@@ -28,19 +28,26 @@ add_task(async function test_removeFolderTransaction_reinsert() {
     notifications.length = 0;
   }
 
+  let listener = events => {
+    for (let event of events) {
+      notifications.push(["bookmark-added",
+                         event.id,
+                         event.parentId,
+                         event.guid,
+                         event.parentGuid]);
+    }
+  };
   let observer = {
     __proto__: NavBookmarkObserver.prototype,
-    onItemAdded(itemId, parentId, index, type, uri, title, dateAdded, guid,
-                parentGuid) {
-      notifications.push(["onItemAdded", itemId, parentId, guid, parentGuid]);
-    },
     onItemRemoved(itemId, parentId, index, type, uri, guid, parentGuid) {
       notifications.push(["onItemRemoved", itemId, parentId, guid, parentGuid]);
     },
   };
   PlacesUtils.bookmarks.addObserver(observer);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
   PlacesUtils.registerShutdownFunction(function() {
     PlacesUtils.bookmarks.removeObserver(observer);
+    PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   });
 
   let transaction = PlacesTransactions.Remove({guid: folder.guid});
@@ -65,10 +72,10 @@ add_task(async function test_removeFolderTransaction_reinsert() {
   tbId = await PlacesUtils.promiseItemId(tb.guid);
 
   checkNotifications([
-    ["onItemAdded", folderId, PlacesUtils.bookmarksMenuFolderId, folder.guid,
+    ["bookmark-added", folderId, PlacesUtils.bookmarksMenuFolderId, folder.guid,
       PlacesUtils.bookmarks.menuGuid],
-    ["onItemAdded", fxId, folderId, fx.guid, folder.guid],
-    ["onItemAdded", tbId, folderId, tb.guid, folder.guid],
+    ["bookmark-added", fxId, folderId, fx.guid, folder.guid],
+    ["bookmark-added", tbId, folderId, tb.guid, folder.guid],
   ], "Undo should reinsert folder with different id but same GUID");
 
   await PlacesTransactions.redo();

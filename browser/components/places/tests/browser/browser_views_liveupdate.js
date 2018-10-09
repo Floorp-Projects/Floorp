@@ -97,7 +97,9 @@ add_task(async function test() {
   // Open bookmarks sidebar.
   await withSidebarTree("bookmarks", async () => {
     // Add observers.
+    bookmarksObserver.handlePlacesEvents = bookmarksObserver.handlePlacesEvents.bind(bookmarksObserver);
     PlacesUtils.bookmarks.addObserver(bookmarksObserver);
+    PlacesUtils.observers.addListener(["bookmark-added"], bookmarksObserver.handlePlacesEvents);
     var addedBookmarks = [];
 
     // MENU
@@ -124,6 +126,7 @@ add_task(async function test() {
 
     // Remove observers.
     PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
+    PlacesUtils.observers.removeListener(["bookmark-added"], bookmarksObserver.handlePlacesEvents);
   });
 
   // Collapse the personal toolbar if needed.
@@ -143,10 +146,10 @@ var bookmarksObserver = {
     Ci.nsINavBookmarkObserver,
   ]),
 
-  // nsINavBookmarkObserver
-  onItemAdded(itemId, folderId, index, itemType, uri, title, dataAdded, guid,
-              parentGuid) {
-    this._notifications.push(["assertItemAdded", parentGuid, guid, index]);
+  handlePlacesEvents(events) {
+    for (let {parentGuid, guid, index} of events) {
+      this._notifications.push(["assertItemAdded", parentGuid, guid, index]);
+    }
   },
 
   onItemRemoved(itemId, folderId, index, itemType, uri, guid, parentGuid) {

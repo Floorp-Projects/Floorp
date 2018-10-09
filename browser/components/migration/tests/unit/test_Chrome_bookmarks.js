@@ -77,27 +77,21 @@ add_task(async function() {
   Assert.ok(await migrator.isSourceAvailable());
 
   let itemsSeen = {bookmarks: 0, folders: 0};
-  let bmObserver = {
-    onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle) {
-      if (!aTitle.includes("Chrome")) {
-        itemsSeen[aItemType == PlacesUtils.bookmarks.TYPE_FOLDER ? "folders" : "bookmarks"]++;
+  let listener = events => {
+    for (let event of events) {
+      if (!event.title.includes("Chrome")) {
+        itemsSeen[event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER ? "folders" : "bookmarks"]++;
       }
-    },
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onItemRemoved() {},
-    onItemChanged() {},
-    onItemVisited() {},
-    onItemMoved() {},
+    }
   };
 
-  PlacesUtils.bookmarks.addObserver(bmObserver);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
   const PROFILE = {
     id: "Default",
     name: "Default",
   };
   await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS, PROFILE);
-  PlacesUtils.bookmarks.removeObserver(bmObserver);
+  PlacesUtils.observers.removeListener(["bookmark-added"], listener);
 
   Assert.equal(itemsSeen.bookmarks, 200, "Should have seen 200 bookmarks.");
   Assert.equal(itemsSeen.folders, 10, "Should have seen 10 folders.");

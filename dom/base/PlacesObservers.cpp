@@ -337,6 +337,7 @@ PlacesObservers::NotifyListeners(const Sequence<OwningNonNull<PlacesEvent>>& aEv
       RemoveListener(listener.flags, *listener.value);
     }
   }
+  listenersToRemove.Clear();
 
   auto& weakListenersToRemove = *WeakJSListeners::GetListenersToRemove();
   if (weakListenersToRemove.Length() > 0) {
@@ -344,6 +345,7 @@ PlacesObservers::NotifyListeners(const Sequence<OwningNonNull<PlacesEvent>>& aEv
       RemoveListener(listener.flags, *listener.value.get());
     }
   }
+  weakListenersToRemove.Clear();
 
   auto& nativeListenersToRemove = *WeakNativeListeners::GetListenersToRemove();
   if (nativeListenersToRemove.Length() > 0) {
@@ -351,6 +353,7 @@ PlacesObservers::NotifyListeners(const Sequence<OwningNonNull<PlacesEvent>>& aEv
       RemoveListener(listener.flags, listener.value.get());
     }
   }
+  nativeListenersToRemove.Clear();
 
   gCallingListeners = false;
 }

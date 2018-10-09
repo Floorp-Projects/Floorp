@@ -423,28 +423,33 @@ add_task(async function() {
   let sourceLabel = MigrationUtils.getLocalizedString("importedBookmarksFolder", [source]);
 
   let seenBookmarks = [];
-  let bookmarkObserver = {
-    onItemAdded(itemId, parentId, index, itemType, url, title, dateAdded, itemGuid, parentGuid) {
+  let listener = events => {
+    for (let event of events) {
+      let {
+        id,
+        itemType,
+        url,
+        title,
+        dateAdded,
+        guid,
+        index,
+        parentGuid,
+        parentId,
+      } = event;
       if (title.startsWith("Deleted")) {
         ok(false, "Should not see deleted items being bookmarked!");
       }
-      seenBookmarks.push({itemId, parentId, index, itemType, url, title, dateAdded, itemGuid, parentGuid});
-    },
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onItemRemoved() {},
-    onItemChanged() {},
-    onItemVisited() {},
-    onItemMoved() {},
+      seenBookmarks.push({id, parentId, index, itemType, url, title, dateAdded, guid, parentGuid});
+    }
   };
-  PlacesUtils.bookmarks.addObserver(bookmarkObserver);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
   let migrateResult = await new Promise(resolve => bookmarksMigrator.migrate(resolve)).catch(ex => {
     Cu.reportError(ex);
     Assert.ok(false, "Got an exception trying to migrate data! " + ex);
     return false;
   });
-  PlacesUtils.bookmarks.removeObserver(bookmarkObserver);
+  PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   Assert.ok(migrateResult, "Migration should succeed");
   Assert.equal(seenBookmarks.length, 7, "Should have seen 7 items being bookmarked.");
   Assert.equal(seenBookmarks.filter(bm => bm.title != sourceLabel).length,
@@ -455,8 +460,8 @@ add_task(async function() {
   Assert.equal(menuParents.length, 1, "Should have a single folder added to the menu");
   let toolbarParents = seenBookmarks.filter(item => item.parentGuid == PlacesUtils.bookmarks.toolbarGuid);
   Assert.equal(toolbarParents.length, 1, "Should have a single item added to the toolbar");
-  let menuParentGuid = menuParents[0].itemGuid;
-  let toolbarParentGuid = toolbarParents[0].itemGuid;
+  let menuParentGuid = menuParents[0].guid;
+  let toolbarParentGuid = toolbarParents[0].guid;
 
   let expectedTitlesInMenu = bookmarkReferenceItems.filter(item => item.ParentId == kEdgeMenuParent).map(item => item.Title);
   // Hacky, but seems like much the simplest way:
@@ -481,39 +486,44 @@ add_task(async function() {
       Assert.equal(bookmark.parentGuid, menuParentGuid, "Item '" + bookmark.title + "' should be in menu");
     } else if (shouldBeInToolbar) {
       Assert.equal(bookmark.parentGuid, toolbarParentGuid, "Item '" + bookmark.title + "' should be in toolbar");
-    } else if (bookmark.itemGuid == menuParentGuid || bookmark.itemGuid == toolbarParentGuid) {
+    } else if (bookmark.guid == menuParentGuid || bookmark.guid == toolbarParentGuid) {
       Assert.ok(true, "Expect toolbar and menu folders to not be in menu or toolbar");
     } else {
       // Bit hacky, but we do need to check this.
       Assert.equal(bookmark.title, "Item in folder", "Subfoldered item shouldn't be in menu or toolbar");
-      let parent = seenBookmarks.find(maybeParent => maybeParent.itemGuid == bookmark.parentGuid);
+      let parent = seenBookmarks.find(maybeParent => maybeParent.guid == bookmark.parentGuid);
       Assert.equal(parent && parent.title, "Folder", "Subfoldered item should be in subfolder labeled 'Folder'");
     }
 
     let dbItem = bookmarkReferenceItems.find(someItem => bookmark.title == someItem.Title);
     if (!dbItem) {
       Assert.equal(bookmark.title, importParentFolderName, "Only the extra layer of folders isn't in the input we stuck in the DB.");
-      Assert.ok([menuParentGuid, toolbarParentGuid].includes(bookmark.itemGuid), "This item should be one of the containers");
+      Assert.ok([menuParentGuid, toolbarParentGuid].includes(bookmark.guid), "This item should be one of the containers");
     } else {
-      Assert.equal(dbItem.URL || null, bookmark.url && bookmark.url.spec, "URL is correct");
-      Assert.equal(dbItem.DateUpdated.valueOf(), (new Date(bookmark.dateAdded / 1000)).valueOf(), "Date added is correct");
+      Assert.equal(dbItem.URL || "", bookmark.url, "URL is correct");
+      Assert.equal(dbItem.DateUpdated.valueOf(), (new Date(bookmark.dateAdded)).valueOf(), "Date added is correct");
     }
   }
 
   MigrationUtils._importQuantities.bookmarks = 0;
   seenBookmarks = [];
-  bookmarkObserver = {
-    onItemAdded(itemId, parentId, index, itemType, url, title, dateAdded, itemGuid, parentGuid) {
-      seenBookmarks.push({itemId, parentId, index, itemType, url, title, dateAdded, itemGuid, parentGuid});
-    },
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onItemRemoved() {},
-    onItemChanged() {},
-    onItemVisited() {},
-    onItemMoved() {},
+  listener = events => {
+    for (let event of events) {
+      let {
+        id,
+        itemType,
+        url,
+        title,
+        dateAdded,
+        guid,
+        index,
+        parentGuid,
+        parentId,
+      } = event;
+      seenBookmarks.push({id, parentId, index, itemType, url, title, dateAdded, guid, parentGuid});
+    }
   };
-  PlacesUtils.bookmarks.addObserver(bookmarkObserver);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
   let readingListMigrator = migrator.wrappedJSObject.getReadingListMigratorForTesting(db);
   Assert.ok(readingListMigrator.exists, "Should recognize db we just created");
@@ -522,7 +532,7 @@ add_task(async function() {
     Assert.ok(false, "Got an exception trying to migrate data! " + ex);
     return false;
   });
-  PlacesUtils.bookmarks.removeObserver(bookmarkObserver);
+  PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   Assert.ok(migrateResult, "Migration should succeed");
   Assert.equal(seenBookmarks.length, 3, "Should have seen 3 items being bookmarked (2 items + 1 folder).");
   Assert.equal(seenBookmarks.filter(bm => bm.title != sourceLabel).length,
@@ -536,7 +546,7 @@ add_task(async function() {
     }
     let referenceItem = readingListReferenceItems.find(item => item.Title == bookmark.title);
     Assert.ok(referenceItem, "Should have imported what we expected");
-    Assert.equal(referenceItem.URL, bookmark.url.spec, "Should have the right URL");
+    Assert.equal(referenceItem.URL, bookmark.url, "Should have the right URL");
     readingListReferenceItems.splice(readingListReferenceItems.findIndex(item => item.Title == bookmark.title), 1);
   }
   Assert.ok(!readingListReferenceItems.length, "Should have seen all expected items.");
