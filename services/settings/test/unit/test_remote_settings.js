@@ -163,7 +163,7 @@ add_task(async function test_inspect_method() {
   const serverTime = Date.now();
 
   // Synchronize the `password-fields` collection.
-  await client.maybeSync(Infinity, serverTime);
+  await client.maybeSync(2000, serverTime);
 
   const inspected = await RemoteSettings.inspect();
 
@@ -401,7 +401,7 @@ function getSampleResponse(req, port) {
         }],
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields/records?_sort=-last_modified": {
+    "GET:/v1/buckets/main/collections/password-fields/records?_expected=2000&_sort=-last_modified": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -419,7 +419,7 @@ function getSampleResponse(req, port) {
         }],
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields/records?_sort=-last_modified&_since=3000": {
+    "GET:/v1/buckets/main/collections/password-fields/records?_expected=3001&_sort=-last_modified&_since=3000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -442,7 +442,7 @@ function getSampleResponse(req, port) {
         }],
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields/records?_sort=-last_modified&_since=4000": {
+    "GET:/v1/buckets/main/collections/password-fields/records?_expected=4001&_sort=-last_modified&_since=4000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -458,7 +458,7 @@ function getSampleResponse(req, port) {
         }],
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields/records?_sort=-last_modified&_since=9999": {
+    "GET:/v1/buckets/main/collections/password-fields/records?_expected=10000&_sort=-last_modified&_since=9999": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",

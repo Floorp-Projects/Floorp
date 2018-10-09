@@ -80,46 +80,6 @@ class BookmarksObserver extends Observer {
   }
 
   /**
-   * onItemAdded - Called when a bookmark is added
-   *
-   * @param  {str} id
-   * @param  {str} folderId
-   * @param  {int} index
-   * @param  {int} type       Indicates if the bookmark is an actual bookmark,
-   *                          a folder, or a separator.
-   * @param  {str} uri
-   * @param  {str} title
-   * @param  {int} dateAdded
-   * @param  {str} guid      The unique id of the bookmark
-   * @param  {str} parent guid
-   * @param  {int} source    Used to distinguish bookmarks made by different
-   *                         actions: sync, bookmarks import, other.
-   */
-  onItemAdded(id, folderId, index, type, uri, bookmarkTitle, dateAdded, bookmarkGuid, parentGuid, source) { // eslint-disable-line max-params
-    // Skips items that are not bookmarks (like folders), about:* pages or
-    // default bookmarks, added when the profile is created.
-    if (type !== PlacesUtils.bookmarks.TYPE_BOOKMARK ||
-        source === PlacesUtils.bookmarks.SOURCES.IMPORT ||
-        source === PlacesUtils.bookmarks.SOURCES.RESTORE ||
-        source === PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP ||
-        source === PlacesUtils.bookmarks.SOURCES.SYNC ||
-        (uri.scheme !== "http" && uri.scheme !== "https")) {
-      return;
-    }
-
-    this.dispatch({type: at.PLACES_LINKS_CHANGED});
-    this.dispatch({
-      type: at.PLACES_BOOKMARK_ADDED,
-      data: {
-        bookmarkGuid,
-        bookmarkTitle,
-        dateAdded,
-        url: uri.spec,
-      },
-    });
-  }
-
-  /**
    * onItemRemoved - Called when a bookmark is removed
    *
    * @param  {str} id
@@ -158,12 +118,50 @@ class BookmarksObserver extends Observer {
   onItemChanged() {}
 }
 
+/**
+ * PlacesObserver - observes events from PlacesUtils.observers
+ */
+class PlacesObserver extends Observer {
+  constructor(dispatch) {
+    super(dispatch, Ci.nsINavBookmarkObserver);
+    this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
+  }
+
+  handlePlacesEvents(events) {
+    for (let {itemType, source, dateAdded, guid, title, url, isTagging} of events) {
+      // Skips items that are not bookmarks (like folders), about:* pages or
+      // default bookmarks, added when the profile is created.
+      if (isTagging ||
+          itemType !== PlacesUtils.bookmarks.TYPE_BOOKMARK ||
+          source === PlacesUtils.bookmarks.SOURCES.IMPORT ||
+          source === PlacesUtils.bookmarks.SOURCES.RESTORE ||
+          source === PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP ||
+          source === PlacesUtils.bookmarks.SOURCES.SYNC ||
+          (!url.startsWith("http://") && !url.startsWith("https://"))) {
+        return;
+      }
+
+      this.dispatch({type: at.PLACES_LINKS_CHANGED});
+      this.dispatch({
+        type: at.PLACES_BOOKMARK_ADDED,
+        data: {
+          bookmarkGuid: guid,
+          bookmarkTitle: title,
+          dateAdded: dateAdded * 1000,
+          url
+        }
+      });
+    }
+  }
+}
+
 class PlacesFeed {
   constructor() {
     this.placesChangedTimer = null;
     this.customDispatch = this.customDispatch.bind(this);
     this.historyObserver = new HistoryObserver(this.customDispatch);
     this.bookmarksObserver = new BookmarksObserver(this.customDispatch);
+    this.placesObserver = new PlacesObserver(this.customDispatch);
   }
 
   addObservers() {
@@ -174,6 +172,8 @@ class PlacesFeed {
     Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
       .getService(Ci.nsINavBookmarksService)
       .addObserver(this.bookmarksObserver, true);
+    PlacesUtils.observers.addListener(["bookmark-added"],
+                                      this.placesObserver.handlePlacesEvents);
 
     Services.obs.addObserver(this, LINK_BLOCKED_EVENT);
   }
@@ -214,6 +214,8 @@ class PlacesFeed {
     }
     PlacesUtils.history.removeObserver(this.historyObserver);
     PlacesUtils.bookmarks.removeObserver(this.bookmarksObserver);
+    PlacesUtils.observers.removeListener(["bookmark-added"],
+                                         this.placesObserver.handlePlacesEvents);
     Services.obs.removeObserver(this, LINK_BLOCKED_EVENT);
   }
 

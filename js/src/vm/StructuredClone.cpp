@@ -1849,7 +1849,7 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             if (wasm::IsSharedWasmMemoryObject(obj)) {
                 return writeSharedWasmMemory(obj);
             }
-            if (SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj)) {
+            if (SavedFrame::isSavedFrameOrWrapper(*obj)) {
                 return traverseSavedFrame(obj);
             }
             break;
@@ -2085,7 +2085,7 @@ JSStructuredCloneWriter::write(HandleValue v)
                 if (!startWrite(key) || !startWrite(val)) {
                     return false;
                 }
-            } else if (cls == ESClass::Set || SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj)) {
+            } else if (cls == ESClass::Set || SavedFrame::isSavedFrameOrWrapper(*obj)) {
                 key = otherEntries.popCopy();
                 checkStack();
 

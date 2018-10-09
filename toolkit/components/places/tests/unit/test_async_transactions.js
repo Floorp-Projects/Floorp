@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const bmsvc    = PlacesUtils.bookmarks;
+const obsvc    = PlacesUtils.observers;
 const tagssvc  = PlacesUtils.tagging;
 const annosvc  = PlacesUtils.annotations;
 const PT       = PlacesTransactions;
@@ -30,30 +31,29 @@ var observer = {
     this.endUpdateBatch = false;
   },
 
+  handlePlacesEvents(events) {
+    for (let event of events) {
+      // Ignore tag items.
+      if (event.isTagging) {
+        this.tagRelatedGuids.add(event.guid);
+        return;
+      }
+
+      this.itemsAdded.set(event.guid, { itemId:         event.id,
+                                        parentGuid:     event.parentGuid,
+                                        index:          event.index,
+                                        itemType:       event.itemType,
+                                        title:          event.title,
+                                        url:            event.url });
+    }
+  },
+
   onBeginUpdateBatch() {
     this.beginUpdateBatch = true;
   },
 
   onEndUpdateBatch() {
     this.endUpdateBatch = true;
-  },
-
-  onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
-           aGuid, aParentGuid) {
-    // Ignore tag items.
-    if (aParentId == PlacesUtils.tagsFolderId ||
-        (aParentId != PlacesUtils.placesRootId &&
-         bmsvc.getFolderIdForItem(aParentId) == PlacesUtils.tagsFolderId)) {
-      this.tagRelatedGuids.add(aGuid);
-      return;
-    }
-
-    this.itemsAdded.set(aGuid, { itemId:         aItemId,
-                                 parentGuid:     aParentGuid,
-                                 index:          aIndex,
-                                 itemType:       aItemType,
-                                 title:          aTitle,
-                                 url:            aURI });
   },
 
   onItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGuid, aParentGuid) {
@@ -108,8 +108,11 @@ var bmStartIndex = 0;
 
 function run_test() {
   bmsvc.addObserver(observer);
+  observer.handlePlacesEvents = observer.handlePlacesEvents.bind(observer);
+  obsvc.addListener(["bookmark-added"], observer.handlePlacesEvents);
   registerCleanupFunction(function() {
     bmsvc.removeObserver(observer);
+    obsvc.removeListener(["bookmark-added"], observer.handlePlacesEvents);
   });
 
   run_next_test();
@@ -180,7 +183,7 @@ function ensureItemsAdded(...items) {
         Assert.equal(info[propName], item[propName]);
     }
     if ("url" in item)
-      Assert.ok(info.url.equals(Services.io.newURI(item.url)),
+      Assert.ok(Services.io.newURI(info.url).equals(Services.io.newURI(item.url)),
         "Should have the correct url");
   }
 
@@ -1610,7 +1613,7 @@ add_task(async function test_livemark_txns() {
     ensureItemsAdded({ guid:       livemark_info.guid,
                        title:      livemark_info.title,
                        parentGuid: livemark_info.parentGuid,
-                       itemType:   bmsvc.TYPE_FOLDER });
+                       itemType:   PlacesUtils.bookmarks.TYPE_FOLDER });
     let annos = [{ name:  PlacesUtils.LMANNO_FEEDURI,
                    value: livemark_info.feedUrl }];
     if ("siteUrl" in livemark_info) {

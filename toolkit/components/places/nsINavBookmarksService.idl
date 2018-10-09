@@ -43,46 +43,6 @@ interface nsINavBookmarkObserver : nsISupports
   void onEndUpdateBatch();
 
   /**
-   * Notifies that an item (any type) was added.  Called after the actual
-   * addition took place.
-   * When a new item is created, all the items following it in the same folder
-   * will have their index shifted down, but no additional notifications will
-   * be sent.
-   *
-   * @param aItemId
-   *        The id of the item that was added.
-   * @param aParentId
-   *        The id of the folder to which the item was added.
-   * @param aIndex
-   *        The item's index in the folder.
-   * @param aItemType
-   *        The type of the added item (see TYPE_* constants below).
-   * @param aURI
-   *        The URI of the added item if it was TYPE_BOOKMARK, null otherwise.
-   * @param aTitle
-   *        The title of the added item.
-   * @param aDateAdded
-   *        The stored date added value, in microseconds from the epoch.
-   * @param aGuid
-   *        The unique ID associated with the item.
-   * @param aParentGuid
-   *        The unique ID associated with the item's parent.
-   * @param aSource
-   *        A change source constant from nsINavBookmarksService::SOURCE_*,
-   *        passed to the method that notifies the observer.
-   */
-  void onItemAdded(in long long aItemId,
-                   in long long aParentId,
-                   in long aIndex,
-                   in unsigned short aItemType,
-                   in nsIURI aURI,
-                   in AUTF8String aTitle,
-                   in PRTime aDateAdded,
-                   in ACString aGuid,
-                   in ACString aParentGuid,
-                   in unsigned short aSource);
-
-  /**
    * Notifies that an item was removed.  Called after the actual remove took
    * place.
    * When an item is removed, all the items following it in the same folder

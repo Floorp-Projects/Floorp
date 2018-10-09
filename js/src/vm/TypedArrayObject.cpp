@@ -1767,10 +1767,18 @@ TypedArrayObject::staticProperties[] = {
     JS_PS_END
 };
 
+static JSObject*
+CreateSharedTypedArrayPrototype(JSContext* cx, JSProtoKey key)
+{
+    return GlobalObject::createBlankPrototype(cx,
+                                              cx->global(),
+                                              &TypedArrayObject::sharedTypedArrayPrototypeClass);
+}
+
 static const ClassSpec
 TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     GenericCreateConstructor<TypedArrayConstructor, 0, gc::AllocKind::FUNCTION>,
-    GenericCreatePrototype,
+    CreateSharedTypedArrayPrototype,
     TypedArrayObject::staticFunctions,
     TypedArrayObject::staticProperties,
     TypedArrayObject::protoFunctions,
@@ -1781,13 +1789,7 @@ TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
 
 /* static */ const Class
 TypedArrayObject::sharedTypedArrayPrototypeClass = {
-    // Actually ({}).toString.call(%TypedArray%.prototype) should throw,
-    // because %TypedArray%.prototype lacks the the typed array internal
-    // slots.  (It's not clear this is desirable -- particularly applied to
-    // the actual typed array prototypes, see below -- but it's what ES6
-    // draft 20140824 requires.)  But this is about as much as we can do
-    // until we implement @@toStringTag.
-    "???",
+    "TypedArrayPrototype",
     JSCLASS_HAS_CACHED_PROTO(JSProto_TypedArray),
     JS_NULL_CLASS_OPS,
     &TypedArrayObjectSharedTypedArrayPrototypeClassSpec

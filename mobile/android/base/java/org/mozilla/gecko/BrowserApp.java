@@ -1747,7 +1747,7 @@ public class BrowserApp extends GeckoApp
                 break;
 
             case "GeckoView:AccessibilityEnabled":
-                mDynamicToolbar.setAccessibilityEnabled(message.getBoolean("enabled"));
+                mDynamicToolbar.setAccessibilityEnabled(message.getBoolean("touchEnabled"));
                 break;
 
             case "Menu:Open":

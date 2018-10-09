@@ -935,13 +935,6 @@ DataViewObject::byteOffsetGetter(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<is, byteOffsetGetterImpl>(cx, args);
 }
 
-const Class DataViewObject::protoClass_ = {
-    js_Object_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
-    JS_NULL_CLASS_OPS,
-    &DataViewObject::classSpec_
-};
-
 JSObject*
 DataViewObject::CreatePrototype(JSContext* cx, JSProtoKey key)
 {
@@ -964,7 +957,7 @@ static const ClassOps DataViewObjectClassOps = {
 
 const ClassSpec DataViewObject::classSpec_ = {
     GenericCreateConstructor<DataViewObject::construct, 3, gc::AllocKind::FUNCTION>,
-    DataViewObject::CreatePrototype,
+    GenericCreatePrototype<DataViewObject>,
     nullptr,
     nullptr,
     DataViewObject::methods,
@@ -977,6 +970,13 @@ const Class DataViewObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     &DataViewObjectClassOps,
+    &DataViewObject::classSpec_
+};
+
+const Class DataViewObject::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
+    JS_NULL_CLASS_OPS,
     &DataViewObject::classSpec_
 };
 

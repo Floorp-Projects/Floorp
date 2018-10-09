@@ -107,27 +107,34 @@ let observer = new class extends EventEmitter {
 
     this.skipTags = true;
     this.skipDescendantsOnItemRemoval = true;
+
+    this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
   }
 
   onBeginUpdateBatch() {}
   onEndUpdateBatch() {}
 
-  onItemAdded(id, parentId, index, itemType, uri, title, dateAdded, guid, parentGuid, source) {
-    let bookmark = {
-      id: guid,
-      parentId: parentGuid,
-      index,
-      title,
-      dateAdded: dateAdded / 1000,
-      type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(itemType),
-      url: getUrl(itemType, uri && uri.spec),
-    };
+  handlePlacesEvents(events) {
+    for (let event of events) {
+      if (event.isTagging) {
+        continue;
+      }
+      let bookmark = {
+        id: event.guid,
+        parentId: event.parentGuid,
+        index: event.index,
+        title: event.title,
+        dateAdded: event.dateAdded,
+        type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(event.itemType),
+        url: getUrl(event.itemType, event.url),
+      };
 
-    if (itemType == TYPE_FOLDER) {
-      bookmark.dateGroupModified = bookmark.dateAdded;
+      if (event.itemType == TYPE_FOLDER) {
+        bookmark.dateGroupModified = bookmark.dateAdded;
+      }
+
+      this.emit("created", bookmark);
     }
-
-    this.emit("created", bookmark);
   }
 
   onItemVisited() {}
@@ -173,6 +180,7 @@ const decrementListeners = () => {
   listenerCount -= 1;
   if (!listenerCount) {
     PlacesUtils.bookmarks.removeObserver(observer);
+    PlacesUtils.observers.removeListener(["bookmark-added"], observer.handlePlacesEvents);
   }
 };
 
@@ -180,6 +188,7 @@ const incrementListeners = () => {
   listenerCount++;
   if (listenerCount == 1) {
     PlacesUtils.bookmarks.addObserver(observer);
+    PlacesUtils.observers.addListener(["bookmark-added"], observer.handlePlacesEvents);
   }
 };
 

@@ -5,13 +5,22 @@
 #define JPEG_LIB_VERSION 62
 
 /* libjpeg-turbo version */
-#define LIBJPEG_TURBO_VERSION 1.5.2
+#define LIBJPEG_TURBO_VERSION 2.0.0
+
+/* libjpeg-turbo version in integer form */
+#define LIBJPEG_TURBO_VERSION_NUMBER 2000000
 
 /* Support arithmetic encoding */
-/*#undef C_ARITH_CODING_SUPPORTED */
+/* #undef C_ARITH_CODING_SUPPORTED */
 
 /* Support arithmetic decoding */
-/*#undef D_ARITH_CODING_SUPPORTED */
+/* #undef D_ARITH_CODING_SUPPORTED */
+
+/* Support in-memory source/destination managers */
+/* #undef MEM_SRCDST_SUPPORTED */
+
+/* Use accelerated SIMD routines. */
+#define WITH_SIMD 1
 
 /*
  * Define BITS_IN_JSAMPLE as either
@@ -24,13 +33,19 @@
 #define BITS_IN_JSAMPLE  8      /* use 8 or 12 */
 
 /* Define to 1 if you have the <locale.h> header file. */
-/*#undef HAVE_LOCALE_H */
+/* #undef HAVE_LOCALE_H */
 
 /* Define to 1 if you have the <stddef.h> header file. */
 #define HAVE_STDDEF_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
+
+/* Need to include <sys/types.h> in order to obtain size_t. */
+#define NEED_SYS_TYPES_H 1
+
+/* Compiler has <strings.h> rather than standard <string.h>. */
+/* #undef NEED_BSD_STRINGS */
 
 /* Compiler supports 'unsigned char'. */
 #define HAVE_UNSIGNED_CHAR 1
@@ -41,20 +56,8 @@
 /* Compiler does not support pointers to unspecified structures. */
 /* #define INCOMPLETE_TYPES_BROKEN 1 */
 
-/* Support in-memory source/destination managers */
-/* #undef MEM_SRCDST_SUPPORTED */
-
-/* Compiler has <strings.h> rather than standard <string.h>. */
-/* #undef NEED_BSD_STRINGS */
-
-/* Need to include <sys/types.h> in order to obtain size_t. */
-#define NEED_SYS_TYPES_H 1
-
 /* Broken compiler shifts signed values as an unsigned shift. */
 /* #undef RIGHT_SHIFT_IS_UNSIGNED */
-
-/* Use accelerated SIMD routines. */
-#define WITH_SIMD 1
 
 /* Define to 1 if type `char' is unsigned and you are not using gcc.  */
 #ifndef __CHAR_UNSIGNED__
@@ -66,10 +69,3 @@
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */
-
-/* The size of `size_t', as computed by sizeof. */
-#ifdef HAVE_64BIT_BUILD
-#define SIZEOF_SIZE_T 8
-#else
-#define SIZEOF_SIZE_T 4
-#endif

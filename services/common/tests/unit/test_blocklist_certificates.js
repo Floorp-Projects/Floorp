@@ -176,7 +176,7 @@ function getSampleResponse(req, port) {
       "status": {status: 200, statusText: "OK"},
       "responseBody": JSON.stringify({"data": [{}]}),
     },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=1000": {
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_expected=2000&_sort=-last_modified&_since=1000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -192,7 +192,7 @@ function getSampleResponse(req, port) {
         "last_modified": 3000,
       }]}),
     },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=3000": {
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_expected=4000&_sort=-last_modified&_since=3000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -213,7 +213,7 @@ function getSampleResponse(req, port) {
         "last_modified": 4000,
       }]}),
     },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=4000": {
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_expected=5000&_sort=-last_modified&_since=4000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",

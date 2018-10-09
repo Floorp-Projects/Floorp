@@ -12,6 +12,26 @@ var gBookmarksObserver = {
     this.deferred = PromiseUtils.defer();
     return this.deferred.promise;
   },
+
+  // Even though this isn't technically testing nsINavBookmarkObserver,
+  // this is the simplest place to keep this. Once all of the notifications
+  // are converted, we can just rename the file.
+  validateEvents(events) {
+    Assert.greaterOrEqual(this.expected.length, events.length);
+    for (let event of events) {
+      let expected = this.expected.shift();
+      Assert.equal(expected.eventType, event.type);
+      let args = expected.args;
+      for (let i = 0; i < args.length; i++) {
+        Assert.ok(args[i].check(event[args[i].name]), event.type + "(args[" + i + "]: " + args[i].name + ")");
+      }
+    }
+
+    if (this.expected.length === 0) {
+      this.deferred.resolve();
+    }
+  },
+
   validate(aMethodName, aArguments) {
     Assert.equal(this.expected[0].name, aMethodName);
 
@@ -26,15 +46,16 @@ var gBookmarksObserver = {
     }
   },
 
+  handlePlacesEvents(events) {
+    this.validateEvents(events);
+  },
+
   // nsINavBookmarkObserver
   onBeginUpdateBatch() {
     return this.validate("onBeginUpdateBatch", arguments);
   },
   onEndUpdateBatch() {
     return this.validate("onEndUpdateBatch", arguments);
-  },
-  onItemAdded() {
-    return this.validate("onItemAdded", arguments);
   },
   onItemRemoved() {
     return this.validate("onItemRemoved", arguments);
@@ -63,11 +84,29 @@ var gBookmarkSkipObserver = {
     this.deferred = PromiseUtils.defer();
     return this.deferred.promise;
   },
+
+  validateEvents(events) {
+    events = events.filter(e => !e.isTagging);
+    Assert.greaterOrEqual(this.expected.length, events.length);
+    for (let event of events) {
+      let expectedEventType = this.expected.shift();
+      Assert.equal(expectedEventType, event.type);
+    }
+
+    if (this.expected.length === 0) {
+      this.deferred.resolve();
+    }
+  },
+
   validate(aMethodName) {
     Assert.equal(this.expected.shift(), aMethodName);
     if (this.expected.length === 0) {
       this.deferred.resolve();
     }
+  },
+
+  handlePlacesEvents(events) {
+    this.validateEvents(events);
   },
 
   // nsINavBookmarkObserver
@@ -76,9 +115,6 @@ var gBookmarkSkipObserver = {
   },
   onEndUpdateBatch() {
     return this.validate("onEndUpdateBatch", arguments);
-  },
-  onItemAdded() {
-    return this.validate("onItemAdded", arguments);
   },
   onItemRemoved() {
     return this.validate("onItemRemoved", arguments);
@@ -101,25 +137,30 @@ var gBookmarkSkipObserver = {
 add_task(async function setup() {
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver);
   PlacesUtils.bookmarks.addObserver(gBookmarkSkipObserver);
-
   gUnfiledFolderId = await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid);
+  gBookmarksObserver.handlePlacesEvents =
+    gBookmarksObserver.handlePlacesEvents.bind(gBookmarksObserver);
+  gBookmarkSkipObserver.handlePlacesEvents =
+    gBookmarkSkipObserver.handlePlacesEvents.bind(gBookmarkSkipObserver);
+  PlacesUtils.observers.addListener(["bookmark-added"], gBookmarksObserver.handlePlacesEvents);
+  PlacesUtils.observers.addListener(["bookmark-added"], gBookmarkSkipObserver.handlePlacesEvents);
 });
 
-add_task(async function onItemAdded_bookmark() {
+add_task(async function bookmarkItemAdded_bookmark() {
   const title = "Bookmark 1";
   let uri = Services.io.newURI("http://1.mozilla.org/");
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemAdded",
+      "bookmark-added",
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemAdded",
+      { eventType: "bookmark-added",
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => v === gUnfiledFolderId },
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-          { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
+          { name: "url", check: v => v == uri.spec },
           { name: "title", check: v => v === title },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
@@ -135,19 +176,19 @@ add_task(async function onItemAdded_bookmark() {
   await promise;
 });
 
-add_task(async function onItemAdded_separator() {
+add_task(async function bookmarkItemAdded_separator() {
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemAdded",
+      "bookmark-added",
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemAdded",
+      { eventType: "bookmark-added",
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => v === gUnfiledFolderId },
           { name: "index", check: v => v === 1 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_SEPARATOR },
-          { name: "uri", check: v => v === null },
+          { name: "url", check: v => v === "" },
           { name: "title", check: v => v === "" },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
@@ -162,20 +203,20 @@ add_task(async function onItemAdded_separator() {
   await promise;
 });
 
-add_task(async function onItemAdded_folder() {
+add_task(async function bookmarkItemAdded_folder() {
   const title = "Folder 1";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemAdded",
+      "bookmark-added",
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemAdded",
+      { eventType: "bookmark-added",
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => v === gUnfiledFolderId },
           { name: "index", check: v => v === 2 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
-          { name: "uri", check: v => v === null },
+          { name: "url", check: v => v === "" },
           { name: "title", check: v => v === title },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
@@ -233,26 +274,26 @@ add_task(async function onItemChanged_tags_bookmark() {
       "onItemChanged", "onItemChanged",
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemAdded", // This is the tag folder.
+      { eventType: "bookmark-added", // This is the tag folder.
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => v === PlacesUtils.tagsFolderId },
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
-          { name: "uri", check: v => v === null },
+          { name: "url", check: v => v === "" },
           { name: "title", check: v => v === TAG },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
-      { name: "onItemAdded", // This is the tag.
+      { eventType: "bookmark-added", // This is the tag.
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-          { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
+          { name: "url", check: v => v == uri.spec },
           { name: "title", check: v => v === "" },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
@@ -479,56 +520,56 @@ add_task(async function onItemRemoved_folder_recursive() {
   let uri = Services.io.newURI("http://1.mozilla.org/");
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
-      "onItemAdded", "onItemAdded", "onItemAdded", "onItemAdded",
+      "bookmark-added", "bookmark-added", "bookmark-added", "bookmark-added",
       "onItemRemoved",
     ]),
     gBookmarksObserver.setup([
-      { name: "onItemAdded",
+      { eventType: "bookmark-added",
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => v === gUnfiledFolderId },
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
-          { name: "uri", check: v => v === null },
+          { name: "url", check: v => v === "" },
           { name: "title", check: v => v === title },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
-      { name: "onItemAdded",
+      { eventType: "bookmark-added",
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-          { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
+          { name: "url", check: v => v == uri.spec },
           { name: "title", check: v => v === BMTITLE },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
-      { name: "onItemAdded",
+      { eventType: "bookmark-added",
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
           { name: "index", check: v => v === 1 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
-          { name: "uri", check: v => v === null },
+          { name: "url", check: v => v === "" },
           { name: "title", check: v => v === title },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "parentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
         ] },
-      { name: "onItemAdded",
+      { eventType: "bookmark-added",
         args: [
-          { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
+          { name: "id", check: v => typeof(v) == "number" && v > 0 },
           { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
-          { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
+          { name: "url", check: v => v == uri.spec },
           { name: "title", check: v => v === BMTITLE },
           { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
           { name: "guid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
@@ -608,4 +649,6 @@ add_task(async function onItemRemoved_folder_recursive() {
 add_task(function cleanup() {
   PlacesUtils.bookmarks.removeObserver(gBookmarksObserver);
   PlacesUtils.bookmarks.removeObserver(gBookmarkSkipObserver);
+  PlacesUtils.observers.removeListener(["bookmark-added"], gBookmarksObserver.handlePlacesEvents);
+  PlacesUtils.observers.removeListener(["bookmark-added"], gBookmarkSkipObserver.handlePlacesEvents);
 });

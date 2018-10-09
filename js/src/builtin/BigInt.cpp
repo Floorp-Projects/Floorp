@@ -26,12 +26,6 @@ IsBigInt(HandleValue v)
     return v.isBigInt() || (v.isObject() && v.toObject().is<BigIntObject>());
 }
 
-static JSObject*
-CreateBigIntPrototype(JSContext* cx, JSProtoKey key)
-{
-    return GlobalObject::createBlankPrototype<PlainObject>(cx, cx->global());
-}
-
 // BigInt proposal section 5.1.3
 static bool
 BigIntConstructor(JSContext* cx, unsigned argc, Value* vp)
@@ -189,7 +183,7 @@ BigIntObject::toLocaleString(JSContext* cx, unsigned argc, Value* vp)
 
 const ClassSpec BigIntObject::classSpec_ = {
     GenericCreateConstructor<BigIntConstructor, 1, gc::AllocKind::FUNCTION>,
-    CreateBigIntPrototype,
+    GenericCreatePrototype<BigIntObject>,
     nullptr,
     nullptr,
     BigIntObject::methods,
@@ -201,6 +195,13 @@ const Class BigIntObject::class_ = {
     "Object",
     JSCLASS_HAS_CACHED_PROTO(JSProto_BigInt) |
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
+    JS_NULL_CLASS_OPS,
+    &BigIntObject::classSpec_
+};
+
+const Class BigIntObject::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_BigInt),
     JS_NULL_CLASS_OPS,
     &BigIntObject::classSpec_
 };

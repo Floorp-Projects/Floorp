@@ -14,19 +14,21 @@ add_task(async function() {
   let obs = {
     count: 0,
     lastIndex: 0,
-    onItemAdded(itemId, parentId, index, type, uri, title, dateAdded, itemGuid, parentGuid) {
-      this.count++;
-      let lastIndex = this.lastIndex;
-      this.lastIndex = index;
-      if (type == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
-        Assert.equal(uri.spec, url, "Found the expected url");
+    handlePlacesEvent(events) {
+      for (let event of events) {
+        obs.count++;
+        let lastIndex = obs.lastIndex;
+        obs.lastIndex = event.index;
+        if (event.itemType == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+          Assert.equal(event.url, url, "Found the expected url");
+        }
+        Assert.ok(event.index == 0 || event.index == lastIndex + 1, "Consecutive indices");
+        Assert.ok(event.dateAdded >= now, "Found a valid dateAdded");
+        Assert.ok(PlacesUtils.isValidGuid(event.guid), "guid is valid");
       }
-      Assert.ok(index == 0 || index == lastIndex + 1, "Consecutive indices");
-      Assert.ok(dateAdded >= PlacesUtils.toPRTime(now), "Found a valid dateAdded");
-      Assert.ok(PlacesUtils.isValidGuid(itemGuid), "guid is valid");
     },
   };
-  PlacesUtils.bookmarks.addObserver(obs);
+  PlacesUtils.observers.addListener(["bookmark-added"], obs.handlePlacesEvent);
 
   let tree = {
     guid,
@@ -86,5 +88,7 @@ add_task(async function() {
   }
   Assert.equal(bms.length, 5);
   Assert.equal(obs.count, bms.length);
+
+  PlacesUtils.observers.removeListener(["bookmark-added"], obs.handlePlacesEvent);
 });
 

@@ -15,17 +15,6 @@ matrix:
   include:
     - os: linux
       env:
-        - TARGET=armv7-unknown-linux-gnueabihf
-        - NAME=arm7hf
-        - EXT=tar.gz
-      addons:
-        apt:
-          packages: &armhf
-          - gcc-arm-linux-gnueabihf
-          - libc6-armhf-cross
-          - libc6-dev-armhf-cross
-    - os: linux
-      env:
         - TARGET=x86_64-unknown-linux-musl
         - NAME=linux64
         - EXT=tar.gz

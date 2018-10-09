@@ -217,21 +217,34 @@ function BookmarkObserver({ ignoreDates = true, skipTags = false } = {}) {
   this.notifications = [];
   this.ignoreDates = ignoreDates;
   this.skipTags = skipTags;
+  this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
 }
 
 BookmarkObserver.prototype = {
+  handlePlacesEvents(events) {
+    for (let event of events) {
+      if (this.skipTags && event.isTagging) {
+        continue;
+      }
+      let params = {
+        itemId: event.id,
+        parentId: event.parentId,
+        index: event.index,
+        type: event.itemType,
+        urlHref: event.url,
+        title: event.title,
+        guid: event.guid,
+        parentGuid: event.parentGuid,
+        source: event.source,
+      };
+      if (!this.ignoreDates) {
+        params.dateAdded = event.dateAdded * 1000;
+      }
+      this.notifications.push({ name: "bookmark-added", params });
+    }
+  },
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onItemAdded(itemId, parentId, index, type, uri, title, dateAdded, guid,
-              parentGuid, source) {
-    let urlHref = uri ? uri.spec : null;
-    let params = { itemId, parentId, index, type, urlHref, title, guid,
-                   parentGuid, source };
-    if (!this.ignoreDates) {
-      params.dateAdded = dateAdded;
-    }
-    this.notifications.push({ name: "onItemAdded", params });
-  },
   onItemRemoved(itemId, parentId, index, type, uri, guid, parentGuid, source) {
     let urlHref = uri ? uri.spec : null;
     this.notifications.push({
@@ -265,6 +278,7 @@ BookmarkObserver.prototype = {
 
   check(expectedNotifications) {
     PlacesUtils.bookmarks.removeObserver(this);
+    PlacesUtils.observers.removeListener(["bookmark-added"], this.handlePlacesEvents);
     if (!ObjectUtils.deepEqual(this.notifications, expectedNotifications)) {
       info(`Expected notifications: ${JSON.stringify(expectedNotifications)}`);
       info(`Actual notifications: ${JSON.stringify(this.notifications)}`);
@@ -279,6 +293,7 @@ BookmarkObserver.prototype = {
 function expectBookmarkChangeNotifications(options) {
   let observer = new BookmarkObserver(options);
   PlacesUtils.bookmarks.addObserver(observer);
+  PlacesUtils.observers.addListener(["bookmark-added"], observer.handlePlacesEvents);
   return observer;
 }
 
