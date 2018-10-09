@@ -45,21 +45,25 @@ public:
               const PointerEventInit& aParam);
 
   int32_t PointerId();
-  int32_t Width();
-  int32_t Height();
-  float Pressure();
-  float TangentialPressure();
-  int32_t TiltX();
-  int32_t TiltY();
-  int32_t Twist();
+  int32_t Width(CallerType aCallerType);
+  int32_t Height(CallerType aCallerType);
+  float Pressure(CallerType aCallerType);
+  float TangentialPressure(CallerType aCallerType);
+  int32_t TiltX(CallerType aCallerType);
+  int32_t TiltY(CallerType aCallerType);
+  int32_t Twist(CallerType aCallerType);
   bool IsPrimary();
-  void GetPointerType(nsAString& aPointerType);
+  void GetPointerType(nsAString& aPointerType, CallerType aCallerType);
   void GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
 
 protected:
   ~PointerEvent() {}
 
 private:
+  // This method returns the boolean to indicate whether spoofing pointer
+  // event for fingerprinting resistance.
+  bool ShouldResistFingerprinting(CallerType aCallerType);
+
   nsTArray<RefPtr<PointerEvent>> mCoalescedEvents;
 };
 
