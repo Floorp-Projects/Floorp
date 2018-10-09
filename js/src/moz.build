@@ -228,6 +228,7 @@ UNIFIED_SOURCES += [
     'frontend/BytecodeEmitter.cpp',
     'frontend/CForEmitter.cpp',
     'frontend/DoWhileEmitter.cpp',
+    'frontend/ElemOpEmitter.cpp',
     'frontend/EmitterScope.cpp',
     'frontend/ExpressionStatementEmitter.cpp',
     'frontend/FoldConstants.cpp',

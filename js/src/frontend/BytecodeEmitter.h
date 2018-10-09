@@ -110,6 +110,7 @@ struct CGYieldAndAwaitOffsetList {
 typedef Vector<jsbytecode, 64> BytecodeVector;
 typedef Vector<jssrcnote, 64> SrcNotesVector;
 
+class ElemOpEmitter;
 class EmitterScope;
 class NestableControl;
 class TDZCheckCache;
@@ -660,6 +661,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     enum class EmitElemOption { Get, Call, IncDec, CompoundAssign, Ref };
     MOZ_MUST_USE bool emitElemOperands(PropertyByValue* elem, EmitElemOption opts);
 
+    MOZ_MUST_USE bool emitElemObjAndKey(PropertyByValue* elem, bool isSuper, ElemOpEmitter& eoe);
     MOZ_MUST_USE bool emitElemOpBase(JSOp op);
     MOZ_MUST_USE bool emitElemOp(PropertyByValue* elem, JSOp op);
     MOZ_MUST_USE bool emitElemIncDec(UnaryNode* incDec);
