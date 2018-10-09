@@ -120,8 +120,13 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
 
     function runOneIteration(canvas, useTexSubImage2D, flipY, program, bindingTarget, opt_texture)
     {
+        var objType = 'canvas';
+        if (canvas.transferToImageBitmap)
+            objType = 'OffscreenCanvas';
+        else if (canvas.parentNode)
+            objType = 'canvas attached to DOM';
         debug('Testing ' + (useTexSubImage2D ? 'texSubImage2D' : 'texImage2D') + ' with flipY=' +
-              flipY + ' visible=' + (canvas.parentNode ? true : false)  +
+              flipY + ' source object: ' + objType +
               ' bindingTarget=' + (bindingTarget == gl.TEXTURE_2D ? 'TEXTURE_2D' : 'TEXTURE_CUBE_MAP') +
               ' canvas size: ' + canvas.width + 'x' + canvas.height + ' with red-green');
 
@@ -220,26 +225,40 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         // Note: We use preserveDrawingBuffer:true to prevent canvas
         // visibility from interfering with the tests.
         var visibleCtx = wtu.create3DContext(null, { preserveDrawingBuffer:true });
+        if (!visibleCtx) {
+            testFailed("context does not exist");
+            finishTest();
+            return;
+        }
         var visibleCanvas = visibleCtx.canvas;
-        visibleCanvas.width = visibleCanvas.height = 32;
-        setCanvasToRedGreen(visibleCtx);
         var descriptionNode = document.getElementById("description");
         document.body.insertBefore(visibleCanvas, descriptionNode);
 
         var cases = [
-            { sub: false, flipY: true,  canvas: canvas, init: setCanvasToMin },
-            { sub: false, flipY: false, canvas: canvas },
-            { sub: true,  flipY: true,  canvas: canvas },
-            { sub: true,  flipY: false, canvas: canvas },
-            { sub: false, flipY: true,  canvas: canvas, init: setCanvasTo257x257 },
-            { sub: false, flipY: false, canvas: canvas },
-            { sub: true,  flipY: true,  canvas: canvas },
-            { sub: true,  flipY: false, canvas: canvas },
-            { sub: false, flipY: true,  canvas: visibleCanvas },
-            { sub: false, flipY: false, canvas: visibleCanvas },
-            { sub: true,  flipY: true,  canvas: visibleCanvas },
-            { sub: true,  flipY: false, canvas: visibleCanvas },
+            { sub: false, flipY: true,  ctx: ctx, init: setCanvasToMin },
+            { sub: false, flipY: false, ctx: ctx },
+            { sub: true,  flipY: true,  ctx: ctx },
+            { sub: true,  flipY: false, ctx: ctx },
+            { sub: false, flipY: true,  ctx: ctx, init: setCanvasTo257x257 },
+            { sub: false, flipY: false, ctx: ctx },
+            { sub: true,  flipY: true,  ctx: ctx },
+            { sub: true,  flipY: false, ctx: ctx },
+            { sub: false, flipY: true,  ctx: visibleCtx, init: setCanvasToMin },
+            { sub: false, flipY: false, ctx: visibleCtx },
+            { sub: true,  flipY: true,  ctx: visibleCtx },
+            { sub: true,  flipY: false, ctx: visibleCtx },
         ];
+
+        if (window.OffscreenCanvas) {
+            var offscreen = new OffscreenCanvas(1, 1);
+            var offscreenCtx = wtu.create3DContext(offscreen);
+            cases = cases.concat([
+                { sub: false, flipY: true,  ctx: offscreenCtx, init: setCanvasToMin },
+                { sub: false, flipY: false, ctx: offscreenCtx },
+                { sub: true,  flipY: true,  ctx: offscreenCtx },
+                { sub: true,  flipY: false, ctx: offscreenCtx },
+            ]);
+        }
 
         function runTexImageTest(bindingTarget) {
             var program;
@@ -256,11 +275,12 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                 function runNextTest() {
                     var c = cases[caseNdx];
                     if (c.init) {
-                      c.init(ctx, bindingTarget);
+                      c.init(c.ctx, bindingTarget);
                     }
-                    texture = runOneIteration(c.canvas, c.sub, c.flipY, program, bindingTarget, texture);
+                    texture = runOneIteration(c.ctx.canvas, c.sub, c.flipY, program, bindingTarget, texture);
                     // for the first 2 iterations always make a new texture.
-                    if (count > 2) {
+                    if (count < 2) {
+                      gl.deleteTexture(texture);
                       texture = undefined;
                     }
                     ++caseNdx;
@@ -272,7 +292,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                             return;
                         }
                     }
-                    wtu.waitForComposite(runNextTest);
+                    wtu.dispatchTask(runNextTest);
                 }
                 runNextTest();
             });

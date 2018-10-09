@@ -51,6 +51,7 @@ var main = function() {
 
   if (!gl) {
     testFailed("can't create 3d context");
+    finishTest();
     return;
   }
 

@@ -15,5 +15,4 @@ context-lost.html
 incorrect-context-object-behaviour.html
 --max-version 1.9.9 methods.html
 premultiplyalpha-test.html
-resource-sharing-test.html
 --min-version 1.0.4 user-defined-properties-on-context.html

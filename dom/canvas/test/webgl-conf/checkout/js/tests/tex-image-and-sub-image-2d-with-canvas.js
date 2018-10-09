@@ -164,9 +164,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         gl.clearColor(0,0,0,1);
         gl.clearDepth(1);
 
-        var testCanvas = document.createElement('canvas');
-        runTest(testCanvas);
-        //document.body.appendChild(testCanvas);
+        runTest();
     }
 
     function setCanvasToRedGreen(ctx) {
@@ -239,9 +237,13 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
 
     function runOneIteration(canvas, useTexSubImage2D, flipY, semiTransparent, program, bindingTarget, opt_texture, opt_fontTest)
     {
+        var objType = 'canvas';
+        if (canvas.transferToImageBitmap)
+          objType = 'OffscreenCanvas';
         debug('Testing ' + (useTexSubImage2D ? 'texSubImage2D' : 'texImage2D') +
               ' with flipY=' + flipY + ' bindingTarget=' + (bindingTarget == gl.TEXTURE_2D ? 'TEXTURE_2D' : 'TEXTURE_CUBE_MAP') +
               ' canvas size: ' + canvas.width + 'x' + canvas.height +
+              ' source object type: ' + objType +
               (opt_fontTest ? " with fonts" : " with" + (semiTransparent ? " semi-transparent" : "") + " red-green"));
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         if (!opt_texture) {
@@ -391,36 +393,50 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         return texture;
     }
 
-    function runTest(canvas)
+    function runTest()
     {
-        var ctx = canvas.getContext("2d");
+        var canvas = document.createElement('canvas');
 
         var cases = [
-            { sub: false, flipY: true,  semiTransparent: false, font: false, init: setCanvasToMin },
-            { sub: false, flipY: false, semiTransparent: false, font: false },
-            { sub: true,  flipY: true,  semiTransparent: false, font: false },
-            { sub: true,  flipY: false, semiTransparent: false, font: false },
-            { sub: false, flipY: true,  semiTransparent: true,  font: false, init: setCanvasToMinSemiTransparent },
-            { sub: false, flipY: false, semiTransparent: true,  font: false },
-            { sub: true,  flipY: true,  semiTransparent: true,  font: false },
-            { sub: true,  flipY: false, semiTransparent: true,  font: false },
-            { sub: false, flipY: true,  semiTransparent: false, font: false, init: setCanvasTo257x257 },
-            { sub: false, flipY: false, semiTransparent: false, font: false },
-            { sub: true,  flipY: true,  semiTransparent: false, font: false },
-            { sub: true,  flipY: false, semiTransparent: false, font: false },
-            { sub: false, flipY: true,  semiTransparent: true,  font: false, init: setCanvasTo257x257SemiTransparent },
-            { sub: false, flipY: false, semiTransparent: true,  font: false },
-            { sub: true,  flipY: true,  semiTransparent: true,  font: false },
-            { sub: true,  flipY: false, semiTransparent: true,  font: false },
+            { canvas: canvas, sub: false, flipY: true,  semiTransparent: false, font: false, init: setCanvasToMin },
+            { canvas: canvas, sub: false, flipY: false, semiTransparent: false, font: false },
+            { canvas: canvas, sub: true,  flipY: true,  semiTransparent: false, font: false },
+            { canvas: canvas, sub: true,  flipY: false, semiTransparent: false, font: false },
+            { canvas: canvas, sub: false, flipY: true,  semiTransparent: true,  font: false, init: setCanvasToMinSemiTransparent },
+            { canvas: canvas, sub: false, flipY: false, semiTransparent: true,  font: false },
+            { canvas: canvas, sub: true,  flipY: true,  semiTransparent: true,  font: false },
+            { canvas: canvas, sub: true,  flipY: false, semiTransparent: true,  font: false },
+            { canvas: canvas, sub: false, flipY: true,  semiTransparent: false, font: false, init: setCanvasTo257x257 },
+            { canvas: canvas, sub: false, flipY: false, semiTransparent: false, font: false },
+            { canvas: canvas, sub: true,  flipY: true,  semiTransparent: false, font: false },
+            { canvas: canvas, sub: true,  flipY: false, semiTransparent: false, font: false },
+            { canvas: canvas, sub: false, flipY: true,  semiTransparent: true,  font: false, init: setCanvasTo257x257SemiTransparent },
+            { canvas: canvas, sub: false, flipY: false, semiTransparent: true,  font: false },
+            { canvas: canvas, sub: true,  flipY: true,  semiTransparent: true,  font: false },
+            { canvas: canvas, sub: true,  flipY: false, semiTransparent: true,  font: false },
         ];
 
         // The font tests don't work with ALPHA-only textures since they draw to the color channels.
         if (internalFormat != 'ALPHA') {
             cases = cases.concat([
-                { sub: false, flipY: true,  semiTransparent: false, font: true, init: drawTextInCanvas },
-                { sub: false, flipY: false, semiTransparent: false, font: true },
-                { sub: true,  flipY: true,  semiTransparent: false, font: true },
-                { sub: true,  flipY: false, semiTransparent: false, font: true },
+                { canvas: canvas, sub: false, flipY: true,  semiTransparent: false, font: true, init: drawTextInCanvas },
+                { canvas: canvas, sub: false, flipY: false, semiTransparent: false, font: true },
+                { canvas: canvas, sub: true,  flipY: true,  semiTransparent: false, font: true },
+                { canvas: canvas, sub: true,  flipY: false, semiTransparent: false, font: true },
+            ]);
+        }
+
+        if (window.OffscreenCanvas) {
+            var offscreenCanvas = new OffscreenCanvas(1, 1);
+            cases = cases.concat([
+                { canvas: offscreenCanvas, sub: false, flipY: true,  semiTransparent: false, font: false, init: setCanvasToMin },
+                { canvas: offscreenCanvas, sub: false, flipY: false, semiTransparent: false, font: false },
+                { canvas: offscreenCanvas, sub: true,  flipY: true,  semiTransparent: false, font: false },
+                { canvas: offscreenCanvas, sub: true,  flipY: false, semiTransparent: false, font: false },
+                { canvas: offscreenCanvas, sub: false, flipY: true,  semiTransparent: true,  font: false, init: setCanvasToMinSemiTransparent },
+                { canvas: offscreenCanvas, sub: false, flipY: false, semiTransparent: true,  font: false },
+                { canvas: offscreenCanvas, sub: true,  flipY: true,  semiTransparent: true,  font: false },
+                { canvas: offscreenCanvas, sub: true,  flipY: false, semiTransparent: true,  font: false },
             ]);
         }
 
@@ -440,11 +456,11 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                     var c = cases[caseNdx];
                     var imageDataBefore = null;
                     if (c.init) {
-                      c.init(ctx, bindingTarget);
+                      c.init(c.canvas.getContext('2d'), bindingTarget);
                     }
-                    texture = runOneIteration(canvas, c.sub, c.flipY, c.semiTransparent, program, bindingTarget, texture, c.font);
+                    texture = runOneIteration(c.canvas, c.sub, c.flipY, c.semiTransparent, program, bindingTarget, texture, c.font);
                     // for the first 2 iterations always make a new texture.
-                    if (count > 2) {
+                    if (count < 2) {
                       gl.deleteTexture(texture);
                       texture = undefined;
                     }
@@ -457,7 +473,11 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                             return;
                         }
                     }
-                    wtu.waitForComposite(runNextTest);
+                    // While we are working with Canvases, it's really unlikely that
+                    // waiting for composition will change anything here, and it's much
+                    // slower, so just dispatchTask. If we want to test with composites,
+                    // we should test a more narrow subset of tests.
+                    wtu.dispatchTask(runNextTest);
                 }
                 runNextTest();
             });
