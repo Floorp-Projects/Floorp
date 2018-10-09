@@ -4326,19 +4326,20 @@ CompoundAssignmentParseNodeKindToJSOp(ParseNodeKind pnk)
 }
 
 bool
-BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rhs)
+BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
 {
-    JSOp op = CompoundAssignmentParseNodeKindToJSOp(pnk);
+    bool isCompound = compoundOp != JSOP_NOP;
 
     // Name assignments are handled separately because choosing ops and when
     // to emit BINDNAME is involved and should avoid duplication.
     if (lhs->isKind(ParseNodeKind::Name)) {
-        auto emitRhs = [op, lhs, rhs](BytecodeEmitter* bce, const NameLocation& lhsLoc,
-                                      bool emittedBindOp)
+        auto emitRhs = [lhs, compoundOp, rhs, isCompound](BytecodeEmitter* bce,
+                                                          const NameLocation& lhsLoc,
+                                                          bool emittedBindOp)
         {
             // For compound assignments, first get the LHS value, then emit
-            // the RHS and the op.
-            if (op != JSOP_NOP) {
+            // the RHS and the compoundOp.
+            if (isCompound) {
                 if (!bce->emitGetNameAtLocationForCompoundAssignment(lhs->name(), lhsLoc)) {
                     return false;
                 }
@@ -4352,7 +4353,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
 
             if (rhs && rhs->isDirectRHSAnonFunction()) {
                 MOZ_ASSERT(!lhs->isInParens());
-                MOZ_ASSERT(op == JSOP_NOP);
+                MOZ_ASSERT(!isCompound);
                 RootedAtom name(bce->cx, lhs->name());
                 if (!bce->setOrEmitSetFunName(rhs, name)) {
                     return false;
@@ -4360,8 +4361,8 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
             }
 
             // Emit the compound assignment op if there is one.
-            if (op != JSOP_NOP) {
-                if (!bce->emit1(op)) {
+            if (isCompound) {
+                if (!bce->emit1(compoundOp)) {
                     return false;
                 }
             }
@@ -4397,7 +4398,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
       }
       case ParseNodeKind::Elem: {
         PropertyByValue* elem = &lhs->as<PropertyByValue>();
-        EmitElemOption opt = op == JSOP_NOP ? EmitElemOption::Get : EmitElemOption::CompoundAssign;
+        EmitElemOption opt = isCompound ? EmitElemOption::CompoundAssign : EmitElemOption::Get;
         if (elem->isSuper()) {
             if (!emitSuperElemOperands(elem, opt)) {      // THIS KEY OBJ
                 return false;
@@ -4434,7 +4435,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
         MOZ_ASSERT(0);
     }
 
-    if (op != JSOP_NOP) {
+    if (isCompound) {
         MOZ_ASSERT(rhs);
         switch (lhs->getKind()) {
           case ParseNodeKind::Dot: {
@@ -4502,11 +4503,11 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
     }
 
     /* If += etc., emit the binary operator with a source note. */
-    if (op != JSOP_NOP) {
+    if (isCompound) {
         if (!newSrcNote(SRC_ASSIGNOP)) {
             return false;
         }
-        if (!emit1(op)) {                                 // ... VAL
+        if (!emit1(compoundOp)) {                         // ... VAL
             return false;
         }
     }
@@ -5346,7 +5347,7 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead)
     // initialization is just assigning the iteration value to a target
     // expression.
     if (!parser->astGenerator().isDeclarationList(target)) {
-        return emitAssignment(target, ParseNodeKind::Assign, nullptr); // ... ITERVAL
+        return emitAssignment(target, JSOP_NOP, nullptr); // ... ITERVAL
     }
 
     // Otherwise, per-loop initialization is (possibly) declaration
@@ -9134,7 +9135,10 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
       case ParseNodeKind::ModAssign:
       case ParseNodeKind::PowAssign: {
         AssignmentNode* assignNode = &pn->as<AssignmentNode>();
-        if (!emitAssignment(assignNode->left(), assignNode->getKind(), assignNode->right())) {
+        if (!emitAssignment(assignNode->left(),
+                            CompoundAssignmentParseNodeKindToJSOp(assignNode->getKind()),
+                            assignNode->right()))
+        {
             return false;
         }
         break;
