@@ -141,6 +141,21 @@
       }
     },
 
+    "DNSOverHTTPS": {
+      "type": "object",
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "ProviderURL": {
+          "type": "URLorEmpty"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "DisableAppUpdate": {
       "machine_only": true,
 
