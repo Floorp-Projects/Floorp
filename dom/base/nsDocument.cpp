@@ -13727,7 +13727,9 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  // Propagate user input event handling to the resolve handler
+  RefPtr<Promise> promise = Promise::Create(global, aRv,
+                                            Promise::ePropagateUserInteraction);
   if (aRv.Failed()) {
     return nullptr;
   }
