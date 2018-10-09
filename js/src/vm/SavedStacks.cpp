@@ -742,15 +742,6 @@ SavedFrame_checkThis(JSContext* cx, CallArgs& args, const char* fnName,
         return false;
     }
 
-    // Check for SavedFrame.prototype, which has the same class as SavedFrame
-    // instances, however doesn't actually represent a captured stack frame. It
-    // is the only object that is<SavedFrame>() but doesn't have a source.
-    if (!SavedFrame::isSavedFrameAndNotProto(*thisObject)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                  SavedFrame::class_.name, fnName, "prototype object");
-        return false;
-    }
-
     // Now set "frame" to the actual object we were invoked in (which may be a
     // wrapper), not the unwrapped version.  Consumers will need to know what
     // that original object was, and will do principal checks as needed.
@@ -792,7 +783,7 @@ UnwrapSavedFrame(JSContext* cx, JSPrincipals* principals, HandleObject obj,
         return nullptr;
     }
 
-    MOZ_RELEASE_ASSERT(js::SavedFrame::isSavedFrameAndNotProto(*savedFrameObj));
+    MOZ_RELEASE_ASSERT(savedFrameObj->is<js::SavedFrame>());
     js::RootedSavedFrame frame(cx, &savedFrameObj->as<js::SavedFrame>());
     return GetFirstSubsumedFrame(cx, principals, frame, selfHosted, skippedAsync);
 }
@@ -1141,14 +1132,14 @@ JS_PUBLIC_API(bool)
 IsMaybeWrappedSavedFrame(JSObject* obj)
 {
     MOZ_ASSERT(obj);
-    return js::SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj);
+    return js::SavedFrame::isSavedFrameOrWrapper(*obj);
 }
 
 JS_PUBLIC_API(bool)
 IsUnwrappedSavedFrame(JSObject* obj)
 {
     MOZ_ASSERT(obj);
-    return js::SavedFrame::isSavedFrameAndNotProto(*obj);
+    return obj->is<js::SavedFrame>();
 }
 
 } /* namespace JS */
@@ -1313,7 +1304,7 @@ SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack, HandleString
 
     RootedObject asyncStackObj(cx, CheckedUnwrap(asyncStack));
     MOZ_RELEASE_ASSERT(asyncStackObj);
-    MOZ_RELEASE_ASSERT(js::SavedFrame::isSavedFrameAndNotProto(*asyncStackObj));
+    MOZ_RELEASE_ASSERT(asyncStackObj->is<js::SavedFrame>());
     adoptedStack.set(&asyncStackObj->as<js::SavedFrame>());
 
     if (!adoptAsyncStack(cx, adoptedStack, asyncCauseAtom, maxFrameCount)) {

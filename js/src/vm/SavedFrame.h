@@ -97,17 +97,12 @@ class SavedFrame : public NativeObject {
         RootedIterator end() { return RootedIterator(); }
     };
 
-    static bool isSavedFrameAndNotProto(JSObject& obj) {
-        return obj.is<SavedFrame>() &&
-               !obj.as<SavedFrame>().getReservedSlot(JSSLOT_SOURCE).isNull();
-    }
-
-    static bool isSavedFrameOrWrapperAndNotProto(JSObject& obj) {
+    static bool isSavedFrameOrWrapper(JSObject& obj) {
         auto unwrapped = CheckedUnwrap(&obj);
         if (!unwrapped) {
             return false;
         }
-        return isSavedFrameAndNotProto(*unwrapped);
+        return unwrapped->is<SavedFrame>();
     }
 
     struct Lookup;
