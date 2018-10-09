@@ -1,17 +1,8 @@
+// |jit-test| skip-if: helperThreadCount() === 0
+
 // Let a few threads hammer on memory with atomics to provoke errors
 // in exclusion work.  This test is not 100% fail-safe: the test may
 // pass despite a bug, but this is unlikely.
-
-if (!(this.SharedArrayBuffer && this.getSharedObject && this.setSharedObject && this.evalInWorker))
-    quit(0);
-
-try {
-    // This will fail with --no-threads.
-    evalInWorker("37");
-}
-catch (e) {
-    quit(0);
-}
 
 // Map an Int32Array on shared memory.  The first location is used as
 // a counter, each worker counts up on exit and the main thread will
