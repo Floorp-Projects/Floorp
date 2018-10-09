@@ -1611,18 +1611,12 @@ VARCACHE_PREF(
   bool, true
 )
 
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
-# define PREF_VALUE false
-#endif
 // Whether Content Blocking UI has been enabled.
 VARCACHE_PREF(
   "browser.contentblocking.ui.enabled",
    browser_contentblocking_ui_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(

@@ -39,7 +39,6 @@ add_task(async function run_test() {
       }
     },
 
-    onItemAdded() {},
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
     onItemVisited() {},

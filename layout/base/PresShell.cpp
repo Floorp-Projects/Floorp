@@ -788,6 +788,7 @@ nsIPresShell::nsIPresShell()
     , mPaintingIsFrozen(false)
     , mIsNeverPainting(false)
     , mInFlush(false)
+    , mCurrentEventFrame(nullptr)
   {}
 
 PresShell::PresShell()
@@ -800,7 +801,6 @@ PresShell::PresShell()
   , mReflowCountMgr(nullptr)
 #endif
   , mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
-  , mCurrentEventFrame(nullptr)
   , mFirstCallbackEventRequest(nullptr)
   , mLastCallbackEventRequest(nullptr)
   , mLastReflowStart(0.0)
@@ -2091,6 +2091,22 @@ PresShell::FireResizeEvent()
 
   if (nsPIDOMWindowOuter* window = mDocument->GetWindow()) {
     EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
+  }
+}
+
+void
+nsIPresShell::NativeAnonymousContentRemoved(nsIContent* aAnonContent)
+{
+  if (aAnonContent == mCurrentEventContent) {
+    mCurrentEventContent = aAnonContent->GetFlattenedTreeParent();
+    mCurrentEventFrame = nullptr;
+  }
+
+  for (unsigned int i = 0; i < mCurrentEventContentStack.Length(); i++) {
+    if (aAnonContent == mCurrentEventContentStack.ElementAt(i)) {
+      mCurrentEventContentStack.ReplaceObjectAt(aAnonContent->GetFlattenedTreeParent(), i);
+      mCurrentEventFrameStack[i] = nullptr;
+    }
   }
 }
 
@@ -6409,7 +6425,7 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, uint8_t aFlags)
 }
 
 nsIContent*
-PresShell::GetCurrentEventContent()
+nsIPresShell::GetCurrentEventContent()
 {
   if (mCurrentEventContent &&
       mCurrentEventContent->GetComposedDoc() != mDocument) {
@@ -6420,7 +6436,7 @@ PresShell::GetCurrentEventContent()
 }
 
 nsIFrame*
-PresShell::GetCurrentEventFrame()
+nsIPresShell::GetCurrentEventFrame()
 {
   if (MOZ_UNLIKELY(mIsDestroying)) {
     return nullptr;
@@ -6440,7 +6456,7 @@ PresShell::GetCurrentEventFrame()
 }
 
 already_AddRefed<nsIContent>
-PresShell::GetEventTargetContent(WidgetEvent* aEvent)
+nsIPresShell::GetEventTargetContent(WidgetEvent* aEvent)
 {
   nsCOMPtr<nsIContent> content = GetCurrentEventContent();
   if (!content) {
@@ -6455,7 +6471,7 @@ PresShell::GetEventTargetContent(WidgetEvent* aEvent)
 }
 
 void
-PresShell::PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent)
+nsIPresShell::PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent)
 {
   if (mCurrentEventFrame || mCurrentEventContent) {
     mCurrentEventFrameStack.InsertElementAt(0, mCurrentEventFrame);
@@ -6466,7 +6482,7 @@ PresShell::PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent)
 }
 
 void
-PresShell::PopCurrentEventInfo()
+nsIPresShell::PopCurrentEventInfo()
 {
   mCurrentEventFrame = nullptr;
   mCurrentEventContent = nullptr;

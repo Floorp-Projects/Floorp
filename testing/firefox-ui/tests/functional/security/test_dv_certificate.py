@@ -41,7 +41,7 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
         cert = self.browser.tabbar.selected_tab.certificate
 
         # The shown host equals to the certificate
-        self.assertRegexpMatches(self.identity_popup.view.main.host.get_property('textContent'),
+        self.assertRegexpMatches(self.identity_popup.view.main.header.get_property('textContent'),
                                  '.*badssl\.com$')
         self.assertRegexpMatches(cert['commonName'], '.*badssl\.com$')
 

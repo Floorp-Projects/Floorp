@@ -147,7 +147,7 @@ The code for reading ``moz.build`` files lives in
 (:py:class:`mozbuild.frontend.context.Context`) are passed into
 :py:mod:`mozbuild.frontend.emitter`, which converts them to classes defined
 in :py:mod:`mozbuild.frontend.data`. Each class in this module defines a
-domain-specific component of tree metdata. e.g. there will be separate
+domain-specific component of tree metadata. e.g. there will be separate
 classes that represent a JavaScript file vs a compiled C++ file or test
 manifests. This means downstream consumers of this data can filter on class
 types to only consume what they are interested in.

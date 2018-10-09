@@ -3604,13 +3604,6 @@ DateConstructor(JSContext* cx, unsigned argc, Value* vp)
     return DateMultipleArguments(cx, args);
 }
 
-// ES6 final draft 20.3.4.
-static JSObject*
-CreateDatePrototype(JSContext* cx, JSProtoKey key)
-{
-    return GlobalObject::createBlankPrototype(cx, cx->global(), &DateObject::protoClass_);
-}
-
 static bool
 FinishDateClassInit(JSContext* cx, HandleObject ctor, HandleObject proto)
 {
@@ -3628,7 +3621,7 @@ FinishDateClassInit(JSContext* cx, HandleObject ctor, HandleObject proto)
 
 static const ClassSpec DateObjectClassSpec = {
     GenericCreateConstructor<DateConstructor, 7, gc::AllocKind::FUNCTION>,
-    CreateDatePrototype,
+    GenericCreatePrototype<DateObject>,
     date_static_methods,
     nullptr,
     date_methods,

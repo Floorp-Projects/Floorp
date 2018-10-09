@@ -269,7 +269,7 @@ gTests.push({
     // Add a visit.
     await PlacesTestUtils.addVisits(TEST_URL);
 
-    this._addObserver = PlacesTestUtils.waitForNotification("onItemAdded");
+    this._addObserver = PlacesTestUtils.waitForNotification("bookmark-added", null, "places");
   },
 
   selectNode(tree) {

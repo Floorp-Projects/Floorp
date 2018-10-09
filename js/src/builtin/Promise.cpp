@@ -5045,12 +5045,6 @@ OffThreadPromiseRuntimeState::shutdown(JSContext* cx)
     MOZ_ASSERT(!initialized());
 }
 
-static JSObject*
-CreatePromisePrototype(JSContext* cx, JSProtoKey key)
-{
-    return GlobalObject::createBlankPrototype(cx, cx->global(), &PromiseObject::protoClass_);
-}
-
 const JSJitInfo promise_then_info = {
   { (JSJitGetterOp)Promise_then_noRetVal },
   { 0 }, /* unused */
@@ -5096,7 +5090,7 @@ static const JSPropertySpec promise_static_properties[] = {
 
 static const ClassSpec PromiseObjectClassSpec = {
     GenericCreateConstructor<PromiseConstructor, 1, gc::AllocKind::FUNCTION>,
-    CreatePromisePrototype,
+    GenericCreatePrototype<PromiseObject>,
     promise_static_methods,
     promise_static_properties,
     promise_methods,
