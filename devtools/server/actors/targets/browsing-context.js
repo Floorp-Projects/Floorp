@@ -336,11 +336,7 @@ const browsingContextTargetPrototype = {
    * Getter for the browsing context's current DOM window.
    */
   get window() {
-    // On xpcshell, there is no document
-    if (this.docShell) {
-      return this.docShell.domWindow;
-    }
-    return null;
+    return this.docShell.domWindow;
   },
 
   get outerWindowID() {
@@ -355,11 +351,10 @@ const browsingContextTargetPrototype = {
    * browsing context's current DOM window.
    */
   get webextensionsContentScriptGlobals() {
-    // Ignore xpcshell runtime which spawns target actors without a window
-    // and only retrieve the content scripts globals if the ExtensionContent JSM module
+    // Only retrieve the content scripts globals if the ExtensionContent JSM module
     // has been already loaded (which is true if the WebExtensions internals have already
     // been loaded in the same content process).
-    if (this.window && Cu.isModuleLoaded(EXTENSION_CONTENT_JSM)) {
+    if (Cu.isModuleLoaded(EXTENSION_CONTENT_JSM)) {
       return ExtensionContent.getContentScriptGlobals(this.window);
     }
 
@@ -460,17 +455,15 @@ const browsingContextTargetPrototype = {
     const response = {
       actor: this.actorID,
       traits: {
-        // FF64+ exposes a new trait to help identify ParentProcessTargetActor used for
-        // xpcshell that isn't attached to any valid browsing context and so shouldn't
-        // be considered as a browsing context-inherited target on the client side.
-        isBrowsingContext: !!this.docShell,
+        // FF64+ exposes a new trait to help identify BrowsingContextActor's inherited
+        // actorss from the client side.
+        isBrowsingContext: true,
       },
     };
 
-    // We may try to access window while the document is closing, then
-    // accessing window throws. Also on xpcshell we are using this actor even if
-    // there is no valid document.
-    if (this.docShell && !this.docShell.isBeingDestroyed()) {
+    // We may try to access window while the document is closing, then accessing window
+    // throws.
+    if (!this.docShell.isBeingDestroyed()) {
       response.title = this.title;
       response.url = this.url;
       response.outerWindowID = this.outerWindowID;
@@ -575,17 +568,14 @@ const browsingContextTargetPrototype = {
     // Create a pool for context-lifetime actors.
     this._createThreadActor();
 
-    // on xpcshell, there is no document
-    if (this.window) {
-      this._progressListener = new DebuggerProgressListener(this);
+    this._progressListener = new DebuggerProgressListener(this);
 
-      // Save references to the original document we attached to
-      this._originalWindow = this.window;
+    // Save references to the original document we attached to
+    this._originalWindow = this.window;
 
-      // Ensure replying to attach() request first
-      // before notifying about new docshells.
-      DevToolsUtils.executeSoon(() => this._watchDocshells());
-    }
+    // Ensure replying to attach() request first
+    // before notifying about new docshells.
+    DevToolsUtils.executeSoon(() => this._watchDocshells());
 
     this._attached = true;
   },

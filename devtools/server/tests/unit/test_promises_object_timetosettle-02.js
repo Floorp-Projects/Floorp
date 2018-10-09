@@ -16,19 +16,16 @@ var EventEmitter = require("devtools/shared/event-emitter");
 add_task(async function() {
   const client = await startTestDebuggerServer("test-promises-timetosettle");
   const parentProcessActors = await getParentProcessActors(client);
-  await attachTarget(client, parentProcessActors);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
   // We have to attach the chrome target actor before playing with the PromiseActor
-  await attachTarget(client, parentProcessActors);
   await testGetTimeToSettle(client, parentProcessActors,
     v => new Promise(resolve => setTimeout(() => resolve(v), 100)));
 
   const response = await listTabs(client);
   const targetTab = findTab(response.tabs, "test-promises-timetosettle");
   ok(targetTab, "Found our target tab.");
-  await attachTarget(client, targetTab);
 
   await testGetTimeToSettle(client, targetTab, v => {
     const debuggee =
