@@ -269,12 +269,13 @@ InitResolution()
 // TimeStampValue implementation
 // ----------------------------------------------------------------------------
 MFBT_API
-TimeStampValue::TimeStampValue(ULONGLONG aGTC, ULONGLONG aQPC, bool aHasQPC)
+TimeStampValue::TimeStampValue(ULONGLONG aGTC, ULONGLONG aQPC, bool aHasQPC, bool aUsedCanonicalNow)
   : mGTC(aGTC)
   , mQPC(aQPC)
+  , mUsedCanonicalNow(aUsedCanonicalNow)
   , mHasQPC(aHasQPC)
-  , mIsNull(false)
 {
+  mIsNull = aGTC == 0 && aQPC == 0;
 }
 
 MFBT_API TimeStampValue&
@@ -372,7 +373,7 @@ TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
 MFBT_API uint64_t
 TimeStampValue::operator-(const TimeStampValue& aOther) const
 {
-  if (mIsNull && aOther.mIsNull) {
+  if (IsNull() && aOther.IsNull()) {
     return uint64_t(0);
   }
 
@@ -523,8 +524,9 @@ TimeStamp::Shutdown()
   DeleteCriticalSection(&sTimeStampLock);
 }
 
-MFBT_API TimeStamp
-TimeStamp::Now(bool aHighResolution)
+
+TimeStampValue
+NowInternal(bool aHighResolution)
 {
   // sUseQPC is volatile
   bool useQPC = (aHighResolution && sUseQPC);
@@ -532,7 +534,19 @@ TimeStamp::Now(bool aHighResolution)
   // Both values are in [mt] units.
   ULONGLONG QPC = useQPC ? PerformanceCounter() : uint64_t(0);
   ULONGLONG GTC = ms2mt(GetTickCount64());
-  return TimeStamp(TimeStampValue(GTC, QPC, useQPC));
+  return TimeStampValue(GTC, QPC, useQPC, false);
+}
+
+MFBT_API TimeStamp
+TimeStamp::Now(bool aHighResolution)
+{
+  return TimeStamp::NowFuzzy(NowInternal(aHighResolution));
+}
+
+MFBT_API TimeStamp
+TimeStamp::NowUnfuzzed(bool aHighResolution)
+{
+  return TimeStamp(NowInternal(aHighResolution));
 }
 
 // Computes and returns the process uptime in microseconds.
