@@ -7,6 +7,7 @@
 #define mozilla_a11y_AccessibleWrap_h_
 
 #include "Accessible.h"
+#include "GeneratedJNIWrappers.h"
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "nsCOMPtr.h"
 
@@ -21,16 +22,45 @@ public:
 
   virtual void Shutdown() override;
 
-  int32_t VirtualViewID() { return mID; }
+  int32_t VirtualViewID() const { return mID; }
+
+  virtual void SetTextContents(const nsAString& aText);
+
+  virtual mozilla::java::GeckoBundle::LocalRef ToBundle();
 
   static const int32_t kNoID = -1;
 
 protected:
+  mozilla::java::GeckoBundle::LocalRef CreateBundle(
+    int32_t aParentID,
+    role aRole,
+    uint64_t aState,
+    const nsString& aName,
+    const nsString& aTextValue,
+    const nsString& aDOMNodeID,
+    const nsIntRect& aBounds,
+    double aCurVal,
+    double aMinVal,
+    double aMaxVal,
+    double aStep,
+    nsIPersistentProperties* aAttributes,
+    const nsTArray<int32_t>& aChildren) const;
+
   // IDs should be a positive 32bit integer.
   static int32_t AcquireID();
   static void ReleaseID(int32_t aID);
 
   int32_t mID;
+
+private:
+  void DOMNodeID(nsString& aDOMNodeID);
+
+  static void GetAndroidRoleAndClass(role aRole,
+                                     nsAString& aGeckoRole,
+                                     nsAString& aRoleDescription,
+                                     nsAString& aClassStr);
+
+  static uint64_t GetFlags(role aRole, uint64_t aState);
 };
 
 static inline AccessibleWrap*

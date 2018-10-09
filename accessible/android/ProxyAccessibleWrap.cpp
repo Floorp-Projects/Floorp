@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProxyAccessibleWrap.h"
-#include "nsIPersistentProperties2.h"
+#include "nsPersistentProperties.h"
 
 using namespace mozilla::a11y;
 
@@ -47,4 +47,73 @@ ProxyAccessibleWrap::Shutdown()
 
   mBits.proxy = nullptr;
   mStateFlags |= eIsDefunct;
+}
+
+// Accessible
+
+already_AddRefed<nsIPersistentProperties>
+ProxyAccessibleWrap::Attributes()
+{
+  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+  nsAutoString unused;
+  AutoTArray<Attribute, 10> attrs;
+  Proxy()->Attributes(&attrs);
+  for (size_t i = 0; i < attrs.Length(); i++) {
+    attributes->SetStringProperty(
+      attrs.ElementAt(i).Name(), attrs.ElementAt(i).Value(), unused);
+  }
+
+  return attributes.forget();
+}
+
+// Other
+
+void
+ProxyAccessibleWrap::SetTextContents(const nsAString& aText)
+{
+  Proxy()->ReplaceText(PromiseFlatString(aText));
+}
+
+mozilla::java::GeckoBundle::LocalRef
+ProxyAccessibleWrap::ToBundle()
+{
+  ProxyAccessible* proxy = Proxy();
+  if (!proxy) {
+    return nullptr;
+  }
+
+  int32_t parentID = proxy->Parent() ?
+    WrapperFor(proxy->Parent())->VirtualViewID() : 0;
+
+  nsAutoString name;
+  proxy->Name(name);
+
+  nsAutoString value;
+  proxy->Value(value);
+
+  nsAutoString viewIdResourceName;
+  proxy->DOMNodeID(viewIdResourceName);
+
+  nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
+
+  auto childCount = proxy->ChildrenCount();
+  nsTArray<int32_t> children(childCount);
+  for (uint32_t i = 0; i < childCount; i++) {
+    auto child = WrapperFor(proxy->ChildAt(i));
+    children.AppendElement(child->VirtualViewID());
+  }
+
+  return CreateBundle(parentID,
+                      proxy->Role(),
+                      proxy->State(),
+                      name,
+                      value,
+                      viewIdResourceName,
+                      proxy->Bounds(),
+                      proxy->CurValue(),
+                      proxy->MinValue(),
+                      proxy->MaxValue(),
+                      proxy->Step(),
+                      attributes,
+                      children);
 }
