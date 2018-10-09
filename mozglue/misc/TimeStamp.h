@@ -29,7 +29,53 @@ template<typename T> struct ParamTraits;
 namespace mozilla {
 
 #ifndef XP_WIN
-typedef uint64_t TimeStampValue;
+struct TimeStamp63Bit
+{
+  uint64_t mUsedCanonicalNow : 1;
+  uint64_t mTimeStamp        : 63;
+
+  constexpr TimeStamp63Bit()
+    : mUsedCanonicalNow(0)
+    , mTimeStamp(0) { }
+
+  MOZ_IMPLICIT constexpr TimeStamp63Bit(const uint64_t aValue)
+    : mUsedCanonicalNow(0)
+    , mTimeStamp(aValue) { }
+
+  constexpr TimeStamp63Bit(const bool aUsedCanonicalNow, const int64_t aTimeStamp)
+    : mUsedCanonicalNow(aUsedCanonicalNow ? 1 : 0)
+    , mTimeStamp(aTimeStamp) { }
+
+  bool operator==(const TimeStamp63Bit aOther) const
+  {
+    uint64_t here, there;
+    memcpy(&here, this, sizeof(TimeStamp63Bit));
+    memcpy(&there, &aOther, sizeof(TimeStamp63Bit));
+    return here == there;
+  }
+
+  operator uint64_t () const
+  {
+    return mTimeStamp;
+  }
+
+  bool IsNull() const
+  {
+    return mTimeStamp == 0;
+  }
+
+  bool UsedCanonicalNow() const
+  {
+    return mUsedCanonicalNow;
+  }
+
+  void SetCanonicalNow()
+  {
+    mUsedCanonicalNow = 1;
+  }
+};
+
+typedef TimeStamp63Bit TimeStampValue;
 #endif
 
 class TimeStamp;
@@ -413,7 +459,7 @@ public:
   /**
    * Initialize to the "null" moment
    */
-  constexpr TimeStamp() : mValue(0) {}
+  constexpr TimeStamp() : mValue() {}
   // Default copy-constructor and assignment are OK
 
   /**
@@ -434,14 +480,14 @@ public:
   {
     static_assert(sizeof(aSystemTime) == sizeof(TimeStampValue),
                   "System timestamp should be same units as TimeStampValue");
-    return TimeStamp(aSystemTime);
+    return TimeStamp(TimeStampValue(false, aSystemTime));
   }
 #endif
 
   /**
    * Return true if this is the "null" moment
    */
-  bool IsNull() const { return mValue == 0; }
+  bool IsNull() const { return mValue.IsNull(); }
 
   /**
    * Return true if this is not the "null" moment, may be used in tests, e.g.:
@@ -449,8 +495,15 @@ public:
    */
   explicit operator bool() const
   {
-    return mValue != 0;
+    return !IsNull();
   }
+
+  bool UsedCanonicalNow() const
+  {
+    return mValue.UsedCanonicalNow();
+  }
+  static MFBT_API bool GetFuzzyfoxEnabled();
+  static MFBT_API void SetFuzzyfoxEnabled(bool aValue);
 
   /**
    * Return a timestamp reflecting the current elapsed system time. This
@@ -467,6 +520,7 @@ public:
    */
   static TimeStamp Now() { return Now(true); }
   static TimeStamp NowLoRes() { return Now(false); }
+  static TimeStamp NowUnfuzzed() { return NowUnfuzzed(true); }
 
   /**
    * Return a timestamp representing the time when the current process was
@@ -531,7 +585,10 @@ public:
     // (We don't check for overflow because it's not obvious what the error
     //  behavior should be in that case.)
     if (aOther.mValue < 0 && value > mValue) {
-      value = 0;
+      value = TimeStampValue();
+    }
+    if (mValue.UsedCanonicalNow()) {
+      value.SetCanonicalNow();
     }
     mValue = value;
     return *this;
@@ -544,7 +601,10 @@ public:
     // (We don't check for overflow because it's not obvious what the error
     //  behavior should be in that case.)
     if (aOther.mValue > 0 && value > mValue) {
-      value = 0;
+      value = TimeStampValue();
+    }
+    if (mValue.UsedCanonicalNow()) {
+      value.SetCanonicalNow();
     }
     mValue = value;
     return *this;
@@ -598,6 +658,10 @@ private:
   MOZ_IMPLICIT TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
   static MFBT_API TimeStamp Now(bool aHighResolution);
+  static MFBT_API TimeStamp NowUnfuzzed(bool aHighResolution);
+  static MFBT_API TimeStamp NowFuzzy(TimeStampValue aValue);
+
+  static MFBT_API void UpdateFuzzyTimeStamp(TimeStamp aValue);
 
   /**
    * Computes the uptime of the current process in microseconds. The result
@@ -623,6 +687,8 @@ private:
    * When using a system clock, a value is system dependent.
    */
   TimeStampValue mValue;
+
+  friend class Fuzzyfox;
 };
 
 } // namespace mozilla
