@@ -1,8 +1,5 @@
-// |jit-test| slow
+// |jit-test| slow; skip-if: !('oomTest' in this)
 "use strict";
-
-if (!('oomTest' in this))
-    quit();
 
 let g = (function() {
     "use asm";
