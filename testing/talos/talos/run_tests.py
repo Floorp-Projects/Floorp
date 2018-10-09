@@ -350,6 +350,9 @@ def run_tests(config, browser_config):
 
 def view_gecko_profile(ffox_bin):
     # automatically load the latest talos gecko-profile archive in perf-html.io
+    if sys.platform.startswith('win') and not ffox_bin.endswith(".exe"):
+        ffox_bin = ffox_bin + ".exe"
+
     if not os.path.exists(ffox_bin):
         LOG.info("unable to find Firefox bin, cannot launch view-gecko-profile")
         return

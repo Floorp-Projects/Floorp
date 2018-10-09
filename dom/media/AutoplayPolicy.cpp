@@ -11,6 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/AutoplayPermissionManager.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "nsGlobalWindowInner.h"
@@ -76,6 +77,16 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
   }
 
   if (!aWindow->GetExtantDoc()) {
+    return false;
+  }
+
+  // Here we are checking whether the current document is blocked via
+  // feature-policy, and further down we walk up the doc tree to the top level
+  // content document and check permissions etc on the top level content
+  // document. FeaturePolicy propagates the permission to any sub-documents if
+  // they don't have special directives.
+  if (!FeaturePolicyUtils::IsFeatureAllowed(aWindow->GetExtantDoc(),
+                                            NS_LITERAL_STRING("autoplay"))) {
     return false;
   }
 

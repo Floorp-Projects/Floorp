@@ -1,6 +1,8 @@
 --min-version 1.0.3 --max-version 1.9.9 angle-instanced-arrays.html
 --min-version 1.0.3 --max-version 1.9.9 angle-instanced-arrays-out-of-bounds.html
 --min-version 1.0.3 --max-version 1.9.9 ext-blend-minmax.html
+--min-version 1.0.4 ext-texture-compression-bptc.html
+--min-version 1.0.4 ext-texture-compression-rgtc.html
 --min-version 1.0.4 ext-disjoint-timer-query.html
 --min-version 1.0.3 --max-version 1.9.9 ext-frag-depth.html
 --min-version 1.0.3 --max-version 1.9.9 ext-shader-texture-lod.html
@@ -26,8 +28,8 @@
 webgl-debug-renderer-info.html
 webgl-debug-shaders.html
 --min-version 1.0.4 webgl-compressed-texture-astc.html
---min-version 1.0.3 webgl-compressed-texture-atc.html
 --min-version 1.0.4 webgl-compressed-texture-etc.html
+--min-version 1.0.4 webgl-compressed-texture-etc1.html
 --min-version 1.0.3 webgl-compressed-texture-pvrtc.html
 --min-version 1.0.2 webgl-compressed-texture-s3tc.html
 --min-version 1.0.4 webgl-compressed-texture-s3tc-srgb.html
@@ -38,5 +40,3 @@ webgl-debug-shaders.html
 --min-version 1.0.3 --max-version 1.9.9 webgl-draw-buffers-feedback-loop.html
 --min-version 1.0.4 --max-version 1.9.9 webgl-draw-buffers-framebuffer-unsupported.html
 --min-version 1.0.4 --max-version 1.9.9 webgl-draw-buffers-max-draw-buffers.html
---min-version 1.0.3 webgl-shared-resources.html
-

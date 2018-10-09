@@ -40,6 +40,7 @@
 --min-version 1.0.4 sequence-operator-evaluation-order.html
 --min-version 1.0.4 sketchfab-lighting-shader-crash.html
 --min-version 1.0.4 struct-constructor-highp-bug.html
+--min-version 1.0.4 struct-with-single-member-constructor.html
 --min-version 1.0.3 temp-expressions-should-not-crash.html
 --min-version 1.0.4 unary-minus-operator-float-bug.html
 --min-version 1.0.4 undefined-index-should-not-crash.html

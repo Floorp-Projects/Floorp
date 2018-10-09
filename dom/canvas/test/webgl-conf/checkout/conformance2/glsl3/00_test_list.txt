@@ -12,6 +12,7 @@ bool-type-cast-bug-uint-ivec-uvec.html
 compare-structs-containing-arrays.html
 compound-assignment-type-combination.html
 const-array-init.html
+--min-version 2.0.1 const-struct-from-array-as-function-parameter.html
 --min-version 2.0.1 float-parsing.html
 forbidden-operators.html
 --min-version 2.0.1 forward-declaration.html

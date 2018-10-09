@@ -33,8 +33,7 @@ IterableTest = (function() {
       debug("Test " + count + " of " + target);
       var success = test();
       if (count < target && success !== false) {
-        wtu.waitForComposite(doNextTest);
-        //setTimeout(doNextTest, 100);
+        wtu.dispatchTask(doNextTest);
       } else {
         finishTest();
       }
