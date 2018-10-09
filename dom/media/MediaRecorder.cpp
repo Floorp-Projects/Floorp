@@ -1396,7 +1396,9 @@ MediaRecorder::Pause(ErrorResult& aResult)
     NotifyError(rv);
     return;
   }
+
   mState = RecordingState::Paused;
+  DispatchSimpleEvent(NS_LITERAL_STRING("pause"));
 }
 
 void
@@ -1414,7 +1416,9 @@ MediaRecorder::Resume(ErrorResult& aResult)
     NotifyError(rv);
     return;
   }
+
   mState = RecordingState::Recording;
+  DispatchSimpleEvent(NS_LITERAL_STRING("resume"));
 }
 
 void
