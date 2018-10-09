@@ -1290,7 +1290,7 @@ void Program::resolveLinkImpl()
     mLinked           = mLinkingState->linkEvent->wait();
     mLinkResolved     = true;
     auto linkingState = std::move(mLinkingState);
-    if (!mLinked)
+    if (!mLinked || !linkingState->context)
     {
         return;
     }
@@ -1443,8 +1443,11 @@ Error Program::loadBinary(const Context *context,
     }
 
     const uint8_t *bytes = reinterpret_cast<const uint8_t *>(binary);
-    ANGLE_TRY_RESULT(
-        MemoryProgramCache::Deserialize(context, this, &mState, bytes, length, mInfoLog), mLinked);
+
+    mLinkingState.reset(new LinkingState());
+    mLinkingState->linkEvent =
+        MemoryProgramCache::Deserialize(context, this, &mState, bytes, length, mInfoLog);
+    mLinkResolved = false;
 
     // Currently we require the full shader text to compute the program hash.
     // TODO(jmadill): Store the binary in the internal program cache.
