@@ -227,12 +227,16 @@ class JitTest:
                 dir_meta = cls.find_directives(meta_file_name)
             cls.Directives[dir_name] = dir_meta
 
-        file_extension = os.path.splitext(path)[1]
+        filename, file_extension = os.path.splitext(path)
         if file_extension == '.binjs':
             # BinAST does not have an inline comment format, so it's hard
-            # to parse file-by-file directives. In future, we can look for
-            # an adjacent test-specific directives file, if we want.
-            meta = ''
+            # to parse file-by-file directives. Allow foo.binjs to use foo.dir
+            # as an adjacent file to specify.
+            meta_file_name = filename + '.dir'
+            if os.path.exists(meta_file_name):
+                meta = cls.find_directives(meta_file_name)
+            else:
+                meta = ''
             test.is_binast = True
         else:
             meta = cls.find_directives(path)
