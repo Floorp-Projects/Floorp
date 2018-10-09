@@ -15,17 +15,12 @@
                   mainViewId="identity-popup-mainView">
     <panelview id="identity-popup-mainView"
                descriptionheightworkaround="true">
-      <vbox id="identity-popup-mainView-panel-header">
-        <label>
-          <html:span id="identity-popup-mainView-panel-header-span"/>
-        </label>
-      </vbox>
-
       <!-- Security Section -->
       <hbox id="identity-popup-security" class="identity-popup-section">
         <vbox class="identity-popup-security-content" flex="1">
           <label class="plain">
-            <label class="identity-popup-headline">&identity.connection;</label>
+            <label class="identity-popup-headline identity-popup-host"></label>
+            <label class="identity-popup-headline identity-popup-hostless" crop="end"/>
           </label>
           <description class="identity-popup-connection-not-secure"
                        when-connection="not-secure secure-cert-user-overridden">&identity.connectionNotSecure;</description>
@@ -170,7 +165,8 @@
                descriptionheightworkaround="true">
       <vbox class="identity-popup-security-content">
         <label class="plain">
-          <label class="identity-popup-headline" id="identity-popup-host"></label>
+          <label class="identity-popup-headline identity-popup-host"></label>
+          <label class="identity-popup-headline identity-popup-hostless" crop="end"/>
         </label>
         <description class="identity-popup-connection-not-secure"
                      when-connection="not-secure secure-cert-user-overridden">&identity.connectionNotSecure;</description>
