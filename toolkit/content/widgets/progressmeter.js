@@ -90,13 +90,13 @@ class MozProgressmeter extends MozXULElement {
     let isUndetermined = this.isUndetermined();
     let content = isUndetermined ?
       `
-        <spacer class="progress-bar"/>
-        <spacer class="progress-remainder"/>
-      ` :
-      `
         <stack class="progress-remainder" flex="1" style="overflow: -moz-hidden-unscrollable;">
           <spacer class="progress-bar" top="0" style="margin-right: -1000px;"/>
         </stack>
+      ` :
+      `
+        <spacer class="progress-bar"/>
+        <spacer class="progress-remainder"/>
       `;
 
     this._stack = null;
