@@ -1,5 +1,4 @@
-if (!this.SharedArrayBuffer)
-    quit(0);
+// |jit-test| skip-if: !this.SharedArrayBuffer
 
 load(libdir + "asserts.js");
 
