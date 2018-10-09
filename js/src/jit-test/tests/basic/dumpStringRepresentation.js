@@ -1,8 +1,7 @@
+// |jit-test| skip-if: typeof dumpStringRepresentation !== 'function'
+
 // Try the dumpStringRepresentation shell function on various types of
 // strings, and make sure it doesn't crash.
-
-if (typeof dumpStringRepresentation !== 'function')
-  quit(0);
 
 print("Empty string:");
 dumpStringRepresentation("");

@@ -1,6 +1,4 @@
-if (helperThreadCount() === 0)
-    quit();
-
+// |jit-test| skip-if: helperThreadCount() === 0
 var i = 0;
 while(i++ < 500) {
   evalInWorker(`
