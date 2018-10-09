@@ -226,6 +226,7 @@ UNIFIED_SOURCES += [
     'frontend/BytecodeCompiler.cpp',
     'frontend/BytecodeControlStructures.cpp',
     'frontend/BytecodeEmitter.cpp',
+    'frontend/CallOrNewEmitter.cpp',
     'frontend/CForEmitter.cpp',
     'frontend/DoWhileEmitter.cpp',
     'frontend/ElemOpEmitter.cpp',

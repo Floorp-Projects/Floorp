@@ -25,6 +25,7 @@
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeControlStructures.h"
+#include "frontend/CallOrNewEmitter.h"
 #include "frontend/CForEmitter.h"
 #include "frontend/DoWhileEmitter.h"
 #include "frontend/ElemOpEmitter.h"
@@ -6776,32 +6777,20 @@ BytecodeEmitter::isRestParameter(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCall, bool isNew)
+BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, CallOrNewEmitter& cone)
 {
-    bool needsThis = !isCall;
     switch (callee->getKind()) {
-      case ParseNodeKind::Name: {
-        JSAtom* name = callee->name();
-        NameOpEmitter noe(this, name,
-                          isCall
-                          ? NameOpEmitter::Kind::Call
-                          : NameOpEmitter::Kind::Get);
-        if (!noe.emitGet()) {                             // CALLEE THIS
+      case ParseNodeKind::Name:
+        if (!cone.emitNameCallee(callee->name())) {       // CALLEE THIS
             return false;
         }
         break;
-      }
       case ParseNodeKind::Dot: {
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         PropertyAccess* prop = &callee->as<PropertyAccess>();
         bool isSuper = prop->isSuper();
-        PropOpEmitter poe(this,
-                          isCall
-                          ? PropOpEmitter::Kind::Call
-                          : PropOpEmitter::Kind::Get,
-                          isSuper
-                          ? PropOpEmitter::ObjKind::Super
-                          : PropOpEmitter::ObjKind::Other);
+
+        PropOpEmitter& poe = cone.prepareForPropCallee(isSuper);
         if (!poe.prepareForObj()) {
             return false;
         }
@@ -6815,10 +6804,7 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCa
                 return false;
             }
         }
-        if (!poe.emitGet(prop->key().atom())) {           // [needsThis]
-            //                                            // CALLEE
-            //                                            // [!needsThis]
-            //                                            // CALLEE THIS
+        if (!poe.emitGet(prop->key().atom())) {           // CALLEE THIS?
             return false;
         }
 
@@ -6828,82 +6814,47 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCa
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         PropertyByValue* elem = &callee->as<PropertyByValue>();
         bool isSuper = elem->isSuper();
-        ElemOpEmitter eoe(this,
-                          isCall
-                          ? ElemOpEmitter::Kind::Call
-                          : ElemOpEmitter::Kind::Get,
-                          isSuper
-                          ? ElemOpEmitter::ObjKind::Super
-                          : ElemOpEmitter::ObjKind::Other);
-        if (!emitElemObjAndKey(elem, isSuper, eoe)) {     // [needsThis,Super]
-            //                                            // THIS KEY
+
+        ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper);
+        if (!emitElemObjAndKey(elem, isSuper, eoe)) {     // [Super]
+            //                                            // THIS? THIS KEY
             //                                            // [needsThis,Other]
-            //                                            // OBJ KEY
-            //                                            // [!needsThis,Super]
-            //                                            // THIS THIS KEY
-            //                                            // [!needsThis,Other]
-            //                                            // OBJ OBJ KEY
+            //                                            // OBJ? OBJ KEY
             return false;
         }
-        if (!eoe.emitGet()) {                             // [needsThis]
-            //                                            // CALLEE
-            //                                            // [!needsThis]
-            //                                            // CALLEE THIS
+        if (!eoe.emitGet()) {                             // CALLEE? THIS
             return false;
         }
 
         break;
       }
       case ParseNodeKind::Function:
-        /*
-         * Top level lambdas which are immediately invoked should be
-         * treated as only running once. Every time they execute we will
-         * create new types and scripts for their contents, to increase
-         * the quality of type information within them and enable more
-         * backend optimizations. Note that this does not depend on the
-         * lambda being invoked at most once (it may be named or be
-         * accessed via foo.caller indirection), as multiple executions
-         * will just cause the inner scripts to be repeatedly cloned.
-         */
-        MOZ_ASSERT(!emittingRunOnceLambda);
-        if (checkRunOnceContext()) {
-            emittingRunOnceLambda = true;
-            if (!emitTree(callee)) {
-                return false;
-            }
-            emittingRunOnceLambda = false;
-        } else {
-            if (!emitTree(callee)) {
-                return false;
-            }
+        if (!cone.prepareForFunctionCallee()) {
+            return false;
         }
-        needsThis = true;
+        if (!emitTree(callee)) {                          // CALLEE
+            return false;
+        }
         break;
       case ParseNodeKind::SuperBase:
         MOZ_ASSERT(call->isKind(ParseNodeKind::SuperCall));
         MOZ_ASSERT(parser->astGenerator().isSuperBase(callee));
-        if (!emit1(JSOP_SUPERFUN)) {
+        if (!cone.emitSuperCallee()) {                    // CALLEE THIS
             return false;
         }
         break;
       default:
+        if (!cone.prepareForOtherCallee()) {
+            return false;
+        }
         if (!emitTree(callee)) {
             return false;
         }
-        needsThis = true;
         break;
     }
 
-    if (needsThis) {
-        if (isNew) {
-            if (!emit1(JSOP_IS_CONSTRUCTING)) {
-                return false;
-            }
-        } else {
-            if (!emit1(JSOP_UNDEFINED)) {
-                return false;
-            }
-        }
+    if (!cone.emitThis()) {                               // CALLEE THIS
+        return false;
     }
 
     return true;
@@ -6914,24 +6865,26 @@ BytecodeEmitter::emitPipeline(ListNode* node)
 {
     MOZ_ASSERT(node->count() >= 2);
 
-    if (!emitTree(node->head())) {
+    if (!emitTree(node->head())) {                        // ARG
         return false;
     }
 
     ParseNode* callee = node->head()->pn_next;
-
+    CallOrNewEmitter cone(this, JSOP_CALL,
+                          CallOrNewEmitter::ArgumentsKind::Other,
+                          ValueUsage::WantValue);
     do {
-        if (!emitCalleeAndThis(callee, node, true, false)) {
+        if (!emitCalleeAndThis(callee, node, cone)) {     // ARG CALLEE THIS
+            return false;
+        }
+        if (!emit2(JSOP_PICK, 2)) {                       // CALLEE THIS ARG
+            return false;
+        }
+        if (!cone.emitEnd(1, Some(node->pn_pos.begin))) { // RVAL
             return false;
         }
 
-        if (!emit2(JSOP_PICK, 2)) {
-            return false;
-        }
-
-        if (!emitCall(JSOP_CALL, 1, node)) {
-            return false;
-        }
+        cone.reset();
 
         checkTypeSet(JSOP_CALL);
     } while ((callee = callee->pn_next));
@@ -6940,69 +6893,35 @@ BytecodeEmitter::emitPipeline(ListNode* node)
 }
 
 bool
-BytecodeEmitter::emitArguments(ListNode* argsList, bool callop, bool spread)
+BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall, bool isSpread,
+                               CallOrNewEmitter& cone)
 {
     uint32_t argc = argsList->count();
-
     if (argc >= ARGC_LIMIT) {
-        reportError(argsList, callop ? JSMSG_TOO_MANY_FUN_ARGS : JSMSG_TOO_MANY_CON_ARGS);
+        reportError(argsList, isCall ? JSMSG_TOO_MANY_FUN_ARGS : JSMSG_TOO_MANY_CON_ARGS);
         return false;
     }
-
-    if (!spread) {
+    if (!isSpread) {
+        if (!cone.prepareForNonSpreadArguments()) {       // CALLEE THIS
+            return false;
+        }
         for (ParseNode* arg : argsList->contents()) {
             if (!emitTree(arg)) {
                 return false;
             }
         }
     } else {
-        ParseNode* args = argsList->head();
-        MOZ_ASSERT_IF(argc == 1, args->isKind(ParseNodeKind::Spread));
-        bool emitOptCode = (argc == 1) && isRestParameter(args->as<UnaryNode>().kid());
-        InternalIfEmitter ifNotOptimizable(this);
-
-        if (emitOptCode) {
-            // Emit a preparation code to optimize the spread call with a rest
-            // parameter:
-            //
-            //   function f(...args) {
-            //     g(...args);
-            //   }
-            //
-            // If the spread operand is a rest parameter and it's optimizable
-            // array, skip spread operation and pass it directly to spread call
-            // operation.  See the comment in OptimizeSpreadCall in
-            // Interpreter.cpp for the optimizable conditons.
-
-            if (!emitTree(args->as<UnaryNode>().kid())) {
-                return false;
-            }
-
-            if (!emit1(JSOP_OPTIMIZE_SPREADCALL)) {
-                return false;
-            }
-
-            if (!emit1(JSOP_NOT)) {
-                return false;
-            }
-
-            if (!ifNotOptimizable.emitThen()) {
-                return false;
-            }
-
-            if (!emit1(JSOP_POP)) {
+        if (cone.wantSpreadOperand()) {
+            UnaryNode* spreadNode = &argsList->head()->as<UnaryNode>();
+            if (!emitTree(spreadNode->kid())) {           // CALLEE THIS ARG0
                 return false;
             }
         }
-
-        if (!emitArray(args, argc)) {
+        if (!cone.emitSpreadArgumentsTest()) {            // CALLEE THIS
             return false;
         }
-
-        if (emitOptCode) {
-            if (!ifNotOptimizable.emitEnd()) {
-                return false;
-            }
+        if (!emitArray(argsList->head(), argc)) {         // CALLEE THIS ARR
+            return false;
         }
     }
 
@@ -7013,9 +6932,6 @@ bool
 BytecodeEmitter::emitCallOrNew(BinaryNode* callNode,
                                ValueUsage valueUsage /* = ValueUsage::WantValue */)
 {
-    bool callop =
-        callNode->isKind(ParseNodeKind::Call) || callNode->isKind(ParseNodeKind::TaggedTemplate);
-
     /*
      * Emit callable invocation or operator new (constructor call) code.
      * First, emit code for the left operand to evaluate the callable or
@@ -7031,12 +6947,14 @@ BytecodeEmitter::emitCallOrNew(BinaryNode* callNode,
      * value required for calls (which non-strict mode functions
      * will box into the global object).
      */
+    bool isCall =
+        callNode->isKind(ParseNodeKind::Call) || callNode->isKind(ParseNodeKind::TaggedTemplate);
     ParseNode* calleeNode = callNode->left();
     ListNode* argsList = &callNode->right()->as<ListNode>();
-
-    bool spread = JOF_OPTYPE(callNode->getOp()) == JOF_BYTE;
-
-    if (calleeNode->isKind(ParseNodeKind::Name) && emitterMode == BytecodeEmitter::SelfHosting && !spread) {
+    bool isSpread = JOF_OPTYPE(callNode->getOp()) == JOF_BYTE;
+    if (calleeNode->isKind(ParseNodeKind::Name) && emitterMode == BytecodeEmitter::SelfHosting &&
+        !isSpread)
+    {
         // Calls to "forceInterpreter", "callFunction",
         // "callContentFunction", or "resumeGenerator" in self-hosted
         // code generate inline bytecode.
@@ -7069,40 +6987,18 @@ BytecodeEmitter::emitCallOrNew(BinaryNode* callNode,
     }
 
     JSOp op = callNode->getOp();
-    bool isNewOp = op == JSOP_NEW || op == JSOP_SPREADNEW ||
-                   op == JSOP_SUPERCALL ||
-                   op == JSOP_SPREADSUPERCALL;
-
-    if (!emitCalleeAndThis(calleeNode, callNode, callop, isNewOp)) {
-        return false;
-    }
-
-    if (!emitArguments(argsList, callop, spread)) {
-        return false;
-    }
-
     uint32_t argc = argsList->count();
-
-    /*
-     * Emit code for each argument in order, then emit the JSOP_*CALL or
-     * JSOP_NEW bytecode with a two-byte immediate telling how many args
-     * were pushed on the operand stack.
-     */
-    if (isNewOp) {
-        if (callNode->isKind(ParseNodeKind::SuperCall)) {
-            if (!emit1(JSOP_NEWTARGET)) {
-                return false;
-            }
-        } else if (!spread) {
-            // Repush the callee as new.target
-            if (!emitDupAt(argc + 1)) {
-                return false;
-            }
-        } else {
-            if (!emitDupAt(2)) {
-                return false;
-            }
-        }
+    CallOrNewEmitter cone(this, op,
+                          isSpread && (argc == 1) &&
+                          isRestParameter(argsList->head()->as<UnaryNode>().kid())
+                          ? CallOrNewEmitter::ArgumentsKind::SingleSpreadRest
+                          : CallOrNewEmitter::ArgumentsKind::Other,
+                          valueUsage);
+    if (!emitCalleeAndThis(calleeNode, callNode, cone)) { // CALLEE THIS
+        return false;
+    }
+    if (!emitArguments(argsList, isCall, isSpread, cone)) {
+        return false;                                     // CALLEE THIS ARGS...
     }
 
     ParseNode* coordNode = callNode;
@@ -7147,38 +7043,8 @@ BytecodeEmitter::emitCallOrNew(BinaryNode* callNode,
             break;
         }
     }
-
-    if (!spread) {
-        if (op == JSOP_CALL && valueUsage == ValueUsage::IgnoreValue) {
-            if (!emitCall(JSOP_CALL_IGNORES_RV, argc, coordNode)) {
-                return false;
-            }
-            checkTypeSet(JSOP_CALL_IGNORES_RV);
-        } else {
-            if (!emitCall(op, argc, coordNode)) {
-                return false;
-            }
-            checkTypeSet(op);
-        }
-    } else {
-        if (coordNode) {
-            if (!updateSourceCoordNotes(coordNode->pn_pos.begin)) {
-                return false;
-            }
-        }
-
-        if (!emit1(op)) {
-            return false;
-        }
-        checkTypeSet(op);
-    }
-    if (op == JSOP_EVAL || op == JSOP_STRICTEVAL ||
-        op == JSOP_SPREADEVAL || op == JSOP_STRICTSPREADEVAL)
-    {
-        uint32_t lineNum = parser->errorReporter().lineAt(callNode->pn_pos.begin);
-        if (!emitUint32Operand(JSOP_LINENO, lineNum)) {
-            return false;
-        }
+    if (!cone.emitEnd(argc, Some(coordNode->pn_pos.begin))) {
+        return false;                                     // RVAL
     }
 
     return true;
