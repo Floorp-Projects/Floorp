@@ -516,7 +516,7 @@ nsHttpHandler::Init()
 #if defined(ANDROID)
     mProductSub.AssignLiteral(MOZILLA_UAVERSION);
 #else
-    mProductSub.AssignLiteral(LEGACY_BUILD_ID);
+    mProductSub.AssignLiteral(LEGACY_UA_GECKO_TRAIL);
 #endif
 
 #if DEBUG

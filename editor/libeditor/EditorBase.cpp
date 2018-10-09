@@ -4667,11 +4667,10 @@ EditorBase::HandleInlineSpellCheck(EditSubAction aEditSubAction,
                                 aEndOffset);
 }
 
-already_AddRefed<nsIContent>
-EditorBase::FindSelectionRoot(nsINode* aNode)
+Element*
+EditorBase::FindSelectionRoot(nsINode* aNode) const
 {
-  nsCOMPtr<nsIContent> rootContent = GetRoot();
-  return rootContent.forget();
+  return GetRoot();
 }
 
 void
