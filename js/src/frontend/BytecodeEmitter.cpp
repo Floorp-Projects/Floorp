@@ -27,6 +27,7 @@
 #include "frontend/BytecodeControlStructures.h"
 #include "frontend/CForEmitter.h"
 #include "frontend/DoWhileEmitter.h"
+#include "frontend/ElemOpEmitter.h"
 #include "frontend/EmitterScope.h"
 #include "frontend/ExpressionStatementEmitter.h"
 #include "frontend/ForInEmitter.h"
@@ -2161,71 +2162,6 @@ BytecodeEmitter::emitNameIncDec(UnaryNode* incDec)
 }
 
 bool
-BytecodeEmitter::emitElemOperands(PropertyByValue* elem, EmitElemOption opts)
-{
-    if (!emitTree(&elem->expression())) {                 // OBJ
-        return false;
-    }
-
-    if (opts == EmitElemOption::IncDec) {
-        if (!emit1(JSOP_CHECKOBJCOERCIBLE)) {             // OBJ
-            return false;
-        }
-    } else if (opts == EmitElemOption::Call) {
-        if (!emit1(JSOP_DUP)) {                           // OBJ OBJ
-            return false;
-        }
-    }
-
-    if (!emitTree(&elem->key())) {                        // OBJ? OBJ KEY
-        return false;
-    }
-
-    if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
-        if (!emit1(JSOP_TOID)) {                          // OBJ KEY
-            return false;
-        }
-    }
-    return true;
-}
-
-bool
-BytecodeEmitter::emitSuperElemOperands(PropertyByValue* elem, EmitElemOption opts)
-{
-    MOZ_ASSERT(elem->isSuper());
-
-    if (!emitGetThisForSuperBase(&elem->expression().as<UnaryNode>())) {
-        return false;                               // THIS
-    }
-
-    if (opts == EmitElemOption::Call) {
-        // We need a second |this| that will be consumed during computation of
-        // the property value. (The original |this| is passed to the call.)
-        if (!emit1(JSOP_DUP)) {                     // THIS THIS
-            return false;
-        }
-    }
-
-    if (!emitTree(&elem->key())) {                  // THIS? THIS KEY
-        return false;
-    }
-
-    // We need to convert the key to an object id first, so that we do not do
-    // it inside both the GETELEM and the SETELEM.
-    if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
-        if (!emit1(JSOP_TOID)) {                    // THIS? THIS KEY
-            return false;
-        }
-    }
-
-    if (!emit1(JSOP_SUPERBASE)) {                   // THIS? THIS KEY SUPERBASE
-        return false;
-    }
-
-    return true;
-}
-
-bool
 BytecodeEmitter::emitElemOpBase(JSOp op)
 {
     if (!emit1(op)) {
@@ -2237,40 +2173,37 @@ BytecodeEmitter::emitElemOpBase(JSOp op)
 }
 
 bool
-BytecodeEmitter::emitElemOp(PropertyByValue* elem, JSOp op)
+BytecodeEmitter::emitElemObjAndKey(PropertyByValue* elem, bool isSuper, ElemOpEmitter& eoe)
 {
-    MOZ_ASSERT(op == JSOP_GETELEM ||
-               op == JSOP_CALLELEM ||
-               op == JSOP_DELELEM ||
-               op == JSOP_STRICTDELELEM);
-
-    EmitElemOption opts = op == JSOP_CALLELEM ? EmitElemOption::Call : EmitElemOption::Get;
-
-    if (!emitElemOperands(elem, opts)) {                  // OBJ? OBJ KEY
-        return false;
-    }
-    if (!emitElemOpBase(op)) {                            // OBJ? ELEM
-        return false;
-    }
-    return true;
-}
-
-bool
-BytecodeEmitter::emitSuperGetElem(PropertyByValue* elem, bool isCall)
-{
-    EmitElemOption opts = isCall ? EmitElemOption::Call : EmitElemOption::Get;
-
-    if (!emitSuperElemOperands(elem, opts)) {       // THIS? THIS KEY SUPERBASE
-        return false;
-    }
-    if (!emitElemOpBase(JSOP_GETELEM_SUPER)) {      // THIS? VALUE
-        return false;
-    }
-
-    if (isCall) {
-        if (!emit1(JSOP_SWAP)) {                    // VALUE THIS
+    if (isSuper) {
+        if (!eoe.prepareForObj()) {                       //
             return false;
         }
+        UnaryNode* base = &elem->expression().as<UnaryNode>();
+        if (!emitGetThisForSuperBase(base)) {             // THIS
+            return false;
+        }
+        if (!eoe.prepareForKey()) {                       // THIS
+            return false;
+        }
+        if (!emitTree(&elem->key())) {                    // THIS KEY
+            return false;
+        }
+
+        return true;
+    }
+
+    if (!eoe.prepareForObj()) {                           //
+        return false;
+    }
+    if (!emitTree(&elem->expression())) {                 // OBJ
+        return false;
+    }
+    if (!eoe.prepareForKey()) {                           // OBJ? OBJ
+        return false;
+    }
+    if (!emitTree(&elem->key())) {                        // OBJ? OBJ KEY
+        return false;
     }
 
     return true;
@@ -2279,74 +2212,25 @@ BytecodeEmitter::emitSuperGetElem(PropertyByValue* elem, bool isCall)
 bool
 BytecodeEmitter::emitElemIncDec(UnaryNode* incDec)
 {
-    PropertyByValue* elem = &incDec->kid()->as<PropertyByValue>();
-    bool isSuper = elem->isSuper();
-
-    // We need to convert the key to an object id first, so that we do not do
-    // it inside both the GETELEM and the SETELEM. This is done by
-    // emit(Super)ElemOperands.
-    if (isSuper) {
-        if (!emitSuperElemOperands(elem, EmitElemOption::IncDec)) {
-            return false;                                 // THIS KEY OBJ
-        }
-    } else {
-        if (!emitElemOperands(elem, EmitElemOption::IncDec)) {
-            return false;                                 // OBJ KEY
-        }
-    }
-
-    bool post;
-    JSOp binop = GetIncDecInfo(incDec->getKind(), &post);
-
-    JSOp getOp;
-    if (isSuper) {
-        // There's no such thing as JSOP_DUP3, so we have to be creative.
-        // Note that pushing things again is no fewer JSOps.
-        if (!emitDupAt(2)) {                            // THIS KEY OBJ THIS
-            return false;
-        }
-        if (!emitDupAt(2)) {                            // THIS KEY OBJ THIS KEY
-            return false;
-        }
-        if (!emitDupAt(2)) {                            // THIS KEY OBJ THIS KEY OBJ
-            return false;
-        }
-        getOp = JSOP_GETELEM_SUPER;
-    } else {
-                                                        // OBJ KEY
-        if (!emit1(JSOP_DUP2)) {                        // OBJ KEY OBJ KEY
-            return false;
-        }
-        getOp = JSOP_GETELEM;
-    }
-    if (!emitElemOpBase(getOp)) {                       // OBJ KEY ELEM
+    PropertyByValue* elemExpr = &incDec->kid()->as<PropertyByValue>();
+    bool isSuper = elemExpr->isSuper();
+    ParseNodeKind kind = incDec->getKind();
+    ElemOpEmitter eoe(this,
+                      kind == ParseNodeKind::PostIncrement ? ElemOpEmitter::Kind::PostIncrement
+                      : kind == ParseNodeKind::PreIncrement ? ElemOpEmitter::Kind::PreIncrement
+                      : kind == ParseNodeKind::PostDecrement ? ElemOpEmitter::Kind::PostDecrement
+                      : ElemOpEmitter::Kind::PreDecrement,
+                      isSuper
+                      ? ElemOpEmitter::ObjKind::Super
+                      : ElemOpEmitter::ObjKind::Other);
+    if (!emitElemObjAndKey(elemExpr, isSuper, eoe)) {     // [Super]
+        //                                                // THIS KEY
+        //                                                // [Other]
+        //                                                // OBJ KEY
         return false;
     }
-    if (!emit1(JSOP_POS)) {                             // OBJ KEY N
-        return false;
-    }
-    if (post) {
-        if (!emit1(JSOP_DUP)) {                         // OBJ KEY N N
-            return false;
-        }
-        if (!emit2(JSOP_UNPICK, 3 + isSuper)) {         // N OBJ KEY N
-            return false;
-        }
-    }
-    if (!emit1(JSOP_ONE)) {                             // N? OBJ KEY N 1
-        return false;
-    }
-    if (!emit1(binop)) {                                // N? OBJ KEY N+1
-        return false;
-    }
-
-    JSOp setOp = isSuper ? (sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER)
-                         : (sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM);
-    if (!emitElemOpBase(setOp)) {                       // N? N+1
-        return false;
-    }
-    if (post && !emit1(JSOP_POP)) {                     // RESULT
-        return false;
+    if (!eoe.emitIncDec()) {                              // RESULT
+         return false;
     }
 
     return true;
@@ -2905,16 +2789,29 @@ BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target, size_t* emitted)
 
       case ParseNodeKind::Elem: {
         PropertyByValue* elem = &target->as<PropertyByValue>();
-        if (elem->isSuper()) {
-            if (!emitSuperElemOperands(elem, EmitElemOption::Ref)) {
-                return false;                             // THIS KEY OBJ
-            }
+        bool isSuper = elem->isSuper();
+        ElemOpEmitter eoe(this,
+                          ElemOpEmitter::Kind::SimpleAssignment,
+                          isSuper
+                          ? ElemOpEmitter::ObjKind::Super
+                          : ElemOpEmitter::ObjKind::Other);
+        if (!emitElemObjAndKey(elem, isSuper, eoe)) {     // [Super]
+            //                                            // THIS KEY
+            //                                            // [Other]
+            //                                            // OBJ KEY
+            return false;
+        }
+        if (isSuper) {
+            // SUPERBASE is pushed onto KEY in eoe.prepareForRhs below.
             *emitted = 3;
         } else {
-            if (!emitElemOperands(elem, EmitElemOption::Ref)) {
-                return false;                             // OBJ KEY
-            }
             *emitted = 2;
+        }
+        if (!eoe.prepareForRhs()) {                       // [Super]
+            //                                            // THIS KEY SUPERBASE
+            //                                            // [Other]
+            //                                            // OBJ KEY
+            return false;
         }
         break;
       }
@@ -3040,19 +2937,22 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
 
           case ParseNodeKind::Elem: {
             // The reference is already pushed by emitDestructuringLHSRef.
+            //                                            // [Super]
+            //                                            // THIS KEY SUPERBASE VAL
+            //                                            // [Other]
+            //                                            // OBJ KEY VAL
             PropertyByValue* elem = &target->as<PropertyByValue>();
-            if (elem->isSuper()) {                        // THIS KEY OBJ VAL
-                JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER;
-                // emitDestructuringLHSRef already did emitSuperElemOperands
-                // part of emitSuperElemOp.  Perform remaining part here.
-                if (!emitElemOpBase(setOp)) {             // VAL
-                    return false;
-                }
-            } else {                                      // OBJ KEY VAL
-                JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
-                if (!emitElemOpBase(setOp)) {             // VAL
-                    return false;
-                }
+            bool isSuper = elem->isSuper();
+            ElemOpEmitter eoe(this,
+                              ElemOpEmitter::Kind::SimpleAssignment,
+                              isSuper
+                              ? ElemOpEmitter::ObjKind::Super
+                              : ElemOpEmitter::ObjKind::Other);
+            if (!eoe.skipObjAndKeyAndRhs()) {
+                return false;
+            }
+            if (!eoe.emitAssignment()) {                  // VAL
+                return false;
             }
             break;
           }
@@ -4298,6 +4198,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
     }
 
     Maybe<PropOpEmitter> poe;
+    Maybe<ElemOpEmitter> eoe;
 
     // Deal with non-name assignments.
     uint8_t offset = 1;
@@ -4333,16 +4234,24 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
       }
       case ParseNodeKind::Elem: {
         PropertyByValue* elem = &lhs->as<PropertyByValue>();
-        EmitElemOption opt = isCompound ? EmitElemOption::CompoundAssign : EmitElemOption::Get;
-        if (elem->isSuper()) {
-            if (!emitSuperElemOperands(elem, opt)) {      // THIS KEY OBJ
-                return false;
-            }
+        bool isSuper = elem->isSuper();
+        eoe.emplace(this,
+                    isCompound
+                    ? ElemOpEmitter::Kind::CompoundAssignment
+                    : ElemOpEmitter::Kind::SimpleAssignment,
+                    isSuper
+                    ? ElemOpEmitter::ObjKind::Super
+                    : ElemOpEmitter::ObjKind::Other);
+        if (!emitElemObjAndKey(elem, isSuper, *eoe)) {    // [Super]
+            //                                            // THIS KEY
+            //                                            // [Other]
+            //                                            // OBJ KEY
+            return false;
+        }
+        if (isSuper) {
+            // SUPERBASE is pushed onto KEY in eoe->emitGet below.
             offset += 3;
         } else {
-            if (!emitElemOperands(elem, opt)) {           // OBJ KEY
-                return false;
-            }
             offset += 2;
         }
         break;
@@ -4384,29 +4293,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
             break;
           }
           case ParseNodeKind::Elem: {
-            JSOp elemOp;
-            PropertyByValue* elem = &lhs->as<PropertyByValue>();
-            if (elem->isSuper()) {
-                if (!emitDupAt(2)) {                      // THIS KEY OBJ THIS
-                    return false;
-                }
-                if (!emitDupAt(2)) {                      // THIS KEY OBJ THIS KEY
-                    return false;
-                }
-                if (!emitDupAt(2)) {                      // THIS KEY OBJ THIS KEY OBJ
-                    return false;
-                }
-                elemOp = JSOP_GETELEM_SUPER;
-            } else {
-                if (!emit1(JSOP_DUP2)) {                  // OBJ KEY OBJ KEY
-                    return false;
-                }
-                elemOp = JSOP_GETELEM;
-            }
-            if (!emitElemOpBase(elemOp)) {                // [Super]
-                //                                        // THIS KEY OBJ ELEM
-                //                                        // [Other]
-                //                                        // OBJ KEY ELEM
+            if (!eoe->emitGet()) {                        // KEY THIS OBJ ELEM
                 return false;
             }
             break;
@@ -4433,6 +4320,18 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
             //                                            // THIS SUPERBASE PROP
             //                                            // [Compound,Other]
             //                                            // OBJ PROP
+            return false;
+        }
+        break;
+      case ParseNodeKind::Elem:
+        if (!eoe->prepareForRhs()) {                      // [Simple,Super]
+            //                                            // THIS KEY SUPERBASE
+            //                                            // [Simple,Other]
+            //                                            // OBJ KEY
+            //                                            // [Compound,Super]
+            //                                            // THIS KEY SUPERBASE ELEM
+            //                                            // [Compound,Other]
+            //                                            // OBJ KEY ELEM
             return false;
         }
         break;
@@ -4469,12 +4368,11 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
         // We threw above, so nothing to do here.
         break;
       case ParseNodeKind::Elem: {
-        JSOp setOp = lhs->as<PropertyByValue>().isSuper() ?
-                       sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER :
-                       sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
-        if (!emit1(setOp)) {                              // VAL
+        if (!eoe->emitAssignment()) {                     // VAL
             return false;
         }
+
+        eoe.reset();
         break;
       }
       case ParseNodeKind::Array:
@@ -6810,40 +6708,45 @@ BytecodeEmitter::emitDeleteElement(UnaryNode* deleteNode)
     MOZ_ASSERT(deleteNode->isKind(ParseNodeKind::DeleteElem));
 
     PropertyByValue* elemExpr = &deleteNode->kid()->as<PropertyByValue>();
-
-    if (elemExpr->isSuper()) {
+    bool isSuper = elemExpr->isSuper();
+    ElemOpEmitter eoe(this,
+                      ElemOpEmitter::Kind::Delete,
+                      isSuper
+                      ? ElemOpEmitter::ObjKind::Super
+                      : ElemOpEmitter::ObjKind::Other);
+    if (isSuper) {
         // The expression |delete super[foo];| has to evaluate |super[foo]|,
         // which could throw if |this| hasn't yet been set by a |super(...)|
         // call, or trigger side-effects when evaluating ToPropertyKey(foo),
         // or also throw when the super-base is not an object, before throwing
         // a ReferenceError for attempting to delete a super-reference.
-        if (!emitGetThisForSuperBase(&elemExpr->expression().as<UnaryNode>())) {
+        if (!eoe.prepareForObj()) {                       //
             return false;
         }
 
-        if (!emitTree(&elemExpr->key())) {
+        UnaryNode* base = &elemExpr->expression().as<UnaryNode>();
+        if (!emitGetThisForSuperBase(base)) {             // THIS
             return false;
         }
-        if (!emit1(JSOP_TOID)) {
+        if (!eoe.prepareForKey()) {                       // THIS
             return false;
         }
-
-        if (!emit1(JSOP_SUPERBASE)) {
+        if (!emitTree(&elemExpr->key())) {                // THIS KEY
             return false;
         }
-
-        // Unconditionally throw when attempting to delete a super-reference.
-        if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER)) {
+    } else {
+        if (!emitElemObjAndKey(elemExpr, false, eoe)) {   // OBJ KEY
             return false;
         }
-
-        // Another wrinkle: Balance the stack from the emitter's point of view.
-        // Execution will not reach here, as the last bytecode threw.
-        return emitPopN(2);
+    }
+    if (!eoe.emitDelete()) {                              // [Super]
+        //                                                // THIS
+        //                                                // [Other]
+        //                                                // SUCCEEDED
+        return false;
     }
 
-    JSOp delOp = sc->strict() ? JSOP_STRICTDELELEM : JSOP_DELELEM;
-    return emitElemOp(elemExpr, delOp);
+    return true;
 }
 
 bool
@@ -7236,25 +7139,31 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCa
         break;
       }
       case ParseNodeKind::Elem: {
-        PropertyByValue* elem = &callee->as<PropertyByValue>();
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
-        if (elem->isSuper()) {
-            if (!emitSuperGetElem(elem, isCall)) {        // CALLEE THIS?
-                return false;
-            }
-        } else {
-            if (isCall) {
-                if (!emitElemOp(elem, JSOP_CALLELEM)) {   // THIS CALLEE
-                    return false;
-                }
-                if (!emit1(JSOP_SWAP)) {                  // CALLEE THIS
-                    return false;
-                }
-            } else {
-                if (!emitElemOp(elem, JSOP_GETELEM)) {    // CALLEE
-                    return false;
-                }
-            }
+        PropertyByValue* elem = &callee->as<PropertyByValue>();
+        bool isSuper = elem->isSuper();
+        ElemOpEmitter eoe(this,
+                          isCall
+                          ? ElemOpEmitter::Kind::Call
+                          : ElemOpEmitter::Kind::Get,
+                          isSuper
+                          ? ElemOpEmitter::ObjKind::Super
+                          : ElemOpEmitter::ObjKind::Other);
+        if (!emitElemObjAndKey(elem, isSuper, eoe)) {     // [needsThis,Super]
+            //                                            // THIS KEY
+            //                                            // [needsThis,Other]
+            //                                            // OBJ KEY
+            //                                            // [!needsThis,Super]
+            //                                            // THIS THIS KEY
+            //                                            // [!needsThis,Other]
+            //                                            // OBJ OBJ KEY
+            return false;
+        }
+        if (!eoe.emitGet()) {                             // [needsThis]
+            //                                            // CALLEE
+            //                                            // [!needsThis]
+            //                                            // CALLEE THIS
+            return false;
         }
 
         break;
@@ -9257,15 +9166,22 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
 
       case ParseNodeKind::Elem: {
         PropertyByValue* elem = &pn->as<PropertyByValue>();
-        if (elem->isSuper()) {
-            if (!emitSuperGetElem(elem)) {
-                return false;
-            }
-        } else {
-            if (!emitElemOp(elem, JSOP_GETELEM)) {
-                return false;
-            }
+        bool isSuper = elem->isSuper();
+        ElemOpEmitter eoe(this,
+                          ElemOpEmitter::Kind::Get,
+                          isSuper
+                          ? ElemOpEmitter::ObjKind::Super
+                          : ElemOpEmitter::ObjKind::Other);
+        if (!emitElemObjAndKey(elem, isSuper, eoe)) {     // [Super]
+            //                                            // THIS KEY
+            //                                            // [Other]
+            //                                            // OBJ KEY
+            return false;
         }
+        if (!eoe.emitGet()) {                             // ELEM
+            return false;
+        }
+
         break;
       }
 
