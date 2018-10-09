@@ -1,9 +1,4 @@
-// |jit-test| slow; allow-oom
-
-if (typeof oomTest !== 'function' || !wasmIsSupported()) {
-    print('Missing oomTest or wasm support in wasm/regress/oom-eval');
-    quit();
-}
+// |jit-test| slow; allow-oom; skip-if: !wasmIsSupported() || !('oomTest' in this)
 
 function foo() {
   var g = newGlobal({sameZoneAs: this});
