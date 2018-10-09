@@ -60,7 +60,7 @@ of collisions, however, is left to the users themselves. In its current implemen
 the API does not provide any means for key registration.
 
 To prevent abuses, the content of a key is limited to 50 characters in length.
-Additionally, keys may only contain alpha-numeric characters or ``-``.
+Additionally, keys may only contain alphanumeric characters or ``-``.
 
 Both the depth of the captured stacks and the total number of keys in the
 dictionary are limited to ``50``.
