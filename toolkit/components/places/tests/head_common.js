@@ -695,7 +695,6 @@ function NavBookmarkObserver() {}
 NavBookmarkObserver.prototype = {
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onItemAdded() {},
   onItemRemoved() {},
   onItemChanged() {},
   onItemVisited() {},

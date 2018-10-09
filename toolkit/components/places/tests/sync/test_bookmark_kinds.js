@@ -258,18 +258,18 @@ add_task(async function test_livemarks() {
                 parentGuid: "toolbar_____", oldValue: "livemarkBBBB",
                 source: PlacesUtils.bookmarks.SOURCES.SYNC },
     }, {
-      name: "onItemAdded",
+      name: "bookmark-added",
       params: { itemId: livemarkC.id, parentId: PlacesUtils.toolbarFolderId,
                 index: 0, type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                urlHref: null, title: "C (remote)", guid: "livemarkCCCC",
+                urlHref: "", title: "C (remote)", guid: "livemarkCCCC",
                 parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                 source: PlacesUtils.bookmarks.SOURCES.SYNC },
     }, {
-      name: "onItemAdded",
+      name: "bookmark-added",
       params: { itemId: livemarkE.id,
                 parentId: unfiledFolderId,
                 index: 0, type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                urlHref: null, title: "E", guid: "livemarkEEEE",
+                urlHref: "", title: "E", guid: "livemarkEEEE",
                 parentGuid: "unfiled_____",
                 source: PlacesUtils.bookmarks.SOURCES.SYNC },
     }, {

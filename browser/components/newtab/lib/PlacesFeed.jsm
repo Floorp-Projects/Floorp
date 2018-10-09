@@ -124,10 +124,10 @@ class BookmarksObserver extends Observer {
 class PlacesObserver extends Observer {
   constructor(dispatch) {
     super(dispatch, Ci.nsINavBookmarkObserver);
-    this.handlePlacesEvent = this.handlePlacesEvent.bind(this);
+    this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
   }
 
-  handlePlacesEvent(events) {
+  handlePlacesEvents(events) {
     for (let {itemType, source, dateAdded, guid, title, url, isTagging} of events) {
       // Skips items that are not bookmarks (like folders), about:* pages or
       // default bookmarks, added when the profile is created.
@@ -173,7 +173,7 @@ class PlacesFeed {
       .getService(Ci.nsINavBookmarksService)
       .addObserver(this.bookmarksObserver, true);
     PlacesUtils.observers.addListener(["bookmark-added"],
-                                      this.placesObserver.handlePlacesEvent);
+                                      this.placesObserver.handlePlacesEvents);
 
     Services.obs.addObserver(this, LINK_BLOCKED_EVENT);
   }
@@ -215,7 +215,7 @@ class PlacesFeed {
     PlacesUtils.history.removeObserver(this.historyObserver);
     PlacesUtils.bookmarks.removeObserver(this.bookmarksObserver);
     PlacesUtils.observers.removeListener(["bookmark-added"],
-                                         this.placesObserver.handlePlacesEvent);
+                                         this.placesObserver.handlePlacesEvents);
     Services.obs.removeObserver(this, LINK_BLOCKED_EVENT);
   }
 

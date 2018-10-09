@@ -27,7 +27,6 @@ function promiseOnItemChanged() {
     PlacesUtils.bookmarks.addObserver({
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onItemAdded() {},
       onItemRemoved() {},
       onItemVisited() {},
       onItemMoved() {},

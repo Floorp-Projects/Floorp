@@ -7,10 +7,11 @@
 var observer = {
   __proto__: NavBookmarkObserver.prototype,
 
-  onItemAdded(id, folder, index) {
-    this._itemAddedId = id;
-    this._itemAddedParent = folder;
-    this._itemAddedIndex = index;
+  handlePlacesEvents(events) {
+    Assert.equal(events.length, 1, "Should only be 1 event.");
+    this._itemAddedId = events[0].id;
+    this._itemAddedParent = events[0].parentId;
+    this._itemAddedIndex = events[0].index;
   },
   onItemChanged(id, property, isAnnotationProperty, value) {
     this._itemChangedId = id;
@@ -20,9 +21,12 @@ var observer = {
   },
 };
 PlacesUtils.bookmarks.addObserver(observer);
+observer.handlePlacesEvents = observer.handlePlacesEvents.bind(observer);
+PlacesUtils.observers.addListener(["bookmark-added"], observer.handlePlacesEvents);
 
 registerCleanupFunction(function() {
   PlacesUtils.bookmarks.removeObserver(observer);
+PlacesUtils.observers.removeListener(["bookmark-added"], observer.handlePlacesEvents);
 });
 
 // Returns do_check_eq with .getTime() added onto parameters

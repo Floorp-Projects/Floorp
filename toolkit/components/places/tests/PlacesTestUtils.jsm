@@ -316,11 +316,11 @@ var PlacesTestUtils = Object.freeze({
     }));
   },
 
-  waitForNotification(notification, conditionFn = () => true, type = "bookmarks") {
+  waitForNotification(notification, conditionFn, type = "bookmarks") {
     if (type == "places") {
       return new Promise(resolve => {
         function listener(events) {
-          if (conditionFn(events)) {
+          if (!conditionFn || conditionFn(events)) {
             PlacesObservers.removeListener([notification], listener);
             resolve();
           }
@@ -338,7 +338,7 @@ var PlacesTestUtils = Object.freeze({
             return ChromeUtils.generateQI([iface]);
           if (name == notification)
             return (...args) => {
-              if (conditionFn.apply(this, args)) {
+              if (!conditionFn || conditionFn.apply(this, args)) {
                 PlacesUtils[type].removeObserver(proxifiedObserver);
                 resolve();
               }

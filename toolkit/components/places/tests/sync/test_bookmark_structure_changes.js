@@ -506,11 +506,11 @@ add_task(async function test_move_into_parent_sibling() {
   let localItemIds = await PlacesUtils.promiseManyItemIds(["folderCCCCCC",
     "bookmarkBBBB", "folderAAAAAA"]);
   observer.check([{
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("folderCCCCCC"),
               parentId: PlacesUtils.bookmarksMenuFolderId, index: 1,
               type: PlacesUtils.bookmarks.TYPE_FOLDER,
-              urlHref: null, title: "C",
+              urlHref: "", title: "C",
               guid: "folderCCCCCC",
               parentGuid: PlacesUtils.bookmarks.menuGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC },
@@ -661,7 +661,7 @@ add_task(async function test_complex_move_with_additions() {
   let localItemIds = await PlacesUtils.promiseManyItemIds(["bookmarkEEEE",
     "folderAAAAAA", "bookmarkCCCC"]);
   observer.check([{
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("bookmarkEEEE"),
               parentId: localItemIds.get("folderAAAAAA"), index: 1,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,

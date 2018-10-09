@@ -159,18 +159,17 @@ add_task(async function test_addLivemark_badGuid_throws() {
 
 add_task(async function test_addLivemark_parentId_succeeds() {
   let onItemAddedCalled = false;
-  PlacesUtils.bookmarks.addObserver({
-    __proto__: NavBookmarkObserver.prototype,
-    onItemAdded: function onItemAdded(aItemId, aParentId, aIndex, aItemType,
-                                      aURI, aTitle) {
-      onItemAddedCalled = true;
-      PlacesUtils.bookmarks.removeObserver(this);
-      Assert.equal(aParentId, unfiledFolderId);
-      Assert.equal(aIndex, 0);
-      Assert.equal(aItemType, Ci.nsINavBookmarksService.TYPE_FOLDER);
-      Assert.equal(aTitle, "test");
-    },
-  });
+  let listener = events => {
+    Assert.equal(events.length, 1);
+    let event = events[0];
+    onItemAddedCalled = true;
+    PlacesUtils.observers.removeListener(["bookmark-added"], listener);
+    Assert.equal(event.parentId, unfiledFolderId);
+    Assert.equal(event.index, 0);
+    Assert.equal(event.itemType, PlacesUtils.bookmarks.TYPE_FOLDER);
+    Assert.equal(event.title, "test");
+  };
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
   await PlacesUtils.livemarks.addLivemark(
     { title: "test",
