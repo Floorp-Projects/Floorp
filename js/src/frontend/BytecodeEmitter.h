@@ -520,6 +520,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     MOZ_MUST_USE bool emitThisLiteral(ThisLiteral* pn);
     MOZ_MUST_USE bool emitGetFunctionThis(ParseNode* pn);
+    MOZ_MUST_USE bool emitGetFunctionThis(const mozilla::Maybe<uint32_t>& offset);
     MOZ_MUST_USE bool emitGetThisForSuperBase(UnaryNode* superBase);
     MOZ_MUST_USE bool emitSetThis(BinaryNode* setThisNode);
     MOZ_MUST_USE bool emitCheckDerivedClassConstructorReturn();
