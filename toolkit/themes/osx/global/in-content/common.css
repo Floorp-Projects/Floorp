@@ -89,6 +89,11 @@ html|*.numberbox-input::-moz-number-spin-down  {
   border-radius: 0 0 4px 4px;
 }
 
+textbox[type="search"] {
+  -moz-appearance: none;
+  padding-inline-start: 10px;
+}
+
 xul|textbox[type="search"]:not([searchbutton]) > moz-input-box > .textbox-search-sign {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
   margin-inline-end: 5px;
