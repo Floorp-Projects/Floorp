@@ -65,6 +65,11 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.responsive.reloadConditions.userAgent");
   Services.prefs.clearUserPref("devtools.responsive.show-setting-tooltip");
   Services.prefs.clearUserPref("devtools.responsive.showUserAgentInput");
+  Services.prefs.clearUserPref("devtools.responsive.touchSimulation.enabled");
+  Services.prefs.clearUserPref("devtools.responsive.userAgent");
+  Services.prefs.clearUserPref("devtools.responsive.viewport.height");
+  Services.prefs.clearUserPref("devtools.responsive.viewport.pixelRatio");
+  Services.prefs.clearUserPref("devtools.responsive.viewport.width");
   await asyncStorage.removeItem("devtools.devices.url_cache");
   await asyncStorage.removeItem("devtools.responsive.deviceState");
   await removeLocalDevices();
