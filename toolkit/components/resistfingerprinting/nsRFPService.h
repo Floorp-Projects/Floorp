@@ -46,7 +46,8 @@
 #endif
 
 #define SPOOFED_APPNAME    "Netscape"
-#define LEGACY_BUILD_ID    "20100101"
+#define LEGACY_BUILD_ID    "20181001000000"
+#define LEGACY_UA_GECKO_TRAIL "20100101"
 
 // Forward declare LRUCache, defined in nsRFPService.cpp
 class LRUCache;

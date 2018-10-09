@@ -85,7 +85,7 @@ void
 GeckoProfilerRuntime::enable(bool enabled)
 {
     JSContext* cx = rt->mainContextFromAnyThread();
-    MOZ_ASSERT(cx->geckoProfiler().installed());
+    MOZ_ASSERT(cx->geckoProfiler().infraInstalled());
 
     if (enabled_ == enabled) {
         return;

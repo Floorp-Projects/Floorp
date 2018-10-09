@@ -37,7 +37,7 @@ namespace gfx {
 using namespace mozilla::ipc;
 
 /// The minimum scale we allow tabs to be rasterized at.
-static const float kMinPaintScale = 0.05;
+static const float kMinPaintScale = 0.05f;
 
 /* static */ PaintFragment
 PaintFragment::Record(nsIDocShell* aDocShell,
