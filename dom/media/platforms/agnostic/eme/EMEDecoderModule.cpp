@@ -102,28 +102,31 @@ public:
 
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override
   {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-    MOZ_RELEASE_ASSERT(mDecrypts.Count() == 0,
-                       "Can only process one sample at a time");
-    RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
-
     RefPtr<EMEDecryptor> self = this;
-    mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)
-      ->Then(mTaskQueue, __func__,
-             [self](RefPtr<MediaRawData> aSample) {
-               self->mKeyRequest.Complete();
-               self->ThrottleDecode(aSample);
-             },
-             [self]() {
-               self->mKeyRequest.Complete();
-             })
-      ->Track(mKeyRequest);
+    RefPtr<MediaRawData> sample = aSample;
+    return InvokeAsync(mTaskQueue, __func__, [self, this, sample]() {
+      MOZ_RELEASE_ASSERT(mDecrypts.Count() == 0,
+                         "Can only process one sample at a time");
+      RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
 
-    return p;
+      mSamplesWaitingForKey->WaitIfKeyNotUsable(sample)
+        ->Then(mTaskQueue,
+               __func__,
+               [self](const RefPtr<MediaRawData>& aSample) {
+                 self->mKeyRequest.Complete();
+                 self->ThrottleDecode(aSample);
+               },
+               [self]() { self->mKeyRequest.Complete(); })
+        ->Track(mKeyRequest);
+
+      return p;
+    });
   }
 
   void ThrottleDecode(MediaRawData* aSample)
   {
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
     RefPtr<EMEDecryptor> self = this;
     mThroughputLimiter.Throttle(aSample)
       ->Then(mTaskQueue, __func__,
@@ -226,50 +229,55 @@ public:
 
   RefPtr<FlushPromise> Flush() override
   {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-    MOZ_ASSERT(!mIsShutdown);
-    mKeyRequest.DisconnectIfExists();
-    mThrottleRequest.DisconnectIfExists();
-    mDecodeRequest.DisconnectIfExists();
-    mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-    mThroughputLimiter.Flush();
-    for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
-      nsAutoPtr<DecryptPromiseRequestHolder>& holder = iter.Data();
-      holder->DisconnectIfExists();
-      iter.Remove();
-    }
-    RefPtr<SamplesWaitingForKey> k = mSamplesWaitingForKey;
-    return mDecoder->Flush()->Then(
-      mTaskQueue, __func__,
-      [k]() {
-        k->Flush();
-        return FlushPromise::CreateAndResolve(true, __func__);
+    RefPtr<EMEDecryptor> self = this;
+    return InvokeAsync(
+      mTaskQueue, __func__, [self, this]() -> RefPtr<FlushPromise> {
+        MOZ_ASSERT(!mIsShutdown);
+        mKeyRequest.DisconnectIfExists();
+        mThrottleRequest.DisconnectIfExists();
+        mDecodeRequest.DisconnectIfExists();
+        mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+        mThroughputLimiter.Flush();
+        for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
+          nsAutoPtr<DecryptPromiseRequestHolder>& holder = iter.Data();
+          holder->DisconnectIfExists();
+          iter.Remove();
+        }
+        RefPtr<SamplesWaitingForKey> k = mSamplesWaitingForKey;
+        return mDecoder->Flush()->Then(mTaskQueue, __func__, [k]() {
+          k->Flush();
+          return FlushPromise::CreateAndResolve(true, __func__);
+        });
       });
   }
 
   RefPtr<DecodePromise> Drain() override
   {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-    MOZ_ASSERT(!mIsShutdown);
-    MOZ_ASSERT(mDecodePromise.IsEmpty() && !mDecodeRequest.Exists(),
-               "Must wait for decoding to complete");
-    for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
-      nsAutoPtr<DecryptPromiseRequestHolder>& holder = iter.Data();
-      holder->DisconnectIfExists();
-      iter.Remove();
-    }
-    return mDecoder->Drain();
+    RefPtr<EMEDecryptor> self = this;
+    return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+      MOZ_ASSERT(!mIsShutdown);
+      MOZ_ASSERT(mDecodePromise.IsEmpty() && !mDecodeRequest.Exists(),
+                 "Must wait for decoding to complete");
+      for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
+        nsAutoPtr<DecryptPromiseRequestHolder>& holder = iter.Data();
+        holder->DisconnectIfExists();
+        iter.Remove();
+      }
+      return mDecoder->Drain();
+    });
   }
 
   RefPtr<ShutdownPromise> Shutdown() override
   {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-    MOZ_ASSERT(!mIsShutdown);
-    mIsShutdown = true;
-    mSamplesWaitingForKey = nullptr;
-    RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
-    mProxy = nullptr;
-    return decoder->Shutdown();
+    RefPtr<EMEDecryptor> self = this;
+    return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+      MOZ_ASSERT(!mIsShutdown);
+      mIsShutdown = true;
+      mSamplesWaitingForKey = nullptr;
+      RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
+      mProxy = nullptr;
+      return decoder->Shutdown();
+    });
   }
 
   nsCString GetDescriptionName() const override
@@ -331,50 +339,60 @@ EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
 RefPtr<MediaDataDecoder::DecodePromise>
 EMEMediaDataDecoderProxy::Decode(MediaRawData* aSample)
 {
-  RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
-
   RefPtr<EMEMediaDataDecoderProxy> self = this;
-  mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)
-    ->Then(mTaskQueue, __func__,
-           [self, this](RefPtr<MediaRawData> aSample) {
-             mKeyRequest.Complete();
+  RefPtr<MediaRawData> sample = aSample;
+  return InvokeAsync(mTaskQueue, __func__, [self, this, sample]() {
+    RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
+    mSamplesWaitingForKey->WaitIfKeyNotUsable(sample)
+      ->Then(mTaskQueue,
+             __func__,
+             [self, this](RefPtr<MediaRawData> aSample) {
+               mKeyRequest.Complete();
 
-             MediaDataDecoderProxy::Decode(aSample)
-               ->Then(mTaskQueue, __func__,
-                      [self, this](const DecodedData& aResults) {
-                        mDecodeRequest.Complete();
-                        mDecodePromise.Resolve(aResults, __func__);
-                      },
-                      [self, this](const MediaResult& aError) {
-                        mDecodeRequest.Complete();
-                        mDecodePromise.Reject(aError, __func__);
-                      })
-               ->Track(mDecodeRequest);
-           },
-           [self]() {
-             self->mKeyRequest.Complete();
-             MOZ_CRASH("Should never get here");
-           })
-    ->Track(mKeyRequest);
+               MediaDataDecoderProxy::Decode(aSample)
+                 ->Then(mTaskQueue,
+                        __func__,
+                        [self, this](const DecodedData& aResults) {
+                          mDecodeRequest.Complete();
+                          mDecodePromise.Resolve(aResults, __func__);
+                        },
+                        [self, this](const MediaResult& aError) {
+                          mDecodeRequest.Complete();
+                          mDecodePromise.Reject(aError, __func__);
+                        })
+                 ->Track(mDecodeRequest);
+             },
+             [self]() {
+               self->mKeyRequest.Complete();
+               MOZ_CRASH("Should never get here");
+             })
+      ->Track(mKeyRequest);
 
-  return p;
+    return p;
+  });
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>
 EMEMediaDataDecoderProxy::Flush()
 {
-  mKeyRequest.DisconnectIfExists();
-  mDecodeRequest.DisconnectIfExists();
-  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  return MediaDataDecoderProxy::Flush();
+  RefPtr<EMEMediaDataDecoderProxy> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    mKeyRequest.DisconnectIfExists();
+    mDecodeRequest.DisconnectIfExists();
+    mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    return MediaDataDecoderProxy::Flush();
+  });
 }
 
 RefPtr<ShutdownPromise>
 EMEMediaDataDecoderProxy::Shutdown()
 {
-  mSamplesWaitingForKey = nullptr;
-  mProxy = nullptr;
-  return MediaDataDecoderProxy::Shutdown();
+  RefPtr<EMEMediaDataDecoderProxy> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    mSamplesWaitingForKey = nullptr;
+    mProxy = nullptr;
+    return MediaDataDecoderProxy::Shutdown();
+  });
 }
 
 EMEDecoderModule::EMEDecoderModule(CDMProxy* aProxy, PDMFactory* aPDM)
@@ -431,7 +449,7 @@ EMEDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(
-    decoder, mProxy, AbstractThread::GetCurrent()->AsTaskQueue(),
+    decoder, mProxy, aParams.mTaskQueue,
     aParams.mType, aParams.mOnWaitingForKeyEvent));
   return emeDecoder.forget();
 }
@@ -466,7 +484,7 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   RefPtr<MediaDataDecoder> emeDecoder(
     new EMEDecryptor(decoder,
                      mProxy,
-                     AbstractThread::GetCurrent()->AsTaskQueue(),
+                     aParams.mTaskQueue,
                      aParams.mType,
                      aParams.mOnWaitingForKeyEvent,
                      std::move(converter)));
