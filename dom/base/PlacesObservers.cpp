@@ -39,18 +39,18 @@ struct ListenerCollection
   static StaticAutoPtr<FlaggedArray<T>> gListeners;
   static StaticAutoPtr<FlaggedArray<T>> gListenersToRemove;
 
-  static FlaggedArray<T>* GetListeners() {
+  static FlaggedArray<T>* GetListeners(bool aDoNotInit = false) {
     MOZ_ASSERT(NS_IsMainThread());
-    if (!gListeners) {
+    if (!gListeners && !aDoNotInit) {
       gListeners = new FlaggedArray<T>();
       ClearOnShutdown(&gListeners);
     }
     return gListeners;
   }
 
-  static FlaggedArray<T>* GetListenersToRemove() {
+  static FlaggedArray<T>* GetListenersToRemove(bool aDoNotInit = false) {
     MOZ_ASSERT(NS_IsMainThread());
-    if (!gListenersToRemove) {
+    if (!gListenersToRemove && !aDoNotInit) {
       gListenersToRemove = new FlaggedArray<T>();
       ClearOnShutdown(&gListenersToRemove);
     }
@@ -226,15 +226,18 @@ void
 PlacesObservers::RemoveListener(uint32_t aFlags,
                                 PlacesEventCallback& aCallback)
 {
-  FlaggedArray<RefPtr<PlacesEventCallback>>& listeners =
-    *JSListeners::GetListeners();
-  for (uint32_t i = 0; i < listeners.Length(); i++) {
-    Flagged<RefPtr<PlacesEventCallback>>& l = listeners[i];
+  FlaggedArray<RefPtr<PlacesEventCallback>>* listeners =
+    JSListeners::GetListeners(/* aDoNotInit: */ true);
+  if (!listeners) {
+    return;
+  }
+  for (uint32_t i = 0; i < listeners->Length(); i++) {
+    Flagged<RefPtr<PlacesEventCallback>>& l = listeners->ElementAt(i);
     if (!(*l.value == aCallback)) {
       continue;
     }
-    if (l.flags == aFlags) {
-      listeners.RemoveElementAt(i);
+    if (l.flags == (aFlags & l.flags)) {
+      listeners->RemoveElementAt(i);
       i--;
     } else {
       l.flags &= ~aFlags;
@@ -246,16 +249,19 @@ void
 PlacesObservers::RemoveListener(uint32_t aFlags,
                                 PlacesWeakCallbackWrapper& aCallback)
 {
-  FlaggedArray<WeakPtr<PlacesWeakCallbackWrapper>>& listeners =
-    *WeakJSListeners::GetListeners();
-  for (uint32_t i = 0; i < listeners.Length(); i++) {
-    Flagged<WeakPtr<PlacesWeakCallbackWrapper>>& l = listeners[i];
+  FlaggedArray<WeakPtr<PlacesWeakCallbackWrapper>>* listeners =
+    WeakJSListeners::GetListeners(/* aDoNotInit: */ true);
+  if (!listeners) {
+    return;
+  }
+  for (uint32_t i = 0; i < listeners->Length(); i++) {
+    Flagged<WeakPtr<PlacesWeakCallbackWrapper>>& l = listeners->ElementAt(i);
     RefPtr<PlacesWeakCallbackWrapper> unwrapped = l.value.get();
     if (unwrapped != &aCallback) {
       continue;
     }
-    if (l.flags == aFlags) {
-      listeners.RemoveElementAt(i);
+    if (l.flags == (aFlags & l.flags)) {
+      listeners->RemoveElementAt(i);
       i--;
     } else {
       l.flags &= ~aFlags;
@@ -267,16 +273,19 @@ void
 PlacesObservers::RemoveListener(uint32_t aFlags,
                                 places::INativePlacesEventCallback* aCallback)
 {
-  FlaggedArray<WeakPtr<places::INativePlacesEventCallback>>& listeners =
-    *WeakNativeListeners::GetListeners();
-  for (uint32_t i = 0; i < listeners.Length(); i++) {
-    Flagged<WeakPtr<places::INativePlacesEventCallback>>& l = listeners[i];
+  FlaggedArray<WeakPtr<places::INativePlacesEventCallback>>* listeners =
+    WeakNativeListeners::GetListeners(/* aDoNotInit: */ true);
+  if (!listeners) {
+    return;
+  }
+  for (uint32_t i = 0; i < listeners->Length(); i++) {
+    Flagged<WeakPtr<places::INativePlacesEventCallback>>& l = listeners->ElementAt(i);
     RefPtr<places::INativePlacesEventCallback> unwrapped = l.value.get();
     if (unwrapped != aCallback) {
       continue;
     }
-    if (l.flags == aFlags) {
-      listeners.RemoveElementAt(i);
+    if (l.flags == (aFlags & l.flags)) {
+      listeners->RemoveElementAt(i);
       i--;
     } else {
       l.flags &= ~aFlags;
