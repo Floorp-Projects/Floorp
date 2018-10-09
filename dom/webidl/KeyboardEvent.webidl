@@ -7,6 +7,7 @@
 [Constructor(DOMString typeArg, optional KeyboardEventInit keyboardEventInitDict)]
 interface KeyboardEvent : UIEvent
 {
+  [NeedsCallerType]
   readonly attribute unsigned long    charCode;
   [NeedsCallerType]
   readonly attribute unsigned long    keyCode;
@@ -35,7 +36,7 @@ interface KeyboardEvent : UIEvent
   [NeedsCallerType]
   readonly attribute DOMString code;
 
-  [Throws]
+  [Throws, BinaryName="initKeyboardEventJS"]
   void initKeyboardEvent(DOMString typeArg,
                          optional boolean bubblesArg = false,
                          optional boolean cancelableArg = false,

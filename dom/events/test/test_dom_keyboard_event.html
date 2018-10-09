@@ -40,7 +40,7 @@ function testInitializingUntrustedEvent()
     }, // 1
 
     { createEventArg: "Keyboardevent", useInitKeyboardEvent: false,
-      type: "keypess", bubbles: true, cancelable: false, view: null,
+      type: "keypress", bubbles: true, cancelable: false, view: null,
       ctrlKey: false, altKey: true, shiftKey: false, metaKey: false,
       keyCode: 0x11, charCode: 0x30, detail: 0, key: "", location: 0,
     }, // 2
@@ -101,7 +101,7 @@ function testInitializingUntrustedEvent()
     }, // 11
 
     { createEventArg: "Keyboardevent", useInitKeyboardEvent: true,
-      type: "keypess", bubbles: true, cancelable: false, view: null,
+      type: "keypress", bubbles: true, cancelable: false, view: null,
       ctrlKey: false, altKey: true, shiftKey: false, metaKey: false,
       keyCode: 0x00, charCode: 0x00, key: "FooBar", location: 2,
     }, // 12
