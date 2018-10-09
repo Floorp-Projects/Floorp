@@ -1,4 +1,4 @@
-// |jit-test| --no-baseline
+// |jit-test| --no-baseline; skip-if: !('oomTest' in this)
 //
 // For background, see the comments for LiveSavedFrameCache in js/src/vm/Stack.h.
 //
@@ -18,9 +18,6 @@
 // usually got away with it because the cache would be re-populated. OOM fuzzing
 // interrupted the code at the proper place and revealed the crash, but did so
 // with a test that took 90s to run. This test runs in a fraction of a second.
-
-if (!('oomTest' in this))
-    quit();
 
 function f() {
   // Ensure that we will try to allocate fresh SavedFrame objects.
