@@ -92,7 +92,14 @@ inline bool IsOpaque(SurfaceFormat aFormat)
   switch (aFormat) {
   case SurfaceFormat::B8G8R8X8:
   case SurfaceFormat::R8G8B8X8:
+  case SurfaceFormat::X8R8G8B8:
   case SurfaceFormat::R5G6B5_UINT16:
+  case SurfaceFormat::R8G8B8:
+  case SurfaceFormat::B8G8R8:
+  case SurfaceFormat::R8G8:
+  case SurfaceFormat::HSV:
+  case SurfaceFormat::Lab:
+  case SurfaceFormat::Depth:
   case SurfaceFormat::YUV:
   case SurfaceFormat::NV12:
   case SurfaceFormat::YUV422:
