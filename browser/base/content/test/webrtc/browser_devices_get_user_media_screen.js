@@ -10,6 +10,7 @@
 //       should use "expectUncaughtRejection" to flag individual failures.
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 PromiseTestUtils.whitelistRejectionsGlobally(/aborted by the user agent/);
+ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm", this);
 
 const permissionError = "error: NotAllowedError: The request is not allowed " +
     "by the user agent or the platform in the current context.";
@@ -581,6 +582,37 @@ var gTests = [
     await expectObserverCalled("getUserMedia:response:deny");
     await expectObserverCalled("recording-window-ended");
     SitePermissions.remove(uri, "screen", browser);
+  },
+},
+
+{
+  desc: "Switching between menu options maintains correct main action state while window sharing",
+  run: async function checkDoorhangerState() {
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:newtab");
+    BrowserWindowTracker.orderedWindows[1].focus();
+
+    let promise = promisePopupNotificationShown("webRTC-shareDevices");
+    await promiseRequestDevice(false, true, null, "window");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
+
+    let menulist = document.getElementById("webRTC-selectWindow-menulist");
+    let notification = PopupNotifications.panel.firstElementChild;
+    let checkbox = notification.checkbox;
+
+    menulist.getItemAtIndex(2).doCommand();
+    checkbox.click();
+    ok(checkbox.checked, "checkbox now checked");
+    ok(notification.button.disabled, "Allow button is disabled");
+    ok(!notification.hasAttribute("warninghidden"), "warning message is shown");
+
+    menulist.getItemAtIndex(3).doCommand();
+    ok(checkbox.checked, "checkbox still checked");
+    ok(notification.button.disabled, "Allow button remains disabled");
+    ok(!notification.hasAttribute("warninghidden"), "warning message is still shown");
+
+    win.close();
   },
 },
 
