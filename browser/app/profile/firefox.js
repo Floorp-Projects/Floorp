@@ -1503,11 +1503,21 @@ pref("media.gmp-provider.enabled", true);
 
 pref("browser.contentblocking.allowlist.storage.enabled", true);
 
+#ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.global-toggle.enabled", true);
+#else
+pref("browser.contentblocking.global-toggle.enabled", false);
+#endif
 
 // Define a set of default features for the Content Blocking UI
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.contentblocking.fastblock.ui.enabled", true);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
+#else
+pref("browser.contentblocking.fastblock.ui.enabled", false);
+pref("browser.contentblocking.fastblock.control-center.ui.enabled", false);
+#endif
+
 pref("browser.contentblocking.trackingprotection.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
