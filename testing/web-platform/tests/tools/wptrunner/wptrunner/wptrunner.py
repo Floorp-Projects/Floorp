@@ -39,7 +39,6 @@ metadata files are used to store the expected test results.
 def setup_logging(*args, **kwargs):
     global logger
     logger = wptlogging.setup(*args, **kwargs)
-    return logger
 
 
 def get_loader(test_paths, product, debug=None, run_info_extras=None, **kwargs):
