@@ -7208,11 +7208,12 @@ BytecodeEmitter::isRestParameter(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
+BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCall, bool isNew)
 {
+    bool needsThis = !isCall;
     switch (callee->getKind()) {
       case ParseNodeKind::Name:
-        if (!emitGetName(callee, *callop)) {
+        if (!emitGetName(callee, isCall)) {
             return false;
         }
         break;
@@ -7220,11 +7221,11 @@ BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
         PropertyAccess* prop = &callee->as<PropertyAccess>();
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         if (prop->isSuper()) {
-            if (!emitSuperGetProp(prop, /* isCall = */ *callop)) {
+            if (!emitSuperGetProp(prop, isCall)) {
                 return false;
             }
         } else {
-            if (!emitPropOp(prop, *callop ? JSOP_CALLPROP : JSOP_GETPROP)) {
+            if (!emitPropOp(prop, isCall ? JSOP_CALLPROP : JSOP_GETPROP)) {
                 return false;
             }
         }
@@ -7235,14 +7236,14 @@ BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
         PropertyByValue* elem = &callee->as<PropertyByValue>();
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         if (elem->isSuper()) {
-            if (!emitSuperGetElem(elem, /* isCall = */ *callop)) {
+            if (!emitSuperGetElem(elem, isCall)) {
                 return false;
             }
         } else {
-            if (!emitElemOp(elem, *callop ? JSOP_CALLELEM : JSOP_GETELEM)) {
+            if (!emitElemOp(elem, isCall ? JSOP_CALLELEM : JSOP_GETELEM)) {
                 return false;
             }
-            if (*callop) {
+            if (isCall) {
                 if (!emit1(JSOP_SWAP)) {
                     return false;
                 }
@@ -7274,7 +7275,7 @@ BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
                 return false;
             }
         }
-        *callop = false;
+        needsThis = true;
         break;
       case ParseNodeKind::SuperBase:
         MOZ_ASSERT(call->isKind(ParseNodeKind::SuperCall));
@@ -7287,8 +7288,20 @@ BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
         if (!emitTree(callee)) {
             return false;
         }
-        *callop = false;             /* trigger JSOP_UNDEFINED after */
+        needsThis = true;
         break;
+    }
+
+    if (needsThis) {
+        if (isNew) {
+            if (!emit1(JSOP_IS_CONSTRUCTING)) {
+                return false;
+            }
+        } else {
+            if (!emit1(JSOP_UNDEFINED)) {
+                return false;
+            }
+        }
     }
 
     return true;
@@ -7306,16 +7319,8 @@ BytecodeEmitter::emitPipeline(ListNode* node)
     ParseNode* callee = node->head()->pn_next;
 
     do {
-        bool callop = true;
-        if (!emitCallee(callee, node, &callop)) {
+        if (!emitCalleeAndThis(callee, node, true, false)) {
             return false;
-        }
-
-        // Emit room for |this|
-        if (!callop) {
-            if (!emit1(JSOP_UNDEFINED)) {
-                return false;
-            }
         }
 
         if (!emit2(JSOP_PICK, 2)) {
@@ -7461,26 +7466,13 @@ BytecodeEmitter::emitCallOrNew(BinaryNode* callNode,
         // Fall through
     }
 
-    if (!emitCallee(calleeNode, callNode, &callop)) {
-        return false;
-    }
-
     JSOp op = callNode->getOp();
     bool isNewOp = op == JSOP_NEW || op == JSOP_SPREADNEW ||
                    op == JSOP_SUPERCALL ||
                    op == JSOP_SPREADSUPERCALL;
 
-    // Emit room for |this|.
-    if (!callop) {
-        if (isNewOp) {
-            if (!emit1(JSOP_IS_CONSTRUCTING)) {
-                return false;
-            }
-        } else {
-            if (!emit1(JSOP_UNDEFINED)) {
-                return false;
-            }
-        }
+    if (!emitCalleeAndThis(calleeNode, callNode, callop, isNewOp)) {
+        return false;
     }
 
     if (!emitArguments(argsList, callop, spread)) {
