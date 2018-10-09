@@ -6,18 +6,38 @@
 #ifndef mozilla_a11y_AccessibleWrap_h_
 #define mozilla_a11y_AccessibleWrap_h_
 
-#include "nsCOMPtr.h"
 #include "Accessible.h"
+#include "mozilla/a11y/ProxyAccessible.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace a11y {
 
 class AccessibleWrap : public Accessible
 {
-public: // construction, destruction
+public:
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~AccessibleWrap();
+
+  virtual void Shutdown() override;
+
+  int32_t VirtualViewID() { return mID; }
+
+  static const int32_t kNoID = -1;
+
+protected:
+  // IDs should be a positive 32bit integer.
+  static int32_t AcquireID();
+  static void ReleaseID(int32_t aID);
+
+  int32_t mID;
 };
+
+static inline AccessibleWrap*
+WrapperFor(const ProxyAccessible* aProxy)
+{
+  return reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
+}
 
 } // namespace a11y
 } // namespace mozilla
