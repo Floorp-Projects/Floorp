@@ -460,6 +460,10 @@ ResponsiveUI.prototype = {
   },
 
   async connectToServer() {
+    // The client being instantiated here is separate from the toolbox. It is being used
+    // separately and has a life cycle that doesn't correspond to the toolbox. As a
+    // result, it does not have a target, so we are not using `target.getFront` here. See
+    // also the implementation for about:debugging
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
     this.client = new DebuggerClient(DebuggerServer.connectPipe());

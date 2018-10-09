@@ -16,7 +16,6 @@ add_task(async function() {
   const parentProcessActors = await getParentProcessActors(client);
 
   // We have to attach the chrome target actor before playing with the PromiseActor
-  await attachTarget(client, parentProcessActors);
   await testListPromises(client, parentProcessActors, v =>
     new Promise(resolve => resolve(v)));
 
