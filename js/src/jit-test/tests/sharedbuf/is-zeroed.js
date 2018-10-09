@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !this.SharedArrayBuffer
+
 // Test that the SharedArrayBuffer memory is properly zeroed.
 
 function f() {
@@ -8,5 +10,4 @@ function f() {
     assertEq(y[1023], 0);
 }
 
-if (this.SharedArrayBuffer)
-    f();
+f();
