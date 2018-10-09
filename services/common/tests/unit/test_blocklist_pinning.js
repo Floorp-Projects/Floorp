@@ -197,7 +197,7 @@ function getSampleResponse(req, port) {
         "hello": "kinto",
       }),
     },
-    "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified": {
+    "GET:/v1/buckets/pinning/collections/pins/records?_expected=2000&_sort=-last_modified": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -218,7 +218,7 @@ function getSampleResponse(req, port) {
         "last_modified": 3000,
       }]}),
     },
-    "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified&_since=3000": {
+    "GET:/v1/buckets/pinning/collections/pins/records?_expected=4000&_sort=-last_modified&_since=3000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -267,7 +267,7 @@ function getSampleResponse(req, port) {
         "last_modified": 4000,
       }]}),
     },
-    "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified&_since=4000": {
+    "GET:/v1/buckets/pinning/collections/pins/records?_expected=5000&_sort=-last_modified&_since=4000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
