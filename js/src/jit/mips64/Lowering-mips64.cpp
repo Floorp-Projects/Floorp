@@ -146,12 +146,6 @@ LIRGenerator::visitReturn(MReturn* ret)
 }
 
 void
-LIRGeneratorMIPS64::defineUntypedPhi(MPhi* phi, size_t lirIndex)
-{
-    defineTypedPhi(phi, lirIndex);
-}
-
-void
 LIRGeneratorMIPS64::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition,
                                          LBlock* block, size_t lirIndex)
 {

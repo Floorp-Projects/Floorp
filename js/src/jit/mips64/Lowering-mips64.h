@@ -31,7 +31,6 @@ class LIRGeneratorMIPS64 : public LIRGeneratorMIPSShared
     }
 
     void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
-    void defineUntypedPhi(MPhi* phi, size_t lirIndex);
 
     void lowerTruncateDToInt32(MTruncateToInt32* ins);
     void lowerTruncateFToInt32(MTruncateToInt32* ins);
