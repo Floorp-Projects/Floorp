@@ -148,12 +148,10 @@ LoadContext::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserEleme
 }
 
 NS_IMETHODIMP
-LoadContext::GetScriptableOriginAttributes(JS::MutableHandleValue aAttrs)
+LoadContext::GetScriptableOriginAttributes(JSContext* aCx,
+                                           JS::MutableHandleValue aAttrs)
 {
-  JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  MOZ_ASSERT(cx);
-
-  bool ok = ToJSValue(cx, mOriginAttributes, aAttrs);
+  bool ok = ToJSValue(aCx, mOriginAttributes, aAttrs);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
   return NS_OK;
 }
