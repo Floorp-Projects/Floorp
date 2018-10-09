@@ -367,13 +367,6 @@ SharedArrayBufferObject::createFromNewRawBuffer(JSContext* cx, SharedArrayRawBuf
     return obj;
 }
 
-static JSObject*
-CreateSharedArrayBufferPrototype(JSContext* cx, JSProtoKey key)
-{
-    return GlobalObject::createBlankPrototype(cx, cx->global(),
-                                              &SharedArrayBufferObject::protoClass_);
-}
-
 static const ClassOps SharedArrayBufferObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
@@ -410,7 +403,7 @@ static const JSPropertySpec sharedarray_proto_properties[] = {
 
 static const ClassSpec SharedArrayBufferObjectClassSpec = {
     GenericCreateConstructor<SharedArrayBufferObject::class_constructor, 1, gc::AllocKind::FUNCTION>,
-    CreateSharedArrayBufferPrototype,
+    GenericCreatePrototype<SharedArrayBufferObject>,
     sharedarrray_functions,
     sharedarrray_properties,
     sharedarray_proto_functions,

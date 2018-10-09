@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 12.0.2 - 2ad36df
+ * Version 12.1.1 - 6950498
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -2153,10 +2153,15 @@ class Collection {
    *
    * Options:
    * - {String} strategy: The selected sync strategy.
+   * - {String} expectedTimestamp: A timestamp to use as a "cache busting" query parameter.
+   * - {Array<String>} exclude: A list of record ids to exclude from pull.
+   * - {Object} headers: The HTTP headers to use in the request.
+   * - {int} retry: The number of retries to do if the HTTP request fails.
+   * - {int} lastModified: The timestamp to use in `?_since` query.
    *
    * @param  {KintoClient.Collection} client           Kinto client Collection instance.
    * @param  {SyncResultObject}       syncResultObject The sync result object.
-   * @param  {Object}                 options
+   * @param  {Object}                 options          The options object.
    * @return {Promise}
    */
 
@@ -2184,6 +2189,12 @@ class Collection {
       const exclude_id = options.exclude.slice(0, 50).map(r => r.id).join(",");
       filters = {
         exclude_id
+      };
+    }
+
+    if (options.expectedTimestamp) {
+      filters = { ...filters,
+        _expected: options.expectedTimestamp
       };
     } // First fetch remote changes from the server
 
@@ -2257,6 +2268,11 @@ class Collection {
   /**
    * Publish local changes to the remote server and updates the passed
    * {@link SyncResultObject} with publication results.
+   *
+   * Options:
+   * - {String} strategy: The selected sync strategy.
+   * - {Object} headers: The HTTP headers to use in the request.
+   * - {int} retry: The number of retries to do if the HTTP request fails.
    *
    * @param  {KintoClient.Collection} client           Kinto client Collection instance.
    * @param  {SyncResultObject}       syncResultObject The sync result object.
@@ -2413,6 +2429,7 @@ class Collection {
    *
    * Options:
    * - {Object} headers: HTTP headers to attach to outgoing requests.
+   * - {String} expectedTimestamp: A timestamp to use as a "cache busting" query parameter.
    * - {Number} retry: Number of retries when server fails to process the request (default: 1).
    * - {Collection.strategy} strategy: See {@link Collection.strategy}.
    * - {Boolean} ignoreBackoff: Force synchronization even if server is currently
@@ -2434,7 +2451,8 @@ class Collection {
     ignoreBackoff: false,
     bucket: null,
     collection: null,
-    remote: null
+    remote: null,
+    expectedTimestamp: null
   }) {
     options = { ...options,
       bucket: options.bucket || this.bucket,

@@ -347,10 +347,6 @@ SavedFrame::HashPolicy::rekey(Key& key, const Key& newKey)
 /* static */ bool
 SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject proto)
 {
-    // The only object with the SavedFrame::class_ that doesn't have a source
-    // should be the prototype.
-    proto->as<NativeObject>().setReservedSlot(SavedFrame::JSSLOT_SOURCE, NullValue());
-
     return FreezeObject(cx, proto);
 }
 
@@ -370,7 +366,7 @@ static const ClassOps SavedFrameClassOps = {
 
 const ClassSpec SavedFrame::classSpec_ = {
     GenericCreateConstructor<SavedFrame::construct, 0, gc::AllocKind::FUNCTION>,
-    GenericCreatePrototype,
+    GenericCreatePrototype<SavedFrame>,
     SavedFrame::staticFunctions,
     nullptr,
     SavedFrame::protoFunctions,
@@ -387,6 +383,13 @@ const ClassSpec SavedFrame::classSpec_ = {
     JSCLASS_IS_ANONYMOUS |
     JSCLASS_FOREGROUND_FINALIZE,
     &SavedFrameClassOps,
+    &SavedFrame::classSpec_
+};
+
+const Class SavedFrame::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_SavedFrame),
+    JS_NULL_CLASS_OPS,
     &SavedFrame::classSpec_
 };
 
@@ -739,15 +742,6 @@ SavedFrame_checkThis(JSContext* cx, CallArgs& args, const char* fnName,
         return false;
     }
 
-    // Check for SavedFrame.prototype, which has the same class as SavedFrame
-    // instances, however doesn't actually represent a captured stack frame. It
-    // is the only object that is<SavedFrame>() but doesn't have a source.
-    if (!SavedFrame::isSavedFrameAndNotProto(*thisObject)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                  SavedFrame::class_.name, fnName, "prototype object");
-        return false;
-    }
-
     // Now set "frame" to the actual object we were invoked in (which may be a
     // wrapper), not the unwrapped version.  Consumers will need to know what
     // that original object was, and will do principal checks as needed.
@@ -789,7 +783,7 @@ UnwrapSavedFrame(JSContext* cx, JSPrincipals* principals, HandleObject obj,
         return nullptr;
     }
 
-    MOZ_RELEASE_ASSERT(js::SavedFrame::isSavedFrameAndNotProto(*savedFrameObj));
+    MOZ_RELEASE_ASSERT(savedFrameObj->is<js::SavedFrame>());
     js::RootedSavedFrame frame(cx, &savedFrameObj->as<js::SavedFrame>());
     return GetFirstSubsumedFrame(cx, principals, frame, selfHosted, skippedAsync);
 }
@@ -1138,14 +1132,14 @@ JS_PUBLIC_API(bool)
 IsMaybeWrappedSavedFrame(JSObject* obj)
 {
     MOZ_ASSERT(obj);
-    return js::SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj);
+    return js::SavedFrame::isSavedFrameOrWrapper(*obj);
 }
 
 JS_PUBLIC_API(bool)
 IsUnwrappedSavedFrame(JSObject* obj)
 {
     MOZ_ASSERT(obj);
-    return js::SavedFrame::isSavedFrameAndNotProto(*obj);
+    return obj->is<js::SavedFrame>();
 }
 
 } /* namespace JS */
@@ -1310,7 +1304,7 @@ SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack, HandleString
 
     RootedObject asyncStackObj(cx, CheckedUnwrap(asyncStack));
     MOZ_RELEASE_ASSERT(asyncStackObj);
-    MOZ_RELEASE_ASSERT(js::SavedFrame::isSavedFrameAndNotProto(*asyncStackObj));
+    MOZ_RELEASE_ASSERT(asyncStackObj->is<js::SavedFrame>());
     adoptedStack.set(&asyncStackObj->as<js::SavedFrame>());
 
     if (!adoptAsyncStack(cx, adoptedStack, asyncCauseAtom, maxFrameCount)) {

@@ -127,8 +127,8 @@ The probes in the definition file are represented in a fixed-depth, two-level st
 Category and probe names need to follow a few rules:
 
 - they cannot exceed 40 characters each;
-- category names must be alpha-numeric + ``.``, with no leading/trailing digit or ``.``;
-- probe names must be alpha-numeric + ``_``, with no leading/trailing digit or ``_``.
+- category names must be alphanumeric + ``.``, with no leading/trailing digit or ``.``;
+- probe names must be alphanumeric + ``_``, with no leading/trailing digit or ``_``.
 
 A probe can be defined as follows:
 

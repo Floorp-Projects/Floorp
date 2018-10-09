@@ -277,7 +277,7 @@ add_task(async function test_tracker_sql_batching() {
   await cleanup();
 });
 
-add_task(async function test_onItemAdded() {
+add_task(async function test_bookmarkAdded() {
   _("Items inserted via the synchronous bookmarks API should be tracked");
 
   try {
@@ -312,7 +312,7 @@ add_task(async function test_onItemAdded() {
   }
 });
 
-add_task(async function test_async_onItemAdded() {
+add_task(async function test_async_bookmarkAdded() {
   _("Items inserted via the asynchronous bookmarks API should be tracked");
 
   try {
@@ -713,7 +713,7 @@ add_task(async function test_async_onItemKeywordDeleted() {
   }
 });
 
-add_task(async function test_onItemAdded_filtered_root() {
+add_task(async function test_bookmarkAdded_filtered_root() {
   _("Items outside the change roots should not be tracked");
 
   try {

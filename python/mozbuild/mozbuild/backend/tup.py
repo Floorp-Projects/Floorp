@@ -1155,7 +1155,12 @@ class TupBackend(CommonBackend):
                                     if '*' not in p:
                                         yield p + '/'
                             prefix = ''.join(_prefix(f.full_path))
-                            self.backend_input_files.add(prefix)
+
+                            # The rest of the build system will not complain if
+                            # there is a wildcard referring to an empty source
+                            # directory, so guard against that here.
+                            if os.path.exists(prefix):
+                                self.backend_input_files.add(prefix)
 
                             output_dir = ''
                             # If we have a RenamedSourcePath here, the common backend

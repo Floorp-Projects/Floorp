@@ -2696,13 +2696,12 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
  * for bookmark events and refresh the results if we have any dependence on
  * the bookmark system.
  */
-NS_IMETHODIMP
+nsresult
 nsNavHistoryQueryResultNode::OnItemAdded(int64_t aItemId,
                                          int64_t aParentId,
                                          int32_t aIndex,
                                          uint16_t aItemType,
                                          nsIURI* aURI,
-                                         const nsACString& aTitle,
                                          PRTime aDateAdded,
                                          const nsACString& aGUID,
                                          const nsACString& aParentGUID,
@@ -3409,13 +3408,12 @@ nsNavHistoryFolderResultNode::OnEndUpdateBatch()
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
                                           int64_t aParentFolder,
                                           int32_t aIndex,
                                           uint16_t aItemType,
                                           nsIURI* aURI,
-                                          const nsACString& aTitle,
                                           PRTime aDateAdded,
                                           const nsACString& aGUID,
                                           const nsACString& aParentGUID,
@@ -3859,13 +3857,11 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
   } else {
     // moving between two different folders, just do a remove and an add
     nsCOMPtr<nsIURI> itemURI;
-    nsAutoCString itemTitle;
     if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
       nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
       NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
       nsresult rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(itemURI));
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = bookmarks->GetItemTitle(aItemId, itemTitle);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     if (aOldParent == mTargetFolderItemId) {
@@ -3873,7 +3869,7 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
                     aGUID, aOldParentGUID, aSource);
     }
     if (aNewParent == mTargetFolderItemId) {
-      OnItemAdded(aItemId, aNewParent, aNewIndex, aItemType, itemURI, itemTitle,
+      OnItemAdded(aItemId, aNewParent, aNewIndex, aItemType, itemURI,
                   RoundedPRNow(), // This is a dummy dateAdded, not the real value.
                   aGUID, aNewParentGUID, aSource);
     }
@@ -3971,6 +3967,7 @@ nsNavHistoryResult::~nsNavHistoryResult()
 void
 nsNavHistoryResult::StopObserving()
 {
+  AutoTArray<PlacesEventType, 2> events;
   if (mIsBookmarkFolderObserver || mIsAllBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     if (bookmarks) {
@@ -3978,6 +3975,7 @@ nsNavHistoryResult::StopObserving()
       mIsBookmarkFolderObserver = false;
       mIsAllBookmarksObserver = false;
     }
+    events.AppendElement(PlacesEventType::Bookmark_added);
   }
   if (mIsMobilePrefObserver) {
     Preferences::UnregisterCallback(OnMobilePrefChangedCallback,
@@ -3989,12 +3987,12 @@ nsNavHistoryResult::StopObserving()
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     if (history) {
       history->RemoveObserver(this);
-      AutoTArray<PlacesEventType, 1> events;
       events.AppendElement(PlacesEventType::Page_visited);
-      PlacesObservers::RemoveListener(events, this);
       mIsHistoryObserver = false;
     }
   }
+
+  PlacesObservers::RemoveListener(events, this);
 }
 
 void
@@ -4028,6 +4026,9 @@ nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
       return;
     }
     bookmarks->AddObserver(this, true);
+    AutoTArray<PlacesEventType, 1> events;
+    events.AppendElement(PlacesEventType::Bookmark_added);
+    PlacesObservers::AddListener(events, this);
     mIsAllBookmarksObserver = true;
   }
   // Don't add duplicate observers.  In some case we don't unregister when
@@ -4068,6 +4069,9 @@ nsNavHistoryResult::AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNod
       return;
     }
     bookmarks->AddObserver(this, true);
+    AutoTArray<PlacesEventType, 1> events;
+    events.AppendElement(PlacesEventType::Bookmark_added);
+    PlacesObservers::AddListener(events, this);
     mIsBookmarkFolderObserver = true;
   }
   // Don't add duplicate observers.  In some case we don't unregister when
@@ -4332,37 +4336,6 @@ nsNavHistoryResult::OnEndUpdateBatch()
 
 
 NS_IMETHODIMP
-nsNavHistoryResult::OnItemAdded(int64_t aItemId,
-                                int64_t aParentId,
-                                int32_t aIndex,
-                                uint16_t aItemType,
-                                nsIURI* aURI,
-                                const nsACString& aTitle,
-                                PRTime aDateAdded,
-                                const nsACString& aGUID,
-                                const nsACString& aParentGUID,
-                                uint16_t aSource)
-{
-  NS_ENSURE_ARG(aItemType != nsINavBookmarksService::TYPE_BOOKMARK ||
-                aURI);
-
-  ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aParentId,
-    OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
-                aGUID, aParentGUID, aSource)
-  );
-  ENUMERATE_HISTORY_OBSERVERS(
-    OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
-                aGUID, aParentGUID, aSource)
-  );
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
-    OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
-                aGUID, aParentGUID, aSource)
-  );
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsNavHistoryResult::OnItemRemoved(int64_t aItemId,
                                   int64_t aParentId,
                                   int32_t aIndex,
@@ -4593,23 +4566,58 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
 void
 nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
   for (const auto& event : aEvents) {
-    if (NS_WARN_IF(event->Type() != PlacesEventType::Page_visited)) {
-      continue;
-    }
+    switch (event->Type()) {
+      case PlacesEventType::Page_visited: {
+        const dom::PlacesVisit* visit = event->AsPlacesVisit();
+        if (NS_WARN_IF(!visit)) {
+          continue;
+        }
 
-    const dom::PlacesVisit* visit = event->AsPlacesVisit();
-    if (NS_WARN_IF(!visit)) {
-      continue;
-    }
+        nsCOMPtr<nsIURI> uri;
+        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), visit->mUrl));
+        if (!uri) {
+          continue;
+        }
+        OnVisit(uri, visit->mVisitId, visit->mVisitTime * 1000,
+                visit->mTransitionType, visit->mPageGuid,
+                visit->mHidden, visit->mVisitCount, visit->mLastKnownTitle);
+        break;
+      }
+      case PlacesEventType::Bookmark_added: {
+        const dom::PlacesBookmarkAddition* item = event->AsPlacesBookmarkAddition();
+        if (NS_WARN_IF(!item)) {
+          continue;
+        }
 
-    nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), visit->mUrl));
-    if (!uri) {
-      return;
+        nsCOMPtr<nsIURI> uri;
+        if (item->mItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
+          MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), item->mUrl));
+          if (!uri) {
+            continue;
+          }
+        }
+
+        ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(item->mParentId,
+          OnItemAdded(item->mId, item->mParentId, item->mIndex,
+                      item->mItemType, uri, item->mDateAdded * 1000,
+                      item->mGuid, item->mParentGuid, item->mSource)
+        );
+        ENUMERATE_HISTORY_OBSERVERS(
+          OnItemAdded(item->mId, item->mParentId,item->mIndex,
+                      item->mItemType, uri, item->mDateAdded * 1000,
+                      item->mGuid, item->mParentGuid, item->mSource)
+        );
+        ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
+          OnItemAdded(item->mId, item->mParentId,item->mIndex,
+                      item->mItemType, uri, item->mDateAdded * 1000,
+                      item->mGuid, item->mParentGuid, item->mSource)
+        );
+        break;
+      }
+      default: {
+        MOZ_ASSERT_UNREACHABLE("Receive notification of a type not subscribed to.");
+      }
     }
-    OnVisit(uri, visit->mVisitId, visit->mVisitTime * 1000,
-            visit->mTransitionType, visit->mPageGuid,
-            visit->mHidden, visit->mVisitCount, visit->mLastKnownTitle);
   }
 }
 

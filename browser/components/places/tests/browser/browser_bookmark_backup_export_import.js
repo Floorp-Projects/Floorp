@@ -125,10 +125,10 @@ add_task(async function test_import_json() {
   await BrowserTestUtils.promiseAlertDialogOpen("accept");
 
   let restored = 0;
-  let promiseBookmarksRestored = PlacesTestUtils.waitForNotification("onItemAdded", () => {
-    restored++;
-    return restored === actualBookmarks.length;
-  });
+  let promiseBookmarksRestored =
+    PlacesTestUtils.waitForNotification("bookmark-added",
+                                        events => events.some(() => ++restored == actualBookmarks.length),
+                                        "places");
 
   await promiseBookmarksRestored;
   await validateImportedBookmarks(PLACES);

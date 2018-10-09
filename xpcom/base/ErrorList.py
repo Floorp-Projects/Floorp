@@ -1240,10 +1240,12 @@ use super::nsresult;
 
 """)
 
-    output.write("pub const NS_ERROR_MODULE_BASE_OFFSET: u32 = {};\n".format(MODULE_BASE_OFFSET))
+    output.write("pub const NS_ERROR_MODULE_BASE_OFFSET: nsresult = nsresult({});\n"
+                 .format(MODULE_BASE_OFFSET))
 
     for mod, val in modules.iteritems():
-        output.write("pub const NS_ERROR_MODULE_{}: u16 = {};\n".format(mod, val.num))
+        output.write("pub const NS_ERROR_MODULE_{}: nsresult = nsresult({});\n"
+                     .format(mod, val.num))
 
     for error, val in errors.iteritems():
-        output.write("pub const {}: nsresult = 0x{:X};\n".format(error, val))
+        output.write("pub const {}: nsresult = nsresult(0x{:X});\n".format(error, val))

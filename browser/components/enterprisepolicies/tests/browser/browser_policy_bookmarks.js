@@ -69,19 +69,21 @@ function findBookmarkInPolicy(bookmark) {
 
 async function promiseAllChangesMade({itemsToAdd, itemsToRemove}) {
   return new Promise(resolve => {
+    let listener = events => {
+      is(events.length, 1, "Should only have 1 event.");
+      itemsToAdd--;
+      if (itemsToAdd == 0 && itemsToRemove == 0) {
+        PlacesUtils.bookmarks.removeObserver(bmObserver);
+        PlacesUtils.observers.removeListener(["bookmark-added"], listener);
+        resolve();
+      }
+    };
     let bmObserver = {
-      onItemAdded() {
-        itemsToAdd--;
-        if (itemsToAdd == 0 && itemsToRemove == 0) {
-          PlacesUtils.bookmarks.removeObserver(bmObserver);
-          resolve();
-        }
-      },
-
       onItemRemoved() {
         itemsToRemove--;
         if (itemsToAdd == 0 && itemsToRemove == 0) {
           PlacesUtils.bookmarks.removeObserver(bmObserver);
+          PlacesUtils.observers.removeListener(["bookmark-added"], listener);
           resolve();
         }
       },
@@ -93,6 +95,7 @@ async function promiseAllChangesMade({itemsToAdd, itemsToRemove}) {
       onItemMoved() {},
     };
     PlacesUtils.bookmarks.addObserver(bmObserver);
+    PlacesUtils.observers.addListener(["bookmark-added"], listener);
   });
 }
 

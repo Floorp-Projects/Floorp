@@ -81,43 +81,11 @@ nsCSSValue::nsCSSValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   mValue.mArray->AddRef();
 }
 
-nsCSSValue::nsCSSValue(mozilla::css::URLValue* aValue)
-  : mUnit(eCSSUnit_URL)
-{
-  mValue.mURL = aValue;
-  mValue.mURL->AddRef();
-}
-
-nsCSSValue::nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue)
-  : mUnit(eCSSUnit_GridTemplateAreas)
-{
-  mValue.mGridTemplateAreas = aValue;
-  mValue.mGridTemplateAreas->AddRef();
-}
-
 nsCSSValue::nsCSSValue(SharedFontList* aValue)
   : mUnit(eCSSUnit_FontFamilyList)
 {
   mValue.mFontFamilyList = aValue;
   mValue.mFontFamilyList->AddRef();
-}
-
-nsCSSValue::nsCSSValue(FontStretch aStretch)
-  : mUnit(eCSSUnit_FontStretch)
-{
-  mValue.mFontStretch = aStretch;
-}
-
-nsCSSValue::nsCSSValue(FontSlantStyle aStyle)
-  : mUnit(eCSSUnit_FontSlantStyle)
-{
-  mValue.mFontSlantStyle = aStyle;
-}
-
-nsCSSValue::nsCSSValue(FontWeight aWeight)
-  : mUnit(eCSSUnit_FontWeight)
-{
-  mValue.mFontWeight = aWeight;
 }
 
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
@@ -141,10 +109,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mArray = aCopy.mValue.mArray;
     mValue.mArray->AddRef();
   }
-  else if (eCSSUnit_URL == mUnit) {
-    mValue.mURL = aCopy.mValue.mURL;
-    mValue.mURL->AddRef();
-  }
   else if (eCSSUnit_Pair == mUnit) {
     mValue.mPair = aCopy.mValue.mPair;
     mValue.mPair->AddRef();
@@ -167,22 +131,9 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_PairListDep == mUnit) {
     mValue.mPairListDependent = aCopy.mValue.mPairListDependent;
   }
-  else if (eCSSUnit_GridTemplateAreas == mUnit) {
-    mValue.mGridTemplateAreas = aCopy.mValue.mGridTemplateAreas;
-    mValue.mGridTemplateAreas->AddRef();
-  }
   else if (eCSSUnit_FontFamilyList == mUnit) {
     mValue.mFontFamilyList = aCopy.mValue.mFontFamilyList;
     mValue.mFontFamilyList->AddRef();
-  }
-  else if (eCSSUnit_FontStretch == mUnit) {
-    mValue.mFontStretch = aCopy.mValue.mFontStretch;
-  }
-  else if (eCSSUnit_FontSlantStyle == mUnit) {
-    mValue.mFontSlantStyle = aCopy.mValue.mFontSlantStyle;
-  }
-  else if (eCSSUnit_FontWeight == mUnit) {
-    mValue.mFontWeight = aCopy.mValue.mFontWeight;
   }
   else if (eCSSUnit_AtomIdent == mUnit) {
     mValue.mAtom = aCopy.mValue.mAtom;
@@ -237,9 +188,6 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     else if (UnitHasArrayValue()) {
       return *mValue.mArray == *aOther.mValue.mArray;
     }
-    else if (eCSSUnit_URL == mUnit) {
-      return mValue.mURL->Equals(*aOther.mValue.mURL);
-    }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
     }
@@ -253,21 +201,9 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
       return nsCSSValuePairList::Equal(mValue.mPairList,
                                        aOther.mValue.mPairList);
     }
-    else if (eCSSUnit_GridTemplateAreas == mUnit) {
-      return *mValue.mGridTemplateAreas == *aOther.mValue.mGridTemplateAreas;
-    }
     else if (eCSSUnit_FontFamilyList == mUnit) {
       return mValue.mFontFamilyList->mNames ==
              aOther.mValue.mFontFamilyList->mNames;
-    }
-    else if (eCSSUnit_FontStretch == mUnit) {
-      return mValue.mFontStretch == aOther.mValue.mFontStretch;
-    }
-    else if (eCSSUnit_FontSlantStyle == mUnit) {
-      return mValue.mFontSlantStyle == aOther.mValue.mFontSlantStyle;
-    }
-    else if (eCSSUnit_FontWeight == mUnit) {
-      return mValue.mFontWeight == aOther.mValue.mFontWeight;
     }
     else if (eCSSUnit_AtomIdent == mUnit) {
       return mValue.mAtom == aOther.mValue.mAtom;
@@ -350,8 +286,6 @@ void nsCSSValue::DoReset()
     mValue.mString->Release();
   } else if (UnitHasArrayValue()) {
     DO_RELEASE(mArray);
-  } else if (eCSSUnit_URL == mUnit) {
-    DO_RELEASE(mURL);
   } else if (eCSSUnit_Pair == mUnit) {
     DO_RELEASE(mPair);
   } else if (eCSSUnit_List == mUnit) {
@@ -360,8 +294,6 @@ void nsCSSValue::DoReset()
     DO_RELEASE(mSharedList);
   } else if (eCSSUnit_PairList == mUnit) {
     DO_RELEASE(mPairList);
-  } else if (eCSSUnit_GridTemplateAreas == mUnit) {
-    DO_RELEASE(mGridTemplateAreas);
   } else if (eCSSUnit_FontFamilyList == mUnit) {
     DO_RELEASE(mFontFamilyList);
   } else if (eCSSUnit_AtomIdent == mUnit) {
@@ -437,50 +369,6 @@ void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   mValue.mArray->AddRef();
 }
 
-void nsCSSValue::SetURLValue(mozilla::css::URLValue* aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_URL;
-  mValue.mURL = aValue;
-  mValue.mURL->AddRef();
-}
-
-void nsCSSValue::SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_GridTemplateAreas;
-  mValue.mGridTemplateAreas = aValue;
-  mValue.mGridTemplateAreas->AddRef();
-}
-
-void nsCSSValue::SetFontFamilyListValue(already_AddRefed<SharedFontList> aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_FontFamilyList;
-  mValue.mFontFamilyList = aValue.take();
-}
-
-void nsCSSValue::SetFontStretch(FontStretch aStretch)
-{
-  Reset();
-  mUnit = eCSSUnit_FontStretch;
-  mValue.mFontStretch = aStretch;
-}
-
-void nsCSSValue::SetFontSlantStyle(FontSlantStyle aStyle)
-{
-  Reset();
-  mUnit = eCSSUnit_FontSlantStyle;
-  mValue.mFontSlantStyle = aStyle;
-}
-
-void nsCSSValue::SetFontWeight(FontWeight aWeight)
-{
-  Reset();
-  mUnit = eCSSUnit_FontWeight;
-  mValue.mFontWeight = aWeight;
-}
-
 void nsCSSValue::SetPairValue(const nsCSSValuePair* aValue)
 {
   // pairs should not be used for null/inherit/initial values
@@ -535,27 +423,6 @@ void nsCSSValue::SetSharedListValue(nsCSSValueSharedList* aList)
   mValue.mSharedList->AddRef();
 }
 
-void nsCSSValue::SetDependentListValue(nsCSSValueList* aList)
-{
-  Reset();
-  if (aList) {
-    mUnit = eCSSUnit_ListDep;
-    mValue.mListDependent = aList;
-  }
-}
-
-void
-nsCSSValue::AdoptListValue(UniquePtr<nsCSSValueList> aValue)
-{
-  // We have to copy the first element since for owned lists the first
-  // element should be an nsCSSValueList_heap object.
-  SetListValue();
-  mValue.mList->mValue = std::move(aValue->mValue);
-  mValue.mList->mNext  = aValue->mNext;
-  aValue->mNext = nullptr;
-  aValue.reset();
-}
-
 nsCSSValuePairList* nsCSSValue::SetPairListValue()
 {
   Reset();
@@ -565,98 +432,22 @@ nsCSSValuePairList* nsCSSValue::SetPairListValue()
   return mValue.mPairList;
 }
 
-void nsCSSValue::SetDependentPairListValue(nsCSSValuePairList* aList)
-{
-  Reset();
-  if (aList) {
-    mUnit = eCSSUnit_PairListDep;
-    mValue.mPairListDependent = aList;
-  }
-}
-
-void
-nsCSSValue::AdoptPairListValue(UniquePtr<nsCSSValuePairList> aValue)
-{
-  // We have to copy the first element, since for owned pair lists, the first
-  // element should be an nsCSSValuePairList_heap object.
-  SetPairListValue();
-  mValue.mPairList->mXValue = std::move(aValue->mXValue);
-  mValue.mPairList->mYValue = std::move(aValue->mYValue);
-  mValue.mPairList->mNext   = aValue->mNext;
-  aValue->mNext = nullptr;
-  aValue.reset();
-}
-
-void nsCSSValue::SetAutoValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Auto;
-}
-
-void nsCSSValue::SetInheritValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Inherit;
-}
-
-void nsCSSValue::SetInitialValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Initial;
-}
-
-void nsCSSValue::SetUnsetValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Unset;
-}
-
 void nsCSSValue::SetNoneValue()
 {
   Reset();
   mUnit = eCSSUnit_None;
 }
 
-void nsCSSValue::SetAllValue()
-{
-  Reset();
-  mUnit = eCSSUnit_All;
-}
-
-void nsCSSValue::SetNormalValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Normal;
-}
-
-void nsCSSValue::SetSystemFontValue()
-{
-  Reset();
-  mUnit = eCSSUnit_System_Font;
-}
-
-void nsCSSValue::SetDummyValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Dummy;
-}
-
-void nsCSSValue::SetDummyInheritValue()
-{
-  Reset();
-  mUnit = eCSSUnit_DummyInherit;
-}
-
-void nsCSSValue::SetCalcValue(const nsStyleCoord::CalcValue* aCalc)
+void nsCSSValue::SetCalcValue(const nsStyleCoord::CalcValue& aCalc)
 {
   RefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
-  if (!aCalc->mHasPercent) {
-    arr->Item(0).SetIntegerCoordValue(aCalc->mLength);
+  if (!aCalc.mHasPercent) {
+    arr->Item(0).SetIntegerCoordValue(aCalc.mLength);
   } else {
-    nsCSSValue::Array *arr2 = nsCSSValue::Array::Create(2);
+    nsCSSValue::Array* arr2 = nsCSSValue::Array::Create(2);
     arr->Item(0).SetArrayValue(arr2, eCSSUnit_Calc_Plus);
-    arr2->Item(0).SetIntegerCoordValue(aCalc->mLength);
-    arr2->Item(1).SetPercentValue(aCalc->mPercent);
+    arr2->Item(0).SetIntegerCoordValue(aCalc.mLength);
+    arr2->Item(1).SetPercentValue(aCalc.mPercent);
   }
 
   SetArrayValue(arr, eCSSUnit_Calc);
@@ -665,8 +456,7 @@ void nsCSSValue::SetCalcValue(const nsStyleCoord::CalcValue* aCalc)
 nsStyleCoord::CalcValue
 nsCSSValue::GetCalcValue() const
 {
-  MOZ_ASSERT(mUnit == eCSSUnit_Calc,
-             "The unit should be eCSSUnit_Calc");
+  MOZ_ASSERT(mUnit == eCSSUnit_Calc, "The unit should be eCSSUnit_Calc");
 
   const nsCSSValue::Array* array = GetArrayValue();
   MOZ_ASSERT(array->Count() == 1,
@@ -702,31 +492,6 @@ nsCSSValue::GetCalcValue() const
   return result;
 }
 
-nsCSSValue::Array*
-nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs)
-{
-  RefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
-  func->Item(0).SetIntValue(aFunctionId, eCSSUnit_Enumerated);
-  SetArrayValue(func, eCSSUnit_Function);
-  return func;
-}
-
-bool
-nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
-{
-  if (mUnit != eCSSUnit_Function) {
-    return false;
-  }
-
-  nsCSSValue::Array* func = mValue.mArray;
-  MOZ_ASSERT(func && func->Count() >= 1 &&
-             func->Item(0).GetUnit() == eCSSUnit_Enumerated,
-             "illegally structured function value");
-
-  nsCSSKeyword thisFunctionId = func->Item(0).GetKeywordValue();
-  return thisFunctionId == aFunctionId;
-}
-
 // static
 already_AddRefed<nsStringBuffer>
 nsCSSValue::BufferFromString(const nsString& aValue)
@@ -751,16 +516,6 @@ nsCSSValue::BufferFromString(const nsString& aValue)
   // Null-terminate.
   data[length] = 0;
   return buffer.forget();
-}
-
-void
-nsCSSValue::AtomizeIdentValue()
-{
-  MOZ_ASSERT(mUnit == eCSSUnit_Ident);
-  RefPtr<nsAtom> atom = NS_Atomize(GetStringBufferValue());
-  Reset();
-  mUnit = eCSSUnit_AtomIdent;
-  mValue.mAtom = atom.forget().take();
 }
 
 /* static */ void
@@ -823,8 +578,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_String:
     case eCSSUnit_Ident:
     case eCSSUnit_Attr:
-    case eCSSUnit_Local_Font:
-    case eCSSUnit_Font_Format:
     case eCSSUnit_Element:
       n += mValue.mString->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
       break;
@@ -843,11 +596,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_Calc_Times_L:
     case eCSSUnit_Calc_Times_R:
     case eCSSUnit_Calc_Divided:
-      break;
-
-    // URL
-    case eCSSUnit_URL:
-      n += mValue.mURL->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Pair
@@ -879,11 +627,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_PairListDep:
       break;
 
-    // GridTemplateAreas
-    case eCSSUnit_GridTemplateAreas:
-      n += mValue.mGridTemplateAreas->SizeOfIncludingThis(aMallocSizeOf);
-      break;
-
     case eCSSUnit_FontFamilyList:
       // The SharedFontList is a refcounted object, but is unique per
       // declaration. We don't measure the references from computed
@@ -898,9 +641,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // Int: nothing extra to measure.
     case eCSSUnit_Integer:
     case eCSSUnit_Enumerated:
-    case eCSSUnit_FontStretch:
-    case eCSSUnit_FontSlantStyle:
-    case eCSSUnit_FontWeight:
       break;
 
     // Float: nothing extra to measure.

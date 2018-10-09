@@ -53,6 +53,8 @@ module.exports = {
     "MatchPatternSet": false,
     "MenuBoxObject": false,
     // Specific to Firefox (Chrome code only).
+    "PlacesBookmarkAddition": false,
+    "PlacesEvent": false,
     "PlacesObservers": false,
     "PlacesWeakCallbackWrapper": false,
     "PrioEncoder": false,

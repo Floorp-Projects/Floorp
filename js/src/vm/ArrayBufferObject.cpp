@@ -261,12 +261,6 @@ js::UnmapBufferMemory(void* base, size_t mappedSize)
  * ArrayBufferObject (base)
  */
 
-static JSObject*
-CreateArrayBufferPrototype(JSContext* cx, JSProtoKey key)
-{
-    return GlobalObject::createBlankPrototype(cx, cx->global(), &ArrayBufferObject::protoClass_);
-}
-
 static const ClassOps ArrayBufferObjectClassOps = {
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
@@ -305,7 +299,7 @@ static const JSPropertySpec arraybuffer_proto_properties[] = {
 
 static const ClassSpec ArrayBufferObjectClassSpec = {
     GenericCreateConstructor<ArrayBufferObject::class_constructor, 1, gc::AllocKind::FUNCTION>,
-    CreateArrayBufferPrototype,
+    GenericCreatePrototype<ArrayBufferObject>,
     arraybuffer_functions,
     arraybuffer_properties,
     arraybuffer_proto_functions,

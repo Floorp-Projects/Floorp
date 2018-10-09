@@ -2761,7 +2761,10 @@ window._gBrowser = {
     // state).
     let tabWidth = windowUtils.getBoundsWithoutFlushing(aTab).width;
 
-    if (!this._beginRemoveTab(aTab, null, null, true, skipPermitUnload)) {
+    if (!this._beginRemoveTab(aTab, {
+          closeWindowFastpath: true,
+          skipPermitUnload,
+        })) {
       TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
       TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
       return;
@@ -2809,13 +2812,19 @@ window._gBrowser = {
            browser.frameLoader.tabParent.hasBeforeUnload;
   },
 
-  _beginRemoveTab(aTab, aAdoptedByTab, aCloseWindowWithLastTab, aCloseWindowFastpath, aSkipPermitUnload) {
+  _beginRemoveTab(aTab, {
+    adoptedByTab,
+    closeWindowWithLastTab,
+    closeWindowFastpath,
+    skipPermitUnload,
+  } = {}) {
     if (aTab.closing ||
-      this._windowIsClosing)
+        this._windowIsClosing) {
       return false;
+    }
 
     var browser = this.getBrowserForTab(aTab);
-    if (!aSkipPermitUnload && !aAdoptedByTab &&
+    if (!skipPermitUnload && !adoptedByTab &&
         aTab.linkedPanel && !aTab._pendingPermitUnload &&
         (!browser.isRemoteBrowser || this._hasBeforeUnload(aTab))) {
       TelemetryStopwatch.start("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", aTab);
@@ -2849,7 +2858,7 @@ window._gBrowser = {
     var closeWindow = false;
     var newTab = false;
     if (this.tabs.length - this._removingTabs.length == 1) {
-      closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
+      closeWindow = closeWindowWithLastTab != null ? closeWindowWithLastTab :
         !window.toolbar.visible ||
         Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
 
@@ -2863,7 +2872,7 @@ window._gBrowser = {
       // than closing the window right away. If the caller opts in, take
       // the fast path.
       if (closeWindow &&
-          aCloseWindowFastpath &&
+          closeWindowFastpath &&
           this._removingTabs.length == 0) {
         // This call actually closes the window, unless the user
         // cancels the operation.  We are finished here in both cases.
@@ -2876,7 +2885,7 @@ window._gBrowser = {
     aTab._endRemoveArgs = [closeWindow, newTab];
 
     // swapBrowsersAndCloseOther will take care of closing the window without animation.
-    if (closeWindow && aAdoptedByTab) {
+    if (closeWindow && adoptedByTab) {
       // Remove the tab's filter and progress listener to avoid leaking.
       if (aTab.linkedPanel) {
         const filter = this._tabFilters.get(aTab);
@@ -2899,7 +2908,7 @@ window._gBrowser = {
     this.tabAnimationsInProgress++;
 
     // Mute audio immediately to improve perceived speed of tab closure.
-    if (!aAdoptedByTab && aTab.hasAttribute("soundplaying")) {
+    if (!adoptedByTab && aTab.hasAttribute("soundplaying")) {
       // Don't persist the muted state as this wasn't a user action.
       // This lets undo-close-tab return it to an unmuted state.
       aTab.linkedBrowser.mute(true);
@@ -2924,7 +2933,7 @@ window._gBrowser = {
     // Dispatch a notification.
     // We dispatch it before any teardown so that event listeners can
     // inspect the tab that's about to close.
-    var evt = new CustomEvent("TabClose", { bubbles: true, detail: { adoptedBy: aAdoptedByTab } });
+    let evt = new CustomEvent("TabClose", { bubbles: true, detail: { adoptedBy: adoptedByTab } });
     aTab.dispatchEvent(evt);
 
     if (this.tabs.length == 2) {
@@ -2935,7 +2944,7 @@ window._gBrowser = {
     }
 
     if (aTab.linkedPanel) {
-      if (!aAdoptedByTab && !gMultiProcessBrowser) {
+      if (!adoptedByTab && !gMultiProcessBrowser) {
         // Prevent this tab from showing further dialogs, since we're closing it
         browser.contentWindow.windowUtils.disableDialogs();
       }
@@ -2950,7 +2959,7 @@ window._gBrowser = {
       listener.destroy();
     }
 
-    if (browser.registeredOpenURI && !aAdoptedByTab) {
+    if (browser.registeredOpenURI && !adoptedByTab) {
       let userContextId = browser.getAttribute("usercontextid") || 0;
       this.UrlbarProviderOpenTabs.unregisterOpenTab(browser.registeredOpenURI.spec,
                                                     userContextId);
@@ -3136,19 +3145,25 @@ window._gBrowser = {
     this.selectedTab = this._findTabToBlurTo(aTab);
   },
 
+  /**
+   * @returns {boolean}
+   *   False if swapping isn't permitted, true otherwise.
+   */
   swapBrowsersAndCloseOther(aOurTab, aOtherTab) {
     // Do not allow transfering a private tab to a non-private window
     // and vice versa.
     if (PrivateBrowsingUtils.isWindowPrivate(window) !=
-      PrivateBrowsingUtils.isWindowPrivate(aOtherTab.ownerGlobal))
-      return;
+        PrivateBrowsingUtils.isWindowPrivate(aOtherTab.ownerGlobal)) {
+      return false;
+    }
 
     let ourBrowser = this.getBrowserForTab(aOurTab);
     let otherBrowser = aOtherTab.linkedBrowser;
 
     // Can't swap between chrome and content processes.
-    if (ourBrowser.isRemoteBrowser != otherBrowser.isRemoteBrowser)
-      return;
+    if (ourBrowser.isRemoteBrowser != otherBrowser.isRemoteBrowser) {
+      return false;
+    }
 
     // Keep the userContextId if set on other browser
     if (otherBrowser.hasAttribute("usercontextid")) {
@@ -3173,8 +3188,12 @@ window._gBrowser = {
     // First, start teardown of the other browser.  Make sure to not
     // fire the beforeunload event in the process.  Close the other
     // window if this was its last tab.
-    if (!remoteBrowser._beginRemoveTab(aOtherTab, aOurTab, true))
-      return;
+    if (!remoteBrowser._beginRemoveTab(aOtherTab, {
+          adoptedByTab: aOurTab,
+          closeWindowWithLastTab: true,
+        })) {
+      return false;
+    }
 
     // If this is the last tab of the window, hide the window
     // immediately without animation before the docshell swap, to avoid
@@ -3279,6 +3298,8 @@ window._gBrowser = {
     if (modifiedAttrs.length) {
       this._tabAttrModified(aOurTab, modifiedAttrs);
     }
+
+    return true;
   },
 
   swapBrowsers(aOurTab, aOtherTab, aFlags) {
@@ -3674,6 +3695,9 @@ window._gBrowser = {
 
   /**
    * Adopts a tab from another browser window, and inserts it at aIndex
+   *
+   * @returns {object}
+   *    The new tab in the current window, null if the tab couldn't be adopted.
    */
   adoptTab(aTab, aIndex, aSelectTab) {
     // Swap the dropped tab with a new one we create and then close
@@ -3702,27 +3726,21 @@ window._gBrowser = {
     let newTab = this.addWebTab("about:blank", params);
     let newBrowser = this.getBrowserForTab(newTab);
 
+    aTab.parentNode._finishAnimateTabMove();
+
     // Stop the about:blank load.
     newBrowser.stop();
     // Make sure it has a docshell.
     newBrowser.docShell;
 
-    // We need to select the tab before calling swapBrowsersAndCloseOther
-    // so that window.content in chrome windows points to the right tab
-    // when pagehide/show events are fired. This is no longer necessary
-    // for any exiting browser code, but it may be necessary for add-on
-    // compatibility.
-    if (aSelectTab) {
-      this.selectedTab = newTab;
+    if (!this.swapBrowsersAndCloseOther(newTab, aTab)) {
+      // Swapping wasn't permitted. Bail out.
+      this.removeTab(newTab);
+      return null;
     }
 
-    aTab.parentNode._finishAnimateTabMove();
-    this.swapBrowsersAndCloseOther(newTab, aTab);
-
     if (aSelectTab) {
-      // Call updateCurrentBrowser to make sure the URL bar is up to date
-      // for our new tab after we've done swapBrowsersAndCloseOther.
-      this.updateCurrentBrowser(true);
+      this.selectedTab = newTab;
     }
 
     return newTab;
