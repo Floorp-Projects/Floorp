@@ -365,13 +365,13 @@ main {
 
 .body-wrapper .section-title,
 .body-wrapper .sections-list .section:last-of-type,
-.body-wrapper .topic {
+.body-wrapper .topics {
   opacity: 0; }
 
 
 .body-wrapper.on .section-title,
 .body-wrapper.on .sections-list .section:last-of-type,
-.body-wrapper.on .topic {
+.body-wrapper.on .topics {
   opacity: 1; }
 
 .non-collapsible-section {
@@ -925,7 +925,8 @@ main {
       font-size: 13px; }
   @media (min-width: 866px) {
     .top-stories-bottom-container {
-      line-height: 16px; } }
+      line-height: 16px;
+      height: 16px; } }
   .top-stories-bottom-container::after {
     clear: both;
     content: '';

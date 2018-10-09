@@ -2625,11 +2625,18 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
     const maxCards = maxCardsPerRow * numRows;
     const maxCardsOnNarrow = CARDS_PER_ROW_DEFAULT * numRows;
 
-    const shouldShowPocketCta = id === "topstories" && Pocket.pocketCta.useCta && !Pocket.isUserLoggedIn;
+    const { pocketCta, isUserLoggedIn } = Pocket || {};
+    const { useCta } = pocketCta || {};
 
-    // Show topics only for top stories and if it's not initialized yet (so
-    // content doesn't shift when it is loaded) or has loaded with topics
-    const shouldShowTopics = id === "topstories" && (!topics || topics.length > 0) && !shouldShowPocketCta;
+    // Don't display anything until we have a definitve result from Pocket,
+    // to avoid a flash of logged out state while we render.
+    const isPocketLoggedInDefined = isUserLoggedIn === true || isUserLoggedIn === false;
+
+    const shouldShowPocketCta = id === "topstories" && useCta && isUserLoggedIn === false;
+
+    // Show topics only for top stories and if it has loaded with topics.
+    // The classs .top-stories-bottom-container ensures content doesn't shift as things load.
+    const shouldShowTopics = id === "topstories" && topics && topics.length > 0 && (useCta && isUserLoggedIn === true || !useCta && isPocketLoggedInDefined);
 
     const realRows = rows.slice(0, maxCards);
 
@@ -8199,7 +8206,7 @@ const INITIAL_STATE = {
   },
   Sections: [],
   Pocket: {
-    isUserLoggedIn: false,
+    isUserLoggedIn: null,
     pocketCta: {},
     waitingForSpoc: true
   }

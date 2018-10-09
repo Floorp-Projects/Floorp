@@ -609,6 +609,9 @@ describe("Reducers", () => {
       const state = Pocket(undefined, {type: at.POCKET_WAITING_FOR_SPOC, data: false});
       assert.isFalse(state.waitingForSpoc);
     });
+    it("should have undefined for initial isUserLoggedIn state", () => {
+      assert.isNull(Pocket(undefined, {type: "some_action"}).isUserLoggedIn);
+    });
     it("should set isUserLoggedIn to false on a POCKET_LOGGED_IN with null", () => {
       const state = Pocket(undefined, {type: at.POCKET_LOGGED_IN, data: null});
       assert.isFalse(state.isUserLoggedIn);
