@@ -548,6 +548,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitIndexOp(JSOp op, uint32_t index);
 
     MOZ_MUST_USE bool emitAtomOp(JSAtom* atom, JSOp op);
+    MOZ_MUST_USE bool emitAtomOp(uint32_t atomIndex, JSOp op);
 
     MOZ_MUST_USE bool emitArrayLiteral(ListNode* array);
     MOZ_MUST_USE bool emitArray(ParseNode* arrayHead, uint32_t count);
@@ -645,7 +646,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitAwaitInScope(EmitterScope& currentScope);
 
     MOZ_MUST_USE bool emitPropLHS(PropertyAccess* prop);
-    MOZ_MUST_USE bool emitPropOp(PropertyAccess* prop, JSOp op);
     MOZ_MUST_USE bool emitPropIncDec(UnaryNode* incDec);
 
     MOZ_MUST_USE bool emitAsyncWrapperLambda(unsigned index, bool isArrow);
@@ -832,8 +832,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitSpread(bool allowSelfHosted = false);
 
     MOZ_MUST_USE bool emitClass(ClassNode* classNode);
-    MOZ_MUST_USE bool emitSuperPropLHS(UnaryNode* superBase, bool isCall = false);
-    MOZ_MUST_USE bool emitSuperGetProp(PropertyAccess* prop, bool isCall = false);
     MOZ_MUST_USE bool emitSuperElemOperands(PropertyByValue* elem,
                                             EmitElemOption opts = EmitElemOption::Get);
     MOZ_MUST_USE bool emitSuperGetElem(PropertyByValue* elem, bool isCall = false);
