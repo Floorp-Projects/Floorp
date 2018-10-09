@@ -21,14 +21,22 @@ textbox {
   color: -moz-FieldText;
 }
 
-html|*.textbox-input, 
+html|*.textbox-input,
 html|*.textbox-textarea {
-  margin: 0px !important;
-  border: none !important;
-  padding: 0px 1px !important;
-  background-color: inherit;
+  -moz-appearance: none;
+  margin: 0;
+  border: none;
+  padding: 0 1px;
+  background-color: transparent;
   color: inherit;
   font: inherit;
+  text-shadow: inherit;
+  box-sizing: border-box;
+  -moz-box-flex: 1;
+}
+
+html|*.textbox-input {
+  text-align: inherit;
 }
 
 .textbox-contextmenu {
