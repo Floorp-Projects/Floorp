@@ -747,7 +747,6 @@ pub type FontVariationSettings = FontSettings<VariationValue<Number>>;
 /// it and store it as a 32-bit integer
 /// (see http://www.microsoft.com/typography/otspec/languagetags.htm).
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq)]
-#[repr(C)]
 pub struct FontLanguageOverride(pub u32);
 
 impl FontLanguageOverride {

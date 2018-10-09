@@ -2229,7 +2229,7 @@ Gecko_CSSValue_SetPixelLength(nsCSSValueBorrowedMut aCSSValue, float aLen)
 void
 Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut aCSSValue, nsStyleCoord::CalcValue aCalc)
 {
-  aCSSValue->SetCalcValue(aCalc);
+  aCSSValue->SetCalcValue(&aCalc);
 }
 
 nsStyleCoord::CalcValue
@@ -2278,6 +2278,13 @@ Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut aCSSValue, int32_t aLength)
   RefPtr<nsCSSValue::Array> array
     = nsCSSValue::Array::Create(aLength);
   aCSSValue->SetArrayValue(array, eCSSUnit_Array);
+}
+
+void
+Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut aCSSValue, URLValue* aURL)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
+  aCSSValue->SetURLValue(aURL);
 }
 
 void
@@ -2356,6 +2363,29 @@ void
 Gecko_CSSValue_Drop(nsCSSValueBorrowedMut aCSSValue)
 {
   aCSSValue->~nsCSSValue();
+}
+
+void
+Gecko_CSSValue_SetFontStretch(nsCSSValueBorrowedMut aCSSValue,
+                              float stretch)
+{
+  aCSSValue->SetFontStretch(
+    FontStretch(std::min(stretch * 100.0f, float(FontStretch::kMax))));
+}
+
+// FIXME(emilio): This function should probably have `Oblique` in its name.
+void
+Gecko_CSSValue_SetFontSlantStyle(nsCSSValueBorrowedMut aCSSValue,
+                                 float aAngle)
+{
+  aCSSValue->SetFontSlantStyle(mozilla::FontSlantStyle::Oblique(aAngle));
+}
+
+void
+Gecko_CSSValue_SetFontWeight(nsCSSValueBorrowedMut aCSSValue,
+                             float weight)
+{
+  aCSSValue->SetFontWeight(mozilla::FontWeight(weight));
 }
 
 void
