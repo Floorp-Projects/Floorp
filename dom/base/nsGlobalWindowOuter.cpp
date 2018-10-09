@@ -1968,7 +1968,7 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.
   if (doomCurrentInner) {
-    currentInner->FreeInnerObjects();
+    currentInner->FreeInnerObjects(handleDocumentOpen);
   }
   currentInner = nullptr;
 
