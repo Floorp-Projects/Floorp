@@ -28,6 +28,7 @@
 #include "frontend/CForEmitter.h"
 #include "frontend/DoWhileEmitter.h"
 #include "frontend/EmitterScope.h"
+#include "frontend/ExpressionStatementEmitter.h"
 #include "frontend/ForInEmitter.h"
 #include "frontend/ForOfEmitter.h"
 #include "frontend/ForOfLoopControl.h"
@@ -6759,16 +6760,16 @@ BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt)
     }
 
     if (useful) {
-        JSOp op = wantval ? JSOP_SETRVAL : JSOP_POP;
-        ValueUsage valueUsage = wantval ? ValueUsage::WantValue : ValueUsage::IgnoreValue;
         MOZ_ASSERT_IF(expr->isKind(ParseNodeKind::Assign), expr->isOp(JSOP_NOP));
-        if (!updateSourceCoordNotes(exprStmt->pn_pos.begin)) {
+        ValueUsage valueUsage = wantval ? ValueUsage::WantValue : ValueUsage::IgnoreValue;
+        ExpressionStatementEmitter ese(this, valueUsage);
+        if (!ese.prepareForExpr(Some(exprStmt->pn_pos.begin))) {
             return false;
         }
         if (!emitTree(expr, valueUsage)) {
             return false;
         }
-        if (!emit1(op)) {
+        if (!ese.emitEnd()) {
             return false;
         }
     } else if (exprStmt->isDirectivePrologueMember()) {

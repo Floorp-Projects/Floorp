@@ -229,6 +229,7 @@ UNIFIED_SOURCES += [
     'frontend/CForEmitter.cpp',
     'frontend/DoWhileEmitter.cpp',
     'frontend/EmitterScope.cpp',
+    'frontend/ExpressionStatementEmitter.cpp',
     'frontend/FoldConstants.cpp',
     'frontend/ForInEmitter.cpp',
     'frontend/ForOfEmitter.cpp',
