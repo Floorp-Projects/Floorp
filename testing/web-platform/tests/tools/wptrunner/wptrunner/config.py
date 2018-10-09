@@ -5,7 +5,6 @@ from collections import OrderedDict
 
 here = os.path.split(__file__)[0]
 
-
 class ConfigDict(dict):
     def __init__(self, base_path, *args, **kwargs):
         self.base_path = base_path
@@ -18,10 +17,9 @@ class ConfigDict(dict):
         os.path.expanduser(path)
         return os.path.abspath(os.path.join(self.base_path, path))
 
-
 def read(config_path):
     config_path = os.path.abspath(config_path)
-    config_root = os.path.dirname(config_path)
+    config_root = os.path.split(config_path)[0]
     parser = ConfigParser.SafeConfigParser()
     success = parser.read(config_path)
     assert config_path in success, success
@@ -35,7 +33,6 @@ def read(config_path):
             rv[section][key] = parser.get(section, key, False, subns)
 
     return rv
-
 
 def path(argv=None):
     if argv is None:
@@ -58,7 +55,6 @@ def path(argv=None):
             path = os.path.join(here, "..", "wptrunner.default.ini")
 
     return os.path.abspath(path)
-
 
 def load():
     return read(path(sys.argv))

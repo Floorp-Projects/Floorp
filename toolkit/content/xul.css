@@ -624,6 +624,15 @@ textbox[type="number"] {
   -moz-binding: url("chrome://global/content/bindings/numberbox.xml#numberbox");
 }
 
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  html|*.textbox-input,
+  html|*.textbox-textarea {
+    /* Be block-level, so that -moz-box-flex can take effect, when we are an item
+       in a -moz-box being emulated by modified modern flex. */
+    display: block;
+  }
+}
+
 .textbox-contextmenu:-moz-locale-dir(rtl) {
   direction: rtl;
 }

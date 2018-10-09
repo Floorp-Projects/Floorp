@@ -28,7 +28,7 @@ var SearchTestUtils = Object.freeze({
    */
   promiseNewSearchEngine(url) {
     return new Promise((resolve, reject) => {
-      Services.search.addEngine(url, null, "", false, {
+      Services.search.addEngine(url, "", false, {
         onSuccess(engine) {
           gTestGlobals.registerCleanupFunction(() => Services.search.removeEngine(engine));
           resolve(engine);

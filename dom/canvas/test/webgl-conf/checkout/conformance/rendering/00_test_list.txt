@@ -1,3 +1,4 @@
+--min-version 1.0.4 canvas-alpha-bug.html
 --min-version 1.0.4 --max-version 1.9.9 clipping-wide-points.html
 --min-version 1.0.2 culling.html
 --min-version 1.0.4 default-texture-draw-bug.html
@@ -13,6 +14,7 @@ gl-scissor-test.html
 --min-version 1.0.2 gl-scissor-fbo-test.html
 --min-version 1.0.3 gl-scissor-canvas-dimensions.html
 --min-version 1.0.3 gl-viewport-test.html
+--min-version 1.0.4 line-rendering-quality.html
 --min-version 1.0.3 many-draw-calls.html
 more-than-65536-indices.html
 multisample-corruption.html

@@ -104,7 +104,7 @@ class RequestListColumnWaterfall extends Component {
     }
 
     if (typeof totalTime === "number") {
-      const title = L10N.getFormatStr("networkMenu.totalMS", totalTime);
+      const title = L10N.getFormatStr("networkMenu.totalMS2", totalTime);
       boxes.push(
         div({
           key: "total",

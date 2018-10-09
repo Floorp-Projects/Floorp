@@ -25,7 +25,6 @@ struct FeatureMap {
  * DOM Security peer!
  */
 static FeatureMap sSupportedFeatures[] = {
-  // TODO: not supported yet!!!
   { "autoplay", FeatureMap::eAll },
   // TODO: not supported yet!!!
   { "camera", FeatureMap::eAll  },
