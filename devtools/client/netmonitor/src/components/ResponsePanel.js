@@ -30,7 +30,7 @@ const RESPONSE_PREVIEW = L10N.getStr("responsePreview");
 
 const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
 
-/*
+/**
  * Response panel component
  * Displays the GET parameters and POST data of a request
  */
@@ -53,8 +53,7 @@ class ResponsePanel extends Component {
       },
     };
 
-    this.updateImageDimemsions = this.updateImageDimemsions.bind(this);
-    this.isJSON = this.isJSON.bind(this);
+    this.updateImageDimensions = this.updateImageDimensions.bind(this);
   }
 
   componentDidMount() {
@@ -67,7 +66,7 @@ class ResponsePanel extends Component {
     fetchNetworkUpdatePacket(connector.requestData, request, ["responseContent"]);
   }
 
-  updateImageDimemsions({ target }) {
+  updateImageDimensions({ target }) {
     this.setState({
       imageDimensions: {
         width: target.naturalWidth,
@@ -76,20 +75,45 @@ class ResponsePanel extends Component {
     });
   }
 
-  // Handle json, which we tentatively identify by checking the MIME type
-  // for "json" after any word boundary. This works for the standard
-  // "application/json", and also for custom types like "x-bigcorp-json".
-  // Additionally, we also directly parse the response text content to
-  // verify whether it's json or not, to handle responses incorrectly
-  // labeled as text/plain instead.
+  /**
+   * This method checks that the response is base64 encoded by
+   * comparing these 2 values:
+   * 1. The original response
+   * 2. The value of doing a base64 decode on the
+   * response and then base64 encoding the result.
+   * If the values are different or an error is thrown,
+   * the method will return false.
+   */
+  isBase64(response) {
+    try {
+      return btoa(atob(response)) == response;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /**
+   * Handle json, which we tentatively identify by checking the
+   * MIME type for "json" after any word boundary. This works
+   * for the standard "application/json", and also for custom
+   * types like "x-bigcorp-json". Additionally, we also
+   * directly parse the response text content to verify whether
+   * it's json or not, to handle responses incorrectly labeled
+   * as text/plain instead.
+   */
   isJSON(mimeType, response) {
     let json, error;
+
     try {
       json = JSON.parse(response);
     } catch (err) {
-      try {
-        json = JSON.parse(atob(response));
-      } catch (err64) {
+      if (this.isBase64(response)) {
+        try {
+          json = JSON.parse(atob(response));
+        } catch (err64) {
+          error = err;
+        }
+      } else {
         error = err;
       }
     }
@@ -150,7 +174,7 @@ class ResponsePanel extends Component {
           img({
             className: "response-image",
             src: formDataURI(mimeType, encoding, text),
-            onLoad: this.updateImageDimemsions,
+            onLoad: this.updateImageDimensions,
           }),
           div({ className: "response-summary" },
             div({ className: "tabpanel-summary-label" }, RESPONSE_IMG_NAME),
