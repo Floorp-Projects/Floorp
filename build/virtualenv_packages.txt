@@ -9,6 +9,7 @@ mozilla.pth:python/l10n
 mozilla.pth:third_party/python/atomicwrites
 mozilla.pth:third_party/python/attrs/src
 mozilla.pth:third_party/python/blessings
+mozilla.pth:third_party/python/Click
 mozilla.pth:third_party/python/compare-locales
 mozilla.pth:third_party/python/configobj
 mozilla.pth:third_party/python/cram
