@@ -1,10 +1,7 @@
-// |jit-test| test-also-no-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline; skip-if: !wasmDebuggingIsSupported()
 // Tests that wasm module scripts handles basic breakpoint operations.
 
 load(libdir + "wasm.js");
-
-if (!wasmDebuggingIsSupported())
-    quit();
 
 function runTest(wast, initFunc, doneFunc) {
     let g = newGlobal('');

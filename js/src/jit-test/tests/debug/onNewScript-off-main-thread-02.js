@@ -1,5 +1,4 @@
-if (helperThreadCount() === 0)
-  quit(0);
+// |jit-test| skip-if: helperThreadCount() === 0
 
 var global = newGlobal();
 var dbg = new Debugger(global);

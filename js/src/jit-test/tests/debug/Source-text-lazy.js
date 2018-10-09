@@ -1,12 +1,11 @@
+// |jit-test| skip-if: typeof withSourceHook !== 'function'
+// withSourceHook isn't defined if you pass the shell the --fuzzing-safe
+// option. Skip this test silently, to avoid spurious failures.
+
 /*
  * Debugger.Source.prototype.text should correctly retrieve the source for
  * code compiled with CompileOptions::LAZY_SOURCE.
  */
-
-// withSourceHook isn't defined if you pass the shell the --fuzzing-safe
-// option. Skip this test silently, to avoid spurious failures.
-if (typeof withSourceHook != 'function')
-  quit(0);
 
 let g = newGlobal();
 let dbg = new Debugger(g);

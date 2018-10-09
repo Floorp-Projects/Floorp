@@ -1,11 +1,8 @@
-// |jit-test| test-also-no-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline; skip-if: !wasmDebuggingIsSupported()
 // Tests that wasm module scripts has inspectable locals.
 
 load(libdir + "wasm.js");
 load(libdir + 'eqArrayHelper.js');
-
-if (!wasmDebuggingIsSupported())
-    quit();
 
 function monitorLocalValues(wast, lib, expected) {
     function setupFrame(frame) {
