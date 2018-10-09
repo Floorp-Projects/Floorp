@@ -38,14 +38,15 @@ async function createLocalClient() {
   DebuggerServer.registerAllActors();
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   await client.connect();
-  return client;
+  return { client };
 }
 
 async function createNetworkClient(host, port) {
-  const transport = await DebuggerClient.socketConnect({ host, port });
+  const transportDetails = { host, port };
+  const transport = await DebuggerClient.socketConnect(transportDetails);
   const client = new DebuggerClient(transport);
   await client.connect();
-  return client;
+  return { client, transportDetails };
 }
 
 async function createUSBClient(socketPath) {
@@ -92,15 +93,15 @@ function connectRuntime(id) {
     dispatch({ type: CONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
-      const client = await createClientForRuntime(runtime);
+      const { client, transportDetails } = await createClientForRuntime(runtime);
       const info = await getRuntimeInfo(runtime, client);
+      const connection = { client, info, transportDetails };
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
         runtime: {
           id,
-          client,
-          info,
+          connection,
           type: runtime.type,
         }
       });
@@ -115,7 +116,7 @@ function disconnectRuntime(id) {
     dispatch({ type: DISCONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
-      const client = runtime.client;
+      const client = runtime.connection.client;
 
       await client.close();
       DebuggerServer.destroy();
