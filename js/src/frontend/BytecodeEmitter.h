@@ -110,6 +110,7 @@ struct CGYieldAndAwaitOffsetList {
 typedef Vector<jsbytecode, 64> BytecodeVector;
 typedef Vector<jssrcnote, 64> SrcNotesVector;
 
+class CallOrNewEmitter;
 class ElemOpEmitter;
 class EmitterScope;
 class NestableControl;
@@ -762,7 +763,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     bool isRestParameter(ParseNode* pn);
 
-    MOZ_MUST_USE bool emitArguments(ListNode* argsList, bool callop, bool spread);
+    MOZ_MUST_USE bool emitArguments(ListNode* argsList, bool isCall, bool isSpread,
+                                    CallOrNewEmitter& cone);
     MOZ_MUST_USE bool emitCallOrNew(BinaryNode* callNode,
                                     ValueUsage valueUsage = ValueUsage::WantValue);
     MOZ_MUST_USE bool emitSelfHostedCallFunction(BinaryNode* callNode);
@@ -809,7 +811,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitSuperGetElem(PropertyByValue* elem, bool isCall = false);
 
     MOZ_MUST_USE bool emitCalleeAndThis(ParseNode* callee, ParseNode* call,
-                                        bool isCall, bool isNew);
+                                        CallOrNewEmitter& cone);
 
     MOZ_MUST_USE bool emitPipeline(ListNode* node);
 
