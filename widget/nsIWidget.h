@@ -578,13 +578,6 @@ class nsIWidget : public nsISupports
     virtual mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() = 0;
 
     /**
-     * Return the scaling factor between device pixels and the platform-
-     * dependent "desktop pixels" by looking up the screen by the position
-     * of the widget.
-     */
-    virtual mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScaleByScreen() = 0;
-
-    /**
      * Return the default scale factor for the window. This is the
      * default number of device pixels per CSS pixel to use. This should
      * depend on OS/platform settings such as the Mac's "UI scale factor"

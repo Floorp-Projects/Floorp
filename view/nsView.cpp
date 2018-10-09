@@ -320,6 +320,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // Stash a copy of these and use them so we can handle this being deleted (say
   // from sync painting/flushing from Show/Move/Resize on the widget).
   LayoutDeviceIntRect newBounds;
+  RefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
   nsWindowType type = widget->WindowType();
 
@@ -359,8 +360,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // because of the potential for device-pixel coordinate spaces for mixed
   // hidpi/lodpi screens to overlap each other and result in bad placement
   // (bug 814434).
-
-  DesktopToLayoutDeviceScale scale = widget->GetDesktopToDeviceScaleByScreen();
+  DesktopToLayoutDeviceScale scale = dx->GetDesktopToDeviceScale();
 
   DesktopRect deskRect = newBounds / scale;
   if (changedPos) {
