@@ -177,7 +177,7 @@ VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
 MediaResult
 VideoDecoderChild::InitIPDL(const VideoInfo& aVideoInfo,
                             float aFramerate,
-                            bool aDisallowHWDecoder,
+                            const CreateDecoderParams::OptionSet& aOptions,
                             const layers::TextureFactoryIdentifier& aIdentifier)
 {
   RefPtr<VideoDecoderManagerChild> manager =
@@ -207,7 +207,7 @@ VideoDecoderChild::InitIPDL(const VideoInfo& aVideoInfo,
   if (manager->SendPVideoDecoderConstructor(this,
                                             aVideoInfo,
                                             aFramerate,
-                                            aDisallowHWDecoder,
+                                            aOptions,
                                             aIdentifier,
                                             &success,
                                             &mBlacklistedD3D11Driver,

@@ -201,22 +201,29 @@ VideoDecoderManagerParent::ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyRea
 }
 
 PVideoDecoderParent*
-VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
-                                                    const float& aFramerate,
-                                                    const bool& aDisallowHWDecoder,
-                                                    const layers::TextureFactoryIdentifier& aIdentifier,
-                                                    bool* aSuccess,
-                                                    nsCString* aBlacklistedD3D11Driver,
-                                                    nsCString* aBlacklistedD3D9Driver,
-                                                    nsCString* aErrorDescription)
+VideoDecoderManagerParent::AllocPVideoDecoderParent(
+  const VideoInfo& aVideoInfo,
+  const float& aFramerate,
+  const CreateDecoderParams::OptionSet& aOptions,
+  const layers::TextureFactoryIdentifier& aIdentifier,
+  bool* aSuccess,
+  nsCString* aBlacklistedD3D11Driver,
+  nsCString* aBlacklistedD3D9Driver,
+  nsCString* aErrorDescription)
 {
-  RefPtr<TaskQueue> decodeTaskQueue = new TaskQueue(
-    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-    "VideoDecoderParent::mDecodeTaskQueue");
+  RefPtr<TaskQueue> decodeTaskQueue =
+    new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                  "VideoDecoderParent::mDecodeTaskQueue");
 
-  auto* parent = new VideoDecoderParent(
-    this, aVideoInfo, aFramerate, aDisallowHWDecoder, aIdentifier,
-    sManagerTaskQueue, decodeTaskQueue, aSuccess, aErrorDescription);
+  auto* parent = new VideoDecoderParent(this,
+                                        aVideoInfo,
+                                        aFramerate,
+                                        aOptions,
+                                        aIdentifier,
+                                        sManagerTaskQueue,
+                                        decodeTaskQueue,
+                                        aSuccess,
+                                        aErrorDescription);
 
 #ifdef XP_WIN
   *aBlacklistedD3D11Driver = GetFoundD3D11BlacklistedDLL();

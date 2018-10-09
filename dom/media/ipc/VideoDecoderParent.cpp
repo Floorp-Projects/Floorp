@@ -42,15 +42,16 @@ private:
   virtual ~KnowsCompositorVideo() = default;
 };
 
-VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
-                                       const VideoInfo& aVideoInfo,
-                                       float aFramerate,
-                                       bool aDisallowHWDecoder,
-                                       const layers::TextureFactoryIdentifier& aIdentifier,
-                                       TaskQueue* aManagerTaskQueue,
-                                       TaskQueue* aDecodeTaskQueue,
-                                       bool* aSuccess,
-                                       nsCString* aErrorDescription)
+VideoDecoderParent::VideoDecoderParent(
+  VideoDecoderManagerParent* aParent,
+  const VideoInfo& aVideoInfo,
+  float aFramerate,
+  const CreateDecoderParams::OptionSet& aOptions,
+  const layers::TextureFactoryIdentifier& aIdentifier,
+  TaskQueue* aManagerTaskQueue,
+  TaskQueue* aDecodeTaskQueue,
+  bool* aSuccess,
+  nsCString* aErrorDescription)
   : mParent(aParent)
   , mManagerTaskQueue(aManagerTaskQueue)
   , mDecodeTaskQueue(aDecodeTaskQueue)
@@ -82,8 +83,7 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
   params.mKnowsCompositor = mKnowsCompositor;
   params.mImageContainer = new layers::ImageContainer();
   params.mRate = CreateDecoderParams::VideoFrameRate(aFramerate);
-  params.mOptions = OptionSet(
-    aDisallowHWDecoder ? Option::HardwareDecoderNotAllowed : Option::Default);
+  params.mOptions = aOptions;
   MediaResult error(NS_OK);
   params.mError = &error;
 

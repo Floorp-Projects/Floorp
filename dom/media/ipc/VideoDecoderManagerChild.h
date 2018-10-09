@@ -70,14 +70,15 @@ protected:
 
   void HandleFatalError(const char* aMsg) const override;
 
-  PVideoDecoderChild* AllocPVideoDecoderChild(const VideoInfo& aVideoInfo,
-                                              const float& aFramerate,
-                                              const bool& aDisallowHWDecoder,
-                                              const layers::TextureFactoryIdentifier& aIdentifier,
-                                              bool* aSuccess,
-                                              nsCString* aBlacklistedD3D11Driver,
-                                              nsCString* aBlacklistedD3D9Driver,
-                                              nsCString* aErrorDescription) override;
+  PVideoDecoderChild* AllocPVideoDecoderChild(
+    const VideoInfo& aVideoInfo,
+    const float& aFramerate,
+    const CreateDecoderParams::OptionSet& aOptions,
+    const layers::TextureFactoryIdentifier& aIdentifier,
+    bool* aSuccess,
+    nsCString* aBlacklistedD3D11Driver,
+    nsCString* aBlacklistedD3D9Driver,
+    nsCString* aErrorDescription) override;
   bool DeallocPVideoDecoderChild(PVideoDecoderChild* actor) override;
 
 private:
