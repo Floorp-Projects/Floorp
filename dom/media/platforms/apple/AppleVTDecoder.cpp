@@ -28,14 +28,17 @@ namespace mozilla {
 
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                                TaskQueue* aTaskQueue,
-                               layers::ImageContainer* aImageContainer)
+                               layers::ImageContainer* aImageContainer,
+                               CreateDecoderParams::OptionSet aOptions)
   : mExtraData(aConfig.mExtraData)
   , mPictureWidth(aConfig.mImage.width)
   , mPictureHeight(aConfig.mImage.height)
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
   , mTaskQueue(aTaskQueue)
-  , mMaxRefFrames(H264::ComputeMaxRefFrames(aConfig.mExtraData))
+  , mMaxRefFrames(aOptions.contains(CreateDecoderParams::Option::LowLatency)
+                    ? 0
+                    : H264::ComputeMaxRefFrames(aConfig.mExtraData))
   , mImageContainer(aImageContainer)
 #ifdef MOZ_WIDGET_UIKIT
   , mUseSoftwareImages(true)
@@ -50,7 +53,8 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
 {
   MOZ_COUNT_CTOR(AppleVTDecoder);
   // TODO: Verify aConfig.mime_type.
-  LOG("Creating AppleVTDecoder for %dx%d h.264 video", mDisplayWidth,
+  LOG("Creating AppleVTDecoder for %dx%d h.264 video",
+      mDisplayWidth,
       mDisplayHeight);
 
   // To ensure our PromiseHolder is only ever accessed with the monitor held.
