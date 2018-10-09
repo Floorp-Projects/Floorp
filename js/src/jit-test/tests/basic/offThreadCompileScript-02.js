@@ -1,7 +1,6 @@
-// Test offThreadCompileScript option handling.
+// |jit-test| skip-if: helperThreadCount() === 0
 
-if (helperThreadCount() === 0)
-  quit(0);
+// Test offThreadCompileScript option handling.
 
 offThreadCompileScript('Error()');
 assertEq(!!runOffThreadScript().stack.match(/^@<string>:1:1\n/), true);
