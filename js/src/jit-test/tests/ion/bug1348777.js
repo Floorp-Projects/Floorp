@@ -1,6 +1,4 @@
-
-if (typeof TypedObject === 'undefined')
-    quit();
+// |jit-test| skip-if: !this.hasOwnProperty("TypedObject")
 
 var uint8 = TypedObject.uint8;
 function check(v) {

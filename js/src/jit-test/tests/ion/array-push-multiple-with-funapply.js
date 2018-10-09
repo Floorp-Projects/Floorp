@@ -1,4 +1,4 @@
-// |jit-test| --no-threads
+// |jit-test| --no-threads; skip-if: !('oomAtAllocation' in this)
 
 // This test case check's Ion ability to inline Array.prototype.push, when
 // fun.apply is used and inlined with the set of arguments of the current
@@ -20,8 +20,6 @@ function canIoncompile() {
   }
 }
 
-if (!("oomAtAllocation" in this))
-  quit();
 if (canIoncompile() != true)
   quit();
 if ("gczeal" in this)
