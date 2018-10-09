@@ -106,6 +106,8 @@ policy-PopupBlocking = Allow certain websites to display popups by default.
 
 policy-Proxy = Configure proxy settings.
 
+policy-RequestedLocales = Set the list of requested locales for the application in order of preference.
+
 policy-SanitizeOnShutdown = Clear all navigation data on shutdown.
 
 policy-SearchBar = Set the default location of the search bar. The user is still allowed to customize it.

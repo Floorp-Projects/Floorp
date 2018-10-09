@@ -666,6 +666,12 @@ var Policies = {
     },
   },
 
+  "RequestedLocales": {
+    onBeforeAddons(manager, param) {
+      Services.locale.requestedLocales = param;
+    },
+  },
+
   "SanitizeOnShutdown": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("privacy.sanitize.sanitizeOnShutdown", param);

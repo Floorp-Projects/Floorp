@@ -586,6 +586,13 @@
       }
     },
 
+    "RequestedLocales": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+
     "SanitizeOnShutdown": {
       "type": "boolean"
     },
