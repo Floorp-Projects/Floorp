@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.toolbar
 
+import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
@@ -16,41 +17,22 @@ class ToolbarPresenter(
     private val toolbar: Toolbar,
     private val sessionManager: SessionManager,
     private val sessionId: String? = null
-) : SessionManager.Observer, Session.Observer {
-    private var activeSession: Session? = null
+) : SelectionAwareSessionObserver(sessionManager) {
 
     /**
      * Start presenter: Display data in toolbar.
      */
     fun start() {
-        activeSession = sessionId?.let {
-            sessionManager.findSessionById(sessionId)
-        } ?: run {
-            sessionManager.register(this)
-            sessionManager.selectedSession
-        }
-
-        activeSession?.register(this)
+        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
+        session?.let { observeFixed(it) } ?: observeSelected()
         initializeView()
-    }
-
-    /**
-     * Stop presenter from updating the view.
-     */
-    fun stop() {
-        sessionManager.unregister(this)
-        activeSession?.unregister(this)
     }
 
     /**
      * A new session has been selected: Update toolbar to display data of new session.
      */
     override fun onSessionSelected(session: Session) {
-        activeSession?.unregister(this)
-
-        activeSession = session
-        session.register(this)
-
+        super.onSessionSelected(session)
         initializeView()
     }
 
