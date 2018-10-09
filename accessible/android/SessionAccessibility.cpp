@@ -6,6 +6,10 @@
 #include "SessionAccessibility.h"
 #include "AndroidUiThread.h"
 #include "nsThreadUtils.h"
+#include "HyperTextAccessible.h"
+#include "JavaBuiltins.h"
+#include "RootAccessibleWrap.h"
+#include "nsAccessibilityService.h"
 
 #ifdef DEBUG
 #include <android/log.h>
@@ -23,6 +27,20 @@ const char nsWindow::NativePtr<mozilla::a11y::SessionAccessibility>::sName[] =
 
 using namespace mozilla::a11y;
 
+class Settings final
+  : public mozilla::java::SessionAccessibility::Settings::Natives<Settings>
+{
+public:
+  static void ToggleNativeAccessibility(bool aEnable)
+  {
+    if (aEnable) {
+      GetOrCreateAccService();
+    } else {
+      MaybeShutdownAccService(nsAccessibilityService::ePlatformAPI);
+    }
+  }
+};
+
 void
 SessionAccessibility::SetAttached(bool aAttached,
                                   already_AddRefed<Runnable> aRunnable)
@@ -39,5 +57,55 @@ SessionAccessibility::SetAttached(bool aAttached,
           runnable->Run();
         }
       }));
+  }
+}
+
+void
+SessionAccessibility::Init()
+{
+  java::SessionAccessibility::NativeProvider::Natives<
+    SessionAccessibility>::Init();
+  Settings::Init();
+}
+
+mozilla::jni::Object::LocalRef
+SessionAccessibility::GetNodeInfo(int32_t aID)
+{
+  java::GeckoBundle::GlobalRef ret = nullptr;
+  RefPtr<SessionAccessibility> self(this);
+  nsAppShell::SyncRunEvent([this, self, aID, &ret] {
+    if (RootAccessibleWrap* rootAcc = GetRoot()) {
+      AccessibleWrap* acc = rootAcc->FindAccessibleById(aID);
+      if (acc) {
+        ret = acc->ToBundle();
+      } else {
+        AALOG("oops, nothing for %d", aID);
+      }
+    }
+  });
+
+  return mozilla::jni::Object::Ref::From(ret);
+}
+
+RootAccessibleWrap*
+SessionAccessibility::GetRoot()
+{
+  if (!mWindow) {
+    return nullptr;
+  }
+
+  return static_cast<RootAccessibleWrap*>(mWindow->GetRootAccessible());
+}
+
+void
+SessionAccessibility::SetText(int32_t aID, jni::String::Param aText)
+{
+  if (RootAccessibleWrap* rootAcc = GetRoot()) {
+    AccessibleWrap* acc = rootAcc->FindAccessibleById(aID);
+    if (!acc) {
+      return;
+    }
+
+    acc->SetTextContents(aText->ToString());
   }
 }

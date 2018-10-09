@@ -14,12 +14,29 @@
 namespace mozilla {
 namespace a11y {
 
+/**
+ * A wrapper for Accessible proxies. The public methods here should be overriden
+ * from AccessibleWrap or its super classes.
+ * This gives us an abstraction layer so SessionAccessibility doesn't have
+ * to distinguish between a local or remote accessibles.
+ * NOTE: This shouldn't be regarded as a full Accessible implementation.
+ */
 class ProxyAccessibleWrap : public AccessibleWrap
 {
 public:
   explicit ProxyAccessibleWrap(ProxyAccessible* aProxy);
 
   virtual void Shutdown() override;
+
+  // Accessible
+
+  virtual already_AddRefed<nsIPersistentProperties> Attributes() override;
+
+  // AccessibleWrap
+
+  virtual void SetTextContents(const nsAString& aText) override;
+
+  virtual mozilla::java::GeckoBundle::LocalRef ToBundle() override;
 };
 
 class DocProxyAccessibleWrap : public ProxyAccessibleWrap

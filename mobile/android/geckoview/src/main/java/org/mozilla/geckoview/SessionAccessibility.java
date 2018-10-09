@@ -5,12 +5,11 @@
 
 package org.mozilla.geckoview;
 
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.PrefsHelper;
-import org.mozilla.gecko.util.BundleEventListener;
-import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.mozglue.JNIObject;
 
@@ -28,28 +27,51 @@ import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityNodeInfo.RangeInfo;
+import android.view.accessibility.AccessibilityNodeInfo.CollectionItemInfo;
+import android.view.accessibility.AccessibilityNodeInfo.CollectionInfo;
 import android.view.accessibility.AccessibilityNodeProvider;
 
 public class SessionAccessibility {
     private static final String LOGTAG = "GeckoAccessibility";
-    private static final boolean DEBUG = false;
 
     // This is the number BrailleBack uses to start indexing routing keys.
     private static final int BRAILLE_CLICK_BASE_INDEX = -275000000;
-
-    private static final int ACTION_SET_TEXT = 0x200000;
     private static final String ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE =
             "ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE";
+
+    @WrapForJNI static final int FLAG_ACCESSIBILITY_FOCUSED = 0;
+    @WrapForJNI static final int FLAG_CHECKABLE = 1 << 1;
+    @WrapForJNI static final int FLAG_CHECKED = 1 << 2;
+    @WrapForJNI static final int FLAG_CLICKABLE = 1 << 3;
+    @WrapForJNI static final int FLAG_CONTENT_INVALID = 1 << 4;
+    @WrapForJNI static final int FLAG_CONTEXT_CLICKABLE = 1 << 5;
+    @WrapForJNI static final int FLAG_EDITABLE = 1 << 6;
+    @WrapForJNI static final int FLAG_ENABLED = 1 << 7;
+    @WrapForJNI static final int FLAG_FOCUSABLE = 1 << 8;
+    @WrapForJNI static final int FLAG_FOCUSED = 1 << 9;
+    @WrapForJNI static final int FLAG_LONG_CLICKABLE = 1 << 10;
+    @WrapForJNI static final int FLAG_MULTI_LINE = 1 << 11;
+    @WrapForJNI static final int FLAG_PASSWORD = 1 << 12;
+    @WrapForJNI static final int FLAG_SCROLLABLE = 1 << 13;
+    @WrapForJNI static final int FLAG_SELECTED = 1 << 14;
+    @WrapForJNI static final int FLAG_VISIBLE_TO_USER = 1 << 15;
+    @WrapForJNI static final int FLAG_SELECTABLE = 1 << 16;
+
 
     /* package */ final class NodeProvider extends AccessibilityNodeProvider {
         @Override
         public AccessibilityNodeInfo createAccessibilityNodeInfo(int virtualDescendantId) {
             AccessibilityNodeInfo node = AccessibilityNodeInfo.obtain(mView, virtualDescendantId);
-            if (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null) {
-                // When running junit tests we don't have a display
-                mView.onInitializeAccessibilityNodeInfo(node);
+            if (mAttached) {
+                populateNodeFromBundle(node, nativeProvider.getNodeInfo(virtualDescendantId));
+            } else {
+                if (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null) {
+                    // When running junit tests we don't have a display
+                    mView.onInitializeAccessibilityNodeInfo(node);
+                }
+                node.setClassName("android.webkit.WebView");
             }
-            node.setClassName("android.webkit.WebView");
             return node;
         }
 
@@ -131,11 +153,209 @@ public class SessionAccessibility {
                 data.putInt("action", action);
                 mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityClipboard", data);
                 return true;
+            case AccessibilityNodeInfo.ACTION_SET_TEXT:
+                final String value = arguments.getString(Build.VERSION.SDK_INT >= 21
+                        ? AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE
+                        : ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE);
+                if (mAttached) {
+                    nativeProvider.setText(virtualViewId, value);
+                }
+                return true;
             }
 
             return mView.performAccessibilityAction(action, arguments);
         }
-    };
+
+        private void populateNodeFromBundle(final AccessibilityNodeInfo node, final GeckoBundle nodeInfo) {
+            if (mView == null || nodeInfo == null) {
+                return;
+            }
+
+            boolean isRoot = nodeInfo.getInt("id") == View.NO_ID;
+            if (isRoot) {
+                if (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null) {
+                    // When running junit tests we don't have a display
+                    mView.onInitializeAccessibilityNodeInfo(node);
+                }
+                node.addAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+                node.addAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+            } else {
+                node.setParent(mView, nodeInfo.getInt("parentId", View.NO_ID));
+            }
+
+            final int flags = nodeInfo.getInt("flags");
+
+            // The basics
+            node.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
+            node.setClassName(nodeInfo.getString("className", "android.view.View"));
+            node.setText(nodeInfo.getString("text", ""));
+
+            // Add actions
+            node.addAction(AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT);
+            node.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT);
+            node.addAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+            node.addAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
+            node.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
+            node.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
+            node.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER |
+                    AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD |
+                    AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE |
+                    AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PARAGRAPH);
+            if ((flags & FLAG_CLICKABLE) != 0) {
+                node.addAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
+
+
+            // Set boolean properties
+            node.setAccessibilityFocused((flags & FLAG_ACCESSIBILITY_FOCUSED) != 0);
+            node.setCheckable((flags & FLAG_CHECKABLE) != 0);
+            node.setChecked((flags & FLAG_CHECKED) != 0);
+            node.setClickable((flags & FLAG_CLICKABLE) != 0);
+            node.setEnabled((flags & FLAG_ENABLED) != 0);
+            node.setFocusable((flags & FLAG_FOCUSABLE) != 0);
+            node.setFocused((flags & FLAG_FOCUSED) != 0);
+            node.setLongClickable((flags & FLAG_LONG_CLICKABLE) != 0);
+            node.setPassword((flags & FLAG_PASSWORD) != 0);
+            node.setScrollable((flags & FLAG_SCROLLABLE) != 0);
+            node.setSelected((flags & FLAG_SELECTED) != 0);
+            node.setVisibleToUser((flags & FLAG_VISIBLE_TO_USER) != 0);
+            // Other boolean properties to consider later:
+            // setHeading, setImportantForAccessibility, setScreenReaderFocusable, setShowingHintText, setDismissable
+
+            // Bounds
+            int[] b = nodeInfo.getIntArray("bounds");
+            if (b != null) {
+                final Rect screenBounds = new Rect(b[0], b[1], b[2], b[3]);
+                node.setBoundsInScreen(screenBounds);
+
+                final Matrix matrix = new Matrix();
+                mSession.getClientToScreenMatrix(matrix);
+                final float[] origin = new float[2];
+                matrix.mapPoints(origin);
+                final Rect parentBounds = new Rect(b[0] - (int)origin[0], b[1] - (int)origin[1], b[2], b[3]);
+                node.setBoundsInParent(parentBounds);
+            }
+
+            // Children
+            int[] children = nodeInfo.getIntArray("children");
+            if (children != null) {
+                for (int childId : children) {
+                    node.addChild(mView, childId);
+                }
+            }
+
+            // SDK 18 and above
+            if (Build.VERSION.SDK_INT >= 18) {
+                if ((flags & FLAG_EDITABLE) != 0) {
+                    node.addAction(AccessibilityNodeInfo.ACTION_SET_SELECTION);
+                    node.addAction(AccessibilityNodeInfo.ACTION_CUT);
+                    node.addAction(AccessibilityNodeInfo.ACTION_COPY);
+                    node.addAction(AccessibilityNodeInfo.ACTION_PASTE);
+                    node.setEditable(true);
+                }
+            }
+
+            // SDK 19 and above
+            if (Build.VERSION.SDK_INT >= 19) {
+                node.setMultiLine((flags & FLAG_MULTI_LINE) != 0);
+                node.setContentInvalid((flags & FLAG_CONTENT_INVALID) != 0);
+
+                // Set bundle keys like role and hint
+                Bundle bundle = node.getExtras();
+                if (nodeInfo.containsKey("hint")) {
+                    final String hint =  nodeInfo.getString("hint");
+                    bundle.putCharSequence("AccessibilityNodeInfo.hint", hint);
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        node.setHintText(hint);
+                    }
+                }
+                if (nodeInfo.containsKey("geckoRole")) {
+                    bundle.putCharSequence("AccessibilityNodeInfo.geckoRole", nodeInfo.getString("geckoRole"));
+                }
+                if (nodeInfo.containsKey("roleDescription")) {
+                    bundle.putCharSequence("AccessibilityNodeInfo.roleDescription", nodeInfo.getString("roleDescription"));
+                }
+                if (isRoot) {
+                    // Argument values for ACTION_NEXT_HTML_ELEMENT/ACTION_PREVIOUS_HTML_ELEMENT.
+                    // This is mostly here to let TalkBack know we are a legit "WebView".
+                    bundle.putCharSequence(
+                            "ACTION_ARGUMENT_HTML_ELEMENT_STRING_VALUES",
+                            "ARTICLE,BUTTON,CHECKBOX,COMBOBOX,CONTROL," +
+                                    "FOCUSABLE,FRAME,GRAPHIC,H1,H2,H3,H4,H5,H6," +
+                                    "HEADING,LANDMARK,LINK,LIST,LIST_ITEM,MAIN," +
+                                    "MEDIA,RADIO,SECTION,TABLE,TEXT_FIELD," +
+                                    "UNVISITED_LINK,VISITED_LINK");
+                }
+
+
+                // Set RangeInfo
+                GeckoBundle rangeBundle = nodeInfo.getBundle("rangeInfo");
+                if (rangeBundle != null) {
+                    final RangeInfo rangeInfo = RangeInfo.obtain(
+                            rangeBundle.getInt("type"),
+                            (float)rangeBundle.getDouble("min", Float.NEGATIVE_INFINITY),
+                            (float)rangeBundle.getDouble("max", Float.POSITIVE_INFINITY),
+                            (float)rangeBundle.getDouble("current", 0));
+                    node.setRangeInfo(rangeInfo);
+                }
+
+                // Set CollectionItemInfo
+                GeckoBundle collectionItemBundle = nodeInfo.getBundle("collectionItemInfo");
+                if (collectionItemBundle != null) {
+                    final CollectionItemInfo collectionItemInfo = CollectionItemInfo.obtain(
+                            collectionItemBundle.getInt("rowIndex"),
+                            collectionItemBundle.getInt("rowSpan"),
+                            collectionItemBundle.getInt("columnIndex"),
+                            collectionItemBundle.getInt("columnSpan"), false);
+                    node.setCollectionItemInfo(collectionItemInfo);
+                }
+
+                // Set CollectionInfo
+                GeckoBundle collectionBundle = nodeInfo.getBundle("collectionInfo");
+                if (collectionBundle != null) {
+                    final CollectionInfo collectionInfo = CollectionInfo.obtain(
+                            collectionBundle.getInt("rowCount"),
+                            collectionBundle.getInt("columnCount"),
+                            collectionBundle.getBoolean("isHierarchical", false),
+                            collectionBundle.getInt("selectionMode", 0));
+                    node.setCollectionInfo(collectionInfo);
+                }
+
+                // Set inputType
+                switch (nodeInfo.getString("inputType", "").toLowerCase()) {
+                    case "email":
+                        node.setInputType(InputType.TYPE_CLASS_TEXT |
+                                InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
+                        break;
+                    case "number":
+                        node.setInputType(InputType.TYPE_CLASS_NUMBER);
+                        break;
+                    case "password":
+                        node.setInputType(InputType.TYPE_CLASS_TEXT |
+                                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD);
+                        break;
+                    case "tel":
+                        node.setInputType(InputType.TYPE_CLASS_PHONE);
+                        break;
+                    case "text":
+                        node.setInputType(InputType.TYPE_CLASS_TEXT |
+                                InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+                        break;
+                    case "url":
+                        node.setInputType(InputType.TYPE_CLASS_TEXT |
+                                InputType.TYPE_TEXT_VARIATION_URI);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // SDK 23 and above
+            if (Build.VERSION.SDK_INT >= 23) {
+                node.setContextClickable((flags & FLAG_CONTEXT_CLICKABLE) != 0);
+            }
+        }
+    }
 
     // Gecko session we are proxying
     /* package */  final GeckoSession mSession;
@@ -143,12 +363,10 @@ public class SessionAccessibility {
     private View mView;
     // The native portion of the node provider.
     /* package */ final NativeProvider nativeProvider = new NativeProvider();
-
     private boolean mAttached = false;
 
     /* package */ SessionAccessibility(final GeckoSession session) {
         mSession = session;
-
         Settings.updateAccessibilitySettings();
     }
 
@@ -254,13 +472,25 @@ public class SessionAccessibility {
         }
 
         /* package */ static void dispatch() {
-            final GeckoBundle ret = new GeckoBundle(1);
-            ret.putBoolean("enabled", isTouchExplorationEnabled());
+            final GeckoBundle ret = new GeckoBundle(2);
+            ret.putBoolean("touchEnabled", isTouchExplorationEnabled());
+            ret.putBoolean("enabled", isEnabled());
             // "GeckoView:AccessibilitySettings" is dispatched to the Gecko thread.
             EventDispatcher.getInstance().dispatch("GeckoView:AccessibilitySettings", ret);
             // "GeckoView:AccessibilityEnabled" is dispatched to the UI thread.
             EventDispatcher.getInstance().dispatch("GeckoView:AccessibilityEnabled", ret);
+
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                toggleNativeAccessibility(isEnabled());
+            } else {
+                GeckoThread.queueNativeCallUntil(
+                        GeckoThread.State.PROFILE_READY,
+                        Settings.class, "toggleNativeAccessibility", isEnabled());
+            }
         }
+
+        @WrapForJNI(dispatchTo = "gecko")
+        private static native void toggleNativeAccessibility(boolean enable);
     }
 
     public boolean onMotionEvent(final MotionEvent event) {
@@ -296,5 +526,11 @@ public class SessionAccessibility {
             // Disposal happens in native code.
             throw new UnsupportedOperationException();
         }
+
+        @WrapForJNI(dispatchTo = "current")
+        public native GeckoBundle getNodeInfo(int id);
+
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void setText(int id, String text);
     }
 }
