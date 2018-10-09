@@ -27,6 +27,7 @@ public:
                      layers::KnowsCompositor* aKnowsCompositor,
                      layers::ImageContainer* aImageContainer,
                      float aFramerate,
+                     const CreateDecoderParams::OptionSet& aOptions,
                      bool aDXVAEnabled);
   ~WMFVideoMFTManager();
 
@@ -123,6 +124,7 @@ private:
   bool mIsValid = true;
   bool mIMFUsable = false;
   const float mFramerate;
+  const bool mLowLatency;
 };
 
 } // namespace mozilla
