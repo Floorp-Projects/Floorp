@@ -1465,7 +1465,7 @@ angle::Result Renderer11::drawArrays(const gl::Context *context, const gl::DrawC
     {
         ANGLE_TRY(markTransformFeedbackUsage(context));
 
-        if (programD3D->usesGeometryShader(params.mode()))
+        if (programD3D->usesGeometryShader(context, params.mode()))
         {
             return drawWithGeometryShaderAndTransformFeedback(
                 context, params.mode(), adjustedInstanceCount, clampedVertexCount);
