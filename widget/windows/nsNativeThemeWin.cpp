@@ -705,12 +705,13 @@ nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(nsIFrame * aFrame, HANDLE 
     }
 
     case StyleAppearance::Menuarrow:
-    {
       // Use the width of the arrow glyph as padding. See the drawing
       // code for details.
       aResult->width *= 2;
       break;
-    }
+
+    default:
+      break;
   }
 
   ::ReleaseDC(nullptr, hdc);
@@ -826,8 +827,9 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(WidgetType aWidge
     case StyleAppearance::MozWinGlass:
     case StyleAppearance::MozWinBorderlessGlass:
       return Some(eUXWindowFrame);
+    default:
+      return Nothing();
   }
-  return Nothing();
 }
 
 HANDLE
@@ -1508,11 +1510,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, WidgetType aWidgetType,
       aPart = -1;
       aState = 0;
       return NS_OK;
+    default:
+      aPart = 0;
+      aState = 0;
+      return NS_ERROR_FAILURE;
   }
-
-  aPart = 0;
-  aState = 0;
-  return NS_ERROR_FAILURE;
 }
 
 static bool
@@ -1599,7 +1601,6 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
         // Nothing to draw, these areas are glass. Minimum dimensions
         // should be set, so xul content should be layed out correctly.
         return NS_OK;
-      break;
       case StyleAppearance::MozWindowButtonClose:
       case StyleAppearance::MozWindowButtonMinimize:
       case StyleAppearance::MozWindowButtonMaximize:
@@ -1608,7 +1609,6 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
         // through here and call the theme library we'll get aero
         // basic bitmaps. 
         return NS_OK;
-      break;
       case StyleAppearance::MozWinGlass:
       case StyleAppearance::MozWinBorderlessGlass:
         // Nothing to draw, this is the glass background.
@@ -1617,7 +1617,8 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
       case StyleAppearance::MozWindowButtonBoxMaximized:
         // We handle these through nsIWidget::UpdateThemeGeometries
         return NS_OK;
-      break;
+      default:
+        break;
     }
   }
 
@@ -2029,18 +2030,6 @@ ScaleForFrameDPI(LayoutDeviceIntMargin* aMargin, nsIFrame* aFrame)
 }
 
 static void
-ScaleForFrameDPI(nsIntMargin* aMargin, nsIFrame* aFrame)
-{
-  double themeScale = GetThemeDpiScaleFactor(aFrame);
-  if (themeScale != 1.0) {
-    aMargin->top = NSToIntRound(aMargin->top * themeScale);
-    aMargin->left = NSToIntRound(aMargin->left * themeScale);
-    aMargin->bottom = NSToIntRound(aMargin->bottom * themeScale);
-    aMargin->right = NSToIntRound(aMargin->right * themeScale);
-  }
-}
-
-static void
 ScaleForFrameDPI(LayoutDeviceIntSize* aSize, nsIFrame* aFrame)
 {
   double themeScale = GetThemeDpiScaleFactor(aFrame);
@@ -2147,6 +2136,8 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Radio:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
+    default:
+      break;
   }
 
   bool ok = true;
@@ -2385,6 +2376,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
     case StyleAppearance::MozWinGlass:
     case StyleAppearance::MozWinBorderlessGlass:
       return NS_OK; // Don't worry about it.
+    default:
+      break;
   }
 
   if (aWidgetType == StyleAppearance::Menuitem && IsTopLevelMenu(aFrame))
@@ -2563,6 +2556,9 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
       aResult->height = GetSystemMetrics(SM_CYFRAME);
       *aIsOverridable = false;
       return rv;
+
+    default:
+      break;
   }
 
   int32_t part, state;
@@ -2808,6 +2804,8 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetType
   case StyleAppearance::ProgresschunkVertical:
   case StyleAppearance::Range:
     return eTransparent;
+  default:
+    break;
   }
 
   HANDLE theme = GetTheme(aWidgetType);
@@ -2921,8 +2919,9 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonBoxMaximized:
       return true;
+    default:
+      return false;
   }
-  return false;
 }
 
 LayoutDeviceIntMargin
@@ -3466,6 +3465,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, WidgetT
         case StyleAppearance::ScrollbarbuttonRight:
           aState = DFCS_SCROLLRIGHT;
           break;
+        default:
+          break;
       }
 
       if (IsDisabled(aFrame, contentState))
@@ -3490,6 +3491,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, WidgetT
         case StyleAppearance::InnerSpinButton:
         case StyleAppearance::SpinnerDownbutton:
           aState = DFCS_SCROLLDOWN;
+          break;
+        default:
           break;
       }
 
@@ -3555,8 +3558,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, WidgetT
                GetClassicWindowFrameButtonState(GetContentState(aFrame,
                                                                 aWidgetType));
       return NS_OK;
+    default:
+      return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_FAILURE;
 }
 
 // Draw classic Windows tab
@@ -4182,44 +4186,6 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(WidgetType aWidgetType)
         gfxWindowsNativeDrawing::CAN_AXIS_ALIGNED_SCALE |
         gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
 
-    // need to check these others
-    case StyleAppearance::Range:
-    case StyleAppearance::RangeThumb:
-    case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-    case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-    case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::Scrollcorner:
-    case StyleAppearance::ScaleHorizontal:
-    case StyleAppearance::ScaleVertical:
-    case StyleAppearance::ScalethumbHorizontal:
-    case StyleAppearance::ScalethumbVertical:
-    case StyleAppearance::InnerSpinButton:
-    case StyleAppearance::SpinnerUpbutton:
-    case StyleAppearance::SpinnerDownbutton:
-    case StyleAppearance::Listbox:
-    case StyleAppearance::Treeview:
-    case StyleAppearance::Tooltip:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-    case StyleAppearance::Resizer:
-    case StyleAppearance::Progressbar:
-    case StyleAppearance::ProgressbarVertical:
-    case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgresschunkVertical:
-    case StyleAppearance::Tab:
-    case StyleAppearance::Tabpanel:
-    case StyleAppearance::Tabpanels:
-    case StyleAppearance::Menubar:
-    case StyleAppearance::Menupopup:
-    case StyleAppearance::Menuitem:
-      break;
-
     // the dropdown button /almost/ renders correctly with scaling,
     // except that the graphic in the dropdown button (the downward arrow)
     // doesn't get scaled up.
@@ -4238,12 +4204,14 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(WidgetType aWidgetType)
         gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
         gfxWindowsNativeDrawing::CANNOT_AXIS_ALIGNED_SCALE |
         gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
-  }
 
-  return
-    gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
-    gfxWindowsNativeDrawing::CANNOT_AXIS_ALIGNED_SCALE |
-    gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
+    // need to check these others
+    default:
+      return
+        gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
+        gfxWindowsNativeDrawing::CANNOT_AXIS_ALIGNED_SCALE |
+        gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
+  }
 }
 
 static nscolor
