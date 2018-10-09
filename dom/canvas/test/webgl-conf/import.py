@@ -7,6 +7,7 @@
 assert __name__ == '__main__'
 
 from pathlib import *
+import shutil
 import subprocess
 import sys
 
@@ -23,15 +24,16 @@ from vendor_from_git import *
 
 # --
 
-merge_base_from = sys.argv[1]
-record_cherry_picks(DIR_IN_GECKO, merge_base_from)
+(MERGE_BASE_ORIGIN, ) = sys.argv[1:] # Not always 'origin'!
+record_cherry_picks(DIR_IN_GECKO, MERGE_BASE_ORIGIN)
 
 # --
 
-src_dir = Path(REPO_DIR, 'sdk/tests').as_posix()
-dest_dir = Path(DIR_IN_GECKO, 'checkout').as_posix()
-run_checked("rm -rI '{}'".format(dest_dir), shell=True)
-run_checked("mkdir '{}'".format(dest_dir), shell=True);
-run_checked("cp -rT '{}' '{}'".format(src_dir, dest_dir), shell=True);
+src_dir = Path(REPO_DIR, 'sdk/tests')
+dest_dir = Path(DIR_IN_GECKO, 'checkout')
+print_now('Nuking old checkout...')
+shutil.rmtree(dest_dir, True)
+print_now('Writing new checkout...')
+shutil.copytree(src_dir, dest_dir, copy_function=shutil.copy)
 
 print_now('Done!')
