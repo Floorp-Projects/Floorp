@@ -1,7 +1,6 @@
-// Exercise triggering GC of atoms zone while off-thread parsing is happening.
+// |jit-test| skip-if: helperThreadCount() === 0
 
-if (helperThreadCount() === 0)
-   quit();
+// Exercise triggering GC of atoms zone while off-thread parsing is happening.
 
 gczeal(0);
 

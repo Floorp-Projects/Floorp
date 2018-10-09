@@ -1,5 +1,4 @@
-if (typeof 'oomAtAllocation' === 'undefined')
-    quit();
+// |jit-test| skip-if: typeof 'oomAtAllocation' === 'undefined'
 
 function fn(i) {
     if (i == 3)

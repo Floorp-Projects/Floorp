@@ -1,7 +1,4 @@
-// |jit-test| slow
-
-if (!('oomTest' in this))
-    quit();
+// |jit-test| slow; skip-if: !('oomTest' in this)
 
 function f1() {}
 function f2() {}
