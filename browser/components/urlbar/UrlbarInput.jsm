@@ -188,6 +188,7 @@ class UrlbarInput {
 
     this.valueIsTyped = false;
     this.inputField.value = val;
+    this.formatValue();
 
     return val;
   }
