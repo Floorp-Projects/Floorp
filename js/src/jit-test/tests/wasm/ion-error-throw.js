@@ -1,8 +1,5 @@
-const options = getJitCompilerOptions();
-
+// |jit-test| skip-if: !getJitCompilerOptions()['baseline.enable']
 // These tests need at least baseline to make sense.
-if (!options['baseline.enable'])
-    quit();
 
 const { assertStackTrace, startProfiling, endProfiling, assertEqPreciseStacks } = WasmHelpers;
 

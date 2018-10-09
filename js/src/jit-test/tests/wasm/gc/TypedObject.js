@@ -1,5 +1,4 @@
-if (!wasmGcEnabled())
-    quit(0);
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // We can read the object fields from JS, and write them if they are mutable.
 

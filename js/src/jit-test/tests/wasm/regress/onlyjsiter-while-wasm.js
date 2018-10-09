@@ -1,5 +1,4 @@
-if (typeof evalInCooperativeThread === 'undefined')
-    quit();
+// |jit-test| skip-if: typeof evalInCooperativeThread === 'undefined'
 
 try {
     evalInCooperativeThread(`

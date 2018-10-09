@@ -1,11 +1,9 @@
-const options = getJitCompilerOptions();
-
+// |jit-test| skip-if: !getJitCompilerOptions()['baseline.enable']
 // These tests need at least baseline to make sense.
-if (!options['baseline.enable'])
-    quit();
 
 const { nextLineNumber, startProfiling, endProfiling, assertEqPreciseStacks } = WasmHelpers;
 
+const options = getJitCompilerOptions();
 const TRIGGER = options['ion.warmup.trigger'] + 10;
 const ITER = 2 * TRIGGER;
 const EXCEPTION_ITER = ITER - 2;
