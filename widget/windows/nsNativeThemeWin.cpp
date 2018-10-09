@@ -1557,6 +1557,13 @@ IsScrollbarWidthThin(nsIFrame* aFrame)
   return IsScrollbarWidthThin(style);
 }
 
+static bool
+ShouldDrawCustomScrollbar(ComputedStyle* aStyle)
+{
+  return aStyle->StyleUI()->HasCustomScrollbars() ||
+    IsScrollbarWidthThin(aStyle);
+}
+
 NS_IMETHODIMP
 nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
@@ -1571,8 +1578,7 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
 
   if (IsWidgetScrollbarPart(aWidgetType)) {
     ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-    if (style->StyleUI()->HasCustomScrollbars() ||
-        IsScrollbarWidthThin(style)) {
+    if (ShouldDrawCustomScrollbar(style)) {
       return DrawCustomScrollbarPart(aContext, aFrame, style,
                                      aWidgetType, aRect, aDirtyRect);
     }
@@ -2759,6 +2765,29 @@ nsNativeThemeWin::ThemeGeometryTypeForWidget(nsIFrame* aFrame,
 nsITheme::Transparency
 nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetType)
 {
+  if (IsWidgetScrollbarPart(aWidgetType)) {
+    ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+    if (ShouldDrawCustomScrollbar(style)) {
+      if (style->StyleUI()->mScrollbarTrackColor.MaybeTransparent()) {
+        return eTransparent;
+      }
+      // DrawCustomScrollbarPart doesn't draw the track background for
+      // widgets on it, and these widgets are thinner than the track,
+      // so we need to return transparent for them.
+      switch (aWidgetType) {
+        case StyleAppearance::ScrollbarthumbHorizontal:
+        case StyleAppearance::ScrollbarthumbVertical:
+        case StyleAppearance::ScrollbarbuttonUp:
+        case StyleAppearance::ScrollbarbuttonDown:
+        case StyleAppearance::ScrollbarbuttonLeft:
+        case StyleAppearance::ScrollbarbuttonRight:
+          return eTransparent;
+        default:
+          break;
+      }
+    }
+  }
+
   switch (aWidgetType) {
   case StyleAppearance::ScrollbarSmall:
   case StyleAppearance::Scrollbar:
@@ -4217,12 +4246,6 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(WidgetType aWidgetType)
     gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
 }
 
-static COLORREF
-ToColorRef(nscolor aColor)
-{
-  return RGB(NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
-}
-
 static nscolor
 GetScrollbarButtonColor(nscolor aTrackColor, EventStates aStates)
 {
@@ -4282,9 +4305,9 @@ GetScrollbarArrowColor(nscolor aButtonColor)
   // luminance is around 0.18, with a contrast ratio ~4.6 to both sides,
   // thus the value below. It's the lumanince of gray 118.
   if (luminance >= 0.18) {
-    return NS_RGB(0, 0, 0);
+    return NS_RGBA(0, 0, 0, NS_GET_A(aButtonColor));
   }
-  return NS_RGB(255, 255, 255);
+  return NS_RGBA(255, 255, 255, NS_GET_A(aButtonColor));
 }
 
 static nscolor
@@ -4331,123 +4354,121 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
                                           const nsRect& aRect,
                                           const nsRect& aClipRect)
 {
-  MOZ_ASSERT(!aStyle->StyleUI()->mScrollbarFaceColor.IsAuto() ||
-             !aStyle->StyleUI()->mScrollbarTrackColor.IsAuto() ||
-             IsScrollbarWidthThin(aStyle));
-
   EventStates eventStates = GetContentState(aFrame, aWidgetType);
 
-  gfxRect tr(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
-          dr(aClipRect.X(), aClipRect.Y(),
-             aClipRect.Width(), aClipRect.Height());
-
-  nscolor trackColor =
-    GetScrollbarTrackColor(aStyle, &GetScrollbarTrackColorForAuto);
-  HBRUSH dcBrush = (HBRUSH) GetStockObject(DC_BRUSH);
-
-  gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());
-  tr.Scale(1.0 / p2a);
-  dr.Scale(1.0 / p2a);
-
+  gfxContextAutoSaveRestore autoSave(aContext);
   RefPtr<gfxContext> ctx = aContext;
+  gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());
+  gfxRect clipRect =
+    ThebesRect(LayoutDevicePixel::FromAppUnits(aClipRect, p2a).ToUnknownRect());
+  ctx->Clip(clipRect);
+  gfxRect rect =
+    ThebesRect(LayoutDevicePixel::FromAppUnits(aRect, p2a).ToUnknownRect());
 
-  uint32_t flags = GetWidgetNativeDrawingFlags(aWidgetType);
-  gfxWindowsNativeDrawing nativeDrawing(ctx, dr, flags);
-
-  do {
-    HDC hdc = nativeDrawing.BeginNativeDrawing();
-    if (!hdc) {
-      return NS_ERROR_FAILURE;
+  const nsStyleUI* ui = aStyle->StyleUI();
+  nscolor trackColor = ui->mScrollbarTrackColor.IsAuto()
+    ? GetScrollbarTrackColorForAuto(aStyle)
+    : ui->mScrollbarTrackColor.CalcColor(aStyle);
+  switch (aWidgetType) {
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::Scrollcorner: {
+      ctx->SetColor(Color::FromABGR(trackColor));
+      ctx->Rectangle(rect);
+      ctx->Fill();
+      return NS_OK;
     }
+    default:
+      break;
+  }
 
-    RECT widgetRect;
-    nativeDrawing.TransformToNativeRect(tr, widgetRect);
-    ::SetDCBrushColor(hdc, ToColorRef(trackColor));
-    ::SelectObject(hdc, dcBrush);
-    ::FillRect(hdc, &widgetRect, dcBrush);
+  // Scrollbar thumb and button are two CSS pixels thinner than the track.
+  gfxRect bgRect = rect;
+  gfxFloat dev2css = round(AppUnitsPerCSSPixel() / p2a);
+  switch (aWidgetType) {
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+      bgRect.Deflate(dev2css, 0);
+      break;
+    case StyleAppearance::ScrollbarthumbHorizontal:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
+      bgRect.Deflate(0, dev2css);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown widget type");
+  }
 
-    RECT componentRect;
-    // Scrollbar thumb and button are two CSS pixels thinner than the track.
-    gfxRect tr2 = tr;
-    gfxFloat dev2css = round(AppUnitsPerCSSPixel() / p2a);
-    if (aWidgetType == StyleAppearance::ScrollbarthumbVertical ||
-        aWidgetType == StyleAppearance::ScrollbarbuttonUp ||
-        aWidgetType == StyleAppearance::ScrollbarbuttonDown) {
-        tr2.Deflate(dev2css, 0);
-    } else {
-      tr2.Deflate(0, dev2css);
+  switch (aWidgetType) {
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal: {
+      nscolor faceColor = ui->mScrollbarFaceColor.IsAuto()
+        ? GetScrollbarFaceColorForAuto(aStyle)
+        : ui->mScrollbarFaceColor.CalcColor(aStyle);
+      faceColor = AdjustScrollbarFaceColor(faceColor, eventStates);
+      ctx->SetColor(Color::FromABGR(faceColor));
+      ctx->Rectangle(bgRect);
+      ctx->Fill();
+      break;
     }
-    nativeDrawing.TransformToNativeRect(tr2, componentRect);
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight: {
+      nscolor buttonColor = GetScrollbarButtonColor(trackColor, eventStates);
+      ctx->SetColor(Color::FromABGR(buttonColor));
+      ctx->Rectangle(bgRect);
+      ctx->Fill();
 
-    switch (aWidgetType) {
-      case StyleAppearance::ScrollbarthumbVertical:
-      case StyleAppearance::ScrollbarthumbHorizontal: {
-        nscolor faceColor =
-          GetScrollbarFaceColor(aStyle, &GetScrollbarFaceColorForAuto);
-        faceColor = AdjustScrollbarFaceColor(faceColor, eventStates);
-        ::SetDCBrushColor(hdc, ToColorRef(faceColor));
-        ::FillRect(hdc, &componentRect, dcBrush);
-        break;
+      // We use the path of scrollbar up arrow on Windows 10 which is
+      // in a 17x17 area.
+      const gfxFloat kSize = 17.0;
+      // Setup the transform matrix.
+      gfxFloat width = rect.Width();
+      gfxFloat height = rect.Height();
+      gfxFloat size = std::min(width, height);
+      gfxFloat left = (width - size) / 2.0 + rect.x;
+      gfxFloat top = (height - size) / 2.0 + rect.y;
+      gfxFloat scale = size / kSize;
+      gfxFloat rad = 0.0;
+      if (aWidgetType == StyleAppearance::ScrollbarbuttonRight) {
+        rad = M_PI / 2;
+      } else if (aWidgetType == StyleAppearance::ScrollbarbuttonDown) {
+        rad = M_PI;
+      } else if (aWidgetType == StyleAppearance::ScrollbarbuttonLeft) {
+        rad = -M_PI / 2;
       }
-      case StyleAppearance::ScrollbarbuttonUp:
-      case StyleAppearance::ScrollbarbuttonDown:
-      case StyleAppearance::ScrollbarbuttonLeft:
-      case StyleAppearance::ScrollbarbuttonRight: {
-        nscolor buttonColor = GetScrollbarButtonColor(trackColor, eventStates);
-        ::SetDCBrushColor(hdc, ToColorRef(buttonColor));
-        ::FillRect(hdc, &componentRect, dcBrush);
-
-        // kPath is the path of scrollbar up arrow on Windows 10
-        // in a 17x17 area.
-        const LONG kSize = 17;
-        const POINT kPath[] = {
-          { 5, 9 }, { 8, 6 }, { 11, 9 }, { 11, 11 }, { 8, 8 }, { 5, 11 },
-        };
-        const size_t kCount = ArrayLength(kPath);
-        // Calculate necessary parameters for positioning the arrow.
-        LONG width = widgetRect.right - widgetRect.left;
-        LONG height = widgetRect.bottom - widgetRect.top;
-        LONG size = std::min(width, height);
-        LONG left = (width - size) / 2 + widgetRect.left;
-        LONG top = (height - size) / 2 + widgetRect.top;
-        float unit = float(size) / kSize;
-        POINT path[kCount];
-        // Flip the path for different direction, then resize and align
-        // it to the middle of the area.
-        for (size_t i = 0; i < kCount; i++) {
-          if (aWidgetType == StyleAppearance::ScrollbarbuttonUp) {
-            path[i] = kPath[i];
-          } else if (aWidgetType == StyleAppearance::ScrollbarbuttonDown) {
-            path[i].x = kPath[i].x;
-            path[i].y = kSize - kPath[i].y;
-          } else if (aWidgetType == StyleAppearance::ScrollbarbuttonLeft) {
-            path[i].x = kPath[i].y;
-            path[i].y = kPath[i].x;
-          } else {
-            path[i].x = kSize - kPath[i].y;
-            path[i].y = kPath[i].x;
-          }
-          path[i].x = left + (LONG) round(unit * path[i].x);
-          path[i].y = top + (LONG) round(unit * path[i].y);
-        }
-        // Paint the arrow.
-        COLORREF arrowColor = ToColorRef(GetScrollbarArrowColor(buttonColor));
-        // XXX Somehow we need to paint with both pen and brush to get
-        //     the desired shape. Can we do so only with brush?
-        ::SetDCPenColor(hdc, arrowColor);
-        ::SetDCBrushColor(hdc, arrowColor);
-        ::SelectObject(hdc, GetStockObject(DC_PEN));
-        ::Polygon(hdc, path, kCount);
-        break;
+      gfx::Matrix mat = ctx->CurrentMatrix();
+      mat.PreTranslate(left, top);
+      mat.PreScale(scale, scale);
+      if (rad != 0.0) {
+        const gfxFloat kOffset = kSize / 2.0;
+        mat.PreTranslate(kOffset, kOffset);
+        mat.PreRotate(rad);
+        mat.PreTranslate(-kOffset, -kOffset);
       }
-      default:
-        break;
+      ctx->SetMatrix(mat);
+      // The arrow should not have antialias applied.
+      ctx->SetAntialiasMode(gfx::AntialiasMode::NONE);
+      // Set the arrow path.
+      ctx->NewPath();
+      ctx->MoveTo(gfxPoint(5.0, 9.0));
+      ctx->LineTo(gfxPoint(8.5, 6.0));
+      ctx->LineTo(gfxPoint(12.0, 9.0));
+      ctx->LineTo(gfxPoint(12.0, 12.0));
+      ctx->LineTo(gfxPoint(8.5, 9.0));
+      ctx->LineTo(gfxPoint(5.0, 12.0));
+      ctx->ClosePath();
+      // And paint the arrow.
+      nscolor arrowColor = GetScrollbarArrowColor(buttonColor);
+      ctx->SetColor(Color::FromABGR(arrowColor));
+      ctx->Fill();
+      break;
     }
-
-    nativeDrawing.EndNativeDrawing();
-  } while (nativeDrawing.ShouldRenderAgain());
-
-  nativeDrawing.PaintToContext();
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown widget type");
+  }
   return NS_OK;
 }
 
