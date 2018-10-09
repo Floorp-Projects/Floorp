@@ -776,7 +776,10 @@ struct DisplayExtensions
     // EGL_ANGLE_create_context_extensions_enabled
     bool createContextExtensionsEnabled;
 
-    // EGL_ANDROID_presentation_time
+    // EGL_MOZ_create_context_provoking_vertex_dont_care
+    bool provokingVertexDontCare;
+
+  // EGL_ANDROID_presentation_time
     bool presentationTime;
 };
 

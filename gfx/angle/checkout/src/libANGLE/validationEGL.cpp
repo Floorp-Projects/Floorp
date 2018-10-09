@@ -984,6 +984,20 @@ Error ValidateCreateContext(Display *display,
                 }
                 break;
 
+            case EGL_CONTEXT_PROVOKING_VERTEX_DONT_CARE_MOZ:
+                if (!display->getExtensions().provokingVertexDontCare)
+                {
+                    return EglBadAttribute()
+                           << "Attribute EGL_CONTEXT_PROVOKING_VERTEX_DONT_CARE_MOZ "
+                              "requires EGL_MOZ_create_context_provoking_vertex_dont_care.";
+                }
+                if (value != EGL_TRUE && value != EGL_FALSE)
+                {
+                    return EglBadAttribute() << "EGL_CONTEXT_PROVOKING_VERTEX_DONT_CARE_MOZ "
+                                              "must be either EGL_TRUE or EGL_FALSE.";
+                }
+                break;
+
             default:
                 return EglBadAttribute() << "Unknown attribute.";
         }
