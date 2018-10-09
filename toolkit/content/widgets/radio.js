@@ -112,6 +112,10 @@ class MozRadiogroup extends MozBaseControl {
   }
 
   connectedCallback() {
+    if (this.delayConnectedCallback()) {
+      return;
+    }
+
     this.init();
     if (!this.value) {
       this.selectedIndex = 0;

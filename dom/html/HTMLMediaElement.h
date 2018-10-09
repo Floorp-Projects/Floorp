@@ -844,8 +844,6 @@ protected:
 
   void SetDecoder(MediaDecoder* aDecoder);
 
-  void UpdateWakeLock();
-
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
   struct OutputMediaStream {
@@ -882,11 +880,14 @@ protected:
   void ChangeNetworkState(nsMediaNetworkState aState);
 
   /**
-   * These two methods are called when mPaused is changed to ensure we have
-   * a wake lock active when we're playing audibly.
+   * The MediaElement will be responsible for creating and releasing the audio
+   * wakelock depending on the playing and audible state.
    */
-  virtual void WakeLockCreate();
   virtual void WakeLockRelease();
+  virtual void UpdateWakeLock();
+
+  void CreateAudioWakeLockIfNeeded();
+  void ReleaseAudioWakeLockIfExists();
   RefPtr<WakeLock> mWakeLock;
 
   /**

@@ -13,10 +13,53 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
+// The listener of DOMContentLoaded must be set on window, rather than
+// document, because the window can go away before the event is fired.
+// In that case, we don't want to initialize anything, otherwise we
+// may be leaking things because they will never be destroyed after.
+let gIsDOMContentLoaded = false;
+const gElementsPendingConnection = new Set();
+window.addEventListener("DOMContentLoaded", () => {
+  gIsDOMContentLoaded = true;
+  for (let element of gElementsPendingConnection) {
+    try {
+      if (element.isConnected) {
+        element.connectedCallback();
+      }
+    } catch (ex) { console.error(ex); }
+  }
+  gElementsPendingConnection.clear();
+}, { once: true, capture: true });
+
 const gXULDOMParser = new DOMParser();
 gXULDOMParser.forceEnableXULXBL();
 
 class MozXULElement extends XULElement {
+  /**
+   * Sometimes an element may not want to run connectedCallback logic during
+   * parse. This could be because we don't want to initialize the element before
+   * the element's contents have been fully parsed, or for performance reasons.
+   * If you'd like to opt-in to this, then add this to the beginning of your
+   * `connectedCallback` and `disconnectedCallback`:
+   *
+   *    if (this.delayConnectedCallback()) { return }
+   *
+   * And this at the beginning of your `attributeChangedCallback`
+   *
+   *    if (!this.isConnectedAndReady) { return; }
+   */
+  delayConnectedCallback() {
+    if (gIsDOMContentLoaded) {
+      return false;
+    }
+    gElementsPendingConnection.add(this);
+    return true;
+  }
+
+  get isConnectedAndReady() {
+    return gIsDOMContentLoaded && this.isConnected;
+  }
+
   /**
    * Allows eager deterministic construction of XUL elements with XBL attached, by
    * parsing an element tree and returning a DOM fragment to be inserted in the
