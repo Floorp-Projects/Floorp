@@ -786,6 +786,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
      This is the header of the security subview in the Site Identity panel. -->
 <!ENTITY identity.securityView.label "Site Security">
 
+<!ENTITY identity.connection "Connection">
 <!ENTITY identity.connectionSecure "Secure Connection">
 <!ENTITY identity.connectionNotSecure "Connection Is Not Secure">
 <!ENTITY identity.connectionFile "This page is stored on your computer.">
