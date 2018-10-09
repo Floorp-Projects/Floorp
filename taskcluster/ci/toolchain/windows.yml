@@ -188,30 +188,6 @@ win64-node:
         arguments: ['win64']
         toolchain-artifact: public/build/node.tar.bz2
 
-win32-rust-1.29:
-    description: "rust repack"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TW32(rust)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        docker-image: {in-tree: toolchain-build}
-        max-run-time: 7200
-        env:
-            UPLOAD_DIR: artifacts
-    run:
-        using: toolchain-script
-        script: repack_rust.py
-        arguments: [
-            '--channel', '1.29.0',
-            '--host', 'i686-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-        ]
-        toolchain-alias: win32-rust
-        toolchain-artifact: public/build/rustc.tar.bz2
-
 mingw32-rust-1.29:
     description: "rust repack"
     treeherder:
