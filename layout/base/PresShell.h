@@ -173,8 +173,6 @@ public:
                                  nsIContent** aTargetContent = nullptr,
                                  nsIContent* aOverrideClickTarget = nullptr)
                                  override;
-  already_AddRefed<nsIContent>
-    GetEventTargetContent(WidgetEvent* aEvent) override;
 
   void NotifyCounterStylesAreDirty() override;
 
@@ -657,12 +655,9 @@ private:
 
   bool InZombieDocument(nsIContent *aContent);
   already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling();
-  nsIContent* GetCurrentEventContent();
-  nsIFrame* GetCurrentEventFrame() override;
   MOZ_CAN_RUN_SCRIPT nsresult
   RetargetEventToParent(WidgetGUIEvent* aEvent, nsEventStatus* aEventStatus);
-  void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
-  void PopCurrentEventInfo();
+
   /**
    * @param aIsHandlingNativeEvent      true when the caller (perhaps) handles
    *                                    an event which is caused by native
@@ -787,10 +782,6 @@ private:
 
   nsTArray<nsAutoPtr<DelayedEvent> > mDelayedEvents;
 private:
-  nsIFrame* mCurrentEventFrame;
-  nsCOMPtr<nsIContent> mCurrentEventContent;
-  nsTArray<nsIFrame*> mCurrentEventFrameStack;
-  nsCOMArray<nsIContent> mCurrentEventContentStack;
   nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
   nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
   RefPtr<nsCaret> mCaret;
