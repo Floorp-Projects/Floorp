@@ -115,8 +115,8 @@ struct ImageDescriptor: public wr::WrImageDescriptor {
     width = aSize.width;
     height = aSize.height;
     stride = 0;
-    opacity = gfx::IsOpaqueFormat(aFormat) ? OpacityType::Opaque
-                                           : OpacityType::HasAlphaChannel;
+    opacity = gfx::IsOpaque(aFormat) ? OpacityType::Opaque
+                                     : OpacityType::HasAlphaChannel;
   }
 
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride, gfx::SurfaceFormat aFormat)
@@ -125,8 +125,8 @@ struct ImageDescriptor: public wr::WrImageDescriptor {
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
-    opacity = gfx::IsOpaqueFormat(aFormat) ? OpacityType::Opaque
-                                           : OpacityType::HasAlphaChannel;
+    opacity = gfx::IsOpaque(aFormat) ? OpacityType::Opaque
+                                     : OpacityType::HasAlphaChannel;
   }
 
   ImageDescriptor(const gfx::IntSize& aSize,
