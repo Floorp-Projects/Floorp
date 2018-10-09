@@ -1,3 +1,8 @@
+// |jit-test| skip-if: !getBuildConfiguration()['moz-memory']
+// Run this test only if we're using jemalloc. Other malloc implementations
+// exhibit surprising behaviors. For example, 32-bit Fedora builds have
+// non-deterministic allocation sizes.
+
 // Check that JS::ubi::Node::size returns reasonable results for objects.
 
 // We actually hard-code specific sizes into this test, even though they're
@@ -5,12 +10,6 @@
 // variants to consider (32-bit and 64-bit), and if these sizes change, that's
 // something SpiderMonkey hackers really want to know; they're supposed to be
 // stable.
-
-// Run this test only if we're using jemalloc. Other malloc implementations
-// exhibit surprising behaviors. For example, 32-bit Fedora builds have
-// non-deterministic allocation sizes.
-if (!getBuildConfiguration()['moz-memory'])
-  quit(0);
 
 if (getBuildConfiguration()['pointer-byte-size'] == 4)
   var s = (s32, s64) => s32
