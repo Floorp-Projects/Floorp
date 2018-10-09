@@ -582,6 +582,9 @@ void Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut css_value, nsCSSKeyword key
 void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent);
 void Gecko_CSSValue_SetPixelLength(nsCSSValueBorrowedMut aCSSValue, float aLen);
 void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
+void Gecko_CSSValue_SetFontStretch(nsCSSValueBorrowedMut css_value, float stretch);
+void Gecko_CSSValue_SetFontSlantStyle(nsCSSValueBorrowedMut css_value, float style);
+void Gecko_CSSValue_SetFontWeight(nsCSSValueBorrowedMut css_value, float weight);
 void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value,
                               const uint8_t* string, uint32_t len, nsCSSUnit unit);
@@ -590,6 +593,7 @@ void Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut css_value,
 // Take an addrefed nsAtom and set it to the nsCSSValue
 void Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut css_value, nsAtom* atom);
 void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
+void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, mozilla::css::URLValue* uri);
 void Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut css_value, int32_t integer, nsCSSUnit unit);
 void Gecko_CSSValue_SetFloat(nsCSSValueBorrowedMut css_value, float value, nsCSSUnit unit);
 void Gecko_CSSValue_SetPair(nsCSSValueBorrowedMut css_value,

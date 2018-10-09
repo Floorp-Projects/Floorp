@@ -24,7 +24,7 @@ use style_traits::values::SequenceWriter;
 use values::computed::font::FamilyName;
 use values::generics::font::FontStyle as GenericFontStyle;
 use values::specified::Angle;
-use values::specified::font::{AbsoluteFontWeight, FontStretch};
+use values::specified::font::{AbsoluteFontWeight, FontStretch as SpecifiedFontStretch};
 #[cfg(feature = "gecko")]
 use values::specified::font::{SpecifiedFontFeatureSettings, SpecifiedFontVariationSettings};
 use values::specified::font::SpecifiedFontStyle;
@@ -43,19 +43,6 @@ pub enum Source {
 
 impl OneOrMoreSeparated for Source {
     type S = Comma;
-}
-
-/// A POD representation for Gecko. All pointers here are non-owned and as such
-/// can't outlive the rule they came from, but we can't enforce that via C++.
-///
-/// All the strings are of course utf8.
-#[cfg(feature = "gecko")]
-#[repr(u8)]
-#[allow(missing_docs)]
-pub enum FontFaceSourceListComponent {
-    Url(*const ::gecko_bindings::structs::mozilla::css::URLValue),
-    Local(*mut ::gecko_bindings::structs::nsAtom),
-    FormatHint { length: usize, utf8_bytes: *const u8 },
 }
 
 /// A `UrlSource` represents a font-face source that has been specified with a
@@ -97,7 +84,6 @@ impl ToCss for UrlSource {
 #[allow(missing_docs)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, ToComputedValue, ToCss)]
-#[repr(u8)]
 pub enum FontDisplay {
     Auto,
     Block,
@@ -106,83 +92,41 @@ pub enum FontDisplay {
     Optional,
 }
 
-macro_rules! impl_range {
-    ($range:ident, $component:ident) => {
-        impl Parse for $range {
-            fn parse<'i, 't>(
-                context: &ParserContext,
-                input: &mut Parser<'i, 't>,
-            ) -> Result<Self, ParseError<'i>> {
-                let first = $component::parse(context, input)?;
-                let second = input
-                    .try(|input| $component::parse(context, input))
-                    .unwrap_or_else(|_| first.clone());
-                Ok($range(first, second))
-            }
-        }
-        impl ToCss for $range {
-            fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-            where
-                W: fmt::Write,
-            {
-                self.0.to_css(dest)?;
-                if self.0 != self.1 {
-                    dest.write_str(" ")?;
-                    self.1.to_css(dest)?;
-                }
-                Ok(())
-            }
-        }
-    }
-}
-
 /// The font-weight descriptor:
 ///
 /// https://drafts.csswg.org/css-fonts-4/#descdef-font-face-font-weight
-#[derive(Clone, Debug, PartialEq)]
-pub struct FontWeightRange(pub AbsoluteFontWeight, pub AbsoluteFontWeight);
-impl_range!(FontWeightRange, AbsoluteFontWeight);
+#[derive(Clone, Debug, PartialEq, ToCss)]
+pub struct FontWeight(pub AbsoluteFontWeight, pub Option<AbsoluteFontWeight>);
 
-/// The computed representation of the above so Gecko can read them easily.
-///
-/// This one is needed because cbindgen doesn't know how to generate
-/// specified::Number.
-#[repr(C)]
-#[allow(missing_docs)]
-pub struct ComputedFontWeightRange(f32, f32);
-
-impl FontWeightRange {
-    /// Returns a computed font-stretch range.
-    pub fn compute(&self) -> ComputedFontWeightRange {
-        ComputedFontWeightRange(self.0.compute().0, self.1.compute().0)
+impl Parse for FontWeight {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        let first = AbsoluteFontWeight::parse(context, input)?;
+        let second = input
+            .try(|input| AbsoluteFontWeight::parse(context, input))
+            .ok();
+        Ok(FontWeight(first, second))
     }
 }
 
 /// The font-stretch descriptor:
 ///
 /// https://drafts.csswg.org/css-fonts-4/#descdef-font-face-font-stretch
-#[derive(Clone, Debug, PartialEq,)]
-pub struct FontStretchRange(pub FontStretch, pub FontStretch);
-impl_range!(FontStretchRange, FontStretch);
+#[derive(Clone, Debug, PartialEq, ToCss)]
+pub struct FontStretch(pub SpecifiedFontStretch, pub Option<SpecifiedFontStretch>);
 
-/// The computed representation of the above, so that
-/// Gecko can read them easily.
-#[repr(C)]
-#[allow(missing_docs)]
-pub struct ComputedFontStretchRange(f32, f32);
-
-impl FontStretchRange {
-    /// Returns a computed font-stretch range.
-    pub fn compute(&self) -> ComputedFontStretchRange {
-        fn compute_stretch(s: &FontStretch) -> f32 {
-            match *s {
-                FontStretch::Keyword(ref kw) => kw.compute().0,
-                FontStretch::Stretch(ref p) => p.get(),
-                FontStretch::System(..) => unreachable!(),
-            }
-        }
-
-        ComputedFontStretchRange(compute_stretch(&self.0), compute_stretch(&self.1))
+impl Parse for FontStretch {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        let first = SpecifiedFontStretch::parse(context, input)?;
+        let second = input
+            .try(|input| SpecifiedFontStretch::parse(context, input))
+            .ok();
+        Ok(FontStretch(first, second))
     }
 }
 
@@ -195,16 +139,6 @@ pub enum FontStyle {
     Normal,
     Italic,
     Oblique(Angle, Angle),
-}
-
-/// The computed representation of the above, with angles in degrees, so that
-/// Gecko can read them easily.
-#[repr(u8)]
-#[allow(missing_docs)]
-pub enum ComputedFontStyleDescriptor {
-    Normal,
-    Italic,
-    Oblique(f32, f32),
 }
 
 impl Parse for FontStyle {
@@ -247,22 +181,6 @@ impl ToCss for FontStyle {
                 }
                 Ok(())
             },
-        }
-    }
-}
-
-impl FontStyle {
-    /// Returns a computed font-style descriptor.
-    pub fn compute(&self) -> ComputedFontStyleDescriptor {
-        match *self {
-            FontStyle::Normal => ComputedFontStyleDescriptor::Normal,
-            FontStyle::Italic => ComputedFontStyleDescriptor::Italic,
-            FontStyle::Oblique(ref first, ref second) => {
-                ComputedFontStyleDescriptor::Oblique(
-                    SpecifiedFontStyle::compute_angle_degrees(first),
-                    SpecifiedFontStyle::compute_angle_degrees(second),
-                )
-            }
         }
     }
 }
@@ -541,10 +459,10 @@ font_face_descriptors! {
         "font-style" style / mStyle: FontStyle,
 
         /// The weight of this font face.
-        "font-weight" weight / mWeight: FontWeightRange,
+        "font-weight" weight / mWeight: FontWeight,
 
         /// The stretch of this font face.
-        "font-stretch" stretch / mStretch: FontStretchRange,
+        "font-stretch" stretch / mStretch: FontStretch,
 
         /// The display of this font face.
         "font-display" display / mDisplay: FontDisplay,

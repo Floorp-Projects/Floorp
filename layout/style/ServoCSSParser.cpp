@@ -70,9 +70,9 @@ ServoCSSParser::ParseTransformIntoMatrix(const nsAString& aValue,
 ServoCSSParser::ParseFontShorthandForMatching(const nsAString& aValue,
                                               URLExtraData* aUrl,
                                               RefPtr<SharedFontList>& aList,
-                                              StyleComputedFontStyleDescriptor& aStyle,
-                                              float& aStretch,
-                                              float& aWeight)
+                                              nsCSSValue& aStyle,
+                                              nsCSSValue& aStretch,
+                                              nsCSSValue& aWeight)
 {
   return Servo_ParseFontShorthandForMatching(&aValue, aUrl, &aList,
                                              &aStyle, &aStretch, &aWeight);
