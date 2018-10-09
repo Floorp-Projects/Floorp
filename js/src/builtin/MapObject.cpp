@@ -412,12 +412,6 @@ MapIteratorObject::createResultPair(JSContext* cx)
 
 /*** Map *****************************************************************************************/
 
-static JSObject*
-CreateMapPrototype(JSContext* cx, JSProtoKey key)
-{
-    return GlobalObject::createBlankPrototype(cx, cx->global(), &MapObject::protoClass_);
-}
-
 const ClassOps MapObject::classOps_ = {
     nullptr, // addProperty
     nullptr, // delProperty
@@ -434,7 +428,7 @@ const ClassOps MapObject::classOps_ = {
 
 const ClassSpec MapObject::classSpec_ = {
     GenericCreateConstructor<MapObject::construct, 0, gc::AllocKind::FUNCTION>,
-    CreateMapPrototype,
+    GenericCreatePrototype<MapObject>,
     nullptr,
     MapObject::staticProperties,
     MapObject::methods,
@@ -1274,12 +1268,6 @@ SetIteratorObject::createResult(JSContext* cx)
 
 /*** Set *****************************************************************************************/
 
-static JSObject*
-CreateSetPrototype(JSContext* cx, JSProtoKey key)
-{
-    return GlobalObject::createBlankPrototype(cx, cx->global(), &SetObject::protoClass_);
-}
-
 const ClassOps SetObject::classOps_ = {
     nullptr, // addProperty
     nullptr, // delProperty
@@ -1296,7 +1284,7 @@ const ClassOps SetObject::classOps_ = {
 
 const ClassSpec SetObject::classSpec_ = {
     GenericCreateConstructor<SetObject::construct, 0, gc::AllocKind::FUNCTION>,
-    CreateSetPrototype,
+    GenericCreatePrototype<SetObject>,
     nullptr,
     SetObject::staticProperties,
     SetObject::methods,

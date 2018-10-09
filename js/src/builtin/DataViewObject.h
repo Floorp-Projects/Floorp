@@ -26,7 +26,6 @@ namespace js {
 class DataViewObject : public NativeObject
 {
   private:
-    static const Class protoClass_;
     static const ClassSpec classSpec_;
 
     static JSObject* CreatePrototype(JSContext* cx, JSProtoKey key);
@@ -60,6 +59,7 @@ class DataViewObject : public NativeObject
 
   public:
     static const Class class_;
+    static const Class protoClass_;
 
     static Value byteOffsetValue(const DataViewObject* view) {
         Value v = view->getFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT);
