@@ -26,8 +26,6 @@ WebrtcMediaDataDecoder::WebrtcMediaDataDecoder()
 
 WebrtcMediaDataDecoder::~WebrtcMediaDataDecoder()
 {
-  mTaskQueue->BeginShutdown();
-  mTaskQueue->AwaitShutdownAndIdle();
 }
 
 int32_t
