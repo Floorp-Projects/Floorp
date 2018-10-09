@@ -1,5 +1,4 @@
-if (helperThreadCount() == 0)
-    quit();
+// |jit-test| skip-if: helperThreadCount() === 0
 
 // Overwrite built-in parseModule with off-thread module parser.
 function parseModule(source) {

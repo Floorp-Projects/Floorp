@@ -1,7 +1,6 @@
-// OOM tests for module parsing.
+// |jit-test| skip-if: !('oomTest' in this)
 
-if (!('oomTest' in this))
-    quit();
+// OOM tests for module parsing.
 
 load(libdir + "dummyModuleResolveHook.js");
 
