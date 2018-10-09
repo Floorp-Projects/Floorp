@@ -1,9 +1,4 @@
-if (!('oomTest' in this))
-    quit();
-
-if (helperThreadCount() == 0)
-    quit();
-
+// |jit-test| skip-if: !('oomTest' in this) || helperThreadCount() === 0
 
 let THREAD_TYPE_PARSE = 4;
 
