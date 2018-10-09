@@ -1364,14 +1364,8 @@ class BuildDriver(MozbuildObject):
                   clobber_file=os.path.join(self.topobjdir, 'CLOBBER')))
             sys.exit(1)
 
-        if not test_objs:
-            # If we don't actually have a list of tests to install we install
-            # test and support files wholesale.
-            self._run_make(target='install-test-files', pass_thru=True,
-                           print_directory=False)
-        else:
-            install_test_files(mozpath.normpath(self.topsrcdir), self.topobjdir,
-                               '_tests', test_objs)
+        install_test_files(mozpath.normpath(self.topsrcdir), self.topobjdir,
+                           '_tests', test_objs)
 
     def _clobber_configure(self):
         # This is an optimistic treatment of the CLOBBER file for when we have
