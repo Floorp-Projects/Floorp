@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.911';
-var pdfjsBuild = 'ff2df9c5';
+var pdfjsVersion = '2.0.919';
+var pdfjsBuild = 'f45e46d7';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -4082,8 +4082,7 @@ var DEFAULT_RANGE_CHUNK_SIZE = 65536;
 let isWorkerDisabled = false;
 let workerSrc;
 const pdfjsFilePath = null;
-var fakeWorkerFilesLoader = null;
-var useRequireEnsure = false;
+let fakeWorkerFilesLoader = null;
 ;
 var createPDFNetworkStream;
 function setPDFNetworkStreamFactory(pdfNetworkStreamFactory) {
@@ -4226,7 +4225,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.911',
+    apiVersion: '2.0.919',
     source: {
       data: source.data,
       url: source.url,
@@ -4742,12 +4741,12 @@ var PDFWorker = function PDFWorkerClosure() {
       fakeWorkerFilesLoadedCapability.resolve(mainWorkerMessageHandler);
       return fakeWorkerFilesLoadedCapability.promise;
     }
-    let loader = fakeWorkerFilesLoader || function (callback) {
-      (0, _dom_utils.loadScript)(getWorkerSrc()).then(function () {
-        callback(window.pdfjsWorker.WorkerMessageHandler);
+    const loader = fakeWorkerFilesLoader || function () {
+      return (0, _dom_utils.loadScript)(getWorkerSrc()).then(function () {
+        return window.pdfjsWorker.WorkerMessageHandler;
       });
     };
-    loader(fakeWorkerFilesLoadedCapability.resolve);
+    loader().then(fakeWorkerFilesLoadedCapability.resolve, fakeWorkerFilesLoadedCapability.reject);
     return fakeWorkerFilesLoadedCapability.promise;
   }
   function createCDNWrapper(url) {
@@ -4881,6 +4880,8 @@ var PDFWorker = function PDFWorkerClosure() {
         var messageHandler = new _message_handler.MessageHandler(id, id + '_worker', port);
         this._messageHandler = messageHandler;
         this._readyCapability.resolve();
+      }).catch(reason => {
+        this._readyCapability.reject(new Error(`Setting up fake worker failed: "${reason.message}".`));
       });
     },
     destroy: function PDFWorker_destroy() {
@@ -5553,8 +5554,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.911';
-  exports.build = build = 'ff2df9c5';
+  exports.version = version = '2.0.919';
+  exports.build = build = 'f45e46d7';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
