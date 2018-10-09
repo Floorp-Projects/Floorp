@@ -718,15 +718,35 @@ PuppetWidget::RequestIMEToCommitComposition(bool aCancel)
 }
 
 nsresult
-PuppetWidget::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+PuppetWidget::StartPluginIME(const WidgetKeyboardEvent& aKeyboardEvent,
                              int32_t aPanelX, int32_t aPanelY,
                              nsString& aCommitted)
 {
+  DebugOnly<bool> propagationAlreadyStopped =
+    aKeyboardEvent.mFlags.mPropagationStopped;
+  DebugOnly<bool> immediatePropagationAlreadyStopped =
+    aKeyboardEvent.mFlags.mImmediatePropagationStopped;
   if (!mTabChild ||
       !mTabChild->SendStartPluginIME(aKeyboardEvent, aPanelX,
                                      aPanelY, &aCommitted)) {
     return NS_ERROR_FAILURE;
   }
+  // TabChild::SendStartPluginIME() sends back the keyboard event to the main
+  // process synchronously.  At this time, ParamTraits<WidgetEvent>::Write()
+  // marks the event as "posted to remote process".  However, this is not
+  // correct here since the event has been handled synchronously in the main
+  // process.  So, we adjust the cross process dispatching state here.
+  const_cast<WidgetKeyboardEvent&>(aKeyboardEvent).
+    ResetCrossProcessDispatchingState();
+  // Although it shouldn't occur in content process,
+  // ResetCrossProcessDispatchingState() may reset propagation state too
+  // if the event was posted to a remote process and we're waiting its
+  // result.  So, if you saw hitting the following assertions, you'd
+  // need to restore the propagation state too.
+  MOZ_ASSERT(propagationAlreadyStopped ==
+               aKeyboardEvent.mFlags.mPropagationStopped);
+  MOZ_ASSERT(immediatePropagationAlreadyStopped ==
+               aKeyboardEvent.mFlags.mImmediatePropagationStopped);
   return NS_OK;
 }
 
