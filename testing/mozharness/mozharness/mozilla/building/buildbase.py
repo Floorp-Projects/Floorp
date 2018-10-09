@@ -1694,6 +1694,16 @@ or run without that action (ie: --no-{action})"
             self.return_code = 2
 
     @PostScriptRun
+    def _shutdown_sccache(self):
+        '''If sccache was in use for this build, shut down the sccache server.'''
+        if os.environ.get('USE_SCCACHE') == '1':
+            topsrcdir = self.query_abs_dirs()['abs_src_dir']
+            sccache = os.path.join(topsrcdir, 'sccache2', 'sccache')
+            if self._is_windows():
+                sccache += '.exe'
+            self.run_command([sccache, '--stop-server'], cwd=topsrcdir)
+
+    @PostScriptRun
     def _summarize(self):
         """ If this is run in automation, ensure the return code is valid and
         set it to one if it's not. Finally, log any summaries we collected
