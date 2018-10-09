@@ -4454,10 +4454,7 @@ nsGlobalWindowOuter::MakeScriptDialogTitle(nsAString& aOutTitle,
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aSubjectPrincipal->GetURI(getter_AddRefs(uri));
-  // Note - The check for the current JSContext here isn't necessarily sensical.
-  // It's just designed to preserve existing behavior during a mass-conversion
-  // patch.
-  if (NS_SUCCEEDED(rv) && uri && nsContentUtils::GetCurrentJSContext()) {
+  if (NS_SUCCEEDED(rv) && uri) {
     // remove user:pass for privacy and spoof prevention
 
     nsCOMPtr<nsIURIFixup> fixup(do_GetService(NS_URIFIXUP_CONTRACTID));
