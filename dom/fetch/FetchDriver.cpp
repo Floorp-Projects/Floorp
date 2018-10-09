@@ -1221,7 +1221,7 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
   if (NS_FAILED(aStatusCode) || !mObserver) {
     nsCOMPtr<nsIAsyncOutputStream> outputStream = do_QueryInterface(mPipeOutputStream);
     if (outputStream) {
-      outputStream->CloseWithStatus(NS_BINDING_FAILED);
+      outputStream->CloseWithStatus(NS_FAILED(aStatusCode) ? aStatusCode : NS_BINDING_FAILED);
     }
     if (altDataListener) {
       altDataListener->Cancel();
