@@ -34,6 +34,7 @@
 #include "frontend/ForOfLoopControl.h"
 #include "frontend/IfEmitter.h"
 #include "frontend/Parser.h"
+#include "frontend/PropOpEmitter.h"
 #include "frontend/SwitchEmitter.h"
 #include "frontend/TDZCheckCache.h"
 #include "frontend/TryEmitter.h"
@@ -880,7 +881,6 @@ bool
 BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op)
 {
     MOZ_ASSERT(atom);
-    MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
     // .generator lookups should be emitted as JSOP_GETALIASEDVAR instead of
     // JSOP_GETNAME etc, to bypass |with| objects on the scope chain.
@@ -899,7 +899,15 @@ BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op)
         return false;
     }
 
-    return emitIndexOp(op, index);
+    return emitAtomOp(index, op);
+}
+
+bool
+BytecodeEmitter::emitAtomOp(uint32_t atomIndex, JSOp op)
+{
+    MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
+
+    return emitIndexOp(op, atomIndex);
 }
 
 bool
@@ -2042,142 +2050,34 @@ BytecodeEmitter::emitPropLHS(PropertyAccess* prop)
 }
 
 bool
-BytecodeEmitter::emitSuperPropLHS(UnaryNode* superBase, bool isCall)
-{
-    if (!emitGetThisForSuperBase(superBase)) {            // THIS
-        return false;
-    }
-    if (isCall && !emit1(JSOP_DUP)) {                     // THIS? THIS
-        return false;
-    }
-    if (!emit1(JSOP_SUPERBASE)) {                         // THIS? THIS SUPERBASE
-        return false;
-    }
-    return true;
-}
-
-bool
-BytecodeEmitter::emitPropOp(PropertyAccess* prop, JSOp op)
-{
-    if (!emitPropLHS(prop)) {
-        return false;
-    }
-
-    if (op == JSOP_CALLPROP && !emit1(JSOP_DUP)) {
-        return false;
-    }
-
-    JSAtom* atom = prop->key().atom();
-    if (!emitAtomOp(atom, op)) {
-        return false;
-    }
-
-    if (op == JSOP_CALLPROP && !emit1(JSOP_SWAP)) {
-        return false;
-    }
-
-    return true;
-}
-
-bool
-BytecodeEmitter::emitSuperGetProp(PropertyAccess* prop, bool isCall)
-{
-    UnaryNode* base = &prop->expression().as<UnaryNode>();
-    if (!emitSuperPropLHS(base, isCall)) {                // THIS? THIS SUPERBASE
-        return false;
-    }
-
-    JSAtom* atom = prop->key().atom();
-    if (!emitAtomOp(atom, JSOP_GETPROP_SUPER)) {          // THIS? PROP
-        return false;
-    }
-
-    if (isCall) {
-        if (!emit1(JSOP_SWAP))                            // PROP THIS
-            return false;
-    }
-
-    return true;
-}
-
-bool
 BytecodeEmitter::emitPropIncDec(UnaryNode* incDec)
 {
     PropertyAccess* prop = &incDec->kid()->as<PropertyAccess>();
-
-    bool post;
     bool isSuper = prop->isSuper();
-    JSOp binop = GetIncDecInfo(incDec->getKind(), &post);
-
+    ParseNodeKind kind = incDec->getKind();
+    PropOpEmitter poe(this,
+                      kind == ParseNodeKind::PostIncrement ? PropOpEmitter::Kind::PostIncrement
+                      : kind == ParseNodeKind::PreIncrement ? PropOpEmitter::Kind::PreIncrement
+                      : kind == ParseNodeKind::PostDecrement ? PropOpEmitter::Kind::PostDecrement
+                      : PropOpEmitter::Kind::PreDecrement,
+                      isSuper
+                      ? PropOpEmitter::ObjKind::Super
+                      : PropOpEmitter::ObjKind::Other);
+    if (!poe.prepareForObj()) {
+        return false;
+    }
     if (isSuper) {
         UnaryNode* base = &prop->expression().as<UnaryNode>();
-        if (!emitSuperPropLHS(base)) {              // THIS OBJ
-            return false;
-        }
-        if (!emit1(JSOP_DUP2)) {                    // THIS OBJ THIS OBJ
+        if (!emitGetThisForSuperBase(base)) {       // THIS
             return false;
         }
     } else {
         if (!emitPropLHS(prop)) {
             return false;                           // OBJ
         }
-        if (!emit1(JSOP_DUP)) {                     // OBJ OBJ
-            return false;
-        }
     }
-    JSAtom* atom = prop->key().atom();
-    if (!emitAtomOp(atom, isSuper ? JSOP_GETPROP_SUPER : JSOP_GETPROP)) {
-        return false;                               // THIS? OBJ V
-    }
-    if (!emit1(JSOP_POS)) {                         // ... N
+    if (!poe.emitIncDec(prop->key().atom())) {      // RESULT
         return false;
-    }
-    if (post) {
-        if (!emit1(JSOP_DUP)) {                     // ... N N
-            return false;
-        }
-    }
-    if (!emit1(JSOP_ONE)) {                         // ... N? N 1
-        return false;
-    }
-    if (!emit1(binop)) {                            // ... N? N+1
-        return false;
-    }
-
-    if (post) {
-        if (isSuper) {                              // THIS OBJ N N+1
-            if (!emit2(JSOP_PICK, 3)) {             // OBJ N N+1 THIS
-                return false;
-            }
-            if (!emit1(JSOP_SWAP)) {                // OBJ N THIS N+1
-                return false;
-            }
-            if (!emit2(JSOP_PICK, 3)) {             // N THIS N+1 OBJ
-                return false;
-            }
-            if (!emit1(JSOP_SWAP)) {                // N THIS OBJ N+1
-                return false;
-            }
-        } else {                                    // OBJ N N+1
-            if (!emit2(JSOP_PICK, 2)) {             // N N+1 OBJ
-                return false;
-            }
-            if (!emit1(JSOP_SWAP)) {                // N OBJ N+1
-                return false;
-
-            }
-        }
-    }
-
-    JSOp setOp = isSuper ? sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER
-                         : sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
-    if (!emitAtomOp(atom, setOp)) {                 // N? N+1
-        return false;
-    }
-    if (post) {
-        if (!emit1(JSOP_POP)) {                     // N
-            return false;
-        }
     }
 
     return true;
@@ -2972,16 +2872,33 @@ BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target, size_t* emitted)
     switch (target->getKind()) {
       case ParseNodeKind::Dot: {
         PropertyAccess* prop = &target->as<PropertyAccess>();
-        if (prop->isSuper()) {
-            if (!emitSuperPropLHS(&prop->expression().as<UnaryNode>())) {
-                return false;                             // THIS SUPERBASE
+        bool isSuper = prop->isSuper();
+        PropOpEmitter poe(this,
+                          PropOpEmitter::Kind::SimpleAssignment,
+                          isSuper
+                          ? PropOpEmitter::ObjKind::Super
+                          : PropOpEmitter::ObjKind::Other);
+        if (!poe.prepareForObj()) {
+            return false;
+        }
+        if (isSuper) {
+            UnaryNode* base = &prop->expression().as<UnaryNode>();
+            if (!emitGetThisForSuperBase(base)) {         // THIS SUPERBASE
+                return false;
             }
+            // SUPERBASE is pushed onto THIS in poe.prepareForRhs below.
             *emitted = 2;
         } else {
             if (!emitTree(&prop->expression())) {         // OBJ
                 return false;
             }
             *emitted = 1;
+        }
+        if (!poe.prepareForRhs()) {                       // [Super]
+            //                                            // THIS SUPERBASE
+            //                                            // [Other]
+            //                                            // OBJ
+            return false;
         }
         break;
       }
@@ -3101,15 +3018,22 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
 
           case ParseNodeKind::Dot: {
             // The reference is already pushed by emitDestructuringLHSRef.
+            //                                            // [Super]
+            //                                            // THIS SUPERBASE VAL
+            //                                            // [Other]
+            //                                            // OBJ VAL
             PropertyAccess* prop = &target->as<PropertyAccess>();
-            JSOp setOp;
-            if (prop->isSuper()) {                        // THIS OBJ VAL
-                setOp = sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER;
-            } else {                                      // OBJ VAL
-                setOp = sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
-            }
-            if (!emitAtomOp(prop->key().atom(), setOp)) { // VAL
+            bool isSuper = prop->isSuper();
+            PropOpEmitter poe(this,
+                              PropOpEmitter::Kind::SimpleAssignment,
+                              isSuper
+                              ? PropOpEmitter::ObjKind::Super
+                              : PropOpEmitter::ObjKind::Other);
+            if (!poe.skipObjAndRhs()) {
                 return false;
+            }
+            if (!poe.emitAssignment(prop->key().atom())) {
+                return false;                             // VAL
             }
             break;
           }
@@ -3144,7 +3068,7 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
         }
 
         // Pop the assigned value.
-        if (!emit1(JSOP_POP)) {
+        if (!emit1(JSOP_POP)) {                           // !STACK EMPTY!
             return false;
         }
     }
@@ -4373,26 +4297,37 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
         return emitSetName(lhs, emitRhs);
     }
 
+    Maybe<PropOpEmitter> poe;
+
     // Deal with non-name assignments.
-    uint32_t atomIndex = (uint32_t) -1;
     uint8_t offset = 1;
 
     switch (lhs->getKind()) {
       case ParseNodeKind::Dot: {
         PropertyAccess* prop = &lhs->as<PropertyAccess>();
-        if (prop->isSuper()) {
-            if (!emitSuperPropLHS(&prop->expression().as<UnaryNode>())) {
-                return false;                             // THIS SUPERBASE
+        bool isSuper = prop->isSuper();
+        poe.emplace(this,
+                    isCompound
+                    ? PropOpEmitter::Kind::CompoundAssignment
+                    : PropOpEmitter::Kind::SimpleAssignment,
+                    isSuper
+                    ? PropOpEmitter::ObjKind::Super
+                    : PropOpEmitter::ObjKind::Other);
+        if (!poe->prepareForObj()) {
+            return false;
+        }
+        if (isSuper) {
+            UnaryNode* base = &prop->expression().as<UnaryNode>();
+            if (!emitGetThisForSuperBase(base)) {         // THIS SUPERBASE
+                return false;
             }
+            // SUPERBASE is pushed onto THIS later in poe->emitGet below.
             offset += 2;
         } else {
             if (!emitTree(&prop->expression())) {         // OBJ
                 return false;
             }
             offset += 1;
-        }
-        if (!makeAtomIndex(prop->key().atom(), &atomIndex)) {
-            return false;
         }
         break;
       }
@@ -4439,21 +4374,11 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
         MOZ_ASSERT(rhs);
         switch (lhs->getKind()) {
           case ParseNodeKind::Dot: {
-            JSOp getOp;
             PropertyAccess* prop = &lhs->as<PropertyAccess>();
-            if (prop->isSuper()) {
-                if (!emit1(JSOP_DUP2)) {                  // THIS OBJ THIS OBJ
-                    return false;
-                }
-                getOp = JSOP_GETPROP_SUPER;
-            } else {
-                if (!emit1(JSOP_DUP)) {                   // OBJ OBJ
-                    return false;
-                }
-                bool isLength = prop->key().atom() == cx->names().length;
-                getOp = isLength ? JSOP_LENGTH : JSOP_GETPROP;
-            }
-            if (!emitIndex32(getOp, atomIndex)) {         // THIS? OBJ VAL
+            if (!poe->emitGet(prop->key().atom())) {      // [Super]
+                //                                        // THIS SUPERBASE PROP
+                //                                        // [Other]
+                //                                        // OBJ PROP
                 return false;
             }
             break;
@@ -4498,6 +4423,23 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
         }
     }
 
+    switch (lhs->getKind()) {
+      case ParseNodeKind::Dot:
+        if (!poe->prepareForRhs()) {                      // [Simple,Super]
+            //                                            // THIS SUPERBASE
+            //                                            // [Simple,Other]
+            //                                            // OBJ
+            //                                            // [Compound,Super]
+            //                                            // THIS SUPERBASE PROP
+            //                                            // [Compound,Other]
+            //                                            // OBJ PROP
+            return false;
+        }
+        break;
+      default:
+        break;
+    }
+
     if (!EmitAssignmentRhs(this, rhs, offset)) {          // ... VAL? RHS
         return false;
     }
@@ -4515,12 +4457,12 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
     /* Finally, emit the specialized assignment bytecode. */
     switch (lhs->getKind()) {
       case ParseNodeKind::Dot: {
-        JSOp setOp = lhs->as<PropertyAccess>().isSuper() ?
-                       (sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER) :
-                       (sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP);
-        if (!emitIndexOp(setOp, atomIndex)) {             // VAL
+        PropertyAccess* prop = &lhs->as<PropertyAccess>();
+        if (!poe->emitAssignment(prop->key().atom())) {   // VAL
             return false;
         }
+
+        poe.reset();
         break;
       }
       case ParseNodeKind::Call:
@@ -6829,32 +6771,37 @@ BytecodeEmitter::emitDeleteProperty(UnaryNode* deleteNode)
     MOZ_ASSERT(deleteNode->isKind(ParseNodeKind::DeleteProp));
 
     PropertyAccess* propExpr = &deleteNode->kid()->as<PropertyAccess>();
-
+    PropOpEmitter poe(this,
+                      PropOpEmitter::Kind::Delete,
+                      propExpr->as<PropertyAccess>().isSuper()
+                      ? PropOpEmitter::ObjKind::Super
+                      : PropOpEmitter::ObjKind::Other);
     if (propExpr->isSuper()) {
         // The expression |delete super.foo;| has to evaluate |super.foo|,
         // which could throw if |this| hasn't yet been set by a |super(...)|
         // call or the super-base is not an object, before throwing a
         // ReferenceError for attempting to delete a super-reference.
-        if (!emitGetThisForSuperBase(&propExpr->expression().as<UnaryNode>())) {
+        UnaryNode* base = &propExpr->expression().as<UnaryNode>();
+        if (!emitGetThisForSuperBase(base)) {             // THIS
             return false;
         }
-
-        if (!emit1(JSOP_SUPERBASE)) {
+    } else {
+        if (!poe.prepareForObj()) {
             return false;
         }
-
-        // Unconditionally throw when attempting to delete a super-reference.
-        if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER)) {
+        if (!emitPropLHS(propExpr)) {                         // OBJ
             return false;
         }
-
-        // Another wrinkle: Balance the stack from the emitter's point of view.
-        // Execution will not reach here, as the last bytecode threw.
-        return emit1(JSOP_POP);
     }
 
-    JSOp delOp = sc->strict() ? JSOP_STRICTDELPROP : JSOP_DELPROP;
-    return emitPropOp(propExpr, delOp);
+    if (!poe.emitDelete(propExpr->key().atom())) {        // [Super]
+        //                                                // THIS
+        //                                                // [Other]
+        //                                                // SUCCEEDED
+        return false;
+    }
+
+    return true;
 }
 
 bool
@@ -7256,16 +7203,34 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCa
         break;
       }
       case ParseNodeKind::Dot: {
-        PropertyAccess* prop = &callee->as<PropertyAccess>();
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
-        if (prop->isSuper()) {
-            if (!emitSuperGetProp(prop, isCall)) {        // CALLEE THIS?
+        PropertyAccess* prop = &callee->as<PropertyAccess>();
+        bool isSuper = prop->isSuper();
+        PropOpEmitter poe(this,
+                          isCall
+                          ? PropOpEmitter::Kind::Call
+                          : PropOpEmitter::Kind::Get,
+                          isSuper
+                          ? PropOpEmitter::ObjKind::Super
+                          : PropOpEmitter::ObjKind::Other);
+        if (!poe.prepareForObj()) {
+            return false;
+        }
+        if (isSuper) {
+            UnaryNode* base = &prop->expression().as<UnaryNode>();
+            if (!emitGetThisForSuperBase(base)) {        // THIS
                 return false;
             }
         } else {
-            if (!emitPropOp(prop, isCall ? JSOP_CALLPROP : JSOP_GETPROP)) {
-                return false;                             // CALLEE THIS?
+            if (!emitPropLHS(prop)) {                    // OBJ
+                return false;
             }
+        }
+        if (!poe.emitGet(prop->key().atom())) {           // [needsThis]
+            //                                            // CALLEE
+            //                                            // [!needsThis]
+            //                                            // CALLEE THIS
+            return false;
         }
 
         break;
@@ -9265,14 +9230,27 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
 
       case ParseNodeKind::Dot: {
         PropertyAccess* prop = &pn->as<PropertyAccess>();
-        if (prop->isSuper()) {
-            if (!emitSuperGetProp(prop)) {
+        bool isSuper = prop->isSuper();
+        PropOpEmitter poe(this,
+                          PropOpEmitter::Kind::Get,
+                          isSuper
+                          ? PropOpEmitter::ObjKind::Super
+                          : PropOpEmitter::ObjKind::Other);
+        if (!poe.prepareForObj()) {
+            return false;
+        }
+        if (isSuper) {
+            UnaryNode* base = &prop->expression().as<UnaryNode>();
+            if (!emitGetThisForSuperBase(base)) {         // THIS
                 return false;
             }
         } else {
-            if (!emitPropOp(prop, JSOP_GETPROP)) {
+            if (!emitPropLHS(prop)) {                     // OBJ
                 return false;
             }
+        }
+        if (!poe.emitGet(prop->key().atom())) {           // PROP
+            return false;
         }
         break;
       }
