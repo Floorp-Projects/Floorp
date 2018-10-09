@@ -14,86 +14,62 @@ const ADB_ADDON_ID = Services.prefs.getCharPref("devtools.remote.adb.extensionID
 // Extension ID for adb helper extension that might be installed on Firefox 63 or older.
 const OLD_ADB_ADDON_ID = "adbhelper@mozilla.org";
 
-// Possible values for ADBAddon::state. WebIDE relies on the exact values for localization
-// and styles, so they should not be updated until WebIDE is removed.
-const ADB_ADDON_STATES = {
-  DOWNLOADING: "downloading",
-  INSTALLED: "installed",
-  INSTALLING: "installed",
-  PREPARING: "preparing",
-  UNINSTALLED: "uninstalled",
-  UNKNOWN: "unknown",
-};
-exports.ADB_ADDON_STATES = ADB_ADDON_STATES;
-
-/**
- * Wrapper around the ADB Extension providing ADB binaries for devtools remote debugging.
- * Fires the following events:
- * - "update": the status of the addon was updated
- * - "failure": addon installation failed
- * - "progress": addon download in progress
- *
- * AdbAddon::state can take any of the values from ADB_ADDON_STATES.
- */
-class ADBAddon extends EventEmitter {
-  constructor() {
-    super();
-
-    this._status = ADB_ADDON_STATES.UNKNOWN;
-
-    // Uninstall old version of the extension that might be installed on this profile.
-    this.uninstallOldExtension();
-
-    const addonsListener = {};
-    addonsListener.onEnabled =
-    addonsListener.onDisabled =
-    addonsListener.onInstalled =
-    addonsListener.onUninstalled = () => this.updateInstallStatus();
-    AddonManager.addAddonListener(addonsListener);
-
-    this.updateInstallStatus();
+const platform = Services.appShell.hiddenDOMWindow.navigator.platform;
+let OS = "";
+if (platform.includes("Win")) {
+  OS = "win32";
+} else if (platform.includes("Mac")) {
+  OS = "mac64";
+} else if (platform.includes("Linux")) {
+  if (platform.includes("x86_64")) {
+    OS = "linux64";
+  } else {
+    OS = "linux32";
   }
+}
 
+function ADBAddon() {
+  EventEmitter.decorate(this);
+
+  this._status = "unknown";
+
+  // This addon uses the string "linux" for "linux32"
+  const fixedOS = OS == "linux32" ? "linux" : OS;
+  this.xpiLink = ADB_LINK.replace(/#OS#/g, fixedOS);
+
+  // Uninstall old version of the extension that might be installed on this profile.
+  this.uninstallOldExtension();
+
+  this.updateInstallStatus();
+
+  const addonsListener = {};
+  addonsListener.onEnabled =
+  addonsListener.onDisabled =
+  addonsListener.onInstalled =
+  addonsListener.onUninstalled = () => this.updateInstallStatus();
+  AddonManager.addAddonListener(addonsListener);
+}
+
+ADBAddon.prototype = {
   set status(value) {
     if (this._status != value) {
       this._status = value;
       this.emit("update");
     }
-  }
+  },
 
   get status() {
     return this._status;
-  }
+  },
 
-  async updateInstallStatus() {
+  updateInstallStatus: async function() {
     const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
-      this.status = ADB_ADDON_STATES.INSTALLED;
+      this.status = "installed";
     } else {
-      this.status = ADB_ADDON_STATES.UNINSTALLED;
+      this.status = "uninstalled";
     }
-  }
-
-  /**
-   * Returns the platform specific download link for the ADB extension.
-   */
-  _getXpiLink() {
-    const platform = Services.appShell.hiddenDOMWindow.navigator.platform;
-    let OS = "";
-    if (platform.includes("Win")) {
-      OS = "win32";
-    } else if (platform.includes("Mac")) {
-      OS = "mac64";
-    } else if (platform.includes("Linux")) {
-      if (platform.includes("x86_64")) {
-        OS = "linux64";
-      } else {
-        OS = "linux";
-      }
-    }
-
-    return ADB_LINK.replace(/#OS#/g, OS);
-  }
+  },
 
   /**
    * Install and enable the adb extension. Returns a promise that resolves when ADB is
@@ -102,18 +78,18 @@ class ADBAddon extends EventEmitter {
    * @param {String} source
    *        String passed to the AddonManager for telemetry.
    */
-  async install(source) {
+  install: async function(source) {
     const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
-      this.status = ADB_ADDON_STATES.INSTALLED;
+      this.status = "installed";
       return;
     }
-    this.status = ADB_ADDON_STATES.PREPARING;
+    this.status = "preparing";
     if (addon && addon.userDisabled) {
       await addon.enable();
     } else {
       const install = await AddonManager.getInstallForURL(
-        this._getXpiLink(),
+        this.xpiLink,
         "application/x-xpinstall",
         null, null, null, null, null,
         { source }
@@ -121,68 +97,57 @@ class ADBAddon extends EventEmitter {
       install.addListener(this);
       install.install();
     }
-  }
+  },
 
-  async uninstall() {
+  uninstall: async function() {
     const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     addon.uninstall();
-  }
+  },
 
-  async uninstallOldExtension() {
+  uninstallOldExtension: async function() {
     const oldAddon = await AddonManager.getAddonByID(OLD_ADB_ADDON_ID);
     if (oldAddon) {
       oldAddon.uninstall();
     }
-  }
+  },
 
-  installFailureHandler(install, message) {
-    this.status = ADB_ADDON_STATES.UNINSTALLED;
+  installFailureHandler: function(install, message) {
+    this.status = "uninstalled";
     this.emit("failure", message);
-  }
+  },
 
-  // Expected AddonManager install listener.
-  onDownloadStarted() {
-    this.status = ADB_ADDON_STATES.DOWNLOADING;
-  }
+  onDownloadStarted: function() {
+    this.status = "downloading";
+  },
 
-  // Expected AddonManager install listener.
-  onDownloadProgress(install) {
+  onInstallStarted: function() {
+    this.status = "installing";
+  },
+
+  onDownloadProgress: function(install) {
     if (install.maxProgress == -1) {
       this.emit("progress", -1);
     } else {
       this.emit("progress", install.progress / install.maxProgress);
     }
-  }
+  },
 
-  // Expected AddonManager install listener.
-  onDownloadCancelled(install) {
-    this.installFailureHandler(install, "Download cancelled");
-  }
-
-  // Expected AddonManager install listener.
-  onDownloadFailed(install) {
-    this.installFailureHandler(install, "Download failed");
-  }
-
-  // Expected AddonManager install listener.
-  onInstallStarted() {
-    this.status = ADB_ADDON_STATES.INSTALLING;
-  }
-
-  // Expected AddonManager install listener.
-  onInstallCancelled(install) {
-    this.installFailureHandler(install, "Install cancelled");
-  }
-
-  // Expected AddonManager install listener.
-  onInstallFailed(install) {
-    this.installFailureHandler(install, "Install failed");
-  }
-
-  // Expected AddonManager install listener.
-  onInstallEnded({addon}) {
+  onInstallEnded: function({addon}) {
     addon.enable();
-  }
-}
+  },
+
+  onDownloadCancelled: function(install) {
+    this.installFailureHandler(install, "Download cancelled");
+  },
+  onDownloadFailed: function(install) {
+    this.installFailureHandler(install, "Download failed");
+  },
+  onInstallCancelled: function(install) {
+    this.installFailureHandler(install, "Install cancelled");
+  },
+  onInstallFailed: function(install) {
+    this.installFailureHandler(install, "Install failed");
+  },
+};
 
 exports.adbAddon = new ADBAddon();
