@@ -64,7 +64,6 @@ debug("");
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("canvas");
 var gl = wtu.create3DContext(canvas, null, 2);
-var WEBGL_get_buffer_sub_data_async = gl.getExtension("WEBGL_get_buffer_sub_data_async");
 var tf = null;
 var tf1 = null;
 var buf = null;
@@ -329,9 +328,6 @@ var retArray;
 
 function verifyGetBufferSubData(expected) {
     wtu.shouldGenerateGLError(gl, expected, "gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, retArray, 0, retArray.length)");
-    if (WEBGL_get_buffer_sub_data_async) {
-        wtu.shouldGenerateGLError(gl, expected, "WEBGL_get_buffer_sub_data_async.getBufferSubDataAsync(gl.TRANSFORM_FEEDBACK_BUFFER, 0, retArray, 0, retArray.length)");
-    }
 }
 
 function runGetBufferSubDataTest() {
