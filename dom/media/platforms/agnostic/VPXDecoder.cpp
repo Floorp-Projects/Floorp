@@ -39,7 +39,8 @@ static VPXDecoder::Codec MimeTypeToCodec(const nsACString& aMimeType)
 static nsresult
 InitContext(vpx_codec_ctx_t* aCtx,
             const VideoInfo& aInfo,
-            const VPXDecoder::Codec aCodec)
+            const VPXDecoder::Codec aCodec,
+            bool aLowLatency)
 {
   int decode_threads = 2;
 
@@ -59,7 +60,7 @@ InitContext(vpx_codec_ctx_t* aCtx,
   decode_threads = std::min(decode_threads, PR_GetNumberOfProcessors());
 
   vpx_codec_dec_cfg_t config;
-  config.threads = decode_threads;
+  config.threads = aLowLatency ? 1 : decode_threads;
   config.w = config.h = 0; // set after decode
 
   if (!dx || vpx_codec_dec_init(aCtx, dx, &config, 0)) {
@@ -74,6 +75,8 @@ VPXDecoder::VPXDecoder(const CreateDecoderParams& aParams)
   , mTaskQueue(aParams.mTaskQueue)
   , mInfo(aParams.VideoConfig())
   , mCodec(MimeTypeToCodec(aParams.VideoConfig().mMimeType))
+  , mLowLatency(
+      aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency))
 {
   MOZ_COUNT_CTOR(VPXDecoder);
   PodZero(&mVPX);
@@ -99,12 +102,12 @@ VPXDecoder::Shutdown()
 RefPtr<MediaDataDecoder::InitPromise>
 VPXDecoder::Init()
 {
-  if (NS_FAILED(InitContext(&mVPX, mInfo, mCodec))) {
+  if (NS_FAILED(InitContext(&mVPX, mInfo, mCodec, mLowLatency))) {
     return VPXDecoder::InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                                     __func__);
   }
   if (mInfo.HasAlpha()) {
-    if (NS_FAILED(InitContext(&mVPXAlpha, mInfo, mCodec))) {
+    if (NS_FAILED(InitContext(&mVPXAlpha, mInfo, mCodec, mLowLatency))) {
       return VPXDecoder::InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                                       __func__);
     }
