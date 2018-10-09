@@ -212,3 +212,131 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
 
 set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)
 set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
+
+
+@depends(host, target, target_is_unix, c_compiler, bindgen_cflags_android)
+def basic_bindgen_cflags(host, target, is_unix, compiler_info, android_cflags):
+    args = [
+        '-x', 'c++', '-std=gnu++14', '-fno-sized-deallocation',
+        '-DTRACING=1', '-DIMPL_LIBXUL', '-DMOZILLA_INTERNAL_API',
+        '-DRUST_BINDGEN'
+    ]
+
+    if is_unix:
+        args += ['-DOS_POSIX=1']
+
+    if target.os == 'Android':
+        args += android_cflags
+
+    def handle_cpu(obj):
+        if 'cpu' in obj and target.cpu in obj['cpu']:
+            return obj['cpu'][target.cpu]
+        return []
+
+    if target.os == 'WINNT' and host.raw_os.startswith('gnu'):
+        args += handle_cpu({
+            'cpu': {
+                'x86': ['--target=i686-pc-mingw32'],
+                'x86_64': ['--target=x86_64-w64-mingw32'],
+            },
+        })
+
+    os_dict = {
+        'Android': {
+            'default': ['-DOS_ANDROID=1'],
+            'cpu': {
+                'aarch64': ['--target=aarch64-linux-android'],
+                'arm': ['--target=armv7-linux-androideabi'],
+                'x86': ['--target=i686-linux-android'],
+                'x86_64': ['--target=x86_64-linux-android'],
+            },
+        },
+        'DragonFly': {
+            'default': ['-DOS_BSD=1', '-DOS_DRAGONFLY=1'],
+        },
+        'FreeBSD': {
+            'default': ['-DOS_BSD=1', '-DOS_FREEBSD=1'],
+        },
+        'GNU': {
+            'default': ['-DOS_LINUX=1'],
+            'cpu': {
+                'x86': ['-m32'],
+                'x86_64': ['-m64'],
+            },
+        },
+        'NetBSD': {
+            'default': ['-DOS_BSD=1', '-DOS_NETBSD=1'],
+        },
+        'OpenBSD': {
+            'default': ['-DOS_BSD=1', '-DOS_OPENBSD=1'],
+        },
+        'OSX': {
+            'default': [
+                '-DOS_MACOSX=1',
+                '-stdlib=libc++',
+                # To disable the fixup bindgen applies which adds search
+                # paths from clang command line in order to avoid potential
+                # conflict with -stdlib=libc++.
+                '--target=x86_64-apple-darwin',
+            ],
+        },
+        'SunOS': {
+            'default': ['-DOS_SOLARIS=1'],
+        },
+        'WINNT': {
+            'default': [
+                '-DOS_WIN=1',
+                '-DWIN32=1',
+            ],
+            'compiler': {
+                'msvc': {
+                    'default': [
+                        # For compatibility with MSVC 2015
+                        '-fms-compatibility-version=19',
+                        # To enable the builtin __builtin_offsetof so that CRT wouldn't
+                        # use reinterpret_cast in offsetof() which is not allowed inside
+                        # static_assert().
+                        '-D_CRT_USE_BUILTIN_OFFSETOF',
+                        # Enable hidden attribute (which is not supported by MSVC and
+                        # thus not enabled by default with a MSVC-compatibile build)
+                        # to exclude hidden symbols from the generated file.
+                        '-DHAVE_VISIBILITY_HIDDEN_ATTRIBUTE=1',
+                    ],
+                    'cpu': {
+                        'x86': ['--target=i686-pc-win32'],
+                        'x86_64': ['--target=x86_64-pc-win32'],
+                        'aarch64': ['--target=aarch64-pc-windows-msvc'],
+                    },
+                },
+            },
+        },
+    }.get(target.os, {})
+
+    if 'default' in os_dict:
+        args += os_dict['default']
+
+    args += handle_cpu(os_dict)
+    if 'compiler' in os_dict and compiler_info and compiler_info in os_dict['compiler']:
+        compiler_dict = os_dict['compiler'].get(compiler_info)
+        if 'default' in compiler_dict:
+            args += compiler_dict['default']
+        args += handle_cpu(compiler_dict)
+
+    return args
+
+
+js_option(env='BINDGEN_CFLAGS',
+          nargs=1,
+          help='Options bindgen should pass to the C/C++ parser')
+
+
+@depends(basic_bindgen_cflags, 'BINDGEN_CFLAGS')
+@checking('bindgen cflags', lambda s: s if s else 'no')
+def bindgen_cflags(base_flags, extra_flags):
+    flags = base_flags
+    if extra_flags and len(extra_flags):
+        flags += extra_flags[0].split()
+    return ' '.join(flags)
+
+
+add_old_configure_assignment('_BINDGEN_CFLAGS', bindgen_cflags)
