@@ -761,7 +761,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     MOZ_MUST_USE bool emitCallSiteObject(CallSiteNode* callSiteObj);
     MOZ_MUST_USE bool emitTemplateString(ListNode* templateString);
-    MOZ_MUST_USE bool emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rhs);
+    MOZ_MUST_USE bool emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs);
 
     MOZ_MUST_USE bool emitReturn(UnaryNode* returnNode);
     MOZ_MUST_USE bool emitExpressionStatement(UnaryNode* exprStmt);
