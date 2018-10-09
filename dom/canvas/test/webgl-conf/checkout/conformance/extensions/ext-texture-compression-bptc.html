@@ -1,0 +1,102 @@
+<!--
+
+/*
+** Copyright (c) 2018 The Khronos Group Inc.
+**
+** Permission is hereby granted, free of charge, to any person obtaining a
+** copy of this software and/or associated documentation files (the
+** "Materials"), to deal in the Materials without restriction, including
+** without limitation the rights to use, copy, modify, merge, publish,
+** distribute, sublicense, and/or sell copies of the Materials, and to
+** permit persons to whom the Materials are furnished to do so, subject to
+** the following conditions:
+**
+** The above copyright notice and this permission notice shall be included
+** in all copies or substantial portions of the Materials.
+**
+** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
+*/
+
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WebGL EXT_texture_compression_bptc Conformance Tests</title>
+<LINK rel="stylesheet" href="../../resources/js-test-style.css"/>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
+<script src="../../js/tests/compressed-texture-utils.js"></script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+<script>
+"use strict";
+description("This test verifies the functionality of the EXT_texture_compression_bptc extension, if it is available.");
+
+debug("");
+
+var validFormats = {
+  COMPRESSED_RGBA_BPTC_UNORM_EXT: 0x8E8C,
+  COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT: 0x8E8D,
+  COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT: 0x8E8E,
+  COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT: 0x8E8F
+};
+
+function expectedByteLength(width, height, format) {
+  return Math.ceil(width / 4) * Math.ceil(height / 4) * 16;
+}
+
+function getBlockDimensions(format) {
+  return {width: 4, height: 4};
+}
+
+var wtu = WebGLTestUtils;
+var ctu = CompressedTextureUtils;
+var contextVersion = wtu.getDefault3DContextVersion();
+var gl = wtu.create3DContext();
+var ext;
+
+var formats = null;
+
+function runTestExtension() {
+  // Test that enum values are listed correctly in supported formats and in the extension object.
+  ctu.testCompressedFormatsListed(gl, validFormats);
+  ctu.testCorrectEnumValuesInExt(ext, validFormats);
+  // Test that texture upload buffer size is validated correctly.
+  ctu.testFormatRestrictionsOnBufferSize(gl, validFormats, expectedByteLength, getBlockDimensions);
+};
+
+function runTest() {
+  if (!gl) {
+    testFailed("context does not exist");
+  } else {
+    testPassed("context exists");
+
+    ctu.testCompressedFormatsUnavailableWhenExtensionDisabled(gl, validFormats, expectedByteLength, 4);
+
+    ext = gl.getExtension("EXT_texture_compression_bptc");
+
+    wtu.runExtensionSupportedTest(gl, "EXT_texture_compression_bptc", ext !== null);
+
+    if (ext !== null) {
+      runTestExtension();
+    }
+  }
+}
+
+runTest();
+
+var successfullyParsed = true;
+</script>
+<script src="../../js/js-test-post.js"></script>
+</body>
+</html>
