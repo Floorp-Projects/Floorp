@@ -903,13 +903,6 @@ BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op)
 }
 
 bool
-BytecodeEmitter::emitAtomOp(NameNode* nameNode, JSOp op)
-{
-    MOZ_ASSERT(nameNode->atom() != nullptr);
-    return emitAtomOp(nameNode->atom(), op);
-}
-
-bool
 BytecodeEmitter::emitInternedScopeOp(uint32_t index, JSOp op)
 {
     MOZ_ASSERT(JOF_OPTYPE(op) == JOF_SCOPE);
@@ -2032,7 +2025,7 @@ BytecodeEmitter::emitPropLHS(PropertyAccess* prop)
 
     while (true) {
         // Walk back up the list, emitting annotated name ops.
-        if (!emitAtomOp(&pndot->key(), JSOP_GETPROP)) {
+        if (!emitAtomOp(pndot->key().atom(), JSOP_GETPROP)) {
             return false;
         }
 
@@ -2074,7 +2067,8 @@ BytecodeEmitter::emitPropOp(PropertyAccess* prop, JSOp op)
         return false;
     }
 
-    if (!emitAtomOp(&prop->key(), op)) {
+    JSAtom* atom = prop->key().atom();
+    if (!emitAtomOp(atom, op)) {
         return false;
     }
 
@@ -2093,7 +2087,8 @@ BytecodeEmitter::emitSuperGetProp(PropertyAccess* prop, bool isCall)
         return false;
     }
 
-    if (!emitAtomOp(&prop->key(), JSOP_GETPROP_SUPER)) {  // THIS? PROP
+    JSAtom* atom = prop->key().atom();
+    if (!emitAtomOp(atom, JSOP_GETPROP_SUPER)) {          // THIS? PROP
         return false;
     }
 
@@ -2130,7 +2125,8 @@ BytecodeEmitter::emitPropIncDec(UnaryNode* incDec)
             return false;
         }
     }
-    if (!emitAtomOp(&prop->key(), isSuper ? JSOP_GETPROP_SUPER : JSOP_GETPROP)) {
+    JSAtom* atom = prop->key().atom();
+    if (!emitAtomOp(atom, isSuper ? JSOP_GETPROP_SUPER : JSOP_GETPROP)) {
         return false;                               // THIS? OBJ V
     }
     if (!emit1(JSOP_POS)) {                         // ... N
@@ -2175,7 +2171,7 @@ BytecodeEmitter::emitPropIncDec(UnaryNode* incDec)
 
     JSOp setOp = isSuper ? sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER
                          : sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
-    if (!emitAtomOp(&prop->key(), setOp)) {         // N? N+1
+    if (!emitAtomOp(atom, setOp)) {                 // N? N+1
         return false;
     }
     if (post) {
@@ -3112,7 +3108,7 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
             } else {                                      // OBJ VAL
                 setOp = sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
             }
-            if (!emitAtomOp(&prop->key(), setOp)) {       // VAL
+            if (!emitAtomOp(prop->key().atom(), setOp)) { // VAL
                 return false;
             }
             break;
@@ -6811,7 +6807,7 @@ BytecodeEmitter::emitDeleteName(UnaryNode* deleteNode)
     NameNode* nameExpr = &deleteNode->kid()->as<NameNode>();
     MOZ_ASSERT(nameExpr->isKind(ParseNodeKind::Name));
 
-    return emitAtomOp(nameExpr, JSOP_DELNAME);
+    return emitAtomOp(nameExpr->atom(), JSOP_DELNAME);
 }
 
 bool
@@ -9360,7 +9356,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
 
       case ParseNodeKind::TemplateString:
       case ParseNodeKind::String:
-        if (!emitAtomOp(&pn->as<NameNode>(), JSOP_STRING)) {
+        if (!emitAtomOp(pn->as<NameNode>().atom(), JSOP_STRING)) {
             return false;
         }
         break;
