@@ -650,7 +650,6 @@
     "html/elements/dialog/model-novalid.html": "Element \u201cdt\u201d not allowed as child of element \u201cdialog\u201d in this context. (Suppressing further errors from this subtree.)",
     "html/elements/div/model-novalid.html": "End tag \u201cp\u201d implied, but there were open elements.",
     "html/elements/dl/article-in-dt-novalid.html": "The element \u201carticle\u201d must not appear as a descendant of the \u201cdt\u201d element.",
-    "html/elements/dl/aside-in-dt-novalid.html": "The element \u201caside\u201d must not appear as a descendant of the \u201cdt\u201d element.",
     "html/elements/dl/dd-in-template-novalid.html": "Element \u201cdl\u201d is missing one or more of the following child elements: [dd].",
     "html/elements/dl/div-contains-dl-novalid.html": "Element \u201cdl\u201d not allowed as child of element \u201cdiv\u201d in this context. (Suppressing further errors from this subtree.)",
     "html/elements/dl/div-contains-text-novalid.html": "Text not allowed in element \u201cdiv\u201d in this context.",
