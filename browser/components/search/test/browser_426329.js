@@ -82,7 +82,7 @@ function promiseSetEngine() {
 
     Services.obs.addObserver(observer, "browser-search-engine-modified");
     ss.addEngine("http://mochi.test:8888/browser/browser/components/search/test/426329.xml",
-                 null, "data:image/x-icon,%00", false);
+                 "data:image/x-icon,%00", false);
   });
 }
 

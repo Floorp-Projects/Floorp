@@ -603,6 +603,11 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
                                      'lib',
                                      os.path.basename(_python_interp),
                                      'site-packages')
+
+            # if  running gecko profiling  install the requirements
+            if self.gecko_profile:
+                self._install_view_gecko_profile_req()
+
             sys.path.append(_path)
             return
 
@@ -632,6 +637,9 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             requirements=[os.path.join(self.talos_path,
                                        'requirements.txt')]
         )
+        self._install_view_gecko_profile_req()
+
+    def _install_view_gecko_profile_req(self):
         # if running locally and gecko profiing is on, we will be using the
         # view-gecko-profile tool which has its own requirements too
         if self.gecko_profile and self.run_local:

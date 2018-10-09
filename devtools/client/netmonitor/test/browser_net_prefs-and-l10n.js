@@ -24,7 +24,7 @@ add_task(async function() {
   function testL10N() {
     is(typeof L10N.getStr("netmonitor.security.enabled"), "string",
       "The getStr() method didn't return a valid string.");
-    is(typeof L10N.getFormatStr("networkMenu.totalMS", "foo"), "string",
+    is(typeof L10N.getFormatStr("networkMenu.totalMS2", "foo"), "string",
       "The getFormatStr() method didn't return a valid string.");
   }
 

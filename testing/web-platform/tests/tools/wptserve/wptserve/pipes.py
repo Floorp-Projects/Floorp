@@ -273,8 +273,9 @@ def slice(request, response, start, end=None):
                 (spelled "null" in a query string) to indicate the end of
                 the file.
     """
-    content = resolve_content(response)
-    response.content = content[start:end]
+    content = resolve_content(response)[start:end]
+    response.content = content
+    response.headers.set("Content-Length", len(content))
     return response
 
 
