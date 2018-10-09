@@ -628,6 +628,15 @@ public:
 
   NS_DECL_BOOKMARK_HISTORY_OBSERVER_INTERNAL
 
+  nsresult OnItemAdded(int64_t aItemId,
+                       int64_t aParentId,
+                       int32_t aIndex,
+                       uint16_t aItemType,
+                       nsIURI* aURI,
+                       PRTime aDateAdded,
+                       const nsACString& aGUID,
+                       const nsACString& aParentGUID,
+                       uint16_t aSource);
   // The internal version has an output aAdded parameter, it is incremented by
   // query nodes when the visited uri belongs to them. If no such query exists,
   // the history result creates a new query node dynamically.
@@ -705,6 +714,16 @@ public:
   // This object implements a bookmark observer interface. This is called from the
   // result's actual observer and it knows all observers are FolderResultNodes
   NS_DECL_NSINAVBOOKMARKOBSERVER
+
+  nsresult OnItemAdded(int64_t aItemId,
+                       int64_t aParentId,
+                       int32_t aIndex,
+                       uint16_t aItemType,
+                       nsIURI* aURI,
+                       PRTime aDateAdded,
+                       const nsACString& aGUID,
+                       const nsACString& aParentGUID,
+                       uint16_t aSource);
 
   virtual void OnRemoving() override;
 

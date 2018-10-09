@@ -1431,6 +1431,7 @@ var BookmarkingUI = {
 
     if (this._hasBookmarksObserver) {
       PlacesUtils.bookmarks.removeObserver(this);
+      PlacesUtils.observers.removeListener(["bookmark-added"], this.handlePlacesEvents);
     }
 
     if (this._pendingUpdate) {
@@ -1476,6 +1477,8 @@ var BookmarkingUI = {
          if (!this._hasBookmarksObserver) {
            try {
              PlacesUtils.bookmarks.addObserver(this);
+            this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
+            PlacesUtils.observers.addListener(["bookmark-added"], this.handlePlacesEvents);
              this._hasBookmarksObserver = true;
            } catch (ex) {
              Cu.reportError("BookmarkingUI failed adding a bookmarks observer: " + ex);
@@ -1710,20 +1713,22 @@ var BookmarkingUI = {
     updateToggleControlLabel(triggerNode);
   },
 
-  // nsINavBookmarkObserver
-  onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded, aGuid) {
-    if (aURI && aURI.equals(this._uri)) {
-      // If a new bookmark has been added to the tracked uri, register it.
-      if (!this._itemGuids.has(aGuid)) {
-        this._itemGuids.add(aGuid);
-        // Only need to update the UI if it wasn't marked as starred before:
-        if (this._itemGuids.size == 1) {
-          this._updateStar();
+  handlePlacesEvents(aEvents) {
+    // Only need to update the UI if it wasn't marked as starred before:
+    if (this._itemGuids.size == 0) {
+      for (let {url, guid} of aEvents) {
+        if (url && url == this._uri.spec) {
+          // If a new bookmark has been added to the tracked uri, register it.
+          if (!this._itemGuids.has(guid)) {
+            this._itemGuids.add(guid);
+            this._updateStar();
+          }
         }
       }
     }
   },
 
+  // nsINavBookmarkObserver
   onItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGuid) {
     // If one of the tracked bookmarks has been removed, unregister it.
     if (this._itemGuids.has(aGuid)) {

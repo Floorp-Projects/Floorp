@@ -4619,14 +4619,19 @@ class BookmarkObserverRecorder {
   }
 
   noteItemAdded(info) {
-    let uri = info.urlHref ? Services.io.newURI(info.urlHref) : null;
-    this.bookmarkObserverNotifications.push({
-      name: "onItemAdded",
+    this.bookmarkObserverNotifications.push(new PlacesBookmarkAddition({
+      id: info.id,
+      parentId: info.parentId,
+      index: info.position,
+      url: info.urlHref || "",
+      title: info.title,
+      dateAdded: info.dateAdded,
+      guid: info.guid,
+      parentGuid: info.parentGuid,
+      source: PlacesUtils.bookmarks.SOURCES.SYNC,
+      itemType: info.type,
       isTagging: info.isTagging,
-      args: [info.id, info.parentId, info.position, info.type, uri, info.title,
-        info.dateAdded, info.guid, info.parentGuid,
-        PlacesUtils.bookmarks.SOURCES.SYNC],
-    });
+    }));
   }
 
   noteGuidChanged(info) {
@@ -4703,12 +4708,20 @@ class BookmarkObserverRecorder {
     let observers = PlacesUtils.bookmarks.getObservers();
     for (let observer of observers) {
       this.notifyObserver(observer, "onBeginUpdateBatch");
-      for await (let info of yieldingIterator(this.bookmarkObserverNotifications)) {
-        if (info.isTagging && observer.skipTags) {
-          continue;
+    }
+    for await (let info of yieldingIterator(this.bookmarkObserverNotifications)) {
+      if (info instanceof PlacesEvent) {
+        PlacesObservers.notifyListeners([info]);
+      } else {
+        for (let observer of observers) {
+          if (info.isTagging && observer.skipTags) {
+            continue;
+          }
+          this.notifyObserver(observer, info.name, info.args);
         }
-        this.notifyObserver(observer, info.name, info.args);
       }
+    }
+    for (let observer of observers) {
       this.notifyObserver(observer, "onEndUpdateBatch");
     }
   }
