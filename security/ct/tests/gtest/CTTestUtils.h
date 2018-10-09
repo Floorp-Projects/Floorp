@@ -17,6 +17,8 @@
 
 namespace mozilla { namespace ct {
 
+Buffer HexToBytes(const char* hexData);
+
 // Note: unless specified otherwise, all test data is taken from
 // Certificate Transparency test data repository at
 // https://github.com/google/certificate-transparency/tree/master/test/testdata

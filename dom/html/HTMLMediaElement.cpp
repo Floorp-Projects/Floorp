@@ -2699,8 +2699,8 @@ HTMLMediaElement::FastSeek(double aTime, ErrorResult& aRv)
   LOG(LogLevel::Debug, ("%p FastSeek(%f) called by JS", this, aTime));
   LOG(LogLevel::Debug, ("Reporting telemetry VIDEO_FASTSEEK_USED"));
   Telemetry::Accumulate(Telemetry::VIDEO_FASTSEEK_USED, 1);
-  RefPtr<Promise> tobeDropped = Seek(aTime, SeekTarget::PrevSyncPoint, aRv);
-  aRv.SuppressException();
+  RefPtr<Promise> tobeDropped = Seek(aTime, SeekTarget::PrevSyncPoint,
+                                     IgnoreErrors());
 }
 
 already_AddRefed<Promise>
@@ -2725,8 +2725,8 @@ HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv)
 {
   LOG(LogLevel::Debug,
       ("%p SetCurrentTime(%f) called by JS", this, aCurrentTime));
-  RefPtr<Promise> tobeDropped = Seek(aCurrentTime, SeekTarget::Accurate, aRv);
-  aRv.SuppressException();
+  RefPtr<Promise> tobeDropped = Seek(aCurrentTime, SeekTarget::Accurate,
+                                     IgnoreErrors());
 }
 
 /**
@@ -2769,6 +2769,7 @@ HTMLMediaElement::Seek(double aTime,
   // aTime should be non-NaN.
   MOZ_ASSERT(!mozilla::IsNaN(aTime));
 
+  RefPtr<Promise> promise = CreateDOMPromise(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -2890,7 +2891,9 @@ HTMLMediaElement::Seek(double aTime,
   AddRemoveSelfReference();
 
   // Keep the DOM promise.
-  return do_AddRef(mSeekDOMPromise = CreateDOMPromise(aRv));
+  mSeekDOMPromise = promise;
+
+  return promise.forget();
 }
 
 double
@@ -4279,14 +4282,14 @@ HTMLMediaElement::UpdateWakeLock()
     Volume() > 0.0 && !mMuted && mIsAudioTrackAudible;
   // WakeLock when playing audible media.
   if (playing && isAudible) {
-    WakeLockCreate();
+    CreateAudioWakeLockIfNeeded();
   } else {
-    WakeLockRelease();
+    ReleaseAudioWakeLockIfExists();
   }
 }
 
 void
-HTMLMediaElement::WakeLockCreate()
+HTMLMediaElement::CreateAudioWakeLockIfNeeded()
 {
   if (!mWakeLock) {
     RefPtr<power::PowerManagerService> pmService =
@@ -4294,13 +4297,14 @@ HTMLMediaElement::WakeLockCreate()
     NS_ENSURE_TRUE_VOID(pmService);
 
     ErrorResult rv;
-    mWakeLock = pmService->NewWakeLock(
-      NS_LITERAL_STRING("audio-playing"), OwnerDoc()->GetInnerWindow(), rv);
+    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("audio-playing"),
+                                       OwnerDoc()->GetInnerWindow(),
+                                       rv);
   }
 }
 
 void
-HTMLMediaElement::WakeLockRelease()
+HTMLMediaElement::ReleaseAudioWakeLockIfExists()
 {
   if (mWakeLock) {
     ErrorResult rv;
@@ -4308,6 +4312,12 @@ HTMLMediaElement::WakeLockRelease()
     rv.SuppressException();
     mWakeLock = nullptr;
   }
+}
+
+void
+HTMLMediaElement::WakeLockRelease()
+{
+  ReleaseAudioWakeLockIfExists();
 }
 
 HTMLMediaElement::OutputMediaStream::OutputMediaStream()
@@ -7753,6 +7763,7 @@ HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo)
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->AudioCaptureStreamChangeIfNeeded();
   }
+  UpdateWakeLock();
 }
 
 void
@@ -8191,7 +8202,7 @@ HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists()
     RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "dom::HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists",
-      [=]() { promise->MaybeResolveWithUndefined(); });
+      [promise]() { promise->MaybeResolveWithUndefined(); });
     mAbstractMainThread->Dispatch(r.forget());
     mSeekDOMPromise = nullptr;
   }
@@ -8205,7 +8216,7 @@ HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists()
     RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "dom::HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists",
-      [=]() { promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR); });
+      [promise]() { promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR); });
     mAbstractMainThread->Dispatch(r.forget());
     mSeekDOMPromise = nullptr;
   }
