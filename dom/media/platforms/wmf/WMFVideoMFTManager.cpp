@@ -146,6 +146,7 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   layers::KnowsCompositor* aKnowsCompositor,
   layers::ImageContainer* aImageContainer,
   float aFramerate,
+  const CreateDecoderParams::OptionSet& aOptions,
   bool aDXVAEnabled)
   : mVideoInfo(aConfig)
   , mImageSize(aConfig.mImage)
@@ -154,8 +155,11 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   , mYUVColorSpace(YUVColorSpace::BT601)
   , mImageContainer(aImageContainer)
   , mKnowsCompositor(aKnowsCompositor)
-  , mDXVAEnabled(aDXVAEnabled)
+  , mDXVAEnabled(aDXVAEnabled &&
+                 !aOptions.contains(
+                   CreateDecoderParams::Option::HardwareDecoderNotAllowed))
   , mFramerate(aFramerate)
+  , mLowLatency(aOptions.contains(CreateDecoderParams::Option::LowLatency))
   // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
   // Init().
 {
@@ -616,7 +620,7 @@ WMFVideoMFTManager::InitInternal()
     attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
     attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
       WMFDecoderModule::GetNumDecoderThreads());
-    if (gfxPrefs::PDMWMFLowLatencyEnabled()) {
+    if (mLowLatency || gfxPrefs::PDMWMFLowLatencyEnabled()) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {
         LOG("Enabling Low Latency Mode");
