@@ -5,7 +5,14 @@
 
 #include "AccessibleWrap.h"
 
+#include "DocAccessibleWrap.h"
+#include "IDSet.h"
+#include "nsAccessibilityService.h"
+
 using namespace mozilla::a11y;
+
+// IDs should be a positive 32bit integer.
+IDSet sIDSet(31UL);
 
 //-----------------------------------------------------
 // construction
@@ -13,11 +20,42 @@ using namespace mozilla::a11y;
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
   : Accessible(aContent, aDoc)
 {
+  if (aDoc) {
+    mID = AcquireID();
+    DocAccessibleWrap* doc = static_cast<DocAccessibleWrap*>(aDoc);
+    doc->AddID(mID, this);
+  }
 }
 
 //-----------------------------------------------------
 // destruction
 //-----------------------------------------------------
-AccessibleWrap::~AccessibleWrap()
+AccessibleWrap::~AccessibleWrap() {}
+
+void
+AccessibleWrap::Shutdown()
 {
+  if (mDoc) {
+    if (mID > 0) {
+      if (auto doc = static_cast<DocAccessibleWrap*>(mDoc.get())) {
+        doc->RemoveID(mID);
+      }
+      ReleaseID(mID);
+      mID = 0;
+    }
+  }
+
+  Accessible::Shutdown();
+}
+
+int32_t
+AccessibleWrap::AcquireID()
+{
+  return sIDSet.GetID();
+}
+
+void
+AccessibleWrap::ReleaseID(int32_t aID)
+{
+  sIDSet.ReleaseID(aID);
 }
