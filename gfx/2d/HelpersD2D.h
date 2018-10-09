@@ -15,7 +15,6 @@
 #include <versionhelpers.h>
 #include "2D.h"
 #include "Logging.h"
-#include "Tools.h"
 #include "ImageScaling.h"
 
 #include "ScaledFontDWrite.h"
@@ -330,7 +329,7 @@ static inline bool IsPatternSupportedByD2D(const Pattern &aPattern)
 
   const RadialGradientPattern *pat =
     static_cast<const RadialGradientPattern*>(&aPattern);
-  
+
   if (pat->mRadius1 != 0) {
     return false;
   }
@@ -427,7 +426,7 @@ DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs, ScaledFontDWrite *aFont, Au
     offsets[i].advanceOffset = aGlyphs.mGlyphs[i].mPosition.x;
     offsets[i].ascenderOffset = -aGlyphs.mGlyphs[i].mPosition.y;
   }
-    
+
   run->bidiLevel = 0;
   run->fontFace = aFont->mFontFace;
   run->fontEmSize = aFont->GetSize();
@@ -582,7 +581,7 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
     uploadRect = Rect(aSourceRect->X(), aSourceRect->Y(), aSourceRect->Width(), aSourceRect->Height());
   }
 
-  // Limit the uploadRect as much as possible without supporting discontiguous uploads 
+  // Limit the uploadRect as much as possible without supporting discontiguous uploads
   //
   //                               region we will paint from
   //   uploadRect
