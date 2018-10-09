@@ -28,8 +28,6 @@ log_formatters = {
                                        "(provided by mozlog)"),
     'tbpl': (formatters.TbplFormatter, "TBPL style log format "
                                        "(provided by mozlog)"),
-    'grouped': (formatters.GroupingFormatter, "Grouped summary of test results "
-                                              "(provided by mozlog)"),
     'errorsummary': (formatters.ErrorSummaryFormatter, argparse.SUPPRESS),
 }
 
