@@ -8,6 +8,7 @@
 
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIStringBundle.h"
 #include "nsIURI.h"
@@ -181,12 +182,18 @@ ToastNotificationHandler::ShowAlert()
     return true;
   }
 
-  ComPtr<IXmlDocument> toastXml =
-    InitializeXmlForTemplate(
-      !mHasImage ?
-        ToastTemplateType::ToastTemplateType_ToastText03 :
-        ToastTemplateType::ToastTemplateType_ToastImageAndText03);
+  ToastTemplateType toastTemplate;
+  if (mHostPort.IsEmpty()) {
+    toastTemplate = mHasImage ?
+      ToastTemplateType::ToastTemplateType_ToastImageAndText03 :
+      ToastTemplateType::ToastTemplateType_ToastText03;
+  } else {
+    toastTemplate = !mHasImage ?
+      ToastTemplateType::ToastTemplateType_ToastImageAndText04 :
+      ToastTemplateType::ToastTemplateType_ToastText04;
+  }
 
+  ComPtr<IXmlDocument> toastXml = InitializeXmlForTemplate(toastTemplate);
   if (!toastXml) {
     return false;
   }
@@ -283,8 +290,36 @@ ToastNotificationHandler::ShowAlert()
   }
 
   if (!mHostPort.IsEmpty()) {
-    nsAutoString disableButtonTitle;
     const char16_t* formatStrings[] = { mHostPort.get() };
+
+    ComPtr<IXmlNode> urlTextNodeRoot;
+    hr = toastTextElements->Item(2, &urlTextNodeRoot);
+    if (NS_WARN_IF(FAILED(hr))) {
+      return false;
+    }
+
+    nsAutoString urlReference;
+    bundle->FormatStringFromName("source.label",
+                                 formatStrings,
+                                 ArrayLength(formatStrings),
+                                 urlReference);
+
+    if (NS_WARN_IF(!SetNodeValueString(urlReference, urlTextNodeRoot.Get(),
+                                       toastXml.Get()))) {
+      return false;
+    }
+
+    if (IsWin10AnniversaryUpdateOrLater()) {
+      ComPtr<IXmlElement> placementText;
+      hr = urlTextNodeRoot.As(&placementText);
+      if (SUCCEEDED(hr)) {
+        // placement is supported on Windows 10 Anniversary Update or later
+        SetAttribute(placementText.Get(), HStringReference(L"placement").Get(),
+                     NS_LITERAL_STRING("attribution"));
+      }
+    }
+
+    nsAutoString disableButtonTitle;
     bundle->FormatStringFromName("webActions.disableForOrigin.label",
                                  formatStrings,
                                  ArrayLength(formatStrings),
