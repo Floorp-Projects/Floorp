@@ -56,7 +56,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
             }
             resources.getString(R.string.pref_key_help) -> run {
                 val session = Session(SupportUtils.HELP_URL, source = Session.Source.MENU)
-                activity.components.sessionManager.add(session)
+                activity.components.sessionManager.add(session, true)
                 activity.finish()
             }
             resources.getString(R.string.pref_key_rights) -> run {
@@ -70,7 +70,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
                     SupportUtils.PRIVACY_NOTICE_URL
 
                 val session = Session(url, source = Session.Source.MENU)
-                activity.components.sessionManager.add(session)
+                activity.components.sessionManager.add(session, true)
                 activity.finish()
             }
         }
