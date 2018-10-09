@@ -54,15 +54,16 @@ async function createUSBClient(socketPath) {
 }
 
 async function createClientForRuntime(runtime) {
-  const { id, type } = runtime;
+  const { connectionParameters, type } = runtime;
 
   if (type === RUNTIMES.THIS_FIREFOX) {
     return createLocalClient();
   } else if (type === RUNTIMES.NETWORK) {
-    const [host, port] = id.split(":");
+    const { host, port } = connectionParameters;
     return createNetworkClient(host, port);
   } else if (type === RUNTIMES.USB) {
-    return createUSBClient(runtime.socketPath);
+    const { socketPath } = connectionParameters;
+    return createUSBClient(socketPath);
   }
 
   return null;
