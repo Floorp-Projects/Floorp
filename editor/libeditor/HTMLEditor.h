@@ -42,6 +42,7 @@ class nsRange;
 
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
+class AutoSetTemporaryAncestorLimiter;
 class DocumentResizeEventListener;
 class EmptyEditableFunctor;
 class ResizerSelectionListener;
@@ -147,8 +148,7 @@ public:
   virtual already_AddRefed<nsIContent> GetFocusedContentForIME() override;
   virtual bool IsActiveInDOMWindow() override;
   virtual dom::EventTarget* GetDOMEventTarget() override;
-  virtual already_AddRefed<nsIContent> FindSelectionRoot(
-                                         nsINode *aNode) override;
+  virtual Element* FindSelectionRoot(nsINode *aNode) const override;
   virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) override;
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
 
@@ -2398,6 +2398,7 @@ protected:
   ParagraphSeparator mDefaultParagraphSeparator;
 
   friend class AutoSelectionSetterAfterTableEdit;
+  friend class AutoSetTemporaryAncestorLimiter;
   friend class CSSEditUtils;
   friend class DocumentResizeEventListener;
   friend class EditorBase;
