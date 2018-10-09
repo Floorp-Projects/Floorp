@@ -153,15 +153,8 @@ XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
 // returning the underlying JSObject) so that JS callers will see what looks
 // Like any other xpcom object - and be limited to use its interfaces.
 //
-// See the comment preceding nsIXPCWrappedJSObjectGetter in nsIXPConnect.idl.
 
 /**
- * This is a sort of a placeholder interface. It is not intended to be
- * implemented. It exists to give the nsIXPCSecurityManager an iid on
- * which to gate a specific activity in XPConnect.
- *
- * That activity is...
- *
  * When JavaScript code uses a component that is itself implemented in
  * JavaScript then XPConnect will build a wrapper rather than directly
  * expose the JSObject of the component. This allows components implemented
@@ -172,16 +165,17 @@ XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
  *
  * However, in some cases it is useful to allow the JS caller access to the
  * JS component's underlying implementation. In order to facilitate this
- * XPConnect supports the 'wrappedJSObject' property. The caller code can do:
+ * XPConnect supports the 'wrappedJSObject' property. This 'wrappedJSObject'
+ * property is different than the XrayWrapper meaning. (The naming collision
+ * avoids having more than one magic XPConnect property name, but is
+ * confusing.)
+ *
+ * The caller code can do:
  *
  * // 'foo' is some xpcom component (that might be implemented in JS).
- * try {
- *   var bar = foo.wrappedJSObject;
- *   if(bar) {
- *      // bar is the underlying JSObject. Do stuff with it here.
- *   }
- * } catch(e) {
- *   // security exception?
+ * var bar = foo.wrappedJSObject;
+ * if(bar) {
+ *    // bar is the underlying JSObject. Do stuff with it here.
  * }
  *
  * Recall that 'foo' above is an XPConnect wrapper, not the underlying JS
@@ -192,17 +186,12 @@ XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
  * 2) The underlying JSObject actually implements a "wrappedJSObject"
  *    property that returns a JSObject. This is called by XPConnect. This
  *    restriction allows wrapped objects to only allow access to the underlying
- *    JSObject if they choose to do so. Ususally this just means that 'foo'
- *    would have a property tht looks like:
+ *    JSObject if they choose to do so. Usually this just means that 'foo'
+ *    would have a property that looks like:
  *       this.wrappedJSObject = this.
- * 3) The implemementation of nsIXPCSecurityManager (if installed) allows
- *    a property get on the interface below. Although the JSObject need not
- *    implement 'nsIXPCWrappedJSObjectGetter', XPConnect will ask the
- *    security manager if it is OK for the caller to access the only method
- *    in nsIXPCWrappedJSObjectGetter before allowing the activity. This fits
- *    in with the security manager paradigm and makes control over accessing
- *    the property on this interface the control factor for getting the
- *    underlying wrapped JSObject of a JS component from JS code.
+ * 3) The caller must be system JS and not content. Double-wrapped XPCWJS should
+ *    not be exposed to content except with enablePrivilege or a remote-XUL
+ *    domain.
  *
  * Notes:
  *
@@ -220,10 +209,6 @@ XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
  *        Note that one might do: this.wrappedJSObject = someOtherObject;
  *   iii) Avoiding the explicit interface makes it easier for both the caller
  *        and the component.
- *
- *  Anyway, some future implementation of nsIXPCSecurityManager might want
- *  do special processing on 'nsIXPCSecurityManager::CanGetProperty' when
- *  the interface id is that of nsIXPCWrappedJSObjectGetter.
  */
 
 static JSObject*
