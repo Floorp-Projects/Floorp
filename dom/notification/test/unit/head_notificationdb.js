@@ -6,7 +6,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 function getNotificationObject(app, id, tag) {
   return {
     origin: "https://" + app + ".gaiamobile.org/",
-    id: id,
+    id,
     title: app + "Notification:" + Date.now(),
     dir: "auto",
     lang: "",
@@ -30,7 +30,7 @@ function startNotificationDB() {
 // Helper function to add a listener, send message and treat the reply
 function addAndSend(msg, reply, callback, payload, runNext = true) {
   let handler = {
-    receiveMessage: function(message) {
+    receiveMessage(message) {
       if (message.name === reply) {
         Services.cpmm.removeMessageListener(reply, handler);
         callback(message);
