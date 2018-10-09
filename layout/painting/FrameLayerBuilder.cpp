@@ -5519,12 +5519,6 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
   nsPoint shift = layerData->mAnimatedGeometryRootOrigin -
                   layerData->mLastAnimatedGeometryRootOrigin;
 
-  if (aData->mTransform) {
-    // If this display item is inside a flattened transform, the shift is
-    // already included in the root transform.
-    shift = nsPoint();
-  }
-
   const DisplayItemClip& clip = item->GetClip();
   const int32_t appUnitsPerDevPixel = layerData->mAppUnitsPerDevPixel;
 
@@ -5585,6 +5579,12 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
     // be repainted.
     const nsRegion& changedFrameInvalidations =
       aData->GetChangedFrameInvalidations();
+
+    if (aData->mTransform) {
+      // If this display item is inside a flattened transform the offset is
+      // already included in the root transform, so there is no need to shift.
+      shift = nsPoint();
+    }
 
     aData->mGeometry->MoveBy(shift);
 
