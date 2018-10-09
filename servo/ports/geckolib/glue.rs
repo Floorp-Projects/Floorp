@@ -2481,36 +2481,158 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetDeclCssText(
     })
 }
 
+
+macro_rules! simple_font_descriptor_getter {
+    ($function_name:ident, $gecko_type:ident, $field:ident, $compute:ident) => {
+        #[no_mangle]
+        pub unsafe extern "C" fn $function_name(
+            rule: RawServoFontFaceRuleBorrowed,
+            out: *mut structs::$gecko_type,
+        ) -> bool {
+            read_locked_arc(rule, |rule: &FontFaceRule| {
+                match rule.$field {
+                    None => return false,
+                    Some(ref f) => {
+                        // FIXME(emilio): We should probably teach bindgen about
+                        // cbindgen.toml and making it hide the types and use
+                        // the rust ones instead. This would make transmute()
+                        // calls unnecessary.
+                        // unsafe: cbindgen guarantees the same representation.
+                        *out = ::std::mem::transmute(f.$compute());
+                    }
+                }
+                true
+            })
+        }
+    }
+}
+
+simple_font_descriptor_getter!(Servo_FontFaceRule_GetFontWeight, StyleComputedFontWeightRange, weight, compute);
+simple_font_descriptor_getter!(Servo_FontFaceRule_GetFontStretch, StyleComputedFontStretchRange, stretch, compute);
+simple_font_descriptor_getter!(Servo_FontFaceRule_GetFontStyle, StyleComputedFontStyleDescriptor, style, compute);
+simple_font_descriptor_getter!(Servo_FontFaceRule_GetFontDisplay, StyleFontDisplay, display, clone);
+simple_font_descriptor_getter!(Servo_FontFaceRule_GetFontLanguageOverride, StyleFontLanguageOverride, language_override, compute_non_system);
+
 #[no_mangle]
-pub unsafe extern "C" fn Servo_FontFaceRule_GetDescriptor(
+pub unsafe extern "C" fn Servo_FontFaceRule_GetFamilyName(
     rule: RawServoFontFaceRuleBorrowed,
-    desc: nsCSSFontDesc,
-    result: nsCSSValueBorrowedMut,
-) {
+) -> *mut nsAtom {
     read_locked_arc(rule, |rule: &FontFaceRule| {
-        macro_rules! to_css_value {
-            (
-                valid: [$($v_enum_name:ident => $field:ident,)*]
-                invalid: [$($i_enum_name:ident,)*]
-            ) => {
-                match desc {
-                    $(
-                        nsCSSFontDesc::$v_enum_name => {
-                            if let Some(ref value) = rule.$field {
-                                result.set_from(value);
-                            }
+        // TODO(emilio): font-family is a mandatory descriptor, can't we unwrap
+        // here, and remove the null-checks in Gecko?
+        rule.family.as_ref().map_or(ptr::null_mut(), |f| f.name.as_ptr())
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_FontFaceRule_GetUnicodeRanges(
+    rule: RawServoFontFaceRuleBorrowed,
+    out_len: *mut usize,
+) -> *const structs::StyleUnicodeRange {
+    *out_len = 0;
+    read_locked_arc(rule, |rule: &FontFaceRule| {
+        let ranges = match rule.unicode_range {
+            Some(ref ranges) => ranges,
+            None => return ptr::null(),
+        };
+        *out_len = ranges.len();
+        ranges.as_ptr() as *const _
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
+    rule: RawServoFontFaceRuleBorrowed,
+    out: *mut nsTArray<structs::StyleFontFaceSourceListComponent>,
+) {
+    use style::font_face::{Source, FontFaceSourceListComponent};
+    let out = &mut *out;
+    read_locked_arc(rule, |rule: &FontFaceRule| {
+        let sources = match rule.sources {
+            Some(ref s) => s,
+            None => return,
+        };
+        let len = sources.iter().fold(0, |acc, src| {
+            acc + match *src {
+                // Each format hint takes one position in the array of mSrc.
+                Source::Url(ref url) => url.format_hints.len() + 1,
+                Source::Local(_) => 1,
+            }
+        });
+
+        out.set_len(len as u32);
+
+        let mut iter = out.iter_mut();
+
+        {
+            let mut set_next = |component: FontFaceSourceListComponent| {
+                // transmute: cbindgen ensures they have the same representation.
+                *iter.next().expect("miscalculated length") =
+                    ::std::mem::transmute(component);
+            };
+
+            for source in sources.iter() {
+                match *source {
+                    Source::Url(ref url) => {
+                        set_next(FontFaceSourceListComponent::Url(url.url.url_value.get()));
+                        for hint in url.format_hints.iter() {
+                            set_next(FontFaceSourceListComponent::FormatHint {
+                                length: hint.len(),
+                                utf8_bytes: hint.as_ptr(),
+                            });
                         }
-                    )*
-                    $(
-                        nsCSSFontDesc::$i_enum_name => {
-                            debug_assert!(false, "not a valid font descriptor");
-                        }
-                    )*
+                    }
+                    Source::Local(ref name) => {
+                        set_next(FontFaceSourceListComponent::Local(name.name.as_ptr()));
+                    }
                 }
             }
         }
-        apply_font_desc_list!(to_css_value)
+
+        assert!(iter.next().is_none(), "miscalculated");
     })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_FontFaceRule_GetVariationSettings(
+    rule: RawServoFontFaceRuleBorrowed,
+    variations: *mut nsTArray<structs::gfxFontVariation>,
+) {
+    read_locked_arc(rule, |rule: &FontFaceRule| {
+        let source_variations = match rule.variation_settings {
+            Some(ref v) => v,
+            None => return,
+        };
+
+        (*variations).set_len(source_variations.0.len() as u32);
+        for (target, source) in (*variations).iter_mut().zip(source_variations.0.iter()) {
+            *target = structs::gfxFontVariation {
+                mTag: source.tag.0,
+                mValue: source.value.get(),
+            };
+        }
+    });
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_FontFaceRule_GetFeatureSettings(
+    rule: RawServoFontFaceRuleBorrowed,
+    features: *mut nsTArray<structs::gfxFontFeature>,
+) {
+    read_locked_arc(rule, |rule: &FontFaceRule| {
+        let source_features = match rule.feature_settings {
+            Some(ref v) => v,
+            None => return,
+        };
+
+        (*features).set_len(source_features.0.len() as u32);
+        for (target, source) in (*features).iter_mut().zip(source_features.0.iter()) {
+            *target = structs::gfxFontFeature {
+                mTag: source.tag.0,
+                mValue: source.value.value() as u32,
+            };
+        }
+    });
 }
 
 #[no_mangle]
@@ -5639,22 +5761,24 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ParseFontShorthandForMatching(
+pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
     value: *const nsAString,
     data: *mut URLExtraData,
     family: *mut structs::RefPtr<structs::SharedFontList>,
-    style: nsCSSValueBorrowedMut,
-    stretch: nsCSSValueBorrowedMut,
-    weight: nsCSSValueBorrowedMut
+    style: *mut structs::StyleComputedFontStyleDescriptor,
+    stretch: *mut f32,
+    weight: *mut f32,
 ) -> bool {
+    use style::font_face::ComputedFontStyleDescriptor;
     use style::properties::shorthands::font;
     use style::values::generics::font::FontStyle as GenericFontStyle;
-    use style::values::specified::font::{FontFamily, FontWeight, FontStyle, SpecifiedFontStyle};
+    use style::values::computed::font::FontWeight as ComputedFontWeight;
+    use style::values::specified::font::{FontFamily, FontWeight, FontStretch, FontStyle, SpecifiedFontStyle};
 
-    let string = unsafe { (*value).to_string() };
+    let string = (*value).to_string();
     let mut input = ParserInput::new(&string);
     let mut parser = Parser::new(&mut input);
-    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
+    let url_data = UrlExtraData::from_ptr_ref(&data);
     let context = ParserContext::new(
         Origin::Author,
         url_data,
@@ -5671,7 +5795,7 @@ pub extern "C" fn Servo_ParseFontShorthandForMatching(
     };
 
     // The system font is not acceptable, so we return false.
-    let family = unsafe { &mut *family };
+    let family = &mut *family;
     match font.font_family {
         FontFamily::Values(list) => family.set_move(list.0),
         FontFamily::System(_) => return false,
@@ -5681,27 +5805,29 @@ pub extern "C" fn Servo_ParseFontShorthandForMatching(
         FontStyle::Specified(ref s) => s,
         FontStyle::System(_) => return false,
     };
-    match *specified_font_style {
-        GenericFontStyle::Normal => style.set_normal(),
-        GenericFontStyle::Italic => style.set_enum(structs::NS_FONT_STYLE_ITALIC as i32),
+    *style = ::std::mem::transmute(match *specified_font_style {
+        GenericFontStyle::Normal => ComputedFontStyleDescriptor::Normal,
+        GenericFontStyle::Italic => ComputedFontStyleDescriptor::Italic,
         GenericFontStyle::Oblique(ref angle) => {
-            style.set_font_style(SpecifiedFontStyle::compute_angle(angle).degrees())
+            let angle = SpecifiedFontStyle::compute_angle_degrees(angle);
+            ComputedFontStyleDescriptor::Oblique(angle, angle)
         }
-    }
+    });
 
-    if font.font_stretch.get_system().is_some() {
-        return false;
-    }
-    stretch.set_from(&font.font_stretch);
+    *stretch = match font.font_stretch {
+        FontStretch::Keyword(ref k) => k.compute().0,
+        FontStretch::Stretch(ref p) => p.get(),
+        FontStretch::System(_) => return false,
+    };
 
-    match font.font_weight {
-        FontWeight::Absolute(w) => weight.set_font_weight(w.compute().0),
+    *weight = match font.font_weight {
+        FontWeight::Absolute(w) => w.compute().0,
         // Resolve relative font weights against the initial of font-weight
         // (normal, which is equivalent to 400).
-        FontWeight::Bolder => weight.set_enum(structs::NS_FONT_WEIGHT_BOLD as i32),
-        FontWeight::Lighter => weight.set_enum(structs::NS_FONT_WEIGHT_THIN as i32),
+        FontWeight::Bolder => ComputedFontWeight::normal().bolder().0,
+        FontWeight::Lighter => ComputedFontWeight::normal().lighter().0,
         FontWeight::System(_) => return false,
-    }
+    };
 
     true
 }

@@ -21,33 +21,27 @@ add_task(async function() {
   let itemCount = 0;
 
   let gotFolder = false;
-  let bmObserver = {
-    onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle) {
-      if (aTitle != label) {
+  let listener = events => {
+    for (let event of events) {
+      if (event.title != label) {
         itemCount++;
       }
-      if (aItemType == PlacesUtils.bookmarks.TYPE_FOLDER && aTitle == "360 \u76f8\u5173") {
+      if (event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER && event.title == "360 \u76f8\u5173") {
         gotFolder = true;
       }
-      if (expectedParents.length > 0 && aTitle == label) {
-        let index = expectedParents.indexOf(aParentId);
+      if (expectedParents.length > 0 && event.title == label) {
+        let index = expectedParents.indexOf(event.parentId);
         Assert.ok(index != -1, "Found expected parent");
         expectedParents.splice(index, 1);
       }
-    },
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onItemRemoved() {},
-    onItemChanged() {},
-    onItemVisited() {},
-    onItemMoved() {},
+    }
   };
-  PlacesUtils.bookmarks.addObserver(bmObserver);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
   await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS, {
     id: "default",
   });
-  PlacesUtils.bookmarks.removeObserver(bmObserver);
+  PlacesUtils.observers.removeListener(["bookmark-added"], listener);
 
   // Check the bookmarks have been imported to all the expected parents.
   Assert.ok(!expectedParents.length, "No more expected parents");

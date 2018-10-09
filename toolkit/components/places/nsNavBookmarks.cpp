@@ -17,6 +17,7 @@
 #include "nsQueryObject.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
+#include "mozilla/dom/PlacesBookmarkAddition.h"
 #include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/dom/PlacesVisit.h"
 
@@ -225,7 +226,7 @@ nsNavBookmarks::Init()
   NS_ENSURE_STATE(history);
   history->AddObserver(this, true);
   AutoTArray<PlacesEventType, 1> events;
-  events.AppendElement(PlacesEventType::Page_visited);
+  events.AppendElement(PlacesEventType::Page_visited, fallible);
   PlacesObservers::AddListener(events, this);
 
   // DO NOT PUT STUFF HERE that can fail. See observer comment above.
@@ -569,11 +570,28 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
-                             SKIP_TAGS(grandParentId == mDB->GetTagsFolderId()),
-                             OnItemAdded(*aNewBookmarkId, aFolder, index,
-                                         TYPE_BOOKMARK, aURI, title, dateAdded,
-                                         guid, folderGuid, aSource));
+  if (mCanNotify) {
+    Sequence<OwningNonNull<PlacesEvent>> events;
+    nsAutoCString utf8spec;
+    aURI->GetSpec(utf8spec);
+
+    RefPtr<PlacesBookmarkAddition> bookmark = new PlacesBookmarkAddition();
+    bookmark->mItemType = TYPE_BOOKMARK;
+    bookmark->mId = *aNewBookmarkId;
+    bookmark->mParentId = aFolder;
+    bookmark->mIndex = index;
+    bookmark->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
+    bookmark->mTitle.Assign(NS_ConvertUTF8toUTF16(title));
+    bookmark->mDateAdded = dateAdded / 1000;
+    bookmark->mGuid.Assign(guid);
+    bookmark->mParentGuid.Assign(folderGuid);
+    bookmark->mSource = aSource;
+    bookmark->mIsTagging = grandParentId == mDB->GetTagsFolderId();
+    bool success = !!events.AppendElement(bookmark.forget(), fallible);
+    MOZ_RELEASE_ASSERT(success);
+
+    PlacesObservers::NotifyListeners(events);
+  }
 
   // If the bookmark has been added to a tag container, notify all
   // bookmark-folder result nodes which contain a bookmark for the new
@@ -781,11 +799,24 @@ nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aTitle,
 
   int64_t tagsRootId = TagsRootId();
 
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
-                             SKIP_TAGS(aParent == tagsRootId),
-                             OnItemAdded(*aNewFolderId, aParent, index, FOLDER,
-                                         nullptr, title, dateAdded, guid,
-                                         folderGuid, aSource));
+  if (mCanNotify) {
+    Sequence<OwningNonNull<PlacesEvent>> events;
+    RefPtr<PlacesBookmarkAddition> folder = new PlacesBookmarkAddition();
+    folder->mItemType = TYPE_FOLDER;
+    folder->mId = *aNewFolderId;
+    folder->mParentId = aParent;
+    folder->mIndex = index;
+    folder->mTitle.Assign(NS_ConvertUTF8toUTF16(title));
+    folder->mDateAdded = dateAdded / 1000;
+    folder->mGuid.Assign(guid);
+    folder->mParentGuid.Assign(folderGuid);
+    folder->mSource = aSource;
+    folder->mIsTagging = aParent == tagsRootId;
+    bool success = !!events.AppendElement(folder.forget(), fallible);
+    MOZ_RELEASE_ASSERT(success);
+
+    PlacesObservers::NotifyListeners(events);
+  }
 
   return NS_OK;
 }

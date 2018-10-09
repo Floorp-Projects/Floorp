@@ -11,7 +11,8 @@ libjpeg-turbo is covered by three compatible BSD-style open source licenses:
 
 - The Modified (3-clause) BSD License, which is listed below
 
-  This license covers the TurboJPEG API library and associated programs.
+  This license covers the TurboJPEG API library and associated programs, as
+  well as the build system.
 
 - The zlib License, which is listed below
 
@@ -137,3 +138,16 @@ freely, subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be
    misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
+
+
+Why Three Licenses?
+===================
+
+The zlib License could have been used instead of the Modified (3-clause) BSD
+License, and since the IJG License effectively subsumes the distribution
+conditions of the zlib License, this would have effectively placed
+libjpeg-turbo binary distributions under the IJG License.  However, the IJG
+License specifically refers to the Independent JPEG Group and does not extend
+attribution and endorsement protections to other entities.  Thus, it was
+desirable to choose a license that granted us the same protections for new code
+that were granted to the IJG for code derived from their software.

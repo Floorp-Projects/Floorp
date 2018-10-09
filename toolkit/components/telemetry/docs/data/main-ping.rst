@@ -299,7 +299,7 @@ in Firefox Nightly or in builds using ``--enable-profiling`` switch.
 Limits for captured stacks are the same as for chromeHangs (see below). Furthermore:
 
 * the key length is limited to 50 characters,
-* keys are restricted to alpha-numeric characters and `-`.
+* keys are restricted to alphanumeric characters and `-`.
 
 The module names can contain unicode characters.
 

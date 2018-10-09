@@ -205,6 +205,8 @@ EXPORTS.mozilla.dom += [
     'NodeInfoInlines.h',
     'NodeIterator.h',
     'ParentProcessMessageManager.h',
+    'PlacesBookmark.h',
+    'PlacesBookmarkAddition.h',
     'PlacesEvent.h',
     'PlacesObservers.h',
     'PlacesVisit.h',

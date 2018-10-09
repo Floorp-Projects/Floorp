@@ -119,7 +119,7 @@ add_task(async function test_value_combo() {
   let localItemIds = await PlacesUtils.promiseManyItemIds(["fxBmk_______",
     "tFolder_____", "tbBmk_______", "bzBmk_______", "mozBmk______"]);
   observer.check([{
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("fxBmk_______"),
               parentId: PlacesUtils.toolbarFolderId, index: 0,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -128,15 +128,15 @@ add_task(async function test_value_combo() {
               parentGuid: PlacesUtils.bookmarks.toolbarGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC },
   }, {
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("tFolder_____"),
               parentId: PlacesUtils.toolbarFolderId,
               index: 1, type: PlacesUtils.bookmarks.TYPE_FOLDER,
-              urlHref: null, title: "Mail", guid: "tFolder_____",
+              urlHref: "", title: "Mail", guid: "tFolder_____",
               parentGuid: PlacesUtils.bookmarks.toolbarGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC },
   }, {
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("tbBmk_______"),
               parentId: localItemIds.get("tFolder_____"), index: 0,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -676,7 +676,7 @@ add_task(async function test_keywords_complex() {
     "bookmarkAAA1", "bookmarkBBB1", "bookmarkBBBB", "bookmarkCCCC",
     "bookmarkDDDD", "bookmarkEEEE"]);
   let expectedNotifications = [{
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("bookmarkAAAA"),
               parentId: PlacesUtils.bookmarksMenuFolderId, index: 0,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -685,7 +685,7 @@ add_task(async function test_keywords_complex() {
               parentGuid: PlacesUtils.bookmarks.menuGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC },
   }, {
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("bookmarkAAA1"),
               parentId: PlacesUtils.bookmarksMenuFolderId, index: 1,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -694,7 +694,7 @@ add_task(async function test_keywords_complex() {
               parentGuid: PlacesUtils.bookmarks.menuGuid,
               source: PlacesUtils.bookmarks.SOURCES.SYNC },
   }, {
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("bookmarkBBB1"),
               parentId: unfiledFolderId, index: 0,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,

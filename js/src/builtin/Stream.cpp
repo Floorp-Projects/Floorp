@@ -583,7 +583,7 @@ const Class TeeState::class_ = {
 #define CLASS_SPEC(cls, nCtorArgs, nSlots, specFlags, classFlags, classOps) \
 const ClassSpec cls::classSpec_ = { \
     GenericCreateConstructor<cls::constructor, nCtorArgs, gc::AllocKind::FUNCTION>, \
-    GenericCreatePrototype, \
+    GenericCreatePrototype<cls>, \
     nullptr, \
     nullptr, \
     cls##_methods, \
