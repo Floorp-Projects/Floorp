@@ -10,6 +10,8 @@ from .html import HTMLFormatter
 from .machformatter import MachFormatter
 from .tbplformatter import TbplFormatter
 from .errorsummary import ErrorSummaryFormatter
+from .grouping import GroupingFormatter
+
 
 try:
     import ujson as json
@@ -23,4 +25,4 @@ def JSONFormatter():
 
 __all__ = ['UnittestFormatter', 'XUnitFormatter', 'HTMLFormatter',
            'MachFormatter', 'TbplFormatter', 'ErrorSummaryFormatter',
-           'JSONFormatter']
+           'JSONFormatter', 'GroupingFormatter']
