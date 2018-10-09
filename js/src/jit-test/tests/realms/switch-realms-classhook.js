@@ -1,5 +1,5 @@
-if (!this.hasOwnProperty("TypedObject"))
-    quit();
+// |jit-test| skip-if: !this.hasOwnProperty("TypedObject")
+
 function test() {
     var g = newGlobal({sameCompartmentAs: this});
     var S = g.evaluate("new TypedObject.StructType({x: TypedObject.uint32});");
