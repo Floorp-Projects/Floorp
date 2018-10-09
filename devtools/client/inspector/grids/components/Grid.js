@@ -43,6 +43,14 @@ class Grid extends PureComponent {
   }
 
   render() {
+    if (!this.props.grids.length) {
+      return (
+        dom.div({ className: "devtools-sidepanel-no-result" },
+          getStr("layout.noGridsOnThisPage")
+        )
+      );
+    }
+
     const {
       getSwatchColorPickerTooltip,
       grids,
@@ -57,14 +65,7 @@ class Grid extends PureComponent {
       onToggleShowInfiniteLines,
       setSelectedNode,
     } = this.props;
-
-    if (!grids.length) {
-      return (
-        dom.div({ className: "devtools-sidepanel-no-result" },
-          getStr("layout.noGridsOnThisPage")
-        )
-      );
-    }
+    const highlightedGrids = grids.filter(grid => grid.highlighted);
 
     return (
       dom.div({ id: "layout-grid-container" },
@@ -85,10 +86,13 @@ class Grid extends PureComponent {
             onToggleShowInfiniteLines,
           })
         ),
-        GridOutline({
-          grids,
-          onShowGridOutlineHighlight,
-        })
+        highlightedGrids.length === 1 ?
+          GridOutline({
+            grids,
+            onShowGridOutlineHighlight,
+          })
+          :
+          null
       )
     );
   }

@@ -110,19 +110,40 @@
       #dispatch-table {
         -moz-user-select: none;
         font-size: 1em;
-        border: 1px solid var(--in-content-box-border-color);
-        border-radius: 2px;
         border-spacing: 0;
         background-color: var(--in-content-box-background);
         margin: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
       }
+
+      /* Avoid scrolling the header */
+      #dispatch-tbody {
+        display: block;
+        overflow-y: auto;
+        /* 2em is the height of the header, 1px is its border */
+        height: calc(100vh - 2em - 1px);
+      }
+      #dispatch-thead {
+        height: 2em;
+      }
+      #dispatch-thead, #dispatch-tbody tr {
+        display: table;
+        table-layout: fixed;
+        width: 100%;
+      }
+      #dispatch-table td:nth-child(2) {
+        width: 10em;
+      }
+
       #dispatch-table > tbody {
         border-top: 1px solid var(--in-content-border-color);
       }
       #dispatch-table > thead > tr > td {
         border: none;
         background-color: var(--in-content-box-background-hover);
-        color: #808080;
         padding: 5px 10px;
       }
       #dispatch-table > thead > tr > td:not(:first-child) {
@@ -144,18 +165,36 @@
         padding-inline-start: 32px;
         background-repeat: no-repeat;
         background-size: 16px 16px;
-        background-position: 8px;
       }
-      #dispatch-tbody > tr > td.indent {
+      #dispatch-tbody > tr > td.root{
+        background-position: 36px;
         padding-inline-start: 62px;
       }
+      .twisty {
+        margin-inline-start: -62px;
+        margin-inline-end: 26px;
+        padding-inline-end: 18px;
+        padding-inline-start: 18px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
+        -moz-context-properties: fill;
+        fill: currentColor;
+      }
+      .twisty.open {
+        background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
+      }
+      #dispatch-tbody > tr > td.indent {
+        padding-inline-start: 88px;
+        background-position: 62px;
+      }
       #dispatch-tbody > tr > td.tracking {
-        background: url(chrome://browser/skin/controlcenter/trackers.svg) no-repeat 41px center;
+        background-image: url(chrome://browser/skin/controlcenter/trackers.svg);
         -moz-context-properties: fill;
         fill: rgb(224, 41, 29);
       }
       #dispatch-tbody > tr > td.worker {
-        background: url(chrome://devtools/skin/images/debugging-workers.svg) no-repeat 41px center;
+        background-image: url(chrome://devtools/skin/images/debugging-workers.svg);
         -moz-context-properties: fill;
         fill: #808080;
       }
@@ -196,11 +235,10 @@
       </div>
     </div>
     <div>
-      <h2>Resource usage per tab</h2>
       <table id="dispatch-table">
-        <thead>
+        <thead id="dispatch-thead">
           <tr>
-            <td>Tab title</td>
+            <td>Name</td>
             <td>Energy Impact</td>
           </tr>
         </thead>

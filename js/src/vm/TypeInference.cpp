@@ -4546,47 +4546,13 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
     MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
 
     unsigned objectCount = baseObjectCount();
-    if (objectCount >= 2) {
-        unsigned oldCapacity = TypeHashSet::Capacity(objectCount);
-        ObjectKey** oldArray = objectSet;
-
-        MOZ_RELEASE_ASSERT(uintptr_t(oldArray[-1]) == oldCapacity);
-
-        unsigned oldObjectCount = objectCount;
-        unsigned oldObjectsFound = 0;
-
-        clearObjects();
-        objectCount = 0;
-        for (unsigned i = 0; i < oldCapacity; i++) {
-            ObjectKey* key = oldArray[i];
-            if (!key) {
-                continue;
-            }
+    TypeHashSet::MapEntries<ObjectKey*, ObjectKey, ObjectKey>(
+        objectSet,
+        objectCount,
+        [&](ObjectKey* key) -> ObjectKey* {
             TraceObjectKey(trc, &key);
-            oldObjectsFound++;
-
-            AutoEnterOOMUnsafeRegion oomUnsafe;
-            ObjectKey** pentry =
-                TypeHashSet::Insert<ObjectKey*, ObjectKey, ObjectKey>
-                    (zone->types.typeLifoAlloc(), objectSet, objectCount, key);
-            if (!pentry) {
-                oomUnsafe.crash("ConstraintTypeSet::trace");
-            }
-
-            *pentry = key;
-        }
-        MOZ_RELEASE_ASSERT(oldObjectCount == oldObjectsFound);
-        setBaseObjectCount(objectCount);
-        // Note: -1/+1 to also poison the capacity field.
-        JS_POISON(oldArray - 1, JS_SWEPT_TI_PATTERN, (oldCapacity + 1) * sizeof(oldArray[0]),
-                  MemCheckKind::MakeUndefined);
-    } else if (objectCount == 1) {
-        ObjectKey* key = (ObjectKey*) objectSet;
-        TraceObjectKey(trc, &key);
-        objectSet = reinterpret_cast<ObjectKey**>(key);
-    } else {
-        MOZ_RELEASE_ASSERT(!objectSet);
-    }
+            return key;
+        });
 
 #ifdef DEBUG
     MOZ_ASSERT(objectCount == baseObjectCount());
