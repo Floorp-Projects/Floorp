@@ -873,6 +873,7 @@ class MochitestDesktop(object):
         self.mozLogs = None
         self.start_script_kwargs = {}
         self.urlOpts = []
+        self.extraPrefs = {}
 
         if logger_options.get('log'):
             self.log = logger_options['log']
