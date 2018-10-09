@@ -119,6 +119,8 @@ raptor-fetch-chrome:
 awsy:
     - awsy
     - awsy-base
+    - awsy-dmd
+    - awsy-base-dmd
 
 awsy-stylo-sequential:
     - awsy-stylo-sequential
