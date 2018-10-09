@@ -65,7 +65,6 @@ SOURCES += [
 if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     DIRS += [
         'openvr',
-        'service',
     ]
     SOURCES += [
         'gfxVROpenVR.cpp',
@@ -78,6 +77,10 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 
 if CONFIG['OS_TARGET'] == 'Android':
     LOCAL_INCLUDES += ['/widget/android']
+else:
+    DIRS += [
+        'service',
+    ]
 
 IPDL_SOURCES = [
     'ipc/PVR.ipdl',
