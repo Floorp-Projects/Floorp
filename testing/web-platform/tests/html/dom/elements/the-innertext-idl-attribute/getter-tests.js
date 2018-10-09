@@ -52,6 +52,9 @@ testText("<div style='white-space:pre-line'>abc\tdef", "abc def", "\\t converted
 testText("<div><span>abc </span> def", "abc def", "Whitespace collapses across element boundaries");
 testText("<div><span>abc </span><span></span> def", "abc def", "Whitespace collapses across element boundaries");
 testText("<div><span>abc </span><span style='white-space:pre'></span> def", "abc def", "Whitespace collapses across element boundaries");
+testText("<div>abc <input> def", "abc  def", "Whitespace around <input> should not be collapsed");
+testText("<div>abc <span style='display:inline-block'></span> def", "abc  def", "Whitespace around inline-block should not be collapsed");
+testText("<div>abc <span style='display:inline-block'> def </span> ghi", "abc def ghi", "Trailing space at end of inline-block should be collapsed");
 
 /**** Soft line breaks ****/
 
