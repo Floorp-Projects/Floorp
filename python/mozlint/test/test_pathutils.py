@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 from copy import deepcopy
+from fnmatch import fnmatch
 
 import mozunit
 import pytest
@@ -100,6 +101,30 @@ def test_filterpaths(filterpaths, test):
 
     paths = filterpaths(**test)
     assert_paths(paths, expected)
+
+
+@pytest.mark.parametrize('paths,expected', [
+    (['subdir1/*'], ['subdir1']),
+    (['subdir2/*'], ['subdir2']),
+    (['subdir1/*.*', 'subdir1/subdir3/*', 'subdir2/*'], ['subdir1', 'subdir2']),
+    ([root + '/*', 'subdir1/*.*', 'subdir1/subdir3/*', 'subdir2/*'], [root]),
+    (['subdir1/b.py', 'subdir1/subdir3'], ['subdir1/b.py', 'subdir1/subdir3']),
+    (['subdir1/b.py', 'subdir1/b.js'], ['subdir1/b.py', 'subdir1/b.js']),
+])
+def test_collapse(paths, expected):
+    inputs = []
+    for path in paths:
+        base, name = os.path.split(path)
+        if '*' in name:
+            for n in os.listdir(base):
+                if not fnmatch(n, name):
+                    continue
+                inputs.append(os.path.join(base, n))
+        else:
+            inputs.append(path)
+
+    print("inputs: {}".format(inputs))
+    assert_paths(pathutils.collapse(inputs), expected)
 
 
 if __name__ == '__main__':
