@@ -79,6 +79,8 @@ if DRY_RUN:
 GN_ENV = dict(os.environ)
 GN_ENV['DEPOT_TOOLS_WIN_TOOLCHAIN'] = '0'
 
+(MERGE_BASE_ORIGIN, ) = sys.argv[1:] # Not always 'origin'!
+
 # --------------------------------------
 
 def sorted_items(x):
@@ -130,7 +132,7 @@ def traverse(roots, pre_recurse_func, key_func=id):
 # --------------------------------------
 
 if not DRY_RUN:
-    record_cherry_picks(GECKO_ANGLE_DIR)
+    record_cherry_picks(GECKO_ANGLE_DIR, MERGE_BASE_ORIGIN)
 
 # --
 

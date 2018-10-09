@@ -146,7 +146,7 @@ var runCompressedTextureSizeLimitTest = function(maxArrayBufferSizeBytes, positi
         return;
       }
     }
-    wtu.waitForComposite(runNextTest);
+    wtu.dispatchTask(runNextTest);
   }
 
   function testFormatType(t, test) {
