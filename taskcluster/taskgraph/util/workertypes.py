@@ -36,7 +36,7 @@ WORKER_TYPES = {
     'aws-provisioner-v1/taskcluster-generic': ('docker-worker', 'linux'),
     'invalid/invalid': ('invalid', None),
     'invalid/always-optimized': ('always-optimized', None),
-    'releng-hardware/gecko-t-linux-talos-tw': ('native-engine', 'linux'),
+    'releng-hardware/gecko-t-linux-talos': ('generic-worker', 'linux'),
     'scriptworker-prov-v1/balrog-dev': ('balrog', None),
     'scriptworker-prov-v1/balrogworker-v1': ('balrog', None),
     'scriptworker-prov-v1/beetmoverworker-v1': ('beetmover', None),
