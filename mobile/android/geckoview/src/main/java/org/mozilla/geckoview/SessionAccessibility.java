@@ -11,6 +11,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.mozglue.JNIObject;
 
 import android.content.Context;
@@ -19,7 +20,6 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
@@ -72,21 +72,36 @@ public class SessionAccessibility {
                 }
                 node.setClassName("android.webkit.WebView");
             }
+
+            node.setAccessibilityFocused(mAccessibilityFocusedNode == virtualDescendantId);
             return node;
         }
 
         @Override
         public boolean performAction(final int virtualViewId, int action, Bundle arguments) {
             final GeckoBundle data;
+
             switch (action) {
             case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:
-                final AccessibilityEvent event = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
-                event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
-                event.setSource(mView, virtualViewId);
-                ((ViewParent) mView).requestSendAccessibilityEvent(mView, event);
+                    if (virtualViewId == View.NO_ID) {
+                        sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, null, null);
+                    } else {
+                        final GeckoBundle nodeInfo = nativeProvider.getNodeInfo(virtualViewId);
+                        final int flags = nodeInfo.getInt("flags");
+                        if ((flags & FLAG_FOCUSED) != 0) {
+                            mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityCursorToFocused", null);
+                        } else {
+                            sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, null, nodeInfo);
+                        }
+                    }
                 return true;
             case AccessibilityNodeInfo.ACTION_CLICK:
                 mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityActivate", null);
+                GeckoBundle nodeInfo = nativeProvider.getNodeInfo(virtualViewId);
+                final int flags = nodeInfo.getInt("flags");
+                if ((flags & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
+                    sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, null, nodeInfo);
+                }
                 return true;
             case AccessibilityNodeInfo.ACTION_LONG_CLICK:
                 mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityLongPress", null);
@@ -164,6 +179,16 @@ public class SessionAccessibility {
             }
 
             return mView.performAccessibilityAction(action, arguments);
+        }
+
+        @Override
+        public AccessibilityNodeInfo findFocus(int focus) {
+          if (focus == AccessibilityNodeInfo.FOCUS_ACCESSIBILITY &&
+              mAccessibilityFocusedNode != 0) {
+            return createAccessibilityNodeInfo(mAccessibilityFocusedNode);
+          }
+
+          return super.findFocus(focus);
         }
 
         private void populateNodeFromBundle(final AccessibilityNodeInfo node, final GeckoBundle nodeInfo) {
@@ -364,6 +389,8 @@ public class SessionAccessibility {
     // The native portion of the node provider.
     /* package */ final NativeProvider nativeProvider = new NativeProvider();
     private boolean mAttached = false;
+    // The current node with accessibility focus
+    private int mAccessibilityFocusedNode = 0;
 
     /* package */ SessionAccessibility(final GeckoSession session) {
         mSession = session;
@@ -455,6 +482,8 @@ public class SessionAccessibility {
             PrefsHelper.addObserver(new String[]{ FORCE_ACCESSIBILITY_PREF }, prefHandler);
         }
 
+        public static boolean isPlatformEnabled() { return sEnabled; }
+
         public static boolean isEnabled() {
             return sEnabled || sForceEnabled;
         }
@@ -515,6 +544,55 @@ public class SessionAccessibility {
         return true;
     }
 
+    /* package */ void sendEvent(final int eventType, final int sourceId, final GeckoBundle eventData, final GeckoBundle sourceInfo) {
+        ThreadUtils.assertOnUiThread();
+        if (mView == null) {
+            return;
+        }
+
+        if (!Settings.isPlatformEnabled() && (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null)) {
+            // Accessibility could be activated in Gecko via xpcom, for example when using a11y
+            // devtools. Here we assure that either Android a11y is *really* enabled, or no
+            // display is attached and we must be in a junit test.
+            return;
+        }
+        if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
+            mAccessibilityFocusedNode = sourceId;
+        }
+
+        final AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
+        event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
+        event.setSource(mView, sourceId);
+        event.setEnabled(true);
+
+        if (sourceInfo != null) {
+            final int flags = sourceInfo.getInt("flags");
+            event.setClassName(sourceInfo.getString("className", "android.view.View"));
+            event.setChecked((flags & FLAG_CHECKED) != 0);
+            event.getText().add(sourceInfo.getString("text", ""));
+        }
+
+        if (eventData != null) {
+            if (eventData.containsKey("text")) {
+                event.getText().add(eventData.getString("text"));
+            }
+            event.setContentDescription(eventData.getString("description", ""));
+            event.setAddedCount(eventData.getInt("addedCount", -1));
+            event.setRemovedCount(eventData.getInt("removedCount", -1));
+            event.setFromIndex(eventData.getInt("fromIndex", -1));
+            event.setItemCount(eventData.getInt("itemCount", -1));
+            event.setCurrentItemIndex(eventData.getInt("currentItemIndex", -1));
+            event.setBeforeText(eventData.getString("beforeText", ""));
+            event.setToIndex(eventData.getInt("toIndex", -1));
+            event.setScrollX(eventData.getInt("scrollX", -1));
+            event.setScrollY(eventData.getInt("scrollY", -1));
+            event.setMaxScrollX(eventData.getInt("maxScrollX", -1));
+            event.setMaxScrollY(eventData.getInt("maxScrollY", -1));
+        }
+
+        ((ViewParent) mView).requestSendAccessibilityEvent(mView, event);
+    }
+
     /* package */ final class NativeProvider extends JNIObject {
         @WrapForJNI(calledFrom = "ui")
         private void setAttached(final boolean attached) {
@@ -532,5 +610,15 @@ public class SessionAccessibility {
 
         @WrapForJNI(dispatchTo = "gecko")
         public native void setText(int id, String text);
+
+        @WrapForJNI(calledFrom = "gecko", stubName = "SendEvent")
+        private void sendEventNative(final int eventType, final int sourceId, final GeckoBundle eventData, final GeckoBundle sourceInfo) {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    sendEvent(eventType, sourceId, eventData, sourceInfo);
+                }
+            });
+        }
     }
 }
