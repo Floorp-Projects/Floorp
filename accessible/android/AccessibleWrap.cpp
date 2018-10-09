@@ -40,6 +40,118 @@ AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
 //-----------------------------------------------------
 AccessibleWrap::~AccessibleWrap() {}
 
+nsresult
+AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
+{
+  nsresult rv = Accessible::HandleAccEvent(aEvent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (IPCAccessibilityActive()) {
+    return NS_OK;
+  }
+
+  auto accessible = static_cast<AccessibleWrap*>(aEvent->GetAccessible());
+  NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
+
+  // The accessible can become defunct if we have an xpcom event listener
+  // which decides it would be fun to change the DOM and flush layout.
+  if (accessible->IsDefunct() || !accessible->IsBoundToParent()) {
+    return NS_OK;
+  }
+
+  if (DocAccessible* doc = accessible->Document()) {
+    if (!nsCoreUtils::IsContentDocument(doc->DocumentNode())) {
+      return NS_OK;
+    }
+  }
+
+  SessionAccessibility* sessionAcc =
+    SessionAccessibility::GetInstanceFor(accessible);
+  if (!sessionAcc) {
+    return NS_OK;
+  }
+
+  switch (aEvent->GetEventType()) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      sessionAcc->SendFocusEvent(accessible);
+      break;
+    case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
+      AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
+      auto newPosition = static_cast<AccessibleWrap*>(vcEvent->NewAccessible());
+      auto oldPosition = static_cast<AccessibleWrap*>(vcEvent->OldAccessible());
+
+      if (sessionAcc && newPosition) {
+        if (oldPosition != newPosition) {
+          if (vcEvent->Reason() == nsIAccessiblePivot::REASON_POINT) {
+            sessionAcc->SendHoverEnterEvent(newPosition);
+          } else {
+            sessionAcc->SendAccessibilityFocusedEvent(newPosition);
+          }
+        }
+
+        if (vcEvent->BoundaryType() != nsIAccessiblePivot::NO_BOUNDARY) {
+          sessionAcc->SendTextTraversedEvent(
+            newPosition, vcEvent->NewStartOffset(), vcEvent->NewEndOffset());
+        }
+      }
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
+      AccCaretMoveEvent* event = downcast_accEvent(aEvent);
+      sessionAcc->SendTextSelectionChangedEvent(accessible,
+                                                event->GetCaretOffset());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
+    case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
+      AccTextChangeEvent* event = downcast_accEvent(aEvent);
+      sessionAcc->SendTextChangedEvent(accessible,
+                                       event->ModifiedText(),
+                                       event->GetStartOffset(),
+                                       event->GetLength(),
+                                       event->IsTextInserted(),
+                                       event->IsFromUserInput());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_STATE_CHANGE: {
+      AccStateChangeEvent* event = downcast_accEvent(aEvent);
+      auto state = event->GetState();
+      if (state & states::CHECKED) {
+        sessionAcc->SendClickedEvent(accessible);
+      }
+
+      if (state & states::SELECTED) {
+        sessionAcc->SendSelectedEvent(accessible);
+      }
+
+      if (state & states::BUSY) {
+        sessionAcc->SendWindowStateChangedEvent(accessible);
+      }
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_SCROLLING: {
+      AccScrollingEvent* event = downcast_accEvent(aEvent);
+      sessionAcc->SendScrollingEvent(accessible,
+                                     event->ScrollX(),
+                                     event->ScrollY(),
+                                     event->MaxScrollX(),
+                                     event->MaxScrollY());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_SHOW:
+    case nsIAccessibleEvent::EVENT_HIDE: {
+      AccMutationEvent* event = downcast_accEvent(aEvent);
+      auto parent = static_cast<AccessibleWrap*>(event->Parent());
+      sessionAcc->SendWindowContentChangedEvent(parent);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return NS_OK;
+}
+
 void
 AccessibleWrap::Shutdown()
 {
@@ -73,6 +185,24 @@ AccessibleWrap::SetTextContents(const nsAString& aText) {
   if (IsHyperText()) {
     AsHyperText()->ReplaceText(aText);
   }
+}
+
+void
+AccessibleWrap::GetTextContents(nsAString& aText) {
+  // For now it is a simple wrapper for getting entire range of TextSubstring.
+  // In the future this may be smarter and retrieve a flattened string.
+  if (IsHyperText()) {
+    AsHyperText()->TextSubstring(0, -1, aText);
+  }
+}
+
+bool
+AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset) {
+  if (IsHyperText()) {
+    return AsHyperText()->SelectionBoundsAt(0, aStartOffset, aEndOffset);
+  }
+
+  return false;
 }
 
 mozilla::java::GeckoBundle::LocalRef

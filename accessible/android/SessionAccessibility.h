@@ -69,6 +69,8 @@ public:
   }
 
   static void Init();
+  static SessionAccessibility* GetInstanceFor(ProxyAccessible* aAccessible);
+  static SessionAccessibility* GetInstanceFor(Accessible* aAccessible);
 
   // Native implementations
   using Base::AttachNative;
@@ -76,6 +78,31 @@ public:
   jni::Object::LocalRef GetNodeInfo(int32_t aID);
   void SetText(int32_t aID, jni::String::Param aText);
   void StartNativeAccessibility();
+
+  // Event methods
+  void SendFocusEvent(AccessibleWrap* aAccessible);
+  void SendScrollingEvent(AccessibleWrap* aAccessible,
+                          int32_t aScrollX,
+                          int32_t aScrollY,
+                          int32_t aMaxScrollX,
+                          int32_t aMaxScrollY);
+  void SendAccessibilityFocusedEvent(AccessibleWrap* aAccessible);
+  void SendHoverEnterEvent(AccessibleWrap* aAccessible);
+  void SendTextSelectionChangedEvent(AccessibleWrap* aAccessible,
+                                     int32_t aCaretOffset);
+  void SendTextTraversedEvent(AccessibleWrap* aAccessible,
+                              int32_t aStartOffset,
+                              int32_t aEndOffset);
+  void SendTextChangedEvent(AccessibleWrap* aAccessible,
+                            const nsString& aStr,
+                            int32_t aStart,
+                            uint32_t aLen,
+                            bool aIsInsert,
+                            bool aFromUser);
+  void SendSelectedEvent(AccessibleWrap* aAccessible);
+  void SendClickedEvent(AccessibleWrap* aAccessible);
+  void SendWindowContentChangedEvent(AccessibleWrap* aAccessible);
+  void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 

@@ -1,0 +1,3 @@
+# We only use constants from KeyEvent
+[android.view.accessibility.AccessibilityEvent = skip:true]
+<field> = skip:false
