@@ -75,10 +75,19 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  *        the addonId of the target WebExtension.
  */
 webExtensionTargetPrototype.initialize = function(conn, chromeGlobal, prefix, addonId) {
-  parentProcessTargetPrototype.initialize.call(this, conn);
+  this.id = addonId;
+
+  // Try to discovery an existent extension page to attach (which will provide the initial
+  // URL shown in the window tittle when the addon debugger is opened).
+  let extensionWindow = this._searchForExtensionWindow();
+  if (!extensionWindow) {
+    this._createFallbackWindow();
+    extensionWindow = this.fallbackWindow;
+  }
+
+  parentProcessTargetPrototype.initialize.call(this, conn, extensionWindow);
   this._chromeGlobal = chromeGlobal;
   this._prefix = prefix;
-  this.id = addonId;
 
   // Redefine the messageManager getter to return the chromeGlobal
   // as the messageManager for this actor (which is the browser XUL
@@ -115,14 +124,6 @@ webExtensionTargetPrototype.initialize = function(conn, chromeGlobal, prefix, ad
     },
     shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee.bind(this),
   });
-
-  // Try to discovery an existent extension page to attach (which will provide the initial
-  // URL shown in the window tittle when the addon debugger is opened).
-  const extensionWindow = this._searchForExtensionWindow();
-
-  if (extensionWindow) {
-    this._setWindow(extensionWindow);
-  }
 };
 
 // NOTE: This is needed to catch in the webextension webconsole all the

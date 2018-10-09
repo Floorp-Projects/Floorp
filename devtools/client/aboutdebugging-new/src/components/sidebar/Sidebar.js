@@ -56,10 +56,10 @@ class Sidebar extends PureComponent {
 
     return runtimes.map(runtime => {
       const pageId = runtime.type + "-" + runtime.id;
-      const runtimeHasClient = !!runtime.client;
+      const runtimeHasConnection = !!runtime.connection;
 
       const connectComponent = DeviceSidebarItemAction({
-        connected: runtimeHasClient,
+        connected: runtimeHasConnection,
         dispatch,
         runtimeId: runtime.id,
       });
@@ -73,7 +73,7 @@ class Sidebar extends PureComponent {
         key: pageId,
         name: runtime.name,
         runtimeId: runtime.id,
-        selectable: runtimeHasClient,
+        selectable: runtimeHasConnection,
       });
     });
   }
