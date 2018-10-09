@@ -70,6 +70,8 @@ policy-DisplayBookmarksToolbar = Display the Bookmark Toolbar by default.
 
 policy-DisplayMenuBar = Display the Menu Bar by default.
 
+policy-DNSOverHTTPS = Configure DNS over HTTPS.
+
 policy-DontCheckDefaultBrowser = Disable check for default browser on startup.
 
 policy-EnableTrackingProtection = Enable or disable Content Blocking and optionally lock it.
