@@ -479,7 +479,7 @@
 
       <method name="updateHeader">
         <body><![CDATA[
-          let currentEngine = Services.search.defaultEngine;
+          let currentEngine = Services.search.currentEngine;
           let uri = currentEngine.iconURI;
           if (uri) {
             this.setAttribute("src", uri.spec);
@@ -935,7 +935,7 @@
             return this._engines;
           let currentEngineNameToIgnore;
           if (!this.getAttribute("includecurrentengine"))
-            currentEngineNameToIgnore = Services.search.defaultEngine.name;
+            currentEngineNameToIgnore = Services.search.currentEngine.name;
 
           let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
           let hiddenList = pref ? pref.split(",") : [];
@@ -990,7 +990,7 @@
           let engines = this.engines;
           let oneOffCount = engines.length;
           let collapsed = !oneOffCount ||
-                          (oneOffCount == 1 && engines[0].name == Services.search.defaultEngine.name);
+                          (oneOffCount == 1 && engines[0].name == Services.search.currentEngine.name);
 
           // header is a xul:deck so collapsed doesn't work on it, see bug 589569.
           this.header.hidden = this.buttons.collapsed = collapsed;
@@ -1801,7 +1801,7 @@
           this.handleSearchCommand(event, this._contextEngine, true);
         }
         if (anonid == "search-one-offs-context-set-default") {
-          let currentEngine = Services.search.defaultEngine;
+          let currentEngine = Services.search.currentEngine;
 
           if (!this.getAttribute("includecurrentengine")) {
             // Make the target button of the context menu reflect the current
@@ -1817,7 +1817,7 @@
             button.engine = currentEngine;
           }
 
-          Services.search.defaultEngine = this._contextEngine;
+          Services.search.currentEngine = this._contextEngine;
         }
       ]]></handler>
 
@@ -1830,7 +1830,7 @@
           return;
         }
         document.getAnonymousElementByAttribute(this, "anonid", "search-one-offs-context-set-default")
-                .setAttribute("disabled", target.engine == Services.search.defaultEngine);
+                .setAttribute("disabled", target.engine == Services.search.currentEngine);
 
         this._contextEngine = target.engine;
       ]]></handler>

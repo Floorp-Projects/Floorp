@@ -53,7 +53,7 @@ this.search = class extends ExtensionAPI {
 
             return {
               name: engine.name,
-              isDefault: engine === Services.search.defaultEngine,
+              isDefault: engine === Services.search.currentEngine,
               alias: engine.alias || undefined,
               favIconUrl,
             };
@@ -69,7 +69,7 @@ this.search = class extends ExtensionAPI {
               throw new ExtensionError(`${searchProperties.engine} was not found`);
             }
           } else {
-            engine = Services.search.defaultEngine;
+            engine = Services.search.currentEngine;
           }
           let submission = engine.getSubmission(searchProperties.query, null, "webextension");
           let options = {

@@ -72,7 +72,7 @@ const SearchAutocompleteProviderInternal = {
     this.aliasMatches = [];
     this.defaultMatch = null;
 
-    let currentEngine = Services.search.defaultEngine;
+    let currentEngine = Services.search.currentEngine;
     // This can be null in XCPShell.
     if (currentEngine) {
       this.defaultMatch = {
@@ -119,7 +119,7 @@ const SearchAutocompleteProviderInternal = {
 
   getSuggestionController(searchToken, inPrivateContext, maxLocalResults,
                           maxRemoteResults, userContextId) {
-    let engine = Services.search.defaultEngine;
+    let engine = Services.search.currentEngine;
     if (!engine) {
       return null;
     }
