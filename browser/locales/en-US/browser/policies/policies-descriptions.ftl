@@ -70,6 +70,8 @@ policy-DisplayBookmarksToolbar = Display the Bookmarks Toolbar by default.
 
 policy-DisplayMenuBar = Display the Menu Bar by default.
 
+policy-DNSOverHTTPS = Configure DNS over HTTPS.
+
 policy-DontCheckDefaultBrowser = Disable check for default browser on startup.
 
 # “lock” means that the user won’t be able to change this setting
