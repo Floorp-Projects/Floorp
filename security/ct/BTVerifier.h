@@ -10,6 +10,7 @@
 #include "BTInclusionProof.h"
 #include "mozpkix/Input.h"
 #include "mozpkix/Result.h"
+#include "mozpkix/pkixtypes.h"
 
 namespace mozilla { namespace ct {
 
@@ -17,6 +18,13 @@ namespace mozilla { namespace ct {
 // 6962-bis). This consumes the entirety of the input.
 pkix::Result DecodeInclusionProof(pkix::Reader& input,
   InclusionProofDataV2& output);
+// Given a decoded Inclusion Proof (InclusionProofDataV2 as per RFC 6962-bis),
+// the corresponding leaf data entry, and the expected root hash, returns
+// Success if the proof verifies correctly.
+// (https://tools.ietf.org/html/draft-ietf-trans-rfc6962-bis-28#section-2.1.3.2)
+pkix::Result VerifyInclusionProof(const InclusionProofDataV2& proof,
+  pkix::Input leafEntry, pkix::Input expectedRootHash,
+  pkix::DigestAlgorithm digestAlgorithm);
 
 } } // namespace mozilla::ct
 

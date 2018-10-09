@@ -435,7 +435,7 @@ CharToByte(char c)
   abort();
 }
 
-static Buffer
+Buffer
 HexToBytes(const char* hexData)
 {
   size_t hexLen = strlen(hexData);

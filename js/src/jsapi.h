@@ -2710,21 +2710,23 @@ extern JS_PUBLIC_API(JSObject*)
 JS_NewArrayObject(JSContext* cx, size_t length);
 
 /**
- * Returns true and sets |*isArray| indicating whether |value| is an Array
- * object or a wrapper around one, otherwise returns false on failure.
+ * On success, returns true, setting |*isArray| to true if |value| is an Array
+ * object or a wrapper around one, or to false if not.  Returns false on
+ * failure.
  *
- * This method returns true with |*isArray == false| when passed a proxy whose
- * target is an Array, or when passed a revoked proxy.
+ * This method returns true with |*isArray == false| when passed an ES6 proxy
+ * whose target is an Array, or when passed a revoked proxy.
  */
 extern JS_PUBLIC_API(bool)
 JS_IsArrayObject(JSContext* cx, JS::HandleValue value, bool* isArray);
 
 /**
- * Returns true and sets |*isArray| indicating whether |obj| is an Array object
- * or a wrapper around one, otherwise returns false on failure.
+ * On success, returns true, setting |*isArray| to true if |obj| is an Array
+ * object or a wrapper around one, or to false if not.  Returns false on
+ * failure.
  *
- * This method returns true with |*isArray == false| when passed a proxy whose
- * target is an Array, or when passed a revoked proxy.
+ * This method returns true with |*isArray == false| when passed an ES6 proxy
+ * whose target is an Array, or when passed a revoked proxy.
  */
 extern JS_PUBLIC_API(bool)
 JS_IsArrayObject(JSContext* cx, JS::HandleObject obj, bool* isArray);
