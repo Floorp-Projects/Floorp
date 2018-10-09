@@ -91,6 +91,7 @@ const spawnProcess = async function(name, cmdArgs, processData, stdin = null) {
   }
 
   await readAllData(proc.stdout, processData);
+  return proc.exitCode;
 };
 
 const runCommandAndGetOutputAsString = async function(command, cmdArgs) {
@@ -113,7 +114,13 @@ const getSymbolsFromNM = async function(path, arch) {
     args.unshift("-arch", arch);
   }
 
-  await spawnProcess("nm", args, data => parser.consume(data));
+  const exitCode = await spawnProcess("nm", args, data => parser.consume(data));
+  if (exitCode === 69) {
+    throw new ExtensionError("Symbolication requires the Xcode command line tools to be installed " +
+                             "and the license accepted. Please run the following from the command " +
+                             "line to accept the xcode license:\n\n" +
+                             "sudo xcodebuild -license");
+  }
   if (Services.appinfo.OS !== "Darwin") {
     // Darwin nm does not support the -D option.
     await spawnProcess("nm", ["-D", ...args], data => parser.consume(data));
@@ -410,12 +417,16 @@ this.geckoProfiler = class extends ExtensionAPI {
             } catch (e) {
               // Each of our options can go wrong for a variety of reasons, so on failure
               // we will try the next one.
+              // But we should still throw the explicit ExtensionErrors if there are any.
               // "localBreakpad" will fail if this is not a local build that's running from the object
               // directory or if the user hasn't run `mach buildsymbols` on it.
               // "nm" will fail if `nm` is not available.
               // "dump_syms.exe" will fail if this is not a local build that's running from the object
               // directory, or if dump_syms.exe doesn't exist in the object directory, or if
               // dump_syms.exe failed for other reasons.
+              if (e instanceof ExtensionError) {
+                throw e;
+              }
             }
           }
 
