@@ -7,7 +7,8 @@ const CC = Components.Constructor;
 
 const kStrictKeyPressEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
-
+const kSameKeyCodeAndCharCodeValue =
+  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.set_keycode_and_charcode_to_same_value");
 const SHOULD_DELIVER_KEYDOWN          = 0x1;
 const SHOULD_DELIVER_KEYPRESS         = 0x2;
 const SHOULD_DELIVER_KEYUP            = 0x4;
@@ -652,8 +653,8 @@ async function testKeyEvent(aTab, aTestCase) {
   let allKeyEventPromises = [];
 
   for (let testEvent of testEvents) {
-    let keyEventPromise = ContentTask.spawn(aTab.linkedBrowser, {testEvent, result: aTestCase.result}, async (aInput) => {
-      function verifyKeyboardEvent(aEvent, aResult) {
+    let keyEventPromise = ContentTask.spawn(aTab.linkedBrowser, {testEvent, result: aTestCase.result, kSameKeyCodeAndCharCodeValue}, async (aInput) => {
+      function verifyKeyboardEvent(aEvent, aResult, aSameKeyCodeAndCharCodeValue) {
         is(aEvent.key, aResult.key, "KeyboardEvent.key is correctly spoofed.");
         is(aEvent.code, aResult.code, "KeyboardEvent.code is correctly spoofed.");
         is(aEvent.location, aResult.location, "KeyboardEvent.location is correctly spoofed.");
@@ -663,12 +664,20 @@ async function testKeyEvent(aTab, aTestCase) {
 
         // If the charCode is not 0, this is a character. The keyCode will be remained as 0.
         // Otherwise, we should check the keyCode.
-        if (aEvent.charCode != 0) {
-          is(aEvent.keyCode, 0, "KeyboardEvent.keyCode should be 0 for this case.");
+        if (!aSameKeyCodeAndCharCodeValue) {
+          if (aEvent.charCode != 0) {
+            is(aEvent.keyCode, 0, "KeyboardEvent.keyCode should be 0 for this case.");
+            is(aEvent.charCode, aResult.charCode, "KeyboardEvent.charCode is correctly spoofed.");
+          } else {
+            is(aEvent.keyCode, aResult.keyCode, "KeyboardEvent.keyCode is correctly spoofed.");
+            is(aEvent.charCode, 0, "KeyboardEvent.charCode should be 0 for this case.");
+          }
+        } else if (aResult.charCode) {
+          is(aEvent.keyCode, aResult.charCode, "KeyboardEvent.keyCode should be same as expected charCode for this case.");
           is(aEvent.charCode, aResult.charCode, "KeyboardEvent.charCode is correctly spoofed.");
         } else {
           is(aEvent.keyCode, aResult.keyCode, "KeyboardEvent.keyCode is correctly spoofed.");
-          is(aEvent.charCode, 0, "KeyboardEvent.charCode should be 0 for this case.");
+          is(aEvent.charCode, aResult.keyCode, "KeyboardEvent.charCode should be same as expected keyCode for this case.");
         }
 
         // Check getModifierState().
@@ -682,7 +691,7 @@ async function testKeyEvent(aTab, aTestCase) {
             `KeyboardEvent.getModifierState() reports a correctly spoofed value for 'Control'.`);
       }
 
-      let {testEvent: eventType, result} = aInput;
+      let {testEvent: eventType, result, kSameKeyCodeAndCharCodeValue: sameKeyCodeAndCharCodeValue} = aInput;
       let inputBox = content.document.getElementById("test");
 
       // We need to put the real access of event object into the content page instead of
@@ -708,7 +717,8 @@ async function testKeyEvent(aTab, aTestCase) {
       // result.
       await new Promise(resolve => {
         function eventHandler(aEvent) {
-          verifyKeyboardEvent(JSON.parse(resElement.value), result);
+          verifyKeyboardEvent(JSON.parse(resElement.value), result,
+                              eventType == "keypress" && sameKeyCodeAndCharCodeValue);
           resElement.removeEventListener("resultAvailable", eventHandler, true);
           resolve();
         }
