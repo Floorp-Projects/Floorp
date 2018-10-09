@@ -74,10 +74,10 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "Grafik konnte nicht geladen werden. Verwenden Sie eine andere URL.",
   "pocket_read_more": "Beliebte Themen:",
   "pocket_read_even_more": "Weitere Nachrichten ansehen",
-  "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
-  "pocket_cta_button": "Get Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_more_reccommendations": "Mehr Empfehlungen",
+  "pocket_learn_more": "Weitere Informationen",
+  "pocket_cta_button": "Pocket holen",
+  "pocket_cta_text": "Speichern Sie Ihre Lieblingstexte in Pocket und gewinnen Sie gedankenreiche Einblicke durch faszinierende Texte.",
   "highlights_empty_state": "Surfen Sie los und wir zeigen Ihnen hier einige der interessanten Artikel, Videos und anderen Seiten, die Sie kürzlich besucht oder als Lesezeichen gespeichert haben.",
   "topstories_empty_state": "Jetzt kennen Sie die Neuigkeiten. Schauen Sie später wieder vorbei, um neue Informationen von {provider} zu erhalten. Können Sie nicht warten? Wählen Sie ein beliebtes Thema und lesen Sie weitere interessante Geschichten aus dem Internet.",
   "manual_migration_explanation2": "Probieren Sie Firefox aus und importieren Sie die Lesezeichen, Chronik und Passwörter eines anderen Browsers.",
@@ -97,7 +97,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_privacy_notice": "Datenschutzhinweis",
   "firstrun_title": "Firefox für unterwegs",
   "firstrun_content": "Nehmen Sie Ihre Lesezeichen, Chronik, Passwörter und andere Einstellungen auf allen Geräten mit.",
-  "firstrun_learn_more_link": "Jetzt mehr über Firefox Konten erfahren",
+  "firstrun_learn_more_link": "Jetzt mehr über Firefox-Konten erfahren",
   "firstrun_form_header": "E-Mail-Adresse eingeben",
   "firstrun_form_sub_header": "um sich bei Firefox Sync anzumelden.",
   "firstrun_email_input_placeholder": "E-Mail",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Nutzungsbedingungen",
   "firstrun_privacy_notice": "Datenschutzhinweis",
   "firstrun_continue_to_login": "Weiter",
-  "firstrun_skip_login": "Diesen Schritt überspringen"
+  "firstrun_skip_login": "Diesen Schritt überspringen",
+  "pocket_how_it_works": "Weitere Informationen"
 };
