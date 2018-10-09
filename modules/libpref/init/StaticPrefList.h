@@ -1066,6 +1066,13 @@ VARCACHE_PREF(
    MediaNavigatorMediadatadecoderEnabled,
   bool, false
 )
+// Use MediaDataDecoder API for WebRTC. This includes hardware acceleration for
+// decoding.
+VARCACHE_PREF(
+  "media.navigator.mediadatadecoder_h264_enabled",
+   MediaNavigatorMediadatadecoderH264Enabled,
+  bool, false
+)
 #endif // MOZ_WEBRTC
 
 #ifdef MOZ_OMX
