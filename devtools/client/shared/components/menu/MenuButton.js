@@ -238,7 +238,6 @@ class MenuButton extends PureComponent {
     }, 0);
 
     this.state.win.addEventListener("touchstart", this.onTouchStart, true);
-
   }
 
   async onClick(e) {
