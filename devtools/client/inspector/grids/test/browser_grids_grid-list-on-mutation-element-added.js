@@ -22,6 +22,7 @@ const TEST_URI = `
 `;
 
 add_task(async function() {
+  await pushPref("devtools.gridinspector.maxHighlighters", 1);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, gridInspector, testActor } = await openLayoutView();
   const { document: doc } = gridInspector;
