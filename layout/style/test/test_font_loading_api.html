@@ -999,7 +999,7 @@ function runTest() {
     is(all.length, 1, "document.fonts should contain one FontFace (TEST 33)");
 
     var face = all[0];
-    is(face.family, "something", "FontFace should have correct family value (TEST 33)");
+    is(face.family, "\"something\"", "FontFace should have correct family value (TEST 33)");
     Object.keys(nonDefaultValues).forEach(function(aDesc) {
       var ok_todo = aDesc == "variant" ? todo : ok;
       ok_todo(face[aDesc] == nonDefaultValues[aDesc][1], "FontFace should have correct " + aDesc + " value (TEST 33)");

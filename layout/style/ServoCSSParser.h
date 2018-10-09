@@ -130,9 +130,9 @@ public:
   static bool ParseFontShorthandForMatching(const nsAString& aValue,
                                             URLExtraData* aUrl,
                                             RefPtr<SharedFontList>& aList,
-                                            StyleComputedFontStyleDescriptor& aStyle,
-                                            float& aStretch,
-                                            float& aWeight);
+                                            nsCSSValue& aStyle,
+                                            nsCSSValue& aStretch,
+                                            nsCSSValue& aWeight);
 
   /**
    * Get a URLExtraData from |nsIDocument|.
