@@ -7,8 +7,9 @@
 const { Ci } = require("chrome");
 const promise = require("promise");
 const Services = require("Services");
-const asyncStorage = require("devtools/shared/async-storage");
 const EventEmitter = require("devtools/shared/event-emitter");
+
+const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
@@ -24,8 +25,6 @@ loader.lazyRequireGetter(this, "PriorityLevels", "devtools/client/shared/compone
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
-
-const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
 const RELOAD_NOTIFICATION_PREF = "devtools.responsive.reloadNotification.enabled";
@@ -362,9 +361,6 @@ ResponsiveUI.prototype = {
     debug("Wait until RDP server connect");
     await this.connectToServer();
 
-    // Restore the previous state of RDM.
-    await this.restoreState();
-
     // Show the settings onboarding tooltip
     if (Services.prefs.getBoolPref(SHOW_SETTING_TOOLTIP_PREF)) {
       this.settingOnboardingTooltip =
@@ -539,7 +535,7 @@ ResponsiveUI.prototype = {
         this.onExit();
         break;
       case "remove-device-association":
-        this.onRemoveDeviceAssociation();
+        this.onRemoveDeviceAssociation(event);
         break;
       case "viewport-resize":
         this.onViewportResize(event);
@@ -608,7 +604,7 @@ ResponsiveUI.prototype = {
     ResponsiveUIManager.closeIfNeeded(browserWindow, tab);
   },
 
-  async onRemoveDeviceAssociation() {
+  async onRemoveDeviceAssociation(event) {
     let reloadNeeded = false;
     await this.updateDPPX();
     reloadNeeded |= await this.updateUserAgent() &&
@@ -628,40 +624,6 @@ ResponsiveUI.prototype = {
       width,
       height,
     });
-  },
-
-  /**
-   * Restores the previous state of RDM.
-   */
-  async restoreState() {
-    const deviceState = await asyncStorage.getItem("devtools.responsive.deviceState");
-    if (deviceState) {
-      // Return if there is a device state to restore, this will be done when the
-      // device list is loaded after the post-init.
-      return;
-    }
-
-    const pixelRatio =
-      Services.prefs.getIntPref("devtools.responsive.viewport.pixelRatio", 0);
-    const touchSimulationEnabled =
-      Services.prefs.getBoolPref("devtools.responsive.touchSimulation.enabled", false);
-    const userAgent = Services.prefs.getCharPref("devtools.responsive.userAgent", "");
-
-    let reloadNeeded = false;
-
-    await this.updateDPPX(pixelRatio);
-
-    if (touchSimulationEnabled) {
-      reloadNeeded |= await this.updateTouchSimulation(touchSimulationEnabled) &&
-                      this.reloadOnChange("touchSimulation");
-    }
-    if (userAgent) {
-      reloadNeeded |= await this.updateUserAgent(userAgent) &&
-                      this.reloadOnChange("userAgent");
-    }
-    if (reloadNeeded) {
-      this.getViewportBrowser().reload();
-    }
   },
 
   /**
