@@ -1027,7 +1027,6 @@ var gEditItemOverlay = {
     });
   },
 
-  onItemAdded() {},
   onItemRemoved() { },
   onBeginUpdateBatch() { },
   onEndUpdateBatch() { },
