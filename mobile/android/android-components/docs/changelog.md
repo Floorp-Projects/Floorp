@@ -19,6 +19,15 @@ Release date: TBD
     * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
     * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
 
+* **browser-engine-system**
+  * A new field `defaultUserAgent` was added to `SystemEngine` for testing purposes. This is to circumvent calls to `WebSettings.getDefaultUserAgent` which fails with a `NullPointerException` in Robolectric. If the `SystemEngine` is used in Robolectric tests the following code will be needed:
+    ```kotlin
+    @Before
+    fun setup() {     
+      SystemEngine.defaultUserAgent = "test-ua-string"
+    }
+    ```    
+
 # 0.26.0
 
 Release date: 2018-10-05
