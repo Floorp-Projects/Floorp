@@ -167,12 +167,6 @@ RegExpObject::trace(JSTracer* trc)
     TraceNullableEdge(trc, &sharedRef(), "RegExpObject shared");
 }
 
-static JSObject*
-CreateRegExpPrototype(JSContext* cx, JSProtoKey key)
-{
-    return GlobalObject::createBlankPrototype(cx, cx->global(), &RegExpObject::protoClass_);
-}
-
 static const ClassOps RegExpObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
@@ -189,7 +183,7 @@ static const ClassOps RegExpObjectClassOps = {
 
 static const ClassSpec RegExpObjectClassSpec = {
     GenericCreateConstructor<js::regexp_construct, 2, gc::AllocKind::FUNCTION>,
-    CreateRegExpPrototype,
+    GenericCreatePrototype<RegExpObject>,
     nullptr,
     js::regexp_static_props,
     js::regexp_methods,

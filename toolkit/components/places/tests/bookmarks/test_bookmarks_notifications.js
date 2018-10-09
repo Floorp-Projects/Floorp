@@ -5,79 +5,119 @@ ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 
 add_task(async function insert_separator_notification() {
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-added"]);
   let bm = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid});
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
-  observer.check([ { name: "onItemAdded",
-                     arguments: [ itemId, parentId, bm.index, bm.type,
-                                  null, "", PlacesUtils.toPRTime(bm.dateAdded),
-                                  bm.guid, bm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
-                 ]);
+  observer.check([{
+    type: "bookmark-added",
+    id: itemId,
+    itemType: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+    parentId,
+    index: bm.index,
+    url: bm.url,
+    title: bm.title,
+    dateAdded: bm.dateAdded,
+    guid: bm.guid,
+    parentGuid: bm.parentGuid,
+    source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+    isTagging: false,
+  }]);
 });
 
 add_task(async function insert_folder_notification() {
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-added"]);
   let bm = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 title: "a folder" });
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
-  observer.check([ { name: "onItemAdded",
-                     arguments: [ itemId, parentId, bm.index, bm.type,
-                                  null, bm.title, PlacesUtils.toPRTime(bm.dateAdded),
-                                  bm.guid, bm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
-                 ]);
+  observer.check([{
+    type: "bookmark-added",
+    id: itemId,
+    itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+    parentId,
+    index: bm.index,
+    url: bm.url,
+    title: bm.title,
+    dateAdded: bm.dateAdded,
+    guid: bm.guid,
+    parentGuid: bm.parentGuid,
+    source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+    isTagging: false,
+  }]);
 });
 
 add_task(async function insert_folder_notitle_notification() {
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-added"]);
   let bm = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   strictEqual(bm.title, "", "Should return empty string for untitled folder");
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
-  observer.check([ { name: "onItemAdded",
-                     arguments: [ itemId, parentId, bm.index, bm.type,
-                                  null, "", PlacesUtils.toPRTime(bm.dateAdded),
-                                  bm.guid, bm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
-                 ]);
+  observer.check([{
+    type: "bookmark-added",
+    id: itemId,
+    itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+    parentId,
+    index: bm.index,
+    url: bm.url,
+    title: bm.title,
+    dateAdded: bm.dateAdded,
+    guid: bm.guid,
+    parentGuid: bm.parentGuid,
+    source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+    isTagging: false,
+  }]);
 });
 
 add_task(async function insert_bookmark_notification() {
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-added"]);
   let bm = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: new URL("http://example.com/"),
                                                 title: "a bookmark" });
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
-  observer.check([ { name: "onItemAdded",
-                     arguments: [ itemId, parentId, bm.index, bm.type,
-                                  bm.url, bm.title, PlacesUtils.toPRTime(bm.dateAdded),
-                                  bm.guid, bm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
-                 ]);
+  observer.check([{
+    type: "bookmark-added",
+    id: itemId,
+    itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    parentId,
+    index: bm.index,
+    url: bm.url,
+    title: bm.title,
+    dateAdded: bm.dateAdded,
+    guid: bm.guid,
+    parentGuid: bm.parentGuid,
+    source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+    isTagging: false,
+  }]);
 });
 
 add_task(async function insert_bookmark_notitle_notification() {
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-added"]);
   let bm = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: new URL("http://example.com/") });
   strictEqual(bm.title, "", "Should return empty string for untitled bookmark");
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
-  observer.check([ { name: "onItemAdded",
-                     arguments: [ itemId, parentId, bm.index, bm.type,
-                                  bm.url, "", PlacesUtils.toPRTime(bm.dateAdded),
-                                  bm.guid, bm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
-                 ]);
+  observer.check([{
+    type: "bookmark-added",
+    id: itemId,
+    itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    parentId,
+    index: bm.index,
+    url: bm.url,
+    title: bm.title,
+    dateAdded: bm.dateAdded,
+    guid: bm.guid,
+    parentGuid: bm.parentGuid,
+    source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+    isTagging: false,
+  }]);
 });
 
 add_task(async function insert_bookmark_tag_notification() {
@@ -90,24 +130,35 @@ add_task(async function insert_bookmark_tag_notification() {
   let tagFolder = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                        parentGuid: PlacesUtils.bookmarks.tagsGuid,
                                                        title: "tag" });
-  let observer = expectNotifications();
+  let placesObserver = expectPlacesObserverNotifications(["bookmark-added"]);
+  let bookmarksObserver = expectNotifications();
   let tag = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                  parentGuid: tagFolder.guid,
                                                  url: new URL("http://tag.example.com/") });
   let tagId = await PlacesUtils.promiseItemId(tag.guid);
   let tagParentId = await PlacesUtils.promiseItemId(tag.parentGuid);
 
-  observer.check([ { name: "onItemAdded",
-                     arguments: [ tagId, tagParentId, tag.index, tag.type,
-                                  tag.url, "", PlacesUtils.toPRTime(tag.dateAdded),
-                                  tag.guid, tag.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
-                   { name: "onItemChanged",
-                     arguments: [ itemId, "tags", false, "",
-                                  PlacesUtils.toPRTime(bm.lastModified),
-                                  bm.type, parentId, bm.guid, bm.parentGuid, "",
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
-                 ]);
+  placesObserver.check([{
+    type: "bookmark-added",
+    id: tagId,
+    parentId: tagParentId,
+    index: tag.index,
+    itemType: tag.type,
+    url: tag.url,
+    title: "",
+    dateAdded: tag.dateAdded,
+    guid: tag.guid,
+    parentGuid: tag.parentGuid,
+    source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+    isTagging: true,
+  }]);
+
+  bookmarksObserver.check([ { name: "onItemChanged",
+                              arguments: [ itemId, "tags", false, "",
+                                            PlacesUtils.toPRTime(bm.lastModified),
+                                            bm.type, parentId, bm.guid, bm.parentGuid, "",
+                                            Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
+                          ]);
 });
 
 add_task(async function update_bookmark_lastModified() {

@@ -361,7 +361,6 @@ LivemarkService.prototype = {
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onItemVisited() {},
-  onItemAdded() {},
 
   onItemChanged(id, property, isAnno, value, lastModified, itemType, parentId,
                 guid, parentGuid) {

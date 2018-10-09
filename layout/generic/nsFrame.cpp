@@ -251,6 +251,7 @@ nsIFrame::DestroyAnonymousContent(nsPresContext* aPresContext,
 {
   if (nsCOMPtr<nsIContent> content = aContent) {
     aPresContext->EventStateManager()->NativeAnonymousContentRemoved(content);
+    aPresContext->PresShell()->NativeAnonymousContentRemoved(content);
     content->UnbindFromTree();
   }
 }

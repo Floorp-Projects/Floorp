@@ -54,3 +54,32 @@ function expectNotifications(skipDescendants, checkAllArgs) {
   PlacesUtils.bookmarks.addObserver(observer);
   return observer;
 }
+
+function expectPlacesObserverNotifications(types, checkAllArgs) {
+  let notifications = [];
+  let listener = (events) => {
+    for (let event of events) {
+      notifications.push({
+        type: event.type,
+        id: event.id,
+        itemType: event.itemType,
+        parentId: event.parentId,
+        index: event.index,
+        url: event.url || undefined,
+        title: event.title,
+        dateAdded: new Date(event.dateAdded),
+        guid: event.guid,
+        parentGuid: event.parentGuid,
+        source: event.source,
+        isTagging: event.isTagging,
+      });
+    }
+  };
+  PlacesUtils.observers.addListener(types, listener);
+  return {
+    check(expectedNotifications) {
+      PlacesUtils.observers.removeListener(types, listener);
+      Assert.deepEqual(notifications, expectedNotifications);
+    },
+  };
+}

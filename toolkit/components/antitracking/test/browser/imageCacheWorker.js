@@ -24,7 +24,6 @@ AntiTracking.runTest("Image cache - should load the image three times.",
     runExtraTests: false,
     cookieBehavior,
     blockingByContentBlocking,
-    blockingByContentBlockingUI,
     blockingByContentBlockingRTUI,
     blockingByAllowList,
     callback: async _ => {
@@ -51,7 +50,7 @@ AntiTracking.runTest("Image cache - should load the image three times.",
 
 // If we didn't run the non-blocking test, only expect to have seen two images.
 // Otherwise, expect to have seen three images.
-let expected = (blockingByContentBlocking && blockingByContentBlockingUI) ? 2 : 3;
+let expected = blockingByContentBlocking ? 2 : 3;
 
 // We still want to see just expected requests.
 add_task(async _ => {

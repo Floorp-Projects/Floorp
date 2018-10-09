@@ -11056,7 +11056,7 @@ Debugger::getObjectAllocationSite(JSObject& obj)
     }
 
     MOZ_ASSERT(!metadata->is<WrapperObject>());
-    return SavedFrame::isSavedFrameAndNotProto(*metadata)
+    return metadata->is<SavedFrame>()
         ? &metadata->as<SavedFrame>()
         : nullptr;
 }

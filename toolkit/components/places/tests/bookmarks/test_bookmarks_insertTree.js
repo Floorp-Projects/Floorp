@@ -210,13 +210,13 @@ add_task(async function tree_where_separator_or_folder_has_kids() {
 
 add_task(async function create_hierarchy() {
   let obsInvoked = 0;
-  let obs = {
-    onItemAdded(itemId, parentId, index, type, uri, title, dateAdded, guid, parentGuid) {
+  let listener = events => {
+    for (let event of events) {
       obsInvoked++;
-      Assert.greater(itemId, 0, "Should have a valid itemId");
-    },
+      Assert.greater(event.id, 0, "Should have a valid itemId");
+    }
   };
-  PlacesUtils.bookmarks.addObserver(obs);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
   let bms = await PlacesUtils.bookmarks.insertTree({children: [{
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: "Root item",
@@ -246,7 +246,7 @@ add_task(async function create_hierarchy() {
     ],
   }], guid: PlacesUtils.bookmarks.unfiledGuid});
   await PlacesTestUtils.promiseAsyncUpdates();
-  PlacesUtils.bookmarks.removeObserver(obs);
+  PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   let parentFolder = null, subFolder = null;
   let prevBM = null;
   for (let bm of bms) {
@@ -277,13 +277,13 @@ add_task(async function create_hierarchy() {
 
 add_task(async function insert_many_non_nested() {
   let obsInvoked = 0;
-  let obs = {
-    onItemAdded(itemId, parentId, index, type, uri, title, dateAdded, guid, parentGuid) {
+  let listener = events => {
+    for (let event of events) {
       obsInvoked++;
-      Assert.greater(itemId, 0, "Should have a valid itemId");
-    },
+      Assert.greater(event.id, 0, "Should have a valid itemId");
+    }
   };
-  PlacesUtils.bookmarks.addObserver(obs);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
   let bms = await PlacesUtils.bookmarks.insertTree({children: [{
       url: "http://www.example.com/1",
       title: "Item 1",
@@ -309,7 +309,7 @@ add_task(async function insert_many_non_nested() {
     },
   ], guid: PlacesUtils.bookmarks.unfiledGuid});
   await PlacesTestUtils.promiseAsyncUpdates();
-  PlacesUtils.bookmarks.removeObserver(obs);
+  PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   let startIndex = -1;
   for (let bm of bms) {
     checkBookmarkObject(bm);
@@ -336,12 +336,19 @@ add_task(async function create_in_folder() {
   });
 
   let notifications = [];
-  let obs = {
-    onItemAdded(itemId, parentId, index, type, uri, title, dateAdded, guid, parentGuid) {
-      notifications.push({ itemId, parentId, index, title, guid, parentGuid });
-    },
+  let listener = events => {
+    for (let event of events) {
+      notifications.push({
+        itemId: event.id,
+        parentId: event.parentId,
+        index: event.index,
+        title: event.title,
+        guid: event.guid,
+        parentGuid: event.parentGuid,
+      });
+    }
   };
-  PlacesUtils.bookmarks.addObserver(obs);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
   let bms = await PlacesUtils.bookmarks.insertTree({children: [{
     url: "http://getfirefox.com",
@@ -362,7 +369,7 @@ add_task(async function create_in_folder() {
   }], guid: mozFolder.guid});
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  PlacesUtils.bookmarks.removeObserver(obs);
+  PlacesUtils.observers.removeListener(["bookmark-added"], listener);
 
   let mozFolderId = await PlacesUtils.promiseItemId(mozFolder.guid);
   let commFolderId = await PlacesUtils.promiseItemId(bms[1].guid);

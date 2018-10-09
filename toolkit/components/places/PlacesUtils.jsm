@@ -2676,12 +2676,13 @@ var GuidHelper = {
       *      So, for exmaple, when the NewBookmark needs the new GUID, we already
       *      have it cached.
       */
+      let listener = events => {
+        for (let event of events) {
+          this.updateCache(event.id, event.guid);
+          this.updateCache(event.parentId, event.parentGuid);
+        }
+      };
       this.observer = {
-        onItemAdded: (aItemId, aParentId, aIndex, aItemType, aURI, aTitle,
-                      aDateAdded, aGuid, aParentGuid) => {
-          this.updateCache(aItemId, aGuid);
-          this.updateCache(aParentId, aParentGuid);
-        },
         onItemRemoved:
         (aItemId, aParentId, aIndex, aItemTyep, aURI, aGuid, aParentGuid) => {
           this.guidsForIds.delete(aItemId);
@@ -2698,8 +2699,10 @@ var GuidHelper = {
         onItemMoved() {},
       };
       PlacesUtils.bookmarks.addObserver(this.observer);
+      PlacesUtils.observers.addListener(["bookmark-added"], listener);
       PlacesUtils.registerShutdownFunction(() => {
         PlacesUtils.bookmarks.removeObserver(this.observer);
+        PlacesUtils.observers.removeListener(["bookmark-added"], listener);
       });
     }
   },

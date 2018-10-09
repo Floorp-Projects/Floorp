@@ -43,11 +43,17 @@ add_task(async function test_newFolder() {
   newFolderButton.click();
 
   let newFolderGuid;
-  let newFolderObserver = PlacesTestUtils.waitForNotification("onItemAdded",
-    (id, parentId, index, type, uri, title, dateAdded, guid) => {
-      newFolderGuid = guid;
-      return type == PlacesUtils.bookmarks.TYPE_FOLDER;
-  });
+  let newFolderObserver =
+    PlacesTestUtils.waitForNotification("bookmark-added",
+                                        events => {
+      for (let {guid, itemType} of events) {
+        newFolderGuid = guid;
+        if (itemType == PlacesUtils.bookmarks.TYPE_FOLDER) {
+          return true;
+        }
+      }
+      return false;
+    }, "places");
 
   let menulist = document.getElementById("editBMPanel_folderMenuList");
 

@@ -5,11 +5,7 @@ This change comes from the blink repo https://codereview.appspot.com/229430043/ 
 diff --git jdhuff.c jdhuff.c
 --- jdhuff.c
 +++ jdhuff.c
-@@ -664,17 +664,17 @@ decode_mcu_fast (j_decompress_ptr cinfo,
-   ASSIGN_STATE(state, entropy->saved);
- 
-   for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
-     JBLOCKROW block = MCU_data ? MCU_data[blkn] : NULL;
+@@ -674,9 +674,9 @@ decode_mcu_fast(j_decompress_ptr cinfo, 
      d_derived_tbl *dctbl = entropy->dc_cur_tbls[blkn];
      d_derived_tbl *actbl = entropy->ac_cur_tbls[blkn];
      register int s, k, r, l;
@@ -20,15 +16,7 @@ diff --git jdhuff.c jdhuff.c
        FILL_BIT_BUFFER_FAST
        r = GET_BITS(s);
        s = HUFF_EXTEND(r, s);
-     }
- 
-     if (entropy->dc_needed[blkn]) {
-       int ci = cinfo->MCU_membership[blkn];
-@@ -682,17 +682,17 @@ decode_mcu_fast (j_decompress_ptr cinfo,
-       state.last_dc_val[ci] = s;
-       if (block)
-         (*block)[0] = (JCOEF) s;
-     }
+@@ -692,9 +692,9 @@ decode_mcu_fast(j_decompress_ptr cinfo, 
  
      if (entropy->ac_needed[blkn] && block) {
  
@@ -39,15 +27,7 @@ diff --git jdhuff.c jdhuff.c
          s &= 15;
  
          if (s) {
-           k += r;
-           FILL_BIT_BUFFER_FAST
-           r = GET_BITS(s);
-           s = HUFF_EXTEND(r, s);
-@@ -701,33 +701,34 @@ decode_mcu_fast (j_decompress_ptr cinfo,
-           if (r != 15) break;
-           k += 15;
-         }
-       }
+@@ -711,9 +711,9 @@ decode_mcu_fast(j_decompress_ptr cinfo, 
  
      } else {
  
@@ -58,14 +38,7 @@ diff --git jdhuff.c jdhuff.c
          s &= 15;
  
          if (s) {
-           k += r;
-           FILL_BIT_BUFFER_FAST
-           DROP_BITS(s);
-         } else {
-           if (r != 15) break;
-           k += 15;
-         }
-       }
+@@ -728,8 +728,9 @@ decode_mcu_fast(j_decompress_ptr cinfo, 
      }
    }
  
@@ -75,47 +48,30 @@ diff --git jdhuff.c jdhuff.c
      return FALSE;
    }
  
-   br_state.bytes_in_buffer -= (buffer - br_state.next_input_byte);
-   br_state.next_input_byte = buffer;
-   BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
-   ASSIGN_STATE(entropy->saved, state);
 diff --git jdhuff.h jdhuff.h
 --- jdhuff.h
 +++ jdhuff.h
-@@ -203,32 +203,34 @@ EXTERN(boolean) jpeg_fill_bit_buffer
-   } else { \
- slowlabel: \
-     if ((result=jpeg_huff_decode(&state,get_buffer,bits_left,htbl,nb)) < 0) \
-         { failaction; } \
-     get_buffer = state.get_buffer; bits_left = state.bits_left; \
+@@ -210,9 +210,9 @@ slowlabel: \
+     get_buffer = state.get_buffer;  bits_left = state.bits_left; \
    } \
  }
  
--#define HUFF_DECODE_FAST(s,nb,htbl) \
-+#define HUFF_DECODE_FAST(s,nb,htbl,slowlabel) \
+-#define HUFF_DECODE_FAST(s, nb, htbl) \
++#define HUFF_DECODE_FAST(s, nb, htbl, slowlabel) \
    FILL_BIT_BUFFER_FAST; \
    s = PEEK_BITS(HUFF_LOOKAHEAD); \
    s = htbl->lookup[s]; \
    nb = s >> HUFF_LOOKAHEAD; \
-   /* Pre-execute the common case of nb <= HUFF_LOOKAHEAD */ \
-   DROP_BITS(nb); \
-   s = s & ((1 << HUFF_LOOKAHEAD) - 1); \
-   if (nb > HUFF_LOOKAHEAD) { \
-     /* Equivalent of jpeg_huff_decode() */ \
-     /* Don't use GET_BITS() here because we don't want to modify bits_left */ \
-     s = (get_buffer >> bits_left) & ((1 << (nb)) - 1); \
-     while (s > htbl->maxcode[nb]) { \
+@@ -227,9 +227,11 @@ slowlabel: \
        s <<= 1; \
        s |= GET_BITS(1); \
        nb++; \
      } \
--    s = htbl->pub->huffval[ (int) (s + htbl->valoffset[nb]) & 0xFF ]; \
+-    s = htbl->pub->huffval[(int)(s + htbl->valoffset[nb]) & 0xFF]; \
 +    if (nb > 16) \
 +      goto slowlabel; \
 +    s = htbl->pub->huffval[ (int) (s + htbl->valoffset[nb]) ]; \
    }
  
  /* Out-of-line case for Huffman code fetching */
- EXTERN(int) jpeg_huff_decode
-         (bitread_working_state *state, register bit_buf_type get_buffer,
-          register int bits_left, d_derived_tbl *htbl, int min_bits);
+ EXTERN(int) jpeg_huff_decode(bitread_working_state *state,
