@@ -6,9 +6,6 @@
 //
 // Public domain.
 
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 var {StructType,uint8,float32} = TypedObject;
 var RgbColor2 = new StructType({r: uint8, g: float32, b: uint8});
 RgbColor2.prototype.add = function(c) {
