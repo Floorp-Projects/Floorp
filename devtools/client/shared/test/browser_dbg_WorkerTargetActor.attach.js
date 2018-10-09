@@ -1,3 +1,19 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// Check to make sure that a worker can be attached to a toolbox
+// and that the console works.
+
+// Import helpers for the workers
+/* import-globals-from helper_workers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
+  this);
+
 var MAX_TOTAL_VIEWERS = "browser.sessionhistory.max_total_viewers";
 
 var TAB1_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attach-tab1.html";
@@ -7,18 +23,18 @@ var WORKER2_URL = "code_WorkerTargetActor.attach-worker2.js";
 
 function test() {
   Task.spawn(function* () {
-    let oldMaxTotalViewers = SpecialPowers.getIntPref(MAX_TOTAL_VIEWERS);
+    const oldMaxTotalViewers = SpecialPowers.getIntPref(MAX_TOTAL_VIEWERS);
     SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
 
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
 
-    let client = new DebuggerClient(DebuggerServer.connectPipe());
+    const client = new DebuggerClient(DebuggerServer.connectPipe());
     yield connect(client);
 
-    let tab = yield addTab(TAB1_URL);
-    let { tabs } = yield listTabs(client);
-    let [, tabClient] = yield attachTarget(client, findTab(tabs, TAB1_URL));
+    const tab = yield addTab(TAB1_URL);
+    const { tabs } = yield listTabs(client);
+    const [, tabClient] = yield attachTarget(client, findTab(tabs, TAB1_URL));
     yield listWorkers(tabClient);
 
     // If a page still has pending network requests, it will not be moved into
@@ -40,7 +56,7 @@ function test() {
 
     yield createWorkerInTab(tab, WORKER2_URL);
     ({ workers } = yield listWorkers(tabClient));
-    let [, workerClient2] = yield attachWorker(tabClient,
+    const [, workerClient2] = yield attachWorker(tabClient,
                                                findWorker(workers, WORKER2_URL));
     is(workerClient2.isClosed, false, "worker in tab 2 should not be closed");
 
