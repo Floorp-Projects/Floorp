@@ -238,6 +238,7 @@ UNIFIED_SOURCES += [
     'frontend/IfEmitter.cpp',
     'frontend/JumpList.cpp',
     'frontend/NameFunctions.cpp',
+    'frontend/NameOpEmitter.cpp',
     'frontend/ParseNode.cpp',
     'frontend/PropOpEmitter.cpp',
     'frontend/SwitchEmitter.cpp',

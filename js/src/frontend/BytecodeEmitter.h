@@ -581,40 +581,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitEnvCoordOp(JSOp op, EnvironmentCoordinate ec);
 
     MOZ_MUST_USE bool emitGetNameAtLocation(JSAtom* name, const NameLocation& loc);
-    MOZ_MUST_USE bool emitGetNameAtLocationForCompoundAssignment(JSAtom* name,
-                                                                 const NameLocation& loc);
     MOZ_MUST_USE bool emitGetName(JSAtom* name) {
         return emitGetNameAtLocation(name, lookupName(name));
     }
     MOZ_MUST_USE bool emitGetName(ParseNode* pn);
-
-    template <typename RHSEmitter>
-    MOZ_MUST_USE bool emitSetOrInitializeNameAtLocation(HandleAtom name, const NameLocation& loc,
-                                                        RHSEmitter emitRhs, bool initialize);
-    template <typename RHSEmitter>
-    MOZ_MUST_USE bool emitSetOrInitializeName(HandleAtom name, RHSEmitter emitRhs,
-                                              bool initialize)
-    {
-        return emitSetOrInitializeNameAtLocation(name, lookupName(name), emitRhs, initialize);
-    }
-    template <typename RHSEmitter>
-    MOZ_MUST_USE bool emitSetName(ParseNode* pn, RHSEmitter emitRhs) {
-        RootedAtom name(cx, pn->name());
-        return emitSetName(name, emitRhs);
-    }
-    template <typename RHSEmitter>
-    MOZ_MUST_USE bool emitSetName(HandleAtom name, RHSEmitter emitRhs) {
-        return emitSetOrInitializeName(name, emitRhs, false);
-    }
-    template <typename RHSEmitter>
-    MOZ_MUST_USE bool emitInitializeName(ParseNode* pn, RHSEmitter emitRhs) {
-        RootedAtom name(cx, pn->name());
-        return emitInitializeName(name, emitRhs);
-    }
-    template <typename RHSEmitter>
-    MOZ_MUST_USE bool emitInitializeName(HandleAtom name, RHSEmitter emitRhs) {
-        return emitSetOrInitializeName(name, emitRhs, true);
-    }
 
     MOZ_MUST_USE bool emitTDZCheckIfNeeded(JSAtom* name, const NameLocation& loc);
 
