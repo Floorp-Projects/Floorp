@@ -1784,7 +1784,7 @@ MLGDeviceD3D11::SetPSTexturesNV12(uint32_t aSlot, TextureSource* aTexture)
     texture,
     &desc,
     getter_AddRefs(views[1]));
-  if (FAILED(hr) || !views[0]) {
+  if (FAILED(hr) || !views[1]) {
     gfxWarning() << "Could not bind an SRV for CbCr plane of NV12 texture: " << hexa(hr);
     return;
   }
