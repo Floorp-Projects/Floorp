@@ -6,8 +6,6 @@
 
 "use strict";
 
-const { ReflowFront } = require("devtools/shared/fronts/reflow");
-
 /**
  * Simple utility class that listens to reflows on a given target if and only if a
  * listener is actively listening to reflows.
@@ -27,7 +25,6 @@ function ReflowTracker(target) {
 }
 
 ReflowTracker.prototype = {
-
   destroy() {
     if (this.reflowFront) {
       this.stopTracking();
@@ -41,8 +38,7 @@ ReflowTracker.prototype = {
   startTracking() {
     // Initialize reflow front if necessary.
     if (!this.reflowFront && this.target.form.reflowActor) {
-      const { client, form } = this.target;
-      this.reflowFront = ReflowFront(client, form);
+      this.reflowFront = this.target.getFront("reflow");
     }
 
     if (this.reflowFront) {
