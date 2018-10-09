@@ -136,7 +136,7 @@ interface nsILoadContext : nsISupports
    * A dictionary of the non-default origin attributes associated with this
    * nsILoadContext.
    */
-  [binaryname(ScriptableOriginAttributes)]
+  [binaryname(ScriptableOriginAttributes), implicit_jscontext]
   readonly attribute jsval originAttributes;
 
   /**
