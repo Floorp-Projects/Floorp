@@ -334,7 +334,7 @@ var ContentSearch = {
       currentEngine: await this._currentEngineObj(),
     };
     if (uriFlag) {
-      state.currentEngine.iconBuffer = Services.search.currentEngine.getIconURLBySize(16, 16);
+      state.currentEngine.iconBuffer = Services.search.defaultEngine.getIconURLBySize(16, 16);
     }
     let pref = Services.prefs.getCharPref("browser.search.hiddenOneOffs");
     let hiddenList = pref ? pref.split(",") : [];
@@ -420,7 +420,7 @@ var ContentSearch = {
   },
 
   _onMessageSetCurrentEngine(msg, data) {
-    Services.search.currentEngine = Services.search.getEngineByName(data);
+    Services.search.defaultEngine = Services.search.getEngineByName(data);
   },
 
   _onMessageManageEngines(msg) {
@@ -510,7 +510,7 @@ var ContentSearch = {
   },
 
   async _currentEngineObj() {
-    let engine = Services.search.currentEngine;
+    let engine = Services.search.defaultEngine;
     let favicon = engine.getIconURLBySize(16, 16);
     let placeholder = this._stringBundle.formatStringFromName(
       "searchWithEngine", [engine.name], 1);
