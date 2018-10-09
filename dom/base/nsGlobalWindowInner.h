@@ -1083,7 +1083,7 @@ protected:
   // Object Management
   virtual ~nsGlobalWindowInner();
 
-  void FreeInnerObjects();
+  void FreeInnerObjects(bool aForDocumentOpen = false);
 
   // Only to be called on an inner window.
   // aDocument must not be null.
