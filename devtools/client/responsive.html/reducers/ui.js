@@ -20,24 +20,22 @@ const LEFT_ALIGNMENT_ENABLED = "devtools.responsive.leftAlignViewport.enabled";
 const RELOAD_ON_TOUCH_SIMULATION = "devtools.responsive.reloadConditions.touchSimulation";
 const RELOAD_ON_USER_AGENT = "devtools.responsive.reloadConditions.userAgent";
 const SHOW_USER_AGENT_INPUT = "devtools.responsive.showUserAgentInput";
-const TOUCH_SIMULATION_ENABLED = "devtools.responsive.touchSimulation.enabled";
-const USER_AGENT = "devtools.responsive.userAgent";
 
 const INITIAL_UI = {
   // The pixel ratio of the display.
   displayPixelRatio: 0,
   // Whether or not the viewports are left aligned.
-  leftAlignmentEnabled: Services.prefs.getBoolPref(LEFT_ALIGNMENT_ENABLED, false),
+  leftAlignmentEnabled: Services.prefs.getBoolPref(LEFT_ALIGNMENT_ENABLED),
   // Whether or not to reload when touch simulation is toggled.
-  reloadOnTouchSimulation: Services.prefs.getBoolPref(RELOAD_ON_TOUCH_SIMULATION, false),
+  reloadOnTouchSimulation: Services.prefs.getBoolPref(RELOAD_ON_TOUCH_SIMULATION),
   // Whether or not to reload when user agent is changed.
-  reloadOnUserAgent: Services.prefs.getBoolPref(RELOAD_ON_USER_AGENT, false),
+  reloadOnUserAgent: Services.prefs.getBoolPref(RELOAD_ON_USER_AGENT),
   // Whether or not to show the user agent input in the toolbar.
-  showUserAgentInput: Services.prefs.getBoolPref(SHOW_USER_AGENT_INPUT, false),
+  showUserAgentInput: Services.prefs.getBoolPref(SHOW_USER_AGENT_INPUT),
   // Whether or not touch simulation is enabled.
-  touchSimulationEnabled: Services.prefs.getBoolPref(TOUCH_SIMULATION_ENABLED, false),
+  touchSimulationEnabled: false,
   // The user agent of the viewport.
-  userAgent: Services.prefs.getCharPref(USER_AGENT, ""),
+  userAgent: "",
 };
 
 const reducers = {
@@ -50,8 +48,6 @@ const reducers = {
   },
 
   [CHANGE_USER_AGENT](ui, { userAgent }) {
-    Services.prefs.setCharPref(USER_AGENT, userAgent);
-
     return {
       ...ui,
       userAgent,
@@ -95,8 +91,6 @@ const reducers = {
   },
 
   [TOGGLE_TOUCH_SIMULATION](ui, { enabled }) {
-    Services.prefs.setBoolPref(TOUCH_SIMULATION_ENABLED, enabled);
-
     return {
       ...ui,
       touchSimulationEnabled: enabled,
