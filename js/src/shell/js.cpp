@@ -10347,6 +10347,8 @@ main(int argc, char** argv, char** envp)
         || !op.addMultiStringOption('m', "module", "PATH", "Module path to run")
 #if defined(JS_BUILD_BINAST)
         || !op.addMultiStringOption('B', "binast", "PATH", "BinAST path to run")
+#else
+        || !op.addMultiStringOption('B', "binast", "", "No-op")
 #endif // JS_BUILD_BINAST
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
