@@ -211,9 +211,9 @@ FontFaceSet::ParseFontShorthandForMatching(
                             FontSlantStyle& aStyle,
                             ErrorResult& aRv)
 {
-  StyleComputedFontStyleDescriptor style;
-  float stretch;
-  float weight;
+  nsCSSValue style;
+  nsCSSValue stretch;
+  nsCSSValue weight;
 
   // FIXME(emilio): This Servo -> nsCSSValue -> Gecko conversion is stupid,
   // Servo understands the font types.
@@ -224,23 +224,30 @@ FontFaceSet::ParseFontShorthandForMatching(
     return;
   }
 
-  switch (style.tag) {
-    case StyleComputedFontStyleDescriptor::Tag::Normal:
+  switch (style.GetUnit()) {
+    case eCSSUnit_Normal:
       aStyle = FontSlantStyle::Normal();
       break;
-    case StyleComputedFontStyleDescriptor::Tag::Italic:
+    case eCSSUnit_Enumerated:
+      MOZ_ASSERT(style.GetIntValue() == NS_FONT_STYLE_ITALIC);
       aStyle = FontSlantStyle::Italic();
       break;
-    case StyleComputedFontStyleDescriptor::Tag::Oblique:
-      MOZ_ASSERT(style.oblique._0 == style.oblique._1,
-                 "We use ComputedFontStyleDescriptor just for convenience, "
-                 "the two values should always match");
-      aStyle = FontSlantStyle::Oblique(style.oblique._0);
+    case eCSSUnit_FontSlantStyle:
+      aStyle = style.GetFontSlantStyle();
       break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown unit for font-style");
   }
 
-  aWeight = FontWeight(weight);
-  aStretch = FontStretch::FromStyle(stretch);
+  if (weight.GetUnit() == eCSSUnit_FontWeight) {
+    aWeight = weight.GetFontWeight();
+  } else {
+    MOZ_ASSERT(weight.GetUnit() == eCSSUnit_Enumerated);
+    aWeight = FontWeight(weight.GetIntValue());
+  }
+
+  MOZ_ASSERT(stretch.GetUnit() == eCSSUnit_FontStretch);
+  aStretch = stretch.GetFontStretch();
 }
 
 static bool
@@ -826,6 +833,18 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   return modified;
 }
 
+static bool
+HasLocalSrc(const nsCSSValue::Array *aSrcArr)
+{
+  size_t numSrc = aSrcArr->Count();
+  for (size_t i = 0; i < numSrc; i++) {
+    if (aSrcArr->Item(i).GetUnit() == eCSSUnit_Local_Font) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 FontFaceSet::IncrementGeneration(bool aIsRebuild)
 {
@@ -837,21 +856,20 @@ void
 FontFaceSet::InsertNonRuleFontFace(FontFace* aFontFace,
                                    bool& aFontSetModified)
 {
-  nsAtom* fontFamily = aFontFace->GetFamilyName();
-  if (!fontFamily) {
+  nsAutoCString fontfamily;
+  if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
     // usable font, so there is no point in processing it further.
     return;
   }
-
-  nsAtomCString family(fontFamily);
 
   // Just create a new font entry if we haven't got one already.
   if (!aFontFace->GetUserFontEntry()) {
     // XXX Should we be checking mUserFontSet->mLocalRulesUsed like
     // InsertRuleFontFace does?
     RefPtr<gfxUserFontEntry> entry =
-      FindOrCreateUserFontEntryFromFontFace(family, aFontFace, SheetType::Doc);
+      FindOrCreateUserFontEntryFromFontFace(fontfamily, aFontFace,
+                                            SheetType::Doc);
     if (!entry) {
       return;
     }
@@ -859,7 +877,7 @@ FontFaceSet::InsertNonRuleFontFace(FontFace* aFontFace,
   }
 
   aFontSetModified = true;
-  mUserFontSet->AddUserFontEntry(family, aFontFace->GetUserFontEntry());
+  mUserFontSet->AddUserFontEntry(fontfamily, aFontFace->GetUserFontEntry());
 }
 
 void
@@ -867,8 +885,8 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
                                 nsTArray<FontFaceRecord>& aOldRecords,
                                 bool& aFontSetModified)
 {
-  nsAtom* fontFamily = aFontFace->GetFamilyName();
-  if (!fontFamily) {
+  nsAutoCString fontfamily;
+  if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
     // usable font, so there is no point in processing it further.
     return;
@@ -876,8 +894,6 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
 
   bool remove = false;
   size_t removeIndex;
-
-  nsAtomCString family(fontFamily);
 
   // This is a rule backed FontFace.  First, we check in aOldRecords; if
   // the FontFace for the rule exists there, just move it to the new record
@@ -890,8 +906,12 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
 
       // if local rules were used, don't use the old font entry
       // for rules containing src local usage
-      if (mUserFontSet->mLocalRulesUsed && mUserFontSet->mRebuildLocalRules) {
-        if (aFontFace->HasLocalSrc()) {
+      if (mUserFontSet->mLocalRulesUsed &&
+          mUserFontSet->mRebuildLocalRules) {
+        nsCSSValue val;
+        aFontFace->GetDesc(eCSSFontDesc_Src, val);
+        nsCSSUnit unit = val.GetUnit();
+        if (unit == eCSSUnit_Array && HasLocalSrc(val.GetArrayValue())) {
           // Remove the old record, but wait to see if we successfully create a
           // new user font entry below.
           remove = true;
@@ -903,7 +923,7 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
       gfxUserFontEntry* entry = rec.mFontFace->GetUserFontEntry();
       MOZ_ASSERT(entry, "FontFace should have a gfxUserFontEntry by now");
 
-      mUserFontSet->AddUserFontEntry(family, entry);
+      mUserFontSet->AddUserFontEntry(fontfamily, entry);
 
       MOZ_ASSERT(!HasRuleFontFace(rec.mFontFace),
                  "FontFace should not occur in mRuleFaces twice");
@@ -921,7 +941,7 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
 
   // this is a new rule:
   RefPtr<gfxUserFontEntry> entry =
-    FindOrCreateUserFontEntryFromFontFace(family, aFontFace, aSheetType);
+    FindOrCreateUserFontEntryFromFontFace(fontfamily, aFontFace, aSheetType);
 
   if (!entry) {
     return;
@@ -959,71 +979,117 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
   // on the family, gfxUserFontFamily::AddFontEntry(), which AddUserFontEntry
   // calls, will automatically remove the earlier occurrence of the same
   // userfont entry.
-  mUserFontSet->AddUserFontEntry(family, entry);
+  mUserFontSet->AddUserFontEntry(fontfamily, entry);
 }
 
 /* static */ already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(FontFace* aFontFace)
 {
-  nsAtom* fontFamily = aFontFace->GetFamilyName();
-  if (!fontFamily) {
+  nsAutoCString fontfamily;
+  if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
     // usable font, so there is no point in processing it further.
     return nullptr;
   }
 
-  return FindOrCreateUserFontEntryFromFontFace(nsAtomCString(fontFamily), aFontFace,
+  return FindOrCreateUserFontEntryFromFontFace(fontfamily, aFontFace,
                                                SheetType::Doc);
 }
 
+static FontWeight
+GetWeightForDescriptor(const nsCSSValue& aVal)
+{
+  switch (aVal.GetUnit()) {
+    case eCSSUnit_FontWeight:
+      return aVal.GetFontWeight();
+    case eCSSUnit_Enumerated:
+      return FontWeight(aVal.GetIntValue());
+    case eCSSUnit_Normal:
+    case eCSSUnit_Null:
+      return FontWeight::Normal();
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown font-weight descriptor value");
+      return FontWeight::Normal();
+  }
+}
+
 static WeightRange
-GetWeightRangeForDescriptor(const Maybe<StyleComputedFontWeightRange>& aVal,
+GetWeightRangeForDescriptor(const nsCSSValue& aVal,
                             gfxFontEntry::RangeFlags& aRangeFlags)
 {
-  if (!aVal) {
+  if (aVal.GetUnit() == eCSSUnit_Null) {
     aRangeFlags |= gfxFontEntry::RangeFlags::eAutoWeight;
     return WeightRange(FontWeight::Normal());
   }
-  return WeightRange(FontWeight(aVal->_0), FontWeight(aVal->_1));
+  if (aVal.GetUnit() == eCSSUnit_Pair) {
+    return WeightRange(GetWeightForDescriptor(aVal.GetPairValue().mXValue),
+                       GetWeightForDescriptor(aVal.GetPairValue().mYValue));
+  }
+  return WeightRange(GetWeightForDescriptor(aVal));
+}
+
+static FontSlantStyle
+GetStyleForDescriptor(const nsCSSValue& aVal)
+{
+  switch (aVal.GetUnit()) {
+    case eCSSUnit_Normal:
+    case eCSSUnit_Null:
+      return FontSlantStyle::Normal();
+    case eCSSUnit_Enumerated:
+      MOZ_ASSERT(aVal.GetIntValue() == NS_FONT_STYLE_ITALIC);
+      return FontSlantStyle::Italic();
+    case eCSSUnit_FontSlantStyle:
+      return aVal.GetFontSlantStyle();
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown font-style descriptor value");
+      return FontSlantStyle::Normal();
+  }
 }
 
 static SlantStyleRange
-GetStyleRangeForDescriptor(const Maybe<StyleComputedFontStyleDescriptor>& aVal,
+GetStyleRangeForDescriptor(const nsCSSValue& aVal,
                            gfxFontEntry::RangeFlags& aRangeFlags)
 {
-  if (!aVal) {
+  if (aVal.GetUnit() == eCSSUnit_Null) {
     aRangeFlags |= gfxFontEntry::RangeFlags::eAutoSlantStyle;
     return SlantStyleRange(FontSlantStyle::Normal());
   }
-  auto& val = *aVal;
-  switch (val.tag) {
-    case StyleComputedFontStyleDescriptor::Tag::Normal:
-      return SlantStyleRange(FontSlantStyle::Normal());
-    case StyleComputedFontStyleDescriptor::Tag::Italic:
-      return SlantStyleRange(FontSlantStyle::Italic());
-    case StyleComputedFontStyleDescriptor::Tag::Oblique:
-      return SlantStyleRange(FontSlantStyle::Oblique(val.oblique._0),
-                             FontSlantStyle::Oblique(val.oblique._1));
+  if (aVal.GetUnit() == eCSSUnit_Pair) {
+    return SlantStyleRange(GetStyleForDescriptor(aVal.GetPairValue().mXValue),
+                           GetStyleForDescriptor(aVal.GetPairValue().mYValue));
   }
-  MOZ_ASSERT_UNREACHABLE("How?");
-  return SlantStyleRange(FontSlantStyle::Normal());
+  return SlantStyleRange(GetStyleForDescriptor(aVal));
+}
+
+static FontStretch
+GetStretchForDescriptor(const nsCSSValue& aVal)
+{
+  switch (aVal.GetUnit()) {
+    case eCSSUnit_Null:
+      return FontStretch::Normal();
+    case eCSSUnit_FontStretch:
+      return aVal.GetFontStretch();
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown font-style descriptor value");
+      return FontStretch::Normal();
+  }
 }
 
 static StretchRange
-GetStretchRangeForDescriptor(const Maybe<StyleComputedFontStretchRange>& aVal,
+GetStretchRangeForDescriptor(const nsCSSValue& aVal,
                              gfxFontEntry::RangeFlags& aRangeFlags)
 {
-  if (!aVal) {
+  if (aVal.GetUnit() == eCSSUnit_Null) {
     aRangeFlags |= gfxFontEntry::RangeFlags::eAutoStretch;
     return StretchRange(FontStretch::Normal());
   }
-  return StretchRange(FontStretch::FromStyle(aVal->_0),
-                      FontStretch::FromStyle(aVal->_1));
+  if (aVal.GetUnit() == eCSSUnit_Pair) {
+    return StretchRange(GetStretchForDescriptor(aVal.GetPairValue().mXValue),
+                       GetStretchForDescriptor(aVal.GetPairValue().mYValue));
+  }
+  return StretchRange(GetStretchForDescriptor(aVal));
 }
 
-// TODO(emilio): Should this take an nsAtom* aFamilyName instead?
-//
-// All callers have one handy.
 /* static */ already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName,
                                                    FontFace* aFontFace,
@@ -1031,39 +1097,74 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName
 {
   FontFaceSet* set = aFontFace->GetPrimaryFontFaceSet();
 
+  nsCSSValue val;
+  nsCSSUnit unit;
+
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
-  StyleFontDisplay fontDisplay = StyleFontDisplay::Auto;
+  uint8_t fontDisplay = NS_FONT_DISPLAY_AUTO;
 
   gfxFontEntry::RangeFlags rangeFlags = gfxFontEntry::RangeFlags::eNoFlags;
 
   // set up weight
-  WeightRange weight =
-    GetWeightRangeForDescriptor(aFontFace->GetFontWeight(), rangeFlags);
+  aFontFace->GetDesc(eCSSFontDesc_Weight, val);
+  WeightRange weight = GetWeightRangeForDescriptor(val, rangeFlags);
 
   // set up stretch
-  StretchRange stretch =
-    GetStretchRangeForDescriptor(aFontFace->GetFontStretch(), rangeFlags);
+  aFontFace->GetDesc(eCSSFontDesc_Stretch, val);
+  StretchRange stretch = GetStretchRangeForDescriptor(val, rangeFlags);
 
   // set up font style
-  SlantStyleRange italicStyle =
-    GetStyleRangeForDescriptor(aFontFace->GetFontStyle(), rangeFlags);
+  aFontFace->GetDesc(eCSSFontDesc_Style, val);
+  SlantStyleRange italicStyle = GetStyleRangeForDescriptor(val, rangeFlags);
 
   // set up font display
-  if (Maybe<StyleFontDisplay> display = aFontFace->GetFontDisplay()) {
-    fontDisplay = *display;
+  aFontFace->GetDesc(eCSSFontDesc_Display, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Enumerated) {
+    fontDisplay = val.GetIntValue();
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face style has unexpected unit");
   }
 
   // set up font features
   nsTArray<gfxFontFeature> featureSettings;
-  aFontFace->GetFontFeatureSettings(featureSettings);
+  aFontFace->GetDesc(eCSSFontDesc_FontFeatureSettings, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Normal) {
+    // empty list of features
+  } else if (unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep) {
+    nsLayoutUtils::ComputeFontFeatures(val.GetPairListValue(), featureSettings);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face font-feature-settings has unexpected unit");
+  }
 
   // set up font variations
   nsTArray<gfxFontVariation> variationSettings;
-  aFontFace->GetFontVariationSettings(variationSettings);
+  aFontFace->GetDesc(eCSSFontDesc_FontVariationSettings, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Normal) {
+    // empty list of variations
+  } else if (unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep) {
+    nsLayoutUtils::ComputeFontVariations(val.GetPairListValue(), variationSettings);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face font-variation-settings has unexpected unit");
+  }
 
   // set up font language override
-  if (Maybe<StyleFontLanguageOverride> descriptor = aFontFace->GetFontLanguageOverride()) {
-    languageOverride = descriptor->_0;
+  aFontFace->GetDesc(eCSSFontDesc_FontLanguageOverride, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Normal) {
+    // empty feature string
+  } else if (unit == eCSSUnit_String) {
+    nsString stringValue;
+    val.GetStringValue(stringValue);
+    languageOverride = nsLayoutUtils::ParseFontLanguageOverride(stringValue);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face font-language-override has unexpected unit");
   }
 
   // set up unicode-range
@@ -1081,27 +1182,38 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName
     face->mBuffer = aFontFace->CreateBufferSource();
     face->mReferrerPolicy = mozilla::net::RP_Unset;
   } else {
-    AutoTArray<StyleFontFaceSourceListComponent, 8> sourceListComponents;
-    aFontFace->GetSources(sourceListComponents);
-    size_t len = sourceListComponents.Length();
-    for (size_t i = 0; i < len; ++i) {
-      gfxFontFaceSrc* face = srcArray.AppendElement();
-      const auto& component = sourceListComponents[i];
-      switch (component.tag) {
-        case StyleFontFaceSourceListComponent::Tag::Local: {
-          nsAtom* atom = component.local._0;
-          face->mLocalName.Append(nsAtomCString(atom));
+    aFontFace->GetDesc(eCSSFontDesc_Src, val);
+    unit = val.GetUnit();
+    if (unit == eCSSUnit_Array) {
+      // Hold a strong reference because content of val is going away
+      // in the loop below.
+      RefPtr<nsCSSValue::Array> srcArr = val.GetArrayValue();
+      size_t numSrc = srcArr->Count();
+
+      for (size_t i = 0; i < numSrc; i++) {
+        val = srcArr->Item(i);
+        unit = val.GetUnit();
+        gfxFontFaceSrc* face = srcArray.AppendElements(1);
+        if (!face)
+          return nullptr;
+
+        switch (unit) {
+
+        case eCSSUnit_Local_Font: {
+          nsAutoString localName;
+          val.GetStringValue(localName);
+          face->mLocalName.Append(NS_ConvertUTF16toUTF8(localName));
           face->mSourceType = gfxFontFaceSrc::eSourceType_Local;
           face->mURI = nullptr;
           face->mFormatFlags = 0;
           face->mReferrerPolicy = mozilla::net::RP_Unset;
           break;
         }
-        case StyleFontFaceSourceListComponent::Tag::Url: {
+        case eCSSUnit_URL: {
           face->mSourceType = gfxFontFaceSrc::eSourceType_URL;
-          const URLValue* url = component.url._0;
-          nsIURI* uri = url->GetURI();
+          nsIURI* uri = val.GetURLValue();
           face->mURI = uri ? new gfxFontSrcURI(uri) : nullptr;
+          URLValue* url = val.GetURLStructValue();
           face->mReferrer = url->mExtraData->GetReferrer();
           face->mReferrerPolicy = url->mExtraData->GetReferrerPolicy();
           face->mOriginPrincipal =
@@ -1118,16 +1230,12 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName
           face->mLocalName.Truncate();
           face->mFormatFlags = 0;
 
-          while (i + 1 < len) {
-            const auto& maybeFontFormat = sourceListComponents[i + 1];
-            if (maybeFontFormat.tag != StyleFontFaceSourceListComponent::Tag::FormatHint) {
+          while (i + 1 < numSrc) {
+            val = srcArr->Item(i + 1);
+            if (val.GetUnit() != eCSSUnit_Font_Format)
               break;
-            }
 
-            nsDependentCSubstring valueString(
-                reinterpret_cast<const char*>(maybeFontFormat.format_hint.utf8_bytes),
-                maybeFontFormat.format_hint.length);
-
+            nsDependentString valueString(val.GetStringBufferValue());
             if (valueString.LowerCaseEqualsASCII("woff")) {
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF;
             } else if (Preferences::GetBool(GFX_PREF_WOFF2_ENABLED) &&
@@ -1171,10 +1279,14 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName
           }
           break;
         }
-        case StyleFontFaceSourceListComponent::Tag::FormatHint:
-          MOZ_ASSERT_UNREACHABLE("Should always come after a URL source, and be consumed already");
+        default:
+          NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
+                       "strange unit type in font-face src array");
           break;
+        }
        }
+    } else {
+      NS_ASSERTION(unit == eCSSUnit_Null, "@font-face src has unexpected unit");
     }
   }
 
@@ -1940,7 +2052,7 @@ FontFaceSet::UserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
-                               StyleFontDisplay aFontDisplay,
+                               uint8_t aFontDisplay,
                                RangeFlags aRangeFlags)
 {
   RefPtr<gfxUserFontEntry> entry =
