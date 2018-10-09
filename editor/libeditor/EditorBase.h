@@ -659,7 +659,7 @@ public:
    * designMode, you should set the document node to aNode except that an
    * element in the document has focus.
    */
-  virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode* aNode);
+  virtual Element* FindSelectionRoot(nsINode* aNode) const;
 
   /**
    * This method has to be called by EditorEventListener::Focus.
