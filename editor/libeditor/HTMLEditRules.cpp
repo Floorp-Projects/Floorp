@@ -162,6 +162,41 @@ protected:
   HTMLEditor* mHTMLEditor;
 };
 
+
+class MOZ_RAII AutoSetTemporaryAncestorLimiter final
+{
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
+
+public:
+  explicit AutoSetTemporaryAncestorLimiter(HTMLEditor& aHTMLEditor,
+                                           Selection& aSelection,
+                                           nsINode& aStartPointNode
+                                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+    if (aSelection.GetAncestorLimiter()) {
+      return;
+    }
+
+    Element* root = aHTMLEditor.FindSelectionRoot(&aStartPointNode);
+    if (root) {
+      aHTMLEditor.InitializeSelectionAncestorLimit(aSelection, *root);
+      mSelection = &aSelection;
+    }
+  }
+
+  ~AutoSetTemporaryAncestorLimiter()
+  {
+    if (mSelection) {
+      mSelection->SetAncestorLimiter(nullptr);
+    }
+  }
+
+private:
+  RefPtr<Selection> mSelection;
+};
+
 /********************************************************
  * mozilla::HTMLEditRules
  ********************************************************/
@@ -2404,6 +2439,13 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
     if (*aCancel) {
       return NS_OK;
     }
+
+    // ExtendSelectionForDelete will use selection controller to set
+    // selection for delete.  But if focus event doesn't receive yet,
+    // ancestor isn't set.  So we must set root eleement of editor to
+    // ancestor.
+    AutoSetTemporaryAncestorLimiter autoSetter(HTMLEditorRef(), SelectionRef(),
+                                               *startPoint.GetContainer());
 
     rv = HTMLEditorRef().ExtendSelectionForDelete(&SelectionRef(), &aAction);
     if (NS_WARN_IF(NS_FAILED(rv))) {

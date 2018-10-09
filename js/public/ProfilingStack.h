@@ -474,12 +474,16 @@ class GeckoProfilerThread
   public:
     GeckoProfilerThread();
 
-    uint32_t stackPointer() { MOZ_ASSERT(installed()); return profilingStack_->stackPointer; }
+    uint32_t stackPointer() { MOZ_ASSERT(infraInstalled()); return profilingStack_->stackPointer; }
     ProfilingStackFrame* stack() { return profilingStack_->frames; }
     ProfilingStack* getProfilingStack() { return profilingStack_; }
 
-    /* management of whether instrumentation is on or off */
-    bool installed() { return profilingStack_ != nullptr; }
+    /*
+     * True if the profiler infrastructure is setup.  Should be true in builds
+     * that include profiler support except during early startup or late
+     * shutdown.  Unrelated to the presence of the Gecko Profiler addon.
+     */
+    bool infraInstalled() { return profilingStack_ != nullptr; }
 
     void setProfilingStack(ProfilingStack* profilingStack);
     void trace(JSTracer* trc);

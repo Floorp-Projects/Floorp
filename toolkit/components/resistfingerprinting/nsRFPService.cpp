@@ -707,7 +707,7 @@ nsRFPService::GetSpoofedUserAgent(nsACString &userAgent)
   uint32_t spoofedVersion = firefoxVersion - ((firefoxVersion - 4) % 7);
   userAgent.Assign(nsPrintfCString(
     "Mozilla/5.0 (%s; rv:%d.0) Gecko/%s Firefox/%d.0",
-    SPOOFED_UA_OS, spoofedVersion, LEGACY_BUILD_ID, spoofedVersion));
+    SPOOFED_UA_OS, spoofedVersion, LEGACY_UA_GECKO_TRAIL, spoofedVersion));
 
   return rv;
 }
