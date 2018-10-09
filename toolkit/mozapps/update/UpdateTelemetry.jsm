@@ -156,8 +156,8 @@ var AUSTLMY = {
   PATCH_UNKNOWN: "UNKNOWN",
 
   /**
-   * Values for the UPDATE_DOWNLOAD_CODE_COMPLETE and
-   * UPDATE_DOWNLOAD_CODE_PARTIAL Telemetry histograms.
+   * Values for the UPDATE_DOWNLOAD_CODE_COMPLETE, UPDATE_DOWNLOAD_CODE_PARTIAL,
+   * and UPDATE_DOWNLOAD_CODE_UNKNOWN Telemetry histograms.
    */
   DWNLD_SUCCESS: 0,
   DWNLD_RETRY_OFFLINE: 1,
@@ -184,6 +184,7 @@ var AUSTLMY = {
    *         the histogram ID out of the following histogram IDs:
    *         UPDATE_DOWNLOAD_CODE_COMPLETE
    *         UPDATE_DOWNLOAD_CODE_PARTIAL
+   *         UPDATE_DOWNLOAD_CODE_UNKNOWN
    * @param  aCode
    *         An integer value as defined by the values that start with DWNLD_ in
    *         the above section.
