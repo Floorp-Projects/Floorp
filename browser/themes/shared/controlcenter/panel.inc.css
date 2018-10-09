@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
+%filter substitution
+%define identityPopupExpanderWidth 38px
 
 /* Hide all conditional elements by default. */
 :-moz-any([when-connection],[when-mixedcontent],[when-ciphers],[when-loginforms]) {
@@ -72,7 +74,7 @@
   max-width: 33em;
 }
 
-.identity-popup-section {
+.identity-popup-section:not(:first-child) {
   border-top: 1px solid var(--panel-separator-color);
 }
 
@@ -103,7 +105,7 @@
   margin: 0;
   padding: 4px 0;
   min-width: auto;
-  width: 38px;
+  width: @identityPopupExpanderWidth@;
   border-style: none;
   -moz-appearance: none;
   background: url("chrome://browser/skin/arrow-left.svg") center no-repeat;
@@ -145,9 +147,6 @@
 
 /* CONTENT */
 
-#identity-popup-mainView-panel-header > label,
-#identity-popup-securityView > .panel-header,
-#identity-popup-breakageReportView > .panel-header,
 #identity-popup-content-blocking-report-breakage,
 #identity-popup-content-blocking-disabled-label,
 .identity-popup-content-blocking-category-label,
@@ -162,23 +161,6 @@
 #identity-popup-content-blocking-content > description {
   font-size: 110%;
   margin: 0;
-}
-
-#identity-popup-mainView-panel-header {
-  padding: 4px 1em;
-  min-height: 40px;
-  -moz-box-pack: center;
-  -moz-box-align: center;
-}
-
-#identity-popup-mainView-panel-header-span {
-  display: inline-block;
-  font-weight: 600;
-  text-align: center;
-  overflow-wrap: break-word;
-  /* This is needed for the overflow-wrap to work correctly.
-   * 33em is the panel width, panel-header has 1em padding on each side. */
-  max-width: calc(33rem - 2em);
 }
 
 #identity-popup-permissions-content > description,
@@ -196,12 +178,11 @@
   font-size: 150%;
 }
 
-#identity-popup-host {
-  overflow-wrap: break-word;
-  /* This is needed for the overflow-wrap to work correctly.
-   * 1em + 2em + 24px is .identity-popup-security-content padding
-   * 33em is the panel width */
-  max-width: calc(33rem - 3rem - 24px);
+.identity-popup-host {
+  word-wrap: break-word;
+  /* 1em + 2em + 24px is .identity-popup-security-content padding
+   * 30em is the panel width */
+  max-width: calc(30rem - 3rem - 24px - @identityPopupExpanderWidth@);
 }
 
 .identity-popup-warning-gray {
