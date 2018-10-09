@@ -1,7 +1,9 @@
+// |jit-test| skip-if: !isAsmJSCompilationAvailable()
+
 load(libdir + "asm.js");
 
 setCachingEnabled(true);
-if (!isAsmJSCompilationAvailable() || !isCachingEnabled())
+if (!isCachingEnabled())
     quit();
 
 var body1 = "'use asm'; function f() { return 42 } function ff() { return 43 } return f";
