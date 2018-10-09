@@ -151,7 +151,7 @@ SuggestAutoComplete.prototype = {
     this._listener = listener;
     this._suggestionController.fetch(searchString,
                                      privacyMode,
-                                     Services.search.currentEngine);
+                                     Services.search.defaultEngine);
   },
 
   /**

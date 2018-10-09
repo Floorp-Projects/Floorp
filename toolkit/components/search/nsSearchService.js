@@ -2416,7 +2416,7 @@ Engine.prototype = {
     if (aResponseType == URLTYPE_SEARCH_HTML &&
         ((resetPending = resetStatus == "pending") ||
          resetEnabled) &&
-        this.name == Services.search.currentEngine.name &&
+        this.name == Services.search.defaultEngine.name &&
         !this._isDefault &&
         this.name != Services.search.originalDefaultEngine.name &&
         (resetPending || !this.getAttr("loadPathHash") ||

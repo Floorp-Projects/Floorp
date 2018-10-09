@@ -2317,7 +2317,7 @@ BrowserGlue.prototype = {
         }, SEARCH_SERVICE_TOPIC);
       });
       searchInitializedPromise.then(() => {
-        let currentEngine = Services.search.currentEngine.wrappedJSObject;
+        let currentEngine = Services.search.defaultEngine.wrappedJSObject;
         // Only reset the current engine if it wasn't set by a WebExtension
         // and it is not one of the default engines.
         // If the original default is not a default, the user has a weird

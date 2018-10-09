@@ -2475,7 +2475,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                          this.input.urlbarSearchSuggestEnabled) {
                 // Preconnect to the current search engine only if the search
                 // suggestions are enabled.
-                let engine = Services.search.currentEngine;
+                let engine = Services.search.defaultEngine;
                 engine.speculativeConnect({window,
                                            originAttributes: gBrowser.contentPrincipal.originAttributes});
               }
