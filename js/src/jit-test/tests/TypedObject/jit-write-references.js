@@ -1,6 +1,3 @@
-if (typeof TypedObject === "undefined")
-    quit();
-
 var T = TypedObject;
 
 var ObjectStruct = new T.StructType({f: T.Object});

@@ -1,9 +1,6 @@
 // Test the case where we detach the buffer underlying a variable-length array.
 // Here we can fold the detached check into the bounds check.
 
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 var {StructType, uint32} = TypedObject;
 var S = new StructType({f: uint32, g: uint32});
 var A = S.array(10);

@@ -1,6 +1,3 @@
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 gczeal(2);
 var Vec3u16Type = TypedObject.uint16.array(3);
 function foo_u16(n) {

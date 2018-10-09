@@ -1,6 +1,3 @@
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 enableGeckoProfiling();
 var T = TypedObject;
 function check(results, ctor) {

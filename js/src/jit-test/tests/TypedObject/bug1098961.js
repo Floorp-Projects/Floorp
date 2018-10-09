@@ -1,6 +1,3 @@
-if (!this.hasOwnProperty("TypedObject"))
-    quit();
-
 Array.prototype[Symbol.iterator] = function*() {
     for (var i = 3; --i >= 0;) {
         yield this[i]
