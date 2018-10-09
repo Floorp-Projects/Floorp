@@ -28,7 +28,6 @@ class LIRGeneratorMIPS : public LIRGeneratorMIPSShared
     }
 
     void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
-    void defineUntypedPhi(MPhi* phi, size_t lirIndex);
 
     void lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
     void defineInt64Phi(MPhi* phi, size_t lirIndex);
