@@ -132,8 +132,7 @@ partial interface Window {
 };
 
 [Exposed=Window,
-  Constructor,
-  Constructor(DOMString text)]
+  Constructor(optional DOMString text)]
 interface SpeechSynthesisUtterance : EventTarget {
     attribute DOMString text;
     attribute DOMString lang;
