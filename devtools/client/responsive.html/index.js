@@ -22,7 +22,7 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const message = require("./utils/message");
 const App = createFactory(require("./components/App"));
 const Store = require("./store");
-const { loadDevices, restoreDeviceState } = require("./actions/devices");
+const { loadDevices } = require("./actions/devices");
 const { addViewport, resizeViewport } = require("./actions/viewports");
 const { changeDisplayPixelRatio } = require("./actions/ui");
 
@@ -78,9 +78,7 @@ message.wait(window, "init").then(() => bootstrap.init());
 // manager.js sends a message to signal init is done, which can be used for delayed
 // startup work that shouldn't block initial load
 message.wait(window, "post-init").then(() => {
-  bootstrap.store.dispatch(loadDevices()).then(() => {
-    bootstrap.dispatch(restoreDeviceState());
-  });
+  bootstrap.dispatch(loadDevices());
 });
 
 window.addEventListener("unload", function() {
