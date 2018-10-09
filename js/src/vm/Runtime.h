@@ -230,7 +230,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     friend class js::jit::JitActivation;
     friend class js::jit::CompileRuntime;
 
+    /* Space for interpreter frames. */
+    js::MainThreadData<js::InterpreterStack> interpreterStack_;
+
   public:
+    js::InterpreterStack& interpreterStack() {
+        return interpreterStack_.ref();
+    }
+
     /*
      * If non-null, another runtime guaranteed to outlive this one and whose
      * permanent data may be used by this one where possible.
