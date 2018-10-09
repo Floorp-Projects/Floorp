@@ -467,7 +467,9 @@ let PDFViewerApplication = {
       let enabled = hashParams['pdfbug'].split(',');
       waitOn.push(loadAndEnablePDFBug(enabled));
     }
-    return Promise.all(waitOn);
+    return Promise.all(waitOn).catch(reason => {
+      console.error(`_parseHashParameters: "${reason.message}".`);
+    });
   },
   async _initializeL10n() {
     this.l10n = this.externalServices.createL10n({ locale: _app_options.AppOptions.get('locale') });
@@ -496,8 +498,8 @@ let PDFViewerApplication = {
       eventBus
     });
     this.findController = findController;
-    let container = appConfig.mainContainer;
-    let viewer = appConfig.viewerContainer;
+    const container = appConfig.mainContainer;
+    const viewer = appConfig.viewerContainer;
     this.pdfViewer = new _pdf_viewer.PDFViewer({
       container,
       viewer,
@@ -538,7 +540,7 @@ let PDFViewerApplication = {
       eventBus,
       cursorToolOnLoad: _app_options.AppOptions.get('cursorToolOnLoad')
     });
-    this.toolbar = new _toolbar.Toolbar(appConfig.toolbar, container, eventBus, this.l10n);
+    this.toolbar = new _toolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n);
     this.secondaryToolbar = new _secondary_toolbar.SecondaryToolbar(appConfig.secondaryToolbar, container, eventBus);
     if (this.supportsFullscreen) {
       this.pdfPresentationMode = new _pdf_presentation_mode.PDFPresentationMode({
@@ -8636,9 +8638,8 @@ const PAGE_NUMBER_LOADING_INDICATOR = 'visiblePageIsLoading';
 const SCALE_SELECT_CONTAINER_PADDING = 8;
 const SCALE_SELECT_PADDING = 22;
 class Toolbar {
-  constructor(options, mainContainer, eventBus, l10n = _ui_utils.NullL10n) {
+  constructor(options, eventBus, l10n = _ui_utils.NullL10n) {
     this.toolbar = options.container;
-    this.mainContainer = mainContainer;
     this.eventBus = eventBus;
     this.l10n = l10n;
     this.items = options;
@@ -8657,7 +8658,7 @@ class Toolbar {
     this._updateUIState(true);
   }
   setPageScale(pageScaleValue, pageScale) {
-    this.pageScaleValue = pageScaleValue;
+    this.pageScaleValue = (pageScaleValue || pageScale).toString();
     this.pageScale = pageScale;
     this._updateUIState(false);
   }
@@ -8729,9 +8730,7 @@ class Toolbar {
     if (!this._wasLocalized) {
       return;
     }
-    let { pageNumber, pagesCount, items } = this;
-    let scaleValue = (this.pageScaleValue || this.pageScale).toString();
-    let scale = this.pageScale;
+    const { pageNumber, pagesCount, pageScaleValue, pageScale, items } = this;
     if (resetNumPages) {
       if (this.hasPageLabels) {
         items.pageNumber.type = 'text';
@@ -8756,15 +8755,15 @@ class Toolbar {
     }
     items.previous.disabled = pageNumber <= 1;
     items.next.disabled = pageNumber >= pagesCount;
-    items.zoomOut.disabled = scale <= _ui_utils.MIN_SCALE;
-    items.zoomIn.disabled = scale >= _ui_utils.MAX_SCALE;
-    let customScale = Math.round(scale * 10000) / 100;
+    items.zoomOut.disabled = pageScale <= _ui_utils.MIN_SCALE;
+    items.zoomIn.disabled = pageScale >= _ui_utils.MAX_SCALE;
+    let customScale = Math.round(pageScale * 10000) / 100;
     this.l10n.get('page_scale_percent', { scale: customScale }, '{{scale}}%').then(msg => {
       let options = items.scaleSelect.options;
       let predefinedValueFound = false;
       for (let i = 0, ii = options.length; i < ii; i++) {
         let option = options[i];
-        if (option.value !== scaleValue) {
+        if (option.value !== pageScaleValue) {
           option.selected = false;
           continue;
         }
