@@ -1714,7 +1714,7 @@ BytecodeEmitter::emitFinishIteratorResult(bool done)
 }
 
 bool
-BytecodeEmitter::emitGetNameAtLocation(JSAtom* name, const NameLocation& loc, bool callContext)
+BytecodeEmitter::emitGetNameAtLocation(JSAtom* name, const NameLocation& loc)
 {
     switch (loc.kind()) {
       case NameLocation::Kind::Dynamic:
@@ -1779,46 +1779,13 @@ BytecodeEmitter::emitGetNameAtLocation(JSAtom* name, const NameLocation& loc, bo
         MOZ_CRASH("Synthesized vars for Annex B.3.3 should only be used in initialization");
     }
 
-    // Need to provide |this| value for call.
-    if (callContext) {
-        switch (loc.kind()) {
-          case NameLocation::Kind::Dynamic: {
-            JSOp thisOp = needsImplicitThis() ? JSOP_IMPLICITTHIS : JSOP_GIMPLICITTHIS;
-            if (!emitAtomOp(name, thisOp)) {
-                return false;
-            }
-            break;
-          }
-
-          case NameLocation::Kind::Global:
-            if (!emitAtomOp(name, JSOP_GIMPLICITTHIS)) {
-                return false;
-            }
-            break;
-
-          case NameLocation::Kind::Intrinsic:
-          case NameLocation::Kind::NamedLambdaCallee:
-          case NameLocation::Kind::Import:
-          case NameLocation::Kind::ArgumentSlot:
-          case NameLocation::Kind::FrameSlot:
-          case NameLocation::Kind::EnvironmentCoordinate:
-            if (!emit1(JSOP_UNDEFINED)) {
-                return false;
-            }
-            break;
-
-          case NameLocation::Kind::DynamicAnnexBVar:
-            MOZ_CRASH("Synthesized vars for Annex B.3.3 should only be used in initialization");
-        }
-    }
-
     return true;
 }
 
 bool
-BytecodeEmitter::emitGetName(ParseNode* pn, bool callContext)
+BytecodeEmitter::emitGetName(ParseNode* pn)
 {
-    return emitGetName(pn->name(), callContext);
+    return emitGetName(pn->name());
 }
 
 template <typename RHSEmitter>
@@ -7212,11 +7179,47 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCa
 {
     bool needsThis = !isCall;
     switch (callee->getKind()) {
-      case ParseNodeKind::Name:
-        if (!emitGetName(callee, isCall)) {
+      case ParseNodeKind::Name: {
+        JSAtom* name = callee->name();
+        NameLocation loc = lookupName(name);
+        if (!emitGetNameAtLocation(name, loc)) {          // CALLEE
             return false;
         }
+
+        if (isCall) {
+            switch (loc.kind()) {
+              case NameLocation::Kind::Dynamic: {
+                JSOp thisOp = needsImplicitThis() ? JSOP_IMPLICITTHIS : JSOP_GIMPLICITTHIS;
+                if (!emitAtomOp(name, thisOp)) {
+                    return false;
+                }
+                break;
+              }
+
+              case NameLocation::Kind::Global:
+                if (!emitAtomOp(name, JSOP_GIMPLICITTHIS)) {
+                    return false;
+                }
+                break;
+
+              case NameLocation::Kind::Intrinsic:
+              case NameLocation::Kind::NamedLambdaCallee:
+              case NameLocation::Kind::Import:
+              case NameLocation::Kind::ArgumentSlot:
+              case NameLocation::Kind::FrameSlot:
+              case NameLocation::Kind::EnvironmentCoordinate:
+                if (!emit1(JSOP_UNDEFINED)) {
+                    return false;
+                }
+                break;
+
+              case NameLocation::Kind::DynamicAnnexBVar:
+                MOZ_CRASH("Synthesized vars for Annex B.3.3 should only be used in initialization");
+            }
+        }
+
         break;
+      }
       case ParseNodeKind::Dot: {
         PropertyAccess* prop = &callee->as<PropertyAccess>();
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
@@ -7240,11 +7243,15 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCa
                 return false;
             }
         } else {
-            if (!emitElemOp(elem, isCall ? JSOP_CALLELEM : JSOP_GETELEM)) {
-                return false;
-            }
             if (isCall) {
+                if (!emitElemOp(elem, JSOP_CALLELEM)) {
+                    return false;
+                }
                 if (!emit1(JSOP_SWAP)) {
+                    return false;
+                }
+            } else {
+                if (!emitElemOp(elem, JSOP_GETELEM)) {
                     return false;
                 }
             }
