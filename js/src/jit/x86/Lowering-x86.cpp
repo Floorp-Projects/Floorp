@@ -163,25 +163,6 @@ LIRGenerator::visitReturn(MReturn* ret)
 }
 
 void
-LIRGeneratorX86::defineUntypedPhi(MPhi* phi, size_t lirIndex)
-{
-    LPhi* type = current->getPhi(lirIndex + VREG_TYPE_OFFSET);
-    LPhi* payload = current->getPhi(lirIndex + VREG_DATA_OFFSET);
-
-    uint32_t typeVreg = getVirtualRegister();
-
-    phi->setVirtualRegister(typeVreg);
-
-    uint32_t payloadVreg = getVirtualRegister();
-    MOZ_ASSERT(typeVreg + 1 == payloadVreg);
-
-    type->setDef(0, LDefinition(typeVreg, LDefinition::TYPE));
-    payload->setDef(0, LDefinition(payloadVreg, LDefinition::PAYLOAD));
-    annotate(type);
-    annotate(payload);
-}
-
-void
 LIRGeneratorX86::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex)
 {
     MDefinition* operand = phi->getOperand(inputPosition);
