@@ -29,6 +29,11 @@ var localProviderModules = {
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
 };
 
+// To improve dataflow and reduce UI work, when a match is added by a
+// non-immediate provider, we notify it to the controller after a delay, so
+// that we can chunk matches coming in that timeframe into a single call.
+const CHUNK_MATCHES_DELAY_MS = 16;
+
 /**
  * Class used to create a manager.
  * The manager is responsible to keep a list of providers, instantiate query
@@ -84,7 +89,7 @@ class ProvidersManager {
    */
   async startQuery(queryContext, controller) {
     logger.info(`Query start ${queryContext.searchString}`);
-    let query = Object.seal(new Query(queryContext, controller, this.providers));
+    let query = new Query(queryContext, controller, this.providers);
     this.queries.set(queryContext, query);
     await query.start();
   }
@@ -148,9 +153,6 @@ class Query {
     this.context.results = [];
     this.controller = controller;
     this.providers = providers;
-    // Track the delay timer.
-    this.sleepResolve = Promise.resolve();
-    this.sleepTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this.started = false;
     this.canceled = false;
     this.complete = false;
@@ -174,11 +176,11 @@ class Query {
       promises.push(provider.startQuery(this.context, this.add));
     }
 
-    await new Promise(resolve => {
-      let time = UrlbarPrefs.get("delay");
-      this.sleepResolve = resolve;
-      this.sleepTimer.initWithCallback(resolve, time, Ci.nsITimer.TYPE_ONE_SHOT);
-    });
+    // Tracks the delay timer. We will fire (in this specific case, cancel would
+    // do the same, since the callback is empty) the timer when the search is
+    // canceled, unblocking start().
+    this._sleepTimer = new SkippableTimer(() => {}, UrlbarPrefs.get("delay"));
+    await this._sleepTimer.promise;
 
     for (let providerType of [UrlbarUtils.PROVIDER_TYPE.NETWORK,
                               UrlbarUtils.PROVIDER_TYPE.PROFILE,
@@ -192,6 +194,11 @@ class Query {
     }
 
     await Promise.all(promises.map(p => p.catch(Cu.reportError)));
+
+    if (this._chunkTimer) {
+      // All the providers are done returning results, so we can stop chunking.
+      await this._chunkTimer.fire();
+    }
 
     // Nothing should be failing above, since we catch all the promises, thus
     // this is not in a finally for now.
@@ -207,13 +214,17 @@ class Query {
       return;
     }
     this.canceled = true;
-    this.sleepTimer.cancel();
     for (let providers of this.providers.values()) {
       for (let provider of providers.values()) {
         provider.cancelQuery(this.context);
       }
     }
-    this.sleepResolve();
+    if (this._chunkTimer) {
+      this._chunkTimer.cancel().catch(Cu.reportError);
+    }
+    if (this._sleepTimer) {
+      this._sleepTimer.fire().catch(Cu.reportError);
+    }
   }
 
   /**
@@ -226,12 +237,83 @@ class Query {
     if (this.canceled) {
       return;
     }
-    // TODO:
-    //  * coalesce results in timed chunks: we don't want to notify every single
-    //    result as soon as it arrives, we'll rather collect results for a few
-    //    ms, then send them
-    //  * pass results to a muxer before sending them back to the controller.
     this.context.results.push(match);
-    this.controller.receiveResults(this.context);
+
+
+    let notifyResults = () => {
+      if (this._chunkTimer) {
+        this._chunkTimer.cancel().catch(Cu.reportError);
+        delete this._chunkTimer;
+      }
+      // TODO:
+      //  * pass results to a muxer before sending them back to the controller.
+      this.controller.receiveResults(this.context);
+    };
+
+    // If the provider is not of immediate type, chunk results, to improve the
+    // dataflow and reduce UI flicker.
+    if (provider.type == UrlbarUtils.PROVIDER_TYPE.IMMEDIATE) {
+      notifyResults();
+    } else if (!this._chunkTimer) {
+      this._chunkTimer = new SkippableTimer(notifyResults, CHUNK_MATCHES_DELAY_MS);
+    }
+  }
+}
+
+/**
+ * Class used to create a timer that can be manually fired, to immediately
+ * invoke the callback, or canceled, as necessary.
+ * Examples:
+ *   let timer = new SkippableTimer();
+ *   // Invokes the callback immediately without waiting for the delay.
+ *   await timer.fire();
+ *   // Cancel the timer, the callback won't be invoked.
+ *   await timer.cancel();
+ *   // Wait for the timer to have elapsed.
+ *   await timer.promise;
+ */
+class SkippableTimer {
+  /**
+   * Creates a skippable timer for the given callback and time.
+   * @param {function} callback To be invoked when requested
+   * @param {number} time A delay in milliseconds to wait for
+   */
+  constructor(callback, time) {
+    let timerPromise = new Promise(resolve => {
+      this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this._timer.initWithCallback(() => {
+        logger.debug(`Elapsed ${time}ms timer`);
+        resolve();
+      }, time, Ci.nsITimer.TYPE_ONE_SHOT);
+      logger.debug(`Started ${time}ms timer`);
+    });
+
+    let firePromise = new Promise(resolve => {
+      this.fire = () => {
+        logger.debug(`Skipped ${time}ms timer`);
+        resolve();
+        return this.promise;
+      };
+    });
+
+    this.promise = Promise.race([timerPromise, firePromise]).then(() => {
+      // If we've been canceled, don't call back.
+      if (this._timer) {
+        callback();
+      }
+    });
+  }
+
+  /**
+   * Allows to cancel the timer and the callback won't be invoked.
+   * It is not strictly necessary to await for this, the promise can just be
+   * used to ensure all the internal work is complete.
+   * @returns {promise} Resolved once all the cancelation work is complete.
+   */
+  cancel() {
+    logger.debug(`Canceling timer for ${this._timer.delay}ms`);
+    this._timer.cancel();
+    delete this._timer;
+    return this.fire();
   }
 }
