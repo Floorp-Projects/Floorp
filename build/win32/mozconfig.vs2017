@@ -21,9 +21,6 @@ if [ -d "${VSPATH}" ]; then
     export WIN64_LIB="${VSPATH}/VC/lib/x64:${VSPATH}/VC/atlmfc/lib/x64:${VSPATH}/SDK/Lib/10.0.17134.0/ucrt/x64:${VSPATH}/SDK/Lib/10.0.17134.0/um/x64:${VSPATH}/DIA SDK/lib/amd64"
 fi
 
-ac_add_options --target=i686-pc-mingw32
-ac_add_options --host=x86_64-pc-mingw32
-
 . $topsrcdir/build/mozconfig.vs-common
 
 mk_export_correct_style WINDOWSSDKDIR
