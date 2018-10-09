@@ -48,8 +48,8 @@ jobs:
                 - builds/taskcluster_base_win32.py
                 - builds/taskcluster_sub_win32/clang_debug.py
         toolchains:
-            - win64-clang-cl-st-an
-            - win64-rust
+            - win32-clang-cl-st-an
+            - win32-rust
             - win64-cbindgen
             - win64-sccache
             - win64-node
@@ -79,8 +79,8 @@ jobs:
                 - builds/taskcluster_base_win32.py
                 - builds/taskcluster_sub_win32/clang.py
         toolchains:
-            - win64-clang-cl-st-an
-            - win64-rust
+            - win32-clang-cl-st-an
+            - win32-rust
             - win64-cbindgen
             - win64-sccache
             - win64-node

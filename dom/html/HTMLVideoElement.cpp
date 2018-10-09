@@ -296,32 +296,38 @@ HTMLVideoElement::GetVideoPlaybackQuality()
   return playbackQuality.forget();
 }
 
-void
-HTMLVideoElement::WakeLockCreate()
-{
-  HTMLMediaElement::WakeLockCreate();
-  UpdateScreenWakeLock();
-}
 
 void
 HTMLVideoElement::WakeLockRelease()
 {
-  UpdateScreenWakeLock();
   HTMLMediaElement::WakeLockRelease();
+  ReleaseVideoWakeLockIfExists();
 }
 
 void
-HTMLVideoElement::UpdateScreenWakeLock()
+HTMLVideoElement::UpdateWakeLock()
 {
-  if (mScreenWakeLock && mPaused) {
-    ErrorResult rv;
-    mScreenWakeLock->Unlock(rv);
-    rv.SuppressException();
-    mScreenWakeLock = nullptr;
-    return;
+  HTMLMediaElement::UpdateWakeLock();
+  if (!mPaused) {
+    CreateVideoWakeLockIfNeeded();
+  } else {
+    ReleaseVideoWakeLockIfExists();
   }
+}
 
-  if (!mScreenWakeLock && !mPaused && HasVideo()) {
+bool
+HTMLVideoElement::ShouldCreateVideoWakeLock() const
+{
+  // Make sure we only request wake lock for video with audio track, because
+  // video without audio track is often used as background image which seems no
+  // need to hold a wakelock.
+  return HasVideo() && HasAudio();
+}
+
+void
+HTMLVideoElement::CreateVideoWakeLockIfNeeded()
+{
+  if (!mScreenWakeLock && ShouldCreateVideoWakeLock()) {
     RefPtr<power::PowerManagerService> pmService =
       power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE_VOID(pmService);
@@ -330,6 +336,18 @@ HTMLVideoElement::UpdateScreenWakeLock()
     mScreenWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("video-playing"),
                                              OwnerDoc()->GetInnerWindow(),
                                              rv);
+  }
+}
+
+void
+HTMLVideoElement::ReleaseVideoWakeLockIfExists()
+{
+  if (mScreenWakeLock) {
+    ErrorResult rv;
+    mScreenWakeLock->Unlock(rv);
+    rv.SuppressException();
+    mScreenWakeLock = nullptr;
+    return;
   }
 }
 
