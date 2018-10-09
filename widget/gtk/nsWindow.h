@@ -125,6 +125,7 @@ public:
     virtual float      GetDPI() override;
     virtual double     GetDefaultScaleInternal() override;
     mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() override;
+    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScaleByScreen() override;
     virtual void       SetParent(nsIWidget* aNewParent) override;
     virtual void       SetModal(bool aModal) override;
     virtual bool       IsVisible() const override;
