@@ -2095,6 +2095,22 @@ PresShell::FireResizeEvent()
 }
 
 void
+nsIPresShell::NativeAnonymousContentRemoved(nsIContent* aAnonContent)
+{
+  if (aAnonContent == mCurrentEventContent) {
+    mCurrentEventContent = aAnonContent->GetFlattenedTreeParent();
+    mCurrentEventFrame = nullptr;
+  }
+
+  for (unsigned int i = 0; i < mCurrentEventContentStack.Length(); i++) {
+    if (aAnonContent == mCurrentEventContentStack.ElementAt(i)) {
+      mCurrentEventContentStack.ReplaceObjectAt(aAnonContent->GetFlattenedTreeParent(), i);
+      mCurrentEventFrameStack[i] = nullptr;
+    }
+  }
+}
+
+void
 PresShell::SetIgnoreFrameDestruction(bool aIgnore)
 {
   if (mDocument) {
