@@ -45,7 +45,7 @@ class TextOverflow final {
   TextOverflow(nsDisplayListBuilder* aBuilder,
                nsIFrame* aBlockFrame);
 
-  TextOverflow() = default;
+  TextOverflow() = delete;
   ~TextOverflow() = default;
   TextOverflow(TextOverflow&&) = default;
   TextOverflow(const TextOverflow&) = delete;

@@ -155,9 +155,18 @@ protected:
 
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void WakeLockCreate() override;
-  virtual void WakeLockRelease() override;
-  void UpdateScreenWakeLock();
+  /**
+   * We create video wakelock when the video is playing and release it when
+   * video pauses. Note, the actual platform wakelock will automatically be
+   * released when the page is in the background, so we don't need to check the
+   * video's visibility by ourselves.
+   */
+  void WakeLockRelease() override;
+  void UpdateWakeLock() override;
+
+  bool ShouldCreateVideoWakeLock() const;
+  void CreateVideoWakeLockIfNeeded();
+  void ReleaseVideoWakeLockIfExists();
 
   RefPtr<WakeLock> mScreenWakeLock;
 

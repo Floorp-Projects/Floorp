@@ -975,8 +975,10 @@ void StartServer(void* data)
   socket_option.value.reuse_addr = true;
   PR_SetSocketOption(listen_socket.get(), &socket_option);
 
+  // Explicitly listen on loopback to avoid users getting errors from their
+  // firewalls about ssltunnel needing permission.
   PRNetAddr server_addr;
-  PR_InitializeNetAddr(PR_IpAddrAny, si->listen_port, &server_addr);
+  PR_InitializeNetAddr(PR_IpAddrLoopback, si->listen_port, &server_addr);
   if (PR_Bind(listen_socket.get(), &server_addr) != PR_SUCCESS) {
     LOG_ERROR(("failed to bind socket on port %d: error %d\n", si->listen_port, PR_GetError()));
     SignalShutdown();

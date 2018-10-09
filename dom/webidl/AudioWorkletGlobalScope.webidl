@@ -9,6 +9,7 @@
 
 [Global=(Worklet,AudioWorklet),Exposed=AudioWorklet]
 interface AudioWorkletGlobalScope : WorkletGlobalScope {
+    [Throws]
     void registerProcessor (DOMString name, VoidFunction processorCtor);
     readonly  attribute   unsigned long long currentFrame;
     readonly  attribute   double currentTime;

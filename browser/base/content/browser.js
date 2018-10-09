@@ -3280,15 +3280,31 @@ function getWebNavigation() {
 }
 
 function BrowserReloadWithFlags(reloadFlags) {
-  let url = gBrowser.currentURI.spec;
-  if (gBrowser.updateBrowserRemotenessByURL(gBrowser.selectedBrowser, url)) {
-    // If the remoteness has changed, the new browser doesn't have any
-    // information of what was loaded before, so we need to load the previous
-    // URL again.
-    gBrowser.loadURI(url, {
-      flags: reloadFlags,
-      triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
-    });
+  let unchangedRemoteness = [];
+
+  for (let tab of gBrowser.selectedTabs) {
+    let browser = tab.linkedBrowser;
+    let url = browser.currentURI.spec;
+    if (gBrowser.updateBrowserRemotenessByURL(browser, url)) {
+      // If the remoteness has changed, the new browser doesn't have any
+      // information of what was loaded before, so we need to load the previous
+      // URL again.
+      if (tab.linkedPanel) {
+        loadBrowserURI(browser, url);
+      } else {
+        // Shift to fully loaded browser and make
+        // sure load handler is instantiated.
+        tab.addEventListener("SSTabRestoring",
+                             () => loadBrowserURI(browser, url),
+                             { once: true });
+        gBrowser._insertBrowser(tab);
+      }
+    } else {
+      unchangedRemoteness.push(tab);
+    }
+  }
+
+  if (unchangedRemoteness.length == 0) {
     return;
   }
 
@@ -3296,20 +3312,45 @@ function BrowserReloadWithFlags(reloadFlags) {
   // Unfortunately, we'll count the remoteness flip case as a
   // "newURL" load, since we're using loadURI, but hopefully
   // that's rare enough to not matter.
-  maybeRecordAbandonmentTelemetry(gBrowser.selectedTab, "reload");
+  for (let tab of unchangedRemoteness) {
+    maybeRecordAbandonmentTelemetry(tab, "reload");
+  }
 
-  // Reset temporary permissions on the current tab. This is done here
-  // because we only want to reset permissions on user reload.
-  SitePermissions.clearTemporaryPermissions(gBrowser.selectedBrowser);
+  // Reset temporary permissions on the remaining tabs to reload.
+  // This is done here because we only want to reset
+  // permissions on user reload.
+  for (let tab of unchangedRemoteness) {
+    SitePermissions.clearTemporaryPermissions(tab.linkedBrowser);
+  }
   PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
 
 
   let handlingUserInput = window.windowUtils.isHandlingUserInput;
 
-  gBrowser.selectedBrowser
-          .messageManager
-          .sendAsyncMessage("Browser:Reload",
-                            { flags: reloadFlags, handlingUserInput });
+  for (let tab of unchangedRemoteness) {
+    if (tab.linkedPanel) {
+      sendReloadMessage(tab);
+    } else {
+      // Shift to fully loaded browser and make
+      // sure load handler is instantiated.
+      tab.addEventListener("SSTabRestoring", () => sendReloadMessage(tab), { once: true });
+      gBrowser._insertBrowser(tab);
+    }
+  }
+
+  function loadBrowserURI(browser, url) {
+    browser.loadURI(url, {
+      flags: reloadFlags,
+      triggeringPrincipal: browser.contentPrincipal,
+    });
+  }
+
+  function sendReloadMessage(tab) {
+    tab.linkedBrowser
+         .messageManager
+         .sendAsyncMessage("Browser:Reload",
+                           { flags: reloadFlags, handlingUserInput });
+  }
 }
 
 function getSecurityInfo(securityInfoAsString) {

@@ -66,6 +66,10 @@ const {
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionCommon.getConsole);
 
+XPCOMUtils.defineLazyGetter(this, "isContentScriptProcess", () => {
+  return Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT ||
+      !Services.appinfo.browserTabsRemoteAutostart;
+});
 
 var DocumentManager;
 
@@ -378,6 +382,10 @@ class Script {
   }
 
   async injectInto(window) {
+    if (!isContentScriptProcess) {
+      return;
+    }
+
     let context = this.extension.getContext(window);
     try {
       if (this.runAt === "document_end") {

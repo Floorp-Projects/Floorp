@@ -7,7 +7,9 @@
 #ifndef mozilla_dom_AudioWorkletGlobalScope_h
 #define mozilla_dom_AudioWorkletGlobalScope_h
 
+#include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
+#include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 
@@ -15,11 +17,13 @@ class WorkletImpl;
 
 namespace dom {
 
-class VoidFunction;
 
 class AudioWorkletGlobalScope final : public WorkletGlobalScope
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope);
+
   explicit AudioWorkletGlobalScope(WorkletImpl* aImpl);
 
   bool
@@ -27,8 +31,9 @@ public:
                    JS::MutableHandle<JSObject*> aReflector) override;
 
   void
-  RegisterProcessor(const nsAString& aType,
-                    VoidFunction& aProcessorCtor);
+  RegisterProcessor(JSContext* aCx, const nsAString& aName,
+                    VoidFunction& aProcessorCtor,
+                    ErrorResult& aRv);
 
   uint64_t CurrentFrame() const;
 
@@ -42,6 +47,9 @@ private:
   uint64_t mCurrentFrame;
   double mCurrentTime;
   float mSampleRate;
+
+  typedef nsRefPtrHashtable<nsStringHashKey, VoidFunction> NodeNameToProcessorDefinitionMap;
+  NodeNameToProcessorDefinitionMap mNameToProcessorMap;
 };
 
 } // namespace dom
