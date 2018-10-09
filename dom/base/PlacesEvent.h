@@ -37,6 +37,8 @@ public:
   PlacesEventType Type() const { return mType; }
 
   virtual const PlacesVisit* AsPlacesVisit() const { return nullptr; }
+  virtual const PlacesBookmark* AsPlacesBookmark() const { return nullptr; }
+  virtual const PlacesBookmarkAddition* AsPlacesBookmarkAddition() const { return nullptr; }
 protected:
   virtual ~PlacesEvent() = default;
   PlacesEventType mType;

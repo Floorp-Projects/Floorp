@@ -279,24 +279,36 @@ var Bookmarks = Object.freeze({
 
       let item = await insertBookmark(insertInfo, parent);
 
-      // Notify onItemAdded to listeners.
-      let observers = PlacesUtils.bookmarks.getObservers();
       // We need the itemId to notify, though once the switch to guids is
       // complete we may stop using it.
-      let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
       let itemId = await PlacesUtils.promiseItemId(item.guid);
 
       // Pass tagging information for the observers to skip over these notifications when needed.
       let isTagging = parent._parentId == PlacesUtils.tagsFolderId;
       let isTagsFolder = parent._id == PlacesUtils.tagsFolderId;
-      notify(observers, "onItemAdded", [ itemId, parent._id, item.index,
-                                         item.type, uri, item.title,
-                                         PlacesUtils.toPRTime(item.dateAdded), item.guid,
-                                         item.parentGuid, item.source ],
-                                       { isTagging: isTagging || isTagsFolder });
+      let url = "";
+      if (item.type == Bookmarks.TYPE_BOOKMARK) {
+        url = item.url.href;
+      }
+
+      let notification = new PlacesBookmarkAddition({
+        id: itemId,
+        url,
+        itemType: item.type,
+        parentId: parent._id,
+        index: item.index,
+        title: item.title,
+        dateAdded: item.dateAdded,
+        guid: item.guid,
+        parentGuid: item.parentGuid,
+        source: item.source,
+        isTagging: isTagging || isTagsFolder,
+      });
+      PlacesObservers.notifyListeners([notification]);
 
       // If it's a tag, notify OnItemChanged to all bookmarks for this URL.
       if (isTagging) {
+        let observers = PlacesUtils.bookmarks.getObservers();
         for (let entry of (await fetchBookmarksByURL(item, true))) {
           notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
                                                PlacesUtils.toPRTime(entry.lastModified),
@@ -554,12 +566,11 @@ var Bookmarks = Object.freeze({
       // We need the itemIds to notify, though once the switch to guids is
       // complete we may stop using them.
       let itemIdMap = await PlacesUtils.promiseManyItemIds(insertInfos.map(info => info.guid));
-      // Notify onItemAdded to listeners.
-      let observers = PlacesUtils.bookmarks.getObservers();
+
+      let notifications = [];
       for (let i = 0; i < insertInfos.length; i++) {
         let item = insertInfos[i];
         let itemId = itemIdMap.get(item.guid);
-        let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
         // For sub-folders, we need to make sure their children have the correct parent ids.
         let parentId;
         if (item.parentGuid === treeParent.guid) {
@@ -572,11 +583,25 @@ var Bookmarks = Object.freeze({
           parentId = itemIdMap.get(item.parentGuid);
         }
 
-        notify(observers, "onItemAdded", [ itemId, parentId, item.index,
-                                           item.type, uri, item.title,
-                                           PlacesUtils.toPRTime(item.dateAdded), item.guid,
-                                           item.parentGuid, item.source ],
-                                         { isTagging: false });
+        let url = "";
+        if (item.type == Bookmarks.TYPE_BOOKMARK) {
+          url = (item.url instanceof URL) ? item.url.href : item.url;
+        }
+
+        notifications.push(new PlacesBookmarkAddition({
+          id: itemId,
+          url,
+          itemType: item.type,
+          parentId,
+          index: item.index,
+          title: item.title,
+          dateAdded: item.dateAdded,
+          guid: item.guid,
+          parentGuid: item.parentGuid,
+          source: item.source,
+          isTagging: false,
+        }));
+
         // Note, annotations for livemark data are deleted from insertInfo
         // within appendInsertionInfoForInfoArray, so we won't be duplicating
         // the insertions here.
@@ -593,6 +618,9 @@ var Bookmarks = Object.freeze({
 
         insertInfos[i] = Object.assign({}, item);
       }
+
+      PlacesObservers.notifyListeners(notifications);
+
       return insertInfos;
     })();
   },

@@ -1289,6 +1289,8 @@ BookmarksTracker.prototype = {
 
   onStart() {
     PlacesUtils.bookmarks.addObserver(this, true);
+    this._placesListener = new PlacesWeakCallbackWrapper(this.handlePlacesEvents.bind(this));
+    PlacesUtils.observers.addListener(["bookmark-added"], this._placesListener);
     Svc.Obs.add("bookmarks-restore-begin", this);
     Svc.Obs.add("bookmarks-restore-success", this);
     Svc.Obs.add("bookmarks-restore-failed", this);
@@ -1296,6 +1298,7 @@ BookmarksTracker.prototype = {
 
   onStop() {
     PlacesUtils.bookmarks.removeObserver(this);
+    PlacesUtils.observers.removeListener(["bookmark-added"], this._placesListener);
     Svc.Obs.remove("bookmarks-restore-begin", this);
     Svc.Obs.remove("bookmarks-restore-success", this);
     Svc.Obs.remove("bookmarks-restore-failed", this);
@@ -1363,15 +1366,15 @@ BookmarksTracker.prototype = {
     }
   },
 
-  onItemAdded: function BMT_onItemAdded(itemId, folder, index,
-                                        itemType, uri, title, dateAdded,
-                                        guid, parentGuid, source) {
-    if (IGNORED_SOURCES.includes(source)) {
-      return;
-    }
+  handlePlacesEvents(events) {
+    for (let event of events) {
+      if (IGNORED_SOURCES.includes(event.source)) {
+        continue;
+      }
 
-    this._log.trace("onItemAdded: " + itemId);
-    this._upScore();
+      this._log.trace("'bookmark-added': " + event.id);
+      this._upScore();
+    }
   },
 
   onItemRemoved(itemId, parentId, index, type, uri,
