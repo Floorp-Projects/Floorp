@@ -115,14 +115,15 @@ var gIdentityHandler = {
     delete this._identityPopupMainView;
     return this._identityPopupMainView = document.getElementById("identity-popup-mainView");
   },
-  get _identityPopupMainViewHeaderLabel() {
-    delete this._identityPopupMainViewHeaderLabel;
-    return this._identityPopupMainViewHeaderLabel =
-      document.querySelector("#identity-popup-mainView-panel-header-span");
+  get _identityPopupContentHosts() {
+    delete this._identityPopupContentHosts;
+    return this._identityPopupContentHosts =
+      [...document.querySelectorAll(".identity-popup-host")];
   },
-  get _identityPopupContentHost() {
-    delete this._identityPopupContentHost;
-    return this._identityPopupContentHost = document.getElementById("identity-popup-host");
+  get _identityPopupContentHostless() {
+    delete this._identityPopupContentHostless;
+    return this._identityPopupContentHostless =
+      [...document.querySelectorAll(".identity-popup-hostless")];
   },
   get _identityPopupContentOwner() {
     delete this._identityPopupContentOwner;
@@ -702,6 +703,7 @@ var gIdentityHandler = {
     let verifier = "";
     let host = "";
     let owner = "";
+    let hostless = false;
 
     try {
       host = this.getEffectiveHost();
@@ -709,13 +711,16 @@ var gIdentityHandler = {
       // Some URIs might have no hosts.
     }
 
-    if (this._pageExtensionPolicy) {
-      host = this._pageExtensionPolicy.name;
-    }
-
     // Fallback for special protocols.
     if (!host) {
       host = this._uri.specIgnoringRef;
+      // Special URIs without a host (eg, about:) should crop the end so
+      // the protocol can be seen.
+      hostless = true;
+    }
+
+    if (this._pageExtensionPolicy) {
+      host = this._pageExtensionPolicy.name;
     }
 
     // Fill in the CA name if we have a valid TLS certificate.
@@ -742,9 +747,14 @@ var gIdentityHandler = {
     }
 
     // Push the appropriate strings out to the UI.
-    this._identityPopupMainViewHeaderLabel.textContent =
-      gNavigatorBundle.getFormattedString("identity.headerWithHost", [host]);
-    this._identityPopupContentHost.textContent = host;
+    this._identityPopupContentHosts.forEach((el) => {
+      el.textContent = host;
+      el.hidden = hostless;
+    });
+    this._identityPopupContentHostless.forEach((el) => {
+      el.setAttribute("value", host);
+      el.hidden = !hostless;
+    });
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
