@@ -4552,6 +4552,57 @@ JS::AddPromiseReactions(JSContext* cx, JS::HandleObject promiseObj,
     return result;
 }
 
+JS_PUBLIC_API(JS::PromiseUserInputEventHandlingState)
+JS::GetPromiseUserInputEventHandlingState(JS::HandleObject promiseObj_)
+{
+    JSObject* promiseObj = CheckedUnwrap(promiseObj_);
+    if (!promiseObj || !promiseObj->is<PromiseObject>()) {
+        return JS::PromiseUserInputEventHandlingState::DontCare;
+    }
+
+    auto& promise = promiseObj->as<PromiseObject>();
+    if (!promise.requiresUserInteractionHandling()) {
+      return JS::PromiseUserInputEventHandlingState::DontCare;
+    }
+    if (promise.hadUserInteractionUponCreation()) {
+      return JS::PromiseUserInputEventHandlingState::HadUserInteractionAtCreation;
+    }
+    return JS::PromiseUserInputEventHandlingState::DidntHaveUserInteractionAtCreation;
+}
+
+JS_PUBLIC_API(bool)
+JS::SetPromiseUserInputEventHandlingState(JS::HandleObject promiseObj_,
+                                          JS::PromiseUserInputEventHandlingState state)
+{
+    JSObject* promiseObj = CheckedUnwrap(promiseObj_);
+    if (!promiseObj || !promiseObj->is<PromiseObject>()) {
+        return false;
+    }
+
+    auto& promise = promiseObj->as<PromiseObject>();
+    if (promise.state() != JS::PromiseState::Pending) {
+      return false;
+    }
+
+    switch (state) {
+      case JS::PromiseUserInputEventHandlingState::DontCare:
+        promise.setRequiresUserInteractionHandling(false);
+        break;
+      case JS::PromiseUserInputEventHandlingState::HadUserInteractionAtCreation:
+        promise.setRequiresUserInteractionHandling(true);
+        promise.setHadUserInteractionUponCreation(true);
+        break;
+      case JS::PromiseUserInputEventHandlingState::DidntHaveUserInteractionAtCreation:
+        promise.setRequiresUserInteractionHandling(true);
+        promise.setHadUserInteractionUponCreation(false);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid PromiseUserInputEventHandlingState enum value");
+        return false;
+    }
+    return true;
+}
+
 /**
  * Unforgeable version of Promise.all for internal use.
  *

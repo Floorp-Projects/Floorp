@@ -64,6 +64,24 @@ enum PromiseSlots {
 // This promise is the return value of an async function invocation.
 #define PROMISE_FLAG_ASYNC    0x10
 
+// This promise knows how to propagate information required to keep track of
+// whether an activation behavior was in progress when the original promise in
+// the promise chain was created.  This is a concept defined in the HTML spec:
+// https://html.spec.whatwg.org/multipage/interaction.html#triggered-by-user-activation
+// It is used by the embedder in order to request SpiderMonkey to keep track of
+// this information in a Promise, and also to propagate it to newly created
+// promises while processing Promise#then.
+#define PROMISE_FLAG_REQUIRES_USER_INTERACTION_HANDLING 0x20
+
+// This flag indicates whether an activation behavior was in progress when the
+// original promise in the promise chain was created.  Activation behavior is a
+// concept defined by the HTML spec:
+// https://html.spec.whatwg.org/multipage/interaction.html#triggered-by-user-activation
+// This flag is only effective when the
+// PROMISE_FLAG_REQUIRES_USER_INTERACTION_HANDLING is set.  Also, it is only
+// possible to set this flag on pending promises.
+#define PROMISE_FLAG_HAD_USER_INTERACTION_UPON_CREATION 0x40
+
 class AutoSetNewObjectMetadata;
 
 class PromiseObject : public NativeObject
@@ -136,6 +154,20 @@ class PromiseObject : public NativeObject
         MOZ_ASSERT(state() == JS::PromiseState::Rejected);
         return !(flags() & PROMISE_FLAG_HANDLED);
     }
+
+    bool requiresUserInteractionHandling() {
+        return (flags() & PROMISE_FLAG_REQUIRES_USER_INTERACTION_HANDLING);
+    }
+
+    void setRequiresUserInteractionHandling(bool state);
+
+    bool hadUserInteractionUponCreation() {
+        return (flags() & PROMISE_FLAG_HAD_USER_INTERACTION_UPON_CREATION);
+    }
+
+    void setHadUserInteractionUponCreation(bool state);
+
+    void copyUserInteractionFlagsFrom(PromiseObject& rhs);
 };
 
 /**
