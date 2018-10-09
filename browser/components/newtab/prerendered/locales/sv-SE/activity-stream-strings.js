@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populära ämnen:",
   "pocket_read_even_more": "Visa fler nyheter",
   "pocket_more_reccommendations": "Fler rekommendationer",
-  "pocket_learn_more": "Läs mer",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Hämta Pocket",
   "pocket_cta_text": "Spara de historier som du tycker är intressant i Pocket, och stimulera dina tankar med fascinerande läsmaterial.",
   "highlights_empty_state": "Börja surfa, och vi visar några av de bästa artiklarna, videoklippen och andra sidor du nyligen har besökt eller bokmärkt här.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Användarvillkor",
   "firstrun_privacy_notice": "Sekretesspolicy",
   "firstrun_continue_to_login": "Fortsätt",
-  "firstrun_skip_login": "Hoppa över det här steget"
+  "firstrun_skip_login": "Hoppa över det här steget",
+  "pocket_learn_more": "Läs mer"
 };

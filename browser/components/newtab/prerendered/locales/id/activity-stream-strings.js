@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Topik Populer:",
   "pocket_read_even_more": "Lihat Cerita Lainnya",
   "pocket_more_reccommendations": "Rekomendasi Lainnya",
-  "pocket_learn_more": "Pelajari Lebih Lanjut",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Dapatkan Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Mulai menjelajah, dan kami akan menampilkan beberapa artikel bagus, video, dan halaman lain yang baru saja Anda kunjungi atau termarkah di sini.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Ketentuan Layanan",
   "firstrun_privacy_notice": "Pernyataan Privasi",
   "firstrun_continue_to_login": "Lanjutkan",
-  "firstrun_skip_login": "Lewati langkah ini"
+  "firstrun_skip_login": "Lewati langkah ini",
+  "pocket_learn_more": "Pelajari Lebih Lanjut"
 };

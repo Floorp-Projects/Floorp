@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "लोकप्रिय विषय:",
   "pocket_read_even_more": "और कहानियाँ देखें",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "अधिक जानें",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ब्राउज़िंग प्रारंभ करें, और हम कुछ प्रमुख आलेख, विडियो, तथा अन्य पृष्ठों को प्रदर्शित करेंगे जिन्हें आपने हाल ही में देखा या पुस्तचिन्हित किया है.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "सेवा की शर्तें",
   "firstrun_privacy_notice": "गोपनीयता नीति",
   "firstrun_continue_to_login": "जारी रखें",
-  "firstrun_skip_login": "इस चरण को छोड़ दें"
+  "firstrun_skip_login": "इस चरण को छोड़ दें",
+  "pocket_learn_more": "अधिक जानें"
 };

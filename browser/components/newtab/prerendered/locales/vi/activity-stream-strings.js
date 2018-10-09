@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Các chủ đề phổ biến:",
   "pocket_read_even_more": "Xem nhiều câu chuyện hơn",
   "pocket_more_reccommendations": "Nhiều khuyến nghị hơn",
-  "pocket_learn_more": "Tìm hiểu thêm",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Bắt đầu duyệt web và chúng tôi sẽ hiển thị một số bài báo, video, và các trang khác mà bạn vừa truy cập hoặc đã đánh dấu tại đây.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Điều khoản dịch vụ",
   "firstrun_privacy_notice": "Thông báo bảo mật",
   "firstrun_continue_to_login": "Tiếp tục",
-  "firstrun_skip_login": "Bỏ qua bước này"
+  "firstrun_skip_login": "Bỏ qua bước này",
+  "pocket_learn_more": "Tìm hiểu thêm"
 };

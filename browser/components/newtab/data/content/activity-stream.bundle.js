@@ -3388,6 +3388,11 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
             ),
             react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
               "span",
+              { className: "click-target", onClick: this.onHeaderClick },
+              isCollapsible && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("span", { className: `collapsible-arrow icon ${collapsed ? "icon-arrowhead-forward-small" : "icon-arrowhead-down-small"}` })
+            ),
+            react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
+              "span",
               null,
               learnMore && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
                 "span",
@@ -3398,11 +3403,6 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
                   react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], { id: learnMore.link.id })
                 )
               )
-            ),
-            react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
-              "span",
-              { className: "click-target", onClick: this.onHeaderClick },
-              isCollapsible && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("span", { className: `collapsible-arrow icon ${collapsed ? "icon-arrowhead-forward-small" : "icon-arrowhead-down-small"}` })
             )
           )
         ),
@@ -3989,13 +3989,17 @@ class _PocketLoggedInCta extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Pu
       { className: "pocket-logged-in-cta" },
       react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
         "a",
-        { href: pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/" },
+        { className: "pocket-cta-button", href: pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/" },
         pocketCta.ctaButton ? pocketCta.ctaButton : react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "pocket_cta_button" })
       ),
       react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
-        "span",
-        { className: "cta-text" },
-        pocketCta.ctaText ? pocketCta.ctaText : react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "pocket_cta_text" })
+        "a",
+        { href: pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/" },
+        react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(
+          "span",
+          { className: "cta-text" },
+          pocketCta.ctaText ? pocketCta.ctaText : react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], { id: "pocket_cta_text" })
+        )
       )
     );
   }

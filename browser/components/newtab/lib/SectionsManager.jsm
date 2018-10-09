@@ -35,8 +35,8 @@ const BUILT_IN_SECTIONS = {
     learnMore: {
       link: {
         href: "https://getpocket.com/firefox/new_tab_learn_more",
-        id: "pocket_learn_more"
-      }
+        id: "pocket_how_it_works",
+      },
     },
     privacyNoticeURL: "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
     compactCards: false,

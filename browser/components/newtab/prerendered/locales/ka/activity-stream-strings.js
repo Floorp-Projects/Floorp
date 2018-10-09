@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "პოპულარული თემები:",
   "pocket_read_even_more": "მეტი სიახლის ნახვა",
   "pocket_more_reccommendations": "მეტი შემოთავაზებები",
-  "pocket_learn_more": "იხილეთ ვრცლად",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "გამოიყენეთ Pocket",
   "pocket_cta_text": "გადაინახეთ სასურველი შიგთავსი Pocket-ში და მიეცით გონებას საკვები, შთამბეჭდავი საკითხავი მასალის სახით.",
   "highlights_empty_state": "დაიწყეთ გვერდების დათვალიერება და აქ გამოჩნდება თქვენთვის სასურველი სტატიები, ვიდეოები და ბოლოს მონახულებული ან ჩანიშნული საიტები.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "გამოყენების პირობებსა",
   "firstrun_privacy_notice": "პირადი მონაცემების დაცვის განაცხადს",
   "firstrun_continue_to_login": "გაგრძელება",
-  "firstrun_skip_login": "გამოტოვება"
+  "firstrun_skip_login": "გამოტოვება",
+  "pocket_learn_more": "იხილეთ ვრცლად"
 };

@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Woblubowane temy:",
   "pocket_read_even_more": "Dalše zdźělenki sej wobhladać",
   "pocket_more_reccommendations": "Dalše doporučenja",
-  "pocket_learn_more": "Dalše informacije",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pocket wobstarać",
   "pocket_cta_text": "Składujće stawizny, kotrež so wam spodobuja, w Pocket a žiwće swój duch z fascinowacymi čitančkami.",
   "highlights_empty_state": "Započńće přehladować, a pokazamy někotre wulkotne nastawki, wideja a druhe strony, kotrež sće njedawno wopytał abo tu jako zapołožki składował.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Wužiwanske wuměnjenja",
   "firstrun_privacy_notice": "Zdźělenka priwatnosće",
   "firstrun_continue_to_login": "Pokročować",
-  "firstrun_skip_login": "Tutón krok přeskočić"
+  "firstrun_skip_login": "Tutón krok přeskočić",
+  "pocket_learn_more": "Dalše informacije"
 };

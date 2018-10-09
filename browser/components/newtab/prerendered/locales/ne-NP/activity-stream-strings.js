@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "लोकप्रिय शीर्षकहरू:",
   "pocket_read_even_more": "अरू कथा देखाउनुहोस्",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ब्राउज गर्न सुरू गर्नुहोस्, र हामी केहि उत्कृष्ट लेखहरू, भिडियोहरू, र अन्य पृष्ठहरू जुन तपाईंले भर्खरै भ्रमण गर्नुभएको वा पुस्तकचिनो राख्नुभएको छ यहाँ देखाउँछौ ।",

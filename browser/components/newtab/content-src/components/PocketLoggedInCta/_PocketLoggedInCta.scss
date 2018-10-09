@@ -5,8 +5,8 @@
   margin-inline-end: 20px;
   display: inline-block;
 
-  a {
-    background: $pocket-red;
+  .pocket-cta-button {
+    background: $blue-60;
     letter-spacing: -0.34px;
     color: $white;
     border-radius: 4px;
@@ -16,7 +16,7 @@
     // So I move it up by 1px to align with the rest of the cta text.
     margin-top: -1px;
     min-height: $min-button-height;
-    padding: 0 6px;
+    padding: 0 8px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -24,7 +24,12 @@
     margin-inline-end: 10px;
   }
 
-  a,
+  .cta-text {
+    font-weight: normal;
+    font-size: 13px;
+  }
+
+  .pocket-cta-button,
   .cta-text {
     vertical-align: top;
   }
