@@ -1,7 +1,4 @@
-// |jit-test| slow; allow-oom
-
-if (typeof oomTest !== 'function' || !wasmIsSupported())
-    quit();
+// |jit-test| slow; allow-oom; skip-if: !wasmIsSupported() || !('oomTest' in this)
 
 Object.getOwnPropertyNames(this);
 s = newGlobal();

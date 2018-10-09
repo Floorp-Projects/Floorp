@@ -1,6 +1,4 @@
-if (!wasmGcEnabled() || !wasmDebuggingIsSupported()) {
-    quit(0);
-}
+// |jit-test| skip-if: !wasmGcEnabled() || !wasmDebuggingIsSupported()
 
 (function() {
     let g = newGlobal();
