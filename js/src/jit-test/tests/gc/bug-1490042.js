@@ -1,7 +1,4 @@
-// |jit-test| --no-ion; --no-baseline
-
-if (!('gcstate' in this))
-    quit();
+// |jit-test| --no-ion; --no-baseline; skip-if: !('gcstate' in this)
 
 gczeal(0);
 

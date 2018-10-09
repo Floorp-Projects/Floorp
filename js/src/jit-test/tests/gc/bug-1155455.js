@@ -1,6 +1,4 @@
-// |jit-test| error: TypeError
-if (!("gczeal" in this))
-    quit();
+// |jit-test| error: TypeError; skip-if !('gczeal' in this)
 var g = newGlobal();
 gczeal(10, 2)
 var dbg = Debugger(g);

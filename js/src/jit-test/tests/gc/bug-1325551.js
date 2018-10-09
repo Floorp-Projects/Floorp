@@ -1,5 +1,4 @@
-if (!('oomTest' in this))
-    quit();
+// |jit-test| skip-if: !('oomTest' in this)
 
 let g = newGlobal();
 let dbg = new Debugger;

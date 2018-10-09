@@ -1,5 +1,4 @@
-if (!('oomTest' in this))
-    quit();
+// |jit-test| skip-if: !('oomTest' in this)
 
 function parseAsmJS() {
     eval(`function m(stdlib)
