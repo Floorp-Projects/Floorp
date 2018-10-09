@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ "use strict";
 
 var EXPORTED_SYMBOLS = ["TelemetryStopwatch"];
 
@@ -37,11 +38,13 @@ const NULL_KEY = {};
  * // Returns information about a simple Stopwatch.
  * let startTime = Timers.get("PLAYING_WITH_CUTE_ANIMALS", null, "CATS");
  */
-let Timers = {
+const Timers = {
   _timers: new Map(),
 
+  _inSeconds: new Set(),
+
   _validTypes(histogram, obj, key) {
-    let nonEmptyString = value => {
+    const nonEmptyString = value => {
       return typeof value === "string" && value !== "" && value.length > 0;
     };
     return nonEmptyString(histogram) &&
@@ -60,7 +63,7 @@ let Timers = {
     return this._timers.get(histogram).get(obj).get(key);
   },
 
-  put(histogram, obj, key, startTime) {
+  put(histogram, obj, key, startTime, {inSeconds} = {}) {
     key = key === null ? NULL_KEY : key;
     obj = obj || NULL_OBJECT;
 
@@ -68,8 +71,12 @@ let Timers = {
       return false;
     }
 
-    let objectMap = this._timers.get(histogram) || new WeakMap();
-    let keyedInfo = objectMap.get(obj) || new Map();
+    if (inSeconds) {
+      this._inSeconds.add(histogram);
+    }
+
+    const objectMap = this._timers.get(histogram) || new WeakMap();
+    const keyedInfo = objectMap.get(obj) || new Map();
     keyedInfo.set(key, startTime);
     objectMap.set(obj, keyedInfo);
     this._timers.set(histogram, objectMap);
@@ -92,8 +99,11 @@ let Timers = {
     if (!this.has(histogram, obj, key)) {
       return false;
     }
-    let objectMap = this._timers.get(histogram);
-    let keyedInfo = objectMap.get(obj);
+
+    this._inSeconds.delete(histogram);
+
+    const objectMap = this._timers.get(histogram);
+    const keyedInfo = objectMap.get(obj);
     if (keyedInfo.size > 1) {
       keyedInfo.delete(key);
       return true;
@@ -122,14 +132,17 @@ var TelemetryStopwatch = {
    *                        timers for the same histogram may be run
    *                        concurrently, as long as they are associated with
    *                        different objects.
+   * @param {Object}  [options.inSeconds=false] - Record elapsed time for this
+   *                  histogram in seconds instead of milliseconds. Defaults to
+   *                  false.
    *
    * @returns {Boolean} True if the timer was successfully started, false
    *                    otherwise. If a timer already exists, it can't be
    *                    started again, and the existing one will be cleared in
    *                    order to avoid measurements errors.
    */
-  start(aHistogram, aObj) {
-    return TelemetryStopwatchImpl.start(aHistogram, aObj, null);
+  start(aHistogram, aObj, {inSeconds} = {}) {
+    return TelemetryStopwatchImpl.start(aHistogram, aObj, null, {inSeconds});
   },
 
   /**
@@ -234,14 +247,17 @@ var TelemetryStopwatch = {
    *                        timers for the same histogram may be run
    *                        concurrently,as long as they are associated with
    *                        different objects.
+   * @param {Object}  [options.inSeconds=false] - Record elapsed time for this
+   *                  histogram in seconds instead of milliseconds. Defaults to
+   *                  false.
    *
    * @returns {Boolean} True if the timer was successfully started, false
    *                    otherwise. If a timer already exists, it can't be
    *                    started again, and the existing one will be cleared in
    *                    order to avoid measurements errors.
    */
-  startKeyed(aHistogram, aKey, aObj) {
-    return TelemetryStopwatchImpl.start(aHistogram, aObj, aKey);
+  startKeyed(aHistogram, aKey, aObj, {inSeconds} = {}) {
+    return TelemetryStopwatchImpl.start(aHistogram, aObj, aKey, {inSeconds});
   },
 
   /**
@@ -344,7 +360,7 @@ var TelemetryStopwatchImpl = {
     this._suppressErrors = suppress;
   },
 
-  start(histogram, object, key) {
+  start(histogram, object, key, {inSeconds} = {}) {
     if (Timers.has(histogram, object, key)) {
       Timers.delete(histogram, object, key);
       if (!this._suppressErrors) {
@@ -354,7 +370,7 @@ var TelemetryStopwatchImpl = {
       return false;
     }
 
-    return Timers.put(histogram, object, key, Cu.now());
+    return Timers.put(histogram, object, key, Cu.now(), {inSeconds});
   },
 
   running(histogram, object, key) {
@@ -366,7 +382,7 @@ var TelemetryStopwatchImpl = {
   },
 
   timeElapsed(histogram, object, key, aCanceledOkay) {
-    let startTime = Timers.get(histogram, object, key);
+    const startTime = Timers.get(histogram, object, key);
     if (startTime === null) {
       if (!aCanceledOkay && !this._suppressErrors) {
         Cu.reportError("TelemetryStopwatch: requesting elapsed time for " +
@@ -377,7 +393,10 @@ var TelemetryStopwatchImpl = {
     }
 
     try {
-      let delta = Cu.now() - startTime;
+      const delta = Cu.now() - startTime;
+      if (Timers._inSeconds.has(histogram)) {
+        return Math.round(delta / 1000);
+      }
       return Math.round(delta);
     } catch (e) {
       if (!this._suppressErrors) {
@@ -390,7 +409,7 @@ var TelemetryStopwatchImpl = {
   },
 
   finish(histogram, object, key, aCanceledOkay) {
-    let delta = this.timeElapsed(histogram, object, key, aCanceledOkay);
+    const delta = this.timeElapsed(histogram, object, key, aCanceledOkay);
     if (delta == -1) {
       return false;
     }
