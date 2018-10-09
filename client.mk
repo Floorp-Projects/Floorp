@@ -155,12 +155,6 @@ build::
 	+$(MOZ_MAKE) automation/build
 endif
 
-ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
-build::
-	# Terminate sccache server. This prints sccache stats.
-	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
-endif
-
 # This makefile doesn't support parallel execution. It does pass
 # MOZ_MAKE_FLAGS to sub-make processes, so they will correctly execute
 # in parallel.
