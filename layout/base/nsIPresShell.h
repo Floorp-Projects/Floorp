@@ -1626,6 +1626,8 @@ public:
 
   virtual void FireResizeEvent() = 0;
 
+  void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
+
 protected:
   /**
    * Refresh observer management.
