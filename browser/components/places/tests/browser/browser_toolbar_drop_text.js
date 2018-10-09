@@ -33,8 +33,10 @@ add_task(async function test() {
    */
   let simulateDragDrop = async function(aEffect, aMimeType) {
     const url = "http://www.mozilla.org/D1995729-A152-4e30-8329-469B01F30AA7";
-    let promiseItemAddedNotification = PlacesTestUtils.waitForNotification(
-      "onItemAdded", (itemId, parentId, index, type, uri, guid) => uri.spec == url);
+    let promiseItemAddedNotification =
+      PlacesTestUtils.waitForNotification("bookmark-added",
+                                          events => events.some(({url: eventUrl}) => eventUrl == url),
+                                          "places");
 
     // We use the toolbar as the drag source, as we just need almost any node
     // to simulate the drag. The actual data for the drop is passed via the
@@ -79,8 +81,10 @@ add_task(async function test() {
     else
       data = urls.join("\n");
 
-    let promiseItemAddedNotification = PlacesTestUtils.waitForNotification(
-      "onItemAdded", (itemId, parentId, index, type, uri, guid) => uri.spec == urls[2]);
+    let promiseItemAddedNotification =
+      PlacesTestUtils.waitForNotification("bookmark-added",
+                                          events => events.some(({url}) => url == urls[2]),
+                                          "places");
 
     // See notes for EventUtils.synthesizeDrop in simulateDragDrop().
     EventUtils.synthesizeDrop(toolbar,

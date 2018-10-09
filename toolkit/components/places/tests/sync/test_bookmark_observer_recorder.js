@@ -320,7 +320,7 @@ add_task(async function test_apply_then_revert() {
               oldValue: "bookmarkEEE1",
               source: PlacesUtils.bookmarks.SOURCES.SYNC },
   }, {
-    name: "onItemAdded",
+    name: "bookmark-added",
     params: { itemId: localItemIds.get("bookmarkFFFF"),
               parentId: PlacesUtils.bookmarksMenuFolderId, index: 1,
               type: PlacesUtils.bookmarks.TYPE_BOOKMARK,

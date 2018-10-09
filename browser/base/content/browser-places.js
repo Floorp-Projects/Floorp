@@ -1462,7 +1462,7 @@ var BookmarkingUI = {
            return;
          }
 
-         // It's possible that onItemAdded gets called before the async statement
+         // It's possible that "bookmark-added" gets called before the async statement
          // calls back.  For such an edge case, retain all unique entries from the
          // array.
          if (this._itemGuids.size > 0) {
