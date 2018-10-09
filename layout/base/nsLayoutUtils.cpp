@@ -6188,7 +6188,7 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
                                     const nsIFrame* aFrame,
                                     LinePosition* aResult)
 {
-  if (aFrame->StyleDisplay()->IsContainSize()) {
+  if (aFrame->StyleDisplay()->IsContainLayout()) {
     return false;
   }
   const nsBlockFrame* block = nsLayoutUtils::GetAsBlock(const_cast<nsIFrame*>(aFrame));
@@ -6289,7 +6289,7 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
 nsLayoutUtils::GetLastLineBaseline(WritingMode aWM,
                                    const nsIFrame* aFrame, nscoord* aResult)
 {
-  if (aFrame->StyleDisplay()->IsContainSize()) {
+  if (aFrame->StyleDisplay()->IsContainLayout()) {
     return false;
   }
 
