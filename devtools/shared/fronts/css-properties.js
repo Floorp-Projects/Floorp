@@ -233,9 +233,17 @@ const initCssProperties = async function(toolbox) {
     return cachedCssProperties.get(client);
   }
 
+  let db, front;
+
   // Get the list dynamically if the cssProperties actor exists.
-  const front = toolbox.target.getFront("cssProperties");
-  const db = await front.getCSSDatabase();
+  if (toolbox.target.hasActor("cssProperties")) {
+    front = toolbox.target.getFront("cssProperties");
+    db = await front.getCSSDatabase();
+  } else {
+    // The target does not support this actor, so require a static list of supported
+    // properties.
+    db = CSS_PROPERTIES_DB;
+  }
 
   const cssProperties = new CssProperties(normalizeCssData(db));
   cachedCssProperties.set(client, {cssProperties, front});
