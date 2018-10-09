@@ -69,7 +69,8 @@ AppleDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   RefPtr<MediaDataDecoder> decoder =
     new AppleVTDecoder(aParams.VideoConfig(),
                        aParams.mTaskQueue,
-                       aParams.mImageContainer);
+                       aParams.mImageContainer,
+                       aParams.mOptions);
   return decoder.forget();
 }
 
