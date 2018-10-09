@@ -6076,6 +6076,9 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
             if (newStub) {
                 JitSpew(JitSpew_BaselineIC, "  Attached UnaryArith CacheIR stub for %s", CodeName[op]);
             }
+
+        } else {
+            stub->noteUnoptimizableOperands();
         }
     }
 

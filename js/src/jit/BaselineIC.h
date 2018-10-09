@@ -3029,12 +3029,21 @@ class ICUnaryArith_Fallback : public ICFallbackStub
         extra_ = 0;
     }
 
+    static const uint16_t SAW_DOUBLE_RESULT_BIT = 0x1;
+    static const uint16_t UNOPTIMIZABLE_OPERANDS_BIT = 0x2;
+
   public:
-    bool sawDoubleResult() {
-        return extra_;
+    bool sawDoubleResult() const {
+        return extra_ & SAW_DOUBLE_RESULT_BIT;
     }
     void setSawDoubleResult() {
-        extra_ = 1;
+        extra_ |= SAW_DOUBLE_RESULT_BIT;
+    }
+    bool hadUnoptimizableOperands() const {
+        return extra_ & UNOPTIMIZABLE_OPERANDS_BIT;
+    }
+    void noteUnoptimizableOperands() {
+        extra_ |= UNOPTIMIZABLE_OPERANDS_BIT;
     }
 
     // Compiler for this stub kind.
