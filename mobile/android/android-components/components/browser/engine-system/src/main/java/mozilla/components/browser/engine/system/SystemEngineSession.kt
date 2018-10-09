@@ -205,8 +205,8 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                 // Explicitly set global defaults.
                 webSettings.setAppCacheEnabled(false)
                 webSettings.databaseEnabled = false
-                webSettings.saveFormData = false
-                webSettings.savePassword = false
+
+                setDeprecatedWebSettings(webSettings)
 
                 // We currently don't implement the callback to support turning this on.
                 webSettings.setGeolocationEnabled(false)
@@ -217,6 +217,15 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                 return initSettings(webView, webSettings)
             }
         } ?: throw IllegalStateException("System engine session not initialized")
+    }
+
+    @Suppress("DEPRECATION")
+    private fun setDeprecatedWebSettings(webSettings: WebSettings) {
+        // Since API26 an autofill platform feature is used instead of WebView's form data. This
+        // has no effect. Form data is supported on pre-26 API versions.
+        webSettings.saveFormData = false
+        // Deprecated in API18.
+        webSettings.savePassword = false
     }
 
     private fun initSettings(webView: WebView, s: WebSettings): Settings {
