@@ -61,7 +61,7 @@ function runTests() {
       ok(true, "Received processListChanged event");
       getProcess();
     });
-    client.mainRoot.listProcesses(response => {
+    client.mainRoot.listProcesses().then(response => {
       processCount = response.processes.length;
       // Create a remote iframe to spawn a new process
       createRemoteIframe();
