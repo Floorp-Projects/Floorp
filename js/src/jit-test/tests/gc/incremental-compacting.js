@@ -1,8 +1,7 @@
+// |jit-test| skip-if: !("gcstate" in this && "gczeal" in this)
+
 // Exercise incremental compacting GC
 // Run with MOZ_GCTIMER to see the timings
-
-if (!("gcstate" in this && "gczeal" in this))
-    quit();
 
 gczeal(0);
 

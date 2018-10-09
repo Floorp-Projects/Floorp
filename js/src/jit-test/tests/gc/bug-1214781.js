@@ -1,6 +1,4 @@
-// |jit-test| allow-unhandlable-oom
-if (!('oomTest' in this))
-    quit();
+// |jit-test| allow-unhandlable-oom; skip-if: !('oomTest' in this)
 
 try {
     gcparam("maxBytes", gcparam("gcBytes"));

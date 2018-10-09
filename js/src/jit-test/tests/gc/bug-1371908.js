@@ -1,5 +1,5 @@
-if (helperThreadCount() === 0)
-    quit();
+// |jit-test| skip-if: helperThreadCount() === 0
+
 gczeal(0);
 offThreadCompileScript("");
 startgc(0);
