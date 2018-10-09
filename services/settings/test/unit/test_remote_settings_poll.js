@@ -197,6 +197,37 @@ add_task(async function test_check_up_to_date() {
 add_task(clear_state);
 
 
+add_task(async function test_expected_timestamp() {
+  function withCacheBust(request, response) {
+    const entries = [{
+      id: "695c2407-de79-4408-91c7-70720dd59d78",
+      last_modified: 1100,
+      host: "localhost",
+      bucket: "main",
+      collection: "with-cache-busting",
+    }];
+    if (request.queryString == `_expected=${encodeURIComponent('"42"')}`) {
+      response.write(JSON.stringify({
+        data: entries,
+      }));
+    }
+    response.setHeader("ETag", '"1100"');
+    response.setHeader("Date", (new Date()).toUTCString());
+    response.setStatusLine(null, 200, "OK");
+  }
+  server.registerPathHandler(CHANGES_PATH, withCacheBust);
+
+  const c = RemoteSettings("with-cache-busting");
+  let maybeSyncCalled = false;
+  c.maybeSync = () => { maybeSyncCalled = true; };
+
+  await RemoteSettings.pollChanges({ expectedTimestamp: '"42"'});
+
+  Assert.ok(maybeSyncCalled, "maybeSync was called");
+});
+add_task(clear_state);
+
+
 add_task(async function test_success_with_partial_list() {
   function partialList(request, response) {
     const entries = [{
