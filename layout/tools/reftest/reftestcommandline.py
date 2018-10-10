@@ -313,8 +313,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
 
         if options.reftestExtensionPath is None:
             if self.build_obj is not None:
-                reftestExtensionPath = os.path.join(self.build_obj.topobjdir, "_tests",
-                                                    "reftest", "reftest")
+                reftestExtensionPath = os.path.join(self.build_obj.distdir,
+                                                    "xpi-stage", "reftest")
             else:
                 reftestExtensionPath = os.path.join(here, "reftest")
             options.reftestExtensionPath = os.path.normpath(reftestExtensionPath)
@@ -322,8 +322,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
         if (options.specialPowersExtensionPath is None and
             options.suite in ["crashtest", "jstestbrowser"]):
             if self.build_obj is not None:
-                specialPowersExtensionPath = os.path.join(self.build_obj.topobjdir, "_tests",
-                                                          "reftest", "specialpowers")
+                specialPowersExtensionPath = os.path.join(self.build_obj.distdir,
+                                                          "xpi-stage", "specialpowers")
             else:
                 specialPowersExtensionPath = os.path.join(here, "specialpowers")
             options.specialPowersExtensionPath = os.path.normpath(specialPowersExtensionPath)
