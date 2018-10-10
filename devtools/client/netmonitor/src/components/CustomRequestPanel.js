@@ -50,6 +50,7 @@ class CustomRequestPanel extends Component {
 
   componentDidMount() {
     const { request, connector } = this.props;
+    this.initialRequestMethod = request.method;
     fetchNetworkUpdatePacket(connector.requestData, request, [
       "requestHeaders",
       "responseHeaders",
@@ -109,7 +110,11 @@ class CustomRequestPanel extends Component {
         };
         break;
       case "custom-method-value":
-        data = { method: val.trim() };
+        // If val is empty when leaving the "method" field, set the method to
+        // its original value
+        data = (evt.type === "blur" && val === "") ?
+          { method: this.initialRequestMethod } :
+          { method: val.trim() };
         break;
       case "custom-postdata-value":
         data = {
@@ -212,7 +217,9 @@ class CustomRequestPanel extends Component {
             id: "custom-method-value",
             onChange: (evt) =>
               this.updateCustomRequestFields(evt, request, updateRequest),
-            value: method || "GET",
+            onBlur: (evt) =>
+              this.updateCustomRequestFields(evt, request, updateRequest),
+            value: method,
           }),
           input({
             className: "custom-url-value",
