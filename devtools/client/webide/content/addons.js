@@ -8,6 +8,8 @@ const Services = require("Services");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 const {gDevTools} = require("devtools/client/framework/devtools");
+const {ADBScanner} = require("devtools/shared/adb/adb-scanner");
+const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 
 loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
 loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
@@ -32,6 +34,11 @@ function BuildUI() {
     progress.removeAttribute("value");
     li.setAttribute("status", adbAddon.status);
     status.textContent = Strings.GetStringFromName("addons_status_" + adbAddon.status);
+    if (adbAddon.status == ADB_ADDON_STATES.INSTALLED) {
+      RuntimeScanners.add(ADBScanner);
+    } else if (adbAddon.status == ADB_ADDON_STATES.UNINSTALLED) {
+      RuntimeScanners.remove(ADBScanner);
+    }
   }
 
   function onAddonFailure(arg) {
