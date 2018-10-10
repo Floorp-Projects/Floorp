@@ -1,5 +1,4 @@
-if (!this.SharedArrayBuffer)
-    quit();
+// |jit-test| skip-if: !this.SharedArrayBuffer
 
 // Note that as of 2014-09-18 it is not correct to construct a SharedArrayBuffer without
 // a length acceptable to asm.js: at-least 4K AND (power-of-two OR multiple-of-16M).

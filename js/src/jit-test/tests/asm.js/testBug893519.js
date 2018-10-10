@@ -1,9 +1,4 @@
-// |jit-test| error:Error
-
-if (!isAsmJSCompilationAvailable()) {
-    throw new Error('this test expects an error to be thrown, here it is');
-    quit();
-}
+// |jit-test| error:Error; skip-if: !isAsmJSCompilationAvailable()
 
 var g = newGlobal();
 evaluate("function h() { function f() { 'use asm'; function g() { return 42 } return g } return f }", { global:g});

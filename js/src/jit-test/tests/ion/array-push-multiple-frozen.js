@@ -1,4 +1,4 @@
-// |jit-test| --no-threads
+// |jit-test| --no-threads; skip-if: !('oomAtAllocation' in this)
 
 // This test case check's Ion ability to recover from an allocation failure in
 // the inlining of Array.prototype.push, when given multiple arguments. Note,
@@ -20,8 +20,6 @@ function canIoncompile() {
   }
 }
 
-if (!("oomAtAllocation" in this))
-  quit();
 if (canIoncompile() != true)
   quit();
 if ("gczeal" in this)

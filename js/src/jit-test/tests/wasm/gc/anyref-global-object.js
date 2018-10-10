@@ -1,6 +1,4 @@
-if (!wasmGcEnabled() || typeof WebAssembly.Global !== 'function') {
-    quit(0);
-}
+// |jit-test| skip-if: !wasmGcEnabled() || typeof WebAssembly.Global !== 'function'
 
 // Dummy object.
 function Baguette(calories) {

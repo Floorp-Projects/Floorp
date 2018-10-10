@@ -1,8 +1,7 @@
+// |jit-test| skip-if: helperThreadCount() === 0
+
 // Test off-thread parsing correctly fixes up prototypes of special objects when
 // merging back to the target compartment.
-
-if (helperThreadCount() === 0)
-    quit();
 
 function execOffThread(source)
 {
