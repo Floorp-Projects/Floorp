@@ -219,15 +219,13 @@ private:
  * RequestDiscard() are made to the imgRequestProxy and ImageTracker as
  * appropriate, according to the mode flags passed in to the constructor.
  *
- * The constructor receives a css::ImageValue to represent the url()
+ * The constructor receives a css::URLValue to represent the url()
  * information, which is held on to for the comparisons done in
  * DefinitelyEquals().
  */
 class nsStyleImageRequest
 {
 public:
-  typedef mozilla::css::URLValueData URLValueData;
-
   // Flags describing whether the imgRequestProxy must be tracked in the
   // ImageTracker, whether LockImage/UnlockImage calls will be made
   // when obtaining and releasing the imgRequestProxy, and whether
@@ -251,7 +249,7 @@ public:
 
   // Can be called from any thread, but Resolve() must be called later
   // on the main thread before get() can be used.
-  nsStyleImageRequest(Mode aModeFlags, mozilla::css::ImageValue* aImageValue);
+  nsStyleImageRequest(Mode aModeFlags, mozilla::css::URLValue* aImageValue);
 
   bool Resolve(nsPresContext*, const nsStyleImageRequest* aOldImageRequest);
   bool IsResolved() const { return mResolved; }
@@ -265,11 +263,11 @@ public:
     return const_cast<nsStyleImageRequest*>(this)->get();
   }
 
-  // Returns whether the ImageValue objects in the two nsStyleImageRequests
-  // return true from URLValueData::DefinitelyEqualURIs.
+  // Returns whether the URLValue objects in the two nsStyleImageRequests
+  // return true from URLValue::DefinitelyEqualURIs.
   bool DefinitelyEquals(const nsStyleImageRequest& aOther) const;
 
-  mozilla::css::ImageValue* GetImageValue() const { return mImageValue; }
+  mozilla::css::URLValue* GetImageValue() const { return mImageValue; }
 
   already_AddRefed<nsIURI> GetImageURI() const;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleImageRequest);
@@ -281,7 +279,7 @@ private:
   void MaybeTrackAndLock();
 
   RefPtr<imgRequestProxy> mRequestProxy;
-  RefPtr<mozilla::css::ImageValue> mImageValue;
+  RefPtr<mozilla::css::URLValue> mImageValue;
   RefPtr<mozilla::dom::ImageTracker> mImageTracker;
 
   // Cache DocGroup for dispatching events in the destructor.
@@ -335,8 +333,7 @@ private:
  */
 struct nsStyleImage
 {
-  typedef mozilla::css::URLValue     URLValue;
-  typedef mozilla::css::URLValueData URLValueData;
+  typedef mozilla::css::URLValue URLValue;
 
   nsStyleImage();
   ~nsStyleImage();
@@ -390,7 +387,7 @@ struct nsStyleImage
 
   already_AddRefed<nsIURI> GetImageURI() const;
 
-  URLValueData* GetURLValue() const;
+  URLValue* GetURLValue() const;
 
   /**
    * Compute the actual crop rect in pixels, using the source image bounds.
