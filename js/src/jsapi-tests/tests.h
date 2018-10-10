@@ -228,6 +228,8 @@ class JSAPITest
         message += msg;
 
         if (JS_IsExceptionPending(cx)) {
+            message += " -- ";
+
             js::gc::AutoSuppressGC gcoff(cx);
             JS::RootedValue v(cx);
             JS_GetPendingException(cx, &v);
