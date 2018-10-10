@@ -1,6 +1,4 @@
-if (!('oomTest' in this)) {
-    quit();
-}
+// |jit-test| skip-if: !('oomTest' in this)
 
 function foo() {}
 function foooooooooooooooooooooooooooooooo() {}

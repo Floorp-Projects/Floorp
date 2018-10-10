@@ -11,9 +11,6 @@
 //               all platforms
 // Bug 1141121 - immediate operand in atomic operations on x86/x64
 
-if (!(this.Atomics && this.SharedArrayBuffer))
-    quit(0);
-
 var sum = 0;
 
 function f(ia, k) {

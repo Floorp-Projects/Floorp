@@ -15,6 +15,7 @@
 #include "common/MemoryBuffer.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/SizedMRUCache.h"
+#include "libANGLE/renderer/ProgramImpl.h"
 
 namespace gl
 {
@@ -61,12 +62,12 @@ class MemoryProgramCache final : angle::NonCopyable
                           angle::MemoryBuffer *binaryOut);
 
     // Loads program state according to the specified binary blob.
-    static LinkResult Deserialize(const Context *context,
-                                  const Program *program,
-                                  ProgramState *state,
-                                  const uint8_t *binary,
-                                  size_t length,
-                                  InfoLog &infoLog);
+    static std::unique_ptr<rx::LinkEvent> Deserialize(const Context *context,
+                                                      const Program *program,
+                                                      ProgramState *state,
+                                                      const uint8_t *binary,
+                                                      size_t length,
+                                                      InfoLog &infoLog);
 
     static void ComputeHash(const Context *context, const Program *program, ProgramHash *hashOut);
 

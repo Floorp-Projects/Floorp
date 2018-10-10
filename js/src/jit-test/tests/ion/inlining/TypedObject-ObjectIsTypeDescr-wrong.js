@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !this.TypedObject
+
 /* -*- tab-width: 8; indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,9 +19,6 @@
  * subsequent block (all of this is at the mercy of the way the code
  * is currently written).
  */
-
-if (!this.TypedObject)
-  quit();
 
 var T = TypedObject;
 var ST = new T.StructType({x:T.int32});

@@ -1,7 +1,6 @@
-// Basic structured cloning tests (specific to SpiderMonkey shell)
+// |jit-test| skip-if: !wasmThreadsSupported()
 
-if (!wasmThreadsSupported())
-    quit(0);
+// Basic structured cloning tests (specific to SpiderMonkey shell)
 
 // Should *not* be possible to serialize and deserialize memories that are not
 // shared, whether we transfer them or not.

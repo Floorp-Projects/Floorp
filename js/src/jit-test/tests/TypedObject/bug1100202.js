@@ -1,6 +1,3 @@
-if (typeof TypedObject === "undefined")
-  quit();
-
 (function() {
     Object
 })()

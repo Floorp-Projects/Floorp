@@ -1,7 +1,4 @@
-// |jit-test| allow-oom
-if (typeof oomAfterAllocations != "function")
-  quit();
-
+// |jit-test| allow-oom; skip-if: typeof oomAfterAllocations !== 'function'
 lfcode = new Array();
 oomAfterAllocations(100);
 loadFile(file);

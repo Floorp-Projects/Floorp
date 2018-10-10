@@ -1,9 +1,9 @@
+// |jit-test| skip-if: helperThreadCount() === 0
+
 // Debugger.allowUnobservedAsmJS with off-thread parsing.
 
 load(libdir + "asm.js");
 
-if (helperThreadCount() == 0)
-    quit();
 
 var g = newGlobal();
 g.parent = this;

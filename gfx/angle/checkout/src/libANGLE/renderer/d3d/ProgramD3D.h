@@ -174,13 +174,14 @@ class ProgramD3D : public ProgramImpl
 
     bool usesPointSize() const { return mUsesPointSize; }
     bool usesPointSpriteEmulation() const;
-    bool usesGeometryShader(gl::PrimitiveMode drawMode) const;
+	bool usesGeometryShader(const gl::Context *context,
+		                    gl::PrimitiveMode drawMode) const;
     bool usesGeometryShaderForPointSpriteEmulation() const;
     bool usesInstancedPointSpriteEmulation() const;
 
-    gl::LinkResult load(const gl::Context *context,
-                        gl::InfoLog &infoLog,
-                        gl::BinaryInputStream *stream) override;
+    std::unique_ptr<LinkEvent> load(const gl::Context *context,
+                                    gl::InfoLog &infoLog,
+                                    gl::BinaryInputStream *stream) override;
     void save(const gl::Context *context, gl::BinaryOutputStream *stream) override;
     void setBinaryRetrievableHint(bool retrievable) override;
     void setSeparable(bool separable) override;
@@ -195,6 +196,18 @@ class ProgramD3D : public ProgramImpl
     angle::Result getPixelExecutableForCachedOutputLayout(const gl::Context *context,
                                                           ShaderExecutableD3D **outExectuable,
                                                           gl::InfoLog *infoLog);
+    angle::Result loadVertexExecutable(const gl::Context *context,
+                                       ShaderExecutableD3D **outExecutable,
+                                       const unsigned char *shaderFunction,
+                                       unsigned int shaderSize,
+                                       bool separateAttribs,
+                                       gl::InputLayout& layout);
+    angle::Result loadPixelExecutable(const gl::Context *context,
+                                      ShaderExecutableD3D **outExecutable,
+                                      const unsigned char *shaderFunction,
+                                      unsigned int shaderSize,
+                                      bool separateAttribs,
+                                      std::vector<GLenum>& layout);
     angle::Result getComputeExecutable(ShaderExecutableD3D **outExecutable);
     std::unique_ptr<LinkEvent> link(const gl::Context *context,
                                     const gl::ProgramLinkedResources &resources,
@@ -284,7 +297,8 @@ class ProgramD3D : public ProgramImpl
 
     // Checks if we need to recompile certain shaders.
     bool hasVertexExecutableForCachedInputLayout();
-    bool hasGeometryExecutableForPrimitiveType(gl::PrimitiveMode drawMode);
+    bool hasGeometryExecutableForPrimitiveType(const gl::Context *context,
+                                               gl::PrimitiveMode drawMode);
     bool hasPixelExecutableForCachedOutputLayout();
 
     bool anyShaderUniformsDirty() const { return mShaderUniformsDirty.any(); }
@@ -309,6 +323,9 @@ class ProgramD3D : public ProgramImpl
     class GetVertexExecutableTask;
     class GetPixelExecutableTask;
     class GetGeometryExecutableTask;
+    class GetLoadExecutableTask;
+    class GetLoadVertexExecutableTask;
+    class GetLoadPixelExecutableTask;
     class GraphicsProgramLinkEvent;
 
     class VertexExecutable

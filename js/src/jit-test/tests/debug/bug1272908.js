@@ -1,7 +1,4 @@
-// |jit-test| slow
-
-if (!('oomTest' in this))
-    quit();
+// |jit-test| slow; skip-if: !('oomTest' in this)
 
 // Adapted from randomly chosen test: js/src/jit-test/tests/modules/bug-1233915.js
 g = newGlobal();

@@ -1,5 +1,4 @@
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
+// |jit-test| skip-if: !this.hasOwnProperty("TypedObject")
 
 var T = TypedObject;
 var ST = new T.StructType({x:T.int32});

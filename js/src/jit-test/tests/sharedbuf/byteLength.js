@@ -1,7 +1,6 @@
-// SharedArrayBuffer.prototype.byteLength
+// |jit-test| skip-if: !this.SharedArrayBuffer
 
-if (!this.SharedArrayBuffer)
-    quit(0);
+// SharedArrayBuffer.prototype.byteLength
 
 load(libdir + "asserts.js");
 

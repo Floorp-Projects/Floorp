@@ -1,5 +1,4 @@
-if (!WasmHelpers.isSingleStepProfilingEnabled)
-    quit();
+// |jit-test| skip-if: !WasmHelpers.isSingleStepPropfilingEnabled
 
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;

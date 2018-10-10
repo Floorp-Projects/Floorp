@@ -1,7 +1,4 @@
-// |jit-test| slow
-
-if (helperThreadCount() == 0)
-  quit(0);
+// |jit-test| slow; skip-if: helperThreadCount() === 0
 
 var s = '';
 for (var i = 0; i < 70000; i++)

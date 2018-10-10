@@ -1,7 +1,5 @@
 // Test that the onNewPromise hook gets called when promises are allocated in
 // the scope of debuggee globals.
-if (!('Promise' in this))
-    quit(0);
 
 var g = newGlobal();
 var dbg = new Debugger();

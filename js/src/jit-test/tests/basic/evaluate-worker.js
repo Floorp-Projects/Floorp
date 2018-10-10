@@ -1,7 +1,4 @@
-// |jit-test| slow
-
-if (typeof evalInWorker == "undefined")
-    quit();
+// |jit-test| slow; skip-if: typeof evalInWorker === 'undefined'
 
 gcslice(11);
 evalInWorker("print('helo world');");

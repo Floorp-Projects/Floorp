@@ -1,9 +1,7 @@
-// |jit-test| exitstatus: 6;
+// |jit-test| exitstatus: 6; skip-if: !wasmIsSupported()
 
 // Don't include wasm.js in timeout tests: when wasm isn't supported, it will
 // quit(0) which will cause the test to fail.
-if (!wasmIsSupported())
-    quit(6);
 
 load(libdir + "asm.js");
 

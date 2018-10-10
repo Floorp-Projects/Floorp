@@ -1,6 +1,3 @@
-if (typeof parseRegExp === 'undefined')
-    quit();
-
 load(libdir + "regexp_parse.js");
 
 test_mix("^", no_multiline_flags,

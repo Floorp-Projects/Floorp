@@ -1,12 +1,11 @@
+// |jit-test| skip-if: helperThreadCount() === 0
+
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
 // Test off-thread parsing.
 
 load(libdir + 'asserts.js');
-
-if (helperThreadCount() === 0)
-  quit(0);
 
 offThreadCompileScript('Math.sin(Math.PI/2)');
 assertEq(runOffThreadScript(), 1);

@@ -1,6 +1,3 @@
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 var { ArrayType, StructType, uint32 } = TypedObject;
 var L = 1024;
 var Matrix = uint32.array(L, 2);

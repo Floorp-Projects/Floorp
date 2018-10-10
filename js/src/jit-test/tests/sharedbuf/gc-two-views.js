@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !this.SharedArrayBuffer
+
 // Test tracing of two views of a SharedArrayBuffer. Uses a different path.
 
 function f() {
@@ -7,5 +9,4 @@ function f() {
     gc();
 }
 
-if (this.SharedArrayBuffer)
-    f();
+f();

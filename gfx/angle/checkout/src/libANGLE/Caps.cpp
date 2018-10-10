@@ -1318,6 +1318,7 @@ DisplayExtensions::DisplayExtensions()
       robustResourceInitialization(false),
       iosurfaceClientBuffer(false),
       createContextExtensionsEnabled(false),
+      provokingVertexDontCare(false),
       presentationTime(false)
 {
 }
@@ -1365,6 +1366,7 @@ std::vector<std::string> DisplayExtensions::getStrings() const
     InsertExtensionString("EGL_ANGLE_robust_resource_initialization",            robustResourceInitialization,       &extensionStrings);
     InsertExtensionString("EGL_ANGLE_iosurface_client_buffer",                   iosurfaceClientBuffer,              &extensionStrings);
     InsertExtensionString("EGL_ANGLE_create_context_extensions_enabled",         createContextExtensionsEnabled,     &extensionStrings);
+    InsertExtensionString("EGL_MOZ_create_context_provoking_vertex_dont_care",   provokingVertexDontCare,            &extensionStrings);
     InsertExtensionString("EGL_ANDROID_presentation_time",                       presentationTime,                   &extensionStrings);
     // TODO(jmadill): Enable this when complete.
     //InsertExtensionString("KHR_create_context_no_error",                       createContextNoError,               &extensionStrings);

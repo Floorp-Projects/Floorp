@@ -1,6 +1,4 @@
-// |jit-test| allow-overrecursed
-if (helperThreadCount() == 0)
-    quit();
+// |jit-test| allow-overrecursed; skip-if: helperThreadCount() === 0
 
 evalInWorker(`
   function f() {

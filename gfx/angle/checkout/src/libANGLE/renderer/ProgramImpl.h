@@ -66,9 +66,9 @@ class ProgramImpl : angle::NonCopyable
     virtual ~ProgramImpl() {}
     virtual gl::Error destroy(const gl::Context *context) { return gl::NoError(); }
 
-    virtual gl::LinkResult load(const gl::Context *context,
-                                gl::InfoLog &infoLog,
-                                gl::BinaryInputStream *stream) = 0;
+    virtual std::unique_ptr<LinkEvent> load(const gl::Context *context,
+                                            gl::InfoLog &infoLog,
+                                            gl::BinaryInputStream *stream) = 0;
     virtual void save(const gl::Context *context, gl::BinaryOutputStream *stream) = 0;
     virtual void setBinaryRetrievableHint(bool retrievable) = 0;
     virtual void setSeparable(bool separable)               = 0;

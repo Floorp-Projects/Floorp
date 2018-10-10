@@ -4,7 +4,7 @@ try {
     enableSingleStepProfiling();
     disableSingleStepProfiling();
 } catch (e) {
-    // Early quit on plateforms not supporting single step profiling.
+    // Early quit on platforms not supporting single step profiling.
     quit();
 }
 

@@ -1,12 +1,9 @@
-// |jit-test|
+// |jit-test| skip-if: !isAsmJSCompilationAvailable()
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
-if (!isAsmJSCompilationAvailable())
-    quit();
-
 // This test runs a lot of code and is very slow with --ion-eager. Use a minimum
-// Ion warmup trigger of 2 to avoid timeouts.
+// Ion warmup trigger of 5 to avoid timeouts.
 if (getJitCompilerOptions()["ion.warmup.trigger"] < 5)
     setJitCompilerOption("ion.warmup.trigger", 5);
 

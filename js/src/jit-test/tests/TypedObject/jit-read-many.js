@@ -3,9 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 // Test a single function (`bar`) being used with arrays that are all
 // of known length, but not the same length.
 
