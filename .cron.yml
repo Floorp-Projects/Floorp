@@ -119,6 +119,9 @@ jobs:
               mozilla-release:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
+              mozilla-esr60:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
 
     - name: periodic-update
       job:
