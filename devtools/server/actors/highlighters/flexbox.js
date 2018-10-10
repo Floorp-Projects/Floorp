@@ -23,6 +23,7 @@ const {
 } = require("./utils/markup");
 const {
   getAdjustedQuads,
+  getCurrentZoom,
   getDisplayPixelRatio,
   getWindowDimensions,
   setIgnoreLayoutChanges,
@@ -88,6 +89,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       x: 0,
       y: 0
     };
+
+    this._ignoreZoom = true;
 
     // Calling `updateCanvasPosition` anyway since the highlighter could be initialized
     // on a page that has scrolled already.
@@ -248,9 +251,11 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     // Create the inversed diagonal lines pattern
     // for the rendering the justify content gaps.
     const canvas = createNode(this.win, { nodeType: "canvas" });
-    const width = canvas.width = FLEXBOX_JUSTIFY_CONTENT_PATTERN_WIDTH * devicePixelRatio;
-    const height = canvas.height = FLEXBOX_JUSTIFY_CONTENT_PATTERN_HEIGHT *
-      devicePixelRatio;
+    const zoom = getCurrentZoom(this.win);
+    const width = canvas.width =
+      FLEXBOX_JUSTIFY_CONTENT_PATTERN_WIDTH * devicePixelRatio * zoom;
+    const height = canvas.height =
+      FLEXBOX_JUSTIFY_CONTENT_PATTERN_HEIGHT * devicePixelRatio * zoom;
 
     const ctx = canvas.getContext("2d");
     ctx.save();
@@ -383,8 +388,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const { devicePixelRatio } = this.win;
     const lineWidth = getDisplayPixelRatio(this.win);
     const offset = (lineWidth / 2) % 1;
-    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const zoom = getCurrentZoom(this.win);
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio * zoom);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio * zoom);
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
@@ -483,8 +489,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const { devicePixelRatio } = this.win;
     const lineWidth = getDisplayPixelRatio(this.win) * 2;
     const offset = (lineWidth / 2) % 1;
-    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const zoom = getCurrentZoom(this.win);
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio * zoom);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio * zoom);
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
@@ -507,8 +514,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const { devicePixelRatio } = this.win;
     const lineWidth = getDisplayPixelRatio(this.win);
     const offset = (lineWidth / 2) % 1;
-    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const zoom = getCurrentZoom(this.win);
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio * zoom);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio * zoom);
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
@@ -540,8 +548,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const { devicePixelRatio } = this.win;
     const lineWidth = getDisplayPixelRatio(this.win);
     const offset = (lineWidth / 2) % 1;
-    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const zoom = getCurrentZoom(this.win);
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio * zoom);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio * zoom);
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
@@ -560,10 +569,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
         // Adjust the flex item bounds relative to the current quads.
         const { bounds: flexItemBounds } = quads[0];
-        const left = Math.round(flexItemBounds.left - bounds.left);
-        const top = Math.round(flexItemBounds.top - bounds.top);
-        const right = Math.round(flexItemBounds.right - bounds.left);
-        const bottom = Math.round(flexItemBounds.bottom - bounds.top);
+        const left = Math.round(flexItemBounds.left / zoom - bounds.left);
+        const top = Math.round(flexItemBounds.top / zoom - bounds.top);
+        const right = Math.round(flexItemBounds.right / zoom - bounds.left);
+        const bottom = Math.round(flexItemBounds.bottom / zoom - bounds.top);
 
         clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
         drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
@@ -582,8 +591,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const { devicePixelRatio } = this.win;
     const lineWidth = getDisplayPixelRatio(this.win);
     const offset = (lineWidth / 2) % 1;
-    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
-    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    const zoom = getCurrentZoom(this.win);
+    const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio * zoom);
+    const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio * zoom);
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
@@ -640,6 +650,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
+    const zoom = getCurrentZoom(this.win);
     const { bounds } = this.currentQuads.content[0];
     const isColumn = this.flexDirection.startsWith("column");
 
@@ -655,10 +666,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
         // Adjust the flex item bounds relative to the current quads.
         const { bounds: flexItemBounds } = quads[0];
-        const left = Math.round(flexItemBounds.left - bounds.left);
-        const top = Math.round(flexItemBounds.top - bounds.top);
-        const right = Math.round(flexItemBounds.right - bounds.left);
-        const bottom = Math.round(flexItemBounds.bottom - bounds.top);
+        const left = Math.round(flexItemBounds.left / zoom - bounds.left);
+        const top = Math.round(flexItemBounds.top / zoom - bounds.top);
+        const right = Math.round(flexItemBounds.right / zoom - bounds.left);
+        const bottom = Math.round(flexItemBounds.bottom / zoom - bounds.top);
 
         if (isColumn) {
           this.drawJustifyContent(crossStart, mainStart, crossStart + crossSize, top);
