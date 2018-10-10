@@ -6,6 +6,8 @@
 
 #include "TelemetryIPCAccumulator.h"
 
+#include "core/TelemetryHistogram.h"
+#include "core/TelemetryScalar.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -16,8 +18,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
-#include "core/TelemetryHistogram.h"
-#include "core/TelemetryScalar.h"
 
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;

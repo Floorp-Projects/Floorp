@@ -495,7 +495,7 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
     parent->mBrokerParent =
       FunctionBrokerParent::Create(std::move(brokerParentEnd));
     if (parent->mBrokerParent) {
-      parent->SendInitPluginFunctionBroker(std::move(brokerChildEnd));
+      Unused << parent->SendInitPluginFunctionBroker(std::move(brokerChildEnd));
     }
 #endif
     return parent.forget();

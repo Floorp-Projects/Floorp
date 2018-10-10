@@ -5,14 +5,11 @@
 
 #include <cerrno>
 #include <cstring>
-#include <string>
-
 #include <dlfcn.h>
+#include <string>
 #include <unistd.h>
-
-#include "third_party/curl/curl.h"
-
 #include "mozilla/Unused.h"
+#include "third_party/curl/curl.h"
 
 namespace PingSender {
 

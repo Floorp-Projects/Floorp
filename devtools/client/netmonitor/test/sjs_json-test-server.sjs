@@ -21,5 +21,8 @@ function handleRequest(request, response) {
     case "nogrip":
       response.write("{\"obj\": {\"type\": \"string\" }}");
       break;
+    case "empty":
+      response.write("{}");
+      break;
   }
 }

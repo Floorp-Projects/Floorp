@@ -6,11 +6,11 @@
 #ifndef KeyedStackCapturer_h__
 #define KeyedStackCapturer_h__
 
-#include "mozilla/Telemetry.h"
-#include "nsString.h"
-#include "nsClassHashtable.h"
-#include "mozilla/Mutex.h"
 #include "CombinedStacks.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/Telemetry.h"
+#include "nsClassHashtable.h"
+#include "nsString.h"
 
 struct JSContext;
 

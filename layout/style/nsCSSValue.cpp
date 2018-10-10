@@ -885,39 +885,17 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
   return n;
 }
 
-css::URLValueData::URLValueData(already_AddRefed<nsIURI> aURI,
-                                ServoRawOffsetArc<RustString> aString,
-                                already_AddRefed<URLExtraData> aExtraData,
-                                CORSMode aCORSMode)
-  : mURI(std::move(aURI))
-  , mExtraData(std::move(aExtraData))
-  , mURIResolved(true)
-  , mString(aString)
-  , mCORSMode(aCORSMode)
+css::URLValue::~URLValue()
 {
-  MOZ_ASSERT(mExtraData);
-  MOZ_ASSERT(mExtraData->GetPrincipal());
-}
+  if (mLoadID != 0) {
+    ImageLoader::DeregisterCSSImageFromAllLoaders(this);
+  }
 
-css::URLValueData::URLValueData(ServoRawOffsetArc<RustString> aString,
-                                already_AddRefed<URLExtraData> aExtraData,
-                                CORSMode aCORSMode)
-  : mExtraData(std::move(aExtraData))
-  , mURIResolved(false)
-  , mString(aString)
-  , mCORSMode(aCORSMode)
-{
-  MOZ_ASSERT(mExtraData);
-  MOZ_ASSERT(mExtraData->GetPrincipal());
-}
-
-css::URLValueData::~URLValueData()
-{
   Servo_ReleaseArcStringData(&mString);
 }
 
 bool
-css::URLValueData::Equals(const URLValueData& aOther) const
+css::URLValue::Equals(const URLValue& aOther) const
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -932,13 +910,12 @@ css::URLValueData::Equals(const URLValueData& aOther) const
           (self->BaseURI() == other->BaseURI() ||
            (NS_SUCCEEDED(self->BaseURI()->Equals(other->BaseURI(), &eq)) &&
             eq)) &&
-          (self->GetPrincipal() == other->GetPrincipal() ||
-           self->GetPrincipal()->Equals(other->GetPrincipal())) &&
+          self->Principal()->Equals(other->Principal()) &&
           IsLocalRef() == aOther.IsLocalRef();
 }
 
 bool
-css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
+css::URLValue::DefinitelyEqualURIs(const URLValue& aOther) const
 {
   if (mExtraData->BaseURI() != aOther.mExtraData->BaseURI()) {
     return false;
@@ -947,15 +924,15 @@ css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
 }
 
 bool
-css::URLValueData::DefinitelyEqualURIsAndPrincipal(
-    const URLValueData& aOther) const
+css::URLValue::DefinitelyEqualURIsAndPrincipal(
+    const URLValue& aOther) const
 {
-  return mExtraData->GetPrincipal() == aOther.mExtraData->GetPrincipal() &&
+  return mExtraData->Principal() == aOther.mExtraData->Principal() &&
          DefinitelyEqualURIs(aOther);
 }
 
 nsDependentCSubstring
-css::URLValueData::GetString() const
+css::URLValue::GetString() const
 {
   const uint8_t* chars;
   uint32_t len;
@@ -964,7 +941,7 @@ css::URLValueData::GetString() const
 }
 
 nsIURI*
-css::URLValueData::GetURI() const
+css::URLValue::GetURI() const
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -982,7 +959,7 @@ css::URLValueData::GetURI() const
 }
 
 bool
-css::URLValueData::IsLocalRef() const
+css::URLValue::IsLocalRef() const
 {
   if (mIsLocalRef.isNothing()) {
     // IsLocalRefURL is O(N), use it only when IsLocalRef is called.
@@ -992,7 +969,7 @@ css::URLValueData::IsLocalRef() const
 }
 
 bool
-css::URLValueData::HasRef() const
+css::URLValue::HasRef() const
 {
   if (IsLocalRef()) {
     return true;
@@ -1008,7 +985,7 @@ css::URLValueData::HasRef() const
 }
 
 already_AddRefed<nsIURI>
-css::URLValueData::ResolveLocalRef(nsIURI* aURI) const
+css::URLValue::ResolveLocalRef(nsIURI* aURI) const
 {
   nsCOMPtr<nsIURI> result = GetURI();
 
@@ -1030,14 +1007,14 @@ css::URLValueData::ResolveLocalRef(nsIURI* aURI) const
 }
 
 already_AddRefed<nsIURI>
-css::URLValueData::ResolveLocalRef(nsIContent* aContent) const
+css::URLValue::ResolveLocalRef(nsIContent* aContent) const
 {
   nsCOMPtr<nsIURI> url = aContent->GetBaseURI();
   return ResolveLocalRef(url);
 }
 
 void
-css::URLValueData::GetSourceString(nsString& aRef) const
+css::URLValue::GetSourceString(nsString& aRef) const
 {
   nsIURI* uri = GetURI();
   if (!uri) {
@@ -1048,7 +1025,7 @@ css::URLValueData::GetSourceString(nsString& aRef) const
   nsCString cref;
   if (IsLocalRef()) {
     // XXXheycam It's possible we can just return mString in this case, since
-    // it should be the "#fragment" string the URLValueData was created with.
+    // it should be the "#fragment" string the URLValue was created with.
     uri->GetRef(cref);
     cref.Insert('#', 0);
   } else {
@@ -1063,61 +1040,25 @@ css::URLValueData::GetSourceString(nsString& aRef) const
   aRef = NS_ConvertUTF8toUTF16(cref);
 }
 
-bool
-css::URLValueData::EqualsExceptRef(nsIURI* aURI) const
-{
-  nsIURI* uri = GetURI();
-  if (!uri) {
-    return false;
-  }
-
-  bool ret = false;
-  uri->EqualsExceptRef(aURI, &ret);
-  return ret;
-}
-
 size_t
-css::URLValueData::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - mURI
   // - mString
   // - mExtraData
-  return 0;
-}
 
-size_t
-css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
   // Only measure it if it's unshared, to avoid double-counting.
   size_t n = 0;
   if (mRefCnt <= 1) {
     n += aMallocSizeOf(this);
-    n += URLValueData::SizeOfExcludingThis(aMallocSizeOf);
   }
   return n;
 }
 
-css::ImageValue::ImageValue(nsIURI* aURI,
-                            ServoRawOffsetArc<RustString> aString,
-                            already_AddRefed<URLExtraData> aExtraData,
-                            nsIDocument* aDocument,
-                            CORSMode aCORSMode)
-  : URLValueData(do_AddRef(aURI), aString, std::move(aExtraData), aCORSMode)
-{
-  LoadImage(aDocument);
-}
-
-css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
-                            already_AddRefed<URLExtraData> aExtraData,
-                            CORSMode aCORSMode)
-  : URLValueData(aString, std::move(aExtraData), aCORSMode)
-{
-}
-
 imgRequestProxy*
-css::ImageValue::LoadImage(nsIDocument* aDocument)
+css::URLValue::LoadImage(nsIDocument* aDocument)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1137,7 +1078,7 @@ css::ImageValue::LoadImage(nsIDocument* aDocument)
 
   // Kick off the load in the loading document.
   ImageLoader::LoadImage(GetURI(),
-                         mExtraData->GetPrincipal(),
+                         mExtraData->Principal(),
                          mExtraData->GetReferrer(),
                          mExtraData->GetReferrerPolicy(),
                          loadingDoc,
@@ -1146,21 +1087,6 @@ css::ImageValue::LoadImage(nsIDocument* aDocument)
 
   // Register the image in the document that's using it.
   return aDocument->StyleImageLoader()->RegisterCSSImage(this);
-}
-
-css::ImageValue::~ImageValue()
-{
-  if (mLoadID != 0) {
-    ImageLoader::DeregisterCSSImageFromAllLoaders(this);
-  }
-}
-
-size_t
-css::ImageValue::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = aMallocSizeOf(this);
-  n += css::URLValueData::SizeOfExcludingThis(aMallocSizeOf);
-  return n;
 }
 
 size_t

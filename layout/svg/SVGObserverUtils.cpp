@@ -27,7 +27,7 @@
 using namespace mozilla::dom;
 
 static already_AddRefed<URLAndReferrerInfo>
-ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
+ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValue* aURL)
 {
   MOZ_ASSERT(aFrame);
 
@@ -800,7 +800,7 @@ SVGMaskObserverList::SVGMaskObserverList(nsIFrame* aFrame)
   const nsStyleSVGReset *svgReset = aFrame->StyleSVGReset();
 
   for (uint32_t i = 0; i < svgReset->mMask.mImageCount; i++) {
-    css::URLValueData* data = svgReset->mMask.mLayers[i].mImage.GetURLValue();
+    css::URLValue* data = svgReset->mMask.mLayers[i].mImage.GetURLValue();
     RefPtr<URLAndReferrerInfo> maskUri = ResolveURLUsingLocalRef(aFrame, data);
 
     bool hasRef = false;
