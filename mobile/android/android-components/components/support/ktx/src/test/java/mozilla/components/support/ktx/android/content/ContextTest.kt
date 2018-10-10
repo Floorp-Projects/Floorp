@@ -4,13 +4,16 @@
 
 package mozilla.components.support.ktx.android.content
 
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.ActivityManager
 import android.content.Context
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows
 
 @RunWith(RobolectricTestRunner::class)
 class ContextTest {
@@ -43,5 +46,21 @@ class ContextTest {
         }.lowMemory
 
         assertEquals(extensionFunctionResult, normalMethodResult)
+    }
+
+    @Test
+    fun `isPermissionGranted() returns same service as checkSelfPermission()`() {
+        val context = RuntimeEnvironment.application
+        val application = Shadows.shadowOf(context)
+
+        assertEquals(
+                context.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
+                context.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
+
+        application.grantPermissions(WRITE_EXTERNAL_STORAGE)
+
+        assertEquals(
+                context.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
+                context.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
     }
 }

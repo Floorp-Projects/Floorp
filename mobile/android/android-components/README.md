@@ -141,6 +141,8 @@ _API contracts and abstraction layers for browser components._
 
 _Combined components to implement feature-specific use cases._
 
+* 🔴 [**Downloads**](components/feature/downloads/README.md) - A component to perform downloads using the [Android downloads manager](https://developer.android.com/reference/android/app/DownloadManager).
+
 * 🔴 [**Intent**](components/feature/intent/README.md) - A component that provides intent processing functionality by combining various other feature modules.
 
 * 🔴 [**Search**](components/feature/search/README.md) - A component that connects an (concept) engine implementation with the browser search module.

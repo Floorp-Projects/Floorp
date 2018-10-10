@@ -133,6 +133,8 @@ dependencies {
     implementation project(':ui-autocomplete')
 
     implementation project(':support-utils')
+    implementation project(':feature-downloads')
+    implementation project(':support-ktx')
 
     servoImplementation project(':browser-engine-servo')
 

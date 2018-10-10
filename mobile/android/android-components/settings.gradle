@@ -34,6 +34,9 @@ project(':feature-tabs').projectDir = new File(rootDir, 'components/feature/tabs
 include ':feature-toolbar'
 project(':feature-toolbar').projectDir = new File(rootDir, 'components/feature/toolbar')
 
+include ':feature-downloads'
+project(':feature-downloads').projectDir = new File(rootDir, 'components/feature/downloads')
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Browser components
 ////////////////////////////////////////////////////////////////////////////////////////////////////

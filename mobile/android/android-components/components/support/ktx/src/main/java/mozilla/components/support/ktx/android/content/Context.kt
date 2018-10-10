@@ -6,6 +6,8 @@ package mozilla.components.support.ktx.android.content
 
 import android.app.ActivityManager
 import android.content.Context
+import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.support.v4.content.ContextCompat.checkSelfPermission
 
 /**
  * The (visible) version name of the application, as specified by the <manifest> tag's versionName
@@ -32,4 +34,12 @@ fun Context.isOSOnLowMemory(): Boolean {
     return ActivityManager.MemoryInfo().also { memoryInfo ->
         activityManager.getMemoryInfo(memoryInfo)
     }.lowMemory
+}
+
+/**
+ * Returns if a list of permission have been granted, if all the permission have been granted
+ * returns true otherwise false.
+ */
+fun Context.isPermissionGranted(vararg permission: String): Boolean {
+    return permission.all { checkSelfPermission(this, it) == PERMISSION_GRANTED }
 }

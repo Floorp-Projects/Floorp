@@ -47,7 +47,8 @@ abstract class SelectionAwareSessionObserver(
     /**
      * Stops the observer.
      */
-    fun stop() {
+    @CallSuper
+    open fun stop() {
         sessionManager.unregister(this)
         activeSession?.unregister(this)
     }

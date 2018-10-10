@@ -153,6 +153,11 @@
           name: feature-intent
           old_artifact_id: feature-intent
           new_group_id: org.mozilla.components
+        public/build/feature.downloads.maven.zip:
+          path: /build/android-components/components/feature/downloads/build/target.maven.zip
+          name: feature-downloads
+          old_artifact_id: feature-downloads
+          new_group_id: org.mozilla.components
         public/build/ui.colors.maven.zip:
           path: /build/android-components/components/ui/colors/build/target.maven.zip
           name: ui-colors

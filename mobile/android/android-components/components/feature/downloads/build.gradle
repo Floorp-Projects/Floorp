@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply from: '../../../publish.gradle'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion Config.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+
+    implementation project(':browser-session')
+    implementation project(':support-ktx')
+    implementation project(':support-utils')
+    implementation Deps.kotlin_stdlib
+
+    testImplementation Deps.testing_junit
+    testImplementation Deps.testing_robolectric
+    testImplementation Deps.testing_mockito
+    testImplementation project(':support-test')
+    testImplementation project(':concept-engine')
+}
+
+archivesBaseName = "feature-downloads"
+
+ext.configurePublish(
+        'org.mozilla.components',
+        'feature-downloads',
+        'Feature implementation for apps that want to use Android downloads manager.')

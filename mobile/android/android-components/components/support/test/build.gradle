@@ -32,6 +32,9 @@ dependencies {
 
     implementation Deps.testing_junit
     implementation Deps.testing_mockito
+    implementation Deps.testing_robolectric
+    testImplementation Deps.support_compat
+    testImplementation project(':support-ktx')
 }
 
 archivesBaseName = "test"
