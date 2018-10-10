@@ -737,6 +737,7 @@ var Policies = {
                 method:      newEngine.Method,
                 suggestURL:  newEngine.SuggestURLTemplate,
                 extensionID: "set-via-policy",
+                queryCharset: "UTF-8",
               };
               try {
                 Services.search.addEngineWithDetails(newEngine.Name,
