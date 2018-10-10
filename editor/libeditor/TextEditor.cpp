@@ -1936,7 +1936,8 @@ TextEditor::ComputeValueInternal(const nsAString& aFormatType,
 }
 
 nsresult
-TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType)
+TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
+                                     bool aDispatchPasteEvent)
 {
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
@@ -1948,6 +1949,8 @@ TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  // XXX Why don't we dispatch ePaste event here?
 
   // Get the nsITransferable interface for getting the data from the clipboard
   nsCOMPtr<nsITransferable> trans;

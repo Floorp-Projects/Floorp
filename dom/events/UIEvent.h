@@ -88,8 +88,10 @@ public:
     return 0;
   }
 
+  MOZ_CAN_RUN_SCRIPT
   already_AddRefed<nsINode> GetRangeParent();
 
+  MOZ_CAN_RUN_SCRIPT
   int32_t RangeOffset() const;
 
 protected:

@@ -48,7 +48,10 @@ public:
   void Disconnect();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
+
+  // nsIDOMEventListener
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  NS_IMETHOD HandleEvent(dom::Event *aEvent) override;
 
   void SpellCheckIfNeeded();
 
@@ -66,17 +69,19 @@ protected:
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);
   nsresult HandleStartComposition(WidgetCompositionEvent* aCompositionEvent);
   void HandleEndComposition(WidgetCompositionEvent* aCompositionEvent);
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent);
   virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseClick(dom::MouseEvent* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT
+  virtual nsresult MouseClick(WidgetMouseEvent* aMouseClickEvent);
   nsresult Focus(InternalFocusEvent* aFocusEvent);
   nsresult Blur(InternalFocusEvent* aBlurEvent);
-  nsresult DragEnter(dom::DragEvent* aDragEvent);
-  nsresult DragOver(dom::DragEvent* aDragEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult DragEnter(dom::DragEvent* aDragEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult DragOver(dom::DragEvent* aDragEvent);
   nsresult DragExit(dom::DragEvent* aDragEvent);
-  nsresult Drop(dom::DragEvent* aDragEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult Drop(dom::DragEvent* aDragEvent);
 
-  bool CanDrop(dom::DragEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT bool CanDrop(dom::DragEvent* aEvent);
   void CleanupDragDropCaret();
   nsIPresShell* GetPresShell() const;
   nsPresContext* GetPresContext() const;
@@ -86,7 +91,6 @@ protected:
   bool EditorHasFocus();
   bool IsFileControlTextBox();
   bool ShouldHandleNativeKeyBindings(WidgetKeyboardEvent* aKeyboardEvent);
-  nsresult HandleMiddleClickPaste(dom::MouseEvent* aMouseEvent);
 
   /**
    * DetachedFromEditor() returns true if editor was detached.
