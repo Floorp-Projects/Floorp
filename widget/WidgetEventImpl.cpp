@@ -651,6 +651,16 @@ WidgetInputEvent::AccelModifier()
 }
 
 /******************************************************************************
+ * mozilla::WidgetMouseEvent (MouseEvents.h)
+ ******************************************************************************/
+
+/* static */ bool
+WidgetMouseEvent::IsMiddleClickPasteEnabled()
+{
+  return Preferences::GetBool("middlemouse.paste", false);
+}
+
+/******************************************************************************
  * mozilla::WidgetWheelEvent (MouseEvents.h)
  ******************************************************************************/
 
