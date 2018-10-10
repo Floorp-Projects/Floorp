@@ -73,6 +73,8 @@ public:
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(aWindowId, mSize.width, mSize.height, supportLowPriorityTransactions,
                        compositor->gl(),
+                       aRenderThread.ProgramCache() ? aRenderThread.ProgramCache()->Raw() : nullptr,
+                       aRenderThread.Shaders() ? aRenderThread.Shaders()->RawShaders() : nullptr,
                        aRenderThread.ThreadPool().Raw(),
                        &WebRenderMallocSizeOf,
                        mDocHandle, &wrRenderer,
@@ -91,9 +93,6 @@ public:
     if (wrRenderer && renderer) {
       wr::WrExternalImageHandler handler = renderer->GetExternalImageHandler();
       wr_renderer_set_external_image_handler(wrRenderer, &handler);
-      if (gfx::gfxVars::UseWebRenderProgramBinary()) {
-        wr_renderer_update_program_cache(wrRenderer, aRenderThread.ProgramCache()->Raw());
-      }
     }
 
     if (renderer) {
@@ -207,6 +206,12 @@ void
 TransactionBuilder::GenerateFrame()
 {
   wr_transaction_generate_frame(mTxn);
+}
+
+void
+TransactionBuilder::InvalidateRenderedFrame()
+{
+  wr_transaction_invalidate_rendered_frame(mTxn);
 }
 
 void

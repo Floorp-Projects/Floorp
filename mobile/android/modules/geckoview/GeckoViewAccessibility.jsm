@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class GeckoViewAccessibility extends GeckoViewModule {
   onInit() {
     EventDispatcher.instance.registerListener((aEvent, aData, aCallback) => {
-      if (aData.touchEnabled) {
+      if (aData.enabled) {
         AccessFu.enable();
       } else {
         AccessFu.disable();

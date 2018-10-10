@@ -59,7 +59,8 @@ struct PackedAttribute
     uint8_t attribType;
     uint8_t semanticIndex;
     uint8_t vertexFormatType;
-    uint8_t divisor;
+    uint8_t dummyPadding;
+    uint32_t divisor;
 };
 
 }  // anonymous namespace
@@ -81,17 +82,18 @@ void PackedAttributeLayout::addAttributeData(GLenum glType,
     packedAttrib.attribType       = static_cast<uint8_t>(attribType);
     packedAttrib.semanticIndex    = static_cast<uint8_t>(semanticIndex);
     packedAttrib.vertexFormatType = static_cast<uint8_t>(vertexFormatType);
-    packedAttrib.divisor          = static_cast<uint8_t>(divisor);
+    packedAttrib.dummyPadding     = 0u;
+    packedAttrib.divisor          = static_cast<uint32_t>(divisor);
 
     ASSERT(static_cast<gl::AttributeType>(packedAttrib.attribType) == attribType);
     ASSERT(static_cast<UINT>(packedAttrib.semanticIndex) == semanticIndex);
     ASSERT(static_cast<gl::VertexFormatType>(packedAttrib.vertexFormatType) == vertexFormatType);
     ASSERT(static_cast<unsigned int>(packedAttrib.divisor) == divisor);
 
-    static_assert(sizeof(uint32_t) == sizeof(PackedAttribute),
-                  "PackedAttributes must be 32-bits exactly.");
+    static_assert(sizeof(uint64_t) == sizeof(PackedAttribute),
+                  "PackedAttributes must be 64-bits exactly.");
 
-    attributeData[numAttributes++] = gl::bitCast<uint32_t>(packedAttrib);
+    attributeData[numAttributes++] = gl::bitCast<uint64_t>(packedAttrib);
 }
 
 bool PackedAttributeLayout::operator==(const PackedAttributeLayout &other) const

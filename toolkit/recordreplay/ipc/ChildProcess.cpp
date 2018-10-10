@@ -23,9 +23,6 @@ static size_t gNumChannels;
 // Whether children might be debugged and should not be treated as hung.
 static bool gChildrenAreDebugging;
 
-// Whether we are allowed to restart crashed/hung child processes.
-static bool gRestartEnabled;
-
 /* static */ void
 ChildProcessInfo::SetIntroductionMessage(IntroductionMessage* aMessage)
 {
@@ -41,7 +38,6 @@ ChildProcessInfo::ChildProcessInfo(UniquePtr<ChildRole> aRole,
   , mPausedMessage(nullptr)
   , mLastCheckpoint(CheckpointId::Invalid)
   , mNumRecoveredMessages(0)
-  , mNumRestarts(0)
   , mRole(std::move(aRole))
   , mPauseNeeded(false)
 {
@@ -51,7 +47,6 @@ ChildProcessInfo::ChildProcessInfo(UniquePtr<ChildRole> aRole,
   if (!gFirst) {
     gFirst = true;
     gChildrenAreDebugging = !!getenv("WAIT_AT_START");
-    gRestartEnabled = !getenv("NO_RESTARTS");
   }
 
   mRole->SetProcess(this);
@@ -206,7 +201,7 @@ ChildProcessInfo::OnIncomingMessage(size_t aChannelId, const Message& aMsg)
   // Always handle fatal errors in the same way.
   if (aMsg.mType == MessageType::FatalError) {
     const FatalErrorMessage& nmsg = static_cast<const FatalErrorMessage&>(aMsg);
-    AttemptRestart(nmsg.Error());
+    OnCrash(nmsg.Error());
     return;
   }
 
@@ -523,68 +518,17 @@ ChildProcessInfo::LaunchSubprocess(const Maybe<RecordingProcessData>& aRecording
   SendMessage(*gIntroductionMessage);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Recovering Crashed / Hung Children
-///////////////////////////////////////////////////////////////////////////////
-
-// The number of times we will restart a process before giving up.
-static const size_t MaxRestarts = 5;
-
-bool
-ChildProcessInfo::CanRestart()
-{
-  return gRestartEnabled
-      && !IsRecording()
-      && !IsPaused()
-      && !IsRecovering()
-      && mNumRestarts < MaxRestarts;
-}
-
 void
-ChildProcessInfo::AttemptRestart(const char* aWhy)
+ChildProcessInfo::OnCrash(const char* aWhy)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  PrintSpew("Warning: Child process died [%d]: %s\n", (int) GetId(), aWhy);
-
-  if (!CanRestart()) {
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RecordReplayError,
-                                       nsAutoCString(aWhy));
-    Shutdown();
-  }
-
-  mNumRestarts++;
-
-  dom::ContentChild::GetSingleton()->SendTerminateReplayingProcess(mChannel->GetId());
-
-  bool newPaused = mPaused;
-  Message* newPausedMessage = mPausedMessage;
-
-  mPaused = false;
-  mPausedMessage = nullptr;
-
-  size_t newLastCheckpoint = mLastCheckpoint;
-  mLastCheckpoint = CheckpointId::Invalid;
-
-  InfallibleVector<Message*> newMessages;
-  newMessages.append(mMessages.begin(), mMessages.length());
-  mMessages.clear();
-
-  InfallibleVector<size_t> newShouldSaveCheckpoints;
-  newShouldSaveCheckpoints.append(mShouldSaveCheckpoints.begin(), mShouldSaveCheckpoints.length());
-  mShouldSaveCheckpoints.clear();
-
-  LaunchSubprocess(Nothing());
-
-  // Disallow child processes from intentionally crashing after restarting.
-  SendMessage(SetAllowIntentionalCrashesMessage(false));
-
-  for (size_t checkpoint : newShouldSaveCheckpoints) {
-    SendMessage(SetSaveCheckpointMessage(checkpoint, true));
-  }
-
-  Recover(newPaused, newPausedMessage, newLastCheckpoint,
-          newMessages.begin(), newMessages.length());
+  // If a child process crashes or hangs then annotate the crash report and
+  // shut down cleanly so that we don't mask the report with our own crash.
+  // We want the crash to happen quickly so the user doesn't get a hanged tab.
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RecordReplayError,
+                                     nsAutoCString(aWhy));
+  Shutdown();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -666,7 +610,7 @@ ChildProcessInfo::WaitUntil(const std::function<bool()>& aCallback)
           } else {
             // The child is still non-responsive after sending the terminate
             // message, fail without producing a minidump.
-            AttemptRestart("Child process non-responsive");
+            OnCrash("Child process non-responsive");
           }
         }
         gMonitor->WaitUntil(deadline);

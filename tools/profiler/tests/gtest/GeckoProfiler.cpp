@@ -523,6 +523,7 @@ TEST(GeckoProfiler, Markers)
     profiler_add_marker("M5", MakeUnique<GTestMarkerPayload>(i));
   }
 
+  // Warning: this could be racy
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, filters, MOZ_ARRAY_LENGTH(filters));
 
@@ -534,6 +535,59 @@ TEST(GeckoProfiler, Markers)
   ASSERT_TRUE(GTestMarkerPayload::sNumCreated == 20);
   ASSERT_TRUE(GTestMarkerPayload::sNumStreamed == 10);
   ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 20);
+}
+
+#define COUNTER_NAME "TestCounter"
+#define COUNTER_DESCRIPTION "Test of counters in profiles"
+#define COUNTER_NAME2 "Counter2"
+#define COUNTER_DESCRIPTION2 "Second Test of counters in profiles"
+
+PROFILER_DEFINE_COUNT_TOTAL(TestCounter, COUNTER_NAME,
+                            COUNTER_DESCRIPTION);
+PROFILER_DEFINE_COUNT_TOTAL(TestCounter2, COUNTER_NAME2,
+                            COUNTER_DESCRIPTION2);
+
+
+TEST(GeckoProfiler, Counters)
+{
+  uint32_t features = ProfilerFeature::Threads;
+  const char* filters[] = { "GeckoMain", "Compositor" };
+
+  // Inactive -> Active
+  profiler_ensure_started(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                          features, filters, MOZ_ARRAY_LENGTH(filters));
+
+  AUTO_PROFILER_COUNT_TOTAL(TestCounter, 10);
+  PR_Sleep(PR_MillisecondsToInterval(200));
+  AUTO_PROFILER_COUNT_TOTAL(TestCounter, 7);
+  PR_Sleep(PR_MillisecondsToInterval(200));
+  AUTO_PROFILER_COUNT_TOTAL(TestCounter, -17);
+  PR_Sleep(PR_MillisecondsToInterval(200));
+
+  // Verify we got counters in the output
+  SpliceableChunkedJSONWriter w;
+  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+
+  UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
+
+  // counter name and description should appear as is.
+  ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME));
+  ASSERT_TRUE(strstr(profile.get(), COUNTER_DESCRIPTION));
+  ASSERT_FALSE(strstr(profile.get(), COUNTER_NAME2));
+  ASSERT_FALSE(strstr(profile.get(), COUNTER_DESCRIPTION2));
+
+  AUTO_PROFILER_COUNT_TOTAL(TestCounter2, 10);
+  PR_Sleep(PR_MillisecondsToInterval(200));
+
+  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+
+  profile = w.WriteFunc()->CopyData();
+  ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME));
+  ASSERT_TRUE(strstr(profile.get(), COUNTER_DESCRIPTION));
+  ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME2));
+  ASSERT_TRUE(strstr(profile.get(), COUNTER_DESCRIPTION2));
+
+  profiler_stop();
 }
 
 TEST(GeckoProfiler, Time)
@@ -791,4 +845,3 @@ TEST(GeckoProfiler, SuspendAndSample)
 
   ASSERT_TRUE(!profiler_is_active());
 }
-

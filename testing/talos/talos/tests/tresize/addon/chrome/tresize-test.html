@@ -3,9 +3,6 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <html>
 <head>
-<script language="Javascript" type="text/javascript" src="../../../../scripts/Profiler.js"></script>
-<script language="Javascript" type="text/javascript" src="../../../../scripts/MozillaFileLogger.js"></script>
-<script language="Javascript" type="text/javascript" src="../../../../talos-powers/content/TalosPowersContent.js"></script>
 <script language="javascript" type="text/javascript">
 
 function runTest() {
@@ -17,18 +14,17 @@ function runTest() {
 }
 
 function logResults(data) {
-  if (typeof dumpLog != "undefined") {
-    data.forEach(function(line) {
-      dumpLog(line);
-    });
-
-
-    window.setTimeout(async function() {
-      await TalosPowers.loadPromise;
-      TalosPowersContent.goQuitApplication();
-    }, 0);
+  let error = data.error;
+  if (data.average) {
+    if (window.tpRecordTime) {
+      window.tpRecordTime(data.average);
+    }
   } else {
-    alert(data[0].split("__start_report")[1].split("__end_report")[0]);
+    error = "data.average and/or window.tpRecordTime is missing!";
+  }
+
+  if (error) {
+    dump(`TRESIZE ERROR: ${error}\n`);
   }
 }
 

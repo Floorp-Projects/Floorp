@@ -221,7 +221,7 @@ public:
 #ifdef MOZ_XUL
   already_AddRefed<ComputedStyle>
   ResolveXULTreePseudoStyle(dom::Element* aParentElement,
-                            nsICSSAnonBoxPseudo* aPseudoTag,
+                            nsCSSAnonBoxPseudoStaticAtom* aPseudoTag,
                             ComputedStyle* aParentContext,
                             const AtomArray& aInputWord);
 #endif
