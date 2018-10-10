@@ -409,19 +409,7 @@ ARCHIVE_FILES = {
                 'testing/crashtest/crashtests.list',
             ],
             'dest': 'reftest/tests',
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'base': 'dist/xpi-stage',
-            'pattern': 'reftest/**',
-            'dest': 'reftest'
-        },
-        {
-            'source': buildconfig.topobjdir,
-            'base': 'dist/xpi-stage',
-            'pattern': 'specialpowers/**',
-            'dest': 'specialpowers'
-        },
+        }
     ],
     'talos': [
         {
