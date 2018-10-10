@@ -3378,17 +3378,14 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case eMouseUp:
     {
       ClearGlobalActiveContent(this);
-      WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-      if (mouseEvent && mouseEvent->IsReal()) {
-        if (!mCurrentTarget) {
-          GetEventTarget();
-        }
+      WidgetMouseEvent* mouseUpEvent = aEvent->AsMouseEvent();
+      if (mouseUpEvent && EventCausesClickEvents(*mouseUpEvent)) {
         // Make sure to dispatch the click even if there is no frame for
         // the current target element. This is required for Web compatibility.
         RefPtr<EventStateManager> esm =
           ESMFromContentOrThis(aOverrideClickTarget);
-        ret = esm->CheckForAndDispatchClick(mouseEvent, aStatus,
-                                            aOverrideClickTarget);
+        ret = esm->PostHandleMouseUp(mouseUpEvent, aStatus,
+                                     aOverrideClickTarget);
       }
 
       nsIPresShell *shell = presContext->GetPresShell();
@@ -4955,30 +4952,56 @@ EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
   return NS_OK;
 }
 
+// static
+bool
+EventStateManager::EventCausesClickEvents(const WidgetMouseEvent& aMouseEvent)
+{
+  if (NS_WARN_IF(aMouseEvent.mMessage != eMouseUp)) {
+    return false;
+  }
+  // If the mouseup event is synthesized event, we don't need to dispatch
+  // click events.
+  if (!aMouseEvent.IsReal()) {
+    return false;
+  }
+  // If mouse is still over same element, clickcount will be > 1.
+  // If it has moved it will be zero, so no click.
+  if (!aMouseEvent.mClickCount) {
+    return false;
+  }
+  // Check that the window isn't disabled before firing a click
+  // (see bug 366544).
+  return !(aMouseEvent.mWidget && !aMouseEvent.mWidget->IsEnabled());
+}
+
 nsresult
-EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aEvent,
+EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aMouseUpEvent,
                                              nsEventStatus* aStatus,
                                              EventMessage aMessage,
                                              nsIPresShell* aPresShell,
-                                             nsIContent* aMouseTarget,
+                                             nsIContent* aMouseUpContent,
                                              AutoWeakFrame aCurrentTarget,
                                              bool aNoContentDispatch,
                                              nsIContent* aOverrideClickTarget)
 {
-  WidgetMouseEvent event(aEvent->IsTrusted(), aMessage,
-                         aEvent->mWidget, WidgetMouseEvent::eReal);
+  MOZ_ASSERT(aMouseUpEvent);
+  MOZ_ASSERT(EventCausesClickEvents(*aMouseUpEvent));
+  MOZ_ASSERT(aMouseUpContent || aCurrentTarget || aOverrideClickTarget);
 
-  event.mRefPoint = aEvent->mRefPoint;
-  event.mClickCount = aEvent->mClickCount;
-  event.mModifiers = aEvent->mModifiers;
-  event.buttons = aEvent->buttons;
-  event.mTime = aEvent->mTime;
-  event.mTimeStamp = aEvent->mTimeStamp;
+  WidgetMouseEvent event(aMouseUpEvent->IsTrusted(), aMessage,
+                         aMouseUpEvent->mWidget, WidgetMouseEvent::eReal);
+
+  event.mRefPoint = aMouseUpEvent->mRefPoint;
+  event.mClickCount = aMouseUpEvent->mClickCount;
+  event.mModifiers = aMouseUpEvent->mModifiers;
+  event.buttons = aMouseUpEvent->buttons;
+  event.mTime = aMouseUpEvent->mTime;
+  event.mTimeStamp = aMouseUpEvent->mTimeStamp;
   event.mFlags.mNoContentDispatch = aNoContentDispatch;
-  event.button = aEvent->button;
-  event.pointerId = aEvent->pointerId;
-  event.inputSource = aEvent->inputSource;
-  nsIContent* target = aMouseTarget;
+  event.button = aMouseUpEvent->button;
+  event.pointerId = aMouseUpEvent->pointerId;
+  event.inputSource = aMouseUpEvent->inputSource;
+  nsIContent* target = aMouseUpContent;
   nsIFrame* targetFrame = aCurrentTarget;
   if (aOverrideClickTarget) {
     target = aOverrideClickTarget;
@@ -4990,52 +5013,65 @@ EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aEvent,
 }
 
 nsresult
-EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
-                                            nsEventStatus* aStatus,
-                                            nsIContent* aOverrideClickTarget)
+EventStateManager::PostHandleMouseUp(WidgetMouseEvent* aMouseUpEvent,
+                                     nsEventStatus* aStatus,
+                                     nsIContent* aOverrideClickTarget)
 {
-  // If mouse is still over same element, clickcount will be > 1.
-  // If it has moved it will be zero, so no click.
-  if (!aEvent->mClickCount) {
-    return NS_OK;
-  }
-
-  // Check that the window isn't disabled before firing a click
-  // (see bug 366544).
-  if (aEvent->mWidget && !aEvent->mWidget->IsEnabled()) {
-    return NS_OK;
-  }
-
-  // Fire click events if the event target is still available.
-  bool notDispatchToContents =
-   (aEvent->button == WidgetMouseEvent::eMiddleButton ||
-    aEvent->button == WidgetMouseEvent::eRightButton);
-
-  bool fireAuxClick = notDispatchToContents;
+  MOZ_ASSERT(aMouseUpEvent);
+  MOZ_ASSERT(EventCausesClickEvents(*aMouseUpEvent));
+  MOZ_ASSERT(aStatus);
 
   nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
   if (!presShell) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> mouseContent = GetEventTargetContent(aEvent);
+  nsCOMPtr<nsIContent> mouseUpContent = GetEventTargetContent(aMouseUpEvent);
   // Click events apply to *elements* not nodes. At this point the target
   // content may have been reset to some non-element content, and so we need
   // to walk up the closest ancestor element, just like we do in
   // nsPresShell::HandleEvent.
-  while (mouseContent && !mouseContent->IsElement()) {
-    mouseContent = mouseContent->GetFlattenedTreeParent();
+  while (mouseUpContent && !mouseUpContent->IsElement()) {
+    mouseUpContent = mouseUpContent->GetFlattenedTreeParent();
   }
 
-  if (!mouseContent && !mCurrentTarget && !aOverrideClickTarget) {
+  if (!mouseUpContent && !mCurrentTarget && !aOverrideClickTarget) {
     return NS_OK;
   }
+
+  // Fire click events if the event target is still available.
+  nsresult rv = DispatchClickEvents(presShell, aMouseUpEvent, aStatus,
+                                    mouseUpContent, aOverrideClickTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+EventStateManager::DispatchClickEvents(nsIPresShell* aPresShell,
+                                       WidgetMouseEvent* aMouseUpEvent,
+                                       nsEventStatus* aStatus,
+                                       nsIContent* aMouseUpContent,
+                                       nsIContent* aOverrideClickTarget)
+{
+  MOZ_ASSERT(aPresShell);
+  MOZ_ASSERT(aMouseUpEvent);
+  MOZ_ASSERT(EventCausesClickEvents(*aMouseUpEvent));
+  MOZ_ASSERT(aStatus);
+  MOZ_ASSERT(aMouseUpContent || mCurrentTarget || aOverrideClickTarget);
+
+  bool notDispatchToContents =
+   (aMouseUpEvent->button == WidgetMouseEvent::eMiddleButton ||
+    aMouseUpEvent->button == WidgetMouseEvent::eRightButton);
+
+  bool fireAuxClick = notDispatchToContents;
 
   // HandleEvent clears out mCurrentTarget which we might need again
   AutoWeakFrame currentTarget = mCurrentTarget;
   nsresult rv =
-    InitAndDispatchClickEvent(aEvent, aStatus, eMouseClick,
-                              presShell, mouseContent, currentTarget,
+    InitAndDispatchClickEvent(aMouseUpEvent, aStatus, eMouseClick,
+                              aPresShell, aMouseUpContent, currentTarget,
                               notDispatchToContents,
                               aOverrideClickTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5043,10 +5079,10 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
   }
 
   // Fire double click event if click count is 2.
-  if (aEvent->mClickCount == 2 &&
-      mouseContent && mouseContent->IsInComposedDoc()) {
-    rv = InitAndDispatchClickEvent(aEvent, aStatus, eMouseDoubleClick,
-                                   presShell, mouseContent, currentTarget,
+  if (aMouseUpEvent->mClickCount == 2 &&
+      aMouseUpContent && aMouseUpContent->IsInComposedDoc()) {
+    rv = InitAndDispatchClickEvent(aMouseUpEvent, aStatus, eMouseDoubleClick,
+                                   aPresShell, aMouseUpContent, currentTarget,
                                    notDispatchToContents,
                                    aOverrideClickTarget);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5056,9 +5092,9 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
 
   // Fire auxclick even if necessary.
   if (fireAuxClick &&
-      mouseContent && mouseContent->IsInComposedDoc()) {
-    rv = InitAndDispatchClickEvent(aEvent, aStatus, eMouseAuxClick,
-                                   presShell, mouseContent, currentTarget,
+      aMouseUpContent && aMouseUpContent->IsInComposedDoc()) {
+    rv = InitAndDispatchClickEvent(aMouseUpEvent, aStatus, eMouseAuxClick,
+                                   aPresShell, aMouseUpContent, currentTarget,
                                    false, aOverrideClickTarget);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch eMouseAuxClick");
   }

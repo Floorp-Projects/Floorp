@@ -112,6 +112,7 @@ public:
    * also contain any centralized event processing which must occur after
    * DOM and frame processing.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult PostHandleEvent(nsPresContext* aPresContext,
                            WidgetEvent* aEvent,
                            nsIFrame* aTargetFrame,
@@ -461,19 +462,90 @@ protected:
    */
   void UpdateDragDataTransfer(WidgetDragEvent* dragEvent);
 
-  static nsresult InitAndDispatchClickEvent(WidgetMouseEvent* aEvent,
+  /**
+   * InitAndDispatchClickEvent() dispatches a click event.
+   *
+   * @param aMouseUpEvent           eMouseUp event which causes the click event.
+   *                                EventCausesClickEvents() must return true
+   *                                if this event is set to it.
+   * @param aStatus                 Returns the result of click event.
+   * @param aMessage                Should be eMouseClick, eMouseDoubleClick or
+   *                                eMouseAuxClick.
+   * @param aPresShell              The PresShell.
+   * @param aMouseUpContent         The event target of aMouseUpEvent.
+   * @param aCurrentTarget          Current target of the caller.
+   * @param aNoContentDispatch      true if the event shouldn't be exposed to
+   *                                web contents (although will be fired on
+   *                                document and window).
+   * @param aOverrideClickTarget    Preferred click event target.  If this is
+   *                                not nullptr, aMouseUpContent and
+   *                                aCurrentTarget are ignored.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  static nsresult InitAndDispatchClickEvent(WidgetMouseEvent* aMouseUpEvent,
                                             nsEventStatus* aStatus,
                                             EventMessage aMessage,
                                             nsIPresShell* aPresShell,
-                                            nsIContent* aMouseTarget,
+                                            nsIContent* aMouseUpContent,
                                             AutoWeakFrame aCurrentTarget,
                                             bool aNoContentDispatch,
                                             nsIContent* aOverrideClickTarget);
+
   nsresult SetClickCount(WidgetMouseEvent* aEvent, nsEventStatus* aStatus,
                          nsIContent* aOverrideClickTarget = nullptr);
-  nsresult CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
-                                    nsEventStatus* aStatus,
-                                    nsIContent* aOverrideClickTarget);
+
+  /**
+   * EventCausesClickEvents() returns true when aMouseEvent is an eMouseUp
+   * event and it should cause eMouseClick, eMouseDoubleClick and/or
+   * eMouseAuxClick events.  Note that this method assumes that
+   * aMouseEvent.mClickCount has already been initialized with SetClickCount().
+   */
+  static bool EventCausesClickEvents(const WidgetMouseEvent& aMouseEvent);
+
+  /**
+   * PostHandleMouseUp() handles default actions of eMouseUp event.
+   *
+   * @param aMouseUpEvent           eMouseUp event which causes the click event.
+   *                                EventCausesClickEvents() must return true
+   *                                if this event is set to it.
+   * @param aStatus                 Returns the result of event status.
+   *                                If one of dispatching event is consumed or
+   *                                this does something as default action,
+   *                                returns nsEventStatus_eConsumeNoDefault.
+   * @param aOverrideClickTarget    Preferred click event target.  If nullptr,
+   *                                aMouseUpEvent target and current target
+   *                                are used.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  nsresult PostHandleMouseUp(WidgetMouseEvent* aMouseUpEvent,
+                             nsEventStatus* aStatus,
+                             nsIContent* aOverrideClickTarget);
+
+  /**
+   * DispatchClickEvents() dispatches eMouseClick, eMouseDoubleClick and
+   * eMouseAuxClick events for aMouseUpEvent.  aMouseUpEvent should cause
+   * click event.
+   *
+   * @param aPresShell              The PresShell.
+   * @param aMouseUpEvent           eMouseUp event which causes the click event.
+   *                                EventCausesClickEvents() must return true
+   *                                if this event is set to it.
+   * @param aStatus                 Returns the result of event status.
+   *                                If one of dispatching click event is
+   *                                consumed, returns
+   *                                nsEventStatus_eConsumeNoDefault.
+   * @param aMouseUpContent         The event target of aMouseUpEvent.
+   * @param aOverrideClickTarget    Preferred click event target.  If this is
+   *                                not nullptr, aMouseUpContent and
+   *                                current target frame of the ESM are ignored.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  nsresult DispatchClickEvents(nsIPresShell* aPresShell,
+                               WidgetMouseEvent* aMouseUpEvent,
+                               nsEventStatus* aStatus,
+                               nsIContent* aMouseUpContent,
+                               nsIContent* aOverrideClickTarget);
+
   void EnsureDocument(nsPresContext* aPresContext);
   void FlushPendingEvents(nsPresContext* aPresContext);
 
