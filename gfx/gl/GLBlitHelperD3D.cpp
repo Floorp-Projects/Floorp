@@ -253,10 +253,12 @@ GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
     const gfx::IntRect clipRect(0, 0, clipSize.width, clipSize.height);
     const auto colorSpace = YUVColorSpace::BT601;
 
-    if (format != gfx::SurfaceFormat::NV12) {
+    if (format != gfx::SurfaceFormat::NV12 &&
+        format != gfx::SurfaceFormat::P010 &&
+        format != gfx::SurfaceFormat::P016) {
         gfxCriticalError() << "Non-NV12 format for SurfaceDescriptorD3D10: "
                            << uint32_t(format);
-        return false;
+      return false;
     }
 
     const auto tex = OpenSharedTexture(d3d, handle);
