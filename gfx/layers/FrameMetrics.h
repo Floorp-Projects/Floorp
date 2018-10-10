@@ -38,6 +38,8 @@ namespace layers {
 struct ScrollUpdateInfo {
   uint32_t mScrollGeneration;
   CSSPoint mScrollOffset;
+  CSSPoint mBaseScrollOffset;
+  bool mIsRelative;
 };
 
 /**
@@ -78,6 +80,7 @@ public:
     , mCumulativeResolution()
     , mDevPixelsPerCSSPixel(1)
     , mScrollOffset(0, 0)
+    , mBaseScrollOffset(0, 0)
     , mZoom()
     , mScrollGeneration(0)
     , mSmoothScrollOffset(0, 0)
@@ -89,6 +92,7 @@ public:
     , mPaintRequestTime()
     , mScrollUpdateType(eNone)
     , mIsRootContent(false)
+    , mIsRelative(false)
     , mDoSmoothScroll(false)
     , mUseDisplayPortMargins(false)
     , mIsScrollInfoLayer(false)
@@ -109,6 +113,7 @@ public:
            mCumulativeResolution == aOther.mCumulativeResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
            mScrollOffset == aOther.mScrollOffset &&
+           mBaseScrollOffset == aOther.mBaseScrollOffset &&
            // don't compare mZoom
            mScrollGeneration == aOther.mScrollGeneration &&
            mSmoothScrollOffset == aOther.mSmoothScrollOffset &&
@@ -120,6 +125,7 @@ public:
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
+           mIsRelative == aOther.mIsRelative &&
            mDoSmoothScroll == aOther.mDoSmoothScroll &&
            mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
@@ -247,15 +253,42 @@ public:
     mZoom.yScale *= aScale.height;
   }
 
-  void CopyScrollInfoFrom(const FrameMetrics& aOther)
+  /*
+   * Compares an APZ frame metrics with an incoming content frame metrics
+   * to see if APZ has a scroll offset that has not been incorporated into
+   * the content frame metrics.
+   */
+  bool HasPendingScroll(const FrameMetrics& aContentFrameMetrics) const
+  {
+    return mScrollOffset != aContentFrameMetrics.mBaseScrollOffset;
+  }
+
+  void ApplyScrollUpdateFrom(const FrameMetrics& aOther)
   {
     mScrollOffset = aOther.mScrollOffset;
     mScrollGeneration = aOther.mScrollGeneration;
   }
 
-  void CopySmoothScrollInfoFrom(const FrameMetrics& aOther)
+  void ApplySmoothScrollUpdateFrom(const FrameMetrics& aOther)
   {
     mSmoothScrollOffset = aOther.mSmoothScrollOffset;
+    mScrollGeneration = aOther.mScrollGeneration;
+    mDoSmoothScroll = aOther.mDoSmoothScroll;
+  }
+
+  void ApplyRelativeScrollUpdateFrom(const FrameMetrics& aOther)
+  {
+    MOZ_ASSERT(aOther.IsRelative());
+    CSSPoint delta = (aOther.mScrollOffset - aOther.mBaseScrollOffset);
+    ClampAndSetScrollOffset(mScrollOffset + delta);
+    mScrollGeneration = aOther.mScrollGeneration;
+  }
+
+  void ApplyRelativeSmoothScrollUpdateFrom(const FrameMetrics& aOther)
+  {
+    MOZ_ASSERT(aOther.IsRelative());
+    CSSPoint delta = (aOther.mSmoothScrollOffset - aOther.mBaseScrollOffset);
+    ClampAndSetSmoothScrollOffset(mScrollOffset + delta);
     mScrollGeneration = aOther.mScrollGeneration;
     mDoSmoothScroll = aOther.mDoSmoothScroll;
   }
@@ -263,8 +296,10 @@ public:
   void UpdatePendingScrollInfo(const ScrollUpdateInfo& aInfo)
   {
     mScrollOffset = aInfo.mScrollOffset;
+    mBaseScrollOffset = aInfo.mBaseScrollOffset;
     mScrollGeneration = aInfo.mScrollGeneration;
     mScrollUpdateType = ePending;
+    mIsRelative = aInfo.mIsRelative;
   }
 
 public:
@@ -343,6 +378,11 @@ public:
     mScrollOffset = aScrollOffset;
   }
 
+  void SetBaseScrollOffset(const CSSPoint& aScrollOffset)
+  {
+    mBaseScrollOffset = aScrollOffset;
+  }
+
   // Set scroll offset, first clamping to the scroll range.
   void ClampAndSetScrollOffset(const CSSPoint& aScrollOffset)
   {
@@ -354,9 +394,19 @@ public:
     return mScrollOffset;
   }
 
+  const CSSPoint& GetBaseScrollOffset() const
+  {
+    return mBaseScrollOffset;
+  }
+
   void SetSmoothScrollOffset(const CSSPoint& aSmoothScrollDestination)
   {
     mSmoothScrollOffset = aSmoothScrollDestination;
+  }
+
+  void ClampAndSetSmoothScrollOffset(const CSSPoint& aSmoothScrollOffset)
+  {
+    SetSmoothScrollOffset(CalculateScrollRange().ClampPoint(aSmoothScrollOffset));
   }
 
   const CSSPoint& GetSmoothScrollOffset() const
@@ -374,16 +424,14 @@ public:
     return mZoom;
   }
 
-  void SetScrollOffsetUpdated(uint32_t aScrollGeneration)
+  void SetScrollGeneration(uint32_t aScrollGeneration)
   {
-    mScrollUpdateType = eMainThread;
     mScrollGeneration = aScrollGeneration;
   }
 
-  void SetScrollOffsetRestored(uint32_t aScrollGeneration)
+  void SetScrollOffsetUpdateType(ScrollOffsetUpdateType aScrollUpdateType)
   {
-    mScrollUpdateType = eRestore;
-    mScrollGeneration = aScrollGeneration;
+    mScrollUpdateType = aScrollUpdateType;
   }
 
   void SetSmoothScrollOffsetUpdated(int32_t aScrollGeneration)
@@ -400,6 +448,16 @@ public:
   bool GetScrollOffsetUpdated() const
   {
     return mScrollUpdateType != eNone;
+  }
+
+  void SetIsRelative(bool aIsRelative)
+  {
+    mIsRelative = aIsRelative;
+  }
+
+  bool IsRelative() const
+  {
+    return mIsRelative;
   }
 
   bool GetDoSmoothScroll() const
@@ -642,6 +700,10 @@ private:
   // not any parents, regardless of parent transforms.
   CSSPoint mScrollOffset;
 
+  // The base scroll offset to use for calculating a relative update to a
+  // scroll offset.
+  CSSPoint mBaseScrollOffset;
+
   // The "user zoom". Content is painted by gecko at mResolution * mDevPixelsPerCSSPixel,
   // but will be drawn to the screen at mZoom. In the steady state, the
   // two will be the same, but during an async zoom action the two may
@@ -688,6 +750,10 @@ private:
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent:1;
+
+  // When mIsRelative, the scroll offset was updated using a relative API,
+  // such as `ScrollBy`, and can combined with an async scroll.
+  bool mIsRelative:1;
 
   // When mDoSmoothScroll, the scroll offset should be animated to
   // smoothly transition to mScrollOffset rather than be updated instantly.

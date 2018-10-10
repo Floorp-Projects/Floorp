@@ -710,11 +710,6 @@ protected:
   void ScrollByAndClamp(const CSSPoint& aOffset);
 
   /**
-   * Copy the scroll offset and scroll generation from |aFrameMetrics|.
-   */
-  void CopyScrollInfoFrom(const FrameMetrics& aFrameMetrics);
-
-  /**
    * Scales the viewport by an amount (note that it multiplies this scale in to
    * the current scale, it doesn't set it to |aScale|). Also considers a focus
    * point so that the page zooms inward/outward from that point.

@@ -139,6 +139,12 @@ public:
    */
   virtual nsPoint GetLogicalScrollPosition() const = 0;
   /**
+   * Get the latest scroll position that the main thread has sent or received
+   * from APZ.
+   */
+  virtual nsPoint GetApzScrollPosition() const = 0;
+
+  /**
    * Get the area that must contain the scroll position. Typically
    * (but not always, e.g. for RTL content) x and y will be 0, and
    * width or height will be nonzero if the content can be scrolled in
@@ -381,15 +387,6 @@ public:
    */
   virtual nsAtom* LastScrollOrigin() = 0;
   /**
-   * Sets a flag on the scrollframe that indicates the current scroll origin
-   * has been sent over in a layers transaction, and subsequent changes to
-   * the scroll position by "weaker" origins are permitted to overwrite the
-   * the scroll origin. Scroll origins that nsLayoutUtils::CanScrollOriginClobberApz
-   * returns false for are considered "weaker" than scroll origins for which
-   * that function returns true.
-   */
-  virtual void AllowScrollOriginDowngrade() = 0;
-  /**
    * Returns the origin that triggered the last smooth scroll.
    * Will equal nsGkAtoms::apz when the compositor's replica frame
    * metrics includes the latest smooth scroll.  The compositor will always
@@ -493,6 +490,22 @@ public:
                                      nsRect* aVisibleRect,
                                      nsRect* aDirtyRect,
                                      bool aSetBase) = 0;
+
+  /**
+   * Notify the scrollframe that the current scroll offset and origin have been
+   * sent over in a layers transaction.
+   *
+   * This sets a flag on the scrollframe that indicates subsequent changes
+   * to the scroll position by "weaker" origins are permitted to overwrite the
+   * the scroll origin. Scroll origins that nsLayoutUtils::CanScrollOriginClobberApz
+   * returns false for are considered "weaker" than scroll origins for which
+   * that function returns true.
+   *
+   * This function must be called for a scrollframe after all calls to
+   * ComputeScrollMetadata in a layers transaction have been completed.
+   *
+   */
+  virtual void NotifyApzTransaction() = 0;
 
   /**
    * Notification that this scroll frame is getting its frame visibility updated.
