@@ -2,7 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 import sys
+
+from mozboot.util import get_state_dir
 
 
 def create_parser_wpt():
@@ -44,4 +47,5 @@ class WebPlatformTestsRunner(object):
         return manifestupdate.run(logger=logger,
                                   src_root=self.setup.topsrcdir,
                                   obj_root=self.setup.topobjdir,
+                                  cache_root=os.path.join(get_state_dir()[0], "cache", "wpt"),
                                   **kwargs)
