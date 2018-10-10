@@ -1105,8 +1105,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName
           face->mReferrer = url->mExtraData->GetReferrer();
           face->mReferrerPolicy = url->mExtraData->GetReferrerPolicy();
           face->mOriginPrincipal =
-            new gfxFontSrcPrincipal(url->mExtraData->GetPrincipal());
-          NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
+            new gfxFontSrcPrincipal(url->mExtraData->Principal());
 
           // agent and user stylesheets are treated slightly differently,
           // the same-site origin check and access control headers are

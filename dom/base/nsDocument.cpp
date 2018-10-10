@@ -3799,7 +3799,7 @@ nsIDocument::DefaultStyleAttrURLData()
       mCachedURLData->BaseURI() != baseURI ||
       mCachedURLData->GetReferrer() != docURI ||
       mCachedURLData->GetReferrerPolicy() != policy ||
-      mCachedURLData->GetPrincipal() != principal) {
+      mCachedURLData->Principal() != principal) {
     mCachedURLData = new URLExtraData(baseURI, docURI, principal, policy);
   }
   return mCachedURLData;
