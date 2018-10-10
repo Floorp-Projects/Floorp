@@ -1228,3 +1228,21 @@ AntiTrackingCommon::StoreUserInteractionFor(nsIPrincipal* aPrincipal)
             _spec), uri);
   cc->SendStoreUserInteractionAsPermission(IPC::Principal(aPrincipal));
 }
+
+/* static */ bool
+AntiTrackingCommon::HasUserInteraction(nsIPrincipal* aPrincipal)
+{
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
+    return false;
+  }
+
+  uint32_t result = 0;
+  nsresult rv =
+    pm->TestPermissionFromPrincipal(aPrincipal, USER_INTERACTION_PERM, &result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return result == nsIPermissionManager::ALLOW_ACTION;
+}
