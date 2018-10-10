@@ -6,7 +6,6 @@ codespell:
         - browser/branding/
         - browser/components/newtab/prerendered/locales/en-US/
         - browser/extensions/formautofill/locales/en-US/
-        - browser/extensions/onboarding/locales/en-US/
         - browser/extensions/pocket/locale/en-US/
         - browser/extensions/webcompat-reporter/locales/en-US/
         - browser/locales/en-US/

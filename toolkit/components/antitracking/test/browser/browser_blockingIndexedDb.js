@@ -85,8 +85,9 @@ AntiTracking.runTest("IndexedDB in workers",
 AntiTracking.runTest("IndexedDB and Storage Access API",
   // blocking callback
   async _ => {
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
+
     try {
       indexedDB.open("test", "1");
       ok(false, "IDB should be blocked");
@@ -95,43 +96,21 @@ AntiTracking.runTest("IndexedDB and Storage Access API",
       is(e.name, "SecurityError", "We want a security error message.");
     }
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     indexedDB.open("test", "1");
     ok(true, "IDB should be allowed");
   },
   // non-blocking callback
   async _ => {
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
+
     indexedDB.open("test", "1");
     ok(true, "IDB should be allowed");
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    await callRequestStorageAccess();
 
     // For non-tracking windows, calling the API is a no-op
     indexedDB.open("test", "1");
@@ -160,8 +139,8 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
       postMessage(true);
     }
 
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
 
     let blob = new Blob([blockCode.toString() + "; blockCode();"]);
     ok(blob, "Blob has been created");
@@ -182,19 +161,8 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
       };
     });
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     blob = new Blob([nonBlockCode.toString() + "; nonBlockCode();"]);
     ok(blob, "Blob has been created");
@@ -221,8 +189,8 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
       postMessage(true);
     }
 
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
 
     let blob = new Blob([nonBlockCode.toString() + "; nonBlockCode();"]);
     ok(blob, "Blob has been created");
@@ -243,19 +211,8 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
       };
     });
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     // For non-tracking windows, calling the API is a no-op
 

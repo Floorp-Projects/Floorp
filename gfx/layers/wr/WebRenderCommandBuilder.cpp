@@ -1747,6 +1747,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
     break;
   case DisplayItemType::TYPE_SVG_WRAPPER:
     {
+      // XXX Why doesn't this need the scaling applied?
       context->SetMatrix(context->CurrentMatrix().PreTranslate(-aOffset.x, -aOffset.y));
       isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, aScale, [&]() {
         aManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aDisplayListBuilder);
@@ -1756,7 +1757,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 
   case DisplayItemType::TYPE_FILTER:
     {
-      context->SetMatrix(context->CurrentMatrix().PreTranslate(-aOffset.x, -aOffset.y));
+      context->SetMatrix(context->CurrentMatrix().PreScale(aScale.width, aScale.height).PreTranslate(-aOffset.x, -aOffset.y));
       isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, aScale, [&]() {
         static_cast<nsDisplayFilters*>(aItem)->PaintAsLayer(aDisplayListBuilder,
                                                             context, aManager);

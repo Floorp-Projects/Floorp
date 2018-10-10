@@ -15,6 +15,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import yaml
 
 from collections import OrderedDict
 
@@ -1727,6 +1728,7 @@ class StaticAnalysis(MachCommandBase):
 
         cwd = self.topobjdir
         self._compilation_commands_path = self.topobjdir
+        self._clang_tidy_config = self._get_clang_tidy_config()
         args = self._get_clang_tidy_command(
             checks=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
 
@@ -1845,7 +1847,6 @@ class StaticAnalysis(MachCommandBase):
 
     def _get_infer_config(self):
         '''Load the infer config file.'''
-        import yaml
         checkers = []
         tp_path = ''
         with open(mozpath.join(self.topsrcdir, 'tools',
@@ -1875,6 +1876,16 @@ class StaticAnalysis(MachCommandBase):
                 excludes.append(line.strip('\n'))
         return checkers, excludes
 
+    def _get_clang_tidy_config(self):
+        try:
+            file_handler = open(mozpath.join(self.topsrcdir, "tools", "clang-tidy", "config.yaml"))
+            config = yaml.safe_load(file_handler)
+        except Exception:
+                print('Looks like config.yaml is not valid, we are going to use default'
+                      ' values for the rest of the analysis.')
+                return None
+        return config
+
     def _get_clang_tidy_command(self, checks, header_filter, sources, jobs, fix):
 
         if checks == '-*':
@@ -1891,6 +1902,14 @@ class StaticAnalysis(MachCommandBase):
         # the source files or folders.
         common_args += ['-header-filter=%s' % (header_filter
                                               if len(header_filter) else '|'.join(sources))]
+
+        # From our configuration file, config.yaml, we build the configuration list, for
+        # the checkers that are used. These configuration options are used to better fit
+        # the checkers to our code.
+        cfg = self._get_checks_config()
+        if cfg:
+            common_args += ['-config=%s' % yaml.dump(cfg)]
+
         if fix:
             common_args += '-fix'
 
@@ -1964,12 +1983,10 @@ class StaticAnalysis(MachCommandBase):
         self._clang_tidy_base_path = mozpath.join(self.topsrcdir, "tools", "clang-tidy")
 
         # For each checker run it
-        f = open(mozpath.join(self._clang_tidy_base_path, "config.yaml"))
-        import yaml
-        config = yaml.safe_load(f)
+        self._clang_tidy_config = self._get_clang_tidy_config()
         platform, _ = self.platform
 
-        if platform not in config['platforms']:
+        if platform not in self._clang_tidy_config['platforms']:
             self.log(logging.ERROR, 'static-analysis', {},
                      "RUNNING: clang-tidy autotest for platform {} not supported.".format(platform))
             return self.TOOLS_UNSUPORTED_PLATFORM
@@ -1992,11 +2009,11 @@ class StaticAnalysis(MachCommandBase):
         self._clang_tidy_checks = [c.strip() for c in available_checks if c]
 
         # Build the dummy compile_commands.json
-        self._compilation_commands_path = self._create_temp_compilation_db(config)
+        self._compilation_commands_path = self._create_temp_compilation_db(self._clang_tidy_config)
         checkers_test_batch = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
-            for item in config['clang_checkers']:
+            for item in self._clang_tidy_config['clang_checkers']:
                 # Skip if any of the following statements is true:
                 # 1. Checker attribute 'publish' is False.
                 not_published = not bool(item.get('publish', True))
@@ -2270,18 +2287,41 @@ class StaticAnalysis(MachCommandBase):
 
     def _get_checks(self):
         checks = '-*'
-        import yaml
-        with open(mozpath.join(self.topsrcdir, "tools", "clang-tidy", "config.yaml")) as f:
-            try:
-                config = yaml.safe_load(f)
-                for item in config['clang_checkers']:
-                    if item.get('publish', True):
-                        checks += ',' + item['name']
-            except Exception:
-                print('Looks like config.yaml is not valid, so we are unable to '
-                      'determine default checkers, using \'-checks=-*,mozilla-*\'')
-                checks += ',mozilla-*'
-        return checks
+        try:
+            config = self._clang_tidy_config
+            for item in config['clang_checkers']:
+                if item.get('publish', True):
+                    checks += ',' + item['name']
+        except Exception:
+            print('Looks like config.yaml is not valid, so we are unable to '
+                    'determine default checkers, using \'-checks=-*,mozilla-*\'')
+            checks += ',mozilla-*'
+        finally:
+            return checks
+
+    def _get_checks_config(self):
+        config_list = []
+        checker_config = {}
+        try:
+            config = self._clang_tidy_config
+            for checker in config['clang_checkers']:
+                if checker.get('publish', True) and 'config' in checker:
+                    for checker_option in checker['config']:
+                        # Verify if the format of the Option is correct,
+                        # possibilities are:
+                        # 1. CheckerName.Option
+                        # 2. Option -> that will become CheckerName.Option
+                        if not checker_option['key'].startswith(checker['name']):
+                            checker_option['key'] = "{}.{}".format(
+                                checker['name'], checker_option['key'])
+                    config_list += checker['config']
+            checker_config['CheckOptions'] = config_list
+        except Exception:
+            print('Looks like config.yaml is not valid, so we are unable to '
+                    'determine configuration for checkers, so using default')
+            checker_config = None
+        finally:
+            return checker_config
 
     def _get_config_environment(self):
         ran_configure = False
