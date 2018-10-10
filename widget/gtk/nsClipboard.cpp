@@ -13,6 +13,7 @@
 #if defined(MOZ_WAYLAND)
 #include "nsClipboardWayland.h"
 #endif
+#include "nsContentUtils.h"
 #include "HeadlessClipboard.h"
 #include "nsSupportsPrimitives.h"
 #include "nsString.h"
@@ -163,22 +164,14 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     for (uint32_t i = 0; i < flavors.Length(); i++) {
         nsCString& flavorStr = flavors[i];
 
-        // special case text/unicode since we can handle all of
-        // the string types
+        // Special case text/unicode since we can handle all of the string types.
         if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-            gtk_target_list_add(list, gdk_atom_intern("UTF8_STRING", FALSE), 0, 0);
-            gtk_target_list_add(list, gdk_atom_intern("COMPOUND_TEXT", FALSE), 0, 0);
-            gtk_target_list_add(list, gdk_atom_intern("TEXT", FALSE), 0, 0);
-            gtk_target_list_add(list, GDK_SELECTION_TYPE_STRING, 0, 0);
+            gtk_target_list_add_text_targets(list, 0);
             continue;
         }
 
-        if (flavorStr.EqualsLiteral(kNativeImageMime) ||
-            flavorStr.EqualsLiteral(kPNGImageMime) ||
-            flavorStr.EqualsLiteral(kJPEGImageMime) ||
-            flavorStr.EqualsLiteral(kJPGImageMime) ||
-            flavorStr.EqualsLiteral(kGIFImageMime)) {
-            // don't bother adding image targets twice
+        if (nsContentUtils::IsFlavorImage(flavorStr)) {
+            // Don't bother adding image targets twice
             if (!imagesAdded) {
                 // accept any writable image type
                 gtk_target_list_add_image_targets(list, 0, TRUE);
@@ -482,12 +475,8 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
 
     GdkAtom selectionTarget = gtk_selection_data_get_target(aSelectionData);
 
-    // Check to see if the selection data includes any of the string
-    // types that we support.
-    if (selectionTarget == gdk_atom_intern ("STRING", FALSE) ||
-        selectionTarget == gdk_atom_intern ("TEXT", FALSE) ||
-        selectionTarget == gdk_atom_intern ("COMPOUND_TEXT", FALSE) ||
-        selectionTarget == gdk_atom_intern ("UTF8_STRING", FALSE)) {
+    // Check to see if the selection data is some text type.
+    if (gtk_targets_include_text(&selectionTarget, 1)) {
         // Try to convert our internal type into a text string.  Get
         // the transferable for this clipboard and try to get the
         // text/unicode type for it.
@@ -503,14 +492,10 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
 
         nsAutoString ucs2string;
         wideString->GetData(ucs2string);
-        char *utf8string = ToNewUTF8String(ucs2string);
-        if (!utf8string)
-            return;
+        NS_ConvertUTF16toUTF8 utf8string(ucs2string);
 
-        gtk_selection_data_set_text (aSelectionData, utf8string,
-                                     strlen(utf8string));
-
-        free(utf8string);
+        gtk_selection_data_set_text(aSelectionData, utf8string.get(),
+                                    utf8string.Length());
         return;
     }
 
