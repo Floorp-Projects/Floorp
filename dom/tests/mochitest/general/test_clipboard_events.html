@@ -800,12 +800,18 @@ add_task(async function test_event_target() {
   selection.setBaseAndExtent(p1.firstChild, 1, p2.firstChild, 1);
 
   let pasteTarget = null;
-  document.addEventListener("paste", (event) => { pasteTarget = event.target; }, {once: true});
-
+  let pasteEventCount = 0;
+  function pasteEventLogger(event) {
+    pasteTarget = event.target;
+    pasteEventCount++;
+  }
+  document.addEventListener("paste", pasteEventLogger);
   synthesizeKey("v", {accelKey: 1});
   is(pasteTarget.getAttribute("id"), "p1",
      "'paste' event's target should be always an element which includes start container of the first Selection range");
-
+  is(pasteEventCount, 1,
+     "'paste' event should be fired only once when Accel+'v' is pressed");
+  document.removeEventListener("paste", pasteEventLogger);
   contenteditableContainer.innerHTML = "";
 });
 
