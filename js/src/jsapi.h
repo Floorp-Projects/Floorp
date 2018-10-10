@@ -3529,7 +3529,7 @@ class OptimizedEncodingListener
     virtual void storeOptimizedEncoding(const uint8_t* bytes, size_t length) = 0;
 };
 
-extern JS_PUBLIC_API(bool)
+extern MOZ_MUST_USE JS_PUBLIC_API(bool)
 GetOptimizedEncodingBuildId(BuildIdCharVector* buildId);
 
 class JS_PUBLIC_API(StreamConsumer)
