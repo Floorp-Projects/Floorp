@@ -105,8 +105,9 @@ RemoteWebNavigation.prototype = {
       postData: aPostData ? Utils.serializeInputStream(aPostData) : null,
       headers: aHeaders ? Utils.serializeInputStream(aHeaders) : null,
       baseURI: aBaseURI ? aBaseURI.spec : null,
-      triggeringPrincipal: Utils.serializePrincipal(
-          aTriggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({})),
+      triggeringPrincipal: aTriggeringPrincipal
+                           ? Utils.serializePrincipal(aTriggeringPrincipal)
+                           : Services.scriptSecurityManager.createNullPrincipal({}),
       requestTime: Services.telemetry.msSystemNow(),
     });
   },
