@@ -678,6 +678,16 @@ EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent)
     return NS_OK;
   }
 
+  // XXX The following code is hack for our buggy "click" and "auxclick"
+  //     implementation.  "auxclick" event was added recently, however,
+  //     any non-primary button click event handlers in our UI still keep
+  //     listening to "click" events.  Additionally, "auxclick" event is
+  //     fired after "click" events and even if we do this in the system event
+  //     group, middle click opens new tab before us.  Therefore, we need to
+  //     handle middle click at capturing phase of the default group even
+  //     though this makes web apps cannot prevent middle click paste with
+  //     calling preventDefault() of "click" nor "auxclick".
+
   if (aMouseClickEvent->button != WidgetMouseEventBase::eMiddleButton ||
       !WidgetMouseEvent::IsMiddleClickPasteEnabled()) {
     return NS_OK;
