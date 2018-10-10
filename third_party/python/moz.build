@@ -74,6 +74,9 @@ with Files('redo/**'):
 with Files('requests*/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files('requirements.*'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
+
 with Files('rsa/**'):
     BUG_COMPONENT = ('Core', 'Security: PSM')
 
