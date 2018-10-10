@@ -40,6 +40,7 @@ Documentation
   * [C# API](https://seleniumhq.github.io/selenium/docs/api/dotnet/)
   * [JavaScript API](https://seleniumhq.github.io/selenium/docs/api/javascript/)
   * [Java API](https://seleniumhq.github.io/selenium/docs/api/java/)
+  * [Perl API](https://metacpan.org/pod/Selenium::Remote::Driver)
   * [Python API](https://seleniumhq.github.io/selenium/docs/api/py/)
   * [Ruby API](https://seleniumhq.github.io/selenium/docs/api/rb/)
 

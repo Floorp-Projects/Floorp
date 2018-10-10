@@ -28,12 +28,13 @@ As these are functional integration tests and pop up Firefox windows
 sporadically, a helpful tip is to surpress the window whilst you
 are running them by using Firefox’ [headless mode]:
 
-	% MOZ_HEADLESS=1 ./mach wpt testing/web-platform/tests/webdriver
+	% ./mach wpt --headless testing/web-platform/tests/webdriver
 
-In addition to the `MOZ_HEADLESS` output variable there is also
-`MOZ_HEADLESS_WIDTH` and `MOZ_HEADLESS_HEIGHT` to control the
+The `--headless` flag is equivalent to setting the `MOZ_HEADLESS`
+output variable.  In addition to `MOZ_HEADLESS` there is also
+`MOZ_HEADLESS_WIDTH` and `MOZ_HEADLESS_HEIGHT` for controlling the
 dimensions of the no-op virtual display.  This is similar to using
-xvfb(1) which you may know from the X windowing system, but has
+Xvfb(1) which you may know from the X windowing system, but has
 the additional benefit of also working on macOS and Windows.
 
 As you get in to development of geckodriver and Marionette you will
