@@ -720,7 +720,7 @@ template JSFlatString*
 js::Int32ToString<NoGC>(JSContext* cx, int32_t si);
 
 JSFlatString*
-js::Int32ToStringHelper(JSContext* cx, int32_t si)
+js::Int32ToStringHelperPure(JSContext* cx, int32_t si)
 {
     AutoUnsafeCallWithABI unsafe;
     JSFlatString* res = Int32ToString<NoGC>(cx, si);
@@ -1530,7 +1530,7 @@ template JSString*
 js::NumberToString<NoGC>(JSContext* cx, double d);
 
 JSString*
-js::NumberToStringHelper(JSContext* cx, double d)
+js::NumberToStringHelperPure(JSContext* cx, double d)
 {
     AutoUnsafeCallWithABI unsafe;
     JSString* res = NumberToString<NoGC>(cx, d);
@@ -1714,7 +1714,7 @@ js::StringToNumber(JSContext* cx, JSString* str, double* result)
 }
 
 bool
-js::StringToNumberDontReportOOM(JSContext* cx, JSString* str, double* result)
+js::StringToNumberPure(JSContext* cx, JSString* str, double* result)
 {
     // IC Code calls this directly.
     AutoUnsafeCallWithABI unsafe;

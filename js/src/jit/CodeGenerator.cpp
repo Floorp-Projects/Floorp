@@ -6917,7 +6917,7 @@ CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir)
 
         // Try to allocate an arguments object. This will leave the reserved
         // slots uninitialized, so it's important we don't GC until we
-        // initialize these slots in ArgumentsObject::finishForIon.
+        // initialize these slots in ArgumentsObject::finishForIonPure.
         Label failure;
         TemplateObject templateObject(templateObj);
         masm.createGCObject(objTemp, temp, templateObject, gc::DefaultHeap, &failure,
@@ -6933,7 +6933,7 @@ CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir)
         masm.passABIArg(callObj);
         masm.passABIArg(objTemp);
 
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ArgumentsObject::finishForIon));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ArgumentsObject::finishForIonPure));
         masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, &failure);
 
         // Discard saved callObj on the stack.
