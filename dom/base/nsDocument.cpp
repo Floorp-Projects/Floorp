@@ -12826,19 +12826,8 @@ nsIDocument::MaybeAllowStorageForOpener()
     return;
   }
 
-  nsCOMPtr<nsIURI> uri = GetDocumentURI();
-  if (NS_WARN_IF(!uri)) {
-    return;
-  }
-
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
   // We don't care when the asynchronous work finishes here.
-  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
+  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(NodePrincipal(),
                                                                      openerInner,
                                                                      AntiTrackingCommon::eHeuristic);
 }
@@ -13842,18 +13831,7 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
   if (granted && inner) {
     outer->SetHasStorageAccess(true);
     if (isTrackingWindow) {
-      nsCOMPtr<nsIURI> uri = GetDocumentURI();
-      if (NS_WARN_IF(!uri)) {
-        aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-        return nullptr;
-      }
-      nsAutoString origin;
-      nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        aRv.Throw(rv);
-        return nullptr;
-      }
-      AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
+      AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(NodePrincipal(),
                                                                inner,
                                                                AntiTrackingCommon::eStorageAccessAPI)
         ->Then(GetCurrentThreadSerialEventTarget(), __func__,
