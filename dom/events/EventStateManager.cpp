@@ -8,6 +8,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MathAlgorithms.h"
@@ -33,12 +34,15 @@
 
 #include "nsCommandParams.h"
 #include "nsCOMPtr.h"
+#include "nsCopySupport.h"
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
+#include "nsITextControlElement.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -3378,17 +3382,14 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case eMouseUp:
     {
       ClearGlobalActiveContent(this);
-      WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-      if (mouseEvent && mouseEvent->IsReal()) {
-        if (!mCurrentTarget) {
-          GetEventTarget();
-        }
+      WidgetMouseEvent* mouseUpEvent = aEvent->AsMouseEvent();
+      if (mouseUpEvent && EventCausesClickEvents(*mouseUpEvent)) {
         // Make sure to dispatch the click even if there is no frame for
         // the current target element. This is required for Web compatibility.
         RefPtr<EventStateManager> esm =
           ESMFromContentOrThis(aOverrideClickTarget);
-        ret = esm->CheckForAndDispatchClick(mouseEvent, aStatus,
-                                            aOverrideClickTarget);
+        ret = esm->PostHandleMouseUp(mouseUpEvent, aStatus,
+                                     aOverrideClickTarget);
       }
 
       nsIPresShell *shell = presContext->GetPresShell();
@@ -4955,101 +4956,333 @@ EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
   return NS_OK;
 }
 
+// static
+bool
+EventStateManager::EventCausesClickEvents(const WidgetMouseEvent& aMouseEvent)
+{
+  if (NS_WARN_IF(aMouseEvent.mMessage != eMouseUp)) {
+    return false;
+  }
+  // If the mouseup event is synthesized event, we don't need to dispatch
+  // click events.
+  if (!aMouseEvent.IsReal()) {
+    return false;
+  }
+  // If mouse is still over same element, clickcount will be > 1.
+  // If it has moved it will be zero, so no click.
+  if (!aMouseEvent.mClickCount) {
+    return false;
+  }
+  // Check that the window isn't disabled before firing a click
+  // (see bug 366544).
+  return !(aMouseEvent.mWidget && !aMouseEvent.mWidget->IsEnabled());
+}
+
 nsresult
-EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aEvent,
+EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aMouseUpEvent,
                                              nsEventStatus* aStatus,
                                              EventMessage aMessage,
                                              nsIPresShell* aPresShell,
-                                             nsIContent* aMouseTarget,
+                                             nsIContent* aMouseUpContent,
                                              AutoWeakFrame aCurrentTarget,
                                              bool aNoContentDispatch,
                                              nsIContent* aOverrideClickTarget)
 {
-  WidgetMouseEvent event(aEvent->IsTrusted(), aMessage,
-                         aEvent->mWidget, WidgetMouseEvent::eReal);
+  MOZ_ASSERT(aMouseUpEvent);
+  MOZ_ASSERT(EventCausesClickEvents(*aMouseUpEvent));
+  MOZ_ASSERT(aMouseUpContent || aCurrentTarget || aOverrideClickTarget);
 
-  event.mRefPoint = aEvent->mRefPoint;
-  event.mClickCount = aEvent->mClickCount;
-  event.mModifiers = aEvent->mModifiers;
-  event.buttons = aEvent->buttons;
-  event.mTime = aEvent->mTime;
-  event.mTimeStamp = aEvent->mTimeStamp;
+  WidgetMouseEvent event(aMouseUpEvent->IsTrusted(), aMessage,
+                         aMouseUpEvent->mWidget, WidgetMouseEvent::eReal);
+
+  event.mRefPoint = aMouseUpEvent->mRefPoint;
+  event.mClickCount = aMouseUpEvent->mClickCount;
+  event.mModifiers = aMouseUpEvent->mModifiers;
+  event.buttons = aMouseUpEvent->buttons;
+  event.mTime = aMouseUpEvent->mTime;
+  event.mTimeStamp = aMouseUpEvent->mTimeStamp;
   event.mFlags.mNoContentDispatch = aNoContentDispatch;
-  event.button = aEvent->button;
-  event.pointerId = aEvent->pointerId;
-  event.inputSource = aEvent->inputSource;
-  nsIContent* target = aMouseTarget;
+  event.button = aMouseUpEvent->button;
+  event.pointerId = aMouseUpEvent->pointerId;
+  event.inputSource = aMouseUpEvent->inputSource;
+  nsIContent* target = aMouseUpContent;
   nsIFrame* targetFrame = aCurrentTarget;
   if (aOverrideClickTarget) {
     target = aOverrideClickTarget;
     targetFrame = aOverrideClickTarget->GetPrimaryFrame();
   }
 
-  return aPresShell->HandleEventWithTarget(&event, targetFrame,
-                                           target, aStatus);
+  // Use local event status for each click event dispatching since it'll be
+  // cleared by EventStateManager::PreHandleEvent().  Therefore, dispatching
+  // an event means that previous event status will be ignored.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv = aPresShell->HandleEventWithTarget(&event, targetFrame,
+                                                  target, &status);
+  // Copy mMultipleActionsPrevented flag from a click event to the mouseup
+  // event only when it's set to true.  It may be set to true if an editor has
+  // already handled it.  This is important to avoid two or more default
+  // actions handled here.
+  aMouseUpEvent->mFlags.mMultipleActionsPrevented |=
+    event.mFlags.mMultipleActionsPrevented;
+  // If current status is nsEventStatus_eConsumeNoDefault, we don't need to
+  // overwrite it.
+  if (*aStatus == nsEventStatus_eConsumeNoDefault) {
+    return rv;
+  }
+  // If new status is nsEventStatus_eConsumeNoDefault or
+  // nsEventStatus_eConsumeDoDefault, use it.
+  if (status == nsEventStatus_eConsumeNoDefault ||
+      status == nsEventStatus_eConsumeDoDefault) {
+    *aStatus = status;
+    return rv;
+  }
+  // Otherwise, keep the original status.
+  return rv;
 }
 
 nsresult
-EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
-                                            nsEventStatus* aStatus,
-                                            nsIContent* aOverrideClickTarget)
+EventStateManager::PostHandleMouseUp(WidgetMouseEvent* aMouseUpEvent,
+                                     nsEventStatus* aStatus,
+                                     nsIContent* aOverrideClickTarget)
 {
-  nsresult ret = NS_OK;
+  MOZ_ASSERT(aMouseUpEvent);
+  MOZ_ASSERT(EventCausesClickEvents(*aMouseUpEvent));
+  MOZ_ASSERT(aStatus);
 
-  //If mouse is still over same element, clickcount will be > 1.
-  //If it has moved it will be zero, so no click.
-  if (aEvent->mClickCount) {
-    //Check that the window isn't disabled before firing a click
-    //(see bug 366544).
-    if (aEvent->mWidget && !aEvent->mWidget->IsEnabled()) {
-      return ret;
-    }
-    //fire click
-    bool notDispatchToContents =
-     (aEvent->button == WidgetMouseEvent::eMiddleButton ||
-      aEvent->button == WidgetMouseEvent::eRightButton);
+  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+  if (!presShell) {
+    return NS_OK;
+  }
 
-    bool fireAuxClick = notDispatchToContents;
+  nsCOMPtr<nsIContent> mouseUpContent = GetEventTargetContent(aMouseUpEvent);
+  // Click events apply to *elements* not nodes. At this point the target
+  // content may have been reset to some non-element content, and so we need
+  // to walk up the closest ancestor element, just like we do in
+  // nsPresShell::HandleEvent.
+  while (mouseUpContent && !mouseUpContent->IsElement()) {
+    mouseUpContent = mouseUpContent->GetFlattenedTreeParent();
+  }
 
-    nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
-    if (presShell) {
-      nsCOMPtr<nsIContent> mouseContent = GetEventTargetContent(aEvent);
-      // Click events apply to *elements* not nodes. At this point the target
-      // content may have been reset to some non-element content, and so we need
-      // to walk up the closest ancestor element, just like we do in
-      // nsPresShell::HandleEvent.
-      while (mouseContent && !mouseContent->IsElement()) {
-        mouseContent = mouseContent->GetFlattenedTreeParent();
-      }
+  if (!mouseUpContent && !mCurrentTarget && !aOverrideClickTarget) {
+    return NS_OK;
+  }
 
-      if (!mouseContent && !mCurrentTarget && !aOverrideClickTarget) {
-        return NS_OK;
-      }
+  // Fire click events if the event target is still available.
+  // Note that do not include the eMouseUp event's status since we ignore it
+  // for compatibility with the other browsers.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv = DispatchClickEvents(presShell, aMouseUpEvent, &status,
+                                    mouseUpContent, aOverrideClickTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-      // HandleEvent clears out mCurrentTarget which we might need again
-      AutoWeakFrame currentTarget = mCurrentTarget;
-      ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseClick,
-                                      presShell, mouseContent, currentTarget,
-                                      notDispatchToContents,
-                                      aOverrideClickTarget);
+  // Do not do anything if preceding click events are consumed.
+  // Note that Chromium dispatches "paste" event and actually pates clipboard
+  // text into focused editor even if the preceding click events are consumed.
+  // However, this is different from our traditional behavior and does not
+  // conform to DOM events.  If we need to keep compatibility with Chromium,
+  // we should change it later.
+  if (status == nsEventStatus_eConsumeNoDefault) {
+    *aStatus = nsEventStatus_eConsumeNoDefault;
+    return NS_OK;
+  }
 
-      if (NS_SUCCEEDED(ret) && aEvent->mClickCount == 2 &&
-          mouseContent && mouseContent->IsInComposedDoc()) {
-        //fire double click
-        ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseDoubleClick,
-                                        presShell, mouseContent, currentTarget,
-                                        notDispatchToContents,
-                                        aOverrideClickTarget);
-      }
-      if (NS_SUCCEEDED(ret) && mouseContent && fireAuxClick &&
-          mouseContent->IsInComposedDoc()) {
-        ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseAuxClick,
-                                        presShell, mouseContent, currentTarget,
-                                        false, aOverrideClickTarget);
-      }
+  // Handle middle click paste if it's enabled and the mouse button is middle.
+  if (aMouseUpEvent->button != WidgetMouseEventBase::eMiddleButton ||
+      !WidgetMouseEvent::IsMiddleClickPasteEnabled()) {
+    return NS_OK;
+  }
+  DebugOnly<nsresult> rvIgnored =
+    HandleMiddleClickPaste(presShell, aMouseUpEvent, &status, nullptr);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Failed to paste for a middle click");
+
+  // If new status is nsEventStatus_eConsumeNoDefault or
+  // nsEventStatus_eConsumeDoDefault, use it.
+  if (*aStatus != nsEventStatus_eConsumeNoDefault &&
+      (status == nsEventStatus_eConsumeNoDefault ||
+       status == nsEventStatus_eConsumeDoDefault)) {
+    *aStatus = status;
+  }
+
+  // Don't return error even if middle mouse paste fails since we haven't
+  // handled it here.
+  return NS_OK;
+}
+
+nsresult
+EventStateManager::DispatchClickEvents(nsIPresShell* aPresShell,
+                                       WidgetMouseEvent* aMouseUpEvent,
+                                       nsEventStatus* aStatus,
+                                       nsIContent* aMouseUpContent,
+                                       nsIContent* aOverrideClickTarget)
+{
+  MOZ_ASSERT(aPresShell);
+  MOZ_ASSERT(aMouseUpEvent);
+  MOZ_ASSERT(EventCausesClickEvents(*aMouseUpEvent));
+  MOZ_ASSERT(aStatus);
+  MOZ_ASSERT(aMouseUpContent || mCurrentTarget || aOverrideClickTarget);
+
+  bool notDispatchToContents =
+   (aMouseUpEvent->button == WidgetMouseEvent::eMiddleButton ||
+    aMouseUpEvent->button == WidgetMouseEvent::eRightButton);
+
+  bool fireAuxClick = notDispatchToContents;
+
+  // HandleEvent clears out mCurrentTarget which we might need again
+  AutoWeakFrame currentTarget = mCurrentTarget;
+  nsresult rv =
+    InitAndDispatchClickEvent(aMouseUpEvent, aStatus, eMouseClick,
+                              aPresShell, aMouseUpContent, currentTarget,
+                              notDispatchToContents,
+                              aOverrideClickTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Fire double click event if click count is 2.
+  if (aMouseUpEvent->mClickCount == 2 &&
+      aMouseUpContent && aMouseUpContent->IsInComposedDoc()) {
+    rv = InitAndDispatchClickEvent(aMouseUpEvent, aStatus, eMouseDoubleClick,
+                                   aPresShell, aMouseUpContent, currentTarget,
+                                   notDispatchToContents,
+                                   aOverrideClickTarget);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
-  return ret;
+
+  // Fire auxclick even if necessary.
+  if (fireAuxClick &&
+      aMouseUpContent && aMouseUpContent->IsInComposedDoc()) {
+    rv = InitAndDispatchClickEvent(aMouseUpEvent, aStatus, eMouseAuxClick,
+                                   aPresShell, aMouseUpContent, currentTarget,
+                                   false, aOverrideClickTarget);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch eMouseAuxClick");
+  }
+
+  return rv;
+}
+
+nsresult
+EventStateManager::HandleMiddleClickPaste(nsIPresShell* aPresShell,
+                                          WidgetMouseEvent* aMouseEvent,
+                                          nsEventStatus* aStatus,
+                                          TextEditor* aTextEditor)
+{
+  MOZ_ASSERT(aPresShell);
+  MOZ_ASSERT(aMouseEvent);
+  MOZ_ASSERT((aMouseEvent->mMessage == eMouseClick &&
+              aMouseEvent->button == WidgetMouseEventBase::eMiddleButton) ||
+             EventCausesClickEvents(*aMouseEvent));
+  MOZ_ASSERT(aStatus);
+  MOZ_ASSERT(*aStatus != nsEventStatus_eConsumeNoDefault);
+
+  // Even if we're called twice or more for a mouse operation, we should
+  // handle only once.  Although mMultipleActionsPrevented may be set to
+  // true by different event handler in the future, we can use it for now.
+  if (aMouseEvent->mFlags.mMultipleActionsPrevented) {
+    return NS_OK;
+  }
+  aMouseEvent->mFlags.mMultipleActionsPrevented = true;
+
+  RefPtr<Selection> selection;
+  if (aTextEditor) {
+    selection = aTextEditor->GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    nsIDocument* document = aPresShell->GetDocument();
+    if (NS_WARN_IF(!document)) {
+      return NS_ERROR_FAILURE;
+    }
+    nsCopySupport::GetSelectionForCopy(document, getter_AddRefs(selection));
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Move selection to the clicked point.
+  nsCOMPtr<nsIContent> container;
+  int32_t offset;
+  nsLayoutUtils::GetContainerAndOffsetAtEvent(aPresShell, aMouseEvent,
+                                              getter_AddRefs(container),
+                                              &offset);
+  if (container) {
+    // XXX If readonly or disabled <input> or <textarea> in contenteditable
+    //     designMode editor is clicked, the point is in the editor.
+    //     However, outer HTMLEditor and Selection should handle it.
+    //     So, in such case, Selection::Collapse() will fail.
+    DebugOnly<nsresult> rv = selection->Collapse(container, offset);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to collapse Selection at middle clicked");
+  }
+
+  int32_t clipboardType = nsIClipboard::kGlobalClipboard;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIClipboard> clipboardService =
+    do_GetService("@mozilla.org/widget/clipboard;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    bool selectionSupported;
+    rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
+    if (NS_SUCCEEDED(rv) && selectionSupported) {
+      clipboardType = nsIClipboard::kSelectionClipboard;
+    }
+  }
+
+  // Fire ePaste event by ourselves since we need to dispatch "paste" event
+  // even if the middle click event was consumed for compatibility with
+  // Chromium.
+  if (!nsCopySupport::FireClipboardEvent(ePaste, clipboardType,
+                                         aPresShell, selection)) {
+    *aStatus = nsEventStatus_eConsumeNoDefault;
+    return NS_OK;
+  }
+
+  // Although we've fired "paste" event, there is no editor to accept the
+  // clipboard content.
+  if (!aTextEditor) {
+    return NS_OK;
+  }
+
+  // Check if the editor is still the good target to paste.
+  if (aTextEditor->Destroyed() ||
+      aTextEditor->IsReadonly() ||
+      aTextEditor->IsDisabled()) {
+    // XXX Should we consume the event when the editor is readonly and/or
+    //     disabled?
+    return NS_OK;
+  }
+
+  // The selection may have been modified during reflow.  Therefore, we
+  // should adjust event target to pass IsAcceptableInputEvent().
+  nsRange* range = selection->GetRangeAt(0);
+  if (!range) {
+    return NS_OK;
+  }
+  WidgetMouseEvent mouseEvent(*aMouseEvent);
+  mouseEvent.mOriginalTarget = range->GetStartContainer();
+  if (NS_WARN_IF(!mouseEvent.mOriginalTarget) ||
+      !aTextEditor->IsAcceptableInputEvent(&mouseEvent)) {
+    return NS_OK;
+  }
+
+  // If Control key is pressed, we should paste clipboard content as
+  // quotation.  Otherwise, paste it as is.
+  if (aMouseEvent->IsControl()) {
+    DebugOnly<nsresult> rv =
+      aTextEditor->PasteAsQuotationAsAction(clipboardType, false);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste as quotation");
+  } else {
+    DebugOnly<nsresult> rv =
+      aTextEditor->PasteAsAction(clipboardType, false);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste");
+  }
+  *aStatus = nsEventStatus_eConsumeNoDefault;
+
+  return NS_OK;
 }
 
 nsIFrame*

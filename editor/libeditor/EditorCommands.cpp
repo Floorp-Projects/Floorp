@@ -559,7 +559,7 @@ PasteCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteAsAction(nsIClipboard::kGlobalClipboard);
+  return textEditor->PasteAsAction(nsIClipboard::kGlobalClipboard, true);
 }
 
 NS_IMETHODIMP
@@ -1308,7 +1308,8 @@ PasteQuotationCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard);
+  return textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard,
+                                              true);
 }
 
 NS_IMETHODIMP
@@ -1322,7 +1323,8 @@ PasteQuotationCommand::DoCommandParams(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard);
+  return textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard,
+                                              true);
 }
 
 NS_IMETHODIMP

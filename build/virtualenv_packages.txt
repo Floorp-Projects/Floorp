@@ -9,6 +9,7 @@ mozilla.pth:python/l10n
 mozilla.pth:third_party/python/atomicwrites
 mozilla.pth:third_party/python/attrs/src
 mozilla.pth:third_party/python/blessings
+mozilla.pth:third_party/python/Click
 mozilla.pth:third_party/python/compare-locales
 mozilla.pth:third_party/python/configobj
 mozilla.pth:third_party/python/cram
@@ -21,9 +22,8 @@ mozilla.pth:third_party/python/gyp/pylib
 mozilla.pth:third_party/python/python-hglib
 mozilla.pth:third_party/python/pluggy
 mozilla.pth:third_party/python/jsmin
-!windows:optional:setup.py:third_party/python/psutil:build_ext:--inplace
-!windows:mozilla.pth:third_party/python/psutil
-windows:mozilla.pth:third_party/python/psutil-cp27-none-win_amd64
+optional:setup.py:third_party/python/psutil:build_ext:--inplace
+mozilla.pth:third_party/python/psutil
 mozilla.pth:third_party/python/pylru
 mozilla.pth:third_party/python/which
 mozilla.pth:third_party/python/pystache

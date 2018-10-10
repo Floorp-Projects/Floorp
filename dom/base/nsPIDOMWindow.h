@@ -716,7 +716,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
 class nsPIDOMWindowOuter : public mozIDOMWindowProxy
 {
 protected:
-  explicit nsPIDOMWindowOuter();
+  explicit nsPIDOMWindowOuter(uint64_t aWindowID);
 
   ~nsPIDOMWindowOuter();
 

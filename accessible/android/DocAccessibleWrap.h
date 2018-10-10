@@ -11,28 +11,7 @@
 namespace mozilla {
 namespace a11y {
 
-class DocAccessibleWrap : public DocAccessible
-{
-public:
-  DocAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell);
-  virtual ~DocAccessibleWrap();
-
-  /**
-   * Manage the mapping from id to Accessible.
-   */
-  void AddID(uint32_t aID, AccessibleWrap* aAcc)
-  {
-    mIDToAccessibleMap.Put(aID, aAcc);
-  }
-  void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
-  AccessibleWrap* GetAccessibleByID(int32_t aID) const;
-
-protected:
-  /*
-   * This provides a mapping from 32 bit id to accessible objects.
-   */
-  nsDataHashtable<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
-};
+typedef DocAccessible DocAccessibleWrap;
 
 } // namespace a11y
 } // namespace mozilla

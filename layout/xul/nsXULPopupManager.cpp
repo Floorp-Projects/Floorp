@@ -632,7 +632,7 @@ nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
 
   mCachedModifiers = 0;
 
-  UIEvent* uiEvent = aEvent ? aEvent->AsUIEvent() : nullptr;
+  RefPtr<UIEvent> uiEvent = aEvent ? aEvent->AsUIEvent() : nullptr;
   if (uiEvent) {
     mRangeParent = uiEvent->GetRangeParent();
     mRangeOffset = uiEvent->RangeOffset();
