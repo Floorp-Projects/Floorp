@@ -150,6 +150,7 @@ pub enum DebugOutput {
     LoadCapture(PathBuf, Vec<PlainExternalImage>),
 }
 
+#[allow(dead_code)]
 pub enum ResultMsg {
     DebugCommand(DebugCommand),
     DebugOutput(DebugOutput),

@@ -1395,7 +1395,7 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.texture_cache.begin_frame(frame_id);
-        self.cached_glyphs.begin_frame(&self.texture_cache, &self.cached_render_tasks);
+        self.cached_glyphs.begin_frame(&self.texture_cache, &self.cached_render_tasks, &mut self.glyph_rasterizer);
         self.cached_render_tasks.begin_frame(&mut self.texture_cache);
         self.current_frame_id = frame_id;
     }
