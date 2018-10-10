@@ -30,8 +30,10 @@ public:
   virtual nsresult Connect(EditorBase* aEditorBase) override;
 
 protected:
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent) override;
   virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) override;
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseClick(dom::MouseEvent* aMouseEvent) override;
 };
 

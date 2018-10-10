@@ -213,6 +213,7 @@ public:
    * OnDrop() is called from EditorEventListener::Drop that is handler of drop
    * event.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult OnDrop(dom::DragEvent* aDropEvent);
 
   /**
