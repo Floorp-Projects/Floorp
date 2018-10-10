@@ -743,57 +743,6 @@ pub struct ImageMask {
     pub repeat: bool,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub enum LocalClip {
-    Rect(LayoutRect),
-    RoundedRect(LayoutRect, ComplexClipRegion),
-}
-
-impl From<LayoutRect> for LocalClip {
-    fn from(rect: LayoutRect) -> Self {
-        LocalClip::Rect(rect)
-    }
-}
-
-impl LocalClip {
-    pub fn clip_rect(&self) -> &LayoutRect {
-        match *self {
-            LocalClip::Rect(ref rect) => rect,
-            LocalClip::RoundedRect(ref rect, _) => rect,
-        }
-    }
-
-    pub fn create_with_offset(&self, offset: &LayoutVector2D) -> LocalClip {
-        match *self {
-            LocalClip::Rect(rect) => LocalClip::from(rect.translate(offset)),
-            LocalClip::RoundedRect(rect, complex) => LocalClip::RoundedRect(
-                rect.translate(offset),
-                ComplexClipRegion {
-                    rect: complex.rect.translate(offset),
-                    radii: complex.radii,
-                    mode: complex.mode,
-                },
-            ),
-        }
-    }
-
-    pub fn clip_by(&self, rect: &LayoutRect) -> LocalClip {
-        match *self {
-            LocalClip::Rect(clip_rect) => {
-                LocalClip::Rect(
-                    clip_rect.intersection(rect).unwrap_or_else(LayoutRect::zero)
-                )
-            }
-            LocalClip::RoundedRect(clip_rect, complex) => {
-                LocalClip::RoundedRect(
-                    clip_rect.intersection(rect).unwrap_or_else(LayoutRect::zero),
-                    complex,
-                )
-            }
-        }
-    }
-}
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum ClipMode {
