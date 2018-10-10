@@ -5,6 +5,7 @@
 
 const OutputParser = require("devtools/client/shared/output-parser");
 const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
+const { CSS_PROPERTIES_DB} = require("devtools/shared/css/properties-db");
 const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
 
 add_task(async function() {
@@ -18,7 +19,13 @@ async function performTest() {
     "<h1>browser_outputParser.js</h1><div></div>");
 
   // Mock the toolbox that initCssProperties expect so we get the fallback css properties.
-  const toolbox = {target: {client: {}, hasActor: () => false}};
+  const toolbox = {
+    target: {
+      client: {},
+      hasActor: () => false,
+      getFront: typeName => ({getCSSDatabase: () => CSS_PROPERTIES_DB})
+    }
+  };
   await initCssProperties(toolbox);
   const cssProperties = getCssProperties(toolbox);
 
