@@ -91,8 +91,6 @@ protected:
   bool EditorHasFocus();
   bool IsFileControlTextBox();
   bool ShouldHandleNativeKeyBindings(WidgetKeyboardEvent* aKeyboardEvent);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult HandleMiddleClickPaste(dom::MouseEvent* aMouseEvent);
 
   /**
    * DetachedFromEditor() returns true if editor was detached.

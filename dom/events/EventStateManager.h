@@ -363,6 +363,24 @@ public:
     MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL = 1000
   };
 
+  /**
+   * HandleMiddleClickPaste() handles middle mouse button event as pasting
+   * clipboard text.
+   *
+   * @param aPresShell              The PresShell for the ESM.  This lifetime
+   *                                should be guaranteed by the caller.
+   * @param aMouseEvent             The eMouseClick event which caused the
+   *                                paste.
+   * @param aStatus                 The event status of aMouseEvent.
+   * @param aTextEditor             TextEditor which may be pasted the
+   *                                clipboard text by the middle click.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  nsresult HandleMiddleClickPaste(nsIPresShell* aPresShell,
+                                  WidgetMouseEvent* aMouseEvent,
+                                  nsEventStatus* aStatus,
+                                  TextEditor* aTextEditor);
+
 protected:
   /**
    * Prefs class capsules preference management.

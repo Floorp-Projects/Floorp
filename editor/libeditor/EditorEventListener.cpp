@@ -11,6 +11,7 @@
 #include "mozilla/ContentEvents.h"      // for InternalFocusEvent
 #include "mozilla/EditorBase.h"         // for EditorBase, etc.
 #include "mozilla/EventListenerManager.h" // for EventListenerManager
+#include "mozilla/EventStateManager.h"  // for EventStateManager
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/TextEditor.h"         // for TextEditor
@@ -647,18 +648,18 @@ EditorEventListener::MouseClick(MouseEvent* aMouseEvent)
     return NS_OK;
   }
   // nothing to do if editor isn't editable or clicked on out of the editor.
-  RefPtr<EditorBase> editorBase(mEditorBase);
+  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
   WidgetMouseEvent* clickEvent =
     aMouseEvent->WidgetEventPtr()->AsMouseEvent();
-  if (editorBase->IsReadonly() || editorBase->IsDisabled() ||
-      !editorBase->IsAcceptableInputEvent(clickEvent)) {
+  if (textEditor->IsReadonly() || textEditor->IsDisabled() ||
+      !textEditor->IsAcceptableInputEvent(clickEvent)) {
     return NS_OK;
   }
 
   // Notifies clicking on editor to IMEStateManager even when the event was
   // consumed.
   if (EditorHasFocus()) {
-    nsPresContext* presContext = GetPresContext();
+    RefPtr<nsPresContext> presContext = GetPresContext();
     if (presContext) {
       IMEStateManager::OnClickInEditor(presContext, GetFocusedRootContent(),
                                        clickEvent);
@@ -679,64 +680,32 @@ EditorEventListener::MouseClick(MouseEvent* aMouseEvent)
     return NS_OK;
   }
 
-  if (clickEvent->button == 1) {
-    return HandleMiddleClickPaste(aMouseEvent);
-  }
-  return NS_OK;
-}
-
-nsresult
-EditorEventListener::HandleMiddleClickPaste(MouseEvent* aMouseEvent)
-{
-  MOZ_ASSERT(aMouseEvent);
-
-  WidgetMouseEvent* clickEvent =
-    aMouseEvent->WidgetEventPtr()->AsMouseEvent();
-  MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(clickEvent));
-
-  if (!Preferences::GetBool("middlemouse.paste", false)) {
-    // Middle click paste isn't enabled.
+  if (clickEvent->button != WidgetMouseEventBase::eMiddleButton ||
+      !WidgetMouseEvent::IsMiddleClickPasteEnabled()) {
     return NS_OK;
   }
 
-  // Set the selection to the point under the mouse cursor:
-  nsCOMPtr<nsINode> parent = aMouseEvent->GetRangeParent();
-  int32_t offset = aMouseEvent->RangeOffset();
-
-  RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-
-  RefPtr<Selection> selection = textEditor->GetSelection();
-  if (selection) {
-    selection->Collapse(parent, offset);
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return NS_OK;
   }
-
-  nsresult rv;
-  int32_t clipboard = nsIClipboard::kGlobalClipboard;
-  nsCOMPtr<nsIClipboard> clipboardService =
-    do_GetService("@mozilla.org/widget/clipboard;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    bool selectionSupported;
-    rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
-    if (NS_SUCCEEDED(rv) && selectionSupported) {
-      clipboard = nsIClipboard::kSelectionClipboard;
-    }
+  nsPresContext* presContext = GetPresContext();
+  if (NS_WARN_IF(!presContext)) {
+    return NS_OK;
   }
-
-  // If the ctrl key is pressed, we'll do paste as quotation.
-  // Would've used the alt key, but the kde wmgr treats alt-middle specially.
-  if (clickEvent->IsControl()) {
-    textEditor->PasteAsQuotationAsAction(clipboard);
-  } else {
-    textEditor->PasteAsAction(clipboard);
+  MOZ_ASSERT(!clickEvent->DefaultPrevented());
+  nsEventStatus status = nsEventStatus_eIgnore;
+  RefPtr<EventStateManager> esm = presContext->EventStateManager();
+  DebugOnly<nsresult> rv =
+    esm->HandleMiddleClickPaste(presShell, clickEvent, &status, textEditor);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to paste for the middle button click");
+  if (status == nsEventStatus_eConsumeNoDefault) {
+    // Prevent the event from propagating up to be possibly handled
+    // again by the containing window:
+    clickEvent->StopImmediatePropagation();
+    clickEvent->PreventDefault();
   }
-
-  // Prevent the event from propagating up to be possibly handled
-  // again by the containing window:
-  clickEvent->StopPropagation();
-  clickEvent->PreventDefault();
-
-  // We processed the event, whether drop/paste succeeded or not
   return NS_OK;
 }
 
