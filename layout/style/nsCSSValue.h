@@ -154,6 +154,8 @@ public:
 
   nsDependentCSubstring GetString() const;
 
+  uint64_t LoadID() const { return mLoadID; }
+
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
   // invalid, even once resolved.
@@ -172,6 +174,17 @@ private:
 
 protected:
   const CORSMode mCORSMode;
+
+  // A unique, non-reused ID value for this ImageValue over the life of the
+  // process.  This value is only valid after LoadImage has been called.
+  //
+  // We use this as a key in some tables in ImageLoader.  This is better than
+  // using the pointer value of the ImageValue object, since we can sometimes
+  // delete ImageValues OMT but cannot update the ImageLoader tables until
+  // we're back on the main thread.  So to avoid dangling pointers that might
+  // get re-used by the time we want to update the ImageLoader tables, we use
+  // these IDs.
+  uint64_t mLoadID = 0;
 
   virtual ~URLValueData();
 
@@ -217,22 +230,8 @@ struct ImageValue final : public URLValueData
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  uint64_t LoadID() const { return mLoadID; }
-
 protected:
   ~ImageValue();
-
-private:
-  // A unique, non-reused ID value for this ImageValue over the life of the
-  // process.  This value is only valid after LoadImage has been called.
-  //
-  // We use this as a key in some tables in ImageLoader.  This is better than
-  // using the pointer value of the ImageValue object, since we can sometimes
-  // delete ImageValues OMT but cannot update the ImageLoader tables until
-  // we're back on the main thread.  So to avoid dangling pointers that might
-  // get re-used by the time we want to update the ImageLoader tables, we use
-  // these IDs.
-  uint64_t mLoadID = 0;
 };
 
 struct GridNamedArea {
