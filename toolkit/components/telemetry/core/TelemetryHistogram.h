@@ -6,10 +6,9 @@
 #ifndef TelemetryHistogram_h__
 #define TelemetryHistogram_h__
 
+#include "mozilla/TelemetryComms.h"
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/TelemetryProcessEnums.h"
-
-#include "mozilla/TelemetryComms.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla{
