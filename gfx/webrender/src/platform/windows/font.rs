@@ -197,7 +197,8 @@ impl FontContext {
                         sims,
                         &font.variations.iter().map(|var| {
                             dwrote::DWRITE_FONT_AXIS_VALUE {
-                                axisTag: var.tag,
+                                // OpenType tags are big-endian, but DWrite wants little-endian.
+                                axisTag: var.tag.swap_bytes(),
                                 value: var.value,
                             }
                         }).collect::<Vec<_>>(),
