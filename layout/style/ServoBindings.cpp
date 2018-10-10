@@ -1392,7 +1392,7 @@ ServoBundledURI::IntoCssUrl()
   MOZ_ASSERT(mExtraData->GetPrincipal());
 
   RefPtr<css::URLValue> urlValue =
-    new css::URLValue(mURLString, do_AddRef(mExtraData));
+    new css::URLValue(mURLString, do_AddRef(mExtraData), CORSMode::CORS_NONE);
   return urlValue.forget();
 }
 
