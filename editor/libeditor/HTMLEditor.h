@@ -159,8 +159,11 @@ public:
    *
    * @param aClipboardType      nsIClipboard::kGlobalClipboard or
    *                            nsIClipboard::kSelectionClipboard.
+   * @param aDispatchPasteEvent true if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, false.
    */
-  virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType) override;
+  virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType,
+                                            bool aDispatchPasteEvent) override;
 
   /**
    * Can we paste |aTransferable| or, if |aTransferable| is null, will a call
@@ -1310,10 +1313,13 @@ protected: // Shouldn't be used by friend classes
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
    *
-   * @param aClipboardType  nsIClipboard::kGlobalClipboard or
-   *                        nsIClipboard::kSelectionClipboard.
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
+   *                            nsIClipboard::kSelectionClipboard.
+   * @param aDispatchPasteEvent true if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, false.
    */
-  nsresult PasteInternal(int32_t aClipboardType);
+  nsresult PasteInternal(int32_t aClipboardType,
+                         bool aDispatchPasteEvent);
 
   /**
    * InsertNodeIntoProperAncestorWithTransaction() attempts to insert aNode
