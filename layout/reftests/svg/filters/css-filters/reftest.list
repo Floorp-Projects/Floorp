@@ -25,8 +25,8 @@ fuzzy-if(webrender,5-7,19040-22652) == blur-zoomed-page.html blur-zoomed-page-re
 == contrast-reduce.html contrast-reduce-ref.html
 == contrast-zero.html contrast-zero-ref.html
 fuzzy-if(webrender,9-9,2625-3002) == drop-shadow.html drop-shadow-ref.html
-fuzzy-if(webrender,9-9,2625-3002) fails-if(webrender&&winWidget) == drop-shadow-default-color.html drop-shadow-default-color-ref.html
-fuzzy-if(webrender,9-9,2625-3002) fails-if(webrender&&winWidget) == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
+fuzzy-if(webrender,9-9,2625-3002) == drop-shadow-default-color.html drop-shadow-default-color-ref.html
+fuzzy-if(webrender,9-9,2625-3002) == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
 == filter-on-huge-bbox.html pass.svg
 == filter-on-outer-svg.html pass.svg
 fuzzy-if(webrender,0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == grayscale.html grayscale-ref.html

@@ -22,6 +22,7 @@ def configure_error(message):
 
 # A wrapper to obtain a process' output and return code.
 # Returns a tuple (retcode, stdout, stderr).
+@imports('os')
 @imports(_from='__builtin__', _import='unicode')
 @imports('subprocess')
 @imports(_from='mozbuild.shellutil', _import='quote')
@@ -44,7 +45,13 @@ def get_cmd_output(*args, **kwargs):
 
     log.debug('Executing: `%s`', quote(*args))
     proc = subprocess.Popen(args, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, **kwargs)
+                            stderr=subprocess.PIPE,
+                            # On Python 2 on Windows, close_fds prevents the
+                            # process from inheriting stdout/stderr.
+                            # Elsewhere, it simply prevents it from inheriting
+                            # extra file descriptors, which is what we want.
+                            close_fds=os.name != 'nt',
+                            **kwargs)
     stdout, stderr = proc.communicate()
     return proc.wait(), stdout, stderr
 

@@ -44,6 +44,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
@@ -2685,6 +2686,11 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_FAILURE;
   }
 
+  nsIDocument* doc = aWindow->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // This principal needs to be sent to different threads and so via IPC.
   // For this reason it's better to convert it to PrincipalInfo right now.
   ipc::PrincipalInfo principalInfo;
@@ -2875,25 +2881,38 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
     uint32_t audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mAudio)) {
-      if (audioType == MediaSourceEnum::Microphone &&
-          Preferences::GetBool("media.getusermedia.microphone.deny", false)) {
-        audioPerm = nsIPermissionManager::DENY_ACTION;
+      if (audioType == MediaSourceEnum::Microphone) {
+        if (Preferences::GetBool("media.getusermedia.microphone.deny", false) ||
+            !dom::FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                                       NS_LITERAL_STRING("microphone"))) {
+          audioPerm = nsIPermissionManager::DENY_ACTION;
+        } else {
+          rv = permManager->TestExactPermissionFromPrincipal(
+            principal, "microphone", &audioPerm);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       } else {
         rv = permManager->TestExactPermissionFromPrincipal(
-          principal, "microphone", &audioPerm);
+          principal, "screen", &audioPerm);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
 
     uint32_t videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mVideo)) {
-      if (videoType == MediaSourceEnum::Camera &&
-          Preferences::GetBool("media.getusermedia.camera.deny", false)) {
-        videoPerm = nsIPermissionManager::DENY_ACTION;
+      if (videoType == MediaSourceEnum::Camera) {
+        if (Preferences::GetBool("media.getusermedia.camera.deny", false) ||
+            !dom::FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                                       NS_LITERAL_STRING("camera"))) {
+          videoPerm = nsIPermissionManager::DENY_ACTION;
+        } else {
+          rv = permManager->TestExactPermissionFromPrincipal(
+            principal, "camera", &videoPerm);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       } else {
         rv = permManager->TestExactPermissionFromPrincipal(
-          principal, videoType == MediaSourceEnum::Camera ? "camera" : "screen",
-          &videoPerm);
+          principal, "screen", &videoPerm);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -4128,6 +4147,17 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
   if (NS_WARN_IF(!window) || NS_WARN_IF(!window->GetPrincipal())) {
     return false;
   }
+
+  nsIDocument* doc = window->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return false;
+  }
+
+  nsIPrincipal* principal = window->GetPrincipal();
+  if (NS_WARN_IF(!principal)) {
+    return false;
+  }
+
   // Check if this site has persistent permissions.
   nsresult rv;
   nsCOMPtr<nsIPermissionManager> mgr =
@@ -4139,14 +4169,23 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
   uint32_t audio = nsIPermissionManager::UNKNOWN_ACTION;
   uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
   {
-    auto* principal = window->GetPrincipal();
-    rv = mgr->TestExactPermissionFromPrincipal(principal, "microphone", &audio);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
+    if (!dom::FeaturePolicyUtils::IsFeatureAllowed(doc, NS_LITERAL_STRING("microphone"))) {
+      audio = nsIPermissionManager::DENY_ACTION;
+    } else {
+      rv = mgr->TestExactPermissionFromPrincipal(principal, "microphone", &audio);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
     }
-    rv = mgr->TestExactPermissionFromPrincipal(principal, "camera", &video);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
+
+    if (!dom::FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                                   NS_LITERAL_STRING("camera"))) {
+      video = nsIPermissionManager::DENY_ACTION;
+    } else {
+      rv = mgr->TestExactPermissionFromPrincipal(principal, "camera", &video);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
     }
   }
   return audio == nsIPermissionManager::ALLOW_ACTION ||
