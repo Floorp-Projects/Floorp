@@ -116,6 +116,13 @@ clang_checkers:
   - name: readability-delete-null-pointer
   - name: readability-else-after-return
   - name: readability-implicit-bool-conversion
+    config:
+      - key: AllowIntegerConditions
+        # The check will allow conditional integer conversions.
+        value: 1
+      - key: AllowPointerConditions
+        # The check will allow conditional pointer conversions.
+        value: 1
   - name: readability-inconsistent-declaration-parameter-name
   - name: readability-misleading-indentation
   - name: readability-non-const-parameter
