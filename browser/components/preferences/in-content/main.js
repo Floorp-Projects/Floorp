@@ -3248,7 +3248,6 @@ class PDFHandlerInfoWrapper extends InternalHandlerInfoWrapper {
   }
 
   get enabled() {
-    return !Services.prefs.getBoolPref(PREF_PDFJS_DISABLED) &&
-           Services.policies.isAllowed("PDF.js");
+    return !Services.prefs.getBoolPref(PREF_PDFJS_DISABLED);
   }
 }
