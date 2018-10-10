@@ -71,6 +71,7 @@ impl<'codegen, 'grammar, W: Write, C> CodeGenerator<'codegen, 'grammar, W, C> {
         F: FnOnce(&mut Self) -> io::Result<()>,
     {
         rust!(self.out, "");
+        rust!(self.out, "#[cfg_attr(rustfmt, rustfmt_skip)]");
         rust!(self.out, "mod {}parse{} {{", self.prefix, self.start_symbol);
 
         // these stylistic lints are annoying for the generated code,

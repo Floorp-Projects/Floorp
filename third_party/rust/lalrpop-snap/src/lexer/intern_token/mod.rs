@@ -59,6 +59,7 @@ pub fn compile<W: Write>(
 ) -> io::Result<()> {
     let prefix = &grammar.prefix;
 
+    rust!(out, "#[cfg_attr(rustfmt, rustfmt_skip)]");
     rust!(out, "mod {}intern_token {{", prefix);
     rust!(out, "#![allow(unused_imports)]");
     try!(out.write_uses("", &grammar));
@@ -101,7 +102,7 @@ pub fn compile<W: Write>(
             })
             .map(|regex| {
                 // make sure all regex are anchored at the beginning of the input
-                format!("^{}", regex)
+                format!("^({})", regex)
             })
             .map(|regex_str| {
                 // create a rust string with text of the regex; the Debug impl

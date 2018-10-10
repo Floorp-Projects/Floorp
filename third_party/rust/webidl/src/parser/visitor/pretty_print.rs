@@ -328,10 +328,13 @@ impl<'ast> ImmutableVisitor<'ast> for PrettyPrintVisitor {
             ConstValue::FloatLiteral(float_literal) => {
                 self.stringify_float_literal(float_literal);
             }
-            ConstValue::IntegerLiteral(integer_literal) => {
+            ConstValue::Null => self.output.push_str("null"),
+            ConstValue::SignedIntegerLiteral(integer_literal) => {
                 self.output.push_str(&*integer_literal.to_string());
             }
-            ConstValue::Null => self.output.push_str("null"),
+            ConstValue::UnsignedIntegerLiteral(integer_literal) => {
+                self.output.push_str(&*integer_literal.to_string());
+            }
         }
     }
 
@@ -735,14 +738,17 @@ impl<'ast> ImmutableVisitor<'ast> for PrettyPrintVisitor {
                 self.stringify_float_literal(float_literal);
             }
             Other::Identifier(ref identifier) => self.visit_identifier(identifier),
-            Other::IntegerLiteral(integer_literal) => {
+            Other::OtherLiteral(other_literal) => self.output.push(other_literal),
+            Other::SignedIntegerLiteral(integer_literal) => {
                 self.output.push_str(&*integer_literal.to_string());
             }
-            Other::OtherLiteral(other_literal) => self.output.push(other_literal),
             Other::StringLiteral(ref string_literal) => {
                 self.output.push('"');
                 self.output.push_str(&*string_literal);
                 self.output.push('"');
+            }
+            Other::UnsignedIntegerLiteral(integer_literal) => {
+                self.output.push_str(&*integer_literal.to_string());
             }
 
             Other::Colon => self.output.push(':'),

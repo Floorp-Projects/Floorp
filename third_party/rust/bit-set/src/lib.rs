@@ -47,17 +47,23 @@
 //! assert!(bv[3]);
 //! ```
 
+#![no_std]
+
 #![cfg_attr(all(test, feature = "nightly"), feature(test))]
 #[cfg(all(test, feature = "nightly"))] extern crate test;
 #[cfg(all(test, feature = "nightly"))] extern crate rand;
 extern crate bit_vec;
 
+#[cfg(test)]
+#[macro_use]
+extern crate std;
+
 use bit_vec::{BitVec, Blocks, BitBlock};
-use std::cmp::Ordering;
-use std::cmp;
-use std::fmt;
-use std::hash;
-use std::iter::{self, Chain, Enumerate, FromIterator, Repeat, Skip, Take};
+use core::cmp::Ordering;
+use core::cmp;
+use core::fmt;
+use core::hash;
+use core::iter::{self, Chain, Enumerate, FromIterator, Repeat, Skip, Take};
 
 type MatchWords<'a, B> = Chain<Enumerate<Blocks<'a, B>>, Skip<Take<Enumerate<Repeat<B>>>>>;
 
@@ -941,6 +947,7 @@ mod tests {
     use std::cmp::Ordering::{Equal, Greater, Less};
     use super::BitSet;
     use bit_vec::BitVec;
+    use std::vec::Vec;
 
     #[test]
     fn test_bit_set_show() {

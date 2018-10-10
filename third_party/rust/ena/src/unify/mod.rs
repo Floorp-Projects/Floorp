@@ -8,10 +8,38 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! Union-find implementation. The main type is `UnificationTable`.
+//!
+//! You can define your own type for the *keys* in the table, but you
+//! must implement `UnifyKey` for that type. The assumption is that
+//! keys will be newtyped integers, hence we require that they
+//! implement `Copy`.
+//!
+//! Keys can have values associated with them. The assumption is that
+//! these values are cheaply cloneable (ideally, `Copy`), and some of
+//! the interfaces are oriented around that assumption. If you just
+//! want the classical "union-find" algorithm where you group things
+//! into sets, use the `Value` type of `()`.
+//!
+//! When you have keys with non-trivial values, you must also define
+//! how those values can be merged. As part of doing this, you can
+//! define the "error" type to return on error; if errors are not
+//! possible, use `NoError` (an uninstantiable struct). Using this
+//! type also unlocks various more ergonomic methods (e.g., `union()`
+//! in place of `unify_var_var()`).
+//!
+//! The best way to see how it is used is to read the `tests.rs` file;
+//! search for e.g. `UnitKey`.
+
 use std::marker;
 use std::fmt::Debug;
-use std::marker::PhantomData;
-use snapshot_vec as sv;
+
+mod backing_vec;
+pub use self::backing_vec::{InPlace, UnificationStore};
+
+#[cfg(feature = "persistent")]
+pub use self::backing_vec::Persistent;
+
 
 #[cfg(test)]
 mod tests;
@@ -27,7 +55,7 @@ mod tests;
 ///
 /// Clients are expected to provide implementations of this trait; you
 /// can see some examples in the `test` module.
-pub trait UnifyKey : Copy + Clone + Debug + PartialEq {
+pub trait UnifyKey: Copy + Clone + Debug + PartialEq {
     type Value: UnifyValue;
 
     fn index(&self) -> u32;
@@ -50,21 +78,72 @@ pub trait UnifyKey : Copy + Clone + Debug + PartialEq {
     /// since overriding the rank can cause execution time to increase
     /// dramatically.
     #[allow(unused_variables)]
-    fn order_roots(a: Self, a_value: &Self::Value,
-                   b: Self, b_value: &Self::Value)
-                   -> Option<(Self, Self)> {
+    fn order_roots(
+        a: Self,
+        a_value: &Self::Value,
+        b: Self,
+        b_value: &Self::Value,
+    ) -> Option<(Self, Self)> {
         None
     }
 }
 
+/// Trait implemented for **values** associated with a unification
+/// key. This trait defines how to merge the values from two keys that
+/// are unioned together. This merging can be fallible. If you attempt
+/// to union two keys whose values cannot be merged, then the error is
+/// propagated up and the two keys are not unioned.
+///
+/// This crate provides implementations of `UnifyValue` for `()`
+/// (which is infallible) and `Option<T>` (where `T: UnifyValue`). The
+/// option implementation merges two sum-values using the `UnifyValue`
+/// implementation of `T`.
+///
+/// See also `EqUnifyValue`, which is a convenience trait for cases
+/// where the "merge" operation succeeds only if the two values are
+/// equal.
 pub trait UnifyValue: Clone + Debug {
+    /// Defines the type to return when merging of two values fails.
+    /// If merging is infallible, use the special struct `NoError`
+    /// found in this crate, which unlocks various more convenient
+    /// methods on the unification table.
+    type Error;
+
     /// Given two values, produce a new value that combines them.
     /// If that is not possible, produce an error.
-    fn unify_values(value1: &Self, value2: &Self) -> Result<Self, (Self, Self)>;
+    fn unify_values(value1: &Self, value2: &Self) -> Result<Self, Self::Error>;
 }
 
-/// Marker trait which indicates that `UnifyValues::unify_values` will never return `Err`.
-pub trait InfallibleUnifyValue: UnifyValue {
+/// A convenient helper for unification values which must be equal or
+/// else an error occurs. For example, if you are unifying types in a
+/// simple functional language, this may be appropriate, since (e.g.)
+/// you can't unify a type variable bound to `int` with one bound to
+/// `float` (but you can unify two type variables both bound to
+/// `int`).
+///
+/// Any type which implements `EqUnifyValue` automatially implements
+/// `UnifyValue`; if the two values are equal, merging is permitted.
+/// Otherwise, the error `(v1, v2)` is returned, where `v1` and `v2`
+/// are the two unequal values.
+pub trait EqUnifyValue: Eq + Clone + Debug {}
+
+impl<T: EqUnifyValue> UnifyValue for T {
+    type Error = (T, T);
+
+    fn unify_values(value1: &Self, value2: &Self) -> Result<Self, Self::Error> {
+        if value1 == value2 {
+            Ok(value1.clone())
+        } else {
+            Err((value1.clone(), value2.clone()))
+        }
+    }
+}
+
+/// A struct which can never be instantiated. Used
+/// for the error type for infallible cases.
+#[derive(Debug)]
+pub struct NoError {
+    _dummy: (),
 }
 
 /// Value of a unification key. We implement Tarjan's union-find
@@ -75,76 +154,71 @@ pub trait InfallibleUnifyValue: UnifyValue {
 /// to keep the DAG relatively balanced, which helps keep the running
 /// time of the algorithm under control. For more information, see
 /// <http://en.wikipedia.org/wiki/Disjoint-set_data_structure>.
-#[derive(PartialEq,Clone,Debug)]
-struct VarValue<K: UnifyKey> {
+#[derive(PartialEq, Clone, Debug)]
+pub struct VarValue<K: UnifyKey> { // FIXME pub
     parent: K, // if equal to self, this is a root
     value: K::Value, // value assigned (only relevant to root)
-    child: K, // if equal to self, no child (relevant to both root/redirect)
-    sibling: K, // if equal to self, no sibling (only relevant to redirect)
     rank: u32, // max depth (only relevant to root)
 }
 
-/// Table of unification keys and their values.
-#[derive(Clone)]
-pub struct UnificationTable<K: UnifyKey> {
+/// Table of unification keys and their values. You must define a key type K
+/// that implements the `UnifyKey` trait. Unification tables can be used in two-modes:
+///
+/// - in-place (`UnificationTable<InPlace<K>>` or `InPlaceUnificationTable<K>`):
+///   - This is the standard mutable mode, where the array is modified
+///     in place.
+///   - To do backtracking, you can employ the `snapshot` and `rollback_to`
+///     methods.
+/// - persistent (`UnificationTable<Persistent<K>>` or `PersistentUnificationTable<K>`):
+///   - In this mode, we use a persistent vector to store the data, so that
+///     cloning the table is an O(1) operation.
+///   - This implies that ordinary operations are quite a bit slower though.
+///   - Requires the `persistent` feature be selected in your Cargo.toml file.
+#[derive(Clone, Debug)]
+pub struct UnificationTable<S: UnificationStore> {
     /// Indicates the current value of each key.
-    values: sv::SnapshotVec<Delegate<K>>,
+    values: S,
 }
+
+/// A unification table that uses an "in-place" vector.
+pub type InPlaceUnificationTable<K> = UnificationTable<InPlace<K>>;
+
+/// A unification table that uses a "persistent" vector.
+#[cfg(feature = "persistent")]
+pub type PersistentUnificationTable<K> = UnificationTable<Persistent<K>>;
 
 /// At any time, users may snapshot a unification table.  The changes
 /// made during the snapshot may either be *committed* or *rolled back*.
-pub struct Snapshot<K: UnifyKey> {
-    // Link snapshot to the key type `K` of the table.
-    marker: marker::PhantomData<K>,
-    snapshot: sv::Snapshot,
+pub struct Snapshot<S: UnificationStore> {
+    // Link snapshot to the unification store `S` of the table.
+    marker: marker::PhantomData<S>,
+    snapshot: S::Snapshot,
 }
-
-#[derive(Copy, Clone)]
-struct Delegate<K>(PhantomData<K>);
 
 impl<K: UnifyKey> VarValue<K> {
     fn new_var(key: K, value: K::Value) -> VarValue<K> {
-        VarValue::new(key, value, key, key, 0)
+        VarValue::new(key, value, 0)
     }
 
-    fn new(parent: K, value: K::Value, child: K, sibling: K, rank: u32) -> VarValue<K> {
+    fn new(parent: K, value: K::Value, rank: u32) -> VarValue<K> {
         VarValue {
             parent: parent, // this is a root
             value: value,
-            child: child,
-            sibling: sibling,
             rank: rank,
         }
     }
 
-    fn redirect(&mut self, to: K, sibling: K) {
-        assert_eq!(self.parent, self.sibling); // ...since this used to be a root
+    fn redirect(&mut self, to: K) {
         self.parent = to;
-        self.sibling = sibling;
     }
 
-    fn root(&mut self, rank: u32, child: K, value: K::Value) {
+    fn root(&mut self, rank: u32, value: K::Value) {
         self.rank = rank;
-        self.child = child;
         self.value = value;
-    }
-
-    /// Returns the key of this node. Only valid if this is a root
-    /// node, which you yourself must ensure.
-    fn key(&self) -> K {
-        self.parent
     }
 
     fn parent(&self, self_key: K) -> Option<K> {
         self.if_not_self(self.parent, self_key)
-    }
-
-    fn child(&self, self_key: K) -> Option<K> {
-        self.if_not_self(self.child, self_key)
-    }
-
-    fn sibling(&self, self_key: K) -> Option<K> {
-        self.if_not_self(self.sibling, self_key)
     }
 
     fn if_not_self(&self, key: K, self_key: K) -> Option<K> {
@@ -161,51 +235,73 @@ impl<K: UnifyKey> VarValue<K> {
 // other type parameter U, and we have no way to say
 // Option<U>:LatticeValue.
 
-impl<K: UnifyKey> UnificationTable<K> {
-    pub fn new() -> UnificationTable<K> {
-        UnificationTable { values: sv::SnapshotVec::new() }
+impl<S: UnificationStore> UnificationTable<S> {
+    pub fn new() -> Self {
+        UnificationTable {
+            values: S::new()
+        }
     }
 
     /// Starts a new snapshot. Each snapshot must be either
     /// rolled back or committed in a "LIFO" (stack) order.
-    pub fn snapshot(&mut self) -> Snapshot<K> {
+    pub fn snapshot(&mut self) -> Snapshot<S> {
         Snapshot {
-            marker: marker::PhantomData::<K>,
+            marker: marker::PhantomData::<S>,
             snapshot: self.values.start_snapshot(),
         }
     }
 
     /// Reverses all changes since the last snapshot. Also
     /// removes any keys that have been created since then.
-    pub fn rollback_to(&mut self, snapshot: Snapshot<K>) {
-        debug!("{}: rollback_to()", K::tag());
+    pub fn rollback_to(&mut self, snapshot: Snapshot<S>) {
+        debug!("{}: rollback_to()", S::tag());
         self.values.rollback_to(snapshot.snapshot);
     }
 
     /// Commits all changes since the last snapshot. Of course, they
     /// can still be undone if there is a snapshot further out.
-    pub fn commit(&mut self, snapshot: Snapshot<K>) {
-        debug!("{}: commit()", K::tag());
+    pub fn commit(&mut self, snapshot: Snapshot<S>) {
+        debug!("{}: commit()", S::tag());
         self.values.commit(snapshot.snapshot);
     }
 
-    pub fn new_key(&mut self, value: K::Value) -> K {
+    /// Creates a fresh key with the given value.
+    pub fn new_key(&mut self, value: S::Value) -> S::Key {
         let len = self.values.len();
-        let key: K = UnifyKey::from_index(len as u32);
+        let key: S::Key = UnifyKey::from_index(len as u32);
         self.values.push(VarValue::new_var(key, value));
-        debug!("{}: created new key: {:?}", K::tag(), key);
+        debug!("{}: created new key: {:?}", S::tag(), key);
         key
     }
 
-    pub fn unioned_keys(&mut self, key: K) -> UnionedKeys<K> {
-        let root_key = self.get_root_key(key);
-        UnionedKeys {
-            table: self,
-            stack: vec![root_key],
-        }
+    /// Reserve memory for `num_new_keys` to be created. Does not
+    /// actually create the new keys; you must then invoke `new_key`.
+    pub fn reserve(&mut self, num_new_keys: usize) {
+        self.values.reserve(num_new_keys);
     }
 
-    fn value(&self, key: K) -> &VarValue<K> {
+    /// Clears all unifications that have been performed, resetting to
+    /// the initial state. The values of each variable are given by
+    /// the closure.
+    pub fn reset_unifications(
+        &mut self,
+        mut value: impl FnMut(S::Key) -> S::Value,
+    ) {
+        self.values.reset_unifications(|i| {
+            let key = UnifyKey::from_index(i as u32);
+            let value = value(key);
+            VarValue::new_var(key, value)
+        });
+    }
+
+    /// Returns the number of keys created so far.
+    pub fn len(&self) -> usize {
+        self.values.len()
+    }
+
+    /// Obtains the current value for a particular key.
+    /// Not for end-users; they can use `probe_value`.
+    fn value(&self, key: S::Key) -> &VarValue<S::Key> {
         &self.values[key.index() as usize]
     }
 
@@ -215,7 +311,7 @@ impl<K: UnifyKey> UnificationTable<K> {
     ///
     /// NB. This is a building-block operation and you would probably
     /// prefer to call `probe` below.
-    fn get_root_key(&mut self, vid: K) -> K {
+    fn get_root_key(&mut self, vid: S::Key) -> S::Key {
         let redirect = {
             match self.value(vid).parent(vid) {
                 None => return vid,
@@ -223,7 +319,7 @@ impl<K: UnifyKey> UnificationTable<K> {
             }
         };
 
-        let root_key: K = self.get_root_key(redirect);
+        let root_key: S::Key = self.get_root_key(redirect);
         if root_key != redirect {
             // Path compression
             self.update_value(vid, |value| value.parent = root_key);
@@ -232,13 +328,9 @@ impl<K: UnifyKey> UnificationTable<K> {
         root_key
     }
 
-    fn is_root(&self, key: K) -> bool {
-        let index = key.index() as usize;
-        self.values.get(index).parent(key).is_none()
-    }
-
-    fn update_value<OP>(&mut self, key: K, op: OP)
-        where OP: FnOnce(&mut VarValue<K>)
+    fn update_value<OP>(&mut self, key: S::Key, op: OP)
+    where
+        OP: FnOnce(&mut VarValue<S::Key>),
     {
         self.values.update(key.index() as usize, op);
         debug!("Updated variable {:?} to {:?}", key, self.value(key));
@@ -252,24 +344,35 @@ impl<K: UnifyKey> UnificationTable<K> {
     /// really more of a building block. If the values associated with
     /// your key are non-trivial, you would probably prefer to call
     /// `unify_var_var` below.
-    fn unify_roots(&mut self, key_a: K, key_b: K, new_value: K::Value) {
-        debug!("unify(key_a={:?}, key_b={:?})",
-               key_a,
-               key_b);
+    fn unify_roots(&mut self, key_a: S::Key, key_b: S::Key, new_value: S::Value) {
+        debug!("unify(key_a={:?}, key_b={:?})", key_a, key_b);
 
         let rank_a = self.value(key_a).rank;
         let rank_b = self.value(key_b).rank;
-        if let Some((new_root, redirected)) = K::order_roots(key_a, &self.value(key_a).value,
-                                                             key_b, &self.value(key_b).value) {
+        if let Some((new_root, redirected)) =
+            S::Key::order_roots(
+                key_a,
+                &self.value(key_a).value,
+                key_b,
+                &self.value(key_b).value,
+            ) {
             // compute the new rank for the new root that they chose;
             // this may not be the optimal choice.
             let new_rank = if new_root == key_a {
                 debug_assert!(redirected == key_b);
-                if rank_a > rank_b { rank_a } else { rank_b + 1 }
+                if rank_a > rank_b {
+                    rank_a
+                } else {
+                    rank_b + 1
+                }
             } else {
                 debug_assert!(new_root == key_b);
                 debug_assert!(redirected == key_a);
-                if rank_b > rank_a { rank_b } else { rank_a + 1 }
+                if rank_b > rank_a {
+                    rank_b
+                } else {
+                    rank_a + 1
+                }
             };
             self.redirect_root(new_rank, redirected, new_root, new_value);
         } else if rank_a > rank_b {
@@ -286,121 +389,87 @@ impl<K: UnifyKey> UnificationTable<K> {
         }
     }
 
-    fn redirect_root(&mut self,
-                     new_rank: u32,
-                     old_root_key: K,
-                     new_root_key: K,
-                     new_value: K::Value) {
-        let sibling = self.value(new_root_key).child(new_root_key)
-                                              .unwrap_or(old_root_key);
+    /// Internal method to redirect `old_root_key` (which is currently
+    /// a root) to a child of `new_root_key` (which will remain a
+    /// root). The rank and value of `new_root_key` will be updated to
+    /// `new_rank` and `new_value` respectively.
+    fn redirect_root(
+        &mut self,
+        new_rank: u32,
+        old_root_key: S::Key,
+        new_root_key: S::Key,
+        new_value: S::Value,
+    ) {
         self.update_value(old_root_key, |old_root_value| {
-            old_root_value.redirect(new_root_key, sibling);
+            old_root_value.redirect(new_root_key);
         });
         self.update_value(new_root_key, |new_root_value| {
-            new_root_value.root(new_rank, old_root_key, new_value);
+            new_root_value.root(new_rank, new_value);
         });
-    }
-}
-
-impl<K: UnifyKey> sv::SnapshotVecDelegate for Delegate<K> {
-    type Value = VarValue<K>;
-    type Undo = ();
-
-    fn reverse(_: &mut Vec<VarValue<K>>, _: ()) {}
-}
-
-/// ////////////////////////////////////////////////////////////////////////
-/// Iterator over keys that have been unioned together
-
-pub struct UnionedKeys<'a, K>
-    where K: UnifyKey + 'a,
-          K::Value: 'a
-{
-    table: &'a mut UnificationTable<K>,
-    stack: Vec<K>,
-}
-
-impl<'a, K> UnionedKeys<'a, K>
-    where K: UnifyKey,
-          K::Value: 'a
-{
-    fn var_value(&self, key: K) -> VarValue<K> {
-        self.table.value(key).clone()
-    }
-}
-
-impl<'a, K: 'a> Iterator for UnionedKeys<'a, K>
-    where K: UnifyKey,
-          K::Value: 'a
-{
-    type Item = K;
-
-    fn next(&mut self) -> Option<K> {
-        let key = match self.stack.last() {
-            Some(k) => *k,
-            None => {
-                return None;
-            }
-        };
-
-        let vv = self.var_value(key);
-
-        match vv.child(key) {
-            Some(child_key) => {
-                self.stack.push(child_key);
-            }
-
-            None => {
-                // No child, push a sibling for the current node.  If
-                // current node has no siblings, start popping
-                // ancestors until we find an aunt or uncle or
-                // something to push. Note that we have the invariant
-                // that for every node N that we reach by popping
-                // items off of the stack, we have already visited all
-                // children of N.
-                while let Some(ancestor_key) = self.stack.pop() {
-                    let ancestor_vv = self.var_value(ancestor_key);
-                    match ancestor_vv.sibling(ancestor_key) {
-                        Some(sibling) => {
-                            self.stack.push(sibling);
-                            break;
-                        }
-                        None => {}
-                    }
-                }
-            }
-        }
-
-        Some(key)
     }
 }
 
 /// ////////////////////////////////////////////////////////////////////////
 /// Public API
 
-impl<'tcx, K, V> UnificationTable<K>
-    where K: UnifyKey<Value = V>,
-          V: UnifyValue,
+impl<'tcx, S, K, V> UnificationTable<S>
+where
+    S: UnificationStore<Key = K, Value = V>,
+    K: UnifyKey<Value = V>,
+    V: UnifyValue,
 {
     /// Unions two keys without the possibility of failure; only
-    /// applicable to InfallibleUnifyValue.
-    pub fn union(&mut self, a_id: K, b_id: K)
-        where V: InfallibleUnifyValue
+    /// applicable when unify values use `NoError` as their error
+    /// type.
+    pub fn union<K1, K2>(&mut self, a_id: K1, b_id: K2)
+    where
+        K1: Into<K>,
+        K2: Into<K>,
+        V: UnifyValue<Error = NoError>,
     {
         self.unify_var_var(a_id, b_id).unwrap();
     }
 
+    /// Unions a key and a value without the possibility of failure;
+    /// only applicable when unify values use `NoError` as their error
+    /// type.
+    pub fn union_value<K1>(&mut self, id: K1, value: V)
+    where
+        K1: Into<K>,
+        V: UnifyValue<Error = NoError>,
+    {
+        self.unify_var_value(id, value).unwrap();
+    }
+
     /// Given two keys, indicates whether they have been unioned together.
-    pub fn unioned(&mut self, a_id: K, b_id: K) -> bool {
+    pub fn unioned<K1, K2>(&mut self, a_id: K1, b_id: K2) -> bool
+    where
+        K1: Into<K>,
+        K2: Into<K>,
+    {
         self.find(a_id) == self.find(b_id)
     }
 
     /// Given a key, returns the (current) root key.
-    pub fn find(&mut self, id: K) -> K {
+    pub fn find<K1>(&mut self, id: K1) -> K
+    where
+        K1: Into<K>,
+    {
+        let id = id.into();
         self.get_root_key(id)
     }
 
-    pub fn unify_var_var(&mut self, a_id: K, b_id: K) -> Result<(), (V, V)> {
+    /// Unions together two variables, merging their values. If
+    /// merging the values fails, the error is propagated and this
+    /// method has no effect.
+    pub fn unify_var_var<K1, K2>(&mut self, a_id: K1, b_id: K2) -> Result<(), V::Error>
+    where
+        K1: Into<K>,
+        K2: Into<K>,
+    {
+        let a_id = a_id.into();
+        let b_id = b_id.into();
+
         let root_a = self.get_root_key(a_id);
         let root_b = self.get_root_key(b_id);
 
@@ -408,21 +477,31 @@ impl<'tcx, K, V> UnificationTable<K>
             return Ok(());
         }
 
-        let combined = try!(V::unify_values(&self.value(root_a).value, &self.value(root_b).value));
+        let combined = V::unify_values(&self.value(root_a).value, &self.value(root_b).value)?;
 
         Ok(self.unify_roots(root_a, root_b, combined))
     }
 
     /// Sets the value of the key `a_id` to `b`, attempting to merge
     /// with the previous value.
-    pub fn unify_var_value(&mut self, a_id: K, b: V) -> Result<(), (V, V)> {
+    pub fn unify_var_value<K1>(&mut self, a_id: K1, b: V) -> Result<(), V::Error>
+    where
+        K1: Into<K>,
+    {
+        let a_id = a_id.into();
         let root_a = self.get_root_key(a_id);
-        let value = try!(V::unify_values(&self.value(root_a).value, &b));
+        let value = V::unify_values(&self.value(root_a).value, &b)?;
         self.update_value(root_a, |node| node.value = value);
         Ok(())
     }
 
-    pub fn probe_value(&mut self, id: K) -> V {
+    /// Returns the current value for the given key. If the key has
+    /// been union'd, this will give the value from the current root.
+    pub fn probe_value<K1>(&mut self, id: K1) -> V
+    where
+        K1: Into<K>,
+    {
+        let id = id.into();
         let id = self.get_root_key(id);
         self.value(id).value.clone()
     }
@@ -432,28 +511,27 @@ impl<'tcx, K, V> UnificationTable<K>
 ///////////////////////////////////////////////////////////////////////////
 
 impl UnifyValue for () {
-    fn unify_values(_: &(), _: &()) -> Result<(), ((), ())> {
+    type Error = NoError;
+
+    fn unify_values(_: &(), _: &()) -> Result<(), NoError> {
         Ok(())
     }
 }
 
-impl InfallibleUnifyValue for () {
-}
-
 impl<V: UnifyValue> UnifyValue for Option<V> {
-    fn unify_values(a: &Option<V>, b: &Option<V>) -> Result<Self, (Self, Self)> {
+    type Error = V::Error;
+
+    fn unify_values(a: &Option<V>, b: &Option<V>) -> Result<Self, V::Error> {
         match (a, b) {
             (&None, &None) => Ok(None),
-            (&Some(ref v), &None) | (&None, &Some(ref v)) => Ok(Some(v.clone())),
+            (&Some(ref v), &None) |
+            (&None, &Some(ref v)) => Ok(Some(v.clone())),
             (&Some(ref a), &Some(ref b)) => {
                 match V::unify_values(a, b) {
                     Ok(v) => Ok(Some(v)),
-                    Err((a, b)) => Err((Some(a), Some(b))),
+                    Err(err) => Err(err),
                 }
             }
         }
     }
-}
-
-impl<V: InfallibleUnifyValue> InfallibleUnifyValue for Option<V> {
 }

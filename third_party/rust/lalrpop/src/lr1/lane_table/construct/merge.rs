@@ -1,5 +1,5 @@
 use collections::{Map, Multimap, Set};
-use ena::unify::UnificationTable;
+use ena::unify::InPlaceUnificationTable;
 use lr1::core::{Action, LR1State, StateIndex};
 use lr1::lane_table::construct::state_set::StateSet;
 use lr1::lane_table::table::LaneTable;
@@ -27,7 +27,7 @@ pub struct Merge<'m, 'grammar: 'm> {
 impl<'m, 'grammar> Merge<'m, 'grammar> {
     pub fn new(
         table: &'m LaneTable<'grammar>,
-        unify: &'m mut UnificationTable<StateSet>,
+        unify: &'m mut InPlaceUnificationTable<StateSet>,
         states: &'m mut Vec<LR1State<'grammar>>,
         state_sets: &'m mut Map<StateIndex, StateSet>,
         inconsistent_state: StateIndex,
@@ -191,7 +191,7 @@ impl<'m, 'grammar> Merge<'m, 'grammar> {
 
 struct ContextSets<'m> {
     state_sets: &'m mut Map<StateIndex, StateSet>,
-    unify: &'m mut UnificationTable<StateSet>,
+    unify: &'m mut InPlaceUnificationTable<StateSet>,
 }
 
 impl<'m> ContextSets<'m> {
