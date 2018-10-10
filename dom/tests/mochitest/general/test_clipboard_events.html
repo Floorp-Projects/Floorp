@@ -67,6 +67,18 @@ function getClipboardText() {
   return SpecialPowers.getClipboardData("text/unicode");
 }
 
+function getHTMLEditor() {
+  let editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  if (!editingSession) {
+    return null;
+  }
+  let editor = editingSession.getEditorForWindow(window);
+  if (!editor) {
+    return null;
+  }
+  return editor.QueryInterface(SpecialPowers.Ci.nsIHTMLEditor);
+}
+
 async function putOnClipboard(expected, operationFn, desc, type) {
   await SimpleTest.promiseClipboardChange(expected, operationFn, type);
   ok(true, desc);
@@ -800,12 +812,88 @@ add_task(async function test_event_target() {
   selection.setBaseAndExtent(p1.firstChild, 1, p2.firstChild, 1);
 
   let pasteTarget = null;
-  document.addEventListener("paste", (event) => { pasteTarget = event.target; }, {once: true});
-
+  let pasteEventCount = 0;
+  function pasteEventLogger(event) {
+    pasteTarget = event.target;
+    pasteEventCount++;
+  }
+  document.addEventListener("paste", pasteEventLogger);
   synthesizeKey("v", {accelKey: 1});
   is(pasteTarget.getAttribute("id"), "p1",
      "'paste' event's target should be always an element which includes start container of the first Selection range");
+  is(pasteEventCount, 1,
+     "'paste' event should be fired only once when Accel+'v' is pressed");
+  document.removeEventListener("paste", pasteEventLogger);
+  contenteditableContainer.innerHTML = "";
+});
 
+add_task(async function test_paste_event_for_middle_click_without_HTMLEditor() {
+  await SpecialPowers.pushPrefEnv({"set": [["middlemouse.paste", true],
+                                           ["middlemouse.contentLoadURL", false]]});
+
+  await reset();
+
+  contenteditableContainer.innerHTML = '<div id="non-editable-target">non-editable</div>';
+  let noneditableDiv = document.getElementById("non-editable-target");
+
+  ok(!getHTMLEditor(), "There should not be HTMLEditor");
+
+  let selection = document.getSelection();
+  selection.setBaseAndExtent(content.firstChild, 0,
+                             content.firstChild, "CONTENT".length);
+
+  await putOnClipboard("CONTENT", () => {
+    synthesizeKey("c", {accelKey: 1});
+  }, "copy text from non-editable element");
+
+  let auxclickFired = false;
+  function onAuxClick(event) {
+    auxclickFired = true;
+  }
+  document.addEventListener("auxclick", onAuxClick);
+
+  let pasteEventCount = 0;
+  function onPaste(event) {
+    pasteEventCount++;
+    ok(auxclickFired, "'auxclick' event should be fired before 'paste' event");
+    is(event.target, noneditableDiv,
+       "'paste' event should be fired on the clicked element");
+  }
+  document.addEventListener("paste", onPaste);
+
+  synthesizeMouseAtCenter(noneditableDiv, {button: 1});
+  is(pasteEventCount, 1, "'paste' event should be fired just once");
+
+  pasteEventCount = 0;
+  auxclickFired = false;
+  document.addEventListener("mouseup", (event) => { event.preventDefault(); }, {once: true});
+  synthesizeMouseAtCenter(noneditableDiv, {button: 1});
+  is(pasteEventCount, 1,
+     "Even if 'mouseup' event is consumed, 'paste' event should be fired");
+
+  pasteEventCount = 0;
+  auxclickFired = false;
+  document.addEventListener("click", (event) => { event.preventDefault(); }, {once: true, capture: true});
+  synthesizeMouseAtCenter(noneditableDiv, {button: 1});
+  is(pasteEventCount, 0,
+     "If 'click' event is consumed at capturing phase at the document node, 'paste' event should be not be fired");
+
+  pasteEventCount = 0;
+  auxclickFired = false;
+  noneditableDiv.addEventListener("click", (event) => { event.preventDefault(); }, {once: true});
+  synthesizeMouseAtCenter(noneditableDiv, {button: 1});
+  is(pasteEventCount, 1,
+     "Even if 'click' event listener is added to the click event target, 'paste' event should be fired");
+
+  pasteEventCount = 0;
+  auxclickFired = false;
+  document.addEventListener("auxclick", (event) => { event.preventDefault(); }, {once: true});
+  synthesizeMouseAtCenter(noneditableDiv, {button: 1});
+  is(pasteEventCount, 0,
+     "If 'auxclick' event is consumed, 'paste' event should be not be fired");
+
+  document.removeEventListener("auxclick", onAuxClick);
+  document.removeEventListener("paste", onPaste);
   contenteditableContainer.innerHTML = "";
 });
 

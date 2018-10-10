@@ -351,6 +351,11 @@ public:
   {
     return mReason == eReal;
   }
+
+  /**
+   * Returns true if middle click paste is enabled.
+   */
+  static bool IsMiddleClickPasteEnabled();
 };
 
 /******************************************************************************

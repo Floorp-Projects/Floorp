@@ -11,7 +11,6 @@
 #include "nsAccUtils.h"
 
 #include "nsIClipboard.h"
-#include "nsIEditor.h"
 #include "nsIPersistentProperties2.h"
 #include "nsFrameSelection.h"
 
@@ -122,7 +121,7 @@ HyperTextAccessible::PasteText(int32_t aPosition)
   RefPtr<TextEditor> textEditor = GetEditor();
   if (textEditor) {
     SetSelectionRange(aPosition, aPosition);
-    textEditor->PasteAsAction(nsIClipboard::kGlobalClipboard);
+    textEditor->PasteAsAction(nsIClipboard::kGlobalClipboard, true);
   }
 }
 

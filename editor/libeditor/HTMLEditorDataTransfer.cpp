@@ -1459,9 +1459,10 @@ HTMLEditor::HavePrivateHTMLFlavor(nsIClipboard* aClipboard)
 }
 
 nsresult
-HTMLEditor::PasteInternal(int32_t aClipboardType)
+HTMLEditor::PasteInternal(int32_t aClipboardType,
+                          bool aDispatchPasteEvent)
 {
-  if (!FireClipboardEvent(ePaste, aClipboardType)) {
+  if (aDispatchPasteEvent && !FireClipboardEvent(ePaste, aClipboardType)) {
     return NS_OK;
   }
 
@@ -1690,12 +1691,14 @@ HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable)
 }
 
 nsresult
-HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType)
+HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
+                                     bool aDispatchPasteEvent)
 {
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
 
   if (IsPlaintextEditor()) {
+    // XXX In this case, we don't dispatch ePaste event.  Why?
     return PasteAsPlaintextQuotation(aClipboardType);
   }
 
@@ -1743,7 +1746,11 @@ HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType)
   }
 
   // XXX Why don't we call HTMLEditRules::DidDoAction() after Paste()?
-  rv = PasteInternal(aClipboardType);
+  // XXX If ePaste event has not been dispatched yet but selected content
+  //     has already been removed and created a <blockquote> element.
+  //     So, web apps cannot prevent the default of ePaste event which
+  //     will be dispatched by PasteInternal().
+  rv = PasteInternal(aClipboardType, aDispatchPasteEvent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

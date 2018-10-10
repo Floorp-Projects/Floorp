@@ -714,6 +714,7 @@ protected:
 
   // set the event that was used to trigger the popup, or null to clear the
   // event details. aTriggerContent will be set to the target of the event.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void InitTriggerEvent(mozilla::dom::Event* aEvent, nsIContent* aPopup, nsIContent** aTriggerContent);
 
   // callbacks for ShowPopup and HidePopup as events may be done asynchronously

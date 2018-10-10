@@ -266,6 +266,11 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute nsIContentViewer contentViewer;
 
   /**
+   * Get the id of the outer window that is or will be in this docshell.
+   */
+  [infallible] readonly attribute unsigned long long outerWindowID;
+
+  /**
    * This attribute allows chrome to tie in to handle DOM events that may
    * be of interest to chrome.
    */

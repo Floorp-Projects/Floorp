@@ -777,6 +777,22 @@ public:
                      const mozilla::WidgetEvent* aEvent);
 
   /**
+   * Get container and offset if aEvent collapses Selection.
+   * @param aPresShell      The PresShell handling aEvent.
+   * @param aEvent          The event having coordinates where you want to
+   *                        collapse Selection.
+   * @param aContainer      Returns the container node at the point.
+   *                        Set nullptr if you don't need this.
+   * @param aOffset         Returns offset in the container node at the point.
+   *                        Set nullptr if you don't need this.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  static void GetContainerAndOffsetAtEvent(nsIPresShell* aPresShell,
+                                           const mozilla::WidgetEvent* aEvent,
+                                           nsIContent** aContainer,
+                                           int32_t* aOffset);
+
+  /**
    * Translate from widget coordinates to the view's coordinates
    * @param aPresContext the PresContext for the view
    * @param aWidget the widget

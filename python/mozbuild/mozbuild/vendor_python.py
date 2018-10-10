@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import shutil
 import subprocess
 
 import mozfile
@@ -24,36 +25,59 @@ class VendorPython(MozbuildObject):
             self.topsrcdir, os.path.join('third_party', 'python'))
 
         packages = packages or []
-        pipenv = self.ensure_pipenv()
 
-        for package in packages:
-            if not all(package.partition('==')):
-                raise Exception('Package {} must be in the format name==version'.format(package))
+        self._activate_virtualenv()
+        pip_compile = os.path.join(self.virtualenv_manager.bin_path, 'pip-compile')
+        if not os.path.exists(pip_compile):
+            path = os.path.normpath(os.path.join(self.topsrcdir, 'third_party', 'python', 'pip-tools'))
+            self.virtualenv_manager.install_pip_package(path, vendored=True)
+        spec = os.path.join(vendor_dir, 'requirements.in')
+        requirements = os.path.join(vendor_dir, 'requirements.txt')
 
-        for package in packages:
-            subprocess.check_call(
-                [pipenv, 'install', package],
-                cwd=self.topsrcdir)
+        with NamedTemporaryFile('w') as tmpspec:
+            shutil.copyfile(spec, tmpspec.name)
+            self._update_packages(tmpspec.name, packages)
 
-        with NamedTemporaryFile('w') as requirements:
-            # determine the dependency graph and generate requirements.txt
-            subprocess.check_call(
-                [pipenv, 'lock', '--requirements'],
-                cwd=self.topsrcdir,
-                stdout=requirements)
+            # resolve the dependencies and update requirements.txt
+            subprocess.check_output([
+                pip_compile,
+                tmpspec.name,
+                '--no-header',
+                '--no-index',
+                '--output-file', requirements,
+                '--generate-hashes'])
 
             with TemporaryDirectory() as tmp:
                 # use requirements.txt to download archived source distributions of all packages
                 self.virtualenv_manager._run_pip([
                     'download',
-                    '-r', requirements.name,
+                    '-r', requirements,
                     '--no-deps',
                     '--dest', tmp,
                     '--no-binary', ':all:',
                     '--disable-pip-version-check'])
                 self._extract(tmp, vendor_dir)
 
-        self.repository.add_remove_files(vendor_dir)
+            shutil.copyfile(tmpspec.name, spec)
+            self.repository.add_remove_files(vendor_dir)
+
+    def _update_packages(self, spec, packages):
+        for package in packages:
+            if not all(package.partition('==')):
+                raise Exception('Package {} must be in the format name==version'.format(package))
+
+        requirements = {}
+        with open(spec, 'r') as f:
+            for line in f.readlines():
+                name, version = line.rstrip().split('==')
+                requirements[name] = version
+        for package in packages:
+            name, version = package.split('==')
+            requirements[name] = version
+
+        with open(spec, 'w') as f:
+            for name, version in sorted(requirements.items()):
+                f.write('{}=={}\n'.format(name, version))
 
     def _extract(self, src, dest):
         """extract source distribution into vendor directory"""

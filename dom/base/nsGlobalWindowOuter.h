@@ -219,7 +219,7 @@ public:
     return (nsGlobalWindowOuter *)(mozilla::dom::EventTarget *)supports;
   }
 
-  static already_AddRefed<nsGlobalWindowOuter> Create(bool aIsChrome);
+  static already_AddRefed<nsGlobalWindowOuter> Create(nsIDocShell* aDocShell, bool aIsChrome);
 
   // public methods
   nsPIDOMWindowOuter* GetPrivateParent();
@@ -320,7 +320,6 @@ public:
   // Outer windows only.
   bool WouldReuseInnerWindow(nsIDocument* aNewDocument);
 
-  void SetDocShell(nsIDocShell* aDocShell);
   void DetachFromDocShell();
 
   virtual nsresult SetNewDocument(nsIDocument *aDocument,
@@ -581,7 +580,6 @@ public:
 
   nsresult GetPrompter(nsIPrompt** aPrompt) override;
 protected:
-  explicit nsGlobalWindowOuter();
   nsPIDOMWindowOuter* GetOpenerWindowOuter();
   // Initializes the mWasOffline member variable
   void InitWasOffline();
@@ -831,6 +829,8 @@ protected:
                  nsPIDOMWindowOuter** _retval) override;
 
 private:
+  explicit nsGlobalWindowOuter(uint64_t aWindowID);
+
   /**
    * @param aUrl the URL we intend to load into the window.  If aNavigate is
    *        true, we'll actually load this URL into the window. Otherwise,
@@ -1047,6 +1047,8 @@ private:
                               SecureContextFlags aFlags =
                                 SecureContextFlags::eDefault);
 
+  void SetDocShell(nsIDocShell* aDocShell);
+
   // nsPIDOMWindow{Inner,Outer} should be able to see these helper methods.
   friend class nsPIDOMWindowInner;
   friend class nsPIDOMWindowOuter;
@@ -1256,13 +1258,6 @@ nsGlobalWindowOuter::MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner)
   if(mInnerWindow == aExpectedInner->AsInner()) {
     mInnerWindow = nullptr;
   }
-}
-
-/* factory function */
-inline already_AddRefed<nsGlobalWindowOuter>
-NS_NewScriptGlobalObject(bool aIsChrome)
-{
-  return nsGlobalWindowOuter::Create(aIsChrome);
 }
 
 #endif /* nsGlobalWindowOuter_h___ */
