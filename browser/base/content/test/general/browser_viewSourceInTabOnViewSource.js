@@ -13,7 +13,7 @@ function wait_while_tab_is_busy() {
 }
 
 // This function waits for the tab to stop being busy instead of waiting for it
-// to load, since the elementsForViewSource change happens at that time.
+// to load, since the canViewSource change happens at that time.
 var with_new_tab_opened = async function(options, taskFn) {
   let busyPromise = wait_while_tab_is_busy();
   let tab = await BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url, false);
@@ -24,10 +24,8 @@ var with_new_tab_opened = async function(options, taskFn) {
 
 add_task(async function test_regular_page() {
   function test_expect_view_source_enabled(browser) {
-    for (let element of [...XULBrowserWindow.elementsForViewSource]) {
-      ok(!element.hasAttribute("disabled"),
-         "View Source should be enabled");
-    }
+    ok(!XULBrowserWindow.canViewSource.hasAttribute("disabled"),
+       "View Source should be enabled");
   }
 
   await with_new_tab_opened({
@@ -38,10 +36,8 @@ add_task(async function test_regular_page() {
 
 add_task(async function test_view_source_page() {
   function test_expect_view_source_disabled(browser) {
-    for (let element of [...XULBrowserWindow.elementsForViewSource]) {
-      ok(element.hasAttribute("disabled"),
-         "View Source should be disabled");
-    }
+    ok(XULBrowserWindow.canViewSource.hasAttribute("disabled"),
+       "View Source should be disabled");
   }
 
   await with_new_tab_opened({

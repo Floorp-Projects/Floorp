@@ -26,6 +26,10 @@
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
+  <broadcasterset id="mainBroadcasterSet">
+    <broadcaster id="isFrameImage"/>
+  </broadcasterset>
+
   <commandset id="mainCommandset">
     <command id="Browser:Back"
              oncommand="getPanelBrowser().webNavigation.goBack();"
