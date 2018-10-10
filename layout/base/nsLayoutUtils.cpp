@@ -9229,7 +9229,9 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
 
   if (scrollableFrame) {
     CSSPoint scrollPosition = CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
+    CSSPoint apzScrollPosition = CSSPoint::FromAppUnits(scrollableFrame->GetApzScrollPosition());
     metrics.SetScrollOffset(scrollPosition);
+    metrics.SetBaseScrollOffset(apzScrollPosition);
 
     CSSRect viewport = metrics.GetViewport();
     viewport.MoveTo(scrollPosition);
@@ -9243,12 +9245,17 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     // its scroll offset. We want to distinguish the case where the scroll offset
     // was "restored" because in that case the restored scroll position should
     // not overwrite a user-driven scroll.
-    if (scrollableFrame->LastScrollOrigin() == nsGkAtoms::restore) {
-      metrics.SetScrollOffsetRestored(scrollableFrame->CurrentScrollGeneration());
-    } else if (CanScrollOriginClobberApz(scrollableFrame->LastScrollOrigin())) {
-      metrics.SetScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
+    nsAtom* lastOrigin = scrollableFrame->LastScrollOrigin();
+    if (lastOrigin == nsGkAtoms::restore) {
+      metrics.SetScrollGeneration(scrollableFrame->CurrentScrollGeneration());
+      metrics.SetScrollOffsetUpdateType(FrameMetrics::eRestore);
+    } else if (CanScrollOriginClobberApz(lastOrigin)) {
+      if (lastOrigin == nsGkAtoms::relative) {
+        metrics.SetIsRelative(true);
+      }
+      metrics.SetScrollGeneration(scrollableFrame->CurrentScrollGeneration());
+      metrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
     }
-    scrollableFrame->AllowScrollOriginDowngrade();
 
     nsAtom* lastSmoothScrollOrigin = scrollableFrame->LastSmoothScrollOrigin();
     if (lastSmoothScrollOrigin) {
