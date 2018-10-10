@@ -295,22 +295,12 @@ enum nsCSSUnit {
   // Plus, Minus, Times_* and Divided have arrays with exactly 2
   // elements.  a + b + c + d is grouped as ((a + b) + c) + d
   eCSSUnit_Calc_Plus    = 31,     // (nsCSSValue::Array*) + node within calc()
-  eCSSUnit_Calc_Minus   = 32,     // (nsCSSValue::Array*) - within calc
-  eCSSUnit_Calc_Times_L = 33,     // (nsCSSValue::Array*) num * val within calc
-  eCSSUnit_Calc_Times_R = 34,     // (nsCSSValue::Array*) val * num within calc
-  eCSSUnit_Calc_Divided = 35,     // (nsCSSValue::Array*) / within calc
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
   eCSSUnit_List         = 53,     // (nsCSSValueList*) list of values
-  eCSSUnit_ListDep      = 54,     // (nsCSSValueList*) same as List
-                                  //   but does not own the list
   eCSSUnit_SharedList   = 55,     // (nsCSSValueSharedList*) same as list
                                   //   but reference counted and shared
   eCSSUnit_PairList     = 56,     // (nsCSSValuePairList*) list of value pairs
-  eCSSUnit_PairListDep  = 57,     // (nsCSSValuePairList*) same as PairList
-                                  //   but does not own the list
-
-  eCSSUnit_FontFamilyList = 58,   // (SharedFontList*) value
 
   // Atom units
   eCSSUnit_AtomIdent    = 60,     // (nsAtom*) for its string as an identifier
@@ -385,7 +375,6 @@ public:
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsString& aValue, nsCSSUnit aUnit);
   nsCSSValue(Array* aArray, nsCSSUnit aUnit);
-  explicit nsCSSValue(mozilla::SharedFontList* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   nsCSSValue(nsCSSValue&& aOther)
     : mUnit(aOther.mUnit)
@@ -450,12 +439,12 @@ public:
   bool      IsTimeUnit() const
     { return eCSSUnit_Seconds <= mUnit && mUnit <= eCSSUnit_Milliseconds; }
   bool      IsCalcUnit() const
-    { return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
+    { return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Plus; }
 
   bool      UnitHasStringValue() const
     { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Element; }
   bool      UnitHasArrayValue() const
-    { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
+    { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Plus; }
 
   int32_t GetIntValue() const
   {
@@ -524,15 +513,6 @@ public:
     return mValue.mSharedList;
   }
 
-  mozilla::NotNull<mozilla::SharedFontList*> GetFontFamilyListValue() const
-  {
-    MOZ_ASSERT(mUnit == eCSSUnit_FontFamilyList,
-               "not a font family list value");
-    NS_ASSERTION(mValue.mFontFamilyList != nullptr,
-                 "font family list value should never be null");
-    return mozilla::WrapNotNull(mValue.mFontFamilyList);
-  }
-
   // bodies of these are below
   inline nsCSSValuePair& GetPairValue();
   inline const nsCSSValuePair& GetPairValue() const;
@@ -585,7 +565,6 @@ public:
   // converts the nscoord to pixels
   void SetIntegerCoordValue(nscoord aCoord);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
-  void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
   void SetSharedListValue(nsCSSValueSharedList* aList);
@@ -603,9 +582,6 @@ public:
   // (Will abort on allocation failure.)
   static already_AddRefed<nsStringBuffer>
     BufferFromString(const nsString& aValue);
-
-  // Convert the given Ident value into AtomIdent.
-  void AtomizeIdentValue();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -629,11 +605,8 @@ protected:
     Array* MOZ_OWNING_REF mArray;
     nsCSSValuePair_heap* MOZ_OWNING_REF mPair;
     nsCSSValueList_heap* MOZ_OWNING_REF mList;
-    nsCSSValueList* mListDependent;
     nsCSSValueSharedList* MOZ_OWNING_REF mSharedList;
     nsCSSValuePairList_heap* MOZ_OWNING_REF mPairList;
-    nsCSSValuePairList* mPairListDependent;
-    mozilla::SharedFontList* MOZ_OWNING_REF mFontFamilyList;
   } mValue;
 };
 
@@ -800,28 +773,18 @@ public:
   nsCSSValueList* mHead;
 };
 
-// This has to be here so that the relationship between nsCSSValueList
-// and nsCSSValueList_heap is visible.
 inline nsCSSValueList*
 nsCSSValue::GetListValue()
 {
-  if (mUnit == eCSSUnit_List)
-    return mValue.mList;
-  else {
-    MOZ_ASSERT(mUnit == eCSSUnit_ListDep, "not a list value");
-    return mValue.mListDependent;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mUnit == eCSSUnit_List, "not a list value");
+  return mValue.mList;
 }
 
 inline const nsCSSValueList*
 nsCSSValue::GetListValue() const
 {
-  if (mUnit == eCSSUnit_List)
-    return mValue.mList;
-  else {
-    MOZ_ASSERT(mUnit == eCSSUnit_ListDep, "not a list value");
-    return mValue.mListDependent;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mUnit == eCSSUnit_List, "not a list value");
+  return mValue.mList;
 }
 
 struct nsCSSValuePair {
@@ -977,23 +940,15 @@ private:
 inline nsCSSValuePairList*
 nsCSSValue::GetPairListValue()
 {
-  if (mUnit == eCSSUnit_PairList)
-    return mValue.mPairList;
-  else {
-    MOZ_ASSERT (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
-    return mValue.mPairListDependent;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mUnit == eCSSUnit_PairList, "not a pairlist value");
+  return mValue.mPairList;
 }
 
 inline const nsCSSValuePairList*
 nsCSSValue::GetPairListValue() const
 {
-  if (mUnit == eCSSUnit_PairList)
-    return mValue.mPairList;
-  else {
-    MOZ_ASSERT (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
-    return mValue.mPairListDependent;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mUnit == eCSSUnit_PairList, "not a pairlist value");
+  return mValue.mPairList;
 }
 
 #endif /* nsCSSValue_h___ */
