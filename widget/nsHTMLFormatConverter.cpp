@@ -35,22 +35,12 @@ NS_IMPL_ISUPPORTS(nsHTMLFormatConverter, nsIFormatConverter)
 // Creates a new list and returns the list of all the flavors this converter
 // knows how to import. In this case, it's just HTML.
 //
-// Flavors (strings) are wrapped in a primitive object so that JavaScript can
-// access them easily via XPConnect.
-//
 NS_IMETHODIMP
-nsHTMLFormatConverter::GetInputDataFlavors(nsIArray **_retval)
+nsHTMLFormatConverter::GetInputDataFlavors(nsTArray<nsCString>& aFlavors)
 {
-  if ( !_retval )
-    return NS_ERROR_INVALID_ARG;
-
-  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
-  nsresult rv = AddFlavorToList ( array, kHTMLMime );
-
-  array.forget(_retval);
-  return rv;
-
-} // GetInputDataFlavors
+  aFlavors.AppendElement(NS_LITERAL_CSTRING(kHTMLMime));
+  return NS_OK;
+}
 
 
 //
@@ -60,53 +50,13 @@ nsHTMLFormatConverter::GetInputDataFlavors(nsIArray **_retval)
 // knows how to export (convert). In this case, it's all sorts of things that HTML can be
 // converted to.
 //
-// Flavors (strings) are wrapped in a primitive object so that JavaScript can
-// access them easily via XPConnect.
-//
 NS_IMETHODIMP
-nsHTMLFormatConverter::GetOutputDataFlavors(nsIArray **_retval)
+nsHTMLFormatConverter::GetOutputDataFlavors(nsTArray<nsCString>& aFlavors)
 {
-  if ( !_retval )
-    return NS_ERROR_INVALID_ARG;
-
-  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
-  nsresult rv = AddFlavorToList ( array, kHTMLMime );
-  if ( NS_FAILED(rv) )
-    return rv;
-  rv = AddFlavorToList ( array, kUnicodeMime );
-  if ( NS_FAILED(rv) )
-    return rv;
-
-  array.forget(_retval);
-  return rv;
-
-} // GetOutputDataFlavors
-
-
-//
-// AddFlavorToList
-//
-// Convenience routine for adding a flavor wrapped in an nsISupportsCString object
-// to a list
-//
-nsresult
-nsHTMLFormatConverter :: AddFlavorToList ( nsCOMPtr<nsIMutableArray>& inList, const char* inFlavor )
-{
-  nsresult rv;
-
-  nsCOMPtr<nsISupportsCString> dataFlavor =
-      do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
-  if ( dataFlavor ) {
-    dataFlavor->SetData ( nsDependentCString(inFlavor) );
-    // add to list as an nsISupports so the correct interface gets the addref
-    // in AppendElement()
-    nsCOMPtr<nsISupports> genericFlavor ( do_QueryInterface(dataFlavor) );
-    inList->AppendElement ( genericFlavor );
-  }
-  return rv;
-
-} // AddFlavorToList
-
+  aFlavors.AppendElement(NS_LITERAL_CSTRING(kHTMLMime));
+  aFlavors.AppendElement(NS_LITERAL_CSTRING(kUnicodeMime));
+  return NS_OK;
+}
 
 //
 // CanConvert
