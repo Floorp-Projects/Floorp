@@ -152,52 +152,44 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     GtkTargetList *list = gtk_target_list_new(nullptr, 0);
 
     // Get the types of supported flavors
-    nsCOMPtr<nsIArray> flavors;
-
-    nsresult rv =
-        aTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavors));
-    if (!flavors || NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
+    nsTArray<nsCString> flavors;
+    nsresult rv = aTransferable->FlavorsTransferableCanExport(flavors);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
     // Add all the flavors to this widget's supported type.
     bool imagesAdded = false;
-    uint32_t count;
-    flavors->GetLength(&count);
-    for (uint32_t i=0; i < count; i++) {
-        nsCOMPtr<nsISupportsCString> flavor = do_QueryElementAt(flavors, i);
+    for (uint32_t i = 0; i < flavors.Length(); i++) {
+        nsCString& flavorStr = flavors[i];
 
-        if (flavor) {
-            nsCString flavorStr;
-            flavor->ToString(getter_Copies(flavorStr));
-
-            // special case text/unicode since we can handle all of
-            // the string types
-            if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-                gtk_target_list_add(list, gdk_atom_intern("UTF8_STRING", FALSE), 0, 0);
-                gtk_target_list_add(list, gdk_atom_intern("COMPOUND_TEXT", FALSE), 0, 0);
-                gtk_target_list_add(list, gdk_atom_intern("TEXT", FALSE), 0, 0);
-                gtk_target_list_add(list, GDK_SELECTION_TYPE_STRING, 0, 0);
-                continue;
-            }
-
-            if (flavorStr.EqualsLiteral(kNativeImageMime) ||
-                flavorStr.EqualsLiteral(kPNGImageMime) ||
-                flavorStr.EqualsLiteral(kJPEGImageMime) ||
-                flavorStr.EqualsLiteral(kJPGImageMime) ||
-                flavorStr.EqualsLiteral(kGIFImageMime)) {
-                // don't bother adding image targets twice
-                if (!imagesAdded) {
-                    // accept any writable image type
-                    gtk_target_list_add_image_targets(list, 0, TRUE);
-                    imagesAdded = true;
-                }
-                continue;
-            }
-
-            // Add this to our list of valid targets
-            GdkAtom atom = gdk_atom_intern(flavorStr.get(), FALSE);
-            gtk_target_list_add(list, atom, 0, 0);
+        // special case text/unicode since we can handle all of
+        // the string types
+        if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+            gtk_target_list_add(list, gdk_atom_intern("UTF8_STRING", FALSE), 0, 0);
+            gtk_target_list_add(list, gdk_atom_intern("COMPOUND_TEXT", FALSE), 0, 0);
+            gtk_target_list_add(list, gdk_atom_intern("TEXT", FALSE), 0, 0);
+            gtk_target_list_add(list, GDK_SELECTION_TYPE_STRING, 0, 0);
+            continue;
         }
+
+        if (flavorStr.EqualsLiteral(kNativeImageMime) ||
+            flavorStr.EqualsLiteral(kPNGImageMime) ||
+            flavorStr.EqualsLiteral(kJPEGImageMime) ||
+            flavorStr.EqualsLiteral(kJPGImageMime) ||
+            flavorStr.EqualsLiteral(kGIFImageMime)) {
+            // don't bother adding image targets twice
+            if (!imagesAdded) {
+                // accept any writable image type
+                gtk_target_list_add_image_targets(list, 0, TRUE);
+                imagesAdded = true;
+            }
+            continue;
+        }
+
+        // Add this to our list of valid targets
+        GdkAtom atom = gdk_atom_intern(flavorStr.get(), FALSE);
+        gtk_target_list_add(list, atom, 0, 0);
     }
 
     // Get GTK clipboard (CLIPBOARD or PRIMARY)
@@ -258,22 +250,14 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
         return NS_ERROR_FAILURE;
 
     // Get a list of flavors this transferable can import
-    nsCOMPtr<nsIArray> flavors;
-    nsresult rv;
-    rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavors));
-    if (!flavors || NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
+    nsTArray<nsCString> flavors;
+    nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
-    uint32_t count;
-    flavors->GetLength(&count);
-    for (uint32_t i=0; i < count; i++) {
-        nsCOMPtr<nsISupportsCString> currentFlavor;
-        currentFlavor = do_QueryElementAt(flavors, i);
-        if (!currentFlavor)
-            continue;
-
-        nsCString flavorStr;
-        currentFlavor->ToString(getter_Copies(flavorStr));
+    for (uint32_t i = 0; i < flavors.Length(); i++) {
+        nsCString& flavorStr = flavors[i];
 
         if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
             flavorStr.EqualsLiteral(kJPGImageMime) ||
