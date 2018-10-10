@@ -4994,62 +4994,76 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
                                             nsEventStatus* aStatus,
                                             nsIContent* aOverrideClickTarget)
 {
-  nsresult ret = NS_OK;
+  // If mouse is still over same element, clickcount will be > 1.
+  // If it has moved it will be zero, so no click.
+  if (!aEvent->mClickCount) {
+    return NS_OK;
+  }
 
-  //If mouse is still over same element, clickcount will be > 1.
-  //If it has moved it will be zero, so no click.
-  if (aEvent->mClickCount) {
-    //Check that the window isn't disabled before firing a click
-    //(see bug 366544).
-    if (aEvent->mWidget && !aEvent->mWidget->IsEnabled()) {
-      return ret;
-    }
-    //fire click
-    bool notDispatchToContents =
-     (aEvent->button == WidgetMouseEvent::eMiddleButton ||
-      aEvent->button == WidgetMouseEvent::eRightButton);
+  // Check that the window isn't disabled before firing a click
+  // (see bug 366544).
+  if (aEvent->mWidget && !aEvent->mWidget->IsEnabled()) {
+    return NS_OK;
+  }
 
-    bool fireAuxClick = notDispatchToContents;
+  // Fire click events if the event target is still available.
+  bool notDispatchToContents =
+   (aEvent->button == WidgetMouseEvent::eMiddleButton ||
+    aEvent->button == WidgetMouseEvent::eRightButton);
 
-    nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
-    if (presShell) {
-      nsCOMPtr<nsIContent> mouseContent = GetEventTargetContent(aEvent);
-      // Click events apply to *elements* not nodes. At this point the target
-      // content may have been reset to some non-element content, and so we need
-      // to walk up the closest ancestor element, just like we do in
-      // nsPresShell::HandleEvent.
-      while (mouseContent && !mouseContent->IsElement()) {
-        mouseContent = mouseContent->GetFlattenedTreeParent();
-      }
+  bool fireAuxClick = notDispatchToContents;
 
-      if (!mouseContent && !mCurrentTarget && !aOverrideClickTarget) {
-        return NS_OK;
-      }
+  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+  if (!presShell) {
+    return NS_OK;
+  }
 
-      // HandleEvent clears out mCurrentTarget which we might need again
-      AutoWeakFrame currentTarget = mCurrentTarget;
-      ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseClick,
-                                      presShell, mouseContent, currentTarget,
-                                      notDispatchToContents,
-                                      aOverrideClickTarget);
+  nsCOMPtr<nsIContent> mouseContent = GetEventTargetContent(aEvent);
+  // Click events apply to *elements* not nodes. At this point the target
+  // content may have been reset to some non-element content, and so we need
+  // to walk up the closest ancestor element, just like we do in
+  // nsPresShell::HandleEvent.
+  while (mouseContent && !mouseContent->IsElement()) {
+    mouseContent = mouseContent->GetFlattenedTreeParent();
+  }
 
-      if (NS_SUCCEEDED(ret) && aEvent->mClickCount == 2 &&
-          mouseContent && mouseContent->IsInComposedDoc()) {
-        //fire double click
-        ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseDoubleClick,
-                                        presShell, mouseContent, currentTarget,
-                                        notDispatchToContents,
-                                        aOverrideClickTarget);
-      }
-      if (NS_SUCCEEDED(ret) && mouseContent && fireAuxClick &&
-          mouseContent->IsInComposedDoc()) {
-        ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseAuxClick,
-                                        presShell, mouseContent, currentTarget,
-                                        false, aOverrideClickTarget);
-      }
+  if (!mouseContent && !mCurrentTarget && !aOverrideClickTarget) {
+    return NS_OK;
+  }
+
+  // HandleEvent clears out mCurrentTarget which we might need again
+  AutoWeakFrame currentTarget = mCurrentTarget;
+  nsresult rv =
+    InitAndDispatchClickEvent(aEvent, aStatus, eMouseClick,
+                              presShell, mouseContent, currentTarget,
+                              notDispatchToContents,
+                              aOverrideClickTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Fire double click event if click count is 2.
+  if (aEvent->mClickCount == 2 &&
+      mouseContent && mouseContent->IsInComposedDoc()) {
+    rv = InitAndDispatchClickEvent(aEvent, aStatus, eMouseDoubleClick,
+                                   presShell, mouseContent, currentTarget,
+                                   notDispatchToContents,
+                                   aOverrideClickTarget);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
-  return ret;
+
+  // Fire auxclick even if necessary.
+  if (fireAuxClick &&
+      mouseContent && mouseContent->IsInComposedDoc()) {
+    rv = InitAndDispatchClickEvent(aEvent, aStatus, eMouseAuxClick,
+                                   presShell, mouseContent, currentTarget,
+                                   false, aOverrideClickTarget);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch eMouseAuxClick");
+  }
+
+  return rv;
 }
 
 nsIFrame*
