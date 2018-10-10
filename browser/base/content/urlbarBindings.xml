@@ -670,15 +670,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
 
-          BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
-            event, this.userSelectionBehavior);
-
           let where = openUILinkWhere || this._whereToOpen(event);
 
           let url = this.value;
           if (!url) {
             return;
           }
+
+          BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
+            event, this.userSelectionBehavior);
 
           let mayInheritPrincipal = false;
           let postData = null;
