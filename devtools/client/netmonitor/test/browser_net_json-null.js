@@ -20,11 +20,11 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  const onReponsePanelReady = waitForDOM(document, "#response-panel .CodeMirror-code");
+  const onResponsePanelReady = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  await onReponsePanelReady;
+  await onResponsePanelReady;
 
   checkResponsePanelDisplaysJSON();
 

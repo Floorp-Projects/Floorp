@@ -475,21 +475,14 @@ struct DIGroup
         // smaller areas
         InvalidateRect(aData->mRect.Intersect(imageRect)); // invalidate the old area -- in theory combined should take care of this
         UniquePtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(aBuilder));
-        aData->mClip.AddOffsetAndComputeDifference(nsPoint(), aData->mGeometry->ComputeInvalidationRegion(), clip,
-                                                   geometry ? geometry->ComputeInvalidationRegion() :
-                                                   aData->mGeometry->ComputeInvalidationRegion(),
-                                                   &combined);
-        IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
-        IntRect invalidRect = transformedRect.Intersect(imageRect);
-        GP("combined not empty: mRect %d %d %d %d\n", invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
         // invalidate the invalidated area.
-        InvalidateRect(invalidRect);
 
         aData->mGeometry = std::move(geometry);
 
         combined = clip.ApplyNonRoundedIntersection(aData->mGeometry->ComputeInvalidationRegion());
-        transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
+        IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
         aData->mRect = transformedRect.Intersect(imageRect);
+        InvalidateRect(aData->mRect);
 
         // CGC invariant broken
         if (!mInvalidRect.Contains(aData->mRect)) {
@@ -498,10 +491,6 @@ struct DIGroup
             "-" << aData->mRect.y <<
             "-" << aData->mRect.width <<
             "-" << aData->mRect.height <<
-            "," << invalidRect.x <<
-            "-" << invalidRect.y <<
-            "-" << invalidRect.width <<
-            "-" << invalidRect.height <<
             "-ib";
         }
 

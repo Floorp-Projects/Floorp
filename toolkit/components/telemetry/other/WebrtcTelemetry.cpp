@@ -4,13 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-#include "mozilla/Telemetry.h"
 #include "WebrtcTelemetry.h"
+
 #include "jsapi.h"
+#include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
-
 void
 WebrtcTelemetry::RecordIceCandidateMask(const uint32_t iceCandidateBitmask,
                                         const bool success)
