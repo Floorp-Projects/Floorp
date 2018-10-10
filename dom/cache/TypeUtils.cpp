@@ -511,6 +511,26 @@ TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
   autoStream->Serialize(aStream, GetIPCManager());
 
   aStreamCleanupList.AppendElement(std::move(autoStream));
+
+  // This nested condition guards against silent failures in IPC code
+  // that would cause a crash when the message is sent. Specifically,
+  // if IPCStreamSource::Initialize fails to get a StrongWorkerRef
+  // (e.g. when the worker terminates), a nullptr is silently stored
+  // in IPCRemoteStreamType.
+  // This is a workaround, requested in bug 1484524, and a more
+  // reasonable solution should replace it.
+  if (cacheStream.stream().type() == OptionalIPCStream::TIPCStream) {
+    const auto& ipcStream = cacheStream.stream().get_IPCStream();
+    if (ipcStream.type() == IPCStream::TIPCRemoteStream) {
+      const auto& ipcRemoteStream = ipcStream.get_IPCRemoteStream();
+      using mozilla::ipc::IPCRemoteStreamType;
+      if (ipcRemoteStream.stream().type() == IPCRemoteStreamType::TPChildToParentStreamChild) {
+        if (!ipcRemoteStream.stream().get_PChildToParentStreamChild()) {
+          aRv.Throw(NS_ERROR_FAILURE);
+        }
+      }
+    }
+  }
 }
 
 } // namespace cache
