@@ -754,6 +754,10 @@ protected:
     gfxPlatform();
     virtual ~gfxPlatform();
 
+    virtual bool HasBattery() {
+      return true;
+    }
+
     virtual void InitAcceleration();
     virtual void InitWebRenderConfig();
 
