@@ -9,7 +9,12 @@ AntiTracking.runTest("Storage Access API called in a private window",
   },
 
   null, // non-blocking callback
-  null, // cleanup function
+  // cleanup function
+  async _ => {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    });
+  },
   [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
