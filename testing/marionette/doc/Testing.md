@@ -65,12 +65,12 @@ and a helpful tip is to suppress the window can be to use Firefox’
 
     % ./mach marionette test -z TEST
 
-`-z` is an alias for `--headless` and equivalent to setting the
-`MOZ_HEADLESS` output variable.  In addition to `MOZ_HEADLESS` there
-is also `MOZ_HEADLESS_WIDTH` and `MOZ_HEADLESS_HEIGHT` for controlling
-the dimensions of the no-op virtual display.  This is similar to
-using xvfb(1) which you may know from the X windowing system, but
-has the additional benefit of also working on macOS and Windows.
+`-z` is an alias for the `--headless` flag and equivalent to setting
+the `MOZ_HEADLESS` output variable.  In addition to `MOZ_HEADLESS`
+there is also `MOZ_HEADLESS_WIDTH` and `MOZ_HEADLESS_HEIGHT` for
+controlling the dimensions of the no-op virtual display.  This is
+similar to using Xvfb(1) which you may know from the X windowing system,
+but has the additional benefit of also working on macOS and Windows.
 
 
 ### Android

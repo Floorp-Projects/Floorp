@@ -36,7 +36,7 @@ repackage_signing_description_schema = Schema({
 })
 
 SIGNING_FORMATS = {
-    'target.complete.mar': ["autograph_mar384"],
+    'target.complete.mar': ["autograph_hash_only_mar384"],
     'target.bz2.complete.mar': ["mar"],
     "target.installer.exe": ["sha2signcode"],
     "target.stub-installer.exe": ["sha2signcodestub"],
