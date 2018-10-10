@@ -151,7 +151,7 @@
 
 .ruleview-namecontainer {
   cursor: text;
-  margin-left: -25px;
+  margin-left: -35px;
 }
 
 .ruleview-computed > .ruleview-namecontainer {
@@ -315,7 +315,10 @@
 .ruleview-enableproperty {
   position: relative;
   float: left;
-  left: -28px;
+  left: -38px;
+  box-sizing: content-box;
+  border-left: 10px solid transparent;
+  background-clip: content-box;
 }
 
 .ruleview-warning {
