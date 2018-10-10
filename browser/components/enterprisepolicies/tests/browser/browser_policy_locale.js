@@ -23,6 +23,7 @@ function promiseLocaleChanged() {
 }
 
 add_task(async function test_requested_locale() {
+  let originalLocales = Services.locale.requestedLocales;
   let localePromise = promiseLocaleChanged();
   await setupPolicyEngineWithJson({
     "policies": {
@@ -30,4 +31,5 @@ add_task(async function test_requested_locale() {
     },
   });
   await localePromise;
+  Services.locale.requestedLocales = originalLocales;
 });
