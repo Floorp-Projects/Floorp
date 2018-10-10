@@ -14,7 +14,7 @@
 
 namespace mozilla {
 
-WebGLExtensionCompressedTexturePVRTC::WebGLExtensionCompressedTexturePVRTC(WebGLContext* webgl)
+WebGLExtensionCompressedTextureATC::WebGLExtensionCompressedTextureATC(WebGLContext* webgl)
     : WebGLExtensionBase(webgl)
 {
     RefPtr<WebGLContext> webgl_ = webgl; // Bug 1201275
@@ -30,18 +30,17 @@ WebGLExtensionCompressedTexturePVRTC::WebGLExtensionCompressedTexturePVRTC(WebGL
 
 #define FOO(x) LOCAL_GL_ ## x, webgl::EffectiveFormat::x
 
-    fnAdd(FOO(COMPRESSED_RGB_PVRTC_4BPPV1));
-    fnAdd(FOO(COMPRESSED_RGB_PVRTC_2BPPV1));
-    fnAdd(FOO(COMPRESSED_RGBA_PVRTC_4BPPV1));
-    fnAdd(FOO(COMPRESSED_RGBA_PVRTC_2BPPV1));
+    fnAdd(FOO(ATC_RGB_AMD));
+    fnAdd(FOO(ATC_RGBA_EXPLICIT_ALPHA_AMD));
+    fnAdd(FOO(ATC_RGBA_INTERPOLATED_ALPHA_AMD));
 
 #undef FOO
 }
 
-WebGLExtensionCompressedTexturePVRTC::~WebGLExtensionCompressedTexturePVRTC()
+WebGLExtensionCompressedTextureATC::~WebGLExtensionCompressedTextureATC()
 {
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTexturePVRTC, WEBGL_compressed_texture_pvrtc)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureATC, WEBGL_compressed_texture_atc)
 
 } // namespace mozilla
