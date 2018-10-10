@@ -848,19 +848,27 @@ CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
         NS_WARNING("No texture found in texture source!");
       }
 
+      D3D11_TEXTURE2D_DESC sourceDesc;
+      texture->GetDesc(&sourceDesc);
+      MOZ_DIAGNOSTIC_ASSERT(sourceDesc.Format == DXGI_FORMAT_NV12 ||
+                            sourceDesc.Format == DXGI_FORMAT_P010 ||
+                            sourceDesc.Format == DXGI_FORMAT_P016);
+
       // Might want to cache these for efficiency.
       RefPtr<ID3D11ShaderResourceView> srViewY;
       RefPtr<ID3D11ShaderResourceView> srViewCbCr;
       D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc =
         CD3D11_SHADER_RESOURCE_VIEW_DESC(D3D11_SRV_DIMENSION_TEXTURE2D,
-                                         DXGI_FORMAT_R8_UNORM);
-      mDevice->CreateShaderResourceView(texture,
-                                        &srvDesc,
-                                        getter_AddRefs(srViewY));
-      srvDesc.Format = DXGI_FORMAT_R8G8_UNORM;
-      mDevice->CreateShaderResourceView(texture,
-                                        &srvDesc,
-                                        getter_AddRefs(srViewCbCr));
+                                         sourceDesc.Format == DXGI_FORMAT_NV12
+                                           ? DXGI_FORMAT_R8_UNORM
+                                           : DXGI_FORMAT_R16_UNORM);
+      mDevice->CreateShaderResourceView(
+        texture, &srvDesc, getter_AddRefs(srViewY));
+      srvDesc.Format = sourceDesc.Format == DXGI_FORMAT_NV12
+                         ? DXGI_FORMAT_R8G8_UNORM
+                         : DXGI_FORMAT_R16G16_UNORM;
+      mDevice->CreateShaderResourceView(
+        texture, &srvDesc, getter_AddRefs(srViewCbCr));
 
       ID3D11ShaderResourceView* views[] = { srViewY, srViewCbCr };
       mContext->PSSetShaderResources(TexSlot::Y, 2, views);
