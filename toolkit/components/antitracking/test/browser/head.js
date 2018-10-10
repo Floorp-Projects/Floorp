@@ -355,6 +355,21 @@ this.AntiTracking = {
     }
   },
 
+  async interactWithTracker() {
+    let windowClosed = new Promise(resolve => {
+      Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
+        if (aTopic == "domwindowclosed") {
+          Services.ww.unregisterNotification(notification);
+          resolve();
+        }
+      });
+    });
+
+    info("Let's interact with the tracker");
+    window.open(TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyOpenUI.html");
+    await windowClosed;
+  },
+
   async _setupTest(win, cookieBehavior, blockingByContentBlocking,
                    blockingByContentBlockingRTUI,
                    extraPrefs) {
@@ -411,20 +426,25 @@ this.AntiTracking = {
             contentBlockingLog = JSON.parse(contentBlockingLogJSON);
           } catch (e) {
           }
+
+          let trackerInteractionHelper = false;
+          if (request) {
+            request.QueryInterface(Ci.nsIChannel);
+            trackerInteractionHelper = request.URI.spec.endsWith("?messageme");
+          }
+
           // If this is the first cookie to be blocked, our state should have
           // just changed, otherwise it should have previously contained the
           // STATE_COOKIES_BLOCKED_TRACKER bit too.
           if (options.expectedBlockingNotifications && cookieBlocked &&
-              !options.allowList) {
+              !options.allowList && !trackerInteractionHelper) {
             if (cookieBlocked == 1) {
               is(oldState & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, 0,
                  "When blocking the first cookie, old state should not have had the " +
                  "STATE_COOKIES_BLOCKED_TRACKER bit");
             }
 
-            let trackerOriginCount = 0;
             for (let trackerOrigin in contentBlockingLog) {
-              ++trackerOriginCount;
               is(trackerOrigin, TEST_3RD_PARTY_DOMAIN, "Correct tracker origin must be reported");
               let originLog = contentBlockingLog[trackerOrigin];
               if (originLog.length == 1) {
@@ -438,6 +458,10 @@ this.AntiTracking = {
                 // This branch is needed here because of the tests that use the storage
                 // access API to gain storage access.
                 is(originLog.length, 2, "Correct origin log length");
+                if (originLog.length > 2) {
+                  console.log(originLog);
+                  console.log(originLog.toSource());
+                }
                 is(originLog[0][0], Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
                    "Correct blocking type reported");
                 is(originLog[0][1], true,
@@ -452,7 +476,9 @@ this.AntiTracking = {
                    "Correct repeat count reported");
               }
             }
-            is(trackerOriginCount, 1, "Should only report one tracker origin");
+            // Can't assert the number of tracker origins because we may get 0
+            // for web progress navigations coming from the window opening from
+            // storage access API tracker interaction attempts...
           }
           if (!options.expectedBlockingNotifications) {
             is(oldState & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, 0,
@@ -766,7 +792,6 @@ this.AntiTracking = {
                               { page: TEST_3RD_PARTY_PAGE_UI,
                                 popup: TEST_POPUP_PAGE,
                                 blockingCallback: blockingCallback.toString(),
-                                nonBlockingCallback: nonBlockingCallback.toString(),
                                 iframeSandbox,
                               },
                               async function(obj) {
@@ -818,7 +843,66 @@ this.AntiTracking = {
         info("Let's wait for the window to be closed");
         await windowClosed;
 
-        info("The 3rd party content should have access to first party storage.");
+        info("First time, the 3rd party content should not have access to first party storage " +
+             "because the tracker did not have user interaction");
+        await new content.Promise(resolve => {
+          content.addEventListener("message", function msg(event) {
+            if (event.data.type == "finish") {
+              content.removeEventListener("message", msg);
+              resolve();
+              return;
+            }
+
+            if (event.data.type == "ok") {
+              ok(event.data.what, event.data.msg);
+              return;
+            }
+
+            if (event.data.type == "info") {
+              info(event.data.msg);
+              return;
+            }
+
+            ok(false, "Unknown message");
+          });
+          ifr.contentWindow.postMessage({ callback: obj.blockingCallback }, "*");
+        });
+      });
+
+      await AntiTracking.interactWithTracker();
+
+      await ContentTask.spawn(browser,
+                              { page: TEST_3RD_PARTY_PAGE_UI,
+                                popup: TEST_POPUP_PAGE,
+                                nonBlockingCallback: nonBlockingCallback.toString(),
+                                iframeSandbox,
+                              },
+                              async function(obj) {
+        let ifr = content.document.createElement("iframe");
+        let loading = new content.Promise(resolve => { ifr.onload = resolve; });
+        if (typeof obj.iframeSandbox == "string") {
+          ifr.setAttribute("sandbox", obj.iframeSandbox);
+        }
+        content.document.body.appendChild(ifr);
+        ifr.src = obj.page;
+        await loading;
+
+        let windowClosed = new content.Promise(resolve => {
+          Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
+            if (aTopic == "domwindowclosed") {
+              Services.ww.unregisterNotification(notification);
+              resolve();
+            }
+          });
+        });
+
+        info("Opening a window from the iframe.");
+        ifr.contentWindow.open(obj.popup);
+
+        info("Let's wait for the window to be closed");
+        await windowClosed;
+
+        info("The 3rd party content should now have access to first party storage.");
         await new content.Promise(resolve => {
           content.addEventListener("message", function msg(event) {
             if (event.data.type == "finish") {

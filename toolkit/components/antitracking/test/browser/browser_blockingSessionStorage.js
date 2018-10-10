@@ -19,49 +19,27 @@ AntiTracking.runTest("sessionStorage",
 
 AntiTracking.runTest("sessionStorage and Storage Access API",
   async _ => {
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
 
     sessionStorage.foo = 42;
     ok(true, "SessionStorage is always allowed");
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     sessionStorage.foo = 42;
     ok(true, "SessionStorage is allowed after calling the storage access API too");
   },
   async _ => {
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
 
     sessionStorage.foo = 42;
     ok(true, "SessionStorage is always allowed");
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     // For non-tracking windows, calling the API is a no-op
     sessionStorage.foo = 42;

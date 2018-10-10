@@ -23,20 +23,20 @@ banner = """/* This file is auto-generated, see gen_histogram_data.py.  */
 def print_array_entry(output, histogram, name_index, exp_index, label_index,
                       label_count, key_index, key_count):
     if histogram.record_on_os(buildconfig.substs["OS_TARGET"]):
-        print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %d, %d, %s, %s, %s },"
+        print("  { %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s },"
               % (histogram.low(),
                  histogram.high(),
                  histogram.n_buckets(),
-                 histogram.nsITelemetry_kind(),
                  name_index,
                  exp_index,
-                 histogram.dataset(),
-                 label_index,
                  label_count,
-                 key_index,
                  key_count,
-                 " | ".join(histogram.record_in_processes_enum()),
+                 label_index,
+                 key_index,
                  "true" if histogram.keyed() else "false",
+                 histogram.nsITelemetry_kind(),
+                 histogram.dataset(),
+                 " | ".join(histogram.record_in_processes_enum()),
                  " | ".join(histogram.products_enum())), file=output)
 
 
@@ -83,6 +83,7 @@ def write_histogram_table(output, histograms):
     for name, indexes in label_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
+    static_assert(output, "sizeof(gHistogramLabelTable) <= UINT16_MAX", "index overflow")
 
     print("\n#if defined(_MSC_VER) && !defined(__clang__)", file=output)
     print("const uint32_t gHistogramKeyTable[] = {", file=output)
@@ -92,6 +93,7 @@ def write_histogram_table(output, histograms):
     for name, indexes in keys_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
+    static_assert(output, "sizeof(gHistogramKeyTable) <= UINT16_MAX", "index overflow")
 
 
 # Write out static asserts for histogram data.  We'd prefer to perform
