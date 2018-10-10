@@ -45,7 +45,7 @@ this.SideMenuWidget = function SideMenuWidget(aNode, aOptions = {}) {
   this._showGroupCheckboxes = showGroupCheckboxes || false;
 
   // Create an internal scrollbox container.
-  this._list = this.document.createElement("scrollbox");
+  this._list = this.document.createXULElement("scrollbox");
   this._list.className = "side-menu-widget-container theme-sidebar";
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
@@ -319,7 +319,7 @@ SideMenuWidget.prototype = {
     if (this._emptyTextNode || !this._emptyTextValue) {
       return;
     }
-    const label = this.document.createElement("label");
+    const label = this.document.createXULElement("label");
     label.className = "plain side-menu-widget-empty-text";
     label.setAttribute("value", this._emptyTextValue);
 
@@ -456,17 +456,17 @@ function SideMenuGroup(aWidget, aName, aOptions = {}) {
 
   // Create an internal title and list container.
   if (aName) {
-    const target = this._target = this.document.createElement("vbox");
+    const target = this._target = this.document.createXULElement("vbox");
     target.className = "side-menu-widget-group";
     target.setAttribute("name", aName);
 
-    const list = this._list = this.document.createElement("vbox");
+    const list = this._list = this.document.createXULElement("vbox");
     list.className = "side-menu-widget-group-list";
 
-    const title = this._title = this.document.createElement("hbox");
+    const title = this._title = this.document.createXULElement("hbox");
     title.className = "side-menu-widget-group-title";
 
-    const name = this._name = this.document.createElement("label");
+    const name = this._name = this.document.createXULElement("label");
     name.className = "plain name";
     name.setAttribute("value", aName);
     name.setAttribute("crop", "end");
@@ -486,7 +486,7 @@ function SideMenuGroup(aWidget, aName, aOptions = {}) {
     target.appendChild(list);
   } else {
     // Skip a few redundant nodes when no title is shown.
-    const target = this._target = this._list = this.document.createElement("vbox");
+    const target = this._target = this._list = this.document.createXULElement("vbox");
     target.className = "side-menu-widget-group side-menu-widget-group-list";
     target.setAttribute("merged-group-contents", "");
   }
@@ -573,10 +573,10 @@ function SideMenuItem(aGroup, aContents, aAttachment = {}, aOptions = {}) {
   this.ownerView = aGroup;
 
   if (aOptions.showArrow || aOptions.showCheckbox) {
-    const container = this._container = this.document.createElement("hbox");
+    const container = this._container = this.document.createXULElement("hbox");
     container.className = "side-menu-widget-item";
 
-    const target = this._target = this.document.createElement("vbox");
+    const target = this._target = this.document.createXULElement("vbox");
     target.className = "side-menu-widget-item-contents";
 
     // Show a checkbox before the content.
@@ -589,13 +589,13 @@ function SideMenuItem(aGroup, aContents, aAttachment = {}, aOptions = {}) {
 
     // Show a horizontal arrow towards the content.
     if (aOptions.showArrow) {
-      const arrow = this._arrow = this.document.createElement("hbox");
+      const arrow = this._arrow = this.document.createXULElement("hbox");
       arrow.className = "side-menu-widget-item-arrow";
       container.appendChild(arrow);
     }
   } else {
     // Skip a few redundant nodes when no horizontal arrow or checkbox is shown.
-    const target = this._target = this._container = this.document.createElement("hbox");
+    const target = this._target = this._container = this.document.createXULElement("hbox");
     target.className = "side-menu-widget-item side-menu-widget-item-contents";
     target.setAttribute("merged-item-contents", "");
   }
@@ -692,7 +692,7 @@ SideMenuItem.prototype = {
  *          - checkboxTooltip: the tooltip text of the checkbox
  */
 function makeCheckbox(aParentNode, aOptions) {
-  const checkbox = aParentNode.ownerDocument.createElement("checkbox");
+  const checkbox = aParentNode.ownerDocument.createXULElement("checkbox");
 
   checkbox.setAttribute("tooltiptext", aOptions.checkboxTooltip || "");
 
