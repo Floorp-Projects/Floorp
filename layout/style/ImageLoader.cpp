@@ -468,13 +468,16 @@ ImageLoader::LoadImage(nsIURI* aURI,
     return;
   }
 
-  if (sImages->Contains(aImage->LoadID())) {
-    // This css::URLValue has already been loaded.
-    return;
-  }
+  ImageTableEntry* entry;
 
-  ImageTableEntry* entry = new ImageTableEntry();
-  sImages->Put(aImage->LoadID(), entry);
+  {
+    auto lookup = sImages->LookupForAdd(aImage->LoadID());
+    if (lookup) {
+      // This css::URLValue has already been loaded.
+      return;
+    }
+    entry = lookup.OrInsert([]() { return new ImageTableEntry(); });
+  }
 
   if (!aURI) {
     return;
