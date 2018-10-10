@@ -1,35 +1,27 @@
-<?xml version="1.0"?>
-<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
-<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!DOCTYPE HTML>
+<html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=688277
 -->
-<window title="Mozilla Bug "
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-
-  <!-- test results are displayed in the html:body -->
-  <body xmlns="http://www.w3.org/1999/xhtml">
-  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id="
-     target="_blank">Mozilla Bug 688277</a>
-  </body>
-
-  <!-- test code goes here -->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for nondeterministicGetWeakMapKeys</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-  <![CDATA[
   /** Test for Bug 688277 **/
 
   /* Fail gracefully if junk is passed in. */
-  is(ChromeUtils.nondeterministicGetWeakMapKeys(11), undefined,
+  is(SpecialPowers.nondeterministicGetWeakMapKeys(11), undefined,
     "nondeterministicGetWeakMapKeys should return undefined for non-objects");
-  is(ChromeUtils.nondeterministicGetWeakMapKeys({}), undefined,
+  is(SpecialPowers.nondeterministicGetWeakMapKeys({}), undefined,
     "nondeterministicGetWeakMapKeys should return undefined for non-weakmap objects");
-  is(ChromeUtils.nondeterministicGetWeakMapKeys(null), undefined,
+  is(SpecialPowers.nondeterministicGetWeakMapKeys(null), undefined,
     "nondeterministicGetWeakMapKeys should return undefined for null");
 
   /* return an empty array for an empty WeakMap */
   let mempty = new WeakMap();
-  is(ChromeUtils.nondeterministicGetWeakMapKeys(mempty).length, 0,
+  is(SpecialPowers.nondeterministicGetWeakMapKeys(mempty).length, 0,
     "nondeterministicGetWeakMapKeys should return empty array for empty weakmap");
 
   /* Test freeing/nonfreeing. */
@@ -50,8 +42,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=688277
 
   add_elements();
 
-  Cu.schedulePreciseGC(function () {
-    let keys = ChromeUtils.nondeterministicGetWeakMapKeys(m);
+  SpecialPowers.exactGC(function () {
+    let keys = SpecialPowers.nondeterministicGetWeakMapKeys(m);
     is(liveKeys.length, 1, "Wrong number of live keys.");
     is(keys.length, 1, "Should have one weak map key.");
     is(m.get(keys[0]), "live1", "live1 should be live");
@@ -59,7 +51,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=688277
   });
 
   SimpleTest.waitForExplicitFinish();
-
-  ]]>
   </script>
-</window>
+</head>
+<body>
+<p id="display"></p>
+</body>
+</html>
