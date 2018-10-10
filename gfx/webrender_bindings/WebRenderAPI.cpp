@@ -209,6 +209,12 @@ TransactionBuilder::GenerateFrame()
 }
 
 void
+TransactionBuilder::InvalidateRenderedFrame()
+{
+  wr_transaction_invalidate_rendered_frame(mTxn);
+}
+
+void
 TransactionBuilder::UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
                                      const nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
