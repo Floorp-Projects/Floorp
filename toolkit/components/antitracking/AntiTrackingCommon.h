@@ -104,7 +104,7 @@ public:
   //   example.net.
   typedef MozPromise<bool, bool, false> StorageAccessGrantPromise;
   static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise>
-  AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal,
+  AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
                                        nsPIDOMWindowInner* aParentWindow,
                                        StorageAccessGrantedReason aReason);
 

@@ -19,23 +19,49 @@ AntiTracking.runTest("sessionStorage",
 
 AntiTracking.runTest("sessionStorage and Storage Access API",
   async _ => {
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     sessionStorage.foo = 42;
     ok(true, "SessionStorage is always allowed");
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     sessionStorage.foo = 42;
     ok(true, "SessionStorage is allowed after calling the storage access API too");
   },
   async _ => {
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     sessionStorage.foo = 42;
     ok(true, "SessionStorage is always allowed");
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     // For non-tracking windows, calling the API is a no-op
     sessionStorage.foo = 42;

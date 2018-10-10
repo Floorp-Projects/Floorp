@@ -55,7 +55,8 @@ AntiTracking.runTest("DOM Cache",
 
 AntiTracking.runTest("SharedWorkers and Storage Access API",
   async _ => {
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     try {
       new SharedWorker("a.js", "foo");
@@ -65,21 +66,46 @@ AntiTracking.runTest("SharedWorkers and Storage Access API",
       is(e.name, "SecurityError", "We want a security error message.");
     }
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     new SharedWorker("a.js", "foo");
     ok(true, "SharedWorker is allowed");
   },
   async _ => {
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     new SharedWorker("a.js", "foo");
     ok(true, "SharedWorker is allowed");
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     // For non-tracking windows, calling the API is a no-op
-    new SharedWorker("a.js", "bar");
+    new SharedWorker("a.js", "foo");
     ok(true, "SharedWorker is allowed");
   },
   async _ => {
@@ -97,14 +123,27 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
        ["dom.serviceWorkers.testing.enabled", true],
     ]});
 
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     await navigator.serviceWorker.register("empty.js").then(
       _ => { ok(false, "ServiceWorker cannot be used!"); },
       _ => { ok(true, "ServiceWorker cannot be used!"); }).
       catch(e => ok(false, "Promise rejected: " + e));
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     await navigator.serviceWorker.register("empty.js").then(
       reg => { ok(true, "ServiceWorker can be used!"); return reg; },
@@ -120,7 +159,8 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
        ["dom.serviceWorkers.testing.enabled", true],
     ]});
 
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     await navigator.serviceWorker.register("empty.js").then(
       reg => { ok(true, "ServiceWorker can be used!"); return reg; },
@@ -129,7 +169,19 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
       _ => { ok(false, "unregister failed"); }).
       catch(e => ok(false, "Promise rejected: " + e));
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     // For non-tracking windows, calling the API is a no-op
     await navigator.serviceWorker.register("empty.js").then(
@@ -151,26 +203,52 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
 
 AntiTracking.runTest("DOM Cache and Storage Access API",
   async _ => {
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     await caches.open("wow").then(
       _ => { ok(false, "DOM Cache cannot be used!"); },
       _ => { ok(true, "DOM Cache cannot be used!"); });
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     await caches.open("wow").then(
       _ => { ok(true, "DOM Cache can be used!"); },
       _ => { ok(false, "DOM Cache can be used!"); });
   },
   async _ => {
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     await caches.open("wow").then(
       _ => { ok(true, "DOM Cache can be used!"); },
       _ => { ok(false, "DOM Cache can be used!"); });
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     // For non-tracking windows, calling the API is a no-op
     await caches.open("wow").then(

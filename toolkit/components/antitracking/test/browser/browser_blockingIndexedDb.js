@@ -85,8 +85,8 @@ AntiTracking.runTest("IndexedDB in workers",
 AntiTracking.runTest("IndexedDB and Storage Access API",
   // blocking callback
   async _ => {
-    await noStorageAccessInitially();
-
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
     try {
       indexedDB.open("test", "1");
       ok(false, "IDB should be blocked");
@@ -98,22 +98,40 @@ AntiTracking.runTest("IndexedDB and Storage Access API",
     let dwu = SpecialPowers.getDOMWindowUtils(window);
     let helper = dwu.setHandlingUserInput(true);
 
-    await callRequestStorageAccess();
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     indexedDB.open("test", "1");
     ok(true, "IDB should be allowed");
   },
   // non-blocking callback
   async _ => {
-    await noStorageAccessInitially();
-
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
     indexedDB.open("test", "1");
     ok(true, "IDB should be allowed");
 
     let dwu = SpecialPowers.getDOMWindowUtils(window);
     let helper = dwu.setHandlingUserInput(true);
 
-    await callRequestStorageAccess();
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     // For non-tracking windows, calling the API is a no-op
     indexedDB.open("test", "1");
@@ -142,7 +160,8 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
       postMessage(true);
     }
 
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     let blob = new Blob([blockCode.toString() + "; blockCode();"]);
     ok(blob, "Blob has been created");
@@ -163,7 +182,19 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
       };
     });
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     blob = new Blob([nonBlockCode.toString() + "; nonBlockCode();"]);
     ok(blob, "Blob has been created");
@@ -190,7 +221,8 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
       postMessage(true);
     }
 
-    await noStorageAccessInitially();
+    let hasAccess = await document.hasStorageAccess();
+    ok(!hasAccess, "Doesn't yet have storage access");
 
     let blob = new Blob([nonBlockCode.toString() + "; nonBlockCode();"]);
     ok(blob, "Blob has been created");
@@ -211,7 +243,19 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
       };
     });
 
-    await callRequestStorageAccess();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
+
+    let p;
+    try {
+      p = document.requestStorageAccess();
+    } finally {
+      helper.destruct();
+    }
+    await p;
+
+    hasAccess = await document.hasStorageAccess();
+    ok(hasAccess, "Now has storage access");
 
     // For non-tracking windows, calling the API is a no-op
 

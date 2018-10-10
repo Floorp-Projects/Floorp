@@ -36,11 +36,13 @@ add_task(async function testWindowOpenHeuristic() {
                                    }, async obj => {
     let msg = {};
     msg.blockingCallback = (async _ => {
-      await noStorageAccessInitially();
+      let hasAccess = await document.hasStorageAccess();
+      ok(!hasAccess, "Doesn't yet have storage access");
     }).toString();
 
     msg.nonBlockingCallback = (async _ => {
-      await hasStorageAccessInitially();
+      let hasAccess = await document.hasStorageAccess();
+      ok(hasAccess, "Now obtained storage access");
     }).toString();
 
     info("Checking if storage access is denied");
@@ -104,95 +106,13 @@ add_task(async function testUserInteractionHeuristic() {
                                    }, async obj => {
     let msg = {};
     msg.blockingCallback = (async _ => {
-      await noStorageAccessInitially();
-    }).toString();
-
-    info("Checking if storage access is denied");
-
-    let ifr = content.document.createElement("iframe");
-    let loading = new content.Promise(resolve => { ifr.onload = resolve; });
-    content.document.body.appendChild(ifr);
-    ifr.src = obj.page;
-    await loading;
-
-    info("The 3rd party content should not have access to first party storage.");
-    await new content.Promise(resolve => {
-      content.addEventListener("message", function msg(event) {
-        if (event.data.type == "finish") {
-          content.removeEventListener("message", msg);
-          resolve();
-          return;
-        }
-
-        if (event.data.type == "ok") {
-          ok(event.data.what, event.data.msg);
-          return;
-        }
-
-        if (event.data.type == "info") {
-          info(event.data.msg);
-          return;
-        }
-
-        ok(false, "Unknown message");
-      });
-      ifr.contentWindow.postMessage({ callback: msg.blockingCallback }, "*");
-    });
-
-    let windowClosed = new content.Promise(resolve => {
-      Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
-        if (aTopic == "domwindowclosed") {
-          Services.ww.unregisterNotification(notification);
-          resolve();
-        }
-      });
-    });
-
-    info("Opening a window from the iframe.");
-    ifr.contentWindow.open(obj.popup);
-
-    info("Let's wait for the window to be closed");
-    await windowClosed;
-
-    info("The 3rd party content should have access to first party storage.");
-    await new content.Promise(resolve => {
-      content.addEventListener("message", function msg(event) {
-        if (event.data.type == "finish") {
-          content.removeEventListener("message", msg);
-          resolve();
-          return;
-        }
-
-        if (event.data.type == "ok") {
-          ok(event.data.what, event.data.msg);
-          return;
-        }
-
-        if (event.data.type == "info") {
-          info(event.data.msg);
-          return;
-        }
-
-        ok(false, "Unknown message");
-      });
-      ifr.contentWindow.postMessage({ callback: msg.blockingCallback }, "*");
-    });
-  });
-
-  await AntiTracking.interactWithTracker();
-
-  info("Loading tracking scripts");
-  await ContentTask.spawn(browser, {
-                                     page: TEST_3RD_PARTY_PAGE_UI,
-                                     popup: TEST_POPUP_PAGE,
-                                   }, async obj => {
-    let msg = {};
-    msg.blockingCallback = (async _ => {
-      await noStorageAccessInitially();
+      let hasAccess = await document.hasStorageAccess();
+      ok(!hasAccess, "Doesn't yet have storage access");
     }).toString();
 
     msg.nonBlockingCallback = (async _ => {
-      await hasStorageAccessInitially();
+      let hasAccess = await document.hasStorageAccess();
+      ok(hasAccess, "Now obtained storage access");
     }).toString();
 
     info("Checking if storage access is denied");

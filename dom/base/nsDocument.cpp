@@ -12826,8 +12826,19 @@ nsIDocument::MaybeAllowStorageForOpener()
     return;
   }
 
+  nsCOMPtr<nsIURI> uri = GetDocumentURI();
+  if (NS_WARN_IF(!uri)) {
+    return;
+  }
+
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
   // We don't care when the asynchronous work finishes here.
-  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(NodePrincipal(),
+  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
                                                                      openerInner,
                                                                      AntiTrackingCommon::eHeuristic);
 }
@@ -13735,7 +13746,7 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
 
   // Step 1. If the document already has been granted access, resolve.
   nsPIDOMWindowInner* inner = GetInnerWindow();
-  RefPtr<nsGlobalWindowOuter> outer;
+  nsGlobalWindowOuter* outer = nullptr;
   if (inner) {
     outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
     if (outer->HasStorageAccess()) {
@@ -13829,17 +13840,27 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
   //          the purposes of future calls to hasStorageAccess() and
   //          requestStorageAccess().
   if (granted && inner) {
+    outer->SetHasStorageAccess(true);
     if (isTrackingWindow) {
-      AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(NodePrincipal(),
+      nsCOMPtr<nsIURI> uri = GetDocumentURI();
+      if (NS_WARN_IF(!uri)) {
+        aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+        return nullptr;
+      }
+      nsAutoString origin;
+      nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return nullptr;
+      }
+      AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
                                                                inner,
                                                                AntiTrackingCommon::eStorageAccessAPI)
         ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-               [outer, promise] (bool) {
-                 outer->SetHasStorageAccess(true);
+               [promise] (bool) {
                  promise->MaybeResolveWithUndefined();
                },
-               [outer, promise] (bool) {
-                 outer->SetHasStorageAccess(false);
+               [promise] (bool) {
                  promise->MaybeRejectWithUndefined();
                });
     } else {
