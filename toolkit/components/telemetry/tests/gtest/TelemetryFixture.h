@@ -6,9 +6,9 @@
 #define TelemetryFixture_h_
 
 #include "gtest/gtest.h"
-#include "nsITelemetry.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "nsITelemetry.h"
 
 class TelemetryTestFixture: public ::testing::Test {
 protected:
