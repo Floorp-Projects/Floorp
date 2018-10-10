@@ -36,13 +36,11 @@ add_task(async function testWindowOpenHeuristic() {
                                    }, async obj => {
     let msg = {};
     msg.blockingCallback = (async _ => {
-      let hasAccess = await document.hasStorageAccess();
-      ok(!hasAccess, "Doesn't yet have storage access");
+      await noStorageAccessInitially();
     }).toString();
 
     msg.nonBlockingCallback = (async _ => {
-      let hasAccess = await document.hasStorageAccess();
-      ok(hasAccess, "Now obtained storage access");
+      await hasStorageAccessInitially();
     }).toString();
 
     info("Checking if storage access is denied");
@@ -106,13 +104,11 @@ add_task(async function testUserInteractionHeuristic() {
                                    }, async obj => {
     let msg = {};
     msg.blockingCallback = (async _ => {
-      let hasAccess = await document.hasStorageAccess();
-      ok(!hasAccess, "Doesn't yet have storage access");
+      await noStorageAccessInitially();
     }).toString();
 
     msg.nonBlockingCallback = (async _ => {
-      let hasAccess = await document.hasStorageAccess();
-      ok(hasAccess, "Now obtained storage access");
+      await hasStorageAccessInitially();
     }).toString();
 
     info("Checking if storage access is denied");
