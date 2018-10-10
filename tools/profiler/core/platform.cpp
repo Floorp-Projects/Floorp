@@ -1481,8 +1481,7 @@ DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
 static void
 DoPeriodicSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
                  ProfiledThreadData& aProfiledThreadData,
-                 const TimeStamp& aNow, const Registers& aRegs,
-                 int64_t aRSSMemory, int64_t aUSSMemory)
+                 const TimeStamp& aNow, const Registers& aRegs)
 {
   // WARNING: this function runs within the profiler's "critical section".
 
@@ -1504,16 +1503,6 @@ DoPeriodicSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
     double delta = resp->GetUnresponsiveDuration(
       (aNow - CorePS::ProcessStartTime()).ToMilliseconds());
     buffer.AddEntry(ProfileBufferEntry::Responsiveness(delta));
-  }
-
-  if (aRSSMemory != 0) {
-    double rssMemory = static_cast<double>(aRSSMemory);
-    buffer.AddEntry(ProfileBufferEntry::ResidentMemory(rssMemory));
-  }
-
-  if (aUSSMemory != 0) {
-    double ussMemory = static_cast<double>(aUSSMemory);
-    buffer.AddEntry(ProfileBufferEntry::UnsharedMemory(ussMemory));
   }
 }
 
@@ -1885,6 +1874,9 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   }
   aWriter.EndObject();
 
+  buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
+  buffer.StreamMemoryToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
+
   // Data of TaskTracer doesn't belong in the circular buffer.
   if (ActivePS::FeatureTaskTracer(aLock)) {
     aWriter.StartObjectProperty("tasktracer");
@@ -2185,13 +2177,45 @@ SamplerThread::Run()
         const nsTArray<LiveProfiledThreadData>& liveThreads =
           ActivePS::LiveProfiledThreads(lock);
 
+        TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
+        ProfileBuffer& buffer = ActivePS::Buffer(lock);
+
+        // Report memory use
         int64_t rssMemory = 0;
         int64_t ussMemory = 0;
-        if (!liveThreads.IsEmpty() && ActivePS::FeatureMemory(lock)) {
+        if (ActivePS::FeatureMemory(lock)) {
           rssMemory = nsMemoryReporterManager::ResidentFast();
 #if defined(GP_OS_linux) || defined(GP_OS_android)
           ussMemory = nsMemoryReporterManager::ResidentUnique();
 #endif
+          if (rssMemory != 0) {
+            buffer.AddEntry(ProfileBufferEntry::ResidentMemory(rssMemory));
+            if (ussMemory != 0) {
+              buffer.AddEntry(ProfileBufferEntry::UnsharedMemory(ussMemory));
+            }
+          }
+          buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+        }
+
+        // handle per-process generic counters
+        const nsTArray<BaseProfilerCount*>& counters =
+          CorePS::Counters(lock);
+        TimeStamp now = TimeStamp::Now();
+        for (auto& counter : counters) {
+          // create Buffer entries for each counter
+          buffer.AddEntry(ProfileBufferEntry::CounterId(counter));
+          buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+          // XXX support keyed maps of counts
+          // In the future, we'll support keyed counters - for example, counters with a key
+          // which is a thread ID. For "simple" counters we'll just use a key of 0.
+          int64_t count;
+          uint64_t number;
+          counter->Sample(count, number);
+          buffer.AddEntry(ProfileBufferEntry::CounterKey(0));
+          buffer.AddEntry(ProfileBufferEntry::Count(count));
+          if (number) {
+            buffer.AddEntry(ProfileBufferEntry::Number(number));
+          }
         }
 
         for (auto& thread : liveThreads) {
@@ -2218,11 +2242,15 @@ SamplerThread::Run()
             resp->Update();
           }
 
-          TimeStamp now = TimeStamp::Now();
+          now = TimeStamp::Now();
           SuspendAndSampleAndResumeThread(lock, *registeredThread,
                                           [&](const Registers& aRegs) {
             DoPeriodicSample(lock, *registeredThread, *profiledThreadData, now,
-                             aRegs, rssMemory, ussMemory);
+                             aRegs);
+            // only report these once per sample-time (if 0 we don't put them in the buffer,
+            // so for the rest of the threads we won't insert them)
+            rssMemory = 0;
+            ussMemory = 0;
           });
         }
 
