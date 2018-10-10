@@ -1,6 +1,4 @@
-if (wasmGcEnabled()) {
-    quit();
-}
+// |jit-test| skip-if: wasmGcEnabled()
 
 const { CompileError, validate } = WebAssembly;
 

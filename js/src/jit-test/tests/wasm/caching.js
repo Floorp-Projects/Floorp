@@ -1,5 +1,4 @@
-if (!wasmStreamingIsSupported())
-    quit();
+// |jit-test| skip-if: !wasmStreamingIsSupported()
 
 const {Module, Instance, compileStreaming} = WebAssembly;
 

@@ -1,6 +1,4 @@
-
-if (!wasmDebuggingIsSupported())
-    quit();
+// |jit-test| skip-if: !wasmDebuggingIsSupported()
 
 var sandbox = newGlobal();
 var dbg = new Debugger(sandbox);

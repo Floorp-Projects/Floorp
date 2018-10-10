@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+
 const {
   ADD_VIEWPORT,
   CHANGE_DEVICE,
@@ -13,6 +15,10 @@ const {
   ROTATE_VIEWPORT,
 } = require("../actions/index");
 
+const VIEWPORT_WIDTH_PREF = "devtools.responsive.viewport.width";
+const VIEWPORT_HEIGHT_PREF = "devtools.responsive.viewport.height";
+const VIEWPORT_PIXEL_RATIO_PREF = "devtools.responsive.viewport.pixelRatio";
+
 let nextViewportId = 0;
 
 const INITIAL_VIEWPORTS = [];
@@ -20,9 +26,9 @@ const INITIAL_VIEWPORT = {
   id: nextViewportId++,
   device: "",
   deviceType: "",
-  height: 480,
-  width: 320,
-  pixelRatio: 0,
+  height: Services.prefs.getIntPref(VIEWPORT_HEIGHT_PREF, 480),
+  width: Services.prefs.getIntPref(VIEWPORT_WIDTH_PREF, 320),
+  pixelRatio: Services.prefs.getIntPref(VIEWPORT_PIXEL_RATIO_PREF, 0),
   userContextId: 0,
 };
 
@@ -63,6 +69,8 @@ const reducers = {
         return viewport;
       }
 
+      Services.prefs.setIntPref(VIEWPORT_PIXEL_RATIO_PREF, pixelRatio);
+
       return {
         ...viewport,
         pixelRatio,
@@ -97,6 +105,9 @@ const reducers = {
       if (!width) {
         width = viewport.width;
       }
+
+      Services.prefs.setIntPref(VIEWPORT_WIDTH_PREF, width);
+      Services.prefs.setIntPref(VIEWPORT_HEIGHT_PREF, height);
 
       return {
         ...viewport,

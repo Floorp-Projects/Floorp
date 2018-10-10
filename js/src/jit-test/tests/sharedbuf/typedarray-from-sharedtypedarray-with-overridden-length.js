@@ -1,5 +1,4 @@
-if (!this.SharedArrayBuffer)
-    quit(0);
+// |jit-test| skip-if: !this.SharedArrayBuffer
 
 // This would hit an assertion in debug builds due to an incorrect
 // type guard in the code that copies data from STA to TA.

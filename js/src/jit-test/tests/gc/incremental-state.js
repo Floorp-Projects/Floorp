@@ -1,7 +1,6 @@
-// Test expected state changes during collection.
-if (!("gcstate" in this))
-    quit();
+// |jit-test| skip-if: !('gcstate' in this)
 
+// Test expected state changes during collection.
 gczeal(0);
 
 // Non-incremental GC.

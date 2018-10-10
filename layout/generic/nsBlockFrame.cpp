@@ -516,7 +516,7 @@ nsBlockFrame::GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
     return nsLayoutUtils::GetFirstLineBaseline(aWM, this, aBaseline);
   }
 
-  if (StyleDisplay()->IsContainSize()) {
+  if (StyleDisplay()->IsContainLayout()) {
     return false;
   }
 

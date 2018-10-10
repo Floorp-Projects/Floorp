@@ -583,7 +583,8 @@ bool ProgramD3D::usesGeometryShaderForPointSpriteEmulation() const
     return usesPointSpriteEmulation() && !usesInstancedPointSpriteEmulation();
 }
 
-bool ProgramD3D::usesGeometryShader(gl::PrimitiveMode drawMode) const
+bool ProgramD3D::usesGeometryShader(const gl::Context *context,
+                                    gl::PrimitiveMode drawMode) const
 {
     if (mHasANGLEMultiviewEnabled && !mRenderer->canSelectViewInVertexShader())
     {
@@ -591,7 +592,7 @@ bool ProgramD3D::usesGeometryShader(gl::PrimitiveMode drawMode) const
     }
     if (drawMode != gl::PrimitiveMode::Points)
     {
-        return mUsesFlatInterpolation;
+        return !context->provokingVertexDontCare() && mUsesFlatInterpolation;
     }
     return usesGeometryShaderForPointSpriteEmulation();
 }
@@ -735,9 +736,253 @@ gl::RangeUI ProgramD3D::getUsedImageRange(gl::ShaderType type, bool readonly) co
     }
 }
 
-gl::LinkResult ProgramD3D::load(const gl::Context *context,
-                                gl::InfoLog &infoLog,
-                                gl::BinaryInputStream *stream)
+class ProgramD3D::GetExecutableTask : public Closure
+{
+public:
+    GetExecutableTask(ProgramD3D *program, const gl::Context *context)
+        : mProgram(program),
+        mResult(angle::Result::Continue()),
+        mInfoLog(),
+        mExecutable(nullptr),
+        mContext(context)
+    {
+    }
+
+    virtual angle::Result run() = 0;
+
+    void operator()() override { mResult = run(); }
+
+    angle::Result getResult() const { return mResult; }
+    const gl::InfoLog &getInfoLog() const { return mInfoLog; }
+    ShaderExecutableD3D *getExecutable() { return mExecutable; }
+
+protected:
+    ProgramD3D * mProgram;
+    angle::Result mResult;
+    gl::InfoLog mInfoLog;
+    ShaderExecutableD3D *mExecutable;
+    const gl::Context *mContext;
+};
+
+class ProgramD3D::GetLoadExecutableTask : public ProgramD3D::GetExecutableTask
+{
+public:
+    GetLoadExecutableTask(ProgramD3D *program, const gl::Context *context,
+                          const unsigned char* shaderFunction, unsigned int shaderSize,
+                          bool separateAttribs)
+        : GetExecutableTask(program, context)
+        , mShaderFunction(shaderFunction)
+        , mShaderSize(shaderSize)
+        , mSeparateAttribs(separateAttribs)
+    {
+    }
+
+    void InternalizeData()
+    {
+        mOwnedData.assign(mShaderFunction, mShaderFunction + mShaderSize);
+        mShaderFunction = mOwnedData.data();
+    }
+
+    const unsigned char *mShaderFunction;
+    const unsigned int mShaderSize;
+    const bool mSeparateAttribs;
+    std::vector<unsigned char> mOwnedData;
+};
+
+class ProgramD3D::GetLoadVertexExecutableTask : public ProgramD3D::GetLoadExecutableTask
+{
+public:
+    GetLoadVertexExecutableTask(ProgramD3D *program, const gl::Context *context,
+                                const unsigned char* shaderFunction, unsigned int shaderSize,
+                                bool separateAttribs, gl::InputLayout& layout)
+        : GetLoadExecutableTask(program, context, shaderFunction, shaderSize, separateAttribs)
+        , mLayout(layout)
+    {
+    }
+    angle::Result run() override
+    {
+        ANGLE_TRY(
+            mProgram->loadVertexExecutable(mContext, &mExecutable, mShaderFunction,
+                                           mShaderSize, mSeparateAttribs, mLayout));
+
+        return angle::Result::Continue();
+    }
+
+    gl::InputLayout mLayout;
+};
+
+class ProgramD3D::GetLoadPixelExecutableTask : public ProgramD3D::GetLoadExecutableTask
+{
+public:
+    GetLoadPixelExecutableTask(ProgramD3D *program, const gl::Context *context,
+                               const unsigned char* shaderFunction, unsigned int shaderSize,
+                               bool separateAttribs, std::vector<GLenum>& outputs)
+        : GetLoadExecutableTask(program, context, shaderFunction, shaderSize, separateAttribs)
+        , mOutputs(outputs)
+    {
+    }
+    angle::Result run() override
+    {
+        ANGLE_TRY(
+            mProgram->loadPixelExecutable(mContext, &mExecutable, mShaderFunction,
+                                          mShaderSize, mSeparateAttribs, mOutputs));
+
+        return angle::Result::Continue();
+    }
+
+    std::vector<GLenum> mOutputs;
+};
+
+angle::Result ProgramD3D::loadVertexExecutable(const gl::Context *context,
+                                               ShaderExecutableD3D **outExecutable,
+                                               const unsigned char *shaderFunction,
+                                               unsigned int shaderSize,
+                                               bool separateAttribs,
+                                               gl::InputLayout& layout)
+{
+    ANGLE_TRY(mRenderer->loadExecutable(context, shaderFunction, shaderSize,
+                                        gl::ShaderType::Vertex, mStreamOutVaryings,
+                                        separateAttribs, outExecutable));
+
+    // generated converted input layout
+    VertexExecutable::Signature signature;
+    VertexExecutable::getSignature(mRenderer, layout, &signature);
+
+    // add new binary
+    mVertexExecutables.push_back(std::unique_ptr<VertexExecutable>(
+        new VertexExecutable(layout, signature, *outExecutable)));
+
+    return angle::Result::Continue();
+}
+
+angle::Result ProgramD3D::loadPixelExecutable(const gl::Context *context,
+                                              ShaderExecutableD3D **outExecutable,
+                                              const unsigned char *shaderFunction,
+                                              unsigned int shaderSize,
+                                              bool separateAttribs,
+                                              std::vector<GLenum>& outputs)
+{
+    ANGLE_TRY(mRenderer->loadExecutable(context, shaderFunction, shaderSize,
+                                        gl::ShaderType::Fragment, mStreamOutVaryings,
+                                        separateAttribs, outExecutable));
+
+    // add new binary
+    mPixelExecutables.push_back(
+        std::unique_ptr<PixelExecutable>(new PixelExecutable(outputs, *outExecutable)));
+
+    return angle::Result::Continue();
+}
+
+// The LinkEvent implementation for linking a rendering(VS, FS, GS) program.
+class ProgramD3D::GraphicsProgramLinkEvent final : public LinkEvent
+{
+public:
+    GraphicsProgramLinkEvent(gl::InfoLog &infoLog,
+        std::shared_ptr<WorkerThreadPool> workerPool,
+        std::shared_ptr<ProgramD3D::GetExecutableTask> vertexTask,
+        std::shared_ptr<ProgramD3D::GetExecutableTask> pixelTask,
+        std::shared_ptr<ProgramD3D::GetExecutableTask> geometryTask,
+        bool useGS,
+        const ShaderD3D *vertexShader,
+        const ShaderD3D *fragmentShader)
+        : mInfoLog(infoLog),
+        mWorkerPool(workerPool),
+        mVertexTask(vertexTask),
+        mPixelTask(pixelTask),
+        mGeometryTask(geometryTask),
+        mWaitEvents(
+            { { std::shared_ptr<WaitableEvent>(workerPool->postWorkerTask(mVertexTask)),
+            std::shared_ptr<WaitableEvent>(workerPool->postWorkerTask(mPixelTask)),
+            std::shared_ptr<WaitableEvent>(workerPool->postWorkerTask(mGeometryTask)) } }),
+        mUseGS(useGS),
+        mVertexShader(vertexShader),
+        mFragmentShader(fragmentShader)
+    {
+    }
+
+    bool wait() override
+    {
+        WaitableEvent::WaitMany(&mWaitEvents);
+
+        if (!checkTask(mVertexTask.get()) || !checkTask(mPixelTask.get()) ||
+            !checkTask(mGeometryTask.get()))
+        {
+            return false;
+        }
+
+        ShaderExecutableD3D *defaultVertexExecutable = mVertexTask->getExecutable();
+        ShaderExecutableD3D *defaultPixelExecutable = mPixelTask->getExecutable();
+        ShaderExecutableD3D *pointGS = mGeometryTask->getExecutable();
+
+        if (mUseGS && pointGS)
+        {
+            // Geometry shaders are currently only used internally, so there is no corresponding
+            // shader object at the interface level. For now the geometry shader debug info is
+            // prepended to the vertex shader.
+            mVertexShader->appendDebugInfo("// GEOMETRY SHADER BEGIN\n\n");
+            mVertexShader->appendDebugInfo(pointGS->getDebugInfo());
+            mVertexShader->appendDebugInfo("\nGEOMETRY SHADER END\n\n\n");
+        }
+
+        if (defaultVertexExecutable && mVertexShader)
+        {
+            mVertexShader->appendDebugInfo(defaultVertexExecutable->getDebugInfo());
+        }
+
+        if (defaultPixelExecutable && mFragmentShader)
+        {
+            mFragmentShader->appendDebugInfo(defaultPixelExecutable->getDebugInfo());
+        }
+
+        bool isLinked = (defaultVertexExecutable && defaultPixelExecutable && (!mUseGS || pointGS));
+        if (!isLinked)
+        {
+            mInfoLog << "Failed to create D3D Shaders";
+        }
+        return isLinked;
+    }
+
+    bool isLinking() override
+    {
+        for (auto &event : mWaitEvents)
+        {
+            if (!event->isReady())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+private:
+    bool checkTask(ProgramD3D::GetExecutableTask *task)
+    {
+        if (!task->getInfoLog().empty())
+        {
+            mInfoLog << task->getInfoLog().str();
+        }
+        auto result = task->getResult();
+        if (result.isError())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    gl::InfoLog &mInfoLog;
+    std::shared_ptr<WorkerThreadPool> mWorkerPool;
+    std::shared_ptr<ProgramD3D::GetExecutableTask> mVertexTask;
+    std::shared_ptr<ProgramD3D::GetExecutableTask> mPixelTask;
+    std::shared_ptr<ProgramD3D::GetExecutableTask> mGeometryTask;
+    std::array<std::shared_ptr<WaitableEvent>, 3> mWaitEvents;
+    bool mUseGS;
+    const ShaderD3D *mVertexShader;
+    const ShaderD3D *mFragmentShader;
+};
+
+std::unique_ptr<LinkEvent> ProgramD3D::load(const gl::Context *context,
+                                            gl::InfoLog &infoLog,
+                                            gl::BinaryInputStream *stream)
 {
     // TODO(jmadill): Use Renderer from contextImpl.
 
@@ -751,14 +996,14 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
     if (memcmp(&identifier, &binaryDeviceIdentifier, sizeof(DeviceIdentifier)) != 0)
     {
         infoLog << "Invalid program binary, device configuration has changed.";
-        return false;
+        return std::make_unique<LinkEventDone>(false);
     }
 
     int compileFlags = stream->readInt<int>();
     if (compileFlags != ANGLE_COMPILE_OPTIMIZATION_LEVEL)
     {
         infoLog << "Mismatched compilation flags.";
-        return false;
+        return std::make_unique<LinkEventDone>(false);
     }
 
     for (int &index : mAttribLocationToD3DSemantic)
@@ -816,7 +1061,7 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
     if (stream->error())
     {
         infoLog << "Invalid program binary.";
-        return false;
+        return std::make_unique<LinkEventDone>(false);
     }
 
     const auto &linkedUniforms = mState.getUniforms();
@@ -843,7 +1088,7 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
     if (stream->error())
     {
         infoLog << "Invalid program binary.";
-        return false;
+        return std::make_unique<LinkEventDone>(false);
     }
 
     ASSERT(mD3DUniformBlocks.empty());
@@ -899,6 +1144,27 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
 
     bool separateAttribs = (mState.getTransformFeedbackBufferMode() == GL_SEPARATE_ATTRIBS);
 
+    std::vector<std::shared_ptr<GetLoadExecutableTask>> tasks;
+    auto FlushTasks = [&]() {
+        for (auto& task : tasks) {
+            angle::Result result = task->run();
+
+            if (result.isError()) {
+                return std::make_unique<LinkEventDone>(result);
+            }
+
+            ShaderExecutableD3D *shaderExecutable = task->getExecutable();
+
+            if (!shaderExecutable)
+            {
+                infoLog << "Could not create shader.";
+                return std::make_unique<LinkEventDone>(false);
+            }
+        }
+        tasks.clear();
+        return std::unique_ptr<LinkEventDone>(nullptr);
+    };
+
     const unsigned int vertexShaderCount = stream->readInt<unsigned int>();
     for (unsigned int vertexShaderIndex = 0; vertexShaderIndex < vertexShaderCount;
          vertexShaderIndex++)
@@ -911,29 +1177,11 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
             inputLayout[inputIndex] = stream->readInt<gl::VertexFormatType>();
         }
 
-        unsigned int vertexShaderSize             = stream->readInt<unsigned int>();
+        unsigned int vertexShaderSize = stream->readInt<unsigned int>();
         const unsigned char *vertexShaderFunction = binary + stream->offset();
 
-        ShaderExecutableD3D *shaderExecutable = nullptr;
-
-        ANGLE_TRY(mRenderer->loadExecutable(context, vertexShaderFunction, vertexShaderSize,
-                                            gl::ShaderType::Vertex, mStreamOutVaryings,
-                                            separateAttribs, &shaderExecutable));
-
-        if (!shaderExecutable)
-        {
-            infoLog << "Could not create vertex shader.";
-            return false;
-        }
-
-        // generated converted input layout
-        VertexExecutable::Signature signature;
-        VertexExecutable::getSignature(mRenderer, inputLayout, &signature);
-
-        // add new binary
-        mVertexExecutables.push_back(std::unique_ptr<VertexExecutable>(
-            new VertexExecutable(inputLayout, signature, shaderExecutable)));
-
+        tasks.emplace_back(std::make_shared<GetLoadVertexExecutableTask>(this, context, vertexShaderFunction,
+                                                                         vertexShaderSize, separateAttribs, inputLayout));
         stream->skip(vertexShaderSize);
     }
 
@@ -949,22 +1197,9 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
 
         const size_t pixelShaderSize             = stream->readInt<unsigned int>();
         const unsigned char *pixelShaderFunction = binary + stream->offset();
-        ShaderExecutableD3D *shaderExecutable    = nullptr;
 
-        ANGLE_TRY(mRenderer->loadExecutable(context, pixelShaderFunction, pixelShaderSize,
-                                            gl::ShaderType::Fragment, mStreamOutVaryings,
-                                            separateAttribs, &shaderExecutable));
-
-        if (!shaderExecutable)
-        {
-            infoLog << "Could not create pixel shader.";
-            return false;
-        }
-
-        // add new binary
-        mPixelExecutables.push_back(
-            std::unique_ptr<PixelExecutable>(new PixelExecutable(outputs, shaderExecutable)));
-
+        tasks.emplace_back(std::make_shared<GetLoadPixelExecutableTask>(this, context, pixelShaderFunction,
+                                                                        pixelShaderSize, separateAttribs, outputs));
         stream->skip(pixelShaderSize);
     }
 
@@ -976,17 +1211,25 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
             continue;
         }
 
+        auto failure = FlushTasks();
+        if (failure) {
+            return std::move(failure);
+        }
+
         const unsigned char *geometryShaderFunction = binary + stream->offset();
 
         ShaderExecutableD3D *geometryExecutable = nullptr;
-        ANGLE_TRY(mRenderer->loadExecutable(context, geometryShaderFunction, geometryShaderSize,
-                                            gl::ShaderType::Geometry, mStreamOutVaryings,
-                                            separateAttribs, &geometryExecutable));
+        angle::Result result = mRenderer->loadExecutable(context, geometryShaderFunction, geometryShaderSize,
+                                                         gl::ShaderType::Geometry, mStreamOutVaryings,
+                                                         separateAttribs, &geometryExecutable);
+        if (result.isError()) {
+            return std::make_unique<LinkEventDone>(result);
+        }
 
         if (!geometryExecutable)
         {
             infoLog << "Could not create geometry shader.";
-            return false;
+            return std::make_unique<LinkEventDone>(false);
         }
 
         geometryExe.reset(geometryExecutable);
@@ -997,17 +1240,25 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
     unsigned int computeShaderSize = stream->readInt<unsigned int>();
     if (computeShaderSize > 0)
     {
+        auto failure = FlushTasks();
+        if (failure) {
+            return std::move(failure);
+        }
+
         const unsigned char *computeShaderFunction = binary + stream->offset();
 
         ShaderExecutableD3D *computeExecutable = nullptr;
-        ANGLE_TRY(mRenderer->loadExecutable(context, computeShaderFunction, computeShaderSize,
-                                            gl::ShaderType::Compute, std::vector<D3DVarying>(),
-                                            false, &computeExecutable));
+        angle::Result result = mRenderer->loadExecutable(context, computeShaderFunction, computeShaderSize,
+                                                         gl::ShaderType::Compute, std::vector<D3DVarying>(),
+                                                         false, &computeExecutable);
+        if (result.isError()) {
+            return std::make_unique<LinkEventDone>(result);
+        }
 
         if (!computeExecutable)
         {
             infoLog << "Could not create compute shader.";
-            return false;
+            return std::make_unique<LinkEventDone>(false);
         }
 
         mComputeExecutable.reset(computeExecutable);
@@ -1017,7 +1268,21 @@ gl::LinkResult ProgramD3D::load(const gl::Context *context,
 
     dirtyAllUniforms();
 
-    return true;
+    if (tasks.size() == 2 && vertexShaderCount == 1 && pixelShaderCount == 1) {
+        auto geometryTask = std::make_shared<GetGeometryExecutableTask>(this, context);
+        tasks[0]->InternalizeData();
+        tasks[1]->InternalizeData();
+        return std::make_unique<GraphicsProgramLinkEvent>(infoLog, context->getWorkerThreadPool(),
+            tasks[0], tasks[1], geometryTask, false,
+            nullptr, nullptr);
+    } else {
+        auto result = FlushTasks();
+        if (result) {
+          return std::move(result);
+        }
+    }
+
+    return std::make_unique<LinkEventDone>(true);
 }
 
 void ProgramD3D::save(const gl::Context *context, gl::BinaryOutputStream *stream)
@@ -1297,7 +1562,7 @@ angle::Result ProgramD3D::getGeometryExecutableForPrimitiveType(const gl::Contex
     }
 
     // Return a null shader if the current rendering doesn't use a geometry shader
-    if (!usesGeometryShader(drawMode))
+    if (!usesGeometryShader(context, drawMode))
     {
         return angle::Result::Continue();
     }
@@ -1345,33 +1610,6 @@ angle::Result ProgramD3D::getGeometryExecutableForPrimitiveType(const gl::Contex
     return result;
 }
 
-class ProgramD3D::GetExecutableTask : public Closure
-{
-  public:
-    GetExecutableTask(ProgramD3D *program, const gl::Context *context)
-        : mProgram(program),
-          mResult(angle::Result::Continue()),
-          mInfoLog(),
-          mExecutable(nullptr),
-          mContext(context)
-    {
-    }
-
-    virtual angle::Result run() = 0;
-
-    void operator()() override { mResult = run(); }
-
-    angle::Result getResult() const { return mResult; }
-    const gl::InfoLog &getInfoLog() const { return mInfoLog; }
-    ShaderExecutableD3D *getExecutable() { return mExecutable; }
-
-  protected:
-    ProgramD3D *mProgram;
-    angle::Result mResult;
-    gl::InfoLog mInfoLog;
-    ShaderExecutableD3D *mExecutable;
-    const gl::Context *mContext;
-};
 
 class ProgramD3D::GetVertexExecutableTask : public ProgramD3D::GetExecutableTask
 {
@@ -1435,7 +1673,7 @@ class ProgramD3D::GetGeometryExecutableTask : public ProgramD3D::GetExecutableTa
     {
         // Auto-generate the geometry shader here, if we expect to be using point rendering in
         // D3D11.
-        if (mProgram->usesGeometryShader(gl::PrimitiveMode::Points))
+        if (mProgram->usesGeometryShader(mContext, gl::PrimitiveMode::Points))
         {
             ANGLE_TRY(mProgram->getGeometryExecutableForPrimitiveType(
                 mContext, gl::PrimitiveMode::Points, &mExecutable, &mInfoLog));
@@ -1455,112 +1693,6 @@ angle::Result ProgramD3D::getComputeExecutable(ShaderExecutableD3D **outExecutab
     return angle::Result::Continue();
 }
 
-// The LinkEvent implementation for linking a rendering(VS, FS, GS) program.
-class ProgramD3D::GraphicsProgramLinkEvent final : public LinkEvent
-{
-  public:
-    GraphicsProgramLinkEvent(gl::InfoLog &infoLog,
-                             std::shared_ptr<WorkerThreadPool> workerPool,
-                             std::shared_ptr<ProgramD3D::GetVertexExecutableTask> vertexTask,
-                             std::shared_ptr<ProgramD3D::GetPixelExecutableTask> pixelTask,
-                             std::shared_ptr<ProgramD3D::GetGeometryExecutableTask> geometryTask,
-                             bool useGS,
-                             const ShaderD3D *vertexShader,
-                             const ShaderD3D *fragmentShader)
-        : mInfoLog(infoLog),
-          mWorkerPool(workerPool),
-          mVertexTask(vertexTask),
-          mPixelTask(pixelTask),
-          mGeometryTask(geometryTask),
-          mWaitEvents(
-              {{std::shared_ptr<WaitableEvent>(workerPool->postWorkerTask(mVertexTask)),
-                std::shared_ptr<WaitableEvent>(workerPool->postWorkerTask(mPixelTask)),
-                std::shared_ptr<WaitableEvent>(workerPool->postWorkerTask(mGeometryTask))}}),
-          mUseGS(useGS),
-          mVertexShader(vertexShader),
-          mFragmentShader(fragmentShader)
-    {
-    }
-
-    bool wait() override
-    {
-        WaitableEvent::WaitMany(&mWaitEvents);
-
-        if (!checkTask(mVertexTask.get()) || !checkTask(mPixelTask.get()) ||
-            !checkTask(mGeometryTask.get()))
-        {
-            return false;
-        }
-
-        ShaderExecutableD3D *defaultVertexExecutable = mVertexTask->getExecutable();
-        ShaderExecutableD3D *defaultPixelExecutable  = mPixelTask->getExecutable();
-        ShaderExecutableD3D *pointGS                 = mGeometryTask->getExecutable();
-
-        if (mUseGS && pointGS)
-        {
-            // Geometry shaders are currently only used internally, so there is no corresponding
-            // shader object at the interface level. For now the geometry shader debug info is
-            // prepended to the vertex shader.
-            mVertexShader->appendDebugInfo("// GEOMETRY SHADER BEGIN\n\n");
-            mVertexShader->appendDebugInfo(pointGS->getDebugInfo());
-            mVertexShader->appendDebugInfo("\nGEOMETRY SHADER END\n\n\n");
-        }
-
-        if (defaultVertexExecutable)
-        {
-            mVertexShader->appendDebugInfo(defaultVertexExecutable->getDebugInfo());
-        }
-
-        if (defaultPixelExecutable)
-        {
-            mFragmentShader->appendDebugInfo(defaultPixelExecutable->getDebugInfo());
-        }
-
-        bool isLinked = (defaultVertexExecutable && defaultPixelExecutable && (!mUseGS || pointGS));
-        if (!isLinked)
-        {
-            mInfoLog << "Failed to create D3D Shaders";
-        }
-        return isLinked;
-    }
-
-    bool isLinking() override
-    {
-        for (auto &event : mWaitEvents)
-        {
-            if (!event->isReady())
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-  private:
-    bool checkTask(ProgramD3D::GetExecutableTask *task)
-    {
-        if (!task->getInfoLog().empty())
-        {
-            mInfoLog << task->getInfoLog().str();
-        }
-        auto result = task->getResult();
-        if (result.isError())
-        {
-            return false;
-        }
-        return true;
-    }
-
-    gl::InfoLog &mInfoLog;
-    std::shared_ptr<WorkerThreadPool> mWorkerPool;
-    std::shared_ptr<ProgramD3D::GetVertexExecutableTask> mVertexTask;
-    std::shared_ptr<ProgramD3D::GetPixelExecutableTask> mPixelTask;
-    std::shared_ptr<ProgramD3D::GetGeometryExecutableTask> mGeometryTask;
-    std::array<std::shared_ptr<WaitableEvent>, 3> mWaitEvents;
-    bool mUseGS;
-    const ShaderD3D *mVertexShader;
-    const ShaderD3D *mFragmentShader;
-};
 
 std::unique_ptr<LinkEvent> ProgramD3D::compileProgramExecutables(const gl::Context *context,
                                                                  gl::InfoLog &infoLog)
@@ -1575,7 +1707,7 @@ std::unique_ptr<LinkEvent> ProgramD3D::compileProgramExecutables(const gl::Conte
     auto vertexTask   = std::make_shared<GetVertexExecutableTask>(this, context);
     auto pixelTask    = std::make_shared<GetPixelExecutableTask>(this, context);
     auto geometryTask = std::make_shared<GetGeometryExecutableTask>(this, context);
-    bool useGS        = usesGeometryShader(gl::PrimitiveMode::Points);
+    bool useGS        = usesGeometryShader(context, gl::PrimitiveMode::Points);
     const ShaderD3D *vertexShaderD3D =
         GetImplAs<ShaderD3D>(mState.getAttachedShader(gl::ShaderType::Vertex));
     const ShaderD3D *fragmentShaderD3D =
@@ -2758,9 +2890,10 @@ bool ProgramD3D::hasVertexExecutableForCachedInputLayout()
     return mCachedVertexExecutableIndex.valid();
 }
 
-bool ProgramD3D::hasGeometryExecutableForPrimitiveType(gl::PrimitiveMode drawMode)
+bool ProgramD3D::hasGeometryExecutableForPrimitiveType(const gl::Context* context,
+                                                       gl::PrimitiveMode drawMode)
 {
-    if (!usesGeometryShader(drawMode))
+    if (!usesGeometryShader(context, drawMode))
     {
         // No shader necessary mean we have the required (null) executable.
         return true;

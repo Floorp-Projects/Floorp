@@ -1,3 +1,46 @@
+commit 598f2502e3a41b76d90037e7858c43c18e66399d
+Merge: 8212058a6 e15a25c6f
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 9 13:54:05 2018 -0700
+
+    Merge pull request #13 from mattwoodrow/async-load-program
+    
+    Support async glProgramBInary
+
+commit 8212058a6c6339ba541f9aabb076900cd31448ef
+Merge: 4fb8d7f97 895294a05
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 9 13:52:08 2018 -0700
+
+    Merge pull request #14 from mattwoodrow/provoking-vertex
+    
+    Add support for EGL_MOZ_create_context_provoking_vertex_dont_care
+
+commit 895294a057c022f0db77975a19419abbec4c9226
+Author: Dan Glastonbury <dan.glastonbury@gmail.com>
+Date:   Tue Oct 9 10:02:46 2018 +1300
+
+    Add support for EGL_MOZ_create_context_provoking_vertex_dont_care
+    extension
+
+commit e15a25c6fa1d910115ce6fd7a03fa5ffece8a054
+Author: Matt Woodrow <matt.woodrow@gmail.com>
+Date:   Tue Oct 9 09:56:16 2018 +1300
+
+    Support async Program::load for ProgramD3D.
+
+commit 2555cc62e340cef6a2744b7f52f3e8b94aa635e1
+Author: Matt Woodrow <matt.woodrow@gmail.com>
+Date:   Tue Oct 9 09:53:40 2018 +1300
+
+    Move task definitions to earlier in the file.
+
+commit 04adbfe1a2bfad21c549a0d30349d1da620e556c
+Author: Matt Woodrow <matt.woodrow@gmail.com>
+Date:   Tue Oct 9 09:52:42 2018 +1300
+
+    Make ProgramImpl::load() return a task and support asynchronously waiting for it to complete.
+
 commit 4fb8d7f978adda36086377ea7846951faa9f6bd3
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Wed Sep 26 18:04:05 2018 -0700

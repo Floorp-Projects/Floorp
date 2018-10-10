@@ -1,7 +1,6 @@
-// Test multiple concurrent off-thread parse jobs.
+// |jit-test| skip-if: helperThreadCount() === 0
 
-if (helperThreadCount() === 0)
-    quit();
+// Test multiple concurrent off-thread parse jobs.
 
 function assertFails(f) {
     let failed = false;

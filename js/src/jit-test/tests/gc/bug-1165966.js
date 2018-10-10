@@ -1,6 +1,4 @@
-// |jit-test| --no-ion
-if (!('oomTest' in this))
-    quit();
+// |jit-test| --no-ion; skip-if: !('oomTest' in this)
 
 var g = newGlobal();
 oomTest(function() {

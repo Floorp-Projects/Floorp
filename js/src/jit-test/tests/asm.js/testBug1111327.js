@@ -1,8 +1,7 @@
-load(libdir + "asm.js");
-
+// |jit-test| skip-if: !getBuildConfiguration()['arm-simulator']
 // Single-step profiling currently only works in the ARM simulator
-if (!getBuildConfiguration()["arm-simulator"])
-    quit();
+
+load(libdir + "asm.js");
 
 enableGeckoProfiling();
 enableSingleStepProfiling();

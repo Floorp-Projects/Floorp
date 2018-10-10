@@ -1,8 +1,5 @@
+// |jit-test| skip-if: !wasmGcEnabled()
 // Ensure that if gc types aren't enabled, test cases properly fail.
-
-if (!wasmGcEnabled()) {
-    quit(0);
-}
 
 // Dummy constructor.
 function Baguette(calories) {

@@ -1,5 +1,4 @@
-if (!('oomTest' in this) || !this.hasOwnProperty("TypedObject"))
-    quit();
+// |jit-test| skip-if: !('oomTest' in this)
 lfCodeBuffer = `
     ArrayType = TypedObject.ArrayType;
     var StructType = TypedObject.StructType;

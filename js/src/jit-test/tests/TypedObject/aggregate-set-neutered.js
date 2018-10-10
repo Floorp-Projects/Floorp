@@ -1,9 +1,6 @@
 // Bug 991981. Check for various quirks when setting a field of a typed object
 // during which set operation the underlying buffer is detached.
 
-if (typeof TypedObject === "undefined")
-  quit();
-
 load(libdir + "asserts.js")
 
 var StructType = TypedObject.StructType;

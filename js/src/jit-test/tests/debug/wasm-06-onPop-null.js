@@ -1,10 +1,7 @@
-// |jit-test| test-also-no-wasm-baseline; exitstatus: 3
+// |jit-test| test-also-no-wasm-baseline; exitstatus: 3; skip-if: !wasmDebuggingIsSupported()
 // Checking resumption values for 'null' at frame's onPop.
 
 load(libdir + "asserts.js");
-
-if (!wasmDebuggingIsSupported())
-    quit(3);
 
 var g = newGlobal('');
 var dbg = new Debugger();

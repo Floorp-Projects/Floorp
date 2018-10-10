@@ -1092,6 +1092,9 @@ void Display::initDisplayExtensions()
     // Request extension is implemented in the ANGLE frontend
     mDisplayExtensions.createContextExtensionsEnabled = true;
 
+    // Enable provoking vertex order don't care since it is not back-end dependent.
+    mDisplayExtensions.provokingVertexDontCare = true;
+
     mDisplayExtensionString = GenerateExtensionsString(mDisplayExtensions);
 }
 

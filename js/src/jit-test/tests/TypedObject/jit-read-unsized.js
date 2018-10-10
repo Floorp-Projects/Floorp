@@ -3,9 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 setJitCompilerOption("ion.warmup.trigger", 30);
 
 var N = 100;

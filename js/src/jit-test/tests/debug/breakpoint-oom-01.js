@@ -1,10 +1,9 @@
+// |jit-test| skip-if: !('oomTest' in this)
+
 // Test for OOM hitting a breakpoint in a generator.
 //
 // (The purpose is to test OOM-handling in the code that creates the
 // Debugger.Frame object and associates it with the generator object.)
-
-if (!('oomTest' in this))
-    quit();
 
 let g = newGlobal();
 g.eval(`\

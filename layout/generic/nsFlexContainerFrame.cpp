@@ -4695,8 +4695,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                     placeholderKids, lines);
 
   if ((lines.getFirst()->IsEmpty() && !lines.getFirst()->getNext()) ||
-      aReflowInput.mStyleDisplay->IsContainSize()) {
-    // If have no flex items, or if we  are size contained and
+      aReflowInput.mStyleDisplay->IsContainLayout()) {
+    // If have no flex items, or if we  are layout contained and
     // want to behave as if we have none, our parent
     // should synthesize a baseline if needed.
     AddStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE);

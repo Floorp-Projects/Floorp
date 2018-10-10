@@ -1,7 +1,6 @@
-// This test case is a simplified version of debug/Source-invisible.js.
+// |jit-test| skip-if: !('gczeal' in this)
 
-if (!'gczeal' in this)
-    quit();
+// This test case is a simplified version of debug/Source-invisible.js.
 
 gczeal(2,21);
 

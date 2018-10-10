@@ -1,5 +1,4 @@
-if (!wasmGcEnabled())
-    quit();
+// |jit-test| skip-if: !wasmGcEnabled()
 
 var conf = getBuildConfiguration();
 

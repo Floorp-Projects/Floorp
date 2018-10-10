@@ -1,6 +1,4 @@
-
-if (!wasmBulkMemSupported())
-    quit(0);
+// |jit-test| skip-if: !wasmBulkMemSupported()
 
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;

@@ -218,6 +218,11 @@ bool GetClientArraysEnabled(const egl::AttributeMap &attribs)
     return (attribs.get(EGL_CONTEXT_CLIENT_ARRAYS_ENABLED_ANGLE, EGL_TRUE) == EGL_TRUE);
 }
 
+bool GetProvokingVertexDontCare(const egl::AttributeMap &attribs)
+{
+    return (attribs.get(EGL_CONTEXT_PROVOKING_VERTEX_DONT_CARE_MOZ, EGL_FALSE) == EGL_TRUE);
+}
+
 bool GetRobustResourceInit(const egl::AttributeMap &attribs)
 {
     return (attribs.get(EGL_ROBUST_RESOURCE_INITIALIZATION_ANGLE, EGL_FALSE) == EGL_TRUE);
@@ -358,6 +363,7 @@ Context::Context(rx::EGLImplFactory *implFactory,
       mCurrentDisplay(static_cast<egl::Display *>(EGL_NO_DISPLAY)),
       mWebGLContext(GetWebGLContext(attribs)),
       mExtensionsEnabled(GetExtensionsEnabled(attribs, mWebGLContext)),
+      mProvokingVertexDontCare(GetProvokingVertexDontCare(attribs)),
       mMemoryProgramCache(memoryProgramCache),
       mVertexArrayObserverBinding(this, kVertexArraySubjectIndex),
       mDrawFramebufferObserverBinding(this, kDrawFramebufferSubjectIndex),

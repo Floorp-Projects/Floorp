@@ -1,7 +1,4 @@
-// |jit-test| allow-oom
-
-if (!('oomAfterAllocations' in this))
-    quit();
+// |jit-test| allow-oom; skip-if: !('oomAfterAllocations' in this)
 
 var egc = 138;
 function SwitchTest(value) {

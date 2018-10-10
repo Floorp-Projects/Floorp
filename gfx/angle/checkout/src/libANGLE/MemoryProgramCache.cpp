@@ -208,7 +208,7 @@ MemoryProgramCache::~MemoryProgramCache()
 }
 
 // static
-LinkResult MemoryProgramCache::Deserialize(const Context *context,
+std::unique_ptr<rx::LinkEvent> MemoryProgramCache::Deserialize(const Context *context,
                                            const Program *program,
                                            ProgramState *state,
                                            const uint8_t *binary,
@@ -223,7 +223,7 @@ LinkResult MemoryProgramCache::Deserialize(const Context *context,
         0)
     {
         infoLog << "Invalid program binary version.";
-        return false;
+        return std::make_unique<rx::LinkEventDone>(false);
     }
 
     int majorVersion = stream.readInt<int>();
@@ -232,7 +232,7 @@ LinkResult MemoryProgramCache::Deserialize(const Context *context,
         minorVersion != context->getClientMinorVersion())
     {
         infoLog << "Cannot load program binaries across different ES context versions.";
-        return false;
+        return std::make_unique<rx::LinkEventDone>(false);
     }
 
     state->mComputeShaderLocalSize[0] = stream.readInt<int>();
@@ -344,7 +344,7 @@ LinkResult MemoryProgramCache::Deserialize(const Context *context,
         context->getWorkarounds().disableProgramCachingForTransformFeedback)
     {
         infoLog << "Current driver does not support transform feedback in binary programs.";
-        return false;
+        return std::make_unique<rx::LinkEventDone>(false);
     }
 
     ASSERT(state->mLinkedTransformFeedbackVaryings.empty());
@@ -659,10 +659,9 @@ LinkResult MemoryProgramCache::getProgram(const Context *context,
     if (get(*hashOut, &binaryProgram))
     {
         InfoLog infoLog;
-        ANGLE_TRY_RESULT(Deserialize(context, program, state, binaryProgram->data(),
-                                     binaryProgram->size(), infoLog),
-                         result);
-        ANGLE_HISTOGRAM_BOOLEAN("GPU.ANGLE.ProgramCache.LoadBinarySuccess", result.getResult());
+        auto event = Deserialize(context, program, state, binaryProgram->data(),
+                                 binaryProgram->size(), infoLog);
+        result = event->wait();
         if (!result.getResult())
         {
             // Cache load failed, evict.

@@ -1,7 +1,6 @@
-load(libdir + "asserts.js");
+// |jit-test| skip-if: helperThreadCount() === 0
 
-if (helperThreadCount() === 0)
-  quit(0);
+load(libdir + "asserts.js");
 
 function BigInteger(a, b, c) {}
 function montConvert(x) {

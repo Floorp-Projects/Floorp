@@ -1,6 +1,3 @@
-if (typeof Promise === "undefined")
-    quit(0);
-
 load(libdir + "asserts.js");
 
 let g = newGlobal();

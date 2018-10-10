@@ -1,6 +1,3 @@
-if (typeof parseRegExp === 'undefined')
-    quit();
-
 load(libdir + "regexp_parse.js");
 
 test("a|\u3042", all_flags,

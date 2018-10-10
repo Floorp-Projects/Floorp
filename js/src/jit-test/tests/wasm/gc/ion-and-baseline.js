@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !wasmGcEnabled()
+
 // Attempt to test intercalls from ion to baseline and back.
 //
 // We get into this situation when the modules are compiled with different
@@ -9,9 +11,6 @@
 //
 // Some logging with printf confirms that refmod is baseline-compiled and
 // nonrefmod is ion-compiled at present, with --wasm-gc enabled.
-
-if (!wasmGcEnabled())
-    quit(0);
 
 // Ion can't talk about references yet *but* we can call indirect from Ion to a
 // baseline module that has exported a function that accepts or returns anyref,
