@@ -88,7 +88,7 @@
             <checkbox id="contentBlockingTrackingProtectionCheckbox"
                       class="content-blocking-checkbox" flex="1"
                       src="chrome://browser/skin/controlcenter/trackers.svg"
-                      data-l10n-id="content-blocking-tracking-protection-all-detected-trackers-label"/>
+                      data-l10n-id="content-blocking-tracking-protection-trackers-label"/>
             <vbox class="content-blocking-category-labels" flex="1">
               <hbox id="contentBlockingTrackingProtectionExtensionContentLabel"
                     align="center" hidden="true" class="extension-controlled">
