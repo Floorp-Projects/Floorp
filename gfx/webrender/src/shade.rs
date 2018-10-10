@@ -20,6 +20,8 @@ use renderer::{
 use gleam::gl::GlType;
 use time::precise_time_ns;
 
+use std::cell::RefCell;
+use std::rc::Rc;
 
 impl ImageBufferKind {
     pub(crate) fn get_feature_string(&self) -> &'static str {
@@ -816,4 +818,12 @@ impl Shaders {
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
     }
+}
+
+// A wrapper around a strong reference to a Shaders
+// object. We have this so that external (ffi)
+// consumers can own a reference to a shared Shaders
+// instance without understanding rust's refcounting.
+pub struct WrShaders {
+    pub shaders: Rc<RefCell<Shaders>>,
 }

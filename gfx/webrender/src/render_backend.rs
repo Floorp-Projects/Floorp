@@ -30,6 +30,7 @@ use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
+use prim_store::PrimitiveDataStore;
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
 use renderer::{AsyncPropertySampler, PipelineInfo};
@@ -89,15 +90,20 @@ pub struct FrameId(pub u32);
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameResources {
-    // The store of currently active / available clip nodes. This is kept
-    // in sync with the clip interner in the scene builder for each document.
+    /// The store of currently active / available clip nodes. This is kept
+    /// in sync with the clip interner in the scene builder for each document.
     pub clip_data_store: ClipDataStore,
+
+    /// Currently active / available primitives. Kept in sync with the
+    /// primitive interner in the scene builder, per document.
+    pub prim_data_store: PrimitiveDataStore,
 }
 
 impl FrameResources {
     fn new() -> Self {
         FrameResources {
             clip_data_store: ClipDataStore::new(),
+            prim_data_store: PrimitiveDataStore::new(),
         }
     }
 }
@@ -139,6 +145,7 @@ struct Document {
     /// before rendering again.
     frame_is_valid: bool,
     hit_tester_is_valid: bool,
+    rendered_frame_is_valid: bool,
 
     resources: FrameResources,
 }
@@ -169,6 +176,7 @@ impl Document {
             dynamic_properties: SceneProperties::new(),
             frame_is_valid: false,
             hit_tester_is_valid: false,
+            rendered_frame_is_valid: false,
             resources: FrameResources::new(),
         }
     }
@@ -656,6 +664,7 @@ impl RenderBackend {
                             replace(&mut txn.frame_ops, Vec::new()),
                             replace(&mut txn.notifications, Vec::new()),
                             txn.render_frame,
+                            txn.invalidate_rendered_frame,
                             &mut frame_counter,
                             &mut profile_counters,
                             has_built_scene,
@@ -936,6 +945,7 @@ impl RenderBackend {
             notifications: transaction_msg.notifications,
             set_root_pipeline: None,
             render_frame: transaction_msg.generate_frame,
+            invalidate_rendered_frame: transaction_msg.invalidate_rendered_frame,
         });
 
         self.resource_cache.pre_scene_building_update(
@@ -971,6 +981,7 @@ impl RenderBackend {
                 replace(&mut txn.frame_ops, Vec::new()),
                 replace(&mut txn.notifications, Vec::new()),
                 txn.render_frame,
+                txn.invalidate_rendered_frame,
                 frame_counter,
                 profile_counters,
                 false
@@ -1008,6 +1019,7 @@ impl RenderBackend {
         mut frame_ops: Vec<FrameMsg>,
         mut notifications: Vec<NotificationRequest>,
         mut render_frame: bool,
+        invalidate_rendered_frame: bool,
         frame_counter: &mut u32,
         profile_counters: &mut BackendProfileCounters,
         has_built_scene: bool,
@@ -1031,6 +1043,7 @@ impl RenderBackend {
         // during the scene build, apply them to the data store now.
         if let Some(updates) = doc_resource_updates {
             doc.resources.clip_data_store.apply_updates(updates.clip_updates);
+            doc.resources.prim_data_store.apply_updates(updates.prim_updates);
         }
 
         // TODO: this scroll variable doesn't necessarily mean we scrolled. It is only used
@@ -1068,11 +1081,19 @@ impl RenderBackend {
         // Avoid re-building the frame if the current built frame is still valid.
         let build_frame = render_frame && !doc.frame_is_valid;
 
+        // Request composite is true when we want to composite frame even when
+        // there is no frame update. This happens when video frame is updated under
+        // external image with NativeTexture or when platform requested to composite frame.
+        if invalidate_rendered_frame {
+            doc.rendered_frame_is_valid = false;
+        }
+
         let mut frame_build_time = None;
         if build_frame && doc.has_pixels() {
             profile_scope!("generate frame");
 
             *frame_counter += 1;
+            doc.rendered_frame_is_valid = false;
 
             // borrow ck hack for profile_counters
             let (pending_update, rendered_document) = {
@@ -1133,6 +1154,12 @@ impl RenderBackend {
         // otherwise gecko can get into a state where it waits (forever) for the
         // transaction to complete before sending new work.
         if requested_frame {
+            // If rendered frame is already valid, there is no need to render frame.
+            if doc.rendered_frame_is_valid {
+                render_frame = false;
+            } else if render_frame {
+                doc.rendered_frame_is_valid = true;
+            }
             self.notifier.new_frame_ready(document_id, scroll, render_frame, frame_build_time);
         }
 
@@ -1454,6 +1481,7 @@ impl RenderBackend {
                 hit_tester: None,
                 frame_is_valid: false,
                 hit_tester_is_valid: false,
+                rendered_frame_is_valid: false,
                 resources: frame_resources,
             };
 
