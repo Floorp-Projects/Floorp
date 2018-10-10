@@ -26,7 +26,7 @@ add_task(async function() {
     window.addEventListener("message", onMessage);
   });
 
-  let iframe = document.createElement("iframe");
+  let iframe = document.createXULElement("iframe");
   document.documentElement.appendChild(iframe);
 
   const tab = await addTab(TEST_URL);

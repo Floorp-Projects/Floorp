@@ -13,7 +13,7 @@ const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/
 add_task(async function() {
   const { MyCustomTreeItem } = synthesizeCustomTreeClass();
 
-  const container = document.createElement("vbox");
+  const container = document.createXULElement("vbox");
   container.style.height = "100%";
   container.style.overflow = "scroll";
   await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
