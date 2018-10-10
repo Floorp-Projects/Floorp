@@ -8,20 +8,20 @@
 if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
         'OSVRSession.cpp',
+        'VRService.cpp',
+        'VRSession.cpp',
     ]
+    include('/ipc/chromium/chromium-config.mozbuild')
 
 # Build OpenVR on Windows, Linux, and macOS desktop targets
 if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     UNIFIED_SOURCES += [
         'OpenVRSession.cpp',
-        'VRService.cpp',
-        'VRSession.cpp',
     ]
     LOCAL_INCLUDES += [
         '/dom/base',
         '/gfx/layers/d3d11',
         '/gfx/thebes',
     ]
-    include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
