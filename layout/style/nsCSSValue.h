@@ -192,8 +192,9 @@ private:
 struct URLValue final : public URLValueData
 {
   URLValue(ServoRawOffsetArc<RustString> aString,
-           already_AddRefed<URLExtraData> aExtraData)
-    : URLValueData(aString, std::move(aExtraData), CORSMode::CORS_NONE)
+           already_AddRefed<URLExtraData> aExtraData,
+           CORSMode aCORSMode)
+    : URLValueData(aString, std::move(aExtraData), aCORSMode)
   { }
 
   URLValue(const URLValue&) = delete;
