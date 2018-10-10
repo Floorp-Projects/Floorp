@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_GECKO_PROFILER']:
+    DEFINES['MOZ_REPLACE_MALLOC_PREFIX'] = 'profiler'
     XPIDL_MODULE = 'profiler'
     XPIDL_SOURCES += [
         'gecko/nsIProfiler.idl',
@@ -34,6 +35,11 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'gecko/ProfilerParent.cpp',
         'gecko/ThreadResponsiveness.cpp',
     ]
+    if CONFIG['MOZ_REPLACE_MALLOC'] and CONFIG['MOZ_PROFILER_MEMORY']:
+        SOURCES += [
+            'core/memory_hooks.cpp', # conflicts with platform.h class Thread
+        ]
+
     if CONFIG['OS_TARGET'] == 'Darwin':
         # This file cannot be built in unified mode because it includes
         # "nsLocalFile.h", which pulls in a system header which uses a type
