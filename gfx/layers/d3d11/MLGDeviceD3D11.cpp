@@ -1748,7 +1748,9 @@ MLGDeviceD3D11::MaybeLockTexture(ID3D11Texture2D* aTexture)
 void
 MLGDeviceD3D11::SetPSTexturesNV12(uint32_t aSlot, TextureSource* aTexture)
 {
-  MOZ_ASSERT(aTexture->GetFormat() == SurfaceFormat::NV12);
+  MOZ_ASSERT(aTexture->GetFormat() == SurfaceFormat::NV12 ||
+             aTexture->GetFormat() == SurfaceFormat::P010 ||
+             aTexture->GetFormat() == SurfaceFormat::P016);
 
   TextureSourceD3D11* source = aTexture->AsSourceD3D11();
   if (!source) {
@@ -1764,26 +1766,24 @@ MLGDeviceD3D11::SetPSTexturesNV12(uint32_t aSlot, TextureSource* aTexture)
 
   MaybeLockTexture(texture);
 
-  RefPtr<ID3D11ShaderResourceView> views[2];
-  D3D11_SHADER_RESOURCE_VIEW_DESC desc =
-    CD3D11_SHADER_RESOURCE_VIEW_DESC(
-      D3D11_SRV_DIMENSION_TEXTURE2D,
-      DXGI_FORMAT_R8_UNORM);
+  const bool isNV12 = aTexture->GetFormat() == SurfaceFormat::NV12;
 
-  HRESULT hr = mDevice->CreateShaderResourceView(
-    texture,
-    &desc,
-    getter_AddRefs(views[0]));
+  RefPtr<ID3D11ShaderResourceView> views[2];
+  D3D11_SHADER_RESOURCE_VIEW_DESC desc = CD3D11_SHADER_RESOURCE_VIEW_DESC(
+    D3D11_SRV_DIMENSION_TEXTURE2D,
+    isNV12 ? DXGI_FORMAT_R8_UNORM : DXGI_FORMAT_R16_UNORM);
+
+  HRESULT hr =
+    mDevice->CreateShaderResourceView(texture, &desc, getter_AddRefs(views[0]));
   if (FAILED(hr) || !views[0]) {
-    gfxWarning() << "Could not bind an SRV for Y plane of NV12 texture: " << hexa(hr);
+    gfxWarning() << "Could not bind an SRV for Y plane of NV12 texture: "
+                 << hexa(hr);
     return;
   }
 
-  desc.Format = DXGI_FORMAT_R8G8_UNORM;
-  hr = mDevice->CreateShaderResourceView(
-    texture,
-    &desc,
-    getter_AddRefs(views[1]));
+  desc.Format = isNV12 ? DXGI_FORMAT_R8G8_UNORM : DXGI_FORMAT_R16G16_UNORM;
+  hr =
+    mDevice->CreateShaderResourceView(texture, &desc, getter_AddRefs(views[1]));
   if (FAILED(hr) || !views[1]) {
     gfxWarning() << "Could not bind an SRV for CbCr plane of NV12 texture: " << hexa(hr);
     return;

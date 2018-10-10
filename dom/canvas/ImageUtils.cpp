@@ -42,6 +42,8 @@ GetImageBitmapFormatFromSurfaceFromat(SurfaceFormat aSurfaceFormat)
   case SurfaceFormat::R5G6B5_UINT16:
   case SurfaceFormat::YUV:
   case SurfaceFormat::NV12:
+  case SurfaceFormat::P010:
+  case SurfaceFormat::P016:
   case SurfaceFormat::UNKNOWN:
   default:
     return ImageBitmapFormat::EndGuard_;

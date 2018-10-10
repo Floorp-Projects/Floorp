@@ -252,6 +252,8 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
     result = new EffectRGB(aSource, isAlphaPremultiplied, aSamplingFilter);
     break;
   case gfx::SurfaceFormat::NV12:
+  case gfx::SurfaceFormat::P010:
+  case gfx::SurfaceFormat::P016:
     result = new EffectNV12(aSource, aSamplingFilter);
     break;
   case gfx::SurfaceFormat::YUV:

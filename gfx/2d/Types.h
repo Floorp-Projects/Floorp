@@ -64,7 +64,13 @@ enum class SurfaceFormat : int8_t {
 
   // These ones are their own special cases.
   YUV,
-  NV12,
+  NV12,         // YUV 4:2:0 image with a plane of 8 bit Y samples followed by
+                // an interleaved U/V plane containing 8 bit 2x2 subsampled
+                // colour difference samples.
+  P016,         // Similar to NV12, but with 16 bits plane values
+  P010,         // Identical to P016 but the 6 least significant bits are 0.
+                // With DXGI in theory entirely compatible, however practice has
+                // shown that it's not the case.
   YUV422,
   HSV,
   Lab,
@@ -124,6 +130,8 @@ inline bool IsOpaque(SurfaceFormat aFormat)
   case SurfaceFormat::Depth:
   case SurfaceFormat::YUV:
   case SurfaceFormat::NV12:
+  case SurfaceFormat::P010:
+  case SurfaceFormat::P016:
   case SurfaceFormat::YUV422:
     return true;
   default:
