@@ -7101,16 +7101,14 @@ nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI)
     return;
   }
 
-  nsIDocument* doc = inner->GetDoc();
-  if (!doc) {
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(aURI, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(aURI,
-      doc->NodePrincipal()->OriginAttributesRef());
 
   // We don't care when the asynchronous work finishes here.
-  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(principal,
+  Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
                                                                      inner,
                                                                      AntiTrackingCommon::eHeuristic);
 }
