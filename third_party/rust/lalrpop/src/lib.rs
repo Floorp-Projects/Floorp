@@ -19,6 +19,7 @@ extern crate regex_syntax;
 extern crate string_cache;
 extern crate term;
 extern crate unicode_xid;
+extern crate sha2;
 
 #[cfg(test)]
 extern crate rand;
