@@ -9,7 +9,6 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "ScopedGLHelpers.h"
 #include "WebGLContext.h"
-#include "WebGLFormats.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLTexture.h"
 
