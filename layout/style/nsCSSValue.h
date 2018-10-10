@@ -107,11 +107,6 @@ protected:
   URLValueData(ServoRawOffsetArc<RustString> aString,
                already_AddRefed<URLExtraData> aExtraData,
                CORSMode aCORSMode);
-  // Construct with the actual URI.
-  URLValueData(already_AddRefed<nsIURI> aURI,
-               ServoRawOffsetArc<RustString> aString,
-               already_AddRefed<URLExtraData> aExtraData,
-               CORSMode aCORSMode);
 
 public:
   // Returns true iff all fields of the two URLValueData objects are equal.
@@ -208,24 +203,6 @@ struct ImageValue final : public URLValueData
   // Not making the constructor and destructor inline because that would
   // force us to include imgIRequest.h, which leads to REQUIRES hell, since
   // this header is included all over.
-  //
-  // This constructor is only safe to call from the main thread.
-  ImageValue(nsIURI* aURI, const nsAString& aString,
-             already_AddRefed<URLExtraData> aExtraData,
-             nsIDocument* aDocument,
-             CORSMode aCORSMode);
-
-  // This constructor is only safe to call from the main thread.
-  ImageValue(nsIURI* aURI, ServoRawOffsetArc<RustString> aString,
-             already_AddRefed<URLExtraData> aExtraData,
-             nsIDocument* aDocument,
-             CORSMode aCORSMode);
-
-  // This constructor is safe to call from any thread, but Initialize
-  // must be called later for the object to be useful.
-  ImageValue(const nsAString& aString,
-             already_AddRefed<URLExtraData> aExtraData,
-             CORSMode aCORSMode);
 
   // This constructor is safe to call from any thread, but Initialize
   // must be called later for the object to be useful.
