@@ -25,12 +25,14 @@ import os
 import sys
 import xml.etree.ElementTree
 
-assert len(sys.argv) == 3, 'Usage: ./GLParseRegistryXML.py path/to/OpenGL-Registry path/to/EGL-Registry'
+assert len(sys.argv) == 3, (
+       'Usage: ./GLParseRegistryXML.py path/to/OpenGL-Registry path/to/EGL-Registry')
 
 (_, GL_REGISTRY_PATH, EGL_REGISTRY_PATH) = sys.argv
 
 ################################################################################
 # export management
+
 
 class GLConstHeader:
     def __init__(self, f):
