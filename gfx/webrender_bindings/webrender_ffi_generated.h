@@ -1821,6 +1821,10 @@ void wr_transaction_generate_frame(Transaction *aTxn)
 WR_FUNC;
 
 WR_INLINE
+void wr_transaction_invalidate_rendered_frame(Transaction *aTxn)
+WR_FUNC;
+
+WR_INLINE
 bool wr_transaction_is_empty(const Transaction *aTxn)
 WR_FUNC;
 

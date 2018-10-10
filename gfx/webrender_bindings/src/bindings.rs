@@ -1275,6 +1275,11 @@ pub extern "C" fn wr_transaction_generate_frame(txn: &mut Transaction) {
 }
 
 #[no_mangle]
+pub extern "C" fn wr_transaction_invalidate_rendered_frame(txn: &mut Transaction) {
+    txn.invalidate_rendered_frame();
+}
+
+#[no_mangle]
 pub extern "C" fn wr_transaction_update_dynamic_properties(
     txn: &mut Transaction,
     opacity_array: *const WrOpacityProperty,
