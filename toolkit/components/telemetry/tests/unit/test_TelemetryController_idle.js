@@ -49,7 +49,7 @@ add_task(async function testSendPendingOnIdleDaily() {
 
   // Check that we are correctly receiving the gather-telemetry notification.
   TelemetrySession.observe(null, "idle-daily", null);
-  await gatherPromise;
+  await gatherPromise.promise;
   Assert.ok(true, "Received gather-telemetry notification.");
 
   Services.obs.removeObserver(gatherPromise.resolve, "gather-telemetry");
