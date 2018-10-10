@@ -3,15 +3,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
 /**
  * Make sure that the debugger attaches to the right tab when multiple windows
  * are open.
  */
-
-var { DebuggerServer } = require("devtools/server/main");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 const TAB1_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 const TAB2_URL = EXAMPLE_URL + "doc_script-switching-02.html";
@@ -92,7 +87,8 @@ async function testRemoveTab(client, win, tab) {
   await continue_remove_tab(client, tab);
 }
 
-async function continue_remove_tab(client, tab) {
+async function continue_remove_tab(client, tab)
+{
   removeTab(tab);
 
   const response = await client.listTabs();
@@ -103,13 +99,4 @@ async function continue_remove_tab(client, tab) {
   ok(!foundTab2, "Tab2 should be gone.");
 
   is(response.selected, 0, "The original tab is selected.");
-}
-
-function addWindow(url) {
-  info("Adding window: " + url);
-  return promise.resolve(getChromeWindow(window.open(url)));
-}
-
-function getChromeWindow(win) {
-  return win.docShell.rootTreeItem.domWindow;
 }
