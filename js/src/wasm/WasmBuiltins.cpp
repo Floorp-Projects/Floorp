@@ -462,7 +462,7 @@ SaturatingTruncateDoubleToUint64(double input)
         return UINT64_MAX;
     }
     // Handle in-range values.
-    if (input >= -1.0) {
+    if (input > -1.0) {
         return uint64_t(input);
     }
     // Handle NaN and negative overflow.
