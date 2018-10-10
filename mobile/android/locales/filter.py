@@ -18,7 +18,6 @@ def test(mod, path, entity=None):
     if mod == "toolkit":
         # keep this file list in sync with jar.mn
         if path in (
-            "chrome/global/aboutAbout.dtd",
             "chrome/global/aboutReader.properties",
             "chrome/global/aboutRights.dtd",
             "chrome/global/charsetMenu.properties",
@@ -37,6 +36,9 @@ def test(mod, path, entity=None):
             return "error"
         if re.match(r"crashreporter/[^/]*.ftl", path):
             # error on crashreporter/*.ftl
+            return "error"
+        if re.match(r"toolkit/about/[^/]*About.ftl", path):
+            # error on toolkit/about/*About.ftl
             return "error"
         return "ignore"
 

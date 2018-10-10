@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
-<!ENTITY % aboutAboutDTD SYSTEM "chrome://global/locale/aboutAbout.dtd" >
-%aboutAboutDTD;
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-%globalDTD;
-]>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,15 +7,17 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>&aboutAbout.title;</title>
+  <title data-l10n-id="about-about-title"></title>
   <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css"/>
+  <link rel="localization" href="toolkit/about/aboutAbout.ftl"/>
   <script type="application/javascript" src="chrome://global/content/aboutAbout.js"></script>
+
 </head>
 
-<body dir="&locale.dir;">
+<body>
   <div class="container">
-    <h1>&aboutAbout.title;</h1>
-    <p><em>&aboutAbout.note;</em></p>
+    <h1 data-l10n-id="about-about-title"></h1>
+    <p><em data-l10n-id="about-about-note"></em></p>
     <ul id="abouts" class="columns"></ul>
   </div>
 </body>
