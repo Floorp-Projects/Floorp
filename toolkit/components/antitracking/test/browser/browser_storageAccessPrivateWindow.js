@@ -3,30 +3,19 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 AntiTracking.runTest("Storage Access API called in a private window",
   // blocking callback
   async _ => {
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    let threw = false;
-    try {
-      p = document.requestStorageAccess();
-    } catch (e) {
-      threw = true;
-    } finally {
-      helper.destruct();
-    }
+    /* import-globals-from storageAccessAPIHelpers.js */
+    let [threw, rejected] = await callRequestStorageAccess();
     ok(!threw, "requestStorageAccess should not throw");
-    threw = false;
-    try {
-      await p;
-    } catch (e) {
-      threw = true;
-    }
-    ok(threw, "requestStorageAccess shouldn't be available");
+    ok(rejected, "requestStorageAccess shouldn't be available");
   },
 
   null, // non-blocking callback
-  null, // cleanup function
+  // cleanup function
+  async _ => {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    });
+  },
   [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test

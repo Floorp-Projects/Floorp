@@ -107,10 +107,6 @@ private:
   // Otherwise, it will return false.
   bool ShouldResistFingerprinting(CallerType aCallerType);
 
-  // This method returns the nsIDocument which is associated with the event
-  // target.
-  already_AddRefed<nsIDocument> GetDocument();
-
   // This method returns the spoofed modifier state of the given modifier key
   // for fingerprinting resistance.
   bool GetSpoofedModifierStates(const Modifiers aModifierKey,

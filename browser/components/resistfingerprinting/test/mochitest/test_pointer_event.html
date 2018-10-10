@@ -1,0 +1,191 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1363508
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Pointer Events spoofing</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="target0" style="width: 50px; height: 50px; background: green"></div>
+<div id="target1" style="width: 50px; height: 50px; background: black"></div>
+<script type="application/javascript">
+
+  /** Test for Bug 1363508 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var target0 = window.document.getElementById("target0");
+  var target1 = window.document.getElementById("target1");
+  var utils = SpecialPowers.Ci.nsIDOMWindowUtils;
+
+  // A helper function to check that whether the pointer is spoofed correctly.
+  function checkPointerEvent(aEvent) {
+    is(aEvent.width, 1, "The spoofed pointer event should always have width as 1.");
+    is(aEvent.height, 1, "The spoofed pointer event should always have width as 1.");
+    if (aEvent.buttons === 0) {
+      is(aEvent.pressure, 0.0,
+         "The spoofed pointer event should have pressure as 0.0 if it is not in a active buttons state.");
+    } else {
+      is(aEvent.pressure, 0.5,
+         "The spoofed pointer event should have pressure as 0.5 if it is in a active buttons state.");
+    }
+    is(aEvent.tangentialPressure, 0, "The spoofed pointer event should always have tangentialPressure as 0.");
+    is(aEvent.tiltX, 0, "The spoofed pointer event should always have tiltX as 0.");
+    is(aEvent.tiltY, 0, "The spoofed pointer event should always have tiltY as 0.");
+    is(aEvent.twist, 0, "The spoofed pointer event should always have twist as 0.");
+    is(aEvent.pointerType, "mouse", "The spoofed pointer event should always has mouse pointerType.");
+    is(aEvent.isPrimary, true, "The spoofed pointer event should only receive primary pointer events.");
+  }
+
+  // A helper function to create a promise for waiting the event.
+  function promiseForEvent(aEventType, aCheckFunc) {
+    return new Promise(resolve => {
+      target0.addEventListener(aEventType, (event) => {
+        is(event.type, aEventType, "receive " + event.type + " on target0");
+        aCheckFunc(event);
+        resolve();
+      }, { once: true });
+    });
+  }
+
+  // A test for pointer events from touch interface.
+  async function doTestForTouchPointerEvent() {
+    let eventPromises = [
+      promiseForEvent("pointerover", checkPointerEvent),
+      promiseForEvent("pointerenter", checkPointerEvent),
+      promiseForEvent("pointerdown", checkPointerEvent),
+      promiseForEvent("pointermove", checkPointerEvent),
+      promiseForEvent("pointerup", checkPointerEvent),
+      promiseForEvent("pointerout", checkPointerEvent),
+      promiseForEvent("pointerleave", checkPointerEvent),
+    ];
+
+    synthesizeMouse(target0, 5, 5, { type: "mousedown", inputSource: MouseEvent.MOZ_SOURCE_TOUCH, pressure: 0.75 });
+    synthesizeMouse(target0, 5, 5, { type: "mousemove", inputSource: MouseEvent.MOZ_SOURCE_TOUCH, pressure: 0.75 });
+    synthesizeMouse(target0, 5, 5, { type: "mouseup", inputSource: MouseEvent.MOZ_SOURCE_TOUCH, pressure: 0.75 });
+
+    await Promise.all(eventPromises);
+  }
+
+  // A test for pointercancel event.
+  async function doTestForTouchPointerCancelEvent() {
+    let eventPromises = [
+      promiseForEvent("pointerover", checkPointerEvent),
+      promiseForEvent("pointerenter", checkPointerEvent),
+      promiseForEvent("pointerdown", checkPointerEvent),
+      promiseForEvent("pointermove", checkPointerEvent),
+      promiseForEvent("pointercancel", checkPointerEvent),
+      promiseForEvent("pointerout", checkPointerEvent),
+      promiseForEvent("pointerleave", checkPointerEvent),
+    ];
+
+    synthesizeTouch(target0, 5, 5, { type: "touchstart" });
+    synthesizeTouch(target0, 5, 5, { type: "touchmove" });
+    synthesizeTouch(target0, 5, 5, { type: "touchcancel" });
+
+    await Promise.all(eventPromises);
+  }
+
+  // A test for pointer events from pen interface.
+  async function doTestForPenPointerEvent() {
+    let eventPromises = [
+      promiseForEvent("pointerover", checkPointerEvent),
+      promiseForEvent("pointerenter", checkPointerEvent),
+      promiseForEvent("pointerdown", checkPointerEvent),
+      promiseForEvent("pointermove", checkPointerEvent),
+      promiseForEvent("pointerup", checkPointerEvent),
+      promiseForEvent("pointerout", checkPointerEvent),
+      promiseForEvent("pointerleave", checkPointerEvent),
+    ];
+
+    synthesizeMouse(target0, 5, 5, { type: "mousedown", inputSource: MouseEvent.MOZ_SOURCE_PEN });
+    synthesizeMouse(target0, 5, 5, { type: "mousemove", inputSource: MouseEvent.MOZ_SOURCE_PEN });
+    synthesizeMouse(target0, 5, 5, { type: "mouseup", inputSource: MouseEvent.MOZ_SOURCE_PEN });
+    synthesizeMouse(target1, 5, 5, { type: "mousemove", inputSource: MouseEvent.MOZ_SOURCE_PEN });
+
+    await Promise.all(eventPromises);
+  }
+
+  // A test for gotpointercapture and lostpointercapture events.
+  async function doTestForPointerCapture() {
+    function eventHandler(event) {
+      checkPointerEvent(event);
+      if (event.type === "pointerdown") {
+        target0.setPointerCapture(event.pointerId);
+      } else if (event.type === "pointermove") {
+        target0.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    let eventPromises = [
+      promiseForEvent("pointerover", eventHandler),
+      promiseForEvent("pointerenter", eventHandler),
+      promiseForEvent("pointerdown", eventHandler),
+      promiseForEvent("gotpointercapture", eventHandler),
+      promiseForEvent("pointermove", eventHandler),
+      promiseForEvent("lostpointercapture", eventHandler),
+      promiseForEvent("pointerup", eventHandler),
+      promiseForEvent("pointerout", eventHandler),
+      promiseForEvent("pointerleave", eventHandler),
+    ];
+
+    synthesizeMouse(target0, 5, 5, { type: "mousedown", inputSource: MouseEvent.MOZ_SOURCE_TOUCH, pressure: 0.75 });
+    synthesizeMouse(target0, 5, 5, { type: "mousemove", inputSource: MouseEvent.MOZ_SOURCE_TOUCH, pressure: 0.75 });
+    synthesizeMouse(target0, 5, 5, { type: "mouseup", inputSource: MouseEvent.MOZ_SOURCE_TOUCH, pressure: 0.75 });
+
+    await Promise.all(eventPromises);
+  }
+
+  // A test for assuring that script generated events won't be spoofed.
+  function doTestNoSpoofingForScriptGeneratedEvent() {
+
+    return new Promise(resolve => {
+      // Generate a custom pointer event by script.
+      let pointerEventCustom = new PointerEvent("pointerover", {
+        pointerId: utils.DEFAULT_TOUCH_POINTER_ID,
+        pointerType: "touch",
+        width: 5,
+        height: 5,
+        pressure: 0.75,
+        tangentialPressure: 0.5,
+        isPrimary: false,
+      });
+
+      target0.addEventListener("pointerover", (event) => {
+        // Check that script generated event is not spoofed.
+        is(event.pointerType, "touch", "The pointerEvent.pointerType is not spoofed.");
+        is(event.width, 5, "The pointerEvent.width is not spoofed.");
+        is(event.height, 5, "The pointerEvent.height is not spoofed.");
+        is(event.pressure, 0.75, "The pointerEvent.pressure is not spoofed.");
+        is(event.tangentialPressure, 0.5, "The pointerEvent.tangentialPressure is not spoofed.");
+        is(event.isPrimary, false, "The pointerEvent.isPrimary is not spoofed.");
+        resolve();
+      }, { once: true });
+
+      target0.dispatchEvent(pointerEventCustom);
+    });
+  }
+
+  async function doTests() {
+    await doTestForTouchPointerEvent();
+    await doTestForTouchPointerCancelEvent();
+    await doTestForPenPointerEvent();
+    await doTestForPointerCapture();
+    await doTestNoSpoofingForScriptGeneratedEvent();
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForFocus(() => {
+    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
+                                      ["privacy.resistFingerprinting", true]]},
+                              doTests);
+  });
+
+</script>
+</body>
+</html>

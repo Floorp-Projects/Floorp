@@ -14,7 +14,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 add_task(async function() {
   const { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
 
-  const container = document.createElement("vbox");
+  const container = document.createXULElement("vbox");
   await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   // Populate the tree and test the root item...

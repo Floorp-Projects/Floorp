@@ -147,7 +147,7 @@ partial interface Navigator {
 
 // http://www.w3.org/TR/pointerevents/#extensions-to-the-navigator-interface
 partial interface Navigator {
-    [Pref="dom.w3c_pointer_events.enabled"]
+    [Pref="dom.w3c_pointer_events.enabled", NeedsCallerType]
     readonly attribute long maxTouchPoints;
 };
 

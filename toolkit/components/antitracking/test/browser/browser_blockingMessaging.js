@@ -81,8 +81,9 @@ AntiTracking.runTest("BroadcastChannel in workers",
 
 AntiTracking.runTest("BroadcastChannel and Storage Access API",
   async _ => {
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
+
     try {
       new BroadcastChannel("hello");
       ok(false, "BroadcastChannel cannot be used!");
@@ -91,41 +92,22 @@ AntiTracking.runTest("BroadcastChannel and Storage Access API",
       is(e.name, "SecurityError", "We want a security error message.");
     }
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
     new BroadcastChannel("hello");
     ok(true, "BroadcastChannel can be used");
   },
   async _ => {
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
+
     new BroadcastChannel("hello");
     ok(true, "BroadcastChanneli can be used");
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
     new BroadcastChannel("hello");
     ok(true, "BroadcastChannel can be used");
   },
@@ -151,8 +133,8 @@ AntiTracking.runTest("BroadcastChannel in workers and Storage Access API",
       postMessage(true);
     }
 
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
 
     let blob = new Blob([blockingCode.toString() + "; blockingCode();"]);
     ok(blob, "Blob has been created");
@@ -173,19 +155,8 @@ AntiTracking.runTest("BroadcastChannel in workers and Storage Access API",
       };
     });
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     blob = new Blob([nonBlockingCode.toString() + "; nonBlockingCode();"]);
     ok(blob, "Blob has been created");
@@ -212,8 +183,8 @@ AntiTracking.runTest("BroadcastChannel in workers and Storage Access API",
       postMessage(true);
     }
 
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
 
     let blob = new Blob([nonBlockingCode.toString() + "; nonBlockingCode();"]);
     ok(blob, "Blob has been created");
@@ -234,19 +205,8 @@ AntiTracking.runTest("BroadcastChannel in workers and Storage Access API",
       };
     });
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     // For non-tracking windows, calling the API is a no-op
 

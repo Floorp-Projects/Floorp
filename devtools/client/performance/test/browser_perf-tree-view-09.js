@@ -15,7 +15,7 @@ add_task(function() {
   const threadNode = new ThreadNode(gProfile.threads[0], { startTime: 0, endTime: 20,
                                                            invertTree: true });
   const treeRoot = new CallView({ frame: threadNode, inverted: true });
-  const container = document.createElement("vbox");
+  const container = document.createXULElement("vbox");
   treeRoot.attachTo(container);
 
   is(treeRoot.getChild(0).frame.location, "B",

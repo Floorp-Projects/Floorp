@@ -19,7 +19,7 @@ from mach.base import (
 class CompareLocales(object):
     """Run compare-locales."""
 
-    @Command('compare-locales', category='testing',
+    @Command('compare-locales', category='build',
              description='Run source checks on a localization.')
     @CommandArgument('config_paths', metavar='l10n.toml', nargs='+',
                      help='TOML or INI file for the project')

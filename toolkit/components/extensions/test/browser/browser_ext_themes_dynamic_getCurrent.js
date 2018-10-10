@@ -37,15 +37,25 @@ add_task(async function test_get_current() {
         },
       };
 
-      function promiseWindowChanged(winId) {
-        return new Promise(resolve => {
+      function ensureWindowFocused(winId) {
+        browser.test.log("Waiting for focused window to be " + winId);
+        return new Promise(async (resolve) => {
           let listener = windowId => {
             if (windowId === winId) {
               browser.windows.onFocusChanged.removeListener(listener);
               resolve();
             }
           };
+          // We first add a listener and then check whether the window is
+          // focused using .get(), because the .get() Promise resolving
+          // could race with the listener running, in which case we'd
+          // never be notified.
           browser.windows.onFocusChanged.addListener(listener);
+          let {focused} = await browser.windows.get(winId);
+          if (focused) {
+            browser.windows.onFocusChanged.removeListener(listener);
+            resolve();
+          }
         });
       }
 
@@ -89,13 +99,14 @@ add_task(async function test_get_current() {
 
       browser.test.log("Testing getCurrent() with after theme.update(windowId)");
       const secondWin = await browser.windows.create();
+      await ensureWindowFocused(secondWin.id);
       await browser.theme.update(secondWin.id, theme2);
       testTheme2(await browser.theme.getCurrent());
       testTheme1(await browser.theme.getCurrent(firstWin.id));
       testTheme2(await browser.theme.getCurrent(secondWin.id));
 
       browser.test.log("Testing getCurrent() after window focus change");
-      let focusChanged = promiseWindowChanged(firstWin.id);
+      let focusChanged = ensureWindowFocused(firstWin.id);
       await browser.windows.update(firstWin.id, {focused: true});
       await focusChanged;
       testTheme1(await browser.theme.getCurrent());
@@ -103,7 +114,7 @@ add_task(async function test_get_current() {
       testTheme2(await browser.theme.getCurrent(secondWin.id));
 
       browser.test.log("Testing getCurrent() after another window focus change");
-      focusChanged = promiseWindowChanged(secondWin.id);
+      focusChanged = ensureWindowFocused(secondWin.id);
       await browser.windows.update(secondWin.id, {focused: true});
       await focusChanged;
       testTheme2(await browser.theme.getCurrent());
@@ -117,7 +128,7 @@ add_task(async function test_get_current() {
       testTheme2(await browser.theme.getCurrent(secondWin.id));
 
       browser.test.log("Testing getCurrent() after reset and window focus change");
-      focusChanged = promiseWindowChanged(firstWin.id);
+      focusChanged = ensureWindowFocused(firstWin.id);
       await browser.windows.update(firstWin.id, {focused: true});
       await focusChanged;
       testEmptyTheme(await browser.theme.getCurrent());
