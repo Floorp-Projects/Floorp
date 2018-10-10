@@ -486,7 +486,7 @@ var BrowserApp = {
     if (AppConstants.ACCESSIBILITY) {
       InitLater(() => GlobalEventDispatcher.dispatch("GeckoView:AccessibilityReady"));
       GlobalEventDispatcher.registerListener((aEvent, aData, aCallback) => {
-        if (aData.touchEnabled) {
+        if (aData.enabled) {
           AccessFu.enable();
         } else {
           AccessFu.disable();
