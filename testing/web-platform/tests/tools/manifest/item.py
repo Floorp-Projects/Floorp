@@ -42,7 +42,6 @@ class ManifestItem(object):
     source_file_cache = SourceFileCache()
 
     def __init__(self, source_file, manifest=None):
-        self.manifest = manifest
         self.source_file = source_file
 
     @abstractproperty
