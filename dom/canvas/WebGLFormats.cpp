@@ -11,10 +11,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/StaticMutex.h"
 
-#ifdef FOO
-#error FOO is already defined! We use FOO() macros to keep things succinct in this file.
-#endif
-
 namespace mozilla {
 namespace webgl {
 
