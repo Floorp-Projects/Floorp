@@ -6,6 +6,9 @@
 #ifndef mozilla_gfx_thebes_D3D11Checks_h
 #define mozilla_gfx_thebes_D3D11Checks_h
 
+#include "mozilla/EnumSet.h"
+#include "mozilla/EnumTypeTraits.h"
+
 struct ID3D11Device;
 struct IDXGIAdapter;
 struct DXGI_ADAPTER_DESC;
@@ -15,6 +18,14 @@ namespace gfx {
 
 struct D3D11Checks
 {
+  enum class VideoFormatOption
+  {
+    NV12,
+    P010,
+    P016,
+  };
+  using VideoFormatOptionSet = EnumSet<VideoFormatOption>;
+
   static bool DoesRenderTargetViewNeedRecreating(ID3D11Device* aDevice);
   static bool DoesDeviceWork();
   static bool DoesTextureSharingWork(ID3D11Device* device);
@@ -22,10 +33,20 @@ struct D3D11Checks
   static void WarnOnAdapterMismatch(ID3D11Device* device);
   static bool GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out);
   static bool DoesRemotePresentWork(IDXGIAdapter* adapter);
-  static bool DoesNV12Work(ID3D11Device* device);
+  static VideoFormatOptionSet FormatOptions(ID3D11Device* device);
 };
 
 } // namespace gfx
+
+// Used for IPDL serialization.
+// The 'value' have to be the biggest enum from D3D11Checks::Option.
+template <>
+struct MaxEnumValue<::mozilla::gfx::D3D11Checks::VideoFormatOption>
+{
+  static constexpr unsigned int value =
+    static_cast<unsigned int>(gfx::D3D11Checks::VideoFormatOption::P016);
+};
+
 } // namespace mozilla
 
 #endif // mozilla_gfx_thebes_D3D11Checks_h
