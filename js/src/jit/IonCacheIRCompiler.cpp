@@ -834,7 +834,7 @@ IonCacheIRCompiler::emitGuardSpecificAtom()
     masm.movePtr(ImmGCPtr(atom), scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(str);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, EqualStringsHelper));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, EqualStringsHelperPure));
     masm.mov(ReturnReg, scratch);
 
     LiveRegisterSet ignore;
@@ -916,7 +916,7 @@ IonCacheIRCompiler::emitGuardHasGetterSetter()
     masm.passABIArg(obj);
     masm.movePtr(ImmGCPtr(shape), scratch2);
     masm.passABIArg(scratch2);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectHasGetterSetter));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectHasGetterSetterPure));
     masm.mov(ReturnReg, scratch1);
     masm.PopRegsInMask(volatileRegs);
 
@@ -1606,7 +1606,7 @@ IonCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
 
     if (op == CacheOp::AllocateAndStoreDynamicSlot) {
         // We have to (re)allocate dynamic slots. Do this first, as it's the
-        // only fallible operation here. Note that growSlotsDontReportOOM is
+        // only fallible operation here. Note that growSlotsPure is
         // fallible but does not GC.
         int32_t numNewSlots = int32StubField(reader.stubOffset());
         MOZ_ASSERT(numNewSlots > 0);
@@ -1620,7 +1620,7 @@ IonCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
         masm.passABIArg(obj);
         masm.move32(Imm32(numNewSlots), scratch2.ref());
         masm.passABIArg(scratch2.ref());
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsDontReportOOM));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsPure));
         masm.mov(ReturnReg, scratch1);
 
         LiveRegisterSet ignore;
@@ -1955,7 +1955,7 @@ IonCacheIRCompiler::emitStoreDenseElementHole()
     masm.loadJSContext(scratch1);
     masm.passABIArg(scratch1);
     masm.passABIArg(obj);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::addDenseElementDontReportOOM));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::addDenseElementPure));
     masm.mov(ReturnReg, scratch1);
 
     masm.PopRegsInMask(save);

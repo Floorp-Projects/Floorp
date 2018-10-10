@@ -61,7 +61,7 @@ extern JSString*
 NumberToString(JSContext* cx, double d);
 
 extern JSString*
-NumberToStringHelper(JSContext* cx, double d);
+NumberToStringHelperPure(JSContext* cx, double d);
 
 extern JSAtom*
 NumberToAtom(JSContext* cx, double d);
@@ -71,7 +71,7 @@ extern JSFlatString*
 Int32ToString(JSContext* cx, int32_t i);
 
 extern JSFlatString*
-Int32ToStringHelper(JSContext* cx, int32_t i);
+Int32ToStringHelperPure(JSContext* cx, int32_t i);
 
 extern JSAtom*
 Int32ToAtom(JSContext* cx, int32_t si);
@@ -199,7 +199,7 @@ extern MOZ_MUST_USE bool
 StringToNumber(JSContext* cx, JSString* str, double* result);
 
 extern MOZ_MUST_USE bool
-StringToNumberDontReportOOM(JSContext* cx, JSString* str, double* result);
+StringToNumberPure(JSContext* cx, JSString* str, double* result);
 
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 MOZ_ALWAYS_INLINE MOZ_MUST_USE bool
