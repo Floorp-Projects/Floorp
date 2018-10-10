@@ -1,6 +1,3 @@
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 var array = new (TypedObject.uint8.array(5));
 
 for (var i = 0; i < array.length; i++)

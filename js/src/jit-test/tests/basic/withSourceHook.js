@@ -1,12 +1,9 @@
+// |jit-test| skip-if: typeof withSourceHook !== 'function'
+
 // Check that withSourceHook passes URLs, propagates exceptions, and
 // properly restores the original source hooks.
 
 load(libdir + 'asserts.js');
-
-// withSourceHook isn't defined if you pass the shell the --fuzzing-safe
-// option. Skip this test silently, to avoid spurious failures.
-if (typeof withSourceHook != 'function')
-  quit(0);
 
 var log = '';
 

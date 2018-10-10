@@ -1,5 +1,4 @@
-if (!("setGCCallback" in this))
-    quit();
+// |jit-test| skip-if: !('setGCCallback' in this)
 
 setGCCallback({
     action: "majorGC",

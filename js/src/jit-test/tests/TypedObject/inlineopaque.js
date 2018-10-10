@@ -1,6 +1,3 @@
-if (!this.hasOwnProperty("TypedObject"))
-    quit();
-
 var TO = TypedObject;
 
 var PointType = new TO.StructType({x: TO.float64, y: TO.float64, name:TO.string});

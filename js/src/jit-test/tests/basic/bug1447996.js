@@ -1,5 +1,5 @@
-if (!('stackTest' in this))
-    quit();
+// |jit-test| skip-if: !('stackTest' in this)
+
 var x = 0;
 function f() {
     var s = "abcdef(((((((a|b)a|b)a|b)a|b)a|b)a|b)a|b)" + x;
