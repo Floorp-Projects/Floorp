@@ -357,6 +357,10 @@ impl Types {
         &self.parse_error_type
     }
 
+    pub fn error_recovery_type(&self) -> &TypeRepr {
+        &self.error_recovery_type
+    }
+
     /// Returns a type `(L, T, L)` where L is the location type and T
     /// is the token type.
     pub fn triple_type(&self) -> TypeRepr {

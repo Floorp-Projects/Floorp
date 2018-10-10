@@ -149,3 +149,22 @@ grammar<F>(logger: &mut F) where F: for<'a> FnMut(&'a str);
         assert!(parser::parse_grammar(g).is_ok());
     }
 }
+
+#[test]
+fn optional_semicolon() {
+    // Semi after block is optional
+    let g = r#"
+grammar;
+pub Foo: () = { Bar }
+Bar: () = "bar";
+"#;
+    assert!(parser::parse_grammar(g).is_ok());
+
+    // Semi after "expression" is mandatory
+    let g = r#"
+grammar;
+pub Foo: () = { Bar };
+Bar: () = "bar"
+"#;
+    assert!(parser::parse_grammar(g).is_err());
+}
