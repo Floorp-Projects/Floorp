@@ -8,12 +8,12 @@ var EXPORTED_SYMBOLS = ["GeckoViewContentModule"];
 
 ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
-GeckoViewUtils.initLogging("GeckoView.Module.[C]", this);
+GeckoViewUtils.initLogging("Module[C]", this);
 
 class GeckoViewContentModule {
   static initLogging(aModuleName) {
     this._moduleName = aModuleName;
-    const tag = aModuleName.replace("GeckoView", "GeckoView.") + ".[C]";
+    const tag = aModuleName.replace("GeckoView", "") + "[C]";
     return GeckoViewUtils.initLogging(tag, {});
   }
 

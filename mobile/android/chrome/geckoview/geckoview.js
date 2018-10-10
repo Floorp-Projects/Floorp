@@ -229,7 +229,7 @@ class ModuleInfo {
     if (aPhase.resource && !this._impl) {
       const scope = {};
       const global = ChromeUtils.import(aPhase.resource, scope);
-      const tag = this._name.replace("GeckoView", "GeckoView.");
+      const tag = this._name.replace("GeckoView", "");
       GeckoViewUtils.initLogging(tag, global);
       this._impl = new scope[this._name](this);
     }
@@ -308,7 +308,7 @@ function createBrowser() {
 }
 
 function startup() {
-  GeckoViewUtils.initLogging("GeckoView.XUL", window);
+  GeckoViewUtils.initLogging("XUL", window);
 
   const browser = createBrowser();
   ModuleManager.init(browser, [{
