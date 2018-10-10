@@ -910,8 +910,7 @@ css::URLValue::Equals(const URLValue& aOther) const
           (self->BaseURI() == other->BaseURI() ||
            (NS_SUCCEEDED(self->BaseURI()->Equals(other->BaseURI(), &eq)) &&
             eq)) &&
-          (self->GetPrincipal() == other->GetPrincipal() ||
-           self->GetPrincipal()->Equals(other->GetPrincipal())) &&
+          self->Principal()->Equals(other->Principal()) &&
           IsLocalRef() == aOther.IsLocalRef();
 }
 
@@ -928,7 +927,7 @@ bool
 css::URLValue::DefinitelyEqualURIsAndPrincipal(
     const URLValue& aOther) const
 {
-  return mExtraData->GetPrincipal() == aOther.mExtraData->GetPrincipal() &&
+  return mExtraData->Principal() == aOther.mExtraData->Principal() &&
          DefinitelyEqualURIs(aOther);
 }
 
@@ -1079,7 +1078,7 @@ css::URLValue::LoadImage(nsIDocument* aDocument)
 
   // Kick off the load in the loading document.
   ImageLoader::LoadImage(GetURI(),
-                         mExtraData->GetPrincipal(),
+                         mExtraData->Principal(),
                          mExtraData->GetReferrer(),
                          mExtraData->GetReferrerPolicy(),
                          loadingDoc,
