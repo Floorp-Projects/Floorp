@@ -16,6 +16,10 @@
 #ifndef GeckoProfiler_h
 #define GeckoProfiler_h
 
+// everything in here is also safe to include unconditionally, and only defines
+// empty macros if MOZ_GECKO_PROFILER is unset
+#include "mozilla/ProfilerCounts.h"
+
 #ifndef MOZ_GECKO_PROFILER
 
 // This file can be #included unconditionally. However, everything within this
@@ -59,18 +63,17 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/net/TimingStruct.h"
 #include "js/ProfilingStack.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "nscore.h"
-#include "nsIURI.h"
 
 // Make sure that we can use std::min here without the Windows headers messing
 // with us.
@@ -81,6 +84,12 @@
 class ProfilerBacktrace;
 class ProfilerMarkerPayload;
 class SpliceableJSONWriter;
+namespace mozilla {
+namespace net {
+struct TimingStruct;
+}
+}
+class nsIURI;
 
 namespace mozilla {
 class MallocAllocPolicy;
@@ -283,6 +292,10 @@ void profiler_ensure_started(uint32_t aEntries, double aInterval,
   profiler_unregister_thread()
 ProfilingStack* profiler_register_thread(const char* name, void* guessStackTop);
 void profiler_unregister_thread();
+
+class BaseProfilerCount;
+void profiler_add_sampled_counter(BaseProfilerCount* aCounter);
+void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);
 
 // Register and unregister a thread within a scope.
 #define AUTO_PROFILER_REGISTER_THREAD(name) \
