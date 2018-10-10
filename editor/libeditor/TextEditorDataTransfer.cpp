@@ -295,17 +295,19 @@ TextEditor::OnDrop(DragEvent* aDropEvent)
 }
 
 nsresult
-TextEditor::PasteAsAction(int32_t aClipboardType)
+TextEditor::PasteAsAction(int32_t aClipboardType,
+                          bool aDispatchPasteEvent)
 {
   if (AsHTMLEditor()) {
-    nsresult rv = AsHTMLEditor()->PasteInternal(aClipboardType);
+    nsresult rv =
+      AsHTMLEditor()->PasteInternal(aClipboardType, aDispatchPasteEvent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
 
-  if (!FireClipboardEvent(ePaste, aClipboardType)) {
+  if (aDispatchPasteEvent && !FireClipboardEvent(ePaste, aClipboardType)) {
     return NS_OK;
   }
 

@@ -673,7 +673,7 @@ EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent)
   }
 
   // If we got a mouse down inside the editing area, we should force the
-  // IME to commit before we change the cursor position
+  // IME to commit before we change the cursor position.
   if (!EnsureCommitCompoisition()) {
     return NS_OK;
   }
