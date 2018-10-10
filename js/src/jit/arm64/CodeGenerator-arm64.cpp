@@ -1023,6 +1023,9 @@ CodeGeneratorARM64::generateInvalidateEpilogue()
 
     masm.bind(&invalidate_);
 
+    // Push the return address of the point that we bailout out onto the stack.
+    masm.push(lr);
+
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
 
