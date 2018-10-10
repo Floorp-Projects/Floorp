@@ -1386,21 +1386,12 @@ Gecko_CounterStyle_GetAnonymous(const CounterStylePtr* aPtr)
 }
 
 already_AddRefed<css::URLValue>
-ServoBundledURI::IntoCssUrl()
+ServoBundledURI::IntoCssUrl(CORSMode aCorsMode)
 {
-  MOZ_ASSERT(mExtraData->GetReferrer());
   MOZ_ASSERT(mExtraData->GetPrincipal());
 
   RefPtr<css::URLValue> urlValue =
-    new css::URLValue(mURLString, do_AddRef(mExtraData), CORSMode::CORS_NONE);
-  return urlValue.forget();
-}
-
-already_AddRefed<css::ImageValue>
-ServoBundledURI::IntoCssImage(mozilla::CORSMode aCorsMode)
-{
-  RefPtr<css::ImageValue> urlValue =
-    new css::ImageValue(mURLString, do_AddRef(mExtraData), aCorsMode);
+    new css::URLValue(mURLString, do_AddRef(mExtraData), aCorsMode);
   return urlValue.forget();
 }
 
@@ -1418,35 +1409,18 @@ Gecko_SetGradientImageValue(nsStyleImage* aImage, nsStyleGradient* aGradient)
   aImage->SetGradientData(aGradient);
 }
 
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
-
 static already_AddRefed<nsStyleImageRequest>
 CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
-                        mozilla::css::ImageValue* aImageValue)
+                        URLValue* aImageValue)
 {
   RefPtr<nsStyleImageRequest> req =
     new nsStyleImageRequest(aModeFlags, aImageValue);
   return req.forget();
 }
 
-mozilla::css::ImageValue*
-Gecko_ImageValue_Create(ServoBundledURI aURI, mozilla::CORSMode aCORSMode)
-{
-  return aURI.IntoCssImage(aCORSMode).take();
-}
-
-MOZ_DEFINE_MALLOC_SIZE_OF(GeckoImageValueMallocSizeOf)
-
-size_t
-Gecko_ImageValue_SizeOfIncludingThis(mozilla::css::ImageValue* aImageValue)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return aImageValue->SizeOfIncludingThis(GeckoImageValueMallocSizeOf);
-}
-
 void
 Gecko_SetLayerImageImageValue(nsStyleImage* aImage,
-                              mozilla::css::ImageValue* aImageValue)
+                              URLValue* aImageValue)
 {
   MOZ_ASSERT(aImage && aImageValue);
 
@@ -1486,7 +1460,7 @@ Gecko_SetCursorArrayLength(nsStyleUI* aStyleUI, size_t aLen)
 
 void
 Gecko_SetCursorImageValue(nsCursorImage* aCursor,
-                          mozilla::css::ImageValue* aImageValue)
+                          URLValue* aImageValue)
 {
   MOZ_ASSERT(aCursor && aImageValue);
 
@@ -1502,7 +1476,7 @@ Gecko_CopyCursorArrayFrom(nsStyleUI* aDest, const nsStyleUI* aSrc)
 
 void
 Gecko_SetContentDataImageValue(nsStyleContentData* aContent,
-                               mozilla::css::ImageValue* aImageValue)
+                               URLValue* aImageValue)
 {
   MOZ_ASSERT(aContent && aImageValue);
 
@@ -1584,7 +1558,7 @@ Gecko_SetListStyleImageNone(nsStyleList* aList)
 
 void
 Gecko_SetListStyleImageImageValue(nsStyleList* aList,
-                             mozilla::css::ImageValue* aImageValue)
+                                  URLValue* aImageValue)
 {
   MOZ_ASSERT(aList && aImageValue);
 
@@ -1652,17 +1626,17 @@ Gecko_CopyStyleGridTemplateValues(UniquePtr<nsStyleGridTemplate>* aGridTemplate,
   }
 }
 
-mozilla::css::GridTemplateAreasValue*
+GridTemplateAreasValue*
 Gecko_NewGridTemplateAreasValue(uint32_t aAreas, uint32_t aTemplates, uint32_t aColumns)
 {
-  RefPtr<mozilla::css::GridTemplateAreasValue> value = new mozilla::css::GridTemplateAreasValue;
+  RefPtr<GridTemplateAreasValue> value = new GridTemplateAreasValue;
   value->mNamedAreas.SetLength(aAreas);
   value->mTemplates.SetLength(aTemplates);
   value->mNColumns = aColumns;
   return value.forget().take();
 }
 
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::GridTemplateAreasValue, GridTemplateAreasValue);
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(GridTemplateAreasValue, GridTemplateAreasValue);
 
 void
 Gecko_ClearAndResizeStyleContents(nsStyleContent* aContent, uint32_t aHowMany)
@@ -2037,9 +2011,9 @@ Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* aDst, const nsStyleSVG* aSrc)
 
 
 css::URLValue*
-Gecko_NewURLValue(ServoBundledURI aURI)
+Gecko_URLValue_Create(ServoBundledURI aURI, mozilla::CORSMode aCORSMode)
 {
-  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl(aCORSMode);
   return url.forget().take();
 }
 
@@ -2053,7 +2027,7 @@ Gecko_URLValue_SizeOfIncludingThis(URLValue* aURL)
 }
 
 void
-Gecko_GetComputedURLSpec(const URLValueData* aURL, nsCString* aOut)
+Gecko_GetComputedURLSpec(const URLValue* aURL, nsCString* aOut)
 {
   MOZ_ASSERT(aURL);
   MOZ_ASSERT(aOut);
@@ -2065,7 +2039,7 @@ Gecko_GetComputedURLSpec(const URLValueData* aURL, nsCString* aOut)
 }
 
 void
-Gecko_GetComputedImageURLSpec(const URLValueData* aURL, nsCString* aOut)
+Gecko_GetComputedImageURLSpec(const URLValue* aURL, nsCString* aOut)
 {
   // Image URIs don't serialize local refs as local.
   if (nsIURI* uri = aURL->GetURI()) {
@@ -2627,7 +2601,10 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
                      RawServoMediaListStrong aMediaList)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<css::URLValue> url = aServoURL.IntoCssUrl();
+
+  // The CORS mode in the URLValue is irrelevant here.
+  // (CORS_NONE is used for all imported sheets in Load::LoadChildSheet.)
+  RefPtr<css::URLValue> url = aServoURL.IntoCssUrl(CORS_NONE);
   return LoadImportSheet(aLoader, aParent, aParentLoadData, aReusableSheets,
                          url, aMediaList.Consume()).take();
 }
@@ -2639,7 +2616,9 @@ Gecko_LoadStyleSheetAsync(css::SheetLoadDataHolder* aParentData,
                           RawServoImportRuleStrong aImportRule)
 {
   RefPtr<SheetLoadDataHolder> loadData = aParentData;
-  RefPtr<css::URLValue> urlVal = aServoURL.IntoCssUrl();
+  // The CORS mode in the URLValue is irrelevant here.
+  // (CORS_NONE is used for all imported sheets in Load::LoadChildSheet.)
+  RefPtr<css::URLValue> urlVal = aServoURL.IntoCssUrl(CORS_NONE);
   RefPtr<RawServoMediaList> mediaList = aMediaList.Consume();
   RefPtr<RawServoImportRule> importRule = aImportRule.Consume();
   NS_DispatchToMainThread(NS_NewRunnableFunction(__func__,
