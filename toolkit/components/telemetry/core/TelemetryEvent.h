@@ -6,6 +6,7 @@
 #ifndef TelemetryEvent_h__
 #define TelemetryEvent_h__
 
+#include <stdint.h>
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/TelemetryProcessEnums.h"
 

@@ -662,7 +662,7 @@ AddImageURL(nsIURI& aURI, nsTArray<nsString>& aURLs)
 
 
 static void
-AddImageURL(const css::URLValueData& aURL, nsTArray<nsString>& aURLs)
+AddImageURL(const css::URLValue& aURL, nsTArray<nsString>& aURLs)
 {
   if (aURL.IsLocalRef()) {
     return;
@@ -1696,7 +1696,7 @@ nsComputedDOMStyle::SetValueToPosition(
 
 
 void
-nsComputedDOMStyle::SetValueToURLValue(const css::URLValueData* aURL,
+nsComputedDOMStyle::SetValueToURLValue(const css::URLValue* aURL,
                                        nsROCSSPrimitiveValue* aValue)
 {
   if (!aURL) {
@@ -1704,7 +1704,7 @@ nsComputedDOMStyle::SetValueToURLValue(const css::URLValueData* aURL,
     return;
   }
 
-  // If we have a usable nsIURI in the URLValueData, and the url() wasn't
+  // If we have a usable nsIURI in the URLValue, and the url() wasn't
   // a fragment-only URL, serialize the nsIURI.
   if (!aURL->IsLocalRef()) {
     if (nsIURI* uri = aURL->GetURI()) {

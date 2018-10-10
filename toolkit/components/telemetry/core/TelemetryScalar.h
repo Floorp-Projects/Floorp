@@ -6,9 +6,10 @@
 #ifndef TelemetryScalar_h__
 #define TelemetryScalar_h__
 
-#include "nsTArray.h"
-#include "mozilla/TelemetryScalarEnums.h"
+#include <stdint.h>
 #include "mozilla/TelemetryProcessEnums.h"
+#include "mozilla/TelemetryScalarEnums.h"
+#include "nsTArray.h"
 
 // This module is internal to Telemetry. It encapsulates Telemetry's
 // scalar accumulation and storage logic. It should only be used by

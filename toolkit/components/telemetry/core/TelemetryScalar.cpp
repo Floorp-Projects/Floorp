@@ -4,18 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsITelemetry.h"
-#include "nsIVariant.h"
-#include "nsVariant.h"
-#include "nsHashKeys.h"
-#include "nsBaseHashtable.h"
-#include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
-#include "nsIXPConnect.h"
-#include "nsContentUtils.h"
-#include "nsThreadUtils.h"
-#include "nsJSUtils.h"
-#include "nsPrintfCString.h"
+#include "TelemetryScalar.h"
+
+#include "ipc/TelemetryComms.h"
+#include "ipc/TelemetryIPCAccumulator.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/JSONWriter.h"
@@ -23,12 +15,20 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
-
+#include "nsBaseHashtable.h"
+#include "nsClassHashtable.h"
+#include "nsContentUtils.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
+#include "nsITelemetry.h"
+#include "nsIVariant.h"
+#include "nsIXPConnect.h"
+#include "nsJSUtils.h"
+#include "nsPrintfCString.h"
+#include "nsThreadUtils.h"
+#include "nsVariant.h"
 #include "TelemetryCommon.h"
-#include "TelemetryScalar.h"
 #include "TelemetryScalarData.h"
-#include "ipc/TelemetryComms.h"
-#include "ipc/TelemetryIPCAccumulator.h"
 
 using mozilla::Preferences;
 using mozilla::StaticAutoPtr;

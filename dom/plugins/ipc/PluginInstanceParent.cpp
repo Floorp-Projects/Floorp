@@ -124,7 +124,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mChildPluginHWND(nullptr)
     , mChildPluginsParentHWND(nullptr)
     , mPluginWndProc(nullptr)
-    , mNestedEventState(false)
 #endif // defined(XP_WIN)
 #if defined(XP_MACOSX)
     , mShWidth(0)

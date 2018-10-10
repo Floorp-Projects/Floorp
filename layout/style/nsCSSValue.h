@@ -93,45 +93,42 @@ class CSSStyleSheet;
 namespace mozilla {
 namespace css {
 
-struct URLValueData
+struct URLValue final
 {
-protected:
-  // Methods are not inline because using an nsIPrincipal means requiring
-  // caps, which leads to REQUIRES hell, since this header is included all
-  // over.
-
-  // aString must not be null.
-  // principal of aExtraData must not be null.
+public:
+  // aString and aExtraData must not be null.
+  //
   // Construct with a base URI; this will create the actual URI lazily from
   // aString and aExtraData.
-  URLValueData(ServoRawOffsetArc<RustString> aString,
-               already_AddRefed<URLExtraData> aExtraData,
-               CORSMode aCORSMode);
-  // Construct with the actual URI.
-  URLValueData(already_AddRefed<nsIURI> aURI,
-               ServoRawOffsetArc<RustString> aString,
-               already_AddRefed<URLExtraData> aExtraData,
-               CORSMode aCORSMode);
+  URLValue(ServoRawOffsetArc<RustString> aString,
+           already_AddRefed<URLExtraData> aExtraData,
+           CORSMode aCORSMode)
+    : mExtraData(std::move(aExtraData))
+    , mURIResolved(false)
+    , mString(aString)
+    , mCORSMode(aCORSMode)
+  {
+    MOZ_ASSERT(mExtraData);
+  }
 
-public:
-  // Returns true iff all fields of the two URLValueData objects are equal.
+  // Returns true iff all fields of the two URLValue objects are equal.
   //
   // Only safe to call on the main thread, since this will call Equals on the
-  // nsIURI and nsIPrincipal objects stored on the URLValueData objects.
-  bool Equals(const URLValueData& aOther) const;
+  // nsIURI and nsIPrincipal objects stored on the URLValue objects.
+  bool Equals(const URLValue& aOther) const;
 
   // Returns true iff we know for sure, by comparing the mBaseURI pointer,
   // the specified url() value mString, and the mIsLocalRef, that these
-  // two URLValueData objects represent the same computed url() value.
+  // two URLValue objects represent the same computed url() value.
   //
   // Doesn't look at mReferrer or mOriginPrincipal.
   //
   // Safe to call from any thread.
-  bool DefinitelyEqualURIs(const URLValueData& aOther) const;
+  bool DefinitelyEqualURIs(const URLValue& aOther) const;
 
   // Smae as DefinitelyEqualURIs but additionally compares the nsIPrincipal
-  // pointers of the two URLValueData objects.
-  bool DefinitelyEqualURIsAndPrincipal(const URLValueData& aOther) const;
+  // pointers of the two URLValue objects.
+  bool DefinitelyEqualURIsAndPrincipal(const URLValue& aOther) const;
 
   nsIURI* GetURI() const;
 
@@ -139,7 +136,7 @@ public:
 
   bool HasRef() const;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValueData)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValue)
 
   // When matching a url with mIsLocalRef set, resolve it against aURI;
   // Otherwise, ignore aURL and return mURL directly.
@@ -150,14 +147,13 @@ public:
   // and serializing just the fragment if true.
   void GetSourceString(nsString& aRef) const;
 
-  bool EqualsExceptRef(nsIURI* aURI) const;
-
-  bool IsStringEmpty() const
-  {
-    return GetString().IsEmpty();
-  }
-
   nsDependentCSubstring GetString() const;
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  imgRequestProxy* LoadImage(nsIDocument* aDocument);
+
+  uint64_t LoadID() const { return mLoadID; }
 
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
@@ -175,77 +171,9 @@ private:
 
   mozilla::ServoRawOffsetArc<RustString> mString;
 
-protected:
   const CORSMode mCORSMode;
 
-  virtual ~URLValueData();
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-private:
-  URLValueData(const URLValueData& aOther) = delete;
-  URLValueData& operator=(const URLValueData& aOther) = delete;
-
-  friend struct ImageValue;
-};
-
-struct URLValue final : public URLValueData
-{
-  URLValue(ServoRawOffsetArc<RustString> aString,
-           already_AddRefed<URLExtraData> aExtraData)
-    : URLValueData(aString, std::move(aExtraData), CORSMode::CORS_NONE)
-  { }
-
-  URLValue(const URLValue&) = delete;
-  URLValue& operator=(const URLValue&) = delete;
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-};
-
-struct ImageValue final : public URLValueData
-{
-  // Not making the constructor and destructor inline because that would
-  // force us to include imgIRequest.h, which leads to REQUIRES hell, since
-  // this header is included all over.
-  //
-  // This constructor is only safe to call from the main thread.
-  ImageValue(nsIURI* aURI, const nsAString& aString,
-             already_AddRefed<URLExtraData> aExtraData,
-             nsIDocument* aDocument,
-             CORSMode aCORSMode);
-
-  // This constructor is only safe to call from the main thread.
-  ImageValue(nsIURI* aURI, ServoRawOffsetArc<RustString> aString,
-             already_AddRefed<URLExtraData> aExtraData,
-             nsIDocument* aDocument,
-             CORSMode aCORSMode);
-
-  // This constructor is safe to call from any thread, but Initialize
-  // must be called later for the object to be useful.
-  ImageValue(const nsAString& aString,
-             already_AddRefed<URLExtraData> aExtraData,
-             CORSMode aCORSMode);
-
-  // This constructor is safe to call from any thread, but Initialize
-  // must be called later for the object to be useful.
-  ImageValue(ServoRawOffsetArc<RustString> aURIString,
-             already_AddRefed<URLExtraData> aExtraData,
-             CORSMode aCORSMode);
-
-  ImageValue(const ImageValue&) = delete;
-  ImageValue& operator=(const ImageValue&) = delete;
-
-  imgRequestProxy* LoadImage(nsIDocument* aDocument);
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  uint64_t LoadID() const { return mLoadID; }
-
-protected:
-  ~ImageValue();
-
-private:
-  // A unique, non-reused ID value for this ImageValue over the life of the
+  // A unique, non-reused ID value for this URLValue over the life of the
   // process.  This value is only valid after LoadImage has been called.
   //
   // We use this as a key in some tables in ImageLoader.  This is better than
@@ -255,6 +183,12 @@ private:
   // get re-used by the time we want to update the ImageLoader tables, we use
   // these IDs.
   uint64_t mLoadID = 0;
+
+  ~URLValue();
+
+private:
+  URLValue(const URLValue& aOther) = delete;
+  URLValue& operator=(const URLValue& aOther) = delete;
 };
 
 struct GridNamedArea {
@@ -439,8 +373,6 @@ class nsCSSValue {
 public:
   struct Array;
   friend struct Array;
-
-  friend struct mozilla::css::ImageValue;
 
   // for valueless units only (null, auto, inherit, none, all, normal)
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)

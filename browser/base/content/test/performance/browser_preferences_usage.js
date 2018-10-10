@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const DEFAULT_PROCESS_COUNT = Services.prefs.getDefaultBranch(null).getIntPref("dom.ipc.processCount");
-
 /**
  * A test that checks whether any preference getter from the given list
  * of stats was called more often than the max parameter.
@@ -122,10 +120,7 @@ add_task(async function startup() {
 
 // This opens 10 tabs and checks pref getters.
 add_task(async function open_10_tabs() {
-  // This is somewhat arbitrary. When we had a default of 4 content processes
-  // the value was 15. We need to scale it as we increase the number of
-  // content processes so we approximate with 4 * process_count.
-  const max = 4 * DEFAULT_PROCESS_COUNT;
+  let max = 15;
 
   let whitelist = {
     "layout.css.dpi": {
@@ -150,6 +145,10 @@ add_task(async function open_10_tabs() {
     "security.insecure_connection_text.pbmode.enabled": {
       min: 10,
       max: 18,
+    },
+    "dom.ipc.processCount": {
+      min: 10,
+      max: 15,
     },
     "browser.startup.record": {
       max: 20,

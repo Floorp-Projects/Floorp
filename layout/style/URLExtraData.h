@@ -35,6 +35,7 @@ struct URLExtraData
     , mIsChrome(mReferrer ? dom::IsChromeURI(mReferrer) : false)
   {
     MOZ_ASSERT(mBaseURI);
+    MOZ_ASSERT(mPrincipal);
   }
 
   URLExtraData(nsIURI* aBaseURI, nsIURI* aReferrer, nsIPrincipal* aPrincipal,
@@ -49,7 +50,7 @@ struct URLExtraData
   nsIURI* BaseURI() const { return mBaseURI; }
   nsIURI* GetReferrer() const { return mReferrer; }
   net::ReferrerPolicy GetReferrerPolicy() const { return mReferrerPolicy;}
-  nsIPrincipal* GetPrincipal() const { return mPrincipal; }
+  nsIPrincipal* Principal() const { return mPrincipal; }
 
   static URLExtraData* Dummy() {
     MOZ_ASSERT(sDummy);

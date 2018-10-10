@@ -2260,6 +2260,7 @@ MediaManager::Get() {
       obs->AddObserver(sSingleton, "getUserMedia:privileged:allow", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:allow", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:deny", false);
+      obs->AddObserver(sSingleton, "getUserMedia:response:noOSPermission", false);
       obs->AddObserver(sSingleton, "getUserMedia:revoke", false);
     }
     // else MediaManager won't work properly and will leak (see bug 837874)
@@ -3634,6 +3635,7 @@ MediaManager::Shutdown()
   obs->RemoveObserver(this, "getUserMedia:privileged:allow");
   obs->RemoveObserver(this, "getUserMedia:response:allow");
   obs->RemoveObserver(this, "getUserMedia:response:deny");
+  obs->RemoveObserver(this, "getUserMedia:response:noOSPermission");
   obs->RemoveObserver(this, "getUserMedia:revoke");
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -3769,11 +3771,29 @@ MediaManager::SendPendingGUMRequest()
   }
 }
 
+bool
+IsGUMResponseNoAccess(const char* aTopic, MediaMgrError::Name& aErrorName)
+{
+  if (!strcmp(aTopic, "getUserMedia:response:deny")) {
+    aErrorName = MediaMgrError::Name::NotAllowedError;
+    return true;
+  }
+
+  if (!strcmp(aTopic, "getUserMedia:response:noOSPermission")) {
+    aErrorName = MediaMgrError::Name::NotFoundError;
+    return true;
+  }
+
+  return false;
+}
+
 nsresult
 MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  MediaMgrError::Name gumNoAccessError = MediaMgrError::Name::NotAllowedError;
 
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> branch( do_QueryInterface(aSubject) );
@@ -3860,12 +3880,12 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     MediaManager::PostTask(task.forget());
     return NS_OK;
 
-  } else if (!strcmp(aTopic, "getUserMedia:response:deny")) {
+  } else if (IsGUMResponseNoAccess(aTopic, gumNoAccessError)) {
     nsString key(aData);
     RefPtr<GetUserMediaTask> task;
     mActiveCallbacks.Remove(key, getter_AddRefs(task));
     if (task) {
-      task->Denied(MediaMgrError::Name::NotAllowedError);
+      task->Denied(gumNoAccessError);
       nsTArray<nsString>* array;
       if (!mCallIds.Get(task->GetWindowID(), &array)) {
         return NS_OK;

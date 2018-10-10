@@ -5,11 +5,14 @@ const CONTENT_CREATED = "ipc:content-created";
 // Make sure that BTU.withNewTab({ ..., forceNewProcess: true }) loads
 // new tabs in their own process.
 async function spawnNewAndTest(recur, pids) {
+  let processCreated = TestUtils.topicObserved(CONTENT_CREATED);
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank", forceNewProcess: true },
                                     async function(browser) {
-      // Make sure our new browser is in its own process.
+      // Make sure our new browser is in its own process. The processCreated
+      // promise should have already resolved by this point.
+      await processCreated;
       let newPid = browser.frameLoader.tabParent.osPid;
-      ok(!pids.has(newPid), "new tab is in its own process: " + recur);
+      ok(!pids.has(newPid), "new tab is in its own process");
       pids.add(newPid);
 
       if (recur) {
