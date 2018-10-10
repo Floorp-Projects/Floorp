@@ -2702,6 +2702,9 @@ class Vendor(MachCommandBase):
 
     @SubCommand('vendor', 'python',
                 description='Vendor Python packages from pypi.org into third_party/python')
+    @CommandArgument('--with-windows-wheel', action='store_true',
+        help='Vendor a wheel for Windows along with the source package',
+        default=False)
     @CommandArgument('packages', default=None, nargs='*', help='Packages to vendor. If omitted, packages and their dependencies defined in Pipfile.lock will be vendored. If Pipfile has been modified, then Pipfile.lock will be regenerated. Note that transient dependencies may be updated when running this command.')
     def vendor_python(self, **kwargs):
         from mozbuild.vendor_python import VendorPython
