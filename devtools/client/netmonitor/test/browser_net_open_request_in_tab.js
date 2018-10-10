@@ -26,21 +26,22 @@ add_task(async function() {
   await performRequest("GET");
   newTab = await openLastRequestInTab();
   await checkTabResponse(newTab, "GET");
+  gBrowser.removeCurrentTab();
 
   // Open POST request in new tab
   await performRequest("POST", "application/x-www-form-urlencoded", "foo=bar&baz=42");
   newTab = await openLastRequestInTab();
   await checkTabResponse(newTab, "POST", "application/x-www-form-urlencoded",
     "foo=bar&amp;baz=42");
+  gBrowser.removeCurrentTab();
 
   // Open POST application/json request in new tab
   await performRequest("POST", "application/json", '{"foo":"bar"}');
   newTab = await openLastRequestInTab();
   await checkTabResponse(newTab, "POST", "application/json", '{"foo":"bar"}');
+  gBrowser.removeCurrentTab();
 
   await teardown(monitor);
-
-  gBrowser.removeCurrentTab();
 
   async function openLastRequestInTab() {
     const wait = waitForDOM(contextMenuDoc, "#request-list-context-newtab");
