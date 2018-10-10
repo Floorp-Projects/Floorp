@@ -52,6 +52,8 @@ SCOPE_WHITELIST = [
     # also are "not that secret" - most of them are built into the resulting
     # binary and could be extracted by someone with `strings`.
     re.compile(r'^secrets:get:project/releng/gecko/build/level-[0-9]/\*'),
+    # ptracing is generally useful for interactive tasks, too!
+    re.compile(r'^docker-worker:feature:allowPtrace$'),
 ]
 
 
