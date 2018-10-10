@@ -132,7 +132,7 @@ var Policies = {
   "Certificates": {
     onBeforeAddons(manager, param) {
       if ("ImportEnterpriseRoots" in param) {
-        setAndLockPref("security.enterprise_roots.enabled", true);
+        setAndLockPref("security.enterprise_roots.enabled", param.ImportEnterpriseRoots);
       }
     },
   },
