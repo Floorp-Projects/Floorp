@@ -96,8 +96,8 @@ namespace css {
 struct URLValue final
 {
 public:
-  // aString must not be null.
-  // principal of aExtraData must not be null.
+  // aString and aExtraData must not be null.
+  //
   // Construct with a base URI; this will create the actual URI lazily from
   // aString and aExtraData.
   URLValue(ServoRawOffsetArc<RustString> aString,
@@ -109,7 +109,6 @@ public:
     , mCORSMode(aCORSMode)
   {
     MOZ_ASSERT(mExtraData);
-    MOZ_ASSERT(mExtraData->GetPrincipal());
   }
 
   // Returns true iff all fields of the two URLValue objects are equal.

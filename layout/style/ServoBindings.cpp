@@ -1388,8 +1388,6 @@ Gecko_CounterStyle_GetAnonymous(const CounterStylePtr* aPtr)
 already_AddRefed<css::URLValue>
 ServoBundledURI::IntoCssUrl(CORSMode aCorsMode)
 {
-  MOZ_ASSERT(mExtraData->GetPrincipal());
-
   RefPtr<css::URLValue> urlValue =
     new css::URLValue(mURLString, do_AddRef(mExtraData), aCorsMode);
   return urlValue.forget();
@@ -2581,7 +2579,7 @@ LoadImportSheet(css::Loader* aLoader,
       NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:invalid"));
     }
     emptySheet->SetURIs(uri, uri, uri);
-    emptySheet->SetPrincipal(aURL->mExtraData->GetPrincipal());
+    emptySheet->SetPrincipal(aURL->mExtraData->Principal());
     emptySheet->SetComplete();
     aParent->PrependStyleSheet(emptySheet);
     return emptySheet.forget();
