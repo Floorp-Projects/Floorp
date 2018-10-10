@@ -153,14 +153,6 @@ BEETMOVER_ACTION_SCOPES = {
 }
 
 
-"""Map the beetmover tasks aliases to phases.
-"""
-PHASES = {
-    'all-candidates-tasks': 'promote',
-    'all-push-tasks': 'push',
-    'default': None,
-}
-
 """Known balrog actions."""
 BALROG_ACTIONS = ('submit-locale', 'submit-toplevel', 'schedule')
 
@@ -392,12 +384,6 @@ get_beetmover_action_scope = functools.partial(
     get_scope_from_target_method,
     alias_to_tasks_map=BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
     alias_to_scope_map=BEETMOVER_ACTION_SCOPES,
-)
-
-get_phase = functools.partial(
-    get_phase_from_target_method,
-    alias_to_tasks_map=BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
-    alias_to_phase_map=PHASES,
 )
 
 get_balrog_server_scope = functools.partial(
