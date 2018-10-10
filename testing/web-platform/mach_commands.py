@@ -27,11 +27,17 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
     default_log_type = "mach"
 
     def kwargs_common(self, kwargs):
+        from mozrunner.devices.android_device import verify_android_device
         build_path = os.path.join(self.topobjdir, 'build')
         here = os.path.split(__file__)[0]
         tests_src_path = os.path.join(here, "tests")
         if build_path not in sys.path:
             sys.path.append(build_path)
+
+        if kwargs["product"] == "fennec":
+            verify_android_device(self, install=True, verbose=False, xre=True)
+            if kwargs["certutil_binary"] is None:
+                kwargs["certutil_binary"] = os.path.join(os.environ.get('MOZ_HOST_BIN'), "certutil")
 
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topobjdir, '_tests', 'web-platform', 'wptrunner.local.ini')
