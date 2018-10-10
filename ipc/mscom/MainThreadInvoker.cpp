@@ -11,10 +11,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/mscom/SpinEvent.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SystemGroup.h"
+#include "mozilla/Unused.h"
 #include "private/prpriv.h" // For PR_GetThreadID
 #include <winternl.h> // For NTSTATUS and NTAPI
 
@@ -38,6 +38,7 @@ public:
   {
     static const bool gotStatics = InitStatics();
     MOZ_ASSERT(gotStatics);
+    Unused << gotStatics;
   }
 
   ~SyncRunnable() = default;
@@ -131,6 +132,7 @@ MainThreadInvoker::MainThreadInvoker()
 {
   static const bool gotStatics = InitStatics();
   MOZ_ASSERT(gotStatics);
+  Unused << gotStatics;
 }
 
 bool

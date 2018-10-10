@@ -296,7 +296,7 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
 
   nsAutoString manifestPath;
 
-  auto marshalFn = [this, &aIID, aObject, mshlFlags, &stream, &streamSize,
+  auto marshalFn = [&aIID, aObject, mshlFlags, &stream, &streamSize,
                     &hglobal, &createStreamResult, &marshalResult, &statResult,
                     &getHGlobalResult, aEnv, &manifestPath]() -> void
   {
