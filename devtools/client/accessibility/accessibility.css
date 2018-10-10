@@ -10,12 +10,18 @@
   --accessibility-toolbar-focus-alpha30: rgba(10, 132, 255, 0.3);
   --accessibility-full-length-minus-splitter: calc(100% - 1px);
   --accessibility-horizontal-padding: 5px;
+  --accessibility-properties-item-width: calc(100% - var(--accessibility-horizontal-padding));
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
   --accessibility-unfocused-tree-focused-node-background: var(--grey-20);
   --accessibility-tree-focused-node-twisty-brightness: brightness(20%);
   --accessibility-link-color: var(--blue-60);
   --accessibility-link-color-active: var(--blue-70);
+  --accessible-role-active-background-color: var(--blue-50);
+  --accessible-role-active-border-color: #FFFFFFB3;
+  --accessible-role-background-color: white;
+  --accessible-role-border-color: #CACAD1;
+  --accessible-role-color: var(--grey-60);
 }
 
 :root.theme-dark {
@@ -23,6 +29,11 @@
   --accessibility-tree-focused-node-twisty-brightness: unset;
   --accessibility-link-color: var(--theme-highlight-blue);
   --accessibility-link-color-active: var(--blue-40);
+  --accessible-role-active-background-color: var(--blue-60);
+  --accessible-role-active-border-color: #FFF6;
+  --accessible-role-background-color: var(--grey-80);
+  --accessible-role-border-color: var(--grey-50);
+  --accessible-role-color: var(--grey-40);
 }
 
 /* General */
@@ -342,7 +353,7 @@ body {
   position: relative;
   display: flex;
   height: var(--accessibility-tree-row-height);
-  width: calc(100% - var(--accessibility-horizontal-padding));
+  width: var(--accessibility-properties-item-width);
   cursor: default;
   align-items: center;
 }
@@ -405,16 +416,43 @@ body {
   color: var(--theme-highlight-blue);
 }
 
+.accessible .tree .objectBox-accessible .accessible-role {
+  background-color: var(--accessible-role-background-color);
+  color: var(--accessible-role-color);
+  border: 1px solid var(--accessible-role-border-color);
+  border-radius: 3px;
+  padding: 0px 2px;
+  margin-inline-start: 5px;
+}
+
+.accessible .tree:focus .node.focused .objectBox-accessible .accessible-role {
+  background-color: var(--accessible-role-active-background-color);
+  border-color: var(--accessible-role-active-border-color);
+  color: var(--theme-selection-color);
+}
+
+.accessible .tree:focus .node.focused .open-accessibility-inspector {
+  background-color: var(--grey-30);
+}
+
+.accessible .tree:focus .node.focused:hover .open-accessibility-inspector {
+  background-color: var(--theme-selection-color);
+}
+
+.accessible .tree .objectBox-accessible,
 .accessible .tree .objectBox-node {
   width: 100%;
   display: flex;
+  align-items: center;
 }
 
+.accessible .tree .objectBox-accessible .accessible-name,
 .accessible .tree .objectBox-node .attrName {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.accessible .tree .objectBox-accessible .open-accessibility-inspector,
 .accessible .tree .objectBox-node .open-inspector{
   width: 17px;
   cursor: pointer;
