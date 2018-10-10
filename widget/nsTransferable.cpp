@@ -500,23 +500,15 @@ nsTransferable::FlavorsTransferableCanImport(nsTArray<nsCString>& aFlavors)
   GetTransferDataFlavors(aFlavors);
 
   if (mFormatConv) {
-    nsCOMPtr<nsIArray> convertedList;
-    mFormatConv->GetInputDataFlavors(getter_AddRefs(convertedList));
+    nsTArray<nsCString> convertedList;
+    mFormatConv->GetInputDataFlavors(convertedList);
 
-    if ( convertedList ) {
-      uint32_t importListLen;
-      convertedList->GetLength(&importListLen);
+    for (uint32_t i = 0; i < convertedList.Length(); ++i) {
+      nsCString& flavorStr = convertedList[i];
 
-      for (uint32_t i = 0; i < importListLen; ++i ) {
-        nsCOMPtr<nsISupportsCString> flavorWrapper =
-            do_QueryElementAt(convertedList, i);
-        nsAutoCString flavorStr;
-        flavorWrapper->GetData( flavorStr );
-
-        // Don't append if already in intrinsic list
-        if (!aFlavors.Contains(flavorStr)) {
-          aFlavors.AppendElement(flavorStr);
-        }
+      // Don't append if already in intrinsic list
+      if (!aFlavors.Contains(flavorStr)) {
+        aFlavors.AppendElement(flavorStr);
       }
     }
   }
@@ -543,23 +535,15 @@ nsTransferable::FlavorsTransferableCanExport(nsTArray<nsCString>& aFlavors)
   GetTransferDataFlavors(aFlavors);
 
   if (mFormatConv) {
-    nsCOMPtr<nsIArray> convertedList;
-    mFormatConv->GetOutputDataFlavors(getter_AddRefs(convertedList));
+    nsTArray<nsCString> convertedList;
+    mFormatConv->GetOutputDataFlavors(convertedList);
 
-    if ( convertedList ) {
-      uint32_t importListLen;
-      convertedList->GetLength(&importListLen);
+    for (uint32_t i = 0; i < convertedList.Length(); ++i) {
+      nsCString& flavorStr = convertedList[i];
 
-      for ( uint32_t i=0; i < importListLen; ++i ) {
-        nsCOMPtr<nsISupportsCString> flavorWrapper =
-            do_QueryElementAt(convertedList, i);
-        nsAutoCString flavorStr;
-        flavorWrapper->GetData( flavorStr );
-
-        // Don't append if already in intrinsic list
-        if (!aFlavors.Contains(flavorStr)) {
-          aFlavors.AppendElement(flavorStr);
-        }
+      // Don't append if already in intrinsic list
+      if (!aFlavors.Contains(flavorStr)) {
+        aFlavors.AppendElement(flavorStr);
       }
     }
   }
