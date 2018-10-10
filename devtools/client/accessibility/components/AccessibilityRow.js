@@ -92,9 +92,9 @@ class AccessibilityRow extends Component {
   }
 
   updateAndScrollIntoViewIfNeeded() {
-    const { dispatch, member, supports } = this.props;
+    const { dispatch, member } = this.props;
     if (gToolbox) {
-      dispatch(updateDetails(gToolbox.walker, member.object, supports));
+      dispatch(updateDetails(gToolbox.walker, member.object));
     }
 
     this.scrollIntoView();
@@ -153,8 +153,4 @@ class AccessibilityRow extends Component {
   }
 }
 
-const mapStateToProps = ({ ui }) => ({
-  supports: ui.supports
-});
-
-module.exports = connect(mapStateToProps)(AccessibilityRow);
+module.exports = connect()(AccessibilityRow);

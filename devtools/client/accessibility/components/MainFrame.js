@@ -109,7 +109,7 @@ class MainFrame extends Component {
             className: "main-panel",
             role: "presentation"
           }, AccessibilityTree({ walker })),
-          endPanel: RightSidebar({ walker }),
+          endPanel: RightSidebar(),
           vert: this.useLandscapeMode,
         })
       ));
