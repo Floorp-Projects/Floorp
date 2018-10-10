@@ -25,7 +25,7 @@ def main():
     This script downloads a talos.json file which indicates which files to download
     for a talos job.
     See a talos.json file for a better understand:
-    http://hg.mozilla.org/mozilla-central/raw-file/default/testing/talos/talos.json
+    https://hg.mozilla.org/mozilla-central/raw-file/default/testing/talos/talos.json
     '''
     parser = OptionParser()
     parser.add_option("--talos-json-url", dest="talos_json_url", type="string",
