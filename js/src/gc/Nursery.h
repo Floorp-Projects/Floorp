@@ -365,7 +365,11 @@ class Nursery
     /* Pointer to the first unallocated byte in the nursery. */
     uintptr_t position_;
 
-    /* Pointer to the logical start of the Nursery. */
+    /*
+     * These fields refer to the beginning of the nursery. They're normally 0
+     * and chunk(0).start() respectively. Except when a generational GC zeal
+     * mode is active, then they may be arbitrary (see Nursery::clear()).
+     */
     unsigned currentStartChunk_;
     uintptr_t currentStartPosition_;
 

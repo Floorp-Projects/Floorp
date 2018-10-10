@@ -1253,8 +1253,6 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
         float(previousGC.tenuredBytes) / float(previousGC.nurseryCapacity);
 
     if (promotionRate > GrowThreshold) {
-        // The GC nursery is an optimization and so if we fail to allocate
-        // nursery chunks we do not report an error.
         growAllocableSpace();
     } else if (maxChunkCount() > 1 && promotionRate < ShrinkThreshold) {
         shrinkAllocableSpace(maxChunkCount() - 1);
