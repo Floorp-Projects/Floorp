@@ -227,9 +227,9 @@ var Policies = {
   },
 
   "DisableBuiltinPDFViewer": {
-    onBeforeUIStartup(manager, param) {
+    onBeforeAddons(manager, param) {
       if (param) {
-        manager.disallowFeature("PDF.js");
+        setAndLockPref("pdfjs.disabled", true);
       }
     },
   },
