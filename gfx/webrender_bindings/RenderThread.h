@@ -59,6 +59,18 @@ protected:
   wr::WrProgramCache* mProgramCache;
 };
 
+class WebRenderShaders {
+public:
+  WebRenderShaders(gl::GLContext* gl, WebRenderProgramCache* programCache);
+  ~WebRenderShaders();
+
+  wr::WrShaders* RawShaders() { return mShaders; }
+
+protected:
+  RefPtr<gl::GLContext> mGL;
+  wr::WrShaders* mShaders;
+};
+
 /// Base class for an event that can be scheduled to run on the render thread.
 ///
 /// The event can be passed through the same channels as regular WebRender messages
@@ -181,7 +193,8 @@ public:
   WebRenderProgramCache* ProgramCache();
 
   /// Can only be called from the render thread.
-  void InitSharedGLContext();
+  WebRenderShaders* Shaders() { return mShaders.get(); }
+
   /// Can only be called from the render thread.
   gl::GLContext* SharedGL();
 
@@ -201,7 +214,7 @@ private:
 
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask(layers::SynchronousTask* aTask);
-  void ProgramCacheTask();
+  void InitDeviceTask();
 
   void DoAccumulateMemoryReport(MemoryReport, const RefPtr<MemoryReportPromise::Private>&);
 
@@ -210,7 +223,9 @@ private:
   base::Thread* const mThread;
 
   WebRenderThreadPool mThreadPool;
+
   UniquePtr<WebRenderProgramCache> mProgramCache;
+  UniquePtr<WebRenderShaders> mShaders;
 
   // An optional shared GLContext to be used for all
   // windows.
