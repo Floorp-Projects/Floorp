@@ -42,13 +42,19 @@
 
 #include ../../../toolkit/content/editMenuCommands.inc.xul
 
-    <command id="View:PageSource" oncommand="BrowserViewSource(window.gBrowser.selectedBrowser);"/>
+    <command id="View:PageSource" oncommand="BrowserViewSource(window.gBrowser.selectedBrowser);" observes="canViewSource"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="View:ReaderView" oncommand="ReaderParent.toggleReaderMode(event);"/>
-    <command id="cmd_find" oncommand="gLazyFindCommand('onFindCommand')"/>
-    <command id="cmd_findAgain" oncommand="gLazyFindCommand('onFindAgainCommand', false)"/>
-    <command id="cmd_findPrevious" oncommand="gLazyFindCommand('onFindAgainCommand', true)"/>
+    <command id="cmd_find"
+             oncommand="gLazyFindCommand('onFindCommand')"
+             observes="isImage"/>
+    <command id="cmd_findAgain"
+             oncommand="gLazyFindCommand('onFindAgainCommand', false)"
+             observes="isImage"/>
+    <command id="cmd_findPrevious"
+             oncommand="gLazyFindCommand('onFindAgainCommand', true)"
+             observes="isImage"/>
 #ifdef XP_MACOSX
     <command id="cmd_findSelection" oncommand="gLazyFindCommand('onFindSelectionCommand')"/>
 #endif
@@ -117,6 +123,12 @@
   </commandset>
 
 #include ../../components/places/content/placesCommands.inc.xul
+
+  <broadcasterset id="mainBroadcasterSet">
+    <broadcaster id="isImage"/>
+    <broadcaster id="canViewSource"/>
+    <broadcaster id="isFrameImage"/>
+  </broadcasterset>
 
   <keyset id="mainKeyset">
     <key id="key_newNavigator"
