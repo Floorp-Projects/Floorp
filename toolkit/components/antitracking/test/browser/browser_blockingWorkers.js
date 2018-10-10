@@ -79,7 +79,7 @@ AntiTracking.runTest("SharedWorkers and Storage Access API",
     await callRequestStorageAccess();
 
     // For non-tracking windows, calling the API is a no-op
-    new SharedWorker("a.js", "foo");
+    new SharedWorker("a.js", "bar");
     ok(true, "SharedWorker is allowed");
   },
   async _ => {
