@@ -56,6 +56,11 @@ function BuildUI() {
     }
   }
 
+  // If the addon is already installed on startup, add the adbScanner to our
+  // RuntimesScanner.
+  if (adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
+    RuntimeScanners.add(adbScanner);
+  }
   adbAddon.on("update", onAddonUpdate);
   adbAddon.on("failure", onAddonFailure);
   adbAddon.on("progress", onAddonProgress);
