@@ -542,8 +542,7 @@ public final class SessionTextInput {
             final CharSequence value = values.valueAt(i);
 
             if (DEBUG) {
-                Log.d(LOGTAG,
-                      "performAutoFill(" + id + ", " + values + ')');
+                Log.d(LOGTAG, "performAutoFill(" + id + ')');
             }
             int rootId = id;
             for (int currentId = id; currentId != View.NO_ID; ) {

@@ -706,7 +706,7 @@ public class SessionAccessibility {
         }
 
         if (DEBUG) {
-            Log.d(LOGTAG, "performAutoFill(" + id + ", " + value + ')');
+            Log.d(LOGTAG, "performAutoFill(" + id + ')');
         }
 
         final EventCallback callback = mAutoFillRoots.get(rootId);
