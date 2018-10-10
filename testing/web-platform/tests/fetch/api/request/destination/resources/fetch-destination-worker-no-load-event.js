@@ -1,5 +1,5 @@
 self.addEventListener('fetch', function(event) {
-    if (event.request.url.includes('dummy.html?')) {
+    if (event.request.url.includes('dummy')) {
         event.waitUntil(async function() {
             let destination = new URL(event.request.url).searchParams.get("dest");
             var result = "FAIL";

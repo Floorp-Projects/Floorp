@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/ServiceWorker/#serviceworkercontainer
+ * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
  *
  */
 
@@ -28,8 +28,6 @@ interface ServiceWorkerContainer : EventTarget {
 
   [NewObject]
   Promise<sequence<ServiceWorkerRegistration>> getRegistrations();
-
-  void startMessages();
 
   attribute EventHandler oncontrollerchange;
   attribute EventHandler onerror;
