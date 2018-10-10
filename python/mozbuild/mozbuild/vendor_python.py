@@ -120,3 +120,11 @@ class VendorPython(MozbuildObject):
                 target = os.path.join(dest, tld.rpartition('-')[0])
                 mozfile.remove(target)  # remove existing version of vendored package
                 mozfile.move(tld, target)
+            # If any files inside the vendored package were symlinks, turn them into normal files
+            # because hg.mozilla.org forbids symlinks in the repository.
+            link_finder = FileFinder(target)
+            for _, f in link_finder.find('**'):
+                if os.path.islink(f.path):
+                    link_target = os.path.realpath(f.path)
+                    os.unlink(f.path)
+                    shutil.copyfile(link_target, f.path)
