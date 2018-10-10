@@ -58,6 +58,7 @@ pub struct FrameBuilder {
     background_color: Option<ColorF>,
     window_size: DeviceUintSize,
     scene_id: u64,
+    root_prim_index: PrimitiveIndex,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub hit_testing_runs: Vec<HitTestingRun>,
@@ -137,6 +138,7 @@ impl FrameBuilder {
             window_size: DeviceUintSize::zero(),
             background_color: None,
             scene_id: 0,
+            root_prim_index: PrimitiveIndex(0),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
@@ -157,6 +159,7 @@ impl FrameBuilder {
             hit_testing_runs: flattener.hit_testing_runs,
             prim_store: flattener.prim_store,
             clip_store: flattener.clip_store,
+            root_prim_index: flattener.root_prim_index,
             screen_rect,
             background_color,
             window_size,
@@ -186,10 +189,7 @@ impl FrameBuilder {
         if self.prim_store.primitives.is_empty() {
             return None
         }
-        self.prim_store.reset_prim_visibility();
 
-        // The root picture is always the first one added.
-        let root_prim_index = PrimitiveIndex(0);
         let root_spatial_node_index = clip_scroll_tree.root_reference_frame_index();
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
@@ -228,7 +228,7 @@ impl FrameBuilder {
 
         let (pic_context, mut pic_state, mut instances) = self
             .prim_store
-            .get_pic_mut(root_prim_index)
+            .get_pic_mut(self.root_prim_index)
             .take_context(
                 &prim_context,
                 root_spatial_node_index,
@@ -253,7 +253,7 @@ impl FrameBuilder {
 
         let pic = self
             .prim_store
-            .get_pic_mut(root_prim_index);
+            .get_pic_mut(self.root_prim_index);
         pic.restore_context(
             instances,
             pic_context,
@@ -267,7 +267,7 @@ impl FrameBuilder {
         let root_render_task = RenderTask::new_picture(
             RenderTaskLocation::Fixed(self.screen_rect.to_i32()),
             self.screen_rect.size.to_f32(),
-            root_prim_index,
+            self.root_prim_index,
             DeviceIntPoint::zero(),
             pic_state.tasks,
             UvRectKind::Rect,

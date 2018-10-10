@@ -131,9 +131,9 @@ protected:
   const uint32_t mHash;
 };
 
-// This class would be |final| if it wasn't for nsICSSAnonBoxPseudo and
-// nsICSSPseudoElement, which are trivial subclasses used to ensure only
-// certain static atoms are passed to certain functions.
+// This class would be |final| if it wasn't for nsCSSAnonBoxPseudoStaticAtom
+// and nsCSSPseudoElementStaticAtom, which are trivial subclasses used to
+// ensure only certain static atoms are passed to certain functions.
 class nsStaticAtom : public nsAtom
 {
 public:

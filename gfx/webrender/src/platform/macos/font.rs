@@ -325,6 +325,11 @@ impl FontContext {
         }
     }
 
+    pub fn delete_font_instance(&mut self, instance: &FontInstance) {
+        // Remove the CoreText font corresponding to this instance.
+        self.ct_fonts.remove(&(instance.font_key, instance.size, instance.variations.clone()));
+    }
+
     fn get_ct_font(
         &mut self,
         font_key: FontKey,

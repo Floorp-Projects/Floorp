@@ -19,7 +19,7 @@ use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
 use plane_split::{BspSplitter, Clipper, Polygon, Splitter};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, DeferredResolve};
 use prim_store::{EdgeAaSegmentMask, ImageSource};
-use prim_store::{PrimitiveMetadata, VisibleGradientTile, PrimitiveInstance};
+use prim_store::{VisibleGradientTile, PrimitiveInstance};
 use prim_store::{BorderSource, Primitive, PrimitiveDetails};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
@@ -476,14 +476,14 @@ impl AlphaBatchBuilder {
             if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
                 println!("\t\tsplit polygon {:?}", poly.points);
             }
-            let transform = transforms.get_world_transform(pic_metadata.spatial_node_index).inverse().unwrap();
+            let transform = transforms.get_world_transform(prim_instance.spatial_node_index).inverse().unwrap();
             let transform_id = transforms.get_id(
-                pic_metadata.spatial_node_index,
+                prim_instance.spatial_node_index,
                 ROOT_SPATIAL_NODE_INDEX,
                 ctx.clip_scroll_tree,
             );
 
-            let clip_task_address = pic_metadata
+            let clip_task_address = prim_instance
                 .clip_task_id
                 .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
@@ -538,7 +538,7 @@ impl AlphaBatchBuilder {
             let batch = self.batch_list
                             .get_suitable_batch(
                                 key,
-                                &pic_metadata.clipped_world_rect.as_ref().expect("bug"),
+                                &prim_instance.clipped_world_rect.as_ref().expect("bug"),
                             );
 
             let gpu_address = gpu_cache.get_address(&gpu_handle);
@@ -575,16 +575,16 @@ impl AlphaBatchBuilder {
         let prim = &ctx.prim_store.primitives[prim_instance.prim_index.0];
         let prim_metadata = &prim.metadata;
 
-        if prim_metadata.clipped_world_rect.is_none() {
+        if prim_instance.clipped_world_rect.is_none() {
             return;
         }
 
         #[cfg(debug_assertions)] //TODO: why is this needed?
-        debug_assert_eq!(prim_metadata.prepared_frame_id, render_tasks.frame_id());
+        debug_assert_eq!(prim_instance.prepared_frame_id, render_tasks.frame_id());
 
         let transform_id = transforms
             .get_id(
-                prim_metadata.spatial_node_index,
+                prim_instance.spatial_node_index,
                 root_spatial_node_index,
                 ctx.clip_scroll_tree,
             );
@@ -593,7 +593,7 @@ impl AlphaBatchBuilder {
         //           wasteful. We should probably cache this in
         //           the scroll node...
         let transform_kind = transform_id.transform_kind();
-        let bounding_rect = prim_metadata.clipped_world_rect
+        let bounding_rect = prim_instance.clipped_world_rect
                                          .as_ref()
                                          .expect("bug");
 
@@ -615,17 +615,17 @@ impl AlphaBatchBuilder {
         let prim_cache_address = if is_multiple_primitives {
             GpuCacheAddress::invalid()
         } else {
-            gpu_cache.get_address(&prim_metadata.gpu_location)
+            gpu_cache.get_address(&prim_instance.gpu_location)
         };
 
-        let clip_task_address = prim_metadata
+        let clip_task_address = prim_instance
             .clip_task_id
             .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
         let specified_blend_mode = prim.get_blend_mode();
 
-        let non_segmented_blend_mode = if !prim_metadata.opacity.is_opaque ||
-            prim_metadata.clip_task_id.is_some() ||
+        let non_segmented_blend_mode = if !prim_instance.opacity.is_opaque ||
+            prim_instance.clip_task_id.is_some() ||
             transform_kind == TransformedRectKind::Complex {
             specified_blend_mode
         } else {
@@ -656,7 +656,7 @@ impl AlphaBatchBuilder {
                         if picture.is_in_3d_context {
                             // Push into parent plane splitter.
                             debug_assert!(picture.raster_config.is_some());
-                            let transform = transforms.get_world_transform(prim_metadata.spatial_node_index);
+                            let transform = transforms.get_world_transform(prim_instance.spatial_node_index);
 
                             // Apply the local clip rect here, before splitting. This is
                             // because the local clip rect can't be applied in the vertex
@@ -670,7 +670,7 @@ impl AlphaBatchBuilder {
                             if let Some(local_rect) = local_rect {
                                 match transform.transform_kind() {
                                     TransformedRectKind::AxisAligned => {
-                                        let inv_transform = transforms.get_world_inv_transform(prim_metadata.spatial_node_index);
+                                        let inv_transform = transforms.get_world_inv_transform(prim_instance.spatial_node_index);
                                         let polygon = Polygon::from_transformed_rect_with_inverse(
                                             local_rect.cast(),
                                             &transform.cast(),
@@ -1062,7 +1062,7 @@ impl AlphaBatchBuilder {
 
                             self.add_brush_to_batch(
                                 brush,
-                                prim_metadata,
+                                prim_instance,
                                 batch_kind,
                                 specified_blend_mode,
                                 non_segmented_blend_mode,
@@ -1200,7 +1200,7 @@ impl AlphaBatchBuilder {
     fn add_brush_to_batch(
         &mut self,
         brush: &BrushPrimitive,
-        prim_metadata: &PrimitiveMetadata,
+        prim_instance: &PrimitiveInstance,
         batch_kind: BrushBatchKind,
         alpha_blend_mode: BlendMode,
         non_segmented_blend_mode: BlendMode,
@@ -1245,7 +1245,7 @@ impl AlphaBatchBuilder {
 
                 for (i, segment) in segment_desc.segments.iter().enumerate() {
                     let is_inner = segment.edge_flags.is_empty();
-                    let needs_blending = !prim_metadata.opacity.is_opaque ||
+                    let needs_blending = !prim_instance.opacity.is_opaque ||
                                          segment.clip_task_id.needs_blending() ||
                                          (!is_inner && transform_kind == TransformedRectKind::Complex);
 

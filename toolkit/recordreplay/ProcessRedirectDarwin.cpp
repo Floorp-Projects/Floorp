@@ -182,6 +182,12 @@ namespace recordreplay {
   MACRO(mach_vm_allocate, nullptr, Preamble_mach_vm_allocate)    \
   MACRO(mach_vm_deallocate, nullptr, Preamble_mach_vm_deallocate) \
   MACRO(mach_vm_protect, nullptr, Preamble_mach_vm_protect)      \
+  MACRO(realpath,                                                \
+        RR_SaveRvalHadErrorZero<RR_Compose<RR_CStringRval,       \
+                                           RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>>) \
+  MACRO(realpath$DARWIN_EXTSN,                                   \
+        RR_SaveRvalHadErrorZero<RR_Compose<RR_CStringRval,       \
+                                           RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>>) \
   /* By passing through events when initializing the sandbox, we ensure both */ \
   /* that we actually initialize the process sandbox while replaying as well as */ \
   /* while recording, and that any activity in these calls does not interfere */ \

@@ -240,6 +240,10 @@ impl FontContext {
         }
     }
 
+    pub fn delete_font_instance(&mut self, _instance: &FontInstance) {
+        // This backend does not yet support variations, so there is nothing to do here.
+    }
+
     fn load_glyph(&self, font: &FontInstance, glyph: &GlyphKey) -> Option<(FT_GlyphSlot, f32)> {
         debug_assert!(self.faces.contains_key(&font.font_key));
         let face = self.faces.get(&font.font_key).unwrap();

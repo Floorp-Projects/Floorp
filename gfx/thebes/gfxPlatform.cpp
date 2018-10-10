@@ -2680,6 +2680,12 @@ gfxPlatform::InitWebRenderConfig()
   // In all cases WR- means WR was not enabled, for one of many possible reasons.
   ScopedGfxFeatureReporter reporter("WR", prefEnabled || envvarEnabled);
   if (!XRE_IsParentProcess()) {
+    // Force-disable WebRender in recording/replaying child processes, which
+    // have their own compositor.
+    if (recordreplay::IsRecordingOrReplaying()) {
+      gfxVars::SetUseWebRender(false);
+    }
+
     // The parent process runs through all the real decision-making code
     // later in this function. For other processes we still want to report
     // the state of the feature for crash reports.
