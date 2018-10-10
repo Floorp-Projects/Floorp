@@ -375,6 +375,8 @@ var GeckoViewUtils = {
    * @param aScope Scope to add the logging functions to.
    */
   initLogging: function(aTag, aScope) {
+    const tag = "GeckoView." + aTag.replace(/^GeckoView\.?/, "");
+
     // Only provide two levels for simplicity.
     // For "info", use "debug" instead.
     // For "error", throw an actual JS error instead.
@@ -383,7 +385,7 @@ var GeckoViewUtils = {
           this._log(log.logger, level, strings, exprs);
 
       XPCOMUtils.defineLazyGetter(log, "logger", _ => {
-        const logger = Log.repository.getLogger(aTag);
+        const logger = Log.repository.getLogger(tag);
         logger.parent = this.rootLogger;
         return logger;
       });
