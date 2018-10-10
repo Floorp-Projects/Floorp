@@ -3183,23 +3183,31 @@ SearchService.prototype = {
     return this._batchTask;
   },
 
-  _blackList: [
-    "blacklist=true",
+  _submissionURLIgnoreList: [
+    "ignore=true",
     "hspart=lvs",
     "form=CONBDF",
     "clid=2308146",
     "fr=mcafee",
     "PC=MC0",
-    "secure.webofsearch.com",
-    "secure.startpageweb.com",
-    "secure.webstartsearch.com",
-    "secure.startwebsearch.com",
+  ],
+
+  _loadPathIgnoreList: [
+    "[other]addEngineWithDetails:searchignore@mozilla.com",
+    "[https]opensearch.startpageweb.com/bing-search.xml",
+    "[https]opensearch.startwebsearch.com/bing-search.xml",
+    "[https]opensearch.webstartsearch.com/bing-search.xml",
+    "[https]opensearch.webofsearch.com/bing-search.xml",
   ],
 
   _addEngineToStore: function SRCH_SVC_addEngineToStore(aEngine) {
     let url = aEngine._getURLOfType("text/html").getSubmission("dummy", aEngine).uri.spec.toLowerCase();
-    if (this._blackList.some(code => url.includes(code.toLowerCase()))) {
-      LOG("_addEngineToStore: Ignoring blacklisted engine");
+    if (this._submissionURLIgnoreList.some(code => url.includes(code.toLowerCase()))) {
+      LOG("_addEngineToStore: Ignoring engine");
+      return;
+    }
+    if (this._loadPathIgnoreList.includes(aEngine._loadPath)) {
+      LOG("_addEngineToStore: Ignoring engine");
       return;
     }
 
