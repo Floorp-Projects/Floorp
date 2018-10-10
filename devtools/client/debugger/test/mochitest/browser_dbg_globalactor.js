@@ -7,13 +7,7 @@
  * Check extension-added global actor API.
  */
 
-"use strict";
-
-var { DebuggerServer } = require("devtools/server/main");
-var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
-var { DebuggerClient } = require("devtools/shared/client/debugger-client");
-
-const ACTORS_URL = EXAMPLE_URL + "testactors.js";
+const ACTORS_URL = CHROME_URL + "testactors.js";
 
 add_task(async function() {
   DebuggerServer.init();
@@ -49,7 +43,7 @@ add_task(async function() {
   for (const connID of Object.getOwnPropertyNames(DebuggerServer._connections)) {
     const conn = DebuggerServer._connections[connID];
     const actorPrefix = conn._prefix + "testOne";
-    for (const pool of conn._extraPools) {
+    for (let pool of conn._extraPools) {
       for (const actor of pool.poolChildren()) {
         if (actor.actorID.startsWith(actorPrefix)) {
           count++;
