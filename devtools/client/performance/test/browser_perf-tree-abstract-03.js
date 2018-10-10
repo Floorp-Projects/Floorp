@@ -13,7 +13,7 @@ const { synthesizeCustomTreeClass } = require("devtools/client/performance/test/
 add_task(async function() {
   const { MyCustomTreeItem, myDataSrc } = synthesizeCustomTreeClass();
 
-  const container = document.createElement("vbox");
+  const container = document.createXULElement("vbox");
   await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   // Populate the tree by pressing RIGHT...

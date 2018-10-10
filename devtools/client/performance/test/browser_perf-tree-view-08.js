@@ -20,7 +20,7 @@ add_task(function() {
   threadNode.calls = threadNode.calls[0].calls;
 
   const treeRoot = new CallView({ frame: threadNode, autoExpandDepth: 10 });
-  const container = document.createElement("vbox");
+  const container = document.createXULElement("vbox");
   treeRoot.attachTo(container);
 
   /*
