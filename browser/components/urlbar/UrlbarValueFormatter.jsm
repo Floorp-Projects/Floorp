@@ -26,18 +26,23 @@ class UrlbarValueFormatter {
     this.urlbarInput = urlbarInput;
     this.window = this.urlbarInput.window;
     this.document = this.window.document;
-    this.editor = this.urlbarInput.editor;
-    this.inputField = this.urlbarInput.inputField;
-    this.scheme =
-      this.document.getAnonymousElementByAttribute(this.urlbarInput.textbox, "anonid", "scheme");
 
     // This is used only as an optimization to avoid removing formatting in
     // the _remove* format methods when no formatting is actually applied.
     this._formattingApplied = false;
   }
 
+  get inputField() {
+    return this.urlbarInput.inputField;
+  }
+
+  get scheme() {
+    return this.document.getAnonymousElementByAttribute(
+      this.urlbarInput.textbox, "anonid", "scheme");
+  }
+
   update() {
-    if (!this.editor || !this.editor.rootElement.firstChild.textContent) {
+    if (!this.inputField.value) {
       return;
     }
 
@@ -132,7 +137,7 @@ class UrlbarValueFormatter {
     if (!this._formattingApplied) {
       return;
     }
-    let controller = this.editor.selectionController;
+    let controller = this.urlbarInput.editor.selectionController;
     let strikeOut =
       controller.getSelection(controller.SELECTION_URLSTRIKEOUT);
     strikeOut.removeAllRanges();
@@ -173,11 +178,12 @@ class UrlbarValueFormatter {
       return false;
     }
 
-    let controller = this.editor.selectionController;
+    let editor = this.urlbarInput.editor;
+    let controller = editor.selectionController;
 
     this._formatScheme(controller.SELECTION_URLSECONDARY);
 
-    let textNode = this.editor.rootElement.firstChild;
+    let textNode = editor.rootElement.firstChild;
 
     // Strike out the "https" part if mixed active content is loaded.
     if (this.urlbarInput.getAttribute("pageproxystate") == "valid" &&
@@ -248,7 +254,7 @@ class UrlbarValueFormatter {
     if (!this._formattingApplied) {
       return;
     }
-    let selection = this.editor.selectionController.getSelection(
+    let selection = this.urlbarInput.editor.selectionController.getSelection(
       Ci.nsISelectionController.SELECTION_FIND
     );
     selection.removeAllRanges();
@@ -289,7 +295,8 @@ class UrlbarValueFormatter {
       return false;
     }
 
-    let textNode = this.editor.rootElement.firstChild;
+    let editor = this.urlbarInput.editor;
+    let textNode = editor.rootElement.firstChild;
     let value = textNode.textContent;
 
     let index = value.indexOf(alias);
@@ -299,7 +306,7 @@ class UrlbarValueFormatter {
 
     // We abuse the SELECTION_FIND selection type to do our highlighting.
     // It's the only type that works with Selection.setColors().
-    let selection = this.editor.selectionController.getSelection(
+    let selection = editor.selectionController.getSelection(
       Ci.nsISelectionController.SELECTION_FIND
     );
 
