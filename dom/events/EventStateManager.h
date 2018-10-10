@@ -365,7 +365,9 @@ public:
 
   /**
    * HandleMiddleClickPaste() handles middle mouse button event as pasting
-   * clipboard text.
+   * clipboard text.  Note that if aTextEditor is nullptr, this only
+   * dispatches ePaste event because it's necessary for some web apps which
+   * want to implement their own editor and supports middle click paste.
    *
    * @param aPresShell              The PresShell for the ESM.  This lifetime
    *                                should be guaranteed by the caller.
@@ -374,6 +376,8 @@ public:
    * @param aStatus                 The event status of aMouseEvent.
    * @param aTextEditor             TextEditor which may be pasted the
    *                                clipboard text by the middle click.
+   *                                If there is no editor for aMouseEvent,
+   *                                set nullptr.
    */
   MOZ_CAN_RUN_SCRIPT
   nsresult HandleMiddleClickPaste(nsIPresShell* aPresShell,
