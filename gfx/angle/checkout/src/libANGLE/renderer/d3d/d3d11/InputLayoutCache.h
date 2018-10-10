@@ -48,7 +48,7 @@ struct PackedAttributeLayout
 
     uint32_t numAttributes;
     uint32_t flags;
-    gl::AttribArray<uint32_t> attributeData;
+    gl::AttribArray<uint64_t> attributeData;
 };
 }  // namespace rx
 
