@@ -3,3 +3,6 @@
 export CC="cl.exe"
 export CXX="cl.exe"
 export LINKER="link.exe"
+
+export HOST_CC=${VSPATH}/VC/bin/Hostx64/x64/cl.exe
+export HOST_CXX=${VSPATH}/VC/bin/Hostx64/x64/cl.exe
