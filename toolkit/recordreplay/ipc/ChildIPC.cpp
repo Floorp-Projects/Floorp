@@ -222,9 +222,12 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
 
   pt.reset();
 
-  DirectCreatePipe(&gCheckpointWriteFd, &gCheckpointReadFd);
-
-  Thread::StartThread(ListenForCheckpointThreadMain, nullptr, false);
+  // N.B. We can't spawn recorded threads when replaying if there was an
+  // initialization failure.
+  if (!gInitializationFailureMessage) {
+    DirectCreatePipe(&gCheckpointWriteFd, &gCheckpointReadFd);
+    Thread::StartThread(ListenForCheckpointThreadMain, nullptr, false);
+  }
 
   pt.emplace();
 
@@ -266,6 +269,12 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
   // so they can be sent.
   HitCheckpoint(CheckpointId::Invalid, /* aRecordingEndpoint = */ false);
 
+  // If we failed to initialize then report it to the user.
+  if (gInitializationFailureMessage) {
+    ReportFatalError(Nothing(), "%s", gInitializationFailureMessage);
+    Unreachable();
+  }
+
   // Process the introduction message to fill in arguments.
   MOZ_RELEASE_ASSERT(gParentArgv.empty());
 
@@ -296,12 +305,6 @@ InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv)
 
   *aArgc = gParentArgv.length() - 1; // For the trailing null.
   *aArgv = gParentArgv.begin();
-
-  // If we failed to initialize then report it to the user.
-  if (gInitializationFailureMessage) {
-    ReportFatalError(Nothing(), "%s", gInitializationFailureMessage);
-    Unreachable();
-  }
 }
 
 base::ProcessId
