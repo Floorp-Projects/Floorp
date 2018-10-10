@@ -24,6 +24,11 @@ function run_test() {
     var profileObj = Services.profiler.getProfileData();
     Assert.notEqual(profileObj, null);
     Assert.notEqual(profileObj.threads, null);
+    // We capture memory counters by default only when jemalloc is turned
+    // on (and it isn't for ASAN), so unless we can conditionalize for ASAN
+    // here we can't check that we're capturing memory counter data.
+    Assert.notEqual(profileObj.counters, null);
+    Assert.notEqual(profileObj.memory, null);
     Assert.ok(profileObj.threads.length >= 1);
     Assert.notEqual(profileObj.threads[0].samples, null);
     // NOTE: The number of samples will be empty since we

@@ -325,7 +325,9 @@ RR_CStringRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
   size_t len = (IsRecording() && rval) ? strlen(rval) + 1 : 0;
   aEvents.RecordOrReplayValue(&len);
   if (IsReplaying()) {
-    rval = len ? NewLeakyArray<char>(len) : nullptr;
+    // Note: Some users (e.g. realpath) require malloc to be used to allocate
+    // the returned buffer.
+    rval = len ? (char*) malloc(len) : nullptr;
   }
   if (len) {
     aEvents.RecordOrReplayBytes(rval, len);

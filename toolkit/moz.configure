@@ -52,6 +52,10 @@ def gecko_profiler_parse_elf(value, target):
 set_config('MOZ_GECKO_PROFILER_PARSE_ELF', gecko_profiler_parse_elf)
 set_define('MOZ_GECKO_PROFILER_PARSE_ELF', gecko_profiler_parse_elf)
 
+# enable this by default if the profiler is enabled
+# Note: also requires jemalloc
+set_config('MOZ_PROFILER_MEMORY', gecko_profiler_define)
+set_define('MOZ_PROFILER_MEMORY', gecko_profiler_define)
 
 option('--enable-dmd', env='MOZ_DMD',
        help='Enable Dark Matter Detector (heap profiler). '

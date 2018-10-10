@@ -307,7 +307,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvOpenRecordReplayChannel(const uint32_t& channelId,
                                                               FileDescriptor* connection) override;
   virtual mozilla::ipc::IPCResult RecvCreateReplayingProcess(const uint32_t& aChannelId) override;
-  virtual mozilla::ipc::IPCResult RecvTerminateReplayingProcess(const uint32_t& aChannelId) override;
 
   virtual mozilla::ipc::IPCResult RecvCreateGMPService() override;
 

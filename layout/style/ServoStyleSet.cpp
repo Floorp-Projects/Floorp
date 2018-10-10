@@ -673,7 +673,7 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag)
 #ifdef MOZ_XUL
 already_AddRefed<ComputedStyle>
 ServoStyleSet::ResolveXULTreePseudoStyle(dom::Element* aParentElement,
-                                         nsICSSAnonBoxPseudo* aPseudoTag,
+                                         nsCSSAnonBoxPseudoStaticAtom* aPseudoTag,
                                          ComputedStyle* aParentContext,
                                          const AtomArray& aInputWord)
 {

@@ -30,6 +30,8 @@
 
 class ProfilerMarker;
 
+// NOTE!  If you add entries, you need to verify if they need to be added to the
+// switch statement in DuplicateLastSample!
 #define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(macro) \
   macro(Category,              int) \
   macro(CollectionStart,       double) \
@@ -42,12 +44,17 @@ class ProfilerMarker;
   macro(NativeLeafAddr,        void*) \
   macro(Marker,                ProfilerMarker*) \
   macro(Pause,                 double) \
-  macro(ResidentMemory,        double) \
   macro(Responsiveness,        double) \
   macro(Resume,                double) \
   macro(ThreadId,              int) \
   macro(Time,                  double) \
-  macro(UnsharedMemory,        double)
+  macro(ResidentMemory,        uint64_t) \
+  macro(UnsharedMemory,        uint64_t) \
+  macro(CounterId,             void*) \
+  macro(CounterKey,            uint64_t) \
+  macro(Number,                uint64_t) \
+  macro(Count,                 int64_t)
+
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #if !defined(GP_ARCH_arm)
@@ -78,6 +85,8 @@ private:
   ProfileBufferEntry(Kind aKind, void *aPtr);
   ProfileBufferEntry(Kind aKind, ProfilerMarker *aMarker);
   ProfileBufferEntry(Kind aKind, double aDouble);
+  ProfileBufferEntry(Kind aKind, int64_t aInt64);
+  ProfileBufferEntry(Kind aKind, uint64_t aUint64);
   ProfileBufferEntry(Kind aKind, int aInt);
 
 public:
@@ -110,6 +119,8 @@ private:
     ProfilerMarker* mMarker;
     double          mDouble;
     int             mInt;
+    int64_t         mInt64;
+    uint64_t        mUint64;
   } u;
 };
 
@@ -354,8 +365,6 @@ private:
 //       "stack": 0,           /* index into stackTable */
 //       "time": 1,            /* number */
 //       "responsiveness": 2,  /* number */
-//       "rss": 3,             /* number */
-//       "uss": 4              /* number */
 //     },
 //     "data":
 //     [
@@ -418,5 +427,61 @@ private:
 //   ]
 // }
 //
-
+// Process:
+// {
+//   "name": "Bar",
+//   "pid": 24,
+//   "threads":
+//   [
+//     <0-N threads from above>
+//   ],
+//   "counters": /* includes the memory counter */
+//   [
+//     {
+//       "name": "qwerty",
+//       "category": "uiop",
+//       "description": "this is qwerty uiop",
+//       "sample_groups:
+//       [
+//         {
+//           "id": 42,    /* number (thread id, or object identifier (tab), etc) */
+//           "samples:
+//           {
+//             "schema":
+//             {
+//               "time": 1,            /* number */
+//               "number": 2,          /* number (of times the counter was touched) */
+//               "count": 3            /* number (total for the counter) */
+//             },
+//             "data":
+//             [
+//               [ 0.1, 1824, 454622 ] /* { time: 0.1, number: 1824, count: 454622 } */
+//             ]
+//           },
+//         },
+//         /* more sample-group objects with different id's */
+//       ]
+//     },
+//     /* more counters */
+//   ],
+//   "memory":
+//   {
+//     "initial_heap": 12345678,
+//     "samples:
+//     {
+//       "schema":
+//       {
+//         "time": 1,            /* number */
+//         "rss": 2,             /* number */
+//         "uss": 3              /* number */
+//       },
+//       "data":
+//       [
+//         /* { time: 0.1, rss: 12345678, uss: 87654321} */
+//         [ 0.1, 12345678, 87654321 ]
+//       ]
+//     },
+//   },
+// }
+//
 #endif /* ndef ProfileBufferEntry_h */

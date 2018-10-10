@@ -208,7 +208,7 @@ static Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve> gNumNonRec
 /* static */ Thread*
 Thread::SpawnNonRecordedThread(Callback aStart, void* aArgument)
 {
-  if (IsMiddleman() || gInitializationFailureMessage) {
+  if (IsMiddleman()) {
     DirectSpawnThread(aStart, aArgument);
     return nullptr;
   }
@@ -323,6 +323,13 @@ MOZ_EXPORT bool
 RecordReplayInterface_InternalAreThreadEventsPassedThrough()
 {
   MOZ_ASSERT(IsRecordingOrReplaying());
+
+  // If initialization fails, pass through all thread events until we're able
+  // to report the problem to the middleman and die.
+  if (gInitializationFailureMessage) {
+    return true;
+  }
+
   Thread* thread = Thread::Current();
   return !thread || thread->PassThroughEvents();
 }

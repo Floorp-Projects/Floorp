@@ -120,14 +120,14 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
   InitializeCurrentTime();
 
   gRecordingFile = new File();
-  if (!gRecordingFile->Open(recordingFile.ref(), IsRecording() ? File::WRITE : File::READ)) {
+  if (gRecordingFile->Open(recordingFile.ref(), IsRecording() ? File::WRITE : File::READ)) {
+    InitializeRedirections();
+  } else {
     gInitializationFailureMessage = strdup("Bad recording file");
-    return;
   }
 
-  if (!InitializeRedirections()) {
-    MOZ_RELEASE_ASSERT(gInitializationFailureMessage);
-    return;
+  if (gInitializationFailureMessage) {
+    fprintf(stderr, "Initialization Failure: %s\n", gInitializationFailureMessage);
   }
 
   Thread::InitializeThreads();

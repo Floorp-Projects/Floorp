@@ -196,11 +196,16 @@ static AtomicLock* gAtomicLock = nullptr;
 /* static */ void
 Lock::InitializeLocks()
 {
-  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
   gNumLocks = gAtomicLockId;
-
   gAtomicLock = new AtomicLock();
-  MOZ_RELEASE_ASSERT(!IsRecording() || gNumLocks == gAtomicLockId + 1);
+
+  AssertEventsAreNotPassedThrough();
+
+  // There should be exactly one recorded lock right now, unless we had an
+  // initialization failure and didn't record the lock just created.
+  MOZ_RELEASE_ASSERT(!IsRecording() ||
+                     gNumLocks == gAtomicLockId + 1 ||
+                     gInitializationFailureMessage);
 }
 
 /* static */ void

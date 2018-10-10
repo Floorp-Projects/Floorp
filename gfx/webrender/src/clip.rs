@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, DevicePixelScale, ImageMask};
-use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D, LocalClip};
+use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D};
 use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle, PicturePixel, WorldPixel};
 use api::{PictureRect, LayoutPixel, WorldPoint, WorldSize, WorldRect, LayoutToWorldTransform};
 use api::{VoidPtrToSizeFn, LayoutRectAu, ImageKey, AuHelpers};
@@ -713,24 +713,13 @@ impl<J> ClipRegion<ComplexTranslateIter<J>> {
 
 impl ClipRegion<Option<ComplexClipRegion>> {
     pub fn create_for_clip_node_with_local_clip(
-        local_clip: &LocalClip,
+        local_clip: &LayoutRect,
         reference_frame_relative_offset: &LayoutVector2D
     ) -> Self {
         ClipRegion {
-            main: local_clip
-                .clip_rect()
-                .translate(reference_frame_relative_offset),
+            main: local_clip.translate(reference_frame_relative_offset),
             image_mask: None,
-            complex_clips: match *local_clip {
-                LocalClip::Rect(_) => None,
-                LocalClip::RoundedRect(_, ref region) => {
-                    Some(ComplexClipRegion {
-                        rect: region.rect.translate(reference_frame_relative_offset),
-                        radii: region.radii,
-                        mode: region.mode,
-                    })
-                },
-            }
+            complex_clips: None,
         }
     }
 }
