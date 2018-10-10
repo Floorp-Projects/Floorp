@@ -183,14 +183,16 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
 }
 
 nsresult
-HTMLEditorEventListener::MouseClick(MouseEvent* aMouseEvent)
+HTMLEditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent)
 {
   if (NS_WARN_IF(DetachedFromEditor())) {
     return NS_OK;
   }
 
-  RefPtr<EventTarget> target = aMouseEvent->GetTarget();
-  NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
+  RefPtr<EventTarget> target = aMouseClickEvent->GetDOMEventTarget();
+  if (NS_WARN_IF(!target)) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<Element> element = do_QueryInterface(target);
   if (NS_WARN_IF(!element)) {
     return NS_ERROR_FAILURE;
@@ -205,7 +207,7 @@ HTMLEditorEventListener::MouseClick(MouseEvent* aMouseEvent)
     return NS_OK;
   }
 
-  return EditorEventListener::MouseClick(aMouseEvent);
+  return EditorEventListener::MouseClick(aMouseClickEvent);
 }
 
 } // namespace mozilla

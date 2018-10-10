@@ -34,7 +34,7 @@ protected:
   virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent) override;
   virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) override;
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult MouseClick(dom::MouseEvent* aMouseEvent) override;
+  virtual nsresult MouseClick(WidgetMouseEvent* aMouseClickEvent) override;
 };
 
 } // namespace mozilla
