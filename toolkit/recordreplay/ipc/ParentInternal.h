@@ -241,9 +241,6 @@ class ChildProcessInfo
   // to the process.
   size_t mNumRecoveredMessages;
 
-  // The number of times we have restarted this process.
-  size_t mNumRestarts;
-
   // Current role of this process.
   UniquePtr<ChildRole> mRole;
 
@@ -276,8 +273,7 @@ class ChildProcessInfo
   void Recover(bool aPaused, Message* aPausedMessage, size_t aLastCheckpoint,
                Message** aMessages, size_t aNumMessages);
 
-  bool CanRestart();
-  void AttemptRestart(const char* aWhy);
+  void OnCrash(const char* aWhy);
   void LaunchSubprocess(const Maybe<RecordingProcessData>& aRecordingProcessData);
 
 public:

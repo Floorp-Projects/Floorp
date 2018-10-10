@@ -2102,21 +2102,6 @@ ContentParent::RecvCreateReplayingProcess(const uint32_t& aChannelId)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ContentParent::RecvTerminateReplayingProcess(const uint32_t& aChannelId)
-{
-  // We should only get this message from the child if it is recording or replaying.
-  if (!this->IsRecordingOrReplaying()) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (aChannelId < mReplayingChildren.length() && mReplayingChildren[aChannelId]) {
-    DelayedDeleteSubprocess(mReplayingChildren[aChannelId]);
-    mReplayingChildren[aChannelId] = nullptr;
-  }
-  return IPC_OK();
-}
-
 jsipc::CPOWManager*
 ContentParent::GetCPOWManager()
 {
