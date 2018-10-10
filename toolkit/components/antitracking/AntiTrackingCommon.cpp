@@ -64,7 +64,8 @@ namespace {
 bool
 GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow,
                                     nsIPrincipal** aTopLevelStoragePrincipal,
-                                    nsACString& aTrackingOrigin)
+                                    nsACString& aTrackingOrigin,
+                                    nsIPrincipal** aTrackingPrincipal)
 {
   if (!nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow)) {
     return false;
@@ -85,7 +86,7 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
   }
 
   // Let's take the principal and the origin of the tracker.
-  nsIPrincipal* trackingPrincipal = a3rdPartyTrackingWindow->GetPrincipal();
+  nsCOMPtr<nsIPrincipal> trackingPrincipal = a3rdPartyTrackingWindow->GetPrincipal();
   if (NS_WARN_IF(!trackingPrincipal)) {
     return false;
   }
@@ -96,6 +97,9 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
   }
 
   topLevelStoragePrincipal.forget(aTopLevelStoragePrincipal);
+  if (aTrackingPrincipal) {
+    trackingPrincipal.forget(aTrackingPrincipal);
+  }
   return true;
 };
 
@@ -361,14 +365,28 @@ AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()
 }
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
-AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
+AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal,
                                                          nsPIDOMWindowInner* aParentWindow,
                                                          StorageAccessGrantedReason aReason)
 {
   MOZ_ASSERT(aParentWindow);
 
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(!uri)) {
+    LOG(("Can't get the URI from the principal"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  nsAutoString origin;
+  rv = nsContentUtils::GetUTFOrigin(uri, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't get the origin from the URI"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
   LOG(("Adding a first-party storage exception for %s...",
-       NS_ConvertUTF16toUTF8(aOrigin).get()));
+       NS_ConvertUTF16toUTF8(origin).get()));
 
   if (StaticPrefs::network_cookie_cookieBehavior() !=
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
@@ -388,6 +406,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
 
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
   nsAutoCString trackingOrigin;
+  nsCOMPtr<nsIPrincipal> trackingPrincipal;
 
   nsGlobalWindowInner* parentWindow = nsGlobalWindowInner::Cast(aParentWindow);
   nsGlobalWindowOuter* outerParentWindow =
@@ -402,7 +421,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
 
   // We are a first party resource.
   if (outerParentWindow->IsTopLevelWindow()) {
-    CopyUTF16toUTF8(aOrigin, trackingOrigin);
+    CopyUTF16toUTF8(origin, trackingOrigin);
+    trackingPrincipal = aPrincipal;
     topLevelStoragePrincipal = parentWindow->GetPrincipal();
     if (NS_WARN_IF(!topLevelStoragePrincipal)) {
       LOG(("Top-level storage area principal not found, bailing out early"));
@@ -412,15 +432,27 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
   // We are a 3rd party source.
   } else if (!GetParentPrincipalAndTrackingOrigin(parentWindow,
                                                   getter_AddRefs(topLevelStoragePrincipal),
-                                                  trackingOrigin)) {
+                                                  trackingOrigin,
+                                                  getter_AddRefs(trackingPrincipal))) {
     LOG(("Error while computing the parent principal and tracking origin, bailing out early"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), trackingOrigin);
+  nsCOMPtr<nsIURI> trackingURI;
+  rv = NS_NewURI(getter_AddRefs(trackingURI), trackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Couldn't make a new URI out of the tracking origin"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  // We hardcode this block reason since the first-party storage access permission
+  // is granted for the purpose of blocking trackers.
+  const uint32_t blockReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+  if (!HasUserInteraction(trackingPrincipal)) {
+    LOG_SPEC(("Tracking principal (%s) hasn't been interacted with before, "
+              "refusing to add a first-party storage permission to access it",
+              _spec), trackingURI);
+    NotifyRejection(aParentWindow, blockReason);
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
@@ -433,15 +465,12 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
   nsIChannel* channel =
     pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
 
-  // We hardcode this block reason since the first-party storage access permission
-  // is granted for the purpose of blocking trackers.
-  const uint32_t blockReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
-  pwin->NotifyContentBlockingState(blockReason, channel, false, uri);
+  pwin->NotifyContentBlockingState(blockReason, channel, false, trackingURI);
 
-  NS_ConvertUTF16toUTF8 grantedOrigin(aOrigin);
+  NS_ConvertUTF16toUTF8 grantedOrigin(origin);
 
   ReportUnblockingConsole(parentWindow, NS_ConvertUTF8toUTF16(trackingOrigin),
-                          aOrigin, aReason);
+                          origin, aReason);
 
   if (XRE_IsParentProcess()) {
     LOG(("Saving the permission: trackingOrigin=%s, grantedOrigin=%s",
@@ -643,7 +672,8 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   nsAutoCString trackingOrigin;
   if (!GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner::Cast(aWindow),
                                            getter_AddRefs(parentPrincipal),
-                                           trackingOrigin)) {
+                                           trackingOrigin,
+                                           nullptr)) {
     LOG(("Failed to obtain the parent principal and the tracking origin"));
     return false;
   }
@@ -1227,4 +1257,22 @@ AntiTrackingCommon::StoreUserInteractionFor(nsIPrincipal* aPrincipal)
   LOG_SPEC(("Asking the parent process to save the user-interaction for us: %s",
             _spec), uri);
   cc->SendStoreUserInteractionAsPermission(IPC::Principal(aPrincipal));
+}
+
+/* static */ bool
+AntiTrackingCommon::HasUserInteraction(nsIPrincipal* aPrincipal)
+{
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
+    return false;
+  }
+
+  uint32_t result = 0;
+  nsresult rv =
+    pm->TestPermissionFromPrincipal(aPrincipal, USER_INTERACTION_PERM, &result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return result == nsIPermissionManager::ALLOW_ACTION;
 }

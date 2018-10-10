@@ -60,7 +60,7 @@ var ToolbarView = {
    */
   _buildMarkersFilterPopup: function() {
     for (const [markerName, markerDetails] of Object.entries(TIMELINE_BLUEPRINT)) {
-      const menuitem = document.createElement("menuitem");
+      const menuitem = document.createXULElement("menuitem");
       menuitem.setAttribute("closemenu", "none");
       menuitem.setAttribute("type", "checkbox");
       menuitem.setAttribute("align", "center");

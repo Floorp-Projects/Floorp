@@ -6,7 +6,6 @@
 
 DIRS += [
     'formautofill',
-    'onboarding',
     'pdfjs',
     'pocket',
     'screenshots',
