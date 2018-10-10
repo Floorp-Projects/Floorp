@@ -3131,6 +3131,11 @@ profiler_start(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                           aFilters, aFilterCount);
   }
 
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  // start counting memory allocations (outside of lock)
+  mozilla::profiler::install_memory_counter(true);
+#endif
+
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
@@ -3198,6 +3203,10 @@ locked_profiler_stop(PSLockRef aLock)
 
   // At the very start, clear RacyFeatures.
   RacyFeatures::SetInactive();
+
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  mozilla::profiler::install_memory_counter(false);
+#endif
 
 #if defined(GP_OS_android)
   if (ActivePS::FeatureJava(aLock)) {
