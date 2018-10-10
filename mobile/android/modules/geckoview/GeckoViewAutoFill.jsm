@@ -114,7 +114,7 @@ class GeckoViewAutoFill {
     this._eventDispatcher.dispatch("GeckoView:AddAutoFill", rootInfo, {
       onSuccess: responses => {
         // `responses` is an object with IDs as keys.
-        debug `Performing auto-fill ${responses}`;
+        debug `Performing auto-fill ${Object.keys(responses)}`;
 
         const AUTOFILL_STATE = "-moz-autofill";
         const winUtils = window.windowUtils;
