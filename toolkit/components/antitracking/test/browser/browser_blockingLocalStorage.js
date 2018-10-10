@@ -20,8 +20,8 @@ AntiTracking.runTest("localStorage",
 
 AntiTracking.runTest("localStorage and Storage Access API",
   async _ => {
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
 
     try {
       localStorage.foo = 42;
@@ -31,43 +31,21 @@ AntiTracking.runTest("localStorage and Storage Access API",
       is(e.name, "SecurityError", "We want a security error message.");
     }
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     localStorage.foo = 42;
     ok(true, "LocalStorage is allowed");
   },
   async _ => {
-    let hasAccess = await document.hasStorageAccess();
-    ok(!hasAccess, "Doesn't yet have storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
 
     localStorage.foo = 42;
     ok(true, "LocalStorage is allowed");
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
-
-    let p;
-    try {
-      p = document.requestStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await p;
-
-    hasAccess = await document.hasStorageAccess();
-    ok(hasAccess, "Now has storage access");
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
 
     // For non-tracking windows, calling the API is a no-op
     localStorage.foo = 42;
