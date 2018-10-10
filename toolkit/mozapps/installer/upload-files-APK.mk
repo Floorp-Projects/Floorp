@@ -32,7 +32,7 @@ RELEASE_SIGN_ANDROID_APK = \
   cp $(1) $(2)-unaligned.apk && \
   ($(ZIP) -d $(2)-unaligned.apk 'META-INF/*' > /dev/null || true) && \
   $(RELEASE_JARSIGNER) $(2)-unaligned.apk && \
-  $(ZIPALIGN) -f -v 4 $(2)-unaligned.apk $(2) && \
+  $(ZIPALIGN) $(if $(MOZ_AUTOMATION),-v) -f 4 $(2)-unaligned.apk $(2) && \
   $(RM) $(2)-unaligned.apk
 
 # Files packed into the APK root.  Packing files into the APK root is not

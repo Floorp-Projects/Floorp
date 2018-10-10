@@ -132,6 +132,7 @@ class Registers {
     static const uint32_t Allocatable = 27; // No named special-function registers.
 
     static const SetType AllMask = 0xFFFFFFFF;
+    static const SetType NoneMask = 0x0;
 
     static const SetType ArgRegMask =
         (1 << Registers::x0) | (1 << Registers::x1) |
@@ -251,6 +252,7 @@ class FloatRegisters
     static const uint32_t Total = 64;
     static const uint32_t TotalPhys = 32;
     static const SetType AllMask = 0xFFFFFFFFFFFFFFFFULL;
+    static const SetType NoneMask = 0x0ULL;
     static const SetType AllPhysMask = 0xFFFFFFFFULL;
     static const SetType SpreadCoefficient = 0x100000001ULL;
 

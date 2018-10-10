@@ -33,8 +33,9 @@ namespace jit {
 //     // Call out to the VM
 //     // Other effectful operations like TypeScript::Monitor
 //
-//     if (stub.invalid())
+//     if (stub.invalid()) {
 //         return true;
+//     }
 //
 //     // First use of stub after VM call.
 //

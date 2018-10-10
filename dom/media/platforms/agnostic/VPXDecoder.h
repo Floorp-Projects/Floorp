@@ -78,6 +78,7 @@ private:
   const VideoInfo& mInfo;
 
   const Codec mCodec;
+  const bool mLowLatency;
 };
 
 } // namespace mozilla

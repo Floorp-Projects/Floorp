@@ -26,8 +26,6 @@ WebrtcMediaDataDecoder::WebrtcMediaDataDecoder()
 
 WebrtcMediaDataDecoder::~WebrtcMediaDataDecoder()
 {
-  mTaskQueue->BeginShutdown();
-  mTaskQueue->AwaitShutdownAndIdle();
 }
 
 int32_t
@@ -159,14 +157,10 @@ WebrtcMediaDataDecoder::RegisterDecodeCompleteCallback(
 int32_t
 WebrtcMediaDataDecoder::Release()
 {
-  RefPtr<ShutdownPromise> p =
-    mDecoder->Flush()->Then(mTaskQueue,
-                            __func__,
-                            [this]() { return mDecoder->Shutdown(); },
-                            [this]() { return mDecoder->Shutdown(); });
-  media::Await(do_AddRef(mThreadPool), p);
+  RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
+  decoder->Flush()->Then(
+    mTaskQueue, __func__, [decoder]() { decoder->Shutdown(); });
 
-  mDecoder = nullptr;
   mNeedKeyframe = true;
 
   return WEBRTC_VIDEO_CODEC_OK;

@@ -153,7 +153,63 @@ XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
 // returning the underlying JSObject) so that JS callers will see what looks
 // Like any other xpcom object - and be limited to use its interfaces.
 //
-// See the comment preceding nsIXPCWrappedJSObjectGetter in nsIXPConnect.idl.
+
+/**
+ * When JavaScript code uses a component that is itself implemented in
+ * JavaScript then XPConnect will build a wrapper rather than directly
+ * expose the JSObject of the component. This allows components implemented
+ * in JavaScript to 'look' just like any other xpcom component (from the
+ * perspective of the JavaScript caller). This insulates the component from
+ * the caller and hides any properties or methods that are not part of the
+ * interface as declared in xpidl. Usually this is a good thing.
+ *
+ * However, in some cases it is useful to allow the JS caller access to the
+ * JS component's underlying implementation. In order to facilitate this
+ * XPConnect supports the 'wrappedJSObject' property. This 'wrappedJSObject'
+ * property is different than the XrayWrapper meaning. (The naming collision
+ * avoids having more than one magic XPConnect property name, but is
+ * confusing.)
+ *
+ * The caller code can do:
+ *
+ * // 'foo' is some xpcom component (that might be implemented in JS).
+ * var bar = foo.wrappedJSObject;
+ * if(bar) {
+ *    // bar is the underlying JSObject. Do stuff with it here.
+ * }
+ *
+ * Recall that 'foo' above is an XPConnect wrapper, not the underlying JS
+ * object. The property get "foo.wrappedJSObject" will only succeed if three
+ * conditions are met:
+ *
+ * 1) 'foo' really is an XPConnect wrapper around a JSObject.
+ * 2) The underlying JSObject actually implements a "wrappedJSObject"
+ *    property that returns a JSObject. This is called by XPConnect. This
+ *    restriction allows wrapped objects to only allow access to the underlying
+ *    JSObject if they choose to do so. Usually this just means that 'foo'
+ *    would have a property that looks like:
+ *       this.wrappedJSObject = this.
+ * 3) The caller must be system JS and not content. Double-wrapped XPCWJS should
+ *    not be exposed to content except with enablePrivilege or a remote-XUL
+ *    domain.
+ *
+ * Notes:
+ *
+ * a) If 'foo' above were the underlying JSObject and not a wrapper at all,
+ *    then this all just works and XPConnect is not part of the picture at all.
+ * b) One might ask why 'foo' should not just implement an interface through
+ *    which callers might get at the underlying object. There are three reasons:
+ *   i)   XPConnect would still have to do magic since JSObject is not a
+ *        scriptable type.
+ *   ii)  JS Components might use aggregation (like C++ objects) and have
+ *        different JSObjects for different interfaces 'within' an aggregate
+ *        object. But, using an additional interface only allows returning one
+ *        underlying JSObject. However, this allows for the possibility that
+ *        each of the aggregte JSObjects could return something different.
+ *        Note that one might do: this.wrappedJSObject = someOtherObject;
+ *   iii) Avoiding the explicit interface makes it easier for both the caller
+ *        and the component.
+ */
 
 static JSObject*
 GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)

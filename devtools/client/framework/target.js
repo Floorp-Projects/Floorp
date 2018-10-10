@@ -286,23 +286,19 @@ TabTarget.prototype = {
    *  "events": {}
    * }
    */
-  getActorDescription: function(actorName) {
+  getActorDescription: async function(actorName) {
     if (!this.client) {
       throw new Error("TabTarget#getActorDescription() can only be called on " +
                       "remote tabs.");
     }
 
-    return new Promise(resolve => {
-      if (this._protocolDescription &&
-          this._protocolDescription.types[actorName]) {
-        resolve(this._protocolDescription.types[actorName]);
-      } else {
-        this.client.mainRoot.protocolDescription(description => {
-          this._protocolDescription = description;
-          resolve(description.types[actorName]);
-        });
-      }
-    });
+    if (this._protocolDescription &&
+        this._protocolDescription.types[actorName]) {
+      return this._protocolDescription.types[actorName];
+    }
+    const description = await this.client.mainRoot.protocolDescription();
+    this._protocolDescription = description;
+    return description.types[actorName];
   },
 
   /**

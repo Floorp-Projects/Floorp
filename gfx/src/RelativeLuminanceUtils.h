@@ -36,7 +36,7 @@ public:
     uint8_t r1 = DecomputeComponent(r * factor);
     uint8_t g1 = DecomputeComponent(g * factor);
     uint8_t b1 = DecomputeComponent(b * factor);
-    return NS_RGB(r1, g1, b1);
+    return NS_RGBA(r1, g1, b1, NS_GET_A(aColor));
   }
 
 private:

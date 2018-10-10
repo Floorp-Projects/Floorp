@@ -8,8 +8,8 @@
 #define mozilla_H264Converter_h
 
 #include "PlatformDecoderModule.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
-
 namespace mozilla {
 
 class DecoderDoctorDiagnostics;
@@ -66,6 +66,11 @@ public:
   MediaResult GetLastError() const { return mLastError; }
 
 private:
+  void AssertOnTaskQueue()
+  {
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  }
+
   // Will create the required MediaDataDecoder if need AVCC and we have a SPS NAL.
   // Returns NS_ERROR_FAILURE if error is permanent and can't be recovered and
   // will set mError accordingly.
@@ -110,6 +115,8 @@ private:
   const CreateDecoderParams::OptionSet mDecoderOptions;
   const CreateDecoderParams::VideoFrameRate mRate;
   Maybe<bool> mCanRecycleDecoder;
+  // Used for debugging purposes only
+  Atomic<bool> mInConstructor;
 };
 
 } // namespace mozilla

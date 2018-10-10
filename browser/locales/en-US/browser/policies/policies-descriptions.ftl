@@ -70,6 +70,8 @@ policy-DisplayBookmarksToolbar = Display the Bookmarks Toolbar by default.
 
 policy-DisplayMenuBar = Display the Menu Bar by default.
 
+policy-DNSOverHTTPS = Configure DNS over HTTPS.
+
 policy-DontCheckDefaultBrowser = Disable check for default browser on startup.
 
 # “lock” means that the user won’t be able to change this setting
@@ -103,6 +105,8 @@ policy-Permissions = Configure permissions for camera, microphone, location and 
 policy-PopupBlocking = Allow certain websites to display popups by default.
 
 policy-Proxy = Configure proxy settings.
+
+policy-RequestedLocales = Set the list of requested locales for the application in order of preference.
 
 policy-SanitizeOnShutdown = Clear all navigation data on shutdown.
 

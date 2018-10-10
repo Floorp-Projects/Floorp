@@ -2827,8 +2827,9 @@ MacroAssembler::alignJitStackBasedOnNArgs(Register nargs)
     // aligned if |nargs| is odd.
 
     // if (nargs % 2 == 0) {
-    //     if (sp % JitStackAlignment == 0)
+    //     if (sp % JitStackAlignment == 0) {
     //         sp -= sizeof(Value);
+    //     }
     //     MOZ_ASSERT(sp % JitStackAlignment == JitStackAlignment - sizeof(Value));
     // } else {
     //     sp = sp & ~(JitStackAlignment - 1);

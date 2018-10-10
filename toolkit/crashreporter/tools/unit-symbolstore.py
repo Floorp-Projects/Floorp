@@ -301,6 +301,7 @@ if target_platform() == 'WINNT':
                     "FILE 0 %s" % sourcefile,
                     "PUBLIC xyz 123"
                     ])
+            mock_Popen.return_value.wait.return_value = 0
             mock_communicate = mock_Popen.return_value.communicate
             mock_communicate.side_effect = [("abcd1234", ""),
                                             ("http://example.com/repo", ""),
@@ -441,6 +442,7 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
                 ]
             )
         mock_Popen.return_value.stdout = mk_output(dumped_files)
+        mock_Popen.return_value.wait.return_value = 0
 
         d = symbolstore.Dumper('dump_syms', self.symboldir,
                                file_mapping=file_mapping)
