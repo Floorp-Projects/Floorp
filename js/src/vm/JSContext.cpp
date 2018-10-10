@@ -1136,7 +1136,8 @@ JSContext::recoverFromOutOfMemory()
 }
 
 static bool
-InternalEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job,
+InternalEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject promise,
+                                  JS::HandleObject job,
                                   JS::HandleObject allocationSite,
                                   JS::HandleObject incumbentGlobal, void* data)
 {

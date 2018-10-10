@@ -137,8 +137,9 @@ using GetAvailable = const char* (*)(int32_t localeIndex);
  * returns the corresponding locale as a borrowed string.  For example:
  *
  *   RootedValue v(cx);
- *   if (!GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable, &v))
+ *   if (!GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable, &v)) {
  *       return false;
+ *   }
  */
 extern bool
 GetAvailableLocales(JSContext* cx, CountAvailable countAvailable, GetAvailable getAvailable,

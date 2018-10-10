@@ -598,7 +598,10 @@ class Dumper:
                         # pass through all other lines unchanged
                         f.write(line)
                 f.close()
-                proc.wait()
+                retcode = proc.wait()
+                if retcode != 0:
+                    raise RuntimeError(
+                        "dump_syms failed with error code %d" % retcode)
                 # we output relative paths so callers can get a list of what
                 # was generated
                 print(rel_path)

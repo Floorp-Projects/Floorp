@@ -447,6 +447,8 @@ pref("media.navigator.video.max_fr", 60);
 pref("media.navigator.video.h264.level", 31); // 0x42E01f - level 3.1
 pref("media.navigator.video.h264.max_br", 0);
 pref("media.navigator.video.h264.max_mbps", 0);
+pref("media.navigator.mediadatadecoder_enabled", false);
+pref("media.navigator.mediadatadecoder_h264_enabled", false);
 pref("media.peerconnection.video.vp9_enabled", true);
 pref("media.peerconnection.video.vp9_preferred", false);
 pref("media.getusermedia.aec", 1);
@@ -1461,7 +1463,7 @@ pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
 
 // JSGC_MAX_NURSERY_BYTES
-#if defined(ANDROID) || defined(XP_IOS) || defined(MOZ_B2G)
+#if defined(ANDROID) || defined(XP_IOS)
 pref("javascript.options.mem.nursery.max_kb", 4096);
 #else
 pref("javascript.options.mem.nursery.max_kb", 16384);

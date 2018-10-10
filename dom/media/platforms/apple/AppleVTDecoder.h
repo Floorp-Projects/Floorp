@@ -26,7 +26,8 @@ class AppleVTDecoder
 public:
   AppleVTDecoder(const VideoInfo& aConfig,
                  TaskQueue* aTaskQueue,
-                 layers::ImageContainer* aImageContainer);
+                 layers::ImageContainer* aImageContainer,
+                 CreateDecoderParams::OptionSet aOptions);
 
   class AppleFrameRef {
   public:
