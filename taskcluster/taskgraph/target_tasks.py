@@ -308,22 +308,9 @@ def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
     of a desktop product. This should include all non-android
     mozilla_{beta,release} tasks, plus l10n, beetmover, balrog, etc."""
 
-    beta_release_tasks = [l for l, t in full_task_graph.tasks.iteritems() if
-                          filter_beta_release_tasks(t, parameters,
-                                                    ignore_kinds=[],
-                                                    allow_l10n=True)]
-
     def filter(task):
         if task.attributes.get('shipping_product') != parameters['release_product']:
             return False
-
-        # Allow for {beta,release}_tasks; these will get optimized out to point
-        # to the previous graph using ``previous_graph_ids`` and
-        # ``previous_graph_kinds``.
-        # At some point this should filter by shipping_phase == 'build' and
-        # shipping_product matches.
-        if task.label in beta_release_tasks:
-            return True
 
         # 'secondary' balrog/update verify/final verify tasks only run for RCs
         if parameters.get('release_type') != 'release-rc':
@@ -393,17 +380,12 @@ def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a candidates build of fennec. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filtered_for_project = target_tasks_nightly_fennec(full_task_graph, parameters, graph_config)
 
     def filter(task):
         attr = task.attributes.get
         # Don't ship single locale fennec anymore - Bug 1408083
         if attr("locale") or attr("chunk_locales"):
             return False
-        if task.label in filtered_for_project:
-            if task.kind not in ('balrog', 'push-apk'):
-                if task.attributes.get('nightly'):
-                    return True
         if task.attributes.get('shipping_product') == 'fennec' and \
                 task.attributes.get('shipping_phase') == 'promote':
             return True
