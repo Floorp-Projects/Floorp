@@ -8,6 +8,7 @@
  */
 
 var { BrowserTabList } = require("devtools/server/actors/webbrowser");
+var { DebuggerServer } = require("devtools/server/main");
 
 var gTestPage = "data:text/html;charset=utf-8," + encodeURIComponent(
   "<title>JS Debugger BrowserTabList test page</title><body>Yo.</body>");
@@ -54,14 +55,18 @@ function checkSingleTab() {
   return gTabList.getList().then(targetActors => {
     is(targetActors.length, 1, "initial tab list: contains initial tab");
     gFirstActor = targetActors[0];
-    is(gFirstActor.url, "about:blank", "initial tab list: initial tab URL is 'about:blank'");
+    is(
+      gFirstActor.url,
+      "about:blank",
+      "initial tab list: initial tab URL is 'about:blank'"
+    );
     is(gFirstActor.title, "New Tab", "initial tab list: initial tab title is 'New Tab'");
   });
 }
 
 function addTabA() {
-  return addTab(gTestPage).then(aTab => {
-    gTabA = aTab;
+  return addTab(gTestPage).then(tab => {
+    gTabA = tab;
   });
 }
 
@@ -76,13 +81,17 @@ function testTabA() {
     info("actors: " + [...targetActors].map(a => a.url));
     gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabA opened: new tab URL");
-    is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabA opened: new tab title");
+    is(
+      gActorA.title,
+      "JS Debugger BrowserTabList test page",
+      "gTabA opened: new tab title"
+    );
   });
 }
 
 function addTabB() {
-  return addTab(gTestPage).then(aTab => {
-    gTabB = aTab;
+  return addTab(gTestPage).then(tab => {
+    gTabB = tab;
   });
 }
 
@@ -96,10 +105,10 @@ function testTabB() {
 }
 
 function removeTabA() {
-  let deferred = promise.defer();
+  const deferred = promise.defer();
 
-  once(gBrowser.tabContainer, "TabClose").then(aEvent => {
-    ok(!aEvent.detail.adoptedBy, "This was a normal tab close");
+  once(gBrowser.tabContainer, "TabClose").then(event => {
+    ok(!event.detail.adoptedBy, "This was a normal tab close");
 
     // Let the actor's TabClose handler finish first.
     executeSoon(deferred.resolve);
@@ -120,13 +129,17 @@ function testTabClosed() {
     info("actors: " + [...targetActors].map(a => a.url));
     gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabA closed: new tab URL");
-    is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabA closed: new tab title");
+    is(
+      gActorA.title,
+      "JS Debugger BrowserTabList test page",
+      "gTabA closed: new tab title"
+    );
   });
 }
 
 function addTabC() {
-  return addTab(gTestPage).then(aTab => {
-    gTabC = aTab;
+  return addTab(gTestPage).then(tab => {
+    gTabC = tab;
   });
 }
 
@@ -140,10 +153,10 @@ function testTabC() {
 }
 
 function removeTabC() {
-  let deferred = promise.defer();
+  const deferred = promise.defer();
 
-  once(gBrowser.tabContainer, "TabClose").then(aEvent => {
-    ok(aEvent.detail.adoptedBy, "This was a tab closed by moving");
+  once(gBrowser.tabContainer, "TabClose").then(event => {
+    ok(event.detail.adoptedBy, "This was a tab closed by moving");
 
     // Let the actor's TabClose handler finish first.
     executeSoon(deferred.resolve);
@@ -164,15 +177,19 @@ function testNewWindow() {
     info("actors: " + [...targetActors].map(a => a.url));
     gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabC closed: new tab URL");
-    is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabC closed: new tab title");
+    is(
+      gActorA.title,
+      "JS Debugger BrowserTabList test page",
+      "gTabC closed: new tab title"
+    );
   });
 }
 
 function removeNewWindow() {
-  let deferred = promise.defer();
+  const deferred = promise.defer();
 
-  once(gNewWindow, "unload").then(aEvent => {
-    ok(!aEvent.detail, "This was a normal window close");
+  once(gNewWindow, "unload").then(event => {
+    ok(!event.detail, "This was a normal window close");
 
     // Let the actor's TabClose handler finish first.
     executeSoon(deferred.resolve);
@@ -193,15 +210,19 @@ function testWindowClosed() {
     info("actors: " + [...targetActors].map(a => a.url));
     gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gNewWindow closed: new tab URL");
-    is(gActorA.title, "JS Debugger BrowserTabList test page", "gNewWindow closed: new tab title");
+    is(
+      gActorA.title,
+      "JS Debugger BrowserTabList test page",
+      "gNewWindow closed: new tab title"
+    );
   });
 }
 
 function removeTabB() {
-  let deferred = promise.defer();
+  const deferred = promise.defer();
 
-  once(gBrowser.tabContainer, "TabClose").then(aEvent => {
-    ok(!aEvent.detail.adoptedBy, "This was a normal tab close");
+  once(gBrowser.tabContainer, "TabClose").then(event => {
+    ok(!event.detail.adoptedBy, "This was a normal tab close");
 
     // Let the actor's TabClose handler finish first.
     executeSoon(deferred.resolve);

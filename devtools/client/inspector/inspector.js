@@ -755,11 +755,6 @@ Inspector.prototype = {
   async addRuleView({ defaultTab = "ruleview", skipQueue = false } = {}) {
     const ruleViewSidebar = this.sidebarSplitBox.startPanelContainer;
 
-    if (this.is3PaneModeEnabled || defaultTab === "ruleview") {
-      // Force the rule view panel creation by calling getPanel
-      this.getPanel("ruleview");
-    }
-
     if (this.is3PaneModeEnabled) {
       // Convert to 3 pane mode by removing the rule view from the inspector sidebar
       // and adding the rule view to the middle (in landscape/horizontal mode) or
@@ -767,6 +762,9 @@ Inspector.prototype = {
       ruleViewSidebar.style.display = "block";
 
       this.setSidebarSplitBoxState();
+
+      // Force the rule view panel creation by calling getPanel
+      this.getPanel("ruleview");
 
       await this.sidebar.removeTab("ruleview");
 
@@ -866,6 +864,7 @@ Inspector.prototype = {
     };
 
     this.sidebar = new ToolSidebar(sidebar, this, "inspector", options);
+    this.sidebar.on("select", this.onSidebarSelect);
 
     const ruleSideBar = this.panelDoc.getElementById("inspector-rules-sidebar");
     this.ruleViewSideBar = new ToolSidebar(ruleSideBar, this, "inspector", {
@@ -986,7 +985,6 @@ Inspector.prototype = {
     this.sidebar.addAllQueuedTabs();
 
     // Persist splitter state in preferences.
-    this.sidebar.on("select", this.onSidebarSelect);
     this.sidebar.on("show", this.onSidebarShown);
     this.sidebar.on("hide", this.onSidebarHidden);
     this.sidebar.on("destroy", this.onSidebarHidden);
