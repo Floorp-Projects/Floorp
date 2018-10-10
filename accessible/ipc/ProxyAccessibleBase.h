@@ -168,14 +168,13 @@ protected:
     , mHasValue(aInterfaces & Interfaces::VALUE)
     , mIsHyperLink(aInterfaces & Interfaces::HYPERLINK)
     , mIsHyperText(aInterfaces & Interfaces::HYPERTEXT)
-    , mIsSelection(aInterfaces & Interfaces::SELECTION)
   {
   }
 
   explicit ProxyAccessibleBase(DocAccessibleParent* aThisAsDoc) :
     mParent(kNoParent), mDoc(aThisAsDoc), mWrapper(0), mID(0),
     mRole(roles::DOCUMENT), mOuterDoc(false), mIsDoc(true), mHasValue(false),
-    mIsHyperLink(false), mIsHyperText(false), mIsSelection(false)
+    mIsHyperLink(false), mIsHyperText(false)
   {}
 
 protected:
@@ -205,7 +204,6 @@ public:
   const bool mHasValue: 1;
   const bool mIsHyperLink: 1;
   const bool mIsHyperText: 1;
-  const bool mIsSelection: 1;
 };
 
 extern template class ProxyAccessibleBase<ProxyAccessible>;

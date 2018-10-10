@@ -14,6 +14,7 @@ use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::PictureIdGenerator;
+use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList};
 use resource_cache::FontInstanceMap;
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
@@ -27,6 +28,7 @@ use std::time::Duration;
 
 pub struct DocumentResourceUpdates {
     pub clip_updates: ClipDataUpdateList,
+    pub prim_updates: PrimitiveDataUpdateList,
 }
 
 /// Represents the work associated to a transaction before scene building.
@@ -44,6 +46,7 @@ pub struct Transaction {
     pub notifications: Vec<NotificationRequest>,
     pub set_root_pipeline: Option<PipelineId>,
     pub render_frame: bool,
+    pub invalidate_rendered_frame: bool,
 }
 
 impl Transaction {
@@ -77,6 +80,7 @@ pub struct BuiltTransaction {
     pub scene_build_start_time: u64,
     pub scene_build_end_time: u64,
     pub render_frame: bool,
+    pub invalidate_rendered_frame: bool,
 }
 
 pub struct DisplayListUpdate {
@@ -160,12 +164,14 @@ pub enum SceneSwapResult {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct DocumentResources {
     pub clip_interner: ClipDataInterner,
+    pub prim_interner: PrimitiveDataInterner,
 }
 
 impl DocumentResources {
     fn new() -> Self {
         DocumentResources {
             clip_interner: ClipDataInterner::new(),
+            prim_interner: PrimitiveDataInterner::new(),
         }
     }
 }
@@ -334,9 +340,15 @@ impl SceneBuilder {
                     .clip_interner
                     .end_frame_and_get_pending_updates();
 
+                let prim_updates = item
+                    .doc_resources
+                    .prim_interner
+                    .end_frame_and_get_pending_updates();
+
                 doc_resource_updates = Some(
                     DocumentResourceUpdates {
                         clip_updates,
+                        prim_updates,
                     }
                 );
 
@@ -358,6 +370,7 @@ impl SceneBuilder {
             let txn = Box::new(BuiltTransaction {
                 document_id: item.document_id,
                 render_frame: item.build_frame,
+                invalidate_rendered_frame: false,
                 built_scene,
                 resource_updates: Vec::new(),
                 rasterized_blobs: Vec::new(),
@@ -433,9 +446,15 @@ impl SceneBuilder {
                     .clip_interner
                     .end_frame_and_get_pending_updates();
 
+                let prim_updates = doc
+                    .resources
+                    .prim_interner
+                    .end_frame_and_get_pending_updates();
+
                 doc_resource_updates = Some(
                     DocumentResourceUpdates {
                         clip_updates,
+                        prim_updates,
                     }
                 );
 
@@ -468,6 +487,7 @@ impl SceneBuilder {
         Box::new(BuiltTransaction {
             document_id: txn.document_id,
             render_frame: txn.render_frame,
+            invalidate_rendered_frame: txn.invalidate_rendered_frame,
             built_scene,
             rasterized_blobs,
             resource_updates: replace(&mut txn.resource_updates, Vec::new()),

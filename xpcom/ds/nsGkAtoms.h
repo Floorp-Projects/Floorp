@@ -46,8 +46,8 @@
 // that look like this:
 //
 //   GK_ATOM(a, "a", 0x01234567, nsStaticAtom, Atom)
-//   GK_ATOM(bb, "bb", 0x12345678, nsICSSPseudoElement, PseudoElementAtom)
-//   GK_ATOM(ccc, "ccc", 0x23456789, nsICSSAnonBoxPseudo, InheritingAnonBoxAtom)
+//   GK_ATOM(bb, "bb", 0x12345678, nsCSSPseudoElementStaticAtom, PseudoElementAtom)
+//   GK_ATOM(ccc, "ccc", 0x23456789, nsCSSAnonBoxPseudoStaticAtom, InheritingAnonBoxAtom)
 //
 // Comments throughout this file and nsGkAtoms.cpp show how these entries get
 // expanded by macros.
@@ -62,8 +62,8 @@
       : nsStaticAtom(aLength, aHash, aOffset) {}                               \
   };
 
-DEFINE_STATIC_ATOM_SUBCLASS(nsICSSAnonBoxPseudo)
-DEFINE_STATIC_ATOM_SUBCLASS(nsICSSPseudoElement)
+DEFINE_STATIC_ATOM_SUBCLASS(nsCSSAnonBoxPseudoStaticAtom)
+DEFINE_STATIC_ATOM_SUBCLASS(nsCSSPseudoElementStaticAtom)
 
 #undef DEFINE_STATIC_ATOM_SUBCLASS
 

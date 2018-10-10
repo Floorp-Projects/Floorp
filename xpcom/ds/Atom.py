@@ -14,12 +14,12 @@ class Atom():
 
 class PseudoElementAtom(Atom):
     def __init__(self, ident, string):
-        Atom.__init__(self, ident, string, ty="nsICSSPseudoElement")
+        Atom.__init__(self, ident, string, ty="nsCSSPseudoElementStaticAtom")
 
 
 class AnonBoxAtom(Atom):
     def __init__(self, ident, string):
-        Atom.__init__(self, ident, string, ty="nsICSSAnonBoxPseudo")
+        Atom.__init__(self, ident, string, ty="nsCSSAnonBoxPseudoStaticAtom")
 
 
 class NonInheritingAnonBoxAtom(AnonBoxAtom):

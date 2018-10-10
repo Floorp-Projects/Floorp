@@ -545,6 +545,8 @@ pub struct GlyphRasterizer {
     // - we don't have to worry about the ordering of events if a font is used on
     //   a frame where it is used (although it seems unlikely).
     fonts_to_remove: Vec<FontKey>,
+    // Defer removal of font instances, as for fonts.
+    font_instances_to_remove: Vec<FontInstance>,
 
     #[allow(dead_code)]
     next_gpu_glyph_cache_key: GpuGlyphCacheKey,
@@ -580,6 +582,7 @@ impl GlyphRasterizer {
             glyph_tx,
             workers,
             fonts_to_remove: Vec::new(),
+            font_instances_to_remove: Vec::new(),
             next_gpu_glyph_cache_key: GpuGlyphCacheKey(0),
         })
     }
@@ -595,6 +598,10 @@ impl GlyphRasterizer {
 
     pub fn delete_font(&mut self, font_key: FontKey) {
         self.fonts_to_remove.push(font_key);
+    }
+
+    pub fn delete_font_instance(&mut self, instance: &FontInstance) {
+        self.font_instances_to_remove.push(instance.clone());
     }
 
     pub fn prepare_font(&self, font: &mut FontInstance) {
@@ -624,14 +631,18 @@ impl GlyphRasterizer {
     }
 
     fn remove_dead_fonts(&mut self) {
-        if self.fonts_to_remove.is_empty() {
+        if self.fonts_to_remove.is_empty() && self.font_instances_to_remove.is_empty() {
             return
         }
 
         let fonts_to_remove = mem::replace(&mut self.fonts_to_remove, Vec::new());
+        let font_instances_to_remove = mem::replace(& mut self.font_instances_to_remove, Vec::new());
         self.font_contexts.for_each(move |mut context| {
             for font_key in &fonts_to_remove {
                 context.delete_font(font_key);
+            }
+            for instance in &font_instances_to_remove {
+                context.delete_font_instance(instance);
             }
         });
     }
@@ -641,6 +652,7 @@ impl GlyphRasterizer {
         //TODO: any signals need to be sent to the workers?
         self.pending_glyphs = 0;
         self.fonts_to_remove.clear();
+        self.font_instances_to_remove.clear();
     }
 }
 

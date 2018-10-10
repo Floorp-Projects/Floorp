@@ -60,6 +60,8 @@ pub struct Transaction {
 
     generate_frame: bool,
 
+    invalidate_rendered_frame: bool,
+
     low_priority: bool,
 }
 
@@ -73,6 +75,7 @@ impl Transaction {
             notifications: Vec::new(),
             use_scene_builder_thread: true,
             generate_frame: false,
+            invalidate_rendered_frame: false,
             low_priority: false,
         }
     }
@@ -90,6 +93,7 @@ impl Transaction {
 
     pub fn is_empty(&self) -> bool {
         !self.generate_frame &&
+            !self.invalidate_rendered_frame &&
             self.scene_ops.is_empty() &&
             self.frame_ops.is_empty() &&
             self.resource_updates.is_empty() &&
@@ -246,6 +250,16 @@ impl Transaction {
         self.generate_frame = true;
     }
 
+    /// Invalidate rendered frame. It ensure that frame will be rendered during
+    /// next frame generation. WebRender could skip frame rendering if there
+    /// is no update.
+    /// But there are cases that needs to force rendering.
+    ///  - Content of image is updated by reusing same ExternalImageId.
+    ///  - Platform requests it if pixels become stale (like wakeup from standby).
+    pub fn invalidate_rendered_frame(&mut self) {
+        self.invalidate_rendered_frame = true;
+    }
+
     /// Supply a list of animated property bindings that should be used to resolve
     /// bindings in the current display list.
     pub fn update_dynamic_properties(&mut self, properties: DynamicProperties) {
@@ -280,6 +294,7 @@ impl Transaction {
                 notifications: self.notifications,
                 use_scene_builder_thread: self.use_scene_builder_thread,
                 generate_frame: self.generate_frame,
+                invalidate_rendered_frame: self.invalidate_rendered_frame,
                 low_priority: self.low_priority,
             },
             self.payloads,
@@ -390,6 +405,7 @@ pub struct TransactionMsg {
     pub frame_ops: Vec<FrameMsg>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub generate_frame: bool,
+    pub invalidate_rendered_frame: bool,
     pub use_scene_builder_thread: bool,
     pub low_priority: bool,
 
@@ -400,6 +416,7 @@ pub struct TransactionMsg {
 impl TransactionMsg {
     pub fn is_empty(&self) -> bool {
         !self.generate_frame &&
+            !self.invalidate_rendered_frame &&
             self.scene_ops.is_empty() &&
             self.frame_ops.is_empty() &&
             self.resource_updates.is_empty() &&
@@ -414,6 +431,7 @@ impl TransactionMsg {
             resource_updates: Vec::new(),
             notifications: Vec::new(),
             generate_frame: false,
+            invalidate_rendered_frame: false,
             use_scene_builder_thread: false,
             low_priority: false,
         }
@@ -426,6 +444,7 @@ impl TransactionMsg {
             resource_updates: Vec::new(),
             notifications: Vec::new(),
             generate_frame: false,
+            invalidate_rendered_frame: false,
             use_scene_builder_thread: false,
             low_priority: false,
         }

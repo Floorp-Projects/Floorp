@@ -59,6 +59,8 @@ enum class CreateContextFlags : uint8_t {
     PREFER_ROBUSTNESS = 1 << 5,
 
     HIGH_POWER = 1 << 6,
+
+    PROVOKING_VERTEX_DONT_CARE = 1 << 7,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CreateContextFlags)
 

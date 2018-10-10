@@ -280,6 +280,8 @@ AsyncImagePipelineManager::UpdateImageKeys(const wr::Epoch& aEpoch,
   }
 
   if (aPipeline->mWrTextureWrapper) {
+    // Force frame rendering, since WebRenderTextureHost update its data outside of WebRender.
+    aMaybeFastTxn.InvalidateRenderedFrame();
     HoldExternalImage(aPipelineId, aEpoch, aPipeline->mWrTextureWrapper);
   }
 
