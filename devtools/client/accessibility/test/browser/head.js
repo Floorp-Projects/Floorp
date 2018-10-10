@@ -178,33 +178,6 @@ async function checkTreeState(doc, expected) {
 }
 
 /**
- * Check if relations object matches what is expected. Note: targets are matched by their
- * name and role.
- * @param  {Object} relations  Relations to test.
- * @param  {Object} expected   Expected relations.
- * @return {Boolean}           True if relation types and their targers match what is
- *                             expected.
- */
-function relationsMatch(relations, expected) {
-  for (const relationType in expected) {
-    let expTargets = expected[relationType];
-    expTargets = Array.isArray(expTargets) ? expTargets : [expTargets];
-
-    let targets = relations[relationType];
-    targets = Array.isArray(targets) ? targets : [targets];
-
-    for (const index in expTargets) {
-      if (expTargets[index].name !== targets[index].name ||
-          expTargets[index].role !== targets[index].role) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-/**
  * Check the state of the accessibility sidebar.
  * @param  {Object} store         React store for the panel (includes store for
  *                                the sidebar).
@@ -219,11 +192,7 @@ async function checkSidebarState(store, expectedState) {
         continue;
       }
 
-      if (key === "relations") {
-        if (!relationsMatch(details.relations, expected)) {
-          return false;
-        }
-      } else if (EXPANDABLE_PROPS.includes(key)) {
+      if (EXPANDABLE_PROPS.includes(key)) {
         if (JSON.stringify(details.accessible[key]) !== JSON.stringify(expected)) {
           return false;
         }
@@ -235,54 +204,6 @@ async function checkSidebarState(store, expectedState) {
     ok(true, "Sidebar state is correct.");
     return true;
   });
-}
-
-/**
- * Focus accessibility properties tree in the a11y inspector sidebar. If focused for the
- * first time, the tree will select first rendered node as defult selection for keyboard
- * purposes.
- *
- * @param  {Document} doc  accessibility inspector panel document.
- */
-async function focusAccessibleProperties(doc) {
-  const tree = doc.querySelector(".tree");
-  if (doc.activeElement !== tree) {
-    tree.focus();
-    await BrowserTestUtils.waitForCondition(() =>
-      tree.querySelector(".node.focused"), "Tree selected.");
-  }
-}
-
-/**
- * Select accessibility property in the sidebar.
- * @param  {Document} doc  accessibility inspector panel document.
- * @param  {String} id     id of the property to be selected.
- * @return {DOMNode}       Node that corresponds to the selected accessibility property.
- */
-async function selectProperty(doc, id) {
-  const win = doc.defaultView;
-  let selected = false;
-  let node;
-
-  await focusAccessibleProperties(doc);
-  await BrowserTestUtils.waitForCondition(() => {
-    node = doc.getElementById(`${id}`);
-    if (node) {
-      if (selected) {
-        return node.firstChild.classList.contains("focused");
-      }
-
-      EventUtils.sendMouseEvent({ type: "click" }, node, win);
-      selected = true;
-    } else {
-      const tree = doc.querySelector(".tree");
-      tree.scrollTop = parseFloat(win.getComputedStyle(tree).height);
-    }
-
-    return false;
-  });
-
-  return node;
 }
 
 /**

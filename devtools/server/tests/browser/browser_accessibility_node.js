@@ -48,24 +48,6 @@ add_task(async function() {
     role: "text leaf"
   });
 
-  info("Relations");
-  const labelNode = await walker.querySelector(walker.rootNode, "#label");
-  const controlNode = await walker.querySelector(walker.rootNode, "#control");
-  const labelAccessibleFront = await a11yWalker.getAccessibleFor(labelNode);
-  const controlAccessibleFront = await a11yWalker.getAccessibleFor(controlNode);
-  const docAccessibleFront = await a11yWalker.getAccessibleFor(walker.rootNode);
-  const relations = await labelAccessibleFront.getRelations();
-  is(relations.length, 2, "Accessible front has a correct number of relations");
-  is(relations[0].type, "label for", "Label has a label for relation");
-  is(relations[0].targets.length, 1, "Label is a label for one target");
-  is(relations[0].targets[0], controlAccessibleFront,
-     "Label is a label for control accessible front");
-  is(relations[1].type, "containing document",
-     "Label has a containing document relation");
-  is(relations[1].targets.length, 1, "Label is contained by just one document");
-  is(relations[1].targets[0], docAccessibleFront,
-     "Label's containing document is a root document");
-
   await accessibility.disable();
   await waitForA11yShutdown();
   await target.destroy();

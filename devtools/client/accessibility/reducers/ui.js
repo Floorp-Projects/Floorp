@@ -132,14 +132,9 @@ function onCanBeEnabledChange(state, { canBeEnabled }) {
  * @param  {Object}  action  Redux action object
  * @return {Object}  updated state
  */
-function onReset(state, { accessibility, supports }) {
+function onReset(state, { accessibility }) {
   const { enabled, canBeDisabled, canBeEnabled } = accessibility;
-  const newState = { ...state, enabled, canBeDisabled, canBeEnabled };
-  if (supports) {
-    newState.supports = supports;
-  }
-
-  return newState;
+  return Object.assign({}, state, { enabled, canBeDisabled, canBeEnabled });
 }
 
 /**

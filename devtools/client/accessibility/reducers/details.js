@@ -33,18 +33,13 @@ function details(state = getInitialState(), action) {
  * @return {Object}  updated state
  */
 function onUpdateDetails(state, action) {
-  const { accessible, response, error } = action;
+  const { accessible, response: DOMNode, error } = action;
   if (error) {
     console.warn("Error fetching DOMNode for accessible", accessible, error);
     return state;
   }
 
-  const [ DOMNode, relationObjects ] = response;
-  const relations = {};
-  relationObjects.forEach(({ type, targets }) => {
-    relations[type] = targets.length === 1 ? targets[0] : targets;
-  });
-  return { accessible, DOMNode, relations };
+  return { accessible, DOMNode };
 }
 
 exports.details = details;

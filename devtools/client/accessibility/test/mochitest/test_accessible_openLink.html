@@ -59,7 +59,7 @@ window.onload = async function() {
     let URL = "http://example.com";
     const mockStore = createStore((state, action) =>
       action ? { ...state, ...action } : state,
-      { details: { DOMNode: {}, accessible: { value: URL } }, ui: { supports: {} } });
+      { details: { DOMNode: {}, accessible: { value: URL } } });
     const provider = createElement(Provider, { store: mockStore }, a);
     const accessible = ReactDOM.render(provider, window.document.body);
     ok(accessible, "Should be able to mount Accessible instances");
