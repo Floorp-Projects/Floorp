@@ -254,12 +254,6 @@ class VirtualenvManager(object):
             search path. e.g. "objdir:build" will add $topobjdir/build to the
             search path.
 
-        windows -- This denotes that the action should only be taken when run
-            on Windows.
-
-        !windows -- This denotes that the action should only be taken when run
-            on non-Windows systems.
-
         Note that the Python interpreter running this function should be the
         one from the virtualenv. If it is the system Python or if the
         environment is not configured properly, packages could be installed
@@ -328,13 +322,6 @@ class VirtualenvManager(object):
                         'because optional. (%s)' % ':'.join(package),
                         file=self.log_handle)
                     return False
-
-            if package[0] in ('windows', '!windows'):
-                for_win = not package[0].startswith('!')
-                is_win = sys.platform == 'win32'
-                if is_win == for_win:
-                    handle_package(package[1:])
-                return True
 
             if package[0] == 'objdir':
                 assert len(package) == 2
