@@ -35,6 +35,7 @@
 #include "nsCOMPtr.h"
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
@@ -5118,6 +5119,95 @@ EventStateManager::DispatchClickEvents(nsIPresShell* aPresShell,
   }
 
   return rv;
+}
+
+nsresult
+EventStateManager::HandleMiddleClickPaste(nsIPresShell* aPresShell,
+                                          WidgetMouseEvent* aMouseEvent,
+                                          nsEventStatus* aStatus,
+                                          TextEditor* aTextEditor)
+{
+  MOZ_ASSERT(aPresShell);
+  MOZ_ASSERT(aMouseEvent);
+  MOZ_ASSERT(aMouseEvent->mMessage == eMouseClick &&
+             aMouseEvent->button == WidgetMouseEventBase::eMiddleButton);
+  MOZ_ASSERT(aStatus);
+  MOZ_ASSERT(aTextEditor);
+
+  if (*aStatus == nsEventStatus_eConsumeNoDefault) {
+    // Already consumed.  Do nothing.
+    return NS_OK;
+  }
+
+  RefPtr<Selection> selection = aTextEditor->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Move selection to the clicked point.
+  nsCOMPtr<nsIContent> container;
+  int32_t offset;
+  nsLayoutUtils::GetContainerAndOffsetAtEvent(aPresShell, aMouseEvent,
+                                              getter_AddRefs(container),
+                                              &offset);
+  if (container) {
+    // XXX If readonly or disabled <input> or <textarea> in contenteditable
+    //     designMode editor is clicked, the point is in the editor.
+    //     However, outer HTMLEditor and Selection should handle it.
+    //     So, in such case, Selection::Collapse() will fail.
+    DebugOnly<nsresult> rv = selection->Collapse(container, offset);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to collapse Selection at middle clicked");
+  }
+
+  int32_t clipboardType = nsIClipboard::kGlobalClipboard;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIClipboard> clipboardService =
+    do_GetService("@mozilla.org/widget/clipboard;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    bool selectionSupported;
+    rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
+    if (NS_SUCCEEDED(rv) && selectionSupported) {
+      clipboardType = nsIClipboard::kSelectionClipboard;
+    }
+  }
+
+  // Check if the editor is still the good target to paste.
+  if (aTextEditor->Destroyed() ||
+      aTextEditor->IsReadonly() ||
+      aTextEditor->IsDisabled()) {
+    // XXX Should we consume the event when the editor is readonly and/or
+    //     disabled?
+    return NS_OK;
+  }
+
+  // The selection may have been modified during reflow.  Therefore, we
+  // should adjust event target to pass IsAcceptableInputEvent().
+  nsRange* range = selection->GetRangeAt(0);
+  if (!range) {
+    return NS_OK;
+  }
+  WidgetMouseEvent mouseEvent(*aMouseEvent);
+  mouseEvent.mOriginalTarget = range->GetStartContainer();
+  if (NS_WARN_IF(!mouseEvent.mOriginalTarget) ||
+      !aTextEditor->IsAcceptableInputEvent(&mouseEvent)) {
+    return NS_OK;
+  }
+
+  // If Control key is pressed, we should paste clipboard content as
+  // quotation.  Otherwise, paste it as is.
+  if (aMouseEvent->IsControl()) {
+    DebugOnly<nsresult> rv =
+      aTextEditor->PasteAsQuotationAsAction(clipboardType);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste as quotation");
+  } else {
+    DebugOnly<nsresult> rv =
+      aTextEditor->PasteAsAction(clipboardType);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste");
+  }
+  *aStatus = nsEventStatus_eConsumeNoDefault;
+
+  return NS_OK;
 }
 
 nsIFrame*
