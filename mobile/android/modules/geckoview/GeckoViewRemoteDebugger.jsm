@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
   return DebuggerServer;
 });
 
-GeckoViewUtils.initLogging("GeckoView.RemoteDebugger", this);
+GeckoViewUtils.initLogging("RemoteDebugger", this);
 
 var GeckoViewRemoteDebugger = {
   observe(aSubject, aTopic, aData) {
