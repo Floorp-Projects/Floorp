@@ -73,7 +73,7 @@ protected:
   virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent);
   virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) { return NS_OK; }
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult MouseClick(dom::MouseEvent* aMouseEvent);
+  virtual nsresult MouseClick(WidgetMouseEvent* aMouseClickEvent);
   nsresult Focus(InternalFocusEvent* aFocusEvent);
   nsresult Blur(InternalFocusEvent* aBlurEvent);
   MOZ_CAN_RUN_SCRIPT nsresult DragEnter(dom::DragEvent* aDragEvent);
