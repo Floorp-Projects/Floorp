@@ -42,6 +42,7 @@ exports.ORDERED_PROPS = [
   "childCount",
   "indexInParent",
   "states",
+  "relations",
   "attributes"
 ];
 

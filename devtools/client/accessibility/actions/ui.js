@@ -14,8 +14,8 @@ const {
 /**
  * Reset accessibility panel UI.
  */
-exports.reset = accessibility =>
-  dispatch => dispatch({ accessibility, type: RESET });
+exports.reset = (accessibility, supports) =>
+  dispatch => dispatch({ accessibility, supports, type: RESET });
 
 /**
  * Update a "canBeDisabled" flag for accessibility service.
