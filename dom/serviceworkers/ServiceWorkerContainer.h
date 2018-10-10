@@ -15,6 +15,8 @@ class nsIGlobalWindow;
 namespace mozilla {
 namespace dom {
 
+class ClientPostMessageArgs;
+struct MessageEventInit;
 class Promise;
 struct RegistrationOptions;
 class ServiceWorker;
@@ -64,7 +66,19 @@ public:
 
   IMPL_EVENT_HANDLER(controllerchange)
   IMPL_EVENT_HANDLER(error)
-  IMPL_EVENT_HANDLER(message)
+  
+  // Almost a manual expansion of IMPL_EVENT_HANDLER(message), but
+  // with the additional StartMessages() when setting the handler, as
+  // required by the spec.
+  inline mozilla::dom::EventHandlerNonNull* GetOnmessage()
+  {
+    return GetEventHandler(nsGkAtoms::onmessage);
+  }
+  inline void SetOnmessage(mozilla::dom::EventHandlerNonNull* aCallback)
+  {
+    SetEventHandler(nsGkAtoms::onmessage, aCallback);
+    StartMessages();
+  }
 
   static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
 
@@ -89,6 +103,9 @@ public:
   already_AddRefed<Promise>
   GetRegistrations(ErrorResult& aRv);
 
+  void
+  StartMessages();
+
   Promise*
   GetReady(ErrorResult& aRv);
 
@@ -103,6 +120,9 @@ public:
   // event.
   void
   ControllerChanged(ErrorResult& aRv);
+
+  void
+  ReceiveMessage(const ClientPostMessageArgs& aArgs);
 
 private:
   ServiceWorkerContainer(nsIGlobalObject* aGlobal,
@@ -121,6 +141,27 @@ private:
   GetGlobalIfValid(ErrorResult& aRv,
                    const std::function<void(nsIDocument*)>&& aStorageFailureCB = nullptr) const;
 
+  struct ReceivedMessage;
+
+  // Dispatch a Runnable that dispatches the given message on this
+  // object. When the owner of this object is a Window, the Runnable
+  // is dispatched on the corresponding TabGroup.
+  void
+  EnqueueReceivedMessageDispatch(RefPtr<ReceivedMessage> aMessage);
+
+  template <typename F>
+  void
+  RunWithJSContext(F&& aCallable);
+
+  void
+  DispatchMessage(RefPtr<ReceivedMessage> aMessage);
+
+  static bool
+  FillInMessageEventInit(JSContext* aCx,
+                         nsIGlobalObject* aGlobal,
+                         ReceivedMessage& aMessage,
+                         MessageEventInit& aInit);
+
   RefPtr<Inner> mInner;
 
   // This only changes when a worker hijacks everything in its scope by calling
@@ -129,6 +170,13 @@ private:
 
   RefPtr<Promise> mReadyPromise;
   MozPromiseRequestHolder<ServiceWorkerRegistrationPromise> mReadyPromiseHolder;
+
+  // Set after StartMessages() has been called.
+  bool mMessagesStarted = false;
+
+  // Queue holding messages posted from service worker as long as
+  // StartMessages() hasn't been called.
+  nsTArray<RefPtr<ReceivedMessage>> mPendingMessages;
 };
 
 } // namespace dom
