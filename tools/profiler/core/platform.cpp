@@ -69,6 +69,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "ProfilerMarkerPayload.h"
+#include "memory_hooks.h"
 #include "shared-libraries.h"
 #include "prdtoa.h"
 #include "prtime.h"
