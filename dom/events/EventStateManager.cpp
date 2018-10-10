@@ -5008,8 +5008,26 @@ EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aMouseUpEvent,
     targetFrame = aOverrideClickTarget->GetPrimaryFrame();
   }
 
-  return aPresShell->HandleEventWithTarget(&event, targetFrame,
-                                           target, aStatus);
+  // Use local event status for each click event dispatching since it'll be
+  // cleared by EventStateManager::PreHandleEvent().  Therefore, dispatching
+  // an event means that previous event status will be ignored.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv = aPresShell->HandleEventWithTarget(&event, targetFrame,
+                                                  target, &status);
+  // If current status is nsEventStatus_eConsumeNoDefault, we don't need to
+  // overwrite it.
+  if (*aStatus == nsEventStatus_eConsumeNoDefault) {
+    return rv;
+  }
+  // If new status is nsEventStatus_eConsumeNoDefault or
+  // nsEventStatus_eConsumeDoDefault, use it.
+  if (status == nsEventStatus_eConsumeNoDefault ||
+      status == nsEventStatus_eConsumeDoDefault) {
+    *aStatus = status;
+    return rv;
+  }
+  // Otherwise, keep the original status.
+  return rv;
 }
 
 nsresult
