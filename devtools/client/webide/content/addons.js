@@ -37,9 +37,9 @@ function BuildUI() {
     progress.removeAttribute("value");
     li.setAttribute("status", adbAddon.status);
     status.textContent = Strings.GetStringFromName("addons_status_" + adbAddon.status);
-    if (adbAddon.status == ADB_ADDON_STATES.INSTALLED) {
+    if (adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
       RuntimeScanners.add(adbScanner);
-    } else if (adbAddon.status == ADB_ADDON_STATES.UNINSTALLED) {
+    } else if (adbAddon.status === ADB_ADDON_STATES.UNINSTALLED) {
       RuntimeScanners.remove(adbScanner);
     }
   }
