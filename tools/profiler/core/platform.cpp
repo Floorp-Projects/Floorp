@@ -295,6 +295,23 @@ public:
       [&](UniquePtr<RegisteredThread>& rt) { return rt.get() == aRegisteredThread; });
   }
 
+  PS_GET(const nsTArray<BaseProfilerCount*>&, Counters)
+
+  static void AppendCounter(PSLockRef, BaseProfilerCount* aCounter)
+  {
+    // we don't own the counter; they may be stored in static objects
+    sInstance->mCounters.AppendElement(aCounter);
+  }
+
+  static void RemoveCounter(PSLockRef, BaseProfilerCount* aCounter)
+  {
+    // we may be called to remove a counter after the profiler is stopped or
+    // late in shutdown.
+    if (sInstance) {
+      sInstance->mCounters.RemoveElement(aCounter);
+    }
+  }
+
 #ifdef USE_LUL_STACKWALK
   static lul::LUL* Lul(PSLockRef) { return sInstance->mLul.get(); }
   static void SetLul(PSLockRef, UniquePtr<lul::LUL> aLul)
@@ -313,6 +330,9 @@ private:
   // Info on all the registered threads.
   // ThreadIds in mRegisteredThreads are unique.
   nsTArray<UniquePtr<RegisteredThread>> mRegisteredThreads;
+
+  // Non-owning pointers to all active counters
+  nsTArray<BaseProfilerCount*> mCounters;
 
 #ifdef USE_LUL_STACKWALK
   // LUL's state. Null prior to the first activation, non-null thereafter.
@@ -3300,6 +3320,24 @@ profiler_feature_active(uint32_t aFeature)
 
   // This function is hot enough that we use RacyFeatures, not ActivePS.
   return RacyFeatures::IsActiveWithFeature(aFeature);
+}
+
+void
+profiler_add_sampled_counter(BaseProfilerCount* aCounter)
+{
+  DEBUG_LOG("profiler_add_sampled_counter(%s)", aCounter->mLabel);
+  PSAutoLock lock(gPSMutex);
+  CorePS::AppendCounter(lock, aCounter);
+}
+
+void
+profiler_remove_sampled_counter(BaseProfilerCount* aCounter)
+{
+  DEBUG_LOG("profiler_remove_sampled_counter(%s)", aCounter->mLabel);
+  PSAutoLock lock(gPSMutex);
+  // Note: we don't enforce a final sample, though we could do so if the
+  // profiler was active
+  CorePS::RemoveCounter(lock, aCounter);
 }
 
 ProfilingStack*
