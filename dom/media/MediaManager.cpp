@@ -2881,12 +2881,19 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
     uint32_t audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mAudio)) {
-      if (audioType == MediaSourceEnum::Microphone &&
-          Preferences::GetBool("media.getusermedia.microphone.deny", false)) {
-        audioPerm = nsIPermissionManager::DENY_ACTION;
+      if (audioType == MediaSourceEnum::Microphone) {
+        if (Preferences::GetBool("media.getusermedia.microphone.deny", false) ||
+            !dom::FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                                       NS_LITERAL_STRING("microphone"))) {
+          audioPerm = nsIPermissionManager::DENY_ACTION;
+        } else {
+          rv = permManager->TestExactPermissionFromPrincipal(
+            principal, "microphone", &audioPerm);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       } else {
         rv = permManager->TestExactPermissionFromPrincipal(
-          principal, "microphone", &audioPerm);
+          principal, "screen", &audioPerm);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -4162,9 +4169,13 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
   uint32_t audio = nsIPermissionManager::UNKNOWN_ACTION;
   uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
   {
-    rv = mgr->TestExactPermissionFromPrincipal(principal, "microphone", &audio);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
+    if (!dom::FeaturePolicyUtils::IsFeatureAllowed(doc, NS_LITERAL_STRING("microphone"))) {
+      audio = nsIPermissionManager::DENY_ACTION;
+    } else {
+      rv = mgr->TestExactPermissionFromPrincipal(principal, "microphone", &audio);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
     }
 
     if (!dom::FeaturePolicyUtils::IsFeatureAllowed(doc,
