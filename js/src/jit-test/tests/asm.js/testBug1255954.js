@@ -1,8 +1,6 @@
-// |jit-test| slow
+// |jit-test| slow; skip-if: !('oomTest' in this)
 
 const USE_ASM = '"use asm";';
-if (!('oomTest' in this))
-    quit();
 function asmCompile() {
     var f = Function.apply(null, arguments);
 }

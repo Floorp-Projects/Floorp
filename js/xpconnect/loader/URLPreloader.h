@@ -319,7 +319,10 @@ private:
     nsCOMPtr<nsIChromeRegistry> mChromeReg;
     nsCOMPtr<nsIFile> mProfD;
 
-    nsCOMPtr<nsIThread> mReaderThread;
+    // Note: We use a RefPtr rather than an nsCOMPtr here because the
+    // AssertNoQueryNeeded checks done by getter_AddRefs happen at a time that
+    // violate data access invariants.
+    RefPtr<nsIThread> mReaderThread;
 
     // A map of URL entries which have were either read this session, or read
     // from the last session's cache file.

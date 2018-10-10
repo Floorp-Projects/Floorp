@@ -2,9 +2,6 @@
 // of type objects has no effect, and that mutating
 // the prototypes of typed objects is an error.
 
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
-
 load(libdir + "asserts.js");
 
 var {StructType, uint32, Object, Any, objectType} = TypedObject;

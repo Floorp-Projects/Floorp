@@ -1,5 +1,4 @@
-// |jit-test| --ion-eager;
-if (typeof Symbol !== "function") quit(0);
+// |jit-test| --ion-eager
 
 var x
 (function() {

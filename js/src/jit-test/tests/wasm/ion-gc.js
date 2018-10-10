@@ -1,9 +1,7 @@
-const options = getJitCompilerOptions();
-
+// |jit-test| skip-if: !getJitCompilerOptions()['baseline.enable']
 // These tests need at least baseline to make sense.
-if (!options['baseline.enable'])
-    quit();
 
+const options = getJitCompilerOptions();
 const TRIGGER = options['baseline.warmup.trigger'] + 10;
 const ITER = 2 * TRIGGER;
 const EXCEPTION_ITER = TRIGGER + 5;

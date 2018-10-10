@@ -1,5 +1,5 @@
-if (helperThreadCount() === 0)
-    quit();
+// |jit-test| skip-if: helperThreadCount() === 0
+
 gcparam('allocationThreshold', 1);
 setGCCallback({
     action: "majorGC",

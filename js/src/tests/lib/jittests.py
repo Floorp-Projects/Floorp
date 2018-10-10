@@ -146,8 +146,13 @@ class JitTest:
         # Exit status or error output.
         self.expect_crash = False
         self.is_module = False
+        self.is_binast = False
         # Reflect.stringify implementation to test
         self.test_reflect_stringify = None
+
+        # Skip-if condition. We don't have a xulrunner, but we can ask the shell
+        # directly.
+        self.skip_if_cond = ''
 
         # Expected by the test runner. Always true for jit-tests.
         self.enable = True
@@ -172,6 +177,8 @@ class JitTest:
         t.test_reflect_stringify = self.test_reflect_stringify
         t.enable = True
         t.is_module = self.is_module
+        t.is_binast = self.is_binast
+        t.skip_if_cond = self.skip_if_cond
         return t
 
     def copy_and_extend_jitflags(self, variant):
@@ -193,6 +200,9 @@ class JitTest:
         return [self.copy_and_extend_jitflags(v) for v in variants]
 
     COOKIE = '|jit-test|'
+
+    # We would use 500019 (5k19), but quit() only accepts values up to 127, due to fuzzers
+    SKIPPED_EXIT_STATUS = 59
     CacheDir = JS_CACHE_DIR
     Directives = {}
 
@@ -225,7 +235,20 @@ class JitTest:
                 dir_meta = cls.find_directives(meta_file_name)
             cls.Directives[dir_name] = dir_meta
 
-        meta = cls.find_directives(path)
+        filename, file_extension = os.path.splitext(path)
+        if file_extension == '.binjs':
+            # BinAST does not have an inline comment format, so it's hard
+            # to parse file-by-file directives. Allow foo.binjs to use foo.dir
+            # as an adjacent file to specify.
+            meta_file_name = filename + '.dir'
+            if os.path.exists(meta_file_name):
+                meta = cls.find_directives(meta_file_name)
+            else:
+                meta = ''
+            test.is_binast = True
+        else:
+            meta = cls.find_directives(path)
+
         if meta != '' or dir_meta != '':
             meta = meta + dir_meta
             parts = meta.split(';')
@@ -240,7 +263,12 @@ class JitTest:
                         test.expect_error = value
                     elif name == 'exitstatus':
                         try:
-                            test.expect_status = int(value, 0)
+                            status = int(value, 0)
+                            if status == test.SKIPPED_EXIT_STATUS:
+                                print("warning: jit-tests uses {} as a sentinel"
+                                      " return value {}", test.SKIPPED_EXIT_STATUS, path)
+                            else:
+                                test.expect_status = status
                         except ValueError:
                             print("warning: couldn't parse exit status"
                                   " {}".format(value))
@@ -253,6 +281,11 @@ class JitTest:
                                   " {}".format(value))
                     elif name == 'include':
                         test.other_includes.append(value)
+                    elif name == 'skip-if':
+                        # Ensure that skip-ifs are composable
+                        if test.skip_if_cond:
+                            test.skip_if_cond += " || "
+                        test.skip_if_cond += "({})".format(value)
                     else:
                         print('{}: warning: unrecognized |jit-test| attribute'
                               ' {}'.format(path, part))
@@ -337,9 +370,15 @@ class JitTest:
             cmd += ['-e', expr]
         for inc in self.other_includes:
             cmd += ['-f', libdir + inc]
+        if self.skip_if_cond:
+            cmd += ['-e', "if ({}) quit({})".format(self.skip_if_cond, self.SKIPPED_EXIT_STATUS)]
         if self.is_module:
             cmd += ['--module-load-path', moduledir]
             cmd += ['--module', path]
+        elif self.is_binast:
+            # In builds with BinAST, this will run the test file. In builds without,
+            # It's a no-op and the tests will silently pass.
+            cmd += ['-B', path]
         elif self.test_reflect_stringify is None:
             cmd += ['-f', path]
         else:
@@ -369,7 +408,7 @@ def find_tests(substring=None):
         if dirpath == '.':
             continue
         for filename in filenames:
-            if not filename.endswith('.js'):
+            if not (filename.endswith('.js') or filename.endswith('.binjs')):
                 continue
             if filename in ('shell.js', 'browser.js'):
                 continue
@@ -420,6 +459,11 @@ def run_test_remote(test, device, prefix, options):
 
 
 def check_output(out, err, rc, timed_out, test, options):
+    # Allow skipping to compose with other expected results
+    if test.skip_if_cond:
+        if rc == test.SKIPPED_EXIT_STATUS:
+            return True
+
     if timed_out:
         if os.path.normpath(test.relpath_tests).replace(os.sep, '/') \
                 in options.ignore_timeouts:

@@ -1,7 +1,9 @@
+// |jit-test| skip-if: !isAsmJSCompilationAvailable()
+
 load(libdir + "asm.js");
 
 setCachingEnabled(true);
-if (!isAsmJSCompilationAvailable() || !isCachingEnabled())
+if (!isCachingEnabled())
     quit();
 
 // Test Latin1 and TwoByte PropertyName serialization.

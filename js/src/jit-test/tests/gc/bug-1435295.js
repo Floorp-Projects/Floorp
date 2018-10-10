@@ -1,7 +1,4 @@
-if (helperThreadCount() === 0)
-    quit();
-if (!('oomTest' in this))
-    quit();
+// |jit-test| skip-if: helperThreadCount() === 0 || !('oomTest' in this)
 
 oomTest(new Function(`function execOffThread(source) {
     offThreadCompileModule(source);

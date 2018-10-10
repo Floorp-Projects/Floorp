@@ -1,5 +1,4 @@
-if (!this.gczeal || !WebAssembly.Global)
-    quit();
+// |jit-test| skip-if: !this.gczeal || !WebAssembly.Global
 
 gczeal(9, 10);
 function wasmEvalText(str, imports) {

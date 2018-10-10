@@ -1,4 +1,4 @@
-// |jit-test| slow;
+// |jit-test| slow; skip-if: !this.SharedArrayBuffer
 //
 // This is for testing inlining behavior in the jits.
 //
@@ -13,9 +13,6 @@
 // Then postprocess with iongraph and verify (by inspecting MIR late in the pipeline)
 // that it contains instructions like "typedarraylength", "loadtypedarrayelement",
 // and "storetypedarrayelement".
-
-if (!this.SharedArrayBuffer)
-    quit();
 
 function f(ta) {
     return (ta[2] = ta[0] + ta[1] + ta.length);

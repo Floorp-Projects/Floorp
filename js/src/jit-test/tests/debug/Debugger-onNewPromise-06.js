@@ -1,6 +1,4 @@
 // Resumption values from onNewPromise handlers are disallowed.
-if (!('Promise' in this))
-    quit(0);
 
 load(libdir + 'asserts.js');
 
