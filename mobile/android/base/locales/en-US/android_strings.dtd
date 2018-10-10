@@ -901,3 +901,6 @@ Picture-in-picture mini window -->
 <!ENTITY leanplum_default_notifications_channel "&brandShortName; Push notifications">
 <!ENTITY updater_notification_channel "App updates">
 <!ENTITY synced_tabs_notification_channel "Synced tabs">
+<!-- LOCALIZATION NOTE (site_notifications_channel): This is for system notifications displayed by
+web sites through the HTML Notifications API. -->
+<!ENTITY site_notifications_channel "Site notifications">
