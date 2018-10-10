@@ -7,7 +7,7 @@ buildscript {
     ext.kotlin_version = '1.2.71'
     ext.geckoview_revision = '33bec02bb81f303b8e3d22586b9e67690e939dbb'
     ext.geckoview_version = '62.0.3.20181001191808' // GeckoView 62 RelBranch from 2018.10.01
-    ext.spotbugs_version = '3.1.2'
+    ext.spotbugs_version = '3.1.4'
     ext.mozilla_components_version = '0.26.0'
 
     repositories {
@@ -19,7 +19,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.1.4'
         classpath 'org.ajoberstar:grgit:1.5.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin:1.6.1"
+        classpath "gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin:1.6.4"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
