@@ -48,4 +48,8 @@ void f() {
 
   if (b == exp) {}
   if (exp == b) {}
+
+  char* ptr;
+  // Shouldn't trigger a checker warning since we are using AllowPointerConditions
+  if (ptr) {}
 }

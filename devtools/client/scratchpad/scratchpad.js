@@ -1285,7 +1285,7 @@ var Scratchpad = {
 
       // Print out menuitems with the most recent file first.
       for (let i = filePaths.length - 1; i >= 0; --i) {
-        const menuitem = document.createElement("menuitem");
+        const menuitem = document.createXULElement("menuitem");
         menuitem.setAttribute("type", "radio");
         menuitem.setAttribute("label", filePaths[i]);
 
@@ -1298,8 +1298,8 @@ var Scratchpad = {
         recentFilesPopup.appendChild(menuitem);
       }
 
-      recentFilesPopup.appendChild(document.createElement("menuseparator"));
-      const clearItems = document.createElement("menuitem");
+      recentFilesPopup.appendChild(document.createXULElement("menuseparator"));
+      const clearItems = document.createXULElement("menuitem");
       clearItems.setAttribute("id", "sp-menu-clear_recent");
       clearItems.setAttribute("label",
                               this.strings

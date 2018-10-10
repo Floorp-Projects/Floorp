@@ -7,6 +7,9 @@
 <script>
 
 SpecialPowers.wrap(document).userInteractionForTesting();
+if (window.location.search == "?messageme") {
+  window.opener.postMessage("done", "*");
+}
 window.close();
 
 </script>
