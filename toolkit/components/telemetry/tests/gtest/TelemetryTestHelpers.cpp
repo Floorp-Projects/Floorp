@@ -4,9 +4,9 @@
 
 #include "TelemetryTestHelpers.h"
 
+#include "core/TelemetryCommon.h"
 #include "gtest/gtest.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "core/TelemetryCommon.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;

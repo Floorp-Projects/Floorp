@@ -13,15 +13,14 @@
 #ifndef TelemetryIOInterposeObserver_h__
 #define TelemetryIOInterposeObserver_h__
 
+#include "core/TelemetryCommon.h"
 #include "jsapi.h"
-#include "nsTArray.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
+#include "mozilla/IOInterposer.h"
 #include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
-
-#include "core/TelemetryCommon.h"
-#include "mozilla/IOInterposer.h"
+#include "nsHashKeys.h"
+#include "nsTArray.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 namespace Telemetry {

@@ -613,7 +613,6 @@
           <menuitem label="5" value="5"/>
           <menuitem label="6" value="6"/>
           <menuitem label="7" value="7"/>
-          <menuitem label="8" value="8"/>
         </menupopup>
       </menulist>
     </hbox>

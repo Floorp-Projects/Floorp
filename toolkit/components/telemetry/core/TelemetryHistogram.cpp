@@ -4,17 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "TelemetryHistogram.h"
+
+#include <limits>
+#include "base/histogram.h"
+#include "ipc/TelemetryIPCAccumulator.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/GCAPI.h"
-#include "nsString.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
-#include "nsBaseHashtable.h"
-#include "nsClassHashtable.h"
-#include "nsITelemetry.h"
-#include "nsPrintfCString.h"
-
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Atomics.h"
@@ -22,16 +19,16 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
-
+#include "nsBaseHashtable.h"
+#include "nsClassHashtable.h"
+#include "nsString.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
+#include "nsITelemetry.h"
+#include "nsPrintfCString.h"
 #include "TelemetryCommon.h"
-#include "TelemetryHistogram.h"
 #include "TelemetryHistogramNameMap.h"
 #include "TelemetryScalar.h"
-#include "ipc/TelemetryIPCAccumulator.h"
-
-#include "base/histogram.h"
-
-#include <limits>
 
 using base::Histogram;
 using base::BooleanHistogram;

@@ -19,7 +19,7 @@
 #include "mozilla/ThreadLocal.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/DebugOnly.h"
+#include "mozilla/Unused.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsExceptionHandler.h"
@@ -277,6 +277,7 @@ Interceptor::Interceptor(IInterceptorSink* aSink)
 {
   static const bool kHasTls = tlsCreatingStdMarshal.init();
   MOZ_ASSERT(kHasTls);
+  Unused << kHasTls;
 
   MOZ_ASSERT(aSink);
   RefPtr<IWeakReference> weakRef;
