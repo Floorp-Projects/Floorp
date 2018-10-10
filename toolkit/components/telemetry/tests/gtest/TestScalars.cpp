@@ -3,17 +3,16 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+#include "core/TelemetryScalar.h"
 #include "gtest/gtest.h"
-
 #include "js/Conversions.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryProcessEnums.h"
 #include "mozilla/Unused.h"
 #include "nsJSUtils.h" // nsAutoJSString
 #include "nsITelemetry.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/TelemetryProcessEnums.h"
 #include "TelemetryFixture.h"
-#include "core/TelemetryScalar.h"
 #include "TelemetryTestHelpers.h"
 
 using namespace mozilla;

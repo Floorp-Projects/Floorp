@@ -6,12 +6,12 @@
 #ifndef TelemetryCommon_h__
 #define TelemetryCommon_h__
 
-#include "nsTHashtable.h"
 #include "jsapi.h"
-#include "nsIScriptError.h"
-#include "nsXULAppAPI.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/TelemetryProcessEnums.h"
+#include "nsIScriptError.h"
+#include "nsTHashtable.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace Telemetry {
