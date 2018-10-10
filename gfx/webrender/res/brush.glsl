@@ -66,7 +66,7 @@ void main(void) {
         //           effect. We can tidy this up as we move
         //           more items to be brush shaders.
 #ifdef WR_FEATURE_ALPHA_PASS
-        init_transform_vs(vec4(vec2(-1000000.0), vec2(1000000.0)));
+        init_transform_vs(vec4(vec2(-1.0e16), vec2(1.0e16)));
 #endif
     } else {
         bvec4 edge_mask = notEqual(edge_flags & ivec4(1, 2, 4, 8), ivec4(0));

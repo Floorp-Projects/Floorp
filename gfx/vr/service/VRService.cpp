@@ -11,6 +11,8 @@
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
 #include "OpenVRSession.h"
+#endif
+#if !defined(MOZ_WIDGET_ANDROID)
 #include "OSVRSession.h"
 #endif
 
@@ -220,6 +222,8 @@ VRService::ServiceInitialize()
       session = nullptr;
     }
   }
+#endif
+#if !defined(MOZ_WIDGET_ANDROID)
   // Try OSVR
   if (!session) {
     session = MakeUnique<OSVRSession>();
