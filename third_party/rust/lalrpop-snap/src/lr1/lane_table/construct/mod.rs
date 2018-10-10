@@ -1,7 +1,7 @@
 //!
 
 use collections::{Map, Set};
-use ena::unify::UnificationTable;
+use ena::unify::InPlaceUnificationTable;
 use grammar::repr::*;
 use lr1::build;
 use lr1::core::*;
@@ -184,7 +184,7 @@ impl<'grammar> LaneTableConstruct<'grammar> {
         // (To handle unification, we also map each state to a
         // `StateSet` that is its entry in the `ena` table.)
         let rows = table.rows()?;
-        let mut unify = UnificationTable::<StateSet>::new();
+        let mut unify = InPlaceUnificationTable::<StateSet>::new();
         let mut state_sets = Map::new();
         for (&state_index, context_set) in &rows {
             let state_set = unify.new_key(context_set.clone());

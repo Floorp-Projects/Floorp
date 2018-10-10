@@ -12,7 +12,7 @@
 
 [package]
 name = "binjs_meta"
-version = "0.3.10"
+version = "0.4.3"
 authors = ["David Teller <D.O.Teller@gmail.com>"]
 description = "Part of binjs-ref. Tools for manipulating grammars. You probably do not want to use this crate directly unless you're writing an encoder, decoder or parser generator for binjs."
 homepage = "https://binast.github.io/ecmascript-binary-ast/"
@@ -31,7 +31,7 @@ version = "^0.7"
 version = "^0.4"
 
 [dependencies.webidl]
-version = "^0.6"
+version = "^0.8"
 [dev-dependencies.clap]
 version = "^2"
 
