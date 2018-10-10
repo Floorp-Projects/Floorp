@@ -2200,11 +2200,6 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 49) {
-      // Annotate that a user haven't seen any onboarding tour
-      Services.prefs.setIntPref("browser.onboarding.seen-tourset-version", 0);
-    }
-
     if (currentUIVersion < 50) {
       try {
         // Transform prefs related to old DevTools Console.
@@ -2254,11 +2249,13 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 54) {
-      // Migrate browser.onboarding.hidden to browser.onboarding.state.
-      if (Services.prefs.prefHasUserValue("browser.onboarding.hidden")) {
-        let state = Services.prefs.getBoolPref("browser.onboarding.hidden") ? "watermark" : "default";
-        Services.prefs.setStringPref("browser.onboarding.state", state);
-        Services.prefs.clearUserPref("browser.onboarding.hidden");
+      // Clear old onboarding prefs from profile (bug 1462415)
+      let onboardingPrefs = Services.prefs.getBranch("browser.onboarding.");
+      if (onboardingPrefs) {
+        let onboardingPrefsArray = onboardingPrefs.getChildList("");
+        for (let item of onboardingPrefsArray) {
+          Services.prefs.clearUserPref("browser.onboarding." + item);
+        }
       }
     }
 

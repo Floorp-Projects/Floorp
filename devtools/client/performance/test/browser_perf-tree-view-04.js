@@ -19,7 +19,7 @@ add_task(function() {
   threadNode.calls = threadNode.calls[0].calls;
 
   const treeRoot = new CallView({ frame: threadNode });
-  const container = document.createElement("vbox");
+  const container = document.createXULElement("vbox");
   treeRoot.attachTo(container);
 
   is(treeRoot.target.getAttribute("origin"), "chrome",

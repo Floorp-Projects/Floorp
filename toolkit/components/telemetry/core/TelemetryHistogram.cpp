@@ -127,20 +127,25 @@ namespace {
 typedef nsDataHashtable<nsCStringHashKey, HistogramID> StringToHistogramIdMap;
 
 // Hardcoded probes
+//
+// The order of elements here is important to minimize the memory footprint of a
+// HistogramInfo instance.
+//
+// Any adjustements need to be reflected in gen_histogram_data.py
 struct HistogramInfo {
   uint32_t min;
   uint32_t max;
   uint32_t bucketCount;
-  uint32_t histogramType;
   uint32_t name_offset;
   uint32_t expiration_offset;
-  uint32_t dataset;
-  uint32_t label_index;
   uint32_t label_count;
-  uint32_t key_index;
   uint32_t key_count;
-  RecordedProcessType record_in_processes;
+  uint16_t label_index;
+  uint16_t key_index;
   bool keyed;
+  uint8_t histogramType;
+  uint8_t dataset;
+  RecordedProcessType record_in_processes;
   SupportedProduct products;
 
   const char *name() const;

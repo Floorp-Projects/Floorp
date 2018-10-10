@@ -391,24 +391,6 @@ KeyboardEvent::InitKeyboardEventJS(const nsAString& aType,
   keyEvent->mKeyValue = aKey;
 }
 
-already_AddRefed<nsIDocument>
-KeyboardEvent::GetDocument()
-{
-  nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<EventTarget> eventTarget = GetTarget();
-
-  if (eventTarget) {
-    nsCOMPtr<nsPIDOMWindowInner> win =
-      do_QueryInterface(eventTarget->GetOwnerGlobal());
-
-    if (win) {
-      doc = win->GetExtantDoc();
-    }
-  }
-
-  return doc.forget();
-}
-
 bool
 KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType)
 {
