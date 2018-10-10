@@ -361,14 +361,28 @@ AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()
 }
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
-AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
+AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal,
                                                          nsPIDOMWindowInner* aParentWindow,
                                                          StorageAccessGrantedReason aReason)
 {
   MOZ_ASSERT(aParentWindow);
 
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(!uri)) {
+    LOG(("Can't get the URI from the principal"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  nsAutoString origin;
+  rv = nsContentUtils::GetUTFOrigin(uri, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't get the origin from the URI"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
   LOG(("Adding a first-party storage exception for %s...",
-       NS_ConvertUTF16toUTF8(aOrigin).get()));
+       NS_ConvertUTF16toUTF8(origin).get()));
 
   if (StaticPrefs::network_cookie_cookieBehavior() !=
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
@@ -402,7 +416,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
 
   // We are a first party resource.
   if (outerParentWindow->IsTopLevelWindow()) {
-    CopyUTF16toUTF8(aOrigin, trackingOrigin);
+    CopyUTF16toUTF8(origin, trackingOrigin);
     topLevelStoragePrincipal = parentWindow->GetPrincipal();
     if (NS_WARN_IF(!topLevelStoragePrincipal)) {
       LOG(("Top-level storage area principal not found, bailing out early"));
@@ -417,8 +431,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), trackingOrigin);
+  nsCOMPtr<nsIURI> trackingURI;
+  rv = NS_NewURI(getter_AddRefs(trackingURI), trackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Couldn't make a new URI out of the tracking origin"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
@@ -436,12 +450,12 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
   // We hardcode this block reason since the first-party storage access permission
   // is granted for the purpose of blocking trackers.
   const uint32_t blockReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
-  pwin->NotifyContentBlockingState(blockReason, channel, false, uri);
+  pwin->NotifyContentBlockingState(blockReason, channel, false, trackingURI);
 
-  NS_ConvertUTF16toUTF8 grantedOrigin(aOrigin);
+  NS_ConvertUTF16toUTF8 grantedOrigin(origin);
 
   ReportUnblockingConsole(parentWindow, NS_ConvertUTF8toUTF16(trackingOrigin),
-                          aOrigin, aReason);
+                          origin, aReason);
 
   if (XRE_IsParentProcess()) {
     LOG(("Saving the permission: trackingOrigin=%s, grantedOrigin=%s",
