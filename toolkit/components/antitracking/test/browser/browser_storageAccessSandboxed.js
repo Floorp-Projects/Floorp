@@ -12,13 +12,23 @@ AntiTracking.runTest("Storage Access API called in a sandboxed iframe",
   },
 
   null, // non-blocking callback
-  null, // cleanup function
+  // cleanup function
+  async _ => {
+    // Only clear the user-interaction permissions for the tracker here so that
+    // the next test has a clean slate.
+    await new Promise(resolve => {
+      Services.clearData.deleteDataFromHost(Services.io.newURI(TEST_3RD_PARTY_DOMAIN).host,
+                                            true,
+                                            Ci.nsIClearDataService.CLEAR_PERMISSIONS,
+                                            value => resolve());
+    });
+  },
   [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
   false, // no blocking notifications
   false, // run in normal window
-  "allow-scripts allow-same-origin"
+  "allow-scripts allow-same-origin allow-popups"
 );
 
 AntiTracking.runTest("Storage Access API called in a sandboxed iframe with" +
@@ -52,7 +62,7 @@ AntiTracking.runTest("Storage Access API called in a sandboxed iframe with" +
   false, // no user-interaction test
   true, // expect blocking notifications
   false, // run in normal window
-  "allow-scripts allow-same-origin allow-storage-access-by-user-activation"
+  "allow-scripts allow-same-origin allow-popups allow-storage-access-by-user-activation"
 );
 
 AntiTracking.runTest("Verify that sandboxed contexts don't get the saved permission",
@@ -77,7 +87,7 @@ AntiTracking.runTest("Verify that sandboxed contexts don't get the saved permiss
   false, // no user-interaction test
   false, // no blocking notifications
   false, // run in normal window
-  "allow-scripts allow-same-origin"
+  "allow-scripts allow-same-origin allow-popups"
 );
 
 AntiTracking.runTest("Verify that sandboxed contexts with" +
@@ -99,7 +109,7 @@ AntiTracking.runTest("Verify that sandboxed contexts with" +
   false, // no user-interaction test
   false, // no blocking notifications
   false, // run in normal window
-  "allow-scripts allow-same-origin allow-storage-access-by-user-activation"
+  "allow-scripts allow-same-origin allow-popups allow-storage-access-by-user-activation"
 );
 
 AntiTracking.runTest("Verify that private browsing contexts don't get the saved permission",
