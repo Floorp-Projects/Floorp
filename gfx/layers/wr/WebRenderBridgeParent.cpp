@@ -1393,6 +1393,12 @@ WebRenderBridgeParent::RecvScheduleComposite()
   if (mDestroyed) {
     return IPC_OK();
   }
+
+  // Force frame rendering during next frame generation.
+  wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
+  fastTxn.InvalidateRenderedFrame();
+  mApi->SendTransaction(fastTxn);
+
   ScheduleGenerateFrame();
   return IPC_OK();
 }

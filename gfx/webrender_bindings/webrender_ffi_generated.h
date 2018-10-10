@@ -270,6 +270,8 @@ enum class YuvColorSpace : uint32_t {
 template<typename T>
 struct Arc;
 
+struct Device;
+
 // Geometry in the coordinate system of the render target (screen or intermediate
 // surface) in physical pixels.
 struct DevicePixel;
@@ -302,6 +304,8 @@ struct Vec;
 struct WorldPixel;
 
 struct WrProgramCache;
+
+struct WrShaders;
 
 struct WrState;
 
@@ -1242,6 +1246,10 @@ void wr_dec_ref_arc(const VecU8 *aArc)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
+void wr_device_delete(Device *aDevice)
+WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
 void wr_dp_clear_save(WrState *aState)
 WR_FUNC;
 
@@ -1765,6 +1773,16 @@ void wr_set_item_tag(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+void wr_shaders_delete(WrShaders *aShaders,
+                       void *aGlContext)
+WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
+WrShaders *wr_shaders_new(void *aGlContext,
+                          WrProgramCache *aProgramCache)
+WR_FUNC;
+
+WR_INLINE
 void wr_state_delete(WrState *aState)
 WR_DESTRUCTOR_SAFE_FUNC;
 
@@ -1800,6 +1818,10 @@ WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 void wr_transaction_generate_frame(Transaction *aTxn)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_invalidate_rendered_frame(Transaction *aTxn)
 WR_FUNC;
 
 WR_INLINE
@@ -1892,6 +1914,8 @@ bool wr_window_new(WrWindowId aWindowId,
                    uint32_t aWindowHeight,
                    bool aSupportLowPriorityTransactions,
                    void *aGlContext,
+                   WrProgramCache *aProgramCache,
+                   WrShaders *aShaders,
                    WrThreadPool *aThreadPool,
                    VoidPtrToSizeFn aSizeOfOp,
                    DocumentHandle **aOutHandle,

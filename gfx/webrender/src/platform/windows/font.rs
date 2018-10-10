@@ -145,6 +145,18 @@ impl FontContext {
         }
     }
 
+    pub fn delete_font_instance(&mut self, instance: &FontInstance) {
+        // Ensure we don't keep around excessive amounts of stale variations.
+        if !instance.variations.is_empty() {
+            let sims = if instance.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
+                dwrote::DWRITE_FONT_SIMULATIONS_BOLD
+            } else {
+                dwrote::DWRITE_FONT_SIMULATIONS_NONE
+            };
+            self.variations.remove(&(instance.font_key, sims, instance.variations.clone()));
+        }
+    }
+
     // Assumes RGB format from dwrite, which is 3 bytes per pixel as dwrite
     // doesn't output an alpha value via GlyphRunAnalysis::CreateAlphaTexture
     #[allow(dead_code)]
@@ -185,7 +197,8 @@ impl FontContext {
                         sims,
                         &font.variations.iter().map(|var| {
                             dwrote::DWRITE_FONT_AXIS_VALUE {
-                                axisTag: var.tag,
+                                // OpenType tags are big-endian, but DWrite wants little-endian.
+                                axisTag: var.tag.swap_bytes(),
                                 value: var.value,
                             }
                         }).collect::<Vec<_>>(),

@@ -87,8 +87,18 @@ extern File* gRecordingFile;
 // Whether record/replay state has finished initialization.
 extern bool gInitialized;
 
-// If we failed to initialize, any associated message.
+// If we failed to initialize, any associated message. On an initialization
+// failure, events will be passed through until we have connected with the
+// middleman, reported the failure, and crashed.
 extern char* gInitializationFailureMessage;
+
+// For places where events will normally not be passed through, unless there
+// was an initialization failure.
+static inline void
+AssertEventsAreNotPassedThrough()
+{
+  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough() || gInitializationFailureMessage);
+}
 
 // Flush any new recording data to disk.
 void FlushRecording();

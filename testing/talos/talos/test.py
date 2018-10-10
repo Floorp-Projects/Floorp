@@ -215,22 +215,6 @@ class sessionrestore_many_windows(sessionrestore):
     profile_path = '${talos}/startup_test/sessionrestore/profile-manywindows'
 
 
-@register_test()
-class tresize(TsBase):
-    """
-    This test does some resize thing.
-    """
-    extensions = ['${talos}/startup_test/tresize/addon']
-    cycles = 20
-    url = 'startup_test/tresize/addon/content/tresize-test.html'
-    timeout = 150
-    gecko_profile_interval = 2
-    gecko_profile_entries = 1000000
-    tpmozafterpaint = True
-    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
-    unit = 'ms'
-
-
 # pageloader tests(tp5, etc)
 
 # The overall test number is determined by first calculating the median
@@ -682,6 +666,22 @@ class dromaeo_dom(dromaeo):
     gecko_profile_entries = 10000000
     tpmanifest = '${talos}/tests/dromaeo/dom.manifest'
     unit = 'score'
+
+
+@register_test()
+class tresize(PageloaderTest):
+    """
+    This test does some resize thing.
+    """
+    tpmanifest = '${talos}/tests/tresize/tresize.manifest'
+    extensions = ['${talos}/pageloader', '${talos}/tests/tresize/addon']
+    tppagecycles = 20
+    timeout = 900
+    gecko_profile_interval = 2
+    gecko_profile_entries = 1000000
+    tpmozafterpaint = True
+    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
 
 
 @register_test()
