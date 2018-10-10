@@ -11,7 +11,6 @@ DevToolsModules(
     'adb-scanner.js',
     'adb-socket.js',
     'adb.js',
-    'addon-aware-adb-scanner.js',
 )
 
 with Files('**'):

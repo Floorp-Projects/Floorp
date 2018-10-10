@@ -10,12 +10,6 @@ const discovery = require("devtools/shared/discovery/discovery");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {RuntimeTypes} = require("devtools/client/webide/modules/runtime-types");
 const promise = require("promise");
-
-loader.lazyGetter(this, "adbScanner", () => {
-  const { AddonAwareADBScanner } = require("devtools/shared/adb/addon-aware-adb-scanner");
-  return new AddonAwareADBScanner();
-});
-
 loader.lazyRequireGetter(this, "AuthenticationResult",
   "devtools/shared/security/auth", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
@@ -197,10 +191,6 @@ EventEmitter.decorate(RuntimeScanners);
 exports.RuntimeScanners = RuntimeScanners;
 
 /* SCANNERS */
-
-// The adb-scanner will automatically start and stop when the ADB extension is installed
-// and uninstalled, so the scanner itself can always be used.
-RuntimeScanners.add(adbScanner);
 
 var WiFiScanner = {
 
