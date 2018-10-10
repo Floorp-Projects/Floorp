@@ -129,9 +129,6 @@ protected:
   // Load the temp directory for sandboxed content processes
   nsresult LoadContentProcessTempDir();
 #endif
-#if defined(MOZ_SANDBOX)
-  nsresult LoadPluginProcessTempDir();
-#endif
 
   void Append(nsIFile* aDirectory);
 
@@ -149,10 +146,6 @@ protected:
 #if defined(MOZ_CONTENT_SANDBOX)
   nsCOMPtr<nsIFile>      mContentTempDir;
   nsCOMPtr<nsIFile>      mContentProcessSandboxTempDir;
-#endif
-#if defined(MOZ_SANDBOX)
-  nsCOMPtr<nsIFile>      mPluginTempDir;
-  nsCOMPtr<nsIFile>      mPluginProcessSandboxTempDir;
 #endif
   nsCOMArray<nsIFile>    mAppBundleDirectories;
 };
