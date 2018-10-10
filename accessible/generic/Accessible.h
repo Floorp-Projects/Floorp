@@ -555,7 +555,7 @@ public:
   /**
    * Scroll the accessible into view.
    */
-  virtual void ScrollTo(uint32_t aHow) const;
+  void ScrollTo(uint32_t aHow) const;
 
   /**
    * Scroll the accessible to the given point.

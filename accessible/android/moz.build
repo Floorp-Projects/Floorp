@@ -11,10 +11,7 @@ EXPORTS.mozilla.a11y += ['AccessibleWrap.h',
 
 SOURCES += [
     'AccessibleWrap.cpp',
-    'DocAccessibleWrap.cpp',
     'Platform.cpp',
-    'ProxyAccessibleWrap.cpp',
-    'RootAccessibleWrap.cpp',
     'SessionAccessibility.cpp',
 ]
 
