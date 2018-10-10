@@ -82,6 +82,7 @@ public:
 #define COUNTER_CANARY 0xDEADBEEF
 #ifdef DEBUG
       mCanary = COUNTER_CANARY;
+      mPrevNumber = 0;
 #endif
       // Can't call profiler_* here since this may be non-xul-library
     }
@@ -97,6 +98,10 @@ public:
 
     aCounter = *mCounter;
     aNumber = mNumber ? *mNumber : 0;
+#ifdef DEBUG
+    MOZ_ASSERT(aNumber >= mPrevNumber);
+    mPrevNumber = aNumber;
+#endif
   }
 
   // We don't define ++ and Add() here, since the static defines directly
@@ -122,6 +127,7 @@ public:
 
 #ifdef DEBUG
   uint32_t mCanary;
+  uint64_t mPrevNumber; // value of number from the last Sample()
 #endif
 };
 
