@@ -191,3 +191,56 @@ class GitIgnoreCache(CacheFile):
         if self.data.get(key) != value:
             self.modified = True
             self.data[key] = value
+
+
+def walk(root):
+    """Re-implementation of os.walk. Returns an iterator over
+    (dirpath, dirnames, filenames), with some semantic differences
+    to os.walk.
+
+    This has a similar interface to os.walk, with the important difference
+    that instead of lists of filenames and directory names, it yields
+    lists of tuples of the form [(name, stat)] where stat is the result of
+    os.stat for the file. That allows reusing the same stat data in the
+    caller. It also always returns the dirpath relative to the root, with
+    the root iself being returned as the empty string.
+
+    Unlike os.walk the implementation is not recursive."""
+
+    listdir = os.listdir
+    get_stat = os.stat
+    listdir = os.listdir
+    join = os.path.join
+    is_dir = stat.S_ISDIR
+    is_link = stat.S_ISLNK
+    relpath = os.path.relpath
+
+    root = os.path.abspath(root)
+    stack = deque([(root, "")])
+
+    while stack:
+        dir_path, rel_path = stack.popleft()
+        try:
+            # Note that listdir and error are globals in this module due
+            # to earlier import-*.
+            names = listdir(dir_path)
+        except OSError:
+            continue
+
+        dirs, non_dirs = [], []
+        for name in names:
+            path = join(dir_path, name)
+            try:
+                path_stat = get_stat(path)
+            except OSError:
+                continue
+            if is_dir(path_stat.st_mode):
+                dirs.append((name, path_stat))
+            else:
+                non_dirs.append((name, path_stat))
+
+        yield rel_path, dirs, non_dirs
+        for name, path_stat in dirs:
+            new_path = join(dir_path, name)
+            if not is_link(path_stat.st_mode):
+                stack.append((new_path, relpath(new_path)))
