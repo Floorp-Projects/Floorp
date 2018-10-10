@@ -10521,9 +10521,6 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-async-stacks", "Disable async stacks")
         || !op.addMultiStringOption('\0', "dll", "LIBRARY", "Dynamically load LIBRARY")
         || !op.addBoolOption('\0', "suppress-minidump", "Suppress crash minidumps")
-#ifdef JS_TRACE_LOGGING
-        || !op.addBoolOption('\0', "enable-tracelogger","Enable Trace Logging")
-#endif
     )
     {
         return EXIT_FAILURE;
@@ -10586,12 +10583,6 @@ main(int argc, char** argv, char** envp)
     if (op.getBoolOption("suppress-minidump")) {
         js::NoteIntentionalCrash();
     }
-
-#ifdef JS_TRACE_LOGGING
-    if (op.getBoolOption("enable-tracelogger")) {
-        jit::JitOptions.enableTraceLogger = true;
-    }
-#endif
 
     if (!InitSharedObjectMailbox()) {
         return 1;
