@@ -13,7 +13,6 @@
 #include "nsLayoutUtils.h"
 #include "WebGLBuffer.h"
 #include "WebGLContext.h"
-#include "WebGLFormats.h"
 #include "WebGLTexelConversions.h"
 #include "WebGLTexture.h"
 
