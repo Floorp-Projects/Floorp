@@ -191,21 +191,13 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // get flavor list that includes all acceptable flavors (including ones obtained through conversion)
-  nsCOMPtr<nsIArray> flavorList;
-  nsresult rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+  nsTArray<nsCString> flavors;
+  nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  uint32_t flavorCount;
-  flavorList->GetLength(&flavorCount);
-
-  for (uint32_t i = 0; i < flavorCount; i++) {
-    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
-    if (!currentFlavor)
-      continue;
-
-    nsCString flavorStr;
-    currentFlavor->ToString(getter_Copies(flavorStr)); // i has a flavr
+  for (uint32_t i = 0; i < flavors.Length(); i++) {
+    nsCString& flavorStr = flavors[i];
 
     // printf("looking for clipboard data of type %s\n", flavorStr.get());
 
@@ -383,26 +375,18 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
     return NS_ERROR_FAILURE;
 
   // get flavor list that includes all acceptable flavors (including ones obtained through conversion)
-  nsCOMPtr<nsIArray> flavorList;
-  nsresult rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+  nsTArray<nsCString> flavors;
+  nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
-
-  uint32_t flavorCount;
-  flavorList->GetLength(&flavorCount);
 
   // If we were the last ones to put something on the pasteboard, then just use the cached
   // transferable. Otherwise clear it because it isn't relevant any more.
   if (mCachedClipboard == aWhichClipboard &&
       mChangeCount == [cocoaPasteboard changeCount]) {
     if (mTransferable) {
-      for (uint32_t i = 0; i < flavorCount; i++) {
-        nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
-        if (!currentFlavor)
-          continue;
-
-        nsCString flavorStr;
-        currentFlavor->ToString(getter_Copies(flavorStr));
+      for (uint32_t i = 0; i < flavors.Length(); i++) {
+        nsCString& flavorStr = flavors[i];
 
         nsCOMPtr<nsISupports> dataSupports;
         uint32_t dataSize = 0;
@@ -439,18 +423,11 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
 
   // first see if we have data for this in our cached transferable
   if (mTransferable) {
-    nsCOMPtr<nsIArray> transferableFlavorList;
-    nsresult rv = mTransferable->FlavorsTransferableCanImport(getter_AddRefs(transferableFlavorList));
+    nsTArray<nsCString> flavors;
+    nsresult rv = mTransferable->FlavorsTransferableCanImport(flavors);
     if (NS_SUCCEEDED(rv)) {
-      uint32_t transferableFlavorCount;
-      transferableFlavorList->GetLength(&transferableFlavorCount);
-      for (uint32_t j = 0; j < transferableFlavorCount; j++) {
-        nsCOMPtr<nsISupportsCString> currentTransferableFlavor =
-            do_QueryElementAt(transferableFlavorList, j);
-        if (!currentTransferableFlavor)
-          continue;
-        nsCString transferableFlavorStr;
-        currentTransferableFlavor->ToString(getter_Copies(transferableFlavorStr));
+      for (uint32_t j = 0; j < flavors.Length(); j++) {
+        nsCString transferableFlavorStr = flavors[j];
 
         for (uint32_t k = 0; k < aLength; k++) {
           if (transferableFlavorStr.Equals(aFlavorList[k])) {
@@ -458,8 +435,8 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
             return NS_OK;
           }
         }
-      }      
-    }    
+      }
+    }
   }
 
   NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
@@ -527,20 +504,13 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
   NSMutableDictionary* pasteboardOutputDict = [NSMutableDictionary dictionary];
 
-  nsCOMPtr<nsIArray> flavorList;
-  nsresult rv = aTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
+  nsTArray<nsCString> flavors;
+  nsresult rv = aTransferable->FlavorsTransferableCanExport(flavors);
   if (NS_FAILED(rv))
     return nil;
 
-  uint32_t flavorCount;
-  flavorList->GetLength(&flavorCount);
-  for (uint32_t i = 0; i < flavorCount; i++) {
-    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
-    if (!currentFlavor)
-      continue;
-
-    nsCString flavorStr;
-    currentFlavor->ToString(getter_Copies(flavorStr));
+  for (uint32_t i = 0; i < flavors.Length(); i++) {
+    nsCString& flavorStr = flavors[i];
 
     MOZ_LOG(sCocoaLog, LogLevel::Info, ("writing out clipboard data of type %s (%d)\n", flavorStr.get(), i));
 
