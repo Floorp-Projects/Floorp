@@ -379,25 +379,18 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
     return NS_ERROR_FAILURE;
 
   // get flavor list that includes all acceptable flavors (including ones obtained through conversion)
-  nsCOMPtr<nsIArray> flavorList;
-  nsresult rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+  nsTArray<nsCString> flavors;
+  nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
-
-  uint32_t acceptableFlavorCount;
-  flavorList->GetLength(&acceptableFlavorCount);
 
   // if this drag originated within Mozilla we should just use the cached data from
   // when the drag started if possible
   if (mDataItems) {
     nsCOMPtr<nsITransferable> currentTransferable = do_QueryElementAt(mDataItems, aItemIndex);
     if (currentTransferable) {
-      for (uint32_t i = 0; i < acceptableFlavorCount; i++) {
-        nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
-        if (!currentFlavor)
-          continue;
-        nsCString flavorStr;
-        currentFlavor->ToString(getter_Copies(flavorStr));
+      for (uint32_t i = 0; i < flavors.Length(); i++) {
+        nsCString& flavorStr = flavors[i];
 
         nsCOMPtr<nsISupports> dataSupports;
         uint32_t dataSize = 0;
@@ -411,13 +404,8 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
   }
 
   // now check the actual clipboard for data
-  for (uint32_t i = 0; i < acceptableFlavorCount; i++) {
-    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
-    if (!currentFlavor)
-      continue;
-
-    nsCString flavorStr;
-    currentFlavor->ToString(getter_Copies(flavorStr));
+  for (uint32_t i = 0; i < flavors.Length(); i++) {
+    nsCString& flavorStr = flavors[i];
 
     MOZ_LOG(sCocoaLog, LogLevel::Info, ("nsDragService::GetData: looking for clipboard data of type %s\n", flavorStr.get()));
 
@@ -588,20 +576,13 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
       if (!currentTransferable)
         continue;
 
-      nsCOMPtr<nsIArray> flavorList;
-      nsresult rv = currentTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+      nsTArray<nsCString> flavors;
+      nsresult rv = currentTransferable->FlavorsTransferableCanImport(flavors);
       if (NS_FAILED(rv))
         continue;
 
-      uint32_t flavorCount;
-      flavorList->GetLength(&flavorCount);
-      for (uint32_t j = 0; j < flavorCount; j++) {
-        nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, j);
-        if (!currentFlavor)
-          continue;
-        nsCString flavorStr;
-        currentFlavor->ToString(getter_Copies(flavorStr));
-        if (dataFlavor.Equals(flavorStr)) {
+      for (uint32_t j = 0; j < flavors.Length(); j++) {
+        if (dataFlavor.Equals(flavors[i])) {
           *_retval = true;
           return NS_OK;
         }

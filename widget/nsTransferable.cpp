@@ -229,27 +229,17 @@ nsTransferable::Init(nsILoadContext* aContext)
 // GetTransferDataFlavors
 //
 // Returns a copy of the internal list of flavors. This does NOT take into
-// account any converter that may be registered. This list consists of
-// nsISupportsCString objects so that the flavor list can be accessed from JS.
+// account any converter that may be registered.
 //
-already_AddRefed<nsIMutableArray>
-nsTransferable::GetTransferDataFlavors()
+void
+nsTransferable::GetTransferDataFlavors(nsTArray<nsCString>& aFlavors)
 {
   MOZ_ASSERT(mInitialized);
 
-  nsCOMPtr<nsIMutableArray> array = nsArray::Create();
-
   for (size_t i = 0; i < mDataArray.Length(); ++i) {
     DataStruct& data = mDataArray.ElementAt(i);
-    nsCOMPtr<nsISupportsCString> flavorWrapper = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
-    if ( flavorWrapper ) {
-      flavorWrapper->SetData ( data.GetFlavor() );
-      nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
-      array->AppendElement( genericWrapper );
-    }
+    aFlavors.AppendElement(data.GetFlavor());
   }
-
-  return array.forget();
 }
 
 
@@ -500,21 +490,18 @@ NS_IMETHODIMP nsTransferable::GetConverter(nsIFormatConverter * *aConverter)
 // intrinsic knowledge or input data converters.
 //
 NS_IMETHODIMP
-nsTransferable::FlavorsTransferableCanImport(nsIArray **_retval)
+nsTransferable::FlavorsTransferableCanImport(nsTArray<nsCString>& aFlavors)
 {
   MOZ_ASSERT(mInitialized);
-
-  NS_ENSURE_ARG_POINTER(_retval);
 
   // Get the flavor list, and on to the end of it, append the list of flavors we
   // can also get to through a converter. This is so that we can just walk the list
   // in one go, looking for the desired flavor.
-  nsCOMPtr<nsIMutableArray> array = GetTransferDataFlavors();
-  nsCOMPtr<nsIFormatConverter> converter;
-  GetConverter(getter_AddRefs(converter));
-  if ( converter ) {
+  GetTransferDataFlavors(aFlavors);
+
+  if (mFormatConv) {
     nsCOMPtr<nsIArray> convertedList;
-    converter->GetInputDataFlavors(getter_AddRefs(convertedList));
+    mFormatConv->GetInputDataFlavors(getter_AddRefs(convertedList));
 
     if ( convertedList ) {
       uint32_t importListLen;
@@ -526,16 +513,16 @@ nsTransferable::FlavorsTransferableCanImport(nsIArray **_retval)
         nsAutoCString flavorStr;
         flavorWrapper->GetData( flavorStr );
 
-        if (GetDataForFlavor (mDataArray, flavorStr.get())
-            == mDataArray.NoIndex) // Don't append if already in intrinsic list
-          array->AppendElement (flavorWrapper);
-      } // foreach flavor that can be converted to
+        // Don't append if already in intrinsic list
+        if (!aFlavors.Contains(flavorStr)) {
+          aFlavors.AppendElement(flavorStr);
+        }
+      }
     }
-  } // if a converter exists
+  }
 
-  array.forget(_retval);
   return NS_OK;
-} // FlavorsTransferableCanImport
+}
 
 
 //
@@ -545,21 +532,19 @@ nsTransferable::FlavorsTransferableCanImport(nsIArray **_retval)
 // intrinsic knowledge or output data converters.
 //
 NS_IMETHODIMP
-nsTransferable::FlavorsTransferableCanExport(nsIArray **_retval)
+nsTransferable::FlavorsTransferableCanExport(nsTArray<nsCString>& aFlavors)
 {
   MOZ_ASSERT(mInitialized);
 
-  NS_ENSURE_ARG_POINTER(_retval);
 
   // Get the flavor list, and on to the end of it, append the list of flavors we
   // can also get to through a converter. This is so that we can just walk the list
   // in one go, looking for the desired flavor.
-  nsCOMPtr<nsIMutableArray> array = GetTransferDataFlavors();
-  nsCOMPtr<nsIFormatConverter> converter;
-  GetConverter(getter_AddRefs(converter));
-  if ( converter ) {
+  GetTransferDataFlavors(aFlavors);
+
+  if (mFormatConv) {
     nsCOMPtr<nsIArray> convertedList;
-    converter->GetOutputDataFlavors(getter_AddRefs(convertedList));
+    mFormatConv->GetOutputDataFlavors(getter_AddRefs(convertedList));
 
     if ( convertedList ) {
       uint32_t importListLen;
@@ -571,16 +556,16 @@ nsTransferable::FlavorsTransferableCanExport(nsIArray **_retval)
         nsAutoCString flavorStr;
         flavorWrapper->GetData( flavorStr );
 
-        if (GetDataForFlavor (mDataArray, flavorStr.get())
-            == mDataArray.NoIndex) // Don't append if already in intrinsic list
-          array->AppendElement (flavorWrapper);
-      } // foreach flavor that can be converted to
+        // Don't append if already in intrinsic list
+        if (!aFlavors.Contains(flavorStr)) {
+          aFlavors.AppendElement(flavorStr);
+        }
+      }
     }
-  } // if a converter exists
+  }
 
-  array.forget(_retval);
   return NS_OK;
-} // FlavorsTransferableCanExport
+}
 
 NS_IMETHODIMP
 nsTransferable::GetIsPrivateData(bool *aIsPrivateData)
