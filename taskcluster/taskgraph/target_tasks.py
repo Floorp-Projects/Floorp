@@ -62,8 +62,6 @@ def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=Fa
             'win64-asan-reporter-nightly',
             ):
         return False
-    if str(platform).startswith('android') and 'nightly' in str(platform):
-        return False
 
     if platform in (
             'linux', 'linux64',
