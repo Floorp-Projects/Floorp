@@ -8,6 +8,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MathAlgorithms.h"
@@ -41,6 +42,7 @@
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
+#include "nsITextControlElement.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -5016,6 +5018,12 @@ EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aMouseUpEvent,
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv = aPresShell->HandleEventWithTarget(&event, targetFrame,
                                                   target, &status);
+  // Copy mMultipleActionsPrevented flag from a click event to the mouseup
+  // event only when it's set to true.  It may be set to true if an editor has
+  // already handled it.  This is important to avoid two or more default
+  // actions handled here.
+  aMouseUpEvent->mFlags.mMultipleActionsPrevented |=
+    event.mFlags.mMultipleActionsPrevented;
   // If current status is nsEventStatus_eConsumeNoDefault, we don't need to
   // overwrite it.
   if (*aStatus == nsEventStatus_eConsumeNoDefault) {
@@ -5060,11 +5068,46 @@ EventStateManager::PostHandleMouseUp(WidgetMouseEvent* aMouseUpEvent,
   }
 
   // Fire click events if the event target is still available.
-  nsresult rv = DispatchClickEvents(presShell, aMouseUpEvent, aStatus,
+  // Note that do not include the eMouseUp event's status since we ignore it
+  // for compatibility with the other browsers.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv = DispatchClickEvents(presShell, aMouseUpEvent, &status,
                                     mouseUpContent, aOverrideClickTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  // Do not do anything if preceding click events are consumed.
+  // Note that Chromium dispatches "paste" event and actually pates clipboard
+  // text into focused editor even if the preceding click events are consumed.
+  // However, this is different from our traditional behavior and does not
+  // conform to DOM events.  If we need to keep compatibility with Chromium,
+  // we should change it later.
+  if (status == nsEventStatus_eConsumeNoDefault) {
+    *aStatus = nsEventStatus_eConsumeNoDefault;
+    return NS_OK;
+  }
+
+  // Handle middle click paste if it's enabled and the mouse button is middle.
+  if (aMouseUpEvent->button != WidgetMouseEventBase::eMiddleButton ||
+      !WidgetMouseEvent::IsMiddleClickPasteEnabled()) {
+    return NS_OK;
+  }
+  DebugOnly<nsresult> rvIgnored =
+    HandleMiddleClickPaste(presShell, aMouseUpEvent, &status, nullptr);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Failed to paste for a middle click");
+
+  // If new status is nsEventStatus_eConsumeNoDefault or
+  // nsEventStatus_eConsumeDoDefault, use it.
+  if (*aStatus != nsEventStatus_eConsumeNoDefault &&
+      (status == nsEventStatus_eConsumeNoDefault ||
+       status == nsEventStatus_eConsumeDoDefault)) {
+    *aStatus = status;
+  }
+
+  // Don't return error even if middle mouse paste fails since we haven't
+  // handled it here.
   return NS_OK;
 }
 
@@ -5130,15 +5173,35 @@ EventStateManager::HandleMiddleClickPaste(nsIPresShell* aPresShell,
 {
   MOZ_ASSERT(aPresShell);
   MOZ_ASSERT(aMouseEvent);
-  MOZ_ASSERT(aMouseEvent->mMessage == eMouseClick &&
-             aMouseEvent->button == WidgetMouseEventBase::eMiddleButton);
+  MOZ_ASSERT((aMouseEvent->mMessage == eMouseClick &&
+              aMouseEvent->button == WidgetMouseEventBase::eMiddleButton) ||
+             EventCausesClickEvents(*aMouseEvent));
   MOZ_ASSERT(aStatus);
   MOZ_ASSERT(*aStatus != nsEventStatus_eConsumeNoDefault);
-  MOZ_ASSERT(aTextEditor);
 
-  RefPtr<Selection> selection = aTextEditor->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
+  // Even if we're called twice or more for a mouse operation, we should
+  // handle only once.  Although mMultipleActionsPrevented may be set to
+  // true by different event handler in the future, we can use it for now.
+  if (aMouseEvent->mFlags.mMultipleActionsPrevented) {
+    return NS_OK;
+  }
+  aMouseEvent->mFlags.mMultipleActionsPrevented = true;
+
+  RefPtr<Selection> selection;
+  if (aTextEditor) {
+    selection = aTextEditor->GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    nsIDocument* document = aPresShell->GetDocument();
+    if (NS_WARN_IF(!document)) {
+      return NS_ERROR_FAILURE;
+    }
+    nsCopySupport::GetSelectionForCopy(document, getter_AddRefs(selection));
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // Move selection to the clicked point.
@@ -5175,6 +5238,12 @@ EventStateManager::HandleMiddleClickPaste(nsIPresShell* aPresShell,
   if (!nsCopySupport::FireClipboardEvent(ePaste, clipboardType,
                                          aPresShell, selection)) {
     *aStatus = nsEventStatus_eConsumeNoDefault;
+    return NS_OK;
+  }
+
+  // Although we've fired "paste" event, there is no editor to accept the
+  // clipboard content.
+  if (!aTextEditor) {
     return NS_OK;
   }
 
