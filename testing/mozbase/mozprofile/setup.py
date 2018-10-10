@@ -10,7 +10,7 @@ PACKAGE_NAME = 'mozprofile'
 PACKAGE_VERSION = '2.0.0'
 
 deps = [
-    'mozfile==1.*',
+    'mozfile>=1.2',
     'mozlog==3.*',
     'six>=1.10.0,<2',
 ]
