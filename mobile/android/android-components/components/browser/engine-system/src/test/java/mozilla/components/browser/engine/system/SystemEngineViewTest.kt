@@ -599,7 +599,7 @@ class SystemEngineViewTest {
 
         assertNotNull(engineView.fullScreenCallback)
         assertEquals(customViewCallback, engineView.fullScreenCallback)
-        assertEquals("mosac_system_engine_fullscreen", view.tag)
+        assertEquals("mozac_system_engine_fullscreen", view.tag)
 
         engineView.currentWebView.webChromeClient.onHideCustomView()
         assertEquals(View.VISIBLE, engineView.currentWebView.visibility)
@@ -631,7 +631,7 @@ class SystemEngineViewTest {
 
         // When the fullscreen view isn't available
         engineView.currentWebView.webChromeClient.onShowCustomView(view, customViewCallback)
-        engineView.findViewWithTag<View>("mosac_system_engine_fullscreen").tag = "not_fullscreen"
+        engineView.findViewWithTag<View>("mozac_system_engine_fullscreen").tag = "not_fullscreen"
 
         engineView.currentWebView.webChromeClient.onHideCustomView()
 
@@ -640,7 +640,7 @@ class SystemEngineViewTest {
         assertEquals(View.INVISIBLE, engineView.currentWebView.visibility)
 
         // When fullscreen view is available, but WebView isn't.
-        engineView.findViewWithTag<View>("not_fullscreen").tag = "mosac_system_engine_fullscreen"
+        engineView.findViewWithTag<View>("not_fullscreen").tag = "mozac_system_engine_fullscreen"
         engineView.currentWebView.tag = "not_webView"
 
         engineView.currentWebView.webChromeClient.onHideCustomView()
