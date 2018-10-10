@@ -12,6 +12,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
@@ -2228,6 +2229,59 @@ nsLayoutUtils::GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
   }
 #endif
   return nullptr;
+}
+
+void
+nsLayoutUtils::GetContainerAndOffsetAtEvent(nsIPresShell* aPresShell,
+                                            const WidgetEvent* aEvent,
+                                            nsIContent** aContainer,
+                                            int32_t* aOffset)
+{
+  MOZ_ASSERT(aContainer || aOffset);
+
+  if (aContainer) {
+    *aContainer = nullptr;
+  }
+  if (aOffset) {
+    *aOffset = 0;
+  }
+
+  if (!aPresShell) {
+    return;
+  }
+
+  aPresShell->FlushPendingNotifications(FlushType::Layout);
+
+  RefPtr<nsPresContext> presContext = aPresShell->GetPresContext();
+  if (!presContext) {
+    return;
+  }
+
+  nsIFrame* targetFrame = presContext->EventStateManager()->GetEventTarget();
+  if (!targetFrame) {
+    return;
+  }
+
+  nsPoint point =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, targetFrame);
+
+  if (aContainer) {
+    // TODO: This result may be useful to change to Selection.  However, this
+    //       may return improper node (e.g., native anonymous node) for the
+    //       Selection.  Perhaps, this should take Selection optionally and
+    //       if it's specified, needs to check if it's proper for the
+    //       Selection.
+    nsCOMPtr<nsIContent> container =
+      targetFrame->GetContentOffsetsFromPoint(point).content;
+    if (container &&
+        (!container->ChromeOnlyAccess() ||
+         nsContentUtils::CanAccessNativeAnon())) {
+      container.forget(aContainer);
+    }
+  }
+  if (aOffset) {
+    *aOffset = targetFrame->GetContentOffsetsFromPoint(point).offset;
+  }
 }
 
 static void ConstrainToCoordValues(float& aStart, float& aSize)

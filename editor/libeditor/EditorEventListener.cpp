@@ -380,19 +380,26 @@ EditorEventListener::HandleEvent(Event* aEvent)
   switch (internalEvent->mMessage) {
     // dragenter
     case eDragEnter: {
-      return DragEnter(aEvent->AsDragEvent());
+      // aEvent should be grabbed by the caller since this is
+      // nsIDOMEventListener method.  However, our clang plugin cannot check it
+      // if we use Event::As*Event().  So, we need to grab it by ourselves.
+      RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
+      return DragEnter(dragEvent);
     }
     // dragover
     case eDragOver: {
-      return DragOver(aEvent->AsDragEvent());
+      RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
+      return DragOver(dragEvent);
     }
     // dragexit
     case eDragExit: {
-      return DragExit(aEvent->AsDragEvent());
+      RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
+      return DragExit(dragEvent);
     }
     // drop
     case eDrop: {
-      return Drop(aEvent->AsDragEvent());
+      RefPtr<DragEvent> dragEvent = aEvent->AsDragEvent();
+      return Drop(dragEvent);
     }
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keydown
@@ -420,7 +427,7 @@ EditorEventListener::HandleEvent(Event* aEvent)
       if (mMouseDownOrUpConsumedByIME) {
         return NS_OK;
       }
-      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
+      RefPtr<MouseEvent> mouseEvent = aEvent->AsMouseEvent();
       return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseDown(mouseEvent);
     }
     // mouseup
@@ -441,13 +448,15 @@ EditorEventListener::HandleEvent(Event* aEvent)
       if (mMouseDownOrUpConsumedByIME) {
         return NS_OK;
       }
-      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
+      RefPtr<MouseEvent> mouseEvent = aEvent->AsMouseEvent();
       return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseUp(mouseEvent);
     }
     // click
     case eMouseClick: {
-      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
-      NS_ENSURE_TRUE(mouseEvent, NS_OK);
+      RefPtr<MouseEvent> mouseEvent = aEvent->AsMouseEvent();
+      if (NS_WARN_IF(!mouseEvent)) {
+        return NS_OK;
+      }
       // If the preceding mousedown event or mouseup event was consumed,
       // editor shouldn't handle this click event.
       if (mMouseDownOrUpConsumedByIME) {
