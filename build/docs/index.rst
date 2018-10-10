@@ -30,6 +30,7 @@ Important Concepts
    rust
    sparse
    Support for projects building with GN <gn>
+   telemetry
 
 integrated development environment (IDE)
 ========================================
