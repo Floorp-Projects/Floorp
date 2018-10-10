@@ -1,5 +1,4 @@
 import hashlib
-import json
 import os
 import urlparse
 from abc import ABCMeta, abstractmethod
@@ -466,12 +465,12 @@ class TestLoader(object):
                     self._test_ids += [item.id for item in test_dict[test_type]]
         return self._test_ids
 
-    def get_test(self, manifest_test, inherit_metadata, test_metadata):
+    def get_test(self, manifest_file, manifest_test, inherit_metadata, test_metadata):
         if test_metadata is not None:
             inherit_metadata.append(test_metadata)
             test_metadata = test_metadata.get_test(manifest_test.id)
 
-        return wpttest.from_manifest(manifest_test, inherit_metadata, test_metadata)
+        return wpttest.from_manifest(manifest_file, manifest_test, inherit_metadata, test_metadata)
 
     def load_dir_metadata(self, test_manifest, metadata_path, test_path):
         rv = []
@@ -511,12 +510,12 @@ class TestLoader(object):
             inherit_metadata, test_metadata = self.load_metadata(manifest_file, metadata_path, test_path)
 
             for test in iterfilter(self.meta_filters,
-                                   self.iter_wpttest(inherit_metadata, test_metadata, tests)):
+                                   self.iter_wpttest(manifest_file, inherit_metadata, test_metadata, tests)):
                 yield test_path, test_type, test
 
-    def iter_wpttest(self, inherit_metadata, test_metadata, tests):
+    def iter_wpttest(self, manifest_file, inherit_metadata, test_metadata, tests):
         for manifest_test in tests:
-            yield self.get_test(manifest_test, inherit_metadata, test_metadata)
+            yield self.get_test(manifest_file, manifest_test, inherit_metadata, test_metadata)
 
     def _load_tests(self):
         """Read in the tests from the manifest file and add them to a queue"""
