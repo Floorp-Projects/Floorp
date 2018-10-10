@@ -19,21 +19,17 @@ interface MediaRecorder : EventTarget {
 
   readonly attribute MediaStream stream;
 
+  readonly attribute RecordingState state;
+
   readonly attribute DOMString mimeType;
 
-  readonly attribute RecordingState state;
+  attribute EventHandler ondataavailable;
+
+  attribute EventHandler onerror;
 
   attribute EventHandler onstart;
 
   attribute EventHandler onstop;
-
-  attribute EventHandler ondataavailable;
-
-  attribute EventHandler onpause;
-
-  attribute EventHandler onresume;
-
-  attribute EventHandler onerror;
 
   attribute EventHandler onwarning;
 
