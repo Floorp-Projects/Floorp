@@ -59,16 +59,16 @@ static constexpr size_t kStyleStructSizeLimit = 504;
 #undef STYLE_STRUCT
 
 static bool
-DefinitelyEqualURIs(css::URLValueData* aURI1,
-                    css::URLValueData* aURI2)
+DefinitelyEqualURIs(css::URLValue* aURI1,
+                    css::URLValue* aURI2)
 {
   return aURI1 == aURI2 ||
          (aURI1 && aURI2 && aURI1->DefinitelyEqualURIs(*aURI2));
 }
 
 static bool
-DefinitelyEqualURIsAndPrincipal(css::URLValueData* aURI1,
-                                css::URLValueData* aURI2)
+DefinitelyEqualURIsAndPrincipal(css::URLValue* aURI1,
+                                css::URLValue* aURI2)
 {
   return aURI1 == aURI2 ||
          (aURI1 && aURI2 && aURI1->DefinitelyEqualURIsAndPrincipal(*aURI2));
@@ -1251,7 +1251,7 @@ nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext, const nsStyleSVGReset*
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
     nsStyleImage& image = mMask.mLayers[i].mImage;
     if (image.GetType() == eStyleImageType_Image) {
-      css::URLValueData* url = image.GetURLValue();
+      css::URLValue* url = image.GetURLValue();
       // If the url is a local ref, it must be a <mask-resource>, so we don't
       // need to resolve the style image.
       if (url->IsLocalRef()) {
@@ -2083,7 +2083,7 @@ private:
 };
 
 nsStyleImageRequest::nsStyleImageRequest(Mode aModeFlags,
-                                         css::ImageValue* aImageValue)
+                                         css::URLValue* aImageValue)
   : mImageValue(aImageValue)
   , mModeFlags(aModeFlags)
   , mResolved(false)
@@ -2665,7 +2665,7 @@ nsStyleImage::GetImageURI() const
   return uri.forget();
 }
 
-css::URLValueData*
+css::URLValue*
 nsStyleImage::GetURLValue() const
 {
   if (mType == eStyleImageType_Image) {

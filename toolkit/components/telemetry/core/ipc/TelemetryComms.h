@@ -7,10 +7,10 @@
 #define Telemetry_Comms_h__
 
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/TelemetryProcessEnums.h"
+#include "mozilla/TimeStamp.h"
 #include "nsITelemetry.h"
 #include "nsVariant.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/TelemetryProcessEnums.h"
 
 namespace mozilla {
 namespace Telemetry {
