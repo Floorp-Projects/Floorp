@@ -133,8 +133,7 @@ nsContextMenu.prototype = {
       Services.obs.notifyObservers(subject, "on-build-contextmenu");
     }
 
-    this.viewFrameSourceElement =
-         document.getElementById("context-viewframesource");
+    this.isFrameImage = document.getElementById("isFrameImage");
     this.ellipsis = "\u2026";
     try {
       this.ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
@@ -532,9 +531,9 @@ nsContextMenu.prototype = {
     // Hide menu entries for images, show otherwise
     if (this.inFrame) {
       if (BrowserUtils.mimeTypeIsTextBased(this.target.ownerDocument.contentType))
-        this.viewFrameSourceElement.removeAttribute("hidden");
+        this.isFrameImage.removeAttribute("hidden");
       else
-        this.viewFrameSourceElement.setAttribute("hidden", "true");
+        this.isFrameImage.setAttribute("hidden", "true");
     }
 
     // BiDi UI

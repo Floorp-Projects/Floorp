@@ -356,7 +356,8 @@
           <menuitem id="context-viewframesource"
                     label="&viewFrameSourceCmd.label;"
                     accesskey="&viewFrameSourceCmd.accesskey;"
-                    oncommand="gContextMenu.viewFrameSource();"/>
+                    oncommand="gContextMenu.viewFrameSource();"
+                    observes="isFrameImage"/>
           <menuitem id="context-viewframeinfo"
                     label="&viewFrameInfoCmd.label;"
                     accesskey="&viewFrameInfoCmd.accesskey;"
@@ -366,12 +367,14 @@
       <menuitem id="context-viewpartialsource-selection"
                 label="&viewPartialSourceForSelectionCmd.label;"
                 accesskey="&viewPartialSourceCmd.accesskey;"
-                oncommand="gContextMenu.viewPartialSource();"/>
+                oncommand="gContextMenu.viewPartialSource();"
+                observes="isImage"/>
       <menuseparator id="context-sep-viewsource"/>
       <menuitem id="context-viewsource"
                 label="&viewPageSourceCmd.label;"
                 accesskey="&viewPageSourceCmd.accesskey;"
-                oncommand="BrowserViewSource(gContextMenu.browser);"/>
+                oncommand="BrowserViewSource(gContextMenu.browser);"
+                observes="canViewSource"/>
       <menuitem id="context-viewinfo"
                 label="&viewPageInfoCmd.label;"
                 accesskey="&viewPageInfoCmd.accesskey;"
