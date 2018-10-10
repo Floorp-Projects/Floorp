@@ -32,7 +32,7 @@
               "value": "{searchTerms}"
             },
             {
-              "name": "blacklist",
+              "name": "ignore",
               "value": "true"
             },
             {
