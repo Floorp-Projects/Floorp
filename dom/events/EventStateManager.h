@@ -469,6 +469,9 @@ protected:
    *                                EventCausesClickEvents() must return true
    *                                if this event is set to it.
    * @param aStatus                 Returns the result of click event.
+   *                                If the status indicates consumed, the
+   *                                value won't be overwritten with
+   *                                nsEventStatus_eIgnore.
    * @param aMessage                Should be eMouseClick, eMouseDoubleClick or
    *                                eMouseAuxClick.
    * @param aPresShell              The PresShell.
