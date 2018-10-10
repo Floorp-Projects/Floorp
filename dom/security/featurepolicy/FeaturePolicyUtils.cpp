@@ -26,7 +26,6 @@ struct FeatureMap {
  */
 static FeatureMap sSupportedFeatures[] = {
   { "autoplay", FeatureMap::eAll },
-  // TODO: not supported yet!!!
   { "camera", FeatureMap::eAll  },
   { "encrypted-media", FeatureMap::eAll  },
   { "fullscreen", FeatureMap::eAll  },
