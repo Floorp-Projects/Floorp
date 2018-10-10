@@ -404,7 +404,7 @@ class ManifestLoader(object):
                              download=self.manifest_download)
 
     def update_manifest(self, manifest_path, tests_path, url_base="/",
-                        recreate=False, download=False):
+                        meta_filters=None, recreate=False, download=False):
         self.logger.info("Updating test manifest %s" % manifest_path)
         manifest_log.setup()
 
@@ -427,22 +427,35 @@ class ManifestLoader(object):
             manifest_file = manifest.Manifest(url_base)
         else:
             try:
-                manifest_file = manifest.Manifest.from_json(tests_path, json_data)
+                manifest_file = manifest.Manifest.from_json(tests_path,
+                                                            json_data,
+                                                            meta_filters=meta_filters)
             except manifest.ManifestVersionMismatch:
-                manifest_file = manifest.Manifest(url_base)
+                manifest_file = manifest.Manifest(url_base, meta_filters=meta_filters)
 
         manifest_update.update(tests_path, manifest_file, True)
 
         manifest.write(manifest_file, manifest_path)
+        return manifest_file
 
     def load_manifest(self, tests_path, manifest_path, url_base="/", **kwargs):
-        if (not os.path.exists(manifest_path) or
-            self.force_manifest_update):
-            self.update_manifest(manifest_path, tests_path, url_base, download=self.manifest_download)
         try:
-            manifest_file = manifest.load(tests_path, manifest_path, types=self.types, meta_filters=self.meta_filters)
+            if (not os.path.exists(manifest_path) or
+                self.force_manifest_update):
+                manifest_file = self.update_manifest(manifest_path,
+                                                     tests_path,
+                                                     url_base,
+                                                     meta_filters=self.meta_filters,
+                                                     download=self.manifest_download)
+
+            else:
+                manifest_file = manifest.load(tests_path,
+                                              manifest_path,
+                                              types=self.types,
+                                              meta_filters=self.meta_filters)
         except manifest.ManifestVersionMismatch:
             manifest_file = manifest.Manifest(url_base)
+
         if manifest_file.url_base != url_base:
             self.logger.info("Updating url_base in manifest from %s to %s" % (manifest_file.url_base,
                                                                               url_base))
