@@ -71,12 +71,6 @@ dictionary MediaTrackConstraintSet {
     ConstrainBoolean autoGainControl = null;
     // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
     ConstrainLong channelCount = null;
-
-    // Deprecated with warnings:
-    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
-    ConstrainBoolean mozNoiseSuppression = null;
-    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
-    ConstrainBoolean mozAutoGainControl = null;
 };
 
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {
