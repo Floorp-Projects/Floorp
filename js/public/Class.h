@@ -102,10 +102,12 @@ IsArray(JSContext* cx, HandleObject obj, IsArrayAnswer* answer);
  * Typical usage:
  *
  *     ObjectOpResult result;
- *     if (!DefineProperty(cx, obj, id, ..., result))
+ *     if (!DefineProperty(cx, obj, id, ..., result)) {
  *         return false;
- *     if (!result)
+ *     }
+ *     if (!result) {
  *         return result.reportError(cx, obj, id);
+ *     }
  *
  * Users don't have to call `result.report()`; another possible ending is:
  *
@@ -161,8 +163,9 @@ class ObjectOpResult
      *
      * Always returns true, as a convenience. Typical usage will be:
      *
-     *     if (funny condition)
+     *     if (funny condition) {
      *         return result.fail(JSMSG_CANT_DO_THE_THINGS);
+     *     }
      *
      * The true return value indicates that no exception is pending, and it
      * would be OK to ignore the failure and continue.

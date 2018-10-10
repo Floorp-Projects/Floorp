@@ -95,6 +95,19 @@ const gTestcases = [
     expectReflow: true,
   },
 
+  // * Changing 'shape-outside' on a non-floating box should not cause anything to happen.
+  {
+    beforeStyle: "shape-outside: none",
+    afterStyle:  "shape-outside: circle()",
+  },
+
+  // * Changing 'shape-outside' should cause reflow, but not frame construction.
+  {
+    beforeStyle: "float: left; shape-outside: none",
+    afterStyle:  "float: left; shape-outside: circle()",
+    expectReflow: true,
+  },
+
   // * Changing 'overflow' on <body> should cause reflow,
   // but not frame reconstruction
   {

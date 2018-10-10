@@ -189,7 +189,7 @@ typedef JSObject*
 (* JSGetIncumbentGlobalCallback)(JSContext* cx);
 
 typedef bool
-(* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject job,
+(* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject promise, JS::HandleObject job,
                                 JS::HandleObject allocationSite, JS::HandleObject incumbentGlobal,
                                 void* data);
 
@@ -2526,8 +2526,9 @@ JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
  * This function is roughly equivalent to:
  *
  *     var result = [];
- *     for (key in obj)
+ *     for (key in obj) {
  *         result.push(key);
+ *     }
  *     return result;
  *
  * This is the closest thing we currently have to the ES6 [[Enumerate]]
@@ -3383,6 +3384,51 @@ extern JS_PUBLIC_API(bool)
 AddPromiseReactions(JSContext* cx, JS::HandleObject promise,
                     JS::HandleObject onResolve, JS::HandleObject onReject);
 
+// This enum specifies whether a promise is expected to keep track of information
+// that is useful for embedders to implement user activation behavior handling as
+// specified in the HTML spec:
+// https://html.spec.whatwg.org/multipage/interaction.html#triggered-by-user-activation
+// By default, promises created by SpiderMonkey do not make any attempt to keep
+// track of information about whether an activation behavior was being processed
+// when the original promise in a promise chain was created.  If the embedder sets
+// either of the HadUserInteractionAtCreation or DidntHaveUserInteractionAtCreation
+// flags on a promise after creating it, SpiderMonkey will propagate that flag to
+// newly created promises when processing Promise#then and will make it possible
+// to query this flag off of a promise further down the chain later using the
+// GetPromiseUserInputEventHandlingState() API.
+enum class PromiseUserInputEventHandlingState {
+  // Don't keep track of this state (default for all promises)
+  DontCare,
+  // Keep track of this state, the original promise in the chain was created
+  // while an activation behavior was being processed.
+  HadUserInteractionAtCreation,
+  // Keep track of this state, the original promise in the chain was created
+  // while an activation behavior was not being processed.
+  DidntHaveUserInteractionAtCreation
+};
+
+/**
+ * Returns the given Promise's activation behavior state flag per above as a
+ * JS::PromiseUserInputEventHandlingState value.  All promises are created with
+ * the DontCare state by default.
+ *
+ * Returns JS::PromiseUserInputEventHandlingState::DontCare if the given object
+ * is a wrapper that can't safely be unwrapped.
+ */
+extern JS_PUBLIC_API(PromiseUserInputEventHandlingState)
+GetPromiseUserInputEventHandlingState(JS::HandleObject promise);
+
+/**
+ * Sets the given Promise's activation behavior state flag per above as a
+ * JS::PromiseUserInputEventHandlingState value.
+ *
+ * Returns false if the given object is a wrapper that can't safely be unwrapped,
+ * or if the promise isn't pending.
+ */
+extern JS_PUBLIC_API(bool)
+SetPromiseUserInputEventHandlingState(JS::HandleObject promise,
+                                      JS::PromiseUserInputEventHandlingState state);
+
 /**
  * Unforgeable version of the JS builtin Promise.all.
  *
@@ -3731,8 +3777,9 @@ JS_PutEscapedString(JSContext* cx, char* buffer, size_t size, JSString* str, cha
  *
  *   // in a fallible context
  *   JSFlatString* fstr = JS_FlattenString(cx, str);
- *   if (!fstr)
+ *   if (!fstr) {
  *     return false;
+ *   }
  *   MOZ_ASSERT(fstr == JS_ASSERT_STRING_IS_FLAT(str));
  *
  *   // in an infallible context, for the same 'str'
@@ -4742,17 +4789,21 @@ DeserializeWasmModule(PRFileDesc* bytecode, JS::UniqueChars filename, unsigned l
  * Convenience class for imitating a JS level for-of loop. Typical usage:
  *
  *     ForOfIterator it(cx);
- *     if (!it.init(iterable))
+ *     if (!it.init(iterable)) {
  *       return false;
+ *     }
  *     RootedValue val(cx);
  *     while (true) {
  *       bool done;
- *       if (!it.next(&val, &done))
+ *       if (!it.next(&val, &done)) {
  *         return false;
- *       if (done)
+ *       }
+ *       if (done) {
  *         break;
- *       if (!DoStuff(cx, val))
+ *       }
+ *       if (!DoStuff(cx, val)) {
  *         return false;
+ *       }
  *     }
  */
 class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {

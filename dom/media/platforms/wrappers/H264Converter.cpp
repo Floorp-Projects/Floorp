@@ -34,7 +34,9 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mDecoderOptions(aParams.mOptions)
   , mRate(aParams.mRate)
 {
+  mInConstructor = true;
   mLastError = CreateDecoder(mOriginalConfig, aParams.mDiagnostics);
+  mInConstructor = false;
   if (mDecoder) {
     MOZ_ASSERT(H264::HasSPS(mOriginalConfig.mExtraData));
     // The video metadata contains out of band SPS/PPS (AVC1) store it.
@@ -49,178 +51,202 @@ H264Converter::~H264Converter()
 RefPtr<MediaDataDecoder::InitPromise>
 H264Converter::Init()
 {
-  if (mDecoder) {
-    return mDecoder->Init();
-  }
+  RefPtr<H264Converter> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    if (mDecoder) {
+      return mDecoder->Init();
+    }
 
-  // We haven't been able to initialize a decoder due to a missing SPS/PPS.
-  return MediaDataDecoder::InitPromise::CreateAndResolve(
-           TrackType::kVideoTrack, __func__);
+    // We haven't been able to initialize a decoder due to a missing SPS/PPS.
+    return MediaDataDecoder::InitPromise::CreateAndResolve(
+      TrackType::kVideoTrack, __func__);
+  });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
 H264Converter::Decode(MediaRawData* aSample)
 {
-  MOZ_RELEASE_ASSERT(mFlushPromise.IsEmpty(), "Flush operatin didn't complete");
+  RefPtr<H264Converter> self = this;
+  RefPtr<MediaRawData> sample = aSample;
+  return InvokeAsync(mTaskQueue, __func__, [self, this, sample]() {
+    MOZ_RELEASE_ASSERT(mFlushPromise.IsEmpty(),
+                       "Flush operatin didn't complete");
 
-  MOZ_RELEASE_ASSERT(!mDecodePromiseRequest.Exists() &&
-                       !mInitPromiseRequest.Exists(),
-                     "Can't request a new decode until previous one completed");
+    MOZ_RELEASE_ASSERT(
+      !mDecodePromiseRequest.Exists() && !mInitPromiseRequest.Exists(),
+      "Can't request a new decode until previous one completed");
 
-  if (!AnnexB::ConvertSampleToAVCC(aSample)) {
-    // We need AVCC content to be able to later parse the SPS.
-    // This is a no-op if the data is already AVCC.
-    return DecodePromise::CreateAndReject(
-      MediaResult(NS_ERROR_OUT_OF_MEMORY, RESULT_DETAIL("ConvertSampleToAVCC")),
-      __func__);
-  }
+    if (!AnnexB::ConvertSampleToAVCC(sample)) {
+      // We need AVCC content to be able to later parse the SPS.
+      // This is a no-op if the data is already AVCC.
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("ConvertSampleToAVCC")),
+        __func__);
+    }
 
-  if (!AnnexB::IsAVCC(aSample)) {
-    return DecodePromise::CreateAndReject(
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  RESULT_DETAIL("Invalid H264 content")),
-      __func__);
-  }
+    if (!AnnexB::IsAVCC(sample)) {
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL("Invalid H264 content")),
+        __func__);
+    }
 
-  MediaResult rv(NS_OK);
-  if (!mDecoder) {
-    // It is not possible to create an AVCC H264 decoder without SPS.
-    // As such, creation will fail if the extra_data just extracted doesn't
-    // contain a SPS.
-    rv = CreateDecoderAndInit(aSample);
-    if (rv == NS_ERROR_NOT_INITIALIZED) {
-      // We are missing the required SPS to create the decoder.
-      // Ignore for the time being, the MediaRawData will be dropped.
+    MediaResult rv(NS_OK);
+    if (!mDecoder) {
+      // It is not possible to create an AVCC H264 decoder without SPS.
+      // As such, creation will fail if the extra_data just extracted doesn't
+      // contain a SPS.
+      rv = CreateDecoderAndInit(sample);
+      if (rv == NS_ERROR_NOT_INITIALIZED) {
+        // We are missing the required SPS to create the decoder.
+        // Ignore for the time being, the MediaRawData will be dropped.
+        return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+      }
+    } else {
+      // Initialize the members that we couldn't if the extradata was given
+      // during H264Converter's construction.
+      if (!mNeedAVCC) {
+        mNeedAVCC =
+          Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
+      }
+      if (!mCanRecycleDecoder) {
+        mCanRecycleDecoder = Some(CanRecycleDecoder());
+      }
+      rv = CheckForSPSChange(sample);
+    }
+
+    if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
+      // The decoder is pending initialization.
+      RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
+      return p;
+    }
+
+    if (NS_FAILED(rv)) {
+      return DecodePromise::CreateAndReject(rv, __func__);
+    }
+
+    if (mNeedKeyframe && !sample->mKeyframe) {
       return DecodePromise::CreateAndResolve(DecodedData(), __func__);
     }
-  } else {
-    // Initialize the members that we couldn't if the extradata was given during
-    // H264Converter's construction.
-    if (!mNeedAVCC) {
-      mNeedAVCC =
-        Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
+
+    auto res = !*mNeedAVCC
+                 ? AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)
+                 : Ok();
+    if (res.isErr()) {
+      return DecodePromise::CreateAndReject(
+        MediaResult(res.unwrapErr(), RESULT_DETAIL("ConvertSampleToAnnexB")),
+        __func__);
     }
-    if (!mCanRecycleDecoder) {
-      mCanRecycleDecoder = Some(CanRecycleDecoder());
-    }
-    rv = CheckForSPSChange(aSample);
-  }
 
-  if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
-    // The decoder is pending initialization.
-    RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
-    return p;
-  }
+    mNeedKeyframe = false;
 
-  if (NS_FAILED(rv)) {
-    return DecodePromise::CreateAndReject(rv, __func__);
-  }
+    sample->mExtraData = mCurrentConfig.mExtraData;
 
-  if (mNeedKeyframe && !aSample->mKeyframe) {
-    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-  }
-
-  auto res = !*mNeedAVCC
-             ? AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)
-             : Ok();
-  if (res.isErr()) {
-    return DecodePromise::CreateAndReject(
-      MediaResult(res.unwrapErr(), RESULT_DETAIL("ConvertSampleToAnnexB")),
-      __func__);
-  }
-
-  mNeedKeyframe = false;
-
-  aSample->mExtraData = mCurrentConfig.mExtraData;
-
-  return mDecoder->Decode(aSample);
+    return mDecoder->Decode(sample);
+  });
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>
 H264Converter::Flush()
 {
-  mDecodePromiseRequest.DisconnectIfExists();
-  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  mNeedKeyframe = true;
-  mPendingFrames.Clear();
+  RefPtr<H264Converter> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    mDecodePromiseRequest.DisconnectIfExists();
+    mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    mNeedKeyframe = true;
+    mPendingFrames.Clear();
 
-  MOZ_RELEASE_ASSERT(mFlushPromise.IsEmpty(), "Previous flush didn't complete");
+    MOZ_RELEASE_ASSERT(mFlushPromise.IsEmpty(),
+                       "Previous flush didn't complete");
 
-  /*
-    When we detect a change of content in the H264 stream, we first drain the
-    current decoder (1), flush (2), shut it down (3) create a new decoder and
-    initialize it (4). It is possible for H264Converter::Flush to be called
-    during any of those times.
-    If during (1):
-      - mDrainRequest will not be empty.
-      - The old decoder can still be used, with the current extradata as stored
-        in mCurrentConfig.mExtraData.
+    /*
+      When we detect a change of content in the H264 stream, we first drain the
+      current decoder (1), flush (2), shut it down (3) create a new decoder and
+      initialize it (4). It is possible for H264Converter::Flush to be called
+      during any of those times.
+      If during (1):
+        - mDrainRequest will not be empty.
+        - The old decoder can still be used, with the current extradata as
+      stored in mCurrentConfig.mExtraData.
 
-    If during (2):
-      - mFlushRequest will not be empty.
-      - The old decoder can still be used, with the current extradata as stored
-        in mCurrentConfig.mExtraData.
+      If during (2):
+        - mFlushRequest will not be empty.
+        - The old decoder can still be used, with the current extradata as
+      stored in mCurrentConfig.mExtraData.
 
-    If during (3):
-      - mShutdownRequest won't be empty.
-      - mDecoder is empty.
-      - The old decoder is no longer referenced by the H264Converter.
+      If during (3):
+        - mShutdownRequest won't be empty.
+        - mDecoder is empty.
+        - The old decoder is no longer referenced by the H264Converter.
 
-    If during (4):
-      - mInitPromiseRequest won't be empty.
-      - mDecoder is set but not usable yet.
-  */
+      If during (4):
+        - mInitPromiseRequest won't be empty.
+        - mDecoder is set but not usable yet.
+    */
 
-  if (mDrainRequest.Exists() || mFlushRequest.Exists() ||
-      mShutdownRequest.Exists() || mInitPromiseRequest.Exists()) {
-    // We let the current decoder complete and will resume after.
-    return mFlushPromise.Ensure(__func__);
-  }
-  if (mDecoder) {
-    return mDecoder->Flush();
-  }
-  return FlushPromise::CreateAndResolve(true, __func__);
+    if (mDrainRequest.Exists() || mFlushRequest.Exists() ||
+        mShutdownRequest.Exists() || mInitPromiseRequest.Exists()) {
+      // We let the current decoder complete and will resume after.
+      RefPtr<FlushPromise> p = mFlushPromise.Ensure(__func__);
+      return p;
+    }
+    if (mDecoder) {
+      return mDecoder->Flush();
+    }
+    return FlushPromise::CreateAndResolve(true, __func__);
+  });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
 H264Converter::Drain()
 {
-  MOZ_RELEASE_ASSERT(!mDrainRequest.Exists());
-  mNeedKeyframe = true;
-  if (mDecoder) {
-    return mDecoder->Drain();
-  }
-  return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  RefPtr<H264Converter> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    MOZ_RELEASE_ASSERT(!mDrainRequest.Exists());
+    mNeedKeyframe = true;
+    if (mDecoder) {
+      return mDecoder->Drain();
+    }
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  });
 }
 
 RefPtr<ShutdownPromise>
 H264Converter::Shutdown()
 {
-  mInitPromiseRequest.DisconnectIfExists();
-  mDecodePromiseRequest.DisconnectIfExists();
-  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  mDrainRequest.DisconnectIfExists();
-  mFlushRequest.DisconnectIfExists();
-  mFlushPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  mShutdownRequest.DisconnectIfExists();
+  RefPtr<H264Converter> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    mInitPromiseRequest.DisconnectIfExists();
+    mDecodePromiseRequest.DisconnectIfExists();
+    mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    mDrainRequest.DisconnectIfExists();
+    mFlushRequest.DisconnectIfExists();
+    mFlushPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    mShutdownRequest.DisconnectIfExists();
 
-  if (mShutdownPromise) {
-    // We have a shutdown in progress, return that promise instead as we can't
-    // shutdown a decoder twice.
-    return mShutdownPromise.forget();
-  }
-  return ShutdownDecoder();
+    if (mShutdownPromise) {
+      // We have a shutdown in progress, return that promise instead as we can't
+      // shutdown a decoder twice.
+      RefPtr<ShutdownPromise> p = mShutdownPromise.forget();
+      return p;
+    }
+    return ShutdownDecoder();
+  });
 }
 
 RefPtr<ShutdownPromise>
 H264Converter::ShutdownDecoder()
 {
-  mNeedAVCC.reset();
-  if (mDecoder) {
-    RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
-    return decoder->Shutdown();
-  }
-  return ShutdownPromise::CreateAndResolve(true, __func__);
+  RefPtr<H264Converter> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    mNeedAVCC.reset();
+    if (mDecoder) {
+      RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
+      return decoder->Shutdown();
+    }
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  });
 }
 
 bool
@@ -253,6 +279,10 @@ MediaResult
 H264Converter::CreateDecoder(const VideoInfo& aConfig,
                              DecoderDoctorDiagnostics* aDiagnostics)
 {
+  // This is the only one of two methods to run outside the TaskQueue when
+  // called from the constructor.
+  MOZ_ASSERT(mInConstructor || mTaskQueue->IsCurrentThreadIn());
+
   if (!H264::HasSPS(aConfig.mExtraData)) {
     // nothing found yet, will try again later
     return NS_ERROR_NOT_INITIALIZED;
@@ -311,6 +341,8 @@ H264Converter::CreateDecoder(const VideoInfo& aConfig,
 MediaResult
 H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 {
+  AssertOnTaskQueue();
+
   RefPtr<MediaByteBuffer> extra_data =
     H264::ExtractExtraData(aSample);
   bool inbandExtradata = H264::HasSPS(extra_data);
@@ -331,7 +363,7 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
     RefPtr<MediaRawData> sample = aSample;
     mDecoder->Init()
       ->Then(
-        AbstractThread::GetCurrent()->AsTaskQueue(),
+        mTaskQueue,
         __func__,
         [self, sample, this](const TrackType aTrackType) {
           mInitPromiseRequest.Complete();
@@ -378,6 +410,8 @@ H264Converter::CanRecycleDecoder() const
 void
 H264Converter::DecodeFirstSample(MediaRawData* aSample)
 {
+  AssertOnTaskQueue();
+
   if (mNeedKeyframe && !aSample->mKeyframe) {
     mDecodePromise.Resolve(mPendingFrames, __func__);
     mPendingFrames.Clear();
@@ -415,6 +449,8 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
 MediaResult
 H264Converter::CheckForSPSChange(MediaRawData* aSample)
 {
+  AssertOnTaskQueue();
+
   RefPtr<MediaByteBuffer> extra_data =
     aSample->mKeyframe ? H264::ExtractExtraData(aSample) : nullptr;
   if (!H264::HasSPS(extra_data)) {
@@ -459,6 +495,8 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
 void
 H264Converter::DrainThenFlushDecoder(MediaRawData* aPendingSample)
 {
+  AssertOnTaskQueue();
+
   RefPtr<MediaRawData> sample = aPendingSample;
   RefPtr<H264Converter> self = this;
   mDecoder->Drain()
@@ -494,10 +532,12 @@ H264Converter::DrainThenFlushDecoder(MediaRawData* aPendingSample)
 
 void H264Converter::FlushThenShutdownDecoder(MediaRawData* aPendingSample)
 {
+  AssertOnTaskQueue();
+
   RefPtr<MediaRawData> sample = aPendingSample;
   RefPtr<H264Converter> self = this;
   mDecoder->Flush()
-    ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
+    ->Then(mTaskQueue,
            __func__,
            [self, sample, this]() {
              mFlushRequest.Complete();
@@ -510,7 +550,7 @@ void H264Converter::FlushThenShutdownDecoder(MediaRawData* aPendingSample)
 
              mShutdownPromise = ShutdownDecoder();
              mShutdownPromise
-               ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
+               ->Then(mTaskQueue,
                       __func__,
                       [self, sample, this]() {
                         mShutdownRequest.Complete();
@@ -549,6 +589,10 @@ void H264Converter::FlushThenShutdownDecoder(MediaRawData* aPendingSample)
 void
 H264Converter::UpdateConfigFromExtraData(MediaByteBuffer* aExtraData)
 {
+  // This is the only one of two methods to run outside the TaskQueue when
+  // called from the constructor.
+  MOZ_ASSERT(mInConstructor || mTaskQueue->IsCurrentThreadIn());
+
   SPSData spsdata;
   if (H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
       spsdata.pic_width > 0 && spsdata.pic_height > 0) {

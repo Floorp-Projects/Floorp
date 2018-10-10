@@ -75,7 +75,7 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  *        the addonId of the target WebExtension.
  */
 webExtensionTargetPrototype.initialize = function(conn, chromeGlobal, prefix, addonId) {
-  this.id = addonId;
+  this.addonId = addonId;
 
   // Try to discovery an existent extension page to attach (which will provide the initial
   // URL shown in the window tittle when the addon debugger is opened).
@@ -111,7 +111,7 @@ webExtensionTargetPrototype.initialize = function(conn, chromeGlobal, prefix, ad
   // Set the consoleAPIListener filtering options
   // (retrieved and used in the related webconsole child actor).
   this.consoleAPIListenerOptions = {
-    addonId: this.id,
+    addonId: this.addonId,
   };
 
   this.aps = Cc["@mozilla.org/addons/policy-service;1"]
@@ -147,7 +147,7 @@ webExtensionTargetPrototype.exit = function() {
   }
 
   this.addon = null;
-  this.id = null;
+  this.addonId = null;
 
   return ParentProcessTargetActor.prototype.exit.apply(this);
 };
@@ -190,7 +190,7 @@ webExtensionTargetPrototype._destroyFallbackWindow = function() {
 // is set later using _onNewExtensionWindow.
 webExtensionTargetPrototype._searchForExtensionWindow = function() {
   for (const window of Services.ww.getWindowEnumerator(null)) {
-    if (window.document.nodePrincipal.addonId == this.id) {
+    if (window.document.nodePrincipal.addonId == this.addonId) {
       return window;
     }
   }
@@ -230,7 +230,7 @@ webExtensionTargetPrototype._attach = function() {
   // ParentProcessTargetActor.onAttach, or the BrowsingContextTargetActor will not be
   // subscribed to the child doc shell updates.
 
-  if (!this.window || this.window.document.nodePrincipal.addonId !== this.id) {
+  if (!this.window || this.window.document.nodePrincipal.addonId !== this.addonId) {
     // Discovery an existent extension page to attach.
     const extensionWindow = this._searchForExtensionWindow();
 
@@ -287,13 +287,13 @@ webExtensionTargetPrototype._docShellsToWindows = function(docshells) {
                     .filter(windowDetails => {
                       // Filter the docShells based on the addon id of the window or
                       // its sameType top level frame.
-                      return windowDetails.addonID === this.id ||
-                             windowDetails.sameTypeRootAddonID === this.id;
+                      return windowDetails.addonID === this.addonId ||
+                             windowDetails.sameTypeRootAddonID === this.addonId;
                     });
 };
 
 webExtensionTargetPrototype.isExtensionWindow = function(window) {
-  return window.document.nodePrincipal.addonId == this.id;
+  return window.document.nodePrincipal.addonId == this.addonId;
 };
 
 webExtensionTargetPrototype.isExtensionWindowDescendent = function(window) {
@@ -342,7 +342,7 @@ webExtensionTargetPrototype._allowSource = function(source) {
   try {
     const addonID = this.aps.extensionURIToAddonId(uri);
 
-    return addonID == this.id;
+    return addonID == this.addonId;
   } catch (err) {
     // extensionURIToAddonId raises an exception on non-extension URLs.
     return false;
@@ -385,7 +385,7 @@ webExtensionTargetPrototype._shouldAddNewGlobalAsDebuggee = function(newGlobal) 
     // This will fail for non-Sandbox objects, hence the try-catch block.
     const metadata = Cu.getSandboxMetadata(global);
     if (metadata) {
-      return metadata.addonID === this.id;
+      return metadata.addonID === this.addonId;
     }
   } catch (e) {
     // Unable to retrieve the sandbox metadata.

@@ -1864,6 +1864,9 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   auto scaledBounds = bounds * layerScale;
   auto dtRect = RoundedOut(scaledBounds);
   auto dtSize = dtRect.Size();
+  if (dtSize.IsEmpty()) {
+    return nullptr;
+  }
 
   aImageRect = dtRect / layerScale;
 

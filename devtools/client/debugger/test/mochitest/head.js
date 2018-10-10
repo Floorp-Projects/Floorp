@@ -169,7 +169,7 @@ function getAddonActorForId(aClient, aAddonId) {
   info("Get addon actor for ID: " + aAddonId);
   let deferred = promise.defer();
 
-  aClient.listAddons(aResponse => {
+  aClient.listAddons().then(aResponse => {
     let addonTargetActor = aResponse.addons.filter(aGrip => aGrip.id == aAddonId).pop();
     info("got addon actor for ID: " + aAddonId);
     deferred.resolve(addonTargetActor);

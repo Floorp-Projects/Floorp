@@ -21,15 +21,18 @@ namespace frontend {
 // Example:
 //
 //     JumpList brList;
-//     if (!emitJump(JSOP_IFEQ, &brList))
+//     if (!emitJump(JSOP_IFEQ, &brList)) {
 //         return false;
+//     }
 //     ...
 //     JumpTarget label;
-//     if (!emitJumpTarget(&label))
+//     if (!emitJumpTarget(&label)) {
 //         return false;
+//     }
 //     ...
-//     if (!emitJump(JSOP_GOTO, &brList))
+//     if (!emitJump(JSOP_GOTO, &brList)) {
 //         return false;
+//     }
 //     ...
 //     patchJumpsToTarget(brList, label);
 //
