@@ -16,6 +16,7 @@
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 
@@ -166,6 +167,7 @@ public:
     MOZ_ASSERT(sIsInit);
     MOZ_ASSERT(!tlsFrame.get());
     tlsFrame.set(this);
+    Unused << sIsInit;
   }
 
   ~SavedCallFrame()

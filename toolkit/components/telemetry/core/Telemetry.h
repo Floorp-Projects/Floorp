@@ -7,14 +7,13 @@
 #define Telemetry_h__
 
 #include "mozilla/GuardObjects.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/StartupTimeline.h"
-#include "nsTArray.h"
-#include "nsString.h"
-#include "nsXULAppAPI.h"
-
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/TelemetryScalarEnums.h"
+#include "mozilla/TimeStamp.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsXULAppAPI.h"
 
 /******************************************************************************
  * This implements the Telemetry system.

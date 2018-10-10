@@ -5,8 +5,8 @@
 
 #include "gtest/gtest.h"
 #include "js/Conversions.h"
-#include "nsITelemetry.h"
 #include "mozilla/Telemetry.h"
+#include "nsITelemetry.h"
 #include "TelemetryFixture.h"
 #include "TelemetryTestHelpers.h"
 

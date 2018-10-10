@@ -240,7 +240,13 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
 }
 
 function denyGUMRequest(aData) {
-  Services.obs.notifyObservers(null, "getUserMedia:response:deny", aData.callID);
+  let subject;
+  if (aData.noOSPermission) {
+    subject = "getUserMedia:response:noOSPermission";
+  } else {
+    subject = "getUserMedia:response:deny";
+  }
+  Services.obs.notifyObservers(null, subject, aData.callID);
 
   if (!aData.windowID)
     return;

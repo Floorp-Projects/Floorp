@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
+#include "Telemetry.h"
 
+#include <algorithm>
 #include <prio.h>
 #include <prproces.h>
 #if defined(XP_UNIX) && !defined(XP_DARWIN)
@@ -13,90 +14,84 @@
 #else
 #include <chrono>
 #endif
-
+#include "base/pickle.h"
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
+#include "geckoview/TelemetryGeckoViewPersistence.h"
+#endif
+#include "ipc/TelemetryIPCAccumulator.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
+#include "js/GCAPI.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/FStream.h"
+#include "mozilla/IOInterposer.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Unused.h"
-
-#include "base/pickle.h"
-#include "other/CombinedStacks.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsThreadManager.h"
-#include "nsXPCOMCIDInternal.h"
-#include "nsCOMArray.h"
-#include "nsCOMPtr.h"
-#include "nsXPCOMPrivate.h"
-#include "nsIXULAppInfo.h"
-#include "nsVersionComparator.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ModuleUtils.h"
-#include "nsIXPConnect.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/PoisonIOInterposer.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/ProcessedStack.h"
 #include "mozilla/Services.h"
-#include "jsapi.h"
-#include "jsfriendapi.h"
-#include "js/GCAPI.h"
-#include "nsString.h"
-#include "nsITelemetry.h"
-#include "nsIDirectoryEnumerator.h"
-#include "nsIFileStreams.h"
-#include "nsLocalFile.h"
-#include "nsIMemoryReporter.h"
-#include "nsISeekableStream.h"
-#include "nsISimpleEnumerator.h"
-#include "Telemetry.h"
-#include "TelemetryCommon.h"
-#include "TelemetryHistogram.h"
-#include "other/TelemetryIOInterposeObserver.h"
-#include "ipc/TelemetryIPCAccumulator.h"
-#include "TelemetryScalar.h"
-#include "TelemetryEvent.h"
-#include "other/WebrtcTelemetry.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
+#include "mozilla/StartupTimeline.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/Unused.h"
+#if defined(XP_WIN)
+#include "mozilla/WinDllServices.h"
+#endif
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
-#include "nsXULAppAPI.h"
+#include "nsHashKeys.h"
+#include "nsIComponentManager.h"
+#include "nsIDirectoryEnumerator.h"
+#include "nsIFileStreams.h"
+#include "nsIMemoryReporter.h"
+#include "nsISeekableStream.h"
+#include "nsIServiceManager.h"
+#include "nsISimpleEnumerator.h"
+#include "nsITelemetry.h"
+#include "nsIXPConnect.h"
+#include "nsIXULAppInfo.h"
+#include "nsJSUtils.h"
+#include "nsLocalFile.h"
+#include "nsNativeCharsetUtils.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
+#include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
+#include "nsTHashtable.h"
+#include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #if defined(XP_WIN)
 #include "nsUnicharUtils.h"
 #endif
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
-#include "nsJSUtils.h"
-#include "nsReadableUtils.h"
+#include "nsVersionComparator.h"
+#include "nsXPCOMCIDInternal.h"
+#include "nsXPCOMPrivate.h"
+#include "nsXULAppAPI.h"
+#include "other/CombinedStacks.h"
+#include "other/TelemetryIOInterposeObserver.h"
+#include "other/WebrtcTelemetry.h"
 #include "plstr.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "mozilla/BackgroundHangMonitor.h"
-#include "mozilla/FStream.h"
-#include "mozilla/ProcessedStack.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/IOInterposer.h"
-#include "mozilla/PoisonIOInterposer.h"
-#include "mozilla/StartupTimeline.h"
-#if defined(XP_WIN)
-#include "mozilla/WinDllServices.h"
-#endif
-#include "nsNativeCharsetUtils.h"
-#include "nsProxyRelease.h"
-
 #if defined(MOZ_GECKO_PROFILER)
 #include "shared-libraries.h"
 #include "other/KeyedStackCapturer.h"
 #endif // MOZ_GECKO_PROFILER
-
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
-#include "geckoview/TelemetryGeckoViewPersistence.h"
-#endif
+#include "TelemetryCommon.h"
+#include "TelemetryEvent.h"
+#include "TelemetryHistogram.h"
+#include "TelemetryScalar.h"
 
 namespace {
 

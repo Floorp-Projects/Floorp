@@ -3514,7 +3514,6 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     RefPtr<gfxImageSurface> blackImage;
     gfxRect targetRect(rect.x, rect.y, rect.width, rect.height);
     IntSize targetSize(rect.width, rect.height);
-    gfxPoint deviceOffset = -targetRect.TopLeft();
 
     // We always use a temporary "white image"
     whiteImage = new gfxImageSurface(targetSize, SurfaceFormat::X8R8G8B8_UINT32);
@@ -3549,6 +3548,7 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     blackImage = image->GetSubimage(targetRect);
 
 #else
+    gfxPoint deviceOffset = -targetRect.TopLeft();
     // Paint onto white background
     whiteImage->SetDeviceOffset(deviceOffset);
     PaintRectToSurface(rect, whiteImage, Color(1.f, 1.f, 1.f));

@@ -23,6 +23,10 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
   return Services.strings.createBundle("chrome://branding/locale/brand.properties");
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "OSPermissions",
+                                   "@mozilla.org/ospermissionrequest;1",
+                                   "nsIOSPermissionRequest");
+
 var webrtcUI = {
   peerConnectionBlockers: new Set(),
   emitter: new EventEmitter(),
@@ -300,6 +304,67 @@ function denyRequest(aBrowser, aRequest) {
                                             windowID: aRequest.windowID});
 }
 
+//
+// Deny the request because the browser does not have access to the
+// camera or microphone due to OS security restrictions. The user may
+// have granted camera/microphone access to the site, but not have
+// allowed the browser access in OS settings.
+//
+function denyRequestNoPermission(aBrowser, aRequest) {
+  aBrowser.messageManager.sendAsyncMessage("webrtc:Deny",
+                                           {callID: aRequest.callID,
+                                            windowID: aRequest.windowID,
+                                            noOSPermission: true});
+}
+
+//
+// Check if we have permission to access the camera and or microphone at the
+// OS level. Triggers a request to access the device if access is needed and
+// the permission state has not yet been determined.
+//
+async function checkOSPermission(camNeeded, micNeeded) {
+  let camStatus = {}, micStatus = {};
+  OSPermissions.getMediaCapturePermissionState(camStatus, micStatus);
+  if (camNeeded) {
+    let camPermission = camStatus.value;
+    let camAccessible = await checkAndGetOSPermission(camPermission,
+      OSPermissions.requestVideoCapturePermission);
+    if (!camAccessible) {
+      return false;
+    }
+  }
+  if (micNeeded) {
+    let micPermission = micStatus.value;
+    let micAccessible = await checkAndGetOSPermission(micPermission,
+      OSPermissions.requestAudioCapturePermission);
+    if (!micAccessible) {
+      return false;
+    }
+  }
+  return true;
+}
+
+//
+// Given a device's permission, return true if the device is accessible. If
+// the device's permission is not yet determined, request access to the device.
+// |requestPermissionFunc| must return a promise that resolves with true
+// if the device is accessible and false otherwise.
+//
+async function checkAndGetOSPermission(devicePermission,
+                                       requestPermissionFunc) {
+  if (devicePermission == OSPermissions.PERMISSION_STATE_DENIED ||
+      devicePermission == OSPermissions.PERMISSION_STATE_RESTRICTED) {
+    return false;
+  }
+  if (devicePermission == OSPermissions.PERMISSION_STATE_NOTDETERMINED) {
+    let deviceAllowed = await requestPermissionFunc();
+    if (!deviceAllowed) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function getHostOrExtensionName(uri, href) {
   let host;
   try {
@@ -517,10 +582,19 @@ function prompt(aBrowser, aRequest) {
           browser._devicePermissionURIs = browser._devicePermissionURIs || [];
           browser._devicePermissionURIs.push(uri);
 
-          let mm = browser.messageManager;
-          mm.sendAsyncMessage("webrtc:Allow", {callID: aRequest.callID,
-                                               windowID: aRequest.windowID,
-                                               devices: allowedDevices});
+          let camNeeded = videoDevices.length > 0;
+          let micNeeded = audioDevices.length > 0;
+          checkOSPermission(camNeeded, micNeeded).then((havePermission) => {
+            if (havePermission) {
+              let mm = browser.messageManager;
+              mm.sendAsyncMessage("webrtc:Allow", {callID: aRequest.callID,
+                                                   windowID: aRequest.windowID,
+                                                   devices: allowedDevices});
+            } else {
+              denyRequestNoPermission(browser, aRequest);
+            }
+          });
+
           this.remove();
           return true;
         }
@@ -717,7 +791,7 @@ function prompt(aBrowser, aRequest) {
       if (!sharingAudio)
         listDevices(micMenupopup, audioDevices);
 
-      this.mainAction.callback = function(aState) {
+      this.mainAction.callback = async function(aState) {
         let remember = aState && aState.checkboxChecked;
         let allowedDevices = [];
         let perms = Services.perms;
@@ -782,6 +856,14 @@ function prompt(aBrowser, aRequest) {
           // can remove them if the user clicks 'Stop Sharing'.
           aBrowser._devicePermissionURIs = aBrowser._devicePermissionURIs || [];
           aBrowser._devicePermissionURIs.push(uri);
+        }
+
+        let camNeeded = videoDevices.length > 0;
+        let micNeeded = audioDevices.length > 0;
+        let havePermission = await checkOSPermission(camNeeded, micNeeded);
+        if (!havePermission) {
+          denyRequestNoPermission(notification.browser, aRequest);
+          return;
         }
 
         let mm = notification.browser.messageManager;

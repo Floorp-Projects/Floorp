@@ -6,8 +6,12 @@
 
 #include "TelemetryGeckoViewPersistence.h"
 
+#include "core/TelemetryHistogram.h"
+#include "core/TelemetryScalar.h"
 #include "jsapi.h"
 #include "js/JSON.h"
+#include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
+#include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Path.h"
@@ -15,8 +19,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SystemGroup.h"
-#include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
-#include "mozilla/dom/SimpleGlobalObject.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -29,8 +31,6 @@
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 #include "prio.h"
-#include "core/TelemetryScalar.h"
-#include "core/TelemetryHistogram.h"
 #include "xpcpublic.h"
 
 using mozilla::GetErrorName;

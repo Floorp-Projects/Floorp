@@ -470,7 +470,7 @@ private:
                                nsROCSSPrimitiveValue* aValue);
   void SetValueToPosition(const mozilla::Position& aPosition,
                           nsDOMCSSValueList* aValueList);
-  void SetValueToURLValue(const mozilla::css::URLValueData* aURL,
+  void SetValueToURLValue(const mozilla::css::URLValue* aURL,
                           nsROCSSPrimitiveValue* aValue);
 
   /**

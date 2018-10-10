@@ -5,8 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CombinedStacks.h"
-#include "mozilla/HangAnnotations.h"
+
 #include "jsapi.h"
+#include "mozilla/HangAnnotations.h"
 
 namespace mozilla {
 namespace Telemetry {
