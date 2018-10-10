@@ -218,7 +218,7 @@ DisallowUnhandledDivergeFromRecording()
 void
 EnsureNotDivergedFromRecording()
 {
-  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
+  AssertEventsAreNotPassedThrough();
   if (HasDivergedFromRecording()) {
     MOZ_RELEASE_ASSERT(gUnhandledDivergeAllowed);
     PrintSpew("Unhandled recording divergence, restoring checkpoint...\n");
@@ -252,8 +252,8 @@ void
 PauseMainThreadAndServiceCallbacks()
 {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
-  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
   MOZ_RELEASE_ASSERT(!HasDivergedFromRecording());
+  AssertEventsAreNotPassedThrough();
 
   // Whether there is a PauseMainThreadAndServiceCallbacks frame on the stack.
   static bool gMainThreadIsPaused = false;

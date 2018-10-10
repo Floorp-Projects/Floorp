@@ -742,7 +742,6 @@ parent:
     sync OpenRecordReplayChannel(uint32_t channelId)
         returns (FileDescriptor connection);
     async CreateReplayingProcess(uint32_t channelId);
-    async TerminateReplayingProcess(uint32_t channelId);
 
     async CreateGMPService();
 

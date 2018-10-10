@@ -11,7 +11,7 @@ with Files("**"):
 with Files("talos/startup_test/sessionrestore/**"):
     BUG_COMPONENT = ("Firefox", "Session Restore")
 
-with Files("talos/startup_test/tresize/**"):
+with Files("talos/tests/tresize/**"):
     BUG_COMPONENT = ("Core", "XUL")
 
 with Files("talos/tests/a11y/**"):

@@ -38,7 +38,7 @@ public:
       nsPresContext* aPresContext,
       nsIContent* aContent,
       mozilla::ComputedStyle* aStyle,
-      nsICSSAnonBoxPseudo* aPseudoElement,
+      nsCSSAnonBoxPseudoStaticAtom* aPseudoElement,
       const mozilla::AtomArray& aInputWord);
 
 protected:

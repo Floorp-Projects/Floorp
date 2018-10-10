@@ -69,6 +69,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "ProfilerMarkerPayload.h"
+#include "memory_hooks.h"
 #include "shared-libraries.h"
 #include "prdtoa.h"
 #include "prtime.h"
@@ -295,6 +296,23 @@ public:
       [&](UniquePtr<RegisteredThread>& rt) { return rt.get() == aRegisteredThread; });
   }
 
+  PS_GET(const nsTArray<BaseProfilerCount*>&, Counters)
+
+  static void AppendCounter(PSLockRef, BaseProfilerCount* aCounter)
+  {
+    // we don't own the counter; they may be stored in static objects
+    sInstance->mCounters.AppendElement(aCounter);
+  }
+
+  static void RemoveCounter(PSLockRef, BaseProfilerCount* aCounter)
+  {
+    // we may be called to remove a counter after the profiler is stopped or
+    // late in shutdown.
+    if (sInstance) {
+      sInstance->mCounters.RemoveElement(aCounter);
+    }
+  }
+
 #ifdef USE_LUL_STACKWALK
   static lul::LUL* Lul(PSLockRef) { return sInstance->mLul.get(); }
   static void SetLul(PSLockRef, UniquePtr<lul::LUL> aLul)
@@ -313,6 +331,9 @@ private:
   // Info on all the registered threads.
   // ThreadIds in mRegisteredThreads are unique.
   nsTArray<UniquePtr<RegisteredThread>> mRegisteredThreads;
+
+  // Non-owning pointers to all active counters
+  nsTArray<BaseProfilerCount*> mCounters;
 
 #ifdef USE_LUL_STACKWALK
   // LUL's state. Null prior to the first activation, non-null thereafter.
@@ -1461,8 +1482,7 @@ DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
 static void
 DoPeriodicSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
                  ProfiledThreadData& aProfiledThreadData,
-                 const TimeStamp& aNow, const Registers& aRegs,
-                 int64_t aRSSMemory, int64_t aUSSMemory)
+                 const TimeStamp& aNow, const Registers& aRegs)
 {
   // WARNING: this function runs within the profiler's "critical section".
 
@@ -1484,16 +1504,6 @@ DoPeriodicSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
     double delta = resp->GetUnresponsiveDuration(
       (aNow - CorePS::ProcessStartTime()).ToMilliseconds());
     buffer.AddEntry(ProfileBufferEntry::Responsiveness(delta));
-  }
-
-  if (aRSSMemory != 0) {
-    double rssMemory = static_cast<double>(aRSSMemory);
-    buffer.AddEntry(ProfileBufferEntry::ResidentMemory(rssMemory));
-  }
-
-  if (aUSSMemory != 0) {
-    double ussMemory = static_cast<double>(aUSSMemory);
-    buffer.AddEntry(ProfileBufferEntry::UnsharedMemory(ussMemory));
   }
 }
 
@@ -1865,6 +1875,9 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   }
   aWriter.EndObject();
 
+  buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
+  buffer.StreamMemoryToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
+
   // Data of TaskTracer doesn't belong in the circular buffer.
   if (ActivePS::FeatureTaskTracer(aLock)) {
     aWriter.StartObjectProperty("tasktracer");
@@ -2165,13 +2178,45 @@ SamplerThread::Run()
         const nsTArray<LiveProfiledThreadData>& liveThreads =
           ActivePS::LiveProfiledThreads(lock);
 
+        TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
+        ProfileBuffer& buffer = ActivePS::Buffer(lock);
+
+        // Report memory use
         int64_t rssMemory = 0;
         int64_t ussMemory = 0;
-        if (!liveThreads.IsEmpty() && ActivePS::FeatureMemory(lock)) {
+        if (ActivePS::FeatureMemory(lock)) {
           rssMemory = nsMemoryReporterManager::ResidentFast();
 #if defined(GP_OS_linux) || defined(GP_OS_android)
           ussMemory = nsMemoryReporterManager::ResidentUnique();
 #endif
+          if (rssMemory != 0) {
+            buffer.AddEntry(ProfileBufferEntry::ResidentMemory(rssMemory));
+            if (ussMemory != 0) {
+              buffer.AddEntry(ProfileBufferEntry::UnsharedMemory(ussMemory));
+            }
+          }
+          buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+        }
+
+        // handle per-process generic counters
+        const nsTArray<BaseProfilerCount*>& counters =
+          CorePS::Counters(lock);
+        TimeStamp now = TimeStamp::Now();
+        for (auto& counter : counters) {
+          // create Buffer entries for each counter
+          buffer.AddEntry(ProfileBufferEntry::CounterId(counter));
+          buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+          // XXX support keyed maps of counts
+          // In the future, we'll support keyed counters - for example, counters with a key
+          // which is a thread ID. For "simple" counters we'll just use a key of 0.
+          int64_t count;
+          uint64_t number;
+          counter->Sample(count, number);
+          buffer.AddEntry(ProfileBufferEntry::CounterKey(0));
+          buffer.AddEntry(ProfileBufferEntry::Count(count));
+          if (number) {
+            buffer.AddEntry(ProfileBufferEntry::Number(number));
+          }
         }
 
         for (auto& thread : liveThreads) {
@@ -2198,11 +2243,15 @@ SamplerThread::Run()
             resp->Update();
           }
 
-          TimeStamp now = TimeStamp::Now();
+          now = TimeStamp::Now();
           SuspendAndSampleAndResumeThread(lock, *registeredThread,
                                           [&](const Registers& aRegs) {
             DoPeriodicSample(lock, *registeredThread, *profiledThreadData, now,
-                             aRegs, rssMemory, ussMemory);
+                             aRegs);
+            // only report these once per sample-time (if 0 we don't put them in the buffer,
+            // so for the rest of the threads we won't insert them)
+            rssMemory = 0;
+            ussMemory = 0;
           });
         }
 
@@ -3082,6 +3131,11 @@ profiler_start(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                           aFilters, aFilterCount);
   }
 
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  // start counting memory allocations (outside of lock)
+  mozilla::profiler::install_memory_counter(true);
+#endif
+
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
@@ -3149,6 +3203,10 @@ locked_profiler_stop(PSLockRef aLock)
 
   // At the very start, clear RacyFeatures.
   RacyFeatures::SetInactive();
+
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  mozilla::profiler::install_memory_counter(false);
+#endif
 
 #if defined(GP_OS_android)
   if (ActivePS::FeatureJava(aLock)) {
@@ -3300,6 +3358,24 @@ profiler_feature_active(uint32_t aFeature)
 
   // This function is hot enough that we use RacyFeatures, not ActivePS.
   return RacyFeatures::IsActiveWithFeature(aFeature);
+}
+
+void
+profiler_add_sampled_counter(BaseProfilerCount* aCounter)
+{
+  DEBUG_LOG("profiler_add_sampled_counter(%s)", aCounter->mLabel);
+  PSAutoLock lock(gPSMutex);
+  CorePS::AppendCounter(lock, aCounter);
+}
+
+void
+profiler_remove_sampled_counter(BaseProfilerCount* aCounter)
+{
+  DEBUG_LOG("profiler_remove_sampled_counter(%s)", aCounter->mLabel);
+  PSAutoLock lock(gPSMutex);
+  // Note: we don't enforce a final sample, though we could do so if the
+  // profiler was active
+  CorePS::RemoveCounter(lock, aCounter);
 }
 
 ProfilingStack*

@@ -83,18 +83,8 @@ RenderThread::Start()
 
   RefPtr<Runnable> runnable = WrapRunnable(
     RefPtr<RenderThread>(sRenderThread.get()),
-    &RenderThread::InitSharedGLContext);
+    &RenderThread::InitDeviceTask);
   sRenderThread->Loop()->PostTask(runnable.forget());
-
-  if (XRE_IsGPUProcess() &&
-      gfx::gfxVars::UseWebRenderProgramBinary()) {
-    MOZ_ASSERT(gfx::gfxVars::UseWebRender());
-    // Initialize program cache if necessary
-    RefPtr<Runnable> runnable = WrapRunnable(
-      RefPtr<RenderThread>(sRenderThread.get()),
-      &RenderThread::ProgramCacheTask);
-    sRenderThread->Loop()->PostTask(runnable.forget());
-  }
 }
 
 // static
@@ -666,9 +656,19 @@ RenderThread::GetRenderTexture(wr::WrExternalImageId aExternalImageId)
 }
 
 void
-RenderThread::ProgramCacheTask()
+RenderThread::InitDeviceTask()
 {
-  ProgramCache();
+  MOZ_ASSERT(IsInRenderThread());
+  MOZ_ASSERT(!mSharedGL);
+
+  mSharedGL = CreateGLContext();
+  if (XRE_IsGPUProcess() &&
+      gfx::gfxVars::UseWebRenderProgramBinary()) {
+    ProgramCache();
+  }
+  // Query the shared GL context to force the
+  // lazy initialization to happen now.
+  SharedGL();
 }
 
 void
@@ -732,21 +732,17 @@ RenderThread::ProgramCache()
   return mProgramCache.get();
 }
 
-void
-RenderThread::InitSharedGLContext()
-{
-  MOZ_ASSERT(IsInRenderThread());
-
-  if (!mSharedGL) {
-    mSharedGL = CreateGLContext();
-  }
-}
-
 gl::GLContext*
 RenderThread::SharedGL()
 {
   MOZ_ASSERT(IsInRenderThread());
-  InitSharedGLContext();
+  if (!mSharedGL) {
+    mSharedGL = CreateGLContext();
+    mShaders = nullptr;
+  }
+  if (mSharedGL && !mShaders) {
+    mShaders = MakeUnique<WebRenderShaders>(mSharedGL, mProgramCache.get());
+  }
 
   return mSharedGL.get();
 }
@@ -755,9 +751,20 @@ void
 RenderThread::ClearSharedGL()
 {
   MOZ_ASSERT(IsInRenderThread());
+  mShaders = nullptr;
   mSharedGL = nullptr;
 }
 
+WebRenderShaders::WebRenderShaders(gl::GLContext* gl,
+                                   WebRenderProgramCache* programCache)
+{
+  mGL = gl;
+  mShaders = wr_shaders_new(gl, programCache ? programCache->Raw() : nullptr);
+}
+
+WebRenderShaders::~WebRenderShaders() {
+  wr_shaders_delete(mShaders, mGL.get());
+}
 
 WebRenderThreadPool::WebRenderThreadPool()
 {
@@ -801,6 +808,12 @@ CreateGLContextANGLE()
 
   auto* egl = gl::GLLibraryEGL::Get();
   auto flags = gl::CreateContextFlags::PREFER_ES3;
+
+  if (egl->IsExtensionSupported(
+     gl::GLLibraryEGL::MOZ_create_context_provoking_vertex_dont_care))
+  {
+     flags |= gl::CreateContextFlags::PROVOKING_VERTEX_DONT_CARE;
+  }
 
   // Create GLContext with dummy EGLSurface, the EGLSurface is not used.
   // Instread we override it with EGLSurface of SwapChain's back buffer.

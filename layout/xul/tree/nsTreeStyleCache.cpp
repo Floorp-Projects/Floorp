@@ -36,7 +36,7 @@ ComputedStyle*
 nsTreeStyleCache::GetComputedStyle(nsPresContext* aPresContext,
                                    nsIContent* aContent,
                                    ComputedStyle* aStyle,
-                                   nsICSSAnonBoxPseudo* aPseudoElement,
+                                   nsCSSAnonBoxPseudoStaticAtom* aPseudoElement,
                                    const AtomArray & aInputWord)
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsTreePseudoElement(aPseudoElement));

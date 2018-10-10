@@ -762,7 +762,6 @@ impl Device {
         gl: Rc<gl::Gl>,
         resource_override_path: Option<PathBuf>,
         upload_method: UploadMethod,
-        _file_changed_handler: Box<FileWatcherHandler>,
         cached_programs: Option<Rc<ProgramCache>>,
     ) -> Device {
         let mut max_texture_size = [0];

@@ -1,3 +1,23 @@
+commit 790e8e6b417905eca335d06c16ec54c977188110
+Author: Olli Etuaho <oetuaho@nvidia.com>
+Date:   Thu Sep 20 13:20:50 2018 +0300
+
+    Fix using a large vertex attrib divisor on D3D11
+    
+    A divisor >= 256 used to trigger an assert on the D3D11 backend since
+    it couldn't fit into the input layout cache. Increase the space
+    reserved for the divisor in the input layout cache to make sure that
+    the correct input layout will get used and to fix the assert.
+    
+    BUG=angleproject:2832
+    TEST=angle_end2end_tests
+    
+    Change-Id: I34eead6c4e8c4fea379bbafc8670b4e32a5b633b
+    Reviewed-on: https://chromium-review.googlesource.com/1236293
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Olli Etuaho <oetuaho@nvidia.com>
+
 commit 598f2502e3a41b76d90037e7858c43c18e66399d
 Merge: 8212058a6 e15a25c6f
 Author: Jeff Gilbert <jdashg@gmail.com>

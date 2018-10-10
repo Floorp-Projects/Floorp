@@ -4960,7 +4960,7 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
                                    nsFrameItems&            aFrameItems,
                                    ContainerFrameCreationFunc aConstructor,
                                    ContainerFrameCreationFunc aInnerConstructor,
-                                   nsICSSAnonBoxPseudo*     aInnerPseudo,
+                                   nsCSSAnonBoxPseudoStaticAtom* aInnerPseudo,
                                    bool                     aCandidateRootFrame)
 {
   nsIContent* const content = aItem.mContent;
@@ -9780,7 +9780,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
                                                const FCItemIterator& aEndIter)
 {
   const PseudoParentData& pseudoData = sPseudoParentData[aWrapperType];
-  nsICSSAnonBoxPseudo* pseudoType = pseudoData.mPseudoType;
+  nsCSSAnonBoxPseudoStaticAtom* pseudoType = pseudoData.mPseudoType;
   StyleDisplay parentDisplay = aParentStyle->StyleDisplay()->mDisplay;
 
   if (pseudoType == nsCSSAnonBoxes::table() &&
