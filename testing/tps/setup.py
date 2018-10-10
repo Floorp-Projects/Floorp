@@ -9,7 +9,7 @@ import sys
 version = '0.6'
 
 deps = ['httplib2 == 0.9.2',
-        'mozfile == 1.2',
+        'mozfile >= 1.2',
         'mozhttpd == 0.7',
         'mozinfo >= 0.10',
         'mozinstall == 1.16',
