@@ -1,5 +1,4 @@
-if (typeof oomTest !== 'function')
-    quit();
+// |jit-test| skip-if: !('oomTest' in this)
 
 x = 0;
 try {

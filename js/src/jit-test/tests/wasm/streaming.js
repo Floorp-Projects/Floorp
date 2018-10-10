@@ -1,5 +1,4 @@
-if (!wasmStreamingIsSupported())
-    quit();
+// |jit-test| skip-if: !wasmStreamingIsSupported()
 
 function testInstantiate(source, importObj, exportName, expectedValue) {
     var result;

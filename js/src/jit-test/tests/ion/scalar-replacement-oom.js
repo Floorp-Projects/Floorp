@@ -1,5 +1,4 @@
-if (typeof oomAtAllocation !== 'function')
-    quit();
+// |jit-test| skip-if: !('oomAtAllocation' in this)
 
 var lfcode = new Array();
 function k(a, f_arg, b, c) {

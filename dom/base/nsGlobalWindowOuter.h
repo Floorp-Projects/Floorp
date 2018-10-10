@@ -807,7 +807,8 @@ protected:
 
   inline void MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner);
 
-  nsGlobalWindowInner *CallerInnerWindow();
+  // We need a JSContext to get prototypes inside CallerInnerWindow.
+  nsGlobalWindowInner* CallerInnerWindow(JSContext* aCx);
 
   // Get the parent, returns null if this is a toplevel window
   nsPIDOMWindowOuter* GetParentInternal();

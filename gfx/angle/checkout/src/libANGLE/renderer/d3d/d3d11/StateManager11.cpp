@@ -2660,7 +2660,7 @@ angle::Result StateManager11::syncProgram(const gl::Context *context, gl::Primit
 
     // Binaries must be compiled before the sync.
     ASSERT(mProgramD3D->hasVertexExecutableForCachedInputLayout());
-    ASSERT(mProgramD3D->hasGeometryExecutableForPrimitiveType(drawMode));
+    ASSERT(mProgramD3D->hasGeometryExecutableForPrimitiveType(context, drawMode));
     ASSERT(mProgramD3D->hasPixelExecutableForCachedOutputLayout());
 
     ShaderExecutableD3D *vertexExe = nullptr;

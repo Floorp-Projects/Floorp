@@ -1,5 +1,4 @@
-if (!this.hasOwnProperty("TypedObject"))
-  quit();
+// |jit-test| skip-if: !this.hasOwnProperty("TypedObject")
 
 setJitCompilerOption('ion.forceinlineCaches', 1);
 // Adapted from randomly chosen test: js/src/jit-test/tests/TypedObject/jit-write-references.js

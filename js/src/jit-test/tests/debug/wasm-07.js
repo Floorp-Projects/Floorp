@@ -1,12 +1,10 @@
-// |jit-test| test-also-no-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline; skip-if: !wasmDebuggingIsSupported()
+
 // Checking existence of all frame.offset references during onEnterFrame,
 // onLeaveFrame and onStep events in the source code, and that we can
 // potentially resolve offset back to the line/column.
 
 load(libdir + "wasm.js");
-
-if (!wasmDebuggingIsSupported())
-    quit();
 
 var offsets;
 wasmRunWithDebugger(
