@@ -34,6 +34,7 @@ import org.hamcrest.Matchers.*
 import org.junit.Test
 import org.junit.Before
 import org.junit.After
+import org.junit.Ignore
 import org.junit.runner.RunWith
 
 const val DISPLAY_WIDTH = 480
@@ -154,7 +155,7 @@ class AccessibilityTest : BaseSessionTest() {
             node.className.toString(), equalTo("android.webkit.WebView"))
     }
 
-    @Test fun testPageLoad() {
+    @Ignore @Test fun testPageLoad() {
         sessionRule.session.loadTestPath(INPUTS_PATH)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -163,7 +164,7 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    @Test fun testAccessibilityFocus() {
+    @Ignore @Test fun testAccessibilityFocus() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.session.loadTestPath(INPUTS_PATH)
         waitForInitialFocus()
@@ -193,7 +194,7 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    @Test fun testTextEntryNode() {
+    @Ignore @Test fun testTextEntryNode() {
         sessionRule.session.loadString("<input aria-label='Name' value='Tobias'>", "text/html")
         waitForInitialFocus()
 
@@ -275,7 +276,7 @@ class AccessibilityTest : BaseSessionTest() {
         return arguments
     }
 
-    @Test fun testClipboard() {
+    @Ignore @Test fun testClipboard() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
         sessionRule.session.loadString("<input value='hello cruel world' id='input'>", "text/html")
         waitForInitialFocus()
@@ -326,7 +327,7 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    @Test fun testMoveByCharacter() {
+    @Ignore @Test fun testMoveByCharacter() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus()
@@ -359,7 +360,7 @@ class AccessibilityTest : BaseSessionTest() {
         waitUntilTextTraversed(0, 1) // "L"
     }
 
-    @Test fun testMoveByWord() {
+    @Ignore @Test fun testMoveByWord() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus()
@@ -392,7 +393,7 @@ class AccessibilityTest : BaseSessionTest() {
         waitUntilTextTraversed(0, 5) // "Lorem"
     }
 
-    @Test fun testMoveByLine() {
+    @Ignore @Test fun testMoveByLine() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus()
@@ -425,7 +426,7 @@ class AccessibilityTest : BaseSessionTest() {
         waitUntilTextTraversed(0, 18) // "Lorem ipsum dolor "
     }
 
-    @Test fun testCheckbox() {
+    @Ignore @Test fun testCheckbox() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID;
         sessionRule.session.loadString("<label><input id='checkbox' type='checkbox'>many option</label>", "text/html")
         waitForInitialFocus()
@@ -451,7 +452,7 @@ class AccessibilityTest : BaseSessionTest() {
         waitUntilClick(false)
     }
 
-    @Test fun testSelectable() {
+    @Ignore @Test fun testSelectable() {
         var nodeId = View.NO_ID
         sessionRule.session.loadString(
                 """<ul style="list-style-type: none;" role="listbox">
@@ -492,7 +493,7 @@ class AccessibilityTest : BaseSessionTest() {
         return screenRect.contains(nodeBounds)
     }
 
-    @Test fun testScroll() {
+    @Ignore @Test fun testScroll() {
         var nodeId = View.NO_ID
         sessionRule.session.loadString(
                 """<body style="margin: 0;">
@@ -587,7 +588,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @ReuseSession(false) // XXX automation crash fix (bug 1485107)
     @WithDevToolsAPI
-    @Test fun autoFill() {
+    @Ignore @Test fun autoFill() {
         // Wait for the accessibility nodes to populate.
         mainSession.loadTestPath(FORMS_HTML_PATH)
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -667,7 +668,7 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @ReuseSession(false) // XXX automation crash fix (bug 1485107)
-    @Test fun autoFill_navigation() {
+    @Ignore @Test fun autoFill_navigation() {
         fun countAutoFillNodes(cond: (AccessibilityNodeInfo) -> Boolean =
                                        { it.className == "android.widget.EditText" },
                                id: Int = View.NO_ID): Int {

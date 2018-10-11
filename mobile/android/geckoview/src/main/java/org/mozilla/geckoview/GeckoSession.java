@@ -1084,9 +1084,6 @@ public class GeckoSession extends LayerSession
             mTextInput.onWindowChanged(mWindow);
         }
         if ((change == WINDOW_CLOSE || change == WINDOW_TRANSFER_OUT) && !inProgress) {
-            if (mAccessibility != null) {
-                mAccessibility.clearAutoFill();
-            }
             mTextInput.clearAutoFill();
         }
     }
@@ -1416,10 +1413,6 @@ public class GeckoSession extends LayerSession
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("focused", focused);
         mEventDispatcher.dispatch("GeckoView:SetFocused", msg);
-
-        if (focused && mAccessibility != null) {
-            mAccessibility.onWindowFocus();
-        }
     }
 
     /**
