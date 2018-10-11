@@ -59,7 +59,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     // Call this before calling compileModule.
     MOZ_MUST_USE bool prepareModuleParse() {
-        return createSourceAndParser(ParseGoal::Module);
+        return createSourceAndParser(ParseGoal::Module) && createScript();
     }
 
     ModuleObject* compileModule();
@@ -444,11 +444,7 @@ BytecodeCompiler::compileEvalScript(HandleObject environment, HandleScope enclos
 ModuleObject*
 BytecodeCompiler::compileModule()
 {
-    assertSourceAndParserCreated();
-
-    if (!createScript()) {
-        return nullptr;
-    }
+    assertSourceParserAndScriptCreated();
 
     Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
     if (!module) {
