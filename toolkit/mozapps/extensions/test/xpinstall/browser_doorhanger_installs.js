@@ -75,22 +75,42 @@ async function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 
   return PopupNotifications.panel;
 }
 
-function acceptAppMenuNotificationWhenShown(id) {
+function acceptAppMenuNotificationWhenShown(id, dismiss = false) {
   ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
   return new Promise(resolve => {
+    function appMenuPopupHidden() {
+      PanelUI.panel.removeEventListener("popuphidden", appMenuPopupHidden);
+      is(PanelUI.menuButton.getAttribute("badge-status"), false, "badge is not set after addon-installed");
+      resolve();
+    }
+    function appMenuPopupShown() {
+      PanelUI.panel.removeEventListener("popupshown", appMenuPopupShown);
+      PanelUI.menuButton.click();
+    }
     function popupshown() {
       let notification = AppMenuNotifications.activeNotification;
-      if (!notification) { return; }
+      if (!notification) {
+        return;
+      }
 
       is(notification.id, id, `${id} notification shown`);
       ok(PanelUI.isNotificationPanelOpen, "notification panel open");
 
       PanelUI.notificationPanel.removeEventListener("popupshown", popupshown);
 
+      if (dismiss) {
+        // Dismiss the panel by clicking on the appMenu button.
+        PanelUI.panel.addEventListener("popupshown", appMenuPopupShown);
+        PanelUI.panel.addEventListener("popuphidden", appMenuPopupHidden);
+        PanelUI.menuButton.click();
+        return;
+      }
+
+      // Dismiss the panel by clicking the primary button.
       let popupnotificationID = PanelUI._getPopupId(notification);
       let popupnotification = document.getElementById(popupnotificationID);
-      popupnotification.button.click();
 
+      popupnotification.button.click();
       resolve();
     }
     PanelUI.notificationPanel.addEventListener("popupshown", popupshown);
@@ -288,7 +308,7 @@ async function test_whitelistedInstall() {
   is(gBrowser.selectedTab, tab,
      "tab selected in response to the addon-install-confirmation notification");
 
-  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed");
+  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed", true);
   acceptInstallDialog(installDialog);
   await notificationPromise;
 

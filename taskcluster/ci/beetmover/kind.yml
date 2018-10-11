@@ -5,26 +5,29 @@
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.beetmover:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.beetmover:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - build-signing
+    - build-signing
 
 only-for-attributes:
-   - nightly
+    - nightly
 
 not-for-build-platforms:
-   - linux-nightly/opt
-   - linux64-nightly/opt
-   - macosx64-nightly/opt
-   - win32-nightly/opt
-   - win64-nightly/opt
-   - linux-devedition-nightly/opt
-   - linux64-devedition-nightly/opt
-   - macosx64-devedition-nightly/opt
-   - win32-devedition-nightly/opt
-   - win64-devedition-nightly/opt
-   - linux64-asan-reporter-nightly/opt
-   - win64-asan-reporter-nightly/opt
+    - linux-nightly/opt
+    - linux64-nightly/opt
+    - macosx64-nightly/opt
+    - win32-nightly/opt
+    - win64-nightly/opt
+    - linux-devedition-nightly/opt
+    - linux64-devedition-nightly/opt
+    - macosx64-devedition-nightly/opt
+    - win32-devedition-nightly/opt
+    - win64-devedition-nightly/opt
+    - linux64-asan-reporter-nightly/opt
+    - win64-asan-reporter-nightly/opt
+
+job-template:
+    shipping-phase: promote

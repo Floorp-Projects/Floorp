@@ -117,20 +117,6 @@ class AutoClearPendingException
     }
 };
 
-class AutoAssertNoPendingException
-{
-    mozilla::DebugOnly<JSContext*> cx;
-
-  public:
-    explicit AutoAssertNoPendingException(JSContext* cxArg)
-      : cx(cxArg)
-    { }
-
-    ~AutoAssertNoPendingException() {
-        MOZ_ASSERT(!JS_IsExceptionPending(cx));
-    }
-};
-
 extern const char*
 ValueToSourceForError(JSContext* cx, HandleValue val, JS::UniqueChars& bytes);
 

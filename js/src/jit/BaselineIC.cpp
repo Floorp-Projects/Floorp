@@ -336,6 +336,33 @@ ICStub::trace(JSTracer* trc)
     }
 }
 
+// This helper handles ICState updates/transitions while attaching CacheIR stubs.
+template<typename IRGenerator, typename... Args>
+static void
+TryAttachStub(const char *name, JSContext* cx, BaselineFrame* frame, ICFallbackStub* stub, BaselineCacheIRStubKind kind, Args&&... args)
+{
+    if (stub->state().maybeTransition()) {
+        stub->discardStubs(cx);
+    }
+
+    if (stub->state().canAttachStub()) {
+        RootedScript script(cx, frame->script());
+        jsbytecode* pc = stub->icEntry()->pc(script);
+
+        bool attached = false;
+        IRGenerator gen(cx, script, pc, stub->state().mode(), std::forward<Args>(args)...);
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        kind, script, stub, &attached);
+            if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  %s %s CacheIR stub", attached ? "Attached" : "Failed to attach", name);
+            }
+        }
+        if (!attached) {
+            stub->state().trackNotAttached();
+        }
+    }
+}
 
 
 //
@@ -1584,30 +1611,7 @@ DoToBoolFallback(JSContext* cx, BaselineFrame* frame, ICToBool_Fallback* stub, H
 
     MOZ_ASSERT(!arg.isBoolean());
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-
-        RootedScript script(cx, frame->script());
-        jsbytecode* pc = stub->icEntry()->pc(script);
-
-        ToBoolIRGenerator gen(cx, script, pc, stub->state().mode(),
-                              arg);
-        bool attached = false;
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached ToBool CacheIR stub, attached is now %d", attached);
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
+    TryAttachStub<ToBoolIRGenerator>("ToBool", cx, frame, stub, BaselineCacheIRStubKind::Regular, arg);
 
     bool cond = ToBoolean(arg);
     ret.setBoolean(cond);
@@ -1786,10 +1790,6 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
         stub->noteNegativeIndex();
     }
 
-    if (!attached && !isTemporarilyUnoptimizable) {
-        stub->noteUnoptimizableAccess();
-    }
-
     return true;
 }
 
@@ -1865,10 +1865,6 @@ DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* 
     // determine that an object has no properties on such indexes.
     if (rhs.isNumber() && rhs.toNumber() < 0) {
         stub->noteNegativeIndex();
-    }
-
-    if (!attached && !isTemporarilyUnoptimizable) {
-        stub->noteUnoptimizableAccess();
     }
 
     return true;
@@ -2063,14 +2059,15 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
                                                         BaselineCacheIRStubKind::Updated,
                                                         frame->script(), stub, &attached);
             if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
+
+                SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+
                 if (gen.shouldNotePreliminaryObjectStub()) {
                     newStub->toCacheIR_Updated()->notePreliminaryObject();
                 } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
                     StripPreliminaryObjectStubs(cx, stub);
                 }
-
-                JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
-                SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
                 return true;
             }
         } else {
@@ -2248,28 +2245,7 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
         return false;
     }
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        RootedScript script(cx, frame->script());
-        jsbytecode* pc = stub->icEntry()->pc(script);
-
-        HasPropIRGenerator gen(cx, script, pc, CacheKind::In, stub->state().mode(), key, objValue);
-        bool attached = false;
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached In CacheIR stub");
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
+    TryAttachStub<HasPropIRGenerator>("In", cx, frame, stub, BaselineCacheIRStubKind::Regular, CacheKind::In, key, objValue);
 
     RootedObject obj(cx, &objValue.toObject());
     bool cond = false;
@@ -2317,29 +2293,9 @@ DoHasOwnFallback(JSContext* cx, BaselineFrame* frame, ICHasOwn_Fallback* stub_,
 
     FallbackICSpew(cx, stub, "HasOwn");
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        RootedScript script(cx, frame->script());
-        jsbytecode* pc = stub->icEntry()->pc(script);
-
-        HasPropIRGenerator gen(cx, script, pc, CacheKind::HasOwn,
-                               stub->state().mode(), keyValue, objValue);
-        bool attached = false;
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached HasOwn CacheIR stub");
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
+    TryAttachStub<HasPropIRGenerator>("HasOwn", cx, frame, stub,
+        BaselineCacheIRStubKind::Regular, CacheKind::HasOwn,
+        keyValue, objValue);
 
     bool found;
     if (!HasOwnProperty(cx, objValue, keyValue, &found)) {
@@ -2393,26 +2349,8 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
     MOZ_ASSERT(op == JSOP_GETNAME || op == JSOP_GETGNAME);
 
     RootedPropertyName name(cx, script->getName(pc));
-    bool attached = false;
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        GetNameIRGenerator gen(cx, script, pc, stub->state().mode(), envChain, name);
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Monitored,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached GetName CacheIR stub");
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
+    TryAttachStub<GetNameIRGenerator>("GetName", cx, frame, stub, BaselineCacheIRStubKind::Monitored, envChain, name);
 
     static_assert(JSOP_GETGNAME_LENGTH == JSOP_GETNAME_LENGTH,
                   "Otherwise our check for JSOP_TYPEOF isn't ok");
@@ -2439,9 +2377,6 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
         return false;
     }
 
-    if (!attached) {
-        stub->noteUnoptimizableAccess();
-    }
     return true;
 }
 
@@ -2480,26 +2415,7 @@ DoBindNameFallback(JSContext* cx, BaselineFrame* frame, ICBindName_Fallback* stu
 
     RootedPropertyName name(cx, frame->script()->getName(pc));
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        bool attached = false;
-        RootedScript script(cx, frame->script());
-        BindNameIRGenerator gen(cx, script, pc, stub->state().mode(), envChain, name);
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached BindName CacheIR stub");
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
+    TryAttachStub<BindNameIRGenerator>("BindName", cx, frame, stub, BaselineCacheIRStubKind::Regular, envChain, name);
 
     RootedObject scope(cx);
     if (!LookupNameUnqualified(cx, name, envChain, &scope)) {
@@ -2562,26 +2478,7 @@ DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame, ICGetIntrinsic_Fallb
         return true;
     }
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        bool attached = false;
-        RootedScript script(cx, frame->script());
-        GetIntrinsicIRGenerator gen(cx, script, pc, stub->state().mode(), res);
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached GetIntrinsic CacheIR stub");
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
+    TryAttachStub<GetIntrinsicIRGenerator>("GetIntrinsic", cx, frame, stub, BaselineCacheIRStubKind::Regular, res);
 
     return true;
 }
@@ -2679,7 +2576,7 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
                                                         BaselineCacheIRStubKind::Monitored,
                                                         script, stub, &attached);
             if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+                JitSpew(JitSpew_BaselineIC, "  Attached GetProp CacheIR stub");
                 if (gen.shouldNotePreliminaryObjectStub()) {
                     newStub->toCacheIR_Monitored()->notePreliminaryObject();
                 } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
@@ -2708,16 +2605,6 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
     if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
         return false;
     }
-
-    if (attached) {
-        return true;
-    }
-
-    MOZ_ASSERT(!attached);
-    if (!isTemporarilyUnoptimizable) {
-        stub->noteUnoptimizableAccess();
-    }
-
     return true;
 }
 
@@ -2757,7 +2644,7 @@ DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* 
                                                         BaselineCacheIRStubKind::Monitored,
                                                         script, stub, &attached);
             if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+                JitSpew(JitSpew_BaselineIC, "  Attached GetPropSuper CacheIR stub");
                 if (gen.shouldNotePreliminaryObjectStub()) {
                     newStub->toCacheIR_Monitored()->notePreliminaryObject();
                 } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
@@ -2787,15 +2674,6 @@ DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* 
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
         return false;
-    }
-
-    if (attached) {
-        return true;
-    }
-
-    MOZ_ASSERT(!attached);
-    if (!isTemporarilyUnoptimizable) {
-        stub->noteUnoptimizableAccess();
     }
 
     return true;
@@ -3025,14 +2903,15 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
                                                         BaselineCacheIRStubKind::Updated,
                                                         frame->script(), stub, &attached);
             if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
+
+                SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+
                 if (gen.shouldNotePreliminaryObjectStub()) {
                     newStub->toCacheIR_Updated()->notePreliminaryObject();
                 } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
                     StripPreliminaryObjectStubs(cx, stub);
                 }
-
-                JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
-                SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
             }
         } else {
             gen.trackAttached(IRGenerator::NotAttached);
@@ -3040,10 +2919,6 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
         if (!attached && !isTemporarilyUnoptimizable) {
             stub->state().trackNotAttached();
         }
-    }
-
-    if (!attached && !isTemporarilyUnoptimizable) {
-        stub->noteUnoptimizableAccess();
     }
 
     return true;
@@ -3843,7 +3718,6 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     }
 
     if (!handled) {
-        stub->noteUnoptimizableCall();
         if (canAttachStub) {
             stub->state().trackNotAttached();
         }
@@ -3896,9 +3770,6 @@ DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_
         return false;
     }
 
-    if (!handled) {
-        stub->noteUnoptimizableCall();
-    }
     return true;
 }
 
@@ -5395,28 +5266,7 @@ DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame, ICGetIterator_Fallbac
 {
     FallbackICSpew(cx, stub, "GetIterator");
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        RootedScript script(cx, frame->script());
-        jsbytecode* pc = stub->icEntry()->pc(script);
-
-        GetIteratorIRGenerator gen(cx, script, pc, stub->state().mode(), value);
-        bool attached = false;
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached GetIterator CacheIR stub");
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
+    TryAttachStub<GetIteratorIRGenerator>("GetIterator", cx, frame, stub, BaselineCacheIRStubKind::Regular, value);
 
     JSObject* iterobj = ValueToIterator(cx, value);
     if (!iterobj) {
@@ -5586,41 +5436,6 @@ ICIteratorClose_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-TryAttachInstanceOfStub(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback* stub,
-                        HandleValue lhs, HandleObject rhs, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-    FallbackICSpew(cx, stub, "InstanceOf");
-
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        RootedScript script(cx, frame->script());
-        jsbytecode* pc = stub->icEntry()->pc(script);
-
-        InstanceOfIRGenerator gen(cx, script, pc, stub->state().mode(),
-                                  lhs,
-                                  rhs);
-
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached InstanceOf CacheIR stub, attached is now %d", *attached);
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
-
-    return true;
-}
-
-static bool
 DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback* stub_,
                      HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
@@ -5648,7 +5463,10 @@ DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback*
     }
 
     if (!obj->is<JSFunction>()) {
-        stub->noteUnoptimizableAccess();
+        // ensure we've recorded at least one failure, so we can detect there was a non-optimizable case
+        if (!stub->state().hasFailures()) {
+            stub->state().trackNotAttached();
+        }
         return true;
     }
 
@@ -5656,13 +5474,7 @@ DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback*
     // for use during Ion compilation.
     EnsureTrackPropertyTypes(cx, obj, NameToId(cx->names().prototype));
 
-    bool attached = false;
-    if (!TryAttachInstanceOfStub(cx, frame, stub, lhs, obj, &attached)) {
-        return false;
-    }
-    if (!attached) {
-        stub->noteUnoptimizableAccess();
-    }
+    TryAttachStub<InstanceOfIRGenerator>("InstanceOf", cx, frame, stub, BaselineCacheIRStubKind::Regular, lhs, obj);
     return true;
 }
 
@@ -5699,28 +5511,7 @@ DoTypeOfFallback(JSContext* cx, BaselineFrame* frame, ICTypeOf_Fallback* stub, H
 {
     FallbackICSpew(cx, stub, "TypeOf");
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        RootedScript script(cx, frame->script());
-        jsbytecode* pc = stub->icEntry()->pc(script);
-
-        TypeOfIRGenerator gen(cx, script, pc, stub->state().mode(), val);
-        bool attached = false;
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached TypeOf CacheIR stub");
-            }
-        }
-        if (!attached) {
-            stub->state().trackNotAttached();
-        }
-    }
+    TryAttachStub<TypeOfIRGenerator>("TypeOf", cx, frame, stub, BaselineCacheIRStubKind::Regular, val);
 
     JSType type = js::TypeOfValue(val);
     RootedString string(cx, TypeName(type, cx->names()));
@@ -6061,24 +5852,7 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
         stub->setSawDoubleResult();
     }
 
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        UnaryArithIRGenerator gen(cx, script, pc, stub->state().mode(),
-                                    op, val, res);
-        if (gen.tryAttachStub()) {
-            bool attached = false;
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached UnaryArith CacheIR stub for %s", CodeName[op]);
-            }
-        }
-    }
-
+    TryAttachStub<UnaryArithIRGenerator>("UniaryArith", cx, frame, stub, BaselineCacheIRStubKind::Regular, op, val, res);
     return true;
 }
 
@@ -6212,35 +5986,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
         stub->setSawDoubleResult();
     }
 
-    // Check if debug mode toggling made the stub invalid.
-    if (stub.invalid()) {
-        return true;
-    }
-
-    if (ret.isDouble()) {
-        stub->setSawDoubleResult();
-    }
-
-    if (stub->state().maybeTransition()) {
-        stub->discardStubs(cx);
-    }
-
-    if (stub->state().canAttachStub()) {
-        BinaryArithIRGenerator gen(cx, script, pc, stub->state().mode(),
-                                   op, lhs, rhs, ret);
-        if (gen.tryAttachStub()) {
-            bool attached = false;
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached BinaryArith CacheIR stub for %s", CodeName[op]);
-            }
-
-        } else {
-            stub->noteUnoptimizableOperands();
-        }
-    }
+    TryAttachStub<BinaryArithIRGenerator>("BinaryArith", cx, frame, stub, BaselineCacheIRStubKind::Regular, op, lhs, rhs, ret);
     return true;
 }
 
@@ -6352,28 +6098,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
         return true;
     }
 
-    // Check to see if a new stub should be generated.
-    if (stub->numOptimizedStubs() >= ICCompare_Fallback::MAX_OPTIMIZED_STUBS) {
-        // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
-        // But for now we just bail.
-        return true;
-    }
-
-    if (stub->state().canAttachStub()) {
-        CompareIRGenerator gen(cx, script, pc, stub->state().mode(), op, lhs, rhs);
-        bool attached = false;
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        BaselineCacheIRStubKind::Regular,
-                                                        script, stub, &attached);
-            if (newStub) {
-                    JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
-            }
-            return true;
-        }
-    }
-
-    stub->noteUnoptimizableAccess();
+    TryAttachStub<CompareIRGenerator>("Compare", cx, frame, stub, BaselineCacheIRStubKind::Regular, op, lhs, rhs);
     return true;
 }
 
@@ -6486,18 +6211,8 @@ DoNewObject(JSContext* cx, BaselineFrame* frame, ICNewObject_Fallback* stub, Mut
                 return false;
             }
 
-            if (!JitOptions.disableCacheIR) {
-                bool attached = false;
-                NewObjectIRGenerator gen(cx, script, pc, stub->state().mode(), JSOp(*pc), templateObject);
-                if (gen.tryAttachStub()) {
-                    ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                                BaselineCacheIRStubKind::Regular,
-                                                                script, stub, &attached);
-                    if (newStub) {
-                        JitSpew(JitSpew_BaselineIC, "  NewObject Attached CacheIR stub");
-                    }
-                }
-            }
+            TryAttachStub<NewObjectIRGenerator>("NewObject", cx, frame, stub, BaselineCacheIRStubKind::Regular, JSOp(*pc), templateObject);
+
             stub->setTemplateObject(templateObject);
         }
     }

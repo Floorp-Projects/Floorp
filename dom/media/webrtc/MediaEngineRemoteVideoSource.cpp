@@ -991,9 +991,9 @@ MediaEngineRemoteVideoSource::ChooseCapability(
   uint32_t sameDistance = candidateSet[0].mDistance;
   {
     MediaTrackConstraintSet prefs;
-    prefs.mWidth.SetAsLong() = aPrefs.GetWidth();
-    prefs.mHeight.SetAsLong() = aPrefs.GetHeight();
-    prefs.mFrameRate.SetAsDouble() = aPrefs.mFPS;
+    prefs.mWidth.Construct().SetAsLong() = aPrefs.GetWidth();
+    prefs.mHeight.Construct().SetAsLong() = aPrefs.GetHeight();
+    prefs.mFrameRate.Construct().SetAsDouble() = aPrefs.mFPS;
     NormalizedConstraintSet normPrefs(prefs, false);
 
     for (auto& candidate : candidateSet) {

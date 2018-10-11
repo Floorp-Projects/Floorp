@@ -34,12 +34,7 @@ job-defaults:
          - 255
       env:
          NO_BBCONFIG: "1"
-         BUILD_TOOLS_REPO:
-            by-project:
-               birch: https://hg.mozilla.org/users/bhearsum_mozilla.com/tools
-               jamun: https://hg.mozilla.org/users/stage-ffxbld/tools
-               maple: https://hg.mozilla.org/users/asasaki_mozilla.com/tools
-               default: https://hg.mozilla.org/build/tools
+         BUILD_TOOLS_REPO: https://hg.mozilla.org/build/tools
    extra:
       chunks: 12
 
