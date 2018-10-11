@@ -1814,6 +1814,26 @@ var gBrowserInit = {
       scheduleIdleTask(() => Win7Features.onOpenWindow());
     }
 
+    scheduleIdleTask(() => {
+      if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
+        return;
+      }
+
+      setTimeout(() => {
+        if (window.closed) {
+          return;
+        }
+
+        let browser = gBrowser.selectedBrowser;
+        let browserBounds = window.windowUtils.getBoundsWithoutFlushing(browser);
+
+        Services.telemetry.keyedScalarAdd(
+          "resistfingerprinting.content_window_size",
+          `${browserBounds.width}x${browserBounds.height}`,
+          1);
+      }, 300 * 1000);
+    });
+
     // This should always go last, since the idle tasks (except for the ones with
     // timeouts) should execute in order. Note that this observer notification is
     // not guaranteed to fire, since the window could close before we get here.
