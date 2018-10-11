@@ -441,12 +441,18 @@ D3D11Checks::FormatOptions(ID3D11Device* device)
   };
 
   auto doesP010Work = [&]() {
+    if (gfxVars::DXP010Blocked() && !gfxPrefs::PDMWMFForceAllowP010Format()) {
+      return false;
+    }
     UINT formatSupport;
     HRESULT hr = device->CheckFormatSupport(DXGI_FORMAT_P010, &formatSupport);
     return (SUCCEEDED(hr) && (formatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D));
   };
 
   auto doesP016Work = [&]() {
+    if (gfxVars::DXP016Blocked() && !gfxPrefs::PDMWMFForceAllowP010Format()) {
+      return false;
+    }
     UINT formatSupport;
     HRESULT hr = device->CheckFormatSupport(DXGI_FORMAT_P016, &formatSupport);
     return (SUCCEEDED(hr) && (formatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D));

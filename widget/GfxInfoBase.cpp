@@ -183,6 +183,12 @@ GetPrefNameForFeature(int32_t aFeature)
     case nsIGfxInfo::FEATURE_DX_NV12:
       name = BLACKLIST_PREF_BRANCH "dx.nv12";
       break;
+    case nsIGfxInfo::FEATURE_DX_P010:
+      name = BLACKLIST_PREF_BRANCH "dx.p010";
+      break;
+    case nsIGfxInfo::FEATURE_DX_P016:
+      name = BLACKLIST_PREF_BRANCH "dx.p016";
+      break;
     case nsIGfxInfo::FEATURE_VP8_HW_DECODE:
     case nsIGfxInfo::FEATURE_VP9_HW_DECODE:
       // We don't provide prefs for these features as these are
@@ -1008,6 +1014,8 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
     nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX,
     nsIGfxInfo::FEATURE_WEBRENDER,
     nsIGfxInfo::FEATURE_DX_NV12,
+    nsIGfxInfo::FEATURE_DX_P010,
+    nsIGfxInfo::FEATURE_DX_P016,
     0
   };
 
