@@ -32,9 +32,17 @@ public:
 
   virtual already_AddRefed<nsIPersistentProperties> Attributes() override;
 
+  virtual uint32_t ChildCount() const override;
+
+  virtual void ScrollTo(uint32_t aHow) const override;
+
   // AccessibleWrap
 
   virtual void SetTextContents(const nsAString& aText) override;
+
+  virtual void GetTextContents(nsAString& aText) override;
+
+  virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset) override;
 
   virtual mozilla::java::GeckoBundle::LocalRef ToBundle() override;
 };

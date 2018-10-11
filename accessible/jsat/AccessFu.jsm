@@ -19,6 +19,7 @@ const GECKOVIEW_MESSAGE = {
   ACTIVATE: "GeckoView:AccessibilityActivate",
   BY_GRANULARITY: "GeckoView:AccessibilityByGranularity",
   CLIPBOARD: "GeckoView:AccessibilityClipboard",
+  CURSOR_TO_FOCUSED: "GeckoView:AccessibilityCursorToFocused",
   EXPLORE_BY_TOUCH: "GeckoView:AccessibilityExploreByTouch",
   LONG_PRESS: "GeckoView:AccessibilityLongPress",
   NEXT: "GeckoView:AccessibilityNext",
@@ -175,6 +176,9 @@ var AccessFu = {
         break;
       case GECKOVIEW_MESSAGE.SCROLL_BACKWARD:
         this.Input.androidScroll("backward");
+        break;
+      case GECKOVIEW_MESSAGE.CURSOR_TO_FOCUSED:
+        this.autoMove({ moveToFocused: true });
         break;
       case GECKOVIEW_MESSAGE.BY_GRANULARITY:
         this.Input.moveByGranularity(data);
