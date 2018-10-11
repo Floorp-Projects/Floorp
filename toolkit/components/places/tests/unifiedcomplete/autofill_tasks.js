@@ -544,29 +544,48 @@ function addAutofillTasks(origins) {
       ]);
     }
 
-    // Enable actions to make sure that the failure to make an autofill match
-    // does not interrupt creating another type of heuristic match, in this case
-    // a search (for "ex") in the `origins` case, and a visit in the `!origins`
-    // case.
-    await check_autocomplete({
-      search,
-      searchParam: "enable-actions",
-      matches: [
-        origins ?
-          makeSearchMatch(search, { style: ["heuristic"] }) :
-          makeVisitMatch(search, "http://" + search, { heuristic: true }),
-        {
-          value: "https://not-" + url,
-          comment: "test visit for https://not-" + url,
-          style: ["favicon"],
-        },
-        {
-          value: "https://" + url,
-          comment: "test visit for https://" + url,
-          style: ["favicon"],
-        },
-      ],
-    });
+    // Enable actions.  In the `origins` case, the failure to make an autofill
+    // match should not interrupt creating another type of heuristic match, in
+    // this case a search (for "ex").  In the `!origins` case, autofill should
+    // still happen since there's no threshold comparison.
+    if (origins) {
+      await check_autocomplete({
+        search,
+        searchParam: "enable-actions",
+        matches: [
+          makeSearchMatch(search, { style: ["heuristic"] }),
+          {
+            value: "https://not-" + url,
+            comment: "test visit for https://not-" + url,
+            style: ["favicon"],
+          },
+          {
+            value: "https://" + url,
+            comment: "test visit for https://" + url,
+            style: ["favicon"],
+          },
+        ],
+      });
+    } else {
+      await check_autocomplete({
+        search,
+        searchParam: "enable-actions",
+        autofilled: url,
+        completed: "https://" + url,
+        matches: [
+          {
+            value: url,
+            comment: "https://" + comment,
+            style: ["autofill", "heuristic"],
+          },
+          {
+            value: "https://not-" + url,
+            comment: "test visit for https://not-" + url,
+            style: ["favicon"],
+          },
+        ],
+      });
+    }
 
     // Remove the visits to the different host.
     await PlacesUtils.history.remove([
