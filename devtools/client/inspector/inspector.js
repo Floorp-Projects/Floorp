@@ -1585,7 +1585,7 @@ Inspector.prototype = {
     }));
 
     // Set the pseudo classes
-    for (const name of ["hover", "active", "focus", "focus-within"]) {
+    for (const name of ["hover", "active", "focus"]) {
       const menuitem = new MenuItem({
         id: "node-menu-pseudo-" + name,
         label: name,
