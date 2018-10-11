@@ -9,16 +9,8 @@
 #include "MediaStreamGraph.h"
 #include "nsContentUtils.h"
 
-#include "mozilla/dom/VideoStreamTrackBinding.h"
-
 namespace mozilla {
 namespace dom {
-
-JSObject*
-VideoStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return VideoStreamTrack_Binding::Wrap(aCx, this, aGivenProto);
-}
 
 void
 VideoStreamTrack::AddVideoOutput(MediaStreamVideoSink* aSink)
