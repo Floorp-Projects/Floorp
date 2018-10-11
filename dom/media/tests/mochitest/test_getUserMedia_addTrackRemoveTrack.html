@@ -27,7 +27,7 @@
         checkMediaStreamContains(stream, [track, otherTrack], "Added video");
 
         var testElem = createMediaElement('video', 'testAddTrackAudioVideo');
-        var playback = new LocalMediaStreamPlayback(testElem, stream);
+        var playback = new MediaStreamPlayback(testElem, stream);
         return playback.playMedia(false);
     }))
     .then(() => getUserMedia({video: true})).then(stream =>
@@ -43,7 +43,7 @@
         checkMediaStreamContains(stream, [track, otherTrack], "Added video");
 
         var test = createMediaElement('video', 'testAddTrackDoubleVideo');
-        var playback = new LocalMediaStreamPlayback(test, stream);
+        var playback = new MediaStreamPlayback(test, stream);
         return playback.playMedia(false);
     }))
     .then(() => getUserMedia({video: true})).then(stream =>
@@ -80,7 +80,7 @@
         .then(() => {
           stream.addTrack(track);
           checkMediaStreamContains(stream, [track], "Re-added added-then-removed track");
-          var playback = new LocalMediaStreamPlayback(elem, stream);
+          var playback = new MediaStreamPlayback(elem, stream);
           return playback.playMedia(false);
         })
         .then(() => otherTrack.stop());
@@ -98,7 +98,7 @@
                                  "2, Added external track");
 
         var elem = createMediaElement('video', 'testAddRemoveOriginalTrackVideo');
-        var playback = new LocalMediaStreamPlayback(elem, audioStream);
+        var playback = new MediaStreamPlayback(elem, audioStream);
         return playback.playMedia(false);
       }))
     .then(() => getUserMedia({ audio: true, video: true })).then(stream => {
