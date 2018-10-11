@@ -3,25 +3,23 @@
 <style>
  #screenshot-preview {width: 200px; height: 200px;}
 </style>
-<div id="url"></div>
-<div id="details"></div>
+<div id="url">$$URL$$</div>
+<div id="details">$$DETAILS$$</div>
 <div id="screenshot-preview">Fail</div>
 <script>
-let params = new URL(location.href).searchParams;
+"use strict";
 let preview = document.getElementById("screenshot-preview");
-let url = document.getElementById("url");
-url.innerText = params.get("url");
-let details = document.getElementById("details");
-details.innerText = params.get("details");
 
 function getBlobAsDataURL(blob) {
   return new Promise((resolve, reject) => {
     let reader = new FileReader();
 
+    // eslint-disable-next-line mozilla/balanced-listeners
     reader.addEventListener("error", (e) => {
       reject(`There was an error reading the blob: ${e.type}`);
     });
 
+    // eslint-disable-next-line mozilla/balanced-listeners
     reader.addEventListener("load", (e) => {
       resolve(e.target.result);
     });
@@ -41,6 +39,7 @@ function sendReceivedEvent() {
   window.dispatchEvent(new CustomEvent("ScreenshotReceived", {bubbles: true}));
 }
 
+// eslint-disable-next-line mozilla/balanced-listeners
 window.addEventListener("message", function(event) {
   if (event.data instanceof Blob) {
     preview.innerText = "Pass";
