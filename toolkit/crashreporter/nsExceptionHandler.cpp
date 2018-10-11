@@ -887,6 +887,42 @@ LaunchCrashHandlerService(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath,
 
 #endif
 
+void
+WriteEscapedMozCrashReason(PlatformWriter& aWriter)
+{
+  const char *reason;
+  size_t len;
+  char *rust_panic_reason;
+  bool rust_panic = get_rust_panic_reason(&rust_panic_reason, &len);
+
+  if (rust_panic) {
+    reason = rust_panic_reason;
+  } else if (gMozCrashReason != nullptr) {
+    reason = gMozCrashReason;
+    len = strlen(reason);
+  } else {
+    return; // No crash reason, bail out
+  }
+
+  WriteString(aWriter, AnnotationToString(Annotation::MozCrashReason));
+  WriteLiteral(aWriter, "=");
+
+  // The crash reason might be non-null-terminated in the case of a rust panic,
+  // it has also not being escaped so escape it one character at a time and
+  // write out the resulting string.
+  for (size_t i = 0; i < len; i++) {
+    if (reason[i] == '\\') {
+      WriteLiteral(aWriter, "\\\\");
+    } else if (reason[i] == '\n') {
+      WriteLiteral(aWriter, "\\n");
+    } else {
+      aWriter.WriteBuffer(reason + i, 1);
+    }
+  }
+
+  WriteLiteral(aWriter, "\n");
+}
+
 // Callback invoked from breakpad's exception handler, this writes out the
 // last annotations after a crash occurs and launches the crash reporter client.
 //
@@ -1088,18 +1124,8 @@ MinidumpCallback(
     WriteGlobalMemoryStatus(&apiData, &eventFile);
 #endif // XP_WIN
 
-    char* rust_panic_reason;
-    size_t rust_panic_len;
-    if (get_rust_panic_reason(&rust_panic_reason, &rust_panic_len)) {
-      // rust_panic_reason is not null-terminated.
-      WriteAnnotation(apiData, Annotation::MozCrashReason, rust_panic_reason,
-                      rust_panic_len);
-      WriteAnnotation(eventFile, Annotation::MozCrashReason, rust_panic_reason,
-                      rust_panic_len);
-    } else if (gMozCrashReason) {
-      WriteAnnotation(apiData, Annotation::MozCrashReason, gMozCrashReason);
-      WriteAnnotation(eventFile, Annotation::MozCrashReason, gMozCrashReason);
-    }
+    WriteEscapedMozCrashReason(apiData);
+    WriteEscapedMozCrashReason(eventFile);
 
     if (oomAllocationSizeBuffer[0]) {
       WriteAnnotation(apiData, Annotation::OOMAllocationSize,
@@ -1293,15 +1319,7 @@ PrepareChildExceptionTimeAnnotations(void* context)
                     oomAllocationSizeBuffer);
   }
 
-  char* rust_panic_reason;
-  size_t rust_panic_len;
-  if (get_rust_panic_reason(&rust_panic_reason, &rust_panic_len)) {
-    // rust_panic_reason is not null-terminated.
-    WriteAnnotation(apiData, Annotation::MozCrashReason, rust_panic_reason,
-                    rust_panic_len);
-  } else if (gMozCrashReason) {
-    WriteAnnotation(apiData, Annotation::MozCrashReason, gMozCrashReason);
-  }
+  WriteEscapedMozCrashReason(apiData);
 
   std::function<void(const char*)> getThreadAnnotationCB =
     [&] (const char * aValue) -> void {
@@ -3056,7 +3074,7 @@ IsDataEscaped(char* aData)
   }
   char* pos = aData;
   while ((pos = strchr(pos, '\\'))) {
-    if (*(pos + 1) != '\\') {
+    if (*(pos + 1) != '\\' && *(pos + 1) != 'n') {
       return false;
     }
     // Add 2 to account for the second pos
