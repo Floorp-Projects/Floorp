@@ -27,6 +27,8 @@ Release date: TBD
       SystemEngine.defaultUserAgent = "test-ua-string"
     }
     ```
+* **browser-engine-servo**:
+  * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
 * **browser-search**
   * Fixed an issue where a locale change at runtime would not update the search engines.
 * **browser-errorpages**
