@@ -20,11 +20,16 @@ public:
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~AccessibleWrap();
 
+  virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
   virtual void Shutdown() override;
 
   int32_t VirtualViewID() const { return mID; }
 
   virtual void SetTextContents(const nsAString& aText);
+
+  virtual void GetTextContents(nsAString& aText);
+
+  virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset);
 
   virtual mozilla::java::GeckoBundle::LocalRef ToBundle();
 

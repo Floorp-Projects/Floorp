@@ -66,12 +66,40 @@ ProxyAccessibleWrap::Attributes()
   return attributes.forget();
 }
 
+uint32_t
+ProxyAccessibleWrap::ChildCount() const
+{
+  return Proxy()->ChildrenCount();
+}
+
+void
+ProxyAccessibleWrap::ScrollTo(uint32_t aHow) const
+{
+  Proxy()->ScrollTo(aHow);
+}
+
 // Other
 
 void
 ProxyAccessibleWrap::SetTextContents(const nsAString& aText)
 {
   Proxy()->ReplaceText(PromiseFlatString(aText));
+}
+
+void
+ProxyAccessibleWrap::GetTextContents(nsAString& aText)
+{
+  nsAutoString text;
+  Proxy()->TextSubstring(0, -1, text);
+  aText.Assign(text);
+}
+
+bool
+ProxyAccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
+                                        int32_t* aEndOffset)
+{
+  nsAutoString unused;
+  return Proxy()->SelectionBoundsAt(0, unused, aStartOffset, aEndOffset);
 }
 
 mozilla::java::GeckoBundle::LocalRef
