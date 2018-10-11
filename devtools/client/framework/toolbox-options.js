@@ -460,7 +460,7 @@ OptionsPanel.prototype = {
     }
 
     if (this.target.activeTab && !this.target.chrome) {
-      const response = await this.target.activeTab.attach();
+      const [ response ] = await this.target.client.attachTarget(this.target.activeTab._actor);
       this._origJavascriptEnabled = !response.javascriptEnabled;
       this.disableJSNode.checked = this._origJavascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
@@ -512,7 +512,7 @@ OptionsPanel.prototype = {
       "javascriptEnabled": !checked
     };
 
-    this.target.activeTab.reconfigure({ options });
+    this.target.activeTab.reconfigure(options);
   },
 
   destroy: function() {

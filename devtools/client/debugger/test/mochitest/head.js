@@ -180,8 +180,8 @@ function getAddonActorForId(aClient, aAddonId) {
 
 async function attachTargetActorForUrl(aClient, aUrl) {
   let grip = await getTargetActorForUrl(aClient, aUrl);
-  let [ response, front ] = await aClient.attachTarget(grip.actor);
-  return [grip, response, front];
+  let [ response ] = await aClient.attachTarget(grip.actor);
+  return [grip, response];
 }
 
 async function attachThreadActorForUrl(aClient, aUrl) {
@@ -450,7 +450,7 @@ function ensureThreadClientState(aPanel, aState) {
 
 function reload(aPanel, aUrl) {
   let activeTab = aPanel.panelWin.DebuggerController._target.activeTab;
-  aUrl ? activeTab.navigateTo({ url: aUrl }) : activeTab.reload();
+  aUrl ? activeTab.navigateTo(aUrl) : activeTab.reload();
 }
 
 function navigateActiveTabTo(aPanel, aUrl, aWaitForEventName, aEventRepeat) {
@@ -1109,9 +1109,14 @@ function attachWorker(tabClient, worker) {
   return tabClient.attachWorker(worker.actor);
 }
 
-function waitForWorkerListChanged(targetFront) {
+function waitForWorkerListChanged(tabClient) {
   info("Waiting for worker list to change.");
-  return targetFront.once("workerListChanged");
+  return new Promise(function (resolve) {
+    tabClient.addListener("workerListChanged", function listener() {
+      tabClient.removeListener("workerListChanged", listener);
+      resolve();
+    });
+  });
 }
 
 function attachThread(workerClient, options) {

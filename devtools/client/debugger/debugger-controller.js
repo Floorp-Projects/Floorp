@@ -478,22 +478,11 @@ Workers.prototype = {
     }
 
     this._updateWorkerList();
-
-    // `_tabClient` can be BrowsingContextTargetFront (protocol.js front) or
-    // WorkerClient/DebuggerClient (old fashion client)
-    if (typeof(this._tabClient.on) == "function") {
-      this._tabClient.on("workerListChanged", this._onWorkerListChanged);
-    } else {
-      this._tabClient.addListener("workerListChanged", this._onWorkerListChanged);
-    }
+    this._tabClient.addListener("workerListChanged", this._onWorkerListChanged);
   },
 
   disconnect: function () {
-    if (typeof(this._tabClient.on) == "function") {
-      this._tabClient.off("workerListChanged", this._onWorkerListChanged);
-    } else {
-      this._tabClient.removeListener("workerListChanged", this._onWorkerListChanged);
-    }
+    this._tabClient.removeListener("workerListChanged", this._onWorkerListChanged);
   },
 
   _updateWorkerList: function () {

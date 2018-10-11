@@ -41,13 +41,7 @@ function setupEvents(dependencies) {
     });
 
     if (threadClient._parent) {
-      // Parent may be BrowsingContextTargetFront and be protocol.js.
-      // Or DebuggerClient/WorkerClient and still be old fashion actor.
-      if (threadClient._parent.on) {
-        threadClient._parent.on("workerListChanged", workerListChanged);
-      } else {
-        threadClient._parent.addListener("workerListChanged", workerListChanged);
-      }
+      threadClient._parent.addListener("workerListChanged", workerListChanged);
     }
   }
 }

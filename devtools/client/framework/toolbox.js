@@ -1339,21 +1339,12 @@ Toolbox.prototype = {
    * Apply the current cache setting from devtools.cache.disabled to this
    * toolbox's tab.
    */
-  _applyCacheSettings: async function() {
+  _applyCacheSettings: function() {
     const pref = "devtools.cache.disabled";
     const cacheDisabled = Services.prefs.getBoolPref(pref);
 
     if (this.target.activeTab) {
-      await this.target.activeTab.reconfigure({
-        options: {
-          "cacheDisabled": cacheDisabled
-        }
-      });
-
-      // This event is only emitted for tests in order to know when to reload
-      if (flags.testing) {
-        this.emit("cache-reconfigured");
-      }
+      this.target.activeTab.reconfigure({"cacheDisabled": cacheDisabled});
     }
   },
 
@@ -1368,9 +1359,7 @@ Toolbox.prototype = {
 
     if (this.target.activeTab) {
       this.target.activeTab.reconfigure({
-        options: {
-          "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
-        }
+        "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
       });
     }
   },
@@ -1416,11 +1405,7 @@ Toolbox.prototype = {
       this.telemetry.toolClosed("paintflashing", this.sessionId, this);
     }
     this.isPaintFlashing = !this.isPaintFlashing;
-    return this.target.activeTab.reconfigure({
-      options: {
-        "paintFlashing": this.isPaintFlashing
-      }
-    });
+    return this.target.activeTab.reconfigure({"paintFlashing": this.isPaintFlashing});
   },
 
   /**
@@ -2343,7 +2328,7 @@ Toolbox.prototype = {
   onSelectFrame: function(frameId) {
     // Send packet to the backend to select specified frame and
     // wait for 'frameUpdate' event packet to update the UI.
-    this.target.activeTab.switchToFrame({ windowId: frameId });
+    this.target.activeTab.switchToFrame(frameId);
   },
 
   /**

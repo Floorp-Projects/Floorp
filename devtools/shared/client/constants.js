@@ -33,16 +33,13 @@ const UnsolicitedNotifications = {
   "addonListChanged": "addonListChanged",
   "workerListChanged": "workerListChanged",
   "serviceWorkerRegistrationListChanged": "serviceWorkerRegistrationList",
+  "tabNavigated": "tabNavigated",
+  "frameUpdate": "frameUpdate",
   "pageError": "pageError",
   "evaluationResult": "evaluationResult",
-  "updatedSource": "updatedSource",
-  "inspectObject": "inspectObject",
-
-  // newSource is still emitted on the ThreadActor, in addition to the
-  // BrowsingContextActor we have to keep it here until ThreadClient is converted to
-  // ThreadFront and/or we stop emitting this duplicated events.
-  // See ThreadActor.onNewSourceEvent.
   "newSource": "newSource",
+  "updatedSource": "updatedSource",
+  "inspectObject": "inspectObject"
 };
 
 /**
