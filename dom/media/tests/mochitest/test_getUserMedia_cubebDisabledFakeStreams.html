@@ -32,7 +32,7 @@
       return;
     }
     ok(stream, "getUserMedia should get a stream!");
-    let playback = new LocalMediaStreamPlayback(testAudio, stream);
+    let playback = new MediaStreamPlayback(testAudio, stream);
     return playback.playMedia(false);
   });
 
