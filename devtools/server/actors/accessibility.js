@@ -26,7 +26,16 @@ const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
 const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent = Ci.nsIAccessibleStateChangeEvent;
+const nsIAccessibleRelation = Ci.nsIAccessibleRelation;
 const nsIAccessibleRole = Ci.nsIAccessibleRole;
+
+const RELATIONS_TO_IGNORE = new Set([
+  nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
+  nsIAccessibleRelation.RELATION_CONTAINING_TAB_PANE,
+  nsIAccessibleRelation.RELATION_CONTAINING_WINDOW,
+  nsIAccessibleRelation.RELATION_PARENT_WINDOW_OF,
+  nsIAccessibleRelation.RELATION_SUBWINDOW_OF
+]);
 
 const {
   EVENT_TEXT_CHANGED,
@@ -354,6 +363,57 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     return { x, y, w, h };
   },
 
+  async getRelations() {
+    const relationObjects = [];
+    if (this.isDefunct) {
+      return relationObjects;
+    }
+
+    const relations =
+      [...this.rawAccessible.getRelations().enumerate(nsIAccessibleRelation)];
+    if (relations.length === 0) {
+      return relationObjects;
+    }
+
+    const doc = await this.walker.getDocument();
+    relations.forEach(relation => {
+      if (RELATIONS_TO_IGNORE.has(relation.relationType)) {
+        return;
+      }
+
+      const type = this.walker.a11yService.getStringRelationType(relation.relationType);
+      const targets = [...relation.getTargets().enumerate(Ci.nsIAccessible)];
+      let relationObject;
+      for (const target of targets) {
+        // Target of the relation is not part of the current root document.
+        if (target.rootDocument !== doc.rawAccessible) {
+          continue;
+        }
+
+        let targetAcc;
+        try {
+          targetAcc = this.walker.attachAccessible(target, doc);
+        } catch (e) {
+          // Target is not available.
+        }
+
+        if (targetAcc) {
+          if (!relationObject) {
+            relationObject = { type, targets: [] };
+          }
+
+          relationObject.targets.push(targetAcc);
+        }
+      }
+
+      if (relationObject) {
+        relationObjects.push(relationObject);
+      }
+    });
+
+    return relationObjects;
+  },
+
   form() {
     return {
       actor: this.actorID,
@@ -608,6 +668,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
     const doc = await this.getDocument();
     const ancestry = [];
+    if (accessible === doc) {
+      return ancestry;
+    }
+
     try {
       let parent = accessible;
       while (parent && (parent = parent.parentAcc) && parent != doc) {
@@ -902,6 +966,29 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     this.rootWin.focus();
   },
 
+  attachAccessible(rawAccessible, accessibleDocument) {
+    // If raw accessible object is defunct or detached, no need to cache it and
+    // its ancestry.
+    if (!rawAccessible || isDefunct(rawAccessible) || rawAccessible.indexInParent < 0) {
+      return null;
+    }
+
+    const accessible = this.addRef(rawAccessible);
+    // There is a chance that ancestry lookup can fail if the accessible is in
+    // the detached subtree. At that point the root accessible object would be
+    // defunct and accessing it via parent property will throw.
+    try {
+      let parent = accessible;
+      while (parent && parent != accessibleDocument) {
+        parent = parent.parentAcc;
+      }
+    } catch (error) {
+      throw new Error(`Failed to get ancestor for ${accessible}: ${error}`);
+    }
+
+    return accessible;
+  },
+
   /**
    * Find accessible object that corresponds to a DOMNode and attach (lookup its
    * ancestry to the root doc) to the AccessibilityWalker tree.
@@ -922,27 +1009,9 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       rawAccessible = this.getRawAccessibleFor(target);
       target = target.parentNode;
     }
-    // If raw accessible object is defunct or detached, no need to cache it and
-    // its ancestry.
-    if (!rawAccessible || isDefunct(rawAccessible) || rawAccessible.indexInParent < 0) {
-      return null;
-    }
 
     const doc = await this.getDocument();
-    const accessible = this.addRef(rawAccessible);
-    // There is a chance that ancestry lookup can fail if the accessible is in
-    // the detached subtree. At that point the root accessible object would be
-    // defunct and accessing it via parent property will throw.
-    try {
-      let parent = accessible;
-      while (parent && parent != doc) {
-        parent = parent.parentAcc;
-      }
-    } catch (error) {
-      throw new Error(`Failed to get ancestor for ${accessible}: ${error}`);
-    }
-
-    return accessible;
+    return this.attachAccessible(rawAccessible, doc);
   },
 
   /**
