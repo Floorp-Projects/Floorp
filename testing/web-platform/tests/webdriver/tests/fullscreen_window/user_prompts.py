@@ -24,7 +24,7 @@ def is_fullscreen(session):
 @pytest.fixture
 def check_user_prompt_closed_without_exception(session, create_dialog):
     def check_user_prompt_closed_without_exception(dialog_type, retval):
-        assert is_fullscreen(session) is False
+        assert not is_fullscreen(session)
 
         create_dialog(dialog_type, text=dialog_type)
 
@@ -32,8 +32,7 @@ def check_user_prompt_closed_without_exception(session, create_dialog):
         assert_success(response)
 
         assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
-
-        assert is_fullscreen(session) is True
+        assert is_fullscreen(session)
 
     return check_user_prompt_closed_without_exception
 
@@ -41,7 +40,7 @@ def check_user_prompt_closed_without_exception(session, create_dialog):
 @pytest.fixture
 def check_user_prompt_closed_with_exception(session, create_dialog):
     def check_user_prompt_closed_with_exception(dialog_type, retval):
-        assert is_fullscreen(session) is False
+        assert not is_fullscreen(session)
 
         create_dialog(dialog_type, text=dialog_type)
 
@@ -49,8 +48,7 @@ def check_user_prompt_closed_with_exception(session, create_dialog):
         assert_error(response, "unexpected alert open")
 
         assert_dialog_handled(session, expected_text=dialog_type, expected_retval=retval)
-
-        assert is_fullscreen(session) is False
+        assert not is_fullscreen(session)
 
     return check_user_prompt_closed_with_exception
 
@@ -58,7 +56,7 @@ def check_user_prompt_closed_with_exception(session, create_dialog):
 @pytest.fixture
 def check_user_prompt_not_closed_but_exception(session, create_dialog):
     def check_user_prompt_not_closed_but_exception(dialog_type):
-        assert is_fullscreen(session) is False
+        assert not is_fullscreen(session)
 
         create_dialog(dialog_type, text=dialog_type)
 
@@ -68,7 +66,7 @@ def check_user_prompt_not_closed_but_exception(session, create_dialog):
         assert session.alert.text == dialog_type
         session.alert.dismiss()
 
-        assert is_fullscreen(session) is False
+        assert not is_fullscreen(session)
 
     return check_user_prompt_not_closed_but_exception
 

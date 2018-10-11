@@ -26,7 +26,7 @@ def test_fullscreen(session):
     response = fullscreen(session)
     assert_success(response)
 
-    assert is_fullscreen(session) is True
+    assert is_fullscreen(session)
 
 
 def test_payload(session):
@@ -47,12 +47,12 @@ def test_payload(session):
 
 
 def test_fullscreen_twice_is_idempotent(session):
-    assert is_fullscreen(session) is False
+    assert not is_fullscreen(session)
 
     first_response = fullscreen(session)
     assert_success(first_response)
-    assert is_fullscreen(session) is True
+    assert is_fullscreen(session)
 
     second_response = fullscreen(session)
     assert_success(second_response)
-    assert is_fullscreen(session) is True
+    assert is_fullscreen(session)
