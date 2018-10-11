@@ -11373,9 +11373,10 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
-    "description": "A value of 0 is sent when the security UI changes on pages loaded outside of Private Browsing mode, a value of 1 is sent when users manually disable TP on that page, and 2 is sent when users manually re-enable TP on that page.",
+    "description": "(Fennec Only) A value of 0 is sent when the security UI changes on pages loaded outside of Private Browsing mode, a value of 1 is sent when users manually disable TP on that page, and 2 is sent when users manually re-enable TP on that page.",
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "bug_numbers": [1058133]
+    "bug_numbers": [1058133],
+    "products": ["fennec"]
   },
   "SERVICE_WORKER_LAUNCH_TIME": {
     "record_in_processes": ["main", "content"],
