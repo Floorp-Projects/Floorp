@@ -65,6 +65,33 @@ Release date: TBD
   StrictMode.allowThreadDiskReads().resetAfter {
     // In this block disk reads are not triggering a strict mode violation
   }
+
+  ```
+  * Added a new helper for checking if you have permission to do something or not:
+  ```kotlin
+    var isGranted = context.isPermissionGranted(INTERNET)
+    if(isGranted){
+        //You can proceed
+    }else{
+        //Request permission
+    }
+  ```
+* **feature-downloads**
+  * A new components for apps that want to process downloads, for more examples take a look at [here](components/feature/downloads/README.md).
+
+* **support-test**
+  * Added a new helper for granting permissions in  Robolectric tests:
+  ```kotlin
+     val context = RuntimeEnvironment.application
+     var isGranted = context.isPermissionGranted(INTERNET)
+
+     assertFalse(isGranted) //False permission is not granted yet.
+
+     grantPermission(INTERNET) // Now you have permission.
+
+     isGranted = context.isPermissionGranted(INTERNET)
+
+     assertTrue(isGranted) // True :D
   ```
 
 * browser-engine-gecko-nightly:
