@@ -512,7 +512,7 @@ OptionsPanel.prototype = {
       "javascriptEnabled": !checked
     };
 
-    this.target.activeTab.reconfigure(options);
+    this.target.activeTab.reconfigure({ options });
   },
 
   destroy: function() {

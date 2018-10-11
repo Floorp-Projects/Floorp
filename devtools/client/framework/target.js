@@ -828,7 +828,7 @@ TabTarget.prototype = {
   logErrorInPage: function(text, category) {
     if (this.activeTab && this.activeTab.traits.logInPage) {
       const errorFlag = 0;
-      this.activeTab.logInPage(text, category, errorFlag);
+      this.activeTab.logInPage({ text, category, flags: errorFlag });
     }
   },
 
@@ -843,7 +843,7 @@ TabTarget.prototype = {
   logWarningInPage: function(text, category) {
     if (this.activeTab && this.activeTab.traits.logInPage) {
       const warningFlag = 1;
-      this.activeTab.logInPage(text, category, warningFlag);
+      this.activeTab.logInPage({ text, category, flags: warningFlag });
     }
   },
 };

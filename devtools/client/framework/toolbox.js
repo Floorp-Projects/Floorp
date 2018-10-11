@@ -1344,7 +1344,11 @@ Toolbox.prototype = {
     const cacheDisabled = Services.prefs.getBoolPref(pref);
 
     if (this.target.activeTab) {
-      this.target.activeTab.reconfigure({"cacheDisabled": cacheDisabled});
+      this.target.activeTab.reconfigure({
+        options: {
+          "cacheDisabled": cacheDisabled
+        }
+      });
     }
   },
 
@@ -1359,7 +1363,9 @@ Toolbox.prototype = {
 
     if (this.target.activeTab) {
       this.target.activeTab.reconfigure({
-        "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
+        options: {
+          "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
+        }
       });
     }
   },
@@ -1405,7 +1411,11 @@ Toolbox.prototype = {
       this.telemetry.toolClosed("paintflashing", this.sessionId, this);
     }
     this.isPaintFlashing = !this.isPaintFlashing;
-    return this.target.activeTab.reconfigure({"paintFlashing": this.isPaintFlashing});
+    return this.target.activeTab.reconfigure({
+      options: {
+        "paintFlashing": this.isPaintFlashing
+      }
+    });
   },
 
   /**

@@ -48,7 +48,7 @@ function reload(aTarget, aWaitForTargetEvent = "navigate") {
 }
 
 function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
-  executeSoon(() => aTarget.activeTab.navigateTo(aUrl));
+  executeSoon(() => aTarget.activeTab.navigateTo({ url: aUrl }));
   return once(aTarget, aWaitForTargetEvent);
 }
 
