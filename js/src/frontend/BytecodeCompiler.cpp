@@ -64,6 +64,11 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     ModuleObject* compileModule();
 
+    // Call this before calling compileStandaloneFunction.
+    MOZ_MUST_USE bool prepareStandaloneFunctionParse(const Maybe<uint32_t>& parameterListEnd) {
+        return createSourceAndParser(ParseGoal::Script, parameterListEnd);
+    }
+
     bool compileStandaloneFunction(MutableHandleFunction fun, GeneratorKind generatorKind,
                                    FunctionAsyncKind asyncKind,
                                    const Maybe<uint32_t>& parameterListEnd);
@@ -499,9 +504,7 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
     MOZ_ASSERT(fun);
     MOZ_ASSERT(fun->isTenured());
 
-    if (!createSourceAndParser(ParseGoal::Script, parameterListEnd)) {
-        return false;
-    }
+    assertSourceAndParserCreated();
 
     TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
 
@@ -1038,7 +1041,8 @@ frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
     }
 
     BytecodeCompiler compiler(cx, options, srcBuf, scope);
-    if (!compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator,
+    if (!compiler.prepareStandaloneFunctionParse(parameterListEnd) ||
+        !compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator,
                                             FunctionAsyncKind::SyncFunction,
                                             parameterListEnd))
     {
@@ -1060,7 +1064,8 @@ frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
     BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
-    if (!compiler.compileStandaloneFunction(fun, GeneratorKind::Generator,
+    if (!compiler.prepareStandaloneFunctionParse(parameterListEnd) ||
+        !compiler.compileStandaloneFunction(fun, GeneratorKind::Generator,
                                             FunctionAsyncKind::SyncFunction,
                                             parameterListEnd))
     {
@@ -1082,7 +1087,8 @@ frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fu
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
     BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
-    if (!compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator,
+    if (!compiler.prepareStandaloneFunctionParse(parameterListEnd) ||
+        !compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator,
                                             FunctionAsyncKind::AsyncFunction,
                                             parameterListEnd))
     {
@@ -1104,7 +1110,8 @@ frontend::CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction f
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
     BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
-    if (!compiler.compileStandaloneFunction(fun, GeneratorKind::Generator,
+    if (!compiler.prepareStandaloneFunctionParse(parameterListEnd) ||
+        !compiler.compileStandaloneFunction(fun, GeneratorKind::Generator,
                                             FunctionAsyncKind::AsyncFunction,
                                             parameterListEnd))
     {
