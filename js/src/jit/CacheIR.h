@@ -1824,8 +1824,8 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator
 
   public:
     // NOTE: Argument order is PROPERTY, OBJECT
-    HasPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
-                       ICState::Mode mode, HandleValue idVal, HandleValue val);
+    HasPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
+                       CacheKind cacheKind, HandleValue idVal, HandleValue val);
 
     bool tryAttachStub();
 };

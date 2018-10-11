@@ -284,14 +284,8 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receiv
         stub = stub->next();
     }
 
-    if (stub->isGetProp_Fallback()) {
-        if (stub->toGetProp_Fallback()->hadUnoptimizableAccess()) {
-            receivers.clear();
-        }
-    } else {
-        if (stub->toSetProp_Fallback()->hadUnoptimizableAccess()) {
-            receivers.clear();
-        }
+    if (stub->toFallbackStub()->state().hasFailures()) {
+        receivers.clear();
     }
 
     // Don't inline if there are more than 5 receivers.
@@ -619,7 +613,7 @@ BaselineInspector::expectedCompareType(jsbytecode* pc)
 
     if (ICStub* fallback = second ? second->next() : first->next()) {
         MOZ_ASSERT(fallback->isFallback());
-        if (fallback->toCompare_Fallback()->hadUnoptimizableAccess()) {
+        if (fallback->toFallbackStub()->state().hasFailures()) {
             return MCompare::Compare_Unknown;
         }
     }
@@ -697,9 +691,8 @@ BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc)
     ICStub* stubs[2];
 
     const ICEntry& entry = icEntryFromPC(pc);
-    ICStub* stub = entry.fallbackStub();
-    if (stub->isBinaryArith_Fallback() &&
-        stub->toBinaryArith_Fallback()->hadUnoptimizableOperands())
+    ICFallbackStub* stub = entry.fallbackStub();
+    if (stub->state().hasFailures())
     {
         return MIRType::None;
     }
@@ -847,7 +840,7 @@ BaselineInspector::getSingleCallee(jsbytecode* pc)
     const ICEntry& entry = icEntryFromPC(pc);
     ICStub* stub = entry.firstStub();
 
-    if (entry.fallbackStub()->toCall_Fallback()->hadUnoptimizableCall()) {
+    if (entry.fallbackStub()->state().hasFailures()) {
         return nullptr;
     }
 
@@ -1249,13 +1242,9 @@ BaselineInspector::commonGetPropFunction(jsbytecode* pc, bool innerized,
             {
                 return false;
             }
-        } else if (stub->isGetProp_Fallback()) {
+        } else if (stub->isFallback()) {
             // If we have an unoptimizable access, don't try to optimize.
-            if (stub->toGetProp_Fallback()->hadUnoptimizableAccess()) {
-                return false;
-            }
-        } else if (stub->isGetName_Fallback()) {
-            if (stub->toGetName_Fallback()->hadUnoptimizableAccess()) {
+            if (stub->toFallbackStub()->state().hasFailures()) {
                 return false;
             }
         } else {
@@ -1334,20 +1323,11 @@ BaselineInspector::megamorphicGetterSetterFunction(jsbytecode* pc, bool isGetter
             *getterOrSetter = setter;
             continue;
         }
-        if (stub->isGetProp_Fallback()) {
-            if (stub->toGetProp_Fallback()->hadUnoptimizableAccess()) {
+        if (stub->isFallback()) {
+            if (stub->toFallbackStub()->state().hasFailures()) {
                 return false;
             }
-            if (stub->toGetProp_Fallback()->state().mode() != ICState::Mode::Megamorphic) {
-                return false;
-            }
-            continue;
-        }
-        if (stub->isSetProp_Fallback()) {
-            if (stub->toSetProp_Fallback()->hadUnoptimizableAccess()) {
-                return false;
-            }
-            if (stub->toSetProp_Fallback()->state().mode() != ICState::Mode::Megamorphic) {
+            if (stub->toFallbackStub()->state().mode() != ICState::Mode::Megamorphic) {
                 return false;
             }
             continue;
@@ -1487,8 +1467,8 @@ BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shap
             {
                 return false;
             }
-        } else if (!stub->isSetProp_Fallback() ||
-                   stub->toSetProp_Fallback()->hadUnoptimizableAccess())
+        } else if (!stub->isFallback() ||
+                   stub->toFallbackStub()->state().hasFailures())
         {
             // We have an unoptimizable access, so don't try to optimize.
             return false;
@@ -1597,7 +1577,7 @@ BaselineInspector::maybeInfoForProtoReadSlot(jsbytecode* pc, ReceiverVector& rec
         stub = stub->next();
     }
 
-    if (stub->toGetProp_Fallback()->hadUnoptimizableAccess()) {
+    if (stub->toFallbackStub()->state().hasFailures()) {
         receivers.clear();
     }
 
@@ -1641,28 +1621,18 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
     MIRType type = MIRType::None;
 
     for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
-        MIRType stubType;
-        switch (stub->kind()) {
-          case ICStub::GetProp_Fallback:
-            if (stub->toGetProp_Fallback()->hadUnoptimizableAccess()) {
-                return MIRType::Value;
-            }
-            continue;
-
-          case ICStub::GetElem_Fallback:
-            if (stub->toGetElem_Fallback()->hadUnoptimizableAccess()) {
-                return MIRType::Value;
-            }
-            continue;
-
-          case ICStub::CacheIR_Monitored:
+        MIRType stubType = MIRType::None;
+        if (stub->isCacheIR_Monitored()) {
             stubType = GetCacheIRExpectedInputType(stub->toCacheIR_Monitored());
             if (stubType == MIRType::Value) {
                 return MIRType::Value;
             }
-            break;
-
-          default:
+        } else if (stub->isGetElem_Fallback() || stub->isGetProp_Fallback()) {
+            // If we have an unoptimizable access, don't try to optimize.
+            if (stub->toFallbackStub()->state().hasFailures()) {
+                return MIRType::Value;
+            }
+        } else {
             MOZ_CRASH("Unexpected stub");
         }
 
@@ -1694,7 +1664,7 @@ BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot,
     if (!firstStub->next() ||
         !firstStub->isCacheIR_Regular() ||
         !firstStub->next()->isInstanceOf_Fallback() ||
-         firstStub->next()->toInstanceOf_Fallback()->hadUnoptimizableAccess())
+         firstStub->next()->toInstanceOf_Fallback()->state().hasFailures())
          {
              return false;
          }
