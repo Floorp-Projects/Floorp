@@ -426,11 +426,12 @@ def template(request, content, escape_type="html"):
         tokens = deque(tokens)
 
         token_type, field = tokens.popleft()
-        field = field.decode("ascii")
+        assert isinstance(field, text_type)
 
         if token_type == "var":
             variable = field
             token_type, field = tokens.popleft()
+            assert isinstance(field, text_type)
         else:
             variable = None
 
