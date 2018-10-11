@@ -16,6 +16,8 @@ class FlexItemList extends PureComponent {
   static get propTypes() {
     return {
       flexItems: PropTypes.arrayOf(PropTypes.shape(Types.flexItem)).isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
@@ -23,6 +25,8 @@ class FlexItemList extends PureComponent {
   render() {
     const {
       flexItems,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
       setSelectedNode,
     } = this.props;
 
@@ -32,6 +36,8 @@ class FlexItemList extends PureComponent {
         flexItems.map(flexItem => FlexItem({
           key: flexItem.actorID,
           flexItem,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
           setSelectedNode,
         }))
       )

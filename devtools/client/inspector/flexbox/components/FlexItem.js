@@ -7,15 +7,11 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
 
-loader.lazyGetter(this, "Rep", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS.Rep;
-});
-loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
-});
-
-loader.lazyRequireGetter(this, "translateNodeFrontToGrip", "devtools/client/inspector/shared/utils", true);
+const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
+const { Rep } = REPS;
+const ElementNode = REPS.ElementNode;
 
 const Types = require("../types");
 
@@ -23,22 +19,35 @@ class FlexItem extends PureComponent {
   static get propTypes() {
     return {
       flexItem: PropTypes.shape(Types.flexItem).isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { nodeFront } = this.props.flexItem;
+    const {
+      flexItem,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.props;
+    const { nodeFront } = flexItem;
 
     return (
       dom.li({},
         dom.button(
           {
             className: "devtools-button devtools-monospace",
-            onClick: () => this.props.setSelectedNode(nodeFront),
+            onClick: () => {
+              setSelectedNode(nodeFront);
+              onHideBoxModelHighlighter();
+            },
+            onMouseOut: () => onHideBoxModelHighlighter(),
+            onMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
           },
           Rep({
-            defaultRep: Rep.ElementNode,
+            defaultRep: ElementNode,
             mode: MODE.TINY,
             object: translateNodeFrontToGrip(nodeFront),
           })

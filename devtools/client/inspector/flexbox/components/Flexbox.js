@@ -59,11 +59,17 @@ class Flexbox extends PureComponent {
   }
 
   renderFlexItemList() {
-    const { setSelectedNode } = this.props;
+    const {
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.props;
     const { flexItems } = this.props.flexContainer;
 
     return FlexItemList({
       flexItems,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
       setSelectedNode,
     });
   }
