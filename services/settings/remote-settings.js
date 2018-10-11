@@ -225,17 +225,29 @@ async function fetchLatestChanges(url, lastEtag, expectedTimestamp) {
 
 /**
  * Load the the JSON file distributed with the release for this collection.
- * @param {String} bucket
- * @param {String} collection
+ * @param {String}  bucket
+ * @param {String}  collection
+ * @param {Object}  options
+ * @param {boolean} options.ignoreMissing Do not throw an error if the file is missing.
  */
-async function loadDumpFile(bucket, collection) {
+async function loadDumpFile(bucket, collection, { ignoreMissing = true } = {}) {
   const fileURI = `resource://app/defaults/settings/${bucket}/${collection}.json`;
-  const response = await fetch(fileURI);
-  if (!response.ok) {
-    throw new Error(`Could not read from '${fileURI}'`);
+  let response;
+  try {
+    // Will throw NetworkError is folder/file is missing.
+    response = await fetch(fileURI);
+    if (!response.ok) {
+      throw new Error(`Could not read from '${fileURI}'`);
+    }
+    // Will throw if JSON is invalid.
+    return response.json();
+  } catch (e) {
+    // A missing file is reported as "NetworError" (see Bug 1493709)
+    if (!ignoreMissing || !/NetworkError/.test(e.message)) {
+      throw e;
+    }
   }
-  // Will be rejected if JSON is invalid.
-  return response.json();
+  return { data: [] };
 }
 
 
@@ -616,7 +628,7 @@ async function hasLocalData(client) {
  */
 async function hasLocalDump(bucket, collection) {
   try {
-    await loadDumpFile(bucket, collection);
+    await loadDumpFile(bucket, collection, {ignoreMissing: false});
     return true;
   } catch (e) {
     return false;
