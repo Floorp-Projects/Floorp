@@ -72,7 +72,7 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
   // event is fired outside of the active editing host), we need to commit
   // composition because it will be change the selection to the clicked
   // point.  Then, we won't be able to commit the composition.
-  if (!EnsureCommitCompoisition()) {
+  if (!EnsureCommitComposition()) {
     return NS_OK;
   }
 
