@@ -97,7 +97,6 @@
   display: flex;
   align-items: center;
   height: 32px;
-  border-bottom: 1px solid var(--theme-splitter-color);
   padding: 0 3px;
 }
 
@@ -123,8 +122,11 @@
  * Flex Item List
  */
 
+.flex-header + .flex-item-list {
+  border-block-start: 1px solid var(--theme-splitter-color);
+}
+
 .flex-item-list {
-  border-bottom: 1px solid var(--theme-splitter-color);
   font-size: 12px;
   margin: 0;
   padding-inline-start: 34px;
@@ -163,6 +165,7 @@
  */
 
 .flex-outline-container {
+  border-block-start: 1px solid var(--theme-splitter-color);
   display: flex;
   justify-content: center;
 }
@@ -348,6 +351,7 @@
  */
 
 #flex-container-properties {
+  border-block-start: 1px solid var(--theme-splitter-color);
   margin-bottom: 5px;
 }
 

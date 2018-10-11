@@ -16,7 +16,7 @@ import subprocess
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.log import FATAL
-from mozharness.base.script import BaseScript, PreScriptAction, PostScriptAction
+from mozharness.base.script import BaseScript, PreScriptAction
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
@@ -68,8 +68,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
          }
     ]] + copy.deepcopy(testing_config_options)
 
-    app_name = None
-
     def __init__(self, require_config_file=False):
         super(AndroidHardwareTest, self).__init__(
             config_options=self.config_options,
@@ -99,9 +97,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         self.test_packages_url = c.get('test_packages_url')
         self.test_manifest = c.get('test_manifest')
         self.robocop_path = os.path.join(abs_dirs['abs_work_dir'], "robocop.apk")
-        self.device_name = os.environ['DEVICE_NAME']
-        self.device_serial = os.environ['DEVICE_SERIAL']
-        self.device_ip = os.environ['DEVICE_IP']
         self.test_suite = c.get('test_suite')
         self.this_chunk = c.get('this_chunk')
         self.total_chunks = c.get('total_chunks')
@@ -290,16 +285,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             self.register_virtualenv_module(requirements=[requirements],
                                             two_pass=True)
 
-    def verify_device(self):
-        '''
-        Check to see if the device can be contacted via adb.
-        '''
-        self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
-        self.dump_perf_info()
-        self.logcat_start()
-        # Get a post-boot device process list for diagnostics
-        self.info(self.shell_output('ps'))
-
     def download_and_extract(self):
         """
         Download and extract fennec APK, tests.zip, host utils, and robocop (if required).
@@ -399,13 +384,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
                     self.record_status(tbpl_status, level=log_level)
                     self.log("The %s suite: %s ran with return status: %s" %
                              (suite_category, suite, tbpl_status), level=log_level)
-
-    @PostScriptAction('run-tests')
-    def stop_device(self, action, success=None):
-        '''
-        Cleanup after test run.
-        '''
-        self.logcat_stop()
 
 
 if __name__ == '__main__':
