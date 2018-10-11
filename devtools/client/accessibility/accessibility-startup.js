@@ -47,11 +47,14 @@ class AccessibilityStartup {
         // oreder to be able to check actor's backward compatibility via actorHasMethod.
         // See targe.js@getActorDescription for more information.
         this._walker = await this._accessibility.getWalker();
+        this._supports = {};
         // Only works with FF61+ targets
-        this._supportsLatestAccessibility =
+        this._supports.enableDisable =
           await this.target.actorHasMethod("accessibility", "enable");
 
-        if (this._supportsLatestAccessibility) {
+        if (this._supports.enableDisable) {
+          this._supports.relations =
+            await this.target.actorHasMethod("accessible", "getRelations");
           await this._accessibility.bootstrap();
         }
 
