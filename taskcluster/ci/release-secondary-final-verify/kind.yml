@@ -27,11 +27,7 @@ job-defaults:
       max-run-time: 7200
       retry-exit-status: [1]
       env:
-         BUILD_TOOLS_REPO:
-            by-project:
-               jamun: https://hg.mozilla.org/users/stage-ffxbld/tools
-               maple: https://hg.mozilla.org/users/asasaki_mozilla.com/tools
-               default: https://hg.mozilla.org/build/tools
+         BUILD_TOOLS_REPO: https://hg.mozilla.org/build/tools
 
 jobs:
    firefox:

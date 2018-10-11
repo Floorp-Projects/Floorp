@@ -235,7 +235,7 @@ js::math_atan(JSContext* cx, unsigned argc, Value* vp)
 double
 js::ecmaAtan2(double y, double x)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
     return fdlibm::atan2(y, x);
 }
 
@@ -268,7 +268,7 @@ js::math_atan2(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_ceil_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
     return fdlibm::ceil(x);
 }
 
@@ -350,7 +350,7 @@ js::math_exp(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_floor_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
     return fdlibm::floor(x);
 }
 
@@ -443,7 +443,7 @@ js::math_fround(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_log_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
     return fdlibm::log(x);
 }
 
@@ -730,7 +730,7 @@ template float js::GetBiggestNumberLessThan<>(float x);
 double
 js::math_round_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
 
     int32_t ignored;
     if (NumberEqualsInt32(x, &ignored)) {
@@ -781,7 +781,7 @@ js::math_round(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_sin_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
     return sin(x);
 }
 
@@ -814,7 +814,7 @@ js::math_sincos_impl(double x, double *sin, double *cos)
 double
 js::math_sqrt_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
     return sqrt(x);
 }
 
@@ -1085,7 +1085,7 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
 double
 js::math_trunc_impl(double x)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
     return fdlibm::trunc(x);
 }
 

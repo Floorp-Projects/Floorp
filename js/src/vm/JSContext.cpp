@@ -1677,11 +1677,24 @@ AutoEnterOOMUnsafeRegion::crash(size_t size, const char* reason)
 }
 
 #ifdef DEBUG
-AutoUnsafeCallWithABI::AutoUnsafeCallWithABI()
+AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
   : cx_(TlsContext.get()),
     nested_(cx_->hasAutoUnsafeCallWithABI),
     nogc(cx_)
 {
+    switch(strictness) {
+      case UnsafeABIStrictness::NoExceptions:
+        MOZ_ASSERT(!JS_IsExceptionPending(cx_));
+        checkForPendingException_ = true;
+        break;
+      case UnsafeABIStrictness::AllowPendingExceptions:
+        checkForPendingException_ = !JS_IsExceptionPending(cx_);
+        break;
+      case UnsafeABIStrictness::AllowThrownExceptions:
+        checkForPendingException_ = false;
+        break;
+    }
+
     cx_->hasAutoUnsafeCallWithABI = true;
 }
 
@@ -1692,5 +1705,6 @@ AutoUnsafeCallWithABI::~AutoUnsafeCallWithABI()
         cx_->hasAutoUnsafeCallWithABI = false;
         cx_->inUnsafeCallWithABI = false;
     }
+    MOZ_ASSERT_IF(checkForPendingException_, !JS_IsExceptionPending(cx_));
 }
 #endif

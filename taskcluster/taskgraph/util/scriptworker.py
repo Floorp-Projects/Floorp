@@ -76,9 +76,6 @@ DEVEDITION_SIGNING_CERT_SCOPES = {
 BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
     'all-nightly-branches', set([
         'mozilla-central',
-        'mozilla-beta',
-        'mozilla-release',
-        'mozilla-esr60',
         'comm-central',
     ])
 ], [
@@ -91,75 +88,21 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
     ])
 ]]
 
-"""The set of all beetmover release target tasks.
-
-Used for both `BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK` and `get_release_build_number`
-"""
-BEETMOVER_CANDIDATES_TARGET_TASKS = set([
-    'promote_fennec',
-    'promote_desktop',
-])
-BEETMOVER_PUSH_TARGET_TASKS = set([
-    'push_fennec',
-    'ship_fennec',
-    'push_desktop',
-    'ship_desktop',
-])
-BEETMOVER_RELEASE_TARGET_TASKS = BEETMOVER_CANDIDATES_TARGET_TASKS | BEETMOVER_PUSH_TARGET_TASKS
-
-"""Map beetmover tasks aliases to sets of target task methods.
-
-This is a list of list-pairs, for ordering.
-"""
-BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
-    'all-nightly-tasks', set([
-        'nightly_fennec',
-        'nightly_linux',
-        'nightly_macosx',
-        'nightly_win32',
-        'nightly_win64',
-        'nightly_desktop',
-        'mozilla_beta_tasks',
-        'mozilla_release_tasks',
-    ])
-], [
-    'all-candidates-tasks', BEETMOVER_CANDIDATES_TARGET_TASKS
-], [
-    'all-push-tasks', BEETMOVER_PUSH_TARGET_TASKS
-]]
-
 """Map the beetmover scope aliases to the actual scopes.
 """
 BEETMOVER_BUCKET_SCOPES = {
-    'all-candidates-tasks': {
-        'all-release-branches': 'beetmover:bucket:release',
-    },
-    'all-push-tasks': {
-        'all-release-branches': 'beetmover:bucket:release',
-    },
-    'all-nightly-tasks': {
-        'all-nightly-branches': 'beetmover:bucket:nightly',
-    },
+    'all-release-branches': 'beetmover:bucket:release',
+    'all-nightly-branches': 'beetmover:bucket:nightly',
     'default': 'beetmover:bucket:dep',
 }
 
 """Map the beetmover tasks aliases to the actual action scopes.
 """
 BEETMOVER_ACTION_SCOPES = {
-    'all-candidates-tasks': 'beetmover:action:push-to-candidates',
-    'all-push-tasks': 'beetmover:action:push-to-releases',
-    'all-nightly-tasks': 'beetmover:action:push-to-nightly',
-    'default': 'beetmover:action:push-to-nightly',
+    'nightly': 'beetmover:action:push-to-nightly',
+    'default': 'beetmover:action:push-to-candidates',
 }
 
-
-"""Map the beetmover tasks aliases to phases.
-"""
-PHASES = {
-    'all-candidates-tasks': 'promote',
-    'all-push-tasks': 'push',
-    'default': None,
-}
 
 """Known balrog actions."""
 BALROG_ACTIONS = ('submit-locale', 'submit-toplevel', 'schedule')
@@ -296,53 +239,20 @@ def get_scope_from_project(config, alias_to_project_map, alias_to_scope_map):
 
 
 @with_scope_prefix
-def get_scope_from_target_method(config, alias_to_tasks_map, alias_to_scope_map):
+def get_scope_from_release_type(config, release_type_to_scope_map):
     """Determine the restricted scope from `config.params['target_tasks_method']`.
 
     Args:
         config (TransformConfig): The configuration for the kind being transformed.
-        alias_to_tasks_map (list of lists): each list pair contains the
-            alias and the set of target methods that match. This is ordered.
-        alias_to_scope_map (dict): the alias alias to scope
+        release_type_to_scope_map (dict): the maps release types to scopes
 
     Returns:
         string: the scope to use.
     """
-    for alias, tasks in alias_to_tasks_map:
-        if config.params['target_tasks_method'] in tasks and alias in alias_to_scope_map:
-            return alias_to_scope_map[alias]
-    return alias_to_scope_map['default']
-
-
-@with_scope_prefix
-def get_scope_from_target_method_and_project(config, alias_to_tasks_map,
-                                             alias_to_project_map, aliases_to_scope_map):
-    """Determine the restricted scope from both `target_tasks_method` and `project`.
-
-    On certain branches, we'll need differing restricted scopes based on
-    `target_tasks_method`.  However, we can't key solely on that, since that
-    `target_tasks_method` might be run on an unprivileged branch.  This method
-    checks both.
-
-    Args:
-        config (TransformConfig): The configuration for the kind being transformed.
-        alias_to_tasks_map (list of lists): each list pair contains the
-            alias and the set of target methods that match. This is ordered.
-        alias_to_project_map (list of lists): each list pair contains the
-            alias and the set of projects that match.  This is ordered.
-        aliases_to_scope_map (dict of dicts): the task alias to project alias to scope
-
-    Returns:
-        string: the scope to use.
-    """
-    project = config.params['project']
-    target = config.params['target_tasks_method']
-    for alias1, tasks in alias_to_tasks_map:
-        for alias2, projects in alias_to_project_map:
-            if target in tasks and project in projects and \
-                    aliases_to_scope_map.get(alias1, {}).get(alias2):
-                return aliases_to_scope_map[alias1][alias2]
-    return aliases_to_scope_map['default']
+    return release_type_to_scope_map.get(
+        config.params['release_type'],
+        release_type_to_scope_map['default']
+    )
 
 
 def get_phase_from_target_method(config, alias_to_tasks_map, alias_to_phase_map):
@@ -382,22 +292,14 @@ get_devedition_signing_cert_scope = functools.partial(
 )
 
 get_beetmover_bucket_scope = functools.partial(
-    get_scope_from_target_method_and_project,
-    alias_to_tasks_map=BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
+    get_scope_from_project,
     alias_to_project_map=BEETMOVER_SCOPE_ALIAS_TO_PROJECT,
-    aliases_to_scope_map=BEETMOVER_BUCKET_SCOPES,
+    alias_to_scope_map=BEETMOVER_BUCKET_SCOPES,
 )
 
 get_beetmover_action_scope = functools.partial(
-    get_scope_from_target_method,
-    alias_to_tasks_map=BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
-    alias_to_scope_map=BEETMOVER_ACTION_SCOPES,
-)
-
-get_phase = functools.partial(
-    get_phase_from_target_method,
-    alias_to_tasks_map=BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
-    alias_to_phase_map=PHASES,
+    get_scope_from_release_type,
+    release_type_to_scope_map=BEETMOVER_ACTION_SCOPES,
 )
 
 get_balrog_server_scope = functools.partial(

@@ -12,7 +12,7 @@ from taskgraph.util.schema import (
      validate_schema, Schema,
 )
 from taskgraph.util.scriptworker import (
-    get_beetmover_bucket_scope, get_beetmover_action_scope,
+    get_beetmover_bucket_scope, add_scope_prefix,
     get_worker_type_for_scope,
 )
 from taskgraph.transforms.job import job_description_schema
@@ -74,7 +74,7 @@ def make_beetmover_push_to_release_description(config, jobs):
         )
 
         bucket_scope = get_beetmover_bucket_scope(config)
-        action_scope = get_beetmover_action_scope(config)
+        action_scope = add_scope_prefix(config, 'beetmover:action:push-to-releases')
 
         task = {
             'label': label,
