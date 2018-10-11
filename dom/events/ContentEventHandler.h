@@ -153,8 +153,9 @@ protected:
   nsresult Init(WidgetQueryContentEvent* aEvent);
   nsresult Init(WidgetSelectionEvent* aEvent);
 
-  nsresult InitBasic();
-  nsresult InitCommon(SelectionType aSelectionType = SelectionType::eNormal);
+  nsresult InitBasic(bool aRequireFlush = true);
+  nsresult InitCommon(SelectionType aSelectionType = SelectionType::eNormal,
+                      bool aRequireFlush = true);
   /**
    * InitRootContent() computes the root content of current focused editor.
    *
