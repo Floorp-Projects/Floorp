@@ -25,24 +25,21 @@
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/javascript" src="chrome://pippki/content/clientauthask.js"/>
 
-  <groupbox>
-    <description style="font-weight: bold;">&clientAuthAsk.message1;</description>
-    <description id="hostname"/>
-    <description id="organization"/>
-    <description id="issuer"/>
-    </groupbox>
-    <groupbox>
-    <description style="font-weight: bold;">&clientAuthAsk.message2;</description>
-    <!-- The items in this menulist must never be sorted,
-         but remain in the order filled by the application
-    -->
-    <menulist id="nicknames" oncommand="onCertSelected();">
-        <menupopup/>
-    </menulist>
-    <description>&clientAuthAsk.message3;</description>
-    <textbox readonly="true" id="details" multiline="true"
-      style="height: 11em;"/>
-    <checkbox id="rememberBox" checked="true"/>
-  </groupbox>
+<description style="font-weight: bold;">&clientAuthAsk.message1;</description>
+<description id="hostname"/>
+<description id="organization"/>
+<description id="issuer"/>
+
+<description style="font-weight: bold;">&clientAuthAsk.message2;</description>
+<!-- The items in this menulist must never be sorted,
+     but remain in the order filled by the application
+-->
+<menulist id="nicknames" oncommand="onCertSelected();">
+    <menupopup/>
+</menulist>
+<description>&clientAuthAsk.message3;</description>
+<textbox readonly="true" id="details" multiline="true"
+  style="height: 11em;"/>
+<checkbox id="rememberBox" checked="true"/>
 
 </dialog>
