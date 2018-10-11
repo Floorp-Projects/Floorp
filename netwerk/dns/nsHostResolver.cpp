@@ -238,6 +238,10 @@ void
 nsHostRecord::SetExpiration(const mozilla::TimeStamp& now, unsigned int valid, unsigned int grace)
 {
     mValidStart = now;
+    if ((valid + grace) < 60) {
+        grace = 60 - valid;
+        LOG(("SetExpiration: artificially bumped grace to %d\n", grace));
+    }
     mGraceStart = now + TimeDuration::FromSeconds(valid);
     mValidEnd = now + TimeDuration::FromSeconds(valid + grace);
 }
