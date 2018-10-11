@@ -4,6 +4,7 @@
 
 var FastBlock = {
   reportBreakageLabel: "fastblock",
+  telemetryIdentifier: "fb",
   PREF_ENABLED: "browser.fastblock.enabled",
   PREF_UI_ENABLED: "browser.contentblocking.fastblock.control-center.ui.enabled",
 
@@ -24,6 +25,7 @@ var FastBlock = {
 
 var TrackingProtection = {
   reportBreakageLabel: "trackingprotection",
+  telemetryIdentifier: "tp",
   PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
   PREF_UI_ENABLED: "browser.contentblocking.trackingprotection.control-center.ui.enabled",
@@ -65,9 +67,6 @@ var TrackingProtection = {
   init() {
     this.updateEnabled();
 
-    this.enabledHistogramAdd(this.enabledGlobally);
-    this.disabledPBMHistogramAdd(!this.enabledInPrivateWindows);
-
     Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this);
     Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
 
@@ -87,20 +86,6 @@ var TrackingProtection = {
     return this.enabledGlobally ||
            (this.enabledInPrivateWindows &&
             PrivateBrowsingUtils.isWindowPrivate(window));
-  },
-
-  enabledHistogramAdd(value) {
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      return;
-    }
-    Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").add(value);
-  },
-
-  disabledPBMHistogramAdd(value) {
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      return;
-    }
-    Services.telemetry.getHistogramById("TRACKING_PROTECTION_PBM_DISABLED").add(value);
   },
 
   onGlobalToggleCommand() {
@@ -142,6 +127,7 @@ var TrackingProtection = {
 
 var ThirdPartyCookies = {
   reportBreakageLabel: "cookierestrictions",
+  telemetryIdentifier: "cr",
   PREF_ENABLED: "network.cookie.cookieBehavior",
   PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.rejecttrackers.reportBreakage.enabled",
   PREF_ENABLED_VALUES: [
@@ -345,6 +331,11 @@ var ContentBlocking = {
       this.appMenuButton.setAttribute("enabled", this.enabled);
       this.appMenuButton.setAttribute("aria-pressed", this.enabled);
     }
+
+    // The enabled state of blockers may also change since it depends on this.enabled.
+    for (let blocker of this.blockers) {
+      blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
+    }
   },
 
   updateUIEnabled() {
@@ -446,13 +437,6 @@ var ContentBlocking = {
     this.identityPopupMultiView.showSubView("identity-popup-breakageReportView");
   },
 
-  eventsHistogramAdd(value) {
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      return;
-    }
-    Services.telemetry.getHistogramById("TRACKING_PROTECTION_EVENTS").add(value);
-  },
-
   shieldHistogramAdd(value) {
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
       return;
@@ -551,9 +535,6 @@ var ContentBlocking = {
       this.iconBox.removeAttribute("tooltiptext");
       this.shieldHistogramAdd(0);
     }
-
-    // Telemetry for state change.
-    this.eventsHistogramAdd(0);
   },
 
   disableForCurrentPage() {
@@ -569,9 +550,6 @@ var ContentBlocking = {
         "trackingprotection", Services.perms.ALLOW_ACTION);
     }
 
-    // Telemetry for disable protection.
-    this.eventsHistogramAdd(1);
-
     this.hideIdentityPopupAndReload();
   },
 
@@ -586,9 +564,6 @@ var ContentBlocking = {
     } else {
       Services.perms.remove(baseURI, "trackingprotection");
     }
-
-    // Telemetry for enable protection.
-    this.eventsHistogramAdd(2);
 
     this.hideIdentityPopupAndReload();
   },

@@ -244,6 +244,14 @@ var gIdentityHandler = {
     openPreferences("privacy-permissions", { origin: "identityPopup-permissions-PreferencesButton" });
   },
 
+  recordClick(object) {
+    let extra = {};
+    for (let blocker of ContentBlocking.blockers) {
+      extra[blocker.telemetryIdentifier] = blocker.activated ? "true" : "false";
+    }
+    Services.telemetry.recordEvent("security.ui.identitypopup", "click", object, null, extra);
+  },
+
   /**
    * Handler for mouseclicks on the "More Information" button in the
    * "identity-popup" panel.
@@ -841,6 +849,14 @@ var gIdentityHandler = {
     if (event.target == this._identityPopup) {
       window.addEventListener("focus", this, true);
     }
+
+    let extra = {};
+    for (let blocker of ContentBlocking.blockers) {
+      extra[blocker.telemetryIdentifier] = blocker.activated ? "true" : "false";
+    }
+
+    let shieldStatus = ContentBlocking.iconBox.hasAttribute("active") ? "shield-showing" : "shield-hidden";
+    Services.telemetry.recordEvent("security.ui.identitypopup", "open", "identity_popup", shieldStatus, extra);
   },
 
   onPopupHidden(event) {

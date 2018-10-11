@@ -1477,7 +1477,15 @@ PopupNotifications.prototype = {
       notificationEl =
         notificationEl.ownerDocument.getBindingParent(notificationEl) || notificationEl.parentNode;
     }
-    this._setNotificationUIState(notificationEl);
+
+    let notification = notificationEl.notification;
+    if (notification.options.checkbox) {
+      if (notificationEl.checkbox.checked) {
+        this._setNotificationUIState(notificationEl, notification.options.checkbox.checkedState);
+      } else {
+        this._setNotificationUIState(notificationEl, notification.options.checkbox.uncheckedState);
+      }
+    }
   },
 
   _onButtonEvent(event, type, source = "button", notificationEl = null) {

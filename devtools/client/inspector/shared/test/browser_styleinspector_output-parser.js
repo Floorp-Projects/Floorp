@@ -10,6 +10,7 @@
 // tested with an xpcshell test as the output-parser requires the DOM to work.
 
 const OutputParser = require("devtools/client/shared/output-parser");
+const { CSS_PROPERTIES_DB} = require("devtools/shared/css/properties-db");
 const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const COLOR_CLASS = "color-class";
@@ -294,7 +295,13 @@ const TEST_DATA = [
 
 add_task(async function() {
   // Mock the toolbox that initCssProperties expect so we get the fallback css properties.
-  const toolbox = {target: {client: {}, hasActor: () => false}};
+  const toolbox = {
+    target: {
+      client: {},
+      hasActor: () => false,
+      getFront: typeName => ({getCSSDatabase: () => CSS_PROPERTIES_DB})
+    }
+  };
   await initCssProperties(toolbox);
   const cssProperties = getCssProperties(toolbox);
 

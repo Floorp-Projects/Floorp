@@ -11321,21 +11321,31 @@
     "alert_emails": ["mobile-frontend@mozilla.com"],
     "bug_numbers": [1235061]
   },
+  "COOKIE_BEHAVIOR": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "70",
+    "releaseChannelCollection": "opt-out",
+    "kind": "enumerated",
+    "n_values": 15,
+    "description": "Records the cookie behavior pref at startup.",
+    "alert_emails": ["jhofmann@mozilla.com", "pdol@mozilla.com", "seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1484251]
+  },
   "TRACKING_PROTECTION_ENABLED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "boolean",
-    "description": "True if tracking protection is enabled globally at the time that a non-Private-Browsing session is initialized.",
+    "description": "True if tracking protection is enabled globally at startup.",
     "alert_emails": ["pdol@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
     "bug_numbers": [1058133]
   },
   "TRACKING_PROTECTION_PBM_DISABLED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "boolean",
-    "description": "True if tracking protection in Private Browsing mode is disabled at the time that a non-Private-Browsing session is initialized.",
+    "description": "True if tracking protection in Private Browsing mode is disabled at startup.",
     "alert_emails": ["pdol@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
     "bug_numbers": [1200944]
   },
@@ -11363,9 +11373,10 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
-    "description": "A value of 0 is sent when the security UI changes on pages loaded outside of Private Browsing mode, a value of 1 is sent when users manually disable TP on that page, and 2 is sent when users manually re-enable TP on that page.",
+    "description": "(Fennec Only) A value of 0 is sent when the security UI changes on pages loaded outside of Private Browsing mode, a value of 1 is sent when users manually disable TP on that page, and 2 is sent when users manually re-enable TP on that page.",
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "bug_numbers": [1058133]
+    "bug_numbers": [1058133],
+    "products": ["fennec"]
   },
   "SERVICE_WORKER_LAUNCH_TIME": {
     "record_in_processes": ["main", "content"],

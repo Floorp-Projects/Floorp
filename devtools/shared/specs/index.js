@@ -336,7 +336,8 @@ function lazyLoadFront(type) {
       require(modulePath);
     } catch (e) {
       throw new Error(
-        `Unable to load lazy front module '${modulePath}' for type '${type}'`);
+        `Unable to load lazy front module '${modulePath}' for type '${type}'.
+        Error: ${e}`);
     }
     lazyFronts.delete(type);
     return true;

@@ -25,6 +25,8 @@ body {
   width: calc(100% - 10px);
   font-family: var(--monospace-font-family);
   padding: 5px;
+  color: -moz-fieldtext;
+  background-color: -moz-field;
 }
 
 /**

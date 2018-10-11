@@ -8,6 +8,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/PerformanceMetricsCollector.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerDebugger.h"
@@ -25,6 +26,62 @@ static mozilla::LazyLogModule sPerfLog("PerformanceMetricsCollector");
 namespace mozilla {
 
 //
+// class IPCTimeout
+//
+NS_IMPL_ISUPPORTS(IPCTimeout, nsIObserver)
+
+
+// static
+IPCTimeout*
+IPCTimeout::CreateInstance(AggregatedResults* aResults)
+{
+  MOZ_ASSERT(aResults);
+  uint32_t delay = StaticPrefs::dom_performance_children_results_ipc_timeout();
+  if (delay == 0) {
+    return nullptr;
+  }
+  return new IPCTimeout(aResults, delay);
+}
+
+
+IPCTimeout::IPCTimeout(AggregatedResults* aResults, uint32_t aDelay):
+    mResults(aResults)
+{
+  MOZ_ASSERT(aResults);
+  MOZ_ASSERT(aDelay > 0);
+  mozilla::DebugOnly<nsresult> rv = NS_NewTimerWithObserver(getter_AddRefs(mTimer),
+                                                            this,
+                                                            aDelay,
+                                                            nsITimer::TYPE_ONE_SHOT);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  LOG(("IPCTimeout timer created"));
+}
+
+IPCTimeout::~IPCTimeout()
+{
+  Cancel();
+}
+
+void
+IPCTimeout::Cancel()
+{
+  if (mTimer) {
+    LOG(("IPCTimeout timer canceled"));
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+}
+
+NS_IMETHODIMP
+IPCTimeout::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
+{
+  MOZ_ASSERT(strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC) == 0);
+  LOG(("IPCTimeout timer triggered"));
+  mResults->ResolveNow();
+  return NS_OK;
+}
+
+//
 // class AggregatedResults
 //
 AggregatedResults::AggregatedResults(nsID aUUID,
@@ -37,6 +94,7 @@ AggregatedResults::AggregatedResults(nsID aUUID,
 {
   MOZ_ASSERT(aCollector);
   MOZ_ASSERT(aPromise);
+  mIPCTimeout = IPCTimeout::CreateInstance(this);
 }
 
 void
@@ -44,9 +102,23 @@ AggregatedResults::Abort(nsresult aReason)
 {
   MOZ_ASSERT(mPromise);
   MOZ_ASSERT(NS_FAILED(aReason));
+  if (mIPCTimeout) {
+    mIPCTimeout->Cancel();
+    mIPCTimeout = nullptr;
+  }
   mPromise->MaybeReject(aReason);
   mPromise = nullptr;
   mPendingResults = 0;
+}
+
+void
+AggregatedResults::ResolveNow()
+{
+  MOZ_ASSERT(mPromise);
+  LOG(("[%s] Early resolve", nsIDToCString(mUUID).get()));
+  mPromise->MaybeResolve(mData);
+  mIPCTimeout = nullptr;
+  mCollector->ForgetAggregatedResults(mUUID);
 }
 
 void
@@ -97,6 +169,10 @@ AggregatedResults::AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics)
   }
 
   LOG(("[%s] All data collected, resolving promise", nsIDToCString(mUUID).get()));
+  if (mIPCTimeout) {
+    mIPCTimeout->Cancel();
+    mIPCTimeout = nullptr;
+  }
   mPromise->MaybeResolve(mData);
   mCollector->ForgetAggregatedResults(mUUID);
 }
@@ -197,7 +273,13 @@ nsresult
 PerformanceMetricsCollector::DataReceived(const nsID& aUUID,
                                           const nsTArray<PerformanceInfo>& aMetrics)
 {
-  MOZ_ASSERT(gInstance);
+  // If some content process were unresponsive on shutdown, we may get called
+  // here with late data received from children - so instead of asserting
+  // that gInstance is available, we just return.
+  if (!gInstance) {
+    LOG(("[%s] gInstance is gone", nsIDToCString(aUUID).get()));
+    return NS_OK;
+  }
   MOZ_ASSERT(XRE_IsParentProcess());
   return gInstance->DataReceivedInternal(aUUID, aMetrics);
 }
@@ -209,6 +291,7 @@ PerformanceMetricsCollector::DataReceivedInternal(const nsID& aUUID,
   MOZ_ASSERT(gInstance == this);
   UniquePtr<AggregatedResults>* results = mAggregatedResults.GetValue(aUUID);
   if (!results) {
+    LOG(("[%s] UUID is gone from mAggregatedResults", nsIDToCString(aUUID).get()));
     return NS_ERROR_FAILURE;
   }
 
