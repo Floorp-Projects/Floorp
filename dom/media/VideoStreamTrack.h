@@ -23,10 +23,7 @@ public:
                    const MediaTrackConstraints& aConstraints = MediaTrackConstraints())
     : MediaStreamTrack(aStream, aTrackID, aInputTrackID, aSource, aConstraints) {}
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
   VideoStreamTrack* AsVideoStreamTrack() override { return this; }
-
   const VideoStreamTrack* AsVideoStreamTrack() const override { return this; }
 
   void AddVideoOutput(MediaStreamVideoSink* aSink);
