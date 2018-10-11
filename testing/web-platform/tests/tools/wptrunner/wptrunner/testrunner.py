@@ -716,6 +716,11 @@ class TestRunnerManager(threading.Thread):
             else:
                 if cmd == "log":
                     self.log(*data)
+                elif cmd == "runner_teardown":
+                    # It's OK for the "runner_teardown" message to be left in
+                    # the queue during cleanup, as we will already have tried
+                    # to stop the TestRunner in `stop_runner`.
+                    pass
                 else:
                     self.logger.warning("Command left in command_queue during cleanup: %r, %r" % (cmd, data))
         while True:
