@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global getModuleLoadPath setModuleLoadHook setModuleResolveHook parseModule os */
+/* global getModuleLoadPath setModuleLoadHook setModuleResolveHook setModuleMetadataHook */
+/* global parseModule os */ 
 
 // A basic synchronous module loader for testing the shell.
 {
@@ -173,6 +174,18 @@ const ReflectLoader = new class {
         let path = this.resolve(name, null);
         return this.loadAndExecute(path);
     }
+
+    populateImportMeta(module, metaObject) {
+        // For the shell, use the script's filename as the base URL.
+
+        let path;
+        if (ReflectApply(MapPrototypeHas, this.modulePaths, [module])) {
+            path = ReflectApply(MapPrototypeGet, this.modulePaths, [module]);
+        } else {
+            path = "(unknown)";
+        }
+        metaObject.url = path;
+    }
 };
 
 setModuleLoadHook((path) => ReflectLoader.importRoot(path));
@@ -182,4 +195,9 @@ setModuleResolveHook((module, requestName) => {
     return ReflectLoader.loadAndParse(path);
 });
 
+setModuleMetadataHook((module, metaObject) => {
+    ReflectLoader.populateImportMeta(module, metaObject);
+});
+
 }
+
