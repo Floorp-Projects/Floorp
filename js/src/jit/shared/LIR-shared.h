@@ -4889,6 +4889,20 @@ class LClassConstructor : public LCallInstructionHelper<1, 0, 0>
     {}
 };
 
+class LModuleMetadata : public LCallInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(ModuleMetadata)
+
+    const MModuleMetadata* mir() const {
+        return mir_->toModuleMetadata();
+    }
+
+    LModuleMetadata()
+      : LCallInstructionHelper(classOpcode)
+    {}
+};
+
 class LLambdaForSingleton : public LCallInstructionHelper<1, 1, 0>
 {
   public:
