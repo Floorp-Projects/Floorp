@@ -30,6 +30,30 @@ ShmSegmentsWriter::~ShmSegmentsWriter()
   Clear();
 }
 
+ShmSegmentsWriter::ShmSegmentsWriter(ShmSegmentsWriter&& aOther) noexcept
+  : mSmallAllocs(std::move(aOther.mSmallAllocs))
+  , mLargeAllocs(std::move(aOther.mLargeAllocs))
+  , mShmAllocator(aOther.mShmAllocator)
+  , mCursor(aOther.mCursor)
+  , mChunkSize(aOther.mChunkSize)
+{
+  aOther.mCursor = 0;
+}
+
+ShmSegmentsWriter&
+ShmSegmentsWriter::operator=(ShmSegmentsWriter&& aOther) noexcept
+{
+  MOZ_ASSERT(IsEmpty(), "Will forget existing updates!");
+  Clear();
+  mSmallAllocs = std::move(aOther.mSmallAllocs);
+  mLargeAllocs = std::move(aOther.mLargeAllocs);
+  mShmAllocator = aOther.mShmAllocator;
+  mCursor = aOther.mCursor;
+  mChunkSize = aOther.mChunkSize;
+  aOther.mCursor = 0;
+  return *this;
+}
+
 layers::OffsetRange
 ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
 {
@@ -246,8 +270,22 @@ ShmSegmentsReader::Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aIn
 
 IpcResourceUpdateQueue::IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator,
                                                size_t aChunkSize)
-: mWriter(std::move(aAllocator), aChunkSize)
+: mWriter(aAllocator, aChunkSize)
 {}
+
+IpcResourceUpdateQueue::IpcResourceUpdateQueue(IpcResourceUpdateQueue&& aOther) noexcept
+  : mWriter(std::move(aOther.mWriter))
+  , mUpdates(std::move(aOther.mUpdates))
+{ }
+
+IpcResourceUpdateQueue&
+IpcResourceUpdateQueue::operator=(IpcResourceUpdateQueue&& aOther) noexcept
+{
+  MOZ_ASSERT(IsEmpty(), "Will forget existing updates!");
+  mWriter = std::move(aOther.mWriter);
+  mUpdates = std::move(aOther.mUpdates);
+  return *this;
+}
 
 bool
 IpcResourceUpdateQueue::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
