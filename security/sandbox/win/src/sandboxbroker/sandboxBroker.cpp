@@ -440,7 +440,8 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     sandbox::MITIGATION_SEHOP |
     sandbox::MITIGATION_DEP_NO_ATL_THUNK |
     sandbox::MITIGATION_DEP |
-    sandbox::MITIGATION_EXTENSION_POINT_DISABLE;
+    sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
+    sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
   if (aSandboxLevel > 4) {
     result = mPolicy->SetAlternateDesktop(false);
