@@ -271,6 +271,7 @@ class BaseBootstrapper(object):
     def ensure_rust_package(self, crate_name, min_version):
         cargo = self.which('cargo')
         if not cargo:
+            cargo_home, cargo_bin = self.cargo_home()
             cargo = os.path.join(cargo_bin, 'cargo')
 
         list = subprocess.check_output([cargo, 'install', '--list'])
