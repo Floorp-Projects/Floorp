@@ -247,12 +247,14 @@ ContentEventHandler::ContentEventHandler(nsPresContext* aPresContext)
 }
 
 nsresult
-ContentEventHandler::InitBasic()
+ContentEventHandler::InitBasic(bool aRequireFlush)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
-  // If text frame which has overflowing selection underline is dirty,
-  // we need to flush the pending reflow here.
-  mDocument->FlushPendingNotifications(FlushType::Layout);
+  if (aRequireFlush) {
+    // If text frame which has overflowing selection underline is dirty,
+    // we need to flush the pending reflow here.
+    mDocument->FlushPendingNotifications(FlushType::Layout);
+  }
   return NS_OK;
 }
 
@@ -314,7 +316,7 @@ ContentEventHandler::InitRootContent(Selection* aNormalSelection)
 }
 
 nsresult
-ContentEventHandler::InitCommon(SelectionType aSelectionType)
+ContentEventHandler::InitCommon(SelectionType aSelectionType, bool aRequireFlush)
 {
   if (mSelection && mSelection->Type() == aSelectionType) {
     return NS_OK;
@@ -324,7 +326,7 @@ ContentEventHandler::InitCommon(SelectionType aSelectionType)
   mRootContent = nullptr;
   mFirstSelectedRawRange.Clear();
 
-  nsresult rv = InitBasic();
+  nsresult rv = InitBasic(aRequireFlush);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelectionController> selectionController;
@@ -399,7 +401,7 @@ ContentEventHandler::Init(WidgetQueryContentEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = InitCommon(selectionType);
+  nsresult rv = InitCommon(selectionType, aEvent->NeedsToFlushLayout());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Be aware, WidgetQueryContentEvent::mInput::mOffset should be made absolute

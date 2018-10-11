@@ -1547,7 +1547,7 @@ IMEContentObserver::MaybeNotifyCompositionEventHandled()
 }
 
 bool
-IMEContentObserver::UpdateSelectionCache()
+IMEContentObserver::UpdateSelectionCache(bool aRequireFlush /* = true */)
 {
   MOZ_ASSERT(IsSafeToNotifyIME());
 
@@ -1560,6 +1560,7 @@ IMEContentObserver::UpdateSelectionCache()
   // XXX Cannot we cache some information for reducing the cost to compute
   //     selection offset and writing mode?
   WidgetQueryContentEvent selection(true, eQuerySelectedText, mWidget);
+  selection.mNeedsToFlushLayout = aRequireFlush;
   ContentEventHandler handler(GetPresContext());
   handler.OnQuerySelectedText(&selection);
   if (NS_WARN_IF(!selection.mSucceeded) ||
@@ -1966,7 +1967,8 @@ IMEContentObserver::IMENotificationSender::SendFocusSet()
 
   observer->mIMEHasFocus = true;
   // Initialize selection cache with the first selection data.
-  observer->UpdateSelectionCache();
+  // We avoid flushing for focus in the general case.
+  observer->UpdateSelectionCache(false);
 
   MOZ_LOG(sIMECOLog, LogLevel::Info,
     ("0x%p IMEContentObserver::IMENotificationSender::"

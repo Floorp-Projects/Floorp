@@ -914,6 +914,7 @@ private:
     : mSucceeded(false)
     , mUseNativeLineBreak(true)
     , mWithFontRanges(false)
+    , mNeedsToFlushLayout(true)
   {
     MOZ_CRASH("WidgetQueryContentEvent is created without proper arguments");
   }
@@ -930,6 +931,7 @@ public:
     , mSucceeded(false)
     , mUseNativeLineBreak(true)
     , mWithFontRanges(false)
+    , mNeedsToFlushLayout(true)
   {
   }
 
@@ -941,6 +943,7 @@ public:
     , mSucceeded(false)
     , mUseNativeLineBreak(aOtherEvent.mUseNativeLineBreak)
     , mWithFontRanges(false)
+    , mNeedsToFlushLayout(aOtherEvent.mNeedsToFlushLayout)
   {
   }
 
@@ -1035,6 +1038,15 @@ public:
     Init(aOptions);
   }
 
+  bool NeedsToFlushLayout() const
+  {
+#ifdef XP_MACOSX
+    return true;
+#else
+    return mNeedsToFlushLayout;
+#endif
+  }
+
   void RequestFontRanges()
   {
     NS_ASSERTION(mMessage == eQueryTextContent,
@@ -1068,6 +1080,7 @@ public:
   bool mSucceeded;
   bool mUseNativeLineBreak;
   bool mWithFontRanges;
+  bool mNeedsToFlushLayout;
   struct Input final
   {
     uint32_t EndOffset() const
