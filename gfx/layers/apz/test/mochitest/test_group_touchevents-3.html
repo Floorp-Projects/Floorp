@@ -23,11 +23,8 @@ var subtests = [
   // Tests that touch-action CSS properties are handled in APZ without waiting
   // on the main-thread, when possible
   {'file': 'helper_touch_action_regions.html', 'prefs': touch_action_prefs},
-  // touch-action tests with :active::after CSS property
-  {'file': 'helper_bug1473108.html'},
-  // Add new subtests here. If this starts timing out because it's taking too
-  // long, create a test_group_touchevents-4.html file. Refer to 1423011#c57
-  // for more details.
+
+  // Add new subtests to test_group_touch_events-4.html, not this file.
 ];
 
 if (isApzEnabled()) {

@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIArray.idl"
-
 
 [scriptable, uuid(948A0023-E3A7-11d2-96CF-0060B0FB9956)]
 interface nsIFormatConverter : nsISupports
@@ -15,7 +13,7 @@ interface nsIFormatConverter : nsISupports
     * in otherwords, the flavors that this converter can convert "from" (the 
     * incoming data to the converter).
     */
-  nsIArray getInputDataFlavors ( ) ;
+  Array<ACString> getInputDataFlavors ( ) ;
 
   /**
     * Get the list of the "output" data flavors (mime types as nsISupportsCString),
@@ -24,7 +22,7 @@ interface nsIFormatConverter : nsISupports
     *
     * @param  aDataFlavorList fills list with supported flavors
     */
-  nsIArray getOutputDataFlavors ( ) ;
+  Array<ACString> getOutputDataFlavors ( ) ;
 
   /**
     * Determines whether a conversion from one flavor to another is supported

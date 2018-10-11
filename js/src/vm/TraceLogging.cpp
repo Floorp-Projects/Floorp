@@ -674,6 +674,7 @@ TraceLoggerThread::startEvent(uint32_t id)
                     mozilla::Maybe<uint32_t> line   = p->line();
                     mozilla::Maybe<uint32_t> column = p->column();
                     graph->addTextId(otherId, filename, line, column);
+                    p->release();
                 }
             }
         }
@@ -1004,6 +1005,7 @@ TraceLoggerThreadState::init()
         }
         if (strstr(options, "EnableGraphFile")) {
             graphFileEnabled = true;
+            jit::JitOptions.enableTraceLogger = true;
         }
         if (strstr(options, "Errors")) {
             spewErrors = true;
@@ -1254,7 +1256,7 @@ JS::StartTraceLogger(JSContext *cx)
 
     LockGuard<Mutex> guard(traceLoggerState->lock);
     traceLoggerState->enableTextIdsForProfiler();
-    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ENABLE_TRACELOGGER, true);
+    jit::JitOptions.enableTraceLogger = true;
 
     // Reset the start time to profile start so it aligns with sampling.
     traceLoggerState->startupTime = rdtsc();
@@ -1273,7 +1275,7 @@ JS::StopTraceLogger(JSContext *cx)
 
     LockGuard<Mutex> guard(traceLoggerState->lock);
     traceLoggerState->disableTextIdsForProfiler();
-    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ENABLE_TRACELOGGER, false);
+    jit::JitOptions.enableTraceLogger = false;
     if (cx->traceLogger) {
         cx->traceLogger->disable();
     }

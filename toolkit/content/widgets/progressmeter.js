@@ -69,6 +69,9 @@ class MozProgressmeter extends MozXULElement {
   }
 
   connectedCallback() {
+    if (this.delayConnectedCallback()) {
+      return;
+    }
     this._initUI();
   }
 
@@ -81,6 +84,10 @@ class MozProgressmeter extends MozXULElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
+    if (!this.isConnectedAndReady) {
+      return;
+    }
+
     if (name === "mode" && oldValue != newValue) {
       this._initUI();
     }

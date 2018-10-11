@@ -1,4 +1,3 @@
-setJitCompilerOption("jit.enable-tracelogger", 1);
 try {
     (function(b, foreign, p) {
          "use asm"

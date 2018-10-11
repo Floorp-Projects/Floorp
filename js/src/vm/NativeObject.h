@@ -834,14 +834,14 @@ class NativeObject : public ShapedObject
      * This method is static because it's called from JIT code. On OOM, returns
      * false without leaving a pending exception on the context.
      */
-    static bool growSlotsDontReportOOM(JSContext* cx, NativeObject* obj, uint32_t newCount);
+    static bool growSlotsPure(JSContext* cx, NativeObject* obj, uint32_t newCount);
 
     /*
-     * Like growSlotsDontReportOOM but for dense elements. This will return
+     * Like growSlotsPure but for dense elements. This will return
      * false if we failed to allocate a dense element for some reason (OOM, too
      * many dense elements, non-writable array length, etc).
      */
-    static bool addDenseElementDontReportOOM(JSContext* cx, NativeObject* obj);
+    static bool addDenseElementPure(JSContext* cx, NativeObject* obj);
 
     bool hasDynamicSlots() const { return !!slots_; }
 
