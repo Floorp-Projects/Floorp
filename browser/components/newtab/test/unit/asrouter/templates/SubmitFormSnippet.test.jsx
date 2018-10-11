@@ -1,25 +1,27 @@
 import {mount} from "enzyme";
-import {NewsletterSnippet} from "content-src/asrouter/templates/NewsletterSnippet/NewsletterSnippet.jsx";
 import React from "react";
-import schema from "content-src/asrouter/templates/NewsletterSnippet/NewsletterSnippet.schema.json";
+import schema from "content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.schema.json";
+import {SubmitFormSnippet} from "content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.jsx";
 
 const DEFAULT_CONTENT = {
-  text: "foo",
+  scene1_text: "foo",
   scene2_text: "bar",
-  button_label: "Sign Up",
+  scene1_button_label: "Sign Up",
   form_action: "foo.com",
   hidden_inputs: {"foo": "foo"},
+  error_text: "error",
+  success_text: "success",
 };
 
-describe("NewsletterSnippet", () => {
+describe("SubmitFormSnippet", () => {
   let sandbox;
   let onBlockStub;
 
   /**
-   * mountAndCheckProps - Mounts a NewsletterSnippet with DEFAULT_CONTENT extended with any props
+   * mountAndCheckProps - Mounts a SubmitFormSnippet with DEFAULT_CONTENT extended with any props
    *                      passed in the content param and validates props against the schema.
    * @param {obj} content Object containing custom message content (e.g. {text, icon, title})
-   * @returns enzyme wrapper for SimpleSnippet
+   * @returns enzyme wrapper for SubmitFormSnippet
    */
   function mountAndCheckProps(content = {}) {
     const props = {
@@ -28,9 +30,10 @@ describe("NewsletterSnippet", () => {
       onDismiss: sandbox.stub(),
       sendUserActionTelemetry: sandbox.stub(),
       onAction: sandbox.stub(),
+      form_method: "POST",
     };
     assert.jsonSchema(props.content, schema);
-    return mount(<NewsletterSnippet {...props} />);
+    return mount(<SubmitFormSnippet {...props} />);
   }
 
   beforeEach(() => {
@@ -43,7 +46,7 @@ describe("NewsletterSnippet", () => {
   });
 
   it("should render .text", () => {
-    const wrapper = mountAndCheckProps({text: "bar"});
+    const wrapper = mountAndCheckProps({scene1_text: "bar"});
     assert.equal(wrapper.find(".body").text(), "bar");
   });
   it("should not render title element if no .title prop is supplied", () => {
@@ -51,15 +54,15 @@ describe("NewsletterSnippet", () => {
     assert.lengthOf(wrapper.find(".title"), 0);
   });
   it("should render .title", () => {
-    const wrapper = mountAndCheckProps({title: "Foo"});
+    const wrapper = mountAndCheckProps({scene1_title: "Foo"});
     assert.equal(wrapper.find(".title").text(), "Foo");
   });
   it("should render .icon", () => {
-    const wrapper = mountAndCheckProps({icon: "data:image/gif;base64,R0lGODl"});
+    const wrapper = mountAndCheckProps({scene1_icon: "data:image/gif;base64,R0lGODl"});
     assert.equal(wrapper.find(".icon").prop("src"), "data:image/gif;base64,R0lGODl");
   });
   it("should render .button_label and default className", () => {
-    const wrapper = mountAndCheckProps({button_label: "Click here"});
+    const wrapper = mountAndCheckProps({scene1_button_label: "Click here"});
 
     const button = wrapper.find("button.ASRouterButton");
     assert.equal(button.text(), "Click here");
@@ -73,7 +76,7 @@ describe("NewsletterSnippet", () => {
 
     beforeEach(() => {
       wrapper = mountAndCheckProps({
-        text: "bar",
+        scene1_text: "bar",
         scene2_email_placeholder_text: "Email",
         scene2_text: "signup",
       });
@@ -166,6 +169,26 @@ describe("NewsletterSnippet", () => {
       wrapper.find(".ASRouterButton").simulate("click");
 
       assert.equal(wrapper.state().signupSubmitted, false);
+    });
+    it("should not render the privacy notice checkbox if prop is missing", () => {
+      wrapper.setState({expanded: true});
+
+      assert.isFalse(wrapper.find(".privacy-notice").exists());
+    });
+    it("should render the privacy notice checkbox if prop is provided", () => {
+      wrapper.setProps({privacyNoticeRichText: "privacy notice"});
+      wrapper.setState({expanded: true});
+
+      assert.isTrue(wrapper.find(".privacy-notice").exists());
+    });
+    it("should not call fetch if form_method is GET", async () => {
+      sandbox.stub(window, "fetch").resolves(fetchOk);
+      wrapper.setProps({form_method: "GET"});
+      wrapper.setState({expanded: true});
+
+      await wrapper.instance().handleSubmit({preventDefault: sandbox.stub()});
+
+      assert.notCalled(window.fetch);
     });
   });
 });

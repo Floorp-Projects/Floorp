@@ -140,6 +140,10 @@ const TargetingGetters = {
       totalDevices: Services.prefs.getIntPref("services.sync.numClients", 0),
     };
   },
+  get xpinstallEnabled() {
+    // This is needed for all add-on recommendations, to know if we allow xpi installs in the first place
+    return Services.prefs.getBoolPref("xpinstall.enabled", true);
+  },
   get addonsInfo() {
     return AddonManager.getActiveAddons(["extension", "service"])
       .then(({addons, fullData}) => {

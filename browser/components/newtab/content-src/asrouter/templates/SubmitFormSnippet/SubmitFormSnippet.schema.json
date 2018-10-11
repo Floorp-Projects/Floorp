@@ -1,5 +1,5 @@
 {
-  "title": "NewsletterSchema",
+  "title": "SubmitFormSnippet",
   "description": "A template with two states: a SimpleSnippet and another that contains a form",
   "version": "1.0.0",
   "type": "object",
@@ -19,23 +19,29 @@
     }
   },
   "properties": {
-    "title": {
-      "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Snippet title displayed before snippet text"}
+    "scene1_title": {
+      "allof": [
+        {"$ref": "#/definitions/plaintext"},
+        {"description": "snippet title displayed before snippet text"}
       ]
     },
-    "text": {
+    "scene1_text": {
       "allOf": [
         {"$ref": "#/definitions/richText"},
         {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
       ]
     },
-    "icon": {
+    "scene2_text": {
+      "allOf": [
+        {"$ref": "#/definitions/richText"},
+        {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+      ]
+    },
+    "scene1_icon": {
       "type": "string",
       "description": "Snippet icon. 64x64px. SVG or PNG preferred."
     },
-    "title_icon": {
+    "scene1_title_icon": {
       "type": "string",
       "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."
     },
@@ -50,10 +56,6 @@
     "error_text": {
       "type": "string",
       "description": "Message shown if registration failed."
-    },
-    "scene2_text": {
-      "type": "string",
-      "description": "Main body of the snippet in the second scene."
     },
     "scene2_email_placeholder_text": {
       "type": "string",
@@ -71,7 +73,7 @@
       "type": "object",
       "description": "Each entry represents a hidden input, key is used as value for the name property."
     },
-    "button_label": {
+    "scene1_button_label": {
       "allOf": [
         {"$ref": "#/definitions/plainText"},
         {"description": "Text for a button next to main snippet text that links to button_url. Requires button_url."}
@@ -105,9 +107,9 @@
     }
   },
   "additionalProperties": false,
-  "required": ["text", "form_action", "scene2_text", "hidden_inputs"],
+  "required": ["scene1_text", "form_action", "scene2_text", "hidden_inputs", "error_text", "success_text", "scene1_button_label"],
   "dependencies": {
-    "button_color": ["button_label"],
-    "button_background_color": ["button_label"]
+    "scene1_button_color": ["scene1_button_label"],
+    "scene1_button_background_color": ["scene1_button_label"]
   }
 }

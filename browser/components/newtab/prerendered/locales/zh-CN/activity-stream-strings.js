@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "热门主题：",
   "pocket_read_even_more": "查看更多文章",
   "pocket_more_reccommendations": "更多推荐",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "原理是什麼",
   "pocket_cta_button": "获取 Pocket",
   "pocket_cta_text": "将您喜爱的故事保存到 Pocket，用精彩的读物为思想注入活力。",
   "highlights_empty_state": "开始网上冲浪之旅吧，之后这里会显示您最近看过或加了书签的精彩文章、视频与其他页面。",
