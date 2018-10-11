@@ -356,7 +356,7 @@ EditorEventListener::DetachedFromEditorOrDefaultPrevented(
 }
 
 bool
-EditorEventListener::EnsureCommitCompoisition()
+EditorEventListener::EnsureCommitComposition()
 {
   MOZ_ASSERT(!DetachedFromEditor());
   RefPtr<EditorBase> editorBase(mEditorBase);
@@ -674,7 +674,7 @@ EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent)
 
   // If we got a mouse down inside the editing area, we should force the
   // IME to commit before we change the cursor position.
-  if (!EnsureCommitCompoisition()) {
+  if (!EnsureCommitComposition()) {
     return NS_OK;
   }
 
@@ -745,7 +745,7 @@ EditorEventListener::MouseDown(MouseEvent* aMouseEvent)
   if (DetachedFromEditor()) {
     return NS_OK;
   }
-  Unused << EnsureCommitCompoisition();
+  Unused << EnsureCommitComposition();
   return NS_OK;
 }
 
