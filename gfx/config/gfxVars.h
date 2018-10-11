@@ -35,6 +35,8 @@ class gfxVarReceiver;
   _(PDMWMFDisableD3D9Dlls,      nsCString,        nsCString())          \
   _(DXInterop2Blocked,          bool,             false)                \
   _(DXNV12Blocked,              bool,             false)                \
+  _(DXP010Blocked,              bool,             false)                \
+  _(DXP016Blocked,              bool,             false)                \
   _(UseWebRender,               bool,             false)                \
   _(UseWebRenderANGLE,          bool,             false)                \
   _(UseWebRenderDCompWin,       bool,             false)                \

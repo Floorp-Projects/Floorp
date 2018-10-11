@@ -137,8 +137,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRENDER = 24;
   /* Whether WebRender is supported, starting in 62 */
   const long FEATURE_DX_NV12 = 25;
+  const long FEATURE_DX_P010 = 26;
+  const long FEATURE_DX_P016 = 27;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_DX_NV12;
+  const long FEATURE_MAX_VALUE = FEATURE_DX_P016;
 
   /*
    * A set of return values from GetFeatureStatus
