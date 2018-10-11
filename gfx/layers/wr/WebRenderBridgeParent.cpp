@@ -624,25 +624,34 @@ WebRenderBridgeParent::UpdateExternalImage(wr::ExternalImageId aExtId,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourceUpdates,
                                            nsTArray<RefCountedShmem>&& aSmallShmems,
-                                           nsTArray<ipc::Shmem>&& aLargeShmems)
+                                           nsTArray<ipc::Shmem>&& aLargeShmems,
+                                           const bool& aScheduleComposite)
 {
   if (mDestroyed) {
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
     return IPC_OK();
   }
 
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
-  if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn)) {
-    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
-    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
-    IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
+  bool success =
+    UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn);
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
+
+  if (!success) {
+    return IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
+  }
+
+  if (aScheduleComposite) {
+    txn.InvalidateRenderedFrame();
+    ScheduleGenerateFrame();
   }
 
   mApi->SendTransaction(txn);
 
-  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
-  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
   return IPC_OK();
 }
 
@@ -910,6 +919,9 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                                             InfallibleTArray<OpDestroy>&& aToDestroy,
                                             const uint64_t& aFwdTransactionId,
                                             const TransactionId& aTransactionId,
+                                            nsTArray<OpUpdateResource>&& aResourceUpdates,
+                                            nsTArray<RefCountedShmem>&& aSmallShmems,
+                                            nsTArray<ipc::Shmem>&& aLargeShmems,
                                             const wr::IdNamespace& aIdNamespace,
                                             const TimeStamp& aRefreshStartTime,
                                             const TimeStamp& aTxnStartTime,
@@ -941,10 +953,18 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     scheduleComposite = true;
   }
 
+  wr::TransactionBuilder txn;
+  txn.SetLowPriority(!IsRootWebRenderBridgeParent());
+  if (!aResourceUpdates.IsEmpty()) {
+    scheduleComposite = true;
+  }
+
+  if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn)) {
+    return IPC_FAIL(this, "Failed to deserialize resource updates");
+  }
+
   if (!aCommands.IsEmpty()) {
     mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-    wr::TransactionBuilder txn;
-    txn.SetLowPriority(!IsRootWebRenderBridgeParent());
     wr::Epoch wrEpoch = GetNextWrEpoch();
     txn.UpdateEpoch(mPipelineId, wrEpoch);
     if (!ProcessWebRenderParentCommands(aCommands, txn)) {
@@ -962,8 +982,11 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
       );
     }
 
-    mApi->SendTransaction(txn);
     scheduleComposite = true;
+  }
+
+  if (!txn.IsEmpty()) {
+    mApi->SendTransaction(txn);
   }
 
   bool sendDidComposite = true;
@@ -1001,6 +1024,8 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     }
   }
 
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
   return IPC_OK();
 }
 
