@@ -1419,6 +1419,9 @@ pref("identity.fxaccounts.migrateToDevEdition", false);
 
 // If activated, send tab will use the new FxA commands backend.
 pref("identity.fxaccounts.commands.enabled", true);
+// How often should we try to fetch missed FxA commands on sync (in seconds).
+// Default is 24 hours.
+pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 
 // On GTK, we now default to showing the menubar only when alt is pressed:
 #ifdef MOZ_WIDGET_GTK
