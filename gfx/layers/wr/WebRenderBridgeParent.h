@@ -78,7 +78,8 @@ public:
   mozilla::ipc::IPCResult RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>&& aIds) override;
   mozilla::ipc::IPCResult RecvUpdateResources(nsTArray<OpUpdateResource>&& aUpdates,
                                               nsTArray<RefCountedShmem>&& aSmallShmems,
-                                              nsTArray<ipc::Shmem>&& aLargeShmems) override;
+                                              nsTArray<ipc::Shmem>&& aLargeShmems,
+                                              const bool& aScheduleComposite) override;
   mozilla::ipc::IPCResult RecvSetDisplayList(const gfx::IntSize& aSize,
                                              InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                              InfallibleTArray<OpDestroy>&& aToDestroy,
@@ -103,6 +104,9 @@ public:
                                                InfallibleTArray<OpDestroy>&& aToDestroy,
                                                const uint64_t& aFwdTransactionId,
                                                const TransactionId& aTransactionId,
+                                               nsTArray<OpUpdateResource>&& aResourceUpdates,
+                                               nsTArray<RefCountedShmem>&& aSmallShmems,
+                                               nsTArray<ipc::Shmem>&& aLargeShmems,
                                                const wr::IdNamespace& aIdNamespace,
                                                const TimeStamp& aRefreshStartTime,
                                                const TimeStamp& aTxnStartTime,
