@@ -2741,21 +2741,21 @@ JS_SetArrayLength(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t length);
 namespace JS {
 
 /**
- * Returns true and sets |*isMap| indicating whether |obj| is an Map object
- * or a wrapper around one, otherwise returns false on failure.
+ * On success, returns true, setting |*isMap| to true if |obj| is a Map object
+ * or a wrapper around one, or to false if not.  Returns false on failure.
  *
- * This method returns true with |*isMap == false| when passed a proxy whose
- * target is an Map, or when passed a revoked proxy.
+ * This method returns true with |*isMap == false| when passed an ES6 proxy
+ * whose target is a Map, or when passed a revoked proxy.
  */
 extern JS_PUBLIC_API(bool)
 IsMapObject(JSContext* cx, JS::HandleObject obj, bool* isMap);
 
 /**
- * Returns true and sets |*isSet| indicating whether |obj| is an Set object
- * or a wrapper around one, otherwise returns false on failure.
+ * On success, returns true, setting |*isSet| to true if |obj| is a Set object
+ * or a wrapper around one, or to false if not.  Returns false on failure.
  *
- * This method returns true with |*isSet == false| when passed a proxy whose
- * target is an Set, or when passed a revoked proxy.
+ * This method returns true with |*isSet == false| when passed an ES6 proxy
+ * whose target is a Set, or when passed a revoked proxy.
  */
 extern JS_PUBLIC_API(bool)
 IsSetObject(JSContext* cx, JS::HandleObject obj, bool* isSet);
@@ -4283,11 +4283,12 @@ extern JS_PUBLIC_API(JSObject*)
 JS_NewDateObject(JSContext* cx, int year, int mon, int mday, int hour, int min, int sec);
 
 /**
- * Returns true and sets |*isDate| indicating whether |obj| is a Date object or
- * a wrapper around one, otherwise returns false on failure.
+ * On success, returns true, setting |*isDate| to true if |obj| is a Date
+ * object or a wrapper around one, or to false if not.  Returns false on
+ * failure.
  *
- * This method returns true with |*isDate == false| when passed a proxy whose
- * target is a Date, or when passed a revoked proxy.
+ * This method returns true with |*isDate == false| when passed an ES6 proxy
+ * whose target is a Date, or when passed a revoked proxy.
  */
 extern JS_PUBLIC_API(bool)
 JS_ObjectIsDate(JSContext* cx, JS::HandleObject obj, bool* isDate);
@@ -4327,11 +4328,12 @@ JS_ExecuteRegExpNoStatics(JSContext* cx, JS::HandleObject reobj, char16_t* chars
                           size_t* indexp, bool test, JS::MutableHandleValue rval);
 
 /**
- * Returns true and sets |*isRegExp| indicating whether |obj| is a RegExp
- * object or a wrapper around one, otherwise returns false on failure.
+ * On success, returns true, setting |*isRegExp| to true if |obj| is a RegExp
+ * object or a wrapper around one, or to false if not.  Returns false on
+ * failure.
  *
- * This method returns true with |*isRegExp == false| when passed a proxy whose
- * target is a RegExp, or when passed a revoked proxy.
+ * This method returns true with |*isRegExp == false| when passed an ES6 proxy
+ * whose target is a RegExp, or when passed a revoked proxy.
  */
 extern JS_PUBLIC_API(bool)
 JS_ObjectIsRegExp(JSContext* cx, JS::HandleObject obj, bool* isRegExp);
@@ -4515,7 +4517,6 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(FULL_DEBUG_CHECKS, "jit.full-debug-checks")                    \
     Register(JUMP_THRESHOLD, "jump-threshold")                              \
     Register(TRACK_OPTIMIZATIONS, "jit.track-optimizations")                \
-    Register(ENABLE_TRACELOGGER, "jit.enable-tracelogger")                  \
     Register(SIMULATOR_ALWAYS_INTERRUPT, "simulator.always-interrupt")      \
     Register(SPECTRE_INDEX_MASKING, "spectre.index-masking")                \
     Register(SPECTRE_OBJECT_MITIGATIONS_BARRIERS, "spectre.object-mitigations.barriers") \

@@ -6608,11 +6608,6 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_TRACK_OPTIMIZATIONS:
         jit::JitOptions.disableOptimizationTracking = !value;
         break;
-#ifdef JS_TRACE_LOGGING
-      case JSJITCOMPILER_ENABLE_TRACELOGGER:
-        jit::JitOptions.enableTraceLogger = !!value;
-        break;
-#endif
       case JSJITCOMPILER_SPECTRE_INDEX_MASKING:
         jit::JitOptions.spectreIndexMasking = !!value;
         break;

@@ -49,24 +49,8 @@ nsClipboardProxy::SetData(nsITransferable *aTransferable,
 NS_IMETHODIMP
 nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 {
-   nsTArray<nsCString> types;
-  
-  nsCOMPtr<nsIArray> flavorList;
-  aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
-  if (flavorList) {
-    uint32_t flavorCount = 0;
-    flavorList->GetLength(&flavorCount);
-    for (uint32_t j = 0; j < flavorCount; ++j) {
-      nsCOMPtr<nsISupportsCString> flavor = do_QueryElementAt(flavorList, j);
-      if (flavor) {
-        nsAutoCString flavorStr;
-        flavor->GetData(flavorStr);
-        if (flavorStr.Length()) {
-          types.AppendElement(flavorStr);
-        }
-      }
-    }
-  }
+  nsTArray<nsCString> types;
+  aTransferable->FlavorsTransferableCanImport(types);
 
   nsresult rv;
   IPCDataTransfer dataTransfer;

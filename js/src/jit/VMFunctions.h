@@ -917,14 +917,14 @@ CallNativeSetter(JSContext* cx, HandleFunction callee, HandleObject obj,
                  HandleValue rhs);
 
 MOZ_MUST_USE bool
-EqualStringsHelper(JSString* str1, JSString* str2);
+EqualStringsHelperPure(JSString* str1, JSString* str2);
 
 MOZ_MUST_USE bool
 CheckIsCallable(JSContext* cx, HandleValue v, CheckIsCallableKind kind);
 
 template <bool HandleMissing>
 bool
-GetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
+GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
 
 template <bool HandleMissing>
 bool
@@ -935,14 +935,14 @@ bool
 HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp);
 
 bool
-HasNativeElement(JSContext* cx, NativeObject* obj, int32_t index, Value* vp);
+HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index, Value* vp);
 
 template <bool NeedsTypeBarrier>
 bool
-SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
+SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
 
 bool
-ObjectHasGetterSetter(JSContext* cx, JSObject* obj, Shape* propShape);
+ObjectHasGetterSetterPure(JSContext* cx, JSObject* obj, Shape* propShape);
 
 JSString*
 TypeOfObject(JSObject* obj, JSRuntime* rt);

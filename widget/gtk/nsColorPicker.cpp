@@ -100,7 +100,11 @@ NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShown
   GtkWidget* color_chooser = gtk_color_chooser_dialog_new(title, parent_window);
 
   if (parent_window) {
-      gtk_window_set_destroy_with_parent(GTK_WINDOW(color_chooser), TRUE);
+    GtkWindow *window = GTK_WINDOW(color_chooser);
+    gtk_window_set_destroy_with_parent(window, TRUE);
+    if (gtk_window_get_modal(parent_window)) {
+      gtk_window_set_modal(window, TRUE);
+    }
   }
 
   gtk_color_chooser_set_use_alpha(GTK_COLOR_CHOOSER(color_chooser), FALSE);
@@ -117,6 +121,9 @@ NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShown
     GtkWindow *window = GTK_WINDOW(color_chooser);
     gtk_window_set_transient_for(window, parent_window);
     gtk_window_set_destroy_with_parent(window, TRUE);
+    if (gtk_window_get_modal(parent_window)) {
+      gtk_window_set_modal(window, TRUE);
+    }
   }
 
   GdkColor color_gdk = convertToGdkColor(color);

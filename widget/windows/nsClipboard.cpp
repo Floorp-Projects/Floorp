@@ -163,94 +163,88 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
   dObj->SetTransferable(aTransferable);
 
   // Get the transferable list of data flavors
-  nsCOMPtr<nsIArray> dfList;
-  aTransferable->FlavorsTransferableCanExport(getter_AddRefs(dfList));
+  nsTArray<nsCString> flavors;
+  aTransferable->FlavorsTransferableCanExport(flavors);
 
   // Walk through flavors that contain data and register them
   // into the DataObj as supported flavors
-  uint32_t i;
-  uint32_t cnt;
-  dfList->GetLength(&cnt);
-  for (i=0;i<cnt;i++) {
-    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(dfList, i);
-    if ( currentFlavor ) {
-      nsCString flavorStr;
-      currentFlavor->ToString(getter_Copies(flavorStr));
-      // When putting data onto the clipboard, we want to maintain kHTMLMime
-      // ("text/html") and not map it to CF_HTML here since this will be done below.
-      UINT format = GetFormat(flavorStr.get(), false);
+  for (uint32_t i = 0; i < flavors.Length(); i++) {
+    nsCString& flavorStr = flavors[i];
 
-      // Now tell the native IDataObject about both our mime type and 
-      // the native data format
-      FORMATETC fe;
-      SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-      dObj->AddDataFlavor(flavorStr.get(), &fe);
-      
-      // Do various things internal to the implementation, like map one
-      // flavor to another or add additional flavors based on what's required
-      // for the win32 impl.
-      if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-        // if we find text/unicode, also advertise text/plain (which we will convert
-        // on our own in nsDataObj::GetText().
-        FORMATETC textFE;
-        SET_FORMATETC(textFE, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-        dObj->AddDataFlavor(kTextMime, &textFE);
-      }
-      else if (flavorStr.EqualsLiteral(kHTMLMime)) {
-        // if we find text/html, also advertise win32's html flavor (which we will convert
-        // on our own in nsDataObj::GetText().
-        FORMATETC htmlFE;
-        SET_FORMATETC(htmlFE, CF_HTML, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-        dObj->AddDataFlavor(kHTMLMime, &htmlFE);     
-      }
-      else if (flavorStr.EqualsLiteral(kURLMime)) {
-        // if we're a url, in addition to also being text, we need to register
-        // the "file" flavors so that the win32 shell knows to create an internet
-        // shortcut when it sees one of these beasts.
-        FORMATETC shortcutFE;
-        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORA), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &shortcutFE);      
-        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &shortcutFE);      
-        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &shortcutFE);  
-        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLA), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &shortcutFE);      
-        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &shortcutFE);      
-      }
-      else if (flavorStr.EqualsLiteral(kPNGImageMime) ||
-               flavorStr.EqualsLiteral(kJPEGImageMime) ||
-               flavorStr.EqualsLiteral(kJPGImageMime) ||
-               flavorStr.EqualsLiteral(kGIFImageMime) ||
-               flavorStr.EqualsLiteral(kNativeImageMime)) {
-        // if we're an image, register the native bitmap flavor
-        FORMATETC imageFE;
-        // Add DIBv5
-        SET_FORMATETC(imageFE, CF_DIBV5, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(flavorStr.get(), &imageFE);
-        // Add DIBv3 
-        SET_FORMATETC(imageFE, CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(flavorStr.get(), &imageFE);
-      }
-      else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
-         // if we're a file promise flavor, also register the 
-         // CFSTR_PREFERREDDROPEFFECT format.  The data object
-         // returns a value of DROPEFFECTS_MOVE to the drop target
-         // when it asks for the value of this format.  This causes
-         // the file to be moved from the temporary location instead
-         // of being copied.  The right thing to do here is to call
-         // SetData() on the data object and set the value of this format
-         // to DROPEFFECTS_MOVE on this particular data object.  But,
-         // since all the other clipboard formats follow the model of setting
-         // data on the data object only when the drop object calls GetData(),
-         // I am leaving this format's value hard coded in the data object.
-         // We can change this if other consumers of this format get added to this
-         // codebase and they need different values.
-        FORMATETC shortcutFE;
-        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kFilePromiseMime, &shortcutFE);
-      }
+    // When putting data onto the clipboard, we want to maintain kHTMLMime
+    // ("text/html") and not map it to CF_HTML here since this will be done below.
+    UINT format = GetFormat(flavorStr.get(), false);
+
+    // Now tell the native IDataObject about both our mime type and 
+    // the native data format
+    FORMATETC fe;
+    SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+    dObj->AddDataFlavor(flavorStr.get(), &fe);
+    
+    // Do various things internal to the implementation, like map one
+    // flavor to another or add additional flavors based on what's required
+    // for the win32 impl.
+    if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+      // if we find text/unicode, also advertise text/plain (which we will convert
+      // on our own in nsDataObj::GetText().
+      FORMATETC textFE;
+      SET_FORMATETC(textFE, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+      dObj->AddDataFlavor(kTextMime, &textFE);
+    }
+    else if (flavorStr.EqualsLiteral(kHTMLMime)) {
+      // if we find text/html, also advertise win32's html flavor (which we will convert
+      // on our own in nsDataObj::GetText().
+      FORMATETC htmlFE;
+      SET_FORMATETC(htmlFE, CF_HTML, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+      dObj->AddDataFlavor(kHTMLMime, &htmlFE);     
+    }
+    else if (flavorStr.EqualsLiteral(kURLMime)) {
+      // if we're a url, in addition to also being text, we need to register
+      // the "file" flavors so that the win32 shell knows to create an internet
+      // shortcut when it sees one of these beasts.
+      FORMATETC shortcutFE;
+      SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORA), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+      dObj->AddDataFlavor(kURLMime, &shortcutFE);      
+      SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+      dObj->AddDataFlavor(kURLMime, &shortcutFE);      
+      SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+      dObj->AddDataFlavor(kURLMime, &shortcutFE);  
+      SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLA), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+      dObj->AddDataFlavor(kURLMime, &shortcutFE);      
+      SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+      dObj->AddDataFlavor(kURLMime, &shortcutFE);      
+    }
+    else if (flavorStr.EqualsLiteral(kPNGImageMime) ||
+             flavorStr.EqualsLiteral(kJPEGImageMime) ||
+             flavorStr.EqualsLiteral(kJPGImageMime) ||
+             flavorStr.EqualsLiteral(kGIFImageMime) ||
+             flavorStr.EqualsLiteral(kNativeImageMime)) {
+      // if we're an image, register the native bitmap flavor
+      FORMATETC imageFE;
+      // Add DIBv5
+      SET_FORMATETC(imageFE, CF_DIBV5, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+      dObj->AddDataFlavor(flavorStr.get(), &imageFE);
+      // Add DIBv3 
+      SET_FORMATETC(imageFE, CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+      dObj->AddDataFlavor(flavorStr.get(), &imageFE);
+    }
+    else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
+       // if we're a file promise flavor, also register the 
+       // CFSTR_PREFERREDDROPEFFECT format.  The data object
+       // returns a value of DROPEFFECTS_MOVE to the drop target
+       // when it asks for the value of this format.  This causes
+       // the file to be moved from the temporary location instead
+       // of being copied.  The right thing to do here is to call
+       // SetData() on the data object and set the value of this format
+       // to DROPEFFECTS_MOVE on this particular data object.  But,
+       // since all the other clipboard formats follow the model of setting
+       // data on the data object only when the drop object calls GetData(),
+       // I am leaving this format's value hard coded in the data object.
+       // We can change this if other consumers of this format get added to this
+       // codebase and they need different values.
+      FORMATETC shortcutFE;
+      SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+      dObj->AddDataFlavor(kFilePromiseMime, &shortcutFE);
     }
   }
 
@@ -596,136 +590,128 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 
   // get flavor list that includes all flavors that can be written (including ones 
   // obtained through conversion)
-  nsCOMPtr<nsIArray> flavorList;
-  res = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
+  nsTArray<nsCString> flavors;
+  res = aTransferable->FlavorsTransferableCanImport(flavors);
   if (NS_FAILED(res)) {
     return NS_ERROR_FAILURE;
   }
 
   // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
-  uint32_t i;
-  uint32_t cnt;
-  flavorList->GetLength(&cnt);
-  for (i=0;i<cnt;i++) {
-    nsCOMPtr<nsISupportsCString> currentFlavor = do_QueryElementAt(flavorList, i);
-    if ( currentFlavor ) {
-      nsCString flavorStr;
-      currentFlavor->ToString(getter_Copies(flavorStr));
-      UINT format = GetFormat(flavorStr.get());
+  for (uint32_t i = 0; i < flavors.Length(); i++) {
+    nsCString& flavorStr = flavors[i];
+    UINT format = GetFormat(flavorStr.get());
 
-      // Try to get the data using the desired flavor. This might fail, but all is
-      // not lost.
-      void* data = nullptr;
-      uint32_t dataLen = 0;
-      bool dataFound = false;
-      if (nullptr != aDataObject) {
-        if (NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, anIndex, format, flavorStr.get(), &data, &dataLen))) {
-          dataFound = true;
-        }
-      } 
-      else if (nullptr != aWindow) {
-        if (NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, anIndex, format, &data, &dataLen))) {
-          dataFound = true;
+    // Try to get the data using the desired flavor. This might fail, but all is
+    // not lost.
+    void* data = nullptr;
+    uint32_t dataLen = 0;
+    bool dataFound = false;
+    if (nullptr != aDataObject) {
+      if (NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, anIndex, format, flavorStr.get(), &data, &dataLen))) {
+        dataFound = true;
+      }
+    } 
+    else if (nullptr != aWindow) {
+      if (NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, anIndex, format, &data, &dataLen))) {
+        dataFound = true;
+      }
+    }
+
+    // This is our second chance to try to find some data, having not found it
+    // when directly asking for the flavor. Let's try digging around in other
+    // flavors to help satisfy our craving for data.
+    if ( !dataFound ) {
+      if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+        dataFound = FindUnicodeFromPlainText(aDataObject, anIndex, &data, &dataLen);
+      }
+      else if (flavorStr.EqualsLiteral(kURLMime)) {
+        // drags from other windows apps expose the native
+        // CFSTR_INETURL{A,W} flavor
+        dataFound = FindURLFromNativeURL ( aDataObject, anIndex, &data, &dataLen );
+        if (!dataFound) {
+          dataFound = FindURLFromLocalFile(aDataObject, anIndex, &data, &dataLen);
         }
       }
+    } // if we try one last ditch effort to find our data
 
-      // This is our second chance to try to find some data, having not found it
-      // when directly asking for the flavor. Let's try digging around in other
-      // flavors to help satisfy our craving for data.
-      if ( !dataFound ) {
-        if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-          dataFound = FindUnicodeFromPlainText(aDataObject, anIndex, &data, &dataLen);
-        }
-        else if (flavorStr.EqualsLiteral(kURLMime)) {
-          // drags from other windows apps expose the native
-          // CFSTR_INETURL{A,W} flavor
-          dataFound = FindURLFromNativeURL ( aDataObject, anIndex, &data, &dataLen );
-          if (!dataFound) {
-            dataFound = FindURLFromLocalFile(aDataObject, anIndex, &data, &dataLen);
-          }
-        }
-      } // if we try one last ditch effort to find our data
-
-      // Hopefully by this point we've found it and can go about our business
-      if ( dataFound ) {
-        nsCOMPtr<nsISupports> genericDataWrapper;
-          if (flavorStr.EqualsLiteral(kFileMime)) {
-            // we have a file path in |data|. Create an nsLocalFile object.
-            nsDependentString filepath(reinterpret_cast<char16_t*>(data));
-            nsCOMPtr<nsIFile> file;
-            if (NS_SUCCEEDED(NS_NewLocalFile(filepath, false, getter_AddRefs(file)))) {
-              genericDataWrapper = do_QueryInterface(file);
-            }
-            free(data);
-          }
-        else if (flavorStr.EqualsLiteral(kNativeHTMLMime)) {
-          uint32_t dummy;
-          // the editor folks want CF_HTML exactly as it's on the clipboard, no conversions,
-          // no fancy stuff. Pull it off the clipboard, stuff it into a wrapper and hand
-          // it back to them.
-          if (FindPlatformHTML(aDataObject, anIndex, &data, &dummy, &dataLen)) {
-            nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper));
-          }
-          else
-          {
-            free(data);
-            continue;     // something wrong with this flavor, keep looking for other data
+    // Hopefully by this point we've found it and can go about our business
+    if ( dataFound ) {
+      nsCOMPtr<nsISupports> genericDataWrapper;
+        if (flavorStr.EqualsLiteral(kFileMime)) {
+          // we have a file path in |data|. Create an nsLocalFile object.
+          nsDependentString filepath(reinterpret_cast<char16_t*>(data));
+          nsCOMPtr<nsIFile> file;
+          if (NS_SUCCEEDED(NS_NewLocalFile(filepath, false, getter_AddRefs(file)))) {
+            genericDataWrapper = do_QueryInterface(file);
           }
           free(data);
         }
-        else if (flavorStr.EqualsLiteral(kHTMLMime)) {
-          uint32_t startOfData = 0;
-          // The JS folks want CF_HTML exactly as it is on the clipboard, but
-          // minus the CF_HTML header index information.
-          // It also needs to be converted to UTF16 and have linebreaks changed.
-          if ( FindPlatformHTML(aDataObject, anIndex, &data, &startOfData, &dataLen) ) {
-            dataLen -= startOfData;
-            nsPrimitiveHelpers::CreatePrimitiveForCFHTML ( static_cast<char*>(data) + startOfData,
-                                                           &dataLen, getter_AddRefs(genericDataWrapper) );
-          }
-          else
-          {
-            free(data);
-            continue;     // something wrong with this flavor, keep looking for other data
-          }
-          free(data);
-        }
-        else if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
-                 flavorStr.EqualsLiteral(kJPGImageMime) ||
-                 flavorStr.EqualsLiteral(kPNGImageMime)) {
-          nsIInputStream * imageStream = reinterpret_cast<nsIInputStream*>(data);
-          genericDataWrapper = do_QueryInterface(imageStream);
-          NS_IF_RELEASE(imageStream);
-        }
-        else {
-          // Treat custom types as a string of bytes.
-          if (!flavorStr.EqualsLiteral(kCustomTypesMime)) {
-            // we probably have some form of text. The DOM only wants LF, so convert from Win32 line 
-            // endings to DOM line endings.
-            int32_t signedLen = static_cast<int32_t>(dataLen);
-            nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr, &data, &signedLen);
-            dataLen = signedLen;
-
-            if (flavorStr.EqualsLiteral(kRTFMime)) {
-              // RTF on Windows is known to sometimes deliver an extra null byte.
-              if (dataLen > 0 && static_cast<char*>(data)[dataLen - 1] == '\0') {
-                dataLen--;
-              }
-            }
-          }
-
+      else if (flavorStr.EqualsLiteral(kNativeHTMLMime)) {
+        uint32_t dummy;
+        // the editor folks want CF_HTML exactly as it's on the clipboard, no conversions,
+        // no fancy stuff. Pull it off the clipboard, stuff it into a wrapper and hand
+        // it back to them.
+        if (FindPlatformHTML(aDataObject, anIndex, &data, &dummy, &dataLen)) {
           nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper));
-          free(data);
         }
-        
-        NS_ASSERTION ( genericDataWrapper, "About to put null data into the transferable" );
-        aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLen);
-        res = NS_OK;
-
-        // we found one, get out of the loop
-        break;
+        else
+        {
+          free(data);
+          continue;     // something wrong with this flavor, keep looking for other data
+        }
+        free(data);
       }
+      else if (flavorStr.EqualsLiteral(kHTMLMime)) {
+        uint32_t startOfData = 0;
+        // The JS folks want CF_HTML exactly as it is on the clipboard, but
+        // minus the CF_HTML header index information.
+        // It also needs to be converted to UTF16 and have linebreaks changed.
+        if ( FindPlatformHTML(aDataObject, anIndex, &data, &startOfData, &dataLen) ) {
+          dataLen -= startOfData;
+          nsPrimitiveHelpers::CreatePrimitiveForCFHTML ( static_cast<char*>(data) + startOfData,
+                                                         &dataLen, getter_AddRefs(genericDataWrapper) );
+        }
+        else
+        {
+          free(data);
+          continue;     // something wrong with this flavor, keep looking for other data
+        }
+        free(data);
+      }
+      else if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
+               flavorStr.EqualsLiteral(kJPGImageMime) ||
+               flavorStr.EqualsLiteral(kPNGImageMime)) {
+        nsIInputStream * imageStream = reinterpret_cast<nsIInputStream*>(data);
+        genericDataWrapper = do_QueryInterface(imageStream);
+        NS_IF_RELEASE(imageStream);
+      }
+      else {
+        // Treat custom types as a string of bytes.
+        if (!flavorStr.EqualsLiteral(kCustomTypesMime)) {
+          // we probably have some form of text. The DOM only wants LF, so convert from Win32 line 
+          // endings to DOM line endings.
+          int32_t signedLen = static_cast<int32_t>(dataLen);
+          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr, &data, &signedLen);
+          dataLen = signedLen;
 
+          if (flavorStr.EqualsLiteral(kRTFMime)) {
+            // RTF on Windows is known to sometimes deliver an extra null byte.
+            if (dataLen > 0 && static_cast<char*>(data)[dataLen - 1] == '\0') {
+              dataLen--;
+            }
+          }
+        }
+
+        nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper));
+        free(data);
+      }
+      
+      NS_ASSERTION ( genericDataWrapper, "About to put null data into the transferable" );
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLen);
+      res = NS_OK;
+
+      // we found one, get out of the loop
+      break;
     }
   } // foreach flavor
 

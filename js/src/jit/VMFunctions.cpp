@@ -1601,7 +1601,7 @@ CallNativeSetter(JSContext* cx, HandleFunction callee, HandleObject obj, HandleV
 }
 
 bool
-EqualStringsHelper(JSString* str1, JSString* str2)
+EqualStringsHelperPure(JSString* str1, JSString* str2)
 {
     // IC code calls this directly so we shouldn't GC.
     AutoUnsafeCallWithABI unsafe;
@@ -1632,7 +1632,7 @@ CheckIsCallable(JSContext* cx, HandleValue v, CheckIsCallableKind kind)
 
 template <bool HandleMissing>
 static MOZ_ALWAYS_INLINE bool
-GetNativeDataProperty(JSContext* cx, NativeObject* obj, jsid id, Value* vp)
+GetNativeDataPropertyPure(JSContext* cx, NativeObject* obj, jsid id, Value* vp)
 {
     // Fast path used by megamorphic IC stubs. Unlike our other property
     // lookup paths, this is optimized to be as fast as possible for simple
@@ -1677,18 +1677,18 @@ GetNativeDataProperty(JSContext* cx, NativeObject* obj, jsid id, Value* vp)
 
 template <bool HandleMissing>
 bool
-GetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp)
+GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp)
 {
     // Condition checked by caller.
     MOZ_ASSERT(obj->isNative());
-    return GetNativeDataProperty<HandleMissing>(cx, &obj->as<NativeObject>(), NameToId(name), vp);
+    return GetNativeDataPropertyPure<HandleMissing>(cx, &obj->as<NativeObject>(), NameToId(name), vp);
 }
 
 template bool
-GetNativeDataProperty<true>(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
+GetNativeDataPropertyPure<true>(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
 
 template bool
-GetNativeDataProperty<false>(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
+GetNativeDataPropertyPure<false>(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
 
 static MOZ_ALWAYS_INLINE bool
 ValueToAtomOrSymbolPure(JSContext* cx, Value& idVal, jsid* id)
@@ -1741,7 +1741,7 @@ GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj, Value* vp)
     }
 
     Value* res = vp + 1;
-    return GetNativeDataProperty<HandleMissing>(cx, &obj->as<NativeObject>(), id, res);
+    return GetNativeDataPropertyPure<HandleMissing>(cx, &obj->as<NativeObject>(), id, res);
 }
 
 template bool
@@ -1752,7 +1752,7 @@ GetNativeDataPropertyByValuePure<false>(JSContext* cx, JSObject* obj, Value* vp)
 
 template <bool NeedsTypeBarrier>
 bool
-SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* val)
+SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name, Value* val)
 {
     AutoUnsafeCallWithABI unsafe;
 
@@ -1778,13 +1778,13 @@ SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* v
 }
 
 template bool
-SetNativeDataProperty<true>(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
+SetNativeDataPropertyPure<true>(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
 
 template bool
-SetNativeDataProperty<false>(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
+SetNativeDataPropertyPure<false>(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
 
 bool
-ObjectHasGetterSetter(JSContext* cx, JSObject* objArg, Shape* propShape)
+ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, Shape* propShape)
 {
     AutoUnsafeCallWithABI unsafe;
 
@@ -1893,7 +1893,7 @@ HasNativeDataPropertyPure<false>(JSContext* cx, JSObject* obj, Value* vp);
 
 
 bool
-HasNativeElement(JSContext* cx, NativeObject* obj, int32_t index, Value* vp)
+HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index, Value* vp)
 {
     AutoUnsafeCallWithABI unsafe;
 

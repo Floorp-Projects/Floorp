@@ -1612,6 +1612,10 @@ SpecialPowersAPI.prototype = {
     Cu.schedulePreciseGC(genGCCallback(callback));
   },
 
+  nondeterministicGetWeakMapKeys(m) {
+    return ChromeUtils.nondeterministicGetWeakMapKeys(m);
+  },
+
   getMemoryReports() {
     try {
       Cc["@mozilla.org/memory-reporter-manager;1"]

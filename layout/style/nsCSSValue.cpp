@@ -81,13 +81,6 @@ nsCSSValue::nsCSSValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   mValue.mArray->AddRef();
 }
 
-nsCSSValue::nsCSSValue(SharedFontList* aValue)
-  : mUnit(eCSSUnit_FontFamilyList)
-{
-  mValue.mFontFamilyList = aValue;
-  mValue.mFontFamilyList->AddRef();
-}
-
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
@@ -117,9 +110,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mList = aCopy.mValue.mList;
     mValue.mList->AddRef();
   }
-  else if (eCSSUnit_ListDep == mUnit) {
-    mValue.mListDependent = aCopy.mValue.mListDependent;
-  }
   else if (eCSSUnit_SharedList == mUnit) {
     mValue.mSharedList = aCopy.mValue.mSharedList;
     mValue.mSharedList->AddRef();
@@ -127,13 +117,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_PairList == mUnit) {
     mValue.mPairList = aCopy.mValue.mPairList;
     mValue.mPairList->AddRef();
-  }
-  else if (eCSSUnit_PairListDep == mUnit) {
-    mValue.mPairListDependent = aCopy.mValue.mPairListDependent;
-  }
-  else if (eCSSUnit_FontFamilyList == mUnit) {
-    mValue.mFontFamilyList = aCopy.mValue.mFontFamilyList;
-    mValue.mFontFamilyList->AddRef();
   }
   else if (eCSSUnit_AtomIdent == mUnit) {
     mValue.mAtom = aCopy.mValue.mAtom;
@@ -168,12 +151,6 @@ nsCSSValue::operator=(nsCSSValue&& aOther)
 
 bool nsCSSValue::operator==(const nsCSSValue& aOther) const
 {
-  MOZ_ASSERT(mUnit != eCSSUnit_ListDep &&
-             aOther.mUnit != eCSSUnit_ListDep &&
-             mUnit != eCSSUnit_PairListDep &&
-             aOther.mUnit != eCSSUnit_PairListDep,
-             "don't use operator== with dependent lists");
-
   if (mUnit == aOther.mUnit) {
     if (mUnit <= eCSSUnit_DummyInherit) {
       return true;
@@ -200,10 +177,6 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     else if (eCSSUnit_PairList == mUnit) {
       return nsCSSValuePairList::Equal(mValue.mPairList,
                                        aOther.mValue.mPairList);
-    }
-    else if (eCSSUnit_FontFamilyList == mUnit) {
-      return mValue.mFontFamilyList->mNames ==
-             aOther.mValue.mFontFamilyList->mNames;
     }
     else if (eCSSUnit_AtomIdent == mUnit) {
       return mValue.mAtom == aOther.mValue.mAtom;
@@ -294,8 +267,6 @@ void nsCSSValue::DoReset()
     DO_RELEASE(mSharedList);
   } else if (eCSSUnit_PairList == mUnit) {
     DO_RELEASE(mPairList);
-  } else if (eCSSUnit_FontFamilyList == mUnit) {
-    DO_RELEASE(mFontFamilyList);
   } else if (eCSSUnit_AtomIdent == mUnit) {
     DO_RELEASE(mAtom);
   }
@@ -592,10 +563,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_Function:
     case eCSSUnit_Calc:
     case eCSSUnit_Calc_Plus:
-    case eCSSUnit_Calc_Minus:
-    case eCSSUnit_Calc_Times_L:
-    case eCSSUnit_Calc_Times_R:
-    case eCSSUnit_Calc_Divided:
       break;
 
     // Pair
@@ -608,10 +575,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
       n += mValue.mList->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
-    // ListDep: not measured because it's non-owning.
-    case eCSSUnit_ListDep:
-      break;
-
     // SharedList
     case eCSSUnit_SharedList:
       // Makes more sense not to measure, since it most cases the list
@@ -621,17 +584,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // PairList
     case eCSSUnit_PairList:
       n += mValue.mPairList->SizeOfIncludingThis(aMallocSizeOf);
-      break;
-
-    // PairListDep: not measured because it's non-owning.
-    case eCSSUnit_PairListDep:
-      break;
-
-    case eCSSUnit_FontFamilyList:
-      // The SharedFontList is a refcounted object, but is unique per
-      // declaration. We don't measure the references from computed
-      // values.
-      n += mValue.mFontFamilyList->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Atom is always shared, and thus should not be counted.
