@@ -1262,6 +1262,8 @@ public:
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
 
+  void AppendSandboxParams(std::vector<std::string>& aArgs);
+
 public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);
@@ -1387,6 +1389,13 @@ private:
 
   static uint64_t sNextTabParentId;
   static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+  // When set to true, indicates that content processes should
+  // initialize their sandbox during startup instead of waiting
+  // for the SetProcessSandbox IPDL message.
+  static bool sEarlySandboxInit;
+#endif
 };
 
 } // namespace dom

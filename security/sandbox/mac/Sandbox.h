@@ -67,12 +67,17 @@ typedef struct _MacSandboxInfo {
   std::string testingReadPath3;
   std::string testingReadPath4;
 
+  std::string parentPort;
+  std::string crashServerPort;
+
   bool shouldLog;
 } MacSandboxInfo;
 
 namespace mozilla {
 
 bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage);
+bool EarlyStartMacSandboxIfEnabled(int aArgc, char** aArgv,
+                                   std::string &aErrorMessage);
 
 } // namespace mozilla
 
