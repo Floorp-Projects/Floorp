@@ -845,6 +845,8 @@ impl AlphaBatchBuilder {
                                                     FilterOp::Opacity(..) => 8,
                                                     FilterOp::DropShadow(..) => 9,
                                                     FilterOp::ColorMatrix(..) => 10,
+                                                    FilterOp::SrgbToLinear => 11,
+                                                    FilterOp::LinearToSrgb => 12,
                                                 };
 
                                                 let user_data = match filter {
@@ -858,6 +860,7 @@ impl AlphaBatchBuilder {
                                                     FilterOp::Opacity(_, amount) => {
                                                         (amount * 65536.0) as i32
                                                     }
+                                                    FilterOp::SrgbToLinear | FilterOp::LinearToSrgb => 0,
                                                     FilterOp::HueRotate(angle) => {
                                                         (0.01745329251 * angle * 65536.0) as i32
                                                     }
