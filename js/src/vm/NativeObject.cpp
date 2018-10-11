@@ -2565,7 +2565,7 @@ js::NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleValue receive
 bool
 js::NativeGetPropertyNoGC(JSContext* cx, NativeObject* obj, const Value& receiver, jsid id, Value* vp)
 {
-    AutoAssertNoException noexc(cx);
+    AutoAssertNoPendingException noexc(cx);
     return NativeGetPropertyInline<NoGC>(cx, obj, receiver, id, NotNameLookup, vp);
 }
 
