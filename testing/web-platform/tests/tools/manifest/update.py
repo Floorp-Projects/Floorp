@@ -13,15 +13,29 @@ wpt_root = os.path.abspath(os.path.join(here, os.pardir, os.pardir))
 
 logger = get_logger()
 
-def update(tests_root, manifest, working_copy=False):
+
+def update(tests_root, manifest, working_copy=False, cache_root=None, rebuild=False):
     logger.info("Updating manifest")
     tree = None
-    if not working_copy:
-        tree = vcs.Git.for_path(tests_root, manifest.url_base)
-    if tree is None:
-        tree = vcs.FileSystem(tests_root, manifest.url_base)
+    if cache_root is None:
+        cache_root = os.path.join(tests_root, ".cache")
+    if not os.path.exists(cache_root):
+        try:
+            os.makedirs(cache_root)
+        except IOError:
+            cache_root = None
 
-    return manifest.update(tree)
+    if not working_copy:
+        tree = vcs.Git.for_path(tests_root, manifest.url_base,
+                                cache_path=cache_root, rebuild=rebuild)
+    if tree is None:
+        tree = vcs.FileSystem(tests_root, manifest.url_base,
+                              cache_path=cache_root, rebuild=rebuild)
+
+    try:
+        return manifest.update(tree)
+    finally:
+        tree.dump_caches()
 
 
 def update_from_cli(**kwargs):
@@ -46,7 +60,9 @@ def update_from_cli(**kwargs):
 
     changed = update(tests_root,
                      m,
-                     working_copy=kwargs["work"])
+                     working_copy=kwargs["work"],
+                     cache_root=kwargs["cache_root"],
+                     rebuild=kwargs["rebuild"])
     if changed:
         manifest.write(m, path)
 
@@ -73,6 +89,9 @@ def create_parser():
     parser.add_argument(
         "--no-download", dest="download", action="store_false", default=True,
         help="Never attempt to download the manifest.")
+    parser.add_argument(
+        "--cache-root", action="store", default=os.path.join(wpt_root, ".wptcache"),
+        help="Path in which to store any caches (default <tests_root>/.wptcache/")
     return parser
 
 
@@ -87,10 +106,9 @@ def find_top_repo():
     return rv
 
 
-def run(**kwargs):
+def run(*args, **kwargs):
     if kwargs["path"] is None:
         kwargs["path"] = os.path.join(kwargs["tests_root"], "MANIFEST.json")
-
     update_from_cli(**kwargs)
 
 
