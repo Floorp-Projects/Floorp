@@ -454,20 +454,6 @@ public:
       mPerformance->GetRandomTimelineSeed());
   }
 
-  DOMTimeMilliSec TimeToFirstInteractive() const
-  {
-    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
-        nsContentUtils::ShouldResistFingerprinting()) {
-      return 0;
-    }
-    if (mPerformance->IsSystemPrincipal()) {
-      return GetDOMTiming()->GetTimeToTTFI();
-    }
-    return nsRFPService::ReduceTimePrecisionAsMSecs(
-      GetDOMTiming()->GetTimeToTTFI(),
-      mPerformance->GetRandomTimelineSeed());
-  }
-
   PerformanceTimingData* Data() const
   {
     return mTimingData.get();

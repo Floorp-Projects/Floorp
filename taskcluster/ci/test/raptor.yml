@@ -37,7 +37,7 @@ raptor-tp6-firefox:
     try-name: raptor-tp6-firefox
     treeherder-symbol: Rap(tp6)
     run-on-projects: ['try', 'mozilla-central']
-    max-run-time: 1800
+    max-run-time: 1200
     mozharness:
         extra-options:
             - --test=raptor-tp6

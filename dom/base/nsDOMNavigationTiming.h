@@ -12,7 +12,6 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/RelativeTimeline.h"
 #include "mozilla/TimeStamp.h"
-#include "nsITimer.h"
 
 class nsDocShell;
 class nsIURI;
@@ -97,10 +96,6 @@ public:
   {
     return TimeStampToDOM(mNonBlankPaint);
   }
-  DOMTimeMilliSec GetTimeToTTFI() const
-  {
-    return TimeStampToDOM(mTTFI);
-  }
   DOMTimeMilliSec GetTimeToDOMContentFlushed() const
   {
     return TimeStampToDOM(mDOMContentFlushed);
@@ -169,10 +164,6 @@ public:
   void NotifyDOMContentLoadedStart(nsIURI* aURI);
   void NotifyDOMContentLoadedEnd(nsIURI* aURI);
 
-  static void TTITimeoutCallback(nsITimer* aTimer, void *aClosure);
-  void TTITimeout(nsITimer* aTimer);
-
-  void NotifyLongTask(mozilla::TimeStamp aWhen);
   void NotifyNonBlankPaintForRootContentDocument();
   void NotifyDOMContentFlushedForRootContentDocument();
   void NotifyDocShellStateChanged(DocShellState aDocShellState);
@@ -203,7 +194,6 @@ private:
 
   nsCOMPtr<nsIURI> mUnloadedURI;
   nsCOMPtr<nsIURI> mLoadedURI;
-  nsCOMPtr<nsITimer> mTTITimer;
 
   Type mNavigationType;
   DOMHighResTimeStamp mNavigationStartHighRes;
@@ -222,8 +212,6 @@ private:
   mozilla::TimeStamp mDOMContentLoadedEventStart;
   mozilla::TimeStamp mDOMContentLoadedEventEnd;
   mozilla::TimeStamp mDOMComplete;
-
-  mozilla::TimeStamp mTTFI;
 
   bool mDocShellHasBeenActiveSinceNavigationStart : 1;
 };

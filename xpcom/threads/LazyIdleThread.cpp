@@ -473,16 +473,6 @@ LazyIdleThread::SetCanInvokeJS(bool aCanInvokeJS)
 }
 
 NS_IMETHODIMP
-LazyIdleThread::GetLastLongTaskEnd(TimeStamp* _retval) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-LazyIdleThread::GetLastLongNonIdleTaskEnd(TimeStamp* _retval) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 LazyIdleThread::AsyncShutdown()
 {
   ASSERT_OWNING_THREAD();
