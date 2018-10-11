@@ -250,6 +250,12 @@ fn write_stacking_context(
             FilterOp::ColorMatrix(matrix) => {
                 filters.push(Yaml::String(format!("color-matrix({:?})", matrix)))
             }
+            FilterOp::SrgbToLinear => {
+                filters.push(Yaml::String("srgb-to-linear".to_string()))
+            }
+            FilterOp::LinearToSrgb => {
+                filters.push(Yaml::String("linear-to-srgb".to_string()))
+            }
         }
     }
 

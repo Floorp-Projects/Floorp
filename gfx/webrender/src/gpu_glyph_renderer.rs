@@ -54,14 +54,16 @@ impl GpuGlyphRenderer {
         let area_lut_pixels =
             &AREA_LUT_TGA_BYTES[18..(18 + area_lut_width * area_lut_height) as usize];
 
-        let mut area_lut_texture = device.create_texture(TextureTarget::Default, ImageFormat::R8);
-        device.init_texture(&mut area_lut_texture,
-                            area_lut_width,
-                            area_lut_height,
-                            TextureFilter::Linear,
-                            None,
-                            1,
-                            Some(area_lut_pixels));
+        let area_lut_texture = device.create_texture(
+            TextureTarget::Default,
+            ImageFormat::R8,
+            area_lut_width,
+            area_lut_height,
+            TextureFilter::Linear,
+            None,
+            1,
+            Some(area_lut_pixels)
+        );
 
         let vector_stencil_vao =
             device.create_vao_with_new_instances(&renderer::desc::VECTOR_STENCIL, prim_vao);
@@ -108,22 +110,26 @@ impl Renderer {
 
         let _timer = self.gpu_profile.start_timer(GPU_TAG_GLYPH_STENCIL);
 
+        let texture = self.device.create_texture::<f32>(
+            TextureTarget::Default,
+            ImageFormat::RGBAF32,
+            target_size.width,
+            target_size.height,
+            TextureFilter::Nearest,
+            Some(RenderTargetInfo {
+                has_depth: false,
+            }),
+            1,
+            None
+        );
+
         // Initialize temporary framebuffer.
         // FIXME(pcwalton): Cache this!
         // FIXME(pcwalton): Use RF32, not RGBAF32!
         let mut current_page = StenciledGlyphPage {
-            texture: self.device.create_texture(TextureTarget::Default, ImageFormat::RGBAF32),
+            texture,
             glyphs: vec![],
         };
-        self.device.init_texture::<f32>(&mut current_page.texture,
-                                        target_size.width,
-                                        target_size.height,
-                                        TextureFilter::Nearest,
-                                        Some(RenderTargetInfo {
-                                            has_depth: false,
-                                        }),
-                                        1,
-                                        None);
 
         // Allocate all target rects.
         let mut packer = ShelfBinPacker::new(&target_size.to_i32().to_untyped(),
@@ -150,9 +156,6 @@ impl Renderer {
         }
 
         // Initialize path info.
-        // TODO(pcwalton): Cache this texture!
-        let mut path_info_texture = self.device.create_texture(TextureTarget::Default,
-                                                               ImageFormat::RGBAF32);
 
         let mut path_info_texels = Vec::with_capacity(glyphs.len() * 12);
         for (stenciled_glyph_index, &glyph_index) in glyph_indices.iter().enumerate() {
@@ -176,13 +179,17 @@ impl Renderer {
             ]);
         }
 
-        self.device.init_texture(&mut path_info_texture,
-                                 3,
-                                 glyphs.len() as u32,
-                                 TextureFilter::Nearest,
-                                 None,
-                                 1,
-                                 Some(&path_info_texels));
+        // TODO(pcwalton): Cache this texture!
+        let path_info_texture = self.device.create_texture(
+            TextureTarget::Default,
+            ImageFormat::RGBAF32,
+            3,
+            glyphs.len() as u32,
+            TextureFilter::Nearest,
+            None,
+            1,
+            Some(&path_info_texels)
+        );
 
         self.gpu_glyph_renderer.vector_stencil.bind(&mut self.device,
                                                     projection,

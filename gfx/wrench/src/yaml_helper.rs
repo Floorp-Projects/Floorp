@@ -576,6 +576,8 @@ impl YamlHelper for Yaml {
                 ("sepia", ref args, _) if args.len() == 1 => {
                     Some(FilterOp::Sepia(args[0].parse().unwrap()))
                 }
+                ("srgb-to-linear", _, _)  => Some(FilterOp::SrgbToLinear),
+                ("linear-to-srgb", _, _)  => Some(FilterOp::LinearToSrgb),
                 ("drop-shadow", ref args, _) if args.len() == 3 => {
                     let str = format!("---\noffset: {}\nblur-radius: {}\ncolor: {}\n", args[0], args[1], args[2]);
                     let mut yaml_doc = YamlLoader::load_from_str(&str).expect("Failed to parse drop-shadow");
