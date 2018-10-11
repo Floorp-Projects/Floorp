@@ -1,5 +1,5 @@
 from tests.support.asserts import assert_error, assert_success
-from tests.support.helpers import is_fullscreen
+from tests.support.helpers import document_hidden, is_fullscreen
 
 
 def maximize(session):
@@ -23,7 +23,7 @@ def test_fully_exit_fullscreen(session):
 
 def test_restore_the_window(session):
     session.window.minimize()
-    assert session.execute_script("return document.hidden") is True
+    assert document_hidden(session)
 
     response = maximize(session)
     assert_success(response)
