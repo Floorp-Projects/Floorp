@@ -5,7 +5,7 @@ import pytest
 from webdriver.transport import Response
 
 from tests.support.asserts import assert_error, assert_success
-from tests.support.helpers import is_fullscreen
+from tests.support.helpers import document_hidden, is_fullscreen
 
 
 def set_window_rect(session, rect):
@@ -144,14 +144,14 @@ def test_fully_exit_fullscreen(session):
 
 def test_restore_from_minimized(session):
     session.window.minimize()
-    assert session.execute_script("return document.hidden") is True
+    assert document_hidden(session)
 
     response = set_window_rect(session, {"width": 450, "height": 450})
     value = assert_success(response)
     assert value["width"] == 450
     assert value["height"] == 450
 
-    assert session.execute_script("return document.hidden") is False
+    assert not document_hidden(session)
 
 
 def test_restore_from_maximized(session):
