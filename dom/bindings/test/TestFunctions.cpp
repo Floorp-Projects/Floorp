@@ -7,6 +7,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TestFunctions.h"
 #include "mozilla/dom/TestFunctionsBinding.h"
+#include "mozilla/dom/WrapperCachedNonISupportsTestInterface.h"
 #include "nsStringBuffer.h"
 #include "mozITestInterfaceJS.h"
 #include "nsComponentManagerUtils.h"
@@ -138,6 +139,15 @@ TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj)
   }
 
   return doc->GetDocumentURI()->GetSpecOrDefault().EqualsLiteral("about:blank");
+}
+
+WrapperCachedNonISupportsTestInterface*
+TestFunctions::WrapperCachedNonISupportsObject()
+{
+  if (!mWrapperCachedNonISupportsTestInterface) {
+    mWrapperCachedNonISupportsTestInterface = new WrapperCachedNonISupportsTestInterface();
+  }
+  return mWrapperCachedNonISupportsTestInterface;
 }
 
 bool
