@@ -20,8 +20,6 @@ Release date: TBD
     * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
 * **browser-engine-system**
   * Fixed a bug where `SystemEngineSession#exitFullScreenMode` didn't invoke the internal callback to exit the fullscreen mode.
-
-* **browser-engine-system**
   * A new field `defaultUserAgent` was added to `SystemEngine` for testing purposes. This is to circumvent calls to `WebSettings.getDefaultUserAgent` which fails with a `NullPointerException` in Robolectric. If the `SystemEngine` is used in Robolectric tests the following code will be needed:
     ```kotlin
     @Before
@@ -31,6 +29,13 @@ Release date: TBD
     ```
 * **browser-errorpages**
   * Added more detailed documentation in the README.
+* **support-ktx**
+  * Added new helper method to run a block of code with a different StrictMode policy:
+  ```kotlin
+  StrictMode.allowThreadDiskReads().resetAfter {
+    // In this block disk reads are not triggering a strict mode violation
+  }
+  ```
 
 # 0.26.0
 
