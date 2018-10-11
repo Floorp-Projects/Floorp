@@ -81,8 +81,10 @@ GetSystemTextQuality()
 gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
                              gfxFontEntry *aFontEntry,
                              const gfxFontStyle *aFontStyle,
+                             RefPtr<IDWriteFontFace> aFontFace,
                              AntialiasOption anAAOption)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, anAAOption)
+    , mFontFace(aFontFace ? aFontFace : aUnscaledFont->GetFontFace())
     , mCairoFontFace(nullptr)
     , mMetrics(nullptr)
     , mSpaceGlyph(0)
@@ -90,8 +92,6 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
     , mAllowManualShowGlyphs(true)
     , mAzureScaledFontUsedClearType(false)
 {
-    mFontFace = aUnscaledFont->GetFontFace();
-
     // If the IDWriteFontFace1 interface is available, we can use that for
     // faster glyph width retrieval.
     mFontFace->QueryInterface(__uuidof(IDWriteFontFace1),
@@ -150,7 +150,7 @@ gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
     auto entry = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
     RefPtr<UnscaledFontDWrite> unscaledFont = static_cast<UnscaledFontDWrite*>(mUnscaledFont.get());
-    return MakeUnique<gfxDWriteFont>(unscaledFont, entry, &mStyle, anAAOption);
+    return MakeUnique<gfxDWriteFont>(unscaledFont, entry, &mStyle, mFontFace, anAAOption);
 }
 
 const gfxFont::Metrics&

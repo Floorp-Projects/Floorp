@@ -30,6 +30,7 @@ public:
     gfxDWriteFont(const RefPtr<mozilla::gfx::UnscaledFontDWrite>& aUnscaledFont,
                   gfxFontEntry *aFontEntry,
                   const gfxFontStyle *aFontStyle,
+                  RefPtr<IDWriteFontFace> aFontFace = nullptr,
                   AntialiasOption = kAntialiasDefault);
     ~gfxDWriteFont();
 

@@ -8,6 +8,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Unused.h"
+#include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -206,6 +207,71 @@ nsSecureBrowserUIImpl::CheckForBlockedContent()
   }
 }
 
+// Helper function to determine if the given URI can be considered secure.
+// Essentially, only "https" URIs can be considered secure. However, the URI we
+// have may be e.g. view-source:https://example.com or
+// wyciwyg://https://example.com, in which case we have to evaluate the
+// innermost URI.
+static nsresult
+URICanBeConsideredSecure(nsIURI* uri, /* out */ bool& canBeConsideredSecure)
+{
+  MOZ_ASSERT(uri);
+  NS_ENSURE_ARG(uri);
+
+  canBeConsideredSecure = false;
+
+  nsCOMPtr<nsIURI> innermostURI = NS_GetInnermostURI(uri);
+  if (!innermostURI) {
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+            ("  couldn't get innermost URI"));
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+          ("  innermost URI is '%s'", innermostURI->GetSpecOrDefault().get()));
+
+  // Unfortunately, wyciwyg URIs don't know about innermost URIs, so we have to
+  // manually get the innermost URI if we have such a URI.
+  bool isWyciwyg;
+  nsresult rv = innermostURI->SchemeIs("wyciwyg", &isWyciwyg);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+            ("  nsIURI->SchemeIs failed"));
+    return rv;
+  }
+
+  if (isWyciwyg) {
+    nsCOMPtr<nsIURI> nonWyciwygURI;
+    rv = nsContentUtils::RemoveWyciwygScheme(innermostURI,
+                                             getter_AddRefs(nonWyciwygURI));
+    if (NS_FAILED(rv)) {
+      MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+              ("  nsContentUtils::RemoveWyciwygScheme failed"));
+      return rv;
+    }
+    if (!nonWyciwygURI) {
+      MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+              ("  apparently that wasn't a valid wyciwyg URI"));
+      return NS_ERROR_FAILURE;
+    }
+    innermostURI = nonWyciwygURI;
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+            ("  innermost URI is now '%s'",
+             innermostURI->GetSpecOrDefault().get()));
+  }
+
+  bool isHttps;
+  rv = innermostURI->SchemeIs("https", &isHttps);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+            ("  nsIURI->SchemeIs failed"));
+    return rv;
+  }
+
+  canBeConsideredSecure = isHttps;
+
+  return NS_OK;
+}
+
 // Helper function to get the securityInfo from a channel as a
 // nsITransportSecurityInfo. The out parameter will be set to null if there is
 // no securityInfo set.
@@ -246,13 +312,27 @@ nsSecureBrowserUIImpl::UpdateStateAndSecurityInfo(nsIChannel* channel,
   mState = STATE_IS_INSECURE;
   mTopLevelSecurityInfo = nullptr;
 
+  // Only https is considered secure (it is possible to have e.g. an http URI
+  // with a channel that has a securityInfo that indicates the connection is
+  // secure - e.g. h2/alt-svc or by visiting an http URI over an https proxy).
+  bool canBeConsideredSecure;
+  nsresult rv = URICanBeConsideredSecure(uri, canBeConsideredSecure);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!canBeConsideredSecure) {
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+            ("  URI can't be considered secure"));
+    return NS_OK;
+  }
+
   nsCOMPtr<nsITransportSecurityInfo> securityInfo;
   GetSecurityInfoFromChannel(channel, getter_AddRefs(securityInfo));
   if (securityInfo) {
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
             ("  we have a security info %p", securityInfo.get()));
 
-    nsresult rv = securityInfo->GetSecurityState(&mState);
+    rv = securityInfo->GetSecurityState(&mState);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -329,8 +409,15 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
             ("  we have a channel %p", channel.get()));
     nsresult rv = UpdateStateAndSecurityInfo(channel, aLocation);
+    // Even if this failed, we still want to notify downstream so that we don't
+    // leave a stale security indicator. We set everything to "not secure" to be
+    // safe.
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+              ("  Failed to update security info. "
+               "Setting everything to 'not secure' to be safe."));
+      mState = STATE_IS_INSECURE;
+      mTopLevelSecurityInfo = nullptr;
     }
   }
 

@@ -58,7 +58,9 @@ DOM4_MSG_DEF(TypeError, "The expression cannot be converted to return the specif
 /* IndexedDB errors http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#exceptions */
 
 DOM4_MSG_DEF(UnknownError, "The operation failed for reasons unrelated to the database itself and not covered by any other error code.", NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR)
-DOM4_MSG_DEF(ConstraintError, "A mutation operation in the transaction failed because a constraint was not satisfied. For example, an object such as an object store or index already exists and a new one was being attempted to be created.", NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR)
+DOM4_MSG_DEF(ConstraintError, "A mutation operation in the transaction failed because a constraint was not satisfied.", NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR)
+DOM4_MSG_DEF(ConstraintError, "Object store renamed to an already existing object store.", NS_ERROR_DOM_INDEXEDDB_RENAME_OBJECT_STORE_ERR)
+DOM4_MSG_DEF(ConstraintError, "Index already exists and a new one was being attempted to be created.", NS_ERROR_DOM_INDEXEDDB_RENAME_INDEX_ERR)
 DOM4_MSG_DEF(DataError, "Data provided to an operation does not meet requirements.", NS_ERROR_DOM_INDEXEDDB_DATA_ERR)
 DOM4_MSG_DEF(DataError, "No key or key range specified.", NS_ERROR_DOM_INDEXEDDB_KEY_ERR)
 DOM4_MSG_DEF(TransactionInactiveError, "A request was placed against a transaction which is currently not active, or which is finished.", NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR)
@@ -72,7 +74,6 @@ DOM4_MSG_DEF(TimeoutError, "A lock for the transaction could not be obtained in 
 DOM4_MSG_DEF(QuotaExceededError, "The current transaction exceeded its quota limitations.", NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR)
 
 /* A Non-standard IndexedDB error */
-
 DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_RECOVERABLE_ERR, "The operation failed because the database was prevented from taking an action. The operation might be able to succeed if the application performs some recovery steps and retries the entire transaction. For example, there was not enough remaining storage space, or the storage quota was reached and the user declined to give more space to the database.")
 
 /* FileSystem DOM errors. */
