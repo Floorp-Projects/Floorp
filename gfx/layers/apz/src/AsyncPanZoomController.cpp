@@ -4218,10 +4218,19 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
 
   bool needContentRepaint = false;
   bool viewportUpdated = false;
-  if (FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Width(), Metrics().GetCompositionBounds().Width()) &&
-      FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Height(), Metrics().GetCompositionBounds().Height())) {
-    // Remote content has sync'd up to the composition geometry
-    // change, so we can accept the viewport it's calculated.
+
+  // We usually don't entertain viewport updates on the same transaction as
+  // a composition bounds update, but we make an exception for Android
+  // to avoid the composition bounds and the viewport diverging during
+  // orientation changes and dynamic toolbar transitions.
+  // TODO: Do this on all platforms.
+  bool entertainViewportUpdates =
+       FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Width(), Metrics().GetCompositionBounds().Width()) &&
+       FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Height(), Metrics().GetCompositionBounds().Height());
+#if defined(MOZ_WIDGET_ANDROID)
+  entertainViewportUpdates = true;
+#endif
+  if (entertainViewportUpdates) {
     if (Metrics().GetViewport().Width() != aLayerMetrics.GetViewport().Width() ||
         Metrics().GetViewport().Height() != aLayerMetrics.GetViewport().Height()) {
       needContentRepaint = true;
