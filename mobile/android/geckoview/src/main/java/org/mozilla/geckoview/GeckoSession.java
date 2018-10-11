@@ -666,6 +666,22 @@ public class GeckoSession extends LayerSession
     }
 
     /**
+     * Get the current user agent string for this GeckoSession.
+     *
+     * @return a {@link GeckoResult} containing the UserAgent string
+     */
+    public @NonNull GeckoResult<String> getUserAgent() {
+        final CallbackResult<String> result = new CallbackResult<String>() {
+            @Override
+            public void sendSuccess(final Object value) {
+                complete((String) value);
+            }
+        };
+        mEventDispatcher.dispatch("GeckoView:GetUserAgent", null, result);
+        return result;
+    }
+
+    /**
      * Get the current prompt delegate for this GeckoSession.
      * @return PromptDelegate instance or null if using default delegate.
      */
