@@ -730,13 +730,8 @@ struct ActiveTexture {
 /// `RenderBackend` (which does not directly interface with the GPU) and actual
 /// device texture handles.
 struct TextureResolver {
-    /// A vector for fast resolves of texture cache IDs to native texture IDs.
-    /// This maps to a free-list managed by the backend thread / texture cache.
-    /// We free the texture memory associated with a TextureId when its texture
-    /// cache ID is freed by the texture cache, but reuse the TextureId when the
-    /// texture caches's free list reuses the texture cache ID. This saves
-    /// having to use a hashmap, and allows a flat vector for performance.
-    texture_cache_map: Vec<Texture>,
+    /// A map to resolve texture cache IDs to native textures.
+    texture_cache_map: FastHashMap<CacheTextureId, Texture>,
 
     /// Map of external image IDs to native textures.
     external_images: FastHashMap<(ExternalImageId, u8), ExternalTexture>,
@@ -775,20 +770,20 @@ struct TextureResolver {
 
 impl TextureResolver {
     fn new(device: &mut Device) -> TextureResolver {
-        let mut dummy_cache_texture = device
-            .create_texture(TextureTarget::Array, ImageFormat::BGRA8);
-        device.init_texture::<u8>(
-            &mut dummy_cache_texture,
-            1,
-            1,
-            TextureFilter::Linear,
-            None,
-            1,
-            None,
-        );
+        let dummy_cache_texture = device
+            .create_texture::<u8>(
+                TextureTarget::Array,
+                ImageFormat::BGRA8,
+                1,
+                1,
+                TextureFilter::Linear,
+                None,
+                1,
+                None,
+            );
 
         TextureResolver {
-            texture_cache_map: Vec::new(),
+            texture_cache_map: FastHashMap::default(),
             external_images: FastHashMap::default(),
             dummy_cache_texture,
             prev_pass_alpha: None,
@@ -801,7 +796,7 @@ impl TextureResolver {
     fn deinit(self, device: &mut Device) {
         device.delete_texture(self.dummy_cache_texture);
 
-        for texture in self.texture_cache_map {
+        for (_id, texture) in self.texture_cache_map {
             device.delete_texture(texture);
         }
 
@@ -905,7 +900,7 @@ impl TextureResolver {
                 device.bind_external_texture(sampler, texture);
             }
             TextureSource::TextureCache(index) => {
-                let texture = &self.texture_cache_map[index.0];
+                let texture = &self.texture_cache_map[&index];
                 device.bind_texture(sampler, texture);
             }
             TextureSource::RenderTaskCache(saved_index) => {
@@ -937,7 +932,7 @@ impl TextureResolver {
                 panic!("BUG: External textures cannot be resolved, they can only be bound.");
             }
             TextureSource::TextureCache(index) => {
-                Some(&self.texture_cache_map[index.0])
+                Some(&self.texture_cache_map[&index])
             }
             TextureSource::RenderTaskCache(saved_index) => {
                 Some(&self.saved_targets[saved_index.0])
@@ -950,7 +945,7 @@ impl TextureResolver {
 
         // We're reporting GPU memory rather than heap-allocations, so we don't
         // use size_of_op.
-        for t in self.texture_cache_map.iter() {
+        for t in self.texture_cache_map.values() {
             report.texture_cache_textures += t.size_in_bytes();
         }
         for t in self.render_target_pool.iter() {
@@ -1014,16 +1009,80 @@ enum GpuCacheBus {
     },
 }
 
+impl GpuCacheBus {
+    /// Returns true if this bus uses a render target for a texture.
+    fn uses_render_target(&self) -> bool {
+        match *self {
+            GpuCacheBus::Scatter { .. } => true,
+            GpuCacheBus::PixelBuffer { .. } => false,
+        }
+    }
+}
+
 /// The device-specific representation of the cache texture in gpu_cache.rs
 struct GpuCacheTexture {
-    texture: Texture,
+    texture: Option<Texture>,
     bus: GpuCacheBus,
 }
 
 impl GpuCacheTexture {
-    fn new(device: &mut Device, use_scatter: bool) -> Result<Self, RendererError> {
-        let texture = device.create_texture(TextureTarget::Default, ImageFormat::RGBAF32);
 
+    /// Ensures that we have an appropriately-sized texture. Returns true if a
+    /// new texture was created.
+    fn ensure_texture(&mut self, device: &mut Device, height: u32) -> bool {
+        // If we already have a texture that works, we're done.
+        if self.texture.as_ref().map_or(false, |t| t.get_dimensions().height >= height) {
+            if GPU_CACHE_RESIZE_TEST && self.bus.uses_render_target() {
+                // Special debug mode - resize the texture even though it's fine.
+            } else {
+                return false;
+            }
+        }
+
+        // Compute a few parameters for the new texture. We round the height up to
+        // a multiple of 256 to avoid many small resizes.
+        let new_height = (height + 255) & !255;
+        let new_size = DeviceUintSize::new(MAX_VERTEX_TEXTURE_WIDTH as _, new_height);
+        let rt_info = if self.bus.uses_render_target() {
+            Some(RenderTargetInfo { has_depth: false })
+        } else {
+            None
+        };
+
+        // Take the old texture, if any, and deinitialize it unless we're going
+        // to blit it's contents to the new one.
+        let mut blit_source = None;
+        if let Some(t) = self.texture.take() {
+            if rt_info.is_some() {
+                blit_source = Some(t);
+            } else {
+                device.delete_texture(t);
+            }
+        }
+
+        // Create the new texture.
+        let mut texture = device.create_texture::<u8>(
+            TextureTarget::Default,
+            ImageFormat::RGBAF32,
+            new_size.width,
+            new_size.height,
+            TextureFilter::Nearest,
+            rt_info,
+            1,
+            None,
+        );
+
+        // Blit the contents of the previous texture, if applicable.
+        if let Some(blit_source) = blit_source {
+            device.blit_renderable_texture(&mut texture, &blit_source);
+            device.delete_texture(blit_source);
+        }
+
+        self.texture = Some(texture);
+        true
+    }
+
+    fn new(device: &mut Device, use_scatter: bool) -> Result<Self, RendererError> {
         let bus = if use_scatter {
             let program = device.create_program_linked(
                 "gpu_cache_update",
@@ -1055,13 +1114,15 @@ impl GpuCacheTexture {
         };
 
         Ok(GpuCacheTexture {
-            texture,
+            texture: None,
             bus,
         })
     }
 
-    fn deinit(self, device: &mut Device) {
-        device.delete_texture(self.texture);
+    fn deinit(mut self, device: &mut Device) {
+        if let Some(t) = self.texture.take() {
+            device.delete_texture(t);
+        }
         match self.bus {
             GpuCacheBus::PixelBuffer { buffer, ..} => {
                 device.delete_pbo(buffer);
@@ -1076,7 +1137,7 @@ impl GpuCacheTexture {
     }
 
     fn get_height(&self) -> u32 {
-        self.texture.get_dimensions().height
+        self.texture.as_ref().map_or(0, |t| t.get_dimensions().height)
     }
 
     fn prepare_for_updates(
@@ -1085,25 +1146,10 @@ impl GpuCacheTexture {
         total_block_count: usize,
         max_height: u32,
     ) {
-        // See if we need to create or resize the texture.
-        let old_size = self.texture.get_dimensions();
-        let new_size = DeviceUintSize::new(MAX_VERTEX_TEXTURE_WIDTH as _, max_height);
-
+        let allocated_new_texture = self.ensure_texture(device, max_height);
         match self.bus {
             GpuCacheBus::PixelBuffer { ref mut rows, .. } => {
-                if max_height > old_size.height {
-                    // Create a f32 texture that can be used for the vertex shader
-                    // to fetch data from.
-                    device.init_texture::<u8>(
-                        &mut self.texture,
-                        new_size.width,
-                        new_size.height,
-                        TextureFilter::Nearest,
-                        None,
-                        1,
-                        None,
-                    );
-
+                if allocated_new_texture {
                     // If we had to resize the texture, just mark all rows
                     // as dirty so they will be uploaded to the texture
                     // during the next flush.
@@ -1122,24 +1168,6 @@ impl GpuCacheTexture {
                 if total_block_count > buf_value.allocated_count() {
                     device.allocate_vbo(buf_position, total_block_count, VertexUsageHint::Stream);
                     device.allocate_vbo(buf_value,    total_block_count, VertexUsageHint::Stream);
-                }
-
-                if new_size.height > old_size.height || GPU_CACHE_RESIZE_TEST {
-                    if old_size.height > 0 {
-                        device.resize_renderable_texture(&mut self.texture, new_size);
-                    } else {
-                        device.init_texture::<u8>(
-                            &mut self.texture,
-                            new_size.width,
-                            new_size.height,
-                            TextureFilter::Nearest,
-                            Some(RenderTargetInfo {
-                                has_depth: false,
-                            }),
-                            1,
-                            None,
-                        );
-                    }
                 }
             }
         }
@@ -1190,7 +1218,7 @@ impl GpuCacheTexture {
                 // Unused positions will be left as 0xFFFF, which translates to
                 // (1.0, 1.0) in the vertex output position and gets culled out
                 let mut position_data = vec![[!0u16; 2]; updates.blocks.len()];
-                let size = self.texture.get_dimensions().to_usize();
+                let size = self.texture.as_ref().unwrap().get_dimensions().to_usize();
 
                 for update in &updates.updates {
                     match *update {
@@ -1217,6 +1245,7 @@ impl GpuCacheTexture {
     }
 
     fn flush(&mut self, device: &mut Device) -> usize {
+        let texture = self.texture.as_ref().unwrap();
         match self.bus {
             GpuCacheBus::PixelBuffer { ref buffer, ref mut rows, ref cpu_blocks } => {
                 let rows_dirty = rows
@@ -1228,7 +1257,7 @@ impl GpuCacheTexture {
                 }
 
                 let mut uploader = device.upload_texture(
-                    &self.texture,
+                    texture,
                     buffer,
                     rows_dirty * MAX_VERTEX_TEXTURE_WIDTH,
                 );
@@ -1259,8 +1288,8 @@ impl GpuCacheTexture {
                 device.bind_program(program);
                 device.bind_custom_vao(vao);
                 device.bind_draw_target(
-                    Some((&self.texture, 0)),
-                    Some(self.texture.get_dimensions()),
+                    Some((texture, 0)),
+                    Some(texture.get_dimensions()),
                 );
                 device.draw_nonindexed_points(0, count as _);
                 0
@@ -1270,7 +1299,8 @@ impl GpuCacheTexture {
 }
 
 struct VertexDataTexture {
-    texture: Texture,
+    texture: Option<Texture>,
+    format: ImageFormat,
     pbo: PBO,
 }
 
@@ -1279,13 +1309,18 @@ impl VertexDataTexture {
         device: &mut Device,
         format: ImageFormat,
     ) -> VertexDataTexture {
-        let texture = device.create_texture(
-            TextureTarget::Default,
-            format,
-        );
         let pbo = device.create_pbo();
+        VertexDataTexture { texture: None, format, pbo }
+    }
 
-        VertexDataTexture { texture, pbo }
+    /// Returns a borrow of the GPU texture. Panics if it hasn't been initialized.
+    fn texture(&self) -> &Texture {
+        self.texture.as_ref().unwrap()
+    }
+
+    /// Returns an estimate of the GPU memory consumed by this VertexDataTexture.
+    fn size_in_bytes(&self) -> usize {
+        self.texture.as_ref().map_or(0, |t| t.size_in_bytes())
     }
 
     fn update<T>(&mut self, device: &mut Device, data: &mut Vec<T>) {
@@ -1309,15 +1344,19 @@ impl VertexDataTexture {
         let width =
             (MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % texels_per_item)) as u32;
         let needed_height = (data.len() / items_per_row) as u32;
+        let existing_height = self.texture.as_ref().map_or(0, |t| t.get_dimensions().height);
 
-        // Determine if the texture needs to be resized.
-        let texture_size = self.texture.get_dimensions();
-
-        if needed_height > texture_size.height {
+        // Create a new texture if needed.
+        if needed_height > existing_height {
+            // Drop the existing texture, if any.
+            if let Some(t) = self.texture.take() {
+                device.delete_texture(t);
+            }
             let new_height = (needed_height + 127) & !127;
 
-            device.init_texture::<u8>(
-                &mut self.texture,
+            let texture = device.create_texture::<u8>(
+                TextureTarget::Default,
+                self.format,
                 width,
                 new_height,
                 TextureFilter::Nearest,
@@ -1325,6 +1364,7 @@ impl VertexDataTexture {
                 1,
                 None,
             );
+            self.texture = Some(texture);
         }
 
         let rect = DeviceUintRect::new(
@@ -1332,13 +1372,15 @@ impl VertexDataTexture {
             DeviceUintSize::new(width, needed_height),
         );
         device
-            .upload_texture(&self.texture, &self.pbo, 0)
+            .upload_texture(self.texture(), &self.pbo, 0)
             .upload(rect, 0, None, data);
     }
 
-    fn deinit(self, device: &mut Device) {
+    fn deinit(mut self, device: &mut Device) {
         device.delete_pbo(self.pbo);
-        device.delete_texture(self.texture);
+        if let Some(t) = self.texture.take() {
+            device.delete_texture(t);
+        }
     }
 }
 
@@ -1667,10 +1709,9 @@ impl Renderer {
                 21,
             ];
 
-            let mut texture = device
-                .create_texture(TextureTarget::Default, ImageFormat::R8);
-            device.init_texture(
-                &mut texture,
+            let mut texture = device.create_texture::<u8>(
+                TextureTarget::Default,
+                ImageFormat::R8,
                 8,
                 8,
                 TextureFilter::Nearest,
@@ -2666,7 +2707,7 @@ impl Renderer {
         // so we need to bind it here.
         self.device.bind_texture(
             TextureSampler::GpuCache,
-            &self.gpu_cache_texture.texture,
+            self.gpu_cache_texture.texture.as_ref().unwrap(),
         );
     }
 
@@ -2685,20 +2726,13 @@ impl Renderer {
                         filter,
                         render_target,
                     } => {
-                        let CacheTextureId(cache_texture_index) = update.id;
-                        if self.texture_resolver.texture_cache_map.len() == cache_texture_index {
-                            // Create a new native texture, as requested by the texture cache.
-                            let texture = self.device.create_texture(TextureTarget::Array, format);
-                            self.texture_resolver.texture_cache_map.push(texture);
-                        }
-                        let texture =
-                            &mut self.texture_resolver.texture_cache_map[cache_texture_index];
-                        assert_eq!(texture.get_format(), format);
-
+                        // Create a new native texture, as requested by the texture cache.
+                        //
                         // Ensure no PBO is bound when creating the texture storage,
                         // or GL will attempt to read data from there.
-                        self.device.init_texture::<u8>(
-                            texture,
+                        let texture = self.device.create_texture::<u8>(
+                            TextureTarget::Array,
+                            format,
                             width,
                             height,
                             filter,
@@ -2706,6 +2740,7 @@ impl Renderer {
                             layer_count,
                             None,
                         );
+                        self.texture_resolver.texture_cache_map.insert(update.id, texture);
                     }
                     TextureUpdateOp::Update {
                         rect,
@@ -2714,7 +2749,7 @@ impl Renderer {
                         layer_index,
                         offset,
                     } => {
-                        let texture = &self.texture_resolver.texture_cache_map[update.id.0];
+                        let texture = &self.texture_resolver.texture_cache_map[&update.id];
                         let mut uploader = self.device.upload_texture(
                             texture,
                             &self.texture_cache_upload_pbo,
@@ -2762,8 +2797,8 @@ impl Renderer {
                         self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
                     }
                     TextureUpdateOp::Free => {
-                        let texture = &mut self.texture_resolver.texture_cache_map[update.id.0];
-                        self.device.free_texture_storage(texture);
+                        let texture = self.texture_resolver.texture_cache_map.remove(&update.id).unwrap();
+                        self.device.delete_texture(texture);
                     }
                 }
             }
@@ -3681,20 +3716,20 @@ impl Renderer {
     /// Allocates a texture to be used as the output for a rendering pass.
     ///
     /// We make an effort to reuse render targe textures across passes and
-    /// across frames. Reusing a texture with the same dimensions (width,
-    /// height, and layer-count) and format is obviously ideal. Reusing a
-    /// texture with different dimensions but the same format can be faster
-    /// than allocating a new texture, since it basically boils down to
-    /// a realloc in GPU memory, which can be very cheap if the existing
-    /// region can be resized. However, some drivers/GPUs require textures
-    /// with different formats to be allocated in different arenas,
-    /// reinitializing with a different format can force a large copy. As
-    /// such, we just allocate a new texture in that case.
+    /// across frames when the format and dimensions match. Because we use
+    /// immutable storage, we can't resize textures.
+    ///
+    /// We could consider approaches to re-use part of a larger target, if
+    /// available. However, we'd need to be careful about eviction. Currently,
+    /// render targets are freed if they haven't been used in 30 frames. If we
+    /// used partial targets, we'd need to track how _much_ of the target has
+    /// been used in the last 30 frames, since we could otherwise end up
+    /// keeping an enormous target alive indefinitely by constantly using it
+    /// in situations where a much smaller target would suffice.
     fn allocate_target_texture<T: RenderTarget>(
         &mut self,
         list: &mut RenderTargetList<T>,
         counters: &mut FrameProfileCounters,
-        frame_id: FrameId,
     ) -> Option<ActiveTexture> {
         debug_assert_ne!(list.max_size, DeviceUintSize::zero());
         if list.targets.is_empty() {
@@ -3703,16 +3738,16 @@ impl Renderer {
 
         counters.targets_used.inc();
 
-        // First, try finding a perfect match
+        // Try finding a match in the existing pool. If there's no match, we'll
+        // create a new texture.
         let selector = TargetSelector {
             size: list.max_size,
             num_layers: list.targets.len() as _,
             format: list.format,
         };
-        let mut index = self.texture_resolver.render_target_pool
+        let index = self.texture_resolver.render_target_pool
             .iter()
             .position(|texture| {
-                //TODO: re-use a part of a larger target, if available
                 selector == TargetSelector {
                     size: texture.get_dimensions(),
                     num_layers: texture.get_render_target_layer_count(),
@@ -3720,36 +3755,25 @@ impl Renderer {
                 }
             });
 
-        // Next, try at least finding a matching format
-        if index.is_none() {
-            counters.targets_changed.inc();
-            index = self.texture_resolver.render_target_pool
-                .iter()
-                .position(|texture| texture.get_format() == list.format && !texture.used_in_frame(frame_id));
-        }
-
-        let mut texture = match index {
-            Some(pos) => {
-                self.texture_resolver.render_target_pool.swap_remove(pos)
-            }
-            None => {
-                counters.targets_created.inc();
-                // finally, give up and create a new one
-                self.device.create_texture(TextureTarget::Array, list.format)
-            }
+        let rt_info = RenderTargetInfo { has_depth: list.needs_depth() };
+        let texture = if let Some(idx) = index {
+            let mut t = self.texture_resolver.render_target_pool.swap_remove(idx);
+            self.device.reuse_render_target::<u8>(&mut t, rt_info);
+            t
+        } else {
+            counters.targets_created.inc();
+            let mut t = self.device.create_texture::<u8>(
+                TextureTarget::Array,
+                list.format,
+                list.max_size.width,
+                list.max_size.height,
+                TextureFilter::Linear,
+                Some(rt_info),
+                list.targets.len() as _,
+                None,
+            );
+            t
         };
-
-        self.device.init_texture::<u8>(
-            &mut texture,
-            list.max_size.width,
-            list.max_size.height,
-            TextureFilter::Linear,
-            Some(RenderTargetInfo {
-                has_depth: list.needs_depth(),
-            }),
-            list.targets.len() as _,
-            None,
-        );
 
         list.check_ready(&texture);
         Some(ActiveTexture {
@@ -3768,7 +3792,7 @@ impl Renderer {
         );
         self.device.bind_texture(
             TextureSampler::PrimitiveHeadersF,
-            &self.prim_header_f_texture.texture,
+            &self.prim_header_f_texture.texture(),
         );
 
         self.prim_header_i_texture.update(
@@ -3777,7 +3801,7 @@ impl Renderer {
         );
         self.device.bind_texture(
             TextureSampler::PrimitiveHeadersI,
-            &self.prim_header_i_texture.texture,
+            &self.prim_header_i_texture.texture(),
         );
 
         self.transforms_texture.update(
@@ -3786,14 +3810,14 @@ impl Renderer {
         );
         self.device.bind_texture(
             TextureSampler::TransformPalette,
-            &self.transforms_texture.texture,
+            &self.transforms_texture.texture(),
         );
 
         self.render_task_texture
             .update(&mut self.device, &mut frame.render_tasks.task_data);
         self.device.bind_texture(
             TextureSampler::RenderTasks,
-            &self.render_task_texture.texture,
+            &self.render_task_texture.texture(),
         );
 
         debug_assert!(self.texture_resolver.prev_pass_alpha.is_none());
@@ -3868,8 +3892,8 @@ impl Renderer {
                     (None, None)
                 }
                 RenderPassKind::OffScreen { ref mut alpha, ref mut color, ref mut texture_cache } => {
-                    let alpha_tex = self.allocate_target_texture(alpha, &mut frame.profile_counters, frame_id);
-                    let color_tex = self.allocate_target_texture(color, &mut frame.profile_counters, frame_id);
+                    let alpha_tex = self.allocate_target_texture(alpha, &mut frame.profile_counters);
+                    let color_tex = self.allocate_target_texture(color, &mut frame.profile_counters);
 
                     // If this frame has already been drawn, then any texture
                     // cache targets have already been updated and can be
@@ -4063,7 +4087,7 @@ impl Renderer {
         let fb_width = framebuffer_size.width as i32;
         let num_layers: i32 = self.texture_resolver
             .texture_cache_map
-            .iter()
+            .values()
             .map(|texture| texture.get_layer_count())
             .sum();
 
@@ -4074,7 +4098,7 @@ impl Renderer {
         }
 
         let mut i = 0;
-        for texture in &self.texture_resolver.texture_cache_map {
+        for texture in self.texture_resolver.texture_cache_map.values() {
             let y = spacing + if self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) {
                 528
             } else {
@@ -4191,10 +4215,11 @@ impl Renderer {
     }
 
     pub fn read_gpu_cache(&mut self) -> (DeviceUintSize, Vec<u8>) {
-        let size = self.gpu_cache_texture.texture.get_dimensions();
+        let texture = self.gpu_cache_texture.texture.as_ref().unwrap();
+        let size = texture.get_dimensions();
         let mut texels = vec![0; (size.width * size.height * 16) as usize];
         self.device.begin_frame();
-        self.device.bind_read_target(Some((&self.gpu_cache_texture.texture, 0)));
+        self.device.bind_read_target(Some((texture, 0)));
         self.device.read_pixels_into(
             DeviceUintRect::new(DeviceUintPoint::zero(), size),
             ReadPixelsFormat::Standard(ImageFormat::RGBAF32),
@@ -4260,7 +4285,8 @@ impl Renderer {
         }
 
         // GPU cache GPU memory.
-        report.gpu_cache_textures += self.gpu_cache_texture.texture.size_in_bytes();
+        report.gpu_cache_textures +=
+            self.gpu_cache_texture.texture.as_ref().map_or(0, |t| t.size_in_bytes());
 
         // Render task CPU memory.
         for (_id, doc) in &self.active_documents {
@@ -4269,10 +4295,10 @@ impl Renderer {
         }
 
         // Vertex data GPU memory.
-        report.vertex_data_textures += self.prim_header_f_texture.texture.size_in_bytes();
-        report.vertex_data_textures += self.prim_header_i_texture.texture.size_in_bytes();
-        report.vertex_data_textures += self.transforms_texture.texture.size_in_bytes();
-        report.vertex_data_textures += self.render_task_texture.texture.size_in_bytes();
+        report.vertex_data_textures += self.prim_header_f_texture.size_in_bytes();
+        report.vertex_data_textures += self.prim_header_i_texture.size_in_bytes();
+        report.vertex_data_textures += self.transforms_texture.size_in_bytes();
+        report.vertex_data_textures += self.render_task_texture.size_in_bytes();
 
         // Texture cache and render target GPU memory.
         report += self.texture_resolver.report_memory();
@@ -4554,7 +4580,7 @@ struct PlainTexture {
 struct PlainRenderer {
     gpu_cache: PlainTexture,
     gpu_cache_frame_id: FrameId,
-    textures: Vec<PlainTexture>,
+    textures: FastHashMap<CacheTextureId, PlainTexture>,
     external_images: Vec<ExternalCaptureImage>
 }
 
@@ -4659,24 +4685,34 @@ impl Renderer {
     }
 
     #[cfg(feature = "replay")]
-    fn load_texture(texture: &mut Texture, plain: &PlainTexture, root: &PathBuf, device: &mut Device) -> Vec<u8> {
+    fn load_texture(
+        target: TextureTarget,
+        plain: &PlainTexture,
+        root: &PathBuf,
+        device: &mut Device
+    ) -> (Texture, Vec<u8>)
+    {
         use std::fs::File;
         use std::io::Read;
 
         let mut texels = Vec::new();
-        assert_eq!(plain.format, texture.get_format());
         File::open(root.join(&plain.data))
             .expect(&format!("Unable to open texture at {}", plain.data))
             .read_to_end(&mut texels)
             .unwrap();
 
-        device.init_texture(
-            texture, plain.size.0, plain.size.1,
-            plain.filter, plain.render_target,
-            plain.size.2, Some(texels.as_slice()),
+        let texture = device.create_texture(
+            target,
+            plain.format,
+            plain.size.0,
+            plain.size.1,
+            plain.filter,
+            plain.render_target,
+            plain.size.2,
+            Some(texels.as_slice()),
         );
 
-        texels
+        (texture, texels)
     }
 
     #[cfg(feature = "capture")]
@@ -4771,20 +4807,20 @@ impl Renderer {
             self.update_gpu_cache(); // flush pending updates
             let mut plain_self = PlainRenderer {
                 gpu_cache: Self::save_texture(
-                    &self.gpu_cache_texture.texture,
+                    &self.gpu_cache_texture.texture.as_ref().unwrap(),
                     "gpu", &config.root, &mut self.device,
                 ),
                 gpu_cache_frame_id: self.gpu_cache_frame_id,
-                textures: Vec::new(),
+                textures: FastHashMap::default(),
                 external_images: deferred_images,
             };
 
             info!("saving cached textures");
-            for texture in &self.texture_resolver.texture_cache_map {
+            for (id, texture) in &self.texture_resolver.texture_cache_map {
                 let file_name = format!("cache-{}", plain_self.textures.len() + 1);
                 info!("\t{}", file_name);
                 let plain = Self::save_texture(texture, &file_name, &config.root, &mut self.device);
-                plain_self.textures.push(plain);
+                plain_self.textures.insert(*id, plain);
             }
 
             config.serialize(&plain_self, "renderer");
@@ -4834,26 +4870,34 @@ impl Renderer {
             info!("loading cached textures");
             self.device.begin_frame();
 
-            for texture in self.texture_resolver.texture_cache_map.drain(..) {
+            for (_id, texture) in self.texture_resolver.texture_cache_map.drain() {
                 self.device.delete_texture(texture);
             }
-            for texture in renderer.textures {
+            for (id, texture) in renderer.textures {
                 info!("\t{}", texture.data);
-                let mut t = self.device.create_texture(TextureTarget::Array, texture.format);
-                Self::load_texture(&mut t, &texture, &root, &mut self.device);
-                self.texture_resolver.texture_cache_map.push(t);
+                let t = Self::load_texture(
+                    TextureTarget::Array,
+                    &texture,
+                    &root,
+                    &mut self.device
+                );
+                self.texture_resolver.texture_cache_map.insert(id, t.0);
             }
 
             info!("loading gpu cache");
-            let gpu_cache_data = Self::load_texture(
-                &mut self.gpu_cache_texture.texture,
+            if let Some(t) = self.gpu_cache_texture.texture.take() {
+                self.device.delete_texture(t);
+            }
+            let (t, gpu_cache_data) = Self::load_texture(
+                TextureTarget::Default,
                 &renderer.gpu_cache,
                 &root,
                 &mut self.device,
             );
+            self.gpu_cache_texture.texture = Some(t);
             match self.gpu_cache_texture.bus {
                 GpuCacheBus::PixelBuffer { ref mut rows, ref mut cpu_blocks, .. } => {
-                    let dim = self.gpu_cache_texture.texture.get_dimensions();
+                    let dim = self.gpu_cache_texture.texture.as_ref().unwrap().get_dimensions();
                     let blocks = unsafe {
                         slice::from_raw_parts(
                             gpu_cache_data.as_ptr() as *const GpuBlockData,
@@ -4893,9 +4937,13 @@ impl Renderer {
                             filter,
                             render_target: None,
                         };
-                        let mut t = self.device.create_texture(target, plain_tex.format);
-                        Self::load_texture(&mut t, &plain_tex, &root, &mut self.device);
-                        let extex = t.into_external();
+                        let t = Self::load_texture(
+                            target,
+                            &plain_tex,
+                            &root,
+                            &mut self.device
+                        );
+                        let extex = t.0.into_external();
                         self.owned_external_images.insert(key, extex.clone());
                         e.insert(extex.internal_id()).clone()
                     }
