@@ -40,27 +40,21 @@ run_task_schema = Schema({
 })
 
 
-def common_setup(config, job, taskdesc):
+def common_setup(config, job, taskdesc, command, checkoutdir):
     run = job['run']
     if run['checkout']:
         support_vcs_checkout(config, job, taskdesc,
                              sparse=bool(run['sparse-profile']))
-
-    taskdesc['worker'].setdefault('env', {})['MOZ_SCM_LEVEL'] = config.params['level']
-
-
-def add_checkout_to_command(run, command):
-    if not run['checkout']:
-        return
-
-    command.append('--vcs-checkout={workdir}/checkouts/gecko'.format(**run))
+        command.append('--vcs-checkout={}/gecko'.format(checkoutdir))
 
     if run['sparse-profile']:
         command.append('--sparse-profile=build/sparse-profiles/%s' %
                        run['sparse-profile'])
 
+    taskdesc['worker'].setdefault('env', {})['MOZ_SCM_LEVEL'] = config.params['level']
 
-defaults = {
+
+worker_defaults = {
     'cache-dotcache': False,
     'checkout': True,
     'comm-checkout': False,
@@ -68,11 +62,17 @@ defaults = {
 }
 
 
-@run_job_using("docker-worker", "run-task", schema=run_task_schema, defaults=defaults)
+def run_task_url(config):
+    return '{}/raw-file/{}/taskcluster/scripts/run-task'.format(
+                config.params['head_repository'], config.params['head_rev'])
+
+
+@run_job_using("docker-worker", "run-task", schema=run_task_schema, defaults=worker_defaults)
 def docker_worker_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']
-    common_setup(config, job, taskdesc)
+    command = ['/builds/worker/bin/run-task']
+    common_setup(config, job, taskdesc, command, checkoutdir='{workdir}/checkouts'.format(**run))
 
     if run.get('cache-dotcache'):
         worker['caches'].append({
@@ -85,8 +85,6 @@ def docker_worker_run_task(config, job, taskdesc):
     run_command = run['command']
     if isinstance(run_command, basestring):
         run_command = ['bash', '-cx', run_command]
-    command = ['{workdir}/bin/run-task'.format(**run)]
-    add_checkout_to_command(run, command)
     if run['comm-checkout']:
         command.append('--comm-checkout={workdir}/checkouts/gecko/comm'.format(**run))
     command.append('--fetch-hgfingerprint')
@@ -95,15 +93,14 @@ def docker_worker_run_task(config, job, taskdesc):
     worker['command'] = command
 
 
-@run_job_using("native-engine", "run-task", schema=run_task_schema, defaults=defaults)
+@run_job_using("native-engine", "run-task", schema=run_task_schema, defaults=worker_defaults)
 def native_engine_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']
-    common_setup(config, job, taskdesc)
+    command = ['./run-task']
+    common_setup(config, job, taskdesc, command, checkoutdir='{workdir}/checkouts'.format(**run))
 
-    worker['context'] = '{}/raw-file/{}/taskcluster/scripts/run-task'.format(
-        config.params['head_repository'], config.params['head_rev']
-    )
+    worker['context'] = run_task_url(config)
 
     if run.get('cache-dotcache'):
         raise Exception("No cache support on native-worker; can't use cache-dotcache")
@@ -111,8 +108,34 @@ def native_engine_run_task(config, job, taskdesc):
     run_command = run['command']
     if isinstance(run_command, basestring):
         run_command = ['bash', '-cx', run_command]
-    command = ['./run-task']
-    add_checkout_to_command(run, command)
     command.append('--')
     command.extend(run_command)
     worker['command'] = command
+
+
+@run_job_using("generic-worker", "run-task", schema=run_task_schema, defaults=worker_defaults)
+def generic_worker_run_task(config, job, taskdesc):
+    run = job['run']
+    worker = taskdesc['worker'] = job['worker']
+    command = ['./run-task']
+    common_setup(config, job, taskdesc, command, checkoutdir='{workdir}/checkouts'.format(**run))
+
+    worker.setdefault('mounts', [])
+    if run.get('cache-dotcache'):
+        worker['mounts'].append({
+            'cache-name': 'level-{level}-{project}-dotcache'.format(**config.params),
+            'directory': '{workdir}/.cache'.format(**run),
+        })
+    worker['mounts'].append({
+        'content': {
+            'url': run_task_url(config),
+        },
+        'file': './run-task',
+    })
+
+    run_command = run['command']
+    if isinstance(run_command, basestring):
+        run_command = ['bash', '-cx', run_command]
+    command.append('--')
+    command.extend(run_command)
+    worker['command'] = [['chmod', '+x', 'run-task'], command]
