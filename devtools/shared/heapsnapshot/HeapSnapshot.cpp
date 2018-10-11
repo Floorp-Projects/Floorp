@@ -1449,7 +1449,7 @@ HeapSnapshot::CreateUniqueCoreDumpFile(ErrorResult& rv,
     return nullptr;
 
   auto ms = msSinceProcessCreation(now);
-  rv = file->AppendNative(nsPrintfCString("%lu.fxsnapshot.gz", ms));
+  rv = file->AppendNative(nsPrintfCString("%lu.fxsnapshot", ms));
   if (NS_WARN_IF(rv.Failed()))
     return nullptr;
 
@@ -1464,7 +1464,7 @@ HeapSnapshot::CreateUniqueCoreDumpFile(ErrorResult& rv,
   // The snapshot ID must be computed in the process that created the
   // temp file, because TmpD may not be the same in all processes.
   outSnapshotId.Assign(Substring(outFilePath, tempPath.Length() + 1,
-                                 outFilePath.Length() - tempPath.Length() - sizeof(".fxsnapshot.gz")));
+                                 outFilePath.Length() - tempPath.Length() - sizeof(".fxsnapshot")));
 
   return file.forget();
 }
