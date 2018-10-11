@@ -124,7 +124,7 @@
     <button type="submit">Submit</button>
   </form>
 
-  <!-- input with sensitive data (9 digit credit card number) -->
+  <!-- input with sensitive data (19 digit credit card number) -->
   <form id="form17" onsubmit="return checkSubmit(17)">
     <input type="text" name="test1">
     <button type="submit">Submit</button>
@@ -322,7 +322,7 @@ function startTest() {
   for (let i = 0; i != testData.length; i++) {
     $_(16, "test" + (i + 1)).value = testData[i];
   }
-  $_(17, "test1").value = "001064088";
+  $_(17, "test1").value = "6799990100000000019";
   $_(18, "test1").value = "0000-0000-0080-4609";
   $_(19, "test1").value = "0000 0000 0222 331";
   $_(20, "test1").value = "dontSaveThis";
@@ -334,7 +334,7 @@ function startTest() {
   $_(103, "test3").value = "savedValue";
   $_(104, "test4").value = " trimTrailingAndLeadingSpace ";
   $_(105, "test5").value = "\t trimTrailingAndLeadingWhitespace\t ";
-  $_(106, "test6").value = "00000000109181";
+  $_(106, "test6").value = "55555555555544445553"; // passes luhn but too long
 
   testData = ccNumbers.invalid16;
   for (let i = 0; i != testData.length; i++) {
@@ -412,7 +412,7 @@ function checkSubmit(formNum) {
                    "checking saved value is trimmed on both sides");
       break;
     case 106:
-      checkForSave("test6", "00000000109181", "checking saved value");
+      checkForSave("test6", "55555555555544445553", "checking saved value");
       break;
     case 107:
       for (let i = 0; i != ccNumbers.invalid16.length; i++) {
