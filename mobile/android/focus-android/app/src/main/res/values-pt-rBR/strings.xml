@@ -82,7 +82,7 @@
   <string name="preference_security_biometric">Use impressão digital para desbloquear seu aplicativo</string>
   <string name="preference_security_biometric_summary">Sua impressão digital pode desbloquear %1$s se a URL já estiver aberta no aplicativo. O modo invisível será ligado.</string>
   <string name="preference_privacy_secure_mode">Furtividade</string>
-  <string name="preference_privacy_stealth_summary">Esconder páginas web quando trocar aplicativo</string>
+  <string name="preference_privacy_stealth_summary">Esconder páginas da web quando trocar aplicativo e bloquear a captura de tela.</string>
   <string name="preference_category_security">Segurança</string>
   <string name="preference_category_performance">Desempenho</string>
   <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
@@ -215,6 +215,7 @@
   <string name="biometric_auth_new_session">Nova sessão</string>
   <string name="biometric_auth_image_description">Ícone de impressão digital</string>
   <string name="biometric_auth_not_recognized_error">Impressão digital não reconhecida. Tente novamente.</string>
+  <string name="biometric_auth_moved_too_quickly">Seu dedo se moveu muito rápido, tente novamente.</string>
   <string name="enable_search_suggestion_title">Deseja ativar as sugestões de pesquisa?</string>
   <string name="enable_search_suggestion_subtitle">Para obter sugestões de pesquisa, %1$s precisa enviar o que você escreve na barra de endereços para o mecanismo de pesquisa que você escolheu. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Saiba mais</string>
