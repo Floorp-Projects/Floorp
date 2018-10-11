@@ -1410,8 +1410,8 @@ GeckoDriver.prototype.getWindowRect = async function() {
  * Set the window position and size of the browser on the operating
  * system window manager.
  *
- * The supplied |width| and |height| values refer to the window outerWidth
- * and outerHeight values, which include browser chrome and OS-level
+ * The supplied `width` and `height` values refer to the window `outerWidth`
+ * and `outerHeight` values, which include browser chrome and OS-level
  * window borders.
  *
  * @param {number} x
@@ -1426,7 +1426,7 @@ GeckoDriver.prototype.getWindowRect = async function() {
  *     Height to resize the window to.
  *
  * @return {Object.<string, number>}
- *     Object with |x| and |y| coordinates and |width| and |height|
+ *     Object with `x` and `y` coordinates and `width` and `height`
  *     dimensions.
  *
  * @throws {UnsupportedOperationError}
