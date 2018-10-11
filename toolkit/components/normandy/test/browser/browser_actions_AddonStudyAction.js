@@ -77,7 +77,7 @@ decorate_task(
 
     Assert.deepEqual(
       sendEventStub.args,
-      [["enrollFailed", "addon_study", recipe.arguments.name, {reason: "download-failure"}]],
+      [["enrollFailed", "addon_study", recipe.arguments.name, {reason: "download-failure", detail: "ERROR_NETWORK_FAILURE"}]],
       "An enrollFailed event should be sent",
     );
   }
