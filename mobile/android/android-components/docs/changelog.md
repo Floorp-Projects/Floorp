@@ -27,6 +27,8 @@ Release date: TBD
       SystemEngine.defaultUserAgent = "test-ua-string"
     }
     ```
+* **browser-search**
+  * Fixed an issue where a locale change at runtime would not update the search engines.
 * **browser-errorpages**
   * Added more detailed documentation in the README.
 * **support-ktx**
