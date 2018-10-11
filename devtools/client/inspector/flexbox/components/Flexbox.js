@@ -47,23 +47,23 @@ class Flexbox extends PureComponent {
   }
 
   renderFlexContainerProperties() {
-    // Don't show the flex container properties for the parent flex container of the
-    // selected element.
-    if (this.props.flexContainer.isFlexItemContainer) {
-      return null;
-    }
-
     return FlexContainerProperties({
       properties: this.props.flexContainer.properties,
     });
   }
 
   renderFlexItemList() {
-    const { setSelectedNode } = this.props;
+    const {
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.props;
     const { flexItems } = this.props.flexContainer;
 
     return FlexItemList({
       flexItems,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
       setSelectedNode,
     });
   }
@@ -133,7 +133,7 @@ class Flexbox extends PureComponent {
         }),
         !flexItemShown && flexItems.length > 0 ? this.renderFlexItemList() : null,
         flexItemShown ? this.renderFlexItemSizing() : null,
-        this.renderFlexContainerProperties()
+        !flexItemShown ? this.renderFlexContainerProperties() : null
       )
     );
   }
