@@ -40,6 +40,7 @@ public:
 
   using AudioChunk::GetDuration;
   using AudioChunk::IsNull;
+  using AudioChunk::IsAudible;
   using AudioChunk::ChannelCount;
   using AudioChunk::ChannelData;
   using AudioChunk::SizeOfExcludingThisIfUnshared;

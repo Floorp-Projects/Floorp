@@ -256,7 +256,9 @@ public:
       return;
     }
 
-    bool newInputMuted = aInput.IsNull() || aInput.IsMuted();
+    bool newInputMuted = aInput.IsNull() ||
+                         aInput.IsMuted() ||
+                         !aInput.IsAudible();
     if (newInputMuted != mLastInputMuted) {
       mLastInputMuted = newInputMuted;
 
