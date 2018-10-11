@@ -9,10 +9,13 @@ import os
 from mozpack import path as mozpath
 from mozpack.files import FileFinder
 
-try:
-    from os import scandir, walk
-except ImportError:
-    from scandir import scandir, walk
+
+def get_scandir_functions():
+    try:
+        from os import scandir, walk
+    except ImportError:
+        from scandir import scandir, walk
+    return scandir, walk
 
 
 class FilterPath(object):
@@ -87,6 +90,9 @@ def collapse(paths, base=None, dotfiles=False):
     :returns: The smallest set of paths (files and directories) that contain
               the original set of paths and only the original set.
     """
+    # Import scandir locally because this file can be imported before we
+    # have created a correctly configured environment
+    scandir, walk = get_scandir_functions()
     if not paths:
         if not base:
             return []
