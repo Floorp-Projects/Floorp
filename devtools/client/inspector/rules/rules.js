@@ -139,6 +139,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.hoverCheckbox = doc.getElementById("pseudo-hover-toggle");
   this.activeCheckbox = doc.getElementById("pseudo-active-toggle");
   this.focusCheckbox = doc.getElementById("pseudo-focus-toggle");
+  this.focusWithinCheckbox = doc.getElementById("pseudo-focus-within-toggle");
 
   this.searchClearButton.hidden = true;
 
@@ -158,6 +159,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.hoverCheckbox.addEventListener("click", this._onTogglePseudoClass);
   this.activeCheckbox.addEventListener("click", this._onTogglePseudoClass);
   this.focusCheckbox.addEventListener("click", this._onTogglePseudoClass);
+  this.focusWithinCheckbox.addEventListener("click", this._onTogglePseudoClass);
 
   if (flags.testing) {
     // In tests, we start listening immediately to avoid having to simulate a mousemove.
@@ -778,6 +780,7 @@ CssRuleView.prototype = {
     this.hoverCheckbox.removeEventListener("click", this._onTogglePseudoClass);
     this.activeCheckbox.removeEventListener("click", this._onTogglePseudoClass);
     this.focusCheckbox.removeEventListener("click", this._onTogglePseudoClass);
+    this.focusWithinCheckbox.removeEventListener("click", this._onTogglePseudoClass);
 
     this.searchField = null;
     this.searchClearButton = null;
@@ -788,6 +791,7 @@ CssRuleView.prototype = {
     this.hoverCheckbox = null;
     this.activeCheckbox = null;
     this.focusCheckbox = null;
+    this.focusWithinCheckbox = null;
 
     this.inspector = null;
     this.styleDocument = null;
@@ -927,6 +931,7 @@ CssRuleView.prototype = {
     this.hoverCheckbox.checked = this.hoverCheckbox.disabled = false;
     this.activeCheckbox.checked = this.activeCheckbox.disabled = false;
     this.focusCheckbox.checked = this.focusCheckbox.disabled = false;
+    this.focusWithinCheckbox.checked = this.focusWithinCheckbox.disabled = false;
   },
 
   /**
@@ -937,6 +942,7 @@ CssRuleView.prototype = {
       this.hoverCheckbox.disabled = true;
       this.activeCheckbox.disabled = true;
       this.focusCheckbox.disabled = true;
+      this.focusWithinCheckbox.disabled = true;
       return;
     }
 
@@ -952,6 +958,10 @@ CssRuleView.prototype = {
         }
         case ":focus": {
           this.focusCheckbox.checked = true;
+          break;
+        }
+        case ":focus-within": {
+          this.focusWithinCheckbox.checked = true;
           break;
         }
       }
@@ -1569,6 +1579,7 @@ CssRuleView.prototype = {
     this.hoverCheckbox.setAttribute("tabindex", "0");
     this.activeCheckbox.setAttribute("tabindex", "0");
     this.focusCheckbox.setAttribute("tabindex", "0");
+    this.focusWithinCheckbox.setAttribute("tabindex", "0");
 
     this.pseudoClassPanel.hidden = false;
   },
@@ -1578,6 +1589,7 @@ CssRuleView.prototype = {
     this.hoverCheckbox.setAttribute("tabindex", "-1");
     this.activeCheckbox.setAttribute("tabindex", "-1");
     this.focusCheckbox.setAttribute("tabindex", "-1");
+    this.focusWithinCheckbox.setAttribute("tabindex", "-1");
 
     this.pseudoClassPanel.hidden = true;
   },

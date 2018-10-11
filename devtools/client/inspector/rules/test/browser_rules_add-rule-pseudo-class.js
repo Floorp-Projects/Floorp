@@ -16,7 +16,10 @@ const TEST_DATA = [
   [":hover", ":active", ":focus"],
   [":active"],
   [":active", ":focus"],
-  [":focus"]
+  [":focus"],
+  [":focus-within"],
+  [":focus-within", ":hover"],
+  [":focus-within", ":hover", ":active"],
 ];
 
 add_task(async function() {
@@ -57,6 +60,10 @@ async function setPseudoLocks(inspector, view, pseudoClasses) {
         view.focusCheckbox.click();
         await inspector.once("rule-view-refreshed");
         break;
+      case ":focus-within":
+        view.focusWithinCheckbox.click();
+        await inspector.once("rule-view-refreshed");
+        break;
     }
   }
 }
@@ -64,7 +71,8 @@ async function setPseudoLocks(inspector, view, pseudoClasses) {
 async function resetPseudoLocks(inspector, view) {
   if (!view.hoverCheckbox.checked &&
       !view.activeCheckbox.checked &&
-      !view.focusCheckbox.checked) {
+      !view.focusCheckbox.checked &&
+      !view.focusWithinCheckbox.checked) {
     return;
   }
   if (view.hoverCheckbox.checked) {
@@ -77,6 +85,10 @@ async function resetPseudoLocks(inspector, view) {
   }
   if (view.focusCheckbox.checked) {
     view.focusCheckbox.click();
+    await inspector.once("rule-view-refreshed");
+  }
+  if (view.focusWithinCheckbox.checked) {
+    view.focusWithinCheckbox.click();
     await inspector.once("rule-view-refreshed");
   }
 }
