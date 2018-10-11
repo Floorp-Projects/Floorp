@@ -67,6 +67,8 @@
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
@@ -5194,6 +5196,14 @@ nsIDocument::DispatchContentLoadedEvents()
   nsContentUtils::DispatchTrustedEvent(this, this,
                                        NS_LITERAL_STRING("DOMContentLoaded"),
                                        CanBubble::eYes, Cancelable::eNo);
+
+  if (auto* const window = GetInnerWindow()) {
+    const RefPtr<ServiceWorkerContainer> serviceWorker = window->Navigator()->ServiceWorker();
+
+    // This could cause queued messages from a service worker to get
+    // dispatched on serviceWorker.
+    serviceWorker->StartMessages();
+  }
 
   if (MayStartLayout()) {
     MaybeResolveReadyForIdle();
