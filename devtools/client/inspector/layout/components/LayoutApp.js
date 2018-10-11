@@ -120,9 +120,9 @@ class LayoutApp extends PureComponent {
       // parent flex container of the current selected node.
       if (this.props.flexbox.flexItemContainer &&
           this.props.flexbox.flexItemContainer.actorID) {
-        // Insert the parent flex container to the second index of the accordion item
+        // Insert the parent flex container to the first index of the accordion item
         // list.
-        items.splice(1, 0, {
+        items.splice(0, 0, {
           component: Flexbox,
           componentProps: {
             ...this.props,
