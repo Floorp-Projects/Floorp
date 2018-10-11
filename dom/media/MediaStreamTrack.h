@@ -386,7 +386,7 @@ public:
                                            DOMEventTargetHelper)
 
   nsPIDOMWindowInner* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual AudioStreamTrack* AsAudioStreamTrack() { return nullptr; }
   virtual VideoStreamTrack* AsVideoStreamTrack() { return nullptr; }
