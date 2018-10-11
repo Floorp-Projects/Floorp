@@ -674,10 +674,18 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  if (NS_WARN_IF(response->BodyUsed())) {
-    autoCancel.SetCancelMessage(
-      NS_LITERAL_CSTRING("InterceptedUsedResponseWithURL"), mRequestURL);
-    return;
+  {
+    ErrorResult error;
+    bool bodyUsed = response->GetBodyUsed(error);
+    if (NS_WARN_IF(error.Failed())) {
+      autoCancel.SetCancelErrorResult(aCx, error);
+      return;
+    }
+    if (NS_WARN_IF(bodyUsed)) {
+      autoCancel.SetCancelMessage(
+        NS_LITERAL_CSTRING("InterceptedUsedResponseWithURL"), mRequestURL);
+      return;
+    }
   }
 
   RefPtr<InternalResponse> ir = response->GetInternalResponse();

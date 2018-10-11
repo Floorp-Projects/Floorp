@@ -8,6 +8,7 @@
 #define jsapi_tests_tests_h
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/TypeTraits.h"
 
 #include <errno.h>
@@ -135,6 +136,12 @@ class JSAPITest
     JSAPITestString toSource(unsigned long long v) {
         char buf[40];
         sprintf(buf, "%llu", v);
+        return JSAPITestString(buf);
+    }
+
+    JSAPITestString toSource(double d) {
+        char buf[40];
+        SprintfLiteral(buf, "%17lg", d);
         return JSAPITestString(buf);
     }
 
