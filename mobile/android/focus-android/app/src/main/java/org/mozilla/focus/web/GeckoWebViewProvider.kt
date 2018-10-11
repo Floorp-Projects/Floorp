@@ -213,9 +213,10 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun setRequestDesktop(shouldRequestDesktop: Boolean) {
-            geckoSession.settings.setBoolean(
-                GeckoSessionSettings.USE_DESKTOP_MODE,
-                shouldRequestDesktop
+            geckoSession.settings.setInt(
+                    GeckoSessionSettings.USER_AGENT_MODE,
+                    if (shouldRequestDesktop) GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+                    else GeckoSessionSettings.USER_AGENT_MODE_MOBILE
             )
             callback?.onRequestDesktopStateChanged(shouldRequestDesktop)
         }
@@ -427,6 +428,15 @@ class GeckoWebViewProvider : IWebViewProvider {
         @Suppress("ComplexMethod")
         private fun createNavigationDelegate(): GeckoSession.NavigationDelegate {
             return object : GeckoSession.NavigationDelegate {
+                override fun onLoadError(
+                    session: GeckoSession?,
+                    uri: String?,
+                    category: Int,
+                    error: Int
+                ): GeckoResult<String> {
+                    return GeckoResult(null)
+                }
+
                 override fun onLoadRequest(
                     session: GeckoSession,
                     uri: String,
@@ -620,7 +630,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         ) {
             isLoadingInternalUrl = historyURL == LocalizedContent.URL_RIGHTS || historyURL ==
                     LocalizedContent.URL_ABOUT
-            geckoSession.loadData(data.toByteArray(Charsets.UTF_8), mimeType, baseURL)
+            geckoSession.loadData(data.toByteArray(Charsets.UTF_8), mimeType)
             currentUrl = historyURL
         }
 

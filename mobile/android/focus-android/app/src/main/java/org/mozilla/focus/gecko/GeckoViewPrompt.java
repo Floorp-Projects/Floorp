@@ -40,6 +40,7 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 
 import org.mozilla.focus.R;
+import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
 
@@ -759,6 +760,11 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             Log.e(LOGTAG, "Cannot launch activity", e);
             callback.dismiss();
         }
+    }
+
+    @Override
+    public GeckoResult<Boolean> onPopupRequest(GeckoSession session, String targetUri) {
+        return GeckoResult.fromValue(true);
     }
 
     public void onFileCallbackResult(final int resultCode, final Intent data) {
