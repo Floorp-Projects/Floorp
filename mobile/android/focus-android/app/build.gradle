@@ -11,7 +11,7 @@ apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.2'
+    buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "org.mozilla"
         minSdkVersion 21
@@ -182,6 +182,7 @@ dependencies {
 
     compileOnly 'net.jcip:jcip-annotations:1.0'
     compileOnly "com.github.spotbugs:spotbugs-annotations:$spotbugs_version"
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
 
     implementation "org.mozilla.components:browser-session:$mozilla_components_version"
     implementation "org.mozilla.components:browser-domains:$mozilla_components_version"
@@ -210,7 +211,7 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     testImplementation "org.robolectric:robolectric:4.0-alpha-3" // required to support api level 28
-    testImplementation 'org.mockito:mockito-core:2.19.0'
+    testImplementation 'org.mockito:mockito-core:2.21.0'
     testImplementation "android.arch.core:core-testing:${architecture_components_version}"
 
     androidTestImplementation 'com.android.support.test.uiautomator:uiautomator-v18:2.1.3'
