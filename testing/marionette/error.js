@@ -160,7 +160,8 @@ this.stack = function() {
   let trace = new Error().stack;
   let sa = trace.split("\n");
   sa = sa.slice(1);
-  return "stacktrace:\n" + sa.join("\n");
+  let rv = "stacktrace:\n" + sa.join("\n");
+  return rv.trimEnd();
 };
 
 /**
