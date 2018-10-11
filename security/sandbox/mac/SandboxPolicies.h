@@ -50,8 +50,6 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
   (define sandbox-level-3 (param "SANDBOX_LEVEL_3"))
   (define macosMinorVersion (string->number (param "MAC_OS_MINOR")))
   (define appPath (param "APP_PATH"))
-  (define appBinaryPath (param "APP_BINARY_PATH"))
-  (define appdir-path (param "APP_DIR"))
   (define hasProfileDir (param "HAS_SANDBOXED_PROFILE"))
   (define profileDir (param "PROFILE_DIR"))
   (define home-path (param "HOME_PATH"))
@@ -81,12 +79,12 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
       (subpath "/System")
       (subpath "/usr/lib")
       (subpath "/Library/GPUBundles")
-      (subpath appdir-path))
+      (subpath appPath))
     (allow file-read*
         (subpath "/System")
         (subpath "/usr/lib")
         (subpath "/Library/GPUBundles")
-        (subpath appdir-path)))
+        (subpath appPath)))
 
   ; Allow read access to standard system paths.
   (allow file-read*
@@ -230,9 +228,7 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
       (home-subpath "/Library/Colors")
       (home-subpath "/Library/Keyboard Layouts")
       (home-subpath "/Library/Input Methods")
-      (home-subpath "/Library/Spelling")
-      (literal appPath)
-      (literal appBinaryPath))
+      (home-subpath "/Library/Spelling"))
 
   (if (defined? 'file-map-executable)
     (begin
