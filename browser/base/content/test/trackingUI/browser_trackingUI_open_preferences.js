@@ -31,6 +31,14 @@ async function waitAndAssertPreferencesShown() {
 
 add_task(async function setup() {
   await UrlClassifierTestUtils.addTestTrackers();
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+
+  registerCleanupFunction(() => {
+    Services.telemetry.canRecordExtended = oldCanRecord;
+  });
+
+  Services.telemetry.clearEvents();
 });
 
 // Tests that pressing the preferences icon in the identity popup
@@ -48,6 +56,11 @@ add_task(async function testOpenPreferencesFromPrefsButton() {
     let shown = waitAndAssertPreferencesShown();
     preferencesButton.click();
     await shown;
+
+    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).parent;
+    let clickEvents = events.filter(
+      e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "cb_prefs_button");
+    is(clickEvents.length, 1, "recorded telemetry for the click");
   });
 });
 
@@ -76,6 +89,11 @@ add_task(async function testOpenPreferencesFromAddBlockingButtons() {
       let shown = waitAndAssertPreferencesShown();
       button.click();
       await shown;
+
+      let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).parent;
+      let clickEvents = events.filter(
+        e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3].endsWith("_add_blocking"));
+      is(clickEvents.length, 1, "recorded telemetry for the click");
     }
   });
 });
