@@ -252,7 +252,7 @@ class SystemEngineViewTest {
         engineSession.register(object : EngineSession.Observer {
             override fun onExternalResource(
                 url: String,
-                fileName: String?,
+                fileName: String,
                 contentLength: Long?,
                 contentType: String?,
                 cookie: String?,

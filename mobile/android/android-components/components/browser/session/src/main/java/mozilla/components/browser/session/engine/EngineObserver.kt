@@ -69,7 +69,7 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
 
     override fun onExternalResource(
         url: String,
-        fileName: String?,
+        fileName: String,
         contentLength: Long?,
         contentType: String?,
         cookie: String?,

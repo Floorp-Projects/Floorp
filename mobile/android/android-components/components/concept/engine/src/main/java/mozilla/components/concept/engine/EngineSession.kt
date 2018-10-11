@@ -40,7 +40,7 @@ abstract class EngineSession(
         @Suppress("LongParameterList")
         fun onExternalResource(
             url: String,
-            fileName: String? = null,
+            fileName: String,
             contentLength: Long? = null,
             contentType: String? = null,
             cookie: String? = null,

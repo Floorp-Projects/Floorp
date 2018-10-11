@@ -17,6 +17,7 @@ import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
+import mozilla.components.support.utils.DownloadUtils
 import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
@@ -358,11 +359,13 @@ class GeckoEngineSession(
 
         override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
             notifyObservers {
+                val fileName = response.filename
+                        ?: DownloadUtils.guessFileName(response.uri, null, null)
                 onExternalResource(
-                    url = response.uri,
-                    contentLength = response.contentLength,
-                    contentType = response.contentType,
-                    fileName = response.filename)
+                        url = response.uri,
+                        contentLength = response.contentLength,
+                        contentType = response.contentType,
+                        fileName = fileName)
             }
         }
 

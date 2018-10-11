@@ -28,7 +28,7 @@ class DownloadManagerTest {
     fun setup() {
         download = Download(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
-            null, "application/zip", 5242880,
+            "", "application/zip", 5242880,
             "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
         )
         val context = RuntimeEnvironment.application
