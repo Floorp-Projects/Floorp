@@ -6,6 +6,8 @@
 #ifndef PerformanceMetricsCollector_h
 #define PerformanceMetricsCollector_h
 
+#include "nsIObserver.h"
+#include "nsITimer.h"
 #include "nsID.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"  // defines PerformanceInfoDictionary
 #include "mozilla/dom/DOMTypes.h"   // defines PerformanceInfo
@@ -17,6 +19,23 @@ namespace dom {
 }
 
 class PerformanceMetricsCollector;
+class AggregatedResults;
+
+class IPCTimeout final: public nsIObserver
+{
+public:
+  NS_DECL_NSIOBSERVER
+  NS_DECL_ISUPPORTS
+  static IPCTimeout* CreateInstance(AggregatedResults* aResults);
+  void Cancel();
+
+private:
+  IPCTimeout(AggregatedResults* aResults, uint32_t aDelay);
+  ~IPCTimeout();
+
+  nsCOMPtr<nsITimer> mTimer;
+  AggregatedResults* mResults;
+};
 
 // AggregatedResults receives PerformanceInfo results that are collected
 // via IPDL from all content processes and the main process. They
@@ -38,8 +57,10 @@ public:
   void AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics);
   void SetNumResultsRequired(uint32_t aNumResultsRequired);
   void Abort(nsresult aReason);
+  void ResolveNow();
 
 private:
+  RefPtr<IPCTimeout> mIPCTimeout;
   RefPtr<dom::Promise> mPromise;
   uint32_t mPendingResults;
   FallibleTArray<dom::PerformanceInfoDictionary> mData;
