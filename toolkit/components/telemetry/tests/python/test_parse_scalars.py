@@ -45,6 +45,7 @@ bug_numbers:
                                         "PROVE",
                                         scalar,
                                         strict_type_checks=True)
+        ParserError.exit_func()
 
         self.assertEqual(sclr.notification_emails, ["test01@mozilla.com", "test02@mozilla.com"])
 
