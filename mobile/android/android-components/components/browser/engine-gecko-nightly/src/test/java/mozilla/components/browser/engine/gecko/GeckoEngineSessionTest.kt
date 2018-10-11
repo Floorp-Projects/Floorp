@@ -11,9 +11,11 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.eq
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,7 +27,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -332,6 +333,58 @@ class GeckoEngineSessionTest {
 
         engineSession.geckoSession.navigationDelegate.onLocationChange(null, "about:blank")
         assertEquals("about:blank", observedUrl)
+    }
+
+    @Test
+    fun `GeckoEngineSession keeps track of current url via onPageStart events`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+
+        assertNull(engineSession.currentUrl)
+        engineSession.geckoSession.progressDelegate.onPageStart(engineSession.geckoSession, "https://www.mozilla.org")
+        assertEquals("https://www.mozilla.org", engineSession.currentUrl)
+
+        engineSession.geckoSession.progressDelegate.onPageStart(engineSession.geckoSession, "https://www.firefox.com")
+        assertEquals("https://www.firefox.com", engineSession.currentUrl)
+    }
+
+    @Test
+    fun `WebView client notifies configured history delegate of title changes`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        val historyDelegate: HistoryTrackingDelegate = mock()
+
+        // Nothing breaks if history delegate isn't configured.
+        engineSession.geckoSession.contentDelegate.onTitleChange(engineSession.geckoSession, "Hello World!")
+
+        engineSession.settings.historyTrackingDelegate = historyDelegate
+
+        engineSession.geckoSession.contentDelegate.onTitleChange(engineSession.geckoSession, "Hello World!")
+        verify(historyDelegate, never()).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"), eq(false))
+
+        // This sets the currentUrl.
+        engineSession.geckoSession.progressDelegate.onPageStart(engineSession.geckoSession, "https://www.mozilla.com")
+
+        engineSession.geckoSession.contentDelegate.onTitleChange(engineSession.geckoSession, "Hello World!")
+        verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"), eq(false))
+    }
+
+    @Test
+    fun `WebView client notifies configured history delegate of title changes for private sessions`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java), privateMode = true)
+        val historyDelegate: HistoryTrackingDelegate = mock()
+
+        // Nothing breaks if history delegate isn't configured.
+        engineSession.geckoSession.contentDelegate.onTitleChange(engineSession.geckoSession, "Hello World!")
+
+        engineSession.settings.historyTrackingDelegate = historyDelegate
+
+        engineSession.geckoSession.contentDelegate.onTitleChange(engineSession.geckoSession, "Hello World!")
+        verify(historyDelegate, never()).onTitleChanged(eq(""), eq("Hello World!"), eq(true))
+
+        // This sets the currentUrl.
+        engineSession.geckoSession.progressDelegate.onPageStart(engineSession.geckoSession, "https://www.mozilla.com")
+
+        engineSession.geckoSession.contentDelegate.onTitleChange(engineSession.geckoSession, "Hello World!")
+        verify(historyDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"), eq(true))
     }
 
     @Test

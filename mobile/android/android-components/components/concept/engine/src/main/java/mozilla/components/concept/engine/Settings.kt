@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine
 
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import kotlin.reflect.KProperty
 
@@ -39,6 +40,11 @@ abstract class Settings {
      * Setting to intercept and override requests.
      */
     open var requestInterceptor: RequestInterceptor? by UnsupportedSetting()
+
+    /**
+     * Setting to provide a history delegate to the engine.
+     */
+    open var historyTrackingDelegate: HistoryTrackingDelegate? by UnsupportedSetting()
 
     /**
      * Setting to control the user agent string.
@@ -114,6 +120,7 @@ data class DefaultSettings(
     override var mediaPlaybackRequiresUserGesture: Boolean = true,
     override var trackingProtectionPolicy: TrackingProtectionPolicy? = null,
     override var requestInterceptor: RequestInterceptor? = null,
+    override var historyTrackingDelegate: HistoryTrackingDelegate? = null,
     override var userAgentString: String? = null,
     override var javaScriptCanOpenWindowsAutomatically: Boolean = false,
     override var displayZoomControls: Boolean = true,

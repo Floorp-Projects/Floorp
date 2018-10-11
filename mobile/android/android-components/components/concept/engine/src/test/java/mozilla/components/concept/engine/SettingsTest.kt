@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine
 
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
@@ -29,6 +30,8 @@ class SettingsTest {
             { settings.webFontsEnabled = false },
             { settings.trackingProtectionPolicy },
             { settings.trackingProtectionPolicy = TrackingProtectionPolicy.all() },
+            { settings.historyTrackingDelegate },
+            { settings.historyTrackingDelegate = null },
             { settings.requestInterceptor },
             { settings.requestInterceptor = null },
             { settings.userAgentString },
@@ -70,6 +73,7 @@ class SettingsTest {
         assertTrue(settings.domStorageEnabled)
         assertTrue(settings.javascriptEnabled)
         assertNull(settings.trackingProtectionPolicy)
+        assertNull(settings.historyTrackingDelegate)
         assertNull(settings.requestInterceptor)
         assertNull(settings.userAgentString)
         assertTrue(settings.mediaPlaybackRequiresUserGesture)
@@ -85,12 +89,14 @@ class SettingsTest {
         assertFalse(settings.remoteDebuggingEnabled)
 
         val interceptor: RequestInterceptor = mock()
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
 
         val defaultSettings = DefaultSettings(
             javascriptEnabled = false,
             domStorageEnabled = false,
             webFontsEnabled = false,
             trackingProtectionPolicy = TrackingProtectionPolicy.all(),
+            historyTrackingDelegate = historyTrackingDelegate,
             requestInterceptor = interceptor,
             userAgentString = "userAgent",
             mediaPlaybackRequiresUserGesture = false,
@@ -109,6 +115,7 @@ class SettingsTest {
         assertFalse(defaultSettings.javascriptEnabled)
         assertFalse(defaultSettings.webFontsEnabled)
         assertEquals(TrackingProtectionPolicy.all(), defaultSettings.trackingProtectionPolicy)
+        assertEquals(historyTrackingDelegate, defaultSettings.historyTrackingDelegate)
         assertEquals(interceptor, defaultSettings.requestInterceptor)
         assertEquals("userAgent", defaultSettings.userAgentString)
         assertFalse(defaultSettings.mediaPlaybackRequiresUserGesture)

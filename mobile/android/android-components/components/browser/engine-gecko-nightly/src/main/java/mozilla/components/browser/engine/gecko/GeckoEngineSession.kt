@@ -12,6 +12,7 @@ import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
@@ -35,17 +36,19 @@ import org.mozilla.geckoview.GeckoSessionSettings
 @Suppress("TooManyFunctions")
 class GeckoEngineSession(
     runtime: GeckoRuntime,
-    privateMode: Boolean = false,
+    private val privateMode: Boolean = false,
     defaultSettings: Settings? = null
 ) : EngineSession() {
 
     internal var geckoSession = GeckoSession()
+    internal var currentUrl: String? = null
 
     /**
      * See [EngineSession.settings]
      */
     override val settings: Settings = object : Settings() {
         override var requestInterceptor: RequestInterceptor? = null
+        override var historyTrackingDelegate: HistoryTrackingDelegate? = null
     }
 
     private var initialLoad = true
@@ -311,15 +314,17 @@ class GeckoEngineSession(
             }
 
             notifyObservers {
-                if (securityInfo != null) {
-                    onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.issuerOrganization)
-                } else {
+                if (securityInfo == null) {
                     onSecurityChange(false)
+                    return@notifyObservers
                 }
+                onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.issuerOrganization)
             }
         }
 
         override fun onPageStart(session: GeckoSession?, url: String?) {
+            url?.let { currentUrl = it }
+
             notifyObservers {
                 onProgress(PROGRESS_START)
                 onLoadingStateChange(true)
@@ -336,6 +341,7 @@ class GeckoEngineSession(
         }
     }
 
+    @Suppress("ComplexMethod")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
         override fun onContextMenu(
             session: GeckoSession,
@@ -372,6 +378,9 @@ class GeckoEngineSession(
         override fun onCloseRequest(session: GeckoSession) = Unit
 
         override fun onTitleChange(session: GeckoSession, title: String) {
+            currentUrl?.let {
+                settings.historyTrackingDelegate?.onTitleChanged(it, title, privateMode)
+            }
             notifyObservers { onTitleChange(title) }
         }
 

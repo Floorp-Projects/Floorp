@@ -23,13 +23,14 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.webkit.ValueCallback
 import android.webkit.WebView.HitTestResult.EMAIL_TYPE
 import android.webkit.WebView.HitTestResult.GEO_TYPE
 import android.webkit.WebView.HitTestResult.IMAGE_TYPE
 import android.webkit.WebView.HitTestResult.PHONE_TYPE
 import android.webkit.WebView.HitTestResult.SRC_ANCHOR_TYPE
 import android.webkit.WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE
-import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
@@ -114,6 +115,12 @@ class SystemEngineView @JvmOverloads constructor(
 
     @Suppress("ComplexMethod")
     private fun createWebViewClient() = object : WebViewClient() {
+        override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
+            // TODO private browsing not supported for SystemEngine
+            // https://github.com/mozilla-mobile/android-components/issues/649
+            session?.settings?.historyTrackingDelegate?.onVisited(url, isReload, privateMode = false)
+        }
+
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
             url?.let {
                 currentUrl = url
@@ -240,14 +247,30 @@ class SystemEngineView @JvmOverloads constructor(
 
     private fun isLowOnMemory() = testLowMemory || (context?.isOSOnLowMemory() == true)
 
-    internal fun createWebChromeClient() = object : WebChromeClient() {
+    private fun createWebChromeClient() = object : WebChromeClient() {
+        override fun getVisitedHistory(callback: ValueCallback<Array<String>>) {
+            // TODO private browsing not supported for SystemEngine
+            // https://github.com/mozilla-mobile/android-components/issues/649
+            session?.settings?.historyTrackingDelegate?.getVisited({
+                callback.onReceiveValue(it.toTypedArray())
+            }, privateMode = false)
+        }
+
         override fun onProgressChanged(view: WebView?, newProgress: Int) {
             session?.internalNotifyObservers { onProgress(newProgress) }
         }
 
         override fun onReceivedTitle(view: WebView, title: String?) {
+            val titleOrEmpty = title ?: ""
+            // TODO private browsing not supported for SystemEngine
+            // https://github.com/mozilla-mobile/android-components/issues/649
+            if (currentUrl.isNotEmpty()) {
+                session?.settings?.historyTrackingDelegate?.onTitleChanged(
+                        currentUrl, titleOrEmpty, privateMode = false
+                )
+            }
             session?.internalNotifyObservers {
-                onTitleChange(title ?: "")
+                onTitleChange(titleOrEmpty)
                 onNavigationStateChange(view.canGoBack(), view.canGoForward())
             }
         }
