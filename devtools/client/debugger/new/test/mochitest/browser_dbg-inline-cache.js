@@ -76,7 +76,7 @@ add_task(async function() {
   );
 
   info("Disable HTTP cache for page");
-  await toolbox.target.activeTab.reconfigure({ cacheDisabled: true });
+  await toolbox.target.activeTab.reconfigure({ options: { cacheDisabled: true } });
   makeChanges();
 
   info("Reload inside debugger with toolbox caching disabled (attempt 1)");
@@ -106,7 +106,7 @@ add_task(async function() {
   );
 
   info("Enable HTTP cache for page");
-  await toolbox.target.activeTab.reconfigure({ cacheDisabled: false });
+  await toolbox.target.activeTab.reconfigure({ options: { cacheDisabled: false } });
   makeChanges();
 
   // Even though the HTTP cache is now enabled, Gecko sets the VALIDATE_ALWAYS flag when
