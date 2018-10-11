@@ -345,6 +345,11 @@ var ContentBlocking = {
       this.appMenuButton.setAttribute("enabled", this.enabled);
       this.appMenuButton.setAttribute("aria-pressed", this.enabled);
     }
+
+    // The enabled state of blockers may also change since it depends on this.enabled.
+    for (let blocker of this.blockers) {
+      blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
+    }
   },
 
   updateUIEnabled() {
