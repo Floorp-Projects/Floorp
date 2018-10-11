@@ -20,9 +20,12 @@ const Actions = require("../../actions/index");
 class SidebarRuntimeItem extends PureComponent {
   static get propTypes() {
     return {
-      dispatch: PropTypes.func.isRequired,
-      icon: PropTypes.string.isRequired,
       id: PropTypes.string.isRequired,
+      deviceName: PropTypes.string,
+      dispatch: PropTypes.func.isRequired,
+      // Provided by wrapping the component with FluentReact.withLocalization.
+      getString: PropTypes.func.isRequired,
+      icon: PropTypes.string.isRequired,
       isConnected: PropTypes.bool.isRequired,
       isSelected: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
@@ -48,9 +51,33 @@ class SidebarRuntimeItem extends PureComponent {
     );
   }
 
+  renderNameWithDevice(name, device) {
+    return dom.span(
+      {
+        className: "ellipsis-text",
+        title: `${name} (${device})`
+      },
+      `${name}`,
+      dom.br({}),
+      device
+    );
+  }
+
+  renderName(name) {
+    return dom.span(
+      {
+        className: "ellipsis-text",
+        title: name
+      },
+      `${name}`
+    );
+  }
+
   render() {
     const {
+      deviceName,
       dispatch,
+      getString,
       icon,
       id,
       isConnected,
@@ -58,6 +85,10 @@ class SidebarRuntimeItem extends PureComponent {
       name,
       runtimeId,
     } = this.props;
+
+    const connectionStatus = isConnected ?
+      getString("aboutdebugging-sidebar-runtime-connection-status-connected") :
+      getString("aboutdebugging-sidebar-runtime-connection-status-disconnected");
 
     return SidebarItem(
       {
@@ -68,25 +99,19 @@ class SidebarRuntimeItem extends PureComponent {
           dispatch(Actions.selectPage(id, runtimeId));
         }
       },
-      dom.span(
-        { className: "ellipsis-text" },
-        dom.img(
-          {
-            className: "sidebar-runtime-item__icon " +
-             `${isConnected ? "sidebar-runtime-item__icon--connected" : "" }`,
-            src: icon,
-          }
-        ),
-        dom.span(
-          {
-            title: name,
-          },
-          ` ${name}`
-        ),
+      dom.img(
+        {
+          className: "sidebar-runtime-item__icon " +
+            `${isConnected ? "sidebar-runtime-item__icon--connected" : "" }`,
+          src: icon,
+          alt: connectionStatus,
+          title: connectionStatus
+        }
       ),
+      deviceName ? this.renderNameWithDevice(name, deviceName) : this.renderName(name),
       !isConnected ? this.renderConnectButton() : null
     );
   }
 }
 
-module.exports = SidebarRuntimeItem;
+module.exports = FluentReact.withLocalization(SidebarRuntimeItem);
