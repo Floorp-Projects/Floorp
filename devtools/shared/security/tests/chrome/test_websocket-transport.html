@@ -56,11 +56,7 @@ window.onload = function() {
 
     // Send a message the server that will echo back
     const message = "message";
-    const reply = await client.request({
-      to: "root",
-      type: "echo",
-      message
-    });
+    const reply = await client.mainRoot.echo({ message });
     is(reply.message, message, "Echo message matches");
 
     client.removeListener("closed", onUnexpectedClose);

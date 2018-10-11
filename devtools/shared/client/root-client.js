@@ -310,6 +310,26 @@ RootClient.prototype = {
    */
   protocolDescription: DebuggerClient.requester({ type: "protocolDescription" }),
 
+  /**
+   * Special request, actually supported by all actors to retrieve the list of all
+   * the request names supported by this actor.
+   */
+  requestTypes: DebuggerClient.requester({ type: "requestTypes" }),
+
+  /**
+   * Test request that returns the object passed as first argument.
+   *
+   * `echo` is special as all the property of the given object have to be passed
+   * on the packet object. That's not something that can be achieve by requester helper.
+   */
+  echo(object) {
+    const packet = Object.assign(object, {
+      to: this.actor,
+      type: "echo",
+    });
+    return this.request(packet);
+  },
+
   /*
    * Methods constructed by DebuggerClient.requester require these forwards
    * on their 'this'.
