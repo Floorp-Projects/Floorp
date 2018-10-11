@@ -402,6 +402,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
+  LiveBookmarkMigrator: "resource:///modules/LiveBookmarkMigrator.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
@@ -1580,6 +1581,12 @@ BrowserGlue.prototype = {
     Services.tm.idleDispatchToMainThread(() => {
       Blocklist.loadBlocklistAsync();
     });
+
+    if (Services.prefs.getIntPref("browser.livebookmarks.migrationAttemptsLeft", 0) > 0) {
+      Services.tm.idleDispatchToMainThread(() => {
+        LiveBookmarkMigrator.migrate().catch(Cu.reportError);
+      });
+    }
   },
 
   /**
@@ -2124,7 +2131,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 73;
+    const UI_VERSION = 74;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2469,6 +2476,13 @@ BrowserGlue.prototype = {
         const path = OS.Path.join(OS.Constants.Path.profileDir, `blocklists-${filename}`);
         OS.File.remove(path, { ignoreAbsent: true });
       }
+    }
+
+    if (currentUIVersion < 74) {
+      // Ensure we try to migrate any live bookmarks the user might have, trying up to
+      // 5 times. We set this early, and here, to avoid running the migration on
+      // new profile (or, indeed, ever creating the pref there).
+      Services.prefs.setIntPref("browser.livebookmarks.migrationAttemptsLeft", 5);
     }
 
     // Update the migration version.

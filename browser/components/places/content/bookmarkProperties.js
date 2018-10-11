@@ -13,7 +13,6 @@
  *         - "folder"
  *           @ URIList (Array of nsIURI objects) - optional, list of uris to
  *             be bookmarked under the new folder.
- *         - "livemark"
  *       @ uri (nsIURI object) - optional, the default uri for the new item.
  *         The property is not used for the "folder with items" type.
  *       @ title (String) - optional, the default title for the new item.
@@ -23,7 +22,7 @@
  *       @ postData (String) - optional, POST data to accompany the keyword.
  *       @ charSet (String) - optional, character-set to accompany the keyword.
  *      Notes:
- *        1) If |uri| is set for a bookmark/livemark item and |title| isn't,
+ *        1) If |uri| is set for a bookmark and |title| isn't,
  *           the dialog will query the history tables for the title associated
  *           with the given uri. If the dialog is set to adding a folder with
  *           bookmark items under it (see URIList), a default static title is
@@ -35,7 +34,7 @@
  *         - "bookmark"
  *           @ node (an nsINavHistoryResultNode object) - a node representing
  *             the bookmark.
- *         - "folder" (also applies to livemarks)
+ *         - "folder"
  *           @ node (an nsINavHistoryResultNode object) - a node representing
  *             the folder.
  *   @ hiddenRows (Strings array) - optional, list of rows to be hidden
@@ -72,7 +71,6 @@ XPCOMUtils.defineLazyScriptGetter(this, ["PlacesInsertionPoint", "PlacesControll
 
 const BOOKMARK_ITEM = 0;
 const BOOKMARK_FOLDER = 1;
-const LIVEMARK_CONTAINER = 2;
 
 const ACTION_EDIT = 0;
 const ACTION_ADD = 1;
@@ -113,9 +111,6 @@ var BookmarkPropertiesPanel = {
       if (this._URIs.length)
         return this._strings.getString("dialogAcceptLabelAddMulti");
 
-      if (this._itemType == LIVEMARK_CONTAINER)
-        return this._strings.getString("dialogAcceptLabelAddLivemark");
-
       if (this._dummyItem)
         return this._strings.getString("dialogAcceptLabelAddItem");
 
@@ -132,8 +127,6 @@ var BookmarkPropertiesPanel = {
     if (this._action == ACTION_ADD) {
       if (this._itemType == BOOKMARK_ITEM)
         return this._strings.getString("dialogTitleAddBookmark");
-      if (this._itemType == LIVEMARK_CONTAINER)
-        return this._strings.getString("dialogTitleAddLivemark");
 
       // add folder
       if (this._itemType != BOOKMARK_FOLDER)
@@ -211,21 +204,6 @@ var BookmarkPropertiesPanel = {
               this._dummyItem = true;
           }
           break;
-
-        case "livemark":
-          this._itemType = LIVEMARK_CONTAINER;
-          if ("feedURI" in dialogInfo)
-            this._feedURI = dialogInfo.feedURI;
-          if ("siteURI" in dialogInfo)
-            this._siteURI = dialogInfo.siteURI;
-
-          if (!this._title) {
-            if (this._feedURI) {
-              this._title = await PlacesUtils.history.fetch(this._feedURI) ||
-                            this._feedURI.spec;
-            } else
-              this._title = this._strings.getString("newLivemarkDefault");
-          }
       }
     } else { // edit
       this._node = dialogInfo.node;
@@ -473,12 +451,6 @@ var BookmarkPropertiesPanel = {
       }
 
       itemGuid = await PlacesTransactions.NewBookmark(info).transact();
-    } else if (this._itemType == LIVEMARK_CONTAINER) {
-      info.feedUrl = this._feedURI;
-      if (this._siteURI)
-        info.siteUrl = this._siteURI;
-
-      itemGuid = await PlacesTransactions.NewLivemark(info).transact();
     } else if (this._itemType == BOOKMARK_FOLDER) {
       // NewFolder requires a url rather than uri.
       info.children = this._URIs.map(item => {

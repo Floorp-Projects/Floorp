@@ -126,10 +126,8 @@ function getAnnotationsForItem(aItemId) {
  *
  * @param aNode
  *        An nsINavHistoryResultNode
- * @param aIsLivemark
- *        Whether the node represents a livemark.
  */
-function serializeNode(aNode, aIsLivemark) {
+function serializeNode(aNode) {
   let data = {};
 
   data.title = aNode.title;
@@ -138,7 +136,6 @@ function serializeNode(aNode, aIsLivemark) {
   // backwards compat of drag and drop with older Firefox versions.
   data.id = aNode.itemId;
   data.itemGuid = aNode.bookmarkGuid;
-  data.livemark = aIsLivemark;
   // Add an instanceId so we can tell which instance of an FF session the data
   // is coming from.
   data.instanceId = PlacesUtils.instanceId;
@@ -923,13 +920,9 @@ var PlacesUtils = {
    *          The Result node to wrap (serialize)
    * @param   aType
    *          The content type to serialize as
-   * @param   [optional] aFeedURI
-   *          Used instead of the node's URI if provided.
-   *          This is useful for wrapping a livemark as TYPE_X_MOZ_URL,
-   *          TYPE_HTML or TYPE_UNICODE.
    * @return  A string serialization of the node
    */
-  wrapNode(aNode, aType, aFeedURI) {
+  wrapNode(aNode, aType) {
     // when wrapping a node, we want all the items, even if the original
     // query options are excluding them.
     // This can happen when copying from the left hand pane of the bookmarks
@@ -960,10 +953,6 @@ var PlacesUtils = {
       // escape out potential HTML in the title
       let escapedTitle = node.title ? htmlEscape(node.title) : "";
 
-      if (aFeedURI) {
-        return `<A HREF="${aFeedURI}">${escapedTitle}</A>${NEWLINE}`;
-      }
-
       if (PlacesUtils.nodeIsContainer(node)) {
         asContainer(node);
         let wasOpen = node.containerOpen;
@@ -990,10 +979,6 @@ var PlacesUtils = {
     }
 
     function gatherDataText(node) {
-      if (aFeedURI) {
-        return aFeedURI;
-      }
-
       if (PlacesUtils.nodeIsContainer(node)) {
         asContainer(node);
         let wasOpen = node.containerOpen;
@@ -1022,11 +1007,12 @@ var PlacesUtils = {
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
       case this.TYPE_X_MOZ_PLACE_CONTAINER: {
         // Serialize the node to JSON.
-        return serializeNode(aNode, aFeedURI);
+        return serializeNode(aNode);
       }
       case this.TYPE_X_MOZ_URL: {
-        if (aFeedURI || PlacesUtils.nodeIsURI(aNode))
-          return (aFeedURI || aNode.uri) + NEWLINE + aNode.title;
+        if (PlacesUtils.nodeIsURI(aNode)) {
+          return aNode.uri + NEWLINE + aNode.title;
+        }
         if (PlacesUtils.nodeIsContainer(aNode)) {
           return PlacesUtils.getURLsForContainerNode(aNode)
             .map(item => item.uri + "\n" + item.title)

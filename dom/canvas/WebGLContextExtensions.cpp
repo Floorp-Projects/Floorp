@@ -39,6 +39,8 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
         WEBGL_EXTENSION_IDENTIFIER(EXT_frag_depth)
         WEBGL_EXTENSION_IDENTIFIER(EXT_shader_texture_lod)
         WEBGL_EXTENSION_IDENTIFIER(EXT_sRGB)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_texture_compression_bptc)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_texture_compression_rgtc)
         WEBGL_EXTENSION_IDENTIFIER(EXT_texture_filter_anisotropic)
         WEBGL_EXTENSION_IDENTIFIER(EXT_disjoint_timer_query)
         WEBGL_EXTENSION_IDENTIFIER(MOZ_debug)
@@ -51,7 +53,6 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
         WEBGL_EXTENSION_IDENTIFIER(OES_vertex_array_object)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_color_buffer_float)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_astc)
-        WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_atc)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_etc)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_etc1)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_pvrtc)
@@ -120,6 +121,16 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     switch (ext) {
     // In alphabetical order
     // EXT_
+    case WebGLExtensionID::EXT_texture_compression_bptc:
+        if (!gfxPrefs::WebGLDraftExtensionsEnabled())
+            return false;
+        return WebGLExtensionCompressedTextureBPTC::IsSupported(this);
+
+    case WebGLExtensionID::EXT_texture_compression_rgtc:
+        if (!gfxPrefs::WebGLDraftExtensionsEnabled())
+            return false;
+        return WebGLExtensionCompressedTextureRGTC::IsSupported(this);
+
     case WebGLExtensionID::EXT_texture_filter_anisotropic:
         return gl->IsExtensionSupported(gl::GLContext::EXT_texture_filter_anisotropic);
 
@@ -130,8 +141,6 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     // WEBGL_
     case WebGLExtensionID::WEBGL_compressed_texture_astc:
         return WebGLExtensionCompressedTextureASTC::IsSupported(this);
-    case WebGLExtensionID::WEBGL_compressed_texture_atc:
-        return gl->IsExtensionSupported(gl::GLContext::AMD_compressed_ATC_texture);
     case WebGLExtensionID::WEBGL_compressed_texture_etc:
         return gl->IsSupported(gl::GLFeature::ES3_compatibility) &&
                !gl->IsANGLE();
@@ -345,6 +354,12 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
     case WebGLExtensionID::EXT_sRGB:
         obj = new WebGLExtensionSRGB(this);
         break;
+    case WebGLExtensionID::EXT_texture_compression_bptc:
+        obj = new WebGLExtensionCompressedTextureBPTC(this);
+        break;
+    case WebGLExtensionID::EXT_texture_compression_rgtc:
+        obj = new WebGLExtensionCompressedTextureRGTC(this);
+        break;
     case WebGLExtensionID::EXT_texture_filter_anisotropic:
         obj = new WebGLExtensionTextureFilterAnisotropic(this);
         break;
@@ -383,9 +398,6 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
         break;
     case WebGLExtensionID::WEBGL_compressed_texture_astc:
         obj = new WebGLExtensionCompressedTextureASTC(this);
-        break;
-    case WebGLExtensionID::WEBGL_compressed_texture_atc:
-        obj = new WebGLExtensionCompressedTextureATC(this);
         break;
     case WebGLExtensionID::WEBGL_compressed_texture_etc:
         obj = new WebGLExtensionCompressedTextureES3(this);

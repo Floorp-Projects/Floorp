@@ -63,6 +63,7 @@
 #include "WebGLContextLossHandler.h"
 #include "WebGLContextUtils.h"
 #include "WebGLExtensions.h"
+#include "WebGLFormats.h"
 #include "WebGLFramebuffer.h"
 #include "WebGLMemoryTracker.h"
 #include "WebGLObjectModel.h"

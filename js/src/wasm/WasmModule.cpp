@@ -193,7 +193,12 @@ Module::testingBlockOnTier2Complete() const
 Module::serializedSize(const LinkData& linkData) const
 {
     JS::BuildIdCharVector buildId;
-    JS::GetOptimizedEncodingBuildId(&buildId);
+    {
+        AutoEnterOOMUnsafeRegion oom;
+        if (!GetOptimizedEncodingBuildId(&buildId)) {
+            oom.crash("getting build id");
+        }
+    }
 
     return SerializedPodVectorSize(buildId) +
            linkData.serializedSize() +
@@ -212,7 +217,12 @@ Module::serialize(const LinkData& linkData, uint8_t* begin, size_t size) const
     MOZ_RELEASE_ASSERT(code_->hasTier(Tier::Serialized));
 
     JS::BuildIdCharVector buildId;
-    JS::GetOptimizedEncodingBuildId(&buildId);
+    {
+        AutoEnterOOMUnsafeRegion oom;
+        if (!GetOptimizedEncodingBuildId(&buildId)) {
+            oom.crash("getting build id");
+        }
+    }
 
     uint8_t* cursor = begin;
     cursor = SerializePodVector(cursor, buildId);
@@ -240,7 +250,9 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
     const uint8_t* cursor = begin;
 
     JS::BuildIdCharVector currentBuildId;
-    JS::GetOptimizedEncodingBuildId(&currentBuildId);
+    if (!GetOptimizedEncodingBuildId(&currentBuildId)) {
+        return nullptr;
+    }
 
     JS::BuildIdCharVector deserializedBuildId;
     cursor = DeserializePodVector(cursor, &deserializedBuildId);
