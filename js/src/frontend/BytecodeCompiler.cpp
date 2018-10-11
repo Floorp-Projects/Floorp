@@ -51,7 +51,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     // Call this before calling compile{Global,Eval}Script.
     MOZ_MUST_USE bool prepareScriptParse() {
-        return createSourceAndParser(ParseGoal::Script);
+        return createSourceAndParser(ParseGoal::Script) && createScript();
     }
 
     JSScript* compileGlobalScript(ScopeKind scopeKind);
@@ -81,6 +81,11 @@ class MOZ_STACK_CLASS BytecodeCompiler
         MOZ_ASSERT(scriptSource != nullptr);
         MOZ_ASSERT(usedNames.isSome());
         MOZ_ASSERT(parser.isSome());
+    }
+
+    void assertSourceParserAndScriptCreated() const {
+        assertSourceAndParserCreated();
+        MOZ_ASSERT(script != nullptr);
     }
 
     JSScript* compileScript(HandleObject environment, SharedContext* sc);
@@ -350,11 +355,7 @@ BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObj
 JSScript*
 BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
 {
-    assertSourceAndParserCreated();
-
-    if (!createScript()) {
-        return nullptr;
-    }
+    assertSourceParserAndScriptCreated();
 
     TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
 
