@@ -64,6 +64,7 @@ class ICState
 
     Mode mode() const { return mode_; }
     size_t numOptimizedStubs() const { return numOptimizedStubs_; }
+    bool hasFailures() const { return (numFailures_ != 0); }
 
     MOZ_ALWAYS_INLINE bool canAttachStub() const {
         // Note: we cannot assert that numOptimizedStubs_ <= MaxOptimizedStubs
@@ -110,7 +111,10 @@ class ICState
         // methods, because they are only used by CacheIR ICs.
         MOZ_ASSERT(numOptimizedStubs_ < 16);
         numOptimizedStubs_++;
-        numFailures_ = 0;
+        // As a heuristic, reduce the failure count after each successful attach
+        // to delay hitting Generic mode. Reset to 1 instead of 0 so that
+        // BaselineInspector can distinguish no-failures from rare-failures.
+        numFailures_ = std::min(numFailures_, static_cast<uint8_t>(1));
     }
     void trackNotAttached() {
         // Note: we can't assert numFailures_ < maxFailures() because
