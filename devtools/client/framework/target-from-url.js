@@ -75,7 +75,7 @@ exports.targetFromURL = async function targetFromURL(url) {
       if (isNaN(id)) {
         id = 0;
       }
-      const response = await client.getProcess(id);
+      const response = await client.mainRoot.getProcess(id);
       form = response.form;
       chrome = true;
     } catch (ex) {
