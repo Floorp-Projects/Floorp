@@ -54,8 +54,10 @@ var test_bookmarks = {
       url: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
       feedUrl: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
     },
+    // This will be ignored, because it has no url.
     { title: "Latest Headlines No Site",
       feedUrl: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
+      ignore: true,
     },
   ],
   unfiled: [
@@ -260,7 +262,7 @@ async function testImportedBookmarks() {
 
     let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks[`${group}Guid`]).root;
 
-    let items = test_bookmarks[group];
+    let items = test_bookmarks[group].filter(b => !b.ignore);
     Assert.equal(root.childCount, items.length);
 
     for (let key in items) {
@@ -272,8 +274,6 @@ async function testImportedBookmarks() {
 }
 
 function checkItem(aExpected, aNode) {
-  let id = aNode.itemId;
-
   return (async function() {
     let bookmark = await PlacesUtils.bookmarks.fetch(aNode.bookmarkGuid);
 
@@ -294,8 +294,7 @@ function checkItem(aExpected, aNode) {
                        aExpected.lastModified);
           break;
         case "url":
-          if (!("feedUrl" in aExpected))
-            Assert.equal(aNode.uri, aExpected.url);
+          Assert.equal(aNode.uri, aExpected.url);
           break;
         case "icon":
           let {data} = await getFaviconDataForPage(aExpected.url);
@@ -318,11 +317,7 @@ function checkItem(aExpected, aNode) {
           Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), aExpected.charset);
           break;
         case "feedUrl":
-          let livemark = await PlacesUtils.livemarks.getLivemark({ id });
-          if (aExpected.url) {
-            Assert.equal(livemark.siteURI.spec, aExpected.url);
-          }
-          Assert.equal(livemark.feedURI.spec, aExpected.feedUrl);
+          // No more supported.
           break;
         case "children":
           let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);

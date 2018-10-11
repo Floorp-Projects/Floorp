@@ -508,33 +508,6 @@ var PlacesCommandHook = {
   },
 
   /**
-   * Adds a Live Bookmark to a feed associated with the current page.
-   * @param     url
-   *            The nsIURI of the page the feed was attached to
-   * @title     title
-   *            The title of the feed. Optional.
-   */
-  async addLiveBookmark(url, feedTitle) {
-    let toolbarIP = new PlacesInsertionPoint({
-      parentId: PlacesUtils.toolbarFolderId,
-      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    });
-
-    let feedURI = makeURI(url);
-    let title = feedTitle || gBrowser.contentTitle;
-
-    PlacesUIUtils.showBookmarkDialog({ action: "add",
-                                       type: "livemark",
-                                       feedURI,
-                                       siteURI: gBrowser.currentURI,
-                                       title,
-                                       defaultInsertionPoint: toolbarIP,
-                                       hiddenRows: [ "feedLocation",
-                                                     "siteLocation" ],
-                                     }, window);
-  },
-
-  /**
    * Opens the Places Organizer.
    * @param {String} item The item to select in the organizer window,
    *                      options are (case sensitive):

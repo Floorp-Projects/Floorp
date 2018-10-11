@@ -78,18 +78,6 @@ jobs:
           - {hour: 16, minute: 0}
           - {hour: 4, minute: 0}
 
-    - name: nightly-dmd
-      job:
-          type: decision-task
-          treeherder-symbol: Ndmd
-          target-tasks-method: nightly_dmd
-      run-on-projects:
-          - mozilla-central
-      when:
-          by-project:
-              mozilla-central: [{hour: 10, minute: 0}]
-              # No default
-
     - name: searchfox-index
       job:
           type: decision-task

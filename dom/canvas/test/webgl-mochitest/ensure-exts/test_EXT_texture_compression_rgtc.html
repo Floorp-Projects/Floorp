@@ -10,7 +10,11 @@
     <script>
 
 'use strict';
-EnsureExt('WEBGL_compressed_texture_atc');
+EnsureExt('EXT_texture_compression_rgtc', false);
+
+Lastly_WithDraftExtsEnabled(() => {
+  EnsureExt('EXT_texture_compression_rgtc', true);
+});
 
     </script>
   </body>

@@ -79,12 +79,13 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
-class WebGLExtensionCompressedTextureATC
+class WebGLExtensionCompressedTextureBPTC final
     : public WebGLExtensionBase
 {
 public:
-    explicit WebGLExtensionCompressedTextureATC(WebGLContext*);
-    virtual ~WebGLExtensionCompressedTextureATC();
+    explicit WebGLExtensionCompressedTextureBPTC(WebGLContext* webgl);
+
+    static bool IsSupported(const WebGLContext* webgl);
 
     DECL_WEBGL_EXTENSION_GOOP
 };
@@ -115,6 +116,17 @@ class WebGLExtensionCompressedTexturePVRTC
 public:
     explicit WebGLExtensionCompressedTexturePVRTC(WebGLContext*);
     virtual ~WebGLExtensionCompressedTexturePVRTC();
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
+class WebGLExtensionCompressedTextureRGTC final
+    : public WebGLExtensionBase
+{
+public:
+    explicit WebGLExtensionCompressedTextureRGTC(WebGLContext* webgl);
+
+    static bool IsSupported(const WebGLContext* webgl);
 
     DECL_WEBGL_EXTENSION_GOOP
 };
