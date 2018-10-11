@@ -318,7 +318,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     const client = new DebuggerClient(transport);
 
     await client.connect();
-    const response = await client.getProcess(processId);
+    const response = await client.mainRoot.getProcess(processId);
     const options = {
       form: response.form,
       client: client,
