@@ -5,7 +5,6 @@
 package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
@@ -586,18 +585,20 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    @ReuseSession(false) // XXX automation crash fix (bug 1485107)
-    @WithDevToolsAPI
-    @Ignore @Test fun autoFill() {
+    @Test fun autoFill() {
         // Wait for the accessibility nodes to populate.
         mainSession.loadTestPath(FORMS_HTML_PATH)
-        sessionRule.waitUntilCalled(object : EventDelegate {
-            // For the root document and the iframe document, each has a form group and
-            // a group for inputs outside of forms, so the total count is 4.
-            @AssertCalled(count = 4)
-            override fun onWinContentChanged(event: AccessibilityEvent) {
-            }
-        })
+//        sessionRule.waitUntilCalled(object : EventDelegate {
+//            // For the root document and the iframe document, each has a form group and
+//            // a group for inputs outside of forms, so the total count is 4.
+//            @AssertCalled(count = 4)
+//            override fun onWinContentChanged(event: AccessibilityEvent) {
+//            }
+//        })
+        // A quick but not reliable way to test the a11y tree. The next patch will have events
+        // to work with..
+        sessionRule.waitForPageStop()
+
 
         val autoFills = mapOf(
                 "#user1" to "bar", "#pass1" to "baz", "#user2" to "bar", "#pass2" to "baz") +
@@ -667,7 +668,6 @@ class AccessibilityTest : BaseSessionTest() {
         }
     }
 
-    @ReuseSession(false) // XXX automation crash fix (bug 1485107)
     @Ignore @Test fun autoFill_navigation() {
         fun countAutoFillNodes(cond: (AccessibilityNodeInfo) -> Boolean =
                                        { it.className == "android.widget.EditText" },
@@ -717,11 +717,6 @@ class AccessibilityTest : BaseSessionTest() {
         })
         assertThat("Should have one focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(1))
-        // The focused field, its siblings, and its parent should be visible.
-        assertThat("Should have six visible nodes",
-                   countAutoFillNodes({ node -> node.isVisibleToUser &&
-                           !(Rect().also({ node.getBoundsInScreen(it) }).isEmpty) }),
-                   equalTo(6))
 
         mainSession.evaluateJS("$('#pass1').blur()")
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -731,5 +726,133 @@ class AccessibilityTest : BaseSessionTest() {
         })
         assertThat("Should not have focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
+    }
+
+    @Test fun testTree() {
+        sessionRule.session.loadString(
+                "<label for='name'>Name:</label><input id='name' type='text' value='Julie'><button>Submit</button>",
+                "text/html")
+        // waitForInitialFocus()
+        // A quick but not reliable way to test the a11y tree. The next patch will have events
+        // to work with..
+        sessionRule.waitForPageStop()
+
+        val rootNode = createNodeInfo(View.NO_ID)
+        assertThat("Document has 3 children", rootNode.childCount, equalTo(3))
+
+        val labelNode = createNodeInfo(rootNode.getChildId(0))
+        assertThat("First node is a label", labelNode.className.toString(), equalTo("android.view.View"))
+        assertThat("Label has text", labelNode.text.toString(), equalTo("Name:"))
+
+        val entryNode = createNodeInfo(rootNode.getChildId(1))
+        assertThat("Second node is an entry", entryNode.className.toString(), equalTo("android.widget.EditText"))
+        assertThat("Entry value is text", entryNode.text.toString(), equalTo("Julie"))
+        if (Build.VERSION.SDK_INT >= 19) {
+            assertThat("Entry hint is label",
+                    entryNode.extras.getString("AccessibilityNodeInfo.hint"),
+                    equalTo("Name:"))
+            assertThat("Entry input type is correct", entryNode.inputType,
+                    equalTo(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT))
+        }
+
+
+        val buttonNode = createNodeInfo(rootNode.getChildId(2))
+        assertThat("Last node is a button", buttonNode.className.toString(), equalTo("android.widget.Button"))
+        assertThat("Button has a single text leaf", buttonNode.childCount, equalTo(1))
+        assertThat("Button has correct text", buttonNode.text.toString(), equalTo("Submit"))
+
+        val textLeaf = createNodeInfo(buttonNode.getChildId(0))
+        assertThat("First node is a label", textLeaf.className.toString(), equalTo("android.view.View"))
+        assertThat("Text leaf has correct text", textLeaf.text.toString(), equalTo("Submit"))
+    }
+
+    @Test fun testCollection() {
+        sessionRule.session.loadString(
+                """<ul>
+                  |  <li>One</li>
+                  |  <li>Two</li>
+                  |</ul>
+                  |<ul>
+                  |  <li>1<ul><li>1.1</li><li>1.2</li></ul></li>
+                  |</ul>
+                """.trimMargin(),
+                "text/html")
+        // waitForInitialFocus()
+        // A quick but not reliable way to test the a11y tree. The next patch will have events
+        // to work with..
+        sessionRule.waitForPageStop()
+
+        val rootNode = createNodeInfo(View.NO_ID)
+        assertThat("Document has 2 children", rootNode.childCount, equalTo(2))
+
+        val firstList = createNodeInfo(rootNode.getChildId(0))
+        assertThat("First list has 2 children", firstList.childCount, equalTo(2))
+        assertThat("List is a ListView", firstList.className.toString(), equalTo("android.widget.ListView"))
+        if (Build.VERSION.SDK_INT >= 19) {
+            assertThat("First list should have collectionInfo", firstList.collectionInfo, notNullValue())
+            assertThat("First list has 2 rowCount", firstList.collectionInfo.rowCount, equalTo(2))
+            assertThat("First list should not be hierarchical", firstList.collectionInfo.isHierarchical, equalTo(false))
+        }
+
+        val firstListFirstItem = createNodeInfo(firstList.getChildId(0))
+        if (Build.VERSION.SDK_INT >= 19) {
+            assertThat("Item has collectionItemInfo", firstListFirstItem.collectionItemInfo, notNullValue())
+            assertThat("Item has collectionItemInfo", firstListFirstItem.collectionItemInfo.rowIndex, equalTo(1))
+        }
+
+        val secondList = createNodeInfo(rootNode.getChildId(1))
+        assertThat("Second list has 1 child", secondList.childCount, equalTo(1))
+        if (Build.VERSION.SDK_INT >= 19) {
+            assertThat("Second list should have collectionInfo", secondList.collectionInfo, notNullValue())
+            assertThat("Second list has 2 rowCount", secondList.collectionInfo.rowCount, equalTo(1))
+            assertThat("Second list should be hierarchical", secondList.collectionInfo.isHierarchical, equalTo(true))
+        }
+    }
+
+    @Test fun testRange() {
+        sessionRule.session.loadString(
+                """<input type="range" aria-label="Rating" min="1" max="10" value="4">
+                  |<input type="range" aria-label="Stars" min="1" max="5" step="0.5" value="4.5">
+                  |<input type="range" aria-label="Percent" min="0" max="1" step="0.01" value="0.83">
+                """.trimMargin(),
+                "text/html")
+        // waitForInitialFocus()
+        // A quick but not reliable way to test the a11y tree. The next patch will have events
+        // to work with..
+        sessionRule.waitForPageStop()
+
+        val rootNode = createNodeInfo(View.NO_ID)
+        assertThat("Document has 3 children", rootNode.childCount, equalTo(3))
+
+        val firstRange = createNodeInfo(rootNode.getChildId(0))
+        assertThat("Range has right label", firstRange.text.toString(), equalTo("Rating"))
+        assertThat("Range is SeekBar", firstRange.className.toString(), equalTo("android.widget.SeekBar"))
+        if (Build.VERSION.SDK_INT >= 19) {
+            assertThat("'Rating' has rangeInfo", firstRange.rangeInfo, notNullValue())
+            assertThat("'Rating' has correct value", firstRange.rangeInfo.current, equalTo(4f))
+            assertThat("'Rating' has correct max", firstRange.rangeInfo.max, equalTo(10f))
+            assertThat("'Rating' has correct min", firstRange.rangeInfo.min, equalTo(1f))
+            assertThat("'Rating' has correct range type", firstRange.rangeInfo.type, equalTo(AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_INT))
+        }
+
+        val secondRange = createNodeInfo(rootNode.getChildId(1))
+        assertThat("Range has right label", secondRange.text.toString(), equalTo("Stars"))
+        if (Build.VERSION.SDK_INT >= 19) {
+            assertThat("'Rating' has rangeInfo", secondRange.rangeInfo, notNullValue())
+            assertThat("'Rating' has correct value", secondRange.rangeInfo.current, equalTo(4.5f))
+            assertThat("'Rating' has correct max", secondRange.rangeInfo.max, equalTo(5f))
+            assertThat("'Rating' has correct min", secondRange.rangeInfo.min, equalTo(1f))
+            assertThat("'Rating' has correct range type", secondRange.rangeInfo.type, equalTo(AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_FLOAT))
+        }
+
+        val thirdRange = createNodeInfo(rootNode.getChildId(2))
+        assertThat("Range has right label", thirdRange.text.toString(), equalTo("Percent"))
+        if (Build.VERSION.SDK_INT >= 19) {
+            assertThat("'Rating' has rangeInfo", thirdRange.rangeInfo, notNullValue())
+            assertThat("'Rating' has correct value", thirdRange.rangeInfo.current, equalTo(0.83f))
+            assertThat("'Rating' has correct max", thirdRange.rangeInfo.max, equalTo(1f))
+            assertThat("'Rating' has correct min", thirdRange.rangeInfo.min, equalTo(0f))
+            assertThat("'Rating' has correct range type", thirdRange.rangeInfo.type, equalTo(AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_PERCENT))
+        }
     }
 }
