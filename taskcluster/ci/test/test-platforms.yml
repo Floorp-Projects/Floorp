@@ -320,7 +320,6 @@ android-em-4.3-arm7-api-16/debug:
     build-platform: android-api-16/debug
     test-sets:
         - android-common-tests
-        - android-gradle-tests
 
 android-em-4.3-arm7-api-16-ccov/debug:
     build-platform: android-api-16-ccov/debug
@@ -332,7 +331,6 @@ android-em-4.3-arm7-api-16/opt:
     test-sets:
         - android-common-tests
         - android-opt-tests
-        - android-gradle-tests
 
 android-em-4.2-x86/opt:
     build-platform: android-x86/opt

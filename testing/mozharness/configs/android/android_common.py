@@ -323,15 +323,6 @@ config = {
                 "%(marionette_extra)s",
             ],
         },
-        "geckoview": {
-            "run_filename": "rungeckoview.py",
-            "testsdir": "mochitest",
-            "options": [
-                "--utility-path=%(utility_path)s",
-                "--symbols-path=%(symbols_path)s",
-                "--deviceSerial=%(device_serial)s",
-            ],
-        },
         "geckoview-junit": {
             "run_filename": "runjunit.py",
             "testsdir": "mochitest",
