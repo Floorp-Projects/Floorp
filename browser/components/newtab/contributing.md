@@ -111,7 +111,7 @@ You can also write a detailed description of the commit:
 Just as in the **subject**, use the imperative, present tense: "change" not "changed" nor "changes"
 It should include the motivation for the change and contrast this with previous behavior.
 
-###Footer
+### Footer
 The footer should contain any information about **Breaking Changes** and is also the place to
 reference GitHub issues that this commit **Closes**.
 

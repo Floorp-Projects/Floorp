@@ -362,3 +362,14 @@ add_task(async function check_provider_cohorts() {
   is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo");
   is(await ASRouterTargeting.Environment.providerCohorts.cfr, "bar");
 });
+
+add_task(async function check_xpinstall_enabled() {
+  // should default to true if pref doesn't exist
+  is(await ASRouterTargeting.Environment.xpinstallEnabled, true);
+  // flip to false, check targeting reflects that
+  await pushPrefs(["xpinstall.enabled", false]);
+  is(await ASRouterTargeting.Environment.xpinstallEnabled, false);
+  // flip to true, check targeting reflects that
+  await pushPrefs(["xpinstall.enabled", true]);
+  is(await ASRouterTargeting.Environment.xpinstallEnabled, true);
+});
