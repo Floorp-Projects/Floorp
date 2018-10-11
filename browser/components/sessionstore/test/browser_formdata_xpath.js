@@ -21,7 +21,7 @@ const FILE1 = createFilePath("346337_test1.file");
 const FILE2 = createFilePath("346337_test2.file");
 
 const FIELDS = {
-  "//input[@name='input']":     Date.now().toString(),
+  "//input[@name='input']":     Date.now().toString(16),
   "//input[@name='spaced 1']":  Math.random().toString(),
   "//input[3]":                 "three",
   "//input[@type='checkbox']":  true,
