@@ -15,7 +15,7 @@ Release date: TBD
   * Android (SDK: 27, Support Libraries: 27.1.1)
   * Kotlin (Stdlib: 1.2.61, Coroutines: 0.23.4)
   * GeckoView
-    * Nightly: 64.0.20180905100117
+    * Nightly: **64.0.20181004100221** 🔺
     * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
     * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
 * **browser-engine-system**
