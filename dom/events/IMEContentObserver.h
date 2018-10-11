@@ -307,7 +307,7 @@ private:
    *
    * Note that this does nothing if WasInitializedWithPlugin() returns true.
    */
-  bool UpdateSelectionCache();
+  bool UpdateSelectionCache(bool aRequireFlush = true);
 
   nsCOMPtr<nsIWidget> mWidget;
   // mFocusedWidget has the editor observed by the instance.  E.g., if the
