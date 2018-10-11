@@ -15,6 +15,7 @@
 #include "ScopedGLHelpers.h"
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
+#include "WebGLFormats.h"
 #include "WebGLFramebuffer.h"
 #include "WebGLSampler.h"
 #include "WebGLTexelConversions.h"
