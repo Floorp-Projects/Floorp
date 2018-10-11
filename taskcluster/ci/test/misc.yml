@@ -1,27 +1,3 @@
-geckoview:
-    description: "Geckoview run"
-    suite: geckoview
-    treeherder-symbol: gv
-    instance-size: xlarge
-    loopback-video: true
-    e10s: false
-    target: geckoview_example.apk
-    mozharness:
-        script: android_emulator_unittest.py
-        config:
-            by-test-platform:
-                android-em-4.2-x86/opt:
-                    - android/android_common.py
-                    - android/androidx86.py
-                android-em-7.0-x86/opt:
-                    - android/android_common.py
-                    - android/androidx86_7_0.py
-                android-em.*:
-                    - android/android_common.py
-                    - android/androidarm_4_3.py
-        extra-options:
-            - --test-suite=geckoview
-
 geckoview-junit:
     description: "Geckoview junit run"
     suite: geckoview-junit

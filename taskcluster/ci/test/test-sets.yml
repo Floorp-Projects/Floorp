@@ -388,14 +388,9 @@ android-opt-tests:
     # Robocop tests often fail on Debug builds
     - robocop
 
-android-gradle-tests:
-    # geckoview_example is only built in gradle builds
-    - geckoview
-
 android-x86-tests:
     - mochitest-chrome
     - xpcshell
-    - geckoview
 
 android-x86-kvm-tests:
     - crashtest
