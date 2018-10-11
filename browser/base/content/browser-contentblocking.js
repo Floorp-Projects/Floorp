@@ -65,9 +65,6 @@ var TrackingProtection = {
   init() {
     this.updateEnabled();
 
-    this.enabledHistogramAdd(this.enabledGlobally);
-    this.disabledPBMHistogramAdd(!this.enabledInPrivateWindows);
-
     Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this);
     Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
 
@@ -87,20 +84,6 @@ var TrackingProtection = {
     return this.enabledGlobally ||
            (this.enabledInPrivateWindows &&
             PrivateBrowsingUtils.isWindowPrivate(window));
-  },
-
-  enabledHistogramAdd(value) {
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      return;
-    }
-    Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").add(value);
-  },
-
-  disabledPBMHistogramAdd(value) {
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      return;
-    }
-    Services.telemetry.getHistogramById("TRACKING_PROTECTION_PBM_DISABLED").add(value);
   },
 
   onGlobalToggleCommand() {
