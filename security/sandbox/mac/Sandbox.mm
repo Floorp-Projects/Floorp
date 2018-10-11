@@ -232,6 +232,8 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
       params.push_back(getenv("HOME"));
       params.push_back("HAS_SANDBOXED_PROFILE");
       params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
+      params.push_back("HAS_WINDOW_SERVER");
+      params.push_back(aInfo.hasWindowServer ? "TRUE" : "FALSE");
       if (!aInfo.parentPort.empty()) {
         params.push_back("PARENT_PORT");
         params.push_back(aInfo.parentPort.c_str());
@@ -376,6 +378,11 @@ GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
 
     if (strcmp(aArgv[i], "-sbAllowAudio") == 0) {
       aInfo.hasAudio = true;
+      continue;
+    }
+
+    if (strcmp(aArgv[i], "-sbAllowWindowServer") == 0) {
+      aInfo.hasWindowServer = true;
       continue;
     }
 
