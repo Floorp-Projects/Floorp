@@ -7,6 +7,7 @@ package mozilla.components.support.ktx.android.os
 import android.os.StrictMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -26,6 +27,32 @@ class StrictModeTest {
             assertNotEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
             27
         })
+        assertEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
+    }
+
+    @Test
+    fun `strict mode policy should be restored if function block throws an error`() {
+        val policy = StrictMode.ThreadPolicy.Builder()
+            .detectDiskReads()
+            .penaltyLog()
+            .build().apply {
+                StrictMode.setThreadPolicy(this)
+            }
+
+        var exceptionCaught = false
+
+        assertEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
+
+        try {
+            StrictMode.allowThreadDiskReads().resetAfter {
+                assertNotEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
+                throw RuntimeException("Boing!")
+            }
+        } catch (e: RuntimeException) {
+            exceptionCaught = true
+        }
+
+        assertTrue(exceptionCaught)
         assertEquals(policy.toString(), StrictMode.getThreadPolicy().toString())
     }
 }
