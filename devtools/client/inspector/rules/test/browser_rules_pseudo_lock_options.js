@@ -20,6 +20,9 @@ const TEST_URI = `
     div:focus {
       color: green;
     }
+    div:focus-within {
+      color: papayawhip;
+    }
   </style>
   <div>test div</div>
 `;
@@ -51,16 +54,24 @@ add_task(async function() {
   await togglePseudoClass(inspector, view.focusCheckbox);
   await assertPseudoRemoved(inspector, view, 2);
 
+  await togglePseudoClass(inspector, view.focusWithinCheckbox);
+  await assertPseudoAdded(inspector, view, ":focus-within", 3, 1);
+  await togglePseudoClass(inspector, view.focusWithinCheckbox);
+  await assertPseudoRemoved(inspector, view, 2);
+
   info("Toggle all pseudo lock and check that the pseudo lock is added");
   await togglePseudoClass(inspector, view.hoverCheckbox);
   await togglePseudoClass(inspector, view.activeCheckbox);
   await togglePseudoClass(inspector, view.focusCheckbox);
-  await assertPseudoAdded(inspector, view, ":focus", 5, 1);
-  await assertPseudoAdded(inspector, view, ":active", 5, 2);
-  await assertPseudoAdded(inspector, view, ":hover", 5, 3);
+  await togglePseudoClass(inspector, view.focusWithinCheckbox);
+  await assertPseudoAdded(inspector, view, ":focus-within", 6, 1);
+  await assertPseudoAdded(inspector, view, ":focus", 6, 1);
+  await assertPseudoAdded(inspector, view, ":active", 6, 2);
+  await assertPseudoAdded(inspector, view, ":hover", 6, 3);
   await togglePseudoClass(inspector, view.hoverCheckbox);
   await togglePseudoClass(inspector, view.activeCheckbox);
   await togglePseudoClass(inspector, view.focusCheckbox);
+  await togglePseudoClass(inspector, view.focusWithinCheckbox);
   await assertPseudoRemoved(inspector, view, 2);
 
   info("Select a null element");
@@ -71,6 +82,8 @@ add_task(async function() {
     ":active checkbox is unchecked and disabled");
   ok(!view.focusCheckbox.checked && view.focusCheckbox.disabled,
     ":focus checkbox is unchecked and disabled");
+  ok(!view.focusWithinCheckbox.checked && view.focusWithinCheckbox.disabled,
+    ":focus-within checkbox is unchecked and disabled");
 
   info("Toggle the pseudo class panel close");
   view.pseudoClassToggle.click();
@@ -108,6 +121,7 @@ function assertPseudoPanelOpened(view) {
   ok(!view.hoverCheckbox.disabled, ":hover checkbox is not disabled");
   ok(!view.activeCheckbox.disabled, ":active checkbox is not disabled");
   ok(!view.focusCheckbox.disabled, ":focus checkbox is not disabled");
+  ok(!view.focusWithinCheckbox.disabled, ":focus-within checkbox is not disabled");
 
   is(view.hoverCheckbox.getAttribute("tabindex"), "0",
     ":hover checkbox has a tabindex of 0");
@@ -115,6 +129,8 @@ function assertPseudoPanelOpened(view) {
     ":active checkbox has a tabindex of 0");
   is(view.focusCheckbox.getAttribute("tabindex"), "0",
     ":focus checkbox has a tabindex of 0");
+  is(view.focusWithinCheckbox.getAttribute("tabindex"), "0",
+    ":focus-within checkbox has a tabindex of 0");
 }
 
 function assertPseudoPanelClosed(view) {
@@ -128,4 +144,6 @@ function assertPseudoPanelClosed(view) {
     ":active checkbox has a tabindex of -1");
   is(view.focusCheckbox.getAttribute("tabindex"), "-1",
     ":focus checkbox has a tabindex of -1");
+  is(view.focusWithinCheckbox.getAttribute("tabindex"), "-1",
+    ":focus-within checkbox has a tabindex of -1");
 }
