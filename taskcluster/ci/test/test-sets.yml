@@ -404,6 +404,9 @@ android-x86-kvm-tests:
     # - mochitest-webgl1-core
     # - reftest
     # - test-verify
+    # - web-platform-tests
+    # - web-platform-tests-reftests
+    # - web-platform-tests-wdspec
 
 android-ccov-tests:
     - geckoview-junit
