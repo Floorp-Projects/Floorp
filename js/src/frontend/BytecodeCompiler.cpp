@@ -414,12 +414,12 @@ BytecodeCompiler::compileModule()
         return nullptr;
     }
 
-    Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
-    if (!module) {
+    if (!createScript()) {
         return nullptr;
     }
 
-    if (!createScript()) {
+    Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
+    if (!module) {
         return nullptr;
     }
 
