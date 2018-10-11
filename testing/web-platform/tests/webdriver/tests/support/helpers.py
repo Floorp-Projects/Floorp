@@ -119,6 +119,17 @@ def is_element_in_viewport(session, element):
     """, args=(element,))
 
 
+def is_fullscreen(session):
+    # At the time of writing, WebKit does not conform to the
+    # Fullscreen API specification.
+    #
+    # Remove the prefixed fallback when
+    # https://bugs.webkit.org/show_bug.cgi?id=158125 is fixed.
+    return session.execute_script("""
+        return !!(window.fullScreen || document.webkitIsFullScreen)
+        """)
+
+
 def document_dimensions(session):
     return tuple(session.execute_script("""
         let {devicePixelRatio} = window;
