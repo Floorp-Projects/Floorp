@@ -53,6 +53,11 @@ const POLICIES_TESTS = [
     },
   },
 
+  // POLICY: DisableBuiltinPDFViewer
+  {
+    policies: { "DisableBuiltinPDFViewer": true },
+    lockedPrefs: { "pdfjs.disabled": true },
+  },
 
   // POLICY: DisableFormHistory
   {
@@ -113,7 +118,7 @@ const POLICIES_TESTS = [
     },
   },
 
-  // POLICY: Certificates
+  // POLICY: Certificates (true)
   {
     policies: {
       "Certificates": {
@@ -122,6 +127,18 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "security.enterprise_roots.enabled": true,
+    },
+  },
+
+  // POLICY: Certificates (false)
+  {
+    policies: {
+      "Certificates": {
+        "ImportEnterpriseRoots": false,
+      },
+    },
+    lockedPrefs: {
+      "security.enterprise_roots.enabled": false,
     },
   },
 

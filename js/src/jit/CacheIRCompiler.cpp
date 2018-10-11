@@ -1965,7 +1965,7 @@ CacheIRCompiler::emitGuardAndGetNumberFromString()
         masm.passABIArg(scratch);
         masm.passABIArg(str);
         masm.passABIArg(output.payloadOrValueReg());
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, StringToNumberDontReportOOM));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, StringToNumberPure));
         masm.mov(ReturnReg, scratch);
 
         LiveRegisterSet ignore;
@@ -1975,16 +1975,16 @@ CacheIRCompiler::emitGuardAndGetNumberFromString()
         Label ok;
         masm.branchIfTrueBool(scratch, &ok);
         {
-            // OOM path, recovered by StringToNumberDontReportOOM.
+            // OOM path, recovered by StringToNumberPure.
             //
             // Use addToStackPtr instead of freeStack as freeStack tracks stack height
             // flow-insensitively, and using it twice would confuse the stack height
-            // tracking. 
+            // tracking.
             masm.addToStackPtr(Imm32(sizeof(double)));
             masm.jump(failure->label());
         }
         masm.bind(&ok);
-        
+
         masm.loadDouble(Address(output.payloadOrValueReg(), 0), FloatReg0);
         masm.boxDouble(FloatReg0, output, FloatReg0);
         masm.freeStack(sizeof(double));
@@ -3803,7 +3803,7 @@ CacheIRCompiler::emitCallObjectHasSparseElementResult()
     masm.passABIArg(obj);
     masm.passABIArg(index);
     masm.passABIArg(scratch2);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasNativeElement));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasNativeElementPure));
     masm.mov(ReturnReg, scratch1);
     masm.PopRegsInMask(volatileRegs);
 
@@ -3950,9 +3950,9 @@ CacheIRCompiler::emitMegamorphicLoadSlotResult()
     masm.passABIArg(scratch2);
     masm.passABIArg(scratch3);
     if (handleMissing) {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataProperty<true>)));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyPure<true>)));
     } else {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataProperty<false>)));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyPure<false>)));
     }
     masm.mov(ReturnReg, scratch2);
     masm.PopRegsInMask(volatileRegs);
@@ -4001,9 +4001,9 @@ CacheIRCompiler::emitMegamorphicStoreSlot()
     masm.passABIArg(scratch2);
     masm.passABIArg(val.scratchReg());
     if (needsTypeBarrier) {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<true>)));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataPropertyPure<true>)));
     } else {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<false>)));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataPropertyPure<false>)));
     }
     masm.mov(ReturnReg, scratch1);
     masm.PopRegsInMask(volatileRegs);
@@ -4059,7 +4059,7 @@ CacheIRCompiler::emitCallInt32ToString() {
     masm.loadJSContext(result);
     masm.passABIArg(result);
     masm.passABIArg(input);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::Int32ToStringHelper)));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::Int32ToStringHelperPure)));
 
     masm.mov(ReturnReg, result);
     masm.PopRegsInMask(volatileRegs);
@@ -4090,7 +4090,7 @@ CacheIRCompiler::emitCallNumberToString() {
     masm.loadJSContext(result);
     masm.passABIArg(result);
     masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::NumberToStringHelper)));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (js::NumberToStringHelperPure)));
 
     masm.mov(ReturnReg, result);
     masm.PopRegsInMask(volatileRegs);

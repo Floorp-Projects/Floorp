@@ -437,6 +437,14 @@ struct BlobCommand {
     tile_size: Option<TileSize>,
 }
 
+ struct Job {
+    request: BlobImageRequest,
+    descriptor: BlobImageDescriptor,
+    commands: Arc<BlobImageData>,
+    dirty_rect: Option<DeviceUintRect>,
+    tile_size: Option<TileSize>,
+}
+
 /// Rasterizes gecko blob images.
 struct Moz2dBlobRasterizer {
     /// Pool of rasterizers.
@@ -447,16 +455,8 @@ struct Moz2dBlobRasterizer {
 
 impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
    
-    fn rasterize(&mut self, requests: &[BlobImageParams], _low_priority: bool) -> Vec<(BlobImageRequest, BlobImageResult)> {
+    fn rasterize(&mut self, requests: &[BlobImageParams], low_priority: bool) -> Vec<(BlobImageRequest, BlobImageResult)> {
         // All we do here is spin up our workers to callback into gecko to replay the drawing commands.
-
-        struct Job {
-            request: BlobImageRequest,
-            descriptor: BlobImageDescriptor,
-            commands: Arc<BlobImageData>,
-            dirty_rect: Option<DeviceUintRect>,
-            tile_size: Option<TileSize>,
-        }
 
         let requests: Vec<Job> = requests.into_iter().map(|params| {
             let command = &self.blob_commands[&params.request.key];
@@ -470,44 +470,64 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
             }
         }).collect();
 
-        self.workers.install(|| {
-            requests.into_par_iter().map(|item| {
-                let descriptor = item.descriptor;
-                let buf_size = (descriptor.size.width
-                    * descriptor.size.height
-                    * descriptor.format.bytes_per_pixel()) as usize;
+        // If we don't have a lot of blobs it is probably not worth the initial cost
+        // of installing work on rayon's thread pool so we do it serially on this thread.
+        let should_parallelize = if low_priority {
+            requests.len() > 2
+        } else {
+            // For high priority requests we don't "risk" the potential priority inversion of
+            // dispatching to a thread pool full of low priority jobs unless it is really
+            // appealing.
+            requests.len() > 4
+        };
 
-                let mut output = vec![0u8; buf_size];
-
-                let result = unsafe {
-                    if wr_moz2d_render_cb(
-                        ByteSlice::new(&item.commands[..]),
-                        descriptor.size.width,
-                        descriptor.size.height,
-                        descriptor.format,
-                        item.tile_size.as_ref(),
-                        item.request.tile.as_ref(),
-                        item.dirty_rect.as_ref(),
-                        MutByteSlice::new(output.as_mut_slice()),
-                    ) {
-                        Ok(RasterizedBlobImage {
-                            rasterized_rect: item.dirty_rect.unwrap_or(
-                                DeviceUintRect {
-                                    origin: DeviceUintPoint::origin(),
-                                    size: descriptor.size,
-                                }
-                            ),
-                            data: Arc::new(output),
-                        })
-                    } else {
-                        panic!("Moz2D replay problem");
-                    }
-                };
-
-                (item.request, result)
-            }).collect()
-        })
+        if should_parallelize {
+            // Parallel version synchronously installs a job on the thread pool which will
+            // try to do the work in parallel.
+            // This thread is blocked until the thread pool is done doing the work.
+            self.workers.install(||{
+                requests.into_par_iter().map(rasterize_blob).collect()
+            })
+        } else {
+            requests.into_iter().map(rasterize_blob).collect()
+        }
     }
+}
+
+fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
+    let descriptor = job.descriptor;
+    let buf_size = (descriptor.size.width
+        * descriptor.size.height
+        * descriptor.format.bytes_per_pixel()) as usize;
+
+    let mut output = vec![0u8; buf_size];
+
+    let result = unsafe {
+        if wr_moz2d_render_cb(
+            ByteSlice::new(&job.commands[..]),
+            descriptor.size.width,
+            descriptor.size.height,
+            descriptor.format,
+            job.tile_size.as_ref(),
+            job.request.tile.as_ref(),
+            job.dirty_rect.as_ref(),
+            MutByteSlice::new(output.as_mut_slice()),
+        ) {
+            Ok(RasterizedBlobImage {
+                rasterized_rect: job.dirty_rect.unwrap_or(
+                    DeviceUintRect {
+                        origin: DeviceUintPoint::origin(),
+                        size: descriptor.size,
+                    }
+                ),
+                data: Arc::new(output),
+            })
+        } else {
+            panic!("Moz2D replay problem");
+        }
+    };
+
+    (job.request, result)    
 }
 
 impl BlobImageHandler for Moz2dBlobImageHandler {

@@ -385,8 +385,8 @@ ArgumentsObject::createForIon(JSContext* cx, jit::JitFrameLayout* frame, HandleO
 }
 
 /* static */ ArgumentsObject*
-ArgumentsObject::finishForIon(JSContext* cx, jit::JitFrameLayout* frame,
-                              JSObject* scopeChain, ArgumentsObject* obj)
+ArgumentsObject::finishForIonPure(JSContext* cx, jit::JitFrameLayout* frame,
+                                  JSObject* scopeChain, ArgumentsObject* obj)
 {
     // JIT code calls this directly (no callVM), because it's faster, so we're
     // not allowed to GC in here.

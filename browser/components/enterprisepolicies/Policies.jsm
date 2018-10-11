@@ -132,7 +132,7 @@ var Policies = {
   "Certificates": {
     onBeforeAddons(manager, param) {
       if ("ImportEnterpriseRoots" in param) {
-        setAndLockPref("security.enterprise_roots.enabled", true);
+        setAndLockPref("security.enterprise_roots.enabled", param.ImportEnterpriseRoots);
       }
     },
   },
@@ -227,9 +227,9 @@ var Policies = {
   },
 
   "DisableBuiltinPDFViewer": {
-    onBeforeUIStartup(manager, param) {
+    onBeforeAddons(manager, param) {
       if (param) {
-        manager.disallowFeature("PDF.js");
+        setAndLockPref("pdfjs.disabled", true);
       }
     },
   },
@@ -744,6 +744,7 @@ var Policies = {
                 method:      newEngine.Method,
                 suggestURL:  newEngine.SuggestURLTemplate,
                 extensionID: "set-via-policy",
+                queryCharset: "UTF-8",
               };
               try {
                 Services.search.addEngineWithDetails(newEngine.Name,
