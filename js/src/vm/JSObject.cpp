@@ -2467,7 +2467,7 @@ bool
 js::LookupNameNoGC(JSContext* cx, PropertyName* name, JSObject* envChain,
                    JSObject** objp, JSObject** pobjp, PropertyResult* propp)
 {
-    AutoAssertNoException nogc(cx);
+    AutoAssertNoPendingException nogc(cx);
 
     MOZ_ASSERT(!*objp && !*pobjp && !*propp);
 
