@@ -102,12 +102,12 @@ async function connectAndAttachTab() {
   // Connect to this tab
   const transport = DebuggerServer.connectPipe();
   const client = new DebuggerClient(transport);
-  const form = await connectDebuggerClient(client);
-  const actorID = form.actor;
-  const [, targetFront ] = await client.attachTarget(actorID);
-  targetFront.on("tabNavigated", function(packet) {
+  client.addListener("tabNavigated", function(event, packet) {
     assertEvent("tabNavigated", packet);
   });
+  const form = await connectDebuggerClient(client);
+  const actorID = form.actor;
+  await client.attachTarget(actorID);
   return { client, actorID };
 }
 

@@ -19,6 +19,7 @@ DevToolsModules(
     'root-client.js',
     'source-client.js',
     'symbol-iterator-client.js',
+    'tab-client.js',
     'thread-client.js',
     'worker-client.js',
 )

@@ -48,7 +48,7 @@ var navigateTo = async function(inspector, url) {
 
   info("Navigating to: " + url);
   const activeTab = inspector.toolbox.target.activeTab;
-  await activeTab.navigateTo({ url });
+  await activeTab.navigateTo(url);
 
   info("Waiting for markup view to load after navigation.");
   await markuploaded;
