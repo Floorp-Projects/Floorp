@@ -24,11 +24,11 @@ def test_no_browsing_context(session, closed_window):
 
 def test_fully_exit_fullscreen(session):
     session.window.fullscreen()
-    assert is_fullscreen(session) is True
+    assert is_fullscreen(session)
 
     response = maximize(session)
     assert_success(response)
-    assert is_fullscreen(session) is False
+    assert not is_fullscreen(session)
 
 
 def test_restore_the_window(session):
