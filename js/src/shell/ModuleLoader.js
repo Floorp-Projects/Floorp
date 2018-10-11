@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* global getModuleLoadPath setModuleLoadHook setModuleResolveHook setModuleMetadataHook */
-/* global parseModule os */ 
+/* global parseModule os */
 
 // A basic synchronous module loader for testing the shell.
 {
