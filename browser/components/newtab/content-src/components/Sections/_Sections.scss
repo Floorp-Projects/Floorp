@@ -22,7 +22,9 @@
     }
 
     @media (min-width: $break-point-widest) and (max-width: $break-point-widest + 2 * $card-width) {
-      :nth-child(3n) {
+      // 3n for normal cards, 4n for compact cards
+      :nth-child(3n),
+      :nth-child(4n) {
         @include context-menu-open-left;
       }
     }

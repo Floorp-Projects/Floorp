@@ -3,17 +3,18 @@ import {actionCreators as ac} from "common/Actions.jsm";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
 import {ImpressionsWrapper} from "./components/ImpressionsWrapper/ImpressionsWrapper";
 import {MessageContext} from "fluent";
-import {NewsletterSnippet} from "./templates/NewsletterSnippet/NewsletterSnippet";
 import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage";
 import React from "react";
 import ReactDOM from "react-dom";
 import {safeURI} from "./template-utils";
 import {SimpleSnippet} from "./templates/SimpleSnippet/SimpleSnippet";
+import {SubmitFormSnippet} from "./templates/SubmitFormSnippet/SubmitFormSnippet";
 
 // Key names matching schema name of templates
 const SnippetComponents = {
   simple_snippet: SimpleSnippet,
-  newsletter_snippet: NewsletterSnippet,
+  newsletter_snippet: props => <SubmitFormSnippet {...props} form_method="POST" />,
+  fxa_signup_snippet: props => <SubmitFormSnippet {...props} form_method="GET" />,
 };
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
@@ -266,12 +267,12 @@ export class ASRouterUISurface extends React.PureComponent {
         // This helps with testing
         document={this.props.document}>
           <LocalizationProvider messages={generateMessages({
-            privacy_notice: content.privacy_notice_text,
-            snippet_text: content.text,
+            privacy_notice: content.scene2_privacy_html,
+            snippet_text: content.text || content.scene1_text,
           })}>
             <SnippetComponent
               {...this.state.message}
-              richText={<RichText text={this.state.message.content.text}
+              richText={<RichText text={content.text || content.scene1_text}
                                   localization_id="snippet_text"
                                   links={this.state.message.content.links}
                                   sendClick={this.sendClick} />}
