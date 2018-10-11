@@ -27,12 +27,8 @@ const OPTIONAL = ["headerURL", "textcolor", "accentcolor",
                   "iconURL", "previewURL", "author", "description",
                   "homepageURL", "updateURL", "version"];
 
-const PERSIST_ENABLED = true;
-const PERSIST_BYPASS_CACHE = false;
-const PERSIST_FILES = {
-  headerURL: "lightweighttheme-header",
-};
-
+ChromeUtils.defineModuleGetter(this, "LightweightThemePersister",
+  "resource://gre/modules/addons/LightweightThemePersister.jsm");
 ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
@@ -86,7 +82,7 @@ var LightweightThemeManager = {
   set fallbackThemeData(data) {
     if (data && Object.getOwnPropertyNames(data).length) {
       _fallbackThemeData = Object.assign({}, data);
-      if (PERSIST_ENABLED) {
+      if (LightweightThemePersister.persistEnabled) {
         LightweightThemeImageOptimizer.purge();
         _persistImages(_fallbackThemeData, () => {});
       }
@@ -125,16 +121,10 @@ var LightweightThemeManager = {
   },
 
   get currentThemeForDisplay() {
-    var data = _substituteDefaulThemeIfNeeded(this.currentTheme);
+    var data = _substituteDefaultThemeIfNeeded(this.currentTheme);
 
-    if (data && PERSIST_ENABLED) {
-      for (let key in PERSIST_FILES) {
-        try {
-          if (data[key] && _prefs.getBoolPref("persisted." + key))
-            data[key] = _getLocalImageURI(PERSIST_FILES[key]).spec
-                        + "?" + data.id + ";" + _version(data);
-        } catch (e) {}
-      }
+    if (data && LightweightThemePersister.persistEnabled) {
+      data = LightweightThemePersister.getPersistedData(data);
     }
 
     return data;
@@ -212,7 +202,7 @@ var LightweightThemeManager = {
   },
 
   previewTheme(aData) {
-    aData = _substituteDefaulThemeIfNeeded(aData);
+    aData = _substituteDefaultThemeIfNeeded(aData);
 
     let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
     cancel.data = false;
@@ -378,7 +368,7 @@ var LightweightThemeManager = {
       let usedThemes = _usedThemesExceptId(themeToSwitchTo.id);
       usedThemes.unshift(themeToSwitchTo);
       _updateUsedThemes(usedThemes);
-      if (PERSIST_ENABLED) {
+      if (LightweightThemePersister.persistEnabled) {
         LightweightThemeImageOptimizer.purge();
         _persistImages(themeToSwitchTo, () => {
           _notifyWindows(this.currentThemeForDisplay);
@@ -483,7 +473,7 @@ var LightweightThemeManager = {
       let usedThemes = _usedThemesExceptId(themeToSwitchTo.id);
       usedThemes.unshift(themeToSwitchTo);
       _updateUsedThemes(usedThemes);
-      if (PERSIST_ENABLED) {
+      if (LightweightThemePersister.persistEnabled) {
         LightweightThemeImageOptimizer.purge();
         _persistImages(themeToSwitchTo, () => {
           _notifyWindows(this.currentThemeForDisplay);
@@ -893,7 +883,7 @@ function _notifyWindows(aThemeData) {
                                JSON.stringify({theme: aThemeData}));
 }
 
-function _substituteDefaulThemeIfNeeded(aThemeData) {
+function _substituteDefaultThemeIfNeeded(aThemeData) {
   if (!aThemeData || aThemeData.id == DEFAULT_THEME_ID) {
     if (_fallbackThemeData) {
       return _fallbackThemeData;
@@ -928,77 +918,7 @@ function _prefObserver(aSubject, aTopic, aData) {
 }
 
 function _persistImages(aData, aCallback) {
-  function onSuccess(key) {
-    return function() {
-      let current = LightweightThemeManager.currentTheme;
-      if (current && current.id == aData.id) {
-        _prefs.setBoolPref("persisted." + key, true);
-      }
-      if (--numFilesToPersist == 0 && aCallback) {
-        aCallback();
-      }
-    };
-  }
-
-  let numFilesToPersist = 0;
-  for (let key in PERSIST_FILES) {
-    _prefs.setBoolPref("persisted." + key, false);
-    if (aData[key]) {
-      numFilesToPersist++;
-      _persistImage(aData[key], PERSIST_FILES[key], onSuccess(key));
-    }
-  }
-}
-
-function _getLocalImageURI(localFileName) {
-  var localFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  localFile.append(localFileName);
-  return Services.io.newFileURI(localFile);
-}
-
-function _persistImage(sourceURL, localFileName, successCallback) {
-  if (/^(file|resource):/.test(sourceURL))
-    return;
-
-  var targetURI = _getLocalImageURI(localFileName);
-  var sourceURI = _makeURI(sourceURL);
-
-  var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                  .createInstance(Ci.nsIWebBrowserPersist);
-
-  persist.persistFlags =
-    Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
-    Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION |
-    (PERSIST_BYPASS_CACHE ?
-       Ci.nsIWebBrowserPersist.PERSIST_FLAGS_BYPASS_CACHE :
-       Ci.nsIWebBrowserPersist.PERSIST_FLAGS_FROM_CACHE);
-
-  persist.progressListener = new _persistProgressListener(successCallback);
-
-  let sourcePrincipal = Services.scriptSecurityManager.createCodebasePrincipal(sourceURI, {});
-  persist.saveURI(sourceURI, sourcePrincipal, 0,
-                  null, Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-                  null, null, targetURI, null);
-}
-
-function _persistProgressListener(successCallback) {
-  this.onLocationChange = function() {};
-  this.onProgressChange = function() {};
-  this.onStatusChange   = function() {};
-  this.onSecurityChange = function() {};
-  this.onStateChange    = function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (aRequest &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-      try {
-        if (aRequest.QueryInterface(Ci.nsIHttpChannel).requestSucceeded) {
-          // success
-          successCallback();
-        }
-      } catch (e) { }
-      // failure
-    }
-  };
+  LightweightThemePersister.persistImages(aData, aCallback);
 }
 
 AddonManagerPrivate.registerProvider(LightweightThemeManager, [
