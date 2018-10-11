@@ -13,12 +13,10 @@ import tempfile
 import time
 
 from mozdevice import ADBHost, ADBError
-from mozprocess import ProcessHandler
 
 
 class Device(object):
     connected = False
-    logcat_proc = None
 
     def __init__(self, app_ctx, logdir=None, serial=None, restore=True):
         self.app_ctx = app_ctx
@@ -140,28 +138,6 @@ class Device(object):
         self.serial = online_devices[0]
 
         self.connected = True
-
-        if self.logdir:
-            # save logcat
-            logcat_log = os.path.join(self.logdir, '%s.log' % self.serial)
-            if os.path.isfile(logcat_log):
-                self._rotate_log(logcat_log)
-            self.logcat_proc = self.start_logcat(self.serial, logfile=logcat_log)
-
-    def start_logcat(self, serial, logfile=None, stream=None, filterspec=None):
-        logcat_args = [self.app_ctx.adb, '-s', '%s' % serial,
-                       'logcat', '-v', 'time', '-b', 'main', '-b', 'radio']
-        # only log filterspec
-        if filterspec:
-            logcat_args.extend(['-s', filterspec])
-        process_args = {}
-        if logfile:
-            process_args['logfile'] = logfile
-        elif stream:
-            process_args['stream'] = stream
-        proc = ProcessHandler(logcat_args, **process_args)
-        proc.run()
-        return proc
 
     def reboot(self):
         """
