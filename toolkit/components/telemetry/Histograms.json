@@ -11322,20 +11322,20 @@
     "bug_numbers": [1235061]
   },
   "TRACKING_PROTECTION_ENABLED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "boolean",
-    "description": "True if tracking protection is enabled globally at the time that a non-Private-Browsing session is initialized.",
+    "description": "True if tracking protection is enabled globally at startup.",
     "alert_emails": ["pdol@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
     "bug_numbers": [1058133]
   },
   "TRACKING_PROTECTION_PBM_DISABLED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "boolean",
-    "description": "True if tracking protection in Private Browsing mode is disabled at the time that a non-Private-Browsing session is initialized.",
+    "description": "True if tracking protection in Private Browsing mode is disabled at startup.",
     "alert_emails": ["pdol@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
     "bug_numbers": [1200944]
   },
