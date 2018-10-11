@@ -51,7 +51,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     // Call this before calling compile{Global,Eval}Script.
     MOZ_MUST_USE bool prepareScriptParse() {
-        return createSourceAndParser(ParseGoal::Script) && createScript();
+        return createSourceAndParser(ParseGoal::Script) && createCompleteScript();
     }
 
     JSScript* compileGlobalScript(ScopeKind scopeKind);
@@ -59,7 +59,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     // Call this before calling compileModule.
     MOZ_MUST_USE bool prepareModuleParse() {
-        return createSourceAndParser(ParseGoal::Module) && createScript();
+        return createSourceAndParser(ParseGoal::Module) && createCompleteScript();
     }
 
     ModuleObject* compileModule();
@@ -96,10 +96,13 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool createSourceAndParser(ParseGoal goal,
                                const Maybe<uint32_t>& parameterListEnd = Nothing());
 
-    // If toString{Start,End} are not explicitly passed, assume the script's
-    // offsets in the source used to parse it are the same as what should be
-    // used to compute its Function.prototype.toString() value.
-    bool createScript();
+    // This assumes the created script's offsets in the source used to parse it
+    // are the same as are used to compute its Function.prototype.toString()
+    // value.
+    bool createCompleteScript();
+
+    // This uses explicitly-provided toString offsets as the created script's
+    // offsets in the source.
     bool createScript(uint32_t toStringStart, uint32_t toStringEnd);
 
     using TokenStreamPosition = frontend::TokenStreamPosition<char16_t>;
@@ -283,7 +286,7 @@ BytecodeCompiler::createSourceAndParser(ParseGoal goal,
 }
 
 bool
-BytecodeCompiler::createScript()
+BytecodeCompiler::createCompleteScript()
 {
     return createScript(0, sourceBuffer.length());
 }
