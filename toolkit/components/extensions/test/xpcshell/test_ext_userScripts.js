@@ -160,9 +160,7 @@ add_task(async function test_userScripts_matches_denied() {
 // - can be registered/unregistered from an extension page
 // - have no WebExtensions APIs available
 // - are able to access the target window and document
-
-// Temporarily disabled due to bug 1498364
-false && add_task(async function test_userScripts_no_webext_apis() {
+add_task(async function test_userScripts_no_webext_apis() {
   async function background() {
     const matches = ["http://localhost/*/file_sample.html"];
 
