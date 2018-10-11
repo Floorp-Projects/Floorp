@@ -10,12 +10,9 @@
 promise_test(async t => {
   const video1 = await loadVideo();
   const video2 = await loadVideo();
-  return test_driver.bless(
-    'request Picture-in-Picture',
-    async () => {
-      video1.requestPictureInPicture();
-      promise_rejects(t, 'NotAllowedError', video2.requestPictureInPicture());
-    }
-  );
+  await test_driver.bless('request Picture-in-Picture');
+  const promise = video1.requestPictureInPicture();
+  await promise_rejects(t, 'NotAllowedError', video2.requestPictureInPicture());
+  return promise;
 }, 'request Picture-in-Picture consumes user gesture');
 </script>
