@@ -551,3 +551,58 @@ devtools.main:
       time_open: Time open.
       os: The OS name and version e.g. "Linux 4.4.0-1014-aws", "Darwin 14.5.0", "Windows_NT 6.1.7601" or "Windows_NT 10.0.15063." This can be used to make sense of data when a feature is only available from a particular operating system build number.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+
+security.ui.identitypopup:
+  open:
+    objects: ["identity_popup"]
+    bug_numbers:
+      - 1484251
+    description: >
+      How many times the control center was opened.
+      Keyed by the state of the content blocking shield, where the shield-showing key indicates
+      that the shield icon in the identity UI is visible to the user, and shield-hidden indicates
+      that it is not visible.
+    expiry_version: "70"
+    notification_emails:
+      - jhofmann@mozilla.com
+      - pdol@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+    extra_keys:
+      fb: Whether FastBlock was active while the user opened the popup
+      tp: Whether Tracking Protection was active while the user opened the popup
+      cr: Whether Cookie Restrictions was active while the user opened the popup
+    products:
+      - firefox
+  click:
+    objects: [
+      "fb_add_blocking",
+      "tp_add_blocking",
+      "cookies_add_blocking",
+      "cb_prefs_button",
+      "clear_sitedata",
+      "unblock",
+      "unblock_private",
+      "block",
+      "report_breakage"
+    ]
+    bug_numbers:
+      - 1484251
+    description: >
+      User interaction by click events in the identity popup.
+    expiry_version: "70"
+    notification_emails:
+      - jhofmann@mozilla.com
+      - pdol@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+    extra_keys:
+      fb: Whether FastBlock was active while the user interacted with the UI
+      tp: Whether Tracking Protection was active while the user interacted with the UI
+      cr: Whether Cookie Restrictions was active while the user interacted with the UI
+    products:
+      - firefox

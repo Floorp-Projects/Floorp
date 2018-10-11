@@ -1350,6 +1350,34 @@ BrowserGlue.prototype = {
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
   },
 
+  _recordContentBlockingTelemetry() {
+    let recordIdentityPopupEvents = Services.prefs.getBoolPref("security.identitypopup.recordEventElemetry");
+    Services.telemetry.setEventRecordingEnabled("security.ui.identitypopup", recordIdentityPopupEvents);
+
+    let tpEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled");
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").add(tpEnabled);
+
+    let tpPBDisabled = Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_PBM_DISABLED").add(!tpPBDisabled);
+
+    let cookieBehavior = Services.prefs.getIntPref("network.cookie.cookieBehavior");
+    Services.telemetry.getHistogramById("COOKIE_BEHAVIOR").add(cookieBehavior);
+
+    let fastBlockEnabled = Services.prefs.getBoolPref("browser.fastblock.enabled");
+    Services.telemetry.scalarSet("contentblocking.fastblock_enabled", fastBlockEnabled);
+
+    let contentBlockingEnabled = Services.prefs.getBoolPref("browser.contentblocking.enabled");
+    Services.telemetry.scalarSet("contentblocking.enabled", contentBlockingEnabled);
+
+    let exceptions = 0;
+    for (let permission of Services.perms.enumerator) {
+      if (permission.type == "trackingprotection") {
+        exceptions++;
+      }
+    }
+    Services.telemetry.scalarSet("contentblocking.exceptions", exceptions);
+  },
+
   _sendMediaTelemetry() {
     let win = Services.appShell.hiddenDOMWindow;
     let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
@@ -2029,6 +2057,10 @@ BrowserGlue.prototype = {
       // we threw halfway through initializing in the Task above.
       this._placesBrowserInitComplete = true;
       Services.obs.notifyObservers(null, "places-browser-init-complete");
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      this._recordContentBlockingTelemetry();
     });
   },
 
