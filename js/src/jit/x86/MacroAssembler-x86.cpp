@@ -987,29 +987,24 @@ void
 MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, bool isSaturating,
                                           Label* oolEntry, Label* oolRejoin, FloatRegister tempReg)
 {
-    Label fail, convert;
+    Label ok;
     Register temp = output.high;
 
-    // Make sure input fits in (u)int64.
-    reserveStack(2 * sizeof(int32_t));
-    storeDouble(input, Operand(esp, 0));
-    branchDoubleNotInInt64Range(Address(esp, 0), temp, &fail);
-    jump(&convert);
-
-    // Handle failure in ool.
-    bind(&fail);
-    freeStack(2 * sizeof(int32_t));
-    jump(oolEntry);
-    bind(oolRejoin);
     reserveStack(2 * sizeof(int32_t));
     storeDouble(input, Operand(esp, 0));
 
-    // Convert the double/float to int64.
-    bind(&convert);
     truncateDoubleToInt64(Address(esp, 0), Address(esp, 0), temp);
-
-    // Load value into int64 register.
     load64(Address(esp, 0), output);
+
+    cmpl(Imm32(0), Operand(esp, 0));
+    j(Assembler::NotEqual, &ok);
+
+    cmpl(Imm32(1), Operand(esp, 4));
+    j(Assembler::Overflow, oolEntry);
+
+    bind(&ok);
+    bind(oolRejoin);
+
     freeStack(2 * sizeof(int32_t));
 }
 
@@ -1018,29 +1013,24 @@ MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 outpu
                                            bool isSaturating,
                                            Label* oolEntry, Label* oolRejoin, FloatRegister tempReg)
 {
-    Label fail, convert;
+    Label ok;
     Register temp = output.high;
 
-    // Make sure input fits in (u)int64.
-    reserveStack(2 * sizeof(int32_t));
-    storeFloat32(input, Operand(esp, 0));
-    branchFloat32NotInInt64Range(Address(esp, 0), temp, &fail);
-    jump(&convert);
-
-    // Handle failure in ool.
-    bind(&fail);
-    freeStack(2 * sizeof(int32_t));
-    jump(oolEntry);
-    bind(oolRejoin);
     reserveStack(2 * sizeof(int32_t));
     storeFloat32(input, Operand(esp, 0));
 
-    // Convert the double/float to int64.
-    bind(&convert);
     truncateFloat32ToInt64(Address(esp, 0), Address(esp, 0), temp);
-
-    // Load value into int64 register.
     load64(Address(esp, 0), output);
+
+    cmpl(Imm32(0), Operand(esp, 0));
+    j(Assembler::NotEqual, &ok);
+
+    cmpl(Imm32(1), Operand(esp, 4));
+    j(Assembler::Overflow, oolEntry);
+
+    bind(&ok);
+    bind(oolRejoin);
+
     freeStack(2 * sizeof(int32_t));
 }
 
