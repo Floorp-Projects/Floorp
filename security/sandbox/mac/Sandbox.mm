@@ -489,5 +489,20 @@ EarlyStartMacSandboxIfEnabled(int aArgc, char** aArgv,
   return StartMacSandbox(info, aErrorMessage);
 }
 
+#ifdef DEBUG
+/*
+ * Ensures that a process sandbox is enabled by attempting to enable
+ * a new sandbox policy and ASSERT'ing that this fails. This depends
+ * on sandbox_init() failing when called again after a sandbox has
+ * already been successfully enabled.
+ */
+void
+AssertMacSandboxEnabled()
+{
+  char *errorbuf = NULL;
+  int rv = sandbox_init("(version 1)(deny default)", 0, &errorbuf);
+  MOZ_ASSERT(rv != 0);
+}
+#endif /* DEBUG */
 
 } // namespace mozilla
