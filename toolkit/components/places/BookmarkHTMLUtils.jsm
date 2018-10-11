@@ -21,7 +21,8 @@
  *   of the bookmark container.
  * Bookmark := a
  *   HREF is the destination of the bookmark
- *   FEEDURL is the URI of the RSS feed if this is a livemark.
+ *   FEEDURL is the URI of the RSS feed. This is deprecated and no more
+ *   supported, but some old files may still contain it.
  *   LAST_CHARSET is stored as an annotation so that the next time we go to
  *     that page we remember the user's preference.
  *   ICON will be stored in the favicon service
@@ -281,12 +282,6 @@ function Frame(aFolder) {
   this.previousLink = null;
 
   /**
-   * contains the URL of the previous livemark, so that when the link ends,
-   * and the livemark title is known, we can create it.
-   */
-  this.previousFeed = null;
-
-  /**
    * Contains a reference to the last created bookmark or folder object.
    */
   this.previousItem = null;
@@ -488,13 +483,11 @@ BookmarkImporter.prototype = {
   _handleLinkBegin: function handleLinkBegin(aElt) {
     let frame = this._curFrame;
 
-    frame.previousFeed = null;
     frame.previousItem = null;
     frame.previousText = ""; // Will hold link text, clear it.
 
     // Get the attributes we care about.
     let href = this._safeTrim(aElt.getAttribute("href"));
-    let feedUrl = this._safeTrim(aElt.getAttribute("feedurl"));
     let icon = this._safeTrim(aElt.getAttribute("icon"));
     let iconUri = this._safeTrim(aElt.getAttribute("icon_uri"));
     let lastCharset = this._safeTrim(aElt.getAttribute("last_charset"));
@@ -504,37 +497,18 @@ BookmarkImporter.prototype = {
     let lastModified = this._safeTrim(aElt.getAttribute("last_modified"));
     let tags = this._safeTrim(aElt.getAttribute("tags"));
 
-    // For feeds, get the feed URL.  If it is invalid, mPreviousFeed will be
-    // NULL and we'll create it as a normal bookmark.
-    if (feedUrl) {
-      frame.previousFeed = feedUrl;
-    }
-
     // Ignore <a> tags that have no href.
-    if (href) {
-      // Save the address if it's valid.  Note that we ignore errors if this is a
-      // feed since href is optional for them.
-      try {
-        frame.previousLink = Services.io.newURI(href).spec;
-      } catch (e) {
-        if (!frame.previousFeed) {
-          frame.previousLink = null;
-          return;
-        }
-      }
-    } else {
+    try {
+      frame.previousLink = Services.io.newURI(href).spec;
+    } catch (e) {
       frame.previousLink = null;
-      // The exception is for feeds, where the href is an optional component
-      // indicating the source web site.
-      if (!frame.previousFeed) {
-        return;
-      }
+      return;
     }
 
     let bookmark = {};
 
-    // Only set the url for bookmarks, not for livemarks.
-    if (frame.previousLink && !frame.previousFeed) {
+    // Only set the url for bookmarks.
+    if (frame.previousLink) {
       bookmark.url = frame.previousLink;
     }
 
@@ -548,13 +522,6 @@ BookmarkImporter.prototype = {
 
     if (!dateAdded && lastModified) {
       bookmark.dateAdded = bookmark.lastModified;
-    }
-
-    if (frame.previousFeed) {
-      // This is a livemark, we've done all we need to do here, so finish early.
-      frame.folder.children.push(bookmark);
-      frame.previousItem = bookmark;
-      return;
     }
 
     if (tags) {
@@ -627,26 +594,6 @@ BookmarkImporter.prototype = {
     frame.previousText = frame.previousText.trim();
 
     if (frame.previousItem != null) {
-      if (frame.previousFeed) {
-        if (!frame.previousItem.hasOwnProperty("annos")) {
-          frame.previousItem.annos = [];
-        }
-        frame.previousItem.type = PlacesUtils.bookmarks.TYPE_FOLDER;
-        frame.previousItem.annos.push({
-          "name": PlacesUtils.LMANNO_FEEDURI,
-          "flags": 0,
-          "expires": 4,
-          "value": frame.previousFeed,
-        });
-        if (frame.previousLink) {
-          frame.previousItem.annos.push({
-            "name": PlacesUtils.LMANNO_SITEURI,
-            "flags": 0,
-            "expires": 4,
-            "value": frame.previousLink,
-          });
-        }
-      }
       frame.previousItem.title = frame.previousText;
     }
 
@@ -956,9 +903,7 @@ BookmarkExporter.prototype = {
     let localIndent = aIndent + EXPORT_INDENT;
 
     for (let child of aItem.children) {
-      if (child.annos && child.annos.some(anno => anno.name == PlacesUtils.LMANNO_FEEDURI)) {
-        this._writeLivemark(child, localIndent);
-      } else if (child.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
+      if (child.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
         await this._writeContainer(child, localIndent);
       } else if (child.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
         this._writeSeparator(child, localIndent);
@@ -974,17 +919,6 @@ BookmarkExporter.prototype = {
     if (aItem.title)
       this._writeAttribute("NAME", escapeHtmlEntities(aItem.title));
     this._write(">");
-  },
-
-  _writeLivemark(aItem, aIndent) {
-    this._write(aIndent + "<DT><A");
-    let feedSpec = aItem.annos.find(anno => anno.name == PlacesUtils.LMANNO_FEEDURI).value;
-    this._writeAttribute("FEEDURL", escapeUrl(feedSpec));
-    let siteSpecAnno = aItem.annos.find(anno => anno.name == PlacesUtils.LMANNO_SITEURI);
-    if (siteSpecAnno)
-      this._writeAttribute("HREF", escapeUrl(siteSpecAnno.value));
-    this._writeLine(">" + escapeHtmlEntities(aItem.title) + "</A>");
-    this._writeDescription(aItem, aIndent);
   },
 
   async _writeItem(aItem, aIndent) {

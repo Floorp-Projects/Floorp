@@ -39,10 +39,6 @@ var bookmarks_initial = {
     { uri: "http://www.cnn.com",
       description: "This is a description of the site a at www.cnn.com",
     },
-    { livemark: "Livemark1",
-      feedUri: "http://rss.wunderground.com/blog/JeffMasters/rss.xml",
-      siteUri: "http://www.wunderground.com/blog/JeffMasters/show.html",
-    },
   ],
   "menu/folderb": [
     { uri: "http://www.apple.com",

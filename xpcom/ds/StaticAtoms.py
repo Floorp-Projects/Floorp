@@ -2189,7 +2189,7 @@ STATIC_ATOMS = [
     Atom("onaddsourcebuffer", "onaddsourcebuffer"),
     Atom("onremovesourcebuffer", "onremovesourcebuffer"),
 
-    # RDF
+    # RDF (not used by mozilla-central, but still used by comm-central)
     Atom("about", "about"),
     Atom("ID", "ID"),
     Atom("nodeID", "nodeID"),

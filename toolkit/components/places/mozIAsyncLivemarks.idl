@@ -15,19 +15,6 @@ interface nsINavHistoryResultObserver;
 interface mozIAsyncLivemarks : nsISupports
 {
   /**
-   * Creates a new livemark
-   *
-   * @param aLivemarkInfo
-   *        mozILivemarkInfo object containing at least title, parentId,
-   *        index and feedURI of the livemark to create.
-   *
-   * @return {Promise}
-   * @throws NS_ERROR_INVALID_ARG if the supplied information is insufficient
-   *         for the creation.
-   */
-  jsval addLivemark(in jsval aLivemarkInfo);
-
-  /**
    * Removes an existing livemark.
    *
    * @param aLivemarkInfo
