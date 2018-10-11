@@ -104,10 +104,6 @@
 // Places string bundle, contains internationalized bookmark root names.
 #define PLACES_BUNDLE "chrome://places/locale/places.properties"
 
-// Livemarks annotations.
-#define LMANNO_FEEDURI "livemark/feedURI"
-#define LMANNO_SITEURI "livemark/siteURI"
-
 // This is no longer used & obsolete except for during migration.
 // Note: it may still be found in older places databases.
 #define MOBILE_ROOT_ANNO "mobile/bookmarksRoot"

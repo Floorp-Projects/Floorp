@@ -195,7 +195,7 @@ typedef RefPtr<const Module> SharedModule;
 
 // JS API implementations:
 
-bool
+MOZ_MUST_USE bool
 GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId);
 
 RefPtr<JS::WasmModule>

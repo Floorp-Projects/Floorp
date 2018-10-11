@@ -65,8 +65,11 @@ var test_bookmarks = {
     },
     { guid: "OCyeUO5uu9FR",
       title: "Latest Headlines",
-      url: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
-      feedUrl: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
+      // This used to be a livemark, but we don't import them anymore, instead
+      // it will be imported as an empty folder, because the json format stores
+      // it like that: an empty folder with a couple annotations. Since
+      // annotations will go away, there won't be a clean way to import it as a
+      // bookmark instead.
       // Note: date gets truncated to milliseconds, whereas the value in bookmarks.json
       // has full microseconds.
       dateAdded: 1361551979451000,
@@ -170,7 +173,6 @@ async function testImportedBookmarks() {
 }
 
 async function checkItem(aExpected, aNode) {
-  let id = aNode.itemId;
   let bookmark = await PlacesUtils.bookmarks.fetch(aNode.bookmarkGuid);
 
   for (let prop in aExpected) {
@@ -190,8 +192,7 @@ async function checkItem(aExpected, aNode) {
                      aExpected.lastModified);
         break;
       case "url":
-        if (!("feedUrl" in aExpected))
-          Assert.equal(aNode.uri, aExpected.url);
+        Assert.equal(aNode.uri, aExpected.url);
         break;
       case "icon":
         let {data} = await getFaviconDataForPage(aExpected.url);
@@ -215,11 +216,6 @@ async function checkItem(aExpected, aNode) {
       case "charset":
         let pageInfo = await PlacesUtils.history.fetch(aNode.uri, {includeAnnotations: true});
         Assert.equal(pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO), aExpected.charset);
-        break;
-      case "feedUrl":
-        let livemark = await PlacesUtils.livemarks.getLivemark({ id });
-        Assert.equal(livemark.siteURI.spec, aExpected.url);
-        Assert.equal(livemark.feedURI.spec, aExpected.feedUrl);
         break;
       case "children":
         let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
