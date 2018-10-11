@@ -49,6 +49,11 @@ class MOZ_STACK_CLASS BytecodeCompiler
                      SourceBufferHolder& sourceBuffer,
                      HandleScope enclosingScope);
 
+    // Call this before calling compile{Global,Eval}Script.
+    MOZ_MUST_USE bool prepareScriptParse() {
+        return createSourceAndParser(ParseGoal::Script);
+    }
+
     JSScript* compileGlobalScript(ScopeKind scopeKind);
     JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
 
@@ -340,9 +345,7 @@ BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObj
 JSScript*
 BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
 {
-    if (!createSourceAndParser(ParseGoal::Script)) {
-        return nullptr;
-    }
+    assertSourceAndParserCreated();
 
     if (!createScript()) {
         return nullptr;
@@ -411,6 +414,11 @@ JSScript*
 BytecodeCompiler::compileGlobalScript(ScopeKind scopeKind)
 {
     GlobalSharedContext globalsc(cx, scopeKind, directives, options.extraWarningsOption);
+
+    if (!prepareScriptParse()) {
+        return nullptr;
+    }
+
     return compileScript(nullptr, &globalsc);
 }
 
@@ -419,6 +427,11 @@ BytecodeCompiler::compileEvalScript(HandleObject environment, HandleScope enclos
 {
     EvalSharedContext evalsc(cx, environment, enclosingScope,
                              directives, options.extraWarningsOption);
+
+    if (!prepareScriptParse()) {
+        return nullptr;
+    }
+
     return compileScript(environment, &evalsc);
 }
 
