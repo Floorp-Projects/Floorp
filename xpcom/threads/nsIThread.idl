@@ -8,12 +8,16 @@
 
 %{C++
 #include "mozilla/AlreadyAddRefed.h"
+namespace mozilla {
+class TimeStamp;
+}
 %}
 
 [ptr] native PRThread(PRThread);
 
 native nsIEventTargetPtr(nsIEventTarget*);
 native nsISerialEventTargetPtr(nsISerialEventTarget*);
+native TimeStamp(mozilla::TimeStamp);
 
 /**
  * This interface provides a high-level abstraction for an operating system
@@ -153,4 +157,11 @@ interface nsIThread : nsISerialEventTarget
    * target is an nsISerialEventTarget and then returns it.
    */
   [noscript,notxpcom] nsISerialEventTargetPtr SerialEventTarget();
+
+  /**
+   * This is set to the end of the last 50+ms event that was executed on
+   * this thread (for MainThread only).  Otherwise returns a null TimeStamp.
+   */
+  [noscript] readonly attribute TimeStamp lastLongTaskEnd;
+  [noscript] readonly attribute TimeStamp lastLongNonIdleTaskEnd;
 };

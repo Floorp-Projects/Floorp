@@ -347,4 +347,16 @@ private:
   mozilla::ServoTraversalStatistics mStats;
 };
 
+class LongTaskMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  LongTaskMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                        const mozilla::TimeStamp& aEndTime)
+    : ProfilerMarkerPayload(aStartTime, aEndTime)
+  {
+  }
+
+  DECL_STREAM_PAYLOAD
+};
+
 #endif // ProfilerMarkerPayload_h
