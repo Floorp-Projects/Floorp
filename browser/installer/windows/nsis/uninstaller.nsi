@@ -605,8 +605,15 @@ FunctionEnd
 
 Function un.preFinish
   ; Need to give the survey (readme) checkbox a few extra DU's of height
-  ; to accommodate a potentially multi-line label.
-  WriteINIStr "$PLUGINSDIR\ioSpecial.ini" "Field 4" Bottom "120"
+  ; to accommodate a potentially multi-line label. If the reboot flag is set,
+  ; then we're not showing the survey checkbox and Field 4 is the "reboot now"
+  ; radio button; setting it to go from 90 to 120 (instead of 90 to 100) would
+  ; cover up Field 5 which is "reboot later", running from 110 to 120. For
+  ; whatever reason child windows get created at the bottom of the z-order, so
+  ; 4 overlaps 5.
+  ${IfNot} ${RebootFlag}
+    WriteINIStr "$PLUGINSDIR\ioSpecial.ini" "Field 4" Bottom "120"
+  ${EndIf}
 FunctionEnd
 
 ################################################################################
