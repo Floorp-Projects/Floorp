@@ -203,8 +203,16 @@ class ExtensionControlledPopup {
       return;
     }
 
-    // Find the elements we need.
     let win = targetWindow || this.topWindow;
+    // If the window closes while waiting for focus, this might reject/throw,
+    // and we should stop trying to show the popup.
+    try {
+      await this._ensureWindowReady(win);
+    } catch (ex) {
+      return;
+    }
+
+    // Find the elements we need.
     let doc = win.document;
     let panel = doc.getElementById("extension-notification-panel");
     let popupnotification = doc.getElementById(this.popupnotificationId);
@@ -300,5 +308,47 @@ class ExtensionControlledPopup {
     link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + this.learnMoreLink;
     link.textContent = strBundle.GetStringFromName(this.learnMoreMessageId);
     description.appendChild(link);
+  }
+
+  _ensureWindowReady(win) {
+    return new Promise(async (resolve, reject) => {
+      if (win.closed) {
+        reject();
+        return;
+      }
+      let promises = [];
+      let listenersToRemove = [];
+      function promiseEvent(type) {
+        promises.push(new Promise(resolve => {
+          let listener = () => {
+            win.removeEventListener(type, listener);
+            resolve();
+          };
+          win.addEventListener(type, listener);
+          listenersToRemove.push([type, listener]);
+        }));
+      }
+      if (Services.focus.activeWindow != win) {
+        promiseEvent("activate");
+      }
+      if (Services.focus.focusedWindow != win) {
+        promiseEvent("focus");
+      }
+      let unloadListener;
+      if (promises.length) {
+        unloadListener = () => {
+          for (let [type, listener] of listenersToRemove) {
+            win.removeEventListener(type, listener);
+          }
+          reject();
+        };
+        win.addEventListener("unload", unloadListener, {once: true});
+      }
+      await Promise.all(promises);
+      if (unloadListener) {
+        win.removeEventListener("unload", unloadListener);
+      }
+      resolve();
+    });
   }
 }
