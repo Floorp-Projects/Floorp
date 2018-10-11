@@ -52,6 +52,7 @@ matrix:
       python: "2.7"
       env: JOB=build_css SCRIPT=css/build-css-testsuites.sh
     - name: "stability (Firefox Nightly)"
+      if: type = pull_request
       os: linux
       python: "2.7"
       addons:
