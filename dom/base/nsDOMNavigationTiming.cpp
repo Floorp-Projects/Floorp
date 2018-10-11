@@ -19,6 +19,7 @@
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "ProfilerMarkerPayload.h"
 
 using namespace mozilla;
 
@@ -253,6 +254,113 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
   }
 }
 
+// static
+void
+nsDOMNavigationTiming::TTITimeoutCallback(nsITimer* aTimer, void *aClosure)
+{
+  nsDOMNavigationTiming* self = static_cast<nsDOMNavigationTiming*>(aClosure);
+  self->TTITimeout(aTimer);
+}
+
+// Return the max of aT1 and aT2, or the lower of the two if there's more
+// than Nms (the window size) between them.  In other words, the window
+// starts at the lower of aT1 and aT2, and we only want to respect
+// timestamps within the window (and pick the max of those).
+//
+// This approach handles the edge case of a late wakeup: where there was
+// more than Nms after one (of aT1 or aT2) without the other, but the other
+// happened after Nms and before we woke up.  For example, if aT1 was 10
+// seconds after aT2, but we woke up late (after aT1) we don't want to
+// return aT1 if the window is 5 seconds.
+static const TimeStamp&
+MaxWithinWindowBeginningAtMin(const TimeStamp& aT1, const TimeStamp& aT2,
+                              const TimeDuration& aWindowSize)
+{
+  if (aT2.IsNull()) {
+    return aT1;
+  } else if (aT1.IsNull()) {
+    return aT2;
+  }
+  if (aT1 > aT2) {
+    if ((aT1 - aT2) > aWindowSize) {
+      return aT2;
+    }
+    return aT1;
+  }
+  if ((aT2 - aT1) > aWindowSize) {
+    return aT1;
+  }
+  return aT2;
+}
+
+#define TTI_WINDOW_SIZE_MS (5 * 1000)
+
+void
+nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer)
+{
+  // Check TTI: see if it's been 5 seconds since the last Long Task
+  TimeStamp now = TimeStamp::Now();
+  MOZ_RELEASE_ASSERT(!mNonBlankPaint.IsNull(), "TTI timeout with no non-blank-paint?");
+
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  TimeStamp lastLongTaskEnded;
+  mainThread->GetLastLongNonIdleTaskEnd(&lastLongTaskEnded);
+  if (!lastLongTaskEnded.IsNull()) {
+    TimeDuration delta = now - lastLongTaskEnded;
+    if (delta.ToMilliseconds() < TTI_WINDOW_SIZE_MS) {
+      // Less than 5 seconds since the last long task.  Schedule another check
+      aTimer->InitWithNamedFuncCallback(TTITimeoutCallback, this, TTI_WINDOW_SIZE_MS,
+                                        nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                                         "nsDOMNavigationTiming::TTITimeout");
+      return;
+    }
+  }
+  // To correctly implement TTI/TTFI as proposed, we'd need to use
+  // FirstContentfulPaint (FCP, which we have not yet implemented) instead
+  // of FirstNonBlankPaing (FNBP) to start at, and not fire it until there
+  // are no more than 2 network loads.  By the proposed definition, without
+  // that we're closer to TimeToFirstInteractive.
+
+  // XXX check number of network loads, and if > 2 mark to check if loads
+  // decreases to 2 (or record that point and let the normal timer here
+  // handle it)
+
+  // TTI has occurred!  TTI is either FCP (if there are no longtasks and no
+  // DCLEnd in the window that starts at FCP), or at the end of the last
+  // Long Task or DOMContentLoadedEnd (whichever is later).
+
+  if (mTTFI.IsNull()) {
+    mTTFI = MaxWithinWindowBeginningAtMin(lastLongTaskEnded, mDOMContentLoadedEventEnd,
+                                          TimeDuration::FromMilliseconds(TTI_WINDOW_SIZE_MS));
+    if (mTTFI.IsNull()) {
+      mTTFI = mNonBlankPaint;
+    }
+  }
+  // XXX Implement TTI via check number of network loads, and if > 2 mark
+  // to check if loads decreases to 2 (or record that point and let the
+  // normal timer here handle it)
+
+  mTTITimer = nullptr;
+
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active()) {
+    TimeDuration elapsed = mTTFI - mNavigationStart;
+    TimeDuration elapsedLongTask = lastLongTaskEnded.IsNull() ? 0 : lastLongTaskEnded - mNavigationStart;
+    nsAutoCString spec;
+    if (mLoadedURI) {
+      mLoadedURI->GetSpec(spec);
+    }
+    nsPrintfCString marker("TTFI after %dms (LongTask after %dms) for URL %s",
+                           int(elapsed.ToMilliseconds()),
+                           int(elapsedLongTask.ToMilliseconds()),spec.get());
+
+    profiler_add_marker(
+      "TTI", MakeUnique<UserTimingMarkerPayload>(NS_ConvertASCIItoUTF16(marker), mTTFI));
+  }
+#endif
+  return;
+}
+
 void
 nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
 {
@@ -278,6 +386,15 @@ nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
     profiler_add_marker(marker.get());
   }
 #endif
+
+  if (!mTTITimer) {
+    mTTITimer = NS_NewTimer();
+  }
+
+  // TTI is first checked 5 seconds after the FCP (non-blank-paint is very close to FCP).
+  mTTITimer->InitWithNamedFuncCallback(TTITimeoutCallback, this, TTI_WINDOW_SIZE_MS,
+                                       nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                                       "nsDOMNavigationTiming::TTITimeout");
 
   if (mDocShellHasBeenActiveSinceNavigationStart) {
     if (net::nsHttp::IsBeforeLastActiveTabLoadOptimization(mNavigationStart)) {
