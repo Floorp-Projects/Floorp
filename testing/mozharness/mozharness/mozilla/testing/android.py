@@ -5,12 +5,16 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 
+import datetime
 import glob
 import os
 import re
+import signal
 import subprocess
+import time
 import tempfile
 from mozharness.mozilla.automation import TBPL_RETRY, EXIT_STATUS_DICT
+from mozharness.base.script import PostScriptAction
 
 
 class AndroidMixin(object):
@@ -21,6 +25,7 @@ class AndroidMixin(object):
     def __init__(self, **kwargs):
         self._adb_path = None
         self._device = None
+        self.app_name = None
         self.device_name = os.environ.get('DEVICE_NAME', None)
         self.device_serial = os.environ.get('DEVICE_SERIAL', None)
         self.device_ip = os.environ.get('DEVICE_IP', None)
@@ -63,6 +68,24 @@ class AndroidMixin(object):
                 pass
         return self._device
 
+    @property
+    def is_android(self):
+        try:
+            c = self.config
+            installer_url = c.get('installer_url', None)
+            return self.device_serial is not None or self.is_emulator or \
+                (installer_url is not None and installer_url.endswith(".apk"))
+        except AttributeError:
+            return False
+
+    @property
+    def is_emulator(self):
+        try:
+            c = self.config
+            return True if c.get('emulator_manifest') else False
+        except AttributeError:
+            return False
+
     def _get_repo_url(self, path):
         """
            Return a url for a file (typically a tooltool manifest) in this hg repo
@@ -101,6 +124,112 @@ class AndroidMixin(object):
         self.tooltool_fetch(manifest_path,
                             output_dir=dir,
                             cache=c.get("tooltool_cache", None))
+
+    def _launch_emulator(self):
+        env = self.query_env()
+
+        # Write a default ddms.cfg to avoid unwanted prompts
+        avd_home_dir = self.abs_dirs['abs_avds_dir']
+        DDMS_FILE = os.path.join(avd_home_dir, "ddms.cfg")
+        with open(DDMS_FILE, 'w') as f:
+            f.write("pingOptIn=false\npingId=0\n")
+        self.info("wrote dummy %s" % DDMS_FILE)
+
+        # Delete emulator auth file, so it doesn't prompt
+        AUTH_FILE = os.path.join(os.path.expanduser('~'), '.emulator_console_auth_token')
+        if os.path.exists(AUTH_FILE):
+            try:
+                os.remove(AUTH_FILE)
+                self.info("deleted %s" % AUTH_FILE)
+            except Exception:
+                self.warning("failed to remove %s" % AUTH_FILE)
+
+        avd_path = os.path.join(avd_home_dir, 'avd')
+        if os.path.exists(avd_path):
+            env['ANDROID_AVD_HOME'] = avd_path
+            self.info("Found avds at %s" % avd_path)
+        else:
+            self.warning("AVDs missing? Not found at %s" % avd_path)
+
+        if "deprecated_sdk_path" in self.config:
+            sdk_path = os.path.abspath(os.path.join(avd_home_dir, '..'))
+        else:
+            sdk_path = os.path.join(self.abs_dirs['abs_work_dir'], 'android-sdk-linux')
+        if os.path.exists(sdk_path):
+            env['ANDROID_SDK_HOME'] = sdk_path
+            self.info("Found sdk at %s" % sdk_path)
+        else:
+            self.warning("Android sdk missing? Not found at %s" % sdk_path)
+
+        # extra diagnostics for kvm acceleration
+        emu = self.config.get('emulator_process_name')
+        if os.path.exists('/dev/kvm') and emu and 'x86' in emu:
+            try:
+                self.run_command(['ls', '-l', '/dev/kvm'])
+                self.run_command(['kvm-ok'])
+                self.run_command(["emulator", "-accel-check"], env=env)
+            except Exception as e:
+                self.warning("Extra kvm diagnostics failed: %s" % str(e))
+
+        command = ["emulator", "-avd", self.config["emulator_avd_name"]]
+        if "emulator_extra_args" in self.config:
+            command += self.config["emulator_extra_args"].split()
+
+        dir = self.query_abs_dirs()['abs_blob_upload_dir']
+        tmp_file = tempfile.NamedTemporaryFile(mode='w', prefix='emulator-',
+                                               suffix='.log', dir=dir, delete=False)
+        self.info("Launching the emulator with: %s" % ' '.join(command))
+        self.info("Writing log to %s" % tmp_file.name)
+        proc = subprocess.Popen(command, stdout=tmp_file, stderr=tmp_file, env=env, bufsize=0)
+        return proc
+
+    def _verify_emulator(self):
+        boot_ok = self._retry(30, 10, self.is_boot_completed, "Verify Android boot completed",
+                              max_time=330)
+        if not boot_ok:
+            self.warning('Unable to verify Android boot completion')
+            return False
+        return True
+
+    def _verify_emulator_and_restart_on_fail(self):
+        emulator_ok = self._verify_emulator()
+        if not emulator_ok:
+            self.screenshot("emulator-startup-screenshot-")
+            self.kill_processes(self.config["emulator_process_name"])
+            subprocess.check_call(['ps', '-ef'])
+            # remove emulator tmp files
+            for dir in glob.glob("/tmp/android-*"):
+                self.rmtree(dir)
+            time.sleep(5)
+            self.emulator_proc = self._launch_emulator()
+        return emulator_ok
+
+    def _retry(self, max_attempts, interval, func, description, max_time=0):
+        '''
+        Execute func until it returns True, up to max_attempts times, waiting for
+        interval seconds between each attempt. description is logged on each attempt.
+        If max_time is specified, no further attempts will be made once max_time
+        seconds have elapsed; this provides some protection for the case where
+        the run-time for func is long or highly variable.
+        '''
+        status = False
+        attempts = 0
+        if max_time > 0:
+            end_time = datetime.datetime.now() + datetime.timedelta(seconds=max_time)
+        else:
+            end_time = None
+        while attempts < max_attempts and not status:
+            if (end_time is not None) and (datetime.datetime.now() > end_time):
+                self.info("Maximum retry run-time of %d seconds exceeded; "
+                          "remaining attempts abandoned" % max_time)
+                break
+            if attempts != 0:
+                self.info("Sleeping %d seconds" % interval)
+                time.sleep(interval)
+            attempts += 1
+            self.info(">> %s: Attempt #%d of %d" % (description, attempts, max_attempts))
+            status = func()
+        return status
 
     def dump_perf_info(self):
         '''
@@ -161,7 +290,6 @@ class AndroidMixin(object):
         """
            Start recording logcat. Writes logcat to the upload directory.
         """
-        self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
         # Start logcat for the device. The adb process runs until the
         # corresponding device is stopped. Output is written directly to
         # the blobber upload directory so that it is uploaded automatically
@@ -268,3 +396,112 @@ class AndroidMixin(object):
             self.run_command(unzip_cmd, cwd=apk_dir, halt_on_failure=True)
             self.app_name = str(self.read_from_file(package_path, verbose=True)).rstrip()
         return self.app_name
+
+    def kill_processes(self, process_name):
+        self.info("Killing every process called %s" % process_name)
+        out = subprocess.check_output(['ps', '-A'])
+        for line in out.splitlines():
+            if process_name in line:
+                pid = int(line.split(None, 1)[0])
+                self.info("Killing pid %d." % pid)
+                os.kill(pid, signal.SIGKILL)
+
+    # Script actions
+
+    def setup_avds(self):
+        """
+        If tooltool cache mechanism is enabled, the cached version is used by
+        the fetch command. If the manifest includes an "unpack" field, tooltool
+        will unpack all compressed archives mentioned in the manifest.
+        """
+        if not self.is_emulator:
+            return
+
+        c = self.config
+        dirs = self.query_abs_dirs()
+        self.mkdir_p(dirs['abs_work_dir'])
+        self.mkdir_p(dirs['abs_blob_upload_dir'])
+
+        # Always start with a clean AVD: AVD includes Android images
+        # which can be stateful.
+        self.rmtree(dirs['abs_avds_dir'])
+        self.mkdir_p(dirs['abs_avds_dir'])
+        if 'avd_url' in c:
+            # Intended for experimental setups to evaluate an avd prior to
+            # tooltool deployment.
+            url = c['avd_url']
+            self.download_unpack(url, dirs['abs_avds_dir'])
+        else:
+            url = self._get_repo_url(c["tooltool_manifest_path"])
+            self._tooltool_fetch(url, dirs['abs_avds_dir'])
+
+        avd_home_dir = self.abs_dirs['abs_avds_dir']
+        if avd_home_dir != "/home/cltbld/.android":
+            # Modify the downloaded avds to point to the right directory.
+            cmd = [
+                'bash', '-c',
+                'sed -i "s|/home/cltbld/.android|%s|" %s/test-*.ini' %
+                (avd_home_dir, os.path.join(avd_home_dir, 'avd'))
+            ]
+            subprocess.check_call(cmd)
+
+    def start_emulator(self):
+        """
+        Starts the emulator
+        """
+        if not self.is_emulator:
+            return
+
+        if 'emulator_url' in self.config or 'emulator_manifest' in self.config:
+            dirs = self.query_abs_dirs()
+            if self.config.get('emulator_url'):
+                self.download_unpack(self.config['emulator_url'], dirs['abs_work_dir'])
+            elif self.config.get('emulator_manifest'):
+                manifest_path = self.create_tooltool_manifest(self.config['emulator_manifest'])
+                dirs = self.query_abs_dirs()
+                cache = self.config.get("tooltool_cache", None)
+                if self.tooltool_fetch(manifest_path,
+                                       output_dir=dirs['abs_work_dir'],
+                                       cache=cache):
+                    self.fatal("Unable to download emulator via tooltool!")
+        else:
+            self.fatal("Cannot get emulator: configure emulator_url or emulator_manifest")
+        if not os.path.isfile(self.adb_path):
+            self.fatal("The adb binary '%s' is not a valid file!" % self.adb_path)
+        self.kill_processes("xpcshell")
+        self.emulator_proc = self._launch_emulator()
+
+    def verify_device(self):
+        """
+        Check to see if the emulator can be contacted via adb.
+        If any communication attempt fails, kill the emulator, re-launch, and re-check.
+        """
+        if not self.is_android:
+            return
+
+        if self.is_emulator:
+            max_restarts = 5
+            emulator_ok = self._retry(max_restarts, 10,
+                                      self._verify_emulator_and_restart_on_fail,
+                                      "Check emulator")
+            if not emulator_ok:
+                self.fatal('INFRA-ERROR: Unable to start emulator after %d attempts'
+                           % max_restarts, EXIT_STATUS_DICT[TBPL_RETRY])
+
+        self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
+        self.dump_perf_info()
+        self.logcat_start()
+        # Get a post-boot device process list for diagnostics
+        self.info(self.shell_output('ps'))
+
+    @PostScriptAction('run-tests')
+    def stop_device(self, action, success=None):
+        """
+        Stop logcat and kill the emulator, if necessary.
+        """
+        if not self.is_android:
+            return
+
+        self.logcat_stop()
+        if self.is_emulator:
+            self.kill_processes(self.config["emulator_process_name"])
