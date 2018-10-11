@@ -168,6 +168,11 @@ add_task(async function e10sLostKeys() {
     return;
   }
 
+  if (AppConstants.platform == "linux" && !AppConstants.DEBUG) {
+    info("Skipping this test because of linux opt (Bug 1491484).");
+    return;
+  }
+
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE_URI);
 
   ok(!gFindBarInitialized, "findbar isn't initialized yet");
