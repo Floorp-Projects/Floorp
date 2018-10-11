@@ -9,6 +9,7 @@ testText("<div>abc\ndef", "abc def", "\\n converted to space");
 testText("<div>abc\rdef", "abc def", "\\r converted to space");
 testText("<div>abc\tdef", "abc def", "\\t converted to space");
 testText("<div>abc <br>def", "abc\ndef", "Trailing whitespace before hard line break removed");
+testText("<div>abc<br> def", "abc\ndef", "Leading whitespace after hard line break removed");
 
 /**** <pre> ****/
 
