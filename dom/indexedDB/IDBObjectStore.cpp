@@ -2239,7 +2239,9 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
        index < count;
        index++) {
     if (aName == indexes[index].name()) {
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR);
+      aRv.ThrowDOMException(NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR,
+        nsPrintfCString("Index named '%s' already exists at index '%u'",
+                        NS_ConvertUTF16toUTF8(aName).get(), index));
       return nullptr;
     }
   }
