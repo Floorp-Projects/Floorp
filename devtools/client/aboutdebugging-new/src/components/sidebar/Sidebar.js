@@ -60,6 +60,7 @@ class Sidebar extends PureComponent {
 
       return SidebarRuntimeItem({
         id: pageId,
+        deviceName: runtime.extra.deviceName,
         dispatch,
         icon,
         isConnected: runtimeHasConnection,
