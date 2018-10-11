@@ -16,6 +16,7 @@ object ErrorPages {
     fun createErrorPage(
         context: Context,
         errorType: ErrorType,
+        uri: String? = null,
         @RawRes htmlResource: Int = R.raw.error_pages,
         @RawRes cssResource: Int = R.raw.error_style
     ): String {
@@ -29,7 +30,7 @@ object ErrorPages {
             .replace("%pageTitle%", context.getString(R.string.errorpage_title))
             .replace("%button%", context.getString(R.string.errorpage_refresh))
             .replace("%messageShort%", context.getString(errorType.titleRes))
-            .replace("%messageLong%", context.getString(errorType.messageRes))
+            .replace("%messageLong%", context.getString(errorType.messageRes, uri))
             .replace("%css%", css)
     }
 }

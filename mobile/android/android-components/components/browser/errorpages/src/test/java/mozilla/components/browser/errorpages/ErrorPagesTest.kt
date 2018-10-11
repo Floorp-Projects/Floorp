@@ -9,6 +9,7 @@ package mozilla.components.browser.errorpages
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -28,6 +29,7 @@ class ErrorPagesTest {
         Assert.assertFalse(errorPage.contains("%messageShort%"))
         Assert.assertFalse(errorPage.contains("%messageLong%"))
         Assert.assertFalse(errorPage.contains("%css%"))
-        verify(context, times(4)).getString(anyInt())
+        verify(context, times(3)).getString(anyInt())
+        verify(context, times(1)).getString(anyInt(), nullable(String::class.java))
     }
 }
