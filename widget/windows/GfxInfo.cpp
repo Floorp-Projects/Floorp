@@ -1410,6 +1410,14 @@ GfxInfo::GetGfxDriverInfo()
       DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, 4459, "FEATURE_BLOCKED_DRIVER_VERSION");
 
     ////////////////////////////////////
+    // FEATURE_DX_P010
+
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_DX_P010, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+      DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_UNQUALIFIED_P010_NVIDIA");
+
+    ////////////////////////////////////
     // FEATURE_WEBRENDER
 
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
