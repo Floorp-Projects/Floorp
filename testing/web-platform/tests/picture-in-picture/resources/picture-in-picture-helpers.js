@@ -8,7 +8,7 @@ function loadVideo(activeDocument, sourceUrl) {
   return new Promise((resolve, reject) => {
     const document = activeDocument || window.document;
     const video = document.createElement('video');
-    video.src = sourceUrl || '/media/movie_5.ogv';
+    video.src = sourceUrl || getVideoURI('/media/movie_5');
     video.onloadedmetadata = () => { resolve(video); };
     video.onerror = error => { reject(error); };
   });
