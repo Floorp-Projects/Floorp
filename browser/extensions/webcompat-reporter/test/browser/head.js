@@ -1,3 +1,10 @@
+"use strict";
+
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
+
+const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+
 const PREF_WC_REPORTER_ENABLED = "extensions.webcompat-reporter.enabled";
 const PREF_WC_REPORTER_ENDPOINT = "extensions.webcompat-reporter.newIssueEndpoint";
 
@@ -5,14 +12,79 @@ const TEST_ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/conte
 const TEST_PAGE = TEST_ROOT + "test.html";
 const NEW_ISSUE_PAGE = TEST_ROOT + "webcompat.html";
 
-const WC_PAGE_ACTION_ID = "pageAction-panel-webcompat-reporter-button";
-const WC_PAGE_ACTION_URLBAR_ID = "pageAction-urlbar-webcompat-reporter-button";
+const WC_ADDON_ID = "webcompat-reporter@mozilla.org";
 
-function isButtonDisabled() {
-  return document.getElementById(WC_PAGE_ACTION_ID).disabled;
+const WC_PAGE_ACTION_ID = "webcompat-reporter_mozilla_org";
+const WC_PAGE_ACTION_PANEL_ID = "pageAction-panel-webcompat-reporter_mozilla_org";
+const WC_PAGE_ACTION_URLBAR_ID = "pageAction-urlbar-webcompat-reporter_mozilla_org";
+
+
+const oldPAadd = PageActions.addAction;
+const placedSignal = "webext-page-action-placed";
+PageActions.addAction = function(action) {
+  oldPAadd.call(this, action);
+  if (action.id === WC_PAGE_ACTION_ID) {
+    Services.obs.notifyObservers(null, placedSignal);
+  }
+  return action;
+};
+const oldPAremoved = PageActions.onActionRemoved;
+const removedSignal = "webext-page-action-removed";
+PageActions.onActionRemoved = function(action) {
+  oldPAremoved.call(this, action);
+  if (action.id === WC_PAGE_ACTION_ID) {
+    Services.obs.notifyObservers(null, removedSignal);
+  }
+  return action;
+};
+
+function promisePageActionSignal(signal) {
+  return new Promise(done => {
+    const obs = function() {
+      Services.obs.removeObserver(obs, signal);
+      done();
+    };
+    Services.obs.addObserver(obs, signal);
+  });
 }
 
-function isURLButtonEnabled() {
+function promisePageActionPlaced() {
+  return promisePageActionSignal(placedSignal);
+}
+
+function promisePageActionRemoved() {
+  return promisePageActionSignal(removedSignal);
+}
+
+
+async function promiseAddonEnabled() {
+  const addon = await AddonManager.getAddonByID(WC_ADDON_ID);
+  if (addon.isActive) {
+    return;
+  }
+  const pref = SpecialPowers.Services.prefs.getBoolPref(PREF_WC_REPORTER_ENABLED, false);
+  if (!pref) {
+    SpecialPowers.Services.prefs.setBoolPref(PREF_WC_REPORTER_ENABLED, true);
+  }
+  await promisePageActionPlaced();
+}
+
+
+async function isPanelItemEnabled() {
+  const icon = document.getElementById(WC_PAGE_ACTION_PANEL_ID);
+  return icon && !icon.disabled;
+}
+
+async function isPanelItemDisabled() {
+  const icon = document.getElementById(WC_PAGE_ACTION_PANEL_ID);
+  return icon && icon.disabled;
+}
+
+async function isPanelItemPresent() {
+  return document.getElementById(WC_PAGE_ACTION_PANEL_ID) !== null;
+}
+
+async function isURLButtonPresent() {
   return document.getElementById(WC_PAGE_ACTION_URLBAR_ID) !== null;
 }
 
@@ -48,7 +120,7 @@ function promisePageActionPanelShown() {
     }
     BrowserPageActions.panelNode.addEventListener("popupshown", () => {
       executeSoon(resolve);
-    }, { once: true });
+    }, {once: true});
   });
 }
 
@@ -68,9 +140,55 @@ function promisePageActionViewChildrenVisible(panelViewNode) {
 }
 
 function pinToURLBar() {
-  PageActions.actionForID("webcompat-reporter-button").pinnedToUrlbar = true;
+  PageActions.actionForID(WC_PAGE_ACTION_ID).pinnedToUrlbar = true;
 }
 
 function unpinFromURLBar() {
-  PageActions.actionForID("webcompat-reporter-button").pinnedToUrlbar = false;
+  PageActions.actionForID(WC_PAGE_ACTION_ID).pinnedToUrlbar = false;
+}
+
+async function startIssueServer() {
+  const BinaryInputStream =
+    Components.Constructor("@mozilla.org/binaryinputstream;1",
+                           "nsIBinaryInputStream", "setInputStream");
+  function getRequestData(request) {
+    const body = new BinaryInputStream(request.bodyInputStream);
+    const bytes = [];
+    let avail;
+    while ((avail = body.available()) > 0) {
+      Array.prototype.push.apply(bytes, body.readByteArray(avail));
+    }
+    return String.fromCharCode.apply(null, bytes);
+  }
+
+  const landingTemplate = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", NEW_ISSUE_PAGE);
+    xhr.onload = () => {
+      resolve(xhr.responseText);
+    };
+    xhr.onerror = reject;
+    xhr.send();
+  });
+
+  const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
+  const server = new HttpServer();
+
+  registerCleanupFunction(async function cleanup() {
+    await new Promise(resolve => server.stop(resolve));
+  });
+
+  server.registerPathHandler("/new", function(request, response) {
+    response.setHeader("Content-Type", "text/html", false);
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    const postData = JSON.parse(getRequestData(request));
+    const url = postData.url;
+    const details = JSON.stringify(postData.details);
+    const output = landingTemplate.replace("$$URL$$", url)
+                                  .replace("$$DETAILS$$", details);
+    response.write(output);
+  });
+
+  server.start(-1);
+  return `http://localhost:${server.identity.primaryPort}/new`;
 }
