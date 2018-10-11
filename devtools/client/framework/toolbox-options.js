@@ -460,7 +460,7 @@ OptionsPanel.prototype = {
     }
 
     if (this.target.activeTab && !this.target.chrome) {
-      const [ response ] = await this.target.client.attachTarget(this.target.activeTab._actor);
+      const response = await this.target.activeTab.attach();
       this._origJavascriptEnabled = !response.javascriptEnabled;
       this.disableJSNode.checked = this._origJavascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
