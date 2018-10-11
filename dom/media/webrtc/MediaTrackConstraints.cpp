@@ -21,7 +21,6 @@ mozilla::LogModule* GetMediaManagerLog();
 namespace mozilla {
 
 using dom::ConstrainBooleanParameters;
-using dom::OwningLongOrConstrainLongRange;
 
 template<class ValueType>
 template<class ConstrainRange>
@@ -91,21 +90,25 @@ NormalizedConstraintSet::Range<bool>::FinalizeMerge()
 NormalizedConstraintSet::LongRange::LongRange(
     LongPtrType aMemberPtr,
     const char* aName,
-    const dom::OwningLongOrConstrainLongRange& aOther,
+    const dom::Optional<dom::OwningLongOrConstrainLongRange>& aOther,
     bool advanced,
     nsTArray<MemberPtrType>* aList)
 : Range<int32_t>((MemberPtrType)aMemberPtr, aName,
                  1 + INT32_MIN, INT32_MAX, // +1 avoids Windows compiler bug
                  aList)
 {
-  if (aOther.IsLong()) {
+  if (!aOther.WasPassed()) {
+    return;
+  }
+  auto& other = aOther.Value();
+  if (other.IsLong()) {
     if (advanced) {
-      mMin = mMax = aOther.GetAsLong();
+      mMin = mMax = other.GetAsLong();
     } else {
-      mIdeal.emplace(aOther.GetAsLong());
+      mIdeal.emplace(other.GetAsLong());
     }
   } else {
-    SetFrom(aOther.GetAsConstrainLongRange());
+    SetFrom(other.GetAsConstrainLongRange());
   }
 }
 
@@ -124,39 +127,48 @@ NormalizedConstraintSet::LongLongRange::LongLongRange(
 NormalizedConstraintSet::DoubleRange::DoubleRange(
     DoublePtrType aMemberPtr,
     const char* aName,
-    const dom::OwningDoubleOrConstrainDoubleRange& aOther, bool advanced,
+    const dom::Optional<dom::OwningDoubleOrConstrainDoubleRange>& aOther,
+    bool advanced,
     nsTArray<MemberPtrType>* aList)
 : Range<double>((MemberPtrType)aMemberPtr, aName,
                 -std::numeric_limits<double>::infinity(),
                 std::numeric_limits<double>::infinity(), aList)
 {
-  if (aOther.IsDouble()) {
+  if (!aOther.WasPassed()) {
+    return;
+  }
+  auto& other = aOther.Value();
+  if (other.IsDouble()) {
     if (advanced) {
-      mMin = mMax = aOther.GetAsDouble();
+      mMin = mMax = other.GetAsDouble();
     } else {
-      mIdeal.emplace(aOther.GetAsDouble());
+      mIdeal.emplace(other.GetAsDouble());
     }
   } else {
-    SetFrom(aOther.GetAsConstrainDoubleRange());
+    SetFrom(other.GetAsConstrainDoubleRange());
   }
 }
 
 NormalizedConstraintSet::BooleanRange::BooleanRange(
     BooleanPtrType aMemberPtr,
     const char* aName,
-    const dom::OwningBooleanOrConstrainBooleanParameters& aOther,
+    const dom::Optional<dom::OwningBooleanOrConstrainBooleanParameters>& aOther,
     bool advanced,
     nsTArray<MemberPtrType>* aList)
 : Range<bool>((MemberPtrType)aMemberPtr, aName, false, true, aList)
 {
-  if (aOther.IsBoolean()) {
+  if (!aOther.WasPassed()) {
+    return;
+  }
+  auto& other = aOther.Value();
+  if (other.IsBoolean()) {
     if (advanced) {
-      mMin = mMax = aOther.GetAsBoolean();
+      mMin = mMax = other.GetAsBoolean();
     } else {
-      mIdeal.emplace(aOther.GetAsBoolean());
+      mIdeal.emplace(other.GetAsBoolean());
     }
   } else {
-    const dom::ConstrainBooleanParameters& r = aOther.GetAsConstrainBooleanParameters();
+    auto& r = other.GetAsConstrainBooleanParameters();
     if (r.mIdeal.WasPassed()) {
       mIdeal.emplace(r.mIdeal.Value());
     }
@@ -170,31 +182,35 @@ NormalizedConstraintSet::BooleanRange::BooleanRange(
 NormalizedConstraintSet::StringRange::StringRange(
     StringPtrType aMemberPtr,
     const char* aName,
-    const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aOther,
+    const dom::Optional<dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters>& aOther,
     bool advanced,
     nsTArray<MemberPtrType>* aList)
   : BaseRange((MemberPtrType)aMemberPtr, aName, aList)
 {
-  if (aOther.IsString()) {
+  if (!aOther.WasPassed()) {
+    return;
+  }
+  auto& other = aOther.Value();
+  if (other.IsString()) {
     if (advanced) {
-      mExact.insert(aOther.GetAsString());
+      mExact.insert(other.GetAsString());
     } else {
-      mIdeal.insert(aOther.GetAsString());
+      mIdeal.insert(other.GetAsString());
     }
-  } else if (aOther.IsStringSequence()) {
+  } else if (other.IsStringSequence()) {
     if (advanced) {
       mExact.clear();
-      for (auto& str : aOther.GetAsStringSequence()) {
+      for (auto& str : other.GetAsStringSequence()) {
         mExact.insert(str);
       }
     } else {
       mIdeal.clear();
-      for (auto& str : aOther.GetAsStringSequence()) {
+      for (auto& str : other.GetAsStringSequence()) {
         mIdeal.insert(str);
       }
     }
   } else {
-    SetFrom(aOther.GetAsConstrainDOMStringParameters());
+    SetFrom(other.GetAsConstrainDOMStringParameters());
   }
 }
 
