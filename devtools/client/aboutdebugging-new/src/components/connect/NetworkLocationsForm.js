@@ -46,7 +46,7 @@ class NetworkLocationsForm extends PureComponent {
         },
         dom.label(
           {
-            for: "about-debugging-network-locations-host-input",
+            htmlFor: "about-debugging-network-locations-host-input",
           },
           "Host",
         )
