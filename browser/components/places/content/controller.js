@@ -687,7 +687,7 @@ PlacesController.prototype = {
    * Shows the Add Bookmark UI for the current insertion point.
    *
    * @param aType
-   *        the type of the new item (bookmark/livemark/folder)
+   *        the type of the new item (bookmark/folder)
    */
   async newItem(aType) {
     let ip = this._view.insertionPoint;

@@ -43,6 +43,11 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
   return Management;
 });
 
+// The extension tests can run a lot slower under ASAN.
+if (AppConstants.ASAN) {
+  SimpleTest.requestLongerTimeout(10);
+}
+
 // We run tests under two different configurations, from browser.ini and
 // browser-remote.ini. When running from browser-remote.ini, the tests are
 // copied to the sub-directory "test-oop-extensions", which we detect here, and

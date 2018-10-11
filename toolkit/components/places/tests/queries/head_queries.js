@@ -127,15 +127,6 @@ async function task_populateDB(aArray) {
         });
       }
 
-      if (qdata.isLivemark) {
-        await PlacesUtils.livemarks.addLivemark({ title: qdata.title,
-                                                  parentId: (await PlacesUtils.promiseItemId(qdata.parentGuid)),
-                                                  index: qdata.index,
-                                                  feedURI: uri(qdata.feedURI),
-                                                  siteURI: uri(qdata.uri),
-                                                });
-      }
-
       if (qdata.isBookmark) {
         let data = {
           parentGuid: qdata.parentGuid,
@@ -211,7 +202,6 @@ function queryData(obj) {
   this.annoMimeType = obj.annoMimeType ? obj.annoMimeType : "";
   this.isTag = obj.isTag ? obj.isTag : false;
   this.tagArray = obj.tagArray ? obj.tagArray : null;
-  this.isLivemark = obj.isLivemark ? obj.isLivemark : false;
   this.parentGuid = obj.parentGuid || PlacesUtils.bookmarks.unfiledGuid;
   this.feedURI = obj.feedURI ? obj.feedURI : "";
   this.index = obj.index ? obj.index : PlacesUtils.bookmarks.DEFAULT_INDEX;

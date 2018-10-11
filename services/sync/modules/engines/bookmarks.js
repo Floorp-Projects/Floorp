@@ -1076,6 +1076,19 @@ BookmarksStore.prototype = {
     }
     this._log.debug("Remote parent is " + parentGUID);
 
+    if (record.type == "livemark") {
+      // Places no longer supports livemarks, so we replace new and updated
+      // livemarks with tombstones, and insert new change records for the engine
+      // to upload.
+      let livemarkInfo = record.toSyncBookmark();
+      let newChanges = await PlacesSyncUtils.bookmarks.removeLivemark(
+        livemarkInfo);
+      if (newChanges) {
+        this.engine._modified.insert(newChanges);
+        return;
+      }
+    }
+
     // Do the normal processing of incoming records
     await Store.prototype.applyIncoming.call(this, record);
 
