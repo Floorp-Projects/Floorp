@@ -21,8 +21,6 @@ function start() {
   // Start the client.
   client = new DebuggerClient(transport);
 
-  // Attach listeners for client events.
-  client.addListener("tabNavigated", onTab);
   client.connect((type, traits) => {
     // Now the client is conected to the server.
     debugTab();
@@ -50,9 +48,6 @@ async function startClient() {
 
   // Start the client.
   client = new DebuggerClient(transport);
-
-  // Attach listeners for client events.
-  client.addListener("tabNavigated", onTab);
 
   client.connect((type, traits) => {
     // Now the client is conected to the server.
@@ -89,6 +84,9 @@ function attachToTab() {
       }
 
       // Now the tabClient is ready and can be used.
+
+      // Attach listeners for client events.
+      tabClient.addListener("tabNavigated", onTab);
     });
   });
 }
@@ -105,7 +103,7 @@ async function onTab() {
   // Detach from the previous thread.
   await client.activeThread.detach();
   // Detach from the previous tab.
-  await client.activeTab.detach();
+  await tabClient.activeTab.detach();
   // Start debugging the new tab.
   start();
 }
@@ -169,8 +167,6 @@ function startDebugger() {
 
   // Start the client.
   client = new DebuggerClient(transport);
-  // Attach listeners for client events.
-  client.addListener("tabNavigated", onTab);
   client.connect((type, traits) => {
     // Now the client is conected to the server.
     debugTab();

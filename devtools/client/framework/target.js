@@ -194,6 +194,7 @@ const TargetFactory = exports.TargetFactory = {
 function TabTarget({ form, client, chrome, tab = null }) {
   EventEmitter.decorate(this);
   this.destroy = this.destroy.bind(this);
+  this._onTabNavigated = this._onTabNavigated.bind(this);
   this.activeTab = this.activeConsole = null;
 
   this._form = form;
@@ -518,6 +519,12 @@ TabTarget.prototype = {
       const [response, tabClient] = await this._client.attachTarget(this._form.actor);
       this.activeTab = tabClient;
       this.threadActor = response.threadActor;
+
+      this.activeTab.on("tabNavigated", this._onTabNavigated);
+      this._onFrameUpdate = packet => {
+        this.emit("frame-update", packet);
+      };
+      this.activeTab.on("frameUpdate", this._onFrameUpdate);
     };
 
     // Attach the console actor
@@ -549,14 +556,16 @@ TabTarget.prototype = {
         this._title = form.title;
       }
 
-      this._setupRemoteListeners();
-
       // AddonActor and chrome debugging on RootActor don't inherit from
       // BrowsingContextTargetActor (i.e. this.isBrowsingContext=false) and don't need
       // to be attached.
       if (this.isBrowsingContext) {
         await attachTarget();
       }
+
+      // _setupRemoteListeners has to be called after the potential call to `attachTarget`
+      // as it depends on `activeTab` which is set by this method.
+      this._setupRemoteListeners();
 
       // But all target actor have a console actor to attach
       return attachConsole();
@@ -586,69 +595,94 @@ TabTarget.prototype = {
   },
 
   /**
+   * Event listener for tabNavigated packet sent by activeTab's front.
+   */
+  _onTabNavigated: function(packet) {
+    const event = Object.create(null);
+    event.url = packet.url;
+    event.title = packet.title;
+    event.nativeConsoleAPI = packet.nativeConsoleAPI;
+    event.isFrameSwitching = packet.isFrameSwitching;
+
+    // Keep the title unmodified when a developer toolbox switches frame
+    // for a tab (Bug 1261687), but always update the title when the target
+    // is a WebExtension (where the addon name is always included in the title
+    // and the url is supposed to be updated every time the selected frame changes).
+    if (!packet.isFrameSwitching || this.isWebExtension) {
+      this._url = packet.url;
+      this._title = packet.title;
+    }
+
+    // Send any stored event payload (DOMWindow or nsIRequest) for backwards
+    // compatibility with non-remotable tools.
+    if (packet.state == "start") {
+      event._navPayload = this._navRequest;
+      this.emit("will-navigate", event);
+      this._navRequest = null;
+    } else {
+      event._navPayload = this._navWindow;
+      this.emit("navigate", event);
+      this._navWindow = null;
+    }
+  },
+
+  /**
    * Setup listeners for remote debugging, updating existing ones as necessary.
    */
   _setupRemoteListeners: function() {
     this.client.addListener("closed", this.destroy);
 
-    this._onTabDetached = (type, packet) => {
-      // We have to filter message to ensure that this detach is for this tab
-      if (packet.from == this._form.actor) {
-        this.destroy();
-      }
-    };
-    this.client.addListener("tabDetached", this._onTabDetached);
+    // For now, only browsing-context inherited actors are using a front,
+    // for which events have to be listened on the front itself.
+    // For other actors (ContentProcessTargetActor and AddonTargetActor), events should
+    // still be listened directly on the client. This should be ultimately cleaned up to
+    // only listen from a front by bug 1465635.
+    if (this.activeTab) {
+      this.activeTab.on("tabDetached", this.destroy);
 
-    this._onTabNavigated = (type, packet) => {
-      const event = Object.create(null);
-      event.url = packet.url;
-      event.title = packet.title;
-      event.nativeConsoleAPI = packet.nativeConsoleAPI;
-      event.isFrameSwitching = packet.isFrameSwitching;
+      // These events should be ultimately listened from the thread client as
+      // they are coming from it and no longer go through the Target Actor/Front.
+      this._onSourceUpdated = packet => this.emit("source-updated", packet);
+      this.activeTab.on("newSource", this._onSourceUpdated);
+      this.activeTab.on("updatedSource", this._onSourceUpdated);
+    } else {
+      this._onTabDetached = (type, packet) => {
+        // We have to filter message to ensure that this detach is for this tab
+        if (packet.from == this._form.actor) {
+          this.destroy();
+        }
+      };
+      this.client.addListener("tabDetached", this._onTabDetached);
 
-      // Keep the title unmodified when a developer toolbox switches frame
-      // for a tab (Bug 1261687), but always update the title when the target
-      // is a WebExtension (where the addon name is always included in the title
-      // and the url is supposed to be updated every time the selected frame changes).
-      if (!packet.isFrameSwitching || this.isWebExtension) {
-        this._url = packet.url;
-        this._title = packet.title;
-      }
-
-      // Send any stored event payload (DOMWindow or nsIRequest) for backwards
-      // compatibility with non-remotable tools.
-      if (packet.state == "start") {
-        event._navPayload = this._navRequest;
-        this.emit("will-navigate", event);
-        this._navRequest = null;
-      } else {
-        event._navPayload = this._navWindow;
-        this.emit("navigate", event);
-        this._navWindow = null;
-      }
-    };
-    this.client.addListener("tabNavigated", this._onTabNavigated);
-
-    this._onFrameUpdate = (type, packet) => {
-      this.emit("frame-update", packet);
-    };
-    this.client.addListener("frameUpdate", this._onFrameUpdate);
-
-    this._onSourceUpdated = (event, packet) => this.emit("source-updated", packet);
-    this.client.addListener("newSource", this._onSourceUpdated);
-    this.client.addListener("updatedSource", this._onSourceUpdated);
+      this._onSourceUpdated = (type, packet) => this.emit("source-updated", packet);
+      this.client.addListener("newSource", this._onSourceUpdated);
+      this.client.addListener("updatedSource", this._onSourceUpdated);
+    }
   },
 
   /**
    * Teardown listeners for remote debugging.
    */
   _teardownRemoteListeners: function() {
+    // Remove listeners set in _setupRemoteListeners
     this.client.removeListener("closed", this.destroy);
-    this.client.removeListener("tabNavigated", this._onTabNavigated);
-    this.client.removeListener("tabDetached", this._onTabDetached);
-    this.client.removeListener("frameUpdate", this._onFrameUpdate);
-    this.client.removeListener("newSource", this._onSourceUpdated);
-    this.client.removeListener("updatedSource", this._onSourceUpdated);
+    if (this.activeTab) {
+      this.activeTab.off("tabDetached", this.destroy);
+      this.activeTab.off("newSource", this._onSourceUpdated);
+      this.activeTab.off("updatedSource", this._onSourceUpdated);
+    } else {
+      this.client.removeListener("tabDetached", this._onTabDetached);
+      this.client.removeListener("newSource", this._onSourceUpdated);
+      this.client.removeListener("updatedSource", this._onSourceUpdated);
+    }
+
+    // Remove listeners set in attachTarget
+    if (this.activeTab) {
+      this.activeTab.off("tabNavigated", this._onTabNavigated);
+      this.activeTab.off("frameUpdate", this._onFrameUpdate);
+    }
+
+    // Remove listeners set in attachConsole
     if (this.activeConsole && this._onInspectObject) {
       this.activeConsole.off("inspectObject", this._onInspectObject);
     }

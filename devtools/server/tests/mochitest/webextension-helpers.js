@@ -51,19 +51,19 @@ function setWebExtensionOOPMode(oopMode) {
   });
 }
 
-function waitForFramesUpdated({client}, matchFn) {
+function waitForFramesUpdated(target, matchFn) {
   return new Promise(resolve => {
-    const listener = (evt, data) => {
+    const listener = data => {
       if (typeof matchFn === "function" && !matchFn(data)) {
         return;
       } else if (!data.frames) {
         return;
       }
 
-      client.removeListener("frameUpdate", listener);
+      target.activeTab.off("frameUpdate", listener);
       resolve(data.frames);
     };
-    client.addListener("frameUpdate", listener);
+    target.activeTab.on("frameUpdate", listener);
   });
 }
 

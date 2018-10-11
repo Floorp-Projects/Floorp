@@ -44,7 +44,7 @@ function test_simple_source_map() {
     expectedSources.delete(packet.source.url);
 
     if (expectedSources.size === 0) {
-      gClient.removeListener("newSource", _onNewSource);
+      gThreadClient.removeListener("newSource", _onNewSource);
       finishClient(gClient);
     }
   });

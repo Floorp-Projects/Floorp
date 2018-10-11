@@ -180,8 +180,8 @@ function getAddonActorForId(aClient, aAddonId) {
 
 async function attachTargetActorForUrl(aClient, aUrl) {
   let grip = await getTargetActorForUrl(aClient, aUrl);
-  let [ response ] = await aClient.attachTarget(grip.actor);
-  return [grip, response];
+  let [ response, front ] = await aClient.attachTarget(grip.actor);
+  return [grip, response, front];
 }
 
 async function attachThreadActorForUrl(aClient, aUrl) {
@@ -1109,14 +1109,9 @@ function attachWorker(tabClient, worker) {
   return tabClient.attachWorker(worker.actor);
 }
 
-function waitForWorkerListChanged(tabClient) {
+function waitForWorkerListChanged(targetFront) {
   info("Waiting for worker list to change.");
-  return new Promise(function (resolve) {
-    tabClient.addListener("workerListChanged", function listener() {
-      tabClient.removeListener("workerListChanged", listener);
-      resolve();
-    });
-  });
+  return targetFront.once("workerListChanged");
 }
 
 function attachThread(workerClient, options) {
