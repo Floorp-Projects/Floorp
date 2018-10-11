@@ -8,6 +8,15 @@ const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSe
 ChromeUtils.defineModuleGetter(this, "SiteDataTestUtils",
                                "resource://testing-common/SiteDataTestUtils.jsm");
 
+add_task(async function setup() {
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+
+  registerCleanupFunction(() => {
+    Services.telemetry.canRecordExtended = oldCanRecord;
+  });
+});
+
 async function testClearing(testQuota, testCookies) {
   // Add some test quota storage.
   if (testQuota) {
@@ -53,6 +62,8 @@ async function testClearing(testQuota, testCookies) {
       ]);
     }
 
+    Services.telemetry.clearEvents();
+
     // Click the "Clear data" button.
     siteDataUpdated = TestUtils.topicObserved("sitedatamanager:sites-updated");
     let hideEvent = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
@@ -60,6 +71,11 @@ async function testClearing(testQuota, testCookies) {
     clearButton.click();
     await hideEvent;
     await removeDialogPromise;
+
+    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN).parent;
+    let buttonEvents = events.filter(
+      e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "clear_sitedata");
+    is(buttonEvents.length, 1, "recorded telemetry for the button click");
 
     await siteDataUpdated;
 
