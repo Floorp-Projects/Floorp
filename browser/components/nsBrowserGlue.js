@@ -1356,6 +1356,23 @@ BrowserGlue.prototype = {
 
     let tpPBDisabled = Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     Services.telemetry.getHistogramById("TRACKING_PROTECTION_PBM_DISABLED").add(!tpPBDisabled);
+
+    let cookieBehavior = Services.prefs.getIntPref("network.cookie.cookieBehavior");
+    Services.telemetry.getHistogramById("COOKIE_BEHAVIOR").add(cookieBehavior);
+
+    let fastBlockEnabled = Services.prefs.getBoolPref("browser.fastblock.enabled");
+    Services.telemetry.scalarSet("contentblocking.fastblock_enabled", fastBlockEnabled);
+
+    let contentBlockingEnabled = Services.prefs.getBoolPref("browser.contentblocking.enabled");
+    Services.telemetry.scalarSet("contentblocking.enabled", contentBlockingEnabled);
+
+    let exceptions = 0;
+    for (let permission of Services.perms.enumerator) {
+      if (permission.type == "trackingprotection") {
+        exceptions++;
+      }
+    }
+    Services.telemetry.scalarSet("contentblocking.exceptions", exceptions);
   },
 
   _sendMediaTelemetry() {
