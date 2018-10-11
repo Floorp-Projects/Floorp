@@ -7,10 +7,40 @@
 #define mozilla_a11y_SessionAccessibility_h_
 
 #include "GeneratedJNINatives.h"
+#include "GeneratedJNIWrappers.h"
+#include "nsAppShell.h"
+#include "nsThreadUtils.h"
 #include "nsWindow.h"
+
+#define GECKOBUNDLE_START(name)                                                \
+  nsTArray<jni::String::LocalRef> _##name##_keys;                              \
+  nsTArray<jni::Object::LocalRef> _##name##_values;
+
+#define GECKOBUNDLE_PUT(name, key, value)                                      \
+  _##name##_keys.AppendElement(jni::StringParam(NS_LITERAL_STRING(key)));      \
+  _##name##_values.AppendElement(value);
+
+#define GECKOBUNDLE_FINISH(name)                                               \
+  MOZ_ASSERT(_##name##_keys.Length() == _##name##_values.Length());            \
+  auto _##name##_jkeys =                                                       \
+    jni::ObjectArray::New<jni::String>(_##name##_keys.Length());               \
+  auto _##name##_jvalues =                                                     \
+    jni::ObjectArray::New<jni::Object>(_##name##_values.Length());             \
+  for (size_t i = 0;                                                           \
+       i < _##name##_keys.Length() && i < _##name##_values.Length();           \
+       i++) {                                                                  \
+    _##name##_jkeys->SetElement(i, _##name##_keys.ElementAt(i));               \
+    _##name##_jvalues->SetElement(i, _##name##_values.ElementAt(i));           \
+  }                                                                            \
+  auto name =                                                                  \
+    mozilla::java::GeckoBundle::New(_##name##_jkeys, _##name##_jvalues);
 
 namespace mozilla {
 namespace a11y {
+
+class AccessibleWrap;
+class ProxyAccessible;
+class RootAccessibleWrap;
 
 class SessionAccessibility final
   : public java::SessionAccessibility::NativeProvider::Natives<SessionAccessibility>
@@ -38,16 +68,22 @@ public:
     return mSessionAccessibility;
   }
 
+  static void Init();
+
   // Native implementations
   using Base::AttachNative;
   using Base::DisposeNative;
+  jni::Object::LocalRef GetNodeInfo(int32_t aID);
+  void SetText(int32_t aID, jni::String::Param aText);
+  void StartNativeAccessibility();
 
-  NS_INLINE_DECL_REFCOUNTING(SessionAccessibility)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 
 private:
   ~SessionAccessibility() {}
 
   void SetAttached(bool aAttached, already_AddRefed<Runnable> aRunnable);
+  RootAccessibleWrap* GetRoot();
 
   nsWindow::WindowPtr<SessionAccessibility> mWindow; // Parent only
   java::SessionAccessibility::NativeProvider::GlobalRef mSessionAccessibility;
