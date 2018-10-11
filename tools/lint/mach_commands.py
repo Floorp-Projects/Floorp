@@ -18,6 +18,12 @@ from mach.decorators import (
     Command,
 )
 
+try:
+    from os import scandir
+except ImportError:
+    from scandir import scandir
+
+
 here = os.path.abspath(os.path.dirname(__file__))
 GLOBAL_EXCLUDES = [
     'tools/lint/test/files',
@@ -30,11 +36,6 @@ def setup_argument_parser():
 
 
 def get_global_excludes(topsrcdir):
-    try:
-        from os import scandir
-    except ImportError:
-        from scandir import scandir
-
     excludes = GLOBAL_EXCLUDES[:]
     excludes.extend([e.name for e in scandir(topsrcdir)
                      if e.name.startswith('obj') and e.is_dir()])
@@ -51,21 +52,6 @@ class MachCommands(MachCommandBase):
     def lint(self, *runargs, **lintargs):
         """Run linters."""
         self._activate_virtualenv()
-        try:
-            from os import scandir  # noqa
-        except ImportError:
-            # Install scandir from the source tree into the virtualenv
-            # This is different to the way that most packages are installed,
-            # to ensure that we get the C helper built where possible; the normal
-            # approach of a pointer into the source directory doesn't work for this
-            # case.
-            self.virtualenv_manager.install_pip_package(
-                os.path.join(here,
-                             os.path.pardir,
-                             os.path.pardir,
-                             'third_party',
-                             'python',
-                             'scandir'), vendored=True)
         from mozlint import cli
 
         lintargs.setdefault('root', self.topsrcdir)
