@@ -211,6 +211,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+VARCACHE_PREF(
+  "dom.performance.children_results_ipc_timeout",
+  dom_performance_children_results_ipc_timeout,
+  uint32_t, 1000
+)
+
 // If true. then the service worker interception and the ServiceWorkerManager
 // will live in the parent process.  This only takes effect on browser start.
 // Note, this is not currently safe to use for normal browsing yet.
