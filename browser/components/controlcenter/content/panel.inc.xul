@@ -76,7 +76,7 @@
             <toolbarbutton id="tracking-protection-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
                            tooltiptext="&trackingProtection.tooltip;"
-                           oncommand="ContentBlocking.openPreferences('identityPopup-TP-preferencesButton');" />
+                           oncommand="ContentBlocking.openPreferences('identityPopup-TP-preferencesButton'); gIdentityHandler.recordClick('cb_prefs_button');" />
           </hbox>
 
           <description id="identity-popup-content-blocking-detected"
@@ -91,7 +91,7 @@
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.fastBlock.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.fastBlock.blocked.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
-                     onclick="ContentBlocking.openPreferences('identityPopup-CB-fastblock');">&contentBlocking.fastBlock.add.label;</label>
+                     onclick="ContentBlocking.openPreferences('identityPopup-CB-fastblock'); gIdentityHandler.recordClick('fb_add_blocking');">&contentBlocking.fastBlock.add.label;</label>
             </hbox>
             <hbox id="identity-popup-content-blocking-category-tracking-protection"
                   class="identity-popup-content-blocking-category" align="center" role="group">
@@ -99,7 +99,8 @@
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection3.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.trackingProtection.blocked.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
-                     onclick="ContentBlocking.openPreferences('identityPopup-CB-tracking-protection');">&contentBlocking.trackingProtection.add.label;</label>
+                     id="identity-popup-tracking-protection-add-blocking"
+                     onclick="ContentBlocking.openPreferences('identityPopup-CB-tracking-protection'); gIdentityHandler.recordClick('tp_add_blocking');">&contentBlocking.trackingProtection.add.label;</label>
             </hbox>
             <hbox id="identity-popup-content-blocking-category-3rdpartycookies"
                   class="identity-popup-content-blocking-category" align="center" role="group">
@@ -107,7 +108,8 @@
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.3rdPartyCookies.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.3rdPartyCookies.blocked.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
-                     onclick="ContentBlocking.openPreferences('identityPopup-CB-3rdpartycookies');">&contentBlocking.3rdPartyCookies.add.label;</label>
+                     id="identity-popup-3rdpartycookies-add-blocking"
+                     onclick="ContentBlocking.openPreferences('identityPopup-CB-3rdpartycookies'); gIdentityHandler.recordClick('cookies_add_blocking');">&contentBlocking.3rdPartyCookies.add.label;</label>
             </hbox>
           </vbox>
 
@@ -115,19 +117,19 @@
                   class="tracking-protection-button"
                   label="&trackingProtection.unblock4.label;"
                   accesskey="&trackingProtection.unblock4.accesskey;"
-                  oncommand="ContentBlocking.disableForCurrentPage();" />
+                  oncommand="ContentBlocking.disableForCurrentPage(); gIdentityHandler.recordClick('unblock');" />
           <button id="tracking-action-unblock-private"
                   class="tracking-protection-button"
                   label="&trackingProtection.unblockPrivate4.label;"
                   accesskey="&trackingProtection.unblockPrivate4.accesskey;"
-                  oncommand="ContentBlocking.disableForCurrentPage();" />
+                  oncommand="ContentBlocking.disableForCurrentPage(); gIdentityHandler.recordClick('unblock_private');" />
           <button id="tracking-action-block"
                   class="tracking-protection-button"
                   label="&trackingProtection.block5.label;"
                   accesskey="&trackingProtection.block5.accesskey;"
-                  oncommand="ContentBlocking.enableForCurrentPage();" />
+                  oncommand="ContentBlocking.enableForCurrentPage(); gIdentityHandler.recordClick('block');" />
           <label id="identity-popup-content-blocking-report-breakage"
-                 onclick="ContentBlocking.showReportBreakageSubview();"
+                 onclick="ContentBlocking.showReportBreakageSubview(); gIdentityHandler.recordClick('report_breakage');"
                  class="text-link subviewkeynav"
                  flex="1">&contentBlocking.openBreakageReportView2.label;</label>
         </vbox>
@@ -160,7 +162,7 @@
             class="identity-popup-footer">
         <button id="identity-popup-clear-sitedata-button"
                 label="&identity.clearSiteData;"
-                oncommand="gIdentityHandler.clearSiteData(event);"/>
+                oncommand="gIdentityHandler.clearSiteData(event); gIdentityHandler.recordClick('clear_sitedata');"/>
       </vbox>
     </panelview>
 
