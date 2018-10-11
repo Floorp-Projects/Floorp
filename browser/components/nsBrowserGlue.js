@@ -1350,6 +1350,14 @@ BrowserGlue.prototype = {
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
   },
 
+  _recordContentBlockingTelemetry() {
+    let tpEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled");
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").add(tpEnabled);
+
+    let tpPBDisabled = Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_PBM_DISABLED").add(!tpPBDisabled);
+  },
+
   _sendMediaTelemetry() {
     let win = Services.appShell.hiddenDOMWindow;
     let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
@@ -2029,6 +2037,10 @@ BrowserGlue.prototype = {
       // we threw halfway through initializing in the Task above.
       this._placesBrowserInitComplete = true;
       Services.obs.notifyObservers(null, "places-browser-init-complete");
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      this._recordContentBlockingTelemetry();
     });
   },
 
