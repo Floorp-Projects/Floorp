@@ -12,8 +12,7 @@ from taskgraph.transforms.beetmover import \
     craft_release_properties as beetmover_craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema, resolve_keyed_by, optionally_keyed_by
-from taskgraph.util.scriptworker import (get_phase,
-                                         get_worker_type_for_scope)
+from taskgraph.util.scriptworker import get_worker_type_for_scope
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
@@ -104,7 +103,7 @@ def make_task_description(config, jobs):
             'attributes': attributes,
             'run-on-projects': ['mozilla-central'],
             'treeherder': treeherder,
-            'shipping-phase': job.get('shipping-phase', get_phase(config)),
+            'shipping-phase': job['shipping-phase'],
         }
 
         yield task

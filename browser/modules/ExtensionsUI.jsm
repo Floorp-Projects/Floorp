@@ -423,7 +423,10 @@ var ExtensionsUI = {
         name: addon.name,
         message,
         popupIconURL: icon,
-        onDismissed: resolve,
+        onDismissed: () => {
+          AppMenuNotifications.removeNotification("addon-installed");
+          resolve();
+        },
       };
 
       AppMenuNotifications.showNotification("addon-installed", action, null, options);

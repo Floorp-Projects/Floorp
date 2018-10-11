@@ -480,7 +480,7 @@ IonHasOwnIC::update(JSContext* cx, HandleScript outerScript, IonHasOwnIC* ic,
     if (ic->state().canAttachStub()) {
         bool attached = false;
         RootedScript script(cx, ic->script());
-        HasPropIRGenerator gen(cx, script, pc, CacheKind::HasOwn, ic->state().mode(), idVal, val);
+        HasPropIRGenerator gen(cx, script, pc, ic->state().mode(), CacheKind::HasOwn, idVal, val);
         if (gen.tryAttachStub()) {
             ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
         }
@@ -514,7 +514,7 @@ IonInIC::update(JSContext* cx, HandleScript outerScript, IonInIC* ic,
         RootedScript script(cx, ic->script());
         RootedValue objV(cx, ObjectValue(*obj));
         jsbytecode* pc = ic->pc();
-        HasPropIRGenerator gen(cx, script, pc, CacheKind::In, ic->state().mode(), key, objV);
+        HasPropIRGenerator gen(cx, script, pc, ic->state().mode(), CacheKind::In, key, objV);
         if (gen.tryAttachStub()) {
             ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
         }

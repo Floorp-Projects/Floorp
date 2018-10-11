@@ -1150,26 +1150,27 @@ class MOZ_RAII AutoArrayRooter : private JS::AutoGCRooter
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoAssertNoException
+
+class AutoAssertNoPendingException
 {
 #ifdef DEBUG
-    JSContext* cx;
-    bool hadException;
-#endif
+    JSContext* cx_;
 
   public:
-    explicit AutoAssertNoException(JSContext* cx)
-#ifdef DEBUG
-      : cx(cx),
-        hadException(cx->isExceptionPending())
-#endif
+    explicit AutoAssertNoPendingException(JSContext* cxArg)
+      : cx_(cxArg)
     {
+        MOZ_ASSERT(!JS_IsExceptionPending(cx_));
     }
 
-    ~AutoAssertNoException()
-    {
-        MOZ_ASSERT_IF(!hadException, !cx->isExceptionPending());
+    ~AutoAssertNoPendingException() {
+        MOZ_ASSERT(!JS_IsExceptionPending(cx_));
     }
+#else
+  public:
+    explicit AutoAssertNoPendingException(JSContext* cxArg)
+    {}
+#endif
 };
 
 class MOZ_RAII AutoLockScriptData
@@ -1261,20 +1262,42 @@ class MOZ_RAII AutoEnterIonCompilation
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+enum UnsafeABIStrictness {
+    NoExceptions,
+    AllowPendingExceptions,
+    AllowThrownExceptions
+};
+
 // Should be used in functions called directly from JIT code (with
 // masm.callWithABI) to assert invariants in debug builds.
+// In debug mode, masm.callWithABI inserts code to verify that the
+// callee function uses AutoUnsafeCallWithABI.
+// While this object is live:
+// 1. cx->hasAutoUnsafeCallWithABI must be true.
+// 2. We can't GC.
+// 3. Exceptions should not be pending/thrown.
+//
+// Note that #3 is a precaution, not a requirement. By default, we
+// assert that the function is not called with a pending exception,
+// and that it does not throw an exception itself.
 class MOZ_RAII AutoUnsafeCallWithABI
 {
 #ifdef DEBUG
     JSContext* cx_;
     bool nested_;
+    bool checkForPendingException_;
 #endif
     JS::AutoCheckCannotGC nogc;
 
   public:
 #ifdef DEBUG
-    AutoUnsafeCallWithABI();
+    explicit AutoUnsafeCallWithABI(UnsafeABIStrictness strictness =
+                                   UnsafeABIStrictness::NoExceptions);
     ~AutoUnsafeCallWithABI();
+#else
+    explicit AutoUnsafeCallWithABI(UnsafeABIStrictness unused_ =
+                                   UnsafeABIStrictness::NoExceptions)
+    {}
 #endif
 };
 

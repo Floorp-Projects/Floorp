@@ -2882,7 +2882,7 @@ BindNameIRGenerator::trackAttached(const char* name)
 }
 
 HasPropIRGenerator::HasPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                                       CacheKind cacheKind, ICState::Mode mode,
+                                       ICState::Mode mode, CacheKind cacheKind,
                                        HandleValue idVal, HandleValue val)
   : IRGenerator(cx, script, pc, cacheKind, mode),
     val_(val),
