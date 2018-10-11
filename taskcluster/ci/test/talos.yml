@@ -33,7 +33,7 @@ talos-bcv:
         by-test-platform:
             .*-qr/.*: []  # this test is not useful with webrender
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     tier:
         by-test-platform:
             .*-qr/.*: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
@@ -69,7 +69,7 @@ talos-chrome:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -98,7 +98,7 @@ talos-damp:
         by-test-platform:
             linux64-ccov/.*: ['try']  # Bug 1407593
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
             - --suite=damp
@@ -124,7 +124,7 @@ talos-dromaeojs:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 2100
     mozharness:
         extra-options:
@@ -165,7 +165,7 @@ talos-g1:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time:
         by-test-platform:
             linux64.*: 3600
@@ -198,7 +198,7 @@ talos-g3:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 900
     mozharness:
         extra-options:
@@ -225,7 +225,7 @@ talos-g4:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time:
         by-test-platform:
             linux64.*: 1500
@@ -258,7 +258,7 @@ talos-g5:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
             - --suite=g5
@@ -291,7 +291,7 @@ talos-h1:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
             - --suite=h1
@@ -311,7 +311,7 @@ talos-h2:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
             - --suite=h2
@@ -360,7 +360,7 @@ talos-other:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -400,7 +400,7 @@ talos-perf-reftest:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-central', 'try']
-            default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['trunk', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -427,7 +427,7 @@ talos-perf-reftest-singletons:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-central', 'try']
-            default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['trunk', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -454,7 +454,7 @@ talos-speedometer:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -481,7 +481,7 @@ talos-svgr:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -508,7 +508,7 @@ talos-tp5o:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -535,7 +535,7 @@ talos-tp6:
     run-on-projects:
         by-test-platform:
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -564,7 +564,7 @@ talos-tp6-stylo-threads:
         by-test-platform:
             macosx.*: ['mozilla-beta', 'autoland', 'try']
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
             - --suite=tp6-stylo-threads
@@ -578,7 +578,7 @@ talos-tps:
         by-test-platform:
             linux64-ccov/.*: ['try']  # Bug 1407593
             windows.*msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
             - --suite=tps
@@ -610,8 +610,8 @@ talos-xperf:
     run-on-projects:
         by-test-platform:
             windows7-32-msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
-            windows7-32(-pgo)?/.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-            windows10-64.*/opt: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            windows7-32(-pgo)?/.*: ['mozilla-beta', 'trunk', 'try']
+            windows10-64.*/opt: ['mozilla-beta', 'trunk', 'try']
             default: []
     tier:
         by-test-platform:
