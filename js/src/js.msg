@@ -635,6 +635,7 @@ MSG_DEF(JSMSG_GET_ASYNC_ITER_RETURNED_PRIMITIVE, 0, JSEXN_TYPEERR, "[Symbol.asyn
 
 // ReadableStream
 MSG_DEF(JSMSG_READABLESTREAM_UNDERLYINGSOURCE_TYPE_WRONG,0, JSEXN_RANGEERR,"'underlyingSource.type' must be \"bytes\" or undefined.")
+MSG_DEF(JSMSG_READABLESTREAM_BYTES_TYPE_NOT_IMPLEMENTED, 0, JSEXN_RANGEERR,"'underlyingSource.type' must be \"bytes\" or undefined.")
 MSG_DEF(JSMSG_READABLESTREAM_INVALID_READER_MODE,        0, JSEXN_RANGEERR,"'mode' must be \"byob\" or undefined.")
 MSG_DEF(JSMSG_NUMBER_MUST_BE_FINITE_NON_NEGATIVE, 1, JSEXN_RANGEERR, "'{0}' must be a finite, non-negative number.")
 MSG_DEF(JSMSG_READABLEBYTESTREAMCONTROLLER_INVALID_BYTESWRITTEN, 0, JSEXN_RANGEERR, "'bytesWritten' exceeds remaining length.")

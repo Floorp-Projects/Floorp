@@ -3322,16 +3322,11 @@ PromiseThenNewPromiseCapability(JSContext* cx, HandleObject promiseObj,
 
 // ES2016, 25.4.5.3., steps 3-5.
 MOZ_MUST_USE bool
-js::OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise,
+js::OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
                         HandleValue onFulfilled, HandleValue onRejected,
                         MutableHandleObject dependent, CreateDependentPromise createDependent)
 {
-    RootedObject promiseObj(cx, promise);
-    if (promise->compartment() != cx->compartment()) {
-        if (!cx->compartment()->wrap(cx, &promiseObj)) {
-            return false;
-        }
-    }
+    Rooted<PromiseObject*> promise(cx, &CheckedUnwrap(promiseObj)->as<PromiseObject>());
 
     // Steps 3-4.
     Rooted<PromiseCapability> resultCapability(cx);
@@ -4062,22 +4057,19 @@ Promise_then_impl(JSContext* cx, HandleValue promiseVal, HandleValue onFulfilled
     }
 
     RootedObject promiseObj(cx, &promiseVal.toObject());
-    Rooted<PromiseObject*> promise(cx);
 
-    if (promiseObj->is<PromiseObject>()) {
-        promise = &promiseObj->as<PromiseObject>();
-    } else {
+    if (!promiseObj->is<PromiseObject>()) {
         JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
         if (!unwrappedPromiseObj) {
             ReportAccessDenied(cx);
             return false;
         }
         if (!unwrappedPromiseObj->is<PromiseObject>()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                      "Promise", "then", "value");
+            JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                       "Promise", "then",
+                                       InformalValueTypeName(ObjectValue(*promiseObj)));
             return false;
         }
-        promise = &unwrappedPromiseObj->as<PromiseObject>();
     }
 
     // Steps 3-5.
@@ -4085,7 +4077,7 @@ Promise_then_impl(JSContext* cx, HandleValue promiseVal, HandleValue onFulfilled
                                              ? CreateDependentPromise::Always
                                              : CreateDependentPromise::SkipIfCtorUnobservable;
     RootedObject resultPromise(cx);
-    if (!OriginalPromiseThen(cx, promise, onFulfilled, onRejected, &resultPromise,
+    if (!OriginalPromiseThen(cx, promiseObj, onFulfilled, onRejected, &resultPromise,
                              createDependent))
     {
         return false;

@@ -212,7 +212,11 @@ TypeUtils::ToCacheResponse(JSContext* aCx, CacheResponse& aOut, Response& aIn,
                            nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList,
                            ErrorResult& aRv)
 {
-  if (aIn.BodyUsed()) {
+  bool bodyUsed = aIn.GetBodyUsed(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+  if (bodyUsed) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return;
   }
@@ -446,7 +450,11 @@ TypeUtils::CheckAndSetBodyUsed(JSContext* aCx, Request* aRequest,
     return;
   }
 
-  if (aRequest->BodyUsed()) {
+  bool bodyUsed = aRequest->GetBodyUsed(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+  if (bodyUsed) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return;
   }
