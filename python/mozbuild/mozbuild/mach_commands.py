@@ -1420,7 +1420,7 @@ class PackageFrontend(MachCommandBase):
                     setup=record.setup)
 
         if from_build:
-            if 'TASK_ID' in os.environ:
+            if 'MOZ_AUTOMATION' in os.environ:
                 self.log(logging.ERROR, 'artifact', {},
                          'Do not use --from-build in automation; all dependencies '
                          'should be determined in the decision task.')
