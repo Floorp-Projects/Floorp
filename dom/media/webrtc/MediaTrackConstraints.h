@@ -150,7 +150,8 @@ public:
     typedef LongRange NormalizedConstraintSet::* LongPtrType;
 
     LongRange(LongPtrType aMemberPtr, const char* aName,
-              const dom::OwningLongOrConstrainLongRange& aOther, bool advanced,
+              const dom::Optional<dom::OwningLongOrConstrainLongRange>& aOther,
+              bool advanced,
               nsTArray<MemberPtrType>* aList);
   };
 
@@ -169,7 +170,7 @@ public:
 
     DoubleRange(DoublePtrType aMemberPtr,
                 const char* aName,
-                const dom::OwningDoubleOrConstrainDoubleRange& aOther,
+                const dom::Optional<dom::OwningDoubleOrConstrainDoubleRange>& aOther,
                 bool advanced,
                 nsTArray<MemberPtrType>* aList);
   };
@@ -179,7 +180,7 @@ public:
     typedef BooleanRange NormalizedConstraintSet::* BooleanPtrType;
 
     BooleanRange(BooleanPtrType aMemberPtr, const char* aName,
-                 const dom::OwningBooleanOrConstrainBooleanParameters& aOther,
+                 const dom::Optional<dom::OwningBooleanOrConstrainBooleanParameters>& aOther,
                  bool advanced,
                  nsTArray<MemberPtrType>* aList);
 
@@ -198,7 +199,7 @@ public:
     typedef StringRange NormalizedConstraintSet::* StringPtrType;
 
     StringRange(StringPtrType aMemberPtr,  const char* aName,
-        const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aOther,
+        const dom::Optional<dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters>& aOther,
         bool advanced,
         nsTArray<MemberPtrType>* aList);
 

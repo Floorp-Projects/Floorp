@@ -424,8 +424,9 @@ MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConst
   MOZ_ASSERT(mState == kReleased);
 
   // Mock failure for automated tests.
-  if (aConstraints.mDeviceId.IsString() &&
-      aConstraints.mDeviceId.GetAsString().EqualsASCII("bad device")) {
+  if (aConstraints.mDeviceId.WasPassed() &&
+      aConstraints.mDeviceId.Value().IsString() &&
+      aConstraints.mDeviceId.Value().GetAsString().EqualsASCII("bad device")) {
     return NS_ERROR_FAILURE;
   }
 
