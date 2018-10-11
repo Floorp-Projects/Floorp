@@ -1339,16 +1339,21 @@ Toolbox.prototype = {
    * Apply the current cache setting from devtools.cache.disabled to this
    * toolbox's tab.
    */
-  _applyCacheSettings: function() {
+  _applyCacheSettings: async function() {
     const pref = "devtools.cache.disabled";
     const cacheDisabled = Services.prefs.getBoolPref(pref);
 
     if (this.target.activeTab) {
-      this.target.activeTab.reconfigure({
+      await this.target.activeTab.reconfigure({
         options: {
           "cacheDisabled": cacheDisabled
         }
       });
+
+      // This event is only emitted for tests in order to know when to reload
+      if (flags.testing) {
+        this.emit("cache-reconfigured");
+      }
     }
   },
 

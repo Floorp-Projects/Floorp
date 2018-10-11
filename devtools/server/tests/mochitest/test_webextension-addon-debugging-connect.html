@@ -42,7 +42,6 @@ async function test_connect_addon(oopMode) {
   ok(addonTargetActor, "The expected webextension addon actor has been found");
 
   // Connect to the target addon actor and wait for the updated list of frames.
-  const waitFramesUpdated = waitForFramesUpdated({client});
   const addonTarget = await TargetFactory.forRemoteTab({
     form: addonTargetActor,
     client,
@@ -50,7 +49,7 @@ async function test_connect_addon(oopMode) {
   });
   is(addonTarget.form.isOOP, oopMode,
      "Got the expected oop mode in the webextension actor form");
-  const frames = await waitFramesUpdated;
+  const frames = await waitForFramesUpdated(addonTarget);
   const backgroundPageFrame = frames.filter((frame) => {
     return frame.url && frame.url.endsWith("/_generated_background_page.html");
   }).pop();
