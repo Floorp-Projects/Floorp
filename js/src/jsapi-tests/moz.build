@@ -84,6 +84,7 @@ UNIFIED_SOURCES += [
     'testProfileStrings.cpp',
     'testPromise.cpp',
     'testPropCache.cpp',
+    'testReadableStream.cpp',
     'testRegExp.cpp',
     'testResolveRecursion.cpp',
     'tests.cpp',

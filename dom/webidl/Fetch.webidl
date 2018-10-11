@@ -12,6 +12,7 @@ typedef (Blob or BufferSource or FormData or URLSearchParams or USVString) BodyI
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface Body {
+  [Throws]
   readonly attribute boolean bodyUsed;
   [Throws]
   Promise<ArrayBuffer> arrayBuffer();
