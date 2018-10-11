@@ -34,7 +34,7 @@ loader.lazyRequireGetter(this, "EventParsers", "devtools/server/actors/inspector
 const SUBGRID_ENABLED =
   Services.prefs.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
 
-const PSEUDO_CLASSES = [":hover", ":active", ":focus", ":focus-within"];
+const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 
