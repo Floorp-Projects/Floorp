@@ -2075,7 +2075,7 @@ ScratchpadWindow.prototype = extend(ScratchpadTab.prototype, {
 
     const client = new DebuggerClient(DebuggerServer.connectPipe());
     await client.connect();
-    const response = await client.getProcess();
+    const response = await client.mainRoot.getProcess(0);
     return { form: response.form, client };
   }
 });

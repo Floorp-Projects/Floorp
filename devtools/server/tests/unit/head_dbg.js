@@ -443,7 +443,7 @@ function get_parent_process_actors(callback) {
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect()
-    .then(() => client.getProcess())
+    .then(() => client.mainRoot.getProcess(0))
     .then(response => {
       callback(client, response.form);
     });
@@ -451,7 +451,7 @@ function get_parent_process_actors(callback) {
 
 function getParentProcessActors(client, server = DebuggerServer) {
   server.allowChromeProcess = true;
-  return client.getProcess().then(response => response.form);
+  return client.mainRoot.getProcess(0).then(response => response.form);
 }
 
 /**

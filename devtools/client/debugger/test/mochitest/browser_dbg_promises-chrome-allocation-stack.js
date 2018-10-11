@@ -29,7 +29,7 @@ function test() {
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
     yield connect(client);
-    let chrome = yield client.getProcess();
+    let chrome = yield client.mainRoot.getProcess(0);
     let [, tabClient] = yield attachTarget(client, chrome.form);
     yield tabClient.attachThread();
 
