@@ -4,14 +4,6 @@ language: python
 branches:
   only:
     - master
-addons:
-  hosts:
-    - web-platform.test
-    - www.web-platform.test
-    - www1.web-platform.test
-    - www2.web-platform.test
-    - xn--n8j6ds53lwwkrqhv28a.web-platform.test
-    - xn--lve-6lad.web-platform.test
 before_install:
   # This needs be sourced as it sets various env vars
   - . ./tools/ci/before_install.sh
@@ -64,7 +56,6 @@ matrix:
     - name: "stability (Chrome Dev)"
       if: type = pull_request
       os: linux
-      sudo: required
       python: "2.7"
       addons:
         apt:
