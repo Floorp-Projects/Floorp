@@ -329,11 +329,11 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
         return nullptr;
     }
 
-    TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
-
     if (!createScript()) {
         return nullptr;
     }
+
+    TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
 
     Maybe<BytecodeEmitter> emitter;
     if (!emplaceEmitter(emitter, sc)) {
