@@ -594,4 +594,12 @@ test(function(){
     }
 }, 'Direct CSSStyleValue instances are tied to their associated property');
 
+// StylePropertyMapReadOnly iteration
+
+test(function(){
+    let name = gen_prop('<length>', '10px');
+    let result = Array.from(target.computedStyleMap()).filter(e => e[0] == name)[0];
+    assert_true(typeof(result) !== 'undefined');
+}, 'Registered property with initial value show up on iteration of computedStyleMap');
+
 </script>
