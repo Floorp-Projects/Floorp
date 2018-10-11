@@ -3348,6 +3348,14 @@ void AsyncPanZoomController::AdjustScrollForSurfaceShift(const ScreenPoint& aShi
   // the shift to take effect right away, without the usual frame delay.
   mCompositedScrollOffset = scrollRange.ClampPoint(
       mCompositedScrollOffset + adjustment);
+  // For a similar reason, apply the shift to mCompositedLayoutViewport.
+  // mCompositedLayoutViewport also needs to immediately pick up any new
+  // size from Metrics().GetViewport() to make sure it reflects any height
+  // change due to dynamic toolbar movement.
+  mCompositedLayoutViewport.SizeTo(Metrics().GetViewport().Size());
+  FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
+      CSSRect(mCompositedScrollOffset, Metrics().CalculateCompositedSizeInCssPixels()),
+      mCompositedLayoutViewport);
   RequestContentRepaint();
   UpdateSharedCompositorFrameMetrics();
 }
