@@ -110,7 +110,7 @@ protected:
    * Returns false if the editor is detached from the listener, i.e.,
    * impossible to continue to handle the event.  Otherwise, true.
    */
-  MOZ_MUST_USE bool EnsureCommitCompoisition();
+  MOZ_MUST_USE bool EnsureCommitComposition();
 
   EditorBase* mEditorBase; // weak
   RefPtr<nsCaret> mCaret;

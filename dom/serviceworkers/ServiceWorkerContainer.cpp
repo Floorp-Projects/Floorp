@@ -12,6 +12,7 @@
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsIScriptError.h"
+#include "nsThreadUtils.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -22,17 +23,27 @@
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/LoadInfo.h"
+#include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
+#include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerContainerBinding.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 
 #include "RemoteServiceWorkerContainerImpl.h"
 #include "ServiceWorker.h"
 #include "ServiceWorkerContainerImpl.h"
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerUtils.h"
+
+// This is defined to something else on Windows
+#ifdef DispatchMessage
+  #undef DispatchMessage
+#endif
 
 namespace mozilla {
 namespace dom {
@@ -150,6 +161,39 @@ ServiceWorkerContainer::ControllerChanged(ErrorResult& aRv)
   }
   mControllerWorker = go->GetOrCreateServiceWorker(go->GetController().ref());
   aRv = DispatchTrustedEvent(NS_LITERAL_STRING("controllerchange"));
+}
+
+using mozilla::dom::ipc::StructuredCloneData;
+
+// A ReceivedMessage represents a message sent via
+// Client.postMessage(). It is used as used both for queuing of
+// incoming messages and as an interface to DispatchMessage().
+struct MOZ_HEAP_CLASS ServiceWorkerContainer::ReceivedMessage
+{
+  explicit ReceivedMessage(const ClientPostMessageArgs& aArgs)
+    : mServiceWorker(aArgs.serviceWorker())
+  {
+    mClonedData.CopyFromClonedMessageDataForBackgroundChild(aArgs.clonedData());
+  }
+
+  ServiceWorkerDescriptor mServiceWorker;
+  StructuredCloneData mClonedData;
+
+  NS_INLINE_DECL_REFCOUNTING(ReceivedMessage)
+
+private:
+  ~ReceivedMessage() = default;
+};
+
+void
+ServiceWorkerContainer::ReceiveMessage(const ClientPostMessageArgs& aArgs)
+{
+  RefPtr<ReceivedMessage> message = new ReceivedMessage(aArgs);
+  if (mMessagesStarted) {
+    EnqueueReceivedMessageDispatch(message.forget());
+  } else {
+    mPendingMessages.AppendElement(message.forget());
+  }
 }
 
 JSObject*
@@ -426,6 +470,16 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
   return outer.forget();
 }
 
+void
+ServiceWorkerContainer::StartMessages()
+{
+  while (!mPendingMessages.IsEmpty()) {
+    EnqueueReceivedMessageDispatch(mPendingMessages.ElementAt(0));
+    mPendingMessages.RemoveElementAt(0);
+  }
+  mMessagesStarted = true;
+}
+
 already_AddRefed<Promise>
 ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
                                         ErrorResult& aRv)
@@ -616,6 +670,154 @@ ServiceWorkerContainer::GetGlobalIfValid(ErrorResult& aRv,
   }
 
   return window->AsGlobal();
+}
+
+void
+ServiceWorkerContainer::EnqueueReceivedMessageDispatch(RefPtr<ReceivedMessage> aMessage) {
+  if (nsPIDOMWindowInner* const window = GetOwner()) {
+    if (auto* const target = window->EventTargetFor(TaskCategory::Other)) {
+      target->Dispatch(
+        NewRunnableMethod<RefPtr<ReceivedMessage>>(
+          "ServiceWorkerContainer::DispatchMessage",
+          this,
+          &ServiceWorkerContainer::DispatchMessage,
+          std::move(aMessage)
+        )
+      );
+    }
+  }
+}
+
+template <typename F>
+void
+ServiceWorkerContainer::RunWithJSContext(F&& aCallable)
+{
+  nsCOMPtr<nsIGlobalObject> globalObject;
+  if (nsPIDOMWindowInner* const window = GetOwner()) {
+    globalObject = do_QueryInterface(window);
+  }
+
+  // If AutoJSAPI::Init() fails then either global is nullptr or not
+  // in a usable state.
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(globalObject)) {
+    return;
+  }
+
+  aCallable(jsapi.cx(), globalObject);
+}
+
+void
+ServiceWorkerContainer::DispatchMessage(RefPtr<ReceivedMessage> aMessage)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // When dispatching a message, either DOMContentLoaded has already
+  // been fired, or someone called startMessages() or set onmessage.
+  // Either way, a global object is supposed to be present. If it's
+  // not, we'd fail to initialize the JS API and exit.
+  RunWithJSContext([this, message = std::move(aMessage)](JSContext* const aCx,
+                                                         nsIGlobalObject* const aGlobal) {
+    RootedDictionary<MessageEventInit> init(aCx);
+    if (!FillInMessageEventInit(aCx, aGlobal, *message, init)) {
+      // TODO: The spec requires us to fire a messageerror event here.
+      return;
+    }
+
+    RefPtr<MessageEvent> event =
+      MessageEvent::Constructor(this, NS_LITERAL_STRING("message"), init);
+    event->SetTrusted(true);
+
+    ErrorResult result;
+    DispatchEvent(*event, result);
+    if (result.Failed()) {
+      result.SuppressException();
+    }
+  });
+}
+
+namespace {
+
+nsresult
+FillInOriginNoSuffix(const ServiceWorkerDescriptor& aServiceWorker, nsString& aOrigin)
+{
+  using mozilla::ipc::PrincipalInfoToPrincipal;
+
+  nsresult rv;
+
+  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aServiceWorker.PrincipalInfo(), &rv);
+  if (NS_FAILED(rv) || !principal) {
+    return rv;
+  }
+
+  nsAutoCString originUTF8;
+  rv = principal->GetOriginNoSuffix(originUTF8);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  CopyUTF8toUTF16(originUTF8, aOrigin);
+  return NS_OK;
+}
+
+already_AddRefed<ServiceWorker>
+GetOrCreateServiceWorkerWithoutWarnings(nsIGlobalObject* const aGlobal,
+                                        const ServiceWorkerDescriptor& aDescriptor)
+{
+  // In child-intercept mode we have to verify that the registration
+  // exists in the current process. This exact check is also performed
+  // (indirectly) in nsIGlobalObject::GetOrCreateServiceWorker, but it
+  // also emits a warning when the registration is not present. To
+  // to avoid having too many warnings, we do a precheck here.
+  if (!ServiceWorkerParentInterceptEnabled()) {
+    const RefPtr<ServiceWorkerManager> serviceWorkerManager = ServiceWorkerManager::GetInstance();
+    if (!serviceWorkerManager) {
+      return nullptr;
+    }
+
+    const RefPtr<ServiceWorkerRegistrationInfo> registration =
+      serviceWorkerManager->GetRegistration(aDescriptor.PrincipalInfo(), aDescriptor.Scope());
+    if (!registration) {
+      return nullptr;
+    }
+  }
+
+  return aGlobal->GetOrCreateServiceWorker(aDescriptor).forget();
+}
+
+}
+
+bool
+ServiceWorkerContainer::FillInMessageEventInit(JSContext* const aCx,
+                                               nsIGlobalObject* const aGlobal,
+                                               ReceivedMessage& aMessage,
+                                               MessageEventInit& aInit)
+{
+  ErrorResult result;
+  JS::Rooted<JS::Value> messageData(aCx);
+  aMessage.mClonedData.Read(aCx, &messageData, result);
+  if (result.Failed()) {
+    return false;
+  }
+
+  aInit.mData = messageData;
+
+  if (!aMessage.mClonedData.TakeTransferredPortsAsSequence(aInit.mPorts)) {
+    return false;
+  }
+
+  const nsresult rv = FillInOriginNoSuffix(aMessage.mServiceWorker, aInit.mOrigin);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  const RefPtr<ServiceWorker> serviceWorkerInstance =
+    GetOrCreateServiceWorkerWithoutWarnings(aGlobal, aMessage.mServiceWorker);
+  if (serviceWorkerInstance) {
+    aInit.mSource.SetValue().SetAsServiceWorker() = serviceWorkerInstance;
+  }
+
+  return true;
 }
 
 } // namespace dom

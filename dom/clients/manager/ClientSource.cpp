@@ -605,125 +605,17 @@ RefPtr<ClientOpPromise>
 ClientSource::PostMessage(const ClientPostMessageArgs& aArgs)
 {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
-  RefPtr<ClientOpPromise> ref;
 
-  ServiceWorkerDescriptor source(aArgs.serviceWorker());
-  const PrincipalInfo& principalInfo = source.PrincipalInfo();
-
-  StructuredCloneData clonedData;
-  clonedData.BorrowFromClonedMessageDataForBackgroundChild(aArgs.clonedData());
-
-  // Currently we only support firing these messages on window Clients.
-  // Once we expose ServiceWorkerContainer and the ServiceWorker on Worker
-  // threads then this will need to change.  See bug 1113522.
-  if (mClientInfo.Type() != ClientType::Window) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
-    return ref.forget();
+  // TODO: Currently this function only supports clients whose global
+  // object is a Window; it should also support those whose global
+  // object is a WorkerGlobalScope.
+  if (nsPIDOMWindowInner* const window = GetInnerWindow()) {
+    const RefPtr<ServiceWorkerContainer> container = window->Navigator()->ServiceWorker();
+    container->ReceiveMessage(aArgs);
+    return ClientOpPromise::CreateAndResolve(NS_OK, __func__).forget();
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<ServiceWorkerContainer> target;
-  nsCOMPtr<nsIGlobalObject> globalObject;
-
-  // We don't need to force the creation of the about:blank document
-  // here because there is no postMessage listener.  If a listener
-  // was registered then the document will already be created.
-  nsPIDOMWindowInner* window = GetInnerWindow();
-  if (window) {
-    globalObject = do_QueryInterface(window);
-    target = window->Navigator()->ServiceWorker();
-  }
-
-  if (NS_WARN_IF(!target)) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                           __func__);
-    return ref.forget();
-  }
-
-  // If AutoJSAPI::Init() fails then either global is nullptr or not
-  // in a usable state.
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(globalObject)) {
-    ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
-    return ref.forget();
-  }
-
-  JSContext* cx = jsapi.cx();
-
-  ErrorResult result;
-  JS::Rooted<JS::Value> messageData(cx);
-  clonedData.Read(cx, &messageData, result);
-  if (result.MaybeSetPendingException(cx)) {
-    // We reported the error in the current window context.  Resolve
-    // promise instead of rejecting.
-    ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
-    return ref.forget();
-  }
-
-  RootedDictionary<MessageEventInit> init(cx);
-
-  init.mData = messageData;
-  if (!clonedData.TakeTransferredPortsAsSequence(init.mPorts)) {
-    // Report the error in the current window context and resolve the
-    // promise instead of rejecting.
-    xpc::Throw(cx, NS_ERROR_OUT_OF_MEMORY);
-    ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
-    return ref.forget();
-  }
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrincipal> principal =
-    PrincipalInfoToPrincipal(principalInfo, &rv);
-  if (NS_FAILED(rv) || !principal) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-    return ref.forget();
-  }
-
-  nsAutoCString origin;
-  rv = principal->GetOriginNoSuffix(origin);
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(origin, init.mOrigin);
-  }
-
-  RefPtr<ServiceWorker> instance;
-
-  if (ServiceWorkerParentInterceptEnabled()) {
-    instance = globalObject->GetOrCreateServiceWorker(source);
-  } else {
-    // If we are in legacy child-side intercept mode then we need to verify
-    // this registration exists in the current process.
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm) {
-      // Shutting down. Just don't deliver this message.
-      ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-      return ref.forget();
-    }
-
-    RefPtr<ServiceWorkerRegistrationInfo> reg =
-      swm->GetRegistration(principal, source.Scope());
-    if (reg) {
-      instance = globalObject->GetOrCreateServiceWorker(source);
-    }
-  }
-
-  if (instance) {
-    init.mSource.SetValue().SetAsServiceWorker() = instance;
-  }
-
-  RefPtr<MessageEvent> event =
-    MessageEvent::Constructor(target, NS_LITERAL_STRING("message"), init);
-  event->SetTrusted(true);
-
-  target->DispatchEvent(*event, result);
-  if (result.Failed()) {
-    result.SuppressException();
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-    return ref.forget();
-  }
-
-  ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
-  return ref.forget();
+  return ClientOpPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__).forget();
 }
 
 RefPtr<ClientOpPromise>
