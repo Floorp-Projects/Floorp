@@ -87,12 +87,27 @@ def fetch_graph_and_labels(parameters, graph_config):
         graph_config['trust-domain'],
         parameters['project'],
         parameters['pushlog_id'])
-    for action in list_tasks(namespace):
+    for task_id in list_tasks(namespace):
+        logger.info('fetching label-to-taskid.json for action task {}'.format(task_id))
         try:
-            run_label_to_id = get_artifact(action, "public/label-to-taskid.json")
+            run_label_to_id = get_artifact(task_id, "public/label-to-taskid.json")
             label_to_taskid.update(run_label_to_id)
         except HTTPError as e:
-            logger.info('Skipping {} due to missing artifact! Error: {}'.format(action, e))
+            logger.debug('No label-to-taskid.json found for {}: {}'.format(task_id, e))
+            continue
+
+    # Similarly for cron tasks..
+    namespace = '{}.v2.{}.revision.{}.cron'.format(
+        graph_config['trust-domain'],
+        parameters['project'],
+        parameters['head_rev'])
+    for task_id in list_tasks(namespace):
+        logger.info('fetching label-to-taskid.json for cron task {}'.format(task_id))
+        try:
+            run_label_to_id = get_artifact(task_id, "public/label-to-taskid.json")
+            label_to_taskid.update(run_label_to_id)
+        except HTTPError as e:
+            logger.debug('No label-to-taskid.json found for {}: {}'.format(task_id, e))
             continue
 
     return (decision_task_id, full_task_graph, label_to_taskid)
