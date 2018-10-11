@@ -8671,6 +8671,8 @@ FindPreviousNonWhitespaceSibling(nsIFrame* aFrame)
 bool
 nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
 {
+#define TRACE(reason) \
+  PROFILER_TRACING("Layout", "MaybeRecreateContainerForFrameRemoval: " reason, TRACING_EVENT)
   MOZ_ASSERT(aFrame, "Must have a frame");
   MOZ_ASSERT(aFrame->GetParent(), "Frame shouldn't be root");
   MOZ_ASSERT(aFrame == aFrame->FirstContinuation(),
@@ -8679,15 +8681,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
   if (IsFramePartOfIBSplit(aFrame)) {
     // The removal functions can't handle removal of an {ib} split directly; we
     // need to rebuild the containing block.
-#ifdef DEBUG
-    if (gNoisyContentUpdates) {
-      printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
-             "frame=");
-      nsFrame::ListTag(stdout, aFrame);
-      printf(" is ib-split\n");
-    }
-#endif
-
+    TRACE("IB split removal");
     ReframeContainingBlock(aFrame);
     return true;
   }
@@ -8695,6 +8689,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
   nsContainerFrame* insertionFrame = aFrame->GetContentInsertionFrame();
   if (insertionFrame && insertionFrame->IsLegendFrame() &&
       aFrame->GetParent()->IsFieldSetFrame()) {
+    TRACE("Fieldset / Legend");
     RecreateFramesForContent(aFrame->GetParent()->GetContent(),
                              InsertionKind::Async);
     return true;
@@ -8720,6 +8715,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
       // When removing a summary, we should reframe the parent details frame to
       // ensure that another summary is used or the default summary is
       // generated.
+      TRACE("Details / Summary");
       RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
       return true;
     }
@@ -8743,6 +8739,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
         // Similar if we're a table-caption.
         (inFlowFrame->IsTableCaption() &&
          parent->GetChildList(nsIFrame::kCaptionList).FirstChild() == inFlowFrame)) {
+      TRACE("Table or ruby pseudo parent");
       RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
       return true;
     }
@@ -8761,15 +8758,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
   if (nextSibling && IsTableOrRubyPseudo(nextSibling)) {
     nsIFrame* prevSibling = FindPreviousNonWhitespaceSibling(inFlowFrame);
     if (prevSibling && IsTableOrRubyPseudo(prevSibling)) {
-#ifdef DEBUG
-      if (gNoisyContentUpdates) {
-        printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
-               "frame=");
-        nsFrame::ListTag(stdout, aFrame);
-        printf(" has a table pseudo next sibling of different type and a "
-               "table pseudo prevsibling\n");
-      }
-#endif
+      TRACE("Table or ruby pseudo sibling");
       // Good enough to recreate frames for aFrame's parent's content; even if
       // aFrame's parent is a pseudo, that'll be the right content node.
       RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
@@ -8788,6 +8777,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
     //    frames may be constructed or destroyed accordingly.
     // 2. The type of the first child of a ruby frame determines
     //    whether a pseudo ruby base container should exist.
+    TRACE("Ruby container");
     RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
     return true;
   }
@@ -8802,14 +8792,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
   // non-replaced content (including whitespace).
   if (nextSibling && IsAnonymousFlexOrGridItem(nextSibling)) {
     AssertAnonymousFlexOrGridItemParent(nextSibling, parent);
-#ifdef DEBUG
-    if (gNoisyContentUpdates) {
-      printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
-             "frame=");
-      nsFrame::ListTag(stdout, aFrame);
-      printf(" has an anonymous flex item as its next sibling\n");
-    }
-#endif // DEBUG
+    TRACE("Anon flex or grid item next sibling");
     // Recreate frames for the flex container (the removed frame's parent)
     RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
     return true;
@@ -8820,14 +8803,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
   // remaining child of that anonymous flex item, which can then go away.)
   if (!nextSibling && IsAnonymousFlexOrGridItem(parent)) {
     AssertAnonymousFlexOrGridItemParent(parent, parent->GetParent());
-#ifdef DEBUG
-    if (gNoisyContentUpdates) {
-      printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
-             "frame=");
-      nsFrame::ListTag(stdout, aFrame);
-      printf(" has an anonymous flex item as its parent\n");
-    }
-#endif // DEBUG
+    TRACE("Anon flex or grid item parent");
     // Recreate frames for the flex container (the removed frame's grandparent)
     RecreateFramesForContent(parent->GetParent()->GetContent(),
                              InsertionKind::Async);
@@ -8839,6 +8815,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
     nsIPopupContainer* popupContainer =
       nsIPopupContainer::GetPopupContainer(mPresShell);
     if (popupContainer && popupContainer->GetPopupSetFrame() == aFrame) {
+      TRACE("PopupSet");
       ReconstructDocElementHierarchy(InsertionKind::Async);
       return true;
     }
@@ -8851,6 +8828,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
       !inFlowFrame->GetNextSibling() &&
       ((parent->GetPrevContinuation() && !parent->GetPrevInFlow()) ||
        (parent->GetNextContinuation() && !parent->GetNextInFlow()))) {
+    TRACE("Removing last child of non-fluid split parent");
     RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
     return true;
   }
@@ -8878,17 +8856,10 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
     return false;
   }
 
-#ifdef DEBUG
-  if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
-           "frame=");
-    nsFrame::ListTag(stdout, parent);
-    printf(" is ib-split\n");
-  }
-#endif
-
+  TRACE("IB split parent");
   ReframeContainingBlock(parent);
   return true;
+#undef TRACE
 }
 
 void
@@ -11343,6 +11314,9 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
                                            bool aIsAppend,
                                            nsIFrame* aPrevSibling)
 {
+#define TRACE(reason) \
+  PROFILER_TRACING("Layout", "WipeContainingBlock: " reason, TRACING_EVENT)
+
   if (aItems.IsEmpty()) {
     return false;
   }
@@ -11355,6 +11329,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   if (aFrame->IsXULBoxFrame() &&
       !(aFrame->GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK) &&
       aItems.AnyItemsNeedBlockParent()) {
+    TRACE("XUL with block-wrapped kids");
     RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
     return true;
   }
@@ -11374,6 +11349,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     const bool isLegacyBox = IsFlexContainerForLegacyBox(aFrame);
     if (aPrevSibling && IsAnonymousFlexOrGridItem(aPrevSibling) &&
         iter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox)) {
+      TRACE("Inserting inline after anon flex or grid item");
       RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
       return true;
     }
@@ -11385,6 +11361,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       iter.SetToEnd();
       iter.Prev();
       if (iter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox)) {
+        TRACE("Inserting inline before anon flex or grid item");
         RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
         return true;
       }
@@ -11413,6 +11390,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     if (!iter.SkipItemsThatNeedAnonFlexOrGridItem(aState, isLegacyBox)) {
       // We hit something that _doesn't_ need an anonymous flex item!
       // Rebuild the flex container to bust it out.
+      TRACE("Inserting non-inlines inside anon flex or grid item");
       RecreateFramesForContent(containerFrame->GetContent(), InsertionKind::Async);
       return true;
     }
@@ -11423,7 +11401,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
   // Situation #4 is a ruby-related frame that's getting new children.
   // The situation for ruby is complex, especially when interacting with
-  // spaces. It containes these two special cases apart from tables:
+  // spaces. It contains these two special cases apart from tables:
   // 1) There are effectively three types of white spaces in ruby frames
   //    we handle differently: leading/tailing/inter-level space,
   //    inter-base/inter-annotation space, and inter-segment space.
@@ -11436,6 +11414,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // We want to optimize it better, and avoid reframing as much as
     // possible. But given the cases above, and the fact that a ruby
     // usually won't be very large, it should be fine to reframe it.
+    TRACE("Ruby");
     RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
     return true;
   }
@@ -11602,6 +11581,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     if (!aItems.AllWantParentType(parentType)) {
       // Reframing aFrame->GetContent() is good enough, since the content of
       // table pseudo-frames is the ancestor content.
+      TRACE("Pseudo-frames going wrong");
       RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
       return true;
     }
@@ -11684,30 +11664,15 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // but it will *always* get the right answer.
 
   nsIContent* blockContent = aContainingBlock->GetContent();
-#ifdef DEBUG
-  if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::WipeContainingBlock: blockContent=%p\n",
-           blockContent);
-  }
-#endif
+  TRACE("IB splits");
   RecreateFramesForContent(blockContent, InsertionKind::Async);
   return true;
+#undef TRACE
 }
 
 void
 nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
 {
-
-#ifdef DEBUG
-  // ReframeContainingBlock is a NASTY routine, it causes terrible performance problems
-  // so I want to see when it is happening!  Unfortunately, it is happening way to often because
-  // so much content on the web causes block-in-inline frame situations and we handle them
-  // very poorly
-  if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ReframeContainingBlock frame=%p\n",
-           aFrame);
-  }
-#endif
 
   // XXXbz how exactly would we get here while isReflowing anyway?  Should this
   // whole test be ifdef DEBUG?
