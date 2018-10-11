@@ -51,7 +51,14 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     JSScript* compileGlobalScript(ScopeKind scopeKind);
     JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
+
+    // Call this before calling compileModule.
+    MOZ_MUST_USE bool prepareModuleParse() {
+        return createSourceAndParser(ParseGoal::Module);
+    }
+
     ModuleObject* compileModule();
+
     bool compileStandaloneFunction(MutableHandleFunction fun, GeneratorKind generatorKind,
                                    FunctionAsyncKind asyncKind,
                                    const Maybe<uint32_t>& parameterListEnd);
@@ -59,6 +66,13 @@ class MOZ_STACK_CLASS BytecodeCompiler
     ScriptSourceObject* sourceObjectPtr() const;
 
   private:
+    void assertSourceAndParserCreated() const {
+        MOZ_ASSERT(sourceObject != nullptr);
+        MOZ_ASSERT(scriptSource != nullptr);
+        MOZ_ASSERT(usedNames.isSome());
+        MOZ_ASSERT(parser.isSome());
+    }
+
     JSScript* compileScript(HandleObject environment, SharedContext* sc);
     bool checkLength();
     bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
@@ -229,9 +243,10 @@ BytecodeCompiler::createParser(ParseGoal goal)
     usedNames.emplace(cx);
 
     if (canLazilyParse()) {
-        syntaxParser.emplace(cx, cx->tempLifoAlloc(), options, sourceBuffer.get(),
-                             sourceBuffer.length(), /* foldConstants = */ false,
-                             *usedNames, nullptr, nullptr, sourceObject, goal);
+        syntaxParser.emplace(cx, cx->tempLifoAlloc(), options,
+                             sourceBuffer.get(), sourceBuffer.length(),
+                             /* foldConstants = */ false, *usedNames, nullptr, nullptr,
+                             sourceObject, goal);
         if (!syntaxParser->checkOptions()) {
             return false;
         }
@@ -410,9 +425,7 @@ BytecodeCompiler::compileEvalScript(HandleObject environment, HandleScope enclos
 ModuleObject*
 BytecodeCompiler::compileModule()
 {
-    if (!createSourceAndParser(ParseGoal::Module)) {
-        return nullptr;
-    }
+    assertSourceAndParserCreated();
 
     if (!createScript()) {
         return nullptr;
@@ -756,6 +769,11 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
     BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
+
+    if (!compiler.prepareModuleParse()) {
+        return nullptr;
+    }
+
     ModuleObject* module = compiler.compileModule();
     if (!module) {
         return nullptr;
