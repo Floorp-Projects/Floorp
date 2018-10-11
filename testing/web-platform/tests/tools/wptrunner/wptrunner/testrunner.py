@@ -623,10 +623,10 @@ class TestRunnerManager(threading.Thread):
 
     def wait_finished(self):
         assert isinstance(self.state, RunnerManagerState.running)
-        # The browser should be stopped already, but this ensures we do any post-stop
-        # processing
         self.logger.debug("Wait finished")
 
+        # The browser should be stopped already, but this ensures we do any
+        # post-stop processing
         return self.after_test_end(self.state.test, True)
 
     def after_test_end(self, test, restart):
