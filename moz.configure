@@ -287,6 +287,27 @@ def build_backends(backends):
 
 set_config('BUILD_BACKENDS', build_backends)
 
+
+@depends(check_build_environment, build_backends)
+@imports('glob')
+def check_objdir_backend_reuse(build_env, backends):
+    # "Make based" might be RecursiveMake or a hybrid backend, so "Make" is
+    # intentionally vague for use with the substring match below.
+    incompatible_backends = (
+        ('Tup', 'Make'),
+        ('Make', 'Tup')
+    )
+    for backend_file in glob.iglob(os.path.join(build_env.topobjdir,
+                                                'backend.*Backend')):
+        for prev, curr in incompatible_backends:
+            if prev in backend_file and any(curr in b for b in backends):
+                die("The active objdir, %s, was previously "
+                    "used to build with a %s based backend. "
+                    "Change objdirs (by setting MOZ_OBJDIR in "
+                    "your mozconfig) or clobber to continue.\n",
+                    build_env.topobjdir, prev)
+
+
 option('--disable-gtest-in-build',
        help='Force disable building the gtest libxul during the build.',
        when='--enable-compile-environment')
