@@ -55,6 +55,7 @@
 .ruleview-reveal-panel {
   display: flex;
   overflow: hidden;
+  flex-wrap: wrap;
 }
 
 .ruleview-reveal-panel[hidden] {
