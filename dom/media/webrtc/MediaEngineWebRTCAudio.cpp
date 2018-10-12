@@ -550,26 +550,6 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
   return NS_OK;
 }
 
-class EndTrackMessage : public ControlMessage
-{
-  public:
-    EndTrackMessage(MediaStream* aStream,
-                    TrackID aTrackID)
-    : ControlMessage(aStream)
-    , mTrackID(aTrackID)
-  {
-  }
-
-  void Run() override
-  {
-    mStream->AsSourceStream()->EndTrack(mTrackID);
-  }
-
-protected:
-  RefPtr<AudioInputProcessing> mInputProcessing;
-  TrackID mTrackID;
-};
-
 
 nsresult
 MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandle>& aHandle)
@@ -578,16 +558,41 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
 
   MOZ_ASSERT(mState == kStopped);
 
+  class EndTrackMessage : public ControlMessage
+  {
+    public:
+      EndTrackMessage(MediaStream* aStream,
+                      AudioInputProcessing* aAudioInputProcessing,
+                      TrackID aTrackID)
+      : ControlMessage(aStream)
+      , mInputProcessing(aAudioInputProcessing)
+      , mTrackID(aTrackID)
+    {
+    }
+
+    void Run() override
+    {
+      mInputProcessing->End();
+      mStream->AsSourceStream()->EndTrack(mTrackID);
+    }
+
+  protected:
+    RefPtr<AudioInputProcessing> mInputProcessing;
+    TrackID mTrackID;
+  };
+
   if (mStream && IsTrackIDExplicit(mTrackID)) {
     RefPtr<MediaStream> sourceStream = mStream;
     RefPtr<MediaStreamGraphImpl> graphImpl = mStream->GraphImpl();
+    RefPtr<AudioInputProcessing> inputProcessing = mInputProcessing;
     NS_DispatchToMainThread(media::NewRunnableFrom(
       [ graph = std::move(graphImpl),
         stream = std::move(sourceStream),
+        audioInputProcessing = std::move(inputProcessing),
         trackID = mTrackID]() mutable {
         if (graph) {
-        graph->AppendMessage(
-            MakeUnique<EndTrackMessage>(stream, trackID));
+          graph->AppendMessage(
+              MakeUnique<EndTrackMessage>(stream, audioInputProcessing, trackID));
         }
         return NS_OK;
       }
@@ -808,6 +813,7 @@ AudioInputProcessing::AudioInputProcessing(uint32_t aMaxChannelCount,
   , mTrackID(aTrackID)
   , mPrincipal(aPrincipalHandle)
   , mEnabled(false)
+  , mEnded(false)
 {
 }
 
@@ -1032,6 +1038,10 @@ AudioInputProcessing::Pull(const RefPtr<const AllocationHandle>& aHandle,
   TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i",
                                aStream.get(), aTrackID);
   StreamTime delta;
+
+  if (mEnded) {
+    return;
+  }
 
   delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
 
@@ -1408,6 +1418,12 @@ AudioInputProcessing::DeviceChanged(MediaStreamGraphImpl* aGraph)
   ResetProcessingIfNeeded(gain_control);
   ResetProcessingIfNeeded(echo_cancellation);
   ResetProcessingIfNeeded(noise_suppression);
+}
+
+void
+AudioInputProcessing::End()
+{
+  mEnded = true;
 }
 
 nsString
