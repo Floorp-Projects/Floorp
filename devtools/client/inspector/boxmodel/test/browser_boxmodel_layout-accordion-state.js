@@ -31,8 +31,8 @@ add_task(async function() {
 });
 
 function testAccordionStateAfterClickingHeader(doc) {
-  const header = doc.querySelector("#layout-container .box-model-pane ._header");
-  const bContent = doc.querySelector("#layout-container .box-model-pane ._content");
+  const header = doc.querySelector(".layout-container .box-model-pane ._header");
+  const bContent = doc.querySelector(".layout-container .box-model-pane ._content");
 
   info("Checking initial state of the box model panel.");
   is(bContent.style.display, "block", "The box model panel content is 'display: block'.");
@@ -51,7 +51,7 @@ function testAccordionStateAfterClickingHeader(doc) {
 function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
   info("Checking the box model accordion state is persistent after switching sidebars.");
 
-  const bContent = doc.querySelector("#layout-container .box-model-pane ._content");
+  const bContent = doc.querySelector(".layout-container .box-model-pane ._content");
 
   info("Selecting the computed view.");
   inspector.sidebar.select("computedview");
@@ -75,7 +75,7 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
   info("Re-opening the layout view.");
   const { boxmodel } = await openLayoutView();
   const { document: doc } = boxmodel;
-  const bContent = doc.querySelector("#layout-container .box-model-pane ._content");
+  const bContent = doc.querySelector(".layout-container .box-model-pane ._content");
 
   info("Checking the state of the box model panel.");
   ok(!bContent, "The box model panel content is not rendered.");
