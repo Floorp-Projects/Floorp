@@ -131,17 +131,15 @@ private:
 #elif defined(XP_WIN)
   base::ProcessHandle mShmemFile;
 #elif defined(MOZ_WIDGET_ANDROID)
-  
+  bool mDoShutdown;
   bool mExternalStructFailed;
   bool mEnumerationCompleted;
 #endif
-  bool mDoShutdown;
 
   volatile VRExternalShmem* mExternalShmem;
 #if !defined(MOZ_WIDGET_ANDROID)
   bool mSameProcess;
 #endif
-  TimeStamp mEarliestRestartTime;
 
   void OpenShmem();
   void CloseShmem();
