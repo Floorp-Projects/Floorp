@@ -311,9 +311,8 @@ def main():
                                LibSignFile(os.path.join(args.destination,
                                                         libname)))
 
-    # If a pdb file is present and we were instructed to copy it, include it.
-    # Run on all OSes to capture MinGW builds
-    if buildconfig.substs['MOZ_COPY_PDBS']:
+    # Include pdb files for llvm-symbolizer to resolve symbols.
+    if buildconfig.substs.get('LLVM_SYMBOLIZER') and mozinfo.isWin:
         for p, f in copier:
             if isinstance(f, ExecutableFile):
                 pdbname = os.path.splitext(f.inputs()[0])[0] + '.pdb'
