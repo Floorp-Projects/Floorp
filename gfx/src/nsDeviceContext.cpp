@@ -65,21 +65,11 @@ public:
     void UpdateUserFonts(gfxUserFontSet* aUserFontSet);
 
 protected:
-    // If the array of cached entries is about to exceed this threshold,
-    // we'll discard the oldest ones so as to keep the size reasonable.
-    // In practice, the great majority of cache hits are among the last
-    // few entries; keeping thousands of older entries becomes counter-
-    // productive because it can then take too long to scan the cache.
-    static const int32_t kMaxCacheEntries = 128;
-
     ~nsFontCache() {}
 
     nsDeviceContext*          mContext; // owner
     RefPtr<nsAtom>         mLocaleLanguage;
-
-    // We don't allow this array to grow beyond kMaxCacheEntries,
-    // so use an autoarray to avoid separate allocation.
-    AutoTArray<nsFontMetrics*,kMaxCacheEntries> mFontMetrics;
+    nsTArray<nsFontMetrics*>  mFontMetrics;
 };
 
 NS_IMPL_ISUPPORTS(nsFontCache, nsIObserver)
@@ -129,7 +119,8 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
 
     // First check our cache
     // start from the end, which is where we put the most-recent-used element
-    const int32_t n = mFontMetrics.Length() - 1;
+
+    int32_t n = mFontMetrics.Length() - 1;
     for (int32_t i = n; i >= 0; --i) {
         nsFontMetrics* fm = mFontMetrics[i];
         if (fm->Font().Equals(aFont) &&
@@ -147,11 +138,6 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
     }
 
     // It's not in the cache. Get font metrics and then cache them.
-    // If the cache has reached its size limit, drop the older half of the
-    // entries.
-    if (n >= kMaxCacheEntries - 1) {
-        mFontMetrics.RemoveElementsAt(0, kMaxCacheEntries / 2);
-    }
 
     nsFontMetrics::Params params = aParams;
     params.language = language;
