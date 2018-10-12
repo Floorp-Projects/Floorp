@@ -769,7 +769,9 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         player.startTime = null;
       }
 
-      player.currentTime = (time - actor.createdTime) * player.playbackRate;
+      const currentTime =
+        player.playbackRate > 0 ? time - actor.createdTime : actor.createdTime - time;
+      player.currentTime = currentTime * Math.abs(player.playbackRate);
     }
 
     return this.waitForNextFrame(players);
