@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "熱門主題:",
   "pocket_read_even_more": "檢視更多文章",
   "pocket_more_reccommendations": "更多推薦項目",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "原理是什麼",
   "pocket_cta_button": "取得 Pocket",
   "pocket_cta_text": "將您喜愛的故事儲存到 Pocket，閱讀一篇篇好文章。",
   "highlights_empty_state": "開始上網，我們就會把您在網路上發現的好文章、影片、剛加入書籤的頁面顯示於此。",

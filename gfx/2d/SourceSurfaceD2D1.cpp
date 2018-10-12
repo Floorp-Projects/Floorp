@@ -6,7 +6,6 @@
 
 #include "SourceSurfaceD2D1.h"
 #include "DrawTargetD2D1.h"
-#include "Tools.h"
 
 namespace mozilla {
 namespace gfx {
@@ -70,7 +69,7 @@ SourceSurfaceD2D1::GetDataSurface()
 
   D2D1_POINT_2U point = D2D1::Point2U(0, 0);
   D2D1_RECT_U rect = D2D1::RectU(0, 0, mSize.width, mSize.height);
-  
+
   hr = softwareBitmap->CopyFromBitmap(&point, mRealizedBitmap, &rect);
 
   if (FAILED(hr)) {

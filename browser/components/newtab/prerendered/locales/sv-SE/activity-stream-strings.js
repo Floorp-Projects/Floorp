@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populära ämnen:",
   "pocket_read_even_more": "Visa fler nyheter",
   "pocket_more_reccommendations": "Fler rekommendationer",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Hur fungerar det",
   "pocket_cta_button": "Hämta Pocket",
   "pocket_cta_text": "Spara de historier som du tycker är intressant i Pocket, och stimulera dina tankar med fascinerande läsmaterial.",
   "highlights_empty_state": "Börja surfa, och vi visar några av de bästa artiklarna, videoklippen och andra sidor du nyligen har besökt eller bokmärkt här.",

@@ -27,7 +27,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
     default_log_type = "mach"
 
     def kwargs_common(self, kwargs):
-        from mozrunner.devices.android_device import verify_android_device
+        from mozrunner.devices.android_device import verify_android_device, grant_runtime_permissions
         build_path = os.path.join(self.topobjdir, 'build')
         here = os.path.split(__file__)[0]
         tests_src_path = os.path.join(here, "tests")
@@ -36,6 +36,13 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         if kwargs["product"] == "fennec":
             verify_android_device(self, install=True, verbose=False, xre=True)
+
+            # package_name may be non-fennec in the future
+            package_name = kwargs["package_name"]
+            if not package_name:
+                package_name = self.substs["ANDROID_PACKAGE_NAME"]
+
+            grant_runtime_permissions(self, package_name, kwargs["device_serial"])
             if kwargs["certutil_binary"] is None:
                 kwargs["certutil_binary"] = os.path.join(os.environ.get('MOZ_HOST_BIN'), "certutil")
 

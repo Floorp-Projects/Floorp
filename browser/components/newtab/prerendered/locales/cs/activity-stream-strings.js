@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populární témata:",
   "pocket_read_even_more": "Zobrazit více článků",
   "pocket_more_reccommendations": "Další doporučení",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Jak to funguje",
   "pocket_cta_button": "Získejte Pocket",
   "pocket_cta_text": "Ukládejte si články do služby Pocket a užívejte si skvělé čtení.",
   "highlights_empty_state": "Začněte prohlížet a my vám zde ukážeme některé skvělé články, videa a další stránky, které jste nedávno viděli nebo uložili do záložek.",

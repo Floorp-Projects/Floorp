@@ -6,7 +6,7 @@
 const { RootActor } = require("devtools/server/actors/root");
 
 function test_requestTypes_request(client, anActor) {
-  client.request({ to: "root", type: "requestTypes" }, function(response) {
+  client.mainRoot.requestTypes().then(function(response) {
     const expectedRequestTypes = Object.keys(RootActor
                                            .prototype
                                            .requestTypes);

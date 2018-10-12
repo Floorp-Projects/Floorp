@@ -69,6 +69,8 @@ public:
   bool TextureSharingWorks();
   bool IsWARP();
   bool CanUseNV12();
+  bool CanUseP010();
+  bool CanUseP016();
   bool CanUseDComp();
 
   // Returns true if we can create a texture with

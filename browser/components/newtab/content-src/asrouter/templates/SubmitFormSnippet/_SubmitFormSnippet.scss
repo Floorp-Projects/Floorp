@@ -1,0 +1,66 @@
+.SubmitFormSnippet {
+  flex-direction: column;
+  flex: 1 1 100%;
+  width: 100%;
+
+  .ASRouterButton {
+    &.primary {
+      font-size: 15px;
+      flex: 1 1 0;
+    }
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .message {
+    font-size: 14px;
+    align-self: stretch;
+    flex: 0 0 100%;
+  }
+
+  .privacy-notice {
+    color: var(--newtab-text-secondary-color);
+    flex: 0 0 100%;
+  }
+
+  .innerWrapper {
+    max-width: 670px;
+    flex-wrap: wrap;
+    justify-items: center;
+  }
+
+  .footer {
+    width: 100%;
+    margin: 0 auto;
+    text-align: right;
+    background: $grey-20;
+    padding: 10px 0;
+
+    .footer-content {
+      margin: 0 auto;
+      max-width: 768px;
+      width: 100%;
+      text-align: right;
+    }
+  }
+
+  input {
+    &[type='email'] {
+      background-color: var(--newtab-textbox-background-color);
+      border: $input-border;
+      padding: 0 8px;
+      height: 32px;
+      font-size: 15px;
+      width: 50%;
+
+      &:focus {
+        border: $input-border-active;
+        box-shadow: var(--newtab-textbox-focus-boxshadow);
+      }
+    }
+  }
+}

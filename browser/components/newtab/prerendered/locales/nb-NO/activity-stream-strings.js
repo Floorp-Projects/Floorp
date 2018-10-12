@@ -77,7 +77,7 @@ window.gActivityStreamStrings = {
   "pocket_more_reccommendations": "Flere anbefalinger",
   "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Hent Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_cta_text": "Lagre artiklene du synes er interessante i Pocket, og stimuler dine tanker med fasinerende lesermateriell.",
   "highlights_empty_state": "Begynn å surfe, og vi viser noen av de beste artiklene, videoer og andre sider du nylig har besøkt eller bokmerket her.",
   "topstories_empty_state": "Du har tatt igjen. Kom tilbake senere for flere topphistorier fra {provider}. Kan du ikke vente? Velg et populært emne for å finne flere gode artikler fra hele Internett.",
   "manual_migration_explanation2": "Prøv Firefox med bokmerkene, historikk og passord fra en annen nettleser.",

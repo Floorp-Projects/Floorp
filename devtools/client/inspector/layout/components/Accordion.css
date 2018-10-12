@@ -61,4 +61,5 @@
   display: inline-block;
   padding-inline-start: 2px;
   padding-inline-end: 1px;
+  flex-shrink: 0;
 }

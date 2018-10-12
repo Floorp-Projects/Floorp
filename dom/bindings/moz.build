@@ -122,11 +122,11 @@ SOURCES += [
     'StructuredClone.cpp',
 ]
 
-# Tests for maplike and setlike require bindings to be built, which means they
-# must be included in libxul. This breaks the "no test classes are exported"
-# rule stated in the test/ directory, but it's the only way this will work.
-# Test classes are only built in debug mode, and all tests requiring use of
-# them are only run in debug mode.
+# Some tests, including those for for maplike and setlike, require bindings
+# to be built, which means they must be included in libxul. This breaks the
+# "no test classes are exported" rule stated in the test/ directory, but it's
+# the only way this will work. Test classes are only built in debug mode, and
+# all tests requiring use of them are only run in debug mode.
 if CONFIG['MOZ_DEBUG'] and CONFIG['ENABLE_TESTS']:
     EXPORTS.mozilla.dom += [
         "test/TestFunctions.h",
@@ -136,7 +136,8 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['ENABLE_TESTS']:
         "test/TestInterfaceMaplike.h",
         "test/TestInterfaceMaplikeObject.h",
         "test/TestInterfaceSetlike.h",
-        "test/TestInterfaceSetlikeNode.h"
+        "test/TestInterfaceSetlikeNode.h",
+        "test/WrapperCachedNonISupportsTestInterface.h",
         ]
     UNIFIED_SOURCES += [
         "test/TestFunctions.cpp",
@@ -147,6 +148,7 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['ENABLE_TESTS']:
         "test/TestInterfaceMaplikeObject.cpp",
         "test/TestInterfaceSetlike.cpp",
         "test/TestInterfaceSetlikeNode.cpp",
+        "test/WrapperCachedNonISupportsTestInterface.cpp",
         ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

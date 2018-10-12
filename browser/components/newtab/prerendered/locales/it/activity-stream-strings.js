@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Argomenti popolari:",
   "pocket_read_even_more": "Visualizza altre storie",
   "pocket_more_reccommendations": "Altri suggerimenti",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Come funziona",
   "pocket_cta_button": "Ottieni Pocket",
   "pocket_cta_text": "Salva le storie che ami in Pocket e nutri la tua mente con letture appassionanti.",
   "highlights_empty_state": "Inizia a navigare e, in questa sezione, verranno visualizzati articoli, video e altre pagine visitate di recente o aggiunte ai segnalibri.",

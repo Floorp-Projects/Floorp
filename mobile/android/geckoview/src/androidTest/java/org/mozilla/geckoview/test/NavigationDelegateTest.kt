@@ -343,6 +343,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                    sessionRule.session.evaluateJS(userAgentJs) as String,
                    containsString(mobileSubStr))
 
+        var userAgent = sessionRule.waitForResult(sessionRule.session.getUserAgent());
+        assertThat("User agent should be reported as mobile",
+                    userAgent, containsString(mobileSubStr));
+
         sessionRule.session.settings.setInt(
             GeckoSessionSettings.USER_AGENT_MODE, GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
 
@@ -353,6 +357,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                    sessionRule.session.evaluateJS(userAgentJs) as String,
                    containsString(desktopSubStr))
 
+        userAgent = sessionRule.waitForResult(sessionRule.session.getUserAgent());
+        assertThat("User agent should be reported as desktop",
+                    userAgent, containsString(desktopSubStr));
+
         sessionRule.session.settings.setInt(
             GeckoSessionSettings.USER_AGENT_MODE, GeckoSessionSettings.USER_AGENT_MODE_MOBILE)
 
@@ -362,6 +370,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should be set to mobile",
                    sessionRule.session.evaluateJS(userAgentJs) as String,
                    containsString(mobileSubStr))
+
+        userAgent = sessionRule.waitForResult(sessionRule.session.getUserAgent());
+        assertThat("User agent should be reported as mobile",
+                    userAgent, containsString(mobileSubStr));
+
     }
 
     @Test fun telemetrySnapshots() {

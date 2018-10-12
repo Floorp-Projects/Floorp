@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_gfx_layers_d3d11_MLGDeviceD3D11_h 
-#define mozilla_gfx_layers_d3d11_MLGDeviceD3D11_h 
+#ifndef mozilla_gfx_layers_d3d11_MLGDeviceD3D11_h
+#define mozilla_gfx_layers_d3d11_MLGDeviceD3D11_h
 
 #include <d3d11_1.h>
 
@@ -319,7 +319,7 @@ private:
 
   RefPtr<ID3D11Query> mWaitForPresentQuery;
   RefPtr<ID3D11Query> mNextWaitForPresentQuery;
-  
+
   nsTHashtable<nsRefPtrHashKey<IDXGIKeyedMutex>> mLockedTextures;
   nsTHashtable<nsRefPtrHashKey<IDXGIKeyedMutex>> mLockAttemptedTextures;
 
@@ -337,4 +337,4 @@ private:
 
 struct ShaderBytes;
 
-#endif // mozilla_gfx_layers_d3d11_MLGDeviceD3D11_h 
+#endif // mozilla_gfx_layers_d3d11_MLGDeviceD3D11_h

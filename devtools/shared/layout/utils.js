@@ -193,11 +193,13 @@ exports.getFrameOffsets = getFrameOffsets;
  * @param {String} region
  *        The box model region to return: "content", "padding", "border" or
  *        "margin".
+ * @param {Object} [options.ignoreZoom=false]
+ *        Ignore zoom used in the context of e.g. canvas.
  * @return {Array}
  *        An array of objects that have the same structure as quads returned by
  *        getBoxQuads. An empty array if the node has no quads or is invalid.
  */
-function getAdjustedQuads(boundaryWindow, node, region) {
+function getAdjustedQuads(boundaryWindow, node, region, {ignoreZoom} = {}) {
   if (!node || !node.getBoxQuads) {
     return [];
   }
@@ -211,7 +213,7 @@ function getAdjustedQuads(boundaryWindow, node, region) {
     return [];
   }
 
-  const scale = getCurrentZoom(node);
+  const scale = ignoreZoom ? 1 : getCurrentZoom(node);
   const { scrollX, scrollY } = boundaryWindow;
 
   const xOffset = scrollX * scale;

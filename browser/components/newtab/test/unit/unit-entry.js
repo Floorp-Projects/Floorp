@@ -91,6 +91,10 @@ const TEST_GLOBAL = {
     get history() {
       return TEST_GLOBAL.Cc["@mozilla.org/browser/nav-history-service;1"];
     },
+    observers: {
+      addListener() {},
+      removeListener() {},
+    },
   },
   PluralForm: {get() {}},
   Preferences: FakePrefs,

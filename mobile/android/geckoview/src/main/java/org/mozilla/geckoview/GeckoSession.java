@@ -666,6 +666,22 @@ public class GeckoSession extends LayerSession
     }
 
     /**
+     * Get the current user agent string for this GeckoSession.
+     *
+     * @return a {@link GeckoResult} containing the UserAgent string
+     */
+    public @NonNull GeckoResult<String> getUserAgent() {
+        final CallbackResult<String> result = new CallbackResult<String>() {
+            @Override
+            public void sendSuccess(final Object value) {
+                complete((String) value);
+            }
+        };
+        mEventDispatcher.dispatch("GeckoView:GetUserAgent", null, result);
+        return result;
+    }
+
+    /**
      * Get the current prompt delegate for this GeckoSession.
      * @return PromptDelegate instance or null if using default delegate.
      */
@@ -1084,9 +1100,6 @@ public class GeckoSession extends LayerSession
             mTextInput.onWindowChanged(mWindow);
         }
         if ((change == WINDOW_CLOSE || change == WINDOW_TRANSFER_OUT) && !inProgress) {
-            if (mAccessibility != null) {
-                mAccessibility.clearAutoFill();
-            }
             mTextInput.clearAutoFill();
         }
     }
@@ -1416,10 +1429,6 @@ public class GeckoSession extends LayerSession
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("focused", focused);
         mEventDispatcher.dispatch("GeckoView:SetFocused", msg);
-
-        if (focused && mAccessibility != null) {
-            mAccessibility.onWindowFocus();
-        }
     }
 
     /**

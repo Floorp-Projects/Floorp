@@ -1045,7 +1045,7 @@ Action.prototype = {
   },
 
   get _isMozillaAction() {
-    return this._isBuiltIn || this.id == "webcompat-reporter-button";
+    return this._isBuiltIn || this.id == "webcompat-reporter_mozilla_org";
   },
 };
 

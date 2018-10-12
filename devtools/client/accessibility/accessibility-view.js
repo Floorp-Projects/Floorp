@@ -47,13 +47,18 @@ AccessibilityView.prototype = {
    * @param {Object} accessibility  front that can initialize accessibility
    *                                walker and enable/disable accessibility
    *                                services.
+   * @param {Object} walker         front for accessibility walker actor responsible for
+   *                                managing accessible objects actors/fronts.
+   * @param {JSON}   supports       a collection of flags indicating which accessibility
+   *                                panel features are supported by the current serverside
+   *                                version.
    */
-  async initialize(accessibility, walker, supportsLatestAccessibility) {
+  async initialize(accessibility, walker, supports) {
     // Make sure state is reset every time accessibility panel is initialized.
-    await this.store.dispatch(reset(accessibility));
+    await this.store.dispatch(reset(accessibility, supports));
     const container = document.getElementById("content");
 
-    if (!supportsLatestAccessibility) {
+    if (!supports.enableDisable) {
       ReactDOM.render(OldVersionDescription(), container);
       return;
     }

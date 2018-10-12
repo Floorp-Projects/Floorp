@@ -1123,7 +1123,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "media.ffmpeg.low-latency.enabled",
    MediaFfmpegLowLatencyEnabled,
-  bool, false
+  RelaxedAtomicBool, false
 )
 #endif
 

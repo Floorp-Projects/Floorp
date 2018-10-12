@@ -41,4 +41,12 @@ describe("CFRMessageProvider", () => {
     assert.deepEqual(cohort3.frequency, {lifetime: 3}, "three day cohort has the right frequency cap");
     assert.include(cohort3.targeting, `(providerCohorts.cfr == "three_per_day_amazon")`);
   });
+  it("should always have xpinstallEnabled as targeting if it is an addon", () => {
+    for (const message of messages) {
+      // Ensure that the CFR messages that are recommending an addon have this targeting.
+      // In the future when we can do targeting based on category, this test will change.
+      // See bug 1494778 and 1497653
+      assert.include(message.targeting, `(xpinstallEnabled == true)`);
+    }
+  });
 });

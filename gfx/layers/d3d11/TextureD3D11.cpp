@@ -468,6 +468,10 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
 
   if (aFormat == SurfaceFormat::NV12) {
     newDesc.Format = DXGI_FORMAT_NV12;
+  } else if (aFormat == SurfaceFormat::P010) {
+    newDesc.Format = DXGI_FORMAT_P010;
+  } else if (aFormat == SurfaceFormat::P016) {
+    newDesc.Format = DXGI_FORMAT_P016;
   }
 
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
@@ -1085,7 +1089,9 @@ DXGITextureHostD3D11::NumSubTextures() const
     case gfx::SurfaceFormat::B8G8R8X8: {
       return 1;
     }
-    case gfx::SurfaceFormat::NV12: {
+    case gfx::SurfaceFormat::NV12:
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016: {
       return 2;
     }
     default: {
@@ -1165,6 +1171,19 @@ DXGITextureHostD3D11::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                              aImageKeys[0],
                              aImageKeys[1],
                              wr::ColorDepth::Color8,
+                             wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
+                             aFilter);
+      break;
+    }
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016: {
+      MOZ_ASSERT(aImageKeys.length() == 2);
+      aBuilder.PushNV12Image(aBounds,
+                             aClip,
+                             true,
+                             aImageKeys[0],
+                             aImageKeys[1],
+                             wr::ColorDepth::Color16,
                              wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
                              aFilter);
       break;

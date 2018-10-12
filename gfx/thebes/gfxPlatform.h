@@ -888,6 +888,8 @@ private:
 
     static bool IsDXInterop2Blocked();
     static bool IsDXNV12Blocked();
+    static bool IsDXP010Blocked();
+    static bool IsDXP016Blocked();
 
     RefPtr<gfxASurface> mScreenReferenceSurface;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;

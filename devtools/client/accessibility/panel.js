@@ -77,7 +77,7 @@ AccessibilityPanel.prototype = {
 
     await this._toolbox.initInspector();
     await this.startup.initAccessibility();
-    if (this.supportsLatestAccessibility) {
+    if (this.supports.enableDisable) {
       this.picker = new Picker(this);
     }
 
@@ -133,9 +133,7 @@ AccessibilityPanel.prototype = {
     }
     // Alright reset the flag we are about to refresh the panel.
     this.shouldRefresh = false;
-    this.postContentMessage("initialize", this.front,
-                                          this.walker,
-                                          this.supportsLatestAccessibility);
+    this.postContentMessage("initialize", this.front, this.walker, this.supports);
   },
 
   updateA11YServiceDurationTimer() {
@@ -208,8 +206,8 @@ AccessibilityPanel.prototype = {
     return this.startup.walker;
   },
 
-  get supportsLatestAccessibility() {
-    return this.startup._supportsLatestAccessibility;
+  get supports() {
+    return this.startup._supports;
   },
 
   /**

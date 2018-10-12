@@ -106,6 +106,16 @@ RootClient.prototype = {
   listProcesses: DebuggerClient.requester({ type: "listProcesses" }),
 
   /**
+   * Fetch the ParentProcessTargetActor for the main process or ContentProcessTargetActor
+   * for a a given child process ID.
+   *
+   * @param number id
+   *        The ID for the process to attach (returned by `listProcesses`).
+   *        Connected to the main process if is 0.
+   */
+  getProcess: DebuggerClient.requester({ type: "getProcess", id: arg(0) }),
+
+  /**
    * Retrieve all service worker registrations as well as workers from the parent and
    * content processes. Listing service workers involves merging information coming from
    * registrations and workers, this method will combine this information to present a
@@ -138,7 +148,7 @@ RootClient.prototype = {
         if (process.parent) {
           continue;
         }
-        const { form } = await this._client.getProcess(process.id);
+        const { form } = await this.getProcess(process.id);
         const processActor = form.actor;
         const response = await this._client.request({
           to: processActor,
@@ -299,6 +309,26 @@ RootClient.prototype = {
    *        Called with the response packet.
    */
   protocolDescription: DebuggerClient.requester({ type: "protocolDescription" }),
+
+  /**
+   * Special request, actually supported by all actors to retrieve the list of all
+   * the request names supported by this actor.
+   */
+  requestTypes: DebuggerClient.requester({ type: "requestTypes" }),
+
+  /**
+   * Test request that returns the object passed as first argument.
+   *
+   * `echo` is special as all the property of the given object have to be passed
+   * on the packet object. That's not something that can be achieve by requester helper.
+   */
+  echo(object) {
+    const packet = Object.assign(object, {
+      to: this.actor,
+      type: "echo",
+    });
+    return this.request(packet);
+  },
 
   /*
    * Methods constructed by DebuggerClient.requester require these forwards

@@ -26,6 +26,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [sync](#sync)
 * [topFrecentSites](#topfrecentsites)
 * [totalBookmarksCount](#totalbookmarkscount)
+* [xpinstallEnabled](#xpinstallEnabled)
 
 ## Detailed usage
 
@@ -374,4 +375,12 @@ Total number of bookmarks.
 declare const totalBookmarksCount: number;
 ```
 
+### `xpinstallEnabled`
 
+Pref used by system administrators to disallow add-ons from installed altogether.
+
+#### Definition
+
+```ts
+declare const xpinstallEnabled: boolean;
+```

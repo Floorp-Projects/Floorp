@@ -10,14 +10,26 @@ DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
 DIRS += ['locales']
 
 FINAL_TARGET_FILES.features['webcompat-reporter@mozilla.org'] += [
-  'bootstrap.js'
+  'background.js',
+  'manifest.json'
 ]
 
-FINAL_TARGET_PP_FILES.features['webcompat-reporter@mozilla.org'] += [
-  'install.rdf.in'
+FINAL_TARGET_FILES.features['webcompat-reporter@mozilla.org'].experimentalAPIs += [
+  'experimentalAPIs/aboutConfigPrefs.js',
+  'experimentalAPIs/aboutConfigPrefs.json',
+  'experimentalAPIs/browserInfo.js',
+  'experimentalAPIs/browserInfo.json',
+  'experimentalAPIs/l10n.js',
+  'experimentalAPIs/l10n.json',
+  'experimentalAPIs/pageActionExtras.js',
+  'experimentalAPIs/pageActionExtras.json',
+  'experimentalAPIs/tabExtras.js',
+  'experimentalAPIs/tabExtras.json'
 ]
 
-JAR_MANIFESTS += ['jar.mn']
+FINAL_TARGET_FILES.features['webcompat-reporter@mozilla.org'].icons += [
+  'icons/lightbulb.svg'
+]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 

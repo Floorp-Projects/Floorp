@@ -877,7 +877,8 @@ main {
       inset-inline-end: 0;
       inset-inline-start: auto; } }
   @media (min-width: 1122px) and (max-width: 1570px) {
-    .sections-list .section-list :nth-child(3n) .context-menu {
+    .sections-list .section-list :nth-child(3n) .context-menu,
+    .sections-list .section-list :nth-child(4n) .context-menu {
       margin-inline-end: 5px;
       margin-inline-start: auto;
       inset-inline-end: 0;
@@ -2091,47 +2092,47 @@ a.firstrun-link {
 .SimpleSnippet .ASRouterButton {
   cursor: pointer; }
 
-.NewsletterSnippet {
+.SubmitFormSnippet {
   flex-direction: column;
   flex: 1 1 100%;
   width: 100%; }
-  .NewsletterSnippet .ASRouterButton.primary {
+  .SubmitFormSnippet .ASRouterButton.primary {
     font-size: 15px;
     flex: 1 1 0; }
-  .NewsletterSnippet form {
+  .SubmitFormSnippet form {
     display: flex;
     flex-direction: column;
     width: 100%; }
-  .NewsletterSnippet .message {
+  .SubmitFormSnippet .message {
     font-size: 14px;
     align-self: stretch;
     flex: 0 0 100%; }
-  .NewsletterSnippet .privacy-notice {
+  .SubmitFormSnippet .privacy-notice {
     color: var(--newtab-text-secondary-color);
     flex: 0 0 100%; }
-  .NewsletterSnippet .innerWrapper {
+  .SubmitFormSnippet .innerWrapper {
     max-width: 670px;
     flex-wrap: wrap;
     justify-items: center; }
-  .NewsletterSnippet .footer {
+  .SubmitFormSnippet .footer {
     width: 100%;
     margin: 0 auto;
     text-align: right;
     background: #EDEDF0;
     padding: 10px 0; }
-    .NewsletterSnippet .footer .footer-content {
+    .SubmitFormSnippet .footer .footer-content {
       margin: 0 auto;
       max-width: 768px;
       width: 100%;
       text-align: right; }
-  .NewsletterSnippet input[type='email'] {
+  .SubmitFormSnippet input[type='email'] {
     background-color: var(--newtab-textbox-background-color);
     border: 1px solid var(--newtab-textbox-border);
     padding: 0 8px;
     height: 32px;
     font-size: 15px;
     width: 50%; }
-    .NewsletterSnippet input[type='email']:focus {
+    .SubmitFormSnippet input[type='email']:focus {
       border: 1px solid var(--newtab-textbox-focus-color);
       box-shadow: var(--newtab-textbox-focus-boxshadow); }
 

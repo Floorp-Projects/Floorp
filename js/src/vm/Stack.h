@@ -2151,6 +2151,7 @@ class FrameIter
     template <class Op> inline void unaliasedForEachActual(JSContext* cx, Op op);
 
     JSObject*  environmentChain(JSContext* cx) const;
+    bool hasInitialEnvironment(JSContext* cx) const;
     CallObject& callObj(JSContext* cx) const;
 
     bool        hasArgsObj() const;

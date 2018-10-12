@@ -101,7 +101,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(react_redux__WEBPACK_IMPORTED_MODULE_7__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(5);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(13);
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(10);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_9__);
 /* harmony import */ var common_Reducers_jsm__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(46);
 
@@ -930,14 +930,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var content_src_lib_init_store__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
 /* harmony import */ var _components_ImpressionsWrapper_ImpressionsWrapper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
 /* harmony import */ var fluent__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(44);
-/* harmony import */ var _templates_NewsletterSnippet_NewsletterSnippet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(10);
-/* harmony import */ var _templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(47);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(5);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(13);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var _template_utils__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(11);
-/* harmony import */ var _templates_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(48);
+/* harmony import */ var _templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(48);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(10);
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var _template_utils__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(11);
+/* harmony import */ var _templates_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(47);
+/* harmony import */ var _templates_SubmitFormSnippet_SubmitFormSnippet__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(13);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -954,8 +954,9 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 // Key names matching schema name of templates
 const SnippetComponents = {
-  simple_snippet: _templates_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_10__["SimpleSnippet"],
-  newsletter_snippet: _templates_NewsletterSnippet_NewsletterSnippet__WEBPACK_IMPORTED_MODULE_5__["NewsletterSnippet"]
+  simple_snippet: _templates_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_9__["SimpleSnippet"],
+  newsletter_snippet: props => react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_templates_SubmitFormSnippet_SubmitFormSnippet__WEBPACK_IMPORTED_MODULE_10__["SubmitFormSnippet"], _extends({}, props, { form_method: "POST" })),
+  fxa_signup_snippet: props => react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_templates_SubmitFormSnippet_SubmitFormSnippet__WEBPACK_IMPORTED_MODULE_10__["SubmitFormSnippet"], _extends({}, props, { form_method: "GET" }))
 };
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
@@ -1031,12 +1032,12 @@ function generateMessages(content) {
 
 // Elements allowed in snippet content
 const ALLOWED_TAGS = {
-  b: react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("b", null),
-  i: react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("i", null),
-  u: react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("u", null),
-  strong: react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("strong", null),
-  em: react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("em", null),
-  br: react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("br", null)
+  b: react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("b", null),
+  i: react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("i", null),
+  u: react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("u", null),
+  strong: react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("strong", null),
+  em: react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("em", null),
+  br: react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("br", null)
 };
 
 /**
@@ -1048,9 +1049,9 @@ function convertLinks(links, sendClick) {
     return Object.keys(links).reduce((acc, linkTag) => {
       const { action } = links[linkTag];
       // Setting the value to false will not include the attribute in the anchor
-      const url = action ? false : Object(_template_utils__WEBPACK_IMPORTED_MODULE_9__["safeURI"])(links[linkTag].url);
+      const url = action ? false : Object(_template_utils__WEBPACK_IMPORTED_MODULE_8__["safeURI"])(links[linkTag].url);
 
-      acc[linkTag] = react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("a", { href: url,
+      acc[linkTag] = react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("a", { href: url,
         "data-metric": links[linkTag].metric,
         "data-action": action,
         "data-args": links[linkTag].args,
@@ -1066,10 +1067,10 @@ function convertLinks(links, sendClick) {
  * Message wrapper used to sanitize markup and render HTML.
  */
 function RichText(props) {
-  return react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(
+  return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
     fluent_react__WEBPACK_IMPORTED_MODULE_0__["Localized"],
     _extends({ id: props.localization_id }, ALLOWED_TAGS, convertLinks(props.links, props.sendClick)),
-    react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(
+    react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
       "span",
       null,
       props.text
@@ -1077,7 +1078,7 @@ function RichText(props) {
   );
 }
 
-class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.PureComponent {
+class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onMessageFromParent = this.onMessageFromParent.bind(this);
@@ -1196,13 +1197,13 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
     const { content } = this.state.message;
 
     if (this.state.message.template === "newsletter_snippet") {
-      privacyNoticeRichText = react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(RichText, { text: content.scene2_privacy_html,
+      privacyNoticeRichText = react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(RichText, { text: content.scene2_privacy_html,
         localization_id: "privacy_notice",
         links: content.links,
         sendClick: this.sendClick });
     }
 
-    return react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(
+    return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
       _components_ImpressionsWrapper_ImpressionsWrapper__WEBPACK_IMPORTED_MODULE_3__["ImpressionsWrapper"],
       {
         id: "NEWTAB_FOOTER_BAR",
@@ -1211,14 +1212,14 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
         shouldSendImpressionOnUpdate: shouldSendImpressionOnUpdate
         // This helps with testing
         , document: this.props.document },
-      react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(
+      react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
         fluent_react__WEBPACK_IMPORTED_MODULE_0__["LocalizationProvider"],
         { messages: generateMessages({
-            privacy_notice: content.privacy_notice_text,
-            snippet_text: content.text
+            privacy_notice: content.scene2_privacy_html,
+            snippet_text: content.text || content.scene1_text
           }) },
-        react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(SnippetComponent, _extends({}, this.state.message, {
-          richText: react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(RichText, { text: this.state.message.content.text,
+        react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(SnippetComponent, _extends({}, this.state.message, {
+          richText: react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(RichText, { text: content.text || content.scene1_text,
             localization_id: "snippet_text",
             links: this.state.message.content.links,
             sendClick: this.sendClick }),
@@ -1233,7 +1234,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
   }
 
   renderOnboarding() {
-    return react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_6__["OnboardingMessage"], _extends({}, this.state.bundle, {
+    return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_5__["OnboardingMessage"], _extends({}, this.state.bundle, {
       UISurface: "NEWTAB_OVERLAY",
       onAction: ASRouterUtils.executeAction,
       onDoneButton: this.clearBundle(this.state.bundle.bundle),
@@ -1245,11 +1246,11 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
       return null;
     }
 
-    return react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(
+    return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
       "div",
       { className: "snippets-preview-banner" },
-      react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("span", { className: "icon icon-small-spacer icon-info" }),
-      react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(
+      react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("span", { className: "icon icon-small-spacer icon-info" }),
+      react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
         "span",
         null,
         "Preview Purposes Only"
@@ -1262,8 +1263,8 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
     if (!message.id && !bundle.template) {
       return null;
     }
-    return react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(
-      react__WEBPACK_IMPORTED_MODULE_7___default.a.Fragment,
+    return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
+      react__WEBPACK_IMPORTED_MODULE_6___default.a.Fragment,
       null,
       this.renderPreviewBanner(),
       bundle.template === "onboarding" ? this.renderOnboarding() : this.renderSnippets()
@@ -1288,11 +1289,11 @@ class ASRouterContent {
       global.document.body.appendChild(this.containerElement);
     }
 
-    react_dom__WEBPACK_IMPORTED_MODULE_8___default.a.render(react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(ASRouterUISurface, null), this.containerElement);
+    react_dom__WEBPACK_IMPORTED_MODULE_7___default.a.render(react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(ASRouterUISurface, null), this.containerElement);
   }
 
   _unmount() {
-    react_dom__WEBPACK_IMPORTED_MODULE_8___default.a.unmountComponentAtNode(this.containerElement);
+    react_dom__WEBPACK_IMPORTED_MODULE_7___default.a.unmountComponentAtNode(this.containerElement);
   }
 
   init() {
@@ -1555,155 +1556,9 @@ ImpressionsWrapper.defaultProps = {
 
 /***/ }),
 /* 10 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "NewsletterSnippet", function() { return NewsletterSnippet; });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(48);
-/* harmony import */ var _components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(12);
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-
-
-
-
-class NewsletterSnippet extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.expandSnippet = this.expandSnippet.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.state = {
-      expanded: false,
-      signupSubmitted: false,
-      signupSuccess: false
-    };
-  }
-
-  handleSubmit(event) {
-    var _this = this;
-
-    return _asyncToGenerator(function* () {
-      let json;
-      const fetchConfig = {
-        body: new FormData(_this.refs.newsletterForm),
-        method: "POST"
-      };
-
-      event.preventDefault();
-      _this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", value: "conversion-subscribe-activation", id: "NEWTAB_FOOTER_BAR_CONTENT" });
-
-      try {
-        const fetchRequest = new Request(_this.refs.newsletterForm.action, fetchConfig);
-        const response = yield fetch(fetchRequest);
-        json = yield response.json();
-      } catch (err) {
-        console.log(err); // eslint-disable-line no-console
-      }
-      if (json && json.status === "ok") {
-        _this.setState({ signupSuccess: true, signupSubmitted: true });
-        _this.props.onBlock({ preventDismiss: true });
-        _this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", value: "subscribe-success", id: "NEWTAB_FOOTER_BAR_CONTENT" });
-      } else {
-        _this.setState({ signupSuccess: false, signupSubmitted: true });
-        _this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", value: "subscribe-error", id: "NEWTAB_FOOTER_BAR_CONTENT" });
-      }
-    })();
-  }
-
-  expandSnippet() {
-    this.setState({
-      expanded: true,
-      signupSuccess: false,
-      signupSubmitted: false
-    });
-  }
-
-  renderHiddenFormInputs() {
-    const { hidden_inputs } = this.props.content;
-
-    if (!hidden_inputs) {
-      return null;
-    }
-
-    return Object.keys(hidden_inputs).map((key, idx) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", { key: idx, type: "hidden", name: key, value: hidden_inputs[key] }));
-  }
-
-  renderFormPrivacyNotice() {
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-      "label",
-      { className: "privacy-notice", htmlFor: "id_privacy" },
-      react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-        "p",
-        null,
-        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", { type: "checkbox", id: "id_privacy", name: "privacy", required: "required" }),
-        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-          "span",
-          null,
-          this.props.privacyNoticeRichText
-        )
-      )
-    );
-  }
-
-  renderSignupSubmitted() {
-    const message = this.state.signupSuccess ? this.props.content.success_text : this.props.content.error_text;
-    const onButtonClick = !this.state.signupSuccess ? this.expandSnippet : null;
-
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_1__["SimpleSnippet"], { className: this.props.className,
-      onButtonClick: onButtonClick,
-      provider: this.props.provider,
-      content: { button_label: this.props.content.button_label, text: message } });
-  }
-
-  renderSignupView() {
-    const { content } = this.props;
-
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-      _components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_2__["SnippetBase"],
-      _extends({}, this.props, { className: "NewsletterSnippet", footerDismiss: true }),
-      react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-        "div",
-        { className: "message" },
-        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-          "p",
-          null,
-          content.scene2_text
-        )
-      ),
-      react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-        "form",
-        { action: content.form_action, method: "POST", onSubmit: this.handleSubmit, ref: "newsletterForm" },
-        this.renderHiddenFormInputs(),
-        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-          "div",
-          null,
-          react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", { type: "email", name: "email", required: "required", placeholder: content.scene2_email_placeholder_text, autoFocus: true }),
-          react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
-            "button",
-            { type: "submit", className: "ASRouterButton primary", ref: "formSubmitBtn" },
-            content.scene2_button_label
-          )
-        ),
-        this.renderFormPrivacyNotice()
-      )
-    );
-  }
-
-  render() {
-    if (this.state.signupSubmitted) {
-      return this.renderSignupSubmitted();
-    }
-    if (this.state.expanded) {
-      return this.renderSignupView();
-    }
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_1__["SimpleSnippet"], _extends({}, this.props, { onButtonClick: this.expandSnippet }));
-  }
-}
+module.exports = ReactDOM;
 
 /***/ }),
 /* 11 */
@@ -1789,9 +1644,178 @@ class SnippetBase extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
 
 /***/ }),
 /* 13 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = ReactDOM;
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SubmitFormSnippet", function() { return SubmitFormSnippet; });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(47);
+/* harmony import */ var _components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(12);
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+
+
+
+
+class SubmitFormSnippet extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.expandSnippet = this.expandSnippet.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.state = {
+      expanded: false,
+      signupSubmitted: false,
+      signupSuccess: false,
+      disableForm: false
+    };
+  }
+
+  handleSubmit(event) {
+    var _this = this;
+
+    return _asyncToGenerator(function* () {
+      let json;
+
+      if (_this.state.disableForm) {
+        return;
+      }
+
+      event.preventDefault();
+      _this.setState({ disableForm: true });
+      _this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", value: "conversion-subscribe-activation", id: "NEWTAB_FOOTER_BAR_CONTENT" });
+
+      if (_this.props.form_method.toUpperCase() === "GET") {
+        _this.refs.form.submit();
+        return;
+      }
+
+      const fetchConfig = {
+        body: new FormData(_this.refs.form),
+        method: "POST"
+      };
+
+      try {
+        const fetchRequest = new Request(_this.refs.form.action, fetchConfig);
+        const response = yield fetch(fetchRequest);
+        json = yield response.json();
+      } catch (err) {
+        console.log(err); // eslint-disable-line no-console
+      }
+      if (json && json.status === "ok") {
+        _this.setState({ signupSuccess: true, signupSubmitted: true });
+        _this.props.onBlock({ preventDismiss: true });
+        _this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", value: "subscribe-success", id: "NEWTAB_FOOTER_BAR_CONTENT" });
+      } else {
+        _this.setState({ signupSuccess: false, signupSubmitted: true });
+        _this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", value: "subscribe-error", id: "NEWTAB_FOOTER_BAR_CONTENT" });
+      }
+
+      _this.setState({ disableForm: false });
+    })();
+  }
+
+  expandSnippet() {
+    this.setState({
+      expanded: true,
+      signupSuccess: false,
+      signupSubmitted: false
+    });
+  }
+
+  renderHiddenFormInputs() {
+    const { hidden_inputs } = this.props.content;
+
+    if (!hidden_inputs) {
+      return null;
+    }
+
+    return Object.keys(hidden_inputs).map((key, idx) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", { key: idx, type: "hidden", name: key, value: hidden_inputs[key] }));
+  }
+
+  renderFormPrivacyNotice() {
+    return this.props.privacyNoticeRichText && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+      "label",
+      { className: "privacy-notice", htmlFor: "id_privacy" },
+      react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+        "p",
+        null,
+        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", { type: "checkbox", id: "id_privacy", name: "privacy", required: "required" }),
+        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+          "span",
+          null,
+          this.props.privacyNoticeRichText
+        )
+      )
+    );
+  }
+
+  renderSignupSubmitted() {
+    const message = this.state.signupSuccess ? this.props.content.success_text : this.props.content.error_text;
+    const onButtonClick = !this.state.signupSuccess ? this.expandSnippet : null;
+
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_1__["SimpleSnippet"], { className: this.props.className,
+      onButtonClick: onButtonClick,
+      provider: this.props.provider,
+      content: { button_label: this.props.content.scene1_button_label, text: message } });
+  }
+
+  renderSignupView() {
+    const { content } = this.props;
+
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+      _components_SnippetBase_SnippetBase__WEBPACK_IMPORTED_MODULE_2__["SnippetBase"],
+      _extends({}, this.props, { className: "SubmitFormSnippet", footerDismiss: true }),
+      react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+        "div",
+        { className: "message" },
+        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+          "p",
+          null,
+          content.scene2_text
+        )
+      ),
+      react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+        "form",
+        { action: content.form_action, method: this.props.form_method, onSubmit: this.handleSubmit, ref: "form" },
+        this.renderHiddenFormInputs(),
+        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+          "div",
+          null,
+          react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", { type: "email", name: "email", required: "required", placeholder: content.scene2_email_placeholder_text, autoFocus: true }),
+          react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
+            "button",
+            { type: "submit", className: "ASRouterButton primary", ref: "formSubmitBtn" },
+            content.scene2_button_label
+          )
+        ),
+        this.renderFormPrivacyNotice()
+      )
+    );
+  }
+
+  getFirstSceneContent() {
+    return Object.keys(this.props.content).filter(key => key.includes("scene1")).reduce((acc, key) => {
+      acc[key.substr(7)] = this.props.content[key];
+      return acc;
+    }, {});
+  }
+
+  render() {
+    const content = Object.assign({}, this.props.content, this.getFirstSceneContent());
+
+    if (this.state.signupSubmitted) {
+      return this.renderSignupSubmitted();
+    }
+    if (this.state.expanded) {
+      return this.renderSignupView();
+    }
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_SimpleSnippet_SimpleSnippet__WEBPACK_IMPORTED_MODULE_1__["SimpleSnippet"], _extends({}, this.props, { content: content, onButtonClick: this.expandSnippet }));
+  }
+}
 
 /***/ }),
 /* 14 */
@@ -8789,6 +8813,138 @@ var reducers = { TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Poc
 var external_React_ = __webpack_require__(5);
 var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_);
 
+// CONCATENATED MODULE: ./content-src/asrouter/components/Button/Button.jsx
+
+
+const ALLOWED_STYLE_TAGS = ["color", "backgroundColor"];
+
+const Button = props => {
+  const style = {};
+
+  // Add allowed style tags from props, e.g. props.color becomes style={color: props.color}
+  for (const tag of ALLOWED_STYLE_TAGS) {
+    if (typeof props[tag] !== "undefined") {
+      style[tag] = props[tag];
+    }
+  }
+  // remove border if bg is set to something custom
+  if (style.backgroundColor) {
+    style.border = "0";
+  }
+
+  return external_React_default.a.createElement(
+    "button",
+    { onClick: props.onClick,
+      className: props.className || "ASRouterButton",
+      style: style },
+    props.children
+  );
+};
+// EXTERNAL MODULE: ./content-src/asrouter/template-utils.js
+var template_utils = __webpack_require__(11);
+
+// EXTERNAL MODULE: ./content-src/asrouter/components/SnippetBase/SnippetBase.jsx
+var SnippetBase = __webpack_require__(12);
+
+// CONCATENATED MODULE: ./content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.jsx
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleSnippet", function() { return SimpleSnippet_SimpleSnippet; });
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+
+
+
+
+
+const DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png";
+
+class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onButtonClick = this.onButtonClick.bind(this);
+  }
+
+  onButtonClick() {
+    if (this.props.provider !== "preview") {
+      this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", id: this.props.UISurface });
+    }
+    this.props.onAction({
+      type: this.props.content.button_action,
+      data: { args: this.props.content.button_action_args }
+    });
+    if (!this.props.content.do_not_autoblock) {
+      this.props.onBlock();
+    }
+  }
+
+  renderTitle() {
+    const { title } = this.props.content;
+    return title ? external_React_default.a.createElement(
+      "h3",
+      { className: "title" },
+      title
+    ) : null;
+  }
+
+  renderTitleIcon() {
+    const titleIcon = Object(template_utils["safeURI"])(this.props.content.title_icon);
+    return titleIcon ? external_React_default.a.createElement("span", { className: "titleIcon", style: { backgroundImage: `url("${titleIcon}")` } }) : null;
+  }
+
+  renderButton() {
+    const { props } = this;
+    if (!props.content.button_action && !props.onButtonClick) {
+      return null;
+    }
+
+    return external_React_default.a.createElement(
+      Button,
+      {
+        onClick: props.onButtonClick || this.onButtonClick,
+        color: props.content.button_color,
+        backgroundColor: props.content.button_background_color },
+      props.content.button_label
+    );
+  }
+
+  render() {
+    const { props } = this;
+    const className = `SimpleSnippet${props.content.tall ? " tall" : ""}`;
+    return external_React_default.a.createElement(
+      SnippetBase["SnippetBase"],
+      _extends({}, props, { className: className }),
+      external_React_default.a.createElement("img", { src: Object(template_utils["safeURI"])(props.content.icon) || DEFAULT_ICON_PATH, className: "icon" }),
+      external_React_default.a.createElement(
+        "div",
+        null,
+        this.renderTitleIcon(),
+        " ",
+        this.renderTitle(),
+        " ",
+        external_React_default.a.createElement(
+          "p",
+          { className: "body" },
+          props.richText || props.content.text
+        )
+      ),
+      external_React_default.a.createElement(
+        "div",
+        null,
+        this.renderButton()
+      )
+    );
+  }
+}
+
+/***/ }),
+/* 48 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXTERNAL MODULE: external "React"
+var external_React_ = __webpack_require__(5);
+var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_);
+
 // CONCATENATED MODULE: ./content-src/asrouter/components/ModalOverlay/ModalOverlay.jsx
 
 
@@ -8918,138 +9074,6 @@ class OnboardingMessage_OnboardingMessage extends external_React_default.a.PureC
           onAction: props.onAction,
           UISurface: props.UISurface
         }, message)))
-      )
-    );
-  }
-}
-
-/***/ }),
-/* 48 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXTERNAL MODULE: external "React"
-var external_React_ = __webpack_require__(5);
-var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_);
-
-// CONCATENATED MODULE: ./content-src/asrouter/components/Button/Button.jsx
-
-
-const ALLOWED_STYLE_TAGS = ["color", "backgroundColor"];
-
-const Button = props => {
-  const style = {};
-
-  // Add allowed style tags from props, e.g. props.color becomes style={color: props.color}
-  for (const tag of ALLOWED_STYLE_TAGS) {
-    if (typeof props[tag] !== "undefined") {
-      style[tag] = props[tag];
-    }
-  }
-  // remove border if bg is set to something custom
-  if (style.backgroundColor) {
-    style.border = "0";
-  }
-
-  return external_React_default.a.createElement(
-    "button",
-    { onClick: props.onClick,
-      className: props.className || "ASRouterButton",
-      style: style },
-    props.children
-  );
-};
-// EXTERNAL MODULE: ./content-src/asrouter/template-utils.js
-var template_utils = __webpack_require__(11);
-
-// EXTERNAL MODULE: ./content-src/asrouter/components/SnippetBase/SnippetBase.jsx
-var SnippetBase = __webpack_require__(12);
-
-// CONCATENATED MODULE: ./content-src/asrouter/templates/SimpleSnippet/SimpleSnippet.jsx
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleSnippet", function() { return SimpleSnippet_SimpleSnippet; });
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-
-
-
-
-
-const DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png";
-
-class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.onButtonClick = this.onButtonClick.bind(this);
-  }
-
-  onButtonClick() {
-    if (this.props.provider !== "preview") {
-      this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", id: this.props.UISurface });
-    }
-    this.props.onAction({
-      type: this.props.content.button_action,
-      data: { args: this.props.content.button_action_args }
-    });
-    if (!this.props.content.do_not_autoblock) {
-      this.props.onBlock();
-    }
-  }
-
-  renderTitle() {
-    const { title } = this.props.content;
-    return title ? external_React_default.a.createElement(
-      "h3",
-      { className: "title" },
-      title
-    ) : null;
-  }
-
-  renderTitleIcon() {
-    const titleIcon = Object(template_utils["safeURI"])(this.props.content.title_icon);
-    return titleIcon ? external_React_default.a.createElement("span", { className: "titleIcon", style: { backgroundImage: `url("${titleIcon}")` } }) : null;
-  }
-
-  renderButton() {
-    const { props } = this;
-    if (!props.content.button_action && !props.onButtonClick) {
-      return null;
-    }
-
-    return external_React_default.a.createElement(
-      Button,
-      {
-        onClick: props.onButtonClick || this.onButtonClick,
-        color: props.content.button_color,
-        backgroundColor: props.content.button_background_color },
-      props.content.button_label
-    );
-  }
-
-  render() {
-    const { props } = this;
-    const className = `SimpleSnippet${props.content.tall ? " tall" : ""}`;
-    return external_React_default.a.createElement(
-      SnippetBase["SnippetBase"],
-      _extends({}, props, { className: className }),
-      external_React_default.a.createElement("img", { src: Object(template_utils["safeURI"])(props.content.icon) || DEFAULT_ICON_PATH, className: "icon" }),
-      external_React_default.a.createElement(
-        "div",
-        null,
-        this.renderTitleIcon(),
-        " ",
-        this.renderTitle(),
-        " ",
-        external_React_default.a.createElement(
-          "p",
-          { className: "body" },
-          props.richText || props.content.text
-        )
-      ),
-      external_React_default.a.createElement(
-        "div",
-        null,
-        this.renderButton()
       )
     );
   }

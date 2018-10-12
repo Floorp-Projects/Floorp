@@ -12,7 +12,6 @@
   "AppInfo.jsm": ["newAppInfo", "getAppInfo", "updateAppInfo"],
   "async.js": ["Async"],
   "AsyncSpellCheckTestHelper.jsm": ["onSpellCheck"],
-  "AutoMigrate.jsm": ["AutoMigrate"],
   "Battery.jsm": ["GetBattery", "Battery"],
   "blocklist-clients.js": ["AddonBlocklistClient", "GfxBlocklistClient", "OneCRLBlocklistClient", "PluginBlocklistClient"],
   "blocklist-updater.js": ["checkVersions", "addTestBlocklistClient"],

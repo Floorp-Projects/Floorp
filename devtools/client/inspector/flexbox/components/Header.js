@@ -71,7 +71,6 @@ class Header extends PureComponent {
       onHideBoxModelHighlighter,
       onSetFlexboxOverlayColor,
       onShowBoxModelHighlighterForNode,
-      setSelectedNode,
     } = this.props;
 
     return FlexContainer({
@@ -80,7 +79,6 @@ class Header extends PureComponent {
       onHideBoxModelHighlighter,
       onSetFlexboxOverlayColor,
       onShowBoxModelHighlighterForNode,
-      setSelectedNode,
     });
   }
 

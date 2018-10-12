@@ -1,0 +1,39 @@
+[
+  {
+    "namespace": "tabExtras",
+    "description": "experimental tab API extensions",
+    "functions": [
+      {
+        "name": "getWebcompatInfo",
+        "type": "function",
+        "description": "Gets the content blocking status and script log for a given tab",
+        "parameters": [{
+          "type": "integer",
+          "name": "tabId",
+          "minimum": 0
+        }],
+        "async": true
+      },
+      {
+        "name": "loadURIWithPostData",
+        "type": "function",
+        "description": "Loads a URI on the given tab using a POST request",
+        "parameters": [{
+          "type": "integer",
+          "name": "tabId",
+          "minimum": 0
+        }, {
+          "type": "string",
+          "name": "url"
+        }, {
+          "type": "string",
+          "name": "postData"
+        }, {
+          "type": "string",
+          "name": "postDataContentType"
+        }],
+        "async": true
+      }
+    ]
+  }
+]
