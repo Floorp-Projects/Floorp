@@ -4,7 +4,7 @@ use visit::IntoNeighbors;
 use visit::{VisitMap, Visitable};
 
 /// Strictly monotonically increasing event time for a depth first search.
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Default, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Default)]
 pub struct Time(pub usize);
 
 /// A depth first search (DFS) visitor event.
@@ -78,7 +78,7 @@ impl<B> ControlFlow for Control<B> {
 impl<E> ControlFlow for Result<(), E> {
     fn continuing() -> Self { Ok(()) }
     fn should_break(&self) -> bool {
-        self.is_err()
+        if let Err(_) = *self { true } else { false }
     }
 }
 

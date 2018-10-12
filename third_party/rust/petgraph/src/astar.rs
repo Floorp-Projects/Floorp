@@ -157,9 +157,13 @@ impl<G> PathTracker<G>
         let mut path = vec![last];
 
         let mut current = last;
-        while let Some(&previous) = self.came_from.get(&current) {
-            path.push(previous);
-            current = previous;
+        loop {
+            if let Some(&previous) = self.came_from.get(&current) {
+                path.push(previous);
+                current = previous;
+            } else {
+                break
+            }
         }
 
         path.reverse();

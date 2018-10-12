@@ -325,7 +325,7 @@ fn report_content(content: &Content) -> term::Result<()> {
     let try_colors = match Tls::session().color_config {
         ColorConfig::Yes => true,
         ColorConfig::No => false,
-        ColorConfig::IfTty => atty::is(atty::Stream::Stdout),
+        ColorConfig::IfTty => atty::is(),
     };
 
     if try_colors {

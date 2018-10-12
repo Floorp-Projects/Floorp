@@ -28,22 +28,13 @@ pub type EdgeIndex = usize;
 
 const BINARY_SEARCH_CUTOFF: usize = 32;
 
-/// Compressed Sparse Row ([`CSR`]) is a sparse adjacency matrix graph.
-///
-/// `CSR` is parameterized over:
-///
-/// - Associated data `N` for nodes and `E` for edges, called *weights*.
-///   The associated data can be of arbitrary type.
-/// - Edge type `Ty` that determines whether the graph edges are directed or undirected.
-/// - Index type `Ix`, which determines the maximum size of the graph.
-///
+/// Compressed Sparse Row (CSR) is a sparse adjacency matrix graph.
 ///
 /// Using **O(|E| + |V|)** space.
 ///
 /// Self loops are allowed, no parallel edges.
 ///
 /// Fast iteration of the outgoing edges of a vertex.
-/// [`CSR`]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_(CSR,_CRS_or_Yale_format)
 #[derive(Debug)]
 pub struct Csr<N = (), E = (), Ty = Directed, Ix = DefaultIx> {
     /// Column of next edge
@@ -96,26 +87,7 @@ impl<N, E, Ty, Ix> Csr<N, E, Ty, Ix>
         }
     }
 
-    /// Create a new [`Csr`] with `n` nodes. `N` must implement [`Default`] for the weight of each node.
-    ///
-    /// [`Default`]: https://doc.rust-lang.org/nightly/core/default/trait.Default.html
-    /// [`Csr`]: #struct.Csr.html
-    ///
-    /// # Example
-    /// ```rust
-    /// use petgraph::csr::Csr;
-    /// use petgraph::prelude::*;
-    ///
-    /// # fn main() {
-    ///
-    /// let graph = Csr::<u8,()>::with_nodes(5);
-    /// assert_eq!(graph.node_count(),5);
-    /// assert_eq!(graph.edge_count(),0);
-    ///
-    /// assert_eq!(graph[0],0);
-    /// assert_eq!(graph[4],0);
-    /// # }
-    /// ```
+    /// Create a new `Csr` with `n` nodes.
     pub fn with_nodes(n: usize) -> Self
         where N: Default,
     {
@@ -146,21 +118,6 @@ impl<N, E, Ix> Csr<N, E, Directed, Ix>
     /// order for the pair *(u, v)* in Rust (*u* has priority).
     ///
     /// Computes in **O(|E| + |V|)** time.
-    /// # Example
-    /// ```rust
-    /// use petgraph::csr::Csr;
-    /// use petgraph::prelude::*;
-    ///
-    /// # fn main() {
-    ///
-    /// let graph = Csr::<(),()>::from_sorted_edges(&[
-    ///                     (0, 1), (0, 2),
-    ///                     (1, 0), (1, 2), (1, 3),
-    ///                     (2, 0),
-    ///                     (3, 1),
-    /// ]);
-    /// # }
-    /// ```
     pub fn from_sorted_edges<Edge>(edges: &[Edge]) -> Result<Self, EdgesNotSorted>
         where Edge: Clone + IntoWeightedEdge<E, NodeId=NodeIndex<Ix>>,
               N: Default,
@@ -341,7 +298,7 @@ impl<N, E, Ty, Ix> Csr<N, E, Ty, Ix>
 
     fn neighbors_range(&self, a: NodeIndex<Ix>) -> Range<usize> {
         let index = self.row[a.index()];
-        let end = self.row.get(a.index() + 1).cloned().unwrap_or_else(|| self.column.len());
+        let end = self.row.get(a.index() + 1).cloned().unwrap_or(self.column.len());
         index..end
     }
 
