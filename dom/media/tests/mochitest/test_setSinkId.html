@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<audio id="audio"></audio>
+
+<script>
+  createHTML({
+    title: "SetSinkId in HTMLMediaElement",
+    bug: "934425",
+  });
+
+  /**
+   * Run a test to verify set sink id in audio element.
+   */
+  runTest(async () => {
+    await pushPrefs(["media.setsinkid.enabled", true]);
+
+    if (!SpecialPowers.getCharPref("media.audio_loopback_dev", "")) {
+      ok(false, "No loopback device set by framework. Try --use-test-media-devices");
+      return;
+    }
+
+    const allDevices = await navigator.mediaDevices.enumerateDevices();
+    const audioDevices = allDevices.filter(({kind}) => kind == 'audiooutput');
+    info(`Found  ${audioDevices.length} output devices`);
+    ok(audioDevices.length > 0, "More than one output device found");
+
+    is(audio.sinkId, "", "Initial value is empty string");
+
+    const p = audio.setSinkId(audioDevices[0].deviceId);
+    is(audio.sinkId, "", "Value is unchanged upon function return");
+    is(await p, undefined, "promise resolves with undefined");
+    is(audio.sinkId, audioDevices[0].deviceId, `Sink device is set, id: ${audio.sinkId}`);
+
+    await audio.setSinkId(audioDevices[0].deviceId);
+    ok(true, `Sink device is set for 2nd time for the same id: ${audio.sinkId}`);
+
+    try {
+      await audio.setSinkId("dummy sink id");
+      ok(false, "Never enter here, this must fail");
+    } catch (error) {
+      ok(true, `Set sink id expected to fail: ${error}`);
+      is(error.name, "NotFoundError", "Verify correct error");
+    }
+  });
+
+</script>
+</pre>
+</body>
+</html>
