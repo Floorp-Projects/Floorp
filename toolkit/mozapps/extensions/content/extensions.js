@@ -150,6 +150,10 @@ function initialize(event) {
     gViewDefault = "addons://list/extension";
   }
 
+  let helpButton = document.getElementById("helpButton");
+  let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "addons-help";
+  helpButton.setAttribute("href", helpUrl);
+
   document.getElementById("preferencesButton")
     .addEventListener("click", () => {
       let mainWindow = getMainWindow();

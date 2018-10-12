@@ -636,5 +636,11 @@ add_task(async function() {
 });
 
 add_task(async function() {
+  is(gManagerWindow.document.getElementById("helpButton").href,
+     Services.urlFormatter.formatURLPref("app.support.baseURL") + "addons-help",
+     "The help link is setup correctly");
+});
+
+add_task(async function() {
   return close_manager(gManagerWindow);
 });
