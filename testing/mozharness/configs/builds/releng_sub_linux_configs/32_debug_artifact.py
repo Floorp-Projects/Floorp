@@ -23,7 +23,6 @@ config = {
 
     #########################################################################
     ###### 32 bit specific ######
-    'base_name': 'Linux_%(branch)s_Artifact_build',
     'platform': 'linux',
     'stage_platform': 'linux-debug',
     'env': {
