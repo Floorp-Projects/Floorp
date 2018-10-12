@@ -4,6 +4,7 @@
 
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceSize, DeviceIntSideOffsets};
 use api::{DevicePixelScale, ImageDescriptor, ImageFormat};
+use api::{LineStyle, LineOrientation, LayoutSize};
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
 use border::BorderCacheKey;
@@ -21,7 +22,7 @@ use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
 use picture::PictureCacheKey;
-use prim_store::{PrimitiveIndex, ImageCacheKey};
+use prim_store::{PrimitiveIndex, ImageCacheKey, LineDecorationCacheKey};
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
 use render_backend::FrameId;
@@ -116,6 +117,12 @@ impl RenderTaskTree {
                 debug_assert!(pass_index < passes.len() - 1);
             }
         }
+
+        let pass_index = if task.is_global_cached_task() {
+            0
+        } else {
+            pass_index
+        };
 
         let pass = &mut passes[pass_index];
         pass.add_render_task(id, task.get_dynamic_size(), task.target_kind());
@@ -293,6 +300,16 @@ pub struct BlitTask {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct LineDecorationTask {
+    pub wavy_line_thickness: f32,
+    pub style: LineStyle,
+    pub orientation: LineOrientation,
+    pub local_size: LayoutSize,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskData {
     pub data: [f32; FLOATS_PER_RENDER_TASK_INFO],
 }
@@ -312,6 +329,7 @@ pub enum RenderTaskKind {
     Scaling(ScalingTask),
     Blit(BlitTask),
     Border(BorderTask),
+    LineDecoration(LineDecorationTask),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -438,6 +456,26 @@ impl RenderTask {
         )
     }
 
+    pub fn new_line_decoration(
+        size: DeviceIntSize,
+        style: LineStyle,
+        orientation: LineOrientation,
+        wavy_line_thickness: f32,
+        local_size: LayoutSize,
+    ) -> Self {
+        RenderTask::with_dynamic_location(
+            size,
+            Vec::new(),
+            RenderTaskKind::LineDecoration(LineDecorationTask {
+                style,
+                orientation,
+                wavy_line_thickness,
+                local_size,
+            }),
+            ClearMode::Transparent,
+        )
+    }
+
     pub fn new_mask(
         outer_rect: DeviceIntRect,
         clip_node_range: ClipNodeRange,
@@ -509,8 +547,7 @@ impl RenderTask {
                 }
                 ClipItem::Rectangle(..) |
                 ClipItem::RoundedRectangle(..) |
-                ClipItem::Image(..) |
-                ClipItem::LineDecoration(..) => {}
+                ClipItem::Image(..) => {}
             }
         }
 
@@ -701,6 +738,7 @@ impl RenderTask {
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Glyph(_) |
             RenderTaskKind::Border(..) |
+            RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Blit(..) => {
                 UvRectKind::Rect
             }
@@ -747,6 +785,7 @@ impl RenderTask {
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
+            RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Blit(..) => {
                 [0.0; 2]
             }
@@ -789,6 +828,7 @@ impl RenderTask {
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Glyph(..) => {
                 panic!("texture handle not supported for this task kind");
             }
@@ -838,6 +878,8 @@ impl RenderTask {
         match self.kind {
             RenderTaskKind::Readback(..) => RenderTargetKind::Color,
 
+            RenderTaskKind::LineDecoration(..) => RenderTargetKind::Color,
+
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::CacheMask(..) => {
                 RenderTargetKind::Alpha
@@ -863,6 +905,30 @@ impl RenderTask {
 
             RenderTaskKind::Blit(..) => {
                 RenderTargetKind::Color
+            }
+        }
+    }
+
+    /// If true, draw this task in the first pass. This is useful
+    /// for simple texture cached render tasks that we want to be made
+    /// available to all subsequent render passes.
+    pub fn is_global_cached_task(&self) -> bool {
+        match self.kind {
+            RenderTaskKind::LineDecoration(..) => {
+                true
+            }
+
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::ClipRegion(..) |
+            RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::VerticalBlur(..) |
+            RenderTaskKind::HorizontalBlur(..) |
+            RenderTaskKind::Glyph(..) |
+            RenderTaskKind::Scaling(..) |
+            RenderTaskKind::Border(..) |
+            RenderTaskKind::Picture(..) |
+            RenderTaskKind::Blit(..) => {
+                false
             }
         }
     }
@@ -894,6 +960,7 @@ impl RenderTask {
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Glyph(..) => {
                 return;
             }
@@ -923,6 +990,9 @@ impl RenderTask {
             RenderTaskKind::CacheMask(ref task) => {
                 pt.new_level(format!("CacheMask with {} clips", task.clip_node_range.count));
                 pt.add_item(format!("rect: {:?}", task.actual_rect));
+            }
+            RenderTaskKind::LineDecoration(..) => {
+                pt.new_level("LineDecoration".to_owned());
             }
             RenderTaskKind::ClipRegion(..) => {
                 pt.new_level("ClipRegion".to_owned());
@@ -991,6 +1061,7 @@ pub enum RenderTaskCacheKeyKind {
     Glyph(GpuGlyphCacheKey),
     Picture(PictureCacheKey),
     Border(BorderCacheKey),
+    LineDecoration(LineDecorationCacheKey),
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]

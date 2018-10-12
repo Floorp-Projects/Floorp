@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
+use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize, LineStyle};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
 use api::{YuvColorSpace, YuvFormat, WorldPixel, WorldRect, ColorDepth};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
@@ -1413,6 +1413,35 @@ impl BrushPrimitive {
                     ))
                 }
             }
+            BrushKind::LineDecoration { ref handle, style, .. } => {
+                match style {
+                    LineStyle::Solid => {
+                        Some((
+                            BrushBatchKind::Solid,
+                            BatchTextures::no_texture(),
+                            [0; 3],
+                        ))
+                    }
+                    LineStyle::Dotted |
+                    LineStyle::Dashed |
+                    LineStyle::Wavy => {
+                        let rt_cache_entry = resource_cache
+                            .get_cached_render_task(handle.as_ref().unwrap());
+                        let cache_item = resource_cache.get_texture_cache_item(&rt_cache_entry.handle);
+                        let textures = BatchTextures::color(cache_item.texture_id);
+                        Some((
+                            BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
+                            textures,
+                            [
+                                cache_item.uv_rect_handle.as_int(gpu_cache),
+                                (ShaderColorMode::Image as i32) << 16|
+                                 RasterizationSpace::Local as i32,
+                                0,
+                            ],
+                        ))
+                    }
+                }
+            }
             BrushKind::Border { ref source, .. } => {
                 let cache_item = match *source {
                     BorderSource::Image(request) => {
@@ -1568,6 +1597,7 @@ impl Primitive {
                             AlphaType::Alpha => BlendMode::Alpha,
                         }
                     }
+                    BrushKind::LineDecoration { .. } |
                     BrushKind::Solid { .. } |
                     BrushKind::YuvImage { .. } |
                     BrushKind::RadialGradient { .. } |
@@ -1711,7 +1741,6 @@ pub struct ClipBatcher {
     /// Image draws apply the image masking.
     pub images: FastHashMap<TextureSource, Vec<ClipMaskInstance>>,
     pub box_shadows: FastHashMap<TextureSource, Vec<ClipMaskInstance>>,
-    pub line_decorations: Vec<ClipMaskInstance>,
 }
 
 impl ClipBatcher {
@@ -1720,7 +1749,6 @@ impl ClipBatcher {
             rectangles: Vec::new(),
             images: FastHashMap::default(),
             box_shadows: FastHashMap::default(),
-            line_decorations: Vec::new(),
         }
     }
 
@@ -1802,12 +1830,6 @@ impl ClipBatcher {
                         debug!("Key:{:?} Rect::{:?}", mask.image, mask.rect);
                         continue;
                     }
-                }
-                ClipItem::LineDecoration(..) => {
-                    self.line_decorations.push(ClipMaskInstance {
-                        clip_data_address: gpu_address,
-                        ..instance
-                    });
                 }
                 ClipItem::BoxShadow(ref info) => {
                     let rt_handle = info

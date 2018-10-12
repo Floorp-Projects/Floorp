@@ -8,12 +8,12 @@ use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemR
 use api::{RasterSpace, LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, LayoutToWorldTransform};
 use api::{LayoutVector2D, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat};
 use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, LayoutToWorldScale, NormalBorder, WorldRect};
-use api::{PicturePixel, RasterPixel, ColorDepth};
+use api::{PicturePixel, RasterPixel, ColorDepth, LineStyle, LineOrientation, LayoutSizeAu, AuHelpers};
 use app_units::Au;
 use border::{BorderCacheKey, BorderRenderTaskInfo};
 use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
 use clip::{ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem, ClipNodeCollector};
-use euclid::{TypedTransform3D, TypedRect};
+use euclid::{TypedTransform3D, TypedRect, TypedScale};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use frame_builder::PrimitiveContext;
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
@@ -407,6 +407,13 @@ pub enum BrushKind {
         visible_tiles: Vec<VisibleGradientTile>,
         stops_opacity: PrimitiveOpacity,
     },
+    LineDecoration {
+        color: ColorF,
+        style: LineStyle,
+        orientation: LineOrientation,
+        wavy_line_thickness: f32,
+        handle: Option<RenderTaskCacheEntryHandle>,
+    },
     Border {
         source: BorderSource,
     },
@@ -434,6 +441,8 @@ impl BrushKind {
             BrushKind::Picture { .. } => false,
 
             BrushKind::Clear => false,
+
+            BrushKind::LineDecoration { .. } => false,
         }
     }
 
@@ -638,6 +647,24 @@ impl BrushPrimitive {
         }
     }
 
+    pub fn new_line_decoration(
+        color: ColorF,
+        style: LineStyle,
+        orientation: LineOrientation,
+        wavy_line_thickness: f32,
+    ) -> Self {
+        BrushPrimitive::new(
+            BrushKind::LineDecoration {
+                color,
+                style,
+                orientation,
+                wavy_line_thickness,
+                handle: None,
+            },
+            None,
+        )
+    }
+
     fn write_gpu_blocks(
         &self,
         request: &mut GpuDataRequest,
@@ -688,6 +715,38 @@ impl BrushPrimitive {
                     0.0,
                 ]);
             }
+            BrushKind::LineDecoration { style, ref color, orientation, wavy_line_thickness, .. } => {
+                // Work out the stretch parameters (for image repeat) based on the
+                // line decoration parameters.
+
+                let size = get_line_decoration_sizes(
+                    &local_rect.size,
+                    orientation,
+                    style,
+                    wavy_line_thickness,
+                );
+
+                match size {
+                    Some((inline_size, _)) => {
+                        let (sx, sy) = match orientation {
+                            LineOrientation::Horizontal => (inline_size, local_rect.size.height),
+                            LineOrientation::Vertical => (local_rect.size.width, inline_size),
+                        };
+
+                        request.push(color.premultiplied());
+                        request.push(PremultipliedColorF::WHITE);
+                        request.push([
+                            sx,
+                            sy,
+                            0.0,
+                            0.0,
+                        ]);
+                    }
+                    None => {
+                        request.push(color.premultiplied());
+                    }
+                }
+            }
             // Solid rects also support opacity collapsing.
             BrushKind::Solid { color, ref opacity_binding, .. } => {
                 request.push(color.scale_alpha(opacity_binding.current).premultiplied());
@@ -736,6 +795,16 @@ impl BrushPrimitive {
 pub struct ImageCacheKey {
     pub request: ImageRequest,
     pub texel_rect: Option<DeviceIntRect>,
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct LineDecorationCacheKey {
+    style: LineStyle,
+    orientation: LineOrientation,
+    wavy_line_thickness: Au,
+    size: LayoutSizeAu,
 }
 
 // Where to find the texture data for an image primitive.
@@ -1323,6 +1392,9 @@ impl PrimitiveContainer {
                     BrushKind::Solid { ref color, .. } => {
                         color.a > 0.0
                     }
+                    BrushKind::LineDecoration { ref color, .. } => {
+                        color.a > 0.0
+                    }
                     BrushKind::Clear |
                     BrushKind::Picture { .. } |
                     BrushKind::Image { .. } |
@@ -1383,6 +1455,14 @@ impl PrimitiveContainer {
                         PrimitiveContainer::Brush(BrushPrimitive::new(
                             source,
                             None,
+                        ))
+                    }
+                    BrushKind::LineDecoration { style, orientation, wavy_line_thickness, .. } => {
+                        PrimitiveContainer::Brush(BrushPrimitive::new_line_decoration(
+                            shadow.color,
+                            style,
+                            orientation,
+                            wavy_line_thickness,
                         ))
                     }
                     BrushKind::Image { request, stretch_size, .. } => {
@@ -1609,6 +1689,7 @@ impl PrimitiveStore {
                     BrushKind::YuvImage { .. } |
                     BrushKind::LinearGradient { .. } |
                     BrushKind::RadialGradient { .. } |
+                    BrushKind::LineDecoration { .. } |
                     BrushKind::Clear => {}
                 }
             }
@@ -1655,6 +1736,7 @@ impl PrimitiveStore {
                             BrushKind::YuvImage { .. } |
                             BrushKind::Border { .. } |
                             BrushKind::LinearGradient { .. } |
+                            BrushKind::LineDecoration { .. } |
                             BrushKind::RadialGradient { .. } => {
                                 unreachable!("bug: invalid prim type for opacity collapse");
                             }
@@ -2222,7 +2304,7 @@ fn write_brush_segment_description(
 
                 continue;
             }
-            ClipItem::LineDecoration(..) | ClipItem::Image(..) => {
+            ClipItem::Image(..) => {
                 rect_clips_only = false;
                 continue;
             }
@@ -2643,6 +2725,85 @@ impl Primitive {
                             }
                         }
                     }
+                    BrushKind::LineDecoration { ref mut handle, style, orientation, wavy_line_thickness, .. } => {
+                        // Work out the device pixel size to be used to cache this line decoration.
+
+                        let size = get_line_decoration_sizes(
+                            &metadata.local_rect.size,
+                            orientation,
+                            style,
+                            wavy_line_thickness,
+                        );
+
+                        if let Some((inline_size, block_size)) = size {
+                            let size = match orientation {
+                                LineOrientation::Horizontal => LayoutSize::new(inline_size, block_size),
+                                LineOrientation::Vertical => LayoutSize::new(block_size, inline_size),
+                            };
+
+                            // If dotted, adjust the clip rect to ensure we don't draw a final
+                            // partial dot.
+                            if style == LineStyle::Dotted {
+                                let clip_size = match orientation {
+                                    LineOrientation::Horizontal => {
+                                        LayoutSize::new(
+                                            inline_size * (metadata.local_rect.size.width / inline_size).floor(),
+                                            metadata.local_rect.size.height,
+                                        )
+                                    }
+                                    LineOrientation::Vertical => {
+                                        LayoutSize::new(
+                                            metadata.local_rect.size.width,
+                                            inline_size * (metadata.local_rect.size.height / inline_size).floor(),
+                                        )
+                                    }
+                                };
+                                let clip_rect = LayoutRect::new(
+                                    metadata.local_rect.origin,
+                                    clip_size,
+                                );
+                                prim_instance.combined_local_clip_rect = clip_rect
+                                    .intersection(&prim_instance.combined_local_clip_rect)
+                                    .unwrap_or(LayoutRect::zero());
+                            }
+
+                            // TODO(gw): Do we ever need / want to support scales for text decorations
+                            //           based on the current transform?
+                            let scale_factor = TypedScale::new(1.0) * frame_context.device_pixel_scale;
+                            let task_size = (size * scale_factor).ceil().to_i32();
+
+                            let cache_key = LineDecorationCacheKey {
+                                style,
+                                orientation,
+                                wavy_line_thickness: Au::from_f32_px(wavy_line_thickness),
+                                size: size.to_au(),
+                            };
+
+                            // Request a pre-rendered image task.
+                            *handle = Some(frame_state.resource_cache.request_render_task(
+                                RenderTaskCacheKey {
+                                    size: task_size,
+                                    kind: RenderTaskCacheKeyKind::LineDecoration(cache_key),
+                                },
+                                frame_state.gpu_cache,
+                                frame_state.render_tasks,
+                                None,
+                                false,
+                                |render_tasks| {
+                                    let task = RenderTask::new_line_decoration(
+                                        task_size,
+                                        style,
+                                        orientation,
+                                        wavy_line_thickness,
+                                        size,
+                                    );
+                                    let task_id = render_tasks.add(task);
+                                    pic_state.tasks.push(task_id);
+                                    task_id
+                                }
+                            ));
+                        }
+                    }
                     BrushKind::YuvImage { format, yuv_key, image_rendering, .. } => {
                         prim_instance.opacity = PrimitiveOpacity::opaque();
 
@@ -3052,4 +3213,49 @@ pub fn get_raster_rects(
     let transform = map_to_raster.get_transform();
 
     Some((clipped.to_i32(), unclipped, transform))
+}
+
+/// Get the inline (horizontal) and block (vertical) sizes
+/// for a given line decoration.
+fn get_line_decoration_sizes(
+    rect_size: &LayoutSize,
+    orientation: LineOrientation,
+    style: LineStyle,
+    wavy_line_thickness: f32,
+) -> Option<(f32, f32)> {
+    let h = match orientation {
+        LineOrientation::Horizontal => rect_size.height,
+        LineOrientation::Vertical => rect_size.width,
+    };
+
+    // TODO(gw): The formulae below are based on the existing gecko and line
+    //           shader code. They give reasonable results for most inputs,
+    //           but could definitely do with a detailed pass to get better
+    //           quality on a wider range of inputs!
+    //           See nsCSSRendering::PaintDecorationLine in Gecko.
+
+    match style {
+        LineStyle::Solid => {
+            None
+        }
+        LineStyle::Dashed => {
+            let dash_length = (3.0 * h).min(64.0).max(1.0);
+
+            Some((2.0 * dash_length, 4.0))
+        }
+        LineStyle::Dotted => {
+            let diameter = h.min(64.0).max(1.0);
+            let period = 2.0 * diameter;
+
+            Some((period, diameter))
+        }
+        LineStyle::Wavy => {
+            let line_thickness = wavy_line_thickness.max(1.0);
+            let slope_length = h - line_thickness;
+            let flat_length = ((line_thickness - 1.0) * 2.0).max(1.0);
+            let approx_period = 2.0 * (slope_length + flat_length);
+
+            Some((approx_period, h))
+        }
+    }
 }
