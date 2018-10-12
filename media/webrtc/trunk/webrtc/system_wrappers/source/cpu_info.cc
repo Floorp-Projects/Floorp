@@ -16,7 +16,7 @@
 #ifndef EXCLUDE_D3D9
 #include <d3d9.h>
 #endif
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 #include <unistd.h>
 #endif
 #if defined(WEBRTC_MAC)
@@ -34,7 +34,7 @@ static int DetectNumberOfCores() {
   SYSTEM_INFO si;
   GetNativeSystemInfo(&si);
   number_of_cores = static_cast<int>(si.dwNumberOfProcessors);
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID) || defined(WEBRTC_BSD)
   number_of_cores = static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
 #elif defined(WEBRTC_MAC)
   int name[] = {CTL_HW, HW_AVAILCPU};
