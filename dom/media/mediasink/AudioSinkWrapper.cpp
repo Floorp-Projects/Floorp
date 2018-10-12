@@ -178,7 +178,7 @@ AudioSinkWrapper::SetPlaying(bool aPlaying)
   }
 }
 
-void
+nsresult
 AudioSinkWrapper::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
 {
   AssertOwnerThread();
@@ -191,9 +191,10 @@ AudioSinkWrapper::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
   // no audio is equivalent to audio ended before video starts.
   mAudioEnded = !aInfo.HasAudio();
 
+  nsresult rv = NS_OK;
   if (aInfo.HasAudio()) {
     mAudioSink.reset(mCreator->Create());
-    mEndPromise = mAudioSink->Init(mParams);
+    rv = mAudioSink->Init(mParams, mEndPromise);
 
     mEndPromise->Then(
       mOwnerThread.get(), __func__, this,
@@ -201,6 +202,7 @@ AudioSinkWrapper::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
       &AudioSinkWrapper::OnAudioEnded
     )->Track(mAudioSinkPromise);
   }
+  return rv;
 }
 
 void
