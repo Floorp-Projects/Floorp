@@ -44,6 +44,9 @@
 #include "nsThreadSyncDispatch.h"
 #include "nsServiceManagerUtils.h"
 #include "GeckoProfiler.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerMarkerPayload.h"
+#endif
 #include "InputEventStatistics.h"
 #include "ThreadEventTarget.h"
 #include "ThreadDelay.h"
@@ -650,6 +653,8 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
   , mCurrentEventStart(TimeStamp::Now())
   , mCurrentPerformanceCounter(nullptr)
 {
+  mLastLongTaskEnd = mCurrentEventStart;
+  mLastLongNonIdleTaskEnd = mCurrentEventStart;
 }
 
 
@@ -670,6 +675,8 @@ nsThread::nsThread()
   , mCurrentEventStart(TimeStamp::Now())
   , mCurrentPerformanceCounter(nullptr)
 {
+  mLastLongTaskEnd = mCurrentEventStart;
+  mLastLongNonIdleTaskEnd = mCurrentEventStart;
   MOZ_ASSERT(!NS_IsMainThread());
 }
 
@@ -812,6 +819,18 @@ NS_IMETHODIMP
 nsThread::SetCanInvokeJS(bool aCanInvokeJS)
 {
   mCanInvokeJS = aCanInvokeJS;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThread::GetLastLongTaskEnd(TimeStamp* _retval) {
+  *_retval = mLastLongTaskEnd;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThread::GetLastLongNonIdleTaskEnd(TimeStamp* _retval) {
+  *_retval = mLastLongNonIdleTaskEnd;
   return NS_OK;
 }
 
@@ -1217,18 +1236,41 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
       }
 
       // The event starts to run, storing the timestamp.
-      bool recursiveEvent = false;
+      bool recursiveEvent = mNestedEventLoopDepth > mCurrentEventLoopDepth;
+      mCurrentEventLoopDepth = mNestedEventLoopDepth;
+      if (IsMainThread() && !recursiveEvent) {
+        mCurrentEventStart = mozilla::TimeStamp::Now();
+      }
       RefPtr<mozilla::PerformanceCounter> currentPerformanceCounter;
       if (schedulerLoggingEnabled) {
-        recursiveEvent = mNestedEventLoopDepth > mCurrentEventLoopDepth;
         mCurrentEventStart = mozilla::TimeStamp::Now();
         mCurrentEvent = event;
-        mCurrentEventLoopDepth = mNestedEventLoopDepth;
         mCurrentPerformanceCounter = GetPerformanceCounter(event);
         currentPerformanceCounter = mCurrentPerformanceCounter;
       }
 
       event->Run();
+
+      mozilla::TimeDuration duration;
+      // Remember the last 50ms+ task on mainthread for Long Task.
+      if (IsMainThread() && !recursiveEvent) {
+        TimeStamp now = TimeStamp::Now();
+        duration = now - mCurrentEventStart;
+        if (duration.ToMilliseconds() > LONGTASK_BUSY_WINDOW_MS) {
+          // Idle events (gc...) don't *really* count here
+          if (priority != EventPriority::Idle) {
+            mLastLongNonIdleTaskEnd = now;
+          }
+          mLastLongTaskEnd = now;
+#ifdef MOZ_GECKO_PROFILER
+          if (profiler_is_active()) {
+              profiler_add_marker(
+                (priority != EventPriority::Idle) ? "LongTask" : "LongIdleTask",
+                MakeUnique<LongTaskMarkerPayload>(mCurrentEventStart, now));
+          }
+#endif
+        }
+      }
 
       // End of execution, we can send the duration for the group
       if (schedulerLoggingEnabled) {

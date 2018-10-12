@@ -182,6 +182,9 @@ pref("dom.performance.time_to_non_blank_paint.enabled", false);
 // Enable exposing timeToDOMContentFlushed
 pref("dom.performance.time_to_dom_content_flushed.enabled", false);
 
+// Enable exposing timeToFirstInteractive
+pref("dom.performance.time_to_first_interactive.enabled", false);
+
 // Enable requestIdleCallback API
 pref("dom.requestIdleCallback.enabled", true);
 
@@ -5301,6 +5304,15 @@ pref("dom.vr.autoactivate.enabled", false);
 pref("dom.vr.controller_trigger_threshold", "0.1");
 // Enable external XR API integrations
 pref("dom.vr.external.enabled", false);
+// Minimum number of milliseconds the browser will wait before attempting
+// to re-start the VR service after an enumeration returned no devices.
+pref("dom.vr.external.notdetected.timeout", 60000);
+// Minimum number of milliseconds the browser will wait before attempting
+// to re-start the VR service after a VR API (eg, OpenVR or Oculus)
+// requests that we shutdown and unload its libraries.
+// To ensure that we don't interfere with VR runtime software auto-updates,
+// we will not attempt to re-load the service until this timeout has elapsed.
+pref("dom.vr.external.quit.timeout", 10000);
 // Maximum number of milliseconds the browser will wait for content to call
 // VRDisplay.requestPresent after emitting vrdisplayactivate during VR
 // link traversal.  This prevents a long running event handler for
@@ -5392,7 +5404,7 @@ pref("dom.vr.display.rafMaxDuration", 50);
 // VR test system.
 pref("dom.vr.test.enabled", false);
 // Enable the VR Service, which interfaces with VR hardware in a separate thread
-pref("dom.vr.service.enabled", false);
+pref("dom.vr.service.enabled", true);
 
 // If the user puts a finger down on an element and we think the user
 // might be executing a pan gesture, how long do we wait before

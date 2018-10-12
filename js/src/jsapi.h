@@ -3120,6 +3120,9 @@ extern JS_PUBLIC_API(void)
 GetRequestedModuleSourcePos(JSContext* cx, JS::HandleValue requestedModuleObject,
                             uint32_t* lineNumber, uint32_t* columnNumber);
 
+/*
+ * Get the top-level script for a module which has not yet been executed.
+ */
 extern JS_PUBLIC_API(JSScript*)
 GetModuleScript(JS::HandleObject moduleRecord);
 

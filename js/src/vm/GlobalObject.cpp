@@ -104,10 +104,8 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
 
       case JSProto_ReadableStream:
       case JSProto_ReadableStreamDefaultReader:
-      case JSProto_ReadableStreamBYOBReader:
       case JSProto_ReadableStreamDefaultController:
       case JSProto_ReadableByteStreamController:
-      case JSProto_ReadableStreamBYOBRequest:
       case JSProto_ByteLengthQueuingStrategy:
       case JSProto_CountQueuingStrategy:
         return !cx->realm()->creationOptions().getStreamsEnabled();

@@ -79,24 +79,6 @@ UpdateButton(VRControllerState& aState, const ::vr::VRControllerState_t& aContro
   }
 }
 
-void
-UpdateTrigger(VRControllerState& aState, uint32_t aButtonIndex, float aValue, float aThreshold)
-{
-  // For OpenVR, the threshold value of ButtonPressed and ButtonTouched is 0.55.
-  // We prefer to let developers to set their own threshold for the adjustment.
-  // Therefore, we don't check ButtonPressed and ButtonTouched with ButtonMask here.
-  // we just check the button value is larger than the threshold value or not.
-  uint64_t mask = (1ULL << aButtonIndex);
-  aState.triggerValue[aButtonIndex] = aValue;
-  if (aValue > aThreshold) {
-    aState.buttonPressed |= mask;
-    aState.buttonTouched |= mask;
-  } else {
-    aState.buttonPressed &= ~mask;
-    aState.buttonTouched &= ~mask;
-  }
-}
-
 }; // anonymous namespace
 
 OpenVRSession::OpenVRSession()
@@ -107,7 +89,6 @@ OpenVRSession::OpenVRSession()
   , mControllerDeviceIndex{}
   , mHapticPulseRemaining{}
   , mHapticPulseIntensity{}
-  , mShouldQuit(false)
   , mIsWindowsMR(false)
   , mControllerHapticStateMutex("OpenVRSession::mControllerHapticStateMutex")
 {
@@ -784,12 +765,6 @@ OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState)
   UpdateTelemetry(aSystemState);
 }
 
-bool
-OpenVRSession::ShouldQuit() const
-{
-  return mShouldQuit;
-}
-
 void
 OpenVRSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState)
 {
@@ -835,64 +810,26 @@ OpenVRSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState)
   }
 }
 
-bool
-OpenVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer)
-{
 #if defined(XP_WIN)
-
-  if (aLayer.mTextureType == VRLayerTextureType::LayerTextureType_D3D10SurfaceDescriptor) {
-      RefPtr<ID3D11Texture2D> dxTexture;
-      HRESULT hr = mDevice->OpenSharedResource((HANDLE)aLayer.mTextureHandle,
-        __uuidof(ID3D11Texture2D),
-        (void**)(ID3D11Texture2D**)getter_AddRefs(dxTexture));
-      if (FAILED(hr) || !dxTexture) {
-        NS_WARNING("Failed to open shared texture");
-        return false;
-      }
-
-      // Similar to LockD3DTexture in TextureD3D11.cpp
-      RefPtr<IDXGIKeyedMutex> mutex;
-      dxTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
-      if (mutex) {
-        HRESULT hr = mutex->AcquireSync(0, 1000);
-        if (hr == WAIT_TIMEOUT) {
-          gfxDevCrash(LogReason::D3DLockTimeout) << "D3D lock mutex timeout";
-        }
-        else if (hr == WAIT_ABANDONED) {
-          gfxCriticalNote << "GFX: D3D11 lock mutex abandoned";
-        }
-        if (FAILED(hr)) {
-          NS_WARNING("Failed to lock the texture");
-          return false;
-        }
-      }
-      bool success = SubmitFrame((void *)dxTexture,
+bool
+OpenVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
+                           ID3D11Texture2D* aTexture)
+{
+  return SubmitFrame((void *)aTexture,
                      ::vr::ETextureType::TextureType_DirectX,
                      aLayer.mLeftEyeRect, aLayer.mRightEyeRect);
-      if (mutex) {
-        HRESULT hr = mutex->ReleaseSync(0);
-        if (FAILED(hr)) {
-          NS_WARNING("Failed to unlock the texture");
-        }
-      }
-      if (!success) {
-        return false;
-      }
-      return true;
-  }
+}
 
 #elif defined(XP_MACOSX)
-
-  if (aLayer.mTextureType == VRLayerTextureType::LayerTextureType_MacIOSurface) {
-    return SubmitFrame(aLayer.mTextureHandle,
-                       ::vr::ETextureType::TextureType_IOSurface,
-                       aLayer.mLeftEyeRect, aLayer.mRightEyeRect);
-  }
-
-#endif
-
-  return false;
+bool
+OpenVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
+                           MacIOSurface* aTexture)
+{
+  return SubmitFrame((void *)aTexture,
+                     ::vr::ETextureType::TextureType_IOSurface,
+                     aLayer.mLeftEyeRect, aLayer.mRightEyeRect);
 }
+#endif
 
 bool
 OpenVRSession::SubmitFrame(void* aTextureHandle,
@@ -938,11 +875,6 @@ OpenVRSession::StopPresentation()
 
   ::vr::Compositor_CumulativeStats stats;
   mVRCompositor->GetCumulativeStats(&stats, sizeof(::vr::Compositor_CumulativeStats));
-  // TODO - Need to send telemetry back to browser.
-  // Bug 1473398 will refactor this original gfxVROpenVR code:
-  //   const uint32_t droppedFramesPerSec = (stats.m_nNumReprojectedFrames -
-  //                                      mTelemetry.mLastDroppedFrameCount) / duration.ToSeconds();
-  // Telemetry::Accumulate(Telemetry::WEBVR_DROPPED_FRAMES_IN_OPENVR, droppedFramesPerSec);
 }
 
 bool
