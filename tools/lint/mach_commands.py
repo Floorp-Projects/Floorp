@@ -18,28 +18,13 @@ from mach.decorators import (
     Command,
 )
 
-try:
-    from os import scandir
-except ImportError:
-    from scandir import scandir
-
 
 here = os.path.abspath(os.path.dirname(__file__))
-GLOBAL_EXCLUDES = [
-    'tools/lint/test/files',
-]
 
 
 def setup_argument_parser():
     from mozlint import cli
     return cli.MozlintParser()
-
-
-def get_global_excludes(topsrcdir):
-    excludes = GLOBAL_EXCLUDES[:]
-    excludes.extend([e.name for e in scandir(topsrcdir)
-                     if e.name.startswith('obj') and e.is_dir()])
-    return excludes
 
 
 @CommandProvider
@@ -51,12 +36,11 @@ class MachCommands(MachCommandBase):
         parser=setup_argument_parser)
     def lint(self, *runargs, **lintargs):
         """Run linters."""
-        self._activate_virtualenv()
         from mozlint import cli
-
         lintargs.setdefault('root', self.topsrcdir)
-        lintargs['exclude'] = get_global_excludes(lintargs['root'])
+        lintargs['exclude'] = ['obj*', 'tools/lint/test/files']
         cli.SEARCH_PATHS.append(here)
+        self._activate_virtualenv()
         return cli.run(*runargs, **lintargs)
 
     @Command('eslint', category='devenv',
