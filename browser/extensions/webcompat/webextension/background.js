@@ -86,17 +86,9 @@ port.onMessage.addListener((message) => {
   }
 });
 
-const INJECTION_PREF = "perform_injections";
-function checkInjectionPref() {
-  browser.aboutConfigPrefs.getPref(INJECTION_PREF).then(value => {
-    if (value === undefined) {
-      browser.aboutConfigPrefs.setPref(INJECTION_PREF, true);
-    } else if (value === false) {
-      unregisterContentScripts();
-    } else {
-      registerContentScripts();
-    }
-  });
-}
-browser.aboutConfigPrefs.onPrefChange.addListener(checkInjectionPref, INJECTION_PREF);
-checkInjectionPref();
+/**
+ * Note that we reset all preferences on extension startup, so the injections will
+ * never be disabled when this loads up. Because of that, we can simply register
+ * right away.
+ */
+registerContentScripts();
