@@ -289,8 +289,6 @@ inline bool ParameterEquality(const char* const& aParam1, const char* const& aPa
 template<typename OrigType> struct IPCTypeMap     { typedef OrigType ipc_type; };
 template<> struct IPCTypeMap<char*>               { typedef nsDependentCSubstring ipc_type; };
 template<> struct IPCTypeMap<const char*>         { typedef nsDependentCSubstring ipc_type; };
-template<> struct IPCTypeMap<wchar_t*>            { typedef nsString ipc_type; };
-template<> struct IPCTypeMap<const wchar_t*>      { typedef nsString ipc_type; };
 template<> struct IPCTypeMap<long>                { typedef int32_t ipc_type; };
 template<> struct IPCTypeMap<unsigned long>       { typedef uint32_t ipc_type; };
 
@@ -506,17 +504,6 @@ struct BaseEndpointHandler<CLIENT,SelfType> {
     }
   }
 
-  inline static void Copy(nsString& aDest, wchar_t* const& aSrc)
-  {
-    if (aSrc) {
-      // We are using nsString as a "raw" container for a wchar_t string.  We
-      // just use its data as a wchar_t* later (so the reinterpret_cast is safe).
-      aDest.Rebind(reinterpret_cast<char16_t*>(aSrc), wcslen(aSrc));
-    } else {
-      aDest.SetIsVoid(true);
-    }
-  }
-
   inline static void Copy(char*& aDest, const nsDependentCSubstring& aSrc)
   {
     MOZ_ASSERT_UNREACHABLE("Returning char* parameters is not yet suported.");
@@ -590,27 +577,6 @@ struct BaseEndpointHandler<SERVER, SelfType> {
   inline static void Copy(ServerCallData* aScd, const char*& aDest, const nsDependentCSubstring& aSrc)
   {
     char* nonConstDest;
-    Copy(aScd, nonConstDest, aSrc);
-    aDest = nonConstDest;
-  }
-
-  inline static void Copy(ServerCallData* aScd, wchar_t*& aDest, const nsString& aSrc)
-  {
-    // Allocating the string with aScd means it will last during the server call
-    // and be freed when the call is complete.
-    MOZ_ASSERT(aScd);
-    if (aSrc.IsVoid()) {
-      aDest = nullptr;
-      return;
-    }
-    aScd->AllocateMemory((aSrc.Length() + 1)*sizeof(wchar_t), aDest);
-    memcpy(aDest, aSrc.Data(), aSrc.Length() * sizeof(wchar_t));
-    aDest[aSrc.Length()] = L'\0';
-  }
-
-  inline static void Copy(ServerCallData* aScd, const wchar_t*& aDest, const nsString& aSrc)
-  {
-    wchar_t* nonConstDest;
     Copy(aScd, nonConstDest, aSrc);
     aDest = nonConstDest;
   }

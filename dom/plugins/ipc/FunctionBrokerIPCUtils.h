@@ -48,7 +48,6 @@ enum FunctionHookId
   , ID_FreeCredentialsHandle
   , ID_PrintDlgW
   , ID_CreateMutexW
-  , ID_GetFileAttributesW
   , ID_FunctionHookCount
 #else // defined(XP_WIN)
     ID_FunctionHookCount

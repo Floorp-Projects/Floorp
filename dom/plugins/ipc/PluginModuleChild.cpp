@@ -65,9 +65,6 @@ using namespace mozilla::widget;
 
 #if defined(XP_WIN)
 const wchar_t * kFlashFullscreenClass = L"ShockwaveFlashFullScreen";
-#if defined(MOZ_SANDBOX)
-std::wstring sRoamingPath;
-#endif
 #endif
 
 namespace {
@@ -211,21 +208,6 @@ PluginModuleChild::EnableFlashSandbox(int aLevel, bool aShouldEnableLogging)
 }
 #endif
 
-#if defined(OS_WIN) && defined(MOZ_SANDBOX)
-/* static */ void
-PluginModuleChild::SetFlashRoamingPath(const std::wstring& aRoamingPath)
-{
-  MOZ_ASSERT(sRoamingPath.empty());
-  sRoamingPath = aRoamingPath;
-}
-
-/* static */ std::wstring
-PluginModuleChild::GetFlashRoamingPath()
-{
-  return sRoamingPath;
-}
-#endif
-
 bool
 PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
                                  base::ProcessId aParentPid,
@@ -233,11 +215,6 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
                                  IPC::Channel* aChannel)
 {
     NS_ASSERTION(aChannel, "need a channel");
-
-#if defined(OS_WIN) && defined(MOZ_SANDBOX)
-    MOZ_ASSERT(!sRoamingPath.empty(),
-               "Should have already called SetFlashRoamingPath");
-#endif
 
     if (!InitGraphics())
         return false;

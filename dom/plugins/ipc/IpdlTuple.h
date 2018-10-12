@@ -39,13 +39,13 @@ private:
 
 #if defined(XP_WIN)
 typedef MaybeVariant<int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,
-                     int64_t,uint64_t,nsCString,nsString,bool,OpenFileNameIPC,
+                     int64_t,uint64_t,nsCString,bool,OpenFileNameIPC,
                      OpenFileNameRetIPC,NativeWindowHandle,
                      IPCSchannelCred,IPCInternetBuffers,StringArray,
                      IPCPrintDlg> IpdlTupleElement;
 #else
 typedef MaybeVariant<int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,
-                     int64_t,uint64_t,nsCString,nsString,bool> IpdlTupleElement;
+                     int64_t,uint64_t,nsCString,bool> IpdlTupleElement;
 #endif // defined(XP_WIN)
 
 } // namespace internal
