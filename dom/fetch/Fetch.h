@@ -150,7 +150,12 @@ public:
   friend class FetchBodyConsumer<Derived>;
 
   bool
-  BodyUsed() const;
+  GetBodyUsed(ErrorResult& aRv) const;
+
+  // For use in assertions. On success, returns true if the body is used, false
+  // if not. On error, this sweeps the error under the rug and returns true.
+  bool
+  CheckBodyUsed() const;
 
   already_AddRefed<Promise>
   ArrayBuffer(JSContext* aCx, ErrorResult& aRv)

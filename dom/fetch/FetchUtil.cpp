@@ -562,7 +562,12 @@ FetchUtil::StreamResponseToJS(JSContext* aCx,
     return ThrowException(aCx, JSMSG_BAD_RESPONSE_STATUS);
   }
 
-  if (response->BodyUsed()) {
+  IgnoredErrorResult result;
+  bool used = response->GetBodyUsed(result);
+  if (NS_WARN_IF(result.Failed())) {
+    return ThrowException(aCx, JSMSG_ERROR_CONSUMING_RESPONSE);
+  }
+  if (used) {
     return ThrowException(aCx, JSMSG_RESPONSE_ALREADY_CONSUMED);
   }
 
@@ -571,7 +576,6 @@ FetchUtil::StreamResponseToJS(JSContext* aCx,
       nsAutoString url;
       response->GetUrl(url);
 
-      IgnoredErrorResult result;
       nsCString sourceMapUrl;
       response->GetInternalHeaders()->Get(NS_LITERAL_CSTRING("SourceMap"), sourceMapUrl, result);
       if (NS_WARN_IF(result.Failed())) {
