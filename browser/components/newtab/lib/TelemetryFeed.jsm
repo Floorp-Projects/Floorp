@@ -10,6 +10,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {actionTypes: at, actionUtils: au} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
+const {classifySite} = ChromeUtils.import("resource://activity-stream/lib/SiteClassifier.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "ASRouterPreferences",
   "resource://activity-stream/lib/ASRouterPreferences.jsm");
@@ -21,10 +22,13 @@ ChromeUtils.defineModuleGetter(this, "UTEventReporting",
   "resource://activity-stream/lib/UTEventReporting.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "HomePage",
+  "resource:///modules/HomePage.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
-  "@mozilla.org/uuid-generator;1",
-  "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetters(this, {
+  gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
+  aboutNewTabService: ["@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService"],
+});
 
 const ACTIVITY_STREAM_ID = "activity-stream";
 const ACTIVITY_STREAM_ENDPOINT_PREF = "browser.newtabpage.activity-stream.telemetry.ping.endpoint";
@@ -56,6 +60,7 @@ this.TelemetryFeed = class TelemetryFeed {
     this._prefs.observe(TELEMETRY_PREF, this._onTelemetryPrefChange);
     this._onEventsTelemetryPrefChange = this._onEventsTelemetryPrefChange.bind(this);
     this._prefs.observe(EVENTS_TELEMETRY_PREF, this._onEventsTelemetryPrefChange);
+    this._classifySite = classifySite;
   }
 
   init() {
@@ -484,10 +489,43 @@ this.TelemetryFeed = class TelemetryFeed {
     this.sendEvent(this.createUndesiredEvent(action));
   }
 
+  async sendPageTakeoverData() {
+    if (this.telemetryEnabled) {
+      const value = {};
+
+      // Check whether or not about:home and about:newtab are set to a custom URL.
+      // If so, classify them.
+      if (Services.prefs.getBoolPref("browser.newtabpage.enabled") &&
+          aboutNewTabService.overridden &&
+          !aboutNewTabService.newTabURL.startsWith("moz-extension://")) {
+        value.newtab_url_category = await this._classifySite(aboutNewTabService.newTabURL);
+      }
+
+      const homePageURL = HomePage.get();
+      if (!["about:home", "about:blank"].includes(homePageURL) &&
+          !homePageURL.startsWith("moz-extension://")) {
+        value.home_url_category = await this._classifySite(homePageURL);
+      }
+
+      if (value.newtab_url_category || value.home_url_category) {
+        const event = Object.assign(
+          this.createPing(),
+          {
+            action: "activity_stream_user_event",
+            event: "PAGE_TAKEOVER_DATA",
+            value,
+          },
+        );
+        this.sendEvent(event);
+      }
+    }
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
         this.init();
+        this.sendPageTakeoverData();
         break;
       case at.NEW_TAB_INIT:
         this.handleNewTabInit(action);

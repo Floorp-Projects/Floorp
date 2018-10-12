@@ -1,4 +1,4 @@
-import {ASRouterUISurface, ASRouterUtils, convertLinks} from "content-src/asrouter/asrouter-content";
+import {ASRouterUISurface, ASRouterUtils} from "content-src/asrouter/asrouter-content";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
 import {FAKE_LOCAL_MESSAGES} from "./constants";
 import {GlobalOverrider} from "test/unit/utils";
@@ -130,41 +130,6 @@ describe("ASRouterUISurface", () => {
 
       wrapper.find(".blockButton").simulate("click");
       assert.notCalled(ASRouterUtils.sendTelemetry);
-    });
-  });
-
-  describe("convertLinks", () => {
-    it("should return an object with anchor elements", () => {
-      const cta = {
-        url: "https://foo.com",
-        metric: "foo",
-      };
-      const stub = sandbox.stub();
-      const result = convertLinks({cta}, stub);
-
-      assert.property(result, "cta");
-      assert.propertyVal(result.cta, "type", "a");
-      assert.propertyVal(result.cta.props, "href", cta.url);
-      assert.propertyVal(result.cta.props, "data-metric", cta.metric);
-      assert.propertyVal(result.cta.props, "onClick", stub);
-    });
-    it("should return an anchor element without href", () => {
-      const cta = {
-        url: "https://foo.com",
-        metric: "foo",
-        action: "OPEN_MENU",
-        args: "appMenu",
-      };
-      const stub = sandbox.stub();
-      const result = convertLinks({cta}, stub);
-
-      assert.property(result, "cta");
-      assert.propertyVal(result.cta, "type", "a");
-      assert.propertyVal(result.cta.props, "href", false);
-      assert.propertyVal(result.cta.props, "data-metric", cta.metric);
-      assert.propertyVal(result.cta.props, "data-action", cta.action);
-      assert.propertyVal(result.cta.props, "data-args", cta.args);
-      assert.propertyVal(result.cta.props, "onClick", stub);
     });
   });
 

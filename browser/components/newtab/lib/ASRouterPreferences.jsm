@@ -18,6 +18,13 @@ const DEFAULT_STATE = {
 
 const USER_PREFERENCES = {snippets: "browser.newtabpage.activity-stream.feeds.snippets"};
 
+const TEST_PROVIDER = {
+  id: "snippets_local_testing",
+  type: "local",
+  localProvider: "SnippetsTestMessageProvider",
+  enabled: true,
+};
+
 class _ASRouterPreferences {
   constructor() {
     Object.assign(this, DEFAULT_STATE);
@@ -26,14 +33,20 @@ class _ASRouterPreferences {
 
   get providers() {
     if (!this._initialized || this._providers === null) {
+      let providers;
       try {
         const parsed = JSON.parse(Services.prefs.getStringPref(this._providerPref, ""));
-        this._providers = Object.freeze(parsed.map(provider => Object.freeze(provider)));
+        providers = parsed.map(provider => Object.freeze(provider));
       } catch (e) {
         Cu.reportError("Problem parsing JSON message provider pref for ASRouter");
-        this._providers = [];
+        providers = [];
       }
+      if (this.devtoolsEnabled) {
+        providers.unshift(TEST_PROVIDER);
+      }
+      this._providers = Object.freeze(providers);
     }
+
     return this._providers;
   }
 
@@ -60,6 +73,7 @@ class _ASRouterPreferences {
         this._providers = null;
         break;
       case this._devtoolsPref:
+        this._providers = null;
         this._devtoolsEnabled = null;
         break;
     }
@@ -108,5 +122,6 @@ class _ASRouterPreferences {
 this._ASRouterPreferences = _ASRouterPreferences;
 
 this.ASRouterPreferences = new _ASRouterPreferences();
+this.TEST_PROVIDER = TEST_PROVIDER;
 
-const EXPORTED_SYMBOLS = ["_ASRouterPreferences", "ASRouterPreferences"];
+const EXPORTED_SYMBOLS = ["_ASRouterPreferences", "ASRouterPreferences", "TEST_PROVIDER"];

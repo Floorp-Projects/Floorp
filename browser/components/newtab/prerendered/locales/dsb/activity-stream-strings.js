@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Woblubowane temy:",
   "pocket_read_even_more": "Dalšne powěźeńki se woglědaś",
   "pocket_more_reccommendations": "Dalšne pórucenja",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Kak funkcioněrujo",
   "pocket_cta_button": "Pocket wobstaraś",
   "pocket_cta_text": "Składujśo tšojeńka, kótarež se wam spódobuju, w Pocket a žywśo swój duch z fasciněrujucymi cytańkami.",
   "highlights_empty_state": "Zachopśo pśeglědowaś, a pokažomy někotare wjelicne nastawki, wideo a druge boki, kótarež sćo se njedawno woglědał abo how ako cytańske znamjenja składował.",
