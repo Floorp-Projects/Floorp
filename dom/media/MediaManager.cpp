@@ -7,6 +7,7 @@
 #include "MediaManager.h"
 
 #include "AllocationHandle.h"
+#include "AudioDeviceInfo.h"
 #include "MediaStreamGraph.h"
 #include "MediaTimer.h"
 #include "mozilla/dom/MediaStreamTrack.h"
