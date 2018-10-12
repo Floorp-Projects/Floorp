@@ -177,7 +177,9 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
       isPositivePlaybackRate ? createdTime : createdTime - endTime;
     const absoluteCurrentTimeAtCreated =
       isPositivePlaybackRate ? currentTimeAtCreated : endTime - currentTimeAtCreated;
-    const absoluteCurrentTime = absoluteCreatedTime + toRate(currentTime);
+    const animationCurrentTime =
+      isPositivePlaybackRate ? currentTime : endTime - currentTime;
+    const absoluteCurrentTime = absoluteCreatedTime + toRate(animationCurrentTime);
     const absoluteStartTime = absoluteCreatedTime + Math.min(absoluteDelay, 0);
     const absoluteStartTimeAtCreated = absoluteCreatedTime + absoluteCurrentTimeAtCreated;
     // To show whole graph with endDelay, we add negative endDelay amount to endTime.
