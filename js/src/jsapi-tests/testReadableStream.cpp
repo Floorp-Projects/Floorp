@@ -11,7 +11,18 @@
 
 using namespace JS;
 
-char test_buffer_data[] = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+struct StubExternalUnderlyingSource {
+    void* buffer;
+};
+
+char testBufferData[] = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+StubExternalUnderlyingSource stubExternalUnderlyingSource = {
+    testBufferData
+};
+
+static_assert(MOZ_ALIGNOF(StubExternalUnderlyingSource) > 1,
+              "UnderlyingSource pointers must not have the low bit set");
 
 static JSObject*
 NewDefaultStream(JSContext* cx, HandleObject source = nullptr, HandleFunction size = nullptr,
@@ -19,17 +30,6 @@ NewDefaultStream(JSContext* cx, HandleObject source = nullptr, HandleFunction si
 {
     RootedObject stream(cx, NewReadableDefaultStreamObject(cx, source, size, highWaterMark,
                                                            proto));
-    MOZ_ASSERT_IF(stream, IsReadableStream(stream));
-    return stream;
-}
-
-static JSObject*
-NewByteStream(JSContext* cx, double highWaterMark = 0, HandleObject proto = nullptr)
-{
-    RootedObject source(cx, JS_NewPlainObject(cx));
-    MOZ_ASSERT(source);
-
-    RootedObject stream(cx, NewReadableByteStreamObject(cx, source, highWaterMark, proto));
     MOZ_ASSERT_IF(stream, IsReadableStream(stream));
     return stream;
 }
@@ -49,9 +49,12 @@ WriteIntoRequestBufferCB(JSContext* cx, HandleObject stream, void* underlyingSou
                          void* buffer, size_t length, size_t* bytesWritten)
 {
     MOZ_ASSERT(!writeIntoRequestBufferCBCalled, "Invalid test setup");
-    MOZ_ASSERT(length <= sizeof(test_buffer_data));
-    memcpy(buffer, test_buffer_data, length);
     writeIntoRequestBufferCBCalled = true;
+
+    MOZ_ASSERT(underlyingSource == &stubExternalUnderlyingSource);
+    MOZ_ASSERT(stubExternalUnderlyingSource.buffer == testBufferData);
+    MOZ_ASSERT(length <= sizeof(testBufferData));
+    memcpy(buffer, testBufferData, length);
     *bytesWritten = length;
 }
 
@@ -150,25 +153,26 @@ GetReadChunk(JSContext* cx, HandleObject readRequest)
     return &chunkVal.toObject();
 }
 
-BEGIN_TEST(testReadableStream_NewReadableStream)
+struct StreamTestFixture : public JSAPITest
+{
+    virtual ~StreamTestFixture() {}
+};
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_NewReadableStream)
 {
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
-    CHECK(ReadableStreamGetMode(stream) == ReadableStreamMode::Default);
+    ReadableStreamMode mode;
+    CHECK(ReadableStreamGetMode(cx, stream, &mode));
+    CHECK(mode == ReadableStreamMode::Default);
     return true;
 }
-END_TEST(testReadableStream_NewReadableStream)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_NewReadableStream)
 
-BEGIN_TEST(testReadableStream_NewReadableByteStream)
-{
-    RootedObject stream(cx, NewByteStream(cx));
-    CHECK(stream);
-    CHECK(ReadableStreamGetMode(stream) == ReadableStreamMode::Byte);
-    return true;
-}
-END_TEST(testReadableStream_NewReadableByteStream)
-
-BEGIN_TEST(testReadableStream_ReadableStreamGetReaderDefault)
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamGetReaderDefault)
 {
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
@@ -176,29 +180,20 @@ BEGIN_TEST(testReadableStream_ReadableStreamGetReaderDefault)
     RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
     CHECK(reader);
     CHECK(IsReadableStreamDefaultReader(reader));
-    CHECK(ReadableStreamIsLocked(stream));
-    CHECK(!ReadableStreamReaderIsClosed(reader));
+    bool locked;
+    CHECK(ReadableStreamIsLocked(cx, stream, &locked));
+    CHECK(locked);
+    bool closed;
+    CHECK(ReadableStreamReaderIsClosed(cx, reader, &closed));
+    CHECK(!closed);
 
     return true;
 }
-END_TEST(testReadableStream_ReadableStreamGetReaderDefault)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamGetReaderDefault)
 
-BEGIN_TEST(testReadableStream_ReadableStreamGetReaderBYOB)
-{
-    RootedObject stream(cx, NewByteStream(cx));
-    CHECK(stream);
-
-    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::BYOB));
-    CHECK(reader);
-    CHECK(IsReadableStreamBYOBReader(reader));
-    CHECK(ReadableStreamIsLocked(stream));
-    CHECK(!ReadableStreamReaderIsClosed(reader));
-
-    return true;
-}
-END_TEST(testReadableStream_ReadableStreamGetReaderBYOB)
-
-BEGIN_TEST(testReadableStream_ReadableStreamTee)
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamTee)
 {
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
@@ -206,7 +201,9 @@ BEGIN_TEST(testReadableStream_ReadableStreamTee)
     RootedObject leftStream(cx);
     RootedObject rightStream(cx);
     CHECK(ReadableStreamTee(cx, stream, &leftStream, &rightStream));
-    CHECK(ReadableStreamIsLocked(stream));
+    bool locked;
+    CHECK(ReadableStreamIsLocked(cx, stream, &locked));
+    CHECK(locked);
     CHECK(leftStream);
     CHECK(IsReadableStream(leftStream));
     CHECK(rightStream);
@@ -214,9 +211,11 @@ BEGIN_TEST(testReadableStream_ReadableStreamTee)
 
     return true;
 }
-END_TEST(testReadableStream_ReadableStreamTee)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamTee)
 
-BEGIN_TEST(testReadableStream_ReadableStreamEnqueue)
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamEnqueue)
 {
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
@@ -228,23 +227,11 @@ BEGIN_TEST(testReadableStream_ReadableStreamEnqueue)
 
     return true;
 }
-END_TEST(testReadableStream_ReadableStreamEnqueue)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamEnqueue)
 
-BEGIN_TEST(testReadableStream_ReadableByteStreamEnqueue)
-{
-    RootedObject stream(cx, NewDefaultStream(cx));
-    CHECK(stream);
-
-    RootedObject chunk(cx, JS_NewUint8Array(cx, 42));
-    CHECK(chunk);
-    CHECK(!ReadableByteStreamEnqueueBuffer(cx, stream, chunk));
-    CHECK(JS_IsExceptionPending(cx));
-
-    return true;
-}
-END_TEST(testReadableStream_ReadableByteStreamEnqueue)
-
-BEGIN_TEST(testReadableStream_ReadableStreamDefaultReaderRead)
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamDefaultReaderRead)
 {
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
@@ -265,92 +252,15 @@ BEGIN_TEST(testReadableStream_ReadableStreamDefaultReaderRead)
 
     return true;
 }
-END_TEST(testReadableStream_ReadableStreamDefaultReaderRead)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamDefaultReaderRead)
 
-BEGIN_TEST(testReadableStream_ReadableByteStreamDefaultReaderRead)
-{
-    RootedObject stream(cx, NewByteStream(cx));
-    CHECK(stream);
-
-    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
-    CHECK(reader);
-
-    RootedObject request(cx, ReadableStreamDefaultReaderRead(cx, reader));
-    CHECK(request);
-    CHECK(IsPromiseObject(request));
-    CHECK(GetPromiseState(request) == PromiseState::Pending);
-
-    size_t length = sizeof(test_buffer_data);
-    RootedObject buffer(cx, JS_NewArrayBufferWithExternalContents(cx, length, test_buffer_data));
-    CHECK(buffer);
-    RootedObject chunk(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, length));
-    CHECK(chunk);
-    bool isShared;
-    CHECK(!JS_IsDetachedArrayBufferObject(buffer));
-
-    CHECK(ReadableByteStreamEnqueueBuffer(cx, stream, chunk));
-
-    CHECK(JS_IsDetachedArrayBufferObject(buffer));
-    RootedObject readChunk(cx, GetReadChunk(cx, request));
-    CHECK(JS_IsUint8Array(readChunk));
-    void* readBufferData;
-    {
-        JS::AutoCheckCannotGC autoNoGC(cx);
-        readBufferData = JS_GetArrayBufferViewData(readChunk, &isShared, autoNoGC);
-    }
-    CHECK(readBufferData);
-    CHECK(!memcmp(test_buffer_data, readBufferData, length));
-
-    return true;
-}
-END_TEST(testReadableStream_ReadableByteStreamDefaultReaderRead)
-
-BEGIN_TEST(testReadableStream_ReadableByteStreamBYOBReaderRead)
-{
-    RootedObject stream(cx, NewByteStream(cx));
-    CHECK(stream);
-
-    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::BYOB));
-    CHECK(reader);
-
-    size_t length = sizeof(test_buffer_data);
-    RootedObject targetArray(cx, JS_NewUint8Array(cx, length));
-    bool isShared;
-
-    RootedObject request(cx, ReadableStreamBYOBReaderRead(cx, reader, targetArray));
-    CHECK(request);
-    CHECK(IsPromiseObject(request));
-    CHECK(GetPromiseState(request) == PromiseState::Pending);
-    CHECK(JS_IsDetachedArrayBufferObject(JS_GetArrayBufferViewBuffer(cx, targetArray, &isShared)));
-
-    RootedObject buffer(cx, JS_NewArrayBufferWithExternalContents(cx, length, test_buffer_data));
-    CHECK(buffer);
-    CHECK(!JS_IsDetachedArrayBufferObject(buffer));
-
-    CHECK(ReadableByteStreamEnqueueBuffer(cx, stream, buffer));
-
-    CHECK(JS_IsDetachedArrayBufferObject(buffer));
-    RootedObject readChunk(cx, GetReadChunk(cx, request));
-    CHECK(JS_IsUint8Array(readChunk));
-    void* readBufferData;
-    {
-        JS::AutoCheckCannotGC autoNoGC(cx);
-        readBufferData = JS_GetArrayBufferViewData(readChunk, &isShared, autoNoGC);
-    }
-    CHECK(readBufferData);
-    CHECK(!memcmp(test_buffer_data, readBufferData, length));
-    // TODO: eliminate the memcpy that happens here.
-//    CHECK(readBufferData == test_buffer_data);
-
-    return true;
-}
-END_TEST(testReadableStream_ReadableByteStreamBYOBReaderRead)
-
-BEGIN_TEST(testReadableStream_ReadableStreamDefaultReaderClose)
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamDefaultReaderClose)
 {
     SetReadableStreamCallbacks(cx, &DataRequestCB, &WriteIntoRequestBufferCB,
-                                             &CancelStreamCB, &StreamClosedCB, &StreamErroredCB,
-                                             &FinalizeStreamCB);
+                               &CancelStreamCB, &StreamClosedCB, &StreamErroredCB,
+                               &FinalizeStreamCB);
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
     RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
@@ -375,14 +285,16 @@ BEGIN_TEST(testReadableStream_ReadableStreamDefaultReaderClose)
 
     return true;
 }
-END_TEST(testReadableStream_ReadableStreamDefaultReaderClose)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamDefaultReaderClose)
 
-BEGIN_TEST(testReadableStream_ReadableStreamDefaultReaderError)
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamDefaultReaderError)
 {
     ResetCallbacks();
     SetReadableStreamCallbacks(cx, &DataRequestCB, &WriteIntoRequestBufferCB,
-                                             &CancelStreamCB, &StreamClosedCB, &StreamErroredCB,
-                                             &FinalizeStreamCB);
+                               &CancelStreamCB, &StreamClosedCB, &StreamErroredCB,
+                               &FinalizeStreamCB);
     RootedObject stream(cx, NewDefaultStream(cx));
     CHECK(stream);
     RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
@@ -393,8 +305,12 @@ BEGIN_TEST(testReadableStream_ReadableStreamDefaultReaderError)
     CHECK(IsPromiseObject(request));
     CHECK(GetPromiseState(request) == PromiseState::Pending);
 
-    CHECK(ReadableStreamIsLocked(stream));
-    CHECK(ReadableStreamIsReadable(stream));
+    bool locked;
+    CHECK(ReadableStreamIsLocked(cx, stream, &locked));
+    CHECK(locked);
+    bool readable;
+    CHECK(ReadableStreamIsReadable(cx, stream, &readable));
+    CHECK(readable);
     RootedValue error(cx, Int32Value(42));
     CHECK(ReadableStreamError(cx, stream, error));
 
@@ -408,7 +324,8 @@ BEGIN_TEST(testReadableStream_ReadableStreamDefaultReaderError)
 
     return true;
 }
-END_TEST(testReadableStream_ReadableStreamDefaultReaderError)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamDefaultReaderError)
 
 static JSObject*
 NewExternalSourceStream(JSContext* cx, void* underlyingSource,
@@ -420,41 +337,55 @@ NewExternalSourceStream(JSContext* cx, void* underlyingSource,
                         ReadableStreamFinalizeCallback finalizeCallback)
 {
     SetReadableStreamCallbacks(cx, dataRequestCallback, writeIntoReadRequestCallback,
-                                             cancelCallback, closedCallback, erroredCallback,
-                                             finalizeCallback);
+                               cancelCallback, closedCallback, erroredCallback,
+                               finalizeCallback);
     RootedObject stream(cx, NewReadableExternalSourceStreamObject(cx, underlyingSource));
     MOZ_ASSERT_IF(stream, IsReadableStream(stream));
     return stream;
 }
 
-BEGIN_TEST(testReadableStream_CreateReadableByteStreamWithExternalSource)
+static JSObject*
+NewExternalSourceStream(JSContext* cx)
+{
+    return NewExternalSourceStream(cx,
+                                   &stubExternalUnderlyingSource,
+                                   &DataRequestCB,
+                                   &WriteIntoRequestBufferCB,
+                                   &CancelStreamCB,
+                                   &StreamClosedCB,
+                                   &StreamErroredCB,
+                                   &FinalizeStreamCB);
+}
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_CreateReadableByteStreamWithExternalSource)
 {
     ResetCallbacks();
 
-    RootedObject stream(cx, NewExternalSourceStream(cx, &test_buffer_data, &DataRequestCB,
-                                                    &WriteIntoRequestBufferCB, &CancelStreamCB,
-                                                    &StreamClosedCB, &StreamErroredCB,
-                                                    &FinalizeStreamCB));
+    RootedObject stream(cx, NewExternalSourceStream(cx));
     CHECK(stream);
-    CHECK(ReadableStreamGetMode(stream) == JS::ReadableStreamMode::ExternalSource);
+    ReadableStreamMode mode;
+    CHECK(ReadableStreamGetMode(cx, stream, &mode));
+    CHECK(mode == ReadableStreamMode::ExternalSource);
     void* underlyingSource;
     CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &underlyingSource));
-    CHECK(underlyingSource == &test_buffer_data);
-    CHECK(ReadableStreamIsLocked(stream));
-    ReadableStreamReleaseExternalUnderlyingSource(stream);
+    CHECK(underlyingSource == &stubExternalUnderlyingSource);
+    bool locked;
+    CHECK(ReadableStreamIsLocked(cx, stream, &locked));
+    CHECK(locked);
+    CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
 
     return true;
 }
-END_TEST(testReadableStream_CreateReadableByteStreamWithExternalSource)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_CreateReadableByteStreamWithExternalSource)
 
-BEGIN_TEST(testReadableStream_ExternalSourceCancel)
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ExternalSourceCancel)
 {
     ResetCallbacks();
 
-    RootedObject stream(cx, NewExternalSourceStream(cx, &test_buffer_data, &DataRequestCB,
-                                                    &WriteIntoRequestBufferCB, &CancelStreamCB,
-                                                    &StreamClosedCB, &StreamErroredCB,
-                                                    &FinalizeStreamCB));
+    RootedObject stream(cx, NewExternalSourceStream(cx));
     CHECK(stream);
     RootedValue reason(cx, Int32Value(42));
     CHECK(ReadableStreamCancel(cx, stream, reason));
@@ -463,16 +394,15 @@ BEGIN_TEST(testReadableStream_ExternalSourceCancel)
 
     return true;
 }
-END_TEST(testReadableStream_ExternalSourceCancel)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ExternalSourceCancel)
 
-BEGIN_TEST(testReadableStream_ExternalSourceGetReader)
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ExternalSourceGetReader)
 {
     ResetCallbacks();
 
-    RootedObject stream(cx, NewExternalSourceStream(cx, &test_buffer_data, &DataRequestCB,
-                                                    &WriteIntoRequestBufferCB, &CancelStreamCB,
-                                                    &StreamClosedCB, &StreamErroredCB,
-                                                    &FinalizeStreamCB));
+    RootedObject stream(cx, NewExternalSourceStream(cx));
     CHECK(stream);
 
     RootedValue streamVal(cx, ObjectValue(*stream));
@@ -485,25 +415,10 @@ BEGIN_TEST(testReadableStream_ExternalSourceGetReader)
 
     return true;
 }
-END_TEST(testReadableStream_ExternalSourceGetReader)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ExternalSourceGetReader)
 
-BEGIN_TEST(testReadableStream_ExternalSourceUpdateAvailableData)
-{
-    ResetCallbacks();
-
-    RootedObject stream(cx, NewExternalSourceStream(cx, &test_buffer_data, &DataRequestCB,
-                                                    &WriteIntoRequestBufferCB, &CancelStreamCB,
-                                                    &StreamClosedCB, &StreamErroredCB,
-                                                    &FinalizeStreamCB));
-    CHECK(stream);
-
-    ReadableStreamUpdateDataAvailableFromSource(cx, stream, 1024);
-
-    return true;
-}
-END_TEST(testReadableStream_ExternalSourceUpdateAvailableData)
-
-struct ReadFromExternalSourceFixture : public JSAPITest
+struct ReadFromExternalSourceFixture : public StreamTestFixture
 {
     virtual ~ReadFromExternalSourceFixture() {}
 
@@ -513,18 +428,16 @@ struct ReadFromExternalSourceFixture : public JSAPITest
         ResetCallbacks();
         definePrint();
 
-        RootedObject stream(cx, NewExternalSourceStream(cx, &test_buffer_data, &DataRequestCB,
-                                                        &WriteIntoRequestBufferCB,
-                                                        &CancelStreamCB,
-                                                        &StreamClosedCB, &StreamErroredCB,
-                                                        &FinalizeStreamCB));
+        RootedObject stream(cx, NewExternalSourceStream(cx));
         CHECK(stream);
         js::RunJobs(cx);
         void* underlyingSource;
         CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &underlyingSource));
-        CHECK(underlyingSource == &test_buffer_data);
-        CHECK(ReadableStreamIsLocked(stream));
-        ReadableStreamReleaseExternalUnderlyingSource(stream);
+        CHECK(underlyingSource == &stubExternalUnderlyingSource);
+        bool locked;
+        CHECK(ReadableStreamIsLocked(cx, stream, &locked));
+        CHECK(locked);
+        CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
 
         RootedValue streamVal(cx, ObjectValue(*stream));
         CHECK(JS_SetProperty(cx, global, "stream", streamVal));
@@ -538,7 +451,7 @@ struct ReadFromExternalSourceFixture : public JSAPITest
         CHECK(IsPromiseObject(promise));
         CHECK(GetPromiseState(promise) == PromiseState::Pending);
 
-        size_t length = sizeof(test_buffer_data);
+        size_t length = sizeof(testBufferData);
         ReadableStreamUpdateDataAvailableFromSource(cx, stream, length);
 
         CHECK(writeIntoRequestBufferCBCalled);
@@ -557,7 +470,7 @@ struct ReadFromExternalSourceFixture : public JSAPITest
             JS::AutoCheckCannotGC noGC(cx);
             bool dummy;
             void* buffer = JS_GetArrayBufferViewData(chunk, &dummy, noGC);
-            CHECK(!memcmp(buffer, test_buffer_data, writtenLength));
+            CHECK(!memcmp(buffer, testBufferData, writtenLength));
         }
 
         dataRequestCBCalled = false;
@@ -573,18 +486,17 @@ struct ReadFromExternalSourceFixture : public JSAPITest
         ResetCallbacks();
         definePrint();
 
-        RootedObject stream(cx, NewExternalSourceStream(cx, &test_buffer_data, &DataRequestCB,
-                                                        &WriteIntoRequestBufferCB, &CancelStreamCB,
-                                                        &StreamClosedCB, &StreamErroredCB,
-                                                        &FinalizeStreamCB));
+        RootedObject stream(cx, NewExternalSourceStream(cx));
         CHECK(stream);
         void* underlyingSource;
         CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &underlyingSource));
-        CHECK(underlyingSource == &test_buffer_data);
-        CHECK(ReadableStreamIsLocked(stream));
-        ReadableStreamReleaseExternalUnderlyingSource(stream);
+        CHECK(underlyingSource == &stubExternalUnderlyingSource);
+        bool locked;
+        CHECK(ReadableStreamIsLocked(cx, stream, &locked));
+        CHECK(locked);
+        CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
 
-        size_t length = sizeof(test_buffer_data);
+        size_t length = sizeof(testBufferData);
         ReadableStreamUpdateDataAvailableFromSource(cx, stream, length);
 
         RootedValue streamVal(cx, ObjectValue(*stream));
@@ -611,7 +523,7 @@ struct ReadFromExternalSourceFixture : public JSAPITest
             JS::AutoCheckCannotGC noGC(cx);
             bool dummy;
             void* buffer = JS_GetArrayBufferViewData(chunk, &dummy, noGC);
-            CHECK(!memcmp(buffer, test_buffer_data, writtenLength));
+            CHECK(!memcmp(buffer, testBufferData, writtenLength));
         }
 
         return true;
@@ -621,7 +533,7 @@ struct ReadFromExternalSourceFixture : public JSAPITest
 BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
                    testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable)
 {
-    return readWithoutDataAvailable("r = stream.getReader(); r.read()", "r.read()", sizeof(test_buffer_data));
+    return readWithoutDataAvailable("r = stream.getReader(); r.read()", "r.read()", sizeof(testBufferData));
 }
 END_FIXTURE_TEST(ReadFromExternalSourceFixture,
                  testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable)
@@ -631,7 +543,7 @@ BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
 {
     CHECK(readWithoutDataAvailable("r = stream.getReader(); request0 = r.read(); "
                                    "request1 = r.read(); request0", "r.read()",
-                                   sizeof(test_buffer_data)));
+                                   sizeof(testBufferData)));
 
     RootedValue val(cx);
     CHECK(JS_GetProperty(cx, global, "request1", &val));
@@ -662,23 +574,542 @@ END_FIXTURE_TEST(ReadFromExternalSourceFixture,
 BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
                    testReadableStream_ExternalSourceReadDefaultWithDataAvailable)
 {
-    return readWithDataAvailable("r = stream.getReader(); r.read()", sizeof(test_buffer_data));
+    return readWithDataAvailable("r = stream.getReader(); r.read()", sizeof(testBufferData));
 }
 END_FIXTURE_TEST(ReadFromExternalSourceFixture,
                  testReadableStream_ExternalSourceReadDefaultWithDataAvailable)
 
-BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
-                   testReadableStream_ExternalSourceReadBYOBWithoutDataAvailable)
+// Cross-global tests:
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamOtherGlobalDefaultReaderRead)
 {
-    return readWithoutDataAvailable("r = stream.getReader({mode: 'byob'}); r.read(new Uint8Array(63))", "r.read(new Uint8Array(10))", 10);
-}
-END_FIXTURE_TEST(ReadFromExternalSourceFixture,
-                 testReadableStream_ExternalSourceReadBYOBWithoutDataAvailable)
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
 
-BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
-                   testReadableStream_ExternalSourceReadBYOBWithDataAvailable)
-{
-    return readWithDataAvailable("r = stream.getReader({mode: 'byob'}); r.read(new Uint8Array(10))", 10);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        RootedObject reader(cx, ReadableStreamGetReader(cx, stream,
+                                                        ReadableStreamReaderMode::Default));
+        CHECK(reader);
+
+        RootedObject request(cx, ReadableStreamDefaultReaderRead(cx, reader));
+        CHECK(request);
+        CHECK(IsPromiseObject(request));
+        CHECK(!js::IsWrapper(request));
+        CHECK(GetPromiseState(request) == PromiseState::Pending);
+
+        RootedObject chunk(cx, JS_NewPlainObject(cx));
+        CHECK(chunk);
+        RootedValue chunkVal(cx, ObjectValue(*chunk));
+        CHECK(ReadableStreamEnqueue(cx, stream, chunkVal));
+
+        CHECK(GetReadChunk(cx, request) == chunk);
+    }
+
+    return true;
 }
-END_FIXTURE_TEST(ReadFromExternalSourceFixture,
-                 testReadableStream_ExternalSourceReadBYOBWithDataAvailable)
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamOtherGlobalDefaultReaderRead)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamGetEmbeddingFlags)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    uint8_t flags;
+    CHECK(ReadableStreamGetEmbeddingFlags(cx, stream, &flags));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        uint8_t flags;
+        CHECK(ReadableStreamGetEmbeddingFlags(cx, stream, &flags));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamGetEmbeddingFlags)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamGetExternalUnderlyingSource)
+{
+    ResetCallbacks();
+
+    RootedObject stream(cx, NewExternalSourceStream(cx));
+    CHECK(stream);
+    void* source;
+    CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &source));
+    CHECK(source == &stubExternalUnderlyingSource);
+    CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        void* source;
+        CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &source));
+        CHECK(source == &stubExternalUnderlyingSource);
+        CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamGetExternalUnderlyingSource)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamUpdateDataAvailableFromSource)
+{
+    RootedObject stream(cx, NewExternalSourceStream(cx));
+    CHECK(stream);
+    CHECK(ReadableStreamUpdateDataAvailableFromSource(cx, stream, 0));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        CHECK(ReadableStreamUpdateDataAvailableFromSource(cx, stream, 1));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamUpdateDataAvailableFromSource)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_IsReadableStream)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    CHECK(IsReadableStream(stream));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        CHECK(IsReadableStream(stream));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_IsReadableStream)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamGetMode)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    ReadableStreamMode mode;
+    CHECK(ReadableStreamGetMode(cx, stream, &mode));
+    CHECK(mode == ReadableStreamMode::Default);
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        CHECK(ReadableStreamGetMode(cx, stream, &mode));
+        CHECK(mode == ReadableStreamMode::Default);
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamGetMode)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamIsReadable)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    bool result;
+    CHECK(ReadableStreamIsReadable(cx, stream, &result));
+    CHECK(result);
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        CHECK(ReadableStreamIsReadable(cx, stream, &result));
+        CHECK(result);
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamIsReadable)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamIsLocked)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    bool result;
+    CHECK(ReadableStreamIsLocked(cx, stream, &result));
+    CHECK_EQUAL(result, false);
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        CHECK(ReadableStreamIsLocked(cx, stream, &result));
+        CHECK_EQUAL(result, false);
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamIsLocked)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamIsDisturbed)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    bool result;
+    CHECK(ReadableStreamIsDisturbed(cx, stream, &result));
+    CHECK_EQUAL(result, false);
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        CHECK(ReadableStreamIsDisturbed(cx, stream, &result));
+        CHECK_EQUAL(result, false);
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamIsDisturbed)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamCancel)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+
+
+    RootedValue reason(cx);
+    JSObject* callResult = ReadableStreamCancel(cx, stream, reason);
+    CHECK(callResult);
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        RootedValue reason(cx);
+        JSObject* callResult = ReadableStreamCancel(cx, stream, reason);
+        CHECK(callResult);
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamCancel)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamGetReader)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+
+
+    RootedObject reader(cx);
+    reader = ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default);
+    CHECK(reader);
+    CHECK(IsReadableStreamDefaultReader(reader));
+    CHECK(ReadableStreamReaderReleaseLock(cx, reader));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        JSObject* callResult = ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default);
+        CHECK(callResult);
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamGetReader)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamTee_CrossCompartment)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+
+
+    RootedObject branch1Stream(cx);
+    RootedObject branch2Stream(cx);
+    CHECK(ReadableStreamTee(cx, stream, &branch1Stream, &branch2Stream));
+    CHECK(IsReadableStream(branch1Stream));
+    CHECK(IsReadableStream(branch2Stream));
+    stream = branch1Stream;
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        CHECK(ReadableStreamTee(cx, stream, &branch1Stream, &branch2Stream));
+        CHECK(IsReadableStream(branch1Stream));
+        CHECK(IsReadableStream(branch2Stream));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamTee_CrossCompartment)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamGetDesiredSize)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    bool hasValue;
+    double value;
+    CHECK(ReadableStreamGetDesiredSize(cx, stream, &hasValue, &value));
+    CHECK_EQUAL(hasValue, true);
+    CHECK_EQUAL(value, 1.0);
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        hasValue = false;
+        value = 0;
+        CHECK(ReadableStreamGetDesiredSize(cx, stream, &hasValue, &value));
+        CHECK_EQUAL(hasValue, true);
+        CHECK_EQUAL(value, 1.0);
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamGetDesiredSize)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamClose)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    CHECK(ReadableStreamClose(cx, stream));
+
+    stream = NewDefaultStream(cx);
+    CHECK(stream);
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        CHECK(ReadableStreamClose(cx, stream));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamClose)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamEnqueue_CrossCompartment)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    RootedValue chunk(cx);
+    CHECK(ReadableStreamEnqueue(cx, stream, chunk));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        RootedValue chunk(cx);
+        CHECK(ReadableStreamEnqueue(cx, stream, chunk));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamEnqueue_CrossCompartment)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamError)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    RootedValue error(cx);
+    CHECK(ReadableStreamError(cx, stream, error));
+
+    stream = NewDefaultStream(cx);
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &stream));
+        RootedValue error(cx);
+        CHECK(ReadableStreamError(cx, stream, error));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamError)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_IsReadableStreamReader)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
+    CHECK(reader);
+    CHECK(IsReadableStreamReader(reader));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &reader));
+        CHECK(IsReadableStreamReader(reader));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_IsReadableStreamReader)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_IsReadableStreamDefaultReader)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
+    CHECK(IsReadableStreamDefaultReader(reader));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &reader));
+        CHECK(IsReadableStreamDefaultReader(reader));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_IsReadableStreamDefaultReader)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamReaderIsClosed)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+
+    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
+    bool result;
+    CHECK(ReadableStreamReaderIsClosed(cx, reader, &result));
+    CHECK_EQUAL(result, false);
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &reader));
+        bool result;
+        CHECK(ReadableStreamReaderIsClosed(cx, reader, &result));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamReaderIsClosed)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamReaderCancel)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
+    RootedValue reason(cx);
+    CHECK(ReadableStreamReaderCancel(cx, reader, reason));
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &reader));
+        RootedValue reason(cx);
+        CHECK(ReadableStreamReaderCancel(cx, reader, reason));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamReaderCancel)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamReaderReleaseLock)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
+    CHECK(reader);
+    CHECK(ReadableStreamReaderReleaseLock(cx, reader));
+
+    // Repeat the test cross-compartment. This creates a new reader, since
+    // releasing the lock above deactivated the first reader.
+    reader = ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default);
+    CHECK(reader);
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &reader));
+        CHECK(ReadableStreamReaderReleaseLock(cx, reader));
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamReaderReleaseLock)
+
+BEGIN_FIXTURE_TEST(StreamTestFixture,
+                   testReadableStream_ReadableStreamDefaultReaderRead_CrossCompartment)
+{
+    RootedObject stream(cx, NewDefaultStream(cx));
+    CHECK(stream);
+    RootedObject reader(cx, ReadableStreamGetReader(cx, stream, ReadableStreamReaderMode::Default));
+    JSObject* callResult = ReadableStreamDefaultReaderRead(cx, reader);
+    CHECK(callResult);
+
+    RootedObject otherGlobal(cx, createGlobal());
+    CHECK(otherGlobal);
+    {
+        JSAutoRealm ar(cx, otherGlobal);
+        CHECK(JS_WrapObject(cx, &reader));
+        JSObject* callResult = ReadableStreamDefaultReaderRead(cx, reader);
+        CHECK(callResult);
+    }
+
+    return true;
+}
+END_FIXTURE_TEST(StreamTestFixture,
+                 testReadableStream_ReadableStreamDefaultReaderRead_CrossCompartment)
+

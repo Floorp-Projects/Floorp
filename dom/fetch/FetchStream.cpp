@@ -133,7 +133,14 @@ FetchStream::RequestDataCallback(JSContext* aCx,
 {
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
   MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
-  MOZ_DIAGNOSTIC_ASSERT(JS::ReadableStreamIsDisturbed(aStream));
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  bool disturbed;
+  if (!JS::ReadableStreamIsDisturbed(aCx, aStream, &disturbed)) {
+    JS_ClearPendingException(aCx);
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(disturbed);
+  }
+#endif
 
   RefPtr<FetchStream> stream = static_cast<FetchStream*>(aUnderlyingSource);
   stream->AssertIsOnOwningThread();
@@ -491,7 +498,11 @@ FetchStream::CloseAndReleaseObjects(JSContext* aCx,
   ReleaseObjects(aProofOfLock);
 
   MutexAutoUnlock unlock(mMutex);
-  if (JS::ReadableStreamIsReadable(aStream)) {
+  bool readable;
+  if (!JS::ReadableStreamIsReadable(aCx, aStream, &readable)) {
+    return;
+  }
+  if (readable) {
     JS::ReadableStreamClose(aCx, aStream);
   }
 }
