@@ -10,11 +10,17 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
   this);
 
+// Make sure the flexbox inspector is enabled before running the tests.
+Services.prefs.setBoolPref("devtools.flexboxinspector.enabled", true);
+
 // Make sure only the flexbox layout accordion is opened, and the others are closed.
 Services.prefs.setBoolPref("devtools.layout.flexbox.opened", true);
 Services.prefs.setBoolPref("devtools.layout.boxmodel.opened", false);
 Services.prefs.setBoolPref("devtools.layout.grid.opened", false);
+
+// Clear all set prefs.
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.flexboxinspector.enabled");
   Services.prefs.clearUserPref("devtools.layout.flexbox.opened");
   Services.prefs.clearUserPref("devtools.layout.boxmodel.opened");
   Services.prefs.clearUserPref("devtools.layout.grid.opened");
