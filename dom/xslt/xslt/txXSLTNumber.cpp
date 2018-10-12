@@ -470,6 +470,7 @@ struct CharRange {
 bool txXSLTNumber::isAlphaNumeric(char16_t ch)
 {
     static const CharRange alphanumericRanges[] = {
+        // clang-format off
         { 0x0030, 0x0039 },
         { 0x0041, 0x005A },
         { 0x0061, 0x007A },
@@ -760,6 +761,7 @@ bool txXSLTNumber::isAlphaNumeric(char16_t ch)
         { 0xFFC2, 0xFFC7 },
         { 0xFFCA, 0xFFCF },
         { 0xFFD2, 0xFFD7 }
+        // clang-format on
     };
 
     CharRange search = { ch, ch };

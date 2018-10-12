@@ -34,6 +34,7 @@ using namespace mozilla::dom;
 // Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist
 //
 const nsStaticAtom* const kElementsHTML[] = {
+  // clang-format off
   nsGkAtoms::a,
   nsGkAtoms::abbr,
   nsGkAtoms::acronym,
@@ -146,9 +147,11 @@ const nsStaticAtom* const kElementsHTML[] = {
   nsGkAtoms::video,
   nsGkAtoms::wbr,
   nullptr
+  // clang-format on
 };
 
 const nsStaticAtom* const kAttributesHTML[] = {
+  // clang-format off
   nsGkAtoms::abbr,
   nsGkAtoms::accept,
   nsGkAtoms::acceptcharset,
@@ -254,9 +257,11 @@ const nsStaticAtom* const kAttributesHTML[] = {
   nsGkAtoms::width,
   nsGkAtoms::wrap,
   nullptr
+  // clang-format on
 };
 
 const nsStaticAtom* const kPresAttributesHTML[] = {
+  // clang-format off
   nsGkAtoms::align,
   nsGkAtoms::background,
   nsGkAtoms::bgcolor,
@@ -273,9 +278,11 @@ const nsStaticAtom* const kPresAttributesHTML[] = {
   nsGkAtoms::valign,
   nsGkAtoms::vspace,
   nullptr
+  // clang-format on
 };
 
 const nsStaticAtom* const kURLAttributesHTML[] = {
+  // clang-format off
   nsGkAtoms::action,
   nsGkAtoms::href,
   nsGkAtoms::src,
@@ -283,6 +290,7 @@ const nsStaticAtom* const kURLAttributesHTML[] = {
   nsGkAtoms::cite,
   nsGkAtoms::background,
   nullptr
+  // clang-format on
 };
 
 const nsStaticAtom* const kElementsSVG[] = {
@@ -921,12 +929,14 @@ const nsStaticAtom* const kAttributesMathML[] = {
 };
 
 const nsStaticAtom* const kURLAttributesMathML[] = {
+  // clang-format off
   nsGkAtoms::href,
   nsGkAtoms::src,
   nsGkAtoms::cdgroup_,
   nsGkAtoms::altimg_,
   nsGkAtoms::definitionURL_,
   nullptr
+  // clang-format on
 };
 
 nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sElementsHTML = nullptr;

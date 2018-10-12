@@ -175,6 +175,7 @@ static const struct {
   LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED mTelemetryLabel;
   const char* mHostName;
 } gFastBlockAnalyticsProviders[] = {
+  // clang-format off
   { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::googleanalytics, "google-analytics.com" },
   { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::scorecardresearch, "scorecardresearch.com" },
   { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::hotjar, "hotjar.com" },
@@ -185,6 +186,7 @@ static const struct {
   { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::yahooanalytics, "analytics.yahoo.com" },
   { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::statcounter, "statcounter.com" },
   { LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED::v12group, "v12group.com" }
+  // clang-format on
 };
 
 void

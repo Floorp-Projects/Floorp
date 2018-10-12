@@ -379,11 +379,13 @@ static const float MinLowFrequencyHeapGrowthFactor =
 static const int IGC_MARK_SLICE_MULTIPLIER = 2;
 
 const AllocKind gc::slotsToThingKind[] = {
+    // clang-format off
     /*  0 */ AllocKind::OBJECT0,  AllocKind::OBJECT2,  AllocKind::OBJECT2,  AllocKind::OBJECT4,
     /*  4 */ AllocKind::OBJECT4,  AllocKind::OBJECT8,  AllocKind::OBJECT8,  AllocKind::OBJECT8,
     /*  8 */ AllocKind::OBJECT8,  AllocKind::OBJECT12, AllocKind::OBJECT12, AllocKind::OBJECT12,
     /* 12 */ AllocKind::OBJECT12, AllocKind::OBJECT16, AllocKind::OBJECT16, AllocKind::OBJECT16,
     /* 16 */ AllocKind::OBJECT16
+    // clang-format on
 };
 
 // Check that reserved bits of a Cell are compatible with our typical allocators
