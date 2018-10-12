@@ -823,7 +823,6 @@ win32-msvc/debug:
             - builds/taskcluster_sub_win32/debug.py
         extra-config:
             mozconfig_variant: 'debug-msvc'
-    run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -863,7 +862,6 @@ win32-msvc/opt:
             - builds/taskcluster_sub_win32/opt.py
         extra-config:
             mozconfig_variant: 'opt-msvc'
-    run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -897,7 +895,6 @@ win64-msvc/debug:
             - builds/taskcluster_sub_win64/debug.py
         extra-config:
             mozconfig_variant: 'debug-msvc'
-    run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -931,7 +928,6 @@ win64-msvc/opt:
             - builds/taskcluster_sub_win64/opt.py
         extra-config:
             mozconfig_variant: 'opt-msvc'
-    run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl
         - win64-rust
