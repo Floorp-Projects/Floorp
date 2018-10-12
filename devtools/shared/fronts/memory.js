@@ -12,11 +12,13 @@ loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
                          "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 
 const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
-  initialize: function(client, form) {
+  initialize: function(client, form, rootForm = null) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._client = client;
     this.actorID = form.memoryActor;
-    this.heapSnapshotFileActorID = null;
+    this.heapSnapshotFileActorID = rootForm
+      ? rootForm.heapSnapshotFileActor
+      : null;
     this.manage(this);
   },
 
@@ -60,10 +62,9 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
    *
    * @returns Promise<String>
    */
-  transferHeapSnapshot: protocol.custom(async function(snapshotId) {
+  transferHeapSnapshot: protocol.custom(function(snapshotId) {
     if (!this.heapSnapshotFileActorID) {
-      const form = await this._client.mainRoot.rootForm;
-      this.heapSnapshotFileActorID = form.heapSnapshotFileActor;
+      throw new Error("MemoryFront initialized without a rootForm");
     }
 
     const request = this._client.request({
