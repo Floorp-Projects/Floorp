@@ -114,6 +114,19 @@ PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchComple
     nsAutoString tempDir;
     MOZ_ALWAYS_SUCCEEDS(dir->GetPath(tempDir));
     args.push_back(NS_ConvertUTF16toUTF8(tempDir).get());
+
+    rv =
+      dirSvc->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsIFile),
+                  getter_AddRefs(dir));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to get appdata directory.");
+      return false;
+    }
+
+    nsAutoString appdataDir;
+    MOZ_ALWAYS_SUCCEEDS(dir->GetPath(appdataDir));
+    appdataDir.Append(L"\\Adobe\\");
+    args.push_back(NS_ConvertUTF16toUTF8(appdataDir).get());
 #endif
 
     bool result = AsyncLaunch(args);

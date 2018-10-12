@@ -139,6 +139,8 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
     // parameters are:
     // values[0] is path to plugin DLL
     // values[1] is path to folder that should be used for temp files
+    // values[2] is path to the Flash Player roaming folder
+    //   (this is always that Flash folder, regardless of what plugin is being run)
     pluginFilename = WideToUTF8(values[0]);
 
     // We don't initialize XPCOM but we need the thread manager and the
@@ -150,11 +152,12 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
     nsThreadManager::get().Init();
 
 #if defined(MOZ_SANDBOX)
-    MOZ_ASSERT(values.size() >= 2, "not enough loose args for sandboxed plugin process");
+    MOZ_ASSERT(values.size() >= 3, "not enough loose args for sandboxed plugin process");
 
     // The sandbox closes off the default location temp file location so we set
     // a new one here (regardless of whether or not we are sandboxing).
     SetSandboxTempPath(values[1]);
+    PluginModuleChild::SetFlashRoamingPath(values[2]);
 
     // This is probably the earliest we would want to start the sandbox.
     // As we attempt to tighten the sandbox, we may need to consider moving this
