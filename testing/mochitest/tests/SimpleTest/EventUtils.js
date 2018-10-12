@@ -2335,8 +2335,6 @@ function synthesizeDropAfterDragOver(aResult, aDataTransfer, aDestElement, aDest
     sendDragEvent(event, aDestElement, aDestWindow);
   }
 
-  synthesizeMouseAtCenter(aDestElement, { type: "mouseup" }, aDestWindow);
-
   return effect;
 }
 
@@ -2465,7 +2463,6 @@ async function synthesizePlainDragAndDrop(aParams)
 
     await new Promise(r => setTimeout(r, 0));
 
-    synthesizeMouseAtCenter(destElement, { type: "mouseup" }, destWindow);
   } finally {
     ds.endDragSession(true, 0);
   }
