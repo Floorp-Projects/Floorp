@@ -191,7 +191,6 @@ class AbstractShot {
     this.docTitle = attrs.docTitle || null;
     this.userTitle = attrs.userTitle || null;
     this.createdDate = attrs.createdDate || Date.now();
-    this.favicon = attrs.favicon || null;
     this.siteName = attrs.siteName || null;
     this.images = [];
     if (attrs.images) {
@@ -203,6 +202,7 @@ class AbstractShot {
     this.documentSize = attrs.documentSize || null;
     this.thumbnail = attrs.thumbnail || null;
     this.abTests = attrs.abTests || null;
+    this.firefoxChannel = attrs.firefoxChannel || null;
     this._clips = {};
     if (attrs.clips) {
       for (const clipId in attrs.clips) {
@@ -458,15 +458,6 @@ class AbstractShot {
     this._createdDate = val;
   }
 
-  get favicon() {
-    return this._favicon;
-  }
-  set favicon(val) {
-    // We set the favicon with tabs.Tab.faviConUrl, which is a full URL.
-    val = val || null;
-    this._favicon = val;
-  }
-
   clipNames() {
     const names = Object.getOwnPropertyNames(this._clips);
     names.sort(function(a, b) {
@@ -563,24 +554,35 @@ class AbstractShot {
     this._abTests = val;
   }
 
+  get firefoxChannel() {
+    return this._firefoxChannel;
+  }
+  set firefoxChannel(val) {
+    if (val === null || val === undefined) {
+      this._firefoxChannel = null;
+      return;
+    }
+    assert(typeof val === "string", "firefoxChannel should be a string, not:", typeof val);
+    this._firefoxChannel = val;
+  }
+
 }
 
 AbstractShot.prototype.REGULAR_ATTRS = (`
-origin fullUrl docTitle userTitle createdDate favicon images
+origin fullUrl docTitle userTitle createdDate images
 siteName openGraph twitterCard documentSize
-thumbnail abTests
+thumbnail abTests firefoxChannel
 `).split(/\s+/g);
 
 // Attributes that will be accepted in the constructor, but ignored/dropped
 AbstractShot.prototype.DEPRECATED_ATTRS = (`
 microdata history ogTitle createdDevice head body htmlAttrs bodyAttrs headAttrs
 readable hashtags comments showPage isPublic resources deviceId url
-fullScreenThumbnail
+fullScreenThumbnail favicon
 `).split(/\s+/g);
 
 AbstractShot.prototype.RECALL_ATTRS = (`
-url docTitle userTitle createdDate favicon
-openGraph twitterCard images thumbnail
+url docTitle userTitle createdDate openGraph twitterCard images thumbnail
 `).split(/\s+/g);
 
 AbstractShot.prototype._OPENGRAPH_PROPERTIES = (`

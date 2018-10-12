@@ -30,6 +30,7 @@ this.slides = (function() {
       iframe.style.top = "0";
       iframe.style.left = "0";
       iframe.style.margin = "0";
+      iframe.style.backgroundColor = "transparent";
       iframe.scrolling = "no";
       updateIframeSize();
       let html = onboardingHtml.replace("<style></style>", `<style>${onboardingCss}</style>`);
