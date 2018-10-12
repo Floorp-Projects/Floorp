@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "Web Compat",
+  "description": "Urgent post-release fixes for web compatibility.",
+  "version": "3.0.0",
+
+  "applications": {
+    "gecko": {
+      "id": "webcompat@mozilla.org",
+      "strict_min_version": "59.0b5"
+    }
+  },
+
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+      "schema": "aboutConfigPrefs.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "aboutConfigPrefs.js",
+        "paths": [["aboutConfigPrefs"]]
+      }
+    }
+  },
+
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
+  ],
+
+  "background": {
+    "scripts": [
+      "injections.js",
+      "ua_overrides.js"
+    ]
+  }
+}
