@@ -784,19 +784,26 @@ var Policies = {
   "SecurityDevices": {
     onProfileAfterChange(manager, param) {
       let securityDevices = param;
-      runOncePerModification("securityDevices",
-                             JSON.stringify(securityDevices),
-                             () => {
-        let pkcs11 = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
-        for (let deviceName in securityDevices) {
-          try {
-            pkcs11.addModule(deviceName, securityDevices[deviceName], 0, 0);
-          } catch (ex) {
-            log.error(`Unable to add security device ${deviceName}`);
-            log.debug(ex);
+      let pkcs11db = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
+      let moduleList = pkcs11db.listModules();
+      for (let deviceName in securityDevices) {
+        let foundModule = false;
+        for (let module of moduleList) {
+          if (module && module.libName === securityDevices[deviceName]) {
+            foundModule = true;
+            break;
           }
         }
-      });
+        if (foundModule) {
+          continue;
+        }
+        try {
+          pkcs11db.addModule(deviceName, securityDevices[deviceName], 0, 0);
+        } catch (ex) {
+          log.error(`Unable to add security device ${deviceName}`);
+          log.debug(ex);
+        }
+      }
     },
   },
 
