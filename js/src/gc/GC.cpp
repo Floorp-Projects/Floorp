@@ -4813,26 +4813,21 @@ static void DropStringWrappers(JSRuntime* rt) {
  */
 namespace {
 struct AddOutgoingEdgeFunctor {
-  bool needsEdge_;
   ZoneComponentFinder& finder_;
 
-  AddOutgoingEdgeFunctor(bool needsEdge, ZoneComponentFinder& finder)
-      : needsEdge_(needsEdge), finder_(finder) {}
+  explicit AddOutgoingEdgeFunctor(ZoneComponentFinder& finder)
+      : finder_(finder) {}
 
   template <typename T>
   void operator()(T tp) {
-    TenuredCell& other = (*tp)->asTenured();
-
     /*
      * Add edge to wrapped object compartment if wrapped object is not
      * marked black to indicate that wrapper compartment not be swept
      * after wrapped compartment.
      */
-    if (needsEdge_) {
-      JS::Zone* zone = other.zone();
-      if (zone->isGCMarking()) {
-        finder_.addEdgeTo(zone);
-      }
+    JS::Zone* zone = (*tp)->asTenured().zone();
+    if (zone->isGCMarking()) {
+      finder_.addEdgeTo(zone);
     }
   }
 };
@@ -4843,12 +4838,13 @@ void Compartment::findOutgoingEdges(ZoneComponentFinder& finder) {
        e.popFront()) {
     CrossCompartmentKey& key = e.front().mutableKey();
     MOZ_ASSERT(!key.is<JSString*>());
-    bool needsEdge = true;
-    if (key.is<JSObject*>()) {
-      TenuredCell& other = key.as<JSObject*>()->asTenured();
-      needsEdge = !other.isMarkedBlack();
+    if (key.is<JSObject*>() &&
+        key.as<JSObject*>()->asTenured().isMarkedBlack()) {
+      // CCW target is already marked, so we don't need to watch out for
+      // later marking of the CCW.
+      continue;
     }
-    key.applyToWrapped(AddOutgoingEdgeFunctor(needsEdge, finder));
+    key.applyToWrapped(AddOutgoingEdgeFunctor(finder));
   }
 }
 
