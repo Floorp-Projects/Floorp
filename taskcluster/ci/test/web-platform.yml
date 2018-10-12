@@ -9,6 +9,8 @@ job-defaults:
                     - web_platform_tests/prod_config_windows_taskcluster.py
                 macosx.*:
                     - web_platform_tests/prod_config.py
+                android-em.*:
+                    - web_platform_tests/prod_config_android.py
                 default:
                     - web_platform_tests/prod_config.py
                     - remove_executables.py
@@ -19,6 +21,7 @@ web-platform-tests:
     treeherder-symbol: W(wpt)
     chunks:
         by-test-platform:
+            android.*: 36
             linux.*/debug: 18
             macosx64/opt: 5
             macosx64/debug: 10
@@ -36,10 +39,12 @@ web-platform-tests:
             default: true
     run-on-projects:
         by-test-platform:
+            android-em-7.0-x86/opt: ['mozilla-central']
             linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
+            android.*: 3
             linux64-asan/opt: 2
             linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
@@ -91,10 +96,12 @@ web-platform-tests-reftests:
             default: true
     run-on-projects:
         by-test-platform:
+            android-em-7.0-x86/opt: ['mozilla-central']
             linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
+            android.*: 3
             linux64-asan/opt: 2
             linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
@@ -140,10 +147,12 @@ web-platform-tests-wdspec:
             - --test-type=wdspec
     run-on-projects:
         by-test-platform:
+            android-em-7.0-x86/opt: ['mozilla-central']
             linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
+            android.*: 3
             linux64-asan/opt: 2
             linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default

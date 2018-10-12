@@ -13822,14 +13822,10 @@ IonBuilder::jsop_importmeta()
     ModuleObject* module = GetModuleObjectForScript(script());
     MOZ_ASSERT(module);
 
-    // If we get there then the meta object must already have been created, at
-    // the latest when we compiled for baseline.
-    JSObject* metaObject = module->metaObject();
-    MOZ_ASSERT(metaObject);
-
-    pushConstant(ObjectValue(*metaObject));
-
-    return Ok();
+    MModuleMetadata* meta = MModuleMetadata::New(alloc(), module);
+    current->add(meta);
+    current->push(meta);
+    return resumeAfter(meta);
 }
 
 MInstruction*

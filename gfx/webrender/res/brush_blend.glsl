@@ -128,6 +128,23 @@ vec3 Brightness(vec3 Cs, float amount) {
     return clamp(Cs.rgb * amount, vec3(0.0), vec3(1.0));
 }
 
+// Based on the Gecko's implementation in
+// https://hg.mozilla.org/mozilla-central/file/91b4c3687d75/gfx/src/FilterSupport.cpp#l24
+// These could be made faster by sampling a lookup table stored in a float texture
+// with linear interpolation.
+
+vec3 SrgbToLinear(vec3 color) {
+    vec3 c1 = color / 12.92;
+    vec3 c2 = pow(color / 1.055 + vec3(0.055 / 1.055), vec3(2.4));
+    return mix(c1, c2, lessThanEqual(color, vec3(0.04045)));
+}
+
+vec3 LinearToSrgb(vec3 color) {
+    vec3 c1 = color * 12.92;
+    vec3 c2 = vec3(1.055) * pow(color, vec3(1.0 / 2.4)) - vec3(0.055);
+    return mix(c1, c2, lessThanEqual(color, vec3(0.0031308)));
+}
+
 Fragment brush_fs() {
     vec4 Cs = texture(sColor0, vUv);
 
@@ -153,6 +170,12 @@ Fragment brush_fs() {
             break;
         case 8: // Opacity
             alpha *= vAmount;
+            break;
+        case 11:
+            color = SrgbToLinear(color);
+            break;
+        case 12:
+            color = LinearToSrgb(color);
             break;
         default:
             color = vColorMat * color + vColorOffset;

@@ -3724,6 +3724,7 @@ nsWindow::Create(nsIWidget* aParent,
         }
         mShell = gtk_window_new(type);
 
+        bool isSetVisual = false;
 #ifdef MOZ_X11
         // Ensure gfxPlatform is initialized, since that is what initializes
         // gfxVars, used below.
@@ -3735,7 +3736,7 @@ nsWindow::Create(nsIWidget* aParent,
         // If using WebRender on X11, we need to select a visual with a depth buffer,
         // as well as an alpha channel if transparency is requested. This must be done
         // before the widget is realized.
-        if (mIsX11Display && useWebRender) {
+        if (mIsX11Display) {
             auto display =
                 GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
             auto screen = gtk_widget_get_screen(mShell);
@@ -3750,20 +3751,20 @@ nsWindow::Create(nsIWidget* aParent,
                                       gdk_x11_screen_lookup_visual(screen,
                                                                    visualId));
                 mHasAlphaVisual = needsAlphaVisual;
+                isSetVisual = true;
             } else {
-                NS_WARNING("We're missing X11 Visual for WebRender!");
+                NS_WARNING("We're missing X11 Visual!");
             }
-        } else
+        }
 #endif // MOZ_X11
-        {
-            if (needsAlphaVisual) {
-                GdkScreen *screen = gtk_widget_get_screen(mShell);
-                if (gdk_screen_is_composited(screen)) {
-                    GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
-                    if (visual) {
-                        gtk_widget_set_visual(mShell, visual);
-                        mHasAlphaVisual = true;
-                    }
+
+        if (!isSetVisual && needsAlphaVisual) {
+            GdkScreen *screen = gtk_widget_get_screen(mShell);
+            if (gdk_screen_is_composited(screen)) {
+                GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
+                if (visual) {
+                    gtk_widget_set_visual(mShell, visual);
+                    mHasAlphaVisual = true;
                 }
             }
         }

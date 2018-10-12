@@ -96,6 +96,7 @@ struct FileInfo {
       // We use the escape character to indicate the objdir nature.
       // Note that output also has the `/' already placed
       Interesting = true;
+      Generated = true;
       Realname.replace(0, Objdir.length(), GENERATED);
       return;
     }
@@ -105,6 +106,7 @@ struct FileInfo {
     // Srcdir or anything outside Srcdir.
     Interesting = (Rname.length() > Srcdir.length()) &&
                   (Rname.compare(0, Srcdir.length(), Srcdir) == 0);
+    Generated = false;
     if (Interesting) {
       // Remove the trailing `/' as well.
       Realname.erase(0, Srcdir.length() + 1);
@@ -113,6 +115,7 @@ struct FileInfo {
   std::string Realname;
   std::vector<std::string> Output;
   bool Interesting;
+  bool Generated;
 };
 
 class IndexConsumer;
@@ -329,6 +332,14 @@ private:
     std::string Filename = F->Realname;
     if (Filename.length() == 0 && Backup.length() != 0) {
       return Backup;
+    }
+    if (F->Generated) {
+      // Since generated files may be different on different platforms,
+      // we need to include a platform-specific thing in the hash. Otherwise
+      // we can end up with hash collisions where different symbols from
+      // different platforms map to the same thing.
+      char* Platform = getenv("MOZSEARCH_PLATFORM");
+      Filename = std::string(Platform ? Platform : "") + std::string("@") + Filename;
     }
     return hash(Filename + std::string("@") + locationToString(Loc));
   }

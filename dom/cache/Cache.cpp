@@ -352,7 +352,7 @@ Cache::Add(JSContext* aContext, const RequestOrUSVString& aRequest,
 
   nsTArray<RefPtr<Request>> requestList(1);
   RefPtr<Request> request = Request::Constructor(global, aRequest,
-                                                   RequestInit(), aRv);
+                                                 RequestInit(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -400,7 +400,7 @@ Cache::AddAll(JSContext* aContext,
     }
 
     RefPtr<Request> request = Request::Constructor(global, requestOrString,
-                                                     RequestInit(), aRv);
+                                                   RequestInit(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
