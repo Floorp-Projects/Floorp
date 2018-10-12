@@ -163,7 +163,6 @@ WGLLibrary::EnsureInitialized()
 
     const auto curCtx = mSymbols.fGetCurrentContext();
     const auto curDC = mSymbols.fGetCurrentDC();
-
     if (!mSymbols.fMakeCurrent(mRootDc, mDummyGlrc)) {
         NS_WARNING("wglMakeCurrent failed");
         return false;
@@ -299,7 +298,6 @@ GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
 GLContextWGL::~GLContextWGL()
 {
     MarkDestroyed();
-
     (void)sWGLLib.mSymbols.fDeleteContext(mContext);
 
     if (mPBuffer) {
@@ -318,20 +316,18 @@ GLContextWGL::Init()
     if (!mDC || !mContext)
         return false;
 
-    // see bug 929506 comment 29. wglGetProcAddress requires a current context.
-    if (!sWGLLib.mSymbols.fMakeCurrent(mDC, mContext))
-        return false;
-
     SetupLookupFunction();
-    if (!InitWithPrefix("gl", true))
-        return false;
-
-    return true;
+    return InitWithPrefix("gl", true);
 }
 
 bool
 GLContextWGL::MakeCurrentImpl() const
 {
+    if (IsDestroyed()) {
+        MOZ_ALWAYS_TRUE( sWGLLib.mSymbols.fMakeCurrent(0, 0) );
+        return false;
+    }
+
     const bool succeeded = sWGLLib.mSymbols.fMakeCurrent(mDC, mContext);
     NS_ASSERTION(succeeded, "Failed to make GL context current!");
     return succeeded;
