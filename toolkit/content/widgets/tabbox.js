@@ -61,7 +61,7 @@ class MozTabbox extends MozXULElement {
   }
 
   set selectedIndex(val) {
-    var tabs = this.tabs;
+    let tabs = this.tabs;
     if (tabs)
       tabs.selectedIndex = val;
     this.setAttribute("selectedIndex", val);
@@ -69,13 +69,13 @@ class MozTabbox extends MozXULElement {
   }
 
   get selectedIndex() {
-    var tabs = this.tabs;
+    let tabs = this.tabs;
     return tabs ? tabs.selectedIndex : -1;
   }
 
   set selectedTab(val) {
     if (val) {
-      var tabs = this.tabs;
+      let tabs = this.tabs;
       if (tabs)
         tabs.selectedItem = val;
     }
@@ -83,13 +83,13 @@ class MozTabbox extends MozXULElement {
   }
 
   get selectedTab() {
-    var tabs = this.tabs;
+    let tabs = this.tabs;
     return tabs && tabs.selectedItem;
   }
 
   set selectedPanel(val) {
     if (val) {
-      var tabpanels = this.tabpanels;
+      let tabpanels = this.tabpanels;
       if (tabpanels)
         tabpanels.selectedPanel = val;
     }
@@ -97,7 +97,7 @@ class MozTabbox extends MozXULElement {
   }
 
   get selectedPanel() {
-    var tabpanels = this.tabpanels;
+    let tabpanels = this.tabpanels;
     return tabpanels && tabpanels.selectedPanel;
   }
 
@@ -135,7 +135,7 @@ class MozTabbox extends MozXULElement {
       case event.DOM_VK_LEFT:
         if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
           if (this.tabs && this._handleMetaAltArrows) {
-            var offset = window.getComputedStyle(this)
+            let offset = window.getComputedStyle(this)
               .direction == "ltr" ? -1 : 1;
             this.tabs.advanceSelectedTab(offset, true);
             event.preventDefault();
@@ -144,7 +144,7 @@ class MozTabbox extends MozXULElement {
       case event.DOM_VK_RIGHT:
         if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
           if (this.tabs && this._handleMetaAltArrows) {
-            offset = window.getComputedStyle(this)
+            let offset = window.getComputedStyle(this)
               .direction == "ltr" ? 1 : -1;
             this.tabs.advanceSelectedTab(offset, true);
             event.preventDefault();
@@ -155,5 +155,109 @@ class MozTabbox extends MozXULElement {
 }
 
 customElements.define("tabbox", MozTabbox);
+
+class MozTabpanels extends MozXULElement {
+  connectedCallback() {
+    if (this.delayConnectedCallback()) {
+      return;
+    }
+
+    this._tabbox = null;
+    this._selectedPanel = this.children.item(this.selectedIndex);
+  }
+
+  get tabbox() {
+    // Memoize the result rather than replacing this getter, so that
+    // it can be reset if the parent changes.
+    if (this._tabbox) {
+      return this._tabbox;
+    }
+
+    let parent = this.parentNode;
+    while (parent) {
+      if (parent.localName == "tabbox") {
+        break;
+      }
+      parent = parent.parentNode;
+    }
+
+    return this._tabbox = parent;
+  }
+
+  set selectedIndex(val) {
+    if (val < 0 || val >= this.children.length)
+      return val;
+
+    let panel = this._selectedPanel;
+    this._selectedPanel = this.children[val];
+
+    if (this.getAttribute("async") != "true") {
+      this.setAttribute("selectedIndex", val);
+    }
+
+    if (this._selectedPanel != panel) {
+      let event = document.createEvent("Events");
+      event.initEvent("select", true, true);
+      this.dispatchEvent(event);
+    }
+    return val;
+  }
+
+  get selectedIndex() {
+    let indexStr = this.getAttribute("selectedIndex");
+    return indexStr ? parseInt(indexStr) : -1;
+  }
+
+  set selectedPanel(val) {
+    let selectedIndex = -1;
+    for (let panel = val; panel != null; panel = panel.previousElementSibling)
+      ++selectedIndex;
+    this.selectedIndex = selectedIndex;
+    return val;
+  }
+
+  get selectedPanel() {
+    return this._selectedPanel;
+  }
+
+  /**
+   * nsIDOMXULRelatedElement
+   */
+  getRelatedElement(aTabPanelElm) {
+    if (!aTabPanelElm)
+      return null;
+
+    let tabboxElm = this.tabbox;
+    if (!tabboxElm)
+      return null;
+
+    let tabsElm = tabboxElm.tabs;
+    if (!tabsElm)
+      return null;
+
+    // Return tab element having 'linkedpanel' attribute equal to the id
+    // of the tab panel or the same index as the tab panel element.
+    let tabpanelIdx = Array.indexOf(this.children, aTabPanelElm);
+    if (tabpanelIdx == -1)
+      return null;
+
+    let tabElms = tabsElm.children;
+    let tabElmFromIndex = tabElms[tabpanelIdx];
+
+    let tabpanelId = aTabPanelElm.id;
+    if (tabpanelId) {
+      for (let idx = 0; idx < tabElms.length; idx++) {
+        let tabElm = tabElms[idx];
+        if (tabElm.linkedPanel == tabpanelId)
+          return tabElm;
+      }
+    }
+
+    return tabElmFromIndex;
+  }
+}
+
+MozXULElement.implementCustomInterface(MozTabpanels, [Ci.nsIDOMXULRelatedElement]);
+customElements.define("tabpanels", MozTabpanels);
 
 }
