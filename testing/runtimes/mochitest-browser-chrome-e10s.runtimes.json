@@ -780,7 +780,7 @@
     "browser/extensions/pdfjs/test/browser_pdfjs_navigation.js": 6302,
     "browser/extensions/pdfjs/test/browser_pdfjs_views.js": 4247,
     "browser/extensions/pdfjs/test/browser_pdfjs_zoom.js": 6099,
-    "browser/extensions/pocket/test/browser_pocket_ui_check.js": 3070,
+    "browser/components/pocket/test/browser_pocket_ui_check.js": 3070,
     "browser/extensions/shield-recipe-client/test/browser/browser_AddonStudies.js": 5032,
     "browser/extensions/shield-recipe-client/test/browser/browser_Heartbeat.js": 4712,
     "browser/extensions/shield-recipe-client/test/browser/browser_about_studies.js": 7504,
