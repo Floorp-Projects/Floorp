@@ -3414,6 +3414,61 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
   return NS_OK;
 }
 
+RefPtr<SinkInfoPromise>
+MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
+                            const nsString& aDeviceId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindow);
+
+  // We have to add the window id here because enumerate methods
+  // check for that and abort silently if it does not exist.
+  uint64_t windowId = aWindow->WindowID();
+  nsIPrincipal* principal = aWindow->GetExtantDoc()->NodePrincipal();
+  RefPtr<GetUserMediaWindowListener> windowListener = GetWindowListener(windowId);
+  if (windowListener) {
+    PrincipalHandle existingPrincipalHandle =
+      windowListener->GetPrincipalHandle();
+    MOZ_ASSERT(PrincipalHandleMatches(existingPrincipalHandle, principal));
+  } else {
+    windowListener = new GetUserMediaWindowListener(mMediaThread, windowId,
+                                                    MakePrincipalHandle(principal));
+    AddWindowID(windowId, windowListener);
+  }
+  // Create an inactive SourceListener to act as a placeholder, so the
+  // window listener doesn't clean itself up until we're done.
+  RefPtr<SourceListener> sourceListener = new SourceListener();
+  windowListener->Register(sourceListener);
+
+  bool isSecure = aWindow->IsSecureContext();
+
+  return EnumerateDevicesImpl(aWindow->WindowID(),
+                              MediaSourceEnum::Other,
+                              MediaSourceEnum::Other,
+                              MediaSinkEnum::Speaker,
+                              DeviceEnumerationType::Normal,
+                              DeviceEnumerationType::Normal)
+  ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+         [aDeviceId, isSecure](RefPtr<MediaDeviceSetRefCnt>&& aDevices) {
+    for (RefPtr<MediaDevice>& device : **aDevices) {
+      if (aDeviceId.IsEmpty() && device->mSinkInfo->Preferred()) {
+        return SinkInfoPromise::CreateAndResolve(device->mSinkInfo, __func__);
+      }
+      if (device->mID.Equals(aDeviceId)) {
+        // TODO: Check if the application is authorized to play audio
+        // through this device (Bug 1493982).
+        if (isSecure || device->mSinkInfo->Preferred()) {
+          return SinkInfoPromise::CreateAndResolve(device->mSinkInfo, __func__);
+        }
+        return SinkInfoPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR, __func__);
+      }
+    }
+    return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+  }, [](RefPtr<MediaStreamError>&& reason) {
+    return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+  });
+}
+
 /*
  * GetUserMediaDevices - called by the UI-part of getUserMedia from chrome JS.
  */
