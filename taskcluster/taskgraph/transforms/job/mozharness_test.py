@@ -183,8 +183,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
 
     is_macosx = worker['os'] == 'macosx'
     is_windows = worker['os'] == 'windows'
-    is_linux = worker['os'] == 'linux'
-    assert is_macosx or is_windows or is_linux
+    assert is_macosx or is_windows
 
     artifacts = [
         {
@@ -255,18 +254,17 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'XPC_SERVICE_NAME': '0',
         })
 
-    if is_windows:
-        mh_command = [
-            'c:\\mozilla-build\\python\\python.exe',
-            '-u',
-            'mozharness\\scripts\\' + normpath(mozharness['script'])
-        ]
-    else:
-        # is_linux or is_macosx
+    if is_macosx:
         mh_command = [
             'python2.7',
             '-u',
             'mozharness/scripts/' + mozharness['script']
+        ]
+    elif is_windows:
+        mh_command = [
+            'c:\\mozilla-build\\python\\python.exe',
+            '-u',
+            'mozharness\\scripts\\' + normpath(mozharness['script'])
         ]
 
     for mh_config in mozharness['config']:
