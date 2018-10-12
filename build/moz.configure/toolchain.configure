@@ -693,7 +693,7 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
     from init.configure.
     `other_c_compiler` is the `target` C compiler when `host_or_target` is `host`.
     '''
-    assert host_or_target in (host, target)
+    assert host_or_target in {host, target}
 
     other_c_compiler = () if other_c_compiler is None else (other_c_compiler,)
 
@@ -838,11 +838,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     `other_c_compiler` is the result of the `compiler` template for the
     language 'C' for `target`.
     '''
-    assert host_or_target in (host, target)
+    assert host_or_target in {host, target}
     assert language in ('C', 'C++')
     assert language == 'C' or c_compiler is not None
-    assert host_or_target == target or other_compiler is not None
-    assert language == 'C' or host_or_target == target or \
+    assert host_or_target is target or other_compiler is not None
+    assert language == 'C' or host_or_target is target or \
         other_c_compiler is not None
 
     host_or_target_str = {
@@ -1050,7 +1050,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # need to check this works for preprocessing, because we already relied
     # on $CC -E/$CXX -E doing preprocessing work to validate the compiler
     # in the first place.
-    if host_or_target == target:
+    if host_or_target is target:
         pp_var = {
             'C': 'CPP',
             'C++': 'CXXCPP',
@@ -1079,7 +1079,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                 log.warning('The value of %s is not used by this build system.'
                             % linker_var)
 
-        if host_or_target == target:
+        if host_or_target is target:
             @depends(valid_compiler)
             def is_msvc(compiler):
                 return compiler.type == 'msvc'
