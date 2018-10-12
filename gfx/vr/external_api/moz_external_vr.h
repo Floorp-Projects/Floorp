@@ -35,7 +35,7 @@ namespace dom {
 #endif //  MOZILLA_INTERNAL_API
 namespace gfx {
 
-static const int32_t kVRExternalVersion = 5;
+static const int32_t kVRExternalVersion = 4;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -267,11 +267,9 @@ struct VRDisplayState
     NumEyes
   };
 
-  // When true, indicates that the VR service has shut down
+#if defined(__ANDROID__)
   bool shutdown;
-  // Minimum number of milliseconds to wait before attempting
-  // to start the VR service again
-  uint32_t mMinRestartInterval;
+#endif // defined(__ANDROID__)
   char mDisplayName[kVRDisplayNameMaxLen];
   // eight byte character code identifier
   // LSB first, so "ABCDEFGH" -> ('H'<<56) + ('G'<<48) + ('F'<<40) + ('E'<<32) + ('D'<<24) + ('C'<<16) + ('B'<<8) + 'A').

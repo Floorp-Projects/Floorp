@@ -30,20 +30,17 @@ public:
   virtual void Shutdown() = 0;
   virtual void ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) = 0;
   virtual void StartFrame(mozilla::gfx::VRSystemState& aSystemState) = 0;
+  virtual bool ShouldQuit() const = 0;
   virtual bool StartPresentation() = 0;
   virtual void StopPresentation() = 0;
+  virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer) = 0;
   virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                              float aIntensity, float aDuration) = 0;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) = 0;
   virtual void StopAllHaptics() = 0;
-  bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer);
-  bool ShouldQuit() const;
 
-protected:
-  bool mShouldQuit;
 #if defined(XP_WIN)
-  virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                           ID3D11Texture2D* aTexture) = 0;
+protected:
   bool CreateD3DContext(RefPtr<ID3D11Device> aDevice);
   RefPtr<ID3D11Device1> mDevice;
   RefPtr<ID3D11DeviceContext1> mContext;
@@ -51,11 +48,7 @@ protected:
   ID3D11DeviceContext1* GetD3DDeviceContext();
   ID3DDeviceContextState* GetD3DDeviceContextState();
   RefPtr<ID3DDeviceContextState> mDeviceContextState;
-#elif defined(XP_MACOSX)
-  virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                           MacIOSurface* aTexture) = 0;
 #endif
-  void UpdateTrigger(VRControllerState& aState, uint32_t aButtonIndex, float aValue, float aThreshold);
 };
 
 } // namespace mozilla
