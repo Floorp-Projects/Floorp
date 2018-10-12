@@ -53,15 +53,12 @@ template<class InternalType, unsigned FractionBits, int Min, int Max>
 class FontPropertyValue
 {
 public:
-  // Ugh. We need a default constructor to allow this type to be used in the
-  // union in nsCSSValue. Furthermore we need the default and copy
-  // constructors to be "trivial" (i.e. the compiler implemented defaults that
-  // do no initialization).
-  // Annoyingly we can't make the default implementations constexpr (at least
-  // in clang). That would be nice to do in order to allow the methods of
-  // subclasses that always return the same value (e.g., FontWeight::Thin())
-  // to also be constexpr. :/
-  FontPropertyValue() = default;
+  // Initialize to the minimum value by default.
+  constexpr FontPropertyValue()
+    : FontPropertyValue(Min)
+  {
+  }
+
   explicit FontPropertyValue(const FontPropertyValue& aOther) = default;
   FontPropertyValue& operator=(const FontPropertyValue& aOther) = default;
 
@@ -110,12 +107,12 @@ public:
 protected:
   // Construct from a floating-point or integer value, checking that it is
   // within the allowed range and converting to fixed-point representation.
-  explicit FontPropertyValue(float aValue)
+  explicit constexpr FontPropertyValue(float aValue)
     : mValue(std::round(aValue * kScale))
   {
     MOZ_ASSERT(aValue >= kMin && aValue <= kMax);
   }
-  explicit FontPropertyValue(int aValue)
+  explicit constexpr FontPropertyValue(int aValue)
     : mValue(aValue << kFractionBits)
   {
     MOZ_ASSERT(aValue >= Min && aValue <= Max);
@@ -124,7 +121,7 @@ protected:
   // Construct directly from a fixed-point value of type T, with no check;
   // note that there may be special "flag" values that are outside the normal
   // min/max range (e.g. for font-style:italic, distinct from oblique angle).
-  explicit FontPropertyValue(InternalType aValue)
+  explicit constexpr FontPropertyValue(InternalType aValue)
     : mValue(aValue)
   {
   }
@@ -156,11 +153,9 @@ protected:
 class FontWeight final : public FontPropertyValue<uint16_t,6,1,1000>
 {
 public:
-  // See comment in FontPropertyValue regarding requirement for a trivial
-  // default constructor.
-  FontWeight() = default;
+  constexpr FontWeight() = default;
 
-  explicit FontWeight(float aValue)
+  explicit constexpr FontWeight(float aValue)
     : FontPropertyValue(aValue)
   {
   }
@@ -169,22 +164,22 @@ public:
    * CSS font weights can have fractional values, but this constructor exists
    * for convenience when writing constants such as FontWeight(700) in code.
    */
-  explicit FontWeight(int aValue)
+  explicit constexpr FontWeight(int aValue)
     : FontPropertyValue(aValue)
   {
   }
 
-  static FontWeight Normal()
+  static constexpr FontWeight Normal()
   {
     return FontWeight(kNormal);
   }
 
-  static FontWeight Thin()
+  static constexpr FontWeight Thin()
   {
     return FontWeight(kThin);
   }
 
-  static FontWeight Bold()
+  static constexpr FontWeight Bold()
   {
     return FontWeight(kBold);
   }
@@ -200,7 +195,7 @@ public:
 private:
   friend class WeightRange;
 
-  explicit FontWeight(InternalType aValue)
+  explicit constexpr FontWeight(InternalType aValue)
     : FontPropertyValue(aValue)
   {
   }
@@ -229,48 +224,46 @@ private:
 class FontStretch final : public FontPropertyValue<uint16_t,6,0,1000>
 {
 public:
-  // See comment in FontPropertyValue regarding requirement for a trivial
-  // default constructor.
-  FontStretch() = default;
+  constexpr FontStretch() = default;
 
-  explicit FontStretch(float aPercent)
+  explicit constexpr FontStretch(float aPercent)
     : FontPropertyValue(aPercent)
   {
   }
 
-  static FontStretch Normal()
+  static constexpr FontStretch Normal()
   {
     return FontStretch(kNormal);
   }
-  static FontStretch UltraCondensed()
+  static constexpr FontStretch UltraCondensed()
   {
     return FontStretch(kUltraCondensed);
   }
-  static FontStretch ExtraCondensed()
+  static constexpr FontStretch ExtraCondensed()
   {
     return FontStretch(kExtraCondensed);
   }
-  static FontStretch Condensed()
+  static constexpr FontStretch Condensed()
   {
     return FontStretch(kCondensed);
   }
-  static FontStretch SemiCondensed()
+  static constexpr FontStretch SemiCondensed()
   {
     return FontStretch(kSemiCondensed);
   }
-  static FontStretch SemiExpanded()
+  static constexpr FontStretch SemiExpanded()
   {
     return FontStretch(kSemiExpanded);
   }
-  static FontStretch Expanded()
+  static constexpr FontStretch Expanded()
   {
     return FontStretch(kExpanded);
   }
-  static FontStretch ExtraExpanded()
+  static constexpr FontStretch ExtraExpanded()
   {
     return FontStretch(kExtraExpanded);
   }
-  static FontStretch UltraExpanded()
+  static constexpr FontStretch UltraExpanded()
   {
     return FontStretch(kUltraExpanded);
   }
@@ -293,7 +286,7 @@ public:
 private:
   friend class StretchRange;
 
-  explicit FontStretch(InternalType aValue)
+  explicit constexpr FontStretch(InternalType aValue)
     : FontPropertyValue(aValue)
   {
   }
@@ -324,21 +317,19 @@ class FontSlantStyle final : public FontPropertyValue<int16_t,8,-90,90>
 public:
   const static constexpr float kDefaultAngle = 14.0;
 
-  // See comment in FontPropertyValue regarding requirement for a trivial
-  // default constructor.
-  FontSlantStyle() = default;
+  constexpr FontSlantStyle() = default;
 
-  static FontSlantStyle Normal()
+  static constexpr FontSlantStyle Normal()
   {
     return FontSlantStyle(kNormal);
   }
 
-  static FontSlantStyle Italic()
+  static constexpr FontSlantStyle Italic()
   {
     return FontSlantStyle(kItalic);
   }
 
-  static FontSlantStyle Oblique(float aAngle = kDefaultAngle)
+  static constexpr FontSlantStyle Oblique(float aAngle = kDefaultAngle)
   {
     return FontSlantStyle(aAngle);
   }
@@ -350,18 +341,18 @@ public:
   {
     if (strcmp(aString, "normal") == 0) {
       return Normal();
-    } else if (strcmp(aString, "italic") == 0) {
-      return Italic();
-    } else {
-      if (mozilla::IsAsciiDigit(aString[0]) && strstr(aString, "deg")) {
-        float angle = strtof(aString, nullptr);
-        return Oblique(angle);
-      }
-      // Not recognized as an oblique angle; maybe it's from a startup-cache
-      // created by an older version. The style field there used a simple 0/1
-      // for normal/italic respectively.
-      return aString[0] == '0' ? Normal() : Italic();
     }
+    if (strcmp(aString, "italic") == 0) {
+      return Italic();
+    }
+    if (mozilla::IsAsciiDigit(aString[0]) && strstr(aString, "deg")) {
+      float angle = strtof(aString, nullptr);
+      return Oblique(angle);
+    }
+    // Not recognized as an oblique angle; maybe it's from a startup-cache
+    // created by an older version. The style field there used a simple 0/1
+    // for normal/italic respectively.
+    return aString[0] == '0' ? Normal() : Italic();
   }
 
   bool IsNormal() const { return mValue == kNormal; }
@@ -398,12 +389,12 @@ public:
 private:
   friend class SlantStyleRange;
 
-  explicit FontSlantStyle(InternalType aConstant)
+  explicit constexpr FontSlantStyle(InternalType aConstant)
     : FontPropertyValue(aConstant)
   {
   }
 
-  explicit FontSlantStyle(float aAngle)
+  explicit constexpr FontSlantStyle(float aAngle)
     : FontPropertyValue(aAngle)
   {
   }
