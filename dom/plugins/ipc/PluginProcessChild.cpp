@@ -29,8 +29,6 @@ extern "C" CGError CGSSetDebugOptions(int options);
 #ifdef XP_WIN
 #if defined(MOZ_SANDBOX)
 #include "mozilla/sandboxTarget.h"
-#include "ProcessUtils.h"
-#include "nsDirectoryService.h"
 #endif
 #endif
 
@@ -42,21 +40,6 @@ using mozilla::ipc::IOThreadChild;
 
 namespace mozilla {
 namespace plugins {
-
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-static void
-SetSandboxTempPath(const std::wstring& aFullTmpPath)
-{
-  // Save the TMP environment variable so that is is picked up by GetTempPath().
-  // Note that we specifically write to the TMP variable, as that is the first
-  // variable that is checked by GetTempPath() to determine its output.
-  Unused << NS_WARN_IF(!SetEnvironmentVariableW(L"TMP", aFullTmpPath.c_str()));
-
-  // We also set TEMP in case there is naughty third-party code that is
-  // referencing the environment variable directly.
-  Unused << NS_WARN_IF(!SetEnvironmentVariableW(L"TEMP", aFullTmpPath.c_str()));
-}
-#endif
 
 bool
 PluginProcessChild::Init(int aArgc, char* aArgv[])
@@ -136,11 +119,6 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
         CommandLine::ForCurrentProcess()->GetLooseValues();
     MOZ_ASSERT(values.size() >= 1, "not enough loose args");
 
-    // parameters are:
-    // values[0] is path to plugin DLL
-    // values[1] is path to folder that should be used for temp files
-    // values[2] is path to the Flash Player roaming folder
-    //   (this is always that Flash folder, regardless of what plugin is being run)
     pluginFilename = WideToUTF8(values[0]);
 
     // We don't initialize XPCOM but we need the thread manager and the
@@ -152,13 +130,6 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
     nsThreadManager::get().Init();
 
 #if defined(MOZ_SANDBOX)
-    MOZ_ASSERT(values.size() >= 3, "not enough loose args for sandboxed plugin process");
-
-    // The sandbox closes off the default location temp file location so we set
-    // a new one here (regardless of whether or not we are sandboxing).
-    SetSandboxTempPath(values[1]);
-    PluginModuleChild::SetFlashRoamingPath(values[2]);
-
     // This is probably the earliest we would want to start the sandbox.
     // As we attempt to tighten the sandbox, we may need to consider moving this
     // to later in the plugin initialization.
