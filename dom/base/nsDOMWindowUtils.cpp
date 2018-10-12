@@ -4250,21 +4250,6 @@ nsDOMWindowUtils::GetGpuProcessPid(int32_t* aPid)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::IsTimeoutTracking(uint32_t aTimeoutId, bool* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = false;
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-  nsCOMPtr<nsPIDOMWindowInner> innerWindow = window->GetCurrentInnerWindow();
-  NS_ENSURE_STATE(innerWindow);
-
-  *aResult = innerWindow->TimeoutManager().IsTimeoutTracking(aTimeoutId);
-  return NS_OK;
-}
-
 struct StateTableEntry
 {
   const char* mStateString;
@@ -4493,4 +4478,3 @@ nsDOMWindowUtils::IsCssPropertyRecordedInUseCounter(const nsACString& aPropName,
                                             &knownProp);
   return knownProp ? NS_OK : NS_ERROR_FAILURE;
 }
-

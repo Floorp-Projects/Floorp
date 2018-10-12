@@ -19,8 +19,7 @@ Timeout::Timeout()
     mNestingLevel(0),
     mCleared(false),
     mRunning(false),
-    mIsInterval(false),
-    mIsTracking(false)
+    mIsInterval(false)
 {
 }
 
