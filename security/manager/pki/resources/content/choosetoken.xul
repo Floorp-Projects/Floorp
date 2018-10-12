@@ -24,11 +24,9 @@
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/javascript" src="chrome://pippki/content/choosetoken.js"/>
 
-  <groupbox>
-    <description>&chooseToken.message1;</description>
-    <menulist id="tokens">
-      <menupopup/>
-    </menulist>
-  </groupbox>
+<description>&chooseToken.message1;</description>
+<menulist id="tokens">
+  <menupopup/>
+</menulist>
 
 </dialog>

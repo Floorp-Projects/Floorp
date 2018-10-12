@@ -59,6 +59,7 @@
 #include "nsThreadUtils.h"
 #include "nsCORSListenerProxy.h"
 #include "nsApplicationCache.h"
+#include "TrackingDummyChannel.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -67,6 +68,8 @@
 #ifdef MOZ_GECKO_PROFILER
 #include "ProfilerMarkerPayload.h"
 #endif
+
+#include <functional>
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -2698,18 +2701,46 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   bool shouldUpgrade = mPostRedirectChannelShouldUpgrade;
   if (mPostRedirectChannelShouldIntercept ||
       ShouldInterceptURI(mURI, shouldUpgrade)) {
-    mResponseCouldBeSynthesized = true;
+    RefPtr<HttpChannelChild> self = this;
 
-    nsCOMPtr<nsINetworkInterceptController> controller;
-    GetCallback(controller);
+    std::function<void(bool)> callback = [self, shouldUpgrade](bool aStorageAllowed) {
+      if (!aStorageAllowed) {
+        nsresult rv = self->ContinueAsyncOpen();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          Unused << self->AsyncAbort(rv);
+        }
+        return;
+      }
 
-    mInterceptListener = new InterceptStreamListener(this, mListenerContext);
+      self->mResponseCouldBeSynthesized = true;
 
-    RefPtr<InterceptedChannelContent> intercepted =
-        new InterceptedChannelContent(this, controller,
-                                      mInterceptListener, shouldUpgrade);
-    intercepted->NotifyController();
-    return NS_OK;
+      nsCOMPtr<nsINetworkInterceptController> controller;
+      self->GetCallback(controller);
+
+      self->mInterceptListener =
+        new InterceptStreamListener(self, self->mListenerContext);
+
+      RefPtr<InterceptedChannelContent> intercepted =
+          new InterceptedChannelContent(self, controller,
+                                        self->mInterceptListener,
+                                        shouldUpgrade);
+      intercepted->NotifyController();
+    };
+
+    TrackingDummyChannel::StorageAllowedState state =
+      TrackingDummyChannel::StorageAllowed(this, callback);
+    if (state == TrackingDummyChannel::eStorageGranted) {
+      callback(true);
+      return NS_OK;
+    }
+
+    if (state == TrackingDummyChannel::eAsyncNeeded) {
+      // The async callback will be executed eventually.
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(state == TrackingDummyChannel::eStorageDenied);
+    // Fall through
   }
 
   return ContinueAsyncOpen();
