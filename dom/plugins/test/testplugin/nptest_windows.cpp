@@ -71,8 +71,6 @@ pluginSupportsWindowlessMode()
 NPError
 pluginInstanceInit(InstanceData* instanceData)
 {
-  NPP npp = instanceData->npp;
-
   instanceData->platformData = static_cast<PlatformData*>
     (NPN_MemAlloc(sizeof(PlatformData)));
   if (!instanceData->platformData)
