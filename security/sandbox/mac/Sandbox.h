@@ -45,6 +45,7 @@ typedef struct _MacSandboxInfo {
     , hasFilePrivileges(false)
     , hasSandboxedProfile(false)
     , hasAudio(false)
+    , hasWindowServer(false)
     , shouldLog(true)
   {
   }
@@ -55,6 +56,7 @@ typedef struct _MacSandboxInfo {
   bool hasFilePrivileges;
   bool hasSandboxedProfile;
   bool hasAudio;
+  bool hasWindowServer;
   MacSandboxPluginInfo pluginInfo;
   std::string appPath;
   std::string appBinaryPath;
@@ -67,12 +69,20 @@ typedef struct _MacSandboxInfo {
   std::string testingReadPath3;
   std::string testingReadPath4;
 
+  std::string parentPort;
+  std::string crashServerPort;
+
   bool shouldLog;
 } MacSandboxInfo;
 
 namespace mozilla {
 
 bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage);
+bool EarlyStartMacSandboxIfEnabled(int aArgc, char** aArgv,
+                                   std::string &aErrorMessage);
+#ifdef DEBUG
+void AssertMacSandboxEnabled();
+#endif /* DEBUG */
 
 } // namespace mozilla
 

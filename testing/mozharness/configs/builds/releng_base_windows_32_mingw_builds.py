@@ -30,7 +30,6 @@ config = {
 
     #########################################################################
     ###### 32 bit specific ######
-    'base_name': 'WINNT_5.2_MINGW_%(branch)s',
     'platform': 'win32-mingw32',
     'stage_platform': 'win32-mingw32',
     'env': {

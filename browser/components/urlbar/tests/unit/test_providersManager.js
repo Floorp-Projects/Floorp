@@ -8,7 +8,9 @@ add_task(async function test_providers() {
   registerBasicTestProvider([match]);
 
   let context = createContext();
-  let controller = new UrlbarController();
+  let controller = new UrlbarController({
+    window: {},
+  });
   let resultsPromise = promiseControllerNotification(controller, "onQueryResults");
 
   await UrlbarProvidersManager.startQuery(context, controller);

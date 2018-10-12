@@ -14,7 +14,6 @@ config = {
 
     #########################################################################
     ###### 64 bit specific ######
-    'base_name': 'Linux_x86-64_%(branch)s_Searchfox',
     'platform': 'linux64',
     'stage_platform': 'linux64-searchfox-opt',
     'env': {

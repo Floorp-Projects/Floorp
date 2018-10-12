@@ -44,7 +44,9 @@ class UrlbarInput {
 
     this.panel = options.panel;
     this.window = this.textbox.ownerGlobal;
-    this.controller = options.controller || new UrlbarController();
+    this.controller = options.controller || new UrlbarController({
+      window: this.window,
+    });
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;
     this.userInitiatedFocus = false;
@@ -98,6 +100,7 @@ class UrlbarInput {
     this.inputField.addEventListener("underflow", this);
     this.inputField.addEventListener("scrollend", this);
     this.inputField.addEventListener("select", this);
+    this.inputField.addEventListener("keyup", this);
 
     this.inputField.controllers.insertControllerAt(0, new CopyCutController(this));
   }
@@ -156,7 +159,7 @@ class UrlbarInput {
   }
 
   /**
-   * Passes DOM events for the textbox to the _on<event type> methods.
+   * Passes DOM events for the textbox to the _on_<event type> methods.
    * @param {Event} event
    *   DOM event from the <textbox>.
    */
@@ -167,6 +170,66 @@ class UrlbarInput {
     } else {
       throw "Unrecognized urlbar event: " + event.type;
     }
+  }
+
+  /**
+   * Handles an event which would cause a url or text to be opened.
+   * XXX the name is currently handleCommand which is compatible with
+   * urlbarBindings. However, it is no longer called automatically by autocomplete,
+   * See _on_keyup.
+   *
+   * @param {Event} event The event triggering the open.
+   * @param {string} [openWhere] Where we expect the result to be opened.
+   * @param {object} [openParams]
+   *   The parameters related to where the result will be opened.
+   * @param {object} [triggeringPrincipal]
+   *   The principal that the action was triggered from.
+   */
+  handleCommand(event, openWhere, openParams, triggeringPrincipal) {
+    let isMouseEvent = event instanceof this.window.MouseEvent;
+    if (isMouseEvent && event.button == 2) {
+      // Do nothing for right clicks.
+      return;
+    }
+
+    // TODO: Hook up one-off button handling.
+    // Determine whether to use the selected one-off search button.  In
+    // one-off search buttons parlance, "selected" means that the button
+    // has been navigated to via the keyboard.  So we want to use it if
+    // the triggering event is not a mouse click -- i.e., it's a Return
+    // key -- or if the one-off was mouse-clicked.
+    // let selectedOneOff = this.popup.oneOffSearchButtons.selectedButton;
+    // if (selectedOneOff &&
+    //     isMouseEvent &&
+    //     event.originalTarget != selectedOneOff) {
+    //   selectedOneOff = null;
+    // }
+    //
+    // // Do the command of the selected one-off if it's not an engine.
+    // if (selectedOneOff && !selectedOneOff.engine) {
+    //   selectedOneOff.doCommand();
+    //   return;
+    // }
+
+    let url = this.value;
+    if (!url) {
+      return;
+    }
+
+    this.controller.handleEnteredText(event, url);
+
+    this.view.close();
+  }
+
+  /**
+   * Called by the view when a result is selected.
+   *
+   * @param {Event} event The event that selected the result.
+   * @param {UrlbarMatch} result The result that was selected.
+   */
+  resultSelected(event, result) {
+    // TODO: Set the input value to the target url.
+    this.controller.resultSelected(event, result);
   }
 
   // Getters and Setters below.
@@ -414,6 +477,15 @@ class UrlbarInput {
 
   _on_TabSelect(event) {
     this.controller.tabContextChanged();
+  }
+
+  _on_keyup(event) {
+    // TODO: We may have an autoFill entry, so we should use that instead.
+    // TODO: We should have an input bufferrer so that we can use search results
+    // if appropriate.
+    if (event.key == "Enter") {
+      this.handleCommand(event);
+    }
   }
 }
 

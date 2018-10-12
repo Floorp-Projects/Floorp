@@ -30,7 +30,9 @@ function assertContextMatches(context, expectedValues) {
 }
 
 add_task(async function setup() {
-  controller = new UrlbarController();
+  controller = new UrlbarController({
+    window: {},
+  });
 });
 
 add_task(async function test_basic_search() {

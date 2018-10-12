@@ -46,6 +46,7 @@ add_task(function setup() {
 
   controller = new UrlbarController({
     manager: fPM,
+    window: {},
   });
   controller.addQueryListener(generalListener);
 });

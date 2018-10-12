@@ -523,10 +523,19 @@ CompositorBridgeParent::StopAndClearResources()
     }
     indirectBridgeParents.clear();
 
+    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
     // Ensure we are not holding the sIndirectLayerTreesLock here because we
     // are going to block on WR threads in order to shut it down properly.
     mWrBridge->Destroy();
     mWrBridge = nullptr;
+
+    if (api) {
+      // Make extra sure we are done cleaning WebRender up before continuing.
+      // After that we wont have a way to talk to a lot of the webrender parts.
+      api->FlushSceneBuilder();
+      api = nullptr;
+    }
+
     if (mAsyncImageManager) {
       mAsyncImageManager->Destroy();
       // WebRenderAPI should be already destructed

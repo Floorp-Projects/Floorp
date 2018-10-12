@@ -9,19 +9,9 @@
 "use strict";
 
 let fakeController;
-let sandbox;
 let generalListener;
 let input;
 let inputOptions;
-
-ChromeUtils.import("resource:///modules/UrlbarController.jsm", this);
-
-/* global sinon */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
-
-registerCleanupFunction(function() {
-  delete window.sinon;
-});
 
 /**
  * Asserts that the query context has the expected values.
@@ -69,7 +59,9 @@ function checkStartQueryCall(stub, expectedQueryContextProps) {
 add_task(async function setup() {
   sandbox = sinon.sandbox.create();
 
-  fakeController = new UrlbarController();
+  fakeController = new UrlbarController({
+    window,
+  });
 
   sandbox.stub(fakeController, "startQuery");
   sandbox.stub(PrivateBrowsingUtils, "isWindowPrivate").returns(false);
