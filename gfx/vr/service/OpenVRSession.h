@@ -37,21 +37,14 @@ public:
   void Shutdown() override;
   void ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) override;
   void StartFrame(mozilla::gfx::VRSystemState& aSystemState) override;
+  bool ShouldQuit() const override;
   bool StartPresentation() override;
   void StopPresentation() override;
+  bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer) override;
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                     float aIntensity, float aDuration) override;
   void StopVibrateHaptic(uint32_t aControllerIdx) override;
   void StopAllHaptics() override;
-
-protected:
-#if defined(XP_WIN)
-  bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                   ID3D11Texture2D* aTexture) override;
-#elif defined(XP_MACOSX)
-  bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                   MacIOSurface* aTexture) override;
-#endif
 
 private:
   // OpenVR State
@@ -61,6 +54,7 @@ private:
   ::vr::TrackedDeviceIndex_t mControllerDeviceIndex[kVRControllerMaxCount];
   float mHapticPulseRemaining[kVRControllerMaxCount][kNumOpenVRHaptics];
   float mHapticPulseIntensity[kVRControllerMaxCount][kNumOpenVRHaptics];
+  bool mShouldQuit;
   bool mIsWindowsMR;
   TimeStamp mLastHapticUpdate;
 

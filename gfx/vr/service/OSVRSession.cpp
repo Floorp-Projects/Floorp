@@ -498,6 +498,12 @@ OSVRSession::UpdateHeadsetPose(mozilla::gfx::VRSystemState& aState)
 }
 
 bool
+OSVRSession::ShouldQuit() const
+{
+  return false;
+}
+
+bool
 OSVRSession::StartPresentation()
 {
   return false;
@@ -510,23 +516,12 @@ OSVRSession::StopPresentation()
   // TODO Implement
 }
 
-#if defined(XP_WIN)
 bool
-OSVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                         ID3D11Texture2D* aTexture)
+OSVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer)
 {
   return false;
-  // TODO Implement
+   // TODO Implement
 }
-#elif defined(XP_MACOSX)
-bool
-OSVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                         MacIOSurface* aTexture)
-{
-  return false;
-  // TODO Implement
-}
-#endif
 
 void
 OSVRSession::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
