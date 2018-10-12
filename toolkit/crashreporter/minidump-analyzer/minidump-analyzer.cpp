@@ -22,6 +22,7 @@
 #include "processor/pathname_stripper.h"
 
 #include "mozilla/FStream.h"
+#include "mozilla/Unused.h"
 
 #if defined(XP_WIN32)
 
@@ -71,6 +72,7 @@ using google_breakpad::ProcessState;
 using google_breakpad::StackFrame;
 
 using mozilla::OFStream;
+using mozilla::Unused;
 
 MinidumpAnalyzerOptions gMinidumpAnalyzerOptions;
 
@@ -475,6 +477,17 @@ struct CharTraits<wchar_t>
 
 #endif // defined(XP_WIN)
 
+static void
+LowerPriority()
+{
+#if defined(XP_WIN)
+  Unused << SetPriorityClass(GetCurrentProcess(),
+                             PROCESS_MODE_BACKGROUND_BEGIN);
+#else // Linux, MacOS X, etc...
+  Unused << nice(20);
+#endif
+}
+
 template <typename CharT, typename Traits = CharTraits<CharT>>
 static void
 ParseArguments(int argc, CharT** argv) {
@@ -507,6 +520,7 @@ int wmain(int argc, wchar_t** argv)
 int main(int argc, char** argv)
 #endif
 {
+  LowerPriority();
   ParseArguments(argc, argv);
 
   if (!GenerateStacks(gMinidumpPath, gMinidumpAnalyzerOptions.fullMinidump)) {
