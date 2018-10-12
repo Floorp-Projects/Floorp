@@ -26,6 +26,7 @@
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
+#include "mozilla/net/TrackingDummyChannelParent.h"
 #ifdef MOZ_WEBRTC
 #include "mozilla/net/StunAddrsRequestParent.h"
 #endif
@@ -1012,6 +1013,45 @@ NeckoParent::RecvGetExtensionFD(const URIParams& aURI,
   }
 
   return IPC_OK();
+}
+
+PTrackingDummyChannelParent*
+NeckoParent::AllocPTrackingDummyChannelParent(nsIURI* aURI,
+                                              const OptionalLoadInfoArgs& aLoadInfo)
+{
+  RefPtr<TrackingDummyChannelParent> c = new TrackingDummyChannelParent();
+  return c.forget().take();
+}
+
+mozilla::ipc::IPCResult
+NeckoParent::RecvPTrackingDummyChannelConstructor(PTrackingDummyChannelParent* aActor,
+                                                  nsIURI* aURI,
+                                                  const OptionalLoadInfoArgs& aLoadInfo)
+{
+  TrackingDummyChannelParent* p =
+    static_cast<TrackingDummyChannelParent*>(aActor);
+
+  if (NS_WARN_IF(!aURI)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(loadInfo));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !loadInfo) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  p->Init(aURI, loadInfo);
+  return IPC_OK();
+}
+
+bool
+NeckoParent::DeallocPTrackingDummyChannelParent(PTrackingDummyChannelParent* aActor)
+{
+  RefPtr<TrackingDummyChannelParent> c =
+    dont_AddRef(static_cast<TrackingDummyChannelParent*>(aActor));
+  MOZ_ASSERT(c);
+  return true;
 }
 
 } // namespace net

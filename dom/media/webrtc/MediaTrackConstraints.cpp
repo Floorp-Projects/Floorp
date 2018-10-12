@@ -625,6 +625,33 @@ MediaConstraintsHelper::FindBadConstraint(
   return FindBadConstraint(aConstraints, devices);
 }
 
+/* static */ void
+MediaConstraintsHelper::ConvertOldWithWarning(
+    const dom::OwningBooleanOrConstrainBooleanParameters& old,
+    dom::OwningBooleanOrConstrainBooleanParameters& to,
+    const char* aMessageName,
+    nsPIDOMWindowInner* aWindow) {
+  if ((old.IsBoolean() ||
+       old.GetAsConstrainBooleanParameters().mExact.WasPassed() ||
+       old.GetAsConstrainBooleanParameters().mIdeal.WasPassed()) &&
+      !(to.IsBoolean() ||
+        to.GetAsConstrainBooleanParameters().mExact.WasPassed() ||
+        to.GetAsConstrainBooleanParameters().mIdeal.WasPassed())) {
+    nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
+    if (doc) {
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("DOM"), doc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      aMessageName);
+    }
+    if (old.IsBoolean()) {
+      to.SetAsBoolean() = old.GetAsBoolean();
+    } else {
+      to.SetAsConstrainBooleanParameters() = old.GetAsConstrainBooleanParameters();
+    }
+  }
+}
+
 static void
 LogConstraintStringRange(const NormalizedConstraintSet::StringRange& aRange)
 {

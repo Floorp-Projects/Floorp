@@ -587,7 +587,7 @@ audiounit_output_callback(void * user_ptr,
         (unsigned int) outBufferList->mBuffers[0].mDataByteSize,
         (unsigned int) outBufferList->mBuffers[0].mNumberChannels,
         (unsigned int) output_frames,
-        stm->input_linear_buffer->length() / stm->input_desc.mChannelsPerFrame);
+        has_input(stm) ? stm->input_linear_buffer->length() / stm->input_desc.mChannelsPerFrame : 0);
 
   long input_frames = 0;
   void * output_buffer = NULL, * input_buffer = NULL;
@@ -3396,16 +3396,25 @@ audiounit_get_devices_of_type(cubeb_device_type devtype)
   if (ret != noErr) {
     return vector<AudioObjectID>();
   }
-  /* Total number of input and output devices. */
-  uint32_t count = (uint32_t)(size / sizeof(AudioObjectID));
-
-  vector<AudioObjectID> devices(count);
+  vector<AudioObjectID> devices(size / sizeof(AudioObjectID));
   ret = AudioObjectGetPropertyData(kAudioObjectSystemObject,
                                    &DEVICES_PROPERTY_ADDRESS, 0, NULL, &size,
                                    devices.data());
   if (ret != noErr) {
     return vector<AudioObjectID>();
   }
+
+  // Remove the aggregate device from the list of devices (if any).
+  for (auto it = devices.begin(); it != devices.end();) {
+    CFStringRef name = get_device_name(*it);
+    if (CFStringFind(name, CFSTR("CubebAggregateDevice"), 0).location !=
+        kCFNotFound) {
+      it = devices.erase(it);
+    } else {
+      it++;
+    }
+  }
+
   /* Expected sorted but did not find anything in the docs. */
   sort(devices.begin(), devices.end(), [](AudioObjectID a, AudioObjectID b) {
       return a < b;
@@ -3420,7 +3429,7 @@ audiounit_get_devices_of_type(cubeb_device_type devtype)
                                          kAudioDevicePropertyScopeOutput;
 
   vector<AudioObjectID> devices_in_scope;
-  for (uint32_t i = 0; i < count; ++i) {
+  for (uint32_t i = 0; i < devices.size(); ++i) {
     /* For device in the given scope channel must be > 0. */
     if (audiounit_get_channel_count(devices[i], scope) > 0) {
       devices_in_scope.push_back(devices[i]);
@@ -3446,47 +3455,17 @@ audiounit_collection_changed_callback(AudioObjectID /* inObjectID */,
       return;
     }
 
-    /* Differentiate input from output changes. */
-    if (context->collection_changed_devtype == CUBEB_DEVICE_TYPE_INPUT ||
-        context->collection_changed_devtype == CUBEB_DEVICE_TYPE_OUTPUT) {
-      vector<AudioObjectID> devices = audiounit_get_devices_of_type(context->collection_changed_devtype);
-      /* When count is the same examine the devid for the case of coalescing. */
-      if (context->devtype_device_array == devices) {
-        /* Device changed for the other scope, ignore. */
-        return;
-      } else {
-        /* Also don't trigger the user callback if the new added device is private
-         * aggregate device: compute the set of new devices, and remove those
-         * with the name of our private aggregate devices. */
-        set<AudioObjectID> current_devices(devices.begin(), devices.end());
-        set<AudioObjectID> previous_devices(context->devtype_device_array.begin(),
-                                            context->devtype_device_array.end());
-        set<AudioObjectID> new_devices;
-        set_difference(current_devices.begin(), current_devices.end(),
-                       previous_devices.begin(), previous_devices.end(),
-                       inserter(new_devices, new_devices.begin()));
+    assert(context->collection_changed_devtype &
+           (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT));
 
-        for (auto it = new_devices.begin(); it != new_devices.end();) {
-          CFStringRef name = get_device_name(*it);
-          if (CFStringFind(name, CFSTR("CubebAggregateDevice"), 0).location !=
-              kCFNotFound) {
-            it = new_devices.erase(it);
-          } else {
-            it++;
-          }
-        }
-
-        // If this set of new devices is empty, it means this was triggerd
-        // solely by creating an aggregate device, no need to trigger the user
-        // callback.
-        if (new_devices.empty()) {
-          return;
-        }
-      }
-      /* Device on desired scope changed. */
-      context->devtype_device_array = devices;
+    vector<AudioObjectID> devices = audiounit_get_devices_of_type(context->collection_changed_devtype);
+    /* The elements in the vector are sorted. */
+    if (context->devtype_device_array == devices) {
+      /* Device changed for the other scope, ignore. */
+      return;
     }
-
+    /* Device on desired scope has changed. */
+    context->devtype_device_array = devices;
     context->collection_changed_callback(context, context->collection_changed_user_ptr);
   });
   return noErr;
@@ -3511,11 +3490,9 @@ audiounit_add_device_listener(cubeb * context,
     assert(context->devtype_device_array.empty());
     /* Listener works for input and output.
      * When requested one of them we need to differentiate. */
-    if (devtype == CUBEB_DEVICE_TYPE_INPUT ||
-        devtype == CUBEB_DEVICE_TYPE_OUTPUT) {
-      /* Used to differentiate input from output device changes. */
-      context->devtype_device_array = audiounit_get_devices_of_type(devtype);
-    }
+    assert(devtype &
+           (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT));
+    context->devtype_device_array = audiounit_get_devices_of_type(devtype);
     context->collection_changed_devtype = devtype;
     context->collection_changed_callback = collection_changed_callback;
     context->collection_changed_user_ptr = user_ptr;

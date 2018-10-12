@@ -23,6 +23,7 @@
 #include "mozilla/dom/network/TCPServerSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/net/AltDataOutputStreamChild.h"
+#include "mozilla/net/TrackingDummyChannelChild.h"
 #ifdef MOZ_WEBRTC
 #include "mozilla/net/StunAddrsRequestChild.h"
 #endif
@@ -532,6 +533,20 @@ NeckoChild::RecvNetworkChangeNotification(nsCString const& type)
                                 NS_ConvertUTF8toUTF16(type).get());
   }
   return IPC_OK();
+}
+
+PTrackingDummyChannelChild*
+NeckoChild::AllocPTrackingDummyChannelChild(nsIURI* aURI,
+                                            const OptionalLoadInfoArgs& aLoadInfo)
+{
+  return new TrackingDummyChannelChild();
+}
+
+bool
+NeckoChild::DeallocPTrackingDummyChannelChild(PTrackingDummyChannelChild* aActor)
+{
+  delete static_cast<TrackingDummyChannelChild*>(aActor);
+  return true;
 }
 
 } // namespace net
