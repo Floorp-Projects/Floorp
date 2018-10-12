@@ -217,14 +217,13 @@
 }
 
 .flex-outline-final {
-  border: 1px solid currentColor;
+  border: 2px solid currentColor;
   position: relative;
   grid-column: final-start / final-end;
 }
 
 .flex-outline-final.clamped::after {
   content: "";
-  background-color: var(--theme-body-background);
   background-image: url(chrome://devtools/skin/images/lock.svg);
   background-size: 16px;
   background-repeat: no-repeat;
@@ -236,7 +235,13 @@
   position: absolute;
   right: -10px;
   top: 6px;
-  border-radius: 50%;
+  /* Making sure the icon is visible against any background by creating a plain background
+     around its shape, using a drop-shadow filter. */
+  filter:
+    drop-shadow(1px 0px 0px var(--theme-body-background))
+    drop-shadow(0px 1px 0px var(--theme-body-background))
+    drop-shadow(-1px 0px 0px var(--theme-body-background))
+    drop-shadow(0px -1px 0px var(--theme-body-background));
 }
 
 .flex-outline.column .flex-outline-final.clamped::after {
@@ -246,7 +251,7 @@
 .flex-outline-basis {
   border-style: dotted;
   border-width: 3px;
-  margin: 1px 0;
+  margin: 1px;
   grid-column: basis-start / basis-end;
 }
 
@@ -255,19 +260,43 @@
 }
 
 .flex-outline-delta {
-  background-repeat: round;
-  fill: currentColor;
-  -moz-context-properties: fill;
   grid-column: delta-start / delta-end;
-  margin: 4px;
+  margin: 3px 0;
+  opacity: .5;
+  position: relative;
 }
 
-.flex-outline.growing .flex-outline-delta {
-  background-image: url(chrome://devtools/skin/images/arrowhead-right.svg);
+.flex-outline-delta::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: calc(50% - .5px);
+  height: 1px;
+  background: currentColor;
 }
 
-.flex-outline.shrinking .flex-outline-delta {
-  background-image: url(chrome://devtools/skin/images/arrowhead-left.svg);
+.flex-outline-delta::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  top: 50%;
+  border: 1px solid currentColor;
+}
+
+.flex-outline.growing .flex-outline-delta:after {
+  right: 2px;
+  border-width: 1px 1px 0 0;
+  transform-origin: top right;
+  transform: rotate(.125turn);
+}
+
+.flex-outline.shrinking .flex-outline-delta:after {
+  left: 2px;
+  border-width: 1px 0 0 1px;
+  transform-origin: top left;
+  transform: rotate(-.125turn);
 }
 
 .flex-outline-point {
