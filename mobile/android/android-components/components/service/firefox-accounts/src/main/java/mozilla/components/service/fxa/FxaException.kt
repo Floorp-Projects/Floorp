@@ -10,11 +10,14 @@ open class FxaException(message: String) : Exception(message) {
     class Panic(msg: String) : FxaException(msg)
 
     companion object {
+        // These numbers come from `ffi::error_codes` in the fxa-client rust code.
+        const val CODE_UNAUTHORIZED: Int = 2
+        const val CODE_PANIC: Int = -1
         fun fromConsuming(e: Error): FxaException {
             val message = e.consumeMessage() ?: ""
             return when (e.code) {
-                FxaClient.ErrorCode.AuthenticationError.ordinal -> Unauthorized(message)
-                FxaClient.ErrorCode.InternalPanic.ordinal -> Panic(message)
+                CODE_UNAUTHORIZED -> Unauthorized(message)
+                CODE_PANIC -> Panic(message)
                 else -> Unspecified(message)
             }
         }

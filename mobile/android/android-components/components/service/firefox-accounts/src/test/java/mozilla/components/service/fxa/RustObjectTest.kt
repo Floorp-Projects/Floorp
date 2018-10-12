@@ -98,7 +98,7 @@ class RustObjectTest {
         latch = CountDownLatch(1)
         complete = false
 
-        RustObject.safeAsync { it.code = FxaClient.ErrorCode.AuthenticationError.ordinal }.then({
+        RustObject.safeAsync { it.code = FxaException.CODE_UNAUTHORIZED }.then({
             complete = true
             latch.countDown()
             FxaResult<Void>()
@@ -119,17 +119,17 @@ class RustObjectTest {
         assertTrue(RustObject.safeSync { true })
 
         try {
-            RustObject.safeSync { it.code = FxaClient.ErrorCode.AuthenticationError.ordinal }
+            RustObject.safeSync { it.code = FxaException.CODE_UNAUTHORIZED }
             fail("Should have thrown FxaException.Unauthorized")
         } catch (e: FxaException.Unauthorized) { }
 
         try {
-            RustObject.safeSync { it.code = FxaClient.ErrorCode.InternalPanic.ordinal }
+            RustObject.safeSync { it.code = FxaException.CODE_PANIC }
             fail("Should have thrown FxaException.Panic")
         } catch (e: FxaException.Panic) { }
 
         try {
-            RustObject.safeSync { it.code = FxaClient.ErrorCode.Other.ordinal }
+            RustObject.safeSync { it.code = 100 } // Number not used by FxaException
             fail("Should have thrown FxaException.Unspecified")
         } catch (e: FxaException.Unspecified) { }
     }

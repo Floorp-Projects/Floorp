@@ -33,11 +33,6 @@ internal interface FxaClient : Library {
         }
     }
 
-    // This is ultra hacky and takes advantage of the zero-based error codes returned in Rust.
-    enum class ErrorCode {
-        NoError, Other, AuthenticationError, InternalPanic
-    }
-
     fun fxa_get_release_config(e: Error.ByReference): RawConfig
     fun fxa_get_custom_config(content_base: String, e: Error.ByReference): RawConfig
 
