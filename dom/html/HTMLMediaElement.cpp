@@ -13,6 +13,7 @@
 
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "AudioChannelService.h"
+#include "AudioDeviceInfo.h"
 #include "AudioStreamTrack.h"
 #include "AutoplayPolicy.h"
 #include "ChannelMediaDecoder.h"
@@ -31,6 +32,7 @@
 #include "MP4Decoder.h"
 #include "MediaContainerType.h"
 #include "MediaError.h"
+#include "MediaManager.h"
 #include "MediaMetadataManager.h"
 #include "MediaResource.h"
 #include "MediaSourceDecoder.h"
@@ -3885,6 +3887,7 @@ HTMLMediaElement::HTMLMediaElement(
   , mPaused(true, "HTMLMediaElement::mPaused")
   , mErrorSink(new ErrorSink(this))
   , mAudioChannelWrapper(new AudioChannelAgentCallback(this))
+  , mSink(MakePair(nsString(), RefPtr<AudioDeviceInfo>()))
 {
   MOZ_ASSERT(mMainThreadEventTarget);
   MOZ_ASSERT(mAbstractMainThread);
@@ -5085,6 +5088,19 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
   // can affect how we feed data to MediaStreams
   NotifyDecoderPrincipalChanged();
 
+  // Set sink device if we have one. Otherwise the default is used.
+  if (mSink.second()) {
+    mDecoder->SetSink(mSink.second())
+#ifdef DEBUG
+      ->Then(mAbstractMainThread, __func__,
+      [](const GenericPromise::ResolveOrRejectValue& aValue) {
+        MOZ_ASSERT(aValue.IsResolve() && !aValue.ResolveValue());
+      });
+#else
+    ;
+#endif
+  }
+
   for (OutputMediaStream& ms : mOutputStreams) {
     if (ms.mCapturingMediaStream) {
       MOZ_ASSERT(!ms.mCapturingDecoder);
@@ -5316,6 +5332,9 @@ HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
 
     stream->AddAudioOutput(this);
     SetVolumeInternal();
+    if (mSink.second()) {
+      NS_WARNING("setSinkId() when playing a MediaStream is not supported yet and will be ignored");
+    }
 
     VideoFrameContainer* container = GetVideoFrameContainer();
     if (mSelectedVideoStreamTrack && container) {
@@ -8263,6 +8282,86 @@ HTMLMediaElement::ReportCanPlayTelemetry()
           }));
       }),
     NS_DISPATCH_NORMAL);
+}
+
+already_AddRefed<Promise>
+HTMLMediaElement::SetSinkId(const nsAString& aSinkId, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindowInner> win = OwnerDoc()->GetInnerWindow();
+  if (!win) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(win->AsGlobal(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (mSink.first().Equals(aSinkId)) {
+    promise->MaybeResolveWithUndefined();
+    return promise.forget();
+  }
+
+  nsString sinkId(aSinkId);
+  MediaManager::Get()->GetSinkDevice(win, sinkId)
+    ->Then(mAbstractMainThread, __func__,
+           [self = RefPtr<HTMLMediaElement>(this)](RefPtr<AudioDeviceInfo>&& aInfo) {
+             // Sink found switch output device.
+             MOZ_ASSERT(aInfo);
+             if (self->mDecoder) {
+               RefPtr<SinkInfoPromise> p = self->mDecoder->SetSink(aInfo)
+                 ->Then(self->mAbstractMainThread, __func__,
+                       [aInfo] (const GenericPromise::ResolveOrRejectValue& aValue) {
+                         if (aValue.IsResolve()) {
+                           return SinkInfoPromise::CreateAndResolve(aInfo, __func__);
+                         }
+                         return SinkInfoPromise::CreateAndReject(aValue.RejectValue(), __func__);
+                       });
+               return p;
+             }
+             if (self->GetSrcMediaStream()) {
+               // Set Sink Id through MSG is not supported yet.
+               return SinkInfoPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+             }
+             // No media attached to the element save it for later.
+             return SinkInfoPromise::CreateAndResolve(aInfo, __func__);
+           },
+           [](nsresult res){
+             // Promise is rejected, sink not found.
+             return SinkInfoPromise::CreateAndReject(res, __func__);
+           })
+    ->Then(mAbstractMainThread, __func__,
+           [promise, self = RefPtr<HTMLMediaElement>(this),
+           sinkId = std::move(sinkId)] (const SinkInfoPromise::ResolveOrRejectValue& aValue) {
+             if (aValue.IsResolve()) {
+               self->mSink = MakePair(sinkId, aValue.ResolveValue());
+               promise->MaybeResolveWithUndefined();
+             } else {
+               switch (aValue.RejectValue()) {
+                 case NS_ERROR_ABORT:
+                   promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+                   break;
+                 case NS_ERROR_NOT_AVAILABLE:
+                 {
+                   ErrorResult notFoundError;
+                   notFoundError.ThrowDOMException(
+                         NS_ERROR_DOM_NOT_FOUND_ERR,
+                         NS_LITERAL_CSTRING("The object can not be found here."));
+                   promise->MaybeReject(notFoundError);
+                   break;
+                 }
+                 case NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
+                   promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+                   break;
+                 default:
+                   MOZ_ASSERT_UNREACHABLE("Invalid error.");
+               }
+             }
+           });
+
+  aRv = NS_OK;
+  return promise.forget();
 }
 
 } // namespace dom
