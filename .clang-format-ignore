@@ -11,6 +11,8 @@ gfx/testsd/.*
 image/test/.*
 ipc/ipdl/test/.*
 ipc/testshell/.*
+# Generated code
+js/src/builtin/intl/TimeZoneDataGenerated.h
 js/src/jsapi-tests/.*
 # See bug 1395584
 js/src/vm/Opcodes.h
