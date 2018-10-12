@@ -75,7 +75,7 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-  void InputMuted(bool aInputMuted);
+  void NotifyAudibleStateChanged(bool aAudible);
   void ResolvePromise(AudioBuffer* aRenderedBuffer);
 
   unsigned long Length()
