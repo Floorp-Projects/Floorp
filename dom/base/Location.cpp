@@ -460,14 +460,8 @@ nsresult
 Location::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
                              bool aReplace)
 {
-  nsCOMPtr<nsIURI> base;
-
   // Get the source of the caller
-  nsresult result = GetSourceBaseURL(cx, getter_AddRefs(base));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  nsCOMPtr<nsIURI> base = GetSourceBaseURL();
 
   return SetHrefWithBase(aHref, base, aReplace);
 }
@@ -939,10 +933,9 @@ Location::Assign(const nsAString& aUrl,
   }
 }
 
-nsresult
-Location::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
+already_AddRefed<nsIURI>
+Location::GetSourceBaseURL()
 {
-  *sourceURL = nullptr;
   nsIDocument* doc = GetEntryDocument();
   // If there's no entry document, we either have no Script Entry Point or one
   // that isn't a DOM Window.  This doesn't generally happen with the DOM, but
@@ -958,9 +951,8 @@ Location::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
       doc = docShellWin->GetDoc();
     }
   }
-  NS_ENSURE_TRUE(doc, NS_OK);
-  *sourceURL = doc->GetBaseURI().take();
-  return NS_OK;
+  NS_ENSURE_TRUE(doc, nullptr);
+  return doc->GetBaseURI();
 }
 
 bool
