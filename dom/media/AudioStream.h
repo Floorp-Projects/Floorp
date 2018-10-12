@@ -200,7 +200,8 @@ public:
   // (22050Hz, 44100Hz, etc).
   nsresult Init(uint32_t aNumChannels,
                 AudioConfig::ChannelLayout::ChannelMap aChannelMap,
-                uint32_t aRate);
+                uint32_t aRate,
+                AudioDeviceInfo* aSinkInfo);
 
   // Closes the stream. All future use of the stream is an error.
   void Shutdown();
@@ -212,7 +213,7 @@ public:
   void SetVolume(double aVolume);
 
   // Start the stream.
-  void Start();
+  nsresult Start();
 
   // Pause audio playback.
   void Pause();
@@ -317,6 +318,11 @@ private:
   DataSource& mDataSource;
 
   bool mPrefillQuirk;
+
+  // The device info of the current sink. If null
+  // the default device is used. It is set
+  // during the Init() in decoder thread.
+  RefPtr<AudioDeviceInfo> mSinkInfo;
 };
 
 } // namespace mozilla

@@ -38,7 +38,7 @@ public:
 
   // Return a promise which will be resolved when AudioSink
   // finishes playing, or rejected if any error.
-  RefPtr<GenericPromise> Init(const PlaybackParams& aParams);
+  nsresult Init(const PlaybackParams& aParams, RefPtr<GenericPromise>& aEndPromise);
 
   /*
    * All public functions are not thread-safe.
