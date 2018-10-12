@@ -2436,17 +2436,8 @@ var SessionStoreInternal = {
     let newTab = aWindow.gBrowser.addTrustedTab(null, tabOptions);
 
     // Start the throbber to pretend we're doing something while actually
-    // waiting for data from the frame script. This throbber is disabled
-    // if the URI is a local about: URI.
-    let uriObj = aTab.linkedBrowser.currentURI;
-    if (!uriObj || (uriObj && !aWindow.gBrowser.isLocalAboutURI(uriObj))) {
-      newTab.setAttribute("busy", "true");
-    }
-
-    // Hack to ensure that the about:home, about:newtab, and about:welcome
-    // favicon is loaded instantaneously, to avoid flickering and improve
-    // perceived performance.
-    aWindow.gBrowser.setDefaultIcon(newTab, uriObj);
+    // waiting for data from the frame script.
+    newTab.setAttribute("busy", "true");
 
     // Collect state before flushing.
     let tabState = TabState.collect(aTab, TAB_CUSTOM_VALUES.get(aTab));
@@ -2783,14 +2774,7 @@ var SessionStoreInternal = {
 
     // Restore the tab icon.
     if ("image" in tabData) {
-      // We know that about:blank is safe to load in any remote type. Since
-      // SessionStore is triggered with about:blank, there must be a process
-      // flip. We will ignore the first about:blank load to prevent resetting the
-      // favicon that we have set earlier to avoid flickering and improve
-      // perceived performance.
-      if (!activePageData || (activePageData && activePageData.url != "about:blank")) {
-        win.gBrowser.setIcon(tab, tabData.image, undefined, tabData.iconLoadingPrincipal);
-      }
+      win.gBrowser.setIcon(tab, tabData.image, undefined, tabData.iconLoadingPrincipal);
       TabStateCache.update(browser, { image: null, iconLoadingPrincipal: null });
     }
   },
@@ -3030,22 +3014,9 @@ var SessionStoreInternal = {
       return;
     }
 
-    let uriObj;
-    try {
-      uriObj = Services.io.newURI(loadArguments.uri);
-    } catch (e) {}
-
     // Start the throbber to pretend we're doing something while actually
-    // waiting for data from the frame script. This throbber is disabled
-    // if the URI is a local about: URI.
-    if (!uriObj || (uriObj && !window.gBrowser.isLocalAboutURI(uriObj))) {
-      tab.setAttribute("busy", "true");
-    }
-
-    // Hack to ensure that the about:home, about:newtab, and about:welcome
-    // favicon is loaded instantaneously, to avoid flickering and improve
-    // perceived performance.
-    window.gBrowser.setDefaultIcon(tab, uriObj);
+    // waiting for data from the frame script.
+    tab.setAttribute("busy", "true");
 
     // Flush to get the latest tab state.
     TabStateFlusher.flush(browser).then(() => {
@@ -4071,7 +4042,7 @@ var SessionStoreInternal = {
        requestTime: Services.telemetry.msSystemNow()});
 
     // Focus the tab's content area.
-    if (aTab.selected && !window.isBlankPageURL(uri)) {
+    if (aTab.selected) {
       browser.focus();
     }
   },
