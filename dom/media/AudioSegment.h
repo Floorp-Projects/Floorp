@@ -222,6 +222,24 @@ struct AudioChunk {
 
   bool IsMuted() const { return mVolume == 0.0f; }
 
+  bool IsAudible() const
+  {
+    for (auto&& channel : mChannelData) {
+      // Transform sound into dB RMS and assume that the value smaller than -100
+      // is inaudible.
+      float dbrms = 0.0;
+      for (uint32_t idx = 0; idx < mDuration; idx++) {
+        dbrms += std::pow(static_cast<const AudioDataValue*>(channel)[idx], 2);
+      }
+      dbrms /= mDuration;
+      dbrms = std::sqrt(dbrms) != 0.0 ? 20 * log10(dbrms) : -1000.0;
+      if (dbrms > -100.0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   size_t SizeOfExcludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
   {
     return SizeOfExcludingThis(aMallocSizeOf, true);
