@@ -1419,6 +1419,9 @@ pref("identity.fxaccounts.migrateToDevEdition", false);
 
 // If activated, send tab will use the new FxA commands backend.
 pref("identity.fxaccounts.commands.enabled", true);
+// How often should we try to fetch missed FxA commands on sync (in seconds).
+// Default is 24 hours.
+pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 
 // On GTK, we now default to showing the menubar only when alt is pressed:
 #ifdef MOZ_WIDGET_GTK
@@ -1633,13 +1636,6 @@ pref("browser.esedbreader.loglevel", "Error");
 pref("browser.laterrun.enabled", false);
 
 pref("dom.ipc.processPrelaunch.enabled", true);
-
-pref("browser.migrate.automigrate.enabled", false);
-// 4 here means the suggestion notification will be automatically
-// hidden the 4th day, so it will actually be shown on 3 different days.
-pref("browser.migrate.automigrate.daysToOfferUndo", 4);
-pref("browser.migrate.automigrate.ui.enabled", true);
-pref("browser.migrate.automigrate.inpage.ui.enabled", false);
 
 // See comments in bug 1340115 on how we got to these numbers.
 pref("browser.migrate.chrome.history.limit", 2000);

@@ -844,12 +844,13 @@ class InlineFrameIterator
     bool isModuleFrame() const;
     bool isConstructing() const;
 
-    JSObject* environmentChain(MaybeReadFallback& fallback) const {
+    JSObject* environmentChain(MaybeReadFallback& fallback,
+                               bool* hasInitialEnvironment = nullptr) const {
         SnapshotIterator s(si_);
 
         // envChain
         Value v = s.maybeRead(fallback);
-        return computeEnvironmentChain(v, fallback);
+        return computeEnvironmentChain(v, fallback, hasInitialEnvironment);
     }
 
     Value thisArgument(MaybeReadFallback& fallback) const {

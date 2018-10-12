@@ -488,25 +488,6 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Fetch the ChromeActor for the main process or ChildProcessActor for a
-   * a given child process ID.
-   *
-   * @param number id
-   *        The ID for the process to attach (returned by `listProcesses`).
-   *        Connected to the main process if omitted, or is 0.
-   */
-  getProcess: function(id) {
-    const packet = {
-      to: "root",
-      type: "getProcess"
-    };
-    if (typeof (id) == "number") {
-      packet.id = id;
-    }
-    return this.request(packet);
-  },
-
-  /**
    * Release an object actor.
    *
    * @param string actor

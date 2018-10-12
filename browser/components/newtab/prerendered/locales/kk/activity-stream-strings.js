@@ -77,7 +77,7 @@ window.gActivityStreamStrings = {
   "pocket_more_reccommendations": "Көбірек ұсыныстар",
   "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pocket-ті алу",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_cta_text": "Өзіңіз ұнатқан хикаяларды Pocket ішіне сақтап, миіңізді тамаша оқумен толықтырыңыз.",
   "highlights_empty_state": "Шолуды бастаңыз, сіз жақында шолған немесе бетбелгілерге қосқан тамаша мақалалар, видеолар немесе басқа парақтардың кейбіреулері осында көрсетіледі.",
   "topstories_empty_state": "Дайын. {provider} ұсынған көбірек мақалаларды алу үшін кейінірек тексеріңіз. Күте алмайсыз ба? Интернеттен көбірек тамаша мақалаларды алу үшін әйгілі теманы таңдаңыз.",
   "manual_migration_explanation2": "Firefox қолданбасын басқа браузер бетбелгілері, тарихы және парольдерімен қолданып көріңіз.",

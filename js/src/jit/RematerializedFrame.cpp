@@ -132,6 +132,7 @@ CallObject&
 RematerializedFrame::callObj() const
 {
     MOZ_ASSERT(hasInitialEnvironment());
+    MOZ_ASSERT(callee()->needsCallObject());
 
     JSObject* env = environmentChain();
     while (!env->is<CallObject>()) {

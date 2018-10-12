@@ -793,7 +793,7 @@ describe("ASRouter", () => {
   describe("#onMessage: INSTALL_ADDON_FROM_URL", () => {
     it("should call installAddonFromURL with correct arguments", async () => {
       sandbox.stub(MessageLoaderUtils, "installAddonFromURL").resolves(null);
-      const msg = fakeExecuteUserAction({type: "INSTALL_ADDON_FROM_URL", data: {args: "foo.com"}});
+      const msg = fakeExecuteUserAction({type: "INSTALL_ADDON_FROM_URL", data: {url: "foo.com"}});
 
       await Router.onMessage(msg);
 

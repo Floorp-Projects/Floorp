@@ -5,12 +5,19 @@
 #layout-container {
   height: 100%;
   width: 100%;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
   min-width: 200px;
 }
 
 #layout-container .accordion ._content {
   padding: 0;
+}
+
+#layout-container .accordion ._header {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 /**
@@ -89,6 +96,19 @@
   flex-direction: column;
 }
 
+#layout-flexbox-container .flex-header-content:not(.flex-item-shown) {
+  overflow: hidden;
+  display: flex;
+}
+
+#layout-flexbox-container .flex-header-content:not(.flex-item-shown) .objectBox {
+  max-width: calc(100% - 20px);
+  margin-inline-end: 5px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 /**
  * Header
  */
@@ -132,10 +152,15 @@
   padding-inline-start: 34px;
   padding-top: 5px;
   padding-bottom: 5px;
+  overflow: hidden;
 }
 
 .flex-item-list .devtools-button {
   background-color: transparent;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  inline-size: 100%;
+  text-align: start;
 }
 
 /**

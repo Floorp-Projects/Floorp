@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Popüler konular:",
   "pocket_read_even_more": "Daha fazla yazı göster",
   "pocket_more_reccommendations": "Daha fazla öneri",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Nasıl çalışıyor?",
   "pocket_cta_button": "Pocket’ı edinin",
   "pocket_cta_text": "Sevdiğiniz yazıları Pocket’a kaydedin, aklınız okumaya değer şeylerle doldurun.",
   "highlights_empty_state": "Gezinmeye başlayın. Son zamanlarda baktığınız veya yer imlerinize eklediğiniz bazı güzel makaleleri, videoları ve diğer sayfaları burada göstereceğiz.",

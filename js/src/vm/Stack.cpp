@@ -1422,10 +1422,30 @@ FrameIter::environmentChain(JSContext* cx) const
     MOZ_CRASH("Unexpected state");
 }
 
+bool
+FrameIter::hasInitialEnvironment(JSContext *cx) const {
+    if (hasUsableAbstractFramePtr()) {
+        return abstractFramePtr().hasInitialEnvironment();
+    }
+
+    if (isWasm()) {
+        // See JSFunction::needsFunctionEnvironmentObjects().
+        return false;
+    }
+
+    MOZ_ASSERT(isJSJit() && isIonScripted());
+    bool hasInitialEnv = false;
+    jit::MaybeReadFallback recover(cx, activation()->asJit(), &jsJitFrame());
+    ionInlineFrames_.environmentChain(recover, &hasInitialEnv);
+
+    return hasInitialEnv;
+}
+
 CallObject&
 FrameIter::callObj(JSContext* cx) const
 {
     MOZ_ASSERT(calleeTemplate()->needsCallObject());
+    MOZ_ASSERT(hasInitialEnvironment(cx));
 
     JSObject* pobj = environmentChain(cx);
     while (!pobj->is<CallObject>()) {
