@@ -169,6 +169,14 @@ MediaDecoder::SetVolume(double aVolume)
   mVolume = aVolume;
 }
 
+RefPtr<GenericPromise>
+MediaDecoder::SetSink(AudioDeviceInfo* aSink)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  AbstractThread::AutoEnter context(AbstractMainThread());
+  return GetStateMachine()->InvokeSetSink(aSink);
+}
+
 void
 MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
                               TrackID aNextAvailableTrackID,
