@@ -8,6 +8,7 @@
 #define mozilla_dom_HTMLIFrameElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/FeaturePolicy.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsDOMTokenList.h"
 
@@ -23,8 +24,9 @@ public:
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLIFrameElement, iframe)
 
   // nsISupports
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLIFrameElement,
-                                       nsGenericHTMLFrameElement)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLIFrameElement,
+                                           nsGenericHTMLFrameElement)
 
   // Element
   virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override
@@ -223,8 +225,13 @@ private:
 
   void RefreshFeaturePolicy();
 
+  // Implements the declared-origin algorithm as described in Feature-Policy
+  // spec: https://wicg.github.io/feature-policy/#declared-origin
+  // If this iframe has a 'src' attribute, the origin will be the parsing of its
+  // value as URL. If the URL is invalid, or 'src' attribute doesn't exist, the
+  // origin will be the document's origin.
   nsresult
-  GetFeaturePolicyDefaultOrigin(nsAString& aDefaultOrigin) const;
+  GetFeaturePolicyDefaultOrigin(nsIPrincipal** aDefaultOrigin) const;
 
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.
@@ -236,6 +243,8 @@ private:
    * @param aNotify Whether we plan to notify document observers.
    */
   void AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName, bool aNotify);
+
+  RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
 };
 
 } // namespace dom

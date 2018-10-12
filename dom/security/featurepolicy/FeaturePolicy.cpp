@@ -9,8 +9,10 @@
 #include "mozilla/dom/FeaturePolicyParser.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "nsContentUtils.h"
+#include "nsNetUtil.h"
 
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FeaturePolicy, mParentNode)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FeaturePolicy)
@@ -34,7 +36,7 @@ FeaturePolicy::InheritPolicy(FeaturePolicy* aParentPolicy)
 
   RefPtr<FeaturePolicy> dest = this;
   RefPtr<FeaturePolicy> src = aParentPolicy;
-  nsString origin = mDefaultOrigin;
+  nsCOMPtr<nsIPrincipal> origin = mDefaultOrigin;
   FeaturePolicyUtils::ForEachFeature([dest, src, origin](const char* aFeatureName) {
     nsString featureName;
     featureName.AppendASCII(aFeatureName);
@@ -86,9 +88,8 @@ FeaturePolicy::HasDeclaredFeature(const nsAString& aFeatureName) const
 void
 FeaturePolicy::SetDeclaredPolicy(nsIDocument* aDocument,
                                  const nsAString& aPolicyString,
-                                 const nsAString& aSelfOrigin,
-                                 const nsAString& aSrcOrigin,
-                                 bool aSrcEnabled)
+                                 nsIPrincipal* aSelfOrigin,
+                                 nsIPrincipal* aSrcOrigin)
 {
   ResetDeclaredPolicy();
 
@@ -96,7 +97,6 @@ FeaturePolicy::SetDeclaredPolicy(nsIDocument* aDocument,
                                                          aDocument,
                                                          aSelfOrigin,
                                                          aSrcOrigin,
-                                                         aSrcEnabled,
                                                          mFeatures));
 }
 
@@ -116,16 +116,32 @@ bool
 FeaturePolicy::AllowsFeature(const nsAString& aFeatureName,
                              const Optional<nsAString>& aOrigin) const
 {
-  return AllowsFeatureInternal(aFeatureName,
-                               aOrigin.WasPassed()
-                                 ? aOrigin.Value()
-                                 : mDefaultOrigin);
+  nsCOMPtr<nsIPrincipal> origin;
+  if (aOrigin.WasPassed()) {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aOrigin.Value());
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+    origin = BasePrincipal::CreateCodebasePrincipal(uri,
+                                                    BasePrincipal::Cast(mDefaultOrigin)->OriginAttributesRef());
+  } else {
+    origin = mDefaultOrigin;
+  }
+
+  if (NS_WARN_IF(!origin)) {
+    return false;
+  }
+
+  return AllowsFeatureInternal(aFeatureName, origin);
 }
 
 bool
 FeaturePolicy::AllowsFeatureInternal(const nsAString& aFeatureName,
-                                     const nsAString& aOrigin) const
+                                     nsIPrincipal* aOrigin) const
 {
+  MOZ_ASSERT(aOrigin);
+
   // Let's see if have to disable this feature because inherited policy.
   if (HasInheritedDeniedFeature(aFeatureName)) {
     return false;
@@ -137,8 +153,22 @@ FeaturePolicy::AllowsFeatureInternal(const nsAString& aFeatureName,
     }
   }
 
-  return FeaturePolicyUtils::AllowDefaultFeature(aFeatureName, mDefaultOrigin,
-                                                 aOrigin);
+  switch (FeaturePolicyUtils::DefaultAllowListFeature(aFeatureName)) {
+    case FeaturePolicyUtils::FeaturePolicyValue::eAll:
+      return true;
+
+    case FeaturePolicyUtils::FeaturePolicyValue::eSelf:
+      return BasePrincipal::Cast(mDefaultOrigin)->Subsumes(aOrigin,
+                                                           BasePrincipal::ConsiderDocumentDomain);
+
+    case FeaturePolicyUtils::FeaturePolicyValue::eNone:
+      return false;
+
+    default:
+      MOZ_CRASH("Unknown default value");
+  }
+
+  return false;
 }
 
 void
@@ -170,16 +200,44 @@ FeaturePolicy::GetAllowlistForFeature(const nsAString& aFeatureName,
         return;
       }
 
-      feature.GetWhiteListedOrigins(aList);
+      nsTArray<nsCOMPtr<nsIPrincipal>> list;
+      feature.GetAllowList(list);
+
+      for (nsIPrincipal* principal : list) {
+        nsAutoCString originNoSuffix;
+        nsresult rv = principal->GetOriginNoSuffix(originNoSuffix);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        aList.AppendElement(NS_ConvertUTF8toUTF16(originNoSuffix));
+      }
       return;
     }
   }
 
-  nsString defaultAllowList;
-  FeaturePolicyUtils::DefaultAllowListFeature(aFeatureName, mDefaultOrigin,
-                                              defaultAllowList);
-   if (!defaultAllowList.IsEmpty()) {
-    aList.AppendElement(defaultAllowList);
+  switch (FeaturePolicyUtils::DefaultAllowListFeature(aFeatureName)) {
+    case FeaturePolicyUtils::FeaturePolicyValue::eAll:
+      aList.AppendElement(NS_LITERAL_STRING("*"));
+      return;
+
+    case FeaturePolicyUtils::FeaturePolicyValue::eSelf:
+    {
+      nsAutoCString originNoSuffix;
+      nsresult rv = mDefaultOrigin->GetOriginNoSuffix(originNoSuffix);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      aList.AppendElement(NS_ConvertUTF8toUTF16(originNoSuffix));
+      return;
+    }
+
+    case FeaturePolicyUtils::FeaturePolicyValue::eNone:
+      return;
+
+    default:
+      MOZ_CRASH("Unknown default value");
   }
 }
 
@@ -197,3 +255,6 @@ FeaturePolicy::MaybeSetAllowedPolicy(const nsAString& aFeatureName)
 
   mFeatures.AppendElement(feature);
 }
+
+} // dom namespace
+} // mozilla namespace
