@@ -66,6 +66,31 @@ class SandboxDependsFunction(object):
                                  'with another @depends function.')
         return self._and(other).sandboxed
 
+    def __cmp__(self, other):
+        raise ConfigureError('Cannot compare @depends functions.')
+
+    def __eq__(self, other):
+        raise ConfigureError('Cannot compare @depends functions.')
+
+    def __ne__(self, other):
+        raise ConfigureError('Cannot compare @depends functions.')
+
+    def __lt__(self, other):
+        raise ConfigureError('Cannot compare @depends functions.')
+
+    def __le__(self, other):
+        raise ConfigureError('Cannot compare @depends functions.')
+
+    def __gt__(self, other):
+        raise ConfigureError('Cannot compare @depends functions.')
+
+    def __ge__(self, other):
+        raise ConfigureError('Cannot compare @depends functions.')
+
+    def __nonzero__(self):
+        raise ConfigureError('Cannot use @depends functions in '
+                             'e.g. conditionals.')
+
     def __getattr__(self, key):
         return self._getattr(key).sandboxed
 
