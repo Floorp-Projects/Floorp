@@ -463,8 +463,7 @@ ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
 static ArrayBufferObject::BufferContents
 AllocateArrayBufferContents(JSContext* cx, uint32_t nbytes)
 {
-    uint8_t* p = cx->pod_callocCanGC<uint8_t>(nbytes,
-                                                      js::ArrayBufferContentsArena);
+    uint8_t* p = cx->pod_callocCanGC<uint8_t>(nbytes, js::ArrayBufferContentsArena);
     return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(p);
 }
 
@@ -1250,6 +1249,7 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
         } else {
             contents = AllocateArrayBufferContents(cx, nbytes);
             if (!contents) {
+                ReportOutOfMemory(cx);
                 return nullptr;
             }
             allocated = true;
