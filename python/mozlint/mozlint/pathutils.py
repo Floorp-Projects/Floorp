@@ -9,15 +9,10 @@ import os
 from mozpack import path as mozpath
 from mozpack.files import FileFinder
 
-try:
-    from os import scandir, walk
-except ImportError:
-    from scandir import scandir, walk
-
 
 class FilterPath(object):
     """Helper class to make comparing and matching file paths easier."""
-    def __init__(self, path):
+    def __init__(self, path, exclude=None):
         self.path = os.path.normpath(path)
         self._finder = None
 
@@ -70,63 +65,6 @@ class FilterPath(object):
 
     def __repr__(self):
         return repr(self.path)
-
-
-def collapse(paths, base=None, dotfiles=False):
-    """Given an iterable of paths, collapse them into the smallest possible set
-    of paths that contain the original set (without containing any extra paths).
-
-    For example, if directory 'a' contains two files b.txt and c.txt, calling:
-
-        collapse(['a/b.txt', 'a/c.txt'])
-
-    returns ['a']. But if a third file d.txt also exists, then it will return
-    ['a/b.txt', 'a/c.txt'] since ['a'] would also include that extra file.
-
-    :param paths: An iterable of paths (files and directories) to collapse.
-    :returns: The smallest set of paths (files and directories) that contain
-              the original set of paths and only the original set.
-    """
-    if not paths:
-        if not base:
-            return []
-
-        # Need to test whether directory chain is empty. If it is then bubble
-        # the base back up so that it counts as 'covered'.
-        for _, _, names in walk(base):
-            if names:
-                return []
-        return [base]
-
-    if not base:
-        paths = map(mozpath.abspath, paths)
-        base = mozpath.commonprefix(paths)
-
-        if not os.path.isdir(base):
-            base = os.path.dirname(base)
-
-    covered = set()
-    full = set()
-    for entry in scandir(base):
-        if not dotfiles and entry.name[0] == '.':
-            continue
-
-        path = mozpath.normpath(entry.path)
-        full.add(path)
-
-        if path in paths:
-            # This path was explicitly specified, so just bubble it back up
-            # without recursing down into it (if it was a directory).
-            covered.add(path)
-        elif entry.is_dir():
-            new_paths = [p for p in paths if p.startswith(path)]
-            covered.update(collapse(new_paths, base=path, dotfiles=dotfiles))
-
-    if full == covered:
-        # Every file under this base was covered, so we can collapse them all
-        # up into the base path.
-        return [base]
-    return covered
 
 
 def filterpaths(paths, linter, **lintargs):
@@ -205,7 +143,7 @@ def filterpaths(paths, linter, **lintargs):
                 discard.add(path.join(p))
 
     # Only pass paths we couldn't exclude here to the underlying linter
-    lintargs['exclude'] = collapse([f.path for f in discard])
+    lintargs['exclude'] = [f.path for f in discard]
     return [f.path for f in keep]
 
 

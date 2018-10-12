@@ -3348,6 +3348,14 @@ void AsyncPanZoomController::AdjustScrollForSurfaceShift(const ScreenPoint& aShi
   // the shift to take effect right away, without the usual frame delay.
   mCompositedScrollOffset = scrollRange.ClampPoint(
       mCompositedScrollOffset + adjustment);
+  // For a similar reason, apply the shift to mCompositedLayoutViewport.
+  // mCompositedLayoutViewport also needs to immediately pick up any new
+  // size from Metrics().GetViewport() to make sure it reflects any height
+  // change due to dynamic toolbar movement.
+  mCompositedLayoutViewport.SizeTo(Metrics().GetViewport().Size());
+  FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
+      CSSRect(mCompositedScrollOffset, Metrics().CalculateCompositedSizeInCssPixels()),
+      mCompositedLayoutViewport);
   RequestContentRepaint();
   UpdateSharedCompositorFrameMetrics();
 }
@@ -4235,10 +4243,19 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
 
   bool needContentRepaint = false;
   bool viewportUpdated = false;
-  if (FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Width(), Metrics().GetCompositionBounds().Width()) &&
-      FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Height(), Metrics().GetCompositionBounds().Height())) {
-    // Remote content has sync'd up to the composition geometry
-    // change, so we can accept the viewport it's calculated.
+
+  // We usually don't entertain viewport updates on the same transaction as
+  // a composition bounds update, but we make an exception for Android
+  // to avoid the composition bounds and the viewport diverging during
+  // orientation changes and dynamic toolbar transitions.
+  // TODO: Do this on all platforms.
+  bool entertainViewportUpdates =
+       FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Width(), Metrics().GetCompositionBounds().Width()) &&
+       FuzzyEqualsAdditive(aLayerMetrics.GetCompositionBounds().Height(), Metrics().GetCompositionBounds().Height());
+#if defined(MOZ_WIDGET_ANDROID)
+  entertainViewportUpdates = true;
+#endif
+  if (entertainViewportUpdates) {
     if (Metrics().GetViewport().Width() != aLayerMetrics.GetViewport().Width() ||
         Metrics().GetViewport().Height() != aLayerMetrics.GetViewport().Height()) {
       needContentRepaint = true;

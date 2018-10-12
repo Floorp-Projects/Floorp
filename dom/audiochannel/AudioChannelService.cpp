@@ -27,7 +27,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static mozilla::LazyLogModule gAudioChannelLog("AudioChannel");
+mozilla::LazyLogModule gAudioChannelLog("AudioChannel");
 
 namespace {
 
