@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+
+  <!-- Tracking URL -->
+  <script id="goodSlowIFrameScript" data-touched="not sure" src="http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/good.js?slowiframe" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+
+  <!-- Tracking Annotation -->
+  <script id="fastSlowIFrameScript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/evil.js?slowiframe" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+
+  <!-- Tracking Annotation -->
+  <script id="slowSlowIFrameScript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.js?slowiframe" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+
+</body>
+</html>
