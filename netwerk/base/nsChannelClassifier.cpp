@@ -42,6 +42,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/net/TrackingDummyChannel.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs.h"
@@ -328,6 +329,11 @@ SetIsTrackingResourceHelper(nsIChannel* aChannel, bool aIsThirdParty)
   RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
   if (httpChannel) {
     httpChannel->SetIsTrackingResource(aIsThirdParty);
+  }
+
+  RefPtr<TrackingDummyChannel> dummyChannel = do_QueryObject(aChannel);
+  if (dummyChannel) {
+    dummyChannel->SetIsTrackingResource();
   }
 }
 

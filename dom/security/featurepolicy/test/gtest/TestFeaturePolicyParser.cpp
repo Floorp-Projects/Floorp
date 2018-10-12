@@ -5,27 +5,30 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Feature.h"
 #include "mozilla/dom/FeaturePolicyParser.h"
 #include "nsNetUtil.h"
 #include "nsTArray.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
-#define URL_SELF NS_LITERAL_STRING("https://example.com")
-#define URL_EXAMPLE_COM NS_LITERAL_STRING("http://example.com")
-#define URL_EXAMPLE_NET NS_LITERAL_STRING("http://example.net")
+#define URL_SELF NS_LITERAL_CSTRING("https://example.com")
+#define URL_EXAMPLE_COM NS_LITERAL_CSTRING("http://example.com")
+#define URL_EXAMPLE_NET NS_LITERAL_CSTRING("http://example.net")
 
 void
 CheckParser(const nsAString& aInput, bool aExpectedResults,
             uint32_t aExpectedFeatures, nsTArray<Feature>& aParsedFeatures)
 {
+  nsCOMPtr<nsIPrincipal> principal =
+    mozilla::BasePrincipal::CreateCodebasePrincipal(URL_SELF);
   nsTArray<Feature> parsedFeatures;
   ASSERT_TRUE(FeaturePolicyParser::ParseString(aInput,
                                                nullptr,
-                                               URL_SELF,
-                                               EmptyString(),
-                                               true, // 'src' enabled
+                                               principal,
+                                               principal,
                                                parsedFeatures) == aExpectedResults);
   ASSERT_TRUE(parsedFeatures.Length() == aExpectedFeatures);
 
@@ -34,6 +37,13 @@ CheckParser(const nsAString& aInput, bool aExpectedResults,
 
 TEST(FeaturePolicyParser, Basic)
 {
+  nsCOMPtr<nsIPrincipal> selfPrincipal =
+    mozilla::BasePrincipal::CreateCodebasePrincipal(URL_SELF);
+  nsCOMPtr<nsIPrincipal> exampleComPrincipal =
+    mozilla::BasePrincipal::CreateCodebasePrincipal(URL_EXAMPLE_COM);
+  nsCOMPtr<nsIPrincipal> exampleNetPrincipal =
+    mozilla::BasePrincipal::CreateCodebasePrincipal(URL_EXAMPLE_NET);
+
   nsTArray<Feature> parsedFeatures;
 
   // Empty string is a valid policy.
@@ -50,70 +60,70 @@ TEST(FeaturePolicyParser, Basic)
   // Existing feature with no allowed values
   CheckParser(NS_LITERAL_STRING("camera"), true, 1, parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[0].HasAllowList());
 
   // Some spaces.
   CheckParser(NS_LITERAL_STRING(" camera "), true, 1, parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[0].HasAllowList());
 
   // A random ;
   CheckParser(NS_LITERAL_STRING("camera;"), true, 1, parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[0].HasAllowList());
 
   // Another random ;
   CheckParser(NS_LITERAL_STRING(";camera;"), true, 1, parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[0].HasAllowList());
 
   // 2 features
   CheckParser(NS_LITERAL_STRING("camera;microphone"), true, 2, parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[0].HasAllowList());
   ASSERT_TRUE(parsedFeatures[1].Name().Equals(NS_LITERAL_STRING("microphone")));
-  ASSERT_TRUE(parsedFeatures[1].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[1].HasAllowList());
 
   // 2 features with spaces
   CheckParser(NS_LITERAL_STRING(" camera ; microphone "), true, 2,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[0].HasAllowList());
   ASSERT_TRUE(parsedFeatures[1].Name().Equals(NS_LITERAL_STRING("microphone")));
-  ASSERT_TRUE(parsedFeatures[1].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[1].HasAllowList());
 
   // 3 features, but only 2 exist.
   CheckParser(NS_LITERAL_STRING("camera;microphone;foobar"), true, 2,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[0].HasAllowList());
   ASSERT_TRUE(parsedFeatures[1].Name().Equals(NS_LITERAL_STRING("microphone")));
-  ASSERT_TRUE(parsedFeatures[1].IsWhiteList());
+  ASSERT_TRUE(parsedFeatures[1].HasAllowList());
 
   // Multiple spaces around the value
   CheckParser(NS_LITERAL_STRING("camera      'self'"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(selfPrincipal));
 
   // Multiple spaces around the value
   CheckParser(NS_LITERAL_STRING("camera      'self'    "), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(selfPrincipal));
 
   // No final '
   CheckParser(NS_LITERAL_STRING("camera      'self"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
-  ASSERT_TRUE(!parsedFeatures[0].WhiteListContains(URL_SELF));
+  ASSERT_TRUE(parsedFeatures[0].HasAllowList());
+  ASSERT_TRUE(!parsedFeatures[0].AllowListContains(selfPrincipal));
 
   // Lowercase/Uppercase
   CheckParser(NS_LITERAL_STRING("camera      'selF'"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(selfPrincipal));
 
   // Lowercase/Uppercase
   CheckParser(NS_LITERAL_STRING("camera * 'self' none' a.com 123"), true, 1,
@@ -136,23 +146,23 @@ TEST(FeaturePolicyParser, Basic)
   // 'self'
   CheckParser(NS_LITERAL_STRING("camera 'self'"), true, 1, parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(selfPrincipal));
 
   // A couple of URLs
   CheckParser(NS_LITERAL_STRING("camera http://example.com http://example.net"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(!parsedFeatures[0].WhiteListContains(URL_SELF));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_EXAMPLE_COM));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_EXAMPLE_NET));
+  ASSERT_TRUE(!parsedFeatures[0].AllowListContains(selfPrincipal));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(exampleComPrincipal));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(exampleNetPrincipal));
 
   // A couple of URLs + self
   CheckParser(NS_LITERAL_STRING("camera http://example.com 'self' http://example.net"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_EXAMPLE_COM));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_EXAMPLE_NET));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(selfPrincipal));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(exampleComPrincipal));
+  ASSERT_TRUE(parsedFeatures[0].AllowListContains(exampleNetPrincipal));
 
   // A couple of URLs but then *
   CheckParser(NS_LITERAL_STRING("camera http://example.com 'self' http://example.net *"), true, 1,

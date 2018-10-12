@@ -5,18 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Feature.h"
+#include "mozilla/BasePrincipal.h"
 
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 void
-Feature::GetWhiteListedOrigins(nsTArray<nsString>& aList) const
+Feature::GetAllowList(nsTArray<nsCOMPtr<nsIPrincipal>>& aList) const
 {
-  MOZ_ASSERT(mPolicy == eWhiteList);
-  aList.AppendElements(mWhiteListedOrigins);
+  MOZ_ASSERT(mPolicy == eAllowList);
+  aList.AppendElements(mAllowList);
 }
 
 bool
-Feature::Allows(const nsAString& aOrigin) const
+Feature::Allows(nsIPrincipal* aPrincipal) const
 {
   if (mPolicy == eNone) {
     return false;
@@ -26,18 +28,12 @@ Feature::Allows(const nsAString& aOrigin) const
     return true;
   }
 
-  for (const nsString& whiteListedOrigin : mWhiteListedOrigins) {
-    if (whiteListedOrigin.Equals(aOrigin)) {
-      return true;
-    }
-  }
-
-  return false;
+  return AllowListContains(aPrincipal);
 }
 
 Feature::Feature(const nsAString& aFeatureName)
   : mFeatureName(aFeatureName)
-  , mPolicy(eWhiteList)
+  , mPolicy(eAllowList)
 {}
 
 Feature::~Feature() = default;
@@ -52,7 +48,7 @@ void
 Feature::SetAllowsNone()
 {
   mPolicy = eNone;
-  mWhiteListedOrigins.Clear();
+  mAllowList.Clear();
 }
 
 bool
@@ -65,7 +61,7 @@ void
 Feature::SetAllowsAll()
 {
   mPolicy = eAll;
-  mWhiteListedOrigins.Clear();
+  mAllowList.Clear();
 }
 
 bool
@@ -75,24 +71,38 @@ Feature::AllowsAll() const
 }
 
 void
-Feature::AppendOriginToWhiteList(const nsAString& aOrigin)
+Feature::AppendToAllowList(nsIPrincipal* aPrincipal)
 {
-  mPolicy = eWhiteList;
-  mWhiteListedOrigins.AppendElement(aOrigin);
+  MOZ_ASSERT(aPrincipal);
+
+  mPolicy = eAllowList;
+  mAllowList.AppendElement(aPrincipal);
 }
 
 bool
-Feature::WhiteListContains(const nsAString& aOrigin) const
+Feature::AllowListContains(nsIPrincipal* aPrincipal) const
 {
-  if (!IsWhiteList()) {
+  MOZ_ASSERT(aPrincipal);
+
+  if (!HasAllowList()) {
     return false;
   }
 
-  return mWhiteListedOrigins.Contains(aOrigin);
+  for (nsIPrincipal* principal : mAllowList) {
+    if (BasePrincipal::Cast(principal)->Subsumes(aPrincipal,
+                                                 BasePrincipal::ConsiderDocumentDomain)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 bool
-Feature::IsWhiteList() const
+Feature::HasAllowList() const
 {
-  return mPolicy == eWhiteList;
+  return mPolicy == eAllowList;
 }
+
+} // dom namespace
+} // mozilla namespace
