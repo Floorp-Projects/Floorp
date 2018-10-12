@@ -8,6 +8,7 @@
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/MappedDeclarations.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
@@ -22,6 +23,24 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
 namespace mozilla {
 namespace dom {
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLIFrameElement)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLIFrameElement,
+                                                  nsGenericHTMLFrameElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFeaturePolicy)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLIFrameElement,
+                                                nsGenericHTMLFrameElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFeaturePolicy)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_ADDREF_INHERITED(HTMLIFrameElement, nsGenericHTMLFrameElement)
+NS_IMPL_RELEASE_INHERITED(HTMLIFrameElement, nsGenericHTMLFrameElement)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLIFrameElement)
+NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLFrameElement)
+
 // static
 const DOMTokenListSupportedToken HTMLIFrameElement::sSupportedSandboxTokens[] = {
 #define SANDBOX_KEYWORD(string, atom, flags) string,
@@ -34,9 +53,8 @@ HTMLIFrameElement::HTMLIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& 
                                      FromParser aFromParser)
   : nsGenericHTMLFrameElement(std::move(aNodeInfo), aFromParser)
 {
-  if (StaticPrefs::dom_security_featurePolicy_enabled()) {
-    mFeaturePolicy = new FeaturePolicy(this);
-  }
+  // We always need a featurePolicy, even if not exposed.
+  mFeaturePolicy = new FeaturePolicy(this);
 }
 
 HTMLIFrameElement::~HTMLIFrameElement()
@@ -174,6 +192,7 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
     if ((aName == nsGkAtoms::allow ||
          aName == nsGkAtoms::src ||
+         aName == nsGkAtoms::srcdoc ||
          aName == nsGkAtoms::sandbox ||
          aName == nsGkAtoms::allowpaymentrequest) &&
         StaticPrefs::dom_security_featurePolicy_enabled()) {
@@ -236,41 +255,29 @@ HTMLIFrameElement::Policy() const
 }
 
 nsresult
-HTMLIFrameElement::GetFeaturePolicyDefaultOrigin(nsAString& aDefaultOrigin) const
+HTMLIFrameElement::GetFeaturePolicyDefaultOrigin(nsIPrincipal** aPrincipal) const
 {
-  aDefaultOrigin.Truncate();
+  nsCOMPtr<nsIPrincipal> principal;
 
-  nsresult rv;
-  nsAutoString src;
-  GetURIAttr(nsGkAtoms::src, nullptr, src);
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc)) {
+    principal = NodePrincipal();
+  }
 
-  nsCOMPtr<nsIURI> nodeURI;
-  if (!src.IsEmpty()) {
-    nsCOMPtr<nsIURI> baseURI = OwnerDoc()->GetBaseURI();
-
-    rv = NS_NewURI(getter_AddRefs(nodeURI), src,
-                   OwnerDoc()->GetDocumentCharacterSet(),
-                   baseURI);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      nodeURI = nullptr;
+  if (!principal) {
+    nsCOMPtr<nsIURI> nodeURI;
+    if (GetURIAttr(nsGkAtoms::src, nullptr, getter_AddRefs(nodeURI)) &&
+        nodeURI) {
+      principal =
+        BasePrincipal::CreateCodebasePrincipal(nodeURI,
+                                               BasePrincipal::Cast(NodePrincipal())->OriginAttributesRef());
     }
   }
 
-  if (!nodeURI) {
-    if (OwnerDoc()->GetSandboxFlags() & SANDBOXED_ORIGIN) {
-      return NS_OK;
-    }
-
-    nodeURI = OwnerDoc()->GetDocumentURI();
+  if (!principal) {
+    principal = NodePrincipal();
   }
 
-  nsAutoString origin;
-  rv = nsContentUtils::GetUTFOrigin(nodeURI, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  aDefaultOrigin.Assign(origin);
+  principal.forget(aPrincipal);
   return NS_OK;
 }
 
@@ -281,29 +288,22 @@ HTMLIFrameElement::RefreshFeaturePolicy()
   mFeaturePolicy->ResetDeclaredPolicy();
 
   // The origin can change if 'src' attribute changes.
-  nsAutoString origin;
-  nsresult rv = GetFeaturePolicyDefaultOrigin(origin);
+  nsCOMPtr<nsIPrincipal> origin;
+  nsresult rv = GetFeaturePolicyDefaultOrigin(getter_AddRefs(origin));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
+  MOZ_ASSERT(origin);
   mFeaturePolicy->SetDefaultOrigin(origin);
 
   nsAutoString allow;
   GetAttr(nsGkAtoms::allow, allow);
 
   if (!allow.IsEmpty()) {
-    nsAutoString documentOrigin;
-    if (OwnerDoc()->GetSandboxFlags() ^ SANDBOXED_ORIGIN) {
-      nsresult rv = nsContentUtils::GetUTFOrigin(NodePrincipal(), documentOrigin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return;
-      }
-    }
-
     // Set or reset the FeaturePolicy directives.
-    mFeaturePolicy->SetDeclaredPolicy(OwnerDoc(), allow, documentOrigin,
-                                      origin, true /* 'src' enabled */);
+    mFeaturePolicy->SetDeclaredPolicy(OwnerDoc(), allow, NodePrincipal(),
+                                      origin);
   }
 
   mFeaturePolicy->InheritPolicy(OwnerDoc()->Policy());

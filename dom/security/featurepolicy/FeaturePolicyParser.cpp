@@ -13,8 +13,8 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -65,11 +65,12 @@ ReportToConsoleInvalidAllowValue(nsIDocument* aDocument,
 /* static */ bool
 FeaturePolicyParser::ParseString(const nsAString& aPolicy,
                                  nsIDocument* aDocument,
-                                 const nsAString& aSelfOrigin,
-                                 const nsAString& aSrcOrigin,
-                                 bool aSrcEnabled,
+                                 nsIPrincipal* aSelfOrigin,
+                                 nsIPrincipal* aSrcOrigin,
                                  nsTArray<Feature>& aParsedFeatures)
 {
+  MOZ_ASSERT(aSelfOrigin);
+
   nsTArray<nsTArray<nsString>> tokens;
   PolicyTokenizer::tokenizePolicy(aPolicy, tokens);
 
@@ -88,9 +89,8 @@ FeaturePolicyParser::ParseString(const nsAString& aPolicy,
     Feature feature(featureTokens[0]);
 
     if (featureTokens.Length() == 1) {
-      if (aSrcEnabled) {
-        // Note that this src origin can be empty if opaque.
-        feature.AppendOriginToWhiteList(aSrcOrigin);
+      if (aSrcOrigin) {
+        feature.AppendToAllowList(aSrcOrigin);
       } else {
         ReportToConsoleInvalidEmptyAllowValue(aDocument, featureTokens[0]);
         continue;
@@ -110,18 +110,12 @@ FeaturePolicyParser::ParseString(const nsAString& aPolicy,
         }
 
         if (curVal.LowerCaseEqualsASCII("'self'")) {
-          // Opaque origins are passed as empty string.
-          if (!aSelfOrigin.IsEmpty()) {
-            feature.AppendOriginToWhiteList(aSelfOrigin);
-          }
+          feature.AppendToAllowList(aSelfOrigin);
           continue;
         }
 
-        if (aSrcEnabled && curVal.LowerCaseEqualsASCII("'src'")) {
-          // Opaque origins are passed as empty string.
-          if (!aSrcOrigin.IsEmpty()) {
-            feature.AppendOriginToWhiteList(aSrcOrigin);
-          }
+        if (aSrcOrigin && curVal.LowerCaseEqualsASCII("'src'")) {
+          feature.AppendToAllowList(aSrcOrigin);
           continue;
         }
 
@@ -132,14 +126,15 @@ FeaturePolicyParser::ParseString(const nsAString& aPolicy,
           continue;
         }
 
-        nsAutoString origin;
-        rv = nsContentUtils::GetUTFOrigin(uri, origin);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
+        nsCOMPtr<nsIPrincipal> origin =
+          BasePrincipal::CreateCodebasePrincipal(uri,
+                                                 BasePrincipal::Cast(aSelfOrigin)->OriginAttributesRef());
+        if (NS_WARN_IF(!origin)) {
           ReportToConsoleInvalidAllowValue(aDocument, curVal);
           continue;
         }
 
-        feature.AppendOriginToWhiteList(origin);
+        feature.AppendToAllowList(origin);
       }
     }
 
@@ -160,3 +155,6 @@ FeaturePolicyParser::ParseString(const nsAString& aPolicy,
   aParsedFeatures.SwapElements(parsedFeatures);
   return true;
 }
+
+} // dom namespace
+} // mozilla namespace
