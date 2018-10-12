@@ -80,7 +80,7 @@ public:
     HANDLE mFontRef;
 };
 
-BYTE 
+BYTE
 FontTypeToOutPrecision(uint8_t fontType)
 {
     BYTE ret;
@@ -154,9 +154,9 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
     }
 
     // skip non-SFNT fonts completely
-    if (mFontType != GFX_FONT_TYPE_PS_OPENTYPE && 
+    if (mFontType != GFX_FONT_TYPE_PS_OPENTYPE &&
         mFontType != GFX_FONT_TYPE_TT_OPENTYPE &&
-        mFontType != GFX_FONT_TYPE_TRUETYPE) 
+        mFontType != GFX_FONT_TYPE_TRUETYPE)
     {
         mCharacterMap = new gfxCharacterMap();
         mCharacterMap->mBuildOnTheFly = true;
@@ -288,7 +288,7 @@ GDIFontEntry::FillLogFont(LOGFONTW *aLogFont,
 #define MISSING_GLYPH 0x1F // glyph index returned for missing characters
                            // on WinXP with .fon fonts, but not Type1 (.pfb)
 
-bool 
+bool
 GDIFontEntry::TestCharacterMap(uint32_t aCh)
 {
     if (!mCharacterMap) {
@@ -322,13 +322,13 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
 
         bool hasGlyph = false;
 
-        // Bug 573038 - in some cases GetGlyphIndicesW returns 0xFFFF for a 
-        // missing glyph or 0x1F in other cases to indicate the "invalid" 
+        // Bug 573038 - in some cases GetGlyphIndicesW returns 0xFFFF for a
+        // missing glyph or 0x1F in other cases to indicate the "invalid"
         // glyph.  Map both cases to "not found"
         if (IsType1() || mForceGDI) {
-            // Type1 fonts and uniscribe APIs don't get along.  
+            // Type1 fonts and uniscribe APIs don't get along.
             // ScriptGetCMap will return E_HANDLE
-            DWORD ret = GetGlyphIndicesW(dc, str, 1, 
+            DWORD ret = GetGlyphIndicesW(dc, str, 1,
                                          glyph, GGI_MARK_NONEXISTING_GLYPHS);
             if (ret != GDI_ERROR
                 && glyph[0] != 0xFFFF
@@ -337,7 +337,7 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
                 hasGlyph = true;
             }
         } else {
-            // ScriptGetCMap works better than GetGlyphIndicesW 
+            // ScriptGetCMap works better than GetGlyphIndicesW
             // for things like bitmap/vector fonts
             SCRIPT_CACHE sc = nullptr;
             HRESULT rv = ScriptGetCMap(dc, &sc, str, 1, 0, glyph);
@@ -392,7 +392,7 @@ GDIFontEntry::InitLogFont(const nsACString& aName,
     mLogFont.lfFaceName[len] = '\0';
 }
 
-GDIFontEntry* 
+GDIFontEntry*
 GDIFontEntry::CreateFontEntry(const nsACString& aName,
                               gfxWindowsFontType aFontType,
                               SlantStyleRange aStyle,
@@ -474,7 +474,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
             // XXX Can we still do this now that we store mCharset
             // on the font family rather than the font entry?
             ff->mCharset.set(metrics.tmCharSet);
-            return 1; 
+            return 1;
         }
     }
 
@@ -585,7 +585,7 @@ gfxGDIFontList::GetFontSubstitutes()
     WCHAR aliasName[MAX_VALUE_NAME];
     WCHAR actualName[MAX_VALUE_DATA];
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes",
           0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
@@ -617,7 +617,7 @@ gfxGDIFontList::GetFontSubstitutes()
         gfxFontFamily *ff;
         NS_ConvertUTF16toUTF8 substitute(substituteName);
         NS_ConvertUTF16toUTF8 actual(actualFontName);
-        if (!actual.IsEmpty() && 
+        if (!actual.IsEmpty() &&
             (ff = mFontFamilies.GetWeak(actual))) {
             mFontSubstitutes.Put(substitute, ff);
         } else {
@@ -717,7 +717,7 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
     return 1;
 }
 
-gfxFontEntry* 
+gfxFontEntry*
 gfxGDIFontList::LookupLocalFont(const nsACString& aFontName,
                                 WeightRange aWeightForEntry,
                                 StretchRange aStretchForEntry,
@@ -731,13 +731,13 @@ gfxGDIFontList::LookupLocalFont(const nsACString& aFontName,
     }
 
     bool isCFF = false; // jtdfix -- need to determine this
-    
+
     // use the face name from the lookup font entry, which will be the localized
     // face name which GDI mapping tables use (e.g. with the system locale set to
     // Dutch, a fullname of 'Arial Bold' will find a font entry with the face name
     // 'Arial Vet' which can be used as a key in GDI font lookups).
-    GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(lookup->Name(), 
-        gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
+    GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(lookup->Name(),
+        gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/,
         lookup->SlantStyle(), lookup->Weight(), aStretchForEntry, nullptr);
 
     if (!fe)
@@ -845,7 +845,7 @@ gfxGDIFontList::MakePlatformFont(const nsACString& aFontName,
 
     if (NS_FAILED(rv))
         return nullptr;
-        
+
     DWORD numFonts = 0;
 
     uint8_t *fontData = reinterpret_cast<uint8_t*> (newFontData.Elements());
@@ -853,9 +853,9 @@ gfxGDIFontList::MakePlatformFont(const nsACString& aFontName,
     NS_ASSERTION(fontData, "null font data after renaming");
 
     // http://msdn.microsoft.com/en-us/library/ms533942(VS.85).aspx
-    // "A font that is added by AddFontMemResourceEx is always private 
+    // "A font that is added by AddFontMemResourceEx is always private
     //  to the process that made the call and is not enumerable."
-    fontRef = AddFontMemResourceEx(fontData, fontLength, 
+    fontRef = AddFontMemResourceEx(fontData, fontLength,
                                     0 /* reserved */, &numFonts);
     if (!fontRef) {
         if (FixupSymbolEncodedFont(fontData, fontLength)) {
@@ -924,7 +924,7 @@ gfxGDIFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
     // this really shouldn't fail to find a font....
     NONCLIENTMETRICSW ncm;
     ncm.cbSize = sizeof(ncm);
-    BOOL status = ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 
+    BOOL status = ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
                                           sizeof(ncm), &ncm, 0);
     if (status) {
         ff = FindFamily(NS_ConvertUTF16toUTF8(ncm.lfMessageFont.lfFaceName));
