@@ -1,12 +1,11 @@
 //! A parser and representation of regular expressions.
 
-use regex_syntax::{self, Error, Parser};
-use regex_syntax::hir::Hir;
+use regex_syntax::{self, Error, Expr};
 
 #[cfg(test)]
 mod test;
 
-pub type Regex = Hir;
+pub type Regex = Expr;
 pub type RegexError = Error;
 
 /// Convert a string literal into a parsed regular expression.
@@ -19,6 +18,6 @@ pub fn parse_literal(s: &str) -> Regex {
 
 /// Parse a regular expression like `a+` etc.
 pub fn parse_regex(s: &str) -> Result<Regex, RegexError> {
-    let expr = Parser::new().parse(s)?;
+    let expr = try!(Expr::parse(s));
     Ok(expr)
 }

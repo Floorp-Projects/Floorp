@@ -1,9 +1,0 @@
-[package]
-name = "fake-simd"
-version = "0.1.2"
-authors = ["The Rust-Crypto Project Developers"]
-license = "MIT/Apache-2.0"
-description = "Crate for mimicking simd crate on stable Rust"
-documentation = "https://docs.rs/fake-simd"
-repository = "https://github.com/RustCrypto/utils"
-keywords = ["simd"]

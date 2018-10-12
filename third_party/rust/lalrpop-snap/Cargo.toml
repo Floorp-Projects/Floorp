@@ -12,7 +12,7 @@
 
 [package]
 name = "lalrpop-snap"
-version = "0.16.0"
+version = "0.15.1"
 authors = ["Niko Matsakis <niko@alum.mit.edu>"]
 description = "convenient LR(1) parser generator"
 readme = "../README.md"
@@ -27,28 +27,31 @@ doctest = false
 version = "1.0"
 
 [dependencies.atty]
-version = "0.2"
+version = "0.1.2"
 
 [dependencies.bit-set]
-version = "0.5.0"
+version = "0.4.0"
 
 [dependencies.diff]
 version = "0.1.9"
 
 [dependencies.ena]
-version = "0.9"
+version = "0.5"
 
 [dependencies.itertools]
 version = "0.7"
 
+[dependencies.lalrpop-intern]
+version = "0.15.1"
+
 [dependencies.lalrpop-util]
-version = "0.16.0"
+version = "0.15.1"
 
 [dependencies.petgraph]
-version = "0.4.13"
+version = "0.4.4"
 
 [dependencies.regex]
-version = "1"
+version = "0.2.1"
 
 [dependencies.regex-syntax]
 version = "0.4.0"

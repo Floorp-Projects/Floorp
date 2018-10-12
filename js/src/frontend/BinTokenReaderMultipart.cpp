@@ -286,26 +286,6 @@ BinTokenReaderMultipart::readAtom()
     return maybe;
 }
 
-JS::Result<JSAtom*>
-BinTokenReaderMultipart::readMaybeIdentifierName() {
-    return readMaybeAtom();
-}
-
-JS::Result<JSAtom*>
-BinTokenReaderMultipart::readIdentifierName() {
-    return readAtom();
-}
-
-JS::Result<JSAtom*>
-BinTokenReaderMultipart::readMaybePropertyKey() {
-    return readMaybeAtom();
-}
-
-JS::Result<JSAtom*>
-BinTokenReaderMultipart::readPropertyKey() {
-    return readAtom();
-}
-
 JS::Result<Ok>
 BinTokenReaderMultipart::readChars(Chars& out)
 {

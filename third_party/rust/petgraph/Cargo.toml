@@ -12,7 +12,7 @@
 
 [package]
 name = "petgraph"
-version = "0.4.13"
+version = "0.4.11"
 authors = ["bluss", "mitchmindtree"]
 description = "Graph data structure library. Provides graph types and graph algorithms."
 documentation = "https://docs.rs/petgraph/"

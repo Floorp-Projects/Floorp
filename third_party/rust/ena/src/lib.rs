@@ -8,16 +8,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! An implementation of union-find. See the `unify` module for more
-//! details.
-
-#![cfg_attr(feature = "bench", feature(test))]
+#![cfg_attr(all(feature = "unstable", test), feature(test))]
+#![allow(dead_code)]
 
 #[macro_use]
-extern crate log;
+mod debug;
 
-#[cfg(feature = "persistent")]
-extern crate dogged;
-
+pub mod constraint;
+pub mod graph;
 pub mod snapshot_vec;
+#[cfg(feature = "unstable")]
+pub mod cc;
 pub mod unify;
+pub mod bitvec;

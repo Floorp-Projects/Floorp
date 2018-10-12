@@ -218,13 +218,11 @@ namespace frontend {
     F(OptionalExpression, "OptionalExpression") \
     F(OptionalIdentifierName, "OptionalIdentifierName") \
     F(OptionalLabel, "OptionalLabel") \
-    F(OptionalPropertyKey, "OptionalPropertyKey") \
     F(OptionalSpreadElementOrExpression, "OptionalSpreadElementOrExpression") \
     F(OptionalStatement, "OptionalStatement") \
     F(OptionalVariableDeclarationOrExpression, "OptionalVariableDeclarationOrExpression") \
     F(Parameter, "Parameter") \
     F(Program, "Program") \
-    F(PropertyKey, "PropertyKey") \
     F(PropertyName, "PropertyName") \
     F(ReturnStatement, "ReturnStatement") \
     F(Script, "Script") \
@@ -269,7 +267,7 @@ enum class BinKind {
 };
 
 // The number of distinct values of BinKind.
-const size_t BINKIND_LIMIT = 200;
+const size_t BINKIND_LIMIT = 198;
 
 
 

@@ -140,26 +140,6 @@ BinTokenReaderTester::readMaybeAtom()
     return result.get();
 }
 
-JS::Result<JSAtom*>
-BinTokenReaderTester::readMaybeIdentifierName() {
-    return readMaybeAtom();
-}
-
-JS::Result<JSAtom*>
-BinTokenReaderTester::readIdentifierName() {
-    return readAtom();
-}
-
-JS::Result<JSAtom*>
-BinTokenReaderTester::readMaybePropertyKey() {
-    return readMaybeAtom();
-}
-
-JS::Result<JSAtom*>
-BinTokenReaderTester::readPropertyKey() {
-    return readAtom();
-}
-
 
 // Nullable strings:
 // - "<string>" (not counted in byte length)

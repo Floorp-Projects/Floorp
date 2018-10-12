@@ -115,10 +115,11 @@ impl TypeDeanonymizer {
                 // See also tagged_tuple in write.rs.
                 if field.is_lazy() {
                     declaration.with_field(skip_name_map.get(field.name()).unwrap(),
-                                           Type::offset().required());
+                                           Type::offset().required(),
+                                           Laziness::Eager);
                 }
-                declaration.with_field_laziness(field.name(), field.type_().clone(),
-                                                field.laziness());
+                declaration.with_field(field.name(), field.type_().clone(),
+                                       field.laziness());
             }
         }
         // Copy and deanonymize typedefs
@@ -190,8 +191,6 @@ impl TypeDeanonymizer {
             TypeSpec::Boolean |
             TypeSpec::Number |
             TypeSpec::UnsignedLong |
-            TypeSpec::PropertyKey |
-            TypeSpec::IdentifierName |
             TypeSpec::String |
             TypeSpec::Offset |
             TypeSpec::Void    => {
@@ -203,14 +202,7 @@ impl TypeDeanonymizer {
                         debug!(target: "export_utils", "import_typespec: Attempting to redefine typedef {name}", name = my_name.to_str());
                     }
                 }
-                // This is a workaround for typedefs in the webidl that are not truly typedefs.
-                // See https://github.com/Yoric/ecmascript-binary-ast/pull/1
-                let name = match *type_spec {
-                    TypeSpec::PropertyKey => self.builder.node_name("PropertyKey"),
-                    TypeSpec::IdentifierName => self.builder.node_name("IdentifierName"),
-                    _ => self.builder.node_name(&format!("@@{:?}", type_spec)),
-                };
-                (None, name)
+                (None, self.builder.node_name("@@"))
             }
             TypeSpec::NamedType(ref link) => {
                 let resolved = spec.get_type_by_name(link)
@@ -246,13 +238,11 @@ impl TypeDeanonymizer {
                             Some(IsNullable { is_nullable: true, .. }) |
                             Some(IsNullable { content: Primitive::Interface(_), .. }) => Type::named(&content).required(),
                             Some(IsNullable { content: Primitive::String, .. }) => Type::string().required(),
-                            Some(IsNullable { content: Primitive::IdentifierName, .. }) => Type::identifier_name().required(),
-                            Some(IsNullable { content: Primitive::PropertyKey, .. }) => Type::property_key().required(),
                             Some(IsNullable { content: Primitive::Number, .. }) => Type::number().required(),
                             Some(IsNullable { content: Primitive::UnsignedLong, .. }) => Type::unsigned_long().required(),
                             Some(IsNullable { content: Primitive::Boolean, .. }) => Type::bool().required(),
                             Some(IsNullable { content: Primitive::Offset, .. }) => Type::offset().required(),
-                            Some(IsNullable { content: Primitive::Void, .. }) => Type::void().required(),
+                            Some(IsNullable { content: Primitive::Void, .. }) => Type::void().required()
                         };
                         debug!(target: "export_utils", "import_typespec aliasing {:?} => {:?}",
                             my_name, deanonymized);
@@ -385,10 +375,6 @@ impl TypeName {
                 "_String".to_string(),
             TypeSpec::Void =>
                 "_Void".to_string(),
-            TypeSpec::IdentifierName =>
-                "IdentifierName".to_string(),
-            TypeSpec::PropertyKey =>
-                "PropertyKey".to_string(),
             TypeSpec::TypeSum(ref sum) => {
                 format!("{}", sum.types()
                     .iter()
@@ -422,10 +408,6 @@ impl ToWebidl {
                 "bool".to_string(),
             TypeSpec::String =>
                 "string".to_string(),
-            TypeSpec::PropertyKey =>
-                "[PropertyKey] string".to_string(),
-            TypeSpec::IdentifierName =>
-                "[IdentifierName] string".to_string(),
             TypeSpec::Number =>
                 "number".to_string(),
             TypeSpec::UnsignedLong =>

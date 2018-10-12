@@ -75,7 +75,7 @@ fn input_parameter_already_declared() {
 #[test]
 fn invalid_regular_expression_unterminated_group() {
     check_err(
-        r#"unclosed group"#,
+        r#"Unclosed parenthesis"#,
         r#"grammar; X = X r"(123";"#,
         r#"               ~~~~~~~ "#,
     );

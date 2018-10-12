@@ -207,8 +207,7 @@ ConstType: (ast::ConstType, bool) = {
 ConstValue: ast::ConstValue = {
     BooleanLiteral => ast::ConstValue::BooleanLiteral(<>),
     FloatLiteral => ast::ConstValue::FloatLiteral(<>),
-    "SignedIntegerLiteral" => ast::ConstValue::SignedIntegerLiteral(<>),
-    "UnsignedIntegerLiteral" => ast::ConstValue::UnsignedIntegerLiteral(<>),
+    "IntegerLiteral" => ast::ConstValue::IntegerLiteral(<>),
     "null" => ast::ConstValue::Null
 };
 
@@ -1135,10 +1134,9 @@ Other: ast::Other = {
 
     "FloatLiteral" => ast::Other::FloatLiteral(<>),
     "Identifier" => ast::Other::Identifier(<>),
+    "IntegerLiteral" => ast::Other::IntegerLiteral(<>),
     "OtherLiteral" => ast::Other::OtherLiteral(<>),
-    "SignedIntegerLiteral" => ast::Other::SignedIntegerLiteral(<>),
     "StringLiteral" => ast::Other::StringLiteral(<>),
-    "UnsignedIntegerLiteral" => ast::Other::UnsignedIntegerLiteral(<>),
 
     ":" => ast::Other::Colon,
     "..." => ast::Other::Ellipsis,
@@ -1560,10 +1558,9 @@ extern {
         // Regular expressions
         "FloatLiteral" => Token::FloatLiteral(<f64>),
         "Identifier" => Token::Identifier(<ast::Identifier>),
+        "IntegerLiteral" => Token::IntegerLiteral(<i64>),
         "OtherLiteral" => Token::OtherLiteral(<char>),
-        "SignedIntegerLiteral" => Token::SignedIntegerLiteral(<i64>),
         "StringLiteral" => Token::StringLiteral(<String>),
-        "UnsignedIntegerLiteral" => Token::UnsignedIntegerLiteral(<u64>),
 
         // Symbols
         ":" => Token::Colon,

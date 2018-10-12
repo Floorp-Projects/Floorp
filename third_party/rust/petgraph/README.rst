@@ -26,17 +26,6 @@ Crate feature flags:
 Recent Changes
 --------------
 
-- 0.4.13
-
-  - Fix clippy warnings by @jonasbb
-  - Add docs for ``Csr`` by @ksadorf
-  - Fix conflict with new stable method ``find_map`` in new Rust
-
-- 0.4.12
-
-  - Newtype ``Time`` now also implements ``Hash``
-  - Documentation updates for ``Frozen``.
-
 - 0.4.11
 
   - Fix ``petgraph::graph::NodeReferences`` to be publically visible
