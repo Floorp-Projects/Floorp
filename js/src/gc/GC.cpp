@@ -2093,8 +2093,8 @@ ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,
 
     float minRatio = tunables.highFrequencyHeapGrowthMin();
     float maxRatio = tunables.highFrequencyHeapGrowthMax();
-    float lowLimit = tunables.highFrequencyLowLimitBytes();
-    float highLimit = tunables.highFrequencyHighLimitBytes();
+    size_t lowLimit = tunables.highFrequencyLowLimitBytes();
+    size_t highLimit = tunables.highFrequencyHighLimitBytes();
 
     MOZ_ASSERT(minRatio <= maxRatio);
     MOZ_ASSERT(lowLimit < highLimit);
