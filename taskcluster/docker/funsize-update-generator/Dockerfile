@@ -26,7 +26,7 @@ RUN for i in 1 2 3 4 5; do freshclam --verbose && break || sleep 15; done
 # python-pip installs a lot of dependencies increasing the size of an image
 # drastically. Install it like this saves us almost 200M.
 RUN bash -c "curl -L https://bootstrap.pypa.io/get-pip.py | python3"
-RUN pip install pipenv
+RUN ["pip", "install", "pipenv<2018.10.9", "pip==18.0"]
 
 # scripts
 RUN mkdir /home/worker/bin
