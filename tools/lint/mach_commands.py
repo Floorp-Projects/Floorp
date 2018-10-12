@@ -36,11 +36,12 @@ class MachCommands(MachCommandBase):
         parser=setup_argument_parser)
     def lint(self, *runargs, **lintargs):
         """Run linters."""
+        self._activate_virtualenv()
+
         from mozlint import cli
         lintargs.setdefault('root', self.topsrcdir)
         lintargs['exclude'] = ['obj*', 'tools/lint/test/files']
         cli.SEARCH_PATHS.append(here)
-        self._activate_virtualenv()
         return cli.run(*runargs, **lintargs)
 
     @Command('eslint', category='devenv',
