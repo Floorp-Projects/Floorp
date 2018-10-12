@@ -4084,11 +4084,7 @@ class PDFFindBar {
         }
         break;
     }
-    if (notFound) {
-      this.findField.classList.add('notFound');
-    } else {
-      this.findField.classList.remove('notFound');
-    }
+    this.findField.classList.toggle('notFound', notFound);
     this.findField.setAttribute('data-status', status);
     Promise.resolve(findMsg).then(msg => {
       this.findMsg.textContent = msg;
@@ -5366,6 +5362,9 @@ class SimpleLinkService {
   constructor() {
     this.externalLinkTarget = null;
     this.externalLinkRel = null;
+  }
+  get pagesCount() {
+    return 0;
   }
   get page() {
     return 0;
@@ -7289,16 +7288,8 @@ class BaseViewer {
   _updateScrollMode(pageNumber = null) {
     const scrollMode = this._scrollMode,
           viewer = this.viewer;
-    if (scrollMode === ScrollMode.HORIZONTAL) {
-      viewer.classList.add('scrollHorizontal');
-    } else {
-      viewer.classList.remove('scrollHorizontal');
-    }
-    if (scrollMode === ScrollMode.WRAPPED) {
-      viewer.classList.add('scrollWrapped');
-    } else {
-      viewer.classList.remove('scrollWrapped');
-    }
+    viewer.classList.toggle('scrollHorizontal', scrollMode === ScrollMode.HORIZONTAL);
+    viewer.classList.toggle('scrollWrapped', scrollMode === ScrollMode.WRAPPED);
     if (!this.pdfDocument || !pageNumber) {
       return;
     }
@@ -8342,11 +8333,9 @@ class SecondaryToolbar {
     this.eventBus.on('resize', this._setMaxHeight.bind(this));
     this.eventBus.on('baseviewerinit', evt => {
       if (evt.source instanceof _pdf_single_page_viewer.PDFSinglePageViewer) {
-        this.toolbarButtonContainer.classList.add('hiddenScrollModeButtons');
-        this.toolbarButtonContainer.classList.add('hiddenSpreadModeButtons');
+        this.toolbarButtonContainer.classList.add('hiddenScrollModeButtons', 'hiddenSpreadModeButtons');
       } else {
-        this.toolbarButtonContainer.classList.remove('hiddenScrollModeButtons');
-        this.toolbarButtonContainer.classList.remove('hiddenSpreadModeButtons');
+        this.toolbarButtonContainer.classList.remove('hiddenScrollModeButtons', 'hiddenSpreadModeButtons');
       }
     });
   }
@@ -8778,11 +8767,7 @@ class Toolbar {
   }
   updateLoadingIndicatorState(loading = false) {
     let pageNumberInput = this.items.pageNumber;
-    if (loading) {
-      pageNumberInput.classList.add(PAGE_NUMBER_LOADING_INDICATOR);
-    } else {
-      pageNumberInput.classList.remove(PAGE_NUMBER_LOADING_INDICATOR);
-    }
+    pageNumberInput.classList.toggle(PAGE_NUMBER_LOADING_INDICATOR, loading);
   }
   _adjustScaleWidth() {
     let container = this.items.scaleSelectContainer;
