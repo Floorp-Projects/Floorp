@@ -76,8 +76,70 @@ def mock_shell_output(monkeypatch):
         elif 'pm list package' in cmd:
             apps = ["org.mozilla.fennec", "org.mozilla.geckoview_example"]
             return ('package:{}\n' * len(apps)).format(*apps)
+        else:
+            print(str(cmd))
+            return str(cmd)
 
     monkeypatch.setattr(mozdevice.ADBDevice, 'shell_output', shell_output_wrapper)
+
+
+@pytest.fixture(autouse=True)
+def mock_is_path_internal_storage(monkeypatch):
+    """Monkeypatches the ADBDevice.is_path_internal_storage() method call.
+
+    Instead of returning the outcome of whether the path provided is
+    internal storage or external, this will always return True.
+
+    :param object monkeypatch: pytest provided fixture for mocking.
+    """
+    def is_path_internal_storage_wrapper(object, path, timeout=None):
+        """Actual monkeypatch implementation of the is_path_internal_storage() call.
+
+        :param str path: The path to test.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value set in the ADBDevice constructor is used.
+        :returns: boolean
+
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        if 'internal_storage' in path:
+            return True
+        return False
+
+    monkeypatch.setattr(mozdevice.ADBDevice,
+                        'is_path_internal_storage', is_path_internal_storage_wrapper)
+
+
+@pytest.fixture(autouse=True)
+def mock_shell_bool(monkeypatch):
+    """Monkeypatches the ADBDevice.shell_bool() method call.
+
+    Instead of returning the output of an adb call, this method will
+    return appropriate string output. Content of the string output is
+    in line with the calling method's expectations.
+
+    :param object monkeypatch: pytest provided fixture for mocking.
+    """
+    def shell_bool_wrapper(object, cmd, env=None, cwd=None, timeout=None, root=False):
+        """Actual monkeypatch implementation of the shell_bool method call.
+
+        :param object object: placeholder object representing ADBDevice
+        :param str cmd: command to be executed
+        :param env: contains the environment variable
+        :type env: dict or None
+        :param cwd: The directory from which to execute.
+        :type cwd: str or None
+        :param timeout: unused parameter tp represent timeout threshold
+        :returns: string - string representation of a simulated call to adb
+        """
+        print(cmd)
+        return str(cmd)
+
+    monkeypatch.setattr(mozdevice.ADBDevice, 'shell_bool', shell_bool_wrapper)
 
 
 @pytest.fixture(autouse=True)
