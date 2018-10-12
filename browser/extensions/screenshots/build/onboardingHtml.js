@@ -1,3 +1,5 @@
+/* Created from webextension/onboarding/slides.html */
+window.onboardingHtml = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -8,7 +10,7 @@
   <body>
     <div id="slide-overlay">
       <!-- The current slide is set by having .active-slide-1, .active-slide-2, etc on #slide element: -->
-      <div id="slide-container" data-number-of-slides="5" class="active-slide-1">
+      <div id="slide-container" data-number-of-slides="6" class="active-slide-1">
         <div class="slide slide-1">
           <!-- Note: all images must be listed in manifest.json.template under web_accessible_resources -->
           <div class="slide-image" style="background-image: url('MOZ_EXTENSION/icons/onboarding-1.png');"></div>
@@ -48,6 +50,13 @@
             <p data-l10n-id="tourBodyDownloadUpload"></p>
           </div>
         </div>
+        <div class="slide slide-6">
+          <div class="slide-image" style="background-image: url('MOZ_EXTENSION/icons/onboarding-6.png');"></div>
+          <div class="slide-content">
+            <h1 data-l10n-id="tourHeaderAccounts"></h1>
+            <p data-l10n-id="tourBodyAccounts"></p>
+          </div>
+        </div>
 
         <!-- Clickable elements should be buttons for accessibility -->
         <button id="skip" data-l10n-id="tourSkip" tabindex=1>Skip</button>
@@ -60,9 +69,14 @@
           <button class="goto-slide goto-slide-3" data-number="3" tabindex=6></button>
           <button class="goto-slide goto-slide-4" data-number="4" tabindex=7></button>
           <button class="goto-slide goto-slide-5" data-number="5" tabindex=8></button>
+          <button class="goto-slide goto-slide-6" data-number="6" tabindex=9></button>
         </div>
         <!-- FIXME: Need to put in privacy / etc links -->
       </div>
     </div>
   </body>
 </html>
+
+`;
+null;
+
