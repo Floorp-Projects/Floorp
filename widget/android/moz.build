@@ -38,6 +38,7 @@ EXPORTS.mozilla.widget += [
 
 SOURCES += [
     '!GeneratedJNIWrappers.cpp',
+    'EventDispatcher.cpp',
 ]
 
 UNIFIED_SOURCES += [
@@ -47,7 +48,6 @@ UNIFIED_SOURCES += [
     'AndroidContentController.cpp',
     'AndroidUiThread.cpp',
     'ANRReporter.cpp',
-    'EventDispatcher.cpp',
     'GeckoEditableSupport.cpp',
     'GfxInfo.cpp',
     'nsAndroidProtocolHandler.cpp',
