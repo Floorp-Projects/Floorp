@@ -4,7 +4,7 @@
 
 use api::{ColorF, BorderStyle, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FilterOp, ImageFormat};
-use api::{MixBlendMode, PipelineId};
+use api::{MixBlendMode, PipelineId, DeviceRect, LayoutSize};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
 use clip_scroll_tree::{ClipScrollTree};
@@ -319,6 +319,16 @@ pub struct BlitJob {
     pub target_rect: DeviceIntRect,
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct LineDecorationJob {
+    pub task_rect: DeviceRect,
+    pub local_size: LayoutSize,
+    pub wavy_line_thickness: f32,
+    pub style: i32,
+    pub orientation: i32,
+}
+
 #[cfg(feature = "pathfinder")]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -478,7 +488,8 @@ impl RenderTarget for ColorRenderTarget {
             }
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Border(..) |
-            RenderTaskKind::CacheMask(..) => {
+            RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::LineDecoration(..) => {
                 panic!("Should not be added to color target!");
             }
             RenderTaskKind::Glyph(..) => {
@@ -616,6 +627,7 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
+            RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Glyph(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
@@ -685,6 +697,7 @@ pub struct TextureCacheRenderTarget {
     pub border_segments_complex: Vec<BorderInstance>,
     pub border_segments_solid: Vec<BorderInstance>,
     pub clears: Vec<DeviceIntRect>,
+    pub line_decorations: Vec<LineDecorationJob>,
 }
 
 impl TextureCacheRenderTarget {
@@ -697,6 +710,7 @@ impl TextureCacheRenderTarget {
             border_segments_complex: vec![],
             border_segments_solid: vec![],
             clears: vec![],
+            line_decorations: vec![],
         }
     }
 
@@ -714,6 +728,17 @@ impl TextureCacheRenderTarget {
         let target_rect = task.get_target_rect();
 
         match task.kind {
+            RenderTaskKind::LineDecoration(ref info) => {
+                self.clears.push(target_rect.0);
+
+                self.line_decorations.push(LineDecorationJob {
+                    task_rect: target_rect.0.to_f32(),
+                    local_size: info.local_size,
+                    style: info.style as i32,
+                    orientation: info.orientation as i32,
+                    wavy_line_thickness: info.wavy_line_thickness,
+                });
+            }
             RenderTaskKind::HorizontalBlur(ref info) => {
                 info.add_instances(
                     &mut self.horizontal_blurs,
