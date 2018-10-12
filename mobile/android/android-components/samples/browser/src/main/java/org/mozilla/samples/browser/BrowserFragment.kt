@@ -112,9 +112,7 @@ class BrowserFragment : Fragment(), BackHandler {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSION_WRITE_STORAGE_REQUEST -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED)
-                    && isStoragePermissionAvailable()
-                ) {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) && isStoragePermissionAvailable()) {
                     // permission was granted, yay!
                     downloadsFeature.onPermissionsGranted()
                 }

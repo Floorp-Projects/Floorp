@@ -15,7 +15,6 @@ import android.widget.CheckBox
 import android.widget.TextView
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
-import mozilla.components.service.fxa.FxaResult
 import mozilla.components.service.fxa.OAuthInfo
 import mozilla.components.service.fxa.Profile
 
@@ -60,8 +59,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                         account = acct
 
                         acct.getProfile()
-                }
-
+                    }
                 }
             }).whenComplete {
                 val txtView: TextView = findViewById(R.id.txtView)

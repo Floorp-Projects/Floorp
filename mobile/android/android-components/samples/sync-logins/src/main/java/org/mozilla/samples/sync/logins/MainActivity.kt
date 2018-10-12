@@ -14,8 +14,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.support.v4.content.ContextCompat
-import android.util.Log
-import android.widget.*
+import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaResult
@@ -47,7 +48,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         listView = findViewById(R.id.logins_list_view)
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1)
         listView.adapter = adapter
-        activityContext = this;
+        activityContext = this
 
         getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).getString(FXA_STATE_KEY, "").let {
             FirefoxAccount.fromJSONString(it).then({
@@ -66,8 +67,6 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             account?.beginOAuthFlow(scopes, wantsKeys)?.whenComplete { openWebView(it) }
         }
-
-
     }
 
     override fun onDestroy() {
@@ -120,8 +119,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                 runOnUiThread {
                     Toast.makeText(this, "Logins success", Toast.LENGTH_SHORT).show()
                     for (i in 0..syncLogins.size - 1) {
-                        adapter.addAll("Login: " + syncLogins[i].hostname);
-                        adapter.notifyDataSetChanged();
+                        adapter.addAll("Login: " + syncLogins[i].hostname)
+                        adapter.notifyDataSetChanged()
                     }
                 }
             }

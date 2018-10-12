@@ -33,8 +33,7 @@ class LoginFragment : Fragment() {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view: View = inflater.inflate(R.layout.fragment_view, container, false)
         val webView = view.findViewById<WebView>(R.id.webview)
         // Need JS, cookies and localStorage.

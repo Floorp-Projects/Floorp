@@ -7,7 +7,6 @@ import android.content.Context
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
-import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 
 /**

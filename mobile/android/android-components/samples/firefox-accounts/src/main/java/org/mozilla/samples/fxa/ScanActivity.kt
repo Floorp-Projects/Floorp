@@ -10,7 +10,7 @@ import android.support.v4.content.ContextCompat
 import com.google.zxing.Result
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
-class ScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler  {
+class ScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     private lateinit var mScannerView: ZXingScannerView
 

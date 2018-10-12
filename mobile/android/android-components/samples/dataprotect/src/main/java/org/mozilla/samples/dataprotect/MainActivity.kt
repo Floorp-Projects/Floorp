@@ -11,7 +11,6 @@ import android.preference.PreferenceManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Base64
-import android.util.Log
 import android.widget.Button
 import mozilla.components.lib.dataprotect.Keystore
 import mozilla.components.support.base.log.logger.Logger
@@ -20,7 +19,7 @@ import java.nio.charset.StandardCharsets
 class MainActivity : AppCompatActivity() {
     private val logger: Logger = Logger("dataprotect")
     private val keystore: Keystore = Keystore(KEYSTORE_LABEL)
-    private val itemKeys: List<String> = List(5) {"protected item ${it+1}" }
+    private val itemKeys: List<String> = List(5) { "protected item ${it + 1}" }
 
     private lateinit var listView: RecyclerView
     private lateinit var listAdapter: ProtectedDataAdapter
@@ -56,11 +55,11 @@ class MainActivity : AppCompatActivity() {
         val editor = prefs.edit()
         for (datakey in itemKeys) {
             if (!prefs.contains(datakey)) {
-                val plain = "value for ${datakey}"
+                val plain = "value for $datakey"
                 val encrypted = keystore.encryptBytes(plain.toByteArray(StandardCharsets.UTF_8))
                 val dataval = Base64.encodeToString(encrypted, B64_FLAGS)
                 editor.putString(datakey, dataval)
-                logger.info("created pref item ${datakey} = ${dataval}")
+                logger.info("created pref item $datakey = $dataval")
             }
         }
         editor.apply()

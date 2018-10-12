@@ -1,8 +1,12 @@
 package org.mozilla.samples.sync.logins
 
-import mozilla.components.service.fxa.*
+import mozilla.components.service.fxa.OAuthInfo
 import org.json.JSONObject
-import org.mozilla.sync15.logins.*
+import org.mozilla.sync15.logins.DatabaseLoginsStorage
+import org.mozilla.sync15.logins.LoginsStorage
+import org.mozilla.sync15.logins.SyncUnlockInfo
+import org.mozilla.sync15.logins.ServerPassword
+import org.mozilla.sync15.logins.SyncResult
 
 /**
  * A minimal login example.
@@ -85,9 +89,9 @@ class SyncLoginsClient(private val databasePath: String) {
         val keyInfo = keysObj.getJSONObject("https://identity.mozilla.com/apps/oldsync") ?: throw RuntimeException("Key info is missing!")
 
         return SyncUnlockInfo(
-                kid            = keyInfo.getString("kid") ?: throw RuntimeException("keyInfo.kid is missing!"),
+                kid = keyInfo.getString("kid") ?: throw RuntimeException("keyInfo.kid is missing!"),
                 fxaAccessToken = oauthInfo.accessToken ?: throw RuntimeException("accessToken is missing!"),
-                syncKey        = keyInfo.getString("k") ?: throw RuntimeException("keyInfo.k is missing!"),
+                syncKey = keyInfo.getString("k") ?: throw RuntimeException("keyInfo.k is missing!"),
                 tokenserverURL = tokenServerURL
         )
     }
@@ -98,5 +102,4 @@ class SyncLoginsClient(private val databasePath: String) {
     private fun getSecretKey(): SyncResult<String> {
         return SyncResult.fromValue("my_cool_secret_key")
     }
-
 }

@@ -28,5 +28,4 @@ class IntentReceiverActivity : Activity() {
         startActivity(intent)
         finish()
     }
-
 }
