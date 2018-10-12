@@ -673,12 +673,23 @@ class ADBDevice(ADBCommand):
             match = re_recurse.search(chmod_output)
             if match:
                 self._chmod_R = True
-        except (ADBError, ADBTimeoutError) as e:
-            self._logger.debug('Check chmod -R: %s' % e)
+        except ADBError as e:
+            self._logger.debug("Check chmod -R: {}".format(e))
             match = re_recurse.search(e.message)
             if match:
                 self._chmod_R = True
-        self._logger.info("Native chmod -R support: %s" % self._chmod_R)
+        self._logger.info("Native chmod -R support: {}".format(self._chmod_R))
+
+        # Do we have chown -R?
+        try:
+            self._chown_R = False
+            chown_output = self.shell_output("chown --help", timeout=timeout)
+            match = re_recurse.search(chown_output)
+            if match:
+                self._chown_R = True
+        except ADBError as e:
+            self._logger.debug("Check chown -R: {}".format(e))
+        self._logger.info("Native chown -R support: {}".format(self._chown_R))
 
         try:
             cleared = self.shell_bool('logcat -P ""', timeout=timeout)
@@ -1610,6 +1621,37 @@ class ADBDevice(ADBCommand):
         if not rv.startswith("remount succeeded"):
             raise ADBError("Unable to remount device")
 
+    def batch_execute(self, commands, timeout=None, root=False):
+        """Writes commands to a temporary file then executes on the device.
+
+        :param list commands_list: List of commands to be run by the shell.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before throwing
+            an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :type timeout: integer or None
+        :param bool root: Flag specifying if the command should
+            be executed as root.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
+        """
+        try:
+            tmpf = tempfile.NamedTemporaryFile(delete=False)
+            tmpf.write('\n'.join(commands))
+            tmpf.close()
+            script = '/sdcard/{}'.format(os.path.basename(tmpf.name))
+            self.push(tmpf.name, script)
+            self.shell_output('sh {}'.format(script), timeout=timeout,
+                              root=root)
+        finally:
+            if tmpf:
+                os.unlink(tmpf.name)
+            if script:
+                self.rm(script, timeout=timeout, root=root)
+
     def chmod(self, path, recursive=False, mask="777", timeout=None, root=False):
         """Recursively changes the permissions of a directory on the
         device.
@@ -1650,44 +1692,78 @@ class ADBDevice(ADBCommand):
             self._logger.warning('Ignoring attempt to chmod external storage')
             return
 
-        if not recursive:
-            self.shell_output("chmod %s %s" % (mask, path),
-                              timeout=timeout, root=root)
+        # build up the command to be run based on capabilities.
+        command = ['chmod']
+
+        if recursive and self._chmod_R:
+            command.append('-R')
+
+        command.append(mask)
+
+        if recursive and not self._chmod_R:
+            paths = self.ls(path, recursive=True, timeout=timeout, root=root)
+            base = ' '.join(command)
+            commands = [' '.join([base, entry]) for entry in paths]
+            self.batch_execute(commands, timeout, root)
+        else:
+            command.append(path)
+            self.shell_output(cmd=' '.join(command), timeout=timeout, root=root)
+
+    def chown(self, path, owner, group=None, recursive=False, timeout=None, root=False):
+        """Run the chown command on the provided path.
+
+        :param str path: path name on the device.
+        :param str owner: new owner of the path.
+        :param group: optional parameter specifying the new group the path
+                      should belong to.
+        :type group: str or None
+        :param bool recursive: optional value specifying whether the command should
+                    operate on files and directories recursively.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before throwing
+            an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :type timeout: integer or None
+        :param bool root: Flag specifying if the command should
+            be executed as root.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
+        """
+        path = posixpath.normpath(path.strip())
+        if self.is_path_internal_storage(path, timeout=timeout):
+            self._logger.warning('Ignoring attempt to chown external storage')
             return
 
-        if self._chmod_R:
-            try:
-                self.shell_output("chmod -R %s %s" % (mask, path),
-                                  timeout=timeout, root=root)
-            except ADBError as e:
-                if e.message.find('No such file or directory') == -1:
-                    raise
-                self._logger.warning('chmod -R %s %s: Ignoring Error: %s' %
-                                     (mask, path, e.message))
-            return
-        # Obtain a list of the directories and files which match path
-        # and construct a shell script which explictly calls chmod on
-        # each of them.
-        entries = self.ls(path, recursive=recursive, timeout=timeout,
-                          root=root)
-        tmpf = None
-        chmodsh = None
-        try:
-            tmpf = tempfile.NamedTemporaryFile(delete=False)
-            for entry in entries:
-                tmpf.write('chmod %s %s\n' % (mask, entry))
-            tmpf.close()
-            chmodsh = '/data/local/tmp/%s' % os.path.basename(tmpf.name)
-            self.push(tmpf.name, chmodsh)
-            self.shell_output('chmod 777 %s' % chmodsh, timeout=timeout,
-                              root=root)
-            self.shell_output('sh -c %s' % chmodsh, timeout=timeout,
-                              root=root)
-        finally:
-            if tmpf:
-                os.unlink(tmpf.name)
-            if chmodsh:
-                self.rm(chmodsh, timeout=timeout, root=root)
+        # build up the command to be run based on capabilities.
+        command = ['chown']
+
+        if recursive and self._chown_R:
+            command.append('-R')
+
+        if group:
+            # officially supported notation is : but . has been checked with
+            # sdk 17 and it works.
+            command.append('{owner}.{group}'.format(owner=owner, group=group))
+        else:
+            command.append(owner)
+
+        if recursive and not self._chown_R:
+            # recursive desired, but chown -R is not supported natively.
+            # like with chmod, get the list of subpaths, put them into a script
+            # then run it with adb with one call.
+            paths = self.ls(path, recursive=True, timeout=timeout, root=root)
+            base = ' '.join(command)
+            commands = [' '.join([base, entry]) for entry in paths]
+
+            self.batch_execute(commands, timeout, root)
+        else:
+            # recursive or not, and chown -R is supported natively.
+            # command can simply be run as provided by the user.
+            command.append(path)
+            self.shell_output(cmd=' '.join(command), timeout=timeout, root=root)
 
     def _test_path(self, argument, path, timeout=None, root=False):
         """Performs path and file type checking.
