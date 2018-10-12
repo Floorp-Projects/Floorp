@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "拍攝網頁的擷圖，可暫時儲存或永久儲存。"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "拍攝畫面擷圖"
+  },
+  "myShotsLink": {
+    "message": "我的擷圖"
+  },
+  "screenshotInstructions": {
+    "message": "拖曳或點擊頁面來選擇區域，按下 ESC 取消。"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "儲存"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "儲存可見範圍"
+  },
+  "saveScreenshotFullPage": {
+    "message": "儲存完整頁面"
+  },
+  "cancelScreenshot": {
+    "message": "取消"
+  },
+  "downloadScreenshot": {
+    "message": "下載"
+  },
+  "downloadOnlyNotice": {
+    "message": "您目前處於「僅可下載模式」。"
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots 會在下列狀況時，進入「僅可下載模式」:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "使用隱私瀏覽模式開啟時。"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "停用第三方 Cookie 時。"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "開啟「永不保留瀏覽紀錄」時。"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "您使用的是 Firefox ESR 版本。"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "已停用上傳。"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "已複製鏈結"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "已將您拍攝的圖片鏈結複製到剪貼簿，按下 $META_KEY$+V 即可貼上。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "複製"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "已複製擷圖"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "已將擷圖複製到剪貼簿，按下 $META_KEY$-V 即可貼上。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "儲存的圖片高度將被裁切至 $PIXELS$px。",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "系統維護中。"
+  },
+  "requestErrorDetails": {
+    "message": "抱歉！無法儲存您拍攝的圖片，請稍候再試一次。"
+  },
+  "connectionErrorTitle": {
+    "message": "無法連線至您的畫面擷圖。"
+  },
+  "connectionErrorDetails": {
+    "message": "請檢查您的網路連線。若您可以正常上網，可能是 Firefox Screenshots 臨時出了問題。"
+  },
+  "loginErrorDetails": {
+    "message": "Firefox Screenshots 服務發生問題，我們無法儲存您拍攝的擷圖。請稍候再試。"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "無法幫此頁面拍照。"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "這不是標準的網頁，無法拍照。"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "您不能幫 Firefox Screenshots 的頁面拍照！"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "您的選擇範圍太小"
+  },
+  "privateWindowErrorTitle": {
+    "message": "隱私瀏覽模式中將停用 Screenshots 套件"
+  },
+  "privateWindowErrorDetails": {
+    "message": "很抱歉帶來不便，我們將在未來提供此功能。"
+  },
+  "genericErrorTitle": {
+    "message": "唉呀，Firefox Screenshots 有點秀逗了。"
+  },
+  "genericErrorDetails": {
+    "message": "我們不確定剛剛發生了什麼事，您可以再試一次，或拍攝其他頁面的擷圖嗎？"
+  },
+  "tourBodyIntro": {
+    "message": "不用離開 Firefox 就可以拍攝、儲存、分享畫面擷圖。"
+  },
+  "tourHeaderPageAction": {
+    "message": "全新的存檔方式"
+  },
+  "tourBodyPageAction": {
+    "message": "想要拍攝擷圖時，打開網址列當中的頁面操作選單即可拍照。"
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "只拍你想拍的"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "點擊並拖曳出要擷取的範圍。或者您也可以用滑鼠移上頁面中的各部分，擷取該範圍。"
+  },
+  "tourHeaderFullPage": {
+    "message": "擷取可見範圍或整張網頁"
+  },
+  "tourBodyFullPage": {
+    "message": "透過右上角的不同按鈕來選擇只拍攝視窗中的可見區域，或是整張網頁。"
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "用您想要的方式分享"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "裁切過的擷圖，可直接傳到網路上方便分享，也能下載到電腦裡；也可以點擊「我的擷圖」按鈕，尋找拍過的所有擷圖。"
+  },
+  "tourHeaderAccounts": {
+    "message": "Screenshots to Go"
+  },
+  "tourBodyAccounts": {
+    "message": "使用您的 Firefox 帳號登入，即可存取您在所有裝置上拍攝的擷取圖，並永久保留您最愛的擷取圖。"
+  },
+  "tourSkip": {
+    "message": "略過"
+  },
+  "tourNext": {
+    "message": "下一頁"
+  },
+  "tourPrevious": {
+    "message": "上一頁"
+  },
+  "tourDone": {
+    "message": "完成"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "使用 Firefox Screenshots 時，代表您同意我們的 $TERMSANDPRIVACYNOTICETERMSLINK$ 及 $TERMSANDPRIVACYNOTICEPRIVACYLINK$。",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "使用條款"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "隱私權保護政策"
+  },
+  "libraryLabel": {
+    "message": "擷圖"
+  }
+}
