@@ -1569,6 +1569,17 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   rv = preflightChannel->SetNotificationCallbacks(preflightListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Per https://fetch.spec.whatwg.org/#cors-preflight-fetch step 1, the
+  // request's referrer and referrer policy should match the original request.
+  uint32_t referrerPolicy = nsIHttpChannel::REFERRER_POLICY_UNSET;
+  rv = reqCh->GetReferrerPolicy(&referrerPolicy);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> requestReferrerURI;
+  rv = reqCh->GetReferrer(getter_AddRefs(requestReferrerURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = preCh->SetReferrerWithPolicy(requestReferrerURI, referrerPolicy);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Start preflight
   rv = preflightChannel->AsyncOpen2(preflightListener);
   NS_ENSURE_SUCCESS(rv, rv);
