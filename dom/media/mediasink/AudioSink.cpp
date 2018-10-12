@@ -71,8 +71,8 @@ AudioSink::~AudioSink()
 {
 }
 
-RefPtr<GenericPromise>
-AudioSink::Init(const PlaybackParams& aParams)
+nsresult
+AudioSink::Init(const PlaybackParams& aParams, RefPtr<GenericPromise>& aEndPromise)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
@@ -86,12 +86,12 @@ AudioSink::Init(const PlaybackParams& aParams)
   // To ensure at least one audio packet will be popped from AudioQueue and
   // ready to be played.
   NotifyAudioNeeded();
-  RefPtr<GenericPromise> p = mEndPromise.Ensure(__func__);
+  aEndPromise = mEndPromise.Ensure(__func__);
   nsresult rv = InitializeAudioStream(aParams);
   if (NS_FAILED(rv)) {
     mEndPromise.Reject(rv, __func__);
   }
-  return p;
+  return rv;
 }
 
 TimeUnit
@@ -197,7 +197,8 @@ AudioSink::InitializeAudioStream(const PlaybackParams& aParams)
   // mOutputChannels into SMPTE format, so there is no need to worry if
   // StaticPrefs::accessibility_monoaudio_enable() or
   // StaticPrefs::MediaForcestereoEnabled() is applied.
-  nsresult rv = mAudioStream->Init(mOutputChannels, channelMap, mOutputRate);
+  nsresult rv = mAudioStream->Init(mOutputChannels, channelMap,
+                                   mOutputRate, aParams.mSink);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
@@ -209,9 +210,7 @@ AudioSink::InitializeAudioStream(const PlaybackParams& aParams)
   mAudioStream->SetVolume(aParams.mVolume);
   mAudioStream->SetPlaybackRate(aParams.mPlaybackRate);
   mAudioStream->SetPreservesPitch(aParams.mPreservesPitch);
-  mAudioStream->Start();
-
-  return NS_OK;
+  return mAudioStream->Start();
 }
 
 TimeUnit

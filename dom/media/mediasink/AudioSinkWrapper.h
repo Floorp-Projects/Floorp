@@ -67,7 +67,7 @@ public:
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;
 
-  void Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) override;
+  nsresult Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) override;
   void Stop() override;
   bool IsStarted() const override;
   bool IsPlaying() const override;

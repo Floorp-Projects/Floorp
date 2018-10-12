@@ -13,7 +13,7 @@ class LSANLeaks(object):
     in allocation stacks
     """
 
-    def __init__(self, logger, scope=None, allowed=None):
+    def __init__(self, logger, scope=None, allowed=None, maxNumRecordedFrames=None):
         self.logger = logger
         self.inReport = False
         self.fatalError = False
@@ -21,7 +21,7 @@ class LSANLeaks(object):
         self.foundFrames = set()
         self.recordMoreFrames = None
         self.currStack = None
-        self.maxNumRecordedFrames = 4
+        self.maxNumRecordedFrames = maxNumRecordedFrames if maxNumRecordedFrames else 4
         self.summaryData = None
         self.scope = scope
         self.allowedMatch = None
@@ -136,6 +136,7 @@ class LSANLeaks(object):
             self.logger.info("LeakSanitizer | To show the "
                              "addresses of leaked objects add report_objects=1 to LSAN_OPTIONS\n"
                              "This can be done in testing/mozbase/mozrunner/mozrunner/utils.py")
+            self.logger.info("Allowed depth was %d" % self.maxNumRecordedFrames)
 
             for frames, allowed in self.foundFrames:
                 self.logger.lsan_leak(frames, scope=self.scope, allowed_match=allowed)

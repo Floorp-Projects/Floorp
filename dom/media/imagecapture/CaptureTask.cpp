@@ -79,7 +79,7 @@ CaptureTask::AttachTrack()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  dom::VideoStreamTrack* track = mImageCapture->GetVideoStreamTrack();
+  dom::MediaStreamTrack* track = mImageCapture->GetVideoStreamTrack();
   track->AddPrincipalChangeObserver(this);
   track->AddListener(mEventListener.get());
   track->AddDirectListener(this);
@@ -90,7 +90,7 @@ CaptureTask::DetachTrack()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  dom::VideoStreamTrack* track = mImageCapture->GetVideoStreamTrack();
+  dom::MediaStreamTrack* track = mImageCapture->GetVideoStreamTrack();
   track->RemovePrincipalChangeObserver(this);
   track->RemoveListener(mEventListener.get());
   track->RemoveDirectListener(this);

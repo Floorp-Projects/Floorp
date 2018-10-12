@@ -53,7 +53,16 @@ function installDistributionEngine() {
   });
 }
 
-function run_test() {
+registerCleanupFunction(async function() {
+  // Remove the distribution dir, even if the test failed, otherwise all
+  // next tests will use it.
+  let folderPath = OS.Path.join(OS.Constants.Path.profileDir, "distribution");
+  await OS.File.removeDir(folderPath, { ignoreAbsent: true });
+  Assert.ok(!(await OS.File.exists(folderPath)));
+  Services.prefs.clearUserPref("distribution.testing.loadFromProfile");
+});
+
+add_task(async function() {
   // Set special pref to load distribution.ini from the profile folder.
   Services.prefs.setBoolPref("distribution.testing.loadFromProfile", true);
 
@@ -73,18 +82,6 @@ function run_test() {
   Assert.ok(testDistributionFile.exists());
 
   installDistributionEngine();
-
-  run_next_test();
-}
-
-registerCleanupFunction(function() {
-  // Remove the distribution dir, even if the test failed, otherwise all
-  // next tests will use it.
-  let distDir = gProfD.clone();
-  distDir.append("distribution");
-  distDir.remove(true);
-  Assert.ok(!distDir.exists());
-  Services.prefs.clearUserPref("distribution.testing.loadFromProfile");
 });
 
 add_task(async function() {
@@ -147,14 +144,14 @@ add_task(async function() {
   // Language should not override locale
   Assert.notEqual(defaultBranch.getComplexValue("distribution.test.locale.set", Ci.nsIPrefLocalizedString).data, "Language Set");
 
-  do_test_pending();
-
   Services.prefs.setCharPref("distribution.searchplugins.defaultLocale", "de-DE");
 
-  Services.search.init(function() {
-    Assert.equal(Services.search.isInitialized, true);
-    var engine = Services.search.getEngineByName("Google");
-    Assert.equal(engine.description, "override-de-DE");
-    do_test_finished();
+  await new Promise(resolve => {
+    Services.search.init(function() {
+      Assert.equal(Services.search.isInitialized, true);
+      var engine = Services.search.getEngineByName("Google");
+      Assert.equal(engine.description, "override-de-DE");
+      resolve();
+    });
   });
 });

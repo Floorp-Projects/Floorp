@@ -65,7 +65,7 @@ class EventEmitter {
       return;
     }
 
-    if (length === 3) {
+    if (length >= 3) {
       // Trying to remove from the `target` the `listener` specified for the
       // event's `type` given.
       const listenersForType = events.get(type);

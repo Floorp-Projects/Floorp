@@ -58,7 +58,7 @@ public:
 
   void Redraw(const VideoInfo& aInfo) override;
 
-  void Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) override;
+  nsresult Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) override;
 
   void Stop() override;
 

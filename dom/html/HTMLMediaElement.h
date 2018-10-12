@@ -66,6 +66,7 @@ class VideoStreamTrack;
 } // namespace dom
 } // namespace mozilla
 
+class AudioDeviceInfo;
 class nsIChannel;
 class nsIHttpChannel;
 class nsILoadGroup;
@@ -825,6 +826,17 @@ public:
   nsISerialEventTarget* MainThreadEventTarget()
   {
     return mMainThreadEventTarget;
+  }
+
+  // Set the sink id (of the output device) that the audio will play. If aSinkId
+  // is empty the default device will be set.
+  already_AddRefed<Promise> SetSinkId(const nsAString& aSinkId, ErrorResult& aRv);
+  // Get the sink id of the device that audio is being played. Initial value is
+  // empty and the default device is being used.
+  void GetSinkId(nsString& aSinkId)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    aSinkId = mSink.first();
   }
 
 protected:
@@ -1893,6 +1905,14 @@ private:
 
   // Attach UA Shadow Root if it is not attached.
   void AttachAndSetUAShadowRoot();
+
+  // Contains the unique id of the sink device and the device info.
+  // The initial value is ("", nullptr) and the default output device is used.
+  // It can contain an invalid id and info if the device has been
+  // unplugged. It can be set to ("", nullptr). It follows the spec attribute:
+  // https://w3c.github.io/mediacapture-output/#htmlmediaelement-extensions
+  // Read/Write from the main thread only.
+  Pair<nsString, RefPtr<AudioDeviceInfo>> mSink;
 };
 
 // Check if the context is chrome or has the debugger or tabs permission

@@ -211,6 +211,12 @@ MediaStreamTrack::GetParentObject() const
   return mOwningStream->GetParentObject();
 }
 
+JSObject*
+MediaStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+{
+  return MediaStreamTrack_Binding::Wrap(aCx, this, aGivenProto);
+}
+
 void
 MediaStreamTrack::GetId(nsAString& aID) const
 {
