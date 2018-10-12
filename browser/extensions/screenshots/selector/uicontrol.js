@@ -74,7 +74,7 @@ this.uicontrol = (function() {
   function eventOptionsForBox(box) {
     return {
       cd1: round10(Math.abs(box.bottom - box.top)),
-      cd2: round10(Math.abs(box.right - box.left))
+      cd2: round10(Math.abs(box.right - box.left)),
     };
   }
 
@@ -85,14 +85,14 @@ this.uicontrol = (function() {
         - (boxStart.bottom - boxStart.top)),
       cd2: round10(
         (boxEnd.right - boxEnd.left)
-        - (boxStart.right - boxStart.left))
+        - (boxStart.right - boxStart.left)),
     };
   }
 
   function eventOptionsForMove(posStart, posEnd) {
     return {
       cd1: round10(posEnd.y - posStart.y),
-      cd2: round10(posEnd.x - posStart.x)
+      cd2: round10(posEnd.x - posStart.x),
     };
   }
 
@@ -125,7 +125,7 @@ this.uicontrol = (function() {
     bottomLeft: ["x1", "y2"],
     bottom: [null, "y2"],
     bottomRight: ["x2", "y2"],
-    move: ["*", "*"]
+    move: ["*", "*"],
   };
 
   const doNotAutoselectTags = {
@@ -134,7 +134,7 @@ this.uicontrol = (function() {
     H3: true,
     H4: true,
     H5: true,
-    H6: true
+    H6: true,
   };
 
   let captureType;
@@ -161,7 +161,7 @@ this.uicontrol = (function() {
     }, copy: () => {
       sendEvent("copy-shot", "overlay-copy-button");
       copyShot();
-    }
+    },
   };
 
   const standardOverlayCallbacks = {
@@ -225,7 +225,7 @@ this.uicontrol = (function() {
     onCopyPreview: () => {
       sendEvent(`copy-${captureType.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`, "copy-preview-button");
       copyShot();
-    }
+    },
   };
 
   /** Holds all the objects that handle events for each state: */
@@ -291,7 +291,7 @@ this.uicontrol = (function() {
       dataUrl = shooter.screenshotPage(selectedPos, captureType);
       ui.iframe.usePreview();
       ui.Preview.display(dataUrl, captureType === "fullPageTruncated");
-    }
+    },
   };
 
   stateHandlers.onboarding = {
@@ -301,7 +301,7 @@ this.uicontrol = (function() {
       }
       sendEvent("internal", "unhide-onboarding-frame");
       catcher.watchPromise(slides.display({
-        onEnd: this.slidesOnEnd.bind(this)
+        onEnd: this.slidesOnEnd.bind(this),
       }));
     },
 
@@ -312,7 +312,7 @@ this.uicontrol = (function() {
 
     end() {
       slides.remove();
-    }
+    },
   };
 
   stateHandlers.crosshairs = {
@@ -499,7 +499,7 @@ this.uicontrol = (function() {
     end() {
       ui.HoverBox.remove();
       ui.PixelDimensions.remove();
-    }
+    },
   };
 
   stateHandlers.draggingReady = {
@@ -590,7 +590,7 @@ this.uicontrol = (function() {
 
     end() {
       mouseupNoAutoselect = false;
-    }
+    },
 
   };
 
@@ -619,14 +619,14 @@ this.uicontrol = (function() {
           top: selectedPos.y1,
           bottom: selectedPos.y2,
           left: selectedPos.x1,
-          right: selectedPos.x2
+          right: selectedPos.x2,
         }));
       setState("selected");
     },
 
     end() {
       ui.PixelDimensions.remove();
-    }
+    },
   };
 
   stateHandlers.selected = {
@@ -653,7 +653,7 @@ this.uicontrol = (function() {
       }
       event.preventDefault();
       return false;
-    }
+    },
   };
 
   stateHandlers.resizing = {
@@ -732,14 +732,14 @@ this.uicontrol = (function() {
       resizeDirection = resizeStartPos = resizeStartSelected = null;
       selectedPos.sortCoords();
       ui.PixelDimensions.remove();
-    }
+    },
   };
 
   stateHandlers.cancel = {
     start() {
       ui.iframe.hide();
       ui.Box.remove();
-    }
+    },
   };
 
   function getDocumentWidth() {

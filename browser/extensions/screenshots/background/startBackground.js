@@ -26,7 +26,7 @@ this.startBackground = (function() {
     "background/analytics.js",
     "background/deviceInfo.js",
     "background/takeshot.js",
-    "background/main.js"
+    "background/main.js",
   ];
 
   browser.pageAction.onClicked.addListener(tab => {
@@ -41,7 +41,7 @@ this.startBackground = (function() {
     id: "create-screenshot",
     title: browser.i18n.getMessage("contextMenuLabel"),
     contexts: ["page"],
-    documentUrlPatterns: ["<all_urls>"]
+    documentUrlPatterns: ["<all_urls>"],
   });
 
   browser.contextMenus.onClicked.addListener((info, tab) => {

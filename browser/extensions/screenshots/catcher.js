@@ -34,7 +34,7 @@ this.catcher = (function() {
         fromMakeError: true,
         name: exc.name || "ERROR",
         message: String(exc),
-        stack: exc.stack
+        stack: exc.stack,
       };
       for (const attr in exc) {
         result[attr] = exc[attr];
