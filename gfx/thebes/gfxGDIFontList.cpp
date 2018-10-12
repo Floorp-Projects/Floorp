@@ -660,9 +660,8 @@ gfxGDIFontList::InitFontListForPlatform()
     logfont.lfCharSet = DEFAULT_CHARSET;
 
     AutoDC hdc;
-    int result = EnumFontFamiliesExW(hdc.GetDC(), &logfont,
-                                     (FONTENUMPROCW)&EnumFontFamExProc,
-                                     0, 0);
+    (void)EnumFontFamiliesExW(hdc.GetDC(), &logfont,
+                              (FONTENUMPROCW)&EnumFontFamExProc, 0, 0);
 
     GetFontSubstitutes();
 
