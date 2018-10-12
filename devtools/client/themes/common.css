@@ -52,6 +52,11 @@ html|button, html|select, html|input {
   font-size: var(--theme-body-font-size);
 }
 
+/* Devtools rely on the old Gecko/HTML4 button hit testing */
+html|button > * {
+  pointer-events: none;
+}
+
 /* Autocomplete Popup */
 .devtools-autocomplete-popup {
   overflow: hidden;
