@@ -172,6 +172,9 @@ with Files("KeyIdsInitData.webidl"):
 with Files("Keyframe*"):
     BUG_COMPONENT = ("Core", "DOM: Animation")
 
+with Files("LocalMediaStream.webidl"):
+    BUG_COMPONENT = ("Core", "Audio/Video")
+
 with Files("MediaDevice*"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
@@ -635,6 +638,7 @@ WEBIDL_FILES = [
     'L10nUtils.webidl',
     'LegacyQueryInterface.webidl',
     'LinkStyle.webidl',
+    'LocalMediaStream.webidl',
     'Location.webidl',
     'MediaCapabilities.webidl',
     'MediaDeviceInfo.webidl',
