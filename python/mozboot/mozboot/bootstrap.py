@@ -24,6 +24,7 @@ except ImportError:
 # list in bin/bootstrap.py!
 from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
+from mozboot.opensuse import OpenSUSEBootstrapper
 from mozboot.debian import DebianBootstrapper
 from mozboot.freebsd import FreeBSDBootstrapper
 from mozboot.gentoo import GentooBootstrapper
@@ -261,6 +262,8 @@ class Bootstrapper(object):
             elif os.path.exists('/etc/arch-release'):
                 # Even on archlinux, platform.linux_distribution() returns ['','','']
                 cls = ArchlinuxBootstrapper
+            elif os.path.exists('/etc/SUSE-brand'):
+                cls = OpenSUSEBootstrapper
             else:
                 raise NotImplementedError('Bootstrap support for this Linux '
                                           'distro not yet available.')
@@ -294,6 +297,7 @@ class Bootstrapper(object):
         if cls is None:
             raise NotImplementedError('Bootstrap support is not yet available '
                                       'for your OS.')
+
 
         self.instance = cls(**args)
 

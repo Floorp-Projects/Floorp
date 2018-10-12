@@ -68,7 +68,7 @@ the $PATH environment variable.
 
 We recommend the following tools for installing Python:
 
-    pyenv   -- https://github.com/yyuu/pyenv)
+    pyenv   -- https://github.com/yyuu/pyenv
     pythonz -- https://github.com/saghul/pythonz
     official installers -- http://www.python.org/
 '''
