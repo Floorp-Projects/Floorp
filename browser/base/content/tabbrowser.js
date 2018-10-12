@@ -718,7 +718,7 @@ window._gBrowser = {
   /**
    * Determine if a URI is an about: page pointing to a local resource.
    */
-  isLocalAboutURI(aURI, aResolvedURI) {
+  _isLocalAboutURI(aURI, aResolvedURI) {
     if (!aURI.schemeIs("about")) {
       return false;
     }
@@ -742,15 +742,6 @@ window._gBrowser = {
     } catch (ex) {
       // aURI might be invalid.
       return false;
-    }
-  },
-
-  /**
-   * Sets an icon for the tab if the URI is defined in FAVICON_DEFAULTS.
-   */
-  setDefaultIcon(aTab, aURI) {
-    if (aURI && aURI.spec in FAVICON_DEFAULTS) {
-      this.setIcon(aTab, FAVICON_DEFAULTS[aURI.spec]);
     }
   },
 
@@ -2489,7 +2480,9 @@ window._gBrowser = {
 
     // Hack to ensure that the about:newtab, and about:welcome favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
-    this.setDefaultIcon(t, aURIObject);
+    if (aURI in FAVICON_DEFAULTS) {
+      this.setIcon(t, FAVICON_DEFAULTS[aURI]);
+    }
 
     // Dispatch a new tab notification.  We do this once we're
     // entirely done, so that things are in a consistent state
@@ -4747,7 +4740,7 @@ class TabProgressListener {
     // Don't show progress indicators in tabs for about: URIs
     // pointing to local resources.
     if ((aRequest instanceof Ci.nsIChannel) &&
-        gBrowser.isLocalAboutURI(aRequest.originalURI, aRequest.URI)) {
+        gBrowser._isLocalAboutURI(aRequest.originalURI, aRequest.URI)) {
       return false;
     }
 
