@@ -1818,6 +1818,13 @@ set_config('LD_IS_BFD', depends(select_linker.KIND)
 add_old_configure_assignment('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
 
 
+# GCC_USE_GNU_LD=1 means the linker is command line compatible with GNU ld.
+set_config('GCC_USE_GNU_LD', depends(select_linker.KIND)
+           (lambda x: x in ('bfd', 'gold', 'lld') or None))
+add_old_configure_assignment('GCC_USE_GNU_LD', depends(select_linker.KIND)
+                             (lambda x: x in ('bfd', 'gold', 'lld') or None))
+
+
 # Assembler detection
 # ==============================================================
 
