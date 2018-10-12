@@ -87,6 +87,7 @@ private:
     GLXContext mContext;
     Display* mDisplay;
     GLXDrawable mDrawable;
+    Maybe<GLXDrawable> mOverrideDrawable;
     bool mDeleteDrawable;
     bool mDoubleBuffered;
 

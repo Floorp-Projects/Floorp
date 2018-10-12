@@ -24,7 +24,7 @@ class GLContextCGL : public GLContext
 {
     friend class GLContextProviderCGL;
 
-    NSOpenGLContext* mContext;
+    NSOpenGLContext* const mContext;
 
 public:
     MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextCGL, override)
