@@ -3,13 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global ADDON_ENABLE:false, ADDON_DISABLE:false, APP_SHUTDOWN: false */
-
-const Cm = Components.manager;
+"use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "AboutPocket",
                                "chrome://pocket/content/AboutPocket.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
@@ -28,8 +25,10 @@ XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
   return Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
 });
 XPCOMUtils.defineLazyGetter(this, "gPocketStyleURI", function() {
-  return Services.io.newURI("chrome://pocket-shared/skin/pocket.css");
+  return Services.io.newURI("chrome://pocket/skin/pocket.css");
 });
+
+var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
 // Due to bug 1051238 frame scripts are cached forever, so we can't update them
 // as a restartless add-on. The Math.random() is the work around for this.
@@ -396,7 +395,7 @@ function pktUIGetter(prop, window) {
 }
 
 var PocketOverlay = {
-  startup(reason) {
+  startup() {
     let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
                               .getService(Ci.nsIStyleSheetService);
     this._sheetType = styleSheetService.AUTHOR_SHEET;
@@ -411,7 +410,7 @@ var PocketOverlay = {
       this.onWindowOpened(win);
     }
   },
-  shutdown(reason) {
+  shutdown() {
     Services.ppmm.broadcastAsyncMessage("PocketShuttingDown");
     Services.obs.removeObserver(this, "browser-delayed-startup-finished");
     // Although the ppmm loads the scripts into the chrome process as well,
@@ -501,43 +500,37 @@ var PocketOverlay = {
 function prefObserver(aSubject, aTopic, aData) {
   let enabled = Services.prefs.getBoolPref("extensions.pocket.enabled");
   if (enabled)
-    PocketOverlay.startup(ADDON_ENABLE);
+    PocketOverlay.startup();
   else
-    PocketOverlay.shutdown(ADDON_DISABLE);
-}
-
-function startup(data, reason) {
-  if (AddonManagerPrivate.addonIsActive("isreaditlater@ideashower.com"))
-    return;
-
-  setDefaultPrefs();
-  // migrate enabled pref
-  if (Services.prefs.prefHasUserValue("browser.pocket.enabled")) {
-    Services.prefs.setBoolPref("extensions.pocket.enabled", Services.prefs.getBoolPref("browser.pocket.enabled"));
-    Services.prefs.clearUserPref("browser.pocket.enabled");
-  }
-  // watch pref change and enable/disable if necessary
-  Services.prefs.addObserver("extensions.pocket.enabled", prefObserver);
-  if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
-    return;
-  PocketOverlay.startup(reason);
-}
-
-function shutdown(data, reason) {
-  // For speed sake, we should only do a shutdown if we're being disabled.
-  // On an app shutdown, just let it fade away...
-  if (reason != APP_SHUTDOWN) {
-    Services.prefs.removeObserver("extensions.pocket.enabled", prefObserver);
-    PocketOverlay.shutdown(reason);
-  }
-}
-
-function install() {
-}
-
-function uninstall() {
+    PocketOverlay.shutdown();
 }
 
 function browserWindows() {
   return Services.wm.getEnumerator("navigator:browser");
 }
+
+var SaveToPocket = {
+  init() {
+    if (AddonManagerPrivate.addonIsActive("isreaditlater@ideashower.com"))
+      return;
+
+    setDefaultPrefs();
+    // migrate enabled pref
+    if (Services.prefs.prefHasUserValue("browser.pocket.enabled")) {
+      Services.prefs.setBoolPref("extensions.pocket.enabled", Services.prefs.getBoolPref("browser.pocket.enabled"));
+      Services.prefs.clearUserPref("browser.pocket.enabled");
+    }
+    // watch pref change and enable/disable if necessary
+    Services.prefs.addObserver("extensions.pocket.enabled", prefObserver);
+    if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
+      return;
+    PocketOverlay.startup();
+  },
+
+  uninit() {
+    // For speed sake, we should only do a shutdown if we're being disabled.
+    // On an app shutdown, just let it fade away...
+    Services.prefs.removeObserver("extensions.pocket.enabled", prefObserver);
+    PocketOverlay.shutdown();
+  },
+};

@@ -32,7 +32,7 @@ add_task(async function() {
 
   // check context menu exists
   info("checking content context menu");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/browser/browser/extensions/pocket/test/test.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/browser/browser/components/pocket/test/test.html");
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
   let popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");

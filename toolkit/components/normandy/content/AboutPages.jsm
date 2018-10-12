@@ -19,7 +19,7 @@ const SHIELD_LEARN_MORE_URL_PREF = "app.normandy.shieldLearnMoreUrl";
 
 /**
  * Class for managing an about: page that Normandy provides. Adapted from
- * browser/extensions/pocket/content/AboutPocket.jsm.
+ * browser/components/pocket/content/AboutPocket.jsm.
  *
  * @implements nsIFactory
  * @implements nsIAboutModule
