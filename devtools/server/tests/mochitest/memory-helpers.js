@@ -4,8 +4,10 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
-const { TargetFactory } = require("devtools/client/framework/target");
+
+const { MemoryFront } = require("devtools/shared/fronts/memory");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -16,17 +18,19 @@ SimpleTest.registerCleanupFunction(function() {
   Services.prefs.setBoolPref("privacy.reduceTimerPrecision", gReduceTimePrecision);
 });
 
-async function getTargetForSelectedTab() {
-  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const target = await TargetFactory.forTab(browserWindow.gBrowser.selectedTab);
-  return target;
-}
+function startServerAndGetSelectedTabMemory() {
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
 
-async function startServerAndGetSelectedTabMemory() {
-  const target = await getTargetForSelectedTab();
-  const memory = target.getFront("memory");
-  const client = target.client;
-  return {memory, client};
+  return client.connect()
+    .then(() => client.listTabs())
+    .then(response => {
+      const form = response.tabs[response.selected];
+      const memory = MemoryFront(client, form, response);
+
+      return { memory, client };
+    });
 }
 
 function destroyServerAndFinish(client) {
