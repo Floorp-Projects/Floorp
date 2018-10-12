@@ -10219,8 +10219,6 @@ nsIDocument::MaybeResolveReadyForIdle()
 FeaturePolicy*
 nsIDocument::Policy() const
 {
-  MOZ_ASSERT(StaticPrefs::dom_security_featurePolicy_enabled());
-
   // The policy is created when the document is initialized. We _must_ have a
   // policy here even if the featurePolicy pref is off. If this assertion fails,
   // it means that ::Policy() is called before ::StartDocumentLoad().
