@@ -6,10 +6,10 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Integration.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Accounts: "resource://gre/modules/Accounts.jsm",
-  DownloadIntegration: "resource://gre/modules/DownloadIntegration.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
@@ -23,6 +23,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyServiceGetters(this, {
   quotaManagerService: ["@mozilla.org/dom/quota-manager-service;1", "nsIQuotaManagerService"],
 });
+
+/* global DownloadIntegration */
+Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
+            "resource://gre/modules/DownloadIntegration.jsm");
 
 
 var EXPORTED_SYMBOLS = ["Sanitizer"];
