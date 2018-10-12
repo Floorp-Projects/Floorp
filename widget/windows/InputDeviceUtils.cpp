@@ -22,8 +22,9 @@ InputDeviceUtils::RegisterNotification(HWND aHwnd)
 
   filter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
   filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-  // We only need notifications for mouse type devices.
-  filter.dbcc_classguid = GUID_DEVINTERFACE_MOUSE;
+  // Some touchsreen devices are not GUID_DEVINTERFACE_MOUSE, so here we use
+  // GUID_DEVINTERFACE_HID instead.
+  filter.dbcc_classguid = GUID_DEVINTERFACE_HID;
   return RegisterDeviceNotification(aHwnd,
                                     &filter,
                                     DEVICE_NOTIFY_WINDOW_HANDLE);
