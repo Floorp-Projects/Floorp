@@ -74,7 +74,7 @@ add_task(async function valid_cookieStoreId() {
       "firefox-container-1",
     ],
     expectedExecuteScriptResult: [
-      // Default URL is about:newtab, and extensions cannot run scripts in it.
+      // Default URL is about:home, and extensions cannot run scripts in it.
       "Missing host permission for the tab",
     ],
   }, {
@@ -169,7 +169,7 @@ add_task(async function valid_cookieStoreId() {
       for (let [i, expectedResult] of Object.entries(expectedExecuteScriptResult)) {
         // Wait until the the tab can process the tabs.executeScript calls.
         // TODO: Remove this when bug 1418655 and bug 1397667 are fixed.
-        let expectedUrl = Array.isArray(createParams.url) ? createParams.url[i] : createParams.url || "about:newtab";
+        let expectedUrl = Array.isArray(createParams.url) ? createParams.url[i] : createParams.url || "about:home";
         await awaitTabReady(win.tabs[i].id, expectedUrl);
 
         let result = await executeScriptAndGetResult(win.tabs[i].id);
