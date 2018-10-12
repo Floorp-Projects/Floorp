@@ -125,6 +125,13 @@ public:
 
     void CommonInit();
 
+#if defined(OS_WIN) && defined(MOZ_SANDBOX)
+    // Path to the roaming Flash Player folder.  This is used to restore some
+    // behavior blocked by the sandbox.
+    static void SetFlashRoamingPath(const std::wstring& aRoamingPath);
+    static std::wstring GetFlashRoamingPath();
+#endif
+
     // aPluginFilename is UTF8, not native-charset!
     bool InitForChrome(const std::string& aPluginFilename,
                        base::ProcessId aParentPid,

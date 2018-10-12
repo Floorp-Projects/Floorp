@@ -11,6 +11,7 @@
 
 #if defined(XP_WIN)
 #include <shlobj.h>
+#include "PluginModuleChild.h"
 #endif
 
 namespace mozilla {
@@ -308,6 +309,38 @@ void FunctionHook::HookProtectedMode()
   sCreateFileAStub.Set(sKernel32Intercept, "CreateFileA", &CreateFileAHookFn);
 }
 
+/* GetFileAttributesW */
+
+typedef BasicFunctionHook<ID_GetFileAttributesW, decltype(GetFileAttributesW)> GetFileAttributesWFH;
+
+DWORD WINAPI GetFileAttributesWHook(LPCWSTR aFilename)
+{
+  MOZ_ASSERT(ID_GetFileAttributesW < FunctionHook::GetHooks()->Length());
+  GetFileAttributesWFH* functionHook =
+    static_cast<GetFileAttributesWFH*>(FunctionHook::GetHooks()->ElementAt(ID_GetFileAttributesW));
+  if (!functionHook->OriginalFunction()) {
+    NS_ASSERTION(FALSE, "Something is horribly wrong in GetFileAttributesWHook!");
+    return FALSE;
+  }
+
+  DWORD ret = functionHook->OriginalFunction()(aFilename);
+  if (ret != INVALID_FILE_ATTRIBUTES) {
+    return ret;
+  }
+
+  // If aFilename is a parent of PluginModuleChild::GetFlashRoamingPath then
+  // assume it was blocked by the sandbox and just report it as a plain directory.
+  size_t len = wcslen(aFilename);
+  std::wstring roamingPath = PluginModuleChild::GetFlashRoamingPath();
+  bool isParent =
+    (len > 0) && (aFilename[len - 1] == L'\\') &&
+    (_wcsnicmp(aFilename, roamingPath.c_str(), len) == 0);
+  if (!isParent) {
+    return ret;
+  }
+  return FILE_ATTRIBUTE_DIRECTORY;
+}
+
 #endif // defined(XP_WIN)
 
 #define FUN_HOOK(x) static_cast<FunctionHook*>(x)
@@ -323,6 +356,10 @@ FunctionHook::AddFunctionHooks(FunctionHookArray& aHooks)
   aHooks[ID_PrintDlgW] =
     FUN_HOOK(new PrintDlgWFH("comdlg32.dll", "PrintDlgW", &PrintDlgW,
                              PrintDlgWHook));
+  aHooks[ID_GetFileAttributesW] =
+    FUN_HOOK(new GetFileAttributesWFH("kernel32.dll", "GetFileAttributesW",
+                                      &GetFileAttributesW,
+                                      &GetFileAttributesWHook));
 #endif // defined(XP_WIN)
 }
 
