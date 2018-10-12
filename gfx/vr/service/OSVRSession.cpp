@@ -521,7 +521,7 @@ OSVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
 #elif defined(XP_MACOSX)
 bool
 OSVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                         MacIOSurface* aTexture)
+                         const VRLayerTextureHandle& aTexture)
 {
   return false;
   // TODO Implement
