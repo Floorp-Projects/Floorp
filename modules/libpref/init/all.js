@@ -5404,7 +5404,7 @@ pref("dom.vr.display.rafMaxDuration", 50);
 // VR test system.
 pref("dom.vr.test.enabled", false);
 // Enable the VR Service, which interfaces with VR hardware in a separate thread
-pref("dom.vr.service.enabled", true);
+pref("dom.vr.service.enabled", false);
 
 // If the user puts a finger down on an element and we think the user
 // might be executing a pan gesture, how long do we wait before
