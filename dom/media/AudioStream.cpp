@@ -337,7 +337,8 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs)
 nsresult
 AudioStream::Init(uint32_t aNumChannels,
                   AudioConfig::ChannelLayout::ChannelMap aChannelMap,
-                  uint32_t aRate)
+                  uint32_t aRate,
+                  AudioDeviceInfo* aSinkInfo)
 {
   auto startTime = TimeStamp::Now();
 
@@ -346,6 +347,8 @@ AudioStream::Init(uint32_t aNumChannels,
   mOutChannels = aNumChannels;
 
   mDumpFile = OpenDumpFile(aNumChannels, aRate);
+
+  mSinkInfo = aSinkInfo;
 
   cubeb_stream_params params;
   params.rate = aRate;
@@ -380,8 +383,12 @@ AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
   /* Convert from milliseconds to frames. */
   uint32_t latency_frames =
     CubebUtils::GetCubebPlaybackLatencyInMilliseconds() * aParams.rate / 1000;
+  cubeb_devid deviceID = nullptr;
+  if (mSinkInfo && mSinkInfo->DeviceID()) {
+    deviceID = mSinkInfo->DeviceID();
+  }
   if (cubeb_stream_init(aContext, &stream, "AudioStream",
-                        nullptr, nullptr, nullptr, &aParams,
+                        nullptr, nullptr, deviceID, &aParams,
                         latency_frames,
                         DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
     mCubebStream.reset(stream);
@@ -411,7 +418,7 @@ AudioStream::SetVolume(double aVolume)
   }
 }
 
-void
+nsresult
 AudioStream::Start()
 {
   MonitorAutoLock mon(mMonitor);
@@ -422,6 +429,10 @@ AudioStream::Start()
     mState = ERRORED;
   }
   LOG("started, state %s", mState == STARTED ? "STARTED" : mState == DRAINED ? "DRAINED" : "ERRORED");
+  if (mState == STARTED || mState == DRAINED) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 void

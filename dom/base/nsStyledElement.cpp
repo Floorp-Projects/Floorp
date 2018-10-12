@@ -132,8 +132,7 @@ nsStyledElement::SetInlineStyleDeclaration(DeclarationBlock& aDeclaration,
   nsIDocument* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, true);
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nullptr,
-                          aData.mOldValue.isSome() ?
-                            aData.mOldValue.ptr() : nullptr,
+                          aData.mOldValue.ptrOr(nullptr),
                           attrValue, nullptr, aData.mModType,
                           hasListeners, true, kDontCallAfterSetAttr,
                           document, updateBatch);

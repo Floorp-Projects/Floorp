@@ -70,7 +70,7 @@ const FlexItemFront = FrontClassWithSpec(flexItemSpec, {
   },
 
   /**
-   * Get the computed style properties for the flex item.
+   * Get the style properties for the flex item.
    */
   get properties() {
     return this._form.properties;

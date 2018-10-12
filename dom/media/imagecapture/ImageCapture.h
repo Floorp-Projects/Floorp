@@ -21,20 +21,21 @@ LogModule* GetICLog();
 namespace dom {
 
 class Blob;
+class MediaStreamTrack;
 class VideoStreamTrack;
 
 /**
- *  Implementation of https://dvcs.w3.org/hg/dap/raw-file/default/media-stream-
- *  capture/ImageCapture.html.
- *  The ImageCapture accepts a VideoStreamTrack as input source. The image will
- *  be sent back as a JPG format via Blob event.
+ * Implementation of https://dvcs.w3.org/hg/dap/raw-file/default/media-stream-
+ * capture/ImageCapture.html.
+ * The ImageCapture accepts a video MediaStreamTrack as input source. The image
+ * will be sent back as a JPG format via Blob event.
  *
- *  All the functions in ImageCapture are run in main thread.
+ * All the functions in ImageCapture are run in main thread.
  *
- *  There are two ways to capture image, MediaEngineSource and MediaStreamGraph.
- *  When the implementation of MediaEngineSource supports TakePhoto(),
- *  it uses the platform camera to grab image. Otherwise, it falls back
- *  to the MediaStreamGraph way.
+ * There are two ways to capture image, MediaEngineSource and MediaStreamGraph.
+ * When the implementation of MediaEngineSource supports TakePhoto(),
+ * it uses the platform camera to grab image. Otherwise, it falls back
+ * to the MediaStreamGraph way.
  */
 
 class ImageCapture final : public DOMEventTargetHelper
@@ -49,8 +50,8 @@ public:
   // WebIDL members.
   void TakePhoto(ErrorResult& aResult);
 
-  // The MediaStream passed into the constructor.
-  VideoStreamTrack* GetVideoStreamTrack() const;
+  // The MediaStreamTrack passed into the constructor.
+  MediaStreamTrack* GetVideoStreamTrack() const;
 
   // nsWrapperCache member
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
@@ -62,10 +63,10 @@ public:
   nsPIDOMWindowInner* GetParentObject() { return GetOwner(); }
 
   static already_AddRefed<ImageCapture> Constructor(const GlobalObject& aGlobal,
-                                                    VideoStreamTrack& aTrack,
+                                                    MediaStreamTrack& aTrack,
                                                     ErrorResult& aRv);
 
-  ImageCapture(VideoStreamTrack* aVideoStreamTrack,
+  ImageCapture(VideoStreamTrack* aTrack,
                nsPIDOMWindowInner* aOwnerWindow);
 
   // Post a Blob event to script.
@@ -85,7 +86,7 @@ protected:
   // should return NS_ERROR_NOT_IMPLEMENTED.
   nsresult TakePhotoByMediaEngine();
 
-  RefPtr<VideoStreamTrack> mVideoStreamTrack;
+  RefPtr<VideoStreamTrack> mTrack;
 };
 
 } // namespace dom

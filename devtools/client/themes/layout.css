@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#layout-container {
+.layout-container {
   height: 100%;
   width: 100%;
   overflow-y: auto;
@@ -10,7 +10,7 @@
   min-width: 200px;
 }
 
-#layout-container .accordion ._content {
+.layout-container .accordion ._content {
   padding: 0;
 }
 
@@ -24,17 +24,17 @@
  * Common styles for the layout container
  */
 
-#layout-container li {
+.layout-container li {
   padding: 3px 0;
   -moz-user-select: none;
 }
 
-#layout-container input {
+.layout-container input {
   margin-inline-end: 7px;
   vertical-align: middle;
 }
 
-#layout-container label {
+.layout-container label {
   margin-inline-start: -3px;
 }
 
@@ -363,12 +363,47 @@
  * Flex Item Sizing Properties
  */
 
-#flex-item-sizing-properties {
-  padding-top: 0;
+.flex-item-sizing {
+  margin: 20px;
+  padding: 0;
+  list-style: none;
 }
 
-#flex-item-sizing-properties span {
- font-weight: 600;
+.flex-item-sizing .section {
+  --padding: 10px;
+  margin-block-start: var(--padding);
+  padding: var(--padding) 0 0 0;
+  border-block-start: 1px solid var(--theme-splitter-color);
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  grid-column-gap: var(--padding);
+}
+
+.flex-item-sizing .section:first-child {
+  margin: 0;
+}
+
+.flex-item-sizing .name {
+  font-weight: 600;
+  grid-column: 1;
+}
+
+.flex-item-sizing .value {
+  text-align: end;
+  font-weight: 600;
+}
+
+.flex-item-sizing .css-property-link {
+  grid-column: 2;
+  text-align: end;
+}
+
+.flex-item-sizing .reasons,
+.flex-item-sizing .reasons li {
+  grid-column: 1 / 3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 /**

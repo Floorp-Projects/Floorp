@@ -323,6 +323,13 @@ const TESTS = {
     await Promise.all([pFoo, pDone]);
   },
 
+  testCallingOffWithMoreThan3Args() {
+    const target = { name: "target"};
+    on(target, "data", fail);
+    off(target, "data", fail, undefined);
+    emit(target, "data", "Listener should be removed");
+  }
+
 };
 
 /**

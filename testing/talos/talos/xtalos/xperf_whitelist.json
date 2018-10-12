@@ -74,6 +74,12 @@
   "c:\\windows\\prefetch\\{prefetch}.pf": {
     "ignore": true
   },
+  "c:\\windows\\system32\\apphelp.dll": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 32768
+  },
   "c:\\windows\\system32\\windows.storage.dll": {
     "mincount": 2,
     "maxcount": 2,

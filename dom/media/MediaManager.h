@@ -71,17 +71,16 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  explicit MediaDevice(MediaEngineSource* aSource,
+  explicit MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                        const nsString& aName,
                        const nsString& aID,
-                       const nsString& aRawID = NS_LITERAL_STRING(""));
+                       const nsString& aRawID);
 
-  explicit MediaDevice(const nsString& aName,
-                       const dom::MediaDeviceKind aKind,
+  explicit MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
                        const nsString& aID,
                        const nsString& aRawID = NS_LITERAL_STRING(""));
 
-  explicit MediaDevice(const MediaDevice* aOther,
+  explicit MediaDevice(const RefPtr<MediaDevice>& aOther,
                        const nsString& aID,
                        const nsString& aRawID);
 
@@ -129,6 +128,7 @@ private:
 
 public:
   const RefPtr<MediaEngineSource> mSource;
+  const RefPtr<AudioDeviceInfo> mSinkInfo;
   const dom::MediaDeviceKind mKind;
   const bool mScary;
   const nsString mType;
@@ -138,6 +138,7 @@ public:
 };
 
 typedef nsRefPtrHashtable<nsUint64HashKey, GetUserMediaWindowListener> WindowTable;
+typedef MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true> SinkInfoPromise;
 
 class MediaManager final : public nsIMediaManagerService,
                            public nsIObserver
@@ -227,6 +228,26 @@ public:
                             dom::CallerType aCallerType);
 
   nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow, dom::Promise& aPromise);
+
+  // Get the sink that corresponds to the given device id.
+  // It is resposible to check if an application is
+  // authorized to play audio through the requested device.
+  // The returned promise will be resolved with the device
+  // information if the device id matches one and operation is
+  // allowed. The default device is always allowed. Non default
+  // devices are allowed only in secure context. It is pending to
+  // implement an user authorization model. The promise will be
+  // rejected in the following cases:
+  // NS_ERROR_NOT_AVAILABLE: Device id does not exist.
+  // NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
+  //   The requested device exists but it is not allowed to be used.
+  //   Currently, this happens only on non-default default devices
+  //   and non https connections. TODO, authorization model to allow
+  //   an application to play audio through the device (Bug 1493982).
+  // NS_ERROR_ABORT: General error.
+  RefPtr<SinkInfoPromise> GetSinkDevice(nsPIDOMWindowInner* aWindow,
+                                        const nsString& aDeviceId);
+
   void OnNavigation(uint64_t aWindowID);
   bool IsActivelyCapturingOrHasAPermission(uint64_t aWindowId);
 

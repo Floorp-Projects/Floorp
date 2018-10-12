@@ -1868,7 +1868,7 @@ async function placesBookmarkToSyncBookmark(db, bookmarkItem) {
 // Converts a Sync bookmark object to a Places bookmark or livemark object.
 // This function maps record IDs to Places GUIDs, and filters out extra Sync
 // properties like keywords, tags. Returns an object that can be passed to
-// `PlacesUtils.livemarks.addLivemark` or `PlacesUtils.bookmarks.{insert, update}`.
+// `PlacesUtils.bookmarks.{insert, update}`.
 function syncBookmarkToPlacesBookmark(info) {
   let bookmarkInfo = {
     source: SOURCE_SYNC,

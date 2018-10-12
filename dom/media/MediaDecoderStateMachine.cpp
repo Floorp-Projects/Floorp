@@ -3303,40 +3303,44 @@ MediaDecoderStateMachine::WaitForData(MediaData::Type aType)
   }
 }
 
-void
+nsresult
 MediaDecoderStateMachine::StartMediaSink()
 {
   MOZ_ASSERT(OnTaskQueue());
-  if (!mMediaSink->IsStarted()) {
-    mAudioCompleted = false;
-    mMediaSink->Start(GetMediaTime(), Info());
 
-    auto videoPromise = mMediaSink->OnEnded(TrackInfo::kVideoTrack);
-    auto audioPromise = mMediaSink->OnEnded(TrackInfo::kAudioTrack);
-
-    if (audioPromise) {
-      audioPromise->Then(
-        OwnerThread(), __func__, this,
-        &MediaDecoderStateMachine::OnMediaSinkAudioComplete,
-        &MediaDecoderStateMachine::OnMediaSinkAudioError)
-      ->Track(mMediaSinkAudioPromise);
-    }
-    if (videoPromise) {
-      videoPromise->Then(
-        OwnerThread(), __func__, this,
-        &MediaDecoderStateMachine::OnMediaSinkVideoComplete,
-        &MediaDecoderStateMachine::OnMediaSinkVideoError)
-      ->Track(mMediaSinkVideoPromise);
-    }
-    // Remember the initial offset when playback starts. This will be used
-    // to calculate the rate at which bytes are consumed as playback moves on.
-    RefPtr<MediaData> sample = mAudioQueue.PeekFront();
-    mPlaybackOffset = sample ? sample->mOffset : 0;
-    sample = mVideoQueue.PeekFront();
-    if (sample && sample->mOffset > mPlaybackOffset) {
-      mPlaybackOffset = sample->mOffset;
-    }
+  if (mMediaSink->IsStarted()) {
+    return NS_OK;
   }
+
+  mAudioCompleted = false;
+  nsresult rv = mMediaSink->Start(GetMediaTime(), Info());
+
+  auto videoPromise = mMediaSink->OnEnded(TrackInfo::kVideoTrack);
+  auto audioPromise = mMediaSink->OnEnded(TrackInfo::kAudioTrack);
+
+  if (audioPromise) {
+    audioPromise->Then(
+      OwnerThread(), __func__, this,
+      &MediaDecoderStateMachine::OnMediaSinkAudioComplete,
+      &MediaDecoderStateMachine::OnMediaSinkAudioError)
+    ->Track(mMediaSinkAudioPromise);
+  }
+  if (videoPromise) {
+    videoPromise->Then(
+      OwnerThread(), __func__, this,
+      &MediaDecoderStateMachine::OnMediaSinkVideoComplete,
+      &MediaDecoderStateMachine::OnMediaSinkVideoError)
+    ->Track(mMediaSinkVideoPromise);
+  }
+  // Remember the initial offset when playback starts. This will be used
+  // to calculate the rate at which bytes are consumed as playback moves on.
+  RefPtr<MediaData> sample = mAudioQueue.PeekFront();
+  mPlaybackOffset = sample ? sample->mOffset : 0;
+  sample = mVideoQueue.PeekFront();
+  if (sample && sample->mOffset > mPlaybackOffset) {
+    mPlaybackOffset = sample->mOffset;
+  }
+  return rv;
 }
 
 bool
@@ -3662,6 +3666,60 @@ MediaDecoderStateMachine::LoopingChanged()
   if (mSeamlessLoopingAllowed) {
     mReader->SetSeamlessLoopingEnabled(mLooping);
   }
+}
+
+RefPtr<GenericPromise>
+MediaDecoderStateMachine::InvokeSetSink(RefPtr<AudioDeviceInfo> aSink)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSink);
+
+  ++mSetSinkRequestsCount;
+  return InvokeAsync(
+           OwnerThread(), this, __func__,
+           &MediaDecoderStateMachine::SetSink, aSink);
+}
+
+RefPtr<GenericPromise>
+MediaDecoderStateMachine::SetSink(RefPtr<AudioDeviceInfo> aSink)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  if (mAudioCaptured) {
+    // Not supported yet.
+    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
+  // Backup current playback parameters.
+  bool wasPlaying = mMediaSink->IsPlaying();
+
+  if (--mSetSinkRequestsCount > 0) {
+    MOZ_ASSERT(mSetSinkRequestsCount > 0);
+    return GenericPromise::CreateAndResolve(wasPlaying, __func__);
+  }
+
+  MediaSink::PlaybackParams params = mMediaSink->GetPlaybackParams();
+  params.mSink = std::move(aSink);
+
+  if (!mMediaSink->IsStarted()) {
+    mMediaSink->SetPlaybackParams(params);
+    return GenericPromise::CreateAndResolve(false, __func__);
+  }
+
+  // Stop and shutdown the existing sink.
+  StopMediaSink();
+  mMediaSink->Shutdown();
+  // Create a new sink according to whether audio is captured.
+  mMediaSink = CreateMediaSink(false);
+  // Restore playback parameters.
+  mMediaSink->SetPlaybackParams(params);
+  // Start the new sink
+  if (wasPlaying) {
+    nsresult rv = StartMediaSink();
+    if (NS_FAILED(rv)) {
+      return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+    }
+  }
+  return GenericPromise::CreateAndResolve(wasPlaying, __func__);
 }
 
 TimeUnit

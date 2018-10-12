@@ -139,7 +139,7 @@ class LayoutApp extends PureComponent {
     }
 
     return (
-      dom.div({ id: "layout-container" },
+      dom.div({ className: "layout-container" },
         Accordion({ items })
       )
     );

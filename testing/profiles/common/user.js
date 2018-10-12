@@ -34,6 +34,8 @@ user_pref("extensions.legacy.enabled", true);
 user_pref("extensions.update.enabled", false);
 // Disable useragent updates.
 user_pref("general.useragent.updates.enabled", false);
+// Ensure WR doesn't get enabled in tests unless we do it explicitly with the MOZ_WEBRENDER envvar.
+user_pref("gfx.webrender.all.qualified", false);
 user_pref("hangmonitor.timeout", 0); // no hang monitor
 user_pref("media.gmp-manager.updateEnabled", false);
 // Make enablePrivilege continue to work for test code. :-(

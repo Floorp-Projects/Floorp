@@ -580,7 +580,8 @@ MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
                                 newSource,
                                 newSource->GetName(),
-                                NS_ConvertUTF8toUTF16(newSource->GetUUID())));
+                                NS_ConvertUTF8toUTF16(newSource->GetUUID()),
+                                NS_LITERAL_STRING("")));
       return;
     }
     case dom::MediaSourceEnum::Microphone: {
@@ -591,7 +592,8 @@ MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
           aDevices->AppendElement(MakeRefPtr<MediaDevice>(
                                     source,
                                     source->GetName(),
-                                    NS_ConvertUTF8toUTF16(source->GetUUID())));
+                                    NS_ConvertUTF8toUTF16(source->GetUUID()),
+                                    NS_LITERAL_STRING("")));
         }
       }
 
@@ -602,7 +604,8 @@ MediaEngineDefault::EnumerateDevices(uint64_t aWindowId,
         aDevices->AppendElement(MakeRefPtr<MediaDevice>(
                                   newSource,
                                   newSource->GetName(),
-                                  NS_ConvertUTF8toUTF16(newSource->GetUUID())));
+                                  NS_ConvertUTF8toUTF16(newSource->GetUUID()),
+                                  NS_LITERAL_STRING("")));
       }
       return;
     }
