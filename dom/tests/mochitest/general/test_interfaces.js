@@ -153,8 +153,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "AudioScheduledSourceNode", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "AudioStreamTrack", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "AudioWorkletNode", insecureContext: false, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "AuthenticatorAssertionResponse"},
@@ -1154,8 +1152,6 @@ var interfaceNamesInGlobalScope =
     {name: "ValidityState", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VideoPlaybackQuality", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VideoStreamTrack", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VisualViewport", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!

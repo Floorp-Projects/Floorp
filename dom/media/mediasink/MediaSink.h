@@ -7,10 +7,11 @@
 #ifndef MediaSink_h_
 #define MediaSink_h_
 
+#include "AudioDeviceInfo.h"
+#include "MediaInfo.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/MozPromise.h"
 #include "nsISupportsImpl.h"
-#include "MediaInfo.h"
 
 namespace mozilla {
 
@@ -44,6 +45,7 @@ public:
     double mVolume;
     double mPlaybackRate;
     bool mPreservesPitch;
+    RefPtr<AudioDeviceInfo> mSink;
   };
 
   // Return the playback parameters of this sink.
@@ -100,7 +102,7 @@ public:
 
   // Begin a playback session with the provided start time and media info.
   // Must be called when playback is stopped.
-  virtual void Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) = 0;
+  virtual nsresult Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) = 0;
 
   // Finish a playback session.
   // Must be called after playback starts.

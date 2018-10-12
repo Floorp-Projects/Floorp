@@ -157,6 +157,9 @@ public:
   void SetPreservesPitch(bool aPreservesPitch);
   void SetLooping(bool aLooping);
 
+  // Set the given device as the output device.
+  RefPtr<GenericPromise> SetSink(AudioDeviceInfo* aSink);
+
   bool GetMinimizePreroll() const { return mMinimizePreroll; }
 
   // All MediaStream-related data is protected by mReentrantMonitor.

@@ -127,12 +127,6 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
   ParsingEnvironment servoEnv =
     GetParsingEnvironment(aSubjectPrincipal);
   if (!servoEnv.mUrlExtraData) {
-    if (created) {
-      // In case we can't set a new declaration, but one was
-      // created for the old one, we need to set the old declaration to
-      // get right style attribute handling.
-      SetCSSDeclaration(olddecl, &closureData);
-    }
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;
   }
@@ -287,22 +281,12 @@ nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
   ParsingEnvironment servoEnv =
     GetParsingEnvironment(aSubjectPrincipal);
   if (!servoEnv.mUrlExtraData) {
-    if (created) {
-      // In case we can't set a new declaration, but one was
-      // created for the old one, we need to set the old declaration to
-      // get right style attribute handling.
-      SetCSSDeclaration(olddecl, aClosureData);
-    }
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   changed = aFunc(decl, servoEnv);
 
   if (!changed) {
-    if (created) {
-      // See comment above about setting old declaration.
-      SetCSSDeclaration(olddecl, aClosureData);
-    }
     // Parsing failed -- but we don't throw an exception for that.
     return NS_OK;
   }
