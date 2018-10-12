@@ -31,6 +31,32 @@ Release date: TBD
   * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
 * **browser-search**
   * Fixed an issue where a locale change at runtime would not update the search engines.
+* **browser-session**:
+  * Added reusable functionality for observing sessions, which also support observering the currently selected session, even if it changes.
+  ```kotlin
+  class MyFeaturePresenter(
+      private val sessionManager: SessionManager
+  ) : SelectionAwareSessionObserver(sessionManager) {
+
+      fun start() {
+          // Always observe changes to the selected session even if the selection changes
+          super.observeSelected()
+
+          // To observe changes to a specific session the following method can be used:
+          // super.observeFixed(session)
+      }
+
+      override fun onUrlChanged(session: Session, url: String) {
+          // URL of selected session changed
+      }
+
+      override fun onProgress(session: Session, progress: Int) {
+         // Progress of selected session changed
+      }
+
+      // More observer functions...      
+  }  
+  ```
 * **browser-errorpages**
   * Added more detailed documentation in the README.
 * **support-ktx**
