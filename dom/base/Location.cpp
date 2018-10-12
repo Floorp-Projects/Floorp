@@ -432,38 +432,16 @@ void
 Location::SetHref(const nsAString& aHref,
                   ErrorResult& aRv)
 {
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    aRv = SetHrefWithContext(cx, aHref, false);
-    return;
-  }
-
-  nsAutoString oldHref;
-  aRv = GetHref(oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> oldUri;
-  aRv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  aRv = SetHrefWithBase(aHref, oldUri, false);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  DoSetHref(aHref, false, aRv);
 }
 
-nsresult
-Location::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
-                             bool aReplace)
+void
+Location::DoSetHref(const nsAString& aHref, bool aReplace, ErrorResult& aRv)
 {
   // Get the source of the caller
   nsCOMPtr<nsIURI> base = GetSourceBaseURL();
 
-  return SetHrefWithBase(aHref, base, aReplace);
+  aRv = SetHrefWithBase(aHref, base, aReplace);
 }
 
 nsresult
@@ -880,25 +858,7 @@ Location::Replace(const nsAString& aUrl,
                   nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv)
 {
-  if (JSContext *cx = nsContentUtils::GetCurrentJSContext()) {
-    aRv = SetHrefWithContext(cx, aUrl, true);
-    return;
-  }
-
-  nsAutoString oldHref;
-  aRv = GetHref(oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> oldUri;
-
-  aRv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  aRv = SetHrefWithBase(aUrl, oldUri, true);
+  DoSetHref(aUrl, true, aRv);
 }
 
 void
@@ -911,26 +871,7 @@ Location::Assign(const nsAString& aUrl,
     return;
   }
 
-  if (JSContext *cx = nsContentUtils::GetCurrentJSContext()) {
-    aRv = SetHrefWithContext(cx, aUrl, false);
-    return;
-  }
-
-  nsAutoString oldHref;
-  aRv = GetHref(oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> oldUri;
-  aRv = NS_NewURI(getter_AddRefs(oldUri), oldHref);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  if (oldUri) {
-    aRv = SetHrefWithBase(aUrl, oldUri, false);
-  }
+  DoSetHref(aUrl, false, aRv);
 }
 
 already_AddRefed<nsIURI>
