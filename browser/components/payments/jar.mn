@@ -26,4 +26,3 @@ browser.jar:
     res/payments/unprivileged-fallbacks.js            (res/unprivileged-fallbacks.js)
     res/payments/mixins/                              (res/mixins/*.js)
     res/payments/PaymentsStore.js                     (res/PaymentsStore.js)
-    res/payments/vendor/                              (res/vendor/*)
