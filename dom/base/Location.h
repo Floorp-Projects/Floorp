@@ -68,7 +68,6 @@ public:
   }
 
   void SetHref(const nsAString& aHref,
-               nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError);
 
   void GetOrigin(nsAString& aOrigin,
@@ -167,25 +166,17 @@ protected:
   // Note, this method can return NS_OK with a null value for aURL. This happens
   // if the docShell is null.
   nsresult GetURI(nsIURI** aURL, bool aGetInnermostURI = false);
-  nsresult SetURI(nsIURI* aURL, nsIPrincipal& aSubjectPrincipal, bool aReplace = false);
+  nsresult SetURI(nsIURI* aURL, bool aReplace = false);
   nsresult SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
-                           nsIPrincipal& aSubjectPrincipal, bool aReplace);
+                           bool aReplace);
 
   // Helper for Assign/SetHref/Replace
-  void DoSetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
-                 bool aReplace, ErrorResult& aRv);
+  void DoSetHref(const nsAString& aHref, bool aReplace, ErrorResult& aRv);
 
   // Get the base URL we should be using for our relative URL
   // resolution for SetHref/Assign/Replace.
   already_AddRefed<nsIURI> GetSourceBaseURL();
-
-  // Check whether it's OK to load the given url with the given subject
-  // principal, and if so construct the right nsDocShellLoadInfo for the load
-  // and return it.
-  nsresult CheckURL(nsIURI *url,
-                    nsIPrincipal& aSubjectPrincipal,
-                    nsDocShellLoadInfo** aLoadInfo);
-
+  nsresult CheckURL(nsIURI *url, nsDocShellLoadInfo** aLoadInfo);
   bool CallerSubsumes(nsIPrincipal* aSubjectPrincipal);
 
   nsString mCachedHash;
