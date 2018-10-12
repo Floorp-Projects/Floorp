@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({ title: "getUserMedia Stop Video Audio Stream", bug: "822109" });
+  /**
+   * Run a test to verify that we can start a video+audio stream in a
+   * media element, call stop() on the stream, and successfully get an
+   * ended event fired.
+   */
+  runTest(function () {
+    return getUserMedia({video: true, audio: true})
+      .then(stream => {
+        var testVideo = createMediaElement('video', 'testVideo');
+        var playback = new LocalMediaStreamPlayback(testVideo, stream);
+
+        return playback.playMediaWithDeprecatedStreamStop(false);
+      });
+  });
+
+</script>
+</pre>
+</body>
+</html>

@@ -21,7 +21,7 @@ public:
     , mIsWritingComplete(false)
   {}
   virtual ~ContainerWriter() {}
-  // Mapping to DOMMediaStream::TrackTypeHints
+  // Mapping to DOMLocalMediaStream::TrackTypeHints
   enum {
     CREATE_AUDIO_TRACK = 1 << 0,
     CREATE_VIDEO_TRACK = 1 << 1,

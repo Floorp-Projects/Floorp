@@ -607,6 +607,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "KeyframeEffect", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "LocalMediaStream", insecureContext: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Location", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MediaCapabilities", insecureContext: true},
