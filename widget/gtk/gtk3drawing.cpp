@@ -2335,8 +2335,6 @@ moz_gtk_header_bar_paint(WidgetNodeType widgetType,
     GtkStyleContext *style =
         GetStyleContext(widgetType, GTK_TEXT_DIR_NONE, state_flags);
 
-    InsetByMargin(rect, style);
-
     // Some themes (Adwaita for instance) draws bold dark line at
     // titlebar bottom. It does not fit well with Firefox tabs so
     // draw with some extent to make the titlebar bottom part invisible.
@@ -2573,14 +2571,6 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
 
             return MOZ_GTK_SUCCESS;
         }
-    case MOZ_GTK_HEADER_BAR:
-    case MOZ_GTK_HEADER_BAR_MAXIMIZED:
-        {
-            style = GetStyleContext(widget);
-            moz_gtk_add_border_padding(style, left, top, right, bottom);
-            *top = *bottom = 0;
-            return MOZ_GTK_SUCCESS;
-        }
     /* These widgets have no borders, since they are not containers. */
     case MOZ_GTK_CHECKBUTTON_LABEL:
     case MOZ_GTK_RADIOBUTTON_LABEL:
@@ -2600,6 +2590,8 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_TREEVIEW_EXPANDER:
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
+    case MOZ_GTK_HEADER_BAR:
+    case MOZ_GTK_HEADER_BAR_MAXIMIZED:
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
