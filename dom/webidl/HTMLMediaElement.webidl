@@ -220,6 +220,14 @@ partial interface HTMLMediaElement {
   boolean hasSuspendTaint();
 };
 
+/* Audio Output Devices API */
+partial interface HTMLMediaElement {
+  [Pref="media.setsinkid.enabled"]
+  readonly attribute DOMString sinkId;
+  [Throws, Pref="media.setsinkid.enabled"]
+  Promise<void> setSinkId(DOMString sinkId);
+};
+
 /*
  * API that exposes whether a call to HTMLMediaElement.play() would be
  * blocked by autoplay policies; whether the promise returned by play()
