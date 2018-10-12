@@ -1,4 +1,5 @@
 import React from "react";
+import {RichText} from "../../components/RichText/RichText";
 import {SimpleSnippet} from "../SimpleSnippet/SimpleSnippet";
 import {SnippetBase} from "../../components/SnippetBase/SnippetBase";
 
@@ -74,10 +75,18 @@ export class SubmitFormSnippet extends React.PureComponent {
   }
 
   renderFormPrivacyNotice() {
-    return this.props.privacyNoticeRichText && (<label className="privacy-notice" htmlFor="id_privacy">
+    const {content} = this.props;
+    if (!content.scene2_privacy_html) {
+      return null;
+    }
+    return (<label className="privacy-notice" htmlFor="id_privacy">
         <p>
           <input type="checkbox" id="id_privacy" name="privacy" required="required" />
-          <span>{this.props.privacyNoticeRichText}</span>
+          <span><RichText text={content.scene2_privacy_html}
+            localization_id="privacy_html"
+            links={content.links}
+            sendClick={this.props.sendClick} />
+          </span>
         </p>
       </label>);
   }

@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Népszerű témák:",
   "pocket_read_even_more": "További történetek",
   "pocket_more_reccommendations": "További javaslatok",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Hogyan működik",
   "pocket_cta_button": "Pocket beszerzése",
   "pocket_cta_text": "Mentse az Ön által kedvelt történeteket a Pocketbe, és töltse fel elméjét lebilincselő olvasnivalókkal.",
   "highlights_empty_state": "Kezdjen el böngészni, és itt fognak megjelenni azok a nagyszerű cikkek, videók és más lapok, amelyeket nemrég meglátogatott vagy könyvjelzőzött.",
