@@ -205,13 +205,13 @@ VideoSink::SetPlaying(bool aPlaying)
   EnsureHighResTimersOnOnlyIfPlaying();
 }
 
-void
+nsresult
 VideoSink::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
 {
   AssertOwnerThread();
   VSINK_LOG("[%s]", __func__);
 
-  mAudioSink->Start(aStartTime, aInfo);
+  nsresult rv = mAudioSink->Start(aStartTime, aInfo);
 
   mHasVideo = aInfo.HasVideo();
 
@@ -247,6 +247,7 @@ VideoSink::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
     // when video duration is 0.
     UpdateRenderedVideoFrames();
   }
+  return rv;
 }
 
 void

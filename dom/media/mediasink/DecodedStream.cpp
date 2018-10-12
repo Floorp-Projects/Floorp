@@ -304,7 +304,7 @@ DecodedStream::OnEnded(TrackType aType)
   return nullptr;
 }
 
-void
+nsresult
 DecodedStream::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
 {
   AssertOwnerThread();
@@ -371,6 +371,7 @@ DecodedStream::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
     mData->SetPlaying(mPlaying);
     SendData();
   }
+  return NS_OK;
 }
 
 void

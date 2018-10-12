@@ -97,6 +97,7 @@ EXPORTS += [
     'AudioCompactor.h',
     'AudioConfig.h',
     'AudioConverter.h',
+    'AudioDeviceInfo.h',
     'AudioMixer.h',
     'AudioPacketizer.h',
     'AudioSampleFormat.h',
