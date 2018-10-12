@@ -59,7 +59,7 @@ public:
   void UpdateTiming(const OptionalEffectTiming& aTiming, ErrorResult& aRv);
 
   const TimingParams& SpecifiedTiming() const { return mTiming; }
-  void SetSpecifiedTiming(const TimingParams& aTiming);
+  void SetSpecifiedTiming(TimingParams&& aTiming);
 
   // This function takes as input the timing parameters of an animation and
   // returns the computed timing at the specified local time.
