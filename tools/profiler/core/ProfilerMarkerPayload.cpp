@@ -264,3 +264,12 @@ StyleMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("stylesShared", mStats.mStylesShared);
   aWriter.IntProperty("stylesReused", mStats.mStylesReused);
 }
+
+void
+LongTaskMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                     const TimeStamp& aProcessStartTime,
+                                     UniqueStacks& aUniqueStacks)
+{
+  StreamCommonProps("MainThreadLongTask", aWriter, aProcessStartTime, aUniqueStacks);
+  aWriter.StringProperty("category", "LongTask");
+}

@@ -154,11 +154,13 @@ AssertScopeMatchesEnvironment(Scope* scope, JSObject* originalEnv)
                 MOZ_CRASH("NonSyntactic should not have a syntactic environment");
                 break;
 
-              case ScopeKind::Module:
-                MOZ_ASSERT(env->as<ModuleEnvironmentObject>().module().script() ==
-                           si.scope()->as<ModuleScope>().script());
+              case ScopeKind::Module: {
+                  ModuleObject* module = &env->as<ModuleEnvironmentObject>().module();
+                  MOZ_ASSERT_IF(module->maybeScript(),
+                                module->script() == si.scope()->as<ModuleScope>().script());
                 env = &env->as<ModuleEnvironmentObject>().enclosingEnvironment();
                 break;
+              }
 
               case ScopeKind::WasmInstance:
                 env = &env->as<WasmInstanceEnvironmentObject>().enclosingEnvironment();

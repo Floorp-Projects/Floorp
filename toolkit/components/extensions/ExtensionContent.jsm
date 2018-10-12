@@ -68,7 +68,7 @@ XPCOMUtils.defineLazyGetter(this, "console", ExtensionCommon.getConsole);
 
 XPCOMUtils.defineLazyGetter(this, "isContentScriptProcess", () => {
   return Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT ||
-      !Services.appinfo.browserTabsRemoteAutostart;
+         !WebExtensionPolicy.useRemoteWebExtensions;
 });
 
 var DocumentManager;

@@ -45,5 +45,11 @@ interface PerformanceTiming {
   [Pref="dom.performance.time_to_dom_content_flushed.enabled"]
   readonly attribute unsigned long long timeToDOMContentFlushed;
 
+  // This is a Chrome proprietary extension and not part of the
+  // performance/navigation timing specification.
+  // Returns 0 if a time-to-interactive measurement has not happened.
+  [Pref="dom.performance.time_to_first_interactive.enabled"]
+  readonly attribute unsigned long long timeToFirstInteractive;
+
   [Default] object toJSON();
 };

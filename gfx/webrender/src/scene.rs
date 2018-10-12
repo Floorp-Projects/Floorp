@@ -219,7 +219,9 @@ impl FilterOpHelpers for FilterOp {
             FilterOp::Saturate(..) |
             FilterOp::Sepia(..) |
             FilterOp::DropShadow(..) |
-            FilterOp::ColorMatrix(..) => true,
+            FilterOp::ColorMatrix(..) |
+            FilterOp::SrgbToLinear |
+            FilterOp::LinearToSrgb  => true,
             FilterOp::Opacity(_, amount) => {
                 amount > OPACITY_EPSILON
             }
@@ -248,6 +250,7 @@ impl FilterOpHelpers for FilterOp {
                            0.0, 0.0, 0.0, 1.0,
                            0.0, 0.0, 0.0, 0.0]
             }
+            FilterOp::SrgbToLinear | FilterOp::LinearToSrgb => false,
         }
     }
 }

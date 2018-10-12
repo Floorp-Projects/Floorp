@@ -4490,42 +4490,18 @@ CallOriginalPromiseThenImpl(JSContext* cx, JS::HandleObject promiseObj,
 
     MOZ_ASSERT_IF(onResolvedObj_, IsCallable(onResolvedObj_));
     MOZ_ASSERT_IF(onRejectedObj_, IsCallable(onRejectedObj_));
+    RootedObject onResolvedObj(cx, onResolvedObj_);
+    RootedObject onRejectedObj(cx, onRejectedObj_);
 
-    {
-        mozilla::Maybe<AutoRealm> ar;
-        Rooted<PromiseObject*> promise(cx);
-        RootedObject onResolvedObj(cx, onResolvedObj_);
-        RootedObject onRejectedObj(cx, onRejectedObj_);
-        if (IsWrapper(promiseObj)) {
-            JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
-            if (!unwrappedPromiseObj) {
-                ReportAccessDenied(cx);
-                return false;
-            }
-            promise = &unwrappedPromiseObj->as<PromiseObject>();
-            ar.emplace(cx, promise);
-            if (!cx->compartment()->wrap(cx, &onResolvedObj) ||
-                !cx->compartment()->wrap(cx, &onRejectedObj))
-            {
-                return false;
-            }
-        } else {
-            promise = promiseObj.as<PromiseObject>();
-        }
-
-        RootedValue onFulfilled(cx, ObjectOrNullValue(onResolvedObj));
-        RootedValue onRejected(cx, ObjectOrNullValue(onRejectedObj));
-        if (!OriginalPromiseThen(cx, promise, onFulfilled, onRejected, resultObj, createDependent)) {
-            return false;
-        }
+    if (IsWrapper(promiseObj) && !CheckedUnwrap(promiseObj)) {
+        ReportAccessDenied(cx);
+        return false;
     }
+    MOZ_ASSERT(CheckedUnwrap(promiseObj)->is<PromiseObject>());
 
-    if (resultObj) {
-        if (!cx->compartment()->wrap(cx, resultObj)) {
-            return false;
-        }
-    }
-    return true;
+    RootedValue onFulfilled(cx, ObjectOrNullValue(onResolvedObj));
+    RootedValue onRejected(cx, ObjectOrNullValue(onRejectedObj));
+    return OriginalPromiseThen(cx, promiseObj, onFulfilled, onRejected, resultObj, createDependent);
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4622,52 +4598,6 @@ JS::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
     return js::GetWaitForAllPromise(cx, promises);
 }
 
-JS_PUBLIC_API(JSObject*)
-JS::NewReadableDefaultStreamObject(JSContext* cx,
-                                   JS::HandleObject underlyingSource /* = nullptr */,
-                                   JS::HandleFunction size /* = nullptr */,
-                                   double highWaterMark /* = 1 */,
-                                   JS::HandleObject proto /* = nullptr */)
-{
-    MOZ_ASSERT(!cx->zone()->isAtomsZone());
-    AssertHeapIsIdle();
-    CHECK_THREAD(cx);
-
-    RootedObject source(cx, underlyingSource);
-    if (!source) {
-        source = NewBuiltinClassInstance<PlainObject>(cx);
-        if (!source) {
-            return nullptr;
-        }
-    }
-    RootedValue sourceVal(cx, ObjectValue(*source));
-    RootedValue sizeVal(cx, size ? ObjectValue(*size) : UndefinedValue());
-    RootedValue highWaterMarkVal(cx, NumberValue(highWaterMark));
-    return ReadableStream::createDefaultStream(cx, sourceVal, sizeVal, highWaterMarkVal, proto);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS::NewReadableByteStreamObject(JSContext* cx,
-                                JS::HandleObject underlyingSource /* = nullptr */,
-                                double highWaterMark /* = 1 */,
-                                JS::HandleObject proto /* = nullptr */)
-{
-    MOZ_ASSERT(!cx->zone()->isAtomsZone());
-    AssertHeapIsIdle();
-    CHECK_THREAD(cx);
-
-    RootedObject source(cx, underlyingSource);
-    if (!source) {
-        source = NewBuiltinClassInstance<PlainObject>(cx);
-        if (!source) {
-            return nullptr;
-        }
-    }
-    RootedValue sourceVal(cx, ObjectValue(*source));
-    RootedValue highWaterMarkVal(cx, NumberValue(highWaterMark));
-    return ReadableStream::createByteStream(cx, sourceVal, highWaterMarkVal, proto);
-}
-
 extern JS_PUBLIC_API(void)
 JS::SetReadableStreamCallbacks(JSContext* cx,
                                JS::RequestReadableStreamDataCallback dataRequestCallback,
@@ -4708,6 +4638,29 @@ JS::HasReadableStreamCallbacks(JSContext* cx)
 }
 
 JS_PUBLIC_API(JSObject*)
+JS::NewReadableDefaultStreamObject(JSContext* cx,
+                                   JS::HandleObject underlyingSource /* = nullptr */,
+                                   JS::HandleFunction size /* = nullptr */,
+                                   double highWaterMark /* = 1 */,
+                                   JS::HandleObject proto /* = nullptr */)
+{
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
+    AssertHeapIsIdle();
+    CHECK_THREAD(cx);
+
+    RootedObject source(cx, underlyingSource);
+    if (!source) {
+        source = NewBuiltinClassInstance<PlainObject>(cx);
+        if (!source)
+            return nullptr;
+    }
+    RootedValue sourceVal(cx, ObjectValue(*source));
+    RootedValue sizeVal(cx, size ? ObjectValue(*size) : UndefinedValue());
+    RootedValue highWaterMarkVal(cx, NumberValue(highWaterMark));
+    return ReadableStream::createDefaultStream(cx, sourceVal, sizeVal, highWaterMarkVal, proto);
+}
+
+JS_PUBLIC_API(JSObject*)
 JS::NewReadableExternalSourceStreamObject(JSContext* cx, void* underlyingSource,
                                           uint8_t flags /* = 0 */,
                                           HandleObject proto /* = nullptr */)
@@ -4715,7 +4668,8 @@ JS::NewReadableExternalSourceStreamObject(JSContext* cx, void* underlyingSource,
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-
+    MOZ_ASSERT((uintptr_t(underlyingSource) & 1) == 0,
+               "external underlying source pointers must be aligned");
 #ifdef DEBUG
     JSRuntime* rt = cx->runtime();
     MOZ_ASSERT(rt->readableStreamDataRequestCallback);
@@ -4729,52 +4683,87 @@ JS::NewReadableExternalSourceStreamObject(JSContext* cx, void* underlyingSource,
     return ReadableStream::createExternalSourceStream(cx, underlyingSource, flags, proto);
 }
 
-JS_PUBLIC_API(uint8_t)
-JS::ReadableStreamGetEmbeddingFlags(const JSObject* stream)
-{
-    return stream->as<ReadableStream>().embeddingFlags();
-}
-
 JS_PUBLIC_API(bool)
 JS::IsReadableStream(const JSObject* obj)
 {
-    return obj->is<ReadableStream>();
+    if (IsWrapper(const_cast<JSObject*>(obj)))
+        obj = CheckedUnwrap(const_cast<JSObject*>(obj));
+    return obj && obj->is<ReadableStream>();
 }
 
 JS_PUBLIC_API(bool)
 JS::IsReadableStreamReader(const JSObject* obj)
 {
-    return obj->is<ReadableStreamDefaultReader>() || obj->is<ReadableStreamBYOBReader>();
+    if (IsWrapper(const_cast<JSObject*>(obj)))
+        obj = CheckedUnwrap(const_cast<JSObject*>(obj));
+    return obj && obj->is<ReadableStreamDefaultReader>();
 }
 
 JS_PUBLIC_API(bool)
 JS::IsReadableStreamDefaultReader(const JSObject* obj)
 {
-    return obj->is<ReadableStreamDefaultReader>();
+    if (IsWrapper(const_cast<JSObject*>(obj)))
+        obj = CheckedUnwrap(const_cast<JSObject*>(obj));
+    return obj && obj->is<ReadableStreamDefaultReader>();
+}
+
+template<class T>
+static MOZ_MUST_USE T*
+ToUnwrapped(JSContext* cx, JSObject* obj)
+{
+    cx->check(obj);
+    if (IsWrapper(obj)) {
+        obj = CheckedUnwrap(obj);
+        if (!obj) {
+            ReportAccessDenied(cx);
+            return nullptr;
+        }
+    }
+    return &obj->as<T>();
 }
 
 JS_PUBLIC_API(bool)
-JS::IsReadableStreamBYOBReader(const JSObject* obj)
+JS::ReadableStreamIsReadable(JSContext* cx, const JSObject* streamObj, bool* result)
 {
-    return obj->is<ReadableStreamBYOBReader>();
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    if (!stream)
+        return false;
+
+    *result = stream->readable();
+    return true;
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamIsReadable(const JSObject* stream)
+JS::ReadableStreamIsLocked(JSContext* cx, const JSObject* streamObj, bool* result)
 {
-    return stream->as<ReadableStream>().readable();
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    if (!stream)
+        return false;
+
+    *result = stream->locked();
+    return true;
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamIsLocked(const JSObject* stream)
+JS::ReadableStreamIsDisturbed(JSContext* cx, const JSObject* streamObj, bool* result)
 {
-    return stream->as<ReadableStream>().locked();
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    if (!stream)
+        return false;
+
+    *result = stream->disturbed();
+    return true;
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamIsDisturbed(const JSObject* stream)
+JS::ReadableStreamGetEmbeddingFlags(JSContext* cx, const JSObject* streamObj, uint8_t* flags)
 {
-    return stream->as<ReadableStream>().disturbed();
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    if (!stream)
+        return false;
+
+    *flags = stream->embeddingFlags();
+    return true;
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4782,17 +4771,24 @@ JS::ReadableStreamCancel(JSContext* cx, HandleObject streamObj, HandleValue reas
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(streamObj);
     cx->check(reason);
 
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
+    Rooted<ReadableStream*> stream(cx, ToUnwrapped<ReadableStream>(cx, streamObj));
+    if (!stream)
+        return nullptr;
+
     return ReadableStream::cancel(cx, stream, reason);
 }
 
-JS_PUBLIC_API(JS::ReadableStreamMode)
-JS::ReadableStreamGetMode(const JSObject* stream)
+JS_PUBLIC_API(bool)
+JS::ReadableStreamGetMode(JSContext* cx, const JSObject* streamObj, JS::ReadableStreamMode* mode)
 {
-    return stream->as<ReadableStream>().mode();
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    if (!stream)
+        return false;
+
+    *mode = stream->mode();
+    return true;
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4800,10 +4796,14 @@ JS::ReadableStreamGetReader(JSContext* cx, HandleObject streamObj, ReadableStrea
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(streamObj);
 
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
-    return ReadableStream::getReader(cx, stream, mode);
+    Rooted<ReadableStream*> stream(cx, ToUnwrapped<ReadableStream>(cx, streamObj));
+    if (!stream)
+        return nullptr;
+
+    JSObject* result = ReadableStream::getReader(cx, stream, mode);
+    MOZ_ASSERT_IF(result, IsObjectInContextCompartment(result, cx));
+    return result;
 }
 
 JS_PUBLIC_API(bool)
@@ -4811,16 +4811,23 @@ JS::ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject stream
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(streamObj);
 
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
+    Rooted<ReadableStream*> stream(cx, ToUnwrapped<ReadableStream>(cx, streamObj));
+    if (!stream)
+        return false;
+
     return ReadableStream::getExternalSource(cx, stream, source);
 }
 
-JS_PUBLIC_API(void)
-JS::ReadableStreamReleaseExternalUnderlyingSource(JSObject* stream)
+JS_PUBLIC_API(bool)
+JS::ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, JSObject* streamObj)
 {
-    stream->as<ReadableStream>().releaseExternalSource();
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    if (!stream)
+        return false;
+
+    stream->releaseExternalSource();
+    return true;
 }
 
 JS_PUBLIC_API(bool)
@@ -4829,9 +4836,11 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(streamObj);
 
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
+    Rooted<ReadableStream*> stream(cx, ToUnwrapped<ReadableStream>(cx, streamObj));
+    if (!stream)
+        return false;
+
     return ReadableStream::updateDataAvailableFromSource(cx, stream, availableData);
 }
 
@@ -4841,9 +4850,11 @@ JS::ReadableStreamTee(JSContext* cx, HandleObject streamObj,
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(streamObj);
 
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
+    Rooted<ReadableStream*> stream(cx, ToUnwrapped<ReadableStream>(cx, streamObj));
+    if (!stream)
+        return false;
+
     Rooted<ReadableStream*> branch1Stream(cx);
     Rooted<ReadableStream*> branch2Stream(cx);
 
@@ -4857,10 +4868,15 @@ JS::ReadableStreamTee(JSContext* cx, HandleObject streamObj,
     return true;
 }
 
-JS_PUBLIC_API(void)
-JS::ReadableStreamGetDesiredSize(JSObject* streamObj, bool* hasValue, double* value)
+JS_PUBLIC_API(bool)
+JS::ReadableStreamGetDesiredSize(JSContext* cx, JSObject* streamObj, bool* hasValue, double* value)
 {
-    streamObj->as<ReadableStream>().desiredSize(hasValue, value);
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, streamObj);
+    if (!stream)
+        return false;
+
+    stream->desiredSize(hasValue, value);
+    return true;
 }
 
 JS_PUBLIC_API(bool)
@@ -4868,9 +4884,11 @@ JS::ReadableStreamClose(JSContext* cx, HandleObject streamObj)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(streamObj);
 
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
+    Rooted<ReadableStream*> stream(cx, ToUnwrapped<ReadableStream>(cx, streamObj));
+    if (!stream)
+        return false;
+
     return ReadableStream::close(cx, stream);
 }
 
@@ -4879,10 +4897,12 @@ JS::ReadableStreamEnqueue(JSContext* cx, HandleObject streamObj, HandleValue chu
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(streamObj);
     cx->check(chunk);
 
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
+    Rooted<ReadableStream*> stream(cx, ToUnwrapped<ReadableStream>(cx, streamObj));
+    if (!stream)
+        return false;
+
     if (stream->mode() != JS::ReadableStreamMode::Default) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAM_NOT_DEFAULT_CONTROLLER,
@@ -4893,72 +4913,53 @@ JS::ReadableStreamEnqueue(JSContext* cx, HandleObject streamObj, HandleValue chu
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableByteStreamEnqueueBuffer(JSContext* cx, HandleObject streamObj, HandleObject chunkObj)
-{
-    AssertHeapIsIdle();
-    CHECK_THREAD(cx);
-    cx->check(streamObj);
-    cx->check(chunkObj);
-
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
-    if (stream->mode() != JS::ReadableStreamMode::Byte) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAM_NOT_BYTE_STREAM_CONTROLLER,
-                                  "JS::ReadableByteStreamEnqueueBuffer");
-        return false;
-    }
-
-    Rooted<ArrayBufferObject*> buffer(cx);
-    if (chunkObj->is<ArrayBufferViewObject>()) {
-        bool dummy;
-        buffer = &JS_GetArrayBufferViewBuffer(cx, chunkObj, &dummy)->as<ArrayBufferObject>();
-    } else if (chunkObj->is<ArrayBufferObject>()) {
-        buffer = &chunkObj->as<ArrayBufferObject>();
-    } else {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLEBYTESTREAMCONTROLLER_BAD_CHUNK,
-                                  "JS::ReadableByteStreamEnqueueBuffer");
-        return false;
-    }
-
-    return ReadableStream::enqueueBuffer(cx, stream, buffer);
-}
-
-JS_PUBLIC_API(bool)
 JS::ReadableStreamError(JSContext* cx, HandleObject streamObj, HandleValue error)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(streamObj);
     cx->check(error);
 
-    Rooted<ReadableStream*> stream(cx, &streamObj->as<ReadableStream>());
+    Rooted<ReadableStream*> stream(cx, ToUnwrapped<ReadableStream>(cx, streamObj));
+    if (!stream)
+        return false;
+
     return js::ReadableStream::error(cx, stream, error);
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamReaderIsClosed(const JSObject* reader)
+JS::ReadableStreamReaderIsClosed(JSContext* cx, const JSObject* reader, bool* result)
 {
-    return js::ReadableStreamReaderIsClosed(reader);
+    reader = ToUnwrapped<NativeObject>(cx, const_cast<JSObject*>(reader));
+    if (!reader)
+        return false;
+
+    *result = js::ReadableStreamReaderIsClosed(reader);
+    return true;
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamReaderCancel(JSContext* cx, HandleObject reader, HandleValue reason)
+JS::ReadableStreamReaderCancel(JSContext* cx, HandleObject readerObj, HandleValue reason)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(reader);
     cx->check(reason);
+
+    RootedNativeObject reader(cx, ToUnwrapped<NativeObject>(cx, readerObj));
+    if (!reader)
+        return false;
 
     return js::ReadableStreamReaderCancel(cx, reader, reason);
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject reader)
+JS::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(reader);
+
+    RootedNativeObject reader(cx, ToUnwrapped<NativeObject>(cx, readerObj));
+    if (!reader)
+        return false;
 
     return js::ReadableStreamReaderReleaseLock(cx, reader);
 }
@@ -4968,23 +4969,13 @@ JS::ReadableStreamDefaultReaderRead(JSContext* cx, HandleObject readerObj)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(readerObj);
 
-    Rooted<ReadableStreamDefaultReader*> reader(cx, &readerObj->as<ReadableStreamDefaultReader>());
+    Rooted<ReadableStreamDefaultReader*> reader(cx);
+    reader = ToUnwrapped<ReadableStreamDefaultReader>(cx, readerObj);
+    if (!reader)
+        return nullptr;
+
     return js::ReadableStreamDefaultReader::read(cx, reader);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS::ReadableStreamBYOBReaderRead(JSContext* cx, HandleObject readerObj, HandleObject viewObj)
-{
-    AssertHeapIsIdle();
-    CHECK_THREAD(cx);
-    cx->check(readerObj);
-    cx->check(viewObj);
-
-    Rooted<ReadableStreamBYOBReader*> reader(cx, &readerObj->as<ReadableStreamBYOBReader>());
-    Rooted<ArrayBufferViewObject*> view(cx, &viewObj->as<ArrayBufferViewObject>());
-    return js::ReadableStreamBYOBReader::read(cx, reader, view);
 }
 
 JS_PUBLIC_API(void)
