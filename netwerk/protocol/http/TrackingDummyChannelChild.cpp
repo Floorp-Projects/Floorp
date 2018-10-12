@@ -1,0 +1,90 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "TrackingDummyChannelChild.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/URIUtils.h"
+#include "nsIChannel.h"
+#include "nsIURI.h"
+
+namespace mozilla {
+namespace net {
+
+/* static */ bool
+TrackingDummyChannelChild::Create(nsIHttpChannel* aChannel, nsIURI* aURI,
+                                  const std::function<void(bool)>& aCallback)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aURI);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (!loadInfo) {
+    return false;
+  }
+
+  OptionalLoadInfoArgs loadInfoArgs;
+  mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs);
+
+  PTrackingDummyChannelChild* actor =
+    gNeckoChild->SendPTrackingDummyChannelConstructor(aURI, loadInfoArgs);
+  if (!actor) {
+    return false;
+  }
+
+  bool isThirdParty =
+    nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, aURI);
+
+  static_cast<TrackingDummyChannelChild*>(actor)->Initialize(aChannel, aURI,
+                                                             isThirdParty,
+                                                             aCallback);
+  return true;
+}
+
+TrackingDummyChannelChild::TrackingDummyChannelChild()
+  : mIsThirdParty(false)
+{}
+
+TrackingDummyChannelChild::~TrackingDummyChannelChild() = default;
+
+void
+TrackingDummyChannelChild::Initialize(nsIHttpChannel* aChannel,
+                                      nsIURI* aURI,
+                                      bool aIsThirdParty,
+                                      const std::function<void(bool)>& aCallback)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mChannel = aChannel;
+  mURI = aURI;
+  mIsThirdParty = aIsThirdParty;
+  mCallback = aCallback;
+}
+
+mozilla::ipc::IPCResult
+TrackingDummyChannelChild::Recv__delete__(const bool& aTrackingResource)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mChannel) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIHttpChannel> channel = std::move(mChannel);
+
+  RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(channel);
+  httpChannel->SetIsTrackingResource(mIsThirdParty);
+
+  bool storageGranted =
+    AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel, mURI,
+                                                            nullptr);
+  mCallback(storageGranted);
+  return IPC_OK();
+}
+
+} // namespace net
+} // namespace mozilla
