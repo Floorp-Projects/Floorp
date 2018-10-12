@@ -22,7 +22,7 @@ SimpleTest.waitForFocus(function() {
   let cellElementWrapper;
   let startRowIndexWrapper, startColumnIndexWrapper;
   let rowspanWrapper, colspanWrapper;
-  let actualRowspanWrapper, actualColspanWrapper;
+  let effectiveRowspanWrapper, effectiveColspanWrapper;
   let isSelectedWrapper;
 
   function reset() {
@@ -31,8 +31,8 @@ SimpleTest.waitForFocus(function() {
     startColumnIndexWrapper = {};
     rowspanWrapper = {};
     colspanWrapper = {};
-    actualRowspanWrapper = {};
-    actualColspanWrapper = {};
+    effectiveRowspanWrapper = {};
+    effectiveColspanWrapper = {};
     isSelectedWrapper = {};
   }
 
@@ -43,7 +43,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     ok(false, "getTableEditor().getCellDataAt(null, 0, 0) should throw exception when selection is outside of any <table>s");
   } catch (e) {
@@ -56,7 +56,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     ok(false, "getTableEditor().getCellDataAt(null, 0, 0) should throw exception when selection has no ranges");
   } catch (e) {
@@ -70,7 +70,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.nextSibling.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(null, 0, 0) should return the <td> element when selection is in it");
@@ -82,10 +82,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for rowspan when selection is in the cell");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for colspan when selection is in the cell");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for actualRowspan when selection is in the cell");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for actualColspan when selection is in the cell");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveRowspan when selection is in the cell");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveColspan when selection is in the cell");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(null, 0, 0) should return false for isSelected when selection is in the cell");
 
@@ -97,7 +97,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.nextSibling.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(null, 0, 0) should return the <td> element when it's selected");
@@ -109,10 +109,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for rowspan when the cell is selected");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for colspan when the cell is selected");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for actualRowspan when the cell is selected");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for actualColspan when the cell is selected");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveRowspan when the cell is selected");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveColspan when the cell is selected");
   is(isSelectedWrapper.value, true,
      "getTableEditor().getCellDataAt(null, 0, 0) should return true for isSelected when the cell is selected");
 
@@ -124,7 +124,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.nextSibling.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(null, 0, 0) should return the <td> element when the <tr> is selected");
@@ -136,10 +136,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for rowspan when the <tr> is selected");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for colspan when the <tr> is selected");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for actualRowspan when the <tr> is selected");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for actualColspan when the <tr> is selected");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveRowspan when the <tr> is selected");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveColspan when the <tr> is selected");
   is(isSelectedWrapper.value, true,
      "getTableEditor().getCellDataAt(null, 0, 0) should return true for isSelected when the <tr> is selected");
 
@@ -150,7 +150,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.nextSibling.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(null, 0, 0) should return the <td> element when the <table> is selected");
@@ -162,10 +162,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for rowspan when the <table> is selected");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for colspan when the <table> is selected");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for actualRowspan when the <table> is selected");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for actualColspan when the <table> is selected");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveRowspan when the <table> is selected");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveColspan when the <table> is selected");
   is(isSelectedWrapper.value, true,
      "getTableEditor().getCellDataAt(null, 0, 0) should return true for isSelected when the <table> is selected");
 
@@ -182,7 +182,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element");
@@ -194,10 +194,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for rowspan");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for colspan");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for actualRowspan");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for actualColspan");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveRowspan");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveColspan");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected");
 
@@ -206,7 +206,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild.nextSibling,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return the second <td> element");
@@ -218,10 +218,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for rowspan");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for colspan");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for actualRowspan");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for actualColspan");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveRowspan");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveColspan");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return false for isSelected");
 
@@ -230,7 +230,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     ok(false, "getTableEditor().getCellDataAt(<table>, 0, 2) should throw exception since column index is out of bounds");
   } catch (e) {
@@ -242,7 +242,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.firstChild,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return the first <td> element in the second row");
@@ -254,10 +254,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for rowspan");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for colspan");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for actualRowspan");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for actualColspan");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveRowspan");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveColspan");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return false for isSelected");
 
@@ -266,7 +266,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.firstChild.nextSibling,
      "getTableEditor().getCellDataAt(<table>, 2, 1) should return the second <td> element in the last row");
@@ -278,10 +278,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for rowspan");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for colspan");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for actualRowspan");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for actualColspan");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for effectiveRowspan");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for effectiveColspan");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 2, 1) should return false for isSelected");
 
@@ -290,7 +290,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     ok(false, "getTableEditor().getCellDataAt(<table>, 2, 2) should throw exception since column index is out of bounds");
   } catch (e) {
@@ -302,7 +302,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     ok(false, "getTableEditor().getCellDataAt(<table>, 3, 0) should throw exception since row index is out of bounds");
   } catch (e) {
@@ -323,7 +323,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element whose rowspan is 3");
@@ -335,10 +335,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for rowspan (the cell's rowspan is 3)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for colspan (the cell's rowspan is 3)");
-  is(actualRowspanWrapper.value, 3,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for actualRowspan (the cell's rowspan is 3)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for actualColspan (the cell's rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for effectiveRowspan (the cell's rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveColspan (the cell's rowspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected (the cell's rowspan is 3)");
 
@@ -347,7 +347,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return the first <td> element whose rowspan is 3");
@@ -359,10 +359,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return 3 for rowspan (the cell's rowspan is 3)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for colspan (the cell's rowspan is 3)");
-  is(actualRowspanWrapper.value, 2,
-     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 2 for actualRowspan (the cell's rowspan is 3)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for actualColspan (the cell's rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 2 for effectiveRowspan (the cell's rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveColspan (the cell's rowspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return false for isSelected (the cell's rowspan is 3)");
 
@@ -371,7 +371,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 2, 0) should return the first <td> element whose rowspan is 3");
@@ -383,10 +383,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 2, 0) should return 3 for rowspan (the cell's rowspan is 3)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 2, 0) should return 1 for colspan (the cell's rowspan is 3)");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 1 for actualRowspan (the cell's rowspan is 3)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 1 for actualColspan (the cell's rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 1 for effectiveRowspan (the cell's rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 1 for effectiveColspan (the cell's rowspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 2, 0) should return false for isSelected (the cell's rowspan is 3)");
 
@@ -395,7 +395,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild,
      "getTableEditor().getCellDataAt(<table>, 3, 0) should return the first <td> element in the last row whose colspan is 3");
@@ -407,10 +407,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 3, 0) should return 1 for rowspan (the cell's colspan is 3)");
   is(colspanWrapper.value, 3,
      "getTableEditor().getCellDataAt(<table>, 3, 0) should return 3 for colspan (the cell's colspan is 3)");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 1 for actualRowspan (the cell's colspan is 3)");
-  is(actualColspanWrapper.value, 3,
-     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 3 for actualColspan (the cell's colspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 1 for effectiveRowspan (the cell's colspan is 3)");
+  is(effectiveColspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 3 for effectiveColspan (the cell's colspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 3, 0) should return false for isSelected (the cell's colspan is 3)");
 
@@ -419,7 +419,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild,
      "getTableEditor().getCellDataAt(<table>, 3, 1) should return the first <td> element in the last row whose colspan is 3");
@@ -431,10 +431,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 3, 1) should return 1 for rowspan (the cell's colspan is 3)");
   is(colspanWrapper.value, 3,
      "getTableEditor().getCellDataAt(<table>, 3, 1) should return 3 for colspan (the cell's colspan is 3)");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 1 for actualRowspan (the cell's colspan is 3)");
-  is(actualColspanWrapper.value, 2,
-     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 2 for actualColspan (the cell's colspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 1 for effectiveRowspan (the cell's colspan is 3)");
+  is(effectiveColspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 2 for effectiveColspan (the cell's colspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 3, 1) should return false for isSelected (the cell's colspan is 3)");
 
@@ -443,7 +443,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild,
      "getTableEditor().getCellDataAt(<table>, 3, 2) should return the first <td> element in the last row whose colspan is 3");
@@ -455,10 +455,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 3, 2) should return 1 for rowspan (the cell's colspan is 3)");
   is(colspanWrapper.value, 3,
      "getTableEditor().getCellDataAt(<table>, 3, 2) should return 3 for colspan (the cell's colspan is 3)");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 1 for actualRowspan (the cell's colspan is 3)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 1 for actualColspan (the cell's colspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 1 for effectiveRowspan (the cell's colspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 1 for effectiveColspan (the cell's colspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 3, 2) should return false for isSelected (the cell's colspan is 3)");
 
@@ -467,7 +467,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild.nextSibling,
      "getTableEditor().getCellDataAt(<table>, 3, 3) should return the second <td> element in the last row");
@@ -479,10 +479,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for rowspan (right cell of the cell whose colspan is 3)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for colspan (right cell of the cell whose colspan is 3)");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for actualRowspan (right cell of the cell whose colspan is 3)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for actualColspan (right cell of the cell whose colspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for effectiveRowspan (right cell of the cell whose colspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for effectiveColspan (right cell of the cell whose colspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 3, 3) should return false for isSelected (right cell of the cell whose colspan is 3)");
 
@@ -491,7 +491,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     ok(false, "getTableEditor().getCellDataAt(<table>, 3, 4) should throw exception since column index is out of bounds");
   } catch (e) {
@@ -503,7 +503,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild.nextSibling,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return the second <td> element in the first row");
@@ -515,10 +515,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for rowspan (right cell of the cell whose rowspan is 3)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for colspan (right cell of the cell whose rowspan is 3)");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for actualRowspan (right cell of the cell whose rowspan is 3)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for actualColspan (right cell of the cell whose rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveRowspan (right cell of the cell whose rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveColspan (right cell of the cell whose rowspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return false for isSelected (right cell of the cell whose rowspan is 3)");
 
@@ -527,7 +527,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.firstChild,
      "getTableEditor().getCellDataAt(<table>, 1, 1) should return the first <td> element in the second row");
@@ -539,10 +539,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for rowspan (right cell of the cell whose rowspan is 3)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for colspan (right cell of the cell whose rowspan is 3)");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for actualRowspan (right cell of the cell whose rowspan is 3)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for actualColspan (right cell of the cell whose rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for effectiveRowspan (right cell of the cell whose rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for effectiveColspan (right cell of the cell whose rowspan is 3)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 1, 1) should return false for isSelected (right cell of the cell whose rowspan is 3)");
 
@@ -551,7 +551,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     ok(false, "getTableEditor().getCellDataAt(<table>, 1, 2) should throw exception since there is no cell due to non-rectangular table");
   } catch (e) {
@@ -569,7 +569,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element whose rowspan is 3 and colspan is 2");
@@ -582,10 +582,10 @@ SimpleTest.waitForFocus(function() {
   is(colspanWrapper.value, 2,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 2 for colspan (the cell's rowspan is 3 and colspan is 2)");
   // XXX Not sure whether expected behavior or not.
-  todo_is(actualRowspanWrapper.value, 3,
-          "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for actualRowspan (the cell's rowspan is 3 and colspan is 2)");
-  is(actualColspanWrapper.value, 2,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 2 for actualColspan (the cell's rowspan is 3 and colspan is 2)");
+  todo_is(effectiveRowspanWrapper.value, 3,
+          "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for effectiveRowspan (the cell's rowspan is 3 and colspan is 2)");
+  is(effectiveColspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 2 for effectiveColspan (the cell's rowspan is 3 and colspan is 2)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected (the cell's rowspan is 3 and colspan is 2)");
 
@@ -594,7 +594,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return the first <td> element whose rowspan is 3 and colspan is 2");
@@ -607,10 +607,10 @@ SimpleTest.waitForFocus(function() {
   is(colspanWrapper.value, 2,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return 2 for colspan (the cell's rowspan is 3 and colspan is 2)");
   // XXX Not sure whether expected behavior or not.
-  todo_is(actualRowspanWrapper.value, 3,
-          "getTableEditor().getCellDataAt(<table>, 0, 1) should return 3 for actualRowspan (the cell's rowspan is 3 and colspan is 2)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for actualColspan (the cell's rowspan is 3 and colspan is 2)");
+  todo_is(effectiveRowspanWrapper.value, 3,
+          "getTableEditor().getCellDataAt(<table>, 0, 1) should return 3 for effectiveRowspan (the cell's rowspan is 3 and colspan is 2)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveColspan (the cell's rowspan is 3 and colspan is 2)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 0, 1) should return false for isSelected (the cell's rowspan is 3 and colspan is 2)");
 
@@ -619,7 +619,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
        "getTableEditor().getCellDataAt(<table>, 1, 0) should return the first <td> element whose rowspan is 3 and colspan is 2");
@@ -632,10 +632,10 @@ SimpleTest.waitForFocus(function() {
     is(colspanWrapper.value, 2,
        "getTableEditor().getCellDataAt(<table>, 1, 0) should return 2 for colspan (the cell's rowspan is 3 and colspan is 2)");
     // XXX Not sure whether expected behavior or not.
-    todo_is(actualRowspanWrapper.value, 2,
-            "getTableEditor().getCellDataAt(<table>, 1, 0) should return 2 for actualRowspan (the cell's rowspan is 3 and colspan is 2)");
-    is(actualColspanWrapper.value, 1,
-       "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for actualColspan (the cell's rowspan is 3 and colspan is 2)");
+    todo_is(effectiveRowspanWrapper.value, 2,
+            "getTableEditor().getCellDataAt(<table>, 1, 0) should return 2 for effectiveRowspan (the cell's rowspan is 3 and colspan is 2)");
+    is(effectiveColspanWrapper.value, 1,
+       "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveColspan (the cell's rowspan is 3 and colspan is 2)");
     is(isSelectedWrapper.value, false,
        "getTableEditor().getCellDataAt(<table>, 1, 0) should return false for isSelected (the cell's rowspan is 3 and colspan is 2)");
   } catch (e) {
@@ -655,7 +655,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element whose rowspan is 0");
@@ -667,10 +667,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for rowspan (the cell's rowspan is 0)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for colspan (the cell's rowspan is 0)");
-  is(actualRowspanWrapper.value, 3,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for actualRowspan (the cell's rowspan is 0)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for actualColspan (the cell's rowspan is 0)");
+  is(effectiveRowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for effectiveRowspan (the cell's rowspan is 0)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveColspan (the cell's rowspan is 0)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected (the cell's rowspan is 0)");
 
@@ -679,7 +679,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return the first <td> element whose rowspan is 0");
@@ -691,10 +691,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for rowspan (the cell's rowspan is 0)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for colspan (the cell's rowspan is 0)");
-  is(actualRowspanWrapper.value, 2,
-     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 3 for actualRowspan (the cell's rowspan is 0)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for actualColspan (the cell's rowspan is 0)");
+  is(effectiveRowspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 3 for effectiveRowspan (the cell's rowspan is 0)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveColspan (the cell's rowspan is 0)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 1, 0) should return false for isSelected (the cell's rowspan is 0)");
 
@@ -711,7 +711,7 @@ SimpleTest.waitForFocus(function() {
                                  cellElementWrapper,
                                  startRowIndexWrapper, startColumnIndexWrapper,
                                  rowspanWrapper, colspanWrapper,
-                                 actualRowspanWrapper, actualColspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
                                  isSelectedWrapper);
   is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element whose colspan is 0");
@@ -723,10 +723,10 @@ SimpleTest.waitForFocus(function() {
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for rowspan (the cell's colspan is 0)");
   is(colspanWrapper.value, 1,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for colspan (the cell's colspan is 0)");
-  is(actualRowspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for actualRowspan (the cell's colspan is 0)");
-  is(actualColspanWrapper.value, 1,
-     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for actualColspan (the cell's colspan is 0)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for effectiveRowspan (the cell's colspan is 0)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveColspan (the cell's colspan is 0)");
   is(isSelectedWrapper.value, false,
      "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected (the cell's colspan is 0)");
 
@@ -735,7 +735,7 @@ SimpleTest.waitForFocus(function() {
                                    cellElementWrapper,
                                    startRowIndexWrapper, startColumnIndexWrapper,
                                    rowspanWrapper, colspanWrapper,
-                                   actualRowspanWrapper, actualColspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
                                    isSelectedWrapper);
     ok(false, "getTableEditor().getCellDataAt(<table>, 0, 1) should throw exception since there is no cell due to right side of a cell whose colspan is 0");
   } catch (e) {
