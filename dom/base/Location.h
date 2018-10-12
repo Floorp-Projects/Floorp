@@ -169,8 +169,9 @@ protected:
   nsresult SetURI(nsIURI* aURL, bool aReplace = false);
   nsresult SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
                            bool aReplace);
-  nsresult SetHrefWithContext(JSContext* cx, const nsAString& aHref,
-                              bool aReplace);
+
+  // Helper for Assign/SetHref/Replace
+  void DoSetHref(const nsAString& aHref, bool aReplace, ErrorResult& aRv);
 
   // Get the base URL we should be using for our relative URL
   // resolution for SetHref/Assign/Replace.
