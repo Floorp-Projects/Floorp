@@ -322,12 +322,13 @@ var tests = [
       ok(result.profileResetWeeksAgo === null, "profileResetWeeksAgo should be null.");
 
       // Set profile reset date to 15 days ago.
-      let profileAccessor = new ProfileAge();
-      profileAccessor.recordProfileReset(Date.now() - (15 * 24 * 60 * 60 * 1000));
-      gContentAPI.getConfiguration("appinfo", (result2) => {
-        ok(typeof(result2.profileResetWeeksAgo) === "number", "profileResetWeeksAgo should be number.");
-        is(result2.profileResetWeeksAgo, 2, "profileResetWeeksAgo should be 2.");
-        done();
+      ProfileAge().then(profileAccessor => {
+        profileAccessor.recordProfileReset(Date.now() - (15 * 24 * 60 * 60 * 1000));
+        gContentAPI.getConfiguration("appinfo", (result2) => {
+          ok(typeof(result2.profileResetWeeksAgo) === "number", "profileResetWeeksAgo should be number.");
+          is(result2.profileResetWeeksAgo, 2, "profileResetWeeksAgo should be 2.");
+          done();
+        });
       });
     });
   },

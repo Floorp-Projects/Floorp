@@ -109,7 +109,7 @@ add_task(async function check_localeLanguageCode() {
 });
 
 add_task(async function checkProfileAgeCreated() {
-  let profileAccessor = new ProfileAge();
+  let profileAccessor = await ProfileAge();
   is(await ASRouterTargeting.Environment.profileAgeCreated, await profileAccessor.created,
     "should return correct profile age creation date");
 
@@ -119,7 +119,7 @@ add_task(async function checkProfileAgeCreated() {
 });
 
 add_task(async function checkProfileAgeReset() {
-  let profileAccessor = new ProfileAge();
+  let profileAccessor = await ProfileAge();
   is(await ASRouterTargeting.Environment.profileAgeReset, await profileAccessor.reset,
     "should return correct profile age reset");
 

@@ -1152,7 +1152,7 @@ BrowserGlue.prototype = {
 
   async _calculateProfileAgeInDays() {
     let ProfileAge = ChromeUtils.import("resource://gre/modules/ProfileAge.jsm", {}).ProfileAge;
-    let profileAge = new ProfileAge(null, null);
+    let profileAge = await ProfileAge();
 
     let creationDate = await profileAge.created;
     let resetDate = await profileAge.reset;
