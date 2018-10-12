@@ -13,42 +13,42 @@ this.senderror = (function() {
   const messages = {
     REQUEST_ERROR: {
       title: browser.i18n.getMessage("requestErrorTitle"),
-      info: browser.i18n.getMessage("requestErrorDetails")
+      info: browser.i18n.getMessage("requestErrorDetails"),
     },
     CONNECTION_ERROR: {
       title: browser.i18n.getMessage("connectionErrorTitle"),
-      info: browser.i18n.getMessage("connectionErrorDetails")
+      info: browser.i18n.getMessage("connectionErrorDetails"),
     },
     LOGIN_ERROR: {
       title: browser.i18n.getMessage("requestErrorTitle"),
-      info: browser.i18n.getMessage("loginErrorDetails")
+      info: browser.i18n.getMessage("loginErrorDetails"),
     },
     LOGIN_CONNECTION_ERROR: {
       title: browser.i18n.getMessage("connectionErrorTitle"),
-      info: browser.i18n.getMessage("connectionErrorDetails")
+      info: browser.i18n.getMessage("connectionErrorDetails"),
     },
     UNSHOOTABLE_PAGE: {
       title: browser.i18n.getMessage("unshootablePageErrorTitle"),
-      info: browser.i18n.getMessage("unshootablePageErrorDetails")
+      info: browser.i18n.getMessage("unshootablePageErrorDetails"),
     },
     SHOT_PAGE: {
-      title: browser.i18n.getMessage("selfScreenshotErrorTitle")
+      title: browser.i18n.getMessage("selfScreenshotErrorTitle"),
     },
     MY_SHOTS: {
-      title: browser.i18n.getMessage("selfScreenshotErrorTitle")
+      title: browser.i18n.getMessage("selfScreenshotErrorTitle"),
     },
     EMPTY_SELECTION: {
-      title: browser.i18n.getMessage("emptySelectionErrorTitle")
+      title: browser.i18n.getMessage("emptySelectionErrorTitle"),
     },
     PRIVATE_WINDOW: {
       title: browser.i18n.getMessage("privateWindowErrorTitle"),
-      info: browser.i18n.getMessage("privateWindowErrorDetails")
+      info: browser.i18n.getMessage("privateWindowErrorDetails"),
     },
     generic: {
       title: browser.i18n.getMessage("genericErrorTitle"),
       info: browser.i18n.getMessage("genericErrorDetails"),
-      showMessage: true
-    }
+      showMessage: true,
+    },
   };
 
   communication.register("reportError", (sender, error) => {
@@ -82,7 +82,7 @@ this.senderror = (function() {
         type: "basic",
         // FIXME: need iconUrl for an image, see #2239
         title,
-        message
+        message,
       });
     }
   };
@@ -123,7 +123,7 @@ this.senderror = (function() {
       tags: {category: e.popupMessage},
       release: manifest.version,
       message: exception.message,
-      extra: rest
+      extra: rest,
     });
   };
 

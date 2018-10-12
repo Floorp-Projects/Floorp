@@ -19,7 +19,7 @@ this.selectorLoader = (function() {
     "blobConverters.js",
     "background/selectorLoader.js",
     "selector/callBackground.js",
-    "selector/util.js"
+    "selector/util.js",
   ];
 
   const selectorScripts = [
@@ -33,20 +33,20 @@ this.selectorLoader = (function() {
     "selector/documentMetadata.js",
     "selector/ui.js",
     "selector/shooter.js",
-    "selector/uicontrol.js"
+    "selector/uicontrol.js",
   ];
 
   // These are loaded on request (by the selector worker) to activate the onboarding:
   const onboardingScripts = [
     "build/onboardingCss.js",
     "build/onboardingHtml.js",
-    "onboarding/slides.js"
+    "onboarding/slides.js",
   ];
 
   exports.unloadIfLoaded = function(tabId) {
     return browser.tabs.executeScript(tabId, {
       code: "this.selectorLoader && this.selectorLoader.unloadModules()",
-      runAt: "document_start"
+      runAt: "document_start",
     }).then(result => {
       return result && result[0];
     });
@@ -58,7 +58,7 @@ this.selectorLoader = (function() {
     }
     return browser.tabs.executeScript(tabId, {
       code: "!!this.selectorLoader",
-      runAt: "document_start"
+      runAt: "document_start",
     }).then(result => {
       return result && result[0];
     });
@@ -100,7 +100,7 @@ this.selectorLoader = (function() {
               // scripts, but not the scripts in the underlying page. For more
               // details, see https://mdn.io/WebExtensions/Content_scripts#Content_script_environment
               code: `window.downloadOnly = ${downloadOnly}`,
-              runAt: "document_start"
+              runAt: "document_start",
             });
           });
         });
@@ -114,7 +114,7 @@ this.selectorLoader = (function() {
       lastPromise = lastPromise.then(() => {
         return browser.tabs.executeScript(tabId, {
           file,
-          runAt: "document_start"
+          runAt: "document_start",
         }).catch((error) => {
           log.error("error in script:", file, error);
           error.scriptName = file;

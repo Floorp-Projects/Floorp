@@ -48,7 +48,7 @@ function getThumbnailDimensions(imageWidth, imageHeight) {
     width: thumbnailImageWidth,
     height: thumbnailImageHeight,
     scaledX,
-    scaledY
+    scaledY,
   };
 }
 

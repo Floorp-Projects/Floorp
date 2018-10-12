@@ -40,7 +40,7 @@ this.auth = (function() {
     const info = {
       deviceId: `anon${makeUuid()}`,
       secret: makeUuid(),
-      registered: false
+      registered: false,
     };
     return info;
   }
@@ -76,7 +76,7 @@ this.auth = (function() {
       req.send(JSON.stringify({
         deviceId: registrationInfo.deviceId,
         secret: registrationInfo.secret,
-        deviceInfo: JSON.stringify(deviceInfo())
+        deviceInfo: JSON.stringify(deviceInfo()),
       }));
     });
   }
