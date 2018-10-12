@@ -21,7 +21,6 @@ class PerformanceCounter;
 
 namespace dom {
 
-class OrderedTimeoutIterator;
 class TimeoutExecutor;
 
 // This class manages the timeouts in a Window's setTimeout/setInterval pool.
@@ -40,8 +39,7 @@ public:
 
   bool HasTimeouts() const
   {
-    return !mNormalTimeouts.IsEmpty() ||
-           !mTrackingTimeouts.IsEmpty();
+    return !mTimeouts.IsEmpty();
   }
 
   nsresult SetTimeout(nsITimeoutHandler* aHandler,
@@ -81,9 +79,6 @@ public:
   // Initialize TimeoutManager before the first time it is accessed.
   static void Initialize();
 
-  // Exposed only for testing
-  bool IsTimeoutTracking(uint32_t aTimeoutId);
-
   // The document finished loading
   void OnDocumentLoaded();
   void StartThrottlingTimeouts();
@@ -93,19 +88,7 @@ public:
   template <class Callable>
   void ForEachUnorderedTimeout(Callable c)
   {
-    mNormalTimeouts.ForEach(c);
-    mTrackingTimeouts.ForEach(c);
-  }
-
-  // Run some code for each Timeout in our list, but let the callback cancel the
-  // iteration by returning true.  Note that this function doesn't guarantee
-  // that Timeouts are iterated in any particular order.
-  template <class Callable>
-  void ForEachUnorderedTimeoutAbortable(Callable c)
-  {
-    if (!mNormalTimeouts.ForEachAbortable(c)) {
-      mTrackingTimeouts.ForEachAbortable(c);
-    }
+    mTimeouts.ForEach(c);
   }
 
   void BeginSyncOperation();
@@ -204,8 +187,6 @@ private:
       return false;
     }
 
-    friend class OrderedTimeoutIterator;
-
   private:
     // The TimeoutManager that owns this Timeouts structure.  This is
     // mainly used to call state inspecting methods like IsValidFiringId().
@@ -218,8 +199,6 @@ private:
     TimeoutList               mTimeoutList;
   };
 
-  friend class OrderedTimeoutIterator;
-
   // Each nsGlobalWindowInner object has a TimeoutManager member.  This reference
   // points to that holder object.
   nsGlobalWindowInner&             mWindow;
@@ -228,9 +207,7 @@ private:
   // it must be a separate ref-counted object.
   RefPtr<TimeoutExecutor>     mExecutor;
   // The list of timeouts coming from non-tracking scripts.
-  Timeouts                    mNormalTimeouts;
-  // The list of timeouts coming from scripts on the tracking protection list.
-  Timeouts                    mTrackingTimeouts;
+  Timeouts                    mTimeouts;
   uint32_t                    mTimeoutIdCounter;
   uint32_t                    mNextFiringId;
   AutoTArray<uint32_t, 2>     mFiringIdStack;

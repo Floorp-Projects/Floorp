@@ -11,9 +11,6 @@
 namespace mozilla {
 namespace dom {
 
-// Time between sampling timeout execution time.
-const uint32_t kTelemetryPeriodMS = 1000;
-
 /* static */ TimeoutBudgetManager&
 TimeoutBudgetManager::Get()
 {
@@ -35,8 +32,7 @@ TimeoutBudgetManager::StopRecording()
 
 TimeDuration
 TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
-                                      const Timeout* aTimeout,
-                                      bool aIsBackground)
+                                      const Timeout* aTimeout)
 {
   if (!mStart) {
     // If we've started a sync operation mStart might be null, in
@@ -44,53 +40,7 @@ TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
     return TimeDuration();
   }
 
-  TimeDuration duration = aNow - mStart;
-
-  if (aIsBackground) {
-    if (aTimeout->mIsTracking) {
-      mTelemetryData.mBackgroundTracking += duration;
-    } else {
-      mTelemetryData.mBackgroundNonTracking += duration;
-    }
-  } else {
-    if (aTimeout->mIsTracking) {
-      mTelemetryData.mForegroundTracking += duration;
-    } else {
-      mTelemetryData.mForegroundNonTracking += duration;
-    }
-  }
-
-  return duration;
-}
-
-void
-TimeoutBudgetManager::Accumulate(Telemetry::HistogramID aId,
-                                 const TimeDuration& aSample)
-{
-  uint32_t sample = std::round(aSample.ToMilliseconds());
-  if (sample) {
-    Telemetry::Accumulate(aId, sample);
-  }
-}
-
-void
-TimeoutBudgetManager::MaybeCollectTelemetry(const TimeStamp& aNow)
-{
-  if ((aNow - mLastCollection).ToMilliseconds() < kTelemetryPeriodMS) {
-    return;
-  }
-
-  Accumulate(Telemetry::TIMEOUT_EXECUTION_FG_TRACKING_MS,
-             mTelemetryData.mForegroundTracking);
-  Accumulate(Telemetry::TIMEOUT_EXECUTION_FG_MS,
-             mTelemetryData.mForegroundNonTracking);
-  Accumulate(Telemetry::TIMEOUT_EXECUTION_BG_TRACKING_MS,
-             mTelemetryData.mBackgroundTracking);
-  Accumulate(Telemetry::TIMEOUT_EXECUTION_BG_MS,
-             mTelemetryData.mBackgroundNonTracking);
-
-  mTelemetryData = TelemetryData();
-  mLastCollection = aNow;
+  return aNow - mStart;
 }
 
 } // namespace dom
