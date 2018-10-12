@@ -507,8 +507,13 @@ impl<'input> Lexer<'input> {
                         self.push_next_char(&mut hexadecimal_literal, c, &mut offset);
                     }
                     _ => {
-                        let token = to_integer_literal(&hexadecimal_literal, 16);
-                        return Some(Ok((start, token, offset)));
+                        let hexadecimal_literal =
+                            i64::from_str_radix(&*hexadecimal_literal, 16).unwrap();
+                        return Some(Ok((
+                            start,
+                            Token::IntegerLiteral(hexadecimal_literal),
+                            offset,
+                        )));
                     }
                 }
             },
@@ -640,7 +645,7 @@ impl<'input> Lexer<'input> {
 
                     if c > '7' {
                         if !self.lookahead_for_decimal_point() {
-                            return Some(Ok((start, Token::SignedIntegerLiteral(0), offset - 1)));
+                            return Some(Ok((start, Token::IntegerLiteral(0), offset - 1)));
                         }
 
                         self.chars.next();
@@ -659,8 +664,12 @@ impl<'input> Lexer<'input> {
                             Some(&(_, c @ '0'...'9')) => {
                                 if c > '7' {
                                     if !self.lookahead_for_decimal_point() {
-                                        let token = to_integer_literal(&literal, 8);
-                                        return Some(Ok((start, token, offset)));
+                                        let literal = i64::from_str_radix(&*literal, 8).unwrap();
+                                        return Some(Ok((
+                                            start,
+                                            Token::IntegerLiteral(literal),
+                                            offset,
+                                        )));
                                     }
 
                                     self.push_next_char(&mut literal, c, &mut offset);
@@ -705,8 +714,8 @@ impl<'input> Lexer<'input> {
                                 );
                             }
                             _ => {
-                                let token = to_integer_literal(&literal, 8);
-                                return Some(Ok((start, token, offset)));
+                                let literal = i64::from_str_radix(&*literal, 8).unwrap();
+                                return Some(Ok((start, Token::IntegerLiteral(literal), offset)));
                             }
                         }
                     }
@@ -729,7 +738,7 @@ impl<'input> Lexer<'input> {
                         FloatLexState::ImmediatelyAfterExponentBase,
                     )
                 }
-                _ => Some(Ok((start, Token::SignedIntegerLiteral(0), start + 1))),
+                _ => Some(Ok((start, Token::IntegerLiteral(0), start + 1))),
             },
             c => {
                 literal.push(c);
@@ -761,8 +770,8 @@ impl<'input> Lexer<'input> {
                             );
                         }
                         _ => {
-                            let token = to_integer_literal(&literal, 10);
-                            return Some(Ok((start, token, offset)));
+                            let literal = literal.parse::<i64>().unwrap();
+                            return Some(Ok((start, Token::IntegerLiteral(literal), offset)));
                         }
                     }
                 }
@@ -784,8 +793,7 @@ impl<'input> Lexer<'input> {
     /// Continues lexing negative infinity. The call assumption is that `-` has already been
     /// lexed with the assumption that "I" follows.
     fn lex_negative_infinity(&mut self, start: usize) -> Option<<Self as Iterator>::Item> {
-        let infinity = self
-            .chars
+        let infinity = self.chars
             .clone()
             .take(8)
             .map(|(_, c)| c)
@@ -867,16 +875,6 @@ impl<'input> Iterator for Lexer<'input> {
     }
 }
 
-// Converts the string literal into either a `i64` or `u64`, preferring `i64`. This will panic if
-// the literal string is too big to fit.
-fn to_integer_literal(literal: &str, radix: u32) -> Token {
-    if let Ok(literal) = i64::from_str_radix(literal, radix) {
-        Token::SignedIntegerLiteral(literal)
-    } else {
-        Token::UnsignedIntegerLiteral(u64::from_str_radix(literal, radix).unwrap())
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -902,17 +900,15 @@ mod test {
         assert_lex("/* this is a comment */", vec![]);
         assert_lex(
             "/* this is a comment",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedCommentBlockEnd,
-                20,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedCommentBlockEnd, 20)),
+            ],
         );
         assert_lex(
             "/* this is a comment*",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedCommentBlockEnd,
-                21,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedCommentBlockEnd, 21)),
+            ],
         );
     }
 
@@ -948,24 +944,21 @@ mod test {
         assert_lex("041e+9", vec![Ok((0, Token::FloatLiteral(41e+9), 6))]);
         assert_lex(
             "021e",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedFloatExponent,
-                4,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedFloatExponent, 4)),
+            ],
         );
         assert_lex(
             "01e+",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedFloatExponent,
-                4,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedFloatExponent, 4)),
+            ],
         );
         assert_lex(
             "01e-",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedFloatExponent,
-                4,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedFloatExponent, 4)),
+            ],
         );
 
         // Without leading 0
@@ -979,24 +972,21 @@ mod test {
         assert_lex("41e+9", vec![Ok((0, Token::FloatLiteral(41e+9), 5))]);
         assert_lex(
             "21e",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedFloatExponent,
-                3,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedFloatExponent, 3)),
+            ],
         );
         assert_lex(
             "1e+",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedFloatExponent,
-                3,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedFloatExponent, 3)),
+            ],
         );
         assert_lex(
             "1e-",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedFloatExponent,
-                3,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedFloatExponent, 3)),
+            ],
         );
 
         // With leading decimal point
@@ -1055,160 +1045,54 @@ mod test {
     #[test]
     fn lex_integer_literal() {
         // Decimal
-        assert_lex("1", vec![Ok((0, Token::SignedIntegerLiteral(1), 1))]);
-        assert_lex("9624", vec![Ok((0, Token::SignedIntegerLiteral(9624), 4))]);
-        assert_lex("-1", vec![Ok((0, Token::SignedIntegerLiteral(-1), 2))]);
-        assert_lex(
-            "-9624",
-            vec![Ok((0, Token::SignedIntegerLiteral(-9624), 5))],
-        );
+        assert_lex("1", vec![Ok((0, Token::IntegerLiteral(1), 1))]);
+        assert_lex("9624", vec![Ok((0, Token::IntegerLiteral(9624), 4))]);
+        assert_lex("-1", vec![Ok((0, Token::IntegerLiteral(-1), 2))]);
+        assert_lex("-9624", vec![Ok((0, Token::IntegerLiteral(-9624), 5))]);
 
         // Hexadecimal
-        assert_lex("0x0", vec![Ok((0, Token::SignedIntegerLiteral(0x0), 3))]);
+        assert_lex("0x0", vec![Ok((0, Token::IntegerLiteral(0x0), 3))]);
         assert_lex(
             "0x1234FF",
-            vec![Ok((0, Token::SignedIntegerLiteral(0x1234FF), 8))],
+            vec![Ok((0, Token::IntegerLiteral(0x1234FF), 8))],
         );
         assert_lex(
             "0x",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedHexadecimalDigit,
-                2,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedHexadecimalDigit, 2)),
+            ],
         );
-        assert_lex("-0x0", vec![Ok((0, Token::SignedIntegerLiteral(0x0), 4))]);
+        assert_lex("-0x0", vec![Ok((0, Token::IntegerLiteral(0x0), 4))]);
         assert_lex(
             "-0x1234FF",
-            vec![Ok((0, Token::SignedIntegerLiteral(-0x1234FF), 9))],
+            vec![Ok((0, Token::IntegerLiteral(-0x1234FF), 9))],
         );
         assert_lex(
             "-0x",
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedHexadecimalDigit,
-                3,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedHexadecimalDigit, 3)),
+            ],
         );
 
         // Octal
-        assert_lex("0", vec![Ok((0, Token::SignedIntegerLiteral(0), 1))]);
-        assert_lex("0624", vec![Ok((0, Token::SignedIntegerLiteral(0o624), 4))]);
-        assert_lex(
-            "-0624",
-            vec![Ok((0, Token::SignedIntegerLiteral(-0o624), 5))],
-        );
+        assert_lex("0", vec![Ok((0, Token::IntegerLiteral(0), 1))]);
+        assert_lex("0624", vec![Ok((0, Token::IntegerLiteral(0o624), 4))]);
+        assert_lex("-0624", vec![Ok((0, Token::IntegerLiteral(-0o624), 5))]);
 
         // Octal integer literal followed by non-octal digits.
         assert_lex(
             "08",
             vec![
-                Ok((0, Token::SignedIntegerLiteral(0), 1)),
-                Ok((1, Token::SignedIntegerLiteral(8), 2)),
+                Ok((0, Token::IntegerLiteral(0), 1)),
+                Ok((1, Token::IntegerLiteral(8), 2)),
             ],
         );
         assert_lex(
             "01238",
             vec![
-                Ok((0, Token::SignedIntegerLiteral(0o123), 4)),
-                Ok((4, Token::SignedIntegerLiteral(8), 5)),
+                Ok((0, Token::IntegerLiteral(0o123), 4)),
+                Ok((4, Token::IntegerLiteral(8), 5)),
             ],
-        );
-
-        // Max/Min
-        assert_lex(
-            "18446744073709551615",
-            vec![Ok((
-                0,
-                Token::UnsignedIntegerLiteral(18446744073709551615),
-                20,
-            ))],
-        );
-        assert_lex(
-            "01777777777777777777777",
-            vec![Ok((
-                0,
-                Token::UnsignedIntegerLiteral(18446744073709551615),
-                23,
-            ))],
-        );
-        assert_lex(
-            "0xFFFFFFFFFFFFFFFF",
-            vec![Ok((
-                0,
-                Token::UnsignedIntegerLiteral(18446744073709551615),
-                18,
-            ))],
-        );
-        assert_lex(
-            "9223372036854775807",
-            vec![Ok((
-                0,
-                Token::SignedIntegerLiteral(9223372036854775807),
-                19,
-            ))],
-        );
-        assert_lex(
-            "9223372036854775808",
-            vec![Ok((
-                0,
-                Token::UnsignedIntegerLiteral(9223372036854775808),
-                19,
-            ))],
-        );
-        assert_lex(
-            "0777777777777777777777",
-            vec![Ok((
-                0,
-                Token::SignedIntegerLiteral(9223372036854775807),
-                22,
-            ))],
-        );
-        assert_lex(
-            "01000000000000000000000",
-            vec![Ok((
-                0,
-                Token::UnsignedIntegerLiteral(9223372036854775808),
-                23,
-            ))],
-        );
-        assert_lex(
-            "0x7FFFFFFFFFFFFFFF",
-            vec![Ok((
-                0,
-                Token::SignedIntegerLiteral(9223372036854775807),
-                18,
-            ))],
-        );
-        assert_lex(
-            "0x8000000000000000",
-            vec![Ok((
-                0,
-                Token::UnsignedIntegerLiteral(9223372036854775808),
-                18,
-            ))],
-        );
-        assert_lex(
-            "-9223372036854775808",
-            vec![Ok((
-                0,
-                Token::SignedIntegerLiteral(-9223372036854775808),
-                20,
-            ))],
-        );
-        assert_lex(
-            "-01000000000000000000000",
-            vec![Ok((
-                0,
-                Token::SignedIntegerLiteral(-9223372036854775808),
-                24,
-            ))],
-        );
-        assert_lex(
-            "-0x8000000000000000",
-            vec![Ok((
-                0,
-                Token::SignedIntegerLiteral(-9223372036854775808),
-                19,
-            ))],
         );
     }
 
@@ -1356,18 +1240,15 @@ mod test {
     fn lex_string() {
         assert_lex(
             r#""this is a string""#,
-            vec![Ok((
-                0,
-                Token::StringLiteral("this is a string".to_string()),
-                18,
-            ))],
+            vec![
+                Ok((0, Token::StringLiteral("this is a string".to_string()), 18)),
+            ],
         );
         assert_lex(
             r#""this is a string"#,
-            vec![Err(create_error(
-                LexicalErrorCode::ExpectedStringLiteralEnd,
-                18,
-            ))],
+            vec![
+                Err(create_error(LexicalErrorCode::ExpectedStringLiteralEnd, 18)),
+            ],
         );
     }
 

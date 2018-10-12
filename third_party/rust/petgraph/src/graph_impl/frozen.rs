@@ -15,14 +15,11 @@ use data::{DataMap, DataMapMut};
 
 
 impl<'a, G> Frozen<'a, G> {
-    /// Create a new `Frozen` from a mutable reference to a graph.
     pub fn new(gr: &'a mut G) -> Self {
         Frozen(gr)
     }
 }
 
-/// Deref allows transparent access to all shared reference (read-only)
-/// functionality in the underlying graph.
 impl<'a, G> Deref for Frozen<'a, G> {
     type Target = G;
     fn deref(&self) -> &G { self.0 }

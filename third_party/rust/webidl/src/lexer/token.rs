@@ -77,10 +77,9 @@ pub enum Token {
     // Regular expressions
     FloatLiteral(f64),
     Identifier(String),
+    IntegerLiteral(i64),
     OtherLiteral(char),
-    SignedIntegerLiteral(i64),
     StringLiteral(String),
-    UnsignedIntegerLiteral(u64),
 
     // Symbols
     Colon,
