@@ -71,17 +71,16 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  explicit MediaDevice(MediaEngineSource* aSource,
+  explicit MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                        const nsString& aName,
                        const nsString& aID,
-                       const nsString& aRawID = NS_LITERAL_STRING(""));
+                       const nsString& aRawID);
 
-  explicit MediaDevice(const nsString& aName,
-                       const dom::MediaDeviceKind aKind,
+  explicit MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
                        const nsString& aID,
                        const nsString& aRawID = NS_LITERAL_STRING(""));
 
-  explicit MediaDevice(const MediaDevice* aOther,
+  explicit MediaDevice(const RefPtr<MediaDevice>& aOther,
                        const nsString& aID,
                        const nsString& aRawID);
 
@@ -129,6 +128,7 @@ private:
 
 public:
   const RefPtr<MediaEngineSource> mSource;
+  const RefPtr<AudioDeviceInfo> mSinkInfo;
   const dom::MediaDeviceKind mKind;
   const bool mScary;
   const nsString mType;

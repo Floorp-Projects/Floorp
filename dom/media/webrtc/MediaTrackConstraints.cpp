@@ -620,7 +620,8 @@ MediaConstraintsHelper::FindBadConstraint(
   AutoTArray<RefPtr<MediaDevice>, 1> devices;
   devices.AppendElement(MakeRefPtr<MediaDevice>(aMediaEngineSource,
                                                 aMediaEngineSource->GetName(),
-                                                aDeviceId));
+                                                aDeviceId,
+                                                NS_LITERAL_STRING("")));
   return FindBadConstraint(aConstraints, devices);
 }
 
