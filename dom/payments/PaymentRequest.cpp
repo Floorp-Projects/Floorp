@@ -60,11 +60,14 @@ NS_IMPL_RELEASE_INHERITED(PaymentRequest, DOMEventTargetHelper)
 bool
 PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
 {
+#ifdef NIGHTLY_BUILD
   if (!XRE_IsContentProcess()) {
     return false;
   }
-
   return StaticPrefs::dom_payments_request_enabled();
+#else
+  return false;
+#endif
 }
 
 nsresult
