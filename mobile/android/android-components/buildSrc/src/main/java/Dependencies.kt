@@ -24,6 +24,8 @@ private object Versions {
 
     const val jna = "4.5.2"
 
+    const val sentry = "1.7.10"
+
     const val mozilla_app_services = "0.5.1"
 }
 
@@ -61,6 +63,8 @@ object Deps {
 
     const val mozilla_fxa = "org.mozilla.fxa_client:fxa_client:${Versions.mozilla_app_services}"
     const val mozilla_sync_logins = "org.mozilla.sync15:logins:${Versions.mozilla_app_services}"
+
+    const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
 
     const val jna = "net.java.dev.jna:jna:${Versions.jna}@aar"
     const val jnaForTest = "net.java.dev.jna:jna:${Versions.jna}@jar"

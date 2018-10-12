@@ -1,3 +1,8 @@
+        public/build/lib.crash.maven.zip:
+          path: /build/android-components/components/lib/crash/build/target.maven.zip
+          name: lib-crash
+          old_artifact_id: lib-crash
+          new_group_id: org.mozilla.components
         public/build/lib.dataprotect.maven.zip:
           path: /build/android-components/components/lib/dataprotect/build/target.maven.zip
           name: lib-dataprotect

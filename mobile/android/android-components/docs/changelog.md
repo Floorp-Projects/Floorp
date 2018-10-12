@@ -78,7 +78,8 @@ Release date: TBD
   ```
 * **feature-downloads**
   * A new components for apps that want to process downloads, for more examples take a look at [here](components/feature/downloads/README.md).
-
+* **lib-crash**
+  * A new generic crash reporter component that can report crashes to multiple services.
 * **support-test**
   * Added a new helper for granting permissions in  Robolectric tests:
   ```kotlin

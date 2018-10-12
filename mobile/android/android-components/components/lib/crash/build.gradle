@@ -1,0 +1,54 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion Config.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
+
+    implementation Deps.support_appcompat
+    implementation Deps.support_constraintlayout
+
+    implementation project(':support-base')
+
+    // We only compile against Sentry and GeckoView. It's up to the app to add those dependencies if it wants to
+    // send crash reports to Socorro (GV) or Sentry.
+    compileOnly Deps.thirdparty_sentry
+    compileOnly Gecko.geckoview_nightly_arm
+    testImplementation Deps.thirdparty_sentry
+
+    testImplementation project(':support-test')
+    testImplementation Deps.testing_junit
+    testImplementation Deps.testing_robolectric
+    testImplementation Deps.testing_mockito
+}
+
+archivesBaseName = "lib-crash"
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(
+        'org.mozilla.components',
+        'lib-crash',
+        'A generic crash reporter library that can report crashes to multiple services.')

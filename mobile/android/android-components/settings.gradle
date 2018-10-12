@@ -135,9 +135,11 @@ project(':support-utils').projectDir = new File(rootDir, 'components/support/uti
 // Standalone Libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+include ':lib-crash'
+project(':lib-crash').projectDir = new File(rootDir, 'components/lib/crash')
+
 include ':lib-dataprotect'
 project(':lib-dataprotect').projectDir = new File(rootDir, 'components/lib/dataprotect')
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tooling

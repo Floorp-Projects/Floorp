@@ -195,6 +195,8 @@ _Supporting components with generic helper code._
 
 ## Standalone libraries
 
+* ⚪ [**Crash**](components/lib/crash/README.md) - A generic crash reporter component that can report crashes to multiple services.
+
 * 🔴 [**Dataprotect**](components/lib/dataprotect/README.md) - A component using AndroidKeyStore to protect user data.
 
 ## Tooling
