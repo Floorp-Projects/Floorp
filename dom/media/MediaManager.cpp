@@ -916,11 +916,12 @@ private:
  */
 NS_IMPL_ISUPPORTS(MediaDevice, nsIMediaDevice)
 
-MediaDevice::MediaDevice(MediaEngineSource* aSource,
+MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                          const nsString& aName,
                          const nsString& aID,
                          const nsString& aRawID)
   : mSource(aSource)
+  , mSinkInfo(nullptr)
   , mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource())) ?
           dom::MediaDeviceKind::Videoinput : dom::MediaDeviceKind::Audioinput)
   , mScary(mSource->GetScary())
@@ -932,15 +933,16 @@ MediaDevice::MediaDevice(MediaEngineSource* aSource,
   MOZ_ASSERT(mSource);
 }
 
-MediaDevice::MediaDevice(const nsString& aName,
-                         const dom::MediaDeviceKind aKind,
+MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
                          const nsString& aID,
                          const nsString& aRawID)
   : mSource(nullptr)
-  , mKind(aKind)
+  , mSinkInfo(aAudioDeviceInfo)
+  , mKind(mSinkInfo->Type() == AudioDeviceInfo::TYPE_INPUT ? dom::MediaDeviceKind::Audioinput
+                                                           : dom::MediaDeviceKind::Audiooutput)
   , mScary(false)
   , mType(NS_ConvertUTF8toUTF16(dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value))
-  , mName(aName)
+  , mName(mSinkInfo->Name())
   , mID(aID)
   , mRawID(aRawID)
 {
@@ -949,12 +951,14 @@ MediaDevice::MediaDevice(const nsString& aName,
   // when we do not instantiate a MediaEngineSource
   // during EnumerateDevices.
   MOZ_ASSERT(mKind == dom::MediaDeviceKind::Audiooutput);
+  MOZ_ASSERT(mSinkInfo);
 }
 
-MediaDevice::MediaDevice(const MediaDevice* aOther,
+MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther,
                          const nsString& aID,
                          const nsString& aRawID)
   : mSource(aOther->mSource)
+  , mSinkInfo(aOther->mSinkInfo)
   , mKind(aOther->mKind)
   , mScary(aOther->mScary)
   , mType(aOther->mType)
