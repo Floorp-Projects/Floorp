@@ -18,25 +18,36 @@ namespace dom {
 class FeaturePolicyUtils final
 {
 public:
+  enum FeaturePolicyValue
+  {
+    // Feature always allowed.
+    eAll,
+
+    // Feature allowed for documents that are same-origin with this one.
+    eSelf,
+
+    // Feature denied.
+    eNone,
+  };
+
+  // This method returns true if aFeatureName is allowed for aDocument.
+  // Use this method everywhere you need to check feature-policy directives.
   static bool
   IsFeatureAllowed(nsIDocument* aDocument,
                    const nsAString& aFeatureName);
 
+  // Returns true if aFeatureName is a known feature policy name.
   static bool
   IsSupportedFeature(const nsAString& aFeatureName);
 
+  // Runs aCallback for each known feature policy, with the feature name as
+  // argument.
   static void
   ForEachFeature(const std::function<void(const char*)>& aCallback);
 
-  static void
-  DefaultAllowListFeature(const nsAString& aFeatureName,
-                          const nsAString& aDefaultOrigin,
-                          nsAString& aDefaultAllowList);
-
-  static bool
-  AllowDefaultFeature(const nsAString& aFeatureName,
-                      const nsAString& aDefaultOrigin,
-                      const nsAString& aOrigin);
+  // Returns the default policy value for aFeatureName.
+  static FeaturePolicyValue
+  DefaultAllowListFeature(const nsAString& aFeatureName);
 };
 
 } // dom namespace

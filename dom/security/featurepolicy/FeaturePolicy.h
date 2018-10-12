@@ -30,12 +30,12 @@
  * these policies:
  * - eNone - the feature is fully disabled.
  * - eAll - the feature is allowed.
- * - eWhitelist - the feature is allowed for a list of origins.
+ * - eAllowList - the feature is allowed for a list of origins.
  *
  * An interesting element of FeaturePolicy is the inheritance: each context
  * inherits the feature-policy directives from the parent context, if it exists.
  * When a context inherits a policy for feature X, it only knows if that feature
- * is allowed or denied (it ignores the list of whitelist origins for instance).
+ * is allowed or denied (it ignores the list of allowed origins for instance).
  * This information is stored in an array of inherited feature strings because
  * we care only to know when they are denied.
  *
@@ -72,19 +72,17 @@ public:
 
   explicit FeaturePolicy(nsINode* aNode);
 
-  // A FeaturePolicy must have a default origin, if not in a sandboxed context.
+  // A FeaturePolicy must have a default origin.
   // This method must be called before any other exposed WebIDL method or before
   // checking if a feature is allowed.
   void
-  SetDefaultOrigin(const nsAString& aOrigin)
+  SetDefaultOrigin(nsIPrincipal* aPrincipal)
   {
-    // aOrigin can be an empty string if this is a opaque origin.
-    mDefaultOrigin = aOrigin;
+    mDefaultOrigin = aPrincipal;
   }
 
-  const nsAString& DefaultOrigin() const
+  nsIPrincipal* DefaultOrigin() const
   {
-    // Returns an empty string if this is an opaque origin.
     return mDefaultOrigin;
   }
 
@@ -97,9 +95,8 @@ public:
   void
   SetDeclaredPolicy(nsIDocument* aDocument,
                     const nsAString& aPolicyString,
-                    const nsAString& aSelfOrigin,
-                    const nsAString& aSrcOrigin,
-                    bool aSrcEnabled);
+                    nsIPrincipal* aSelfOrigin,
+                    nsIPrincipal* aSrcOrigin);
 
   // This method creates a policy for aFeatureName allowing it to '*' if it
   // doesn't exist yet. It's used by HTMLIFrameElement to enable features by
@@ -140,9 +137,12 @@ public:
 private:
   ~FeaturePolicy() = default;
 
+  // This method returns true if the aFeatureName is allowed for aOrigin,
+  // following the feature-policy directives. See the comment at the top of this
+  // file.
   bool
   AllowsFeatureInternal(const nsAString& aFeatureName,
-                        const nsAString& aOrigin) const;
+                        nsIPrincipal* aOrigin) const;
 
   // Inherits a single denied feature from the parent context.
   void
@@ -151,6 +151,7 @@ private:
   bool
   HasInheritedDeniedFeature(const nsAString& aFeatureName) const;
 
+  // This returns true if we have a declared feature policy for aFeatureName.
   bool
   HasDeclaredFeature(const nsAString& aFeatureName) const;
 
@@ -163,7 +164,7 @@ private:
   // Feature policy for the current context.
   nsTArray<Feature> mFeatures;
 
-  nsString mDefaultOrigin;
+  nsCOMPtr<nsIPrincipal> mDefaultOrigin;
 };
 
 } // dom namespace
