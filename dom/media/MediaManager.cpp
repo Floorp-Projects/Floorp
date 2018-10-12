@@ -2799,14 +2799,6 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
   if (c.mAudio.IsMediaTrackConstraints()) {
     auto& ac = c.mAudio.GetAsMediaTrackConstraints();
-    MediaConstraintsHelper::ConvertOldWithWarning(ac.mMozAutoGainControl,
-                                                  ac.mAutoGainControl,
-                                                  "MozAutoGainControlWarning",
-                                                  aWindow);
-    MediaConstraintsHelper::ConvertOldWithWarning(ac.mMozNoiseSuppression,
-                                                  ac.mNoiseSuppression,
-                                                  "MozNoiseSuppressionWarning",
-                                                  aWindow);
     audioType = StringToEnum(dom::MediaSourceEnumValues::strings,
                              ac.mMediaSource,
                              MediaSourceEnum::Other);
@@ -4830,7 +4822,7 @@ RefPtr<SourceListener::ApplyConstraintsPromise>
 SourceListener::ApplyConstraintsToTrack(
     nsPIDOMWindowInner* aWindow,
     TrackID aTrackID,
-    const MediaTrackConstraints& aConstraintsPassedIn,
+    const MediaTrackConstraints& aConstraints,
     dom::CallerType aCallerType)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -4842,37 +4834,27 @@ SourceListener::ApplyConstraintsToTrack(
     return ApplyConstraintsPromise::CreateAndResolve(false, __func__);
   }
 
-  MediaTrackConstraints c(aConstraintsPassedIn); // use a modifiable copy
-  MediaConstraintsHelper::ConvertOldWithWarning(c.mMozAutoGainControl,
-                                                c.mAutoGainControl,
-                                                "MozAutoGainControlWarning",
-                                                aWindow);
-  MediaConstraintsHelper::ConvertOldWithWarning(c.mMozNoiseSuppression,
-                                                c.mNoiseSuppression,
-                                                "MozNoiseSuppressionWarning",
-                                                aWindow);
-
   MediaManager* mgr = MediaManager::GetIfExists();
   if (!mgr) {
     return ApplyConstraintsPromise::CreateAndResolve(false, __func__);
   }
 
   return MediaManager::PostTask<ApplyConstraintsPromise>(__func__,
-      [device = state.mDevice, c,
+      [device = state.mDevice, aConstraints,
        isChrome = aCallerType == dom::CallerType::System]
       (MozPromiseHolder<ApplyConstraintsPromise>& aHolder) mutable {
     MOZ_ASSERT(MediaManager::IsInMediaThread());
     MediaManager* mgr = MediaManager::GetIfExists();
     MOZ_RELEASE_ASSERT(mgr); // Must exist while media thread is alive
     const char* badConstraint = nullptr;
-    nsresult rv = device->Reconfigure(c, mgr->mPrefs, &badConstraint);
+    nsresult rv = device->Reconfigure(aConstraints, mgr->mPrefs, &badConstraint);
     if (rv == NS_ERROR_INVALID_ARG) {
       // Reconfigure failed due to constraints
       if (!badConstraint) {
         nsTArray<RefPtr<MediaDevice>> devices;
         devices.AppendElement(device);
         badConstraint = MediaConstraintsHelper::SelectSettings(
-            NormalizedConstraints(c), devices, isChrome);
+            NormalizedConstraints(aConstraints), devices, isChrome);
       }
 
       aHolder.Reject(Some(NS_ConvertASCIItoUTF16(badConstraint)), __func__);
