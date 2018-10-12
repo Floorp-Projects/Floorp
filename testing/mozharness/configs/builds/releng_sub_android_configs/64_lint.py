@@ -1,5 +1,4 @@
 config = {
-    'base_name': 'Android lint %(branch)s',
     'stage_platform': 'android-lint',
     'src_mozconfig': 'mobile/android/config/mozconfigs/android-api-16-frontend/nightly',
     'multi_locale_config_platform': 'android',

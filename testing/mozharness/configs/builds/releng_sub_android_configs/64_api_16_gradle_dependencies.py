@@ -1,5 +1,4 @@
 config = {
-    'base_name': 'Android armv7 api-16+ Gradle dependencies %(branch)s',
     'stage_platform': 'android-api-16-gradle-dependencies',
     'src_mozconfig': 'mobile/android/config/mozconfigs/android-api-16-gradle-dependencies/nightly',
     'multi_locale_config_platform': 'android',

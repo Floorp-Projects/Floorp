@@ -1,7 +1,6 @@
 import os
 
 config = {
-    'base_name': 'WINNT_6.1_x86-64_%(branch)s',
     'platform': 'win64',
     'env': {
         'PDBSTR_PATH': 'C:/Program Files (x86)/Windows Kits/10/Debuggers/x64/srcsrv/pdbstr.exe',

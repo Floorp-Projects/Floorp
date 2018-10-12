@@ -35,7 +35,6 @@ config = {
 
     #########################################################################
     ###### 64 bit specific ######
-    'base_name': 'Linux_x86-64_%(branch)s',
     'platform': 'linux64',
     'stage_platform': 'linux64',
     'env': {
