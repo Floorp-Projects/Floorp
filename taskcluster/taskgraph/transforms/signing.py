@@ -186,7 +186,7 @@ def _generate_treeherder_platform(dep_th_platform, build_platform, build_type):
 
 
 def _generate_treeherder_symbol(is_nightly, build_platform):
-    symbol = 'Ns' if is_nightly else 'Bs'
-    if '-msvc' in build_platform:
-        symbol += '-msvc'
-    return symbol
+    if is_nightly:
+        return 'Ns'
+    else:
+        return 'Bs'
