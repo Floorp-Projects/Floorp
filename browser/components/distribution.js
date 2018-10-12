@@ -165,15 +165,17 @@ DistributionCustomizer.prototype = {
         break;
 
       case "livemark":
-        if (itemIndex < defaultIndex)
+        // Livemarks are no more supported, instead of a livemark we'll insert
+        // a bookmark pointing to the site uri, if available.
+        if (!item.siteLink) {
+          break;
+        }
+        if (itemIndex < defaultIndex) {
           index = prependIndex++;
+        }
 
-        // Don't bother updating the livemark contents on creation.
-        let parentId = await PlacesUtils.promiseItemId(parentGuid);
-        await PlacesUtils.livemarks.addLivemark({
-          feedURI: Services.io.newURI(item.feedLink),
-          siteURI: Services.io.newURI(item.siteLink),
-          parentId, index, title: item.title,
+        await PlacesUtils.bookmarks.insert({
+          parentGuid, index, title: item.title, url: item.siteLink,
         });
         break;
 
