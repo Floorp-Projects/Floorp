@@ -122,7 +122,7 @@ def make_task_description(config, jobs):
                 is_nightly, build_platform
             ))
 
-            # ccov and msvc builds are tier 2, so they cannot have tier 1 tasks
+            # ccov builds are tier 2, so they cannot have tier 1 tasks
             # depending on them.
             treeherder.setdefault(
                 'tier',

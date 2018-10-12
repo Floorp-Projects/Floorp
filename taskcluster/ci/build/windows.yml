@@ -805,7 +805,7 @@ win32-msvc/debug:
     treeherder:
         platform: windows2012-32/debug
         symbol: Bmsvc
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -838,7 +838,7 @@ win32-msvc/opt:
     treeherder:
         platform: windows2012-32/opt
         symbol: Bmsvc
-        tier: 2
+        tier: 1
     stub-installer:
         # Beta and release use a stub-requiring update channel
         by-project:
@@ -877,7 +877,7 @@ win64-msvc/debug:
     treeherder:
         platform: windows2012-64/debug
         symbol: Bmsvc
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -910,7 +910,7 @@ win64-msvc/opt:
     treeherder:
         platform: windows2012-64/opt
         symbol: Bmsvc
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
