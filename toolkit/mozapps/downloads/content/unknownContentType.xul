@@ -58,9 +58,9 @@
       <label id="unknownPrompt" value="&unknownPromptText.label;" flex="1"/>
     </hbox>
 
-    <groupbox flex="1" id="normalBox">
-      <caption label="&actionQuestion.label;"/>
-      <separator class="thin"/>
+    <vbox flex="1" id="normalBox">
+      <separator/>
+      <label control="mode" class="header" value="&actionQuestion.label;"/>
       <radiogroup id="mode" class="small-indent">
         <hbox>
           <radio id="open" label="&openWith.label;" accesskey="&openWith.accesskey;"/>
@@ -93,7 +93,7 @@
       <description id="settingsChange" hidden="true">&settingsChangeOptions.label;</description>
 #endif
       <separator class="thin"/>
-    </groupbox>
+    </vbox>
   </vbox>
   
   <menulist id="openHandler" flex="1">
