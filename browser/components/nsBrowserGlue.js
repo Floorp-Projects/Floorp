@@ -1451,7 +1451,7 @@ BrowserGlue.prototype = {
   _monitorWebcompatReporterPref() {
     const PREF = "extensions.webcompat-reporter.enabled";
     const ID = "webcompat-reporter@mozilla.org";
-    Services.prefs.addObserver(PREF, async () => {
+    async function checkPref() {
       let addon = await AddonManager.getAddonByID(ID);
       let enabled = Services.prefs.getBoolPref(PREF, false);
       if (enabled && !addon.isActive) {
@@ -1459,7 +1459,9 @@ BrowserGlue.prototype = {
       } else if (!enabled && addon.isActive) {
         await addon.disable({allowSystemAddons: true});
       }
-    });
+    }
+    Services.prefs.addObserver(PREF, checkPref);
+    checkPref();
   },
 
   // All initial windows have opened.
