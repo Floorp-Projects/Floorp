@@ -1155,21 +1155,21 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VisualViewport", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplay", insecureContext: true, releaseNonWindows: false},
+    {name: "VRDisplay", insecureContext: true, releaseNonWindowsAndMac: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplayCapabilities", insecureContext: true, releaseNonWindows: false},
+    {name: "VRDisplayCapabilities", insecureContext: true, releaseNonWindowsAndMac: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplayEvent", insecureContext: true, releaseNonWindows: false},
+    {name: "VRDisplayEvent", insecureContext: true, releaseNonWindowsAndMac: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VREyeParameters", insecureContext: true, releaseNonWindows: false},
+    {name: "VREyeParameters", insecureContext: true, releaseNonWindowsAndMac: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRFieldOfView", insecureContext: true, releaseNonWindows: false},
+    {name: "VRFieldOfView", insecureContext: true, releaseNonWindowsAndMac: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRFrameData", insecureContext: true, releaseNonWindows: false},
+    {name: "VRFrameData", insecureContext: true, releaseNonWindowsAndMac: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRPose", insecureContext: true, releaseNonWindows: false},
+    {name: "VRPose", insecureContext: true, releaseNonWindowsAndMac: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRStageParameters", insecureContext: true, releaseNonWindows: false},
+    {name: "VRStageParameters", insecureContext: true, releaseNonWindowsAndMac: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VTTCue", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1283,6 +1283,7 @@ function createInterfaceMap(isXBLScope) {
             (entry.linux === !isLinux) ||
             (entry.android === !isAndroid && !entry.nightlyAndroid) ||
             (entry.release === !isRelease) ||
+            (entry.releaseNonWindowsAndMac === !(isRelease && !isWindows && !isMac)) ||
             (entry.releaseNonWindows === !(isRelease && !isWindows)) ||
 	    // The insecureContext test is very purposefully converting
 	    // entry.insecureContext to boolean, so undefined will convert to
