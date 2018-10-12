@@ -1708,6 +1708,20 @@ telemetry:
     record_in_processes:
       - 'main'
 
+  keyed_scalars_exceed_limit:
+    bug_numbers:
+      - 1451813
+    description: >
+      The number of times keyed scalars exceeded the number of keys limit, keyed by scalar name.
+    expires: "never"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:
