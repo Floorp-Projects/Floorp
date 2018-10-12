@@ -78,8 +78,7 @@ add_task(async function() {
     }
   );
 
-  // Currently TP will allow this, although it probably shouldn't?
-  ok(controlled, "Should be controlled (and not crash.)");
+  ok(!controlled, "Should not be controlled!");
 
   // ## Cleanup
   // Close the testing tab.
