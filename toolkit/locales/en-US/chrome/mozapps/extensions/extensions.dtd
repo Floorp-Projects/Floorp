@@ -42,6 +42,7 @@
 <!ENTITY view.recentUpdates.label             "Recent Updates">
 <!ENTITY view.availableUpdates.label          "Available Updates">
 
+<!ENTITY helpButton.label                      "Add-ons Support">
 <!ENTITY preferencesWin.label                  "&brandShortName; Options">
 <!ENTITY preferencesUnix.label                 "&brandShortName; Preferences">
 
