@@ -94,11 +94,11 @@ this.slides = (function() {
     const sentinelSplitter = "!!!";
     const linkTexts = {
       [termsSentinel]: browser.i18n.getMessage("termsAndPrivacyNoticeTermsLink"),
-      [privacySentinel]: browser.i18n.getMessage("termsAndPrivacyNoticyPrivacyLink")
+      [privacySentinel]: browser.i18n.getMessage("termsAndPrivacyNoticyPrivacyLink"),
     };
     const linkUrls = {
       [termsSentinel]: "https://www.mozilla.org/about/legal/terms/services/",
-      [privacySentinel]: "https://www.mozilla.org/privacy/firefox/"
+      [privacySentinel]: "https://www.mozilla.org/privacy/firefox/",
     };
     const text = browser.i18n.getMessage(
       "termsAndPrivacyNotice2",

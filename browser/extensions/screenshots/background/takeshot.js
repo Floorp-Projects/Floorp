@@ -27,9 +27,9 @@ this.takeshot = (function() {
             location: selectedPos,
             dimensions: {
               x: selectedPos.right - selectedPos.left,
-              y: selectedPos.bottom - selectedPos.top
-            }
-          }
+              y: selectedPos.bottom - selectedPos.top,
+            },
+          },
         });
       });
     }
@@ -94,7 +94,7 @@ this.takeshot = (function() {
       top: pos.top - scroll.scrollY,
       left: pos.left - scroll.scrollX,
       bottom: pos.bottom - scroll.scrollY,
-      right: pos.right - scroll.scrollX
+      right: pos.right - scroll.scrollX,
     };
     pos.width = pos.right - pos.left;
     pos.height = pos.bottom - pos.top;
@@ -177,7 +177,7 @@ this.takeshot = (function() {
       body = concatBuffers(body, tail.buffer);
       return {
         "content-type": `multipart/form-data; boundary=${boundary}`,
-        body
+        body,
       };
     });
   }
@@ -199,7 +199,7 @@ this.takeshot = (function() {
       }
       return {
         "content-type": "application/json",
-        body: JSON.stringify(shot)
+        body: JSON.stringify(shot),
       };
 
     }).then((submission) => {
@@ -209,7 +209,7 @@ this.takeshot = (function() {
         method: "PUT",
         mode: "cors",
         headers,
-        body: submission.body
+        body: submission.body,
       });
     }).then((resp) => {
       if (!resp.ok) {
