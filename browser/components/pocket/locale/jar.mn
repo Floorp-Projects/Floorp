@@ -28,7 +28,7 @@
 #define zh_CN zh-CN
 #define zh_TW zh-TW
 
-[features/firefox@getpocket.com] @AB_CD@.jar:
+@AB_CD@.jar:
 % locale pocket @AB_CD@ %locale/@AB_CD@/
   # For locales we support, include the file from the locale's directory in the
   # source tree.
