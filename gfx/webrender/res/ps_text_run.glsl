@@ -130,14 +130,12 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
 
     // Map the clamped local space corner into device space.
     vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
-    vec2 device_pos = world_pos.xy / world_pos.w * task.common_data.device_pixel_scale;
+    vec2 device_pos = world_pos.xy * task.common_data.device_pixel_scale;
 
     // Apply offsets for the render task to get correct screen location.
-    vec2 final_pos = device_pos -
-                     task.content_origin +
-                     task.common_data.task_rect.p0;
+    vec2 final_offset = -task.content_origin + task.common_data.task_rect.p0;
 
-    gl_Position = uTransform * vec4(final_pos, z, 1.0);
+    gl_Position = uTransform * vec4(device_pos + final_offset * world_pos.w, z * world_pos.w, world_pos.w);
 
     VertexInfo vi = VertexInfo(
         local_pos,

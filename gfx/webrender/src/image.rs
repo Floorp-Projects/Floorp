@@ -237,12 +237,12 @@ pub fn compute_tile_range(
     let t0 = point2(
         f32::floor(visible_area.origin.x as f32 * tw),
         f32::floor(visible_area.origin.y as f32 * th),
-    ).cast::<u16>();
+    ).try_cast::<u16>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
 
     let t1 = point2(
         f32::ceil(visible_area.max_x() as f32 * tw),
         f32::ceil(visible_area.max_y() as f32 * th),
-    ).cast::<u16>();
+    ).try_cast::<u16>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
 
     TileRange {
         origin: t0,
