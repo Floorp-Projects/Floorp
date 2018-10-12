@@ -458,10 +458,6 @@ this.AntiTracking = {
                 // This branch is needed here because of the tests that use the storage
                 // access API to gain storage access.
                 is(originLog.length, 2, "Correct origin log length");
-                if (originLog.length > 2) {
-                  console.log(originLog);
-                  console.log(originLog.toSource());
-                }
                 is(originLog[0][0], Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
                    "Correct blocking type reported");
                 is(originLog[0][1], true,
