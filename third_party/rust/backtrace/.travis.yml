@@ -1,0 +1,109 @@
+language: rust
+sudo: false
+dist: trusty
+
+matrix:
+  fast_finish: true
+  include:
+    # Test everything on stable linux
+    - rust: stable
+      addons:
+        sources:
+          # Provides clang-3.9
+          - llvm-toolchain-trusty-3.9
+        apt:
+          packages:
+            # Required for `bindgen`, which is required by `findshlibs`, which is
+            # required by the `gimli` feature.
+            - clang-3.9
+      script: &test_all
+        - cargo build --manifest-path backtrace-sys/Cargo.toml
+        - cargo build
+        - cargo test
+        - cargo test --no-default-features
+        - cargo test --no-default-features --features 'libunwind'
+        - cargo test --no-default-features --features 'libunwind dladdr'
+        - cargo test --no-default-features --features 'libunwind libbacktrace'
+        - cargo test --no-default-features --features 'unix-backtrace'
+        - cargo test --no-default-features --features 'unix-backtrace dladdr'
+        - cargo test --no-default-features --features 'unix-backtrace libbacktrace'
+        - cargo test --no-default-features --features 'serialize-serde'
+        - cargo test --no-default-features --features 'serialize-rustc'
+        - cargo test --no-default-features --features 'serialize-rustc serialize-serde'
+        - cargo test --no-default-features --features 'cpp_demangle'
+        - cargo test --no-default-features --features 'gimli-symbolize'
+        - cd ./cpp_smoke_test && cargo test && cd ..
+        - cargo clean && cargo build
+
+    # Test everything on OSX as well as beta/nightly
+    - os: osx
+      script: *test_all
+    - rust: beta
+      script: *test_all
+    - rust: nightly
+      script: *test_all
+
+    # Upload docs on nightly
+    - rust: nightly
+      script:
+        - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+        - cargo doc --no-deps --all-features
+      after_success:
+        - travis-cargo doc-upload
+
+    # Cross-compile tests, not as comprehensive as above but gets us breadth of
+    # targets
+    - env: TARGET=aarch64-unknown-linux-gnu
+    - env: TARGET=arm-unknown-linux-gnueabihf
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+    - env: TARGET=i586-unknown-linux-gnu
+    - env: TARGET=i686-unknown-linux-gnu
+    - env: TARGET=powerpc64-unknown-linux-gnu
+    - env: TARGET=powerpc-unknown-linux-gnu
+    - env: TARGET=x86_64-pc-windows-gnu
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=x86_64-unknown-linux-musl
+
+    # Cross compile Android targets from linux
+    - env: TARGET=arm-linux-androideabi
+    - env: TARGET=armv7-linux-androideabi
+    - env: TARGET=aarch64-linux-android
+    - env: TARGET=i686-linux-android
+    - env: TARGET=x86_64-linux-android
+
+    # Build iOS targets from OSX
+    - env: TARGET=aarch64-apple-ios SDK=iphoneos
+      os: osx
+      script: &ios-build
+        - rustup target add $TARGET
+        - export SDK_PATH=`xcrun --show-sdk-path --sdk $SDK`
+        - export RUSTFLAGS="-C link-arg=-isysroot -C link-arg=$SDK_PATH"
+        - cargo test --no-run --target $TARGET
+    - env: TARGET=armv7-apple-ios SDK=iphoneos
+      os: osx
+      script: *ios-build
+    - env: TARGET=armv7s-apple-ios SDK=iphoneos
+      os: osx
+      script: *ios-build
+    - env: TARGET=i386-apple-ios SDK=iphonesimulator
+      os: osx
+      script: *ios-build
+    - env: TARGET=x86_64-apple-ios SDK=iphonesimulator
+      os: osx
+      script: *ios-build
+
+# docker cross-compilation targets
+script:
+  - if [ "$NO_ADD" == "" ]; then rustup target add $TARGET; fi
+  - cargo generate-lockfile
+  - ci/run-docker.sh $TARGET
+
+notifications:
+  email:
+    on_success: never
+
+env:
+  global:
+    # serde-codegen has historically needed a large stack to expand
+    - RUST_MIN_STACK=16777216
+    - secure: "Kuf3j6gC3MhR+F7g8/5J4+3tu+FXJP/SqKjsUVVjs/qjniIVX3MwZPhtP/pVtdRvYjW0NzLw5Nufb4o1cyY4uKwR8BHHNuEUE/h3mPShjWHqzLyn5QiBumPozsFCa32H4gconRmp3+s0YrBT7nLoGvUZZS0dkldMkpvvrPL/yUKXLS8HEP4L1GO5iMQQYG6i3sbWTbHikE6ZQogW/iZommyqUkVB/s/SQvdH9SXu89ttNXlm/F+EIsgsgyzpbULp5sD34GRDPJe+H1m+sgA1kTRrzmuBGNmz9mx6GyIKaqACTm1gRcb06nFjTPVTQioJBNnoV7TEqZCvjuSsUjcGmP4Aeissafo93ADzV+bd0uoWIScE9ltSVS+RgCDV+sd0GHz5U6FjhgZp0amaVl3d6hPp8lbTfK/gfj1i9ktQfKZbG7rB4tfIU1KeQRkyE9vb/TaKp8nwBbc4SVQ4EKFOlRbE1S1FooaKZweW8w57d2u+sMMMVJbO28/Ap8tk9xDSOl4shPaT0iM0U9/heF8FmCZB1OKXLKn6TAaNFnaMTvdTHl+Tjrf6Vzd/oPXJ7GuaB6eLxXYjXvZHuKiLkSZriOzhL7PbijNILbSgZt7+Fa0vcnXP8zgD4dmupx/CoIHLN9NP4o9cGXuBcaJ/iFryJ4i5LKGFNEUHtXkavDrcgcA="
