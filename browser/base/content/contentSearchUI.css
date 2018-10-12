@@ -125,6 +125,7 @@
   width: 16px;
   height: 16px;
   margin-bottom: -2px;
+  pointer-events: none;
 }
 
 .contentSearchOneOffItem:not(.last-row) {
