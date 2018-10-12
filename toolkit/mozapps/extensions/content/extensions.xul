@@ -168,7 +168,17 @@
           </hbox>
         </label>
       </hbox>
+
+      <hbox class="sidebar-footer-button help-button" pack="center">
+        <label id="helpButton" class="text-link">
+          <hbox align="center">
+            <image class="sidebar-footer-icon help-icon"/>
+            <label class="sidebar-footer-label" flex="1">&helpButton.label;</label>
+          </hbox>
+        </label>
+      </hbox>
     </vbox>
+
     <vbox class="main-content" flex="1">
       <!-- view port -->
       <deck id="view-port" flex="1" selectedIndex="0">
