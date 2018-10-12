@@ -18,7 +18,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 // v4l includes
+#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
+#include <sys/videoio.h>
+#elif defined(__sun)
+#include <sys/videodev2.h>
+#else
 #include <linux/videodev2.h>
+#endif
 
 #include "rtc_base/logging.h"
 
@@ -194,8 +200,8 @@ DeviceInfoLinux::DeviceInfoLinux() : DeviceInfoImpl()
         _inotifyEventThread->Start();
         _inotifyEventThread->SetPriority(rtc::kHighPriority);
     }
-}
 #endif
+}
 
 int32_t DeviceInfoLinux::Init() {
   return 0;

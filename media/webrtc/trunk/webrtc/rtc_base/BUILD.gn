@@ -411,6 +411,9 @@ rtc_source_set("rtc_task_queue_impl") {
       if (is_android) {
         include_dirs += [ "/ipc/chromium/src/third_party/libevent/android" ]
       }
+      if (is_bsd) {
+        include_dirs += [ "/ipc/chromium/src/third_party/libevent/bsd" ]
+      }
     }
   } else {
     if (is_mac || is_ios) {
