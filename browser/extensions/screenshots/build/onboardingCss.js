@@ -1,18 +1,16 @@
 /* Created from build/server/static/css/onboarding.css */
 window.onboardingCss = `
 .loader {
-  background: #2e2d30;
+  background: rgba(12, 12, 13, 0.2);
   border-radius: 2px;
   height: 4px;
   overflow: hidden;
   position: relative;
   width: 200px; }
-  #shot-index .loader {
-    background-color: #dedede; }
 
 .loader-inner {
   animation: bounce infinite alternate 1250ms cubic-bezier(0.7, 0, 0.3, 1);
-  background: #04d1e6;
+  background: #45a1ff;
   border-radius: 2px;
   height: 4px;
   transform: translateX(-40px);
@@ -162,14 +160,16 @@ body {
 .slide-2,
 .slide-3,
 .slide-4,
-.slide-5 {
+.slide-5,
+.slide-6 {
   display: none; }
 
 .active-slide-1 .slide-1,
 .active-slide-2 .slide-2,
 .active-slide-3 .slide-3,
 .active-slide-4 .slide-4,
-.active-slide-5 .slide-5 {
+.active-slide-5 .slide-5,
+.active-slide-6 .slide-6 {
   display: flex; }
 
 #slide-status-container {
@@ -197,7 +197,8 @@ body {
 .active-slide-2 .goto-slide-2,
 .active-slide-3 .goto-slide-3,
 .active-slide-4 .goto-slide-4,
-.active-slide-5 .goto-slide-5 {
+.active-slide-5 .goto-slide-5,
+.active-slide-6 .goto-slide-6 {
   opacity: 1;
   transform: scale(1.1); }
 
@@ -281,14 +282,14 @@ body {
   opacity: 1; }
 
 .active-slide-1 #prev,
-.active-slide-5 #next {
+.active-slide-6 #next {
   display: none; }
 
 #done {
   background-image: url("MOZ_EXTENSION/icons/done.svg");
   display: none; }
 
-.active-slide-5 #done {
+.active-slide-6 #done {
   display: inline-block; }
 
 /* for smaller screen sizes */
