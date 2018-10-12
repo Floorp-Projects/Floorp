@@ -25,6 +25,7 @@ public:
 static FFmpegLibWrapper sLibAV;
 
 static const char* sLibs[] = {
+  // clang-format off
 #if defined(XP_DARWIN)
   "libavcodec.58.dylib",
   "libavcodec.57.dylib",
@@ -43,6 +44,7 @@ static const char* sLibs[] = {
   "libavcodec.so.54",
   "libavcodec.so.53",
 #endif
+  // clang-format on
 };
 
 /* static */ bool

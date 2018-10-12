@@ -4235,6 +4235,7 @@ technique10 SampleTextTexture
 
 const BYTE d2deffect[] =
 {
+     // clang-format off
      68,  88,  66,  67, 116, 210, 
     237,  43,  26, 169, 147,  99, 
      62,  90, 128, 241, 238, 193, 
@@ -16009,4 +16010,5 @@ const BYTE d2deffect[] =
       7,   0,   0,   0,   0,   0, 
       0,   0,   7,   0,   0,   0, 
      54,   7,   1,   0
+     // clang-format on
 };

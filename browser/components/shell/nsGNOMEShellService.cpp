@@ -57,15 +57,19 @@ struct MimeTypeAssociation
 };
 
 static const ProtocolAssociation appProtocols[] = {
+  // clang-format off
   { "http",   true     },
   { "https",  true     },
   { "ftp",    false },
   { "chrome", false }
+  // clang-format on
 };
 
 static const MimeTypeAssociation appTypes[] = {
+  // clang-format off
   { "text/html",             "htm html shtml" },
   { "application/xhtml+xml", "xhtml xht"      }
+  // clang-format on
 };
 
 // GConf registry key constants

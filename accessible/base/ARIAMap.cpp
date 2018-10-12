@@ -37,6 +37,7 @@ static const uint32_t kGenericAccType = 0;
 
 static const nsRoleMapEntry sWAIRoleMaps[] =
 {
+  // clang-format off
   { // alert
     nsGkAtoms::alert,
     roles::ALERT,
@@ -1240,6 +1241,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIASelectable,
     eARIACheckedMixed
   }
+  // clang-format on
 };
 
 static const nsRoleMapEntry sLandmarkRoleMap = {
@@ -1294,6 +1296,7 @@ struct AttrCharacteristics
 };
 
 static const AttrCharacteristics gWAIUnivAttrMap[] = {
+  // clang-format off
   {nsGkAtoms::aria_activedescendant,  ATTR_BYPASSOBJ                               },
   {nsGkAtoms::aria_atomic,   ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_busy,                               ATTR_VALTOKEN | ATTR_GLOBAL },
@@ -1331,6 +1334,7 @@ static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {nsGkAtoms::aria_valuemin,          ATTR_BYPASSOBJ                               },
   {nsGkAtoms::aria_valuemax,          ATTR_BYPASSOBJ                               },
   {nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                               }
+  // clang-format on
 };
 
 namespace {

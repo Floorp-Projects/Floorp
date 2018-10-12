@@ -2685,6 +2685,7 @@ struct MidasCommand {
 };
 
 static const struct MidasCommand gMidasCommandTable[] = {
+  // clang-format off
   { "bold",          "cmd_bold",            "", true,  false },
   { "italic",        "cmd_italic",          "", true,  false },
   { "underline",     "cmd_underline",       "", true,  false },
@@ -2742,11 +2743,13 @@ static const struct MidasCommand gMidasCommandTable[] = {
   { "print",         "cmd_print",           "", true,  false },
 #endif
   { nullptr, nullptr, nullptr, false, false }
+  // clang-format on
 };
 
 #define MidasCommandCount ((sizeof(gMidasCommandTable) / sizeof(struct MidasCommand)) - 1)
 
 static const char* const gBlocks[] = {
+  // clang-format off
   "ADDRESS",
   "BLOCKQUOTE",
   "DD",
@@ -2761,6 +2764,7 @@ static const char* const gBlocks[] = {
   "H6",
   "P",
   "PRE"
+  // clang-format on
 };
 
 static bool
