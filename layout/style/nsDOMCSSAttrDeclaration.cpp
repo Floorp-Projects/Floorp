@@ -78,12 +78,9 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl,
   // needed.
   MOZ_ASSERT_IF(!mIsSMILOverride, aClosureData);
 
-  // If the closure hasn't been called because the declaration wasn't changed,
-  // we need to explicitly call it now to get InlineStyleDeclarationWillChange
-  // notification before SetInlineStyleDeclaration.
-  if (aClosureData && aClosureData->mClosure) {
-    aClosureData->mClosure(aClosureData);
-  }
+  // The closure needs to have been called by now, otherwise we shouldn't be
+  // getting here when the attribute hasn't changed.
+  MOZ_ASSERT_IF(aClosureData, !aClosureData->mClosure);
 
   aDecl->SetDirty();
   return mIsSMILOverride

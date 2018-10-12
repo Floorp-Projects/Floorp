@@ -367,7 +367,9 @@ public:
   void GetId(nsAString& aID) const;
 
   void GetAudioTracks(nsTArray<RefPtr<AudioStreamTrack> >& aTracks) const;
+  void GetAudioTracks(nsTArray<RefPtr<MediaStreamTrack> >& aTracks) const;
   void GetVideoTracks(nsTArray<RefPtr<VideoStreamTrack> >& aTracks) const;
+  void GetVideoTracks(nsTArray<RefPtr<MediaStreamTrack> >& aTracks) const;
   void GetTracks(nsTArray<RefPtr<MediaStreamTrack> >& aTracks) const;
   MediaStreamTrack* GetTrackById(const nsAString& aId) const;
   void AddTrack(MediaStreamTrack& aTrack);
