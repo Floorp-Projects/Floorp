@@ -142,17 +142,24 @@ describe("RecipeExecutor", () => {
       item = instance.naiveBayesTag(item, {fields: ["text"]});
       assert.isTrue("nb_tags" in item);
       assert.isTrue(!("tag1" in item.nb_tags));
-      assert.deepEqual(item.nb_tags.tag2, {
+      assert.equal(item.nb_tags.tag2, 0.86);
+      assert.equal(item.nb_tags.tag3, 0.90);
+      assert.equal(item.nb_tags.tag5, 0.90);
+      assert.isTrue("nb_tokens" in item);
+      assert.deepEqual(item.nb_tokens, ["this", "is", "a", "sentence"]);
+      assert.isTrue("nb_tags_extended" in item);
+      assert.isTrue(!("tag1" in item.nb_tags_extended));
+      assert.deepEqual(item.nb_tags_extended.tag2, {
         label: "tag2",
         logProb: Math.log(0.86),
         confident: true,
       });
-      assert.deepEqual(item.nb_tags.tag3, {
+      assert.deepEqual(item.nb_tags_extended.tag3, {
         label: "tag3",
         logProb: Math.log(0.90),
         confident: true,
       });
-      assert.deepEqual(item.nb_tags.tag5, {
+      assert.deepEqual(item.nb_tags_extended.tag5, {
         label: "tag5",
         logProb: Math.log(0.90),
         confident: true,
@@ -172,12 +179,16 @@ describe("RecipeExecutor", () => {
       item = instance.conditionallyNmfTag(item, {});
       assert.isTrue(("nb_tags" in item));
       assert.deepEqual(item.nmf_tags, {
-        tag21: 0.8,
-        tag22: 0.7,
-        tag23: 0.6,
-        tag31: 0.7,
-        tag32: 0.6,
-        tag33: 0.5,
+        tag2: {
+          tag21: 0.8,
+          tag22: 0.7,
+          tag23: 0.6,
+        },
+        tag3: {
+          tag31: 0.7,
+          tag32: 0.6,
+          tag33: 0.5,
+        },
       });
       assert.deepEqual(item.nmf_tags_parent, {
         tag21: "tag2",
@@ -354,6 +365,17 @@ describe("RecipeExecutor", () => {
       item = instance.copyValue(item, {src: "one", dest: "again"});
       assert.isTrue("again" in item);
       assert.equal(item.again, 1);
+      item.one = 100;
+      assert.equal(item.one, 100);
+      assert.equal(item.again, 1);
+    });
+    it("should handle maps corrects", () => {
+      item = instance.copyValue(item, {src: "map", dest: "again"});
+      assert.deepEqual(item.again, {a: 1, b: 2, c: 3});
+      item.map.c = 100;
+      assert.deepEqual(item.again, {a: 1, b: 2, c: 3});
+      item.map = 342;
+      assert.deepEqual(item.again, {a: 1, b: 2, c: 3});
     });
     it("should error for a missing field", () => {
       item = instance.copyValue(item, {src: "missing", dest: "toks"});
@@ -389,6 +411,11 @@ describe("RecipeExecutor", () => {
       assert.isTrue("c" in item.map);
       assert.equal(item.map.c, 3);
     });
+    it("should promote up nested fields", () => {
+      item = instance.keepTopK(item, {field: "tags", k: 2});
+      assert.equal(Object.keys(item.tags).length, 2);
+      assert.deepEqual(item.tags, {bb: 5, bc: 6});
+    });
     it("should error for a missing field", () => {
       item = instance.keepTopK(item, {field: "missing", k: 3});
       assert.equal(item, null);
@@ -409,7 +436,7 @@ describe("RecipeExecutor", () => {
       assert.equal(item.map.c, 9);
     });
     it("should use default", () => {
-      item = instance.scalarMultiply(item, {field: "map", k: "missing", default: 4});
+      item = instance.scalarMultiply(item, {field: "map", k: "missing", dfault: 4});
       assert.equal(item.map.a, 4);
       assert.equal(item.map.b, 8);
       assert.equal(item.map.c, 12);
@@ -434,10 +461,8 @@ describe("RecipeExecutor", () => {
 
   describe("#elementwiseMultiply", () => {
     it("should handle maps", () => {
-      item = instance.elementwiseMultiply(item, {left: "map", right: "map2"});
-      assert.equal(item.map.a, 0);
-      assert.equal(item.map.b, 4);
-      assert.equal(item.map.c, 9);
+      item = instance.elementwiseMultiply(item, {left: "tags", right: "map2"});
+      assert.deepEqual(item.tags, {a: {aa: 0, ab: 0, ac: 0}, b: {ba: 8, bb: 10, bc: 12}});
     });
     it("should handle arrays of same length", () => {
       item = instance.elementwiseMultiply(item, {left: "arr1", right: "arr2"});
@@ -508,6 +533,10 @@ describe("RecipeExecutor", () => {
     it("should error for strings", () => {
       item = instance.scalarAdd(item, {field: "foo", k: 10});
       assert.equal(item, null);
+    });
+    it("should work for numbers", () => {
+      item = instance.scalarAdd(item, {field: "one", k: 10});
+      assert.equal(item.one, 11);
     });
     it("should add a constant to every cell on a map", () => {
       item = instance.scalarAdd(item, {field: "map", k: 10});
@@ -688,34 +717,23 @@ describe("RecipeExecutor", () => {
       item = instance.scalarMultiplyTag(item, {field: "missing", k: 3});
       assert.equal(item, null);
     });
-    it("should scalar multiply an array", () => {
-      item = instance.scalarMultiplyTag(item, {field: "arr1", k: 3});
-      assert.deepEqual(item.arr1, [6, 9, 12]);
+    it("should scalar multiply a nested map", () => {
+      item = instance.scalarMultiplyTag(item, {field: "tags", k: 3, log_scale: false});
+      assert.isTrue(Math.abs(item.tags.a.aa - 0.3) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.a.ab - 0.6) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.a.ac - 0.9) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.b.ba - 12) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.b.bb - 15) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.b.bc - 18) <= EPSILON);
     });
-    it("should scalar multiply an array with logrithms", () => {
-      item = instance.scalarMultiplyTag(item, {field: "arr1", k: 3, log_scale: true});
-      assert.equal(item.arr1.length, 3);
-      assert.isTrue(Math.abs(item.arr1[0] - Math.log(2) * 3) <= EPSILON);
-      assert.isTrue(Math.abs(item.arr1[1] - Math.log(3) * 3) <= EPSILON);
-      assert.isTrue(Math.abs(item.arr1[2] - Math.log(4) * 3) <= EPSILON);
-    });
-    it("should scalar multiply a number", () => {
-      item = instance.scalarMultiplyTag(item, {field: "lhs", k: 3});
-      assert.equal(item.lhs, 6);
-    });
-    it("should scalar multiply a number with logrithms", () => {
-      item = instance.scalarMultiplyTag(item, {field: "lhs", k: 3, log_scale: true});
-      assert.isTrue(Math.abs(item.lhs - Math.log(2) * 3) <= EPSILON);
-    });
-    it("should scalar multiply a map", () => {
-      item = instance.scalarMultiplyTag(item, {field: "map", k: 3, log_scale: false});
-      assert.deepEqual(item.map, {a: 3, b: 6, c: 9});
-    });
-    it("should scalar multiply a map with logrithms", () => {
-      item = instance.scalarMultiplyTag(item, {field: "map", k: 3, log_scale: true});
-      assert.isTrue(Math.abs(item.map.a - Math.log(1) * 3) <= EPSILON);
-      assert.isTrue(Math.abs(item.map.b - Math.log(2) * 3) <= EPSILON);
-      assert.isTrue(Math.abs(item.map.c - Math.log(3) * 3) <= EPSILON);
+    it("should scalar multiply a nested map with logrithms", () => {
+      item = instance.scalarMultiplyTag(item, {field: "tags", k: 3, log_scale: true});
+      assert.isTrue(Math.abs(item.tags.a.aa - Math.log(0.1 + 0.000001) * 3) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.a.ab - Math.log(0.2 + 0.000001) * 3) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.a.ac - Math.log(0.3 + 0.000001) * 3) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.b.ba - Math.log(4.0 + 0.000001) * 3) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.b.bb - Math.log(5.0 + 0.000001) * 3) <= EPSILON);
+      assert.isTrue(Math.abs(item.tags.b.bc - Math.log(6.0 + 0.000001) * 3) <= EPSILON);
     });
     it("should fail a string", () => {
       item = instance.scalarMultiplyTag(item, {field: "foo", k: 3});
@@ -731,6 +749,10 @@ describe("RecipeExecutor", () => {
     it("should not overwrite an existing value", () => {
       item = instance.setDefault(item, {field: "lhs", value: 1111});
       assert.equal(item.lhs, 2);
+    });
+    it("should store a complex value", () => {
+      item = instance.setDefault(item, {field: "missing", value: {a: 1}});
+      assert.deepEqual(item.missing, {a: 1});
     });
   });
 

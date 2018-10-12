@@ -176,7 +176,7 @@ describe("SubmitFormSnippet", () => {
       assert.isFalse(wrapper.find(".privacy-notice").exists());
     });
     it("should render the privacy notice checkbox if prop is provided", () => {
-      wrapper.setProps({privacyNoticeRichText: "privacy notice"});
+      wrapper.setProps({content: {...DEFAULT_CONTENT, scene2_privacy_html: "privacy notice"}});
       wrapper.setState({expanded: true});
 
       assert.isTrue(wrapper.find(".privacy-notice").exists());
