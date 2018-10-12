@@ -18,7 +18,6 @@
 #include "nsITimeoutHandler.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
-#include "OrderedTimeoutIterator.h"
 #include "TimeoutExecutor.h"
 #include "TimeoutBudgetManager.h"
 #include "mozilla/net/WebSocketEventService.h"
@@ -293,11 +292,6 @@ TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
       result, TimeDuration::FromMilliseconds(gMinClampTimeoutValue));
   }
 
-  if (aTimeout->mIsTracking && mThrottleTrackingTimeouts) {
-    result = TimeDuration::Max(
-      result, TimeDuration::FromMilliseconds(gMinTrackingTimeoutValue));
-  }
-
   return result;
 }
 
@@ -332,9 +326,7 @@ TimeoutManager::RecordExecution(Timeout* aRunningTimeout,
   if (aRunningTimeout) {
     // If we're running a timeout callback, record any execution until
     // now.
-    TimeDuration duration = budgetManager.RecordExecution(
-      now, aRunningTimeout, mWindow.IsBackgroundInternal());
-    budgetManager.MaybeCollectTelemetry(now);
+    TimeDuration duration = budgetManager.RecordExecution(now, aRunningTimeout);
 
     UpdateBudget(now, duration);
 
@@ -396,13 +388,6 @@ TimeoutManager::UpdateBudget(const TimeStamp& aNow, const TimeDuration& aDuratio
   mLastBudgetUpdate = aNow;
 }
 
-#define TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY 0 // Consider all timeouts coming from tracking scripts as tracking
-// These strategies are useful for testing.
-#define ALL_NORMAL_TIMEOUT_BUCKETING_STRATEGY        1 // Consider all timeouts as normal
-#define ALTERNATE_TIMEOUT_BUCKETING_STRATEGY         2 // Put every other timeout in the list of tracking timeouts
-#define RANDOM_TIMEOUT_BUCKETING_STRATEGY            3 // Put timeouts into either the normal or tracking timeouts list randomly
-static int32_t gTimeoutBucketingStrategy = 0;
-
 #define DEFAULT_TIMEOUT_THROTTLING_DELAY           -1  // Only positive integers cause us to introduce a delay for
                                                        // timeout throttling.
 
@@ -430,8 +415,7 @@ int32_t gDisableOpenClickDelay;
 TimeoutManager::TimeoutManager(nsGlobalWindowInner& aWindow)
   : mWindow(aWindow),
     mExecutor(new TimeoutExecutor(this)),
-    mNormalTimeouts(*this),
-    mTrackingTimeouts(*this),
+    mTimeouts(*this),
     mTimeoutIdCounter(1),
     mNextFiringId(InvalidFiringId + 1),
     mRunningTimeout(nullptr),
@@ -474,9 +458,6 @@ TimeoutManager::Initialize()
   Preferences::AddIntVarCache(&gMinTrackingBackgroundTimeoutValue,
                               "dom.min_tracking_background_timeout_value",
                               DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE);
-  Preferences::AddIntVarCache(&gTimeoutBucketingStrategy,
-                              "dom.timeout_bucketing_strategy",
-                              TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY);
   Preferences::AddIntVarCache(&gTimeoutThrottlingDelay,
                               "dom.timeout.throttling_delay",
                               DEFAULT_TIMEOUT_THROTTLING_DELAY);
@@ -563,43 +544,6 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   // No popups from timeouts by default
   timeout->mPopupState = openAbused;
 
-  switch (gTimeoutBucketingStrategy) {
-  default:
-  case TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY: {
-    const char* filename = nullptr;
-    uint32_t dummyLine = 0, dummyColumn = 0;
-    aHandler->GetLocation(&filename, &dummyLine, &dummyColumn);
-    timeout->mIsTracking = doc->IsScriptTracking(nsDependentCString(filename));
-
-    MOZ_LOG(gLog, LogLevel::Debug,
-            ("Classified timeout %p set from %s as %stracking\n",
-             timeout.get(), filename, timeout->mIsTracking ? "" : "non-"));
-    break;
-  }
-  case ALL_NORMAL_TIMEOUT_BUCKETING_STRATEGY:
-    // timeout->mIsTracking is already false!
-    MOZ_DIAGNOSTIC_ASSERT(!timeout->mIsTracking);
-
-    MOZ_LOG(gLog, LogLevel::Debug,
-            ("Classified timeout %p unconditionally as normal\n",
-             timeout.get()));
-    break;
-  case ALTERNATE_TIMEOUT_BUCKETING_STRATEGY:
-    timeout->mIsTracking = (mTimeoutIdCounter % 2) == 0;
-
-    MOZ_LOG(gLog, LogLevel::Debug,
-            ("Classified timeout %p as %stracking (alternating mode)\n",
-             timeout.get(), timeout->mIsTracking ? "" : "non-"));
-    break;
-  case RANDOM_TIMEOUT_BUCKETING_STRATEGY:
-    timeout->mIsTracking = (rand() % 2) == 0;
-
-    MOZ_LOG(gLog, LogLevel::Debug,
-            ("Classified timeout %p as %stracking (random mode)\n",
-             timeout.get(), timeout->mIsTracking ? "" : "non-"));
-    break;
-  }
-
   timeout->mNestingLevel = sNestingLevel < DOM_CLAMP_TIMEOUT_NESTING_LEVEL
                          ? sNestingLevel + 1 : sNestingLevel;
 
@@ -633,11 +577,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
 
   Timeouts::SortBy sort(mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
                                            : Timeouts::SortBy::TimeWhen);
-  if (timeout->mIsTracking) {
-    mTrackingTimeouts.Insert(timeout, sort);
-  } else {
-    mNormalTimeouts.Insert(timeout, sort);
-  }
+  mTimeouts.Insert(timeout, sort);
 
   timeout->mTimeoutId = GetTimeoutId(aReason);
   *aReturn = timeout->mTimeoutId;
@@ -646,7 +586,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
           LogLevel::Debug,
           ("Set%s(TimeoutManager=%p, timeout=%p, delay=%i, "
            "minimum=%f, throttling=%s, state=%s(%s), realInterval=%f) "
-           "returned %stracking timeout ID %u, budget=%d\n",
+           "returned timeout ID %u, budget=%d\n",
            aIsInterval ? "Interval" : "Timeout",
            this, timeout.get(), interval,
            (CalculateDelay(timeout) - timeout->mInterval).ToMilliseconds(),
@@ -656,7 +596,6 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
            IsActive() ? "active" : "inactive",
            mWindow.IsBackgroundInternal() ? "background" : "foreground",
            realInterval.ToMilliseconds(),
-           timeout->mIsTracking ? "" : "non-",
            timeout->mTimeoutId,
            int(mExecutionBudget.ToMilliseconds())));
 
@@ -671,11 +610,10 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
   bool firstTimeout = true;
   bool deferredDeletion = false;
 
-  ForEachUnorderedTimeoutAbortable([&](Timeout* aTimeout) {
+  mTimeouts.ForEachAbortable([&](Timeout* aTimeout) {
     MOZ_LOG(gLog, LogLevel::Debug,
-            ("Clear%s(TimeoutManager=%p, timeout=%p, aTimerId=%u, ID=%u, tracking=%d)\n", aTimeout->mIsInterval ? "Interval" : "Timeout",
-             this, aTimeout, timerId, aTimeout->mTimeoutId,
-             int(aTimeout->mIsTracking)));
+            ("Clear%s(TimeoutManager=%p, timeout=%p, aTimerId=%u, ID=%u)\n", aTimeout->mIsInterval ? "Interval" : "Timeout",
+             this, aTimeout, timerId, aTimeout->mTimeoutId));
 
     if (aTimeout->mTimeoutId == timerId && aTimeout->mReason == aReason) {
       if (aTimeout->mRunning) {
@@ -712,8 +650,7 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
   // Stop the executor and restart it at the next soonest deadline.
   mExecutor->Cancel();
 
-  OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
-  Timeout* nextTimeout = iter.Next();
+  Timeout* nextTimeout = mTimeouts.GetFirst();
   if (nextTimeout) {
     MOZ_ALWAYS_SUCCEEDS(MaybeSchedule(nextTimeout->When()));
   }
@@ -787,39 +724,30 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   // if the timer fired early.  So we can stop walking if we get to timeouts
   // whose When() is greater than deadline, since once that happens we know
   // nothing past that point is expired.
-  {
-    // Use a nested scope in order to make sure the strong references held by
-    // the iterator are freed after the loop.
-    OrderedTimeoutIterator expiredIter(mNormalTimeouts, mTrackingTimeouts);
+  for (Timeout* timeout = mTimeouts.GetFirst();
+       timeout != nullptr;
+       timeout = timeout->getNext()) {
+    if (totalTimeLimit.IsZero() || timeout->When() > deadline) {
+      nextDeadline = timeout->When();
+      break;
+    }
 
-    while (true) {
-      Timeout* timeout = expiredIter.Next();
-      if (!timeout || totalTimeLimit.IsZero() || timeout->When() > deadline) {
-        if (timeout) {
+    if (IsInvalidFiringId(timeout->mFiringId)) {
+      // Mark any timeouts that are on the list to be fired with the
+      // firing depth so that we can reentrantly run timeouts
+      timeout->mFiringId = firingId;
+
+      numTimersToRun += 1;
+
+      // Run only a limited number of timers based on the configured maximum.
+      if (numTimersToRun % kNumTimersPerInitialElapsedCheck == 0) {
+        now = TimeStamp::Now();
+        TimeDuration elapsed(now - start);
+        if (elapsed >= initialTimeLimit) {
           nextDeadline = timeout->When();
-        }
-        break;
-      }
-
-      if (IsInvalidFiringId(timeout->mFiringId)) {
-        // Mark any timeouts that are on the list to be fired with the
-        // firing depth so that we can reentrantly run timeouts
-        timeout->mFiringId = firingId;
-
-        numTimersToRun += 1;
-
-        // Run only a limited number of timers based on the configured maximum.
-        if (numTimersToRun % kNumTimersPerInitialElapsedCheck == 0) {
-          now = TimeStamp::Now();
-          TimeDuration elapsed(now - start);
-          if (elapsed >= initialTimeLimit) {
-            nextDeadline = timeout->When();
-            break;
-          }
+          break;
         }
       }
-
-      expiredIter.UpdateIterator();
     }
   }
 
@@ -853,17 +781,18 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
   // next item after the last timeout we looked at or nullptr if we have
   // exhausted the entire list while looking for the last expired timeout.
   {
-    // Use a nested scope in order to make sure the strong references held by
-    // the iterator are freed after the loop.
-    OrderedTimeoutIterator runIter(mNormalTimeouts, mTrackingTimeouts);
-    while (true) {
-      RefPtr<Timeout> timeout = runIter.Next();
-      if (!timeout) {
-        // We have run out of timeouts!
-        break;
-      }
-      runIter.UpdateIterator();
+    // Use a nested scope in order to make sure the strong references held while
+    // iterating are freed after the loop.
 
+    // The next timeout to run. This is used to advance the loop, but
+    // we cannot set it until we've run the current timeout, since
+    // running the current timeout might remove the immediate next
+    // timeout.
+    RefPtr<Timeout> next;
+
+    for (RefPtr<Timeout> timeout = mTimeouts.GetFirst();
+         timeout != nullptr;
+         timeout = next) {
       // We should only execute callbacks for the set of expired Timeout
       // objects we computed above.
       if (timeout->mFiringId != firingId) {
@@ -907,15 +836,18 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
       // This timeout is good to run
       bool timeout_was_cleared = mWindow.RunTimeoutHandler(timeout, scx);
 
-      MOZ_LOG(gLog, LogLevel::Debug,
-              ("Run%s(TimeoutManager=%p, timeout=%p, tracking=%d) returned %d\n", timeout->mIsInterval ? "Interval" : "Timeout",
-               this, timeout.get(),
-               int(timeout->mIsTracking),
-               !!timeout_was_cleared));
+      MOZ_LOG(
+        gLog,
+        LogLevel::Debug,
+        ("Run%s(TimeoutManager=%p, timeout=%p) returned %d\n",
+         timeout->mIsInterval ? "Interval" : "Timeout",
+         this,
+         timeout.get(),
+         !!timeout_was_cleared));
 
       if (timeout_was_cleared) {
-        // Make sure the iterator isn't holding any Timeout objects alive.
-        runIter.Clear();
+        // Make sure we're not holding any Timeout objects alive.
+        next = nullptr;
 
         // Since ClearAllTimeouts() was called the lists should be empty.
         MOZ_DIAGNOSTIC_ASSERT(!HasTimeouts());
@@ -936,22 +868,16 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
 
       // Running a timeout can cause another timeout to be deleted, so
       // we need to reset the pointer to the following timeout.
-      runIter.UpdateIterator();
+      next = timeout->getNext();
 
       timeout->remove();
 
       if (needsReinsertion) {
         // Insert interval timeout onto the corresponding list sorted in
         // deadline order. AddRefs timeout.
-        if (runIter.PickedTrackingIter()) {
-          mTrackingTimeouts.Insert(timeout,
-                                   mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
-                                                      : Timeouts::SortBy::TimeWhen);
-        } else {
-          mNormalTimeouts.Insert(timeout,
-                                 mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
-                                                    : Timeouts::SortBy::TimeWhen);
-        }
+        mTimeouts.Insert(timeout,
+                         mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
+                                            : Timeouts::SortBy::TimeWhen);
       }
 
       // Check to see if we have run out of time to execute timeout handlers.
@@ -963,8 +889,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
         // however, that the last timeout handler suspended the window.  If
         // that happened then we must skip this step.
         if (!mWindow.IsSuspended()) {
-          RefPtr<Timeout> timeout = runIter.Next();
-          if (timeout) {
+          if (next) {
             // If we ran out of execution budget we need to force a
             // reschedule. By cancelling the executor we will not run
             // immediately, but instead reschedule to the minimum
@@ -973,7 +898,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
               mExecutor->Cancel();
             }
 
-            MOZ_ALWAYS_SUCCEEDS(MaybeSchedule(timeout->When(), now));
+            MOZ_ALWAYS_SUCCEEDS(MaybeSchedule(next->When(), now));
           }
         }
         break;
@@ -1056,8 +981,7 @@ TimeoutManager::ClearAllTimeouts()
   });
 
   // Clear out our list
-  mNormalTimeouts.Clear();
-  mTrackingTimeouts.Clear();
+  mTimeouts.Clear();
 }
 
 void
@@ -1149,8 +1073,7 @@ TimeoutManager::Resume()
     MaybeStartThrottleTimeout();
   }
 
-  OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
-  Timeout* nextTimeout = iter.Next();
+  Timeout* nextTimeout = mTimeouts.GetFirst();
   if (nextTimeout) {
     MOZ_ALWAYS_SUCCEEDS(MaybeSchedule(nextTimeout->When()));
   }
@@ -1202,21 +1125,12 @@ TimeoutManager::UpdateBackgroundState()
   // changed.  Only do this if the window is not suspended and we
   // actually have a timeout.
   if (!mWindow.IsSuspended()) {
-    OrderedTimeoutIterator iter(mNormalTimeouts, mTrackingTimeouts);
-    Timeout* nextTimeout = iter.Next();
+    Timeout* nextTimeout = mTimeouts.GetFirst();
     if (nextTimeout) {
       mExecutor->Cancel();
       MOZ_ALWAYS_SUCCEEDS(MaybeSchedule(nextTimeout->When()));
     }
   }
-}
-
-bool
-TimeoutManager::IsTimeoutTracking(uint32_t aTimeoutId)
-{
-  return mTrackingTimeouts.ForEachAbortable([&](Timeout* aTimeout) {
-      return aTimeout->mTimeoutId == aTimeoutId;
-    });
 }
 
 namespace {

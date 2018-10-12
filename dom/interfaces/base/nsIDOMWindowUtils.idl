@@ -1877,12 +1877,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute int32_t gpuProcessPid;
 
   /**
-   * Returns true if the given timeout ID is in the list of tracking
-   * timeouts.
-   */
-  boolean isTimeoutTracking(in unsigned long timeoutId);
-
-  /**
    * Adds an EventStates bit to the element.
    *
    * The state string must be one of the following:

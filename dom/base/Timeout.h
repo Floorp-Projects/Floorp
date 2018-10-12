@@ -104,9 +104,6 @@ public:
 
   // True if this is a repeating/interval timer
   bool mIsInterval;
-
-  // True if this is a timeout coming from a tracking script
-  bool mIsTracking;
 };
 
 } // namespace dom
