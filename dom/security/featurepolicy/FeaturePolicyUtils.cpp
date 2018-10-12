@@ -9,15 +9,12 @@
 #include "mozilla/StaticPrefs.h"
 #include "nsIDocument.h"
 
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
 struct FeatureMap {
   const char* mFeatureName;
-
-  enum {
-    eAll,
-    eSelf,
-  } mDefaultAllowList;
+  FeaturePolicyUtils::FeaturePolicyValue mDefaultAllowList;
 };
 
 /*
@@ -25,17 +22,17 @@ struct FeatureMap {
  * DOM Security peer!
  */
 static FeatureMap sSupportedFeatures[] = {
-  { "autoplay", FeatureMap::eAll },
-  { "camera", FeatureMap::eAll  },
-  { "encrypted-media", FeatureMap::eAll  },
-  { "fullscreen", FeatureMap::eAll  },
-  { "geolocation", FeatureMap::eAll  },
-  { "microphone", FeatureMap::eAll  },
-  { "midi", FeatureMap::eAll  },
-  { "payment", FeatureMap::eAll  },
+  { "autoplay", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "camera", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "geolocation", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "microphone", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "midi", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "payment", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
   // TODO: not supported yet!!!
-  { "speaker", FeatureMap::eAll  },
-  { "vr", FeatureMap::eAll  },
+  { "speaker", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "vr", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
 };
 
 /* static */ bool
@@ -59,51 +56,17 @@ FeaturePolicyUtils::ForEachFeature(const std::function<void(const char*)>& aCall
   }
 }
 
-/* static */ void
-FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName,
-                                            const nsAString& aDefaultOrigin,
-                                            nsAString& aDefaultAllowList)
+/* static */ FeaturePolicyUtils::FeaturePolicyValue
+FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName)
 {
   uint32_t numFeatures = (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
   for (uint32_t i = 0; i < numFeatures; ++i) {
     if (aFeatureName.LowerCaseEqualsASCII(sSupportedFeatures[i].mFeatureName)) {
-      switch (sSupportedFeatures[i].mDefaultAllowList) {
-        case FeatureMap::eAll:
-          aDefaultAllowList.AppendASCII("*");
-          return;
-
-        case FeatureMap::eSelf:
-          aDefaultAllowList = aDefaultOrigin;
-          return;
-
-        default:
-          MOZ_CRASH("Unknown default value");
-      }
-    }
-  }
-}
-
-/* static */ bool
-FeaturePolicyUtils::AllowDefaultFeature(const nsAString& aFeatureName,
-                                        const nsAString& aDefaultOrigin,
-                                        const nsAString& aOrigin)
-{
-  uint32_t numFeatures = (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
-  for (uint32_t i = 0; i < numFeatures; ++i) {
-    if (aFeatureName.LowerCaseEqualsASCII(sSupportedFeatures[i].mFeatureName)) {
-      switch (sSupportedFeatures[i].mDefaultAllowList) {
-        case FeatureMap::eAll:
-          return true;
-        case FeatureMap::eSelf:
-          return aDefaultOrigin == aOrigin;
-        default:
-          MOZ_CRASH("Unknown default value");
-      }
-      return true;
+      return sSupportedFeatures[i].mDefaultAllowList;
     }
   }
 
-  return false;
+  return FeaturePolicyValue::eNone;
 }
 
 /* static */ bool
@@ -125,3 +88,6 @@ FeaturePolicyUtils::IsFeatureAllowed(nsIDocument* aDocument,
 
   return policy->AllowsFeatureInternal(aFeatureName, policy->DefaultOrigin());
 }
+
+} // dom namespace
+} // mozilla namespace
