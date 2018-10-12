@@ -9,11 +9,6 @@
 #include "base/string_util.h"
 #include "base/process_util.h"
 
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsIProperties.h"
-#include "nsServiceManagerUtils.h"
-
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
 #include "mozilla/Telemetry.h"
@@ -93,40 +88,6 @@ PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchComple
             args.push_back("-flashSandboxLogging");
         }
     }
-#elseif defined(XP_WIN) && defined(MOZ_SANDBOX)
-    nsresult rv;
-    nsCOMPtr<nsIProperties> dirSvc =
-      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false, "Failed to get directory service.");
-      return false;
-    }
-
-    nsCOMPtr<nsIFile> dir;
-    rv =
-      dirSvc->Get(NS_APP_PLUGIN_PROCESS_TEMP_DIR, NS_GET_IID(nsIFile),
-                  getter_AddRefs(dir));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to get plugin process temp directory.");
-      return false;
-    }
-
-    nsAutoString tempDir;
-    MOZ_ALWAYS_SUCCEEDS(dir->GetPath(tempDir));
-    args.push_back(NS_ConvertUTF16toUTF8(tempDir).get());
-
-    rv =
-      dirSvc->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsIFile),
-                  getter_AddRefs(dir));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to get appdata directory.");
-      return false;
-    }
-
-    nsAutoString appdataDir;
-    MOZ_ALWAYS_SUCCEEDS(dir->GetPath(appdataDir));
-    appdataDir.Append(L"\\Adobe\\");
-    args.push_back(NS_ConvertUTF16toUTF8(appdataDir).get());
 #endif
 
     bool result = AsyncLaunch(args);
