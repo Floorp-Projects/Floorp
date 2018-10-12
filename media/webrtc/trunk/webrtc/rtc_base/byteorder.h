@@ -76,6 +76,8 @@
 #else
 #error RTC_ARCH_CPU_BIG_ENDIAN or RTC_ARCH_CPU_LITTLE_ENDIAN must be defined.
 #endif  // defined(RTC_ARCH_CPU_LITTLE_ENDIAN)
+#elif defined(WEBRTC_BSD) && !defined(__OpenBSD__)
+#include <sys/endian.h>
 #elif defined(WEBRTC_POSIX)
 #include <endian.h>
 #endif
