@@ -23,6 +23,12 @@ var getFNBPaint = false;
 // default only; this is set via control server settings json
 var getDCF = false;
 
+// measure firefox TTFI
+// note: this browser pref must be enabled:
+// dom.performance.time_to_first_interactive.enabled = True
+// default only; this is set via control server settings json
+var getTTFI = false;
+
 // measure google's first-contentful-paint
 // default only; this is set via control server settings json
 var getFCP = false;
@@ -85,6 +91,14 @@ function setup(settings) {
       heroesToCapture = settings.measure.hero;
       console.log("hero elements to measure: " + heroesToCapture);
       measureHero();
+    }
+  }
+
+  if (settings.measure.ttfi !== undefined) {
+    getTTFI = settings.measure.ttfi;
+    if (getTTFI) {
+      console.log("will be measuring ttfi");
+      measureTTFI();
     }
   }
 }
@@ -175,6 +189,37 @@ function measureDCF() {
       window.setTimeout(measureDCF, 100);
     } else {
       console.log("\nunable to get a value for dcf after " + gRetryCounter + " retries\n");
+    }
+  }
+}
+
+function measureTTFI() {
+  var x = window.performance.timing.timeToFirstInteractive;
+
+  if (typeof(x) == "undefined") {
+    console.log("ERROR: timeToFirstInteractive is undefined; ensure the pref is enabled");
+    return;
+  }
+  if (x > 0) {
+    console.log("got timeToFirstInteractive: " + x);
+    gRetryCounter = 0;
+    var startTime = perfData.timing.fetchStart;
+    sendResult("ttfi", x - startTime);
+  } else {
+    gRetryCounter += 1;
+    // NOTE: currently the gecko implementation doesn't look at network
+    // requests, so this is closer to TimeToFirstInteractive than
+    // TimeToInteractive.  Also, we use FNBP instead of FCP as the start
+    // point.  TTFI/TTI requires running at least 5 seconds past last
+    // "busy" point, give 25 seconds here (overall the harness times out at
+    // 30 seconds).  Some pages will never get 5 seconds without a busy
+    // period!
+    if (gRetryCounter <= 25 * (1000 / 200)) {
+      console.log("\TTFI is not yet available (0), retry number " + gRetryCounter + "...\n");
+      window.setTimeout(measureTTFI, 200);
+    } else {
+      // unable to get a value for TTFI - filter out later
+      sendResult("ttfi", 0);
     }
   }
 }

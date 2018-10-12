@@ -563,6 +563,13 @@ class JSObject : public js::gc::Cell
     void operator=(const JSObject& other) = delete;
 };
 
+template <>
+inline bool
+JSObject::is<JSObject>() const
+{
+    return true;
+}
+
 template <typename Wrapper>
 template <typename U>
 MOZ_ALWAYS_INLINE JS::Handle<U*>

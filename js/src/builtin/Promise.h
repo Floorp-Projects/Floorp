@@ -208,9 +208,11 @@ enum class CreateDependentPromise {
  * Note: In this case, the reactions pushed using this function contain a
  * `promise` field that can contain null. That field is only ever used by
  * devtools, which have to treat these reactions specially.
+ *
+ * Asserts that `promiseObj` is a, maybe wrapped, instance of Promise.
  */
 MOZ_MUST_USE bool
-OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise,
+OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
                     HandleValue onFulfilled, HandleValue onRejected,
                     MutableHandleObject dependent, CreateDependentPromise createDependent);
 

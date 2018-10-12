@@ -31,10 +31,12 @@ pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
 /// cache (e.g.  if an image is too large to be added to an atlas). The texture
 /// cache manages the allocation and freeing of these IDs, and the rendering
 /// thread maintains a map from cache texture ID to native texture.
+///
+/// We never reuse IDs, so we use a u64 here to be safe.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct CacheTextureId(pub usize);
+pub struct CacheTextureId(pub u64);
 
 /// Identifies a render pass target that is persisted until the end of the frame.
 ///

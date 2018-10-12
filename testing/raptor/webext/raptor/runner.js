@@ -37,12 +37,14 @@ var getHero = false;
 var getFNBPaint = false;
 var getFCP = false;
 var getDCF = false;
+var getTTFI = false;
 var isHeroPending = false;
 var pendingHeroes = [];
 var settings = {};
 var isFNBPaintPending = false;
 var isFCPPending = false;
 var isDCFPending = false;
+var isTTFIPending = false;
 var isBenchmarkPending = false;
 var pageTimeout = 10000; // default pageload timeout
 
@@ -105,6 +107,9 @@ function getTestSettings() {
               if (settings.measure.hero.length !== 0) {
                 getHero = true;
               }
+            }
+            if (settings.measure.ttfi !== undefined) {
+              getTTFI = settings.measure.ttfi;
             }
           } else {
             console.log("abort: 'measure' key not found in test settings");
@@ -177,7 +182,7 @@ function waitForResult() {
   return new Promise(resolve => {
     function checkForResult() {
       if (testType == "pageload") {
-        if (!isHeroPending && !isFNBPaintPending && !isFCPPending && !isDCFPending) {
+        if (!isHeroPending && !isFNBPaintPending && !isFCPPending && !isDCFPending && !isTTFIPending) {
           cancelTimeoutAlarm("raptor-page-timeout");
           resolve();
         } else {
@@ -222,6 +227,8 @@ function nextCycle() {
           isFCPPending = true;
         if (getDCF)
           isDCFPending = true;
+        if (getTTFI)
+          isTTFIPending = true;
       } else if (testType == "benchmark") {
         isBenchmarkPending = true;
       }
@@ -298,6 +305,9 @@ function resultListener(request, sender, sendResponse) {
       } else if (request.type == "dcf") {
         results.measurements.dcf.push(request.value);
         isDCFPending = false;
+      } else if (request.type == "ttfi") {
+        results.measurements.ttfi.push(request.value);
+        isTTFIPending = false;
       } else if (request.type == "fcp") {
         results.measurements.fcp.push(request.value);
         isFCPPending = false;

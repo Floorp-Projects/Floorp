@@ -269,7 +269,8 @@ private:
 /*static*/ already_AddRefed<Request>
 Request::Constructor(const GlobalObject& aGlobal,
                      const RequestOrUSVString& aInput,
-                     const RequestInit& aInit, ErrorResult& aRv)
+                     const RequestInit& aInit,
+                     ErrorResult& aRv)
 {
   bool hasCopiedBody = false;
   RefPtr<InternalRequest> request;
@@ -282,7 +283,11 @@ Request::Constructor(const GlobalObject& aGlobal,
     RefPtr<Request> inputReq = &aInput.GetAsRequest();
     nsCOMPtr<nsIInputStream> body;
     inputReq->GetBody(getter_AddRefs(body));
-    if (inputReq->BodyUsed()) {
+    bool used = inputReq->GetBodyUsed(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+    if (used) {
       aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
       return nullptr;
     }
@@ -598,7 +603,11 @@ Request::Constructor(const GlobalObject& aGlobal,
 already_AddRefed<Request>
 Request::Clone(ErrorResult& aRv)
 {
-  if (BodyUsed()) {
+  bool used = GetBodyUsed(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  if (used) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }
