@@ -36,8 +36,8 @@ function closeContextMenu() {
 function getVisibleMenuItems(aMenu, aData) {
     var items = [];
     var accessKeys = {};
-    for (var i = 0; i < aMenu.childNodes.length; i++) {
-        var item = aMenu.childNodes[i];
+    for (var i = 0; i < aMenu.children.length; i++) {
+        var item = aMenu.children[i];
         if (item.hidden)
             continue;
 
