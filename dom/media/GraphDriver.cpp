@@ -1037,12 +1037,12 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // StateCallback() receives an error for this stream while the main thread
     // or another driver has control of the graph.
     mShouldFallbackIfError = false;
+    RemoveMixerCallback();
+    // Update the flag before handing over the graph and going to drain.
+    mAudioThreadRunning = false;
     // Enter shutdown mode. The stable-state handler will detect this
     // and complete shutdown if the graph does not get restarted.
     mGraphImpl->SignalMainThreadCleanup();
-    RemoveMixerCallback();
-    // Update the flag before go to drain
-    mAudioThreadRunning = false;
     return aFrames - 1;
   }
 
@@ -1062,8 +1062,8 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     }
     LOG(LogLevel::Debug, ("%p: Switching to system driver.", GraphImpl()));
     RemoveMixerCallback();
-    SwitchToNextDriver();
     mAudioThreadRunning = false;
+    SwitchToNextDriver();
     // Returning less than aFrames starts the draining and eventually stops the
     // audio thread. This function will never get called again.
     return aFrames - 1;
