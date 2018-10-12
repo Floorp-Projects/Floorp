@@ -569,7 +569,12 @@ nsSVGImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect
 
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     // Called once the resource's dimensions have been obtained.
-    aRequest->GetImage(getter_AddRefs(mFrame->mImageContainer));
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    if (image) {
+      image->SetAnimationMode(mFrame->PresContext()->ImageAnimationMode());
+      mFrame->mImageContainer = image.forget();
+    }
     mFrame->InvalidateFrame();
     nsLayoutUtils::PostRestyleEvent(
       mFrame->GetContent()->AsElement(), nsRestyleHint(0),
