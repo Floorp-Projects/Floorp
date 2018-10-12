@@ -156,7 +156,7 @@ public final class NotificationClient implements NotificationListener {
 
         if (!AppConstants.Versions.preO) {
             builder.setChannelId(NotificationHelper.getInstance(mContext)
-                    .getNotificationChannel(NotificationHelper.Channel.SITE_NOTIFICATIONS).getId());
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
         }
 
         // Fetch icon.
