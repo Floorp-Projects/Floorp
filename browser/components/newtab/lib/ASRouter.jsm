@@ -892,7 +892,7 @@ class _ASRouter {
         UITour.showMenu(target.browser.ownerGlobal, action.data.args);
         break;
       case ra.INSTALL_ADDON_FROM_URL:
-        await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.args);
+        await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url);
         break;
       case ra.SHOW_FIREFOX_ACCOUNTS:
         const url = await FxAccounts.config.promiseSignUpURI("snippets");

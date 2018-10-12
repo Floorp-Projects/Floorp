@@ -253,7 +253,7 @@ CanvasRenderingContext2D::PatternIsOpaque(CanvasRenderingContext2D::Style aStyle
   }
 
   if (state.patternStyles[aStyle] && state.patternStyles[aStyle]->mSurface) {
-    return IsOpaqueFormat(state.patternStyles[aStyle]->mSurface->GetFormat());
+    return IsOpaque(state.patternStyles[aStyle]->mSurface->GetFormat());
   }
 
   // TODO: for gradient patterns we could check that all stops are opaque

@@ -83,22 +83,27 @@ function tryActors(reachables, completed) {
 
     count++;
 
+    let promise;
     // phone home
-    gClient.request(
-      { to: actor, type: "echo", value: "tango"},
-      (response) => {
-        if (reachables.has(actor)) {
-          Assert.deepEqual({ from: actor, to: actor,
-                             type: "echo", value: "tango" }, response);
-        } else {
-          Assert.deepEqual({ from: actor, error: "noSuchActor",
-                             message: "No such actor for ID: " + actor }, response);
-        }
+    if (actor == "root") {
+      promise = gClient.mainRoot.echo({ value: "tango" });
+    } else {
+      promise = gClient.request({ to: actor, type: "echo", value: "tango"});
+    }
+    const callback = (response) => {
+      if (reachables.has(actor)) {
+        Assert.deepEqual({ from: actor, to: actor,
+                           type: "echo", value: "tango" }, response);
+      } else {
+        Assert.deepEqual({ from: actor, error: "noSuchActor",
+                           message: "No such actor for ID: " + actor }, response);
+      }
 
-        if (--count == 0) {
-          executeSoon(completed, "tryActors callback " + completed.name);
-        }
-      });
+      if (--count == 0) {
+        executeSoon(completed, "tryActors callback " + completed.name);
+      }
+    };
+    promise.then(callback, callback);
   }
 }
 

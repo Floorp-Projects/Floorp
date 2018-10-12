@@ -27,6 +27,7 @@ function Alarm(api, name, alarmInfo) {
   this.scheduledTime = scheduledTime;
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  delay = delay > 0 ? delay : 0;
   timer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
   this.timer = timer;
 }

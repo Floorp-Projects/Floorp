@@ -17,6 +17,7 @@ namespace dom {
 
 class Promise;
 class PromiseReturner;
+class WrapperCachedNonISupportsTestInterface;
 
 class TestFunctions : public NonRefcountedDOMObject {
 public:
@@ -51,10 +52,13 @@ public:
 
   static bool ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj);
 
+  WrapperCachedNonISupportsTestInterface* WrapperCachedNonISupportsObject();
+
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aWrapper);
 private:
   nsString mStringData;
+  RefPtr<WrapperCachedNonISupportsTestInterface> mWrapperCachedNonISupportsTestInterface;
 };
 
 } // namespace dom

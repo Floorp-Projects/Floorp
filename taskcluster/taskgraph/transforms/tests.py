@@ -985,7 +985,7 @@ def set_tag(config, tests):
 @transforms.add
 def set_test_type(config, tests):
     for test in tests:
-        for test_type in ['mochitest', 'reftest']:
+        for test_type in ['mochitest', 'reftest', 'talos', 'raptor']:
             if test_type in test['suite'] and 'web-platform' not in test['suite']:
                 test.setdefault('tags', {})['test-type'] = test_type
         yield test

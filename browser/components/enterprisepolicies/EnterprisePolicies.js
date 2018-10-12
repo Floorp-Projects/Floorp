@@ -442,18 +442,6 @@ class macOSPoliciesProvider {
       return;
     }
     this._policies = macOSPoliciesParser.readPolicies(prefReader);
-    this._removeUnknownPolicies();
-  }
-
-  _removeUnknownPolicies() {
-    let { schema } = ChromeUtils.import("resource:///modules/policies/schema.jsm", {});
-
-    for (let policyName of Object.keys(this._policies)) {
-      if (!schema.properties.hasOwnProperty(policyName)) {
-        log.debug(`Removing unknown policy: ${policyName}`);
-        delete this._policies[policyName];
-      }
-    }
   }
 
   get hasPolicies() {

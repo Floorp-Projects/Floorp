@@ -30,7 +30,6 @@ class FlexContainer extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
@@ -40,7 +39,6 @@ class FlexContainer extends PureComponent {
     this.colorValueEl = createRef();
     this.swatchEl = createRef();
 
-    this.onFlexboxInspectIconClick = this.onFlexboxInspectIconClick.bind(this);
     this.setFlexboxColor = this.setFlexboxColor.bind(this);
   }
 
@@ -70,11 +68,6 @@ class FlexContainer extends PureComponent {
     this.props.onSetFlexboxOverlayColor(color);
   }
 
-  onFlexboxInspectIconClick(nodeFront) {
-    this.props.setSelectedNode(nodeFront, { reason: "layout-panel" });
-    nodeFront.scrollIntoView().catch(e => console.error(e));
-  }
-
   render() {
     const {
       color,
@@ -91,7 +84,6 @@ class FlexContainer extends PureComponent {
         object: translateNodeFrontToGrip(nodeFront),
         onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
         onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-        onInspectIconClick: () => this.onFlexboxInspectIconClick(nodeFront),
       }),
       dom.div({
         className: "layout-color-swatch",

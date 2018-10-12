@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populaire onderwerpen:",
   "pocket_read_even_more": "Meer verhalen bekijken",
   "pocket_more_reccommendations": "Meer aanbevelingen",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Hoe het werkt",
   "pocket_cta_button": "Pocket gebruiken",
   "pocket_cta_text": "Bewaar de verhalen die u interessant vindt in Pocket, en stimuleer uw gedachten met boeiende leesstof.",
   "highlights_empty_state": "Begin met surfen, en we tonen hier een aantal geweldige artikelen, video’s en andere pagina’s die u onlangs hebt bezocht of waarvoor u een bladwijzer hebt gemaakt.",

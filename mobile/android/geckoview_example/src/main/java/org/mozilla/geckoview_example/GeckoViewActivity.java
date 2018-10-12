@@ -326,6 +326,24 @@ public class GeckoViewActivity extends AppCompatActivity {
     }
 
     private void downloadFile(GeckoSession.WebResponseInfo response) {
+        mGeckoSession
+                .getUserAgent()
+                .then(new GeckoResult.OnValueListener<String, Void>() {
+            @Override
+            public GeckoResult<Void> onValue(String userAgent) throws Throwable {
+                downloadFile(response, userAgent);
+                return null;
+            }
+        }, new GeckoResult.OnExceptionListener<Void>() {
+            @Override
+            public GeckoResult<Void> onException(Throwable exception) throws Throwable {
+                // getUserAgent() cannot fail.
+                throw new IllegalStateException("Could not get UserAgent string.");
+            }
+        });
+    }
+
+    private void downloadFile(GeckoSession.WebResponseInfo response, String userAgent) {
         if (ContextCompat.checkSelfPermission(GeckoViewActivity.this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             mPendingDownloads.add(response);
@@ -343,6 +361,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         req.setMimeType(response.contentType);
         req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
         req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+        req.addRequestHeader("User-Agent", userAgent);
         manager.enqueue(req);
     }
 

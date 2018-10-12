@@ -16,7 +16,6 @@
 #include "HelpersD2D.h"
 #include "FilterNodeD2D1.h"
 #include "ExtendInputEffectD2D1.h"
-#include "Tools.h"
 #include "nsAppRunner.h"
 #include "MainThreadUtils.h"
 

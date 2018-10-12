@@ -44,23 +44,39 @@ D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
         gfx::DeviceManagerDx::Get()->CanUseNV12()) {
       mTextureClient =
         aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
+    } else if (((mSourceFormat == MFVideoFormat_P010 &&
+                 gfx::DeviceManagerDx::Get()->CanUseP010()) ||
+                (mSourceFormat == MFVideoFormat_P016 &&
+                 gfx::DeviceManagerDx::Get()->CanUseP016())) &&
+               gfxPrefs::PDMWMFUseNV12Format()) {
+      mTextureClient = aAllocator->CreateOrRecycleClient(
+        mSourceFormat == MFVideoFormat_P010 ? gfx::SurfaceFormat::P010
+                                            : gfx::SurfaceFormat::P016,
+        mSize);
     } else {
       mTextureClient =
         aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
     }
     if (mTextureClient) {
-      mTexture = static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())->GetD3D11Texture();
+      mTexture =
+        static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())
+          ->GetD3D11Texture();
       return true;
     }
     return false;
   } else {
     MOZ_ASSERT(aDevice);
     CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                  mSize.width, mSize.height, 1, 1,
-                                  D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+                                  mSize.width,
+                                  mSize.height,
+                                  1,
+                                  1,
+                                  D3D11_BIND_RENDER_TARGET |
+                                    D3D11_BIND_SHADER_RESOURCE);
     newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
-    HRESULT hr = aDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(mTexture));
+    HRESULT hr =
+      aDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(mTexture));
     return SUCCEEDED(hr);
   }
 }
@@ -186,7 +202,8 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 }
 
 ID3D11Texture2D*
-D3D11ShareHandleImage::GetTexture() const {
+D3D11ShareHandleImage::GetTexture() const
+{
   return mTexture;
 }
 

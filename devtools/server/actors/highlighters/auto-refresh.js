@@ -78,6 +78,8 @@ function AutoRefreshHighlighter(highlighterEnv) {
 }
 
 AutoRefreshHighlighter.prototype = {
+  _ignoreZoom: false,
+
   /**
    * Window corresponding to the current highlighterEnv
    */
@@ -177,7 +179,7 @@ AutoRefreshHighlighter.prototype = {
     for (const region of BOX_MODEL_REGIONS) {
       this.currentQuads[region] = getAdjustedQuads(
         this.win,
-        this.currentNode, region);
+        this.currentNode, region, {ignoreZoom: this._ignoreZoom});
     }
   },
 
