@@ -832,12 +832,12 @@ win32-msvc/debug:
         - win64-node
 
 win32-msvc/opt:
-    description: "Win32 MSVC PGO"
+    description: "Win32 MSVC Opt"
     index:
         product: firefox
-        job-name: win32-msvc-pgo
+        job-name: win32-msvc-opt
     treeherder:
-        platform: windows2012-32/pgo
+        platform: windows2012-32/opt
         symbol: Bmsvc
         tier: 2
     stub-installer:
@@ -854,7 +854,7 @@ win32-msvc/opt:
             PERFHERDER_EXTRA_OPTIONS: msvc
     run:
         using: mozharness
-        options: [enable-pgo, append-env-variables-from-configs]
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
@@ -906,12 +906,12 @@ win64-msvc/debug:
         - win64-node
 
 win64-msvc/opt:
-    description: "Win64 MSVC PGO"
+    description: "Win64 MSVC Opt"
     index:
         product: firefox
-        job-name: win64-msvc-pgo
+        job-name: win64-msvc-opt
     treeherder:
-        platform: windows2012-64/pgo
+        platform: windows2012-64/opt
         symbol: Bmsvc
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
@@ -922,7 +922,7 @@ win64-msvc/opt:
             PERFHERDER_EXTRA_OPTIONS: msvc
     run:
         using: mozharness
-        options: [enable-pgo, append-env-variables-from-configs]
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
