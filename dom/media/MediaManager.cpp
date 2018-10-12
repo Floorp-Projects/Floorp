@@ -915,11 +915,12 @@ private:
  */
 NS_IMPL_ISUPPORTS(MediaDevice, nsIMediaDevice)
 
-MediaDevice::MediaDevice(MediaEngineSource* aSource,
+MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                          const nsString& aName,
                          const nsString& aID,
                          const nsString& aRawID)
   : mSource(aSource)
+  , mSinkInfo(nullptr)
   , mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource())) ?
           dom::MediaDeviceKind::Videoinput : dom::MediaDeviceKind::Audioinput)
   , mScary(mSource->GetScary())
@@ -931,15 +932,16 @@ MediaDevice::MediaDevice(MediaEngineSource* aSource,
   MOZ_ASSERT(mSource);
 }
 
-MediaDevice::MediaDevice(const nsString& aName,
-                         const dom::MediaDeviceKind aKind,
+MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
                          const nsString& aID,
                          const nsString& aRawID)
   : mSource(nullptr)
-  , mKind(aKind)
+  , mSinkInfo(aAudioDeviceInfo)
+  , mKind(mSinkInfo->Type() == AudioDeviceInfo::TYPE_INPUT ? dom::MediaDeviceKind::Audioinput
+                                                           : dom::MediaDeviceKind::Audiooutput)
   , mScary(false)
   , mType(NS_ConvertUTF8toUTF16(dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value))
-  , mName(aName)
+  , mName(mSinkInfo->Name())
   , mID(aID)
   , mRawID(aRawID)
 {
@@ -948,12 +950,14 @@ MediaDevice::MediaDevice(const nsString& aName,
   // when we do not instantiate a MediaEngineSource
   // during EnumerateDevices.
   MOZ_ASSERT(mKind == dom::MediaDeviceKind::Audiooutput);
+  MOZ_ASSERT(mSinkInfo);
 }
 
-MediaDevice::MediaDevice(const MediaDevice* aOther,
+MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther,
                          const nsString& aID,
                          const nsString& aRawID)
   : mSource(aOther->mSource)
+  , mSinkInfo(aOther->mSinkInfo)
   , mKind(aOther->mKind)
   , mScary(aOther->mScary)
   , mType(aOther->mType)
@@ -2794,6 +2798,14 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
   if (c.mAudio.IsMediaTrackConstraints()) {
     auto& ac = c.mAudio.GetAsMediaTrackConstraints();
+    MediaConstraintsHelper::ConvertOldWithWarning(ac.mMozAutoGainControl,
+                                                  ac.mAutoGainControl,
+                                                  "MozAutoGainControlWarning",
+                                                  aWindow);
+    MediaConstraintsHelper::ConvertOldWithWarning(ac.mMozNoiseSuppression,
+                                                  ac.mNoiseSuppression,
+                                                  "MozNoiseSuppressionWarning",
+                                                  aWindow);
     audioType = StringToEnum(dom::MediaSourceEnumValues::strings,
                              ac.mMediaSource,
                              MediaSourceEnum::Other);
@@ -3407,6 +3419,61 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
     onFailure->OnError(reason);
   });
   return NS_OK;
+}
+
+RefPtr<SinkInfoPromise>
+MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
+                            const nsString& aDeviceId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindow);
+
+  // We have to add the window id here because enumerate methods
+  // check for that and abort silently if it does not exist.
+  uint64_t windowId = aWindow->WindowID();
+  nsIPrincipal* principal = aWindow->GetExtantDoc()->NodePrincipal();
+  RefPtr<GetUserMediaWindowListener> windowListener = GetWindowListener(windowId);
+  if (windowListener) {
+    PrincipalHandle existingPrincipalHandle =
+      windowListener->GetPrincipalHandle();
+    MOZ_ASSERT(PrincipalHandleMatches(existingPrincipalHandle, principal));
+  } else {
+    windowListener = new GetUserMediaWindowListener(mMediaThread, windowId,
+                                                    MakePrincipalHandle(principal));
+    AddWindowID(windowId, windowListener);
+  }
+  // Create an inactive SourceListener to act as a placeholder, so the
+  // window listener doesn't clean itself up until we're done.
+  RefPtr<SourceListener> sourceListener = new SourceListener();
+  windowListener->Register(sourceListener);
+
+  bool isSecure = aWindow->IsSecureContext();
+
+  return EnumerateDevicesImpl(aWindow->WindowID(),
+                              MediaSourceEnum::Other,
+                              MediaSourceEnum::Other,
+                              MediaSinkEnum::Speaker,
+                              DeviceEnumerationType::Normal,
+                              DeviceEnumerationType::Normal)
+  ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+         [aDeviceId, isSecure](RefPtr<MediaDeviceSetRefCnt>&& aDevices) {
+    for (RefPtr<MediaDevice>& device : **aDevices) {
+      if (aDeviceId.IsEmpty() && device->mSinkInfo->Preferred()) {
+        return SinkInfoPromise::CreateAndResolve(device->mSinkInfo, __func__);
+      }
+      if (device->mID.Equals(aDeviceId)) {
+        // TODO: Check if the application is authorized to play audio
+        // through this device (Bug 1493982).
+        if (isSecure || device->mSinkInfo->Preferred()) {
+          return SinkInfoPromise::CreateAndResolve(device->mSinkInfo, __func__);
+        }
+        return SinkInfoPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR, __func__);
+      }
+    }
+    return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+  }, [](RefPtr<MediaStreamError>&& reason) {
+    return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+  });
 }
 
 /*
@@ -4762,7 +4829,7 @@ RefPtr<SourceListener::ApplyConstraintsPromise>
 SourceListener::ApplyConstraintsToTrack(
     nsPIDOMWindowInner* aWindow,
     TrackID aTrackID,
-    const MediaTrackConstraints& aConstraints,
+    const MediaTrackConstraints& aConstraintsPassedIn,
     dom::CallerType aCallerType)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -4774,27 +4841,37 @@ SourceListener::ApplyConstraintsToTrack(
     return ApplyConstraintsPromise::CreateAndResolve(false, __func__);
   }
 
+  MediaTrackConstraints c(aConstraintsPassedIn); // use a modifiable copy
+  MediaConstraintsHelper::ConvertOldWithWarning(c.mMozAutoGainControl,
+                                                c.mAutoGainControl,
+                                                "MozAutoGainControlWarning",
+                                                aWindow);
+  MediaConstraintsHelper::ConvertOldWithWarning(c.mMozNoiseSuppression,
+                                                c.mNoiseSuppression,
+                                                "MozNoiseSuppressionWarning",
+                                                aWindow);
+
   MediaManager* mgr = MediaManager::GetIfExists();
   if (!mgr) {
     return ApplyConstraintsPromise::CreateAndResolve(false, __func__);
   }
 
   return MediaManager::PostTask<ApplyConstraintsPromise>(__func__,
-      [device = state.mDevice, aConstraints,
+      [device = state.mDevice, c,
        isChrome = aCallerType == dom::CallerType::System]
       (MozPromiseHolder<ApplyConstraintsPromise>& aHolder) mutable {
     MOZ_ASSERT(MediaManager::IsInMediaThread());
     MediaManager* mgr = MediaManager::GetIfExists();
     MOZ_RELEASE_ASSERT(mgr); // Must exist while media thread is alive
     const char* badConstraint = nullptr;
-    nsresult rv = device->Reconfigure(aConstraints, mgr->mPrefs, &badConstraint);
+    nsresult rv = device->Reconfigure(c, mgr->mPrefs, &badConstraint);
     if (rv == NS_ERROR_INVALID_ARG) {
       // Reconfigure failed due to constraints
       if (!badConstraint) {
         nsTArray<RefPtr<MediaDevice>> devices;
         devices.AppendElement(device);
         badConstraint = MediaConstraintsHelper::SelectSettings(
-            NormalizedConstraints(aConstraints), devices, isChrome);
+            NormalizedConstraints(c), devices, isChrome);
       }
 
       aHolder.Reject(Some(NS_ConvertASCIItoUTF16(badConstraint)), __func__);

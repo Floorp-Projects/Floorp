@@ -28,7 +28,7 @@ LogModule* GetICLog()
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ImageCapture, DOMEventTargetHelper,
-                                   mVideoStreamTrack)
+                                   mTrack)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImageCapture)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -36,14 +36,13 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(ImageCapture, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ImageCapture, DOMEventTargetHelper)
 
-ImageCapture::ImageCapture(VideoStreamTrack* aVideoStreamTrack,
+ImageCapture::ImageCapture(VideoStreamTrack* aTrack,
                            nsPIDOMWindowInner* aOwnerWindow)
   : DOMEventTargetHelper(aOwnerWindow)
+  , mTrack(aTrack)
 {
   MOZ_ASSERT(aOwnerWindow);
-  MOZ_ASSERT(aVideoStreamTrack);
-
-  mVideoStreamTrack = aVideoStreamTrack;
+  MOZ_ASSERT(aTrack);
 }
 
 ImageCapture::~ImageCapture()
@@ -53,7 +52,7 @@ ImageCapture::~ImageCapture()
 
 already_AddRefed<ImageCapture>
 ImageCapture::Constructor(const GlobalObject& aGlobal,
-                          VideoStreamTrack& aTrack,
+                          MediaStreamTrack& aTrack,
                           ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
@@ -62,15 +61,20 @@ ImageCapture::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<ImageCapture> object = new ImageCapture(&aTrack, win);
+  if (!aTrack.AsVideoStreamTrack()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  RefPtr<ImageCapture> object = new ImageCapture(aTrack.AsVideoStreamTrack(), win);
 
   return object.forget();
 }
 
-VideoStreamTrack*
+MediaStreamTrack*
 ImageCapture::GetVideoStreamTrack() const
 {
-  return mVideoStreamTrack;
+  return mTrack;
 }
 
 nsresult
@@ -118,25 +122,25 @@ ImageCapture::TakePhotoByMediaEngine()
       mVideoTrack->RemovePrincipalChangeObserver(this);
     }
 
-    RefPtr<VideoStreamTrack> mVideoTrack;
-    RefPtr<ImageCapture> mImageCapture;
+    const RefPtr<VideoStreamTrack> mVideoTrack;
+    const RefPtr<ImageCapture> mImageCapture;
     bool mPrincipalChanged;
   };
 
   RefPtr<MediaEnginePhotoCallback> callback =
-    new TakePhotoCallback(mVideoStreamTrack, this);
-  return mVideoStreamTrack->GetSource().TakePhoto(callback);
+    new TakePhotoCallback(mTrack, this);
+  return mTrack->GetSource().TakePhoto(callback);
 }
 
 void
 ImageCapture::TakePhoto(ErrorResult& aResult)
 {
-  // According to spec, VideoStreamTrack.readyState must be "live"; however
+  // According to spec, MediaStreamTrack.readyState must be "live"; however
   // gecko doesn't implement it yet (bug 910249). Instead of readyState, we
-  // check VideoStreamTrack.enable before bug 910249 is fixed.
+  // check MediaStreamTrack.enable before bug 910249 is fixed.
   // The error code should be INVALID_TRACK, but spec doesn't define it in
   // ImageCaptureError. So it returns PHOTO_ERROR here before spec updates.
-  if (!mVideoStreamTrack->Enabled()) {
+  if (!mTrack->Enabled()) {
     PostErrorEvent(ImageCaptureError::PHOTO_ERROR, NS_ERROR_FAILURE);
     return;
   }
@@ -211,7 +215,7 @@ ImageCapture::CheckPrincipal()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIPrincipal> principal = mVideoStreamTrack->GetPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = mTrack->GetPrincipal();
 
   if (!GetOwner()) {
     return false;

@@ -12,11 +12,11 @@ const {
   gridSpec,
   layoutSpec,
 } = require("devtools/shared/specs/layout");
-const { ELEMENT_NODE } = require("devtools/shared/dom-node-constants");
 const { SHOW_ELEMENT } = require("devtools/shared/dom-node-filter-constants");
 const { getStringifiableFragments } =
   require("devtools/server/actors/utils/css-grid-utils");
 
+loader.lazyRequireGetter(this, "getCSSStyleRules", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
 
@@ -103,10 +103,6 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
 
     for (const line of flex.getLines()) {
       for (const item of line.getItems()) {
-        if (item.node.nodeType !== ELEMENT_NODE) {
-          continue;
-        }
-
         flexItemActors.push(new FlexItemActor(this, item.node, {
           crossMaxSize: item.crossMaxSize,
           crossMinSize: item.crossMinSize,
@@ -114,6 +110,7 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
           mainDeltaSize: item.mainDeltaSize,
           mainMaxSize: item.mainMaxSize,
           mainMinSize: item.mainMinSize,
+          lineGrowthState: line.growthState,
         }));
       }
     }
@@ -157,31 +154,49 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
       return this.actorID;
     }
 
+    const { flexDirection } = CssLogic.getComputedStyle(this.containerEl);
+    const dimension = flexDirection.startsWith("row") ? "width" : "height";
+
+    // Find the authored sizing properties for this item.
+    const properties = {
+      "flex-basis": "",
+      "flex-grow": "",
+      "flex-shrink": "",
+      [`min-${dimension}`]: "",
+      [`max-${dimension}`]: "",
+      [dimension]: ""
+    };
+
+    if (this.element.nodeType === this.element.ELEMENT_NODE) {
+      for (const name in properties) {
+        let value = "";
+        // Look first on the element style.
+        if (this.element.style[name] && this.element.style[name] !== "auto") {
+          value = this.element.style[name];
+        } else {
+          // And then on the rules that apply to the element.
+          // getCSSStyleRules returns rules from least to most specific, so override
+          // values as we find them.
+          const cssRules = getCSSStyleRules(this.element);
+          for (const rule of cssRules) {
+            const rulePropertyValue = rule.style.getPropertyValue(name);
+            if (rulePropertyValue && rulePropertyValue !== "auto") {
+              value = rulePropertyValue;
+            }
+          }
+        }
+
+        properties[name] = value;
+      }
+    }
+
     const form = {
       actor: this.actorID,
       // The flex item sizing data.
       flexItemSizing: this.flexItemSizing,
+      // The authored style properties of the flex item.
+      properties,
     };
-
-    if (this.element.nodeType === ELEMENT_NODE) {
-      const { flexDirection } = CssLogic.getComputedStyle(this.containerEl);
-      const styles = CssLogic.getComputedStyle(this.element);
-      const clientRect = this.element.getBoundingClientRect();
-      const dimension = flexDirection.startsWith("row") ? "width" : "height";
-
-      // The computed style properties of the flex item.
-      form.properties = {
-        "flex-basis": styles.flexBasis,
-        "flex-grow": styles.flexGrow,
-        "flex-shrink": styles.flexShrink,
-        // min-width/height computed style.
-        [`min-${dimension}`]: styles[`min-${dimension}`],
-        // max-width/height computed style.
-        [`max-${dimension}`]: styles[`max-${dimension}`],
-        // Computed width/height of the flex item element.
-        [dimension]: parseFloat(clientRect[dimension.toLowerCase()].toPrecision(6)),
-      };
-    }
 
     // If the WalkerActor already knows the flex item element, then also return its
     // ActorID so we avoid the client from doing another round trip to get it in many
