@@ -52,6 +52,9 @@ EXPORTS.mozilla.net += [
     'PHttpChannelParams.h',
     'PSpdyPush.h',
     'TimingStruct.h',
+    'TrackingDummyChannel.h',
+    'TrackingDummyChannelChild.h',
+    'TrackingDummyChannelParent.h',
 ]
 
 SOURCES += [
@@ -100,6 +103,9 @@ UNIFIED_SOURCES += [
     'nsServerTiming.cpp',
     'NullHttpChannel.cpp',
     'NullHttpTransaction.cpp',
+    'TrackingDummyChannel.cpp',
+    'TrackingDummyChannelChild.cpp',
+    'TrackingDummyChannelParent.cpp',
     'TunnelUtils.cpp',
 ]
 
@@ -112,6 +118,7 @@ IPDL_SOURCES += [
     'PAltDataOutputStream.ipdl',
     'PHttpBackgroundChannel.ipdl',
     'PHttpChannel.ipdl',
+    'PTrackingDummyChannel.ipdl',
 ]
 
 EXTRA_JS_MODULES += [

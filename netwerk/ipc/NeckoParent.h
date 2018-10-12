@@ -240,6 +240,18 @@ protected:
   virtual mozilla::ipc::IPCResult
     RecvGetExtensionFD(const URIParams& aURI,
                        GetExtensionFDResolver&& aResolve) override;
+
+  virtual PTrackingDummyChannelParent*
+    AllocPTrackingDummyChannelParent(nsIURI* aURI,
+                                     const OptionalLoadInfoArgs& aLoadInfo) override;
+
+  virtual bool
+    DeallocPTrackingDummyChannelParent(PTrackingDummyChannelParent* aChild) override;
+
+  virtual mozilla::ipc::IPCResult
+    RecvPTrackingDummyChannelConstructor(PTrackingDummyChannelParent* aActor,
+                                         nsIURI* aURI,
+                                         const OptionalLoadInfoArgs& aLoadInfo) override;
 };
 
 } // namespace net
