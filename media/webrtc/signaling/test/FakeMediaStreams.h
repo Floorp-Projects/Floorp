@@ -492,6 +492,8 @@ public:
     return ds.forget();
   }
 
+  virtual void Stop() {} // Really DOMLocalMediaStream
+
   virtual bool AddDirectListener(Fake_MediaStreamListener *aListener) { return false; }
   virtual void RemoveDirectListener(Fake_MediaStreamListener *aListener) {}
 
@@ -643,6 +645,7 @@ typedef Fake_MediaStreamListener MediaStreamListener;
 typedef Fake_MediaStreamTrackListener MediaStreamTrackListener;
 typedef Fake_DirectMediaStreamTrackListener DirectMediaStreamTrackListener;
 typedef Fake_DOMMediaStream DOMMediaStream;
+typedef Fake_DOMMediaStream DOMLocalMediaStream;
 typedef Fake_MediaStreamVideoSink MediaStreamVideoSink;
 
 namespace dom {

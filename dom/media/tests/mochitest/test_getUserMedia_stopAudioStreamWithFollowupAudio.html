@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({ title: "getUserMedia Stop Audio Stream With Followup Audio", bug: "822109" });
+  /**
+   * Run a test to verify that I can complete an audio gum playback in a media
+   * element, stop the stream, and then complete another audio gum playback
+   * in a media element.
+   */
+  runTest(function () {
+    return getUserMedia({audio: true})
+      .then(firstStream => {
+        var testAudio = createMediaElement('audio', 'testAudio');
+        var streamPlayback = new LocalMediaStreamPlayback(testAudio, firstStream);
+
+        return streamPlayback.playMediaWithDeprecatedStreamStop(false)
+          .then(() => getUserMedia({audio: true}))
+          .then(secondStream => {
+            streamPlayback.mediaStream = secondStream;
+
+            return streamPlayback.playMedia(false)
+              .then(() => secondStream.stop());
+          });
+      });
+  });
+
+</script>
+</pre>
+</body>
+</html>
