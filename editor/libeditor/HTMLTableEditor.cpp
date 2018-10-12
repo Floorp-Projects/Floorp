@@ -3358,43 +3358,40 @@ HTMLEditor::TableSize::Update(HTMLEditor& aHTMLEditor,
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetCellDataAt(Element* aTable,
+HTMLEditor::GetCellDataAt(Element* aTableElement,
                           int32_t aRowIndex,
-                          int32_t aColIndex,
-                          Element** aCell,
+                          int32_t aColumnIndex,
+                          Element** aCellElement,
                           int32_t* aStartRowIndex,
-                          int32_t* aStartColIndex,
+                          int32_t* aStartColumnIndex,
                           int32_t* aRowSpan,
                           int32_t* aColSpan,
-                          int32_t* aActualRowSpan,
-                          int32_t* aActualColSpan,
+                          int32_t* aEffectiveRowSpan,
+                          int32_t* aEffectiveColSpan,
                           bool* aIsSelected)
 {
-  NS_ENSURE_ARG_POINTER(aStartRowIndex);
-  NS_ENSURE_ARG_POINTER(aStartColIndex);
-  NS_ENSURE_ARG_POINTER(aRowSpan);
-  NS_ENSURE_ARG_POINTER(aColSpan);
-  NS_ENSURE_ARG_POINTER(aActualRowSpan);
-  NS_ENSURE_ARG_POINTER(aActualColSpan);
-  NS_ENSURE_ARG_POINTER(aIsSelected);
-  NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aCellElement) ||
+      NS_WARN_IF(!aStartRowIndex) || NS_WARN_IF(!aStartColumnIndex) ||
+      NS_WARN_IF(!aRowSpan) || NS_WARN_IF(!aColSpan) ||
+      NS_WARN_IF(!aEffectiveRowSpan) || NS_WARN_IF(!aEffectiveColSpan) ||
+      NS_WARN_IF(!aIsSelected)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   *aStartRowIndex = 0;
-  *aStartColIndex = 0;
+  *aStartColumnIndex = 0;
   *aRowSpan = 0;
   *aColSpan = 0;
-  *aActualRowSpan = 0;
-  *aActualColSpan = 0;
+  *aEffectiveRowSpan = 0;
+  *aEffectiveColSpan = 0;
   *aIsSelected = false;
+  *aCellElement = nullptr;
 
-  *aCell = nullptr;
-
-  // needs to live while we use aTable
-  // XXX Really? Looks like it's safe to use raw pointer here.
-  //     However, layout code change won't be handled by editor developers
-  //     so that it must be safe to keep using RefPtr here.
-  RefPtr<Element> table;
-  if (!aTable) {
+  // Let's keep the table element with strong pointer since editor developers
+  // may not handle layout code of <table>, however, this method depends on
+  // them.
+  RefPtr<Element> table = aTableElement;
+  if (!table) {
     RefPtr<Selection> selection = GetSelection();
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
@@ -3405,29 +3402,69 @@ HTMLEditor::GetCellDataAt(Element* aTable,
     if (NS_WARN_IF(!table)) {
       return NS_ERROR_FAILURE;
     }
-    aTable = table;
   }
 
-  nsTableWrapperFrame* tableFrame = HTMLEditor::GetTableFrame(aTable);
-  NS_ENSURE_TRUE(tableFrame, NS_ERROR_FAILURE);
-
-  nsTableCellFrame* cellFrame =
-    tableFrame->GetCellFrameAt(aRowIndex, aColIndex);
-  if (NS_WARN_IF(!cellFrame)) {
+  IgnoredErrorResult ignoredError;
+  CellData cellData(*this, *table, aRowIndex, aColumnIndex, ignoredError);
+  if (NS_WARN_IF(cellData.FailedOrNotFound())) {
     return NS_ERROR_FAILURE;
   }
-
-  *aIsSelected = cellFrame->IsSelected();
-  *aStartRowIndex = cellFrame->RowIndex();
-  *aStartColIndex = cellFrame->ColIndex();
-  *aRowSpan = cellFrame->GetRowSpan();
-  *aColSpan = cellFrame->GetColSpan();
-  *aActualRowSpan = tableFrame->GetEffectiveRowSpanAt(aRowIndex, aColIndex);
-  *aActualColSpan = tableFrame->GetEffectiveColSpanAt(aRowIndex, aColIndex);
-  RefPtr<Element> domCell = cellFrame->GetContent()->AsElement();
-  domCell.forget(aCell);
-
+  cellData.mElement.forget(aCellElement);
+  *aIsSelected = cellData.mIsSelected;
+  *aStartRowIndex = cellData.mFirst.mRow;
+  *aStartColumnIndex = cellData.mFirst.mColumn;
+  *aRowSpan = cellData.mRowSpan;
+  *aColSpan = cellData.mColSpan;
+  *aEffectiveRowSpan = cellData.mEffectiveRowSpan;
+  *aEffectiveColSpan = cellData.mEffectiveColSpan;
   return NS_OK;
+}
+
+void
+HTMLEditor::CellData::Update(HTMLEditor& aHTMLEditor,
+                             Element& aTableElement,
+                             ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aRv.Failed());
+
+  mElement = nullptr;
+  mIsSelected = false;
+  mFirst.mRow = -1;
+  mFirst.mColumn = -1;
+  mRowSpan = -1;
+  mColSpan = -1;
+  mEffectiveRowSpan = -1;
+  mEffectiveColSpan = -1;
+
+  nsTableWrapperFrame* tableFrame = HTMLEditor::GetTableFrame(&aTableElement);
+  if (NS_WARN_IF(!tableFrame)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // If there is no cell at the indexes.  Don't return error.
+  // XXX If we have pending layout and that causes the cell frame hasn't been
+  //     created, we should return error, but how can we do it?
+  nsTableCellFrame* cellFrame =
+    tableFrame->GetCellFrameAt(mCurrent.mRow, mCurrent.mColumn);
+  if (!cellFrame) {
+    return;
+  }
+
+  mElement = cellFrame->GetContent()->AsElement();
+  if (NS_WARN_IF(!mElement)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  mIsSelected = cellFrame->IsSelected();
+  mFirst.mRow = cellFrame->RowIndex();
+  mFirst.mColumn = cellFrame->ColIndex();
+  mRowSpan = cellFrame->GetRowSpan();
+  mColSpan = cellFrame->GetColSpan();
+  mEffectiveRowSpan =
+    tableFrame->GetEffectiveRowSpanAt(mCurrent.mRow, mCurrent.mColumn);
+  mEffectiveColSpan =
+    tableFrame->GetEffectiveColSpanAt(mCurrent.mRow, mCurrent.mColumn);
 }
 
 NS_IMETHODIMP
