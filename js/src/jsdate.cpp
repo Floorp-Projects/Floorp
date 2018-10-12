@@ -711,6 +711,7 @@ MakeTime(double hour, double min, double sec, double ms)
 /* for use by date_parse */
 
 static const char* const wtb[] = {
+    // clang-format off
     "am", "pm",
     "monday", "tuesday", "wednesday", "thursday", "friday",
     "saturday", "sunday",
@@ -722,9 +723,11 @@ static const char* const wtb[] = {
     "mst", "mdt",
     "pst", "pdt"
     /* time zone table needs to be expanded */
+    // clang-format on
 };
 
 static const int ttb[] = {
+    // clang-format off
     -1, -2, 0, 0, 0, 0, 0, 0, 0,       /* AM/PM */
     2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
     10000 + 0, 10000 + 0, 10000 + 0,   /* GMT/UT/UTC */
@@ -732,6 +735,7 @@ static const int ttb[] = {
     10000 + 6 * 60, 10000 + 5 * 60,    /* CST/CDT */
     10000 + 7 * 60, 10000 + 6 * 60,    /* MST/MDT */
     10000 + 8 * 60, 10000 + 7 * 60     /* PST/PDT */
+    // clang-format on
 };
 
 template <typename CharT>
@@ -3346,13 +3350,16 @@ date_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec date_static_methods[] = {
+    // clang-format off
     JS_FN("UTC",                 date_UTC,                7,0),
     JS_FN("parse",               date_parse,              1,0),
     JS_FN("now",                 date_now,                0,0),
     JS_FS_END
+    // clang-format on
 };
 
 static const JSFunctionSpec date_methods[] = {
+    // clang-format off
     JS_FN("getTime",             date_getTime,            0,0),
     JS_FN("getTimezoneOffset",   date_getTimezoneOffset,  0,0),
     JS_FN("getYear",             date_getYear,            0,0),
@@ -3407,6 +3414,7 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN(js_valueOf_str,        date_valueOf,            0,0),
     JS_SYM_FN(toPrimitive,       date_toPrimitive,        1,JSPROP_READONLY),
     JS_FS_END
+    // clang-format on
 };
 
 static bool
