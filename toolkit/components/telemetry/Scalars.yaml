@@ -2188,6 +2188,23 @@ memoryreporter:
     record_in_processes:
       - 'content'
 
+resistfingerprinting:
+  content_window_size:
+    bug_numbers:
+      - 1489493
+    description: >
+      The size (in pixels) of the content windows for innerWidth and innerHeight.
+    expires: "66"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - tihuang@mozilla.com
+      - tom@mozilla.com
+      - ettseng@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:

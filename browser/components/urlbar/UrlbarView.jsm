@@ -75,6 +75,7 @@ class UrlbarView {
    * Closes the autocomplete results popup.
    */
   close() {
+    this.panel.hidePopup();
   }
 
   // UrlbarController listener methods.
@@ -86,8 +87,9 @@ class UrlbarView {
     // XXX For now, clear the results for each set received. We should really
     // be updating the existing list.
     this._rows.textContent = "";
-    for (let result of queryContext.results) {
-      this._addRow(result);
+    this._queryContext = queryContext;
+    for (let resultIndex in queryContext.results) {
+      this._addRow(resultIndex);
     }
     this.open();
   }
@@ -102,9 +104,12 @@ class UrlbarView {
     return this.document.createElementNS("http://www.w3.org/1999/xhtml", name);
   }
 
-  _addRow(result) {
+  _addRow(resultIndex) {
+    let result = this._queryContext.results[resultIndex];
     let item = this._createElement("div");
     item.className = "urlbarView-row";
+    item.addEventListener("click", this);
+    item.setAttribute("resultIndex", resultIndex);
     if (result.type == UrlbarUtils.MATCH_TYPE.TAB_SWITCH) {
       item.setAttribute("action", "switch-to-tab");
     }
@@ -138,5 +143,32 @@ class UrlbarView {
     content.appendChild(secondary);
 
     this._rows.appendChild(item);
+  }
+
+  /**
+   * Passes DOM events for the view to the _on_<event type> methods.
+   * @param {Event} event
+   *   DOM event from the <view>.
+   */
+  handleEvent(event) {
+    let methodName = "_on_" + event.type;
+    if (methodName in this) {
+      this[methodName](event);
+    } else {
+      throw "Unrecognized urlbar event: " + event.type;
+    }
+  }
+
+  _on_click(event) {
+    let row = event.target;
+    while (!row.classList.contains("urlbarView-row")) {
+      row = row.parentNode;
+    }
+    let resultIndex = row.getAttribute("resultIndex");
+    let result = this._queryContext.results[resultIndex];
+    if (result) {
+      this.urlbar.resultSelected(event, result);
+    }
+    this.close();
   }
 }

@@ -108,6 +108,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Results will include search suggestions when this is true.
   ["suggest.searches", false],
 
+  // When using switch to tabs, if set to true this will move the tab into the
+  // active window.
+  ["switchTabs.adoptIntoActiveWindow", false],
+
   // Remove redundant portions from URLs.
   ["trimURLs", true],
 

@@ -30,7 +30,6 @@ config = {
 
     #########################################################################
     ###### 64 bit specific ######
-    'base_name': 'WINNT_6.1_MINGW_%(branch)s',
     'platform': 'win64-mingw32',
     'stage_platform': 'win64-mingw32',
     'env': {
