@@ -273,8 +273,6 @@ class JSFunction : public js::NativeObject
     // (see the comment above hasUncompletedScript for more details).
     bool hasScript()                const { return flags() & INTERPRETED; }
 
-    bool infallibleIsDefaultClassConstructor(JSContext* cx) const;
-
     // Arrow functions store their lexical new.target in the first extended slot.
     bool isArrow()                  const { return kind() == Arrow; }
     // Every class-constructor is also a method.

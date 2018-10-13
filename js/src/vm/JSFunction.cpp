@@ -1380,27 +1380,6 @@ js::fun_apply(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-JSFunction::infallibleIsDefaultClassConstructor(JSContext* cx) const
-{
-    if (!isSelfHostedBuiltin()) {
-        return false;
-    }
-
-    bool isDefault = false;
-    if (isInterpretedLazy()) {
-        JSAtom* name = &getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).toString()->asAtom();
-        isDefault = name == cx->names().DefaultDerivedClassConstructor ||
-                    name == cx->names().DefaultBaseClassConstructor;
-    } else {
-        isDefault = nonLazyScript()->isDefaultClassConstructor();
-    }
-
-    MOZ_ASSERT_IF(isDefault, isConstructor());
-    MOZ_ASSERT_IF(isDefault, isClassConstructor());
-    return isDefault;
-}
-
-bool
 JSFunction::isDerivedClassConstructor()
 {
     bool derived;
