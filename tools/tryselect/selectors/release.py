@@ -4,11 +4,13 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+
 import attr
 from mozilla_version.gecko import FirefoxVersion
 
 from ..cli import BaseTryParser
-from ..push import push_to_try
+from ..push import push_to_try, vcs
 
 
 class ReleaseParser(BaseTryParser):
@@ -21,11 +23,18 @@ class ReleaseParser(BaseTryParser):
           'type': FirefoxVersion.parse,
           'help': "The version number to use for the staging release.",
           }],
+        [['--migration'],
+         {'metavar': 'STR',
+          'action': 'append',
+          'dest': 'migrations',
+          'choices': ['central-to-beta', 'beta-to-release'],
+          'help': "Migration to run for the release (can be specified multiple times).",
+          }],
     ]
     common_groups = ['push']
 
 
-def run_try_release(version, push=True, message='{msg}', **kwargs):
+def run_try_release(version, migrations=(), push=True, message='{msg}', **kwargs):
 
     if version.is_beta:
         app_version = attr.evolve(version, beta_number=None)
@@ -51,6 +60,22 @@ def run_try_release(version, push=True, message='{msg}', **kwargs):
             'release_type': release_type,
         },
     }
+
+    for migration in migrations:
+        migration_path = os.path.join(
+            vcs.path,
+            'testing/mozharness/configs/merge_day',
+            '{}.py'.format(migration.replace('-', '_')),
+        )
+        migration_config = {}
+        execfile(migration_path, migration_config, migration_config)
+        for (path, from_, to) in migration_config['config']['replacements']:
+            if path in files_to_change:
+                contents = files_to_change[path]
+            else:
+                with open(path) as fh:
+                    contents = fh.read()
+            files_to_change[path] = contents.replace(from_, to)
 
     msg = 'staging release: {}'.format(version)
     return push_to_try(
