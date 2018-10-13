@@ -155,6 +155,30 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
 }
 
 /**
+ * Create a function which is used as parameter (toPathStringFunc) in constructor
+ * of SummaryGraphHelper.
+ *
+ * @param {Number} endTime
+ *        end time of animation
+ *        e.g. 200
+ * @param {Number} playbackRate
+ *        playback rate of animation
+ *        e.g. -1
+ * @return {Function}
+ */
+function createSummaryGraphPathStringFunction(endTime, playbackRate) {
+  return segments => {
+    segments = mapSegmentsToPlaybackRate(segments, endTime, playbackRate);
+    const firstSegment = segments[0];
+    let pathString = `M${ firstSegment.x },0 `;
+    pathString += toPathString(segments);
+    const lastSegment = segments[segments.length - 1];
+    pathString += `L${ lastSegment.x },0 Z`;
+    return pathString;
+  };
+}
+
+/**
  * Return preferred duration resolution.
  * This corresponds to narrow interval keyframe offset.
  *
@@ -243,6 +267,17 @@ function getStepsOrFramesCount(easing) {
   return stepsOrFramesFunction ? parseInt(stepsOrFramesFunction[2], 10) : 0;
 }
 
+function mapSegmentsToPlaybackRate(segments, endTime, playbackRate) {
+  if (playbackRate > 0) {
+    return segments;
+  }
+
+  return segments.map(segment => {
+    segment.x = endTime - segment.x;
+    return segment;
+  });
+}
+
 /**
  * Return path string for 'd' attribute for <path> from given segments.
  *
@@ -261,6 +296,7 @@ function toPathString(segments) {
 }
 
 exports.createPathSegments = createPathSegments;
+exports.createSummaryGraphPathStringFunction = createSummaryGraphPathStringFunction;
 exports.DEFAULT_DURATION_RESOLUTION = DEFAULT_DURATION_RESOLUTION;
 exports.DEFAULT_EASING_HINT_STROKE_WIDTH = DEFAULT_EASING_HINT_STROKE_WIDTH;
 exports.DEFAULT_GRAPH_HEIGHT = DEFAULT_GRAPH_HEIGHT;
