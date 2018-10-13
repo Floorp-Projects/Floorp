@@ -264,7 +264,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
           (this._isPayerRequested(state.request.paymentOptions) &&
            (!this._payerAddressPicker.selectedOption ||
             this._payerAddressPicker.classList.contains(INVALID_CLASS_NAME))) ||
-          !this._paymentMethodPicker.securityCodeInput.validity.valid ||
+          !this._paymentMethodPicker.securityCodeInput.isValid ||
           !this._paymentMethodPicker.selectedOption ||
           this._paymentMethodPicker.classList.contains(INVALID_CLASS_NAME) ||
           state.changesPrevented;

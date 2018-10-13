@@ -40,7 +40,9 @@
   <!ENTITY billingAddress.editPage.title  "Edit Billing Address">
   <!ENTITY basicCard.addPage.title    "Add Credit Card">
   <!ENTITY basicCard.editPage.title   "Edit Credit Card">
-  <!ENTITY basicCard.cvv.placeholder  "CVV&fieldRequiredSymbol;">
+  <!ENTITY basicCard.csc.placeholder  "CVV">
+  <!ENTITY basicCard.csc.back.infoTooltip   "3 digit number found on the back of your credit card.">
+  <!ENTITY basicCard.csc.front.infoTooltip  "3 digit number found on the front of your credit card.">
   <!ENTITY payer.addPage.title        "Add Payer Contact">
   <!ENTITY payer.editPage.title       "Edit Payer Contact">
   <!ENTITY payerLabel                 "Contact Information">
@@ -150,7 +152,9 @@
           <payment-method-picker selected-state-key="selectedPaymentCard"
                                  data-add-link-label="&basicCard.addLink.label;"
                                  data-edit-link-label="&basicCard.editLink.label;"
-                                 data-cvv-placeholder="&basicCard.cvv.placeholder;"
+                                 data-csc-placeholder="&basicCard.csc.placeholder;"
+                                 data-csc-back-tooltip="&basicCard.csc.back.infoTooltip;"
+                                 data-csc-front-tooltip="&basicCard.csc.front.infoTooltip;"
                                  data-invalid-label="&invalidOption.label;"
                                  label="&paymentMethodsLabel;">
           </payment-method-picker>
@@ -199,6 +203,9 @@
                        data-cancel-button-label="&cancelPaymentButton.label;"
                        data-persist-checkbox-label="&basicCardPage.persistCheckbox.label;"
                        data-persist-checkbox-info-tooltip="&basicCardPage.persistCheckbox.infoTooltip;"
+                       data-csc-placeholder="&basicCard.csc.placeholder;"
+                       data-csc-back-info-tooltip="&basicCard.csc.back.infoTooltip;"
+                       data-csc-front-info-tooltip="&basicCard.csc.front.infoTooltip;"
                        data-accepted-cards-label="&acceptedCards.label;"
                        data-field-required-symbol="&fieldRequiredSymbol;"
                        hidden="hidden"></basic-card-form>
