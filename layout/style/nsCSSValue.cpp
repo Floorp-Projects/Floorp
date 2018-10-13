@@ -189,37 +189,16 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
 }
 
 double
-nsCSSValue::GetAngleValueInRadians() const
+nsCSSValue::GetAngleValueInDegrees() const
 {
-  double angle = GetFloatValue();
-
-  switch (GetUnit()) {
-    case eCSSUnit_Radian: return angle;
-    case eCSSUnit_Turn:   return angle * 2 * M_PI;
-    case eCSSUnit_Degree: return angle * M_PI / 180.0;
-    case eCSSUnit_Grad:   return angle * M_PI / 200.0;
-
-    default:
-      MOZ_ASSERT(false, "unrecognized angular unit");
-      return 0.0;
-  }
+  // Note that this extends the value from float to double.
+  return GetAngleValue();
 }
 
 double
-nsCSSValue::GetAngleValueInDegrees() const
+nsCSSValue::GetAngleValueInRadians() const
 {
-  double angle = GetFloatValue();
-
-  switch (GetUnit()) {
-    case eCSSUnit_Degree: return angle;
-    case eCSSUnit_Grad:   return angle * 0.9; // grad / 400 * 360
-    case eCSSUnit_Radian: return angle * 180.0 / M_PI;  // rad / 2pi * 360
-    case eCSSUnit_Turn:   return angle * 360.0;
-
-    default:
-      MOZ_ASSERT(false, "unrecognized angular unit");
-      return 0.0;
-  }
+  return GetAngleValueInDegrees() * M_PI / 180.0;
 }
 
 nscoord nsCSSValue::GetPixelLength() const
@@ -614,9 +593,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_Pixel:
     case eCSSUnit_Quarter:
     case eCSSUnit_Degree:
-    case eCSSUnit_Grad:
-    case eCSSUnit_Turn:
-    case eCSSUnit_Radian:
     case eCSSUnit_Hertz:
     case eCSSUnit_Kilohertz:
     case eCSSUnit_Seconds:

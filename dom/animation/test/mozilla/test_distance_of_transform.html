@@ -12,7 +12,7 @@
 // the similar rules to define the distance. If there is a spec for it, we have
 // to update this test file.
 
-const epsilon = 0.00001;
+const EPSILON = 0.00001;
 
 // |v| should be a unit vector (i.e. having length 1)
 function getQuaternion(v, angle) {
@@ -136,14 +136,14 @@ test(function(t) {
   var target = addDiv(t);
   var dist =
     getDistance(target, 'transform', 'rotate(45deg)', 'rotate(90deg)');
-  assert_equals(dist, Math.PI/ 2.0 - Math.PI / 4.0, 'distance of rotate');
+  assert_approx_equals(dist, Math.PI / 2.0 - Math.PI / 4.0, EPSILON, 'distance of rotate');
 }, 'Test distance of rotate functions');
 
 test(function(t) {
   var target = addDiv(t);
   var dist =
     getDistance(target, 'transform', 'rotate(45deg)', 'none');
-  assert_equals(dist, Math.PI / 4.0, 'distance of rotate');
+  assert_approx_equals(dist, Math.PI / 4.0, EPSILON, 'distance of rotate');
 }, 'Test distance of rotate function and none');
 
 test(function(t) {
@@ -151,7 +151,7 @@ test(function(t) {
   var dist = getDistance(target, 'transform',
                          'rotate3d(0, 1, 0, 90deg)',
                          'none');
-  assert_equals(dist, Math.PI / 2, 'distance of rotate3d');
+  assert_approx_equals(dist, Math.PI / 2, EPSILON, 'distance of rotate3d');
 }, 'Test distance of rotate3d function and none');
 
 test(function(t) {
@@ -161,7 +161,7 @@ test(function(t) {
                          'rotate3d(1, 0, 0, 90deg)');
   let q1 = getQuaternion([0, 0, 1], Math.PI / 2.0);
   let q2 = getQuaternion([1, 0, 0], Math.PI / 2.0);
-  assert_equals(dist, computeRotateDistance(q1, q2), 'distance of rotate3d');
+  assert_approx_equals(dist, computeRotateDistance(q1, q2), EPSILON, 'distance of rotate3d');
 }, 'Test distance of rotate3d functions');
 
 test(function(t) {
@@ -169,14 +169,14 @@ test(function(t) {
   var dist = getDistance(target, 'transform',
                          'rotate3d(0, 0, 1, 90deg)',
                          'rotate3d(0, 0, 0, 90deg)');
-  assert_equals(dist, Math.PI / 2, 'distance of rotate3d');
+  assert_approx_equals(dist, Math.PI / 2, EPSILON, 'distance of rotate3d');
 }, 'Test distance of rotate3d functions whose direction vector cannot be ' +
    'normalized');
 
 test(function(t) {
   var target = addDiv(t);
   var dist = getDistance(target, 'transform', 'skew(1rad, 0.5rad)', 'none');
-  assert_equals(dist, Math.sqrt(1 * 1 + 0.5 * 0.5), 'distance of skew');
+  assert_approx_equals(dist, Math.sqrt(1 * 1 + 0.5 * 0.5), EPSILON, 'distance of skew');
 }, 'Test distance of skew function and none');
 
 test(function(t) {
@@ -184,7 +184,7 @@ test(function(t) {
   var dist = getDistance(target, 'transform',
                          'skew(1rad, 0.5rad)',
                          'skew(-1rad, 0)');
-  assert_equals(dist, Math.sqrt(2 * 2 + 0.5 * 0.5), 'distance of skew');
+  assert_approx_equals(dist, Math.sqrt(2 * 2 + 0.5 * 0.5), EPSILON, 'distance of skew');
 }, 'Test distance of skew functions');
 
 test(function(t) {
@@ -224,7 +224,7 @@ test(function(t) {
   var dist = getDistance(target, 'transform', matrix, 'none');
   assert_approx_equals(dist,
                        Math.sqrt(100 * 100 + (Math.PI / 6) * (Math.PI / 6)),
-                       epsilon,
+                       EPSILON,
                        'distance of matrix');
 }, 'Test distance of matrix function and none');
 
@@ -243,7 +243,7 @@ test(function(t) {
                        Math.sqrt(100 * 100 + 100 * 100 +          // translate
                                  (Math.PI / 6) * (Math.PI / 6) +  // rotate
                                  0.5 * 0.5 + 0.5 * 0.5),          // scale
-                       epsilon,
+                       EPSILON,
                        'distance of matrix');
 }, 'Test distance of matrix functions');
 
@@ -251,7 +251,7 @@ test(function(t) {
   var target = addDiv(t);
   var matrix = createMatrixFromArray(rotate3dToMatrix(0, 1, 0, Math.PI / 6));
   var dist = getDistance(target, 'transform', matrix, 'none');
-  assert_approx_equals(dist, Math.PI / 6, epsilon, 'distance of matrix3d');
+  assert_approx_equals(dist, Math.PI / 6, EPSILON, 'distance of matrix3d');
 }, 'Test distance of matrix3d function and none');
 
 test(function(t) {
@@ -268,7 +268,7 @@ test(function(t) {
                        Math.sqrt(100 * 100 +                      // translate
                                  0.5 * 0.5 * 3 +                  // scale
                                  (Math.PI / 6) * (Math.PI / 6)),  // rotate
-                       epsilon,
+                       EPSILON,
                        'distance of matrix');
 }, 'Test distance of matrix3d functions');
 
@@ -291,7 +291,7 @@ test(function(t) {
                        Math.sqrt(900 * 900 + 50 * 50 + 10 * 10 +  // translate
                                  Math.PI * Math.PI +              // rotate
                                  (Math.PI / 4) * (Math.PI / 4)),  // skew angle
-                       epsilon,
+                       EPSILON,
                        'distance of matrix');
 }, 'Test distance of matrix3d functions with skew factors');
 
@@ -301,8 +301,8 @@ test(function(t) {
     getDistance(target, 'transform',
                 'rotate(180deg) translate(1000px)',
                 'rotate(360deg) translate(0px)');
-  assert_equals(dist, Math.sqrt(1000 * 1000 + Math.PI * Math.PI),
-                'distance of transform lists');
+  assert_approx_equals(dist, Math.sqrt(1000 * 1000 + Math.PI * Math.PI), EPSILON,
+                       'distance of transform lists');
 }, 'Test distance of transform lists');
 
 test(function(t) {
@@ -315,7 +315,7 @@ test(function(t) {
                                  Math.PI / 2 * Math.PI / 2 +
                                  4 * 4 * 2 +
                                  1 * 1),
-                       epsilon,
+                       EPSILON,
                        'distance of transform lists');
 }, 'Test distance of transform lists where one has extra items');
 
@@ -335,7 +335,7 @@ test(function(t) {
                          'translate(1000px) rotate3d(0, 1, 0, -2rad)');
   assert_approx_equals(dist,
                        Math.sqrt(900 * 900 + 1 * 1 + 2 * 2),
-                       epsilon,
+                       EPSILON,
                        'distance of transform lists');
 }, 'Test distance of mismatched transform lists with skew function');
 
