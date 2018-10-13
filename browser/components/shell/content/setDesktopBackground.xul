@@ -61,14 +61,12 @@
                   onchange="gSetBackground.updateColor(this.value);"/> 
     </hbox>
 #endif
-    <groupbox align="center">
-      <caption label="&preview.label;"/>
-      <stack>
-        <!-- if width and height are not present, they default to 300x150 and stretch the stack -->
-        <html:canvas id="screen" width="1" height="1"/>
-        <image id="monitor"/>
-      </stack>
-    </groupbox>
+
+    <stack>
+      <!-- if width and height are not present, they default to 300x150 and stretch the stack -->
+      <html:canvas id="screen" width="1" height="1" role="presentation"/>
+      <image id="monitor"/>
+    </stack>
 
 #ifdef XP_MACOSX
     <separator/>

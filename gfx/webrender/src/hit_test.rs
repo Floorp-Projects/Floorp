@@ -40,7 +40,6 @@ impl HitTestClipNode {
             ClipItem::RoundedRectangle(ref rect, ref radii, ref mode) =>
                 HitTestRegion::RoundedRectangle(*rect, *radii, *mode),
             ClipItem::Image(ref mask) => HitTestRegion::Rectangle(mask.rect, ClipMode::Clip),
-            ClipItem::LineDecoration(_) |
             ClipItem::BoxShadow(_) => HitTestRegion::Invalid,
         };
 

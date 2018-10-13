@@ -284,19 +284,22 @@ private:
    * data, we'll attempt a sync decode if no matching surface is found. If
    * FLAG_SYNC_DECODE was not specified and no matching surface was found, we'll
    * kick off an async decode so that the surface is (hopefully) available next
-   * time it's requested.
+   * time it's requested. aMarkUsed determines if we mark the surface used in
+   * the surface cache or not.
    *
    * @return a drawable surface, which may be empty if the requested surface
    *         could not be found.
    */
   LookupResult LookupFrame(const gfx::IntSize& aSize,
                            uint32_t aFlags,
-                           PlaybackType aPlaybackType);
+                           PlaybackType aPlaybackType,
+                           bool aMarkUsed);
 
   /// Helper method for LookupFrame().
   LookupResult LookupFrameInternal(const gfx::IntSize& aSize,
                                    uint32_t aFlags,
-                                   PlaybackType aPlaybackType);
+                                   PlaybackType aPlaybackType,
+                                   bool aMarkUsed);
 
   ImgDrawResult DrawInternal(DrawableSurface&& aFrameRef,
                           gfxContext* aContext,

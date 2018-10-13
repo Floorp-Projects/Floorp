@@ -79,6 +79,7 @@ constexpr char16_t GREEK_SMALL_LETTER_FINAL_SIGMA = 0x03C2;
 constexpr char16_t GREEK_SMALL_LETTER_SIGMA = 0x03C3;
 constexpr char16_t LINE_SEPARATOR = 0x2028;
 constexpr char16_t PARA_SEPARATOR = 0x2029;
+constexpr char16_t REPLACEMENT_CHARACTER = 0xFFFD;
 constexpr char16_t BYTE_ORDER_MARK2 = 0xFFFE;
 
 const char16_t LeadSurrogateMin = 0xD800;

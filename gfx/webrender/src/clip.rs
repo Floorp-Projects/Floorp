@@ -4,7 +4,7 @@
 
 use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, DevicePixelScale, ImageMask};
 use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D};
-use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle, PicturePixel, WorldPixel};
+use api::{BoxShadowClipMode, LayoutToWorldScale, PicturePixel, WorldPixel};
 use api::{PictureRect, LayoutPixel, WorldPoint, WorldSize, WorldRect, LayoutToWorldTransform};
 use api::{VoidPtrToSizeFn, LayoutRectAu, ImageKey, AuHelpers};
 use app_units::Au;
@@ -21,7 +21,7 @@ use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, u32};
 use std::os::raw::c_void;
-use util::{extract_inner_rect_safe, pack_as_float, project_rect, ScaleOffset};
+use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
 
 /*
 
@@ -143,14 +143,6 @@ impl From<ClipItemKey> for ClipNode {
                     radius.into(),
                     mode,
                 )
-            }
-            ClipItemKey::LineDecoration(rect, style, orientation, wavy_line_thickness) => {
-                ClipItem::LineDecoration(LineDecorationClipSource {
-                    rect: LayoutRect::from_au(rect),
-                    style,
-                    orientation,
-                    wavy_line_thickness: wavy_line_thickness.to_f32_px(),
-                })
             }
             ClipItemKey::ImageMask(rect, image, repeat) => {
                 ClipItem::Image(ImageMask {
@@ -298,15 +290,6 @@ impl ClipNode {
                     let data = ClipData::rounded_rect(rect, radius, mode);
                     data.write(&mut request);
                 }
-                ClipItem::LineDecoration(ref info) => {
-                    request.push(info.rect);
-                    request.push([
-                        info.wavy_line_thickness,
-                        pack_as_float(info.style as u32),
-                        pack_as_float(info.orientation as u32),
-                        0.0,
-                    ]);
-                }
             }
         }
 
@@ -353,8 +336,7 @@ impl ClipNode {
                 }
             }
             ClipItem::Rectangle(..) |
-            ClipItem::RoundedRectangle(..) |
-            ClipItem::LineDecoration(..) => {}
+            ClipItem::RoundedRectangle(..) => {}
         }
     }
 }
@@ -599,8 +581,7 @@ impl ClipStore {
                         ClipItem::Rectangle(_, ClipMode::ClipOut) |
                         ClipItem::RoundedRectangle(..) |
                         ClipItem::Image(..) |
-                        ClipItem::BoxShadow(..) |
-                        ClipItem::LineDecoration(..) => {
+                        ClipItem::BoxShadow(..) => {
                             true
                         }
 
@@ -650,17 +631,6 @@ impl ClipStore {
         size
     }
 }
-
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct LineDecorationClipSource {
-    rect: LayoutRect,
-    style: LineStyle,
-    orientation: LineOrientation,
-    wavy_line_thickness: f32,
-}
-
 
 pub struct ComplexTranslateIter<I> {
     source: I,
@@ -739,7 +709,6 @@ pub enum ClipItemKey {
     RoundedRectangle(LayoutRectAu, BorderRadiusAu, ClipMode),
     ImageMask(LayoutRectAu, ImageKey, bool),
     BoxShadow(LayoutRectAu, BorderRadiusAu, LayoutRectAu, Au, BoxShadowClipMode),
-    LineDecoration(LayoutRectAu, LineStyle, LineOrientation, Au),
 }
 
 impl ClipItemKey {
@@ -768,20 +737,6 @@ impl ClipItemKey {
         )
     }
 
-    pub fn line_decoration(
-        rect: LayoutRect,
-        style: LineStyle,
-        orientation: LineOrientation,
-        wavy_line_thickness: f32,
-    ) -> Self {
-        ClipItemKey::LineDecoration(
-            rect.to_au(),
-            style,
-            orientation,
-            Au::from_f32_px(wavy_line_thickness),
-        )
-    }
-
     pub fn box_shadow(
         shadow_rect: LayoutRect,
         shadow_radius: BorderRadius,
@@ -797,25 +752,6 @@ impl ClipItemKey {
             clip_mode,
         )
     }
-
-    // Return a modified clip source that is the same as self
-    // but offset in local-space by a specified amount.
-    pub fn offset(&self, offset: &LayoutVector2D) -> Self {
-        let offset = offset.to_au();
-        match *self {
-            ClipItemKey::LineDecoration(rect, style, orientation, wavy_line_thickness) => {
-                ClipItemKey::LineDecoration(
-                    rect.translate(&offset),
-                    style,
-                    orientation,
-                    wavy_line_thickness,
-                )
-            }
-            _ => {
-                panic!("bug: other clip sources not expected here yet");
-            }
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -826,7 +762,6 @@ pub enum ClipItem {
     RoundedRectangle(LayoutRect, BorderRadius, ClipMode),
     Image(ImageMask),
     BoxShadow(BoxShadowClipSource),
-    LineDecoration(LineDecorationClipSource),
 }
 
 impl ClipItem {
@@ -941,7 +876,6 @@ impl ClipItem {
             ClipItem::Image(ref mask) if mask.repeat => None,
             ClipItem::Image(ref mask) => Some(mask.rect),
             ClipItem::BoxShadow(..) => None,
-            ClipItem::LineDecoration(..) => None,
         }
     }
 
@@ -962,8 +896,7 @@ impl ClipItem {
             ClipItem::Rectangle(_, ClipMode::ClipOut) |
             ClipItem::RoundedRectangle(_, _, ClipMode::ClipOut) |
             ClipItem::Image(..) |
-            ClipItem::BoxShadow(..) |
-            ClipItem::LineDecoration(..) => {
+            ClipItem::BoxShadow(..) => {
                 return ClipResult::Partial
             }
         };
@@ -1087,8 +1020,7 @@ impl ClipItem {
                     }
                 }
             }
-            ClipItem::BoxShadow(..) |
-            ClipItem::LineDecoration(..) => {
+            ClipItem::BoxShadow(..) => {
                 ClipResult::Partial
             }
         }

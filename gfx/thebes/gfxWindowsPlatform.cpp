@@ -1298,7 +1298,7 @@ gfxWindowsPlatform::IsOptimus()
     }
     return knowIsOptimus;
 }
-
+/*
 static inline bool
 IsWARPStable()
 {
@@ -1308,7 +1308,7 @@ IsWARPStable()
   }
   return true;
 }
-
+*/
 static void
 InitializeANGLEConfig()
 {

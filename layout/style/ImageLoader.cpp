@@ -165,11 +165,13 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
           // We want to request decode in such a way that avoids triggering
           // sync decode. First, we attempt to convert the aRequest into
           // a imgIContainer. If that succeeds, then aRequest has an image
-          // and we can request decoding for size at zero size, and that will
-          // trigger async decode. If the conversion to imgIContainer is
-          // unsuccessful, then that means aRequest doesn't have an image yet,
-          // which means we can safely call StartDecoding() on it without
-          // triggering any synchronous work.
+          // and we can request decoding for size at zero size, the size will
+          // be ignored because we don't pass the FLAG_HIGH_QUALITY_SCALING
+          // flag and an async decode (because we didn't pass any sync decoding
+          // flags) at the intrinsic size will be requested. If the conversion
+          // to imgIContainer is unsuccessful, then that means aRequest doesn't
+          // have an image yet, which means we can safely call StartDecoding()
+          // on it without triggering any synchronous work.
           nsCOMPtr<imgIContainer> imgContainer;
           aRequest->GetImage(getter_AddRefs(imgContainer));
           if (imgContainer) {
