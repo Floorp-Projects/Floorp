@@ -1131,9 +1131,9 @@ VectorImage::LookupCachedSurface(const IntSize& aSize,
   LookupResult result(MatchType::NOT_FOUND);
   SurfaceKey surfaceKey = VectorSurfaceKey(aSize, aSVGContext);
   if ((aFlags & FLAG_SYNC_DECODE) || !(aFlags & FLAG_HIGH_QUALITY_SCALING)) {
-    result = SurfaceCache::Lookup(ImageKey(this), surfaceKey);
+    result = SurfaceCache::Lookup(ImageKey(this), surfaceKey, /* aMarkUsed = */ true);
   } else {
-    result = SurfaceCache::LookupBestMatch(ImageKey(this), surfaceKey);
+    result = SurfaceCache::LookupBestMatch(ImageKey(this), surfaceKey, /* aMarkUsed = */ true);
   }
 
   IntSize rasterSize = result.SuggestedSize().IsEmpty()
