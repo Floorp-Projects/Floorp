@@ -17,6 +17,11 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#category");
 }
 
+.sidebar-footer-button > .text-link {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 .addon[status="installed"] {
   -moz-box-orient: vertical;
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-generic");
