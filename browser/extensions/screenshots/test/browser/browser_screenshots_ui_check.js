@@ -1,8 +1,5 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-
 const BUTTON_ID = "pageAction-panel-screenshots_mozilla_org";
 
 function checkElements(expectPresent, l) {
@@ -18,12 +15,13 @@ async function togglePageActionPanel() {
 }
 
 function promiseOpenPageActionPanel() {
+  const dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     // Wait for the main page action button to become visible.  It's hidden for
     // some URIs, so depending on when this is called, it may not yet be quite
     // visible.  It's up to the caller to make sure it will be visible.
     info("Waiting for main page action button to have non-0 size");
-    const bounds = window.windowUtils.getBoundsWithoutFlushing(BrowserPageActions.mainButtonNode);
+    const bounds = dwu.getBoundsWithoutFlushing(BrowserPageActions.mainButtonNode);
     return bounds.width > 0 && bounds.height > 0;
   }).then(() => {
     // Wait for the panel to become open, by clicking the button if necessary.
@@ -56,10 +54,11 @@ function promisePageActionPanelEvent(eventType) {
 
 function promisePageActionViewChildrenVisible(panelViewNode) {
   info("promisePageActionViewChildrenVisible waiting for a child node to be visible");
+  const dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
-    const bodyNode = panelViewNode.firstChild;
-    for (const childNode of bodyNode.childNodes) {
-      const bounds = window.windowUtils.getBoundsWithoutFlushing(childNode);
+    const bodyNode = panelViewNode.firstElementChild;
+    for (const childNode of bodyNode.children) {
+      const bounds = dwu.getBoundsWithoutFlushing(childNode);
       if (bounds.width > 0 && bounds.height > 0) {
         return true;
       }
@@ -69,15 +68,11 @@ function promisePageActionViewChildrenVisible(panelViewNode) {
 }
 
 add_task(async function() {
-  // If Screenshots was disabled, enable it just for this test.
-  const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
-  const isEnabled = addon.enabled;
-  if (!isEnabled) {
-    await addon.enable({allowSystemAddons: true});
-    registerCleanupFunction(async () => {
-      await addon.disable({allowSystemAddons: true});
-    });
-  }
+  await promiseScreenshotsEnabled();
+
+  registerCleanupFunction(async function() {
+    await promiseScreenshotsReset();
+  });
 
   // Toggle the page action panel to get it to rebuild itself.  An actionable
   // page must be opened first.
