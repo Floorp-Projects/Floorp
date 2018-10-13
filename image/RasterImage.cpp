@@ -333,7 +333,7 @@ LookupResult
 RasterImage::LookupFrame(const IntSize& aSize,
                          uint32_t aFlags,
                          PlaybackType aPlaybackType,
-                         bool aMarkUsed /* = true */)
+                         bool aMarkUsed)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -609,7 +609,7 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
   // not waiting for the data to be loaded from the network or not passing
   // FLAG_SYNC_DECODE.
   LookupResult result =
-    LookupFrame(aSize, aFlags, ToPlaybackType(aWhichFrame));
+    LookupFrame(aSize, aFlags, ToPlaybackType(aWhichFrame), /* aMarkUsed = */ true);
 
   // The surface cache may have suggested we use a different size than the
   // given size in the future. This may or may not be accompanied by an
@@ -1523,7 +1523,7 @@ RasterImage::Draw(gfxContext* aContext,
                  : aFlags & ~FLAG_HIGH_QUALITY_SCALING;
 
   LookupResult result =
-    LookupFrame(aSize, flags, ToPlaybackType(aWhichFrame));
+    LookupFrame(aSize, flags, ToPlaybackType(aWhichFrame), /* aMarkUsed = */ true);
   if (!result) {
     // Getting the frame (above) touches the image and kicks off decoding.
     if (mDrawStartTime.IsNull()) {

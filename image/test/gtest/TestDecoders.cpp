@@ -573,7 +573,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST)
       SurfaceCache::Lookup(ImageKey(image.get()),
                            RasterSurfaceKey(imageSize,
                                             DefaultSurfaceFlags(),
-                                            PlaybackType::eStatic));
+                                            PlaybackType::eStatic),
+                           /* aMarkUsed = */ false);
     ASSERT_EQ(MatchType::EXACT, result.Type());
     EXPECT_TRUE(bool(result.Surface()));
   }
@@ -584,7 +585,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST)
       SurfaceCache::Lookup(ImageKey(image.get()),
                            RasterSurfaceKey(imageSize,
                                             DefaultSurfaceFlags(),
-                                            PlaybackType::eAnimated));
+                                            PlaybackType::eAnimated),
+                           /* aMarkUsed = */ false);
     ASSERT_EQ(MatchType::NOT_FOUND, result.Type());
   }
 
@@ -600,7 +602,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST)
       SurfaceCache::Lookup(ImageKey(image.get()),
                            RasterSurfaceKey(imageSize,
                                             DefaultSurfaceFlags(),
-                                            PlaybackType::eAnimated));
+                                            PlaybackType::eAnimated),
+                           /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
 
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
@@ -616,7 +619,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST)
       SurfaceCache::Lookup(ImageKey(image.get()),
                            RasterSurfaceKey(imageSize,
                                             DefaultSurfaceFlags(),
-                                            PlaybackType::eStatic));
+                                            PlaybackType::eStatic),
+                           /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
     EXPECT_TRUE(bool(result.Surface()));
   }
@@ -686,7 +690,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT)
       SurfaceCache::Lookup(ImageKey(image.get()),
                            RasterSurfaceKey(imageSize,
                                             DefaultSurfaceFlags(),
-                                            PlaybackType::eAnimated));
+                                            PlaybackType::eAnimated),
+                           /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
 
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
@@ -702,7 +707,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT)
       SurfaceCache::Lookup(ImageKey(image.get()),
                            RasterSurfaceKey(imageSize,
                                             DefaultSurfaceFlags(),
-                                            PlaybackType::eStatic));
+                                            PlaybackType::eStatic),
+                           /* aMarkUsed = */ false);
     ASSERT_EQ(MatchType::NOT_FOUND, result.Type());
   }
 
@@ -718,7 +724,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT)
       SurfaceCache::Lookup(ImageKey(image.get()),
                            RasterSurfaceKey(imageSize,
                                             DefaultSurfaceFlags(),
-                                            PlaybackType::eStatic));
+                                            PlaybackType::eStatic),
+                           /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
     EXPECT_TRUE(bool(result.Surface()));
   }
@@ -729,7 +736,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT)
       SurfaceCache::Lookup(ImageKey(image.get()),
                            RasterSurfaceKey(imageSize,
                                             DefaultSurfaceFlags(),
-                                            PlaybackType::eAnimated));
+                                            PlaybackType::eAnimated),
+                           /* aMarkUsed = */ true);
     ASSERT_EQ(MatchType::EXACT, result.Type());
 
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
@@ -798,7 +806,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
     SurfaceCache::Lookup(ImageKey(image.get()),
                          RasterSurfaceKey(imageSize,
                                           DefaultSurfaceFlags(),
-                                          PlaybackType::eAnimated));
+                                          PlaybackType::eAnimated),
+                         /* aMarkUsed = */ true);
   ASSERT_EQ(MatchType::EXACT, result.Type());
 
   EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
