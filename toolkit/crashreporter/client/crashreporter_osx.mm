@@ -101,6 +101,7 @@ static bool RestartApplication()
 
   [mWindow setTitle:[[NSBundle mainBundle]
                       objectForInfoDictionaryKey:@"CFBundleName"]];
+  [NSApp activateIgnoringOtherApps:YES];
 }
 
 -(void)showCrashUI:(const StringTable&)files
