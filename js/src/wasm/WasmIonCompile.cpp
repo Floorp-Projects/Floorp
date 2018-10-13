@@ -3594,7 +3594,6 @@ EmitBodyExprs(FunctionCompiler& f)
           // Miscellaneous operations
           case uint16_t(Op::MiscPrefix): {
             switch (op.b1) {
-#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
               case uint16_t(MiscOp::I32TruncSSatF32):
               case uint16_t(MiscOp::I32TruncUSatF32):
                 CHECK(EmitTruncate(f, ValType::F32, ValType::I32,
@@ -3611,7 +3610,6 @@ EmitBodyExprs(FunctionCompiler& f)
               case uint16_t(MiscOp::I64TruncUSatF64):
                 CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
                                    MiscOp(op.b1) == MiscOp::I64TruncUSatF64, true));
-#endif
 #ifdef ENABLE_WASM_BULKMEM_OPS
               case uint16_t(MiscOp::MemCopy):
                 CHECK(EmitMemOrTableCopy(f, /*isMem=*/true));

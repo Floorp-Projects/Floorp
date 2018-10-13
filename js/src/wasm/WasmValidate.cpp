@@ -891,7 +891,6 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
             CHECK(iter.readUnreachable());
           case uint16_t(Op::MiscPrefix): {
             switch (op.b1) {
-#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
               case uint16_t(MiscOp::I32TruncSSatF32):
               case uint16_t(MiscOp::I32TruncUSatF32):
                 CHECK(iter.readConversion(ValType::F32, ValType::I32, &nothing));
@@ -904,7 +903,6 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
               case uint16_t(MiscOp::I64TruncSSatF64):
               case uint16_t(MiscOp::I64TruncUSatF64):
                 CHECK(iter.readConversion(ValType::F64, ValType::I64, &nothing));
-#endif
 #ifdef ENABLE_WASM_BULKMEM_OPS
               case uint16_t(MiscOp::MemCopy):
                   CHECK(iter.readMemOrTableCopy(/*isMem=*/true,

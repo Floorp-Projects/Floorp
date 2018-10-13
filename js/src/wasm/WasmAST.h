@@ -483,9 +483,7 @@ enum class AstExprKind
     ConversionOperator,
     CurrentMemory,
     Drop,
-#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
     ExtraConversionOperator,
-#endif
     First,
     GetGlobal,
     GetLocal,
@@ -1639,7 +1637,6 @@ class AstConversionOperator final : public AstExpr
     AstExpr* operand() const { return operand_; }
 };
 
-#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
 // Like AstConversionOperator, but for opcodes encoded with the Misc prefix.
 class AstExtraConversionOperator final : public AstExpr
 {
@@ -1656,7 +1653,6 @@ class AstExtraConversionOperator final : public AstExpr
     MiscOp op() const { return op_; }
     AstExpr* operand() const { return operand_; }
 };
-#endif
 
 class AstRefNull final : public AstExpr
 {
