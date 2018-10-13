@@ -158,7 +158,6 @@
       <label control="networkDnsOverHttpsUrl" data-l10n-id="connection-dns-over-https-url"
              data-l10n-attrs="tooltiptext"/>
       <textbox id="networkDnsOverHttpsUrl" flex="1" preference="network.trr.uri"
-               placeholder="https://doh.example.com/dns-query"
                onsynctopreference="return gConnectionsDialog.writeDnsOverHttpsUri()" />
     </hbox>
     <separator/>

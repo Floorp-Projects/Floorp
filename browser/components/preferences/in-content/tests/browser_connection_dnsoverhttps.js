@@ -8,7 +8,7 @@ const modeCheckboxSelector = "#networkDnsOverHttps";
 const uriTextboxSelector = "#networkDnsOverHttpsUrl";
 const defaultPrefValues = Object.freeze({
   [TRR_MODE_PREF]: 0,
-  [TRR_URI_PREF]: "",
+  [TRR_URI_PREF]: "https://mozilla.cloudflare-dns.com/dns-query",
 });
 
 function resetPrefs() {
@@ -116,7 +116,7 @@ add_task(async function default_values() {
 
 let testVariations = [
   // verify state with defaults
-  { expectedModePref: 0, expectedUriValue: "" },
+  { expectedModePref: 0, expectedUriValue: "https://mozilla.cloudflare-dns.com/dns-query" },
 
   // verify each of the modes maps to the correct checked state
   { [TRR_MODE_PREF]: 0, expectedModeChecked: false },
@@ -129,7 +129,7 @@ let testVariations = [
   { [TRR_MODE_PREF]: 77, expectedModeChecked: false },
 
   // verify toggling the checkbox gives the right outcomes
-  { clickMode: true, expectedModeValue: 2, expectedUriValue: "" },
+  { clickMode: true, expectedModeValue: 2, expectedUriValue: "https://mozilla.cloudflare-dns.com/dns-query" },
   {
     [TRR_MODE_PREF]: 4,
     expectedModeChecked: true, clickMode: true, expectedModePref: 0,
