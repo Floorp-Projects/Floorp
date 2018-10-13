@@ -62,6 +62,7 @@ category-sync =
     .tooltiptext = { pane-sync-title }
 
 help-button-label = { -brand-short-name } Support
+addons-button-label = Extensions & Themes
 
 focus-search =
     .key = f

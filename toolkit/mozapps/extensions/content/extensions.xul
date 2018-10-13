@@ -151,7 +151,34 @@
                       name="&view.recentUpdates.label;" priority="101000"
                       tooltiptext="&view.recentUpdates.label;" disabled="true"/>
       </richlistbox>
+
+      <spacer flex="1"/>
+
+      <hbox class="sidebar-footer-button" pack="center">
+        <label id="preferencesButton" class="text-link">
+          <hbox align="center">
+            <image class="sidebar-footer-icon preferences-icon"/>
+            <label class="sidebar-footer-label" flex="1">
+#ifdef XP_WIN
+                &preferencesWin.label;
+#else
+                &preferencesUnix.label;
+#endif
+            </label>
+          </hbox>
+        </label>
+      </hbox>
+
+      <hbox class="sidebar-footer-button help-button" pack="center">
+        <label id="helpButton" class="text-link">
+          <hbox align="center">
+            <image class="sidebar-footer-icon help-icon"/>
+            <label class="sidebar-footer-label" flex="1">&helpButton.label;</label>
+          </hbox>
+        </label>
+      </hbox>
     </vbox>
+
     <vbox class="main-content" flex="1">
       <!-- view port -->
       <deck id="view-port" flex="1" selectedIndex="0">
