@@ -97,17 +97,6 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart: public BinTokenReaderBase
     MOZ_MUST_USE JS::Result<JSAtom*> readMaybeAtom();
     MOZ_MUST_USE JS::Result<JSAtom*> readAtom();
 
-    /**
-     * Read a single IdentifierName value.
-     */
-    MOZ_MUST_USE JS::Result<JSAtom*> readMaybeIdentifierName();
-    MOZ_MUST_USE JS::Result<JSAtom*> readIdentifierName();
-
-    /**
-     * Read a single PropertyKey value.
-     */
-    MOZ_MUST_USE JS::Result<JSAtom*> readMaybePropertyKey();
-    MOZ_MUST_USE JS::Result<JSAtom*> readPropertyKey();
 
     /**
      * Read a single `string | null` value.
