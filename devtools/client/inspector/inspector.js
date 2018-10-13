@@ -1129,6 +1129,8 @@ Inspector.prototype = {
       eyeDropperButton.disabled = true;
       eyeDropperButton.title = INSPECTOR_L10N.getStr("eyedropper.disabled.title");
     }
+
+    this.emit("inspector-toolbar-updated");
   },
 
   teardownToolbar: function() {
