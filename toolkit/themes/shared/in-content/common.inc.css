@@ -845,3 +845,88 @@ xul|treechildren::-moz-tree-image(selected) {
 .message-bar-warning > .message-bar-icon {
   list-style-image: url("chrome://browser/skin/warning.svg");
 }
+
+.sidebar-footer-button {
+  padding: 1px; /* Adding padding around help label in order to make entire keyboard focusing outline visible */
+}
+
+.sidebar-footer-button > .text-link {
+  -moz-box-flex: 1;
+  margin-inline-start: 34px;
+  margin-inline-end: 0;
+  text-decoration: none;
+  color: currentColor;
+  width: 36px;
+  height: 36px;
+  cursor: default;
+}
+
+.sidebar-footer-button > .text-link:hover {
+  background-color: var(--in-content-category-background-hover);
+  border-radius: 2px;
+}
+
+.sidebar-footer-button > .text-link:hover:active:not([disabled]) {
+  background-color: var(--in-content-category-background-active);
+}
+
+.sidebar-footer-button > .text-link:-moz-focusring {
+  outline: var(--in-content-category-outline-focus);
+}
+
+.sidebar-footer-icon {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  width: 16px;
+  height: 16px;
+  margin: 10px;
+  margin-inline-start: 13px;
+  vertical-align: middle;
+}
+
+.sidebar-footer-icon:hover {
+  fill: currentColor !important;
+}
+
+.sidebar-footer-button:last-of-type {
+  margin-bottom: 36px;
+}
+
+.help-icon {
+  list-style-image: url("chrome://global/skin/icons/help.svg");
+}
+
+.preferences-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/general.svg");
+}
+
+.addons-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.svg");
+  /* The add-ons icon doesn't have much (any?) margin, so make it a bit smaller. */
+  width: 14px;
+  height: 14px;
+  margin-inline-start: 15px;
+}
+
+.sidebar-footer-label {
+  margin: 0 4px;
+  font-size: .9em;
+  -moz-user-select: none;
+}
+
+@media (max-width: 830px) {
+  .sidebar-footer-button > .text-link {
+    -moz-box-flex: 0;
+    width: 36px;
+    height: 36px;
+    margin-inline-start: 0;
+  }
+
+  .sidebar-footer-icon {
+    margin: 10px;
+  }
+
+  .sidebar-footer-label {
+    display: none;
+  }
+}
