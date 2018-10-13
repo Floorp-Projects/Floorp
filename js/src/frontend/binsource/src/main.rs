@@ -549,7 +549,7 @@ impl CPPExporter {
             if typedef.is_optional() {
                 let content_name = TypeName::type_spec(typedef.spec());
                 let content_node_name = syntax.get_node_name(&content_name)
-                    .unwrap_or_else(|| panic!("While generating an option parser, could not find node name \"{}\"", content_name))
+                    .unwrap_or_else(|| panic!("While generating an option parser, could not find node name {}", content_name))
                     .clone();
                 debug!(target: "generate_spidermonkey", "CPPExporter::new adding optional typedef {:?} => {:?} => {:?}",
                     parser_node_name,
@@ -712,10 +712,6 @@ impl CPPExporter {
             }
             refgraph.insert(string_from_nodename(&parser.name), edges);
         }
-
-        // 6. Primitive values.
-        refgraph.insert(Rc::new("IdentifierName".to_string()), HashSet::new());
-        refgraph.insert(Rc::new("PropertyKey".to_string()), HashSet::new());
 
         self.refgraph = refgraph;
     }
@@ -1480,65 +1476,6 @@ impl CPPExporter {
                             ));
                         }
                     }
-                    &TypeSpec::IdentifierName => {
-                        let build_result = rules_for_this_node.init.reindent("    ");
-                        let first_line = self.get_method_definition_start(&parser.name, "", "",
-                                                                          &extra_params);
-                        if build_result.len() == 0 {
-                            buffer.push_str(&format!("{first_line}
-{{
-    return raiseError(\"FIXME: Not implemented yet ({kind})\");
-}}
-
-",
-                                first_line = first_line,
-                                kind = parser.name.to_str()));
-                        } else {
-                            buffer.push_str(&format!("{first_line}
-{{
-    BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybeIdentifierName());
-
-{build}
-
-    return result;
-}}
-
-",
-                                first_line = first_line,
-                                build = build_result,
-                            ));
-                        }
-                    }
-                    &TypeSpec::PropertyKey => {
-                        debug!(target: "generate_spidermonkey", "Generating method for PropertyKey: {:?}", parser.name);
-                        let build_result = rules_for_this_node.init.reindent("    ");
-                        let first_line = self.get_method_definition_start(&parser.name, "", "",
-                                                                          &extra_params);
-                        if build_result.len() == 0 {
-                            buffer.push_str(&format!("{first_line}
-{{
-    return raiseError(\"FIXME: Not implemented yet ({kind})\");
-}}
-
-",
-                                first_line = first_line,
-                                kind = parser.name.to_str()));
-                        } else {
-                            buffer.push_str(&format!("{first_line}
-{{
-    BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybePropertyKey());
-
-{build}
-
-    return result;
-}}
-
-",
-                                first_line = first_line,
-                                build = build_result,
-                            ));
-                        }
-                    }
                     _else => unimplemented!("{:?}", _else)
                 }
             }
@@ -1667,26 +1604,6 @@ impl CPPExporter {
                     (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
                         Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readAtom());", var_name = var_name)))
                 }
-                Some(IsNullable { is_nullable: false, content: Primitive::IdentifierName }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readIdentifierName());", var_name = var_name)))
-                }
-                Some(IsNullable { is_nullable: false, content: Primitive::PropertyKey }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readPropertyKey());", var_name = var_name)))
-                }
-                Some(IsNullable { is_nullable: true, content: Primitive::String }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeAtom());", var_name = var_name)))
-                }
-                Some(IsNullable { is_nullable: true, content: Primitive::IdentifierName }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeIdentifierName());", var_name = var_name)))
-                }
-                Some(IsNullable { is_nullable: true, content: Primitive::PropertyKey }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybePropertyKey());", var_name = var_name)))
-                }
                 _else => {
                     let typename = TypeName::type_(field.type_());
                     let name = self.syntax.get_node_name(typename.to_str())
@@ -1709,6 +1626,7 @@ impl CPPExporter {
                                                call_kind)))
                 }
             };
+
             let rendered = {
                 if rules_for_this_field.replace.is_some() {
                     for &(condition, rule_name) in &[
