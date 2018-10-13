@@ -127,7 +127,7 @@ VRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer)
 #elif defined(XP_MACOSX)
 
   if (aLayer.mTextureType == VRLayerTextureType::LayerTextureType_MacIOSurface) {
-    return SubmitFrame(aLayer, (MacIOSurface*)aLayer.mTextureHandle);
+    return SubmitFrame(aLayer, aLayer.mTextureHandle);
   }
 
 #endif

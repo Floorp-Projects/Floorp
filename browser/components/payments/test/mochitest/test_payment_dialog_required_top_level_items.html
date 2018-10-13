@@ -117,7 +117,7 @@ async function setup({shippingRequired, payerRequired}) {
 
   // Fill the security code input so it doesn't interfere with checking the pay
   // button state for dropdown changes.
-  el1._paymentMethodPicker.securityCodeInput.select();
+  el1._paymentMethodPicker.securityCodeInput.querySelector("input").select();
   sendString("123");
   await asyncElementRendered();
 }
@@ -234,14 +234,14 @@ add_task(async function test_securityCodeRequired() {
   selectFirstItemOfPicker(picker);
   await stateChangedPromise;
 
-  picker.securityCodeInput.select();
+  picker.securityCodeInput.querySelector("input").select();
   stateChangedPromise = promiseStateChange(el1.requestStore);
   synthesizeKey("VK_DELETE");
   await stateChangedPromise;
 
   ok(payButton.disabled, "Button is disabled when CVV is empty");
 
-  picker.securityCodeInput.select();
+  picker.securityCodeInput.querySelector("input").select();
   stateChangedPromise = promiseStateChange(el1.requestStore);
   sendString("123");
   await stateChangedPromise;

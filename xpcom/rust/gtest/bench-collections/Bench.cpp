@@ -222,12 +222,14 @@ static const size_t VALS_LEN = 131072;
 // Note that no "Inserts" value can exceed VALS_LEN.
 // Also, if any failing lookups are done, Inserts must be <= VALS_LEN/2.
 const Params gParamsList[] = {
+  // clang-format off
   //                           Successful Failing              Remove
   //                 Inserts   lookups    lookups  Iterations  inserts
   { "succ_lookups",  1024,     5000,      0,       0,          false },
   { "fail_lookups",  1024,     0,         5000,    0,          false },
   { "insert_remove", VALS_LEN, 0,         0,       0,          true  },
   { "iterate",       1024,     0,         0,       5000,       false },
+  // clang-format on
 };
 
 class BenchCollections : public ::testing::Test

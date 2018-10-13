@@ -358,6 +358,7 @@ struct timerEvent {
   int32_t timerIdUnschedule;
 };
 static timerEvent timerEvents[] = {
+  // clang-format off
   {-1, 0, 200, false, -1},
   {0, 0, 400, false, -1},
   {0, 0, 200, true, -1},
@@ -365,6 +366,7 @@ static timerEvent timerEvents[] = {
   {0, -1, 0, false, 0},
   {1, -1, 0, false, -1},
   {1, -1, 0, false, 1},
+  // clang-format on
 };
 static uint32_t currentTimerEventCount = 0;
 static uint32_t totalTimerEvents = sizeof(timerEvents) / sizeof(timerEvent);

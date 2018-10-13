@@ -1929,6 +1929,7 @@ JSFunction::maybeRelazify(JSRuntime* rt)
 }
 
 const JSFunctionSpec js::function_methods[] = {
+    // clang-format off
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
     JS_FN(js_toString_str,   fun_toString,   0,0),
     JS_FN(js_apply_str,      fun_apply,      2,0),
@@ -1936,6 +1937,7 @@ const JSFunctionSpec js::function_methods[] = {
     JS_SELF_HOSTED_FN("bind", "FunctionBind", 2, 0),
     JS_SYM_FN(hasInstance, fun_symbolHasInstance, 1, JSPROP_READONLY | JSPROP_PERMANENT),
     JS_FS_END
+    // clang-format on
 };
 
 // ES2018 draft rev 2aea8f3e617b49df06414eb062ab44fad87661d3

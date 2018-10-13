@@ -1,4 +1,4 @@
-import {_ASRouterPreferences, ASRouterPreferences as ASRouterPreferencesSingleton} from "lib/ASRouterPreferences.jsm";
+import {_ASRouterPreferences, ASRouterPreferences as ASRouterPreferencesSingleton, TEST_PROVIDER} from "lib/ASRouterPreferences.jsm";
 const FAKE_PROVIDERS = [{id: "foo"}, {id: "bar"}];
 
 const PROVIDER_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
@@ -107,6 +107,12 @@ describe("ASRouterPreferences", () => {
 
       assert.deepEqual(ASRouterPreferences.providers, []);
     });
+    it("should include TEST_PROVIDER if devtools is turned on", () => {
+      boolPrefStub.withArgs(DEVTOOLS_PREF).returns(true);
+      ASRouterPreferences.init();
+
+      assert.deepEqual(ASRouterPreferences.providers, [TEST_PROVIDER, ...FAKE_PROVIDERS]);
+    });
   });
   describe(".devtoolsEnabled", () => {
     it("should read the pref the first time .devtoolsEnabled is accessed", () => {
@@ -170,15 +176,18 @@ describe("ASRouterPreferences", () => {
       // Cache should be invalidated so we access the new value of the pref now
       assert.deepEqual(ASRouterPreferences.providers, testProviders);
     });
-    it("should invalidate .devtoolsEnabled when the pref is changed", () => {
+    it("should invalidate .devtoolsEnabled and .providers when the pref is changed", () => {
       ASRouterPreferences.init();
 
       assert.isFalse(ASRouterPreferences.devtoolsEnabled);
       boolPrefStub.withArgs(DEVTOOLS_PREF).returns(true);
+      stringPrefStub.withArgs(PROVIDER_PREF).returns("[]");
       ASRouterPreferences.observe(null, null, DEVTOOLS_PREF);
 
       // Cache should be invalidated so we access the new value of the pref now
+      // Note that providers needs to be invalidated because devtools adds test content to it.
       assert.isTrue(ASRouterPreferences.devtoolsEnabled);
+      assert.deepEqual(ASRouterPreferences.providers, [TEST_PROVIDER]);
     });
     it("should call listeners added with .addListener", () => {
       const callback1 = sinon.stub();

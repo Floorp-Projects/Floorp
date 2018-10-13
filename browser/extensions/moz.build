@@ -7,7 +7,6 @@
 DIRS += [
     'formautofill',
     'pdfjs',
-    'pocket',
     'screenshots',
     'webcompat',
     'webcompat-reporter'

@@ -1205,6 +1205,7 @@ num_toPrecision(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec number_methods[] = {
+    // clang-format off
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
     JS_FN(js_toString_str,       num_toString,          1, 0),
 #if EXPOSE_INTL_API
@@ -1217,6 +1218,7 @@ static const JSFunctionSpec number_methods[] = {
     JS_FN("toExponential",       num_toExponential,     1, 0),
     JS_FN("toPrecision",         num_toPrecision,       1, 0),
     JS_FS_END
+    // clang-format on
 };
 
 bool
@@ -1333,6 +1335,7 @@ js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global)
      * encoding for our value representation.  See Value.h.
      */
     static const JSConstDoubleSpec number_constants[] = {
+        // clang-format off
         {"NaN",               GenericNaN()               },
         {"POSITIVE_INFINITY", mozilla::PositiveInfinity<double>() },
         {"NEGATIVE_INFINITY", mozilla::NegativeInfinity<double>() },
@@ -1345,6 +1348,7 @@ js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global)
         /* ES6 (May 2013 draft) 15.7.3.7 */
         {"EPSILON", 2.2204460492503130808472633361816e-16},
         {0,0}
+        // clang-format on
     };
 
     /* Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor. */

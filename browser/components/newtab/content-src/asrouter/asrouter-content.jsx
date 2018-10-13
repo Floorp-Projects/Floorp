@@ -1,12 +1,11 @@
-import {LocalizationProvider, Localized} from "fluent-react";
 import {actionCreators as ac} from "common/Actions.jsm";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
+import {generateMessages} from "./rich-text-strings";
 import {ImpressionsWrapper} from "./components/ImpressionsWrapper/ImpressionsWrapper";
-import {MessageContext} from "fluent";
+import {LocalizationProvider} from "fluent-react";
 import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage";
 import React from "react";
 import ReactDOM from "react-dom";
-import {safeURI} from "./template-utils";
 import {SimpleSnippet} from "./templates/SimpleSnippet/SimpleSnippet";
 import {SubmitFormSnippet} from "./templates/SubmitFormSnippet/SubmitFormSnippet";
 
@@ -78,58 +77,6 @@ export const ASRouterUtils = {
 // Note: nextProps/prevProps refer to props passed to <ImpressionsWrapper />, not <ASRouterUISurface />
 function shouldSendImpressionOnUpdate(nextProps, prevProps) {
   return (nextProps.message.id && (!prevProps.message || prevProps.message.id !== nextProps.message.id));
-}
-
-function generateMessages(content) {
-  const cx = new MessageContext("en-US");
-  Object.keys(content).forEach(key => {
-    cx.addMessages(`${key} = ${content[key]}`);
-  });
-  return [cx];
-}
-
-// Elements allowed in snippet content
-const ALLOWED_TAGS = {
-  b: <b />,
-  i: <i />,
-  u: <u />,
-  strong: <strong />,
-  em: <em />,
-  br: <br />,
-};
-
-/**
- * Transform an object (tag name: {url}) into (tag name: anchor) where the url
- * is used as href, in order to render links inside a Fluent.Localized component.
- */
-export function convertLinks(links, sendClick) {
-  if (links) {
-    return Object.keys(links).reduce((acc, linkTag) => {
-      const {action} = links[linkTag];
-      // Setting the value to false will not include the attribute in the anchor
-      const url = action ? false : safeURI(links[linkTag].url);
-
-      acc[linkTag] = (<a href={url}
-        data-metric={links[linkTag].metric}
-        data-action={action}
-        data-args={links[linkTag].args}
-        onClick={sendClick} />);
-      return acc;
-    }, {});
-  }
-
-  return null;
-}
-
-/**
- * Message wrapper used to sanitize markup and render HTML.
- */
-function RichText(props) {
-  return (
-    <Localized id={props.localization_id} {...ALLOWED_TAGS} {...convertLinks(props.links, props.sendClick)}>
-      <span>{props.text}</span>
-    </Localized>
-  );
 }
 
 export class ASRouterUISurface extends React.PureComponent {
@@ -247,16 +194,8 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   renderSnippets() {
-    let privacyNoticeRichText;
     const SnippetComponent = SnippetComponents[this.state.message.template];
     const {content} = this.state.message;
-
-    if (this.state.message.template === "newsletter_snippet") {
-      privacyNoticeRichText = (<RichText text={content.scene2_privacy_html}
-        localization_id="privacy_notice"
-        links={content.links}
-        sendClick={this.sendClick} />);
-    }
 
     return (
       <ImpressionsWrapper
@@ -266,21 +205,14 @@ export class ASRouterUISurface extends React.PureComponent {
         shouldSendImpressionOnUpdate={shouldSendImpressionOnUpdate}
         // This helps with testing
         document={this.props.document}>
-          <LocalizationProvider messages={generateMessages({
-            privacy_notice: content.scene2_privacy_html,
-            snippet_text: content.text || content.scene1_text,
-          })}>
+          <LocalizationProvider messages={generateMessages(content)}>
             <SnippetComponent
               {...this.state.message}
-              richText={<RichText text={content.text || content.scene1_text}
-                                  localization_id="snippet_text"
-                                  links={this.state.message.content.links}
-                                  sendClick={this.sendClick} />}
-              privacyNoticeRichText={privacyNoticeRichText}
               UISurface="NEWTAB_FOOTER_BAR"
               onBlock={this.onBlockById(this.state.message.id)}
               onDismiss={this.onDismissById(this.state.message.id)}
               onAction={ASRouterUtils.executeAction}
+              sendClick={this.sendClick}
               sendUserActionTelemetry={this.sendUserActionTelemetry} />
           </LocalizationProvider>
       </ImpressionsWrapper>);

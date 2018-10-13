@@ -61,6 +61,7 @@ struct ManifestDirective
     int aLineNo, char* const* aArgv, int aFlags);
 };
 static const ManifestDirective kParsingTable[] = {
+  // clang-format off
   {
     "manifest",         1, true, false,
     &nsComponentManagerImpl::ManifestManifest, nullptr,
@@ -99,6 +100,7 @@ static const ManifestDirective kParsingTable[] = {
     "resource",         2, false, true,
     nullptr, &nsChromeRegistry::ManifestResource,
   }
+  // clang-format on
 };
 
 static const char kWhitespace[] = "\t ";

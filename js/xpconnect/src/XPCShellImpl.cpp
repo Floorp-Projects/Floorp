@@ -678,6 +678,7 @@ RegisterXPCTestComponents(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
 static const JSFunctionSpec glob_functions[] = {
+    // clang-format off
     JS_FN("print",           Print,          0,0),
     JS_FN("readline",        ReadLine,       1,0),
     JS_FN("load",            Load,           1,0),
@@ -699,6 +700,7 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FN("registerXPCTestComponents", RegisterXPCTestComponents, 0, 0),
 #endif
     JS_FS_END
+    // clang-format on
 };
 
 /***************************************************************************/

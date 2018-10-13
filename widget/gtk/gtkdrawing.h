@@ -327,6 +327,8 @@ typedef enum {
   MOZ_GTK_HEADER_BAR,
   /* Paints a GtkHeaderBar in maximized state */
   MOZ_GTK_HEADER_BAR_MAXIMIZED,
+  /* Container for GtkHeaderBar buttons */
+  MOZ_GTK_HEADER_BAR_BUTTON_BOX,
   /* Paints GtkHeaderBar title buttons.
    * Keep the order here as MOZ_GTK_HEADER_BAR_BUTTON_* are processed
    * as an array from MOZ_GTK_HEADER_BAR_BUTTON_CLOSE to the last one.

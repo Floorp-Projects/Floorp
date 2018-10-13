@@ -125,10 +125,10 @@ const TargetingGetters = {
     return new Date();
   },
   get profileAgeCreated() {
-    return new ProfileAge(null, null).created;
+    return ProfileAge().then(times => times.created);
   },
   get profileAgeReset() {
-    return new ProfileAge(null, null).reset;
+    return ProfileAge().then(times => times.reset);
   },
   get usesFirefoxSync() {
     return Services.prefs.prefHasUserValue(FXA_USERNAME_PREF);

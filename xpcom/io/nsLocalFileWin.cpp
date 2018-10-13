@@ -2899,6 +2899,7 @@ nsLocalFile::IsExecutable(bool* aResult)
 
     // Search for any of the set of executable extensions.
     static const char* const executableExts[] = {
+      // clang-format off
       "ad",
       "ade",         // access project extension
       "adp",
@@ -2974,6 +2975,7 @@ nsLocalFile::IsExecutable(bool* aResult)
       "wsc",
       "wsf",
       "wsh"
+      // clang-format on
     };
     nsDependentSubstring ext = Substring(path, dotIdx + 1);
     for (size_t i = 0; i < ArrayLength(executableExts); ++i) {

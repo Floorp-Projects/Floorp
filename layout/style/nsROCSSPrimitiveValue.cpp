@@ -109,24 +109,6 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         tmpStr.AppendLiteral("deg");
         break;
       }
-    case CSS_GRAD:
-      {
-        nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
-        tmpStr.AppendLiteral("grad");
-        break;
-      }
-    case CSS_RAD:
-      {
-        nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
-        tmpStr.AppendLiteral("rad");
-        break;
-      }
-    case CSS_TURN:
-      {
-        nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
-        tmpStr.AppendLiteral("turn");
-        break;
-      }
     case CSS_S:
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
@@ -169,138 +151,6 @@ nsROCSSPrimitiveValue::CssValueType() const
 }
 
 void
-nsROCSSPrimitiveValue::SetFloatValue(uint16_t aType, float aVal,
-                                     ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-}
-
-float
-nsROCSSPrimitiveValue::GetFloatValue(uint16_t aUnitType, ErrorResult& aRv)
-{
-  switch(aUnitType) {
-    case CSS_PX:
-      if (mType == CSS_PX) {
-        return nsPresContext::AppUnitsToFloatCSSPixels(mValue.mAppUnits);
-      }
-
-      break;
-    case CSS_CM:
-      if (mType == CSS_PX) {
-        return mValue.mAppUnits * CM_PER_INCH_FLOAT / AppUnitsPerCSSInch();
-      }
-
-      break;
-    case CSS_MM:
-      if (mType == CSS_PX) {
-        return mValue.mAppUnits * MM_PER_INCH_FLOAT / AppUnitsPerCSSInch();
-      }
-
-      break;
-    case CSS_IN:
-      if (mType == CSS_PX) {
-        return mValue.mAppUnits / AppUnitsPerCSSInch();
-      }
-
-      break;
-    case CSS_PT:
-      if (mType == CSS_PX) {
-        return mValue.mAppUnits * POINTS_PER_INCH_FLOAT / AppUnitsPerCSSInch();
-      }
-
-      break;
-    case CSS_PC:
-      if (mType == CSS_PX) {
-        return mValue.mAppUnits * 6.0f / AppUnitsPerCSSInch();
-      }
-
-      break;
-    case CSS_PERCENTAGE:
-      if (mType == CSS_PERCENTAGE) {
-        return mValue.mFloat * 100;
-      }
-
-      break;
-    case CSS_NUMBER:
-      if (mType == CSS_NUMBER) {
-        return mValue.mFloat;
-      }
-      if (mType == CSS_NUMBER_INT32) {
-        return mValue.mInt32;
-      }
-      if (mType == CSS_NUMBER_UINT32) {
-        return mValue.mUint32;
-      }
-
-      break;
-    case CSS_UNKNOWN:
-    case CSS_EMS:
-    case CSS_EXS:
-    case CSS_DEG:
-    case CSS_RAD:
-    case CSS_GRAD:
-    case CSS_MS:
-    case CSS_S:
-    case CSS_HZ:
-    case CSS_KHZ:
-    case CSS_DIMENSION:
-    case CSS_STRING:
-    case CSS_URI:
-    case CSS_IDENT:
-    case CSS_ATTR:
-    case CSS_COUNTER:
-    case CSS_RGBCOLOR:
-      break;
-  }
-
-  aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-  return 0;
-}
-
-void
-nsROCSSPrimitiveValue::SetStringValue(uint16_t aType, const nsAString& aString,
-                                      mozilla::ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-}
-
-void
-nsROCSSPrimitiveValue::GetStringValue(nsString& aReturn, ErrorResult& aRv)
-{
-  switch (mType) {
-    case CSS_IDENT:
-      CopyUTF8toUTF16(nsCSSKeywords::GetStringValue(mValue.mKeyword), aReturn);
-      break;
-    case CSS_STRING:
-    case CSS_ATTR:
-      aReturn.Assign(mValue.mString);
-      break;
-    case CSS_URI: {
-      nsAutoCString spec;
-      if (mValue.mURI) {
-        nsresult rv = mValue.mURI->GetSpec(spec);
-        if (NS_FAILED(rv)) {
-          aRv.Throw(rv);
-          return;
-        }
-      }
-      CopyUTF8toUTF16(spec, aReturn);
-      break;
-    }
-    default:
-      aReturn.Truncate();
-      aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-      return;
-  }
-}
-
-void
-nsROCSSPrimitiveValue::GetCounterValue(ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-void
 nsROCSSPrimitiveValue::SetNumber(float aValue)
 {
   Reset();
@@ -338,30 +188,6 @@ nsROCSSPrimitiveValue::SetDegree(float aValue)
   Reset();
   mValue.mFloat = aValue;
   mType = CSS_DEG;
-}
-
-void
-nsROCSSPrimitiveValue::SetGrad(float aValue)
-{
-  Reset();
-  mValue.mFloat = aValue;
-  mType = CSS_GRAD;
-}
-
-void
-nsROCSSPrimitiveValue::SetRadian(float aValue)
-{
-  Reset();
-  mValue.mFloat = aValue;
-  mType = CSS_RAD;
-}
-
-void
-nsROCSSPrimitiveValue::SetTurn(float aValue)
-{
-  Reset();
-  mValue.mFloat = aValue;
-  mType = CSS_TURN;
 }
 
 void

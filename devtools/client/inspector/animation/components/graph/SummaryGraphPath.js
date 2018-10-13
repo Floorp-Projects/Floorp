@@ -168,7 +168,8 @@ class SummaryGraphPath extends Component {
     }
 
     const keyframesList = this.getOffsetAndEasingOnlyKeyframes(animatedPropertyMap);
-    const totalDuration = timeScale.getDuration() * animation.state.playbackRate;
+    const totalDuration =
+      timeScale.getDuration() * Math.abs(animation.state.playbackRate);
     const durationPerPixel = totalDuration / thisEl.parentNode.clientWidth;
 
     this.setState(
@@ -193,19 +194,16 @@ class SummaryGraphPath extends Component {
       return dom.svg();
     }
 
-    const { createdTime, playbackRate } = animation.state;
+    const { playbackRate } = animation.state;
+    const { createdTime } = animation.state.absoluteValues;
+    const absPlaybackRate = Math.abs(playbackRate);
 
-    // If createdTime is not defined (which happens when connected to server older
-    // than FF62), use previousStartTime instead. See bug 1454392
-    const baseTime = typeof createdTime === "undefined"
-                       ? (animation.state.previousStartTime || 0)
-                       : createdTime;
     // Absorb the playbackRate in viewBox of SVG and offset of child path elements
     // in order to each graph path components can draw without considering to the
     // playbackRate.
-    const offset = baseTime * playbackRate;
-    const startTime = timeScale.minStartTime * playbackRate;
-    const totalDuration = timeScale.getDuration() * playbackRate;
+    const offset = createdTime * absPlaybackRate;
+    const startTime = timeScale.minStartTime * absPlaybackRate;
+    const totalDuration = timeScale.getDuration() * absPlaybackRate;
     const opacity = Math.max(1 / keyframesList.length, MIN_KEYFRAMES_EASING_OPACITY);
 
     return dom.svg(

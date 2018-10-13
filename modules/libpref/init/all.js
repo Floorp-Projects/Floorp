@@ -5287,7 +5287,7 @@ pref("dom.placeholder.show_on_focus", true);
 
 // WebVR is enabled by default in beta and release for Windows and for all
 // platforms in nightly and aurora.
-#if defined(XP_WIN) || !defined(RELEASE_OR_BETA)
+#if defined(XP_WIN) || defined(XP_MACOSX) || !defined(RELEASE_OR_BETA)
 pref("dom.vr.enabled", true);
 #else
 pref("dom.vr.enabled", false);
@@ -5433,7 +5433,7 @@ pref("network.captive-portal-service.enabled", false);
 // 0 - default off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow, 5 off by choice
 pref("network.trr.mode", 0);
 // DNS-over-HTTP service to use, must be HTTPS://
-pref("network.trr.uri", "");
+pref("network.trr.uri", "https://mozilla.cloudflare-dns.com/dns-query");
 // credentials to pass to DOH end-point
 pref("network.trr.credentials", "");
 // Wait for captive portal confirmation before enabling TRR

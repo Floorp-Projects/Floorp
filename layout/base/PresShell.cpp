@@ -257,6 +257,7 @@ struct VerifyReflowFlags {
 };
 
 static const VerifyReflowFlags gFlags[] = {
+  // clang-format off
   { "verify",                VERIFY_REFLOW_ON },
   { "reflow",                VERIFY_REFLOW_NOISY },
   { "all",                   VERIFY_REFLOW_ALL },
@@ -264,6 +265,7 @@ static const VerifyReflowFlags gFlags[] = {
   { "noisy-commands",        VERIFY_REFLOW_NOISY_RC },
   { "really-noisy-commands", VERIFY_REFLOW_REALLY_NOISY_RC },
   { "resize",                VERIFY_REFLOW_DURING_RESIZE_REFLOW },
+  // clang-format on
 };
 
 #define NUM_VERIFY_REFLOW_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))

@@ -760,6 +760,7 @@ NS_DEFINE_NAMED_CID(NETWORKINFOSERVICE_CID);
 #endif // BUILD_NETWORK_INFO_SERVICE
 
 static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
+    // clang-format off
     { &kNS_IOSERVICE_CID, false, nullptr, nsIOServiceConstructor },
     { &kNS_STREAMTRANSPORTSERVICE_CID, false, nullptr, nsStreamTransportServiceConstructor },
     { &kNS_SOCKETTRANSPORTSERVICE_CID, false, nullptr, nsSocketTransportServiceConstructor },
@@ -876,9 +877,11 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNETWORKINFOSERVICE_CID, false, nullptr, nsNetworkInfoServiceConstructor },
 #endif
     { nullptr }
+    // clang-format on
 };
 
 static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
+    // clang-format off
     { NS_IOSERVICE_CONTRACTID, &kNS_IOSERVICE_CID },
     { NS_NETUTIL_CONTRACTID, &kNS_IOSERVICE_CID },
     { NS_STREAMTRANSPORTSERVICE_CONTRACTID, &kNS_STREAMTRANSPORTSERVICE_CID },
@@ -992,6 +995,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NETWORKINFOSERVICE_CONTRACT_ID, &kNETWORKINFOSERVICE_CID },
 #endif
     { nullptr }
+    // clang-format on
 };
 
 static const mozilla::Module kNeckoModule = {
