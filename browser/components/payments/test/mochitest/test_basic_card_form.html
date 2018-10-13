@@ -149,7 +149,7 @@ add_task(async function test_saveButton() {
   let year = (new Date()).getFullYear().toString();
   fillField(form.form.querySelector("#cc-exp-year"), year);
   fillField(form.form.querySelector("#cc-type"), "visa");
-  fillField(form.form.querySelector("#cc-csc"), "123");
+  fillField(form.form.querySelector("csc-input input"), "123");
   isnot(form.form.querySelector("#billingAddressGUID").value, address2.guid,
         "Check initial billing address");
   fillField(form.form.querySelector("#billingAddressGUID"), address2.guid);
@@ -222,7 +222,8 @@ add_task(async function test_requiredAttributePropagated() {
       continue;
     }
     let container = element.closest("label") || element.closest("div");
-    ok(container.hasAttribute("required"), "Container should also be marked as required");
+    ok(container.hasAttribute("required"),
+       `Container ${container.id} should also be marked as required`);
   }
   // Now test that toggling the `required` attribute will affect the container.
   let sampleRequiredElement = requiredElements[0];
@@ -460,7 +461,7 @@ add_task(async function test_field_validity_updates() {
   let ccNumber = form.form.querySelector("#cc-number");
   let nameInput = form.form.querySelector("#cc-name");
   let typeInput = form.form.querySelector("#cc-type");
-  let cscInput = form.form.querySelector("#cc-csc");
+  let cscInput = form.form.querySelector("csc-input input");
   let monthInput = form.form.querySelector("#cc-exp-month");
   let yearInput = form.form.querySelector("#cc-exp-year");
 
