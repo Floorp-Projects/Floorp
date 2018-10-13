@@ -8851,7 +8851,6 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "capitalize",
-      "full-size-kana",
       "full-width",
       "inherit",
       "initial",
