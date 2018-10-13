@@ -10696,7 +10696,6 @@ BaseCompiler::emitBody()
           // "Miscellaneous" operations
           case uint16_t(Op::MiscPrefix): {
             switch (op.b1) {
-#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
               case uint16_t(MiscOp::I32TruncSSatF32):
                 CHECK_NEXT(emitConversionOOM(emitTruncateF32ToI32<TRUNC_SATURATING>,
                                              ValType::F32, ValType::I32));
@@ -10745,7 +10744,6 @@ BaseCompiler::emitBody()
                 CHECK_NEXT(emitConversionOOM(emitTruncateF64ToI64<TRUNC_UNSIGNED | TRUNC_SATURATING>,
                                              ValType::F64, ValType::I64));
 #endif
-#endif // ENABLE_WASM_SATURATING_TRUNC_OPS
 #ifdef ENABLE_WASM_BULKMEM_OPS
               case uint16_t(MiscOp::MemCopy):
                 CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/true));

@@ -29,11 +29,6 @@ using namespace js::wasm;
 # else
 #  define WASM_GC_OP(code) break
 # endif
-# ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
-#  define WASM_TRUNC_OP(code) return code
-# else
-#  define WASM_TRUNC_OP(code) break
-# endif
 # ifdef ENABLE_WASM_BULKMEM_OPS
 #  define WASM_BULK_OP(code) return code
 # else
@@ -277,7 +272,7 @@ wasm::Classify(OpBytes op)
             case MiscOp::I64TruncUSatF32:
             case MiscOp::I64TruncSSatF64:
             case MiscOp::I64TruncUSatF64:
-              WASM_TRUNC_OP(OpKind::Conversion);
+              return OpKind::Conversion;
             case MiscOp::MemCopy:
             case MiscOp::TableCopy:
               WASM_BULK_OP(OpKind::MemOrTableCopy);
@@ -432,7 +427,6 @@ wasm::Classify(OpBytes op)
 }
 
 # undef WASM_GC_OP
-# undef WASM_TRUNC_OP
 # undef WASM_BULK_OP
 # undef WASM_THREAD_OP
 
