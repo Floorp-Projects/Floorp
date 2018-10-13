@@ -35,7 +35,9 @@ add_task(async function() {
   ok(isDisabled(button), "The button is disabled in the color picker");
 
   info("Navigate to a HTML document");
+  const toolbarUpdated = inspector.once("inspector-toolbar-updated");
   await navigateTo(inspector, TEST_URL_2);
+  await toolbarUpdated;
 
   info("Check the inspector toolbar in HTML document");
   button = inspector.panelDoc.querySelector("#inspector-eyedropper-toggle");
