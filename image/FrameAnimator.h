@@ -323,7 +323,8 @@ public:
    * not have required compositing). It may not be available because it hasn't
    * been decoded yet, in which case we return an empty LookupResult.
    */
-  LookupResult GetCompositedFrame(AnimationState& aState);
+  LookupResult GetCompositedFrame(AnimationState& aState,
+                                  bool aMarkUsed);
 
   /**
    * Collect an accounting of the memory occupied by the compositing surfaces we

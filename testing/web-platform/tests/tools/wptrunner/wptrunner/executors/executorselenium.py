@@ -18,6 +18,7 @@ from .protocol import (BaseProtocolPart,
                        SelectorProtocolPart,
                        ClickProtocolPart,
                        SendKeysProtocolPart,
+                       ActionSequenceProtocolPart,
                        TestDriverProtocolPart)
 from ..testrunner import Stop
 
@@ -26,15 +27,18 @@ here = os.path.join(os.path.split(__file__)[0])
 webdriver = None
 exceptions = None
 RemoteConnection = None
+Command = None
 
 
 def do_delayed_imports():
     global webdriver
     global exceptions
     global RemoteConnection
+    global Command
     from selenium import webdriver
     from selenium.common import exceptions
     from selenium.webdriver.remote.remote_connection import RemoteConnection
+    from selenium.webdriver.remote.command import Command
 
 
 class SeleniumBaseProtocolPart(BaseProtocolPart):
@@ -72,14 +76,16 @@ class SeleniumBaseProtocolPart(BaseProtocolPart):
 class SeleniumTestharnessProtocolPart(TestharnessProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
+        with open(os.path.join(here, "runner.js")) as f:
+            self.runner_script = f.read()
 
     def load_runner(self, url_protocol):
         url = urlparse.urljoin(self.parent.executor.server_url(url_protocol),
                                "/testharness_runner.html")
         self.logger.debug("Loading %s" % url)
         self.webdriver.get(url)
-        self.webdriver.execute_script("document.title = '%s'" %
-                                      threading.current_thread().name.replace("'", '"'))
+        format_map = {"title": threading.current_thread().name.replace("'", '"')}
+        self.parent.base.execute_script(self.runner_script % format_map)
 
     def close_old_windows(self):
         exclude = self.webdriver.current_window_handle
@@ -147,12 +153,21 @@ class SeleniumClickProtocolPart(ClickProtocolPart):
     def element(self, element):
         return element.click()
 
+
 class SeleniumSendKeysProtocolPart(SendKeysProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
 
     def send_keys(self, element, keys):
         return element.send_keys(keys)
+
+
+class SeleniumActionSequenceProtocolPart(ActionSequenceProtocolPart):
+    def setup(self):
+        self.webdriver = self.parent.webdriver
+
+    def send_actions(self, actions):
+        self.webdriver.execute(Command.W3C_ACTIONS, {"actions": actions})
 
 
 class SeleniumTestDriverProtocolPart(TestDriverProtocolPart):
@@ -175,7 +190,8 @@ class SeleniumProtocol(Protocol):
                   SeleniumSelectorProtocolPart,
                   SeleniumClickProtocolPart,
                   SeleniumSendKeysProtocolPart,
-                  SeleniumTestDriverProtocolPart]
+                  SeleniumTestDriverProtocolPart,
+                  SeleniumActionSequenceProtocolPart]
 
     def __init__(self, executor, browser, capabilities, **kwargs):
         do_delayed_imports()

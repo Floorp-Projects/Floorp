@@ -507,7 +507,7 @@ button > hbox > label {
   min-width: 66ch;
 }
 
-.dialogBox > .groupbox-title {
+.dialogTitleBar {
   margin-top: 0;
   padding: 3.5px 0;
   background-color: #F1F1F1;
@@ -516,6 +516,7 @@ button > hbox > label {
 
 .dialogTitle {
   font-size: .9em;
+  font-weight: 600;
   text-align: center;
   -moz-user-select: none;
 }
@@ -527,12 +528,8 @@ button > hbox > label {
   min-height: auto;
 }
 
-.dialogBox > .groupbox-body {
-  -moz-appearance: none;
-  padding: 20px;
-}
-
 .dialogFrame {
+  margin: 20px;
   -moz-box-flex: 1;
   /* Default dialog dimensions */
   width: 66ch;

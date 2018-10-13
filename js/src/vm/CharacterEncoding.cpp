@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "util/Unicode.h" // unicode::REPLACEMENT_CHARACTER
 #include "vm/JSContext.h"
 
 using namespace js;
@@ -80,8 +81,6 @@ JS::GetDeflatedUTF8StringLength(JSFlatString* s)
            : ::GetDeflatedUTF8StringLength(s->twoByteChars(nogc), s->length());
 }
 
-static const char16_t UTF8_REPLACEMENT_CHAR = 0xFFFD;
-
 template <typename CharT>
 static void
 DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<char> dst,
@@ -101,16 +100,16 @@ DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<ch
         char16_t c = *src++;
         srclen--;
         if (c >= 0xDC00 && c <= 0xDFFF) {
-            v = UTF8_REPLACEMENT_CHAR;
+            v = unicode::REPLACEMENT_CHARACTER;
         } else if (c < 0xD800 || c > 0xDBFF) {
             v = c;
         } else {
             if (srclen < 1) {
-                v = UTF8_REPLACEMENT_CHAR;
+                v = unicode::REPLACEMENT_CHARACTER;
             } else {
                 char16_t c2 = *src;
                 if (c2 < 0xDC00 || c2 > 0xDFFF) {
-                    v = UTF8_REPLACEMENT_CHAR;
+                    v = unicode::REPLACEMENT_CHARACTER;
                 } else {
                     src++;
                     srclen--;
@@ -271,13 +270,6 @@ enum class OnUTF8Error {
     Crash,
 };
 
-// The Unicode REPLACEMENT CHARACTER, rendered as a diamond with a question
-// mark, meaning "someone screwed up here but it wasn't me".
-static const char16_t REPLACEMENT_CHARACTER = 0xFFFD;
-
-// If making changes to this algorithm, make sure to also update
-// LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
-//
 // Scan UTF8 input and (internally, at least) convert it to a series of UTF-16
 // code units. But you can also do odd things like pass an empty lambda for
 // `dst`, in which case the output is discarded entirely--the only effect of
@@ -311,7 +303,7 @@ InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, OutputFn dst)
                 } else {                                                \
                     char16_t replacement;                               \
                     if (ErrorAction == OnUTF8Error::InsertReplacementCharacter) { \
-                        replacement = REPLACEMENT_CHARACTER;            \
+                        replacement = unicode::REPLACEMENT_CHARACTER;   \
                     } else {                                            \
                         MOZ_ASSERT(ErrorAction == OnUTF8Error::InsertQuestionMark); \
                         replacement = '?';                              \
@@ -398,7 +390,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 
     size_t len = 0;
     bool allASCII = true;
-    auto count = [&](char16_t c) -> LoopDisposition {
+    auto count = [&len, &allASCII](char16_t c) -> LoopDisposition {
         len++;
         allASCII &= (c < 0x80);
         return LoopDisposition::Continue;
@@ -425,7 +417,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
             ? OnUTF8Error::InsertQuestionMark
             : OnUTF8Error::InsertReplacementCharacter;
         size_t j = 0;
-        auto push = [&](char16_t c) -> LoopDisposition {
+        auto push = [dst, &j](char16_t c) -> LoopDisposition {
             dst[j++] = CharT(c);
             return LoopDisposition::Continue;
         };
@@ -467,7 +459,7 @@ JS::SmallestEncoding
 JS::FindSmallestEncoding(UTF8Chars utf8)
 {
     JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
-    auto onChar = [&](char16_t c) -> LoopDisposition {
+    auto onChar = [&encoding](char16_t c) -> LoopDisposition {
         if (c >= 0x80) {
             if (c < 0x100) {
                 encoding = JS::SmallestEncoding::Latin1;

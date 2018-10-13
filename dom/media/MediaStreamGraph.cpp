@@ -783,11 +783,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
     }
     audioOutput.mLastTickWritten = offset;
 
-    // Need unique id for stream & track - and we want it to match the inserter
-    output.WriteTo(LATENCY_STREAM_ID(aStream, track->GetID()),
-                                     mMixer,
-                                     AudioOutputChannelCount(),
-                                     mSampleRate);
+    output.WriteTo(mMixer, AudioOutputChannelCount(), mSampleRate);
   }
   return ticksWritten;
 }
@@ -2834,7 +2830,6 @@ SourceMediaStream::SourceMediaStream()
   , mUpdateKnownTracksTime(0)
   , mPullEnabled(false)
   , mFinishPending(false)
-  , mNeedsMixing(false)
 {
 }
 
@@ -3328,7 +3323,7 @@ SourceMediaStream::GetEndOfAppendedData(TrackID aID)
   if (track) {
     return track->mEndOfFlushedData + track->mData->GetDuration();
   }
-  NS_ERROR("Track not found");
+  MOZ_CRASH("Track not found");
   return 0;
 }
 
@@ -3426,20 +3421,6 @@ SourceMediaStream::RemoveAllDirectListenersImpl()
 
 SourceMediaStream::~SourceMediaStream()
 {
-}
-
-void
-SourceMediaStream::RegisterForAudioMixing()
-{
-  MutexAutoLock lock(mMutex);
-  mNeedsMixing = true;
-}
-
-bool
-SourceMediaStream::NeedsMixing()
-{
-  MutexAutoLock lock(mMutex);
-  return mNeedsMixing;
 }
 
 bool
@@ -3729,7 +3710,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mRealtime(aDriverRequested != OFFLINE_THREAD_DRIVER)
   , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
-  , mLatencyLog(AsyncLatencyLogger::Get())
   , mAbstractMainThread(aMainThread)
   , mSelfRef(this)
   , mOutputChannels(std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels()))

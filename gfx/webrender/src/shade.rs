@@ -170,6 +170,7 @@ impl LazilyCompiledShader {
 
             let vertex_descriptor = match vertex_format {
                 VertexArrayKind::Primitive => &desc::PRIM_INSTANCES,
+                VertexArrayKind::LineDecoration => &desc::LINE,
                 VertexArrayKind::Blur => &desc::BLUR,
                 VertexArrayKind::Clip => &desc::CLIP,
                 VertexArrayKind::VectorStencil => &desc::VECTOR_STENCIL,
@@ -449,6 +450,7 @@ pub struct Shaders {
     pub cs_border_solid: LazilyCompiledShader,
     pub cs_scale_a8: LazilyCompiledShader,
     pub cs_scale_rgba8: LazilyCompiledShader,
+    pub cs_line_decoration: LazilyCompiledShader,
 
     // Brush shaders
     brush_solid: BrushShader,
@@ -465,7 +467,6 @@ pub struct Shaders {
     pub cs_clip_rectangle: LazilyCompiledShader,
     pub cs_clip_box_shadow: LazilyCompiledShader,
     pub cs_clip_image: LazilyCompiledShader,
-    pub cs_clip_line: LazilyCompiledShader,
 
     // The are "primitive shaders". These shaders draw and blend
     // final results on screen. They are aware of tile boundaries.
@@ -561,14 +562,6 @@ impl Shaders {
         let cs_clip_box_shadow = LazilyCompiledShader::new(
             ShaderKind::ClipCache,
             "cs_clip_box_shadow",
-            &[],
-            device,
-            options.precache_flags,
-        )?;
-
-        let cs_clip_line = LazilyCompiledShader::new(
-            ShaderKind::ClipCache,
-            "cs_clip_line",
             &[],
             device,
             options.precache_flags,
@@ -684,6 +677,14 @@ impl Shaders {
             }
         }
 
+        let cs_line_decoration = LazilyCompiledShader::new(
+            ShaderKind::Cache(VertexArrayKind::LineDecoration),
+            "cs_line_decoration",
+            &[],
+            device,
+            options.precache_flags,
+        )?;
+
         let cs_border_segment = LazilyCompiledShader::new(
             ShaderKind::Cache(VertexArrayKind::Border),
             "cs_border_segment",
@@ -712,6 +713,7 @@ impl Shaders {
             cs_blur_a8,
             cs_blur_rgba8,
             cs_border_segment,
+            cs_line_decoration,
             cs_border_solid,
             cs_scale_a8,
             cs_scale_rgba8,
@@ -725,7 +727,6 @@ impl Shaders {
             cs_clip_rectangle,
             cs_clip_box_shadow,
             cs_clip_image,
-            cs_clip_line,
             ps_text_run,
             ps_text_run_dual_source,
             ps_split_composite,
@@ -801,7 +802,6 @@ impl Shaders {
         self.cs_clip_rectangle.deinit(device);
         self.cs_clip_box_shadow.deinit(device);
         self.cs_clip_image.deinit(device);
-        self.cs_clip_line.deinit(device);
         self.ps_text_run.deinit(device);
         self.ps_text_run_dual_source.deinit(device);
         for shader in self.brush_image {
@@ -815,6 +815,7 @@ impl Shaders {
             }
         }
         self.cs_border_solid.deinit(device);
+        self.cs_line_decoration.deinit(device);
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
     }

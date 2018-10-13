@@ -19,7 +19,8 @@ from .base import (CallbackHandler,
                    WebDriverProtocol,
                    extra_timeout,
                    strip_server)
-from .protocol import (AssertsProtocolPart,
+from .protocol import (ActionSequenceProtocolPart,
+                       AssertsProtocolPart,
                        BaseProtocolPart,
                        TestharnessProtocolPart,
                        PrefsProtocolPart,
@@ -109,6 +110,8 @@ class MarionetteTestharnessProtocolPart(TestharnessProtocolPart):
     def __init__(self, parent):
         super(MarionetteTestharnessProtocolPart, self).__init__(parent)
         self.runner_handle = None
+        with open(os.path.join(here, "runner.js")) as f:
+            self.runner_script = f.read()
 
     def setup(self):
         self.marionette = self.parent.marionette
@@ -129,8 +132,8 @@ class MarionetteTestharnessProtocolPart(TestharnessProtocolPart):
                 "that your firewall rules or network setup does not "
                 "prevent access.\e%s" % (url, traceback.format_exc(e)))
             raise
-        self.parent.base.execute_script(
-            "document.title = '%s'" % threading.current_thread().name.replace("'", '"'))
+        format_map = {"title": threading.current_thread().name.replace("'", '"')}
+        self.parent.base.execute_script(self.runner_script % format_map)
 
     def close_old_windows(self, url_protocol):
         handles = self.marionette.window_handles
@@ -357,6 +360,16 @@ class MarionetteSendKeysProtocolPart(SendKeysProtocolPart):
         return element.send_keys(keys)
 
 
+class MarionetteActionSequenceProtocolPart(ActionSequenceProtocolPart):
+    def setup(self):
+        self.marionette = self.parent.marionette
+
+    def send_actions(self, actions):
+        actions = self.marionette._to_json(actions)
+        self.logger.info(actions)
+        self.marionette._send_message("WebDriver:PerformActions", actions)
+
+
 class MarionetteTestDriverProtocolPart(TestDriverProtocolPart):
     def setup(self):
         self.marionette = self.parent.marionette
@@ -431,6 +444,7 @@ class MarionetteProtocol(Protocol):
                   MarionetteSelectorProtocolPart,
                   MarionetteClickProtocolPart,
                   MarionetteSendKeysProtocolPart,
+                  MarionetteActionSequenceProtocolPart,
                   MarionetteTestDriverProtocolPart,
                   MarionetteAssertsProtocolPart,
                   MarionetteCoverageProtocolPart]

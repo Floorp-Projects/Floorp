@@ -1067,12 +1067,6 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
         latin1 = lengthAndEncoding & 0x1;
     }
 
-    // We need to align the string in the XDR buffer such that we can avoid
-    // non-align loads of 16bits characters.
-    if (!latin1) {
-        MOZ_TRY(xdr->codeAlign(sizeof(char16_t)));
-    }
-
     if (mode == XDR_ENCODE) {
         JS::AutoCheckCannotGC nogc;
         if (latin1) {
@@ -1100,7 +1094,13 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
         /* Directly access the little endian chars in the XDR buffer. */
         const char16_t* chars = nullptr;
         if (length) {
-            const uint8_t *ptr;
+            // In the |mode == XDR_ENCODE| case above, when |nchars > 0|,
+            // |XDRState::codeChars(char16_t*, size_t nchars)| will align the
+            // buffer.  This code never calls that function, but it must act
+            // *as if* it had, so we must align manually here.
+            MOZ_TRY(xdr->codeAlign(sizeof(char16_t)));
+
+            const uint8_t* ptr;
             size_t nbyte = length * sizeof(char16_t);
             MOZ_TRY(xdr->peekData(&ptr, nbyte));
             MOZ_ASSERT(reinterpret_cast<uintptr_t>(ptr) % sizeof(char16_t) == 0,

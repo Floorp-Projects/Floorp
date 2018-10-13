@@ -37,7 +37,8 @@ AnimationState::UpdateState(bool aAnimationFinished,
     SurfaceCache::Lookup(ImageKey(aImage),
                          RasterSurfaceKey(aSize,
                                           DefaultSurfaceFlags(),
-                                          PlaybackType::eAnimated));
+                                          PlaybackType::eAnimated),
+                         /* aMarkUsed = */ false);
 
   return UpdateStateInternal(result, aAnimationFinished, aSize, aAllowInvalidation);
 }
@@ -398,7 +399,8 @@ FrameAnimator::ResetAnimation(AnimationState& aState)
     SurfaceCache::Lookup(ImageKey(mImage),
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
-                                          PlaybackType::eAnimated));
+                                          PlaybackType::eAnimated),
+                         /* aMarkUsed = */ false);
   if (!result) {
     return;
   }
@@ -427,7 +429,8 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
     SurfaceCache::Lookup(ImageKey(mImage),
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
-                                          PlaybackType::eAnimated));
+                                          PlaybackType::eAnimated),
+                         /* aMarkUsed = */ true);
 
   ret.mDirtyRect = aState.UpdateStateInternal(result, aAnimationFinished, mSize);
   if (aState.IsDiscarded() || !result) {
@@ -502,7 +505,7 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
 }
 
 LookupResult
-FrameAnimator::GetCompositedFrame(AnimationState& aState)
+FrameAnimator::GetCompositedFrame(AnimationState& aState, bool aMarkUsed)
 {
   aState.mCompositedFrameRequested = true;
 
@@ -517,7 +520,8 @@ FrameAnimator::GetCompositedFrame(AnimationState& aState)
     SurfaceCache::Lookup(ImageKey(mImage),
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
-                                          PlaybackType::eAnimated));
+                                          PlaybackType::eAnimated),
+                         aMarkUsed);
 
   if (aState.mCompositedFrameInvalid) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());

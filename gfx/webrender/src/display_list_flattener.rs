@@ -279,8 +279,6 @@ impl<'a> DisplayListFlattener<'a> {
                         reference_frame_info,
                         &info,
                         bg_color,
-                        None,
-                        Vec::new(),
                     );
                 }
             }
@@ -563,8 +561,6 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_and_scroll,
                     &prim_info,
                     info.color,
-                    None,
-                    Vec::new(),
                 );
             }
             SpecificDisplayItem::ClearRectangle => {
@@ -918,12 +914,13 @@ impl<'a> DisplayListFlattener<'a> {
                 self.add_primitive_to_draw_list(prim_instance);
             }
         } else {
+            debug_assert!(clip_items.is_empty(), "No per-prim clips expected for shadowed primitives");
+
             // There is an active shadow context. Store as a pending primitive
             // for processing during pop_all_shadows.
             self.pending_shadow_items.push_back(ShadowItem::Primitive(PendingPrimitive {
                 clip_and_scroll,
                 info: *info,
-                clip_items,
                 container,
             }));
         }
@@ -1482,22 +1479,10 @@ impl<'a> DisplayListFlattener<'a> {
                             info.rect = info.rect.translate(&pending_shadow.shadow.offset);
                             info.clip_rect = info.clip_rect.translate(&pending_shadow.shadow.offset);
 
-                            // Offset any local clip sources by the shadow offset.
-                            let clip_items: Vec<ClipItemKey> = pending_primitive
-                                .clip_items
-                                .iter()
-                                .map(|cs| cs.offset(&pending_shadow.shadow.offset))
-                                .collect();
-                            let clip_chain_id = self.build_clip_chain(
-                                clip_items,
-                                pending_primitive.clip_and_scroll.spatial_node_index,
-                                pending_primitive.clip_and_scroll.clip_chain_id,
-                            );
-
                             // Construct and add a primitive for the given shadow.
                             let shadow_prim_instance = self.create_primitive(
                                 &info,
-                                clip_chain_id,
+                                pending_primitive.clip_and_scroll.clip_chain_id,
                                 pending_primitive.clip_and_scroll.spatial_node_index,
                                 pending_primitive.container.create_shadow(&pending_shadow.shadow),
                             );
@@ -1553,14 +1538,9 @@ impl<'a> DisplayListFlattener<'a> {
                     // For a normal primitive, if it has alpha > 0, then we add this
                     // as a normal primitive to the parent picture.
                     if pending_primitive.container.is_visible() {
-                        let clip_chain_id = self.build_clip_chain(
-                            pending_primitive.clip_items,
-                            pending_primitive.clip_and_scroll.spatial_node_index,
-                            pending_primitive.clip_and_scroll.clip_chain_id,
-                        );
                         let prim_instance = self.create_primitive(
                             &pending_primitive.info,
-                            clip_chain_id,
+                            pending_primitive.clip_and_scroll.clip_chain_id,
                             pending_primitive.clip_and_scroll.spatial_node_index,
                             pending_primitive.container,
                         );
@@ -1584,8 +1564,6 @@ impl<'a> DisplayListFlattener<'a> {
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
         color: ColorF,
-        segments: Option<BrushSegmentDescriptor>,
-        extra_clips: Vec<ClipItemKey>,
     ) {
         if color.a == 0.0 {
             // Don't add transparent rectangles to the draw list, but do consider them for hit
@@ -1596,13 +1574,13 @@ impl<'a> DisplayListFlattener<'a> {
 
         let prim = BrushPrimitive::new(
             BrushKind::new_solid(color),
-            segments,
+            None,
         );
 
         self.add_primitive(
             clip_and_scroll,
             info,
-            extra_clips,
+            Vec::new(),
             PrimitiveContainer::Brush(prim),
         );
     }
@@ -1631,36 +1609,20 @@ impl<'a> DisplayListFlattener<'a> {
         info: &LayoutPrimitiveInfo,
         wavy_line_thickness: f32,
         orientation: LineOrientation,
-        line_color: &ColorF,
+        color: &ColorF,
         style: LineStyle,
     ) {
-        let prim = BrushPrimitive::new(
-            BrushKind::new_solid(*line_color),
-            None,
+        let prim = BrushPrimitive::new_line_decoration(
+            *color,
+            style,
+            orientation,
+            wavy_line_thickness,
         );
-
-        let extra_clips = match style {
-            LineStyle::Solid => {
-                Vec::new()
-            }
-            LineStyle::Wavy |
-            LineStyle::Dotted |
-            LineStyle::Dashed => {
-                vec![
-                    ClipItemKey::line_decoration(
-                        info.rect,
-                        style,
-                        orientation,
-                        wavy_line_thickness,
-                    ),
-                ]
-            }
-        };
 
         self.add_primitive(
             clip_and_scroll,
             info,
-            extra_clips,
+            Vec::new(),
             PrimitiveContainer::Brush(prim),
         );
     }
@@ -2217,7 +2179,6 @@ struct FlattenedStackingContext {
 struct PendingPrimitive {
     clip_and_scroll: ScrollNodeAndClipChain,
     info: LayoutPrimitiveInfo,
-    clip_items: Vec<ClipItemKey>,
     container: PrimitiveContainer,
 }
 

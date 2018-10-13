@@ -38,10 +38,6 @@ const SHADERS: &[Shader] = &[
         name: "cs_clip_box_shadow",
         features: CLIP_FEATURES,
     },
-    Shader {
-        name: "cs_clip_line",
-        features: CLIP_FEATURES,
-    },
     // Cache shaders
     Shader {
         name: "cs_blur",
@@ -49,6 +45,10 @@ const SHADERS: &[Shader] = &[
     },
     Shader {
         name: "cs_border_segment",
+        features: CACHE_FEATURES,
+    },
+    Shader {
+        name: "cs_line_decoration",
         features: CACHE_FEATURES,
     },
     Shader {

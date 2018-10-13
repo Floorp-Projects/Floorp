@@ -71,8 +71,6 @@ pluginSupportsWindowlessMode()
 NPError
 pluginInstanceInit(InstanceData* instanceData)
 {
-  NPP npp = instanceData->npp;
-
   instanceData->platformData = static_cast<PlatformData*>
     (NPN_MemAlloc(sizeof(PlatformData)));
   if (!instanceData->platformData)
@@ -398,26 +396,26 @@ drawToDC(InstanceData* instanceData, HDC dc,
     {
       HDC offscreenDC = ::CreateCompatibleDC(dc);
       if (!offscreenDC)
-	return;
+        return;
 
       const BITMAPV4HEADER bitmapheader = {
-	sizeof(BITMAPV4HEADER),
-	width,
-	height,
-	1, // planes
-	32, // bits
-	BI_BITFIELDS,
-	0, // unused size
-	0, 0, // unused metrics
-	0, 0, // unused colors used/important
-	0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000, // ARGB masks
+        sizeof(BITMAPV4HEADER),
+        width,
+        height,
+        1, // planes
+        32, // bits
+        BI_BITFIELDS,
+        0, // unused size
+        0, 0, // unused metrics
+        0, 0, // unused colors used/important
+        0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000, // ARGB masks
       };
       uint32_t *pixelData;
       HBITMAP offscreenBitmap =
-	::CreateDIBSection(dc, reinterpret_cast<const BITMAPINFO*>(&bitmapheader),
-			   0, reinterpret_cast<void**>(&pixelData), 0, 0);
+        ::CreateDIBSection(dc, reinterpret_cast<const BITMAPINFO*>(&bitmapheader),
+                           0, reinterpret_cast<void**>(&pixelData), 0, 0);
       if (!offscreenBitmap)
-	return;
+        return;
 
       uint32_t rgba = instanceData->scriptableObject->drawColor;
       unsigned int alpha = ((rgba & 0xFF000000) >> 24);
@@ -430,12 +428,12 @@ drawToDC(InstanceData* instanceData, HDC dc,
       g = BYTE(float(alpha * g) / 0xFF);
       b = BYTE(float(alpha * b) / 0xFF);
       uint32_t premultiplied =
-	(alpha << 24) +	(r << 16) + (g << 8) + b;
+        (alpha << 24) + (r << 16) + (g << 8) + b;
 
       for (uint32_t* lastPixel = pixelData + width * height;
-	   pixelData < lastPixel;
-	   ++pixelData)
-	*pixelData = premultiplied;
+           pixelData < lastPixel;
+           ++pixelData)
+        *pixelData = premultiplied;
 
       ::SelectObject(offscreenDC, offscreenBitmap);
       BLENDFUNCTION blendFunc;
@@ -444,7 +442,7 @@ drawToDC(InstanceData* instanceData, HDC dc,
       blendFunc.SourceConstantAlpha = 255;
       blendFunc.AlphaFormat = AC_SRC_ALPHA;
       ::AlphaBlend(dc, x, y, width, height, offscreenDC, 0, 0, width, height,
-		   blendFunc);
+                   blendFunc);
 
       ::DeleteObject(offscreenDC);
       ::DeleteObject(offscreenBitmap);
@@ -800,7 +798,7 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	WNDPROC wndProc = (WNDPROC)GetProp(hWnd, "MozillaWndProc");
+        WNDPROC wndProc = (WNDPROC)GetProp(hWnd, "MozillaWndProc");
   if (!wndProc)
     return 0;
   InstanceData* pInstance = (InstanceData*)GetProp(hWnd, "InstanceData");
