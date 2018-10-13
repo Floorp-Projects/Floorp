@@ -335,9 +335,6 @@ enum nsCSSUnit {
 
   // Angular units
   eCSSUnit_Degree       = 1000,    // (float) 360 per circle
-  eCSSUnit_Grad         = 1001,    // (float) 400 per circle
-  eCSSUnit_Radian       = 1002,    // (float) 2*pi per circle
-  eCSSUnit_Turn         = 1003,    // (float) 1 per circle
 
   // Frequency units
   eCSSUnit_Hertz        = 2000,    // (float) 1/seconds
@@ -433,7 +430,7 @@ public:
   static bool IsFloatUnit(nsCSSUnit aUnit)
     { return eCSSUnit_Number <= aUnit; }
   bool      IsAngularUnit() const
-    { return eCSSUnit_Degree <= mUnit && mUnit <= eCSSUnit_Turn; }
+    { return eCSSUnit_Degree == mUnit; }
   bool      IsFrequencyUnit() const
     { return eCSSUnit_Hertz <= mUnit && mUnit <= eCSSUnit_Kilohertz; }
   bool      IsTimeUnit() const
@@ -475,8 +472,7 @@ public:
 
   float GetAngleValue() const
   {
-    MOZ_ASSERT(eCSSUnit_Degree <= mUnit && mUnit <= eCSSUnit_Turn,
-               "not an angle value");
+    MOZ_ASSERT(eCSSUnit_Degree == mUnit, "not an angle value");
     return mValue.mFloat;
   }
 
