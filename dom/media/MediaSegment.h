@@ -13,7 +13,6 @@
 #include "mozilla/TimeStamp.h"
 #endif
 #include <algorithm>
-#include "Latency.h"
 
 namespace mozilla {
 
@@ -331,9 +330,6 @@ public:
     } else {
       mChunks.InsertElementAt(0)->SetNull(aDuration);
     }
-#ifdef MOZILLA_INTERNAL_API
-    mChunks[0].mTimeStamp = mozilla::TimeStamp::Now();
-#endif
     mDuration += aDuration;
   }
   void AppendNullData(StreamTime aDuration) override
@@ -418,12 +414,6 @@ public:
     RemoveLeading(aDuration, 0);
   }
 
-#ifdef MOZILLA_INTERNAL_API
-  void GetStartTime(TimeStamp &aTime) {
-    aTime = mChunks[0].mTimeStamp;
-  }
-#endif
-
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = mChunks.ShallowSizeOfExcludingThis(aMallocSizeOf);
@@ -455,9 +445,6 @@ protected:
   MediaSegmentBase(MediaSegmentBase&& aSegment)
     : MediaSegment(std::move(aSegment))
     , mChunks()
-#ifdef MOZILLA_INTERNAL_API
-    , mTimeStamp(std::move(aSegment.mTimeStamp))
-#endif
   {
     mChunks.SwapElements(aSegment.mChunks);
     MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
@@ -576,9 +563,6 @@ protected:
   }
 
   AutoTArray<Chunk, DEFAULT_SEGMENT_CAPACITY> mChunks;
-#ifdef MOZILLA_INTERNAL_API
-  mozilla::TimeStamp mTimeStamp;
-#endif
 };
 
 } // namespace mozilla

@@ -196,20 +196,19 @@
 
   <stack id="dialogStack" hidden="true"/>
   <vbox id="dialogTemplate" class="dialogOverlay" align="center" pack="center" topmost="true" hidden="true">
-    <groupbox class="dialogBox"
-              orient="vertical"
-              pack="end"
-              role="dialog"
-              aria-labelledby="dialogTitle">
-      <caption flex="1" align="center">
-        <label class="dialogTitle" flex="1"></label>
+    <vbox class="dialogBox"
+          pack="end"
+          role="dialog"
+          aria-labelledby="dialogTitle">
+      <hbox class="dialogTitleBar" align="center">
+        <label class="dialogTitle" flex="1"/>
         <button class="dialogClose close-icon"
                 data-l10n-id="close-button"/>
-      </caption>
+      </hbox>
       <browser class="dialogFrame"
                autoscroll="false"
                disablehistory="true"/>
-    </groupbox>
+    </vbox>
   </vbox>
   </stack>
 </page>

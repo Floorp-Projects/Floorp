@@ -59,7 +59,6 @@
 #include "MediaTrackConstraints.h"
 #include "VideoUtils.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
-#include "Latency.h"
 #include "nsProxyRelease.h"
 #include "nsVariant.h"
 
