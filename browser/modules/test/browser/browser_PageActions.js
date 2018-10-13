@@ -18,10 +18,6 @@ add_task(async function init() {
   registerCleanupFunction(async () => {
     BrowserTestUtils.removeTab(tab);
   });
-
-  // Ensure screenshots is really disabled (bug 1498738)
-  const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
-  await addon.disable({allowSystemAddons: true});
 });
 
 
