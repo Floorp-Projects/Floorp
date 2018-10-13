@@ -150,6 +150,16 @@ function initialize(event) {
     gViewDefault = "addons://list/extension";
   }
 
+  document.getElementById("preferencesButton")
+    .addEventListener("click", () => {
+      let mainWindow = getMainWindow();
+      if ("switchToTabHavingURI" in mainWindow) {
+        mainWindow.switchToTabHavingURI("about:preferences", true, {
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
+      }
+    });
+
   gViewController.initialize();
   gCategories.initialize();
   gHeader.initialize();
