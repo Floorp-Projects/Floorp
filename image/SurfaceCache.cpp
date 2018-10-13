@@ -960,7 +960,7 @@ public:
   LookupResult Lookup(const ImageKey    aImageKey,
                       const SurfaceKey& aSurfaceKey,
                       const StaticMutexAutoLock& aAutoLock,
-                      bool aMarkUsed = true)
+                      bool aMarkUsed)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -1000,7 +1000,7 @@ public:
   LookupResult LookupBestMatch(const ImageKey         aImageKey,
                                const SurfaceKey&      aSurfaceKey,
                                const StaticMutexAutoLock& aAutoLock,
-                               bool aMarkUsed /* = true */)
+                               bool aMarkUsed)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -1519,7 +1519,7 @@ SurfaceCache::Shutdown()
 /* static */ LookupResult
 SurfaceCache::Lookup(const ImageKey         aImageKey,
                      const SurfaceKey&      aSurfaceKey,
-                     bool aMarkUsed /* = true */)
+                     bool aMarkUsed)
 {
   nsTArray<RefPtr<CachedSurface>> discard;
   LookupResult rv(MatchType::NOT_FOUND);
@@ -1540,7 +1540,7 @@ SurfaceCache::Lookup(const ImageKey         aImageKey,
 /* static */ LookupResult
 SurfaceCache::LookupBestMatch(const ImageKey         aImageKey,
                               const SurfaceKey&      aSurfaceKey,
-                              bool aMarkUsed /* = true */)
+                              bool aMarkUsed)
 {
   nsTArray<RefPtr<CachedSurface>> discard;
   LookupResult rv(MatchType::NOT_FOUND);

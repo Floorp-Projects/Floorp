@@ -233,7 +233,7 @@ struct SurfaceCache
    */
   static LookupResult Lookup(const ImageKey    aImageKey,
                              const SurfaceKey& aSurfaceKey,
-                             bool aMarkUsed = true);
+                             bool aMarkUsed);
 
   /**
    * Looks up the best matching cache entry and returns a drawable reference to
@@ -253,7 +253,7 @@ struct SurfaceCache
    */
   static LookupResult LookupBestMatch(const ImageKey    aImageKey,
                                       const SurfaceKey& aSurfaceKey,
-                                      bool aMarkUsed = true);
+                                      bool aMarkUsed);
 
   /**
    * Insert an ISurfaceProvider into the cache. If an entry with the same
