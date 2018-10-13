@@ -1,0 +1,3 @@
+[submodule "benches/cargon/phc-winner-argon2"]
+	path = benches/cargon/phc-winner-argon2
+	url = git://github.com/p-h-c/phc-winner-argon2

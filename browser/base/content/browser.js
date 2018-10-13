@@ -5770,9 +5770,11 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   }
 
   if (showTabStripItems) {
-    let haveMultipleTabs = gBrowser.visibleTabs.length > 1;
-    document.getElementById("toolbar-context-reloadAllTabs").disabled = !haveMultipleTabs;
-
+    let multipleTabsSelected = !!gBrowser.multiSelectedTabsCount;
+    document.getElementById("toolbar-context-bookmarkSelectedTabs").hidden = !multipleTabsSelected;
+    document.getElementById("toolbar-context-bookmarkSelectedTab").hidden = multipleTabsSelected;
+    document.getElementById("toolbar-context-reloadSelectedTabs").hidden = !multipleTabsSelected;
+    document.getElementById("toolbar-context-reloadSelectedTab").hidden = multipleTabsSelected;
     document.getElementById("toolbar-context-selectAllTabs").disabled = gBrowser.allTabsSelected();
     document.getElementById("toolbar-context-undoCloseTab").disabled =
       SessionStore.getClosedTabCount(window) == 0;

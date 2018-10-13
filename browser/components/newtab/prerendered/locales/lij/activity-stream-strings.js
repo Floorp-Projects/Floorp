@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Argomenti popolari:",
   "pocket_read_even_more": "Amia atre stöie",
   "pocket_more_reccommendations": "Atri conseggi",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Comme o fonçionn-a",
   "pocket_cta_button": "Piggite Pocket",
   "pocket_cta_text": "Sarva e stöie che te piaxan into Pocket, e carega torna a mente con letue che incantan.",
   "highlights_empty_state": "Iniçia a navegâ e, in sta seçion, saian mostræ articoli, video e atre pagine vixitæ de fresco ò azonti a-i segnalibbri.",

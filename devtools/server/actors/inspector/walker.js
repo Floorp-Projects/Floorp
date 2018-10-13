@@ -1167,7 +1167,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *
    * @param NodeActor node
    * @param string pseudo
-   *    A pseudoclass: ':hover', ':active', ':focus'
+   *    A pseudoclass: ':hover', ':active', ':focus', ':focus-within'
    * @param options
    *    Options object:
    *    `parents`: True if the pseudo-class should be added
@@ -1247,7 +1247,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *
    * @param NodeActor node
    * @param string pseudo
-   *    A pseudoclass: ':hover', ':active', ':focus'
+   *    A pseudoclass: ':hover', ':active', ':focus', ':focus-within'
    * @param options
    *    Options object:
    *    `parents`: True if the pseudo-class should be removed

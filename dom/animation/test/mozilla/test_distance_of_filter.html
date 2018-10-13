@@ -7,6 +7,8 @@
 <script type='text/javascript'>
 'use strict';
 
+const EPSILON = 1e-6;
+
 // We don't have an official spec to define the distance between two filter
 // lists, but we still need this for DevTools, so Gecko and Servo backends use
 // the similar rules to define the distance. If there is a spec for it, we have
@@ -122,15 +124,15 @@ test(function(t) {
   var target = addDiv(t);
   var dist = getDistance(target, 'filter', 'hue-rotate(180deg)', 'none');
   // The default value of hue-rotate is 0deg.
-  assert_equals(dist, Math.PI, 'hue-rotate(180deg) and none');
+  assert_approx_equals(dist, Math.PI, EPSILON, 'hue-rotate(180deg) and none');
 }, 'hue-rotate and none');
 
 test(function(t) {
   var target = addDiv(t);
   var dist = getDistance(target, 'filter',
                          'hue-rotate(720deg)', 'hue-rotate(-180deg)');
-  assert_equals(dist, 5 * Math.PI,
-                'hue-rotate(720deg) and hue-rotate(-180deg)');
+  assert_approx_equals(dist, 5 * Math.PI, EPSILON,
+                       'hue-rotate(720deg) and hue-rotate(-180deg)');
 }, 'hue-rotates');
 
 test(function(t) {

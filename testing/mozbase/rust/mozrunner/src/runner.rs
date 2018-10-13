@@ -311,8 +311,8 @@ pub mod platform {
 #[cfg(target_os = "macos")]
 pub mod platform {
     use path::{find_binary, is_binary};
-    use std::env;
     use std::path::PathBuf;
+    use dirs;
 
     /// Searches the system path for `firefox-bin`, then looks for
     /// `Applications/Firefox.app/Contents/MacOS/firefox-bin` under both `/`
@@ -322,7 +322,7 @@ pub mod platform {
             return Some(path);
         }
 
-        let home = env::home_dir();
+        let home = dirs::home_dir();
         for &(prefix_home, trial_path) in [
             (
                 false,

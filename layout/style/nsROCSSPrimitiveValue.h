@@ -36,8 +36,6 @@ public:
     CSS_PT,
     CSS_PC,
     CSS_DEG,
-    CSS_RAD,
-    CSS_GRAD,
     CSS_MS,
     CSS_S,
     CSS_HZ,
@@ -49,7 +47,6 @@ public:
     CSS_ATTR,
     CSS_COUNTER,
     CSS_RGBCOLOR,
-    CSS_TURN,
     CSS_NUMBER_INT32,
     CSS_NUMBER_UINT32,
   };
@@ -60,13 +57,6 @@ public:
 
   // CSSPrimitiveValue
   uint16_t PrimitiveType();
-  void SetFloatValue(uint16_t aUnitType, float aValue,
-                     mozilla::ErrorResult& aRv);
-  float GetFloatValue(uint16_t aUnitType, mozilla::ErrorResult& aRv);
-  void GetStringValue(nsString& aString, mozilla::ErrorResult& aRv);
-  void SetStringValue(uint16_t aUnitType, const nsAString& aString,
-                      mozilla::ErrorResult& aRv);
-  void GetCounterValue(mozilla::ErrorResult& aRv);
 
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue();
@@ -77,9 +67,6 @@ public:
   void SetNumber(uint32_t aValue);
   void SetPercent(float aValue);
   void SetDegree(float aValue);
-  void SetGrad(float aValue);
-  void SetRadian(float aValue);
-  void SetTurn(float aValue);
   void SetAppUnits(nscoord aValue);
   void SetAppUnits(float aValue);
   void SetIdent(nsCSSKeyword aKeyword);

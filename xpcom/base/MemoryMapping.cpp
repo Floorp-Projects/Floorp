@@ -23,6 +23,7 @@ struct VMFlagString
 };
 
 static const VMFlagString sVMFlagStrings[] = {
+  // clang-format off
   {"ac", "Accountable",   VMFlag::Accountable},
   {"ar", "ArchSpecific",  VMFlag::ArchSpecific},
   {"dc", "NoFork",        VMFlag::NoFork},
@@ -51,6 +52,7 @@ static const VMFlagString sVMFlagStrings[] = {
   {"sh", "Shared",        VMFlag::Shared},
   {"sr", "Sequential",    VMFlag::Sequential},
   {"wr", "Writable",      VMFlag::Writable},
+  // clang-format on
 };
 } // anonymous namespace
 
@@ -59,6 +61,7 @@ constexpr size_t kVMFlags = size_t(-1);
 // An array of known field names which may be present in an smaps file, and the
 // offsets of the corresponding fields in a MemoryMapping class.
 const MemoryMapping::Field MemoryMapping::sFields[] = {
+  // clang-format off
   {"AnonHugePages",   offsetof(MemoryMapping, mAnonHugePages)},
   {"Anonymous",       offsetof(MemoryMapping, mAnonymous)},
   {"KernelPageSize",  offsetof(MemoryMapping, mKernelPageSize)},
@@ -83,6 +86,7 @@ const MemoryMapping::Field MemoryMapping::sFields[] = {
   // it in this array to aid in parsing, but give it a separate sentinel value,
   // and treat it specially.
   {"VmFlags",         kVMFlags},
+  // clang-format on
 };
 
 template <typename T, int n>

@@ -62,7 +62,7 @@ function testMultipleFingerprints() {
       (e => ok(false, 'error in ' + msg + ': ' +
                (e.message ? (e.message + '\n' + e.stack) : e)));
 
-  navigator.mediaDevices.getUserMedia({ audio: true })
+  navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
       ok(stream, 'Got test stream');
       pcDouble.addStream(stream);

@@ -175,7 +175,7 @@ add_task(async function test_change_selected_card() {
   let stateChangePromise = promiseStateChange(picker1.requestStore);
 
   // Type in the security code field
-  picker1.securityCodeInput.focus();
+  picker1.securityCodeInput.querySelector("input").focus();
   sendString("836");
   sendKey("Tab");
   let state = await stateChangePromise;

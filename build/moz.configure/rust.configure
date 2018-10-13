@@ -152,7 +152,7 @@ def rust_triple_alias(host_or_target):
     `host_or_target` is either `host` or `target` (the @depends functions
     from init.configure).
     """
-    assert host_or_target in (host, target)
+    assert host_or_target in {host, target}
 
     @depends(rustc, host_or_target, c_compiler, rust_supported_targets,
              when=rust_compiler)

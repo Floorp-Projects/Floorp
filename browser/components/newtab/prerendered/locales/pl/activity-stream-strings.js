@@ -77,7 +77,7 @@ window.gActivityStreamStrings = {
   "pocket_more_reccommendations": "Więcej polecanych",
   "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pobierz Pocket",
-  "pocket_cta_text": "Zachowuj historie w Pocket, aby wrócić później do ich lektury.",
+  "pocket_cta_text": "Zachowuj historie w Pocket, aby wrócić później do ich lektury.",
   "highlights_empty_state": "Zacznij przeglądać Internet, a pojawią się tutaj świetne artykuły, filmy oraz inne ostatnio odwiedzane strony i dodane zakładki.",
   "topstories_empty_state": "To na razie wszystko. {provider} później będzie mieć więcej popularnych artykułów. Nie możesz się doczekać? Wybierz popularny temat, aby znaleźć więcej treści z całego Internetu.",
   "manual_migration_explanation2": "Wypróbuj program Firefox z zakładkami, historią i hasłami z innej przeglądarki.",

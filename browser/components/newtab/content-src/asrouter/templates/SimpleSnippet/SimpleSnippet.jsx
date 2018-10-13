@@ -1,5 +1,6 @@
 import {Button} from "../../components/Button/Button";
 import React from "react";
+import {RichText} from "../../components/RichText/RichText";
 import {safeURI} from "../../template-utils";
 import {SnippetBase} from "../../components/SnippetBase/SnippetBase";
 
@@ -48,13 +49,21 @@ export class SimpleSnippet extends React.PureComponent {
     </Button>);
   }
 
+  renderText() {
+    const {props} = this;
+    return (<RichText text={props.content.text}
+      localization_id="text"
+      links={props.content.links}
+      sendClick={props.sendClick} />);
+  }
+
   render() {
     const {props} = this;
     const className = `SimpleSnippet${props.content.tall ? " tall" : ""}`;
     return (<SnippetBase {...props} className={className}>
       <img src={safeURI(props.content.icon) || DEFAULT_ICON_PATH} className="icon" />
       <div>
-        {this.renderTitleIcon()} {this.renderTitle()} <p className="body">{props.richText || props.content.text}</p>
+        {this.renderTitleIcon()} {this.renderTitle()} <p className="body">{this.renderText()}</p>
       </div>
       {<div>{this.renderButton()}</div>}
     </SnippetBase>);

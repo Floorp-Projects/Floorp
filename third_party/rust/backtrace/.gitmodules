@@ -1,0 +1,3 @@
+[submodule "backtrace-sys/src/libbacktrace"]
+	path = backtrace-sys/src/libbacktrace
+	url = https://github.com/rust-lang-nursery/libbacktrace

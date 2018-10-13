@@ -64,6 +64,50 @@ add_task(async function aliasCase() {
   await promisePopupHidden(gURLBar.popup);
 });
 
+add_task(async function inputDoesntMatchHeuristicResult() {
+  // Do a search using the alias.
+  let searchString = `${ALIAS} aaa`;
+  gURLBar.search(searchString);
+  await promiseSearchComplete();
+  await waitForAutocompleteResultAt(0);
+  assertAlias(true);
+
+  // Hide the popup.
+  EventUtils.synthesizeKey("KEY_Escape");
+  await promisePopupHidden(gURLBar.popup);
+
+  // Manually set the urlbar value to a string that contains the alias at the
+  // beginning but is not the same as the search string.
+  let value = `${ALIAS} xxx`;
+  gURLBar.value = `${ALIAS} xxx`;
+
+  // The alias substring should not be highlighted.
+  Assert.equal(gURLBar.value, value);
+  Assert.ok(gURLBar.value.includes(ALIAS));
+  assertHighlighted(false, ALIAS);
+
+  // Do another search using the alias.
+  searchString = `${ALIAS} bbb`;
+  gURLBar.search(searchString);
+  await promiseSearchComplete();
+  await waitForAutocompleteResultAt(0);
+  assertAlias(true);
+
+  // Hide the popup.
+  EventUtils.synthesizeKey("KEY_Escape");
+  await promisePopupHidden(gURLBar.popup);
+
+  // Manually set the urlbar value to a string that contains the alias, but not
+  // at the beginning and is not the same as the search string.
+  value = `bbb ${ALIAS}`;
+  gURLBar.value = `bbb ${ALIAS}`;
+
+  // The alias substring should not be highlighted.
+  Assert.equal(gURLBar.value, value);
+  Assert.ok(gURLBar.value.includes(ALIAS));
+  assertHighlighted(false, ALIAS);
+});
+
 
 async function doTest(revertBetweenSteps) {
   // "@tes" -- not an alias, no highlight

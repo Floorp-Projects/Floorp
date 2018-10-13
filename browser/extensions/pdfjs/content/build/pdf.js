@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.919';
-var pdfjsBuild = 'f45e46d7';
+var pdfjsVersion = '2.0.928';
+var pdfjsBuild = 'e41c50c3';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -4078,10 +4078,9 @@ var _webgl = __w_pdfjs_require__(18);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var DEFAULT_RANGE_CHUNK_SIZE = 65536;
+const DEFAULT_RANGE_CHUNK_SIZE = 65536;
 let isWorkerDisabled = false;
-let workerSrc;
-const pdfjsFilePath = null;
+let fallbackWorkerSrc;
 let fakeWorkerFilesLoader = null;
 ;
 var createPDFNetworkStream;
@@ -4225,7 +4224,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.919',
+    apiVersion: '2.0.928',
     source: {
       data: source.data,
       url: source.url,
@@ -4719,16 +4718,18 @@ var PDFWorker = function PDFWorkerClosure() {
     if (_worker_options.GlobalWorkerOptions.workerSrc) {
       return _worker_options.GlobalWorkerOptions.workerSrc;
     }
-    if (typeof workerSrc !== 'undefined') {
-      return workerSrc;
+    if (typeof fallbackWorkerSrc !== 'undefined') {
+      return fallbackWorkerSrc;
     }
     throw new Error('No "GlobalWorkerOptions.workerSrc" specified.');
   }
   function getMainThreadWorkerMessageHandler() {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-    return window.pdfjsWorker && window.pdfjsWorker.WorkerMessageHandler;
+    try {
+      if (typeof window !== 'undefined') {
+        return window.pdfjsWorker && window.pdfjsWorker.WorkerMessageHandler;
+      }
+    } catch (ex) {}
+    return null;
   }
   let fakeWorkerFilesLoadedCapability;
   function setupFakeWorkerGlobal() {
@@ -4791,7 +4792,7 @@ var PDFWorker = function PDFWorkerClosure() {
     },
     _initialize: function PDFWorker_initialize() {
       if (typeof Worker !== 'undefined' && !isWorkerDisabled && !getMainThreadWorkerMessageHandler()) {
-        var workerSrc = getWorkerSrc();
+        let workerSrc = getWorkerSrc();
         try {
           var worker = new Worker(workerSrc);
           var messageHandler = new _message_handler.MessageHandler('main', 'worker', worker);
@@ -5554,8 +5555,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.919';
-  exports.build = build = 'f45e46d7';
+  exports.version = version = '2.0.928';
+  exports.build = build = 'e41c50c3';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;

@@ -32,6 +32,7 @@ GetCspParserLog()
 #define CSPPARSERLOG(args) MOZ_LOG(GetCspParserLog(), mozilla::LogLevel::Debug, args)
 #define CSPPARSERLOGENABLED() MOZ_LOG_TEST(GetCspParserLog(), mozilla::LogLevel::Debug)
 
+// clang-format off
 static const char16_t COLON        = ':';
 static const char16_t SEMICOLON    = ';';
 static const char16_t SLASH        = '/';
@@ -52,6 +53,7 @@ static const char16_t OPENBRACE    = '(';
 static const char16_t CLOSINGBRACE = ')';
 static const char16_t EQUALS       = '=';
 static const char16_t ATSYMBOL     = '@';
+// clang-format on
 
 static const uint32_t kSubHostPathCharacterCutoff = 512;
 

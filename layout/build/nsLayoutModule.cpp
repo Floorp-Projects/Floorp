@@ -505,6 +505,7 @@ NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
+  // clang-format off
   XPCONNECT_CIDENTRIES
 #ifdef DEBUG
   { &kNS_LAYOUT_DEBUGGER_CID, false, nullptr, CreateNewLayoutDebugger },
@@ -582,9 +583,11 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTEXT_INPUT_PROCESSOR_CID, false, nullptr, TextInputProcessorConstructor },
   { &kNS_SCRIPTERROR_CID, false, nullptr, nsScriptErrorConstructor },
   { nullptr }
+  // clang-format on
 };
 
 static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
+  // clang-format off
   XPCONNECT_CONTRACTS
   { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &kNS_TEXT_ENCODER_CID },
@@ -681,6 +684,7 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   { "profile-after-change", "PresentationService", PRESENTATION_SERVICE_CONTRACTID },
   { "profile-after-change", "Notification Telemetry Service", NOTIFICATIONTELEMETRYSERVICE_CONTRACTID },
   { nullptr }
+  // clang-format on
 };
 
 static void

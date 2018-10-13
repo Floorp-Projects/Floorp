@@ -57,6 +57,7 @@ InfallibleQuote(RangedPtr<const SrcCharT> srcBegin, RangedPtr<const SrcCharT> sr
     // Entries with 'u' are handled as \\u00xy, and entries with 0 are not escaped in any way.
     // Characters >= 256 are all assumed to be unescaped.
     static const Latin1Char escapeLookup[256] = {
+        // clang-format off
         'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'b', 't',
         'n', 'u', 'f', 'r', 'u', 'u', 'u', 'u', 'u', 'u',
         'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u',
@@ -67,6 +68,7 @@ InfallibleQuote(RangedPtr<const SrcCharT> srcBegin, RangedPtr<const SrcCharT> sr
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
         0,   0,  '\\', // rest are all zeros
+        // clang-format on
     };
 
     /* Step 1. */
@@ -1103,10 +1105,12 @@ json_stringify(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec json_static_methods[] = {
+    // clang-format off
     JS_FN(js_toSource_str,  json_toSource,      0, 0),
     JS_FN("parse",          json_parse,         2, 0),
     JS_FN("stringify",      json_stringify,     3, 0),
     JS_FS_END
+    // clang-format on
 };
 
 JSObject*

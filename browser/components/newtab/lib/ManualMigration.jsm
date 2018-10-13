@@ -39,7 +39,7 @@ this.ManualMigration = class ManualMigration {
   }
 
   async isMigrationMessageExpired() {
-    let profileAge = new ProfileAge();
+    let profileAge = await ProfileAge();
     let profileCreationDate = await profileAge.created;
     let daysSinceProfileCreation = (Date.now() - profileCreationDate) / MS_PER_DAY;
 

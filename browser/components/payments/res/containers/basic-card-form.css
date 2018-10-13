@@ -12,6 +12,11 @@ basic-card-form .editCreditCardForm {
     "billingAddressGUID billingAddressGUID billingAddressGUID";
 }
 
+basic-card-form csc-input {
+  display: flex;
+  flex-grow: 1;
+}
+
 basic-card-form .editCreditCardForm > accepted-cards {
   grid-area: accepted;
   margin: 0;

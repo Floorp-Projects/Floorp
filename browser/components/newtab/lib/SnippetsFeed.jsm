@@ -59,7 +59,7 @@ this.SnippetsFeed = class SnippetsFeed {
   }
 
   async getProfileInfo() {
-    const profileAge = new ProfileAge(null, null);
+    const profileAge = await ProfileAge();
     const createdDate = await profileAge.created;
     const resetDate = await profileAge.reset;
     return {

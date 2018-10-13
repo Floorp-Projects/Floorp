@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      background-color: lime;
+      height: 100px;
+    }
+    </style>
+  </head>
+  <body>
+    <script>
+    "use strict";
+
+    const DURATION = 100000;
+    const KEYFRAMES = { backgroundColor: ["lime", "red"] };
+
+    function createAnimation(effect, className, playbackRate = -1) {
+      const div = document.createElement("div");
+      div.classList.add(className);
+      document.body.appendChild(div);
+      effect.duration = DURATION;
+      effect.fill = "forwards";
+      const animation = div.animate(KEYFRAMES, effect);
+      animation.updatePlaybackRate(playbackRate);
+      animation.play();
+    }
+
+    createAnimation({}, "normal");
+    createAnimation({}, "normal-playbackrate-2", -2);
+    createAnimation({ delay: 50000 }, "positive-delay");
+    createAnimation({ delay: -50000 }, "negative-delay");
+    createAnimation({ endDelay: 50000 }, "positive-end-delay");
+    createAnimation({ endDelay: -50000 }, "negative-end-delay");
+    </script>
+  </body>
+</html>

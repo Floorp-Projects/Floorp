@@ -69,9 +69,6 @@ bool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
     case eStyleUnit_Percent:
     case eStyleUnit_Factor:
     case eStyleUnit_Degree:
-    case eStyleUnit_Grad:
-    case eStyleUnit_Radian:
-    case eStyleUnit_Turn:
     case eStyleUnit_FlexFraction:
       return mValue.mFloat == aOther.mValue.mFloat;
     case eStyleUnit_Coord:
@@ -123,20 +120,6 @@ void nsStyleCoord::SetFactorValue(float aValue)
   mValue.mFloat = aValue;
 }
 
-void nsStyleCoord::SetAngleValue(float aValue, nsStyleUnit aUnit)
-{
-  Reset();
-  if (aUnit == eStyleUnit_Degree ||
-      aUnit == eStyleUnit_Grad ||
-      aUnit == eStyleUnit_Radian ||
-      aUnit == eStyleUnit_Turn) {
-    mUnit = aUnit;
-    mValue.mFloat = aValue;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("not an angle value");
-  }
-}
-
 void nsStyleCoord::SetFlexFractionValue(float aValue)
 {
   Reset();
@@ -178,24 +161,14 @@ void nsStyleCoord::SetNoneValue()
 double
 nsStyleCoord::GetAngleValueInDegrees() const
 {
-  return GetAngleValueInRadians() * (180.0 / M_PI);
+  // Note that this extends the value from float to double.
+  return GetAngleValue();
 }
 
 double
 nsStyleCoord::GetAngleValueInRadians() const
 {
-  double angle = mValue.mFloat;
-
-  switch (GetUnit()) {
-  case eStyleUnit_Radian: return angle;
-  case eStyleUnit_Turn:   return angle * 2 * M_PI;
-  case eStyleUnit_Degree: return angle * M_PI / 180.0;
-  case eStyleUnit_Grad:   return angle * M_PI / 200.0;
-
-  default:
-    MOZ_ASSERT_UNREACHABLE("unrecognized angular unit");
-    return 0.0;
-  }
+  return GetAngleValueInDegrees() * M_PI / 180.0;
 }
 
 nscoord

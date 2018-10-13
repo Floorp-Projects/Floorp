@@ -18,6 +18,7 @@ import tempfile
 import time
 import requests
 import sh
+from distutils.util import strtobool
 
 import redo
 from scriptworker.utils import retry_async
@@ -34,7 +35,7 @@ log = logging.getLogger(__name__)
 ddstats = ThreadStats(namespace='releng.releases.partials')
 
 
-ALLOWED_URL_PREFIXES = [
+ALLOWED_URL_PREFIXES = (
     "http://download.cdn.mozilla.net/pub/mozilla.org/firefox/nightly/",
     "http://download.cdn.mozilla.net/pub/firefox/nightly/",
     "https://mozilla-nightly-updates.s3.amazonaws.com",
@@ -44,7 +45,10 @@ ALLOWED_URL_PREFIXES = [
     "https://archive.mozilla.org/",
     "http://archive.mozilla.org/",
     "https://queue.taskcluster.net/v1/task/",
-]
+)
+STAGING_URL_PREFIXES = (
+    "http://ftp.stage.mozaws.net/",
+)
 
 DEFAULT_FILENAME_TEMPLATE = "{appName}-{branch}-{version}-{platform}-" \
                             "{locale}-{from_buildid}-{to_buildid}.partial.mar"
@@ -229,7 +233,7 @@ def get_hash(path, hash_type="sha512"):
 
 class WorkEnv(object):
 
-    def __init__(self, mar=None, mbsdiff=None):
+    def __init__(self, allowed_url_prefixes, mar=None, mbsdiff=None):
         self.workdir = tempfile.mkdtemp()
         self.paths = {
             'unwrap_full_update.pl': os.path.join(self.workdir, 'unwrap_full_update.pl'),
@@ -244,6 +248,7 @@ class WorkEnv(object):
             'mbsdiff': 'https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/'
             'latest-mozilla-central/mar-tools/linux64/mbsdiff'
         }
+        self.allowed_url_prefixes = allowed_url_prefixes
         if mar:
             self.urls['mar'] = mar
         if mbsdiff:
@@ -275,17 +280,17 @@ class WorkEnv(object):
         return my_env
 
 
-def verify_allowed_url(mar):
-    if not any(mar.startswith(prefix) for prefix in ALLOWED_URL_PREFIXES):
+def verify_allowed_url(mar, allowed_url_prefixes):
+    if not any(mar.startswith(prefix) for prefix in allowed_url_prefixes):
         raise ValueError("{mar} is not in allowed URL prefixes: {p}".format(
-            mar=mar, p=ALLOWED_URL_PREFIXES
+            mar=mar, p=allowed_url_prefixes
         ))
 
 
 async def manage_partial(partial_def, work_env, filename_template, artifacts_dir, signing_certs):
     """Manage the creation of partial mars based on payload."""
     for mar in (partial_def["from_mar"], partial_def["to_mar"]):
-        verify_allowed_url(mar)
+        verify_allowed_url(mar, work_env.allowed_url_prefixes)
 
     complete_mars = {}
     use_old_format = False
@@ -407,10 +412,15 @@ async def manage_partial(partial_def, work_env, filename_template, artifacts_dir
 async def async_main(args, signing_certs):
     tasks = []
 
+    allowed_url_prefixes = list(ALLOWED_URL_PREFIXES)
+    if args.allow_staging_prefixes:
+        allowed_url_prefixes += STAGING_URL_PREFIXES
+
     task = json.load(args.task_definition)
     # TODO: verify task["extra"]["funsize"]["partials"] with jsonschema
     for definition in task["extra"]["funsize"]["partials"]:
         workenv = WorkEnv(
+            allowed_url_prefixes=allowed_url_prefixes,
             mar=definition.get('mar_binary'),
             mbsdiff=definition.get('mbsdiff_binary')
         )
@@ -442,6 +452,11 @@ def main():
     parser.add_argument("--sha384-signing-cert", required=True)
     parser.add_argument("--task-definition", required=True,
                         type=argparse.FileType('r'))
+    parser.add_argument("--allow-staging-prefixes",
+                        action="store_true",
+                        default=strtobool(
+                            os.environ.get('FUNSIZE_ALLOW_STAGING_PREFIXES', "false")),
+                        help="Allow files from staging buckets.")
     parser.add_argument("--filename-template",
                         default=DEFAULT_FILENAME_TEMPLATE)
     parser.add_argument("--no-freshclam", action="store_true", default=False,

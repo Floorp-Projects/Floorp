@@ -293,6 +293,7 @@ struct ModifierPair
   const char* name;
 };
 static const ModifierPair kPairs[] = {
+  // clang-format off
   { MODIFIER_ALT,        NS_DOM_KEYNAME_ALT },
   { MODIFIER_ALTGRAPH,   NS_DOM_KEYNAME_ALTGRAPH },
   { MODIFIER_CAPSLOCK,   NS_DOM_KEYNAME_CAPSLOCK },
@@ -306,6 +307,7 @@ static const ModifierPair kPairs[] = {
   { MODIFIER_SYMBOL,     NS_DOM_KEYNAME_SYMBOL },
   { MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
   { MODIFIER_OS,         NS_DOM_KEYNAME_OS }
+  // clang-format on
 };
 
 // static

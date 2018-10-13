@@ -1,0 +1,23 @@
+os:
+- linux
+- osx
+
+sudo: false
+
+language: rust
+
+rust:
+- stable
+- beta
+- 1.13.0
+
+install:
+- rustc -Vv
+- cargo -V
+
+script:
+- cargo build --verbose
+- RUST_BACKTRACE=full cargo test --verbose -- --nocapture
+
+cache:
+  cargo: true

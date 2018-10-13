@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Məşhur Mövzular:",
   "pocket_read_even_more": "Daha çox hekayə gör",
   "pocket_more_reccommendations": "Daha Çox Tövsiyyələr",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Bu necə işləyir",
   "pocket_cta_button": "Pocket əldə edin",
   "pocket_cta_text": "Sevdiyiniz məqalələri Pocket-də saxlayın və möhtəşəm yeni yazıları kəşf edin.",
   "highlights_empty_state": "İnternetdə gəzməyə başlayın, burada ziyarət edəcəyiniz və ya əlfəcinləyəcəyiniz məqalə, video və digər səhifələri göstərəcəyik.",

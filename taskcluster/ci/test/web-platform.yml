@@ -185,7 +185,6 @@ test-verify-wpt:
             .*-ccov/.*: []
             .*-asan/.*: []
             # do not run on beta or release: usually just confirms earlier results
-            .*-msvc/.*: ['mozilla-central', 'try']
             default: ['trunk', 'try']
     tier: 2
     mozharness:

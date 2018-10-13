@@ -15,10 +15,13 @@
 using mozilla::unicode::MultiCharMapping;
 
 static const MultiCharMapping CaseSpecials_Lower[] = {
+  // clang-format off
   { 0x0130, {0x0069, 0x0307, 0x0000} }, // LATIN CAPITAL LETTER I WITH DOT ABOVE
+  // clang-format on
 };
 
 static const MultiCharMapping CaseSpecials_Upper[] = {
+  // clang-format off
   { 0x00df, {0x0053, 0x0053, 0x0000} }, // LATIN SMALL LETTER SHARP S
   { 0x0149, {0x02bc, 0x004e, 0x0000} }, // LATIN SMALL LETTER N PRECEDED BY APOSTROPHE
   { 0x01f0, {0x004a, 0x030c, 0x0000} }, // LATIN SMALL LETTER J WITH CARON
@@ -121,9 +124,11 @@ static const MultiCharMapping CaseSpecials_Upper[] = {
   { 0xfb15, {0x0544, 0x053b, 0x0000} }, // ARMENIAN SMALL LIGATURE MEN INI
   { 0xfb16, {0x054e, 0x0546, 0x0000} }, // ARMENIAN SMALL LIGATURE VEW NOW
   { 0xfb17, {0x0544, 0x053d, 0x0000} }, // ARMENIAN SMALL LIGATURE MEN XEH
+  // clang-format on
 };
 
 static const MultiCharMapping CaseSpecials_Title[] = {
+  // clang-format off
   { 0x00df, {0x0053, 0x0073, 0x0000} }, // LATIN SMALL LETTER SHARP S
   { 0x0149, {0x02bc, 0x004e, 0x0000} }, // LATIN SMALL LETTER N PRECEDED BY APOSTROPHE
   { 0x01f0, {0x004a, 0x030c, 0x0000} }, // LATIN SMALL LETTER J WITH CARON
@@ -172,6 +177,7 @@ static const MultiCharMapping CaseSpecials_Title[] = {
   { 0xfb15, {0x0544, 0x056b, 0x0000} }, // ARMENIAN SMALL LIGATURE MEN INI
   { 0xfb16, {0x054e, 0x0576, 0x0000} }, // ARMENIAN SMALL LIGATURE VEW NOW
   { 0xfb17, {0x0544, 0x056d, 0x0000} }, // ARMENIAN SMALL LIGATURE MEN XEH
+  // clang-format on
 };
 
 static int CompareMCM(const void* aKey, const void* aElement)

@@ -112,8 +112,8 @@ def check_and_add_flags(flag, flags_collection, test_flags,
         flags = [flag]
 
     for c in compilers:
-        assert c in (c_compiler, cxx_compiler,
-                     host_c_compiler, host_cxx_compiler)
+        assert c in {c_compiler, cxx_compiler,
+                     host_c_compiler, host_cxx_compiler}
         lang, list_of_flags = {
             c_compiler: ('C', flags_collection.cflags),
             cxx_compiler: ('C++', flags_collection.cxxflags),

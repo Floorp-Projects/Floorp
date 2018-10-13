@@ -575,7 +575,6 @@ tab[selected="true"]:not([ignorefocus="true"]) {
 }
 
 tabpanels {
-  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabpanels");
   display: -moz-deck;
 }
 

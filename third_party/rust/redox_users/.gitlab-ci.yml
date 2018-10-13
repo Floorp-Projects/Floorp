@@ -1,0 +1,21 @@
+image: "rust:latest"
+
+before_script:
+    - rustup toolchain add nightly
+    - rustup target add x86_64-unknown-redox --toolchain nightly
+    - rustup show      # Print version info for debugging
+
+build:linux:cargo:
+    script:
+        - cargo +nightly build --verbose
+
+build:redox:cargo:
+    script:
+        - cargo +nightly build --verbose --target x86_64-unknown-redox
+
+test:linux:cargo:
+    script:
+        - cargo +nightly test --verbose -- --test-threads=1
+
+# TODO: Set up a redox testing docker image that would allow to run things
+#   like tests under redox

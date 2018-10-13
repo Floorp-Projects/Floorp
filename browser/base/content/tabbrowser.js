@@ -3403,10 +3403,6 @@ window._gBrowser = {
     }
   },
 
-  reloadAllTabs() {
-    this.reloadTabs(this.visibleTabs);
-  },
-
   reloadMultiSelectedTabs() {
     this.reloadTabs(this.selectedTabs);
   },

@@ -100,11 +100,13 @@ pm_canMeasureSomething(JSContext* cx, unsigned argc, Value* vp)
 
 static const uint8_t PM_FATTRS = JSPROP_READONLY | JSPROP_PERMANENT;
 static const JSFunctionSpec pm_fns[] = {
+    // clang-format off
     JS_FN("start",               pm_start,               0, PM_FATTRS),
     JS_FN("stop",                pm_stop,                0, PM_FATTRS),
     JS_FN("reset",               pm_reset,               0, PM_FATTRS),
     JS_FN("canMeasureSomething", pm_canMeasureSomething, 0, PM_FATTRS),
     JS_FS_END
+    // clang-format on
 };
 
 static const uint8_t PM_PATTRS =

@@ -146,6 +146,9 @@ class SummaryGraph extends PureComponent {
       timeScale,
     } = this.props;
 
+    const { iterationCount } = animation.state;
+    const { delay, endDelay } = animation.state.absoluteValues;
+
     return dom.div(
       {
         className: "animation-summary-graph" +
@@ -162,7 +165,7 @@ class SummaryGraph extends PureComponent {
           timeScale,
         }
       ),
-      animation.state.delay ?
+      delay ?
         DelaySign(
           {
             animation,
@@ -171,7 +174,7 @@ class SummaryGraph extends PureComponent {
         )
       :
       null,
-      animation.state.iterationCount && animation.state.endDelay ?
+      iterationCount && endDelay ?
         EndDelaySign(
           {
             animation,
