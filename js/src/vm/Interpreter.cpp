@@ -305,7 +305,6 @@ js::MakeDefaultConstructor(JSContext* cx, HandleScript script, jsbytecode* pc, H
 
     ctor->setIsConstructor();
     ctor->setIsClassConstructor();
-    MOZ_ASSERT(ctor->infallibleIsDefaultClassConstructor(cx));
 
     // Create the script now, as the source span needs to be overridden for
     // toString. Calling toString on a class constructor must not return the
