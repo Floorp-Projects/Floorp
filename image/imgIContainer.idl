@@ -476,11 +476,7 @@ interface imgIContainer : nsISupports
    * @param aSize The size to which the image should be scaled while decoding,
    *              if possible. If the image cannot be scaled to this size while
    *              being decoded, it will be decoded at its intrinsic size.
-   * @param aFlags Flags of the FLAG_* variety. Only the decode flags
-   *               (FLAG_DECODE_*) and FLAG_SYNC_DECODE (which will
-   *               synchronously decode images that can be decoded "quickly",
-   *               just like startDecoding() does) are accepted; others will be
-   *               ignored.
+   * @param aFlags Flags of the FLAG_* variety.
    */
   [noscript] void requestDecodeForSize([const] in nsIntSize aSize,
                                        in uint32_t aFlags);
