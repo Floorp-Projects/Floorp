@@ -72,6 +72,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
       documentCurrentTime: this._form.documentCurrentTime,
       createdTime: this._form.createdTime,
       currentTimeAtCreated: this._form.currentTimeAtCreated,
+      absoluteValues: this.calculateAbsoluteValues(this._form),
     };
   },
 
@@ -121,8 +122,81 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
       }
     }
 
+    data.absoluteValues = this.calculateAbsoluteValues(data);
     return {state: data, hasChanged};
-  }
+  },
+
+  calculateAbsoluteValues(data) {
+    const {
+      createdTime,
+      currentTime,
+      currentTimeAtCreated,
+      delay,
+      duration,
+      endDelay = 0,
+      fill,
+      iterationCount,
+      playbackRate,
+    } = data;
+
+    const toRate = v => v / Math.abs(playbackRate);
+    const isPositivePlaybackRate = playbackRate > 0;
+    let absoluteDelay = 0;
+    let absoluteEndDelay = 0;
+    let isDelayFilled = false;
+    let isEndDelayFilled = false;
+
+    if (isPositivePlaybackRate) {
+      absoluteDelay = toRate(delay);
+      absoluteEndDelay = toRate(endDelay);
+      isDelayFilled = fill === "both" || fill === "backwards";
+      isEndDelayFilled = fill === "both" || fill === "forwards";
+    } else {
+      absoluteDelay = toRate(endDelay);
+      absoluteEndDelay = toRate(delay);
+      isDelayFilled = fill === "both" || fill === "forwards";
+      isEndDelayFilled = fill === "both" || fill === "backwards";
+    }
+
+    let endTime = 0;
+
+    if (duration === Infinity) {
+      // Set endTime so as to enable the scrubber with keeping the consinstency of UI
+      // even the duration was Infinity. In case of delay is longer than zero, handle
+      // the graph duration as double of the delay amount. In case of no delay, handle
+      // the duration as 1ms which is short enough so as to make the scrubber movable
+      // and the limited duration is prioritized.
+      endTime = (absoluteDelay > 0 ? absoluteDelay * 2 : 1);
+    } else {
+      endTime = absoluteDelay +
+                toRate(duration * (iterationCount || 1)) +
+                absoluteEndDelay;
+    }
+
+    const absoluteCreatedTime =
+      isPositivePlaybackRate ? createdTime : createdTime - endTime;
+    const absoluteCurrentTimeAtCreated =
+      isPositivePlaybackRate ? currentTimeAtCreated : endTime - currentTimeAtCreated;
+    const absoluteCurrentTime = absoluteCreatedTime + toRate(currentTime);
+    const absoluteStartTime = absoluteCreatedTime + Math.min(absoluteDelay, 0);
+    const absoluteStartTimeAtCreated = absoluteCreatedTime + absoluteCurrentTimeAtCreated;
+    // To show whole graph with endDelay, we add negative endDelay amount to endTime.
+    const endTimeWithNegativeEndDelay = endTime - Math.min(absoluteEndDelay, 0);
+    const absoluteEndTime = absoluteCreatedTime + endTimeWithNegativeEndDelay;
+
+    return {
+      createdTime: absoluteCreatedTime,
+      currentTime: absoluteCurrentTime,
+      currentTimeAtCreated: absoluteCurrentTimeAtCreated,
+      delay: absoluteDelay,
+      endDelay: absoluteEndDelay,
+      endTime: absoluteEndTime,
+      isDelayFilled,
+      isEndDelayFilled,
+      startTime: absoluteStartTime,
+      startTimeAtCreated: absoluteStartTimeAtCreated,
+    };
+  },
 });
 
 exports.AnimationPlayerFront = AnimationPlayerFront;
