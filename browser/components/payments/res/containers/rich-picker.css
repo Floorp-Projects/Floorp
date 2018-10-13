@@ -55,16 +55,23 @@ payment-method-picker.rich-picker {
   grid-template-columns: 20fr 1fr auto auto;
   grid-template-areas:
     "label    spacer edit add"
-    "dropdown cvv    cvv  cvv"
+    "dropdown csc    csc  csc"
     "invalid  invalid invalid invalid";
 }
 
-payment-method-picker > input {
-  border: 1px solid #0C0C0D33;
-  border-inline-start: none;
-  grid-area: cvv;
+.security-code-container {
+  display: flex;
+  flex-grow: 1;
+  grid-area: csc;
   margin: 10px 0; /* Has to be same as rich-select */
-  padding: 8px;
   /* So the error outline appears above the adjacent dropdown */
   z-index: 1;
+}
+
+.rich-picker .security-code {
+  border: 1px solid #0C0C0D33;
+  /* Override the border from common.css */
+  border-inline-start: none !important;
+  flex-grow: 1;
+  padding: 8px;
 }
