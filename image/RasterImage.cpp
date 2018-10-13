@@ -298,13 +298,14 @@ RasterImage::GetType(uint16_t* aType)
 LookupResult
 RasterImage::LookupFrameInternal(const IntSize& aSize,
                                  uint32_t aFlags,
-                                 PlaybackType aPlaybackType)
+                                 PlaybackType aPlaybackType,
+                                 bool aMarkUsed)
 {
   if (mAnimationState && aPlaybackType == PlaybackType::eAnimated) {
     MOZ_ASSERT(mFrameAnimator);
     MOZ_ASSERT(ToSurfaceFlags(aFlags) == DefaultSurfaceFlags(),
                "Can't composite frames with non-default surface flags");
-    return mFrameAnimator->GetCompositedFrame(*mAnimationState);
+    return mFrameAnimator->GetCompositedFrame(*mAnimationState, aMarkUsed);
   }
 
   SurfaceFlags surfaceFlags = ToSurfaceFlags(aFlags);
@@ -316,20 +317,23 @@ RasterImage::LookupFrameInternal(const IntSize& aSize,
     return SurfaceCache::Lookup(ImageKey(this),
                                 RasterSurfaceKey(aSize,
                                                  surfaceFlags,
-                                                 PlaybackType::eStatic));
+                                                 PlaybackType::eStatic),
+                                aMarkUsed);
   }
 
   // We'll return the best match we can find to the requested frame.
   return SurfaceCache::LookupBestMatch(ImageKey(this),
                                        RasterSurfaceKey(aSize,
                                                         surfaceFlags,
-                                                        PlaybackType::eStatic));
+                                                        PlaybackType::eStatic),
+                                       aMarkUsed);
 }
 
 LookupResult
 RasterImage::LookupFrame(const IntSize& aSize,
                          uint32_t aFlags,
-                         PlaybackType aPlaybackType)
+                         PlaybackType aPlaybackType,
+                         bool aMarkUsed /* = true */)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -347,7 +351,7 @@ RasterImage::LookupFrame(const IntSize& aSize,
   }
 
   LookupResult result =
-    LookupFrameInternal(requestedSize, aFlags, aPlaybackType);
+    LookupFrameInternal(requestedSize, aFlags, aPlaybackType, aMarkUsed);
 
   if (!result && !mHasSize) {
     // We can't request a decode without knowing our intrinsic size. Give up.
@@ -377,7 +381,7 @@ RasterImage::LookupFrame(const IntSize& aSize,
 
     // If we can or did sync decode, we should already have the frame.
     if (ranSync || (aFlags & FLAG_SYNC_DECODE)) {
-      result = LookupFrameInternal(requestedSize, aFlags, aPlaybackType);
+      result = LookupFrameInternal(requestedSize, aFlags, aPlaybackType, aMarkUsed);
     }
   }
 
@@ -462,7 +466,8 @@ RasterImage::WillDrawOpaqueNow()
     SurfaceCache::LookupBestMatch(ImageKey(this),
                                   RasterSurfaceKey(mSize,
                                                    DefaultSurfaceFlags(),
-                                                   PlaybackType::eStatic));
+                                                   PlaybackType::eStatic),
+                                  /* aMarkUsed = */ false);
   MatchType matchType = result.Type();
   if (matchType == MatchType::NOT_FOUND || matchType == MatchType::PENDING ||
       !result.Surface()->IsFinished()) {
@@ -1200,7 +1205,7 @@ RasterImage::RequestDecodeForSizeInternal(const IntSize& aSize, uint32_t aFlags)
   // Perform a frame lookup, which will implicitly start decoding if needed.
   PlaybackType playbackType = mAnimationState ? PlaybackType::eAnimated
                                               : PlaybackType::eStatic;
-  LookupResult result = LookupFrame(aSize, flags, playbackType);
+  LookupResult result = LookupFrame(aSize, flags, playbackType, /* aMarkUsed = */ false);
   return std::move(result.Surface());
 }
 
