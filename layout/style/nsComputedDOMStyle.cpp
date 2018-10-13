@@ -3887,18 +3887,6 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
       aValue->SetDegree(aCoord.GetAngleValue());
       break;
 
-    case eStyleUnit_Grad:
-      aValue->SetGrad(aCoord.GetAngleValue());
-      break;
-
-    case eStyleUnit_Radian:
-      aValue->SetRadian(aCoord.GetAngleValue());
-      break;
-
-    case eStyleUnit_Turn:
-      aValue->SetTurn(aCoord.GetAngleValue());
-      break;
-
     case eStyleUnit_FlexFraction: {
       nsAutoString tmpStr;
       nsStyleUtil::AppendCSSNumber(aCoord.GetFlexFractionValue(), tmpStr);

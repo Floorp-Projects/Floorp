@@ -209,9 +209,6 @@ nsStyleUtil::AppendAngleValue(const nsStyleCoord& aAngle, nsAString& aResult)
   // Append unit.
   switch (aAngle.GetUnit()) {
     case eStyleUnit_Degree: aResult.AppendLiteral("deg");  break;
-    case eStyleUnit_Grad:   aResult.AppendLiteral("grad"); break;
-    case eStyleUnit_Radian: aResult.AppendLiteral("rad");  break;
-    case eStyleUnit_Turn:   aResult.AppendLiteral("turn"); break;
     default: MOZ_ASSERT_UNREACHABLE("unrecognized angle unit");
   }
 }
