@@ -805,7 +805,7 @@ win32-msvc/debug:
     treeherder:
         platform: windows2012-32/debug
         symbol: Bmsvc
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -823,7 +823,6 @@ win32-msvc/debug:
             - builds/taskcluster_sub_win32/debug.py
         extra-config:
             mozconfig_variant: 'debug-msvc'
-    run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -832,14 +831,14 @@ win32-msvc/debug:
         - win64-node
 
 win32-msvc/opt:
-    description: "Win32 MSVC PGO"
+    description: "Win32 MSVC Opt"
     index:
         product: firefox
-        job-name: win32-msvc-pgo
+        job-name: win32-msvc-opt
     treeherder:
-        platform: windows2012-32/pgo
+        platform: windows2012-32/opt
         symbol: Bmsvc
-        tier: 2
+        tier: 1
     stub-installer:
         # Beta and release use a stub-requiring update channel
         by-project:
@@ -854,7 +853,7 @@ win32-msvc/opt:
             PERFHERDER_EXTRA_OPTIONS: msvc
     run:
         using: mozharness
-        options: [enable-pgo, append-env-variables-from-configs]
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
@@ -863,7 +862,6 @@ win32-msvc/opt:
             - builds/taskcluster_sub_win32/opt.py
         extra-config:
             mozconfig_variant: 'opt-msvc'
-    run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -879,7 +877,7 @@ win64-msvc/debug:
     treeherder:
         platform: windows2012-64/debug
         symbol: Bmsvc
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -897,7 +895,6 @@ win64-msvc/debug:
             - builds/taskcluster_sub_win64/debug.py
         extra-config:
             mozconfig_variant: 'debug-msvc'
-    run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -906,14 +903,14 @@ win64-msvc/debug:
         - win64-node
 
 win64-msvc/opt:
-    description: "Win64 MSVC PGO"
+    description: "Win64 MSVC Opt"
     index:
         product: firefox
-        job-name: win64-msvc-pgo
+        job-name: win64-msvc-opt
     treeherder:
-        platform: windows2012-64/pgo
+        platform: windows2012-64/opt
         symbol: Bmsvc
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -922,7 +919,7 @@ win64-msvc/opt:
             PERFHERDER_EXTRA_OPTIONS: msvc
     run:
         using: mozharness
-        options: [enable-pgo, append-env-variables-from-configs]
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
@@ -931,7 +928,6 @@ win64-msvc/opt:
             - builds/taskcluster_sub_win64/opt.py
         extra-config:
             mozconfig_variant: 'opt-msvc'
-    run-on-projects: ['mozilla-central']
     toolchains:
         - win64-clang-cl
         - win64-rust

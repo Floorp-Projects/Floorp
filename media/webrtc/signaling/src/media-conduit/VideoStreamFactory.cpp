@@ -26,6 +26,7 @@ namespace mozilla {
 // XXX Populate this based on a pref (which we should consider sorting because
 // people won't assume they need to).
 static VideoStreamFactory::ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
+  // clang-format off
   {MB_OF(1920, 1200), KBPS(1500), KBPS(2000), KBPS(10000)}, // >HD (3K, 4K, etc)
   {MB_OF(1280, 720), KBPS(1200), KBPS(1500), KBPS(5000)}, // HD ~1080-1200
   {MB_OF(800, 480), KBPS(600), KBPS(800), KBPS(2500)}, // HD ~720
@@ -33,6 +34,7 @@ static VideoStreamFactory::ResolutionAndBitrateLimits kResolutionAndBitrateLimit
   {tl::Max<MB_OF(400, 240), MB_OF(352, 288)>::value, KBPS(125), KBPS(300), KBPS(1300)}, // VGA
   {MB_OF(176, 144), KBPS(100), KBPS(150), KBPS(500)}, // WQVGA, CIF
   {0 , KBPS(40), KBPS(80), KBPS(250)} // QCIF and below
+  // clang-format on
 };
 
 static VideoStreamFactory::ResolutionAndBitrateLimits

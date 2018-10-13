@@ -11,6 +11,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", this);
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // AttributionCode is only needed for Firefox
 ChromeUtils.defineModuleGetter(this, "AttributionCode",
@@ -19,9 +21,6 @@ ChromeUtils.defineModuleGetter(this, "AttributionCode",
 // Lazy load |LightweightThemeManager|.
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
                                "resource://gre/modules/LightweightThemeManager.jsm");
-
-ChromeUtils.defineModuleGetter(this, "ProfileAge",
-                               "resource://gre/modules/ProfileAge.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ExtensionTestUtils",
                                "resource://testing-common/ExtensionXPCShellUtils.jsm");
@@ -296,12 +295,10 @@ function spoofGfxAdapter() {
 }
 
 function spoofProfileReset() {
-  let profileAccessor = new ProfileAge();
-
-  return profileAccessor.writeTimes({
+  return CommonUtils.writeJSON({
     created: PROFILE_CREATION_DATE_MS,
     reset: PROFILE_RESET_DATE_MS,
-  });
+  }, OS.Path.join(OS.Constants.Path.profileDir, "times.json"));
 }
 
 function spoofPartnerInfo() {

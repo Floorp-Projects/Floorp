@@ -1,0 +1,50 @@
+environment:
+  global:
+    CHANNEL: stable
+    #APPVEYOR_CACHE_SKIP_RESTORE: true  # Uncomment when caching causes problems
+
+  matrix:
+  # Stable channel
+  - TARGET: i686-pc-windows-msvc
+    CHANNEL: stable
+  - TARGET: i686-pc-windows-gnu
+    CHANNEL: stable
+  - TARGET: x86_64-pc-windows-msvc
+    CHANNEL: stable
+  - TARGET: x86_64-pc-windows-gnu
+    CHANNEL: stable
+  # Beta channel
+  - TARGET: x86_64-pc-windows-msvc
+    CHANNEL: beta
+  - TARGET: x86_64-pc-windows-gnu
+    CHANNEL: beta
+  # 1.13.0
+  - TARGET: x86_64-pc-windows-msvc
+    CHANNEL: 1.13.0
+  - TARGET: x86_64-pc-windows-gnu
+    CHANNEL: 1.13.0
+
+install:
+- ps: >-
+    $Env:PATH += ';C:\msys64\usr\bin'
+- curl -sSf -o rustup-init.exe https://win.rustup.rs/
+- rustup-init.exe -y --default-host %TARGET% --default-toolchain %CHANNEL%
+- set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+- rustc -Vv
+- cargo -V
+
+test_script:
+- cargo build --verbose
+- set RUST_BACKTRACE=full
+- cargo test --verbose -- --nocapture
+
+cache:
+- C:\Users\appveyor\.cargo\registry
+- target
+
+notifications:
+- provider: Email
+  on_build_success: false
+
+# Building is done in the test phase, so we disable Appveyor's build phase.
+build: false

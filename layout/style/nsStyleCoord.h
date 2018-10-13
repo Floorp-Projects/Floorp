@@ -55,9 +55,6 @@ enum nsStyleUnit : uint8_t {
   eStyleUnit_Percent      = 10,     // (float) 1.0 == 100%
   eStyleUnit_Factor       = 11,     // (float) a multiplier
   eStyleUnit_Degree       = 12,     // (float) angle in degrees
-  eStyleUnit_Grad         = 13,     // (float) angle in grads
-  eStyleUnit_Radian       = 14,     // (float) angle in radians
-  eStyleUnit_Turn         = 15,     // (float) angle in turns
   eStyleUnit_FlexFraction = 16,     // (float) <flex> in fr units
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
   eStyleUnit_Integer      = 30,     // (int) value is simple integer
@@ -153,7 +150,7 @@ public:
   }
 
   bool IsAngleValue() const {
-    return eStyleUnit_Degree <= mUnit && mUnit <= eStyleUnit_Turn;
+    return eStyleUnit_Degree == mUnit;
   }
 
   static bool IsCalcUnit(nsStyleUnit aUnit) {
@@ -256,7 +253,6 @@ public:
   void  SetIntValue(int32_t aValue, nsStyleUnit aUnit);
   void  SetPercentValue(float aValue);
   void  SetFactorValue(float aValue);
-  void  SetAngleValue(float aValue, nsStyleUnit aUnit);
   void  SetFlexFractionValue(float aValue);
   void  SetNormalValue();
   void  SetAutoValue();
@@ -494,12 +490,8 @@ inline float nsStyleCoord::GetFactorOrPercentValue() const
 
 inline float nsStyleCoord::GetAngleValue() const
 {
-  NS_ASSERTION(mUnit >= eStyleUnit_Degree &&
-               mUnit <= eStyleUnit_Turn, "not an angle value");
-  if (mUnit >= eStyleUnit_Degree && mUnit <= eStyleUnit_Turn) {
-    return mValue.mFloat;
-  }
-  return 0.0f;
+  MOZ_ASSERT(mUnit == eStyleUnit_Degree);
+  return mValue.mFloat;
 }
 
 inline float nsStyleCoord::GetFlexFractionValue() const

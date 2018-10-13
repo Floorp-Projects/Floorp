@@ -181,6 +181,7 @@ ret
 
 const BYTE SampleRadialGradientPS[] =
 {
+    // clang-format off
      68,  88,  66,  67,  20, 173, 
     189, 124, 239,   6,  22,  67, 
     226,  55, 243,  56,  30, 182, 
@@ -766,6 +767,7 @@ const BYTE SampleRadialGradientPS[] =
      15,   0,   0,   0,  83,  86, 
      95,  84,  97, 114, 103, 101, 
     116,   0, 171, 171
+    // clang-format on
 };
 #if 0
 //
@@ -926,6 +928,7 @@ ret
 
 const BYTE SampleRadialGradientA0PS[] =
 {
+    // clang-format off
      68,  88,  66,  67,  47, 105, 
     118, 126,   8, 122, 228, 233, 
      56,  98,  50, 148, 135,  10, 
@@ -1416,4 +1419,5 @@ const BYTE SampleRadialGradientA0PS[] =
       0,   0,  83,  86,  95,  84, 
      97, 114, 103, 101, 116,   0, 
     171, 171
+    // clang-format on
 };

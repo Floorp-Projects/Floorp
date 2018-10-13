@@ -57,7 +57,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
         dnl version that what our build machines have installed.
         LLVM_LDFLAGS=`echo "$LLVM_LDFLAGS" | sed -E 's/-L[[^ ]]+\/clang\/lib//'`
     elif test "${HOST_OS_ARCH}" = "WINNT"; then
-        CLANG_LDFLAGS="clang.lib clangASTMatchers.lib"
+        CLANG_LDFLAGS="clangASTMatchers.lib clang.lib"
     else
         CLANG_LDFLAGS="-lclangASTMatchers"
     fi

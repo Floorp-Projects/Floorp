@@ -424,6 +424,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
+  SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
@@ -1066,6 +1067,7 @@ BrowserGlue.prototype = {
     const appSource = new FileSource("app", locales, "resource://app/localization/{locale}/");
     L10nRegistry.registerSource(appSource);
 
+    SaveToPocket.init();
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");
   },
 
@@ -1152,7 +1154,7 @@ BrowserGlue.prototype = {
 
   async _calculateProfileAgeInDays() {
     let ProfileAge = ChromeUtils.import("resource://gre/modules/ProfileAge.jsm", {}).ProfileAge;
-    let profileAge = new ProfileAge(null, null);
+    let profileAge = await ProfileAge();
 
     let creationDate = await profileAge.created;
     let resetDate = await profileAge.reset;
@@ -1422,6 +1424,7 @@ BrowserGlue.prototype = {
     AboutPrivateBrowsingHandler.uninit();
     AutoCompletePopup.uninit();
     DateTimePickerParent.uninit();
+    SaveToPocket.uninit();
 
     // Browser errors are only collected on Nightly, but telemetry for
     // them is collected on all channels.
@@ -1451,7 +1454,7 @@ BrowserGlue.prototype = {
   _monitorWebcompatReporterPref() {
     const PREF = "extensions.webcompat-reporter.enabled";
     const ID = "webcompat-reporter@mozilla.org";
-    Services.prefs.addObserver(PREF, async () => {
+    async function checkPref() {
       let addon = await AddonManager.getAddonByID(ID);
       let enabled = Services.prefs.getBoolPref(PREF, false);
       if (enabled && !addon.isActive) {
@@ -1459,7 +1462,9 @@ BrowserGlue.prototype = {
       } else if (!enabled && addon.isActive) {
         await addon.disable({allowSystemAddons: true});
       }
-    });
+    }
+    Services.prefs.addObserver(PREF, checkPref);
+    checkPref();
   },
 
   // All initial windows have opened.

@@ -186,10 +186,10 @@ UpdateButton(const ovrInputState& aInputState,
              VRControllerState& aControllerState)
 {
   if (aInputState.Buttons & OculusControllerButtons[aHandIdx][aButtonIdx]) {
-    aControllerState.buttonPressed |= (1 << aButtonIdx);
+    aControllerState.buttonPressed |= ((uint64_t)1 << aButtonIdx);
   }
   if (aInputState.Touches & OculusControllerTouches[aHandIdx][aButtonIdx]) {
-    aControllerState.buttonTouched |= (1 << aButtonIdx);
+    aControllerState.buttonTouched |= ((uint64_t)1 << aButtonIdx);
   }
 }
 

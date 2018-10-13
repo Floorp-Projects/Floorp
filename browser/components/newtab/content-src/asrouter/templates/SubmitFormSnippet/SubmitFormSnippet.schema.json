@@ -69,6 +69,10 @@
       "type": "string",
       "description": "Information about how the form data is used."
     },
+    "scene2_dismiss_button_text": {
+      "type": "string",
+      "description": "Label for the dismiss button when the sign-up form is expanded."
+    },
     "hidden_inputs": {
       "type": "object",
       "description": "Each entry represents a hidden input, key is used as value for the name property."

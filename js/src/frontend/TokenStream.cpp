@@ -2065,6 +2065,7 @@ enum FirstCharKind {
 #define T_RC        size_t(TokenKind::RightCurly)
 #define _______     Other
 static const uint8_t firstCharKinds[] = {
+// clang-format off
 /*         0        1        2        3        4        5        6        7        8        9    */
 /*   0+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______,   Space,
 /*  10+ */     EOL,   Space,   Space,     EOL, _______, _______, _______, _______, _______, _______,
@@ -2079,6 +2080,7 @@ static const uint8_t firstCharKinds[] = {
 /* 100+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /* 110+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /* 120+ */   Ident,   Ident,   Ident,    T_LC, _______,    T_RC,T_BITNOT, _______
+// clang-format on
 };
 #undef T_COMMA
 #undef T_COLON

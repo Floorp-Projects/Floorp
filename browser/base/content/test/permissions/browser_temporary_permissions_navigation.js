@@ -80,13 +80,16 @@ add_task(async function testTempPermissionOnReloadAllTabs() {
   await BrowserTestUtils.withNewTab(uri.spec, async function(browser) {
     SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, browser);
 
+    // Select all tabs before opening the context menu.
+    gBrowser.selectAllTabs();
+
     // Open the tab context menu.
     let contextMenu = document.getElementById("tabContextMenu");
     let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
     EventUtils.synthesizeMouseAtCenter(gBrowser.selectedTab, {type: "contextmenu", button: 2});
     await popupShownPromise;
 
-    let reloadMenuItem = document.getElementById("context_reloadAllTabs");
+    let reloadMenuItem = document.getElementById("context_reloadSelectedTabs");
 
     let reloaded = Promise.all(gBrowser.visibleTabs.map(
       tab => BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab))));

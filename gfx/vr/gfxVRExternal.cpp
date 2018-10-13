@@ -217,16 +217,11 @@ VRDisplayExternal::PopulateLayerTexture(const layers::SurfaceDescriptor& aTextur
     }
 #elif defined(XP_MACOSX)
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
+      // MacIOSurface ptr can't be fetched or used at different threads.
+      // Both of fetching and using this MacIOSurface are at the VRService thread.
       const auto& desc = aTexture.get_SurfaceDescriptorMacIOSurface();
-      RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(desc.surfaceId(),
-                                                              desc.scaleFactor(),
-                                                              !desc.isOpaque());
-      if (!surf) {
-        NS_WARNING("VRDisplayHost::SubmitFrame failed to get a MacIOSurface");
-        return false;
-      }
       *aTextureType = VRLayerTextureType::LayerTextureType_MacIOSurface;
-      *aTextureHandle = (void *)surf->GetIOSurfacePtr();
+      *aTextureHandle = desc.surfaceId();
       return true;
     }
 #elif defined(MOZ_WIDGET_ANDROID)

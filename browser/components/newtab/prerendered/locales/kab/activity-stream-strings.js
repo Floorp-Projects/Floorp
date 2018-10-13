@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Isental ittwasnen aṭas:",
   "pocket_read_even_more": "Wali ugar n teqsiḍin",
   "pocket_more_reccommendations": "Ugar n iwellihen",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Amek iteddu",
   "pocket_cta_button": "Awi-d Pocket",
   "pocket_cta_text": "Sekles tiqṣiḍin i tḥemmleḍ deg Pocket, sedhu allaɣ-ik s tɣuri ifazen.",
   "highlights_empty_state": "Bdu tuniginn sakin nekkni ad k-n-sken imagraden, tividyutin, akked isebtar nniḍen i γef terziḍ yakan neγ i tceṛḍeḍ dagi.",

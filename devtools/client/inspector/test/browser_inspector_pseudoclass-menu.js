@@ -9,7 +9,7 @@
 const TEST_URI = "data:text/html;charset=UTF-8," +
                  "pseudo-class lock node menu tests" +
                  "<div>test div</div>";
-const PSEUDOS = ["hover", "active", "focus"];
+const PSEUDOS = ["hover", "active", "focus", "focus-within"];
 
 add_task(async function() {
   const {inspector, testActor} = await openInspectorForURL(TEST_URI);

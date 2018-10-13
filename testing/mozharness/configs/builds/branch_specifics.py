@@ -54,51 +54,6 @@ config = {
             'win64': {
                 'mozconfig_variant': 'release',
             },
-            'linux-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an': {
-                'update_channel': 'default',
-            },
-            'linux64-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'macosx64-debug': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'macosx64-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win32-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'win64-debug': {
-                'update_channel': 'default',
-            },
-            'win64-add-on-devel': {
-                'update_channel': 'default',
-            },
         },
     },
     'mozilla-esr60': {
@@ -124,51 +79,6 @@ config = {
             },
             'win64': {
                 'mozconfig_variant': 'release',
-            },
-            'linux-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an': {
-                'update_channel': 'default',
-            },
-            'linux64-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'macosx64-debug': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'macosx64-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win32-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'win64-debug': {
-                'update_channel': 'default',
-            },
-            'win64-add-on-devel': {
-                'update_channel': 'default',
             },
         },
     },
@@ -207,51 +117,6 @@ config = {
             },
             'win64-devedition': {
                 "update_channel": "aurora",
-            },
-            'linux-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an': {
-                'update_channel': 'default',
-            },
-            'linux64-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'macosx64-debug': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'macosx64-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win32-add-on-devel': {
-                'update_channel': 'default',
-            },
-            'win64-debug': {
-                'update_channel': 'default',
-            },
-            'win64-add-on-devel': {
-                'update_channel': 'default',
             },
         },
     },
@@ -299,50 +164,17 @@ config = {
             'linux': {
                 'mozconfig_variant': 'release',
             },
-            'linux-debug': {
-                'update_channel': 'default',
-            },
             'linux64': {
                 'mozconfig_variant': 'release',
-            },
-            'linux64-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an': {
-                'update_channel': 'default',
             },
             'macosx64': {
                 'mozconfig_variant': 'release',
             },
-            'macosx64-debug': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an-debug': {
-                'update_channel': 'default',
-            },
             'win32': {
                 'mozconfig_variant': 'release',
             },
-            'win32-debug': {
-                'update_channel': 'default',
-            },
             'win64': {
                 'mozconfig_variant': 'release',
-            },
-            'win64-debug': {
-                'update_channel': 'default',
             },
             'linux-devedition': {
                 "update_channel": "aurora",

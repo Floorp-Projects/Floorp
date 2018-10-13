@@ -169,7 +169,7 @@ def so_version(value):
 
 @template
 def library_name_info_template(host_or_target):
-    assert host_or_target in (host, target)
+    assert host_or_target in {host, target}
     compiler = {
         host: host_c_compiler,
         target: c_compiler,

@@ -20,7 +20,7 @@ var StarUI = {
   // the popup.
   _autoCloseTimerEnabled: true,
   // The autoclose timeout length. 3500ms matches the timeout that Pocket uses
-  // in browser/extensions/pocket/content/panels/js/saved.js.
+  // in browser/components/pocket/content/panels/js/saved.js.
   _autoCloseTimeout: 3500,
   _removeBookmarksOnPopupHidden: false,
 

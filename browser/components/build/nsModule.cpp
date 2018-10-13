@@ -71,6 +71,7 @@ NS_DEFINE_NAMED_CID(NS_MACATTRIBUTIONSERVICE_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
+    // clang-format off
     { &kNS_BROWSERDIRECTORYPROVIDER_CID, false, nullptr, DirectoryProviderConstructor },
 #if defined(XP_WIN)
     { &kNS_SHELLSERVICE_CID, false, nullptr, nsWindowsShellServiceConstructor },
@@ -88,9 +89,11 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_MACATTRIBUTIONSERVICE_CID, false, nullptr, nsMacAttributionServiceConstructor },
 #endif
     { nullptr }
+    // clang-format on
 };
 
 static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
+    // clang-format off
     { NS_BROWSERDIRECTORYPROVIDER_CONTRACTID, &kNS_BROWSERDIRECTORYPROVIDER_CID },
 #if defined(XP_WIN)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
@@ -126,6 +129,7 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_MACATTRIBUTIONSERVICE_CONTRACTID, &kNS_MACATTRIBUTIONSERVICE_CID },
 #endif
     { nullptr }
+    // clang-format on
 };
 
 static const mozilla::Module::CategoryEntry kBrowserCategories[] = {

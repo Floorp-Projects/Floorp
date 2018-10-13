@@ -734,18 +734,6 @@ set_config('MOZ_IPDL_TESTS',
 
 include('nss.configure')
 
-# LibSecret
-# ==============================================================
-# To access the OS key store on Linux systems we use libsecret.
-# https://developer.gnome.org/libsecret/
-
-if target.os == 'Linux':
-    libsecret = pkg_check_modules('MOZ_LIB_SECRET', 'libsecret-1',
-                                  allow_missing=True)
-
-    set_config('MOZ_LIB_SECRET', depends_if(libsecret)(lambda _: True))
-    set_define('MOZ_LIB_SECRET', depends_if(libsecret)(lambda _: True))
-
 # Graphics
 # ==============================================================
 option('--disable-skia', help='Disable use of Skia')

@@ -61,15 +61,7 @@
       <span data-localization="cardNetwork" class="label-text"/>
     </label>
     <label id="cc-csc-container" class="container" hidden="hidden">
-      <!-- Keep these attributes in-sync with securityCodeInput in payment-method-picker.js -->
-      <input id="cc-csc"
-             type="text"
-             autocomplete="off"
-             size="3"
-             required="required"
-             pattern="[0-9]{3,}"
-             disabled="disabled"/>
-      <span data-localization="cardCVV" class="label-text"/>
+      <!-- The CSC container will get filled in by forms that need a CSC (using csc-input.js) -->
     </label>
     <div id="billingAddressGUID-container" class="billingAddressRow container rich-picker">
       <select id="billingAddressGUID" required="required">

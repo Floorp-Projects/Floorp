@@ -77,7 +77,7 @@ jobs:
                 - builds/taskcluster_base_win64.py
                 - builds/taskcluster_sub_win64/clang_debug.py
         toolchains:
-            - win64-clang-cl-st-an
+            - win64-clang-cl
             - win64-rust
             - win64-sccache
             - win64-cbindgen

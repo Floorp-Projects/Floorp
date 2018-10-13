@@ -411,8 +411,9 @@ XPCOMUtils.defineLazyGetter(this, "PreloadedSiteStorage", () => Object.seal({
   },
 }));
 
-XPCOMUtils.defineLazyGetter(this, "ProfileAgeCreatedPromise", () => {
-  return (new ProfileAge(null, null)).created;
+XPCOMUtils.defineLazyGetter(this, "ProfileAgeCreatedPromise", async () => {
+  let times = await ProfileAge();
+  return times.created;
 });
 
 // Helper functions

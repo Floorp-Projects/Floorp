@@ -21,13 +21,16 @@ if CONFIG['OS_TARGET'] != 'Android':
 
 # Build OpenVR on Windows, Linux, and macOS desktop targets
 if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
-    UNIFIED_SOURCES += [
-        'OpenVRSession.cpp',
-    ]
     LOCAL_INCLUDES += [
         '/dom/base',
-        '/gfx/layers/d3d11',
-        '/gfx/thebes',
+        '/gfx/layers/d3d11'
+    ]
+
+    # OpenVRSession includes MacIOSurface.h which includes Mac headers
+    # which define Size and Points types in the root namespace that
+    # often conflict with our own types.
+    SOURCES += [
+        'OpenVRSession.cpp'
     ]
 
 FINAL_LIBRARY = 'xul'

@@ -33,6 +33,7 @@ const ALL_MENU_ITEMS = [
   "node-menu-pseudo-hover",
   "node-menu-pseudo-active",
   "node-menu-pseudo-focus",
+  "node-menu-pseudo-focus-within",
   "node-menu-scrollnodeintoview",
   "node-menu-screenshotnode",
   "node-menu-add-attribute",

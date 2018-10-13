@@ -18,8 +18,6 @@
 
 #if defined(XP_WIN)
 #include <d3d11_1.h>
-#elif defined(XP_MACOSX)
-class MacIOSurface;
 #endif
 
 namespace mozilla {
@@ -48,7 +46,7 @@ protected:
                    ID3D11Texture2D* aTexture) override;
 #elif defined(XP_MACOSX)
   bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                   MacIOSurface* aTexture) override;
+                   const VRLayerTextureHandle& aTexture) override;
 #endif
 
 private:

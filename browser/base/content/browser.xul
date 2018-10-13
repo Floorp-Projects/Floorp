@@ -191,10 +191,6 @@ xmlns="http://www.w3.org/1999/xhtml"
                    onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle, TabContextMenu.contextTab.multiselected);"/>
       </menu>
       <menuseparator/>
-      <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
-                tbattr="tabbrowser-multiple-visible"
-                oncommand="gBrowser.reloadAllTabs();"/>
-      <menuseparator/>
       <menu id="context_closeTabOptions"
             label="&closeTabOptions.label;"
             accesskey="&closeTabOptions.accesskey;">
@@ -449,12 +445,24 @@ xmlns="http://www.w3.org/1999/xhtml"
                 label="&customizeMenu.removeFromToolbar.label;"
                 contexttype="toolbaritem"
                 class="customize-context-removeFromToolbar"/>
-      <menuitem id="toolbar-context-reloadAllTabs"
+      <menuitem id="toolbar-context-reloadSelectedTab"
                 class="toolbaritem-tabsmenu"
                 contexttype="tabbar"
-                oncommand="gBrowser.reloadAllTabs();"
-                label="&toolbarContextMenu.reloadAllTabs.label;"
-                accesskey="&toolbarContextMenu.reloadAllTabs.accesskey;"/>
+                oncommand="gBrowser.reloadMultiSelectedTabs();"
+                label="&toolbarContextMenu.reloadSelectedTab.label;"
+                accesskey="&toolbarContextMenu.reloadSelectedTab.accesskey;"/>
+      <menuitem id="toolbar-context-reloadSelectedTabs"
+                class="toolbaritem-tabsmenu"
+                contexttype="tabbar"
+                oncommand="gBrowser.reloadMultiSelectedTabs();"
+                label="&toolbarContextMenu.reloadSelectedTabs.label;"
+                accesskey="&toolbarContextMenu.reloadSelectedTabs.accesskey;"/>
+      <menuitem id="toolbar-context-bookmarkSelectedTab"
+                class="toolbaritem-tabsmenu"
+                contexttype="tabbar"
+                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueSelectedPages);"
+                label="&toolbarContextMenu.bookmarkSelectedTab.label;"
+                accesskey="&toolbarContextMenu.bookmarkSelectedTab.accesskey;"/>
       <menuitem id="toolbar-context-bookmarkSelectedTabs"
                 class="toolbaritem-tabsmenu"
                 contexttype="tabbar"

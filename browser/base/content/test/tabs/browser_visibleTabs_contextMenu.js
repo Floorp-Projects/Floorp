@@ -14,7 +14,6 @@ add_task(async function test() {
   // Check the context menu with two tabs
   updateTabContextMenu(origTab);
   is(document.getElementById("context_closeTab").disabled, false, "Close Tab is enabled");
-  is(document.getElementById("context_reloadAllTabs").disabled, false, "Reload All Tabs is enabled");
 
   // Hide the original tab.
   gBrowser.selectedTab = testTab;
@@ -24,7 +23,6 @@ add_task(async function test() {
   // Check the context menu with one tab.
   updateTabContextMenu(testTab);
   is(document.getElementById("context_closeTab").disabled, false, "Close Tab is enabled when more than one tab exists");
-  is(document.getElementById("context_reloadAllTabs").disabled, true, "Reload All Tabs is disabled");
 
   // Add a tab that will get pinned
   // So now there's one pinned tab, one visible unpinned tab, and one hidden tab

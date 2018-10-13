@@ -7,8 +7,6 @@
 #ifndef GFX_VR_SERVICE_VRSESSION_H
 #define GFX_VR_SERVICE_VRSESSION_H
 
-#include "VRSession.h"
-
 #include "moz_external_vr.h"
 
 #if defined(XP_WIN)
@@ -53,7 +51,7 @@ protected:
   RefPtr<ID3DDeviceContextState> mDeviceContextState;
 #elif defined(XP_MACOSX)
   virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                           MacIOSurface* aTexture) = 0;
+                           const VRLayerTextureHandle& aTexture) = 0;
 #endif
   void UpdateTrigger(VRControllerState& aState, uint32_t aButtonIndex, float aValue, float aThreshold);
 };
