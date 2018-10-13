@@ -236,6 +236,7 @@ class FennecBrowser(FirefoxBrowser):
                 traceback.print_exception(*sys.exc_info())
             # We assume that stopping the runner prompts the
             # browser to shut down. This allows the leak log to be written
+            self.runner.stop()
             for clean, stop_f in [(True, lambda: self.runner.wait(self.shutdown_timeout)),
                                   (False, lambda: self.runner.stop(signal.SIGTERM)),
                                   (False, lambda: self.runner.stop(signal.SIGKILL))]:
