@@ -22,31 +22,21 @@ class EndDelaySign extends PureComponent {
       timeScale,
     } = this.props;
     const {
-      createdTime,
-      delay,
-      duration,
       endDelay,
-      fill,
-      iterationCount,
-      playbackRate,
-    } = animation.state;
+      endTime,
+      isEndDelayFilled,
+   } = animation.state.absoluteValues;
 
-    const toRate = v => v / playbackRate;
-    // If createdTime is not defined (which happens when connected to server older
-    // than FF62), use previousStartTime instead. See bug 1454392
-    const baseTime = typeof createdTime === "undefined"
-                       ? (animation.state.previousStartTime || 0)
-                       : createdTime;
-    const startTime = baseTime - timeScale.minStartTime;
-    const endTime = toRate(delay + duration * iterationCount + Math.min(endDelay, 0));
-    const offset = (startTime + endTime) / timeScale.getDuration() * 100;
-    const width = Math.abs(toRate(endDelay)) / timeScale.getDuration() * 100;
+    const toPercentage = v => v / timeScale.getDuration() * 100;
+    const absEndDelay = Math.abs(endDelay);
+    const offset = toPercentage(endTime - absEndDelay - timeScale.minStartTime);
+    const width = toPercentage(absEndDelay);
 
     return dom.div(
       {
         className: "animation-end-delay-sign" +
-                   (endDelay < 0 ? " negative" : "") +
-                   (fill === "both" || fill === "forwards" ? " fill" : ""),
+                    (endDelay < 0 ? " negative" : "") +
+                    (isEndDelayFilled ? " fill" : ""),
         style: {
           width: `${ width }%`,
           marginInlineStart: `${ offset }%`,
