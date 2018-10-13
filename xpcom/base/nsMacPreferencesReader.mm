@@ -14,11 +14,14 @@ using namespace mozilla;
 
 struct StringWriteFunc : public JSONWriteFunc
 {
-  nsCString& mCString;
-  explicit StringWriteFunc(nsCString& aCString) : mCString(aCString)
+  nsAString& mString;
+  explicit StringWriteFunc(nsAString& aStr) : mString(aStr)
   {
   }
-  void Write(const char* aStr) override { mCString.Append(aStr); }
+  void Write(const char* aStr) override
+  {
+    mString.Append(NS_ConvertUTF8toUTF16(aStr));
+  }
 };
 
 static void
@@ -79,15 +82,14 @@ NS_IMETHODIMP
 nsMacPreferencesReader::ReadPreferences(JSContext* aCx,
                                         JS::MutableHandle<JS::Value> aResult)
 {
-  nsAutoCString jsonStr;
+  nsAutoString jsonStr;
   JSONWriter w(MakeUnique<StringWriteFunc>(jsonStr));
   w.Start();
   EvaluateDict(&w, [[NSUserDefaults standardUserDefaults]
                      dictionaryRepresentation]);
   w.End();
 
-  NS_ConvertUTF8toUTF16 jsString(nsDependentCString(jsonStr.get()));
-  auto json = static_cast<const char16_t*>(jsString.get());
+  auto json = static_cast<const char16_t*>(jsonStr.get());
 
   JS::RootedValue val(aCx);
   MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, json, jsonStr.Length(), &val));
