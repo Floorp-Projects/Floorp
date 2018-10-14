@@ -625,21 +625,6 @@
 
           <xul:hbox class="advancedinfo-container" flex="1">
             <xul:vbox class="description-outer-container" flex="1">
-              <xul:hbox class="description-container">
-                <xul:label anonid="description" class="description" crop="end" flex="1"/>
-                <xul:button anonid="details-btn" class="details button-link"
-                            label="&addon.details.label;"
-                            tooltiptext="&addon.details.tooltip;"
-                            oncommand="document.getBindingParent(this).showInDetailView();"/>
-                <xul:spacer flex="5000"/> <!-- Necessary to make the description crop -->
-              </xul:hbox>
-              <xul:vbox anonid="relnotes-container" class="relnotes-container">
-                <xul:label class="relnotes-header" value="&addon.releaseNotes.label;"/>
-                <xul:label anonid="relnotes-loading" value="&addon.loadingReleaseNotes.label;"/>
-                <xul:label anonid="relnotes-error" hidden="true"
-                           value="&addon.errorLoadingReleaseNotes.label;"/>
-                <xul:vbox anonid="relnotes" class="relnotes"/>
-              </xul:vbox>
               <xul:hbox class="relnotes-toggle-container">
                 <xul:button anonid="relnotes-toggle-btn" class="relnotes-toggle"
                             hidden="true" label="&cmd.showReleaseNotes.label;"
@@ -650,6 +635,13 @@
                             hidetooltip="&cmd.hideReleaseNotes.tooltip;"
                             oncommand="document.getBindingParent(this).toggleReleaseNotes();"/>
               </xul:hbox>
+              <xul:vbox anonid="relnotes-container" class="relnotes-container">
+                <xul:label class="relnotes-header" value="&addon.releaseNotes.label;"/>
+                <xul:label anonid="relnotes-loading" value="&addon.loadingReleaseNotes.label;"/>
+                <xul:label anonid="relnotes-error" hidden="true"
+                           value="&addon.errorLoadingReleaseNotes.label;"/>
+                <xul:vbox anonid="relnotes" class="relnotes"/>
+              </xul:vbox>
             </xul:vbox>
           </xul:hbox>
         </xul:vbox>
@@ -794,10 +786,6 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "date-updated");
       </field>
-      <field name="_description">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "description");
-      </field>
       <field name="_stateMenulist">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "state-menulist");
@@ -918,11 +906,6 @@
             this._icon.src = iconURL;
           else
             this._icon.src = "";
-
-          if (this.mAddon.description)
-            this._description.value = this.mAddon.description;
-          else
-            this._description.hidden = true;
 
           let legacyWarning = legacyExtensionsEnabled && !this.mAddon.install &&
             isLegacyExtension(this.mAddon);
@@ -1505,18 +1488,9 @@
 
     <handlers>
       <handler event="click" button="0"><![CDATA[
-        switch (event.detail) {
-        case 1:
-          // Prevent double-click where the UI changes on the first click
-          this._lastClickTarget = event.originalTarget;
-          break;
-        case 2:
-          if (event.originalTarget.localName != "button" &&
-              !event.originalTarget.classList.contains("text-link") &&
-              event.originalTarget == this._lastClickTarget) {
-            this.showInDetailView();
-          }
-          break;
+        if (!["button", "checkbox"].includes(event.originalTarget.localName) &&
+            !event.originalTarget.classList.contains("text-link")) {
+          this.showInDetailView();
         }
       ]]></handler>
     </handlers>
