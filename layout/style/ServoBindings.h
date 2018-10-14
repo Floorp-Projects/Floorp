@@ -140,7 +140,7 @@ void Servo_StyleSet_RebuildCachedData(RawServoStyleSetBorrowed set);
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
-MediumFeaturesChangedResult Servo_StyleSet_MediumFeaturesChanged(
+mozilla::MediumFeaturesChangedResult Servo_StyleSet_MediumFeaturesChanged(
   RawServoStyleSetBorrowed document_set,
   nsTArray<RawServoAuthorStylesBorrowedMut>* non_document_sets,
   bool may_affect_default_style);
@@ -749,7 +749,7 @@ bool Servo_DeclarationBlock_SetProperty(
   mozilla::ParsingMode parsing_mode,
   nsCompatibility quirks_mode,
   mozilla::css::Loader* loader,
-  DeclarationBlockMutationClosure);
+  mozilla::DeclarationBlockMutationClosure);
 
 bool Servo_DeclarationBlock_SetPropertyToAnimationValue(
   RawServoDeclarationBlockBorrowed declarations,
@@ -764,17 +764,17 @@ bool Servo_DeclarationBlock_SetPropertyById(
   mozilla::ParsingMode parsing_mode,
   nsCompatibility quirks_mode,
   mozilla::css::Loader* loader,
-  DeclarationBlockMutationClosure);
+  mozilla::DeclarationBlockMutationClosure);
 
 bool Servo_DeclarationBlock_RemoveProperty(
   RawServoDeclarationBlockBorrowed declarations,
   const nsACString* property,
-  DeclarationBlockMutationClosure);
+  mozilla::DeclarationBlockMutationClosure);
 
 bool Servo_DeclarationBlock_RemovePropertyById(
   RawServoDeclarationBlockBorrowed declarations,
   nsCSSPropertyID property,
-  DeclarationBlockMutationClosure);
+  mozilla::DeclarationBlockMutationClosure);
 
 bool Servo_DeclarationBlock_HasCSSWideKeyword(
   RawServoDeclarationBlockBorrowed declarations,

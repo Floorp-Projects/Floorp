@@ -37,7 +37,6 @@ namespace mozilla {
   enum class UpdateAnimationsTasks : uint8_t;
   struct FontFamilyName;
   struct Keyframe;
-  struct LangGroupFontPrefs;
 
   namespace css {
     class LoaderReusableStyleSheets;
@@ -81,18 +80,6 @@ public:
   already_AddRefed<mozilla::css::URLValue> IntoCssUrl(mozilla::CORSMode);
   mozilla::ServoRawOffsetArc<RustString> mURLString;
   mozilla::URLExtraData* mExtraData;
-};
-
-struct FontSizePrefs
-{
-  void CopyFrom(const mozilla::LangGroupFontPrefs&);
-  nscoord mDefaultVariableSize;
-  nscoord mDefaultFixedSize;
-  nscoord mDefaultSerifSize;
-  nscoord mDefaultSansSerifSize;
-  nscoord mDefaultMonospaceSize;
-  nscoord mDefaultCursiveSize;
-  nscoord mDefaultFantasySize;
 };
 
 // Debugging stuff.
@@ -576,7 +563,7 @@ void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* font,
                                                 uint8_t generic_id);
 void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* font,
                                         RawGeckoPresContextBorrowed pres_context);
-FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
+mozilla::FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
 
 // XBL related functions.
 RawGeckoElementBorrowedOrNull Gecko_GetBindingParent(RawGeckoElementBorrowed aElement);
