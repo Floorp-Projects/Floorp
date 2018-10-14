@@ -6,6 +6,69 @@
 
 /* FFI functions for Gecko to call into Servo */
 
+#ifndef mozilla_ServoBindings_h
+#define mozilla_ServoBindings_h
+
+#include <stdint.h>
+
+#include "mozilla/AtomArray.h"
+#include "mozilla/ServoTypes.h"
+#include "mozilla/ServoBindingTypes.h"
+#include "mozilla/ServoComputedDataInlines.h"
+#include "mozilla/ServoElementSnapshot.h"
+#include "mozilla/css/DocumentMatchingFunction.h"
+#include "mozilla/css/SheetLoadData.h"
+#include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/EffectCompositor.h"
+#include "mozilla/ComputedTimingFunction.h"
+#include "nsChangeHint.h"
+#include "nsIDocument.h"
+
+class nsAtom;
+class nsIPrincipal;
+class nsIURI;
+struct nsFont;
+namespace mozilla {
+  class FontFamilyList;
+  struct FontFamilyName;
+  enum FontFamilyType : uint8_t;
+  class SharedFontList;
+  enum class CSSPseudoElementType : uint8_t;
+  struct Keyframe;
+  struct StyleTransition;
+  namespace css {
+    class ErrorReporter;
+    struct URLValue;
+    class LoaderReusableStyleSheets;
+  };
+  namespace dom {
+    enum class IterationCompositeOperation : uint8_t;
+  };
+  enum class UpdateAnimationsTasks : uint8_t;
+  struct LangGroupFontPrefs;
+  class SeenPtrs;
+  class ComputedStyle;
+  class StyleSheet;
+  class ServoElementSnapshotTable;
+  enum class PointerCapabilities : uint8_t;
+}
+using mozilla::FontFamilyList;
+using mozilla::FontFamilyName;
+using mozilla::FontFamilyType;
+using mozilla::ServoElementSnapshot;
+using mozilla::SharedFontList;
+struct nsMediaFeature;
+class nsSimpleContentList;
+struct nsStyleList;
+struct nsStyleImage;
+struct nsStyleGradientStop;
+class nsStyleGradient;
+class nsStyleCoord;
+struct nsStyleDisplay;
+class nsXBLBinding;
+
+extern "C" {
+
 // Element data
 void Servo_Element_ClearData(RawGeckoElementBorrowed node);
 
@@ -1131,3 +1194,7 @@ bool Servo_IsCssPropertyRecordedInUseCounter(
   void Servo_##name_##_Release(type_##Borrowed);
 #include "mozilla/ServoArcTypeList.h"
 #undef SERVO_ARC_TYPE
+
+} // extern "C"
+
+#endif // mozilla_ServoBindings_h
