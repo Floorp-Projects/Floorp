@@ -29,7 +29,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::StyleAnimationValue;
 
 typedef AutoTArray<RefPtr<RawServoAnimationValue>, 1> ServoAnimationValues;
 

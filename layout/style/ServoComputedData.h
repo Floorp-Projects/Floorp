@@ -9,6 +9,8 @@
 
 #include "mozilla/ServoTypes.h"
 
+class nsWindowSizes;
+
 /*
  * ServoComputedData and its related types.
  */

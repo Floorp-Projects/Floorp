@@ -14,11 +14,8 @@
  * so don't add significant include dependencies to this file.
  */
 
-class nsWindowSizes;
 struct ServoNodeData;
 namespace mozilla {
-
-class SizeOfState;
 
 /*
  * Replaced types. These get mapped to associated Servo types in bindgen.
