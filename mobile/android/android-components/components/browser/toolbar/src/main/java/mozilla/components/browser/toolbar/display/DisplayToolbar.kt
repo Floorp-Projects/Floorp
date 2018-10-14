@@ -286,6 +286,7 @@ internal class DisplayToolbar(
         val sizeSpec = MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY)
 
         return actions
+            .asSequence()
             .mapNotNull { it.view }
             .map { view ->
                 val widthSpec = if (view.minimumWidth > size) {
@@ -309,6 +310,7 @@ internal class DisplayToolbar(
         //   +-------------+------------------------------------------------+
 
         val navigationActionsWidth = navigationActions
+            .asSequence()
             .mapNotNull { it.view }
             .fold(0) { usedWidth, view ->
                 val viewLeft = usedWidth
