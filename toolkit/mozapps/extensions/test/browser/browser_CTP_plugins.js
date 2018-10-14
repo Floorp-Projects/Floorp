@@ -108,9 +108,7 @@ add_task(async function() {
 
   BrowserTestUtils.removeTab(pluginTab);
 
-  let details = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
-  is_element_visible(details, "part7: details link should be visible");
-  EventUtils.synthesizeMouseAtCenter(details, {}, managerWindow);
+  EventUtils.synthesizeMouseAtCenter(pluginEl, {}, managerWindow);
   await BrowserTestUtils.waitForEvent(managerWindow.document, "ViewChanged");
 
   is_element_hidden(enableButton, "part8: detail enable button should be hidden");
@@ -161,8 +159,7 @@ add_task(async function() {
   menu = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "state-menulist");
   is(menu.disabled, true, "part12: state menu should be disabled");
 
-  details = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
-  EventUtils.synthesizeMouseAtCenter(details, {}, managerWindow);
+  EventUtils.synthesizeMouseAtCenter(pluginEl, {}, managerWindow);
   await BrowserTestUtils.waitForEvent(managerWindow.document, "ViewChanged");
 
   menu = managerWindow.document.getElementById("detail-state-menulist");
