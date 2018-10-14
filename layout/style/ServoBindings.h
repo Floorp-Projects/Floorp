@@ -12,60 +12,38 @@
 #include <stdint.h>
 
 #include "mozilla/AtomArray.h"
-#include "mozilla/ServoTypes.h"
-#include "mozilla/ServoBindingTypes.h"
-#include "mozilla/ServoComputedDataInlines.h"
-#include "mozilla/ServoElementSnapshot.h"
-#include "mozilla/css/DocumentMatchingFunction.h"
 #include "mozilla/css/SheetLoadData.h"
 #include "mozilla/css/SheetParsingMode.h"
-#include "mozilla/EffectCompositor.h"
-#include "mozilla/ComputedTimingFunction.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "nsChangeHint.h"
-#include "nsIDocument.h"
+#include "nsColor.h"
+#include "nsCSSValue.h"
 
+class gfxFontFeatureValueSet;
 class nsAtom;
-class nsIPrincipal;
-class nsIURI;
-struct nsFont;
+class nsSimpleContentList;
+struct gfxFontFeature;
+
 namespace mozilla {
-  class FontFamilyList;
-  struct FontFamilyName;
-  enum FontFamilyType : uint8_t;
+  class SeenPtrs;
+  class ServoElementSnapshotTable;
   class SharedFontList;
+  class StyleSheet;
   enum class CSSPseudoElementType : uint8_t;
   struct Keyframe;
-  struct StyleTransition;
+
   namespace css {
-    class ErrorReporter;
-    struct URLValue;
     class LoaderReusableStyleSheets;
-  };
+  }
+
+  namespace gfx {
+    struct FontVariation;
+  }
+
   namespace dom {
     enum class IterationCompositeOperation : uint8_t;
-  };
-  enum class UpdateAnimationsTasks : uint8_t;
-  struct LangGroupFontPrefs;
-  class SeenPtrs;
-  class ComputedStyle;
-  class StyleSheet;
-  class ServoElementSnapshotTable;
-  enum class PointerCapabilities : uint8_t;
+  }
 }
-using mozilla::FontFamilyList;
-using mozilla::FontFamilyName;
-using mozilla::FontFamilyType;
-using mozilla::ServoElementSnapshot;
-using mozilla::SharedFontList;
-struct nsMediaFeature;
-class nsSimpleContentList;
-struct nsStyleList;
-struct nsStyleImage;
-struct nsStyleGradientStop;
-class nsStyleGradient;
-class nsStyleCoord;
-struct nsStyleDisplay;
-class nsXBLBinding;
 
 extern "C" {
 
@@ -1146,7 +1124,7 @@ bool Servo_ParseTransformIntoMatrix(
 bool Servo_ParseFontShorthandForMatching(
   const nsAString* value,
   RawGeckoURLExtraData* data,
-  RefPtr<SharedFontList>* family,
+  RefPtr<mozilla::SharedFontList>* family,
   // We use ComputedFontStyleDescriptor just for convenience,
   // but the two values of Oblique are the same.
   mozilla::StyleComputedFontStyleDescriptor* style,
