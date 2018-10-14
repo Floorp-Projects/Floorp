@@ -227,13 +227,26 @@ button.warning {
 /*** header ***/
 
 #header-inner {
-  margin: 20px 4px 30px;
+  margin: 20px 4px 4px;
   width: 692px;
 }
 
 #header-search {
   margin-top: 0;
-}:
+  margin-bottom: 0;
+  min-height: 32px;
+}
+
+#header-search > moz-input-box > .textbox-search-sign {
+  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
+  margin-inline-end: 5px;
+}
+
+#search-label {
+  margin: 0;
+  margin-inline-end: 4px;
+  margin-bottom: 2px;
+}
 
 @media (max-width: 600px) {
   #header-search {
@@ -241,13 +254,18 @@ button.warning {
   }
 }
 
+.list-view-heading-inner {
+  width: 664px;
+}
+
 #header-utils-btn {
-  height: 30px;
   line-height: 20px;
   border-color: var(--in-content-box-border-color);
   background-color: var(--in-content-page-background);
   padding-right: 10px;
   padding-left: 10px;
+  /* This button is too tall, adding margin-bottom shrinks it. */
+  margin-bottom: 2px;
 }
 
 #header-utils-btn:not([disabled="true"]):active:hover,
