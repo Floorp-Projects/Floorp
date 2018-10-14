@@ -4,8 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ServoBindings_h
-#define mozilla_ServoBindings_h
+/* FFI functions for Servo to call into Gecko */
+
+#ifndef mozilla_GeckoBindings_h
+#define mozilla_GeckoBindings_h
 
 #include <stdint.h>
 
@@ -21,13 +23,6 @@
 #include "mozilla/ComputedTimingFunction.h"
 #include "nsChangeHint.h"
 #include "nsIDocument.h"
-
-/*
- * API for Servo to access Gecko data structures.
- *
- * Functions beginning with Gecko_ are implemented in Gecko and invoked from Servo.
- * Functions beginning with Servo_ are implemented in Servo and invoked from Gecko.
- */
 
 class nsAtom;
 class nsIPrincipal;
@@ -99,15 +94,6 @@ const bool GECKO_IS_NIGHTLY = false;
   void Gecko_##name_##_Release(class_* aPtr)                      \
     { MOZ_ASSERT(NS_IsMainThread()); NS_RELEASE(aPtr); }
 
-#define DEFINE_ARRAY_TYPE_FOR(type_)                                \
-  struct nsTArrayBorrowed_##type_ {                                 \
-    nsTArray<type_>* mArray;                                        \
-    MOZ_IMPLICIT nsTArrayBorrowed_##type_(nsTArray<type_>* aArray)  \
-      : mArray(aArray) {}                                           \
-  }
-DEFINE_ARRAY_TYPE_FOR(uintptr_t);
-#undef DEFINE_ARRAY_TYPE_FOR
-
 extern "C" {
 
 class ServoBundledURI
@@ -130,12 +116,6 @@ struct FontSizePrefs
   nscoord mDefaultMonospaceSize;
   nscoord mDefaultCursiveSize;
   nscoord mDefaultFantasySize;
-};
-
-struct MediumFeaturesChangedResult {
-  bool mAffectsDocumentRules;
-  bool mAffectsNonDocumentRules;
-  bool mUsesViewportUnits;
 };
 
 // Debugging stuff.
@@ -638,9 +618,6 @@ GeckoFontMetrics Gecko_GetFontMetrics(RawGeckoPresContextBorrowed pres_context,
                                       nscoord font_size,
                                       bool use_user_font_set);
 int32_t Gecko_GetAppUnitsPerPhysicalInch(RawGeckoPresContextBorrowed pres_context);
-void InitializeServo();
-void ShutdownServo();
-void AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
 
 mozilla::StyleSheet* Gecko_StyleSheet_Clone(
     const mozilla::StyleSheet* aSheet,
@@ -689,8 +666,6 @@ void Gecko_AnnotateCrashReport(uint32_t key, const char* value_str);
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
-#include "mozilla/ServoBindingList.h"
-
 bool Gecko_ErrorReportingEnabled(const mozilla::StyleSheet* sheet,
                                  const mozilla::css::Loader* loader);
 void Gecko_ReportUnexpectedCSSError(const mozilla::StyleSheet* sheet,
@@ -735,6 +710,8 @@ bool Gecko_IsInServoTraversal();
 bool Gecko_IsMainThread();
 
 // Media feature helpers.
+//
+// Defined in nsMediaFeatures.cpp.
 mozilla::StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(nsIDocument*);
 uint32_t Gecko_MediaFeatures_GetColorDepth(nsIDocument*);
 void Gecko_MediaFeatures_GetDeviceSize(nsIDocument*, nscoord* width, nscoord* height);
@@ -751,4 +728,4 @@ nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument*);
 
 } // extern "C"
 
-#endif // mozilla_ServoBindings_h
+#endif // mozilla_GeckoBindings_h
