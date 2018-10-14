@@ -1221,21 +1221,20 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
   return array.RemoveElement(aObserver);
 }
 
-bool
+void
 nsRefreshDriver::AddTimerAdjustmentObserver(
-  nsATimerAdjustmentObserver *aObserver)
+  nsATimerAdjustmentObserver* aObserver)
 {
   MOZ_ASSERT(!mTimerAdjustmentObservers.Contains(aObserver));
-
-  return mTimerAdjustmentObservers.AppendElement(aObserver) != nullptr;
+  mTimerAdjustmentObservers.AppendElement(aObserver);
 }
 
-bool
+void
 nsRefreshDriver::RemoveTimerAdjustmentObserver(
-  nsATimerAdjustmentObserver *aObserver)
+  nsATimerAdjustmentObserver* aObserver)
 {
   MOZ_ASSERT(mTimerAdjustmentObservers.Contains(aObserver));
-  return mTimerAdjustmentObservers.RemoveElement(aObserver);
+  mTimerAdjustmentObservers.RemoveElement(aObserver);
 }
 
 void
