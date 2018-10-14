@@ -76,11 +76,6 @@ async function test() {
     contributionAmount: null,
     updateDate: gDate,
     permissions: 0,
-    screenshots: [{
-      url: "chrome://branding/content/about.png",
-      width: 200,
-      height: 150,
-    }],
   }, {
     id: "addon3@tests.mozilla.org",
     name: "Test add-on 3",
@@ -98,14 +93,6 @@ async function test() {
     permissions: AddonManager.PERM_CAN_ENABLE |
                  AddonManager.PERM_CAN_DISABLE |
                  AddonManager.PERM_CAN_UPGRADE,
-    screenshots: [{
-      url: "http://example.com/screenshot",
-      width: 400,
-      height: 300,
-      thumbnailURL: "chrome://branding/content/icon64.png",
-      thumbnailWidth: 160,
-      thumbnailHeight: 120,
-    }],
   }, {
     id: "addon5@tests.mozilla.org",
     blocklistURL: "http://example.com/addon5@tests.mozilla.org",
@@ -169,11 +156,6 @@ add_test(function() {
     is(get("detail-creator")._creatorName.value, "Mozilla", "Creator should be correct");
     is_element_hidden(get("detail-creator")._creatorLink, "Creator link should be hidden");
 
-    is_element_visible(get("detail-screenshot-box"), "Screenshot should be visible");
-    is(get("detail-screenshot").src, "chrome://branding/content/about.png", "Should be showing the full sized screenshot");
-    is(get("detail-screenshot").width, 200, "Screenshot dimensions should be set");
-    is(get("detail-screenshot").height, 150, "Screenshot dimensions should be set");
-    is(get("detail-screenshot").hasAttribute("loading"), true, "Screenshot should have loading attribute");
     is(get("detail-desc").textContent, "Short description", "Description should be correct");
     is_element_hidden(get("detail-fulldesc"), "Full description should be hidden");
 
@@ -200,10 +182,7 @@ add_test(function() {
     is_element_hidden(get("detail-error-link"), "Error link should be hidden");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
-    get("detail-screenshot").addEventListener("load", function() {
-      is(this.hasAttribute("loading"), false, "Screenshot should not have loading attribute");
-      run_next_test();
-    }, {once: true});
+    run_next_test();
   });
 });
 
@@ -219,12 +198,6 @@ add_test(function() {
     is_element_visible(get("detail-creator")._creatorLink, "Creator link should not be hidden");
     is(get("detail-creator")._creatorLink.value, "Mozilla", "Creator link should be correct");
     is(get("detail-creator")._creatorLink.href, "http://www.mozilla.org", "Creator link href should be correct");
-
-    is_element_visible(get("detail-screenshot-box"), "Screenshot should be visible");
-    is(get("detail-screenshot").src, "chrome://branding/content/icon64.png", "Should be showing the thumbnail");
-    is(get("detail-screenshot").width, 160, "Screenshot dimensions should be set");
-    is(get("detail-screenshot").height, 120, "Screenshot dimensions should be set");
-    is(get("detail-screenshot").hasAttribute("loading"), true, "Screenshot should have loading attribute");
 
     is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
 
@@ -278,10 +251,7 @@ add_test(function() {
     is_element_hidden(get("detail-error-link"), "Error link should be hidden");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
-    get("detail-screenshot").addEventListener("load", function() {
-      is(this.hasAttribute("loading"), false, "Screenshot should not have loading attribute");
-      run_next_test();
-    }, {once: true});
+    run_next_test();
   });
 });
 
@@ -557,7 +527,6 @@ add_test(function() {
     is(get("detail-version").value, "2.5", "Version should be correct");
     is(get("detail-icon").src, "chrome://foo/skin/icon264.png", "Icon should be correct");
     is_element_hidden(get("detail-creator"), "Creator should be hidden");
-    is_element_hidden(get("detail-screenshot-box"), "Screenshot should be hidden");
     is(get("detail-desc").textContent, "Short description replacement", "Description should be correct");
     is(get("detail-fulldesc").textContent, "Longer description replacement", "Full description should be correct");
 

@@ -240,8 +240,7 @@ add_test(async function() {
   var item = get_item_in_list(ID, list);
   isnot(item, null, "Should have found the add-on in the list");
 
-  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
-  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+  item.click();
   await wait_for_view_load(gManagerWindow);
 
   // Test the uninstall.
@@ -287,8 +286,7 @@ add_test(async function() {
   var item = get_item_in_list(ID, list);
   isnot(item, null, "Should have found the add-on in the list");
 
-  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
-  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+  item.click();
   await wait_for_view_load(gManagerWindow);
   is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
 

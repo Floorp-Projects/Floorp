@@ -67,9 +67,7 @@ function checkStateMenuDetail(locked) {
     "Preference should be " + (locked === true ? "" : "un") + "locked.");
 
   // open details menu
-  let details = gManagerWindow.document.getAnonymousElementByAttribute(gPluginElement, "anonid", "details-btn");
-  is_element_visible(details, "Details link should be visible.");
-  EventUtils.synthesizeMouseAtCenter(details, {}, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(gPluginElement, {}, gManagerWindow);
 
   return new Promise(async resolve => {
     await wait_for_view_load(gManagerWindow);
