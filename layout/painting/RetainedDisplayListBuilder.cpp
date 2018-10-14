@@ -414,6 +414,13 @@ public:
       return true;
     }
 
+    if (type == DisplayItemType::TYPE_MASK ||
+        type == DisplayItemType::TYPE_FILTER ||
+        type == DisplayItemType::TYPE_SVG_WRAPPER) {
+      // SVG items have some invalidation issues, see bugs 1494110 and 1494663.
+      return true;
+    }
+
     return false;
   }
 
