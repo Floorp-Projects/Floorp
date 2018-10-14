@@ -2107,68 +2107,6 @@ DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     return result.succeed();
 }
 
-bool
-js::AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj, int32_t int_id,
-                                   HandleValue v, bool strict)
-{
-    MOZ_ASSERT(INT_FITS_IN_JSID(int_id));
-    RootedId id(cx, INT_TO_JSID(int_id));
-
-    // This helper doesn't handle the case where the index may be in the dense elements
-    MOZ_ASSERT(int_id >= 0);
-    MOZ_ASSERT(uint32_t(int_id) >= obj->getDenseCapacity());
-
-    // First decide if this is an add or an update. Because the IC guards have
-    // already ensured this exists exterior to the dense array range, and the
-    // prototype checks have ensured there are no indexes on the prototype, we
-    // can use the shape lineage to find the element if it exists:
-    Shape* shape = obj->lastProperty()->search(cx, id);
-
-    // If we didn't find the shape, we're on the add path: delegate to
-    // AddSparseElement:
-    if (shape == nullptr) {
-        Rooted<PropertyDescriptor> desc(cx);
-        desc.setDataDescriptor(v, JSPROP_ENUMERATE);
-        desc.assertComplete();
-
-        if (!ReshapeForShadowedProp(cx, obj, id)) {
-            return false;
-        }
-
-        MOZ_ASSERT(Shape::isDataProperty(desc.attributes(), desc.getter(), desc.setter()));
-
-        shape = NativeObject::addDataProperty(cx, obj, id, SHAPE_INVALID_SLOT,
-                                              desc.attributes());
-        if (!shape) {
-            return false;
-        }
-
-        UpdateShapeTypeAndValueForWritableDataProp(cx, obj, shape, id, desc.value());
-
-        // Do not call `maybeDensifySparseElements` here.  This may theoretically
-        // de-optimize cases where Arrays are being used "partly sparsely", with
-        // a mostly-dense prefix range, and some sparse elements.  That does not
-        // seem to be a likely case, however, and thus this is an explicit decision
-        // to not bother with sparsification.
-
-        return CallAddPropertyHook(cx, obj, id, desc.value());
-    }
-
-    // At this point we're updating a property: See SetExistingProperty
-    if (shape->writable() && shape->isDataProperty()) {
-        // While all JSID_INT properties use a single TI entry,
-        // nothing yet has inspected the updated value so we *must* use setSlotWithType().
-        obj->setSlotWithType(cx, shape, v, /* overwriting = */ true);
-        return true;
-    }
-
-    // We don't know exactly what this object looks like, hit the slowpath.
-    RootedValue receiver(cx, ObjectValue(*obj));
-    JS::ObjectOpResult result;
-    return SetProperty(cx, obj, id, v, receiver, result) &&
-           result.checkStrictErrorOrWarning(cx, obj, id, strict);
-}
-
 
 /*** [[HasProperty]] *****************************************************************************/
 
