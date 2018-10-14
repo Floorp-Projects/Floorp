@@ -7,8 +7,6 @@
 #ifndef mozilla_ServoComputedData_h
 #define mozilla_ServoComputedData_h
 
-#include "mozilla/ServoTypes.h"
-
 class nsWindowSizes;
 
 /*
@@ -21,29 +19,41 @@ class nsWindowSizes;
 
 namespace mozilla {
 
-struct ServoWritingMode {
+template<typename T>
+struct ServoRawOffsetArc
+{
+  // This is a pointer to a T that lives inside a servo_arc::Arc<T>, and
+  // which already has had its reference count incremented.
+  T* mPtr;
+};
+
+struct ServoWritingMode
+{
   uint8_t mBits;
 };
 
-struct ServoCustomPropertiesMap {
+struct ServoCustomPropertiesMap
+{
   uintptr_t mPtr;
 };
 
-struct ServoRuleNode {
+struct ServoRuleNode
+{
   uintptr_t mPtr;
 };
 
 class ComputedStyle;
 
-struct ServoVisitedStyle {
-  // This is actually a strong reference
-  // but ServoComputedData's destructor is
-  // managed by the Rust code so we just use a
-  // regular pointer
+struct ServoVisitedStyle
+{
+  // This is actually a strong reference but ServoComputedData's
+  // destructor is managed by the Rust code so we just use a regular
+  // pointer
   ComputedStyle* mPtr;
 };
 
-struct ServoComputedValueFlags {
+struct ServoComputedValueFlags
+{
   uint16_t mFlags;
 };
 
