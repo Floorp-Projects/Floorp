@@ -30,6 +30,7 @@ namespace mozilla {
   class SharedFontList;
   class StyleSheet;
   enum class CSSPseudoElementType : uint8_t;
+  enum class OriginFlags : uint8_t;
   struct Keyframe;
 
   namespace css {
@@ -43,6 +44,10 @@ namespace mozilla {
   namespace dom {
     enum class IterationCompositeOperation : uint8_t;
   }
+}
+
+namespace nsStyleTransformMatrix {
+  enum class MatrixTransformOperator: uint8_t;
 }
 
 extern "C" {
