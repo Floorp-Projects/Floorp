@@ -112,6 +112,7 @@ class nsIVariant;
 class nsViewManager;
 class nsPresContext;
 class nsRange;
+class nsSimpleContentList;
 class nsSMILAnimationController;
 class nsSVGElement;
 class nsTextNode;

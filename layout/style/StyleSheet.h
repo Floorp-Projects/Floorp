@@ -31,6 +31,7 @@ namespace mozilla {
 
 class ServoCSSRuleList;
 class ServoStyleSet;
+enum class OriginFlags : uint8_t;
 
 typedef MozPromise</* Dummy */ bool,
                    /* Dummy */ bool,
@@ -146,7 +147,7 @@ public:
   ServoCSSRuleList* GetCssRulesInternal();
 
   // Returns the stylesheet's Servo origin as an OriginFlags value.
-  OriginFlags GetOrigin();
+  mozilla::OriginFlags GetOrigin();
 
   /**
    * The different changes that a stylesheet may go through.
