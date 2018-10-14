@@ -3,14 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.w3.org/1999/xhtml");
-@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .datetime-input-box-wrapper {
-  -moz-appearance: none;
   display: inline-flex;
   flex: 1;
   background-color: inherit;
-  color: inherit;
   min-width: 0;
   justify-content: space-between;
 }
@@ -28,7 +25,6 @@
   border: 0;
   margin: 0;
   ime-mode: disabled;
-  font: inherit;
   outline: none;
 }
 
