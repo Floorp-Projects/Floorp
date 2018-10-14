@@ -38,8 +38,8 @@ internal class WhiteList {
     /**
      * Checks if the given resource is white-listed for the given host.
      *
-     * @param host the host URI
-     * @param host the resources URI
+     * @param hostUri the host URI
+     * @param resource the resources URI
      */
     fun contains(hostUri: Uri, resource: Uri): Boolean {
         return if (TextUtils.isEmpty(hostUri.host) || TextUtils.isEmpty(resource.host) || hostUri.scheme == "data") {
