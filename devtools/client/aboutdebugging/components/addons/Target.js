@@ -209,10 +209,10 @@ class AddonTarget extends Component {
     const { target, debugDisabled } = this.props;
 
     return dom.li(
-      { className: "card addon-target-container", "data-addon-id": target.addonID },
-      dom.div({ className: "target-card-heading target" },
+      { className: "addon-target-container", "data-addon-id": target.addonID },
+      dom.div({ className: "target" },
         dom.img({
-          className: "target-icon addon-target-icon",
+          className: "target-icon",
           role: "presentation",
           src: target.icon
         }),
@@ -227,21 +227,21 @@ class AddonTarget extends Component {
         ...addonIDforTarget(target),
         ...internalIDForTarget(target),
       ),
-      dom.div({className: "target-card-actions"},
+      dom.div({className: "addon-target-actions"},
         dom.button({
-          className: "target-card-action-link debug-button addon-target-button",
+          className: "debug-button addon-target-button",
           onClick: this.debug,
           disabled: debugDisabled,
         }, Strings.GetStringFromName("debug")),
         target.temporarilyInstalled
           ? dom.button({
-            className: "target-card-action-link reload-button addon-target-button",
+            className: "reload-button addon-target-button",
             onClick: this.reload,
           }, Strings.GetStringFromName("reload"))
           : null,
         target.temporarilyInstalled
           ? dom.button({
-            className: "target-card-action-link uninstall-button addon-target-button",
+            className: "uninstall-button addon-target-button",
             onClick: this.uninstall,
           }, Strings.GetStringFromName("remove"))
           : null,
