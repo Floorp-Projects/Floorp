@@ -429,7 +429,7 @@ public:
    *
    * aObserver must not be null.
    */
-  nsresult AddObserver(nsICSSLoaderObserver* aObserver);
+  void AddObserver(nsICSSLoaderObserver* aObserver);
 
   /**
    * Remove an observer added via AddObserver.

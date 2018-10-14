@@ -2100,9 +2100,7 @@ nsDocument::Init()
   // subclasses currently do, other don't). This is because the code in
   // nsNodeUtils always notifies the first observer first, expecting the
   // first observer to be the document.
-  NS_ENSURE_TRUE(slots->mMutationObservers.PrependElementUnlessExists(static_cast<nsIMutationObserver*>(this)),
-                 NS_ERROR_OUT_OF_MEMORY);
-
+  slots->mMutationObservers.PrependElementUnlessExists(static_cast<nsIMutationObserver*>(this));
 
   mOnloadBlocker = new nsOnloadBlocker();
   mCSSLoader = new mozilla::css::Loader(this);

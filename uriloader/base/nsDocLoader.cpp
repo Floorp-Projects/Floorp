@@ -643,11 +643,8 @@ nsresult nsDocLoader::RemoveChildLoader(nsDocLoader* aChild)
 
 nsresult nsDocLoader::AddChildLoader(nsDocLoader* aChild)
 {
-  nsresult rv = mChildList.AppendElement(aChild) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-  if (NS_SUCCEEDED(rv)) {
-    rv = aChild->SetDocLoaderParent(this);
-  }
-  return rv;
+  mChildList.AppendElement(aChild);
+  return aChild->SetDocLoaderParent(this);
 }
 
 NS_IMETHODIMP nsDocLoader::GetDocumentChannel(nsIChannel ** aChannel)
@@ -883,8 +880,8 @@ nsDocLoader::AddProgressListener(nsIWebProgressListener *aListener,
     return NS_ERROR_INVALID_ARG;
   }
 
-  return mListenerInfoList.AppendElement(nsListenerInfo(listener, aNotifyMask)) ?
-         NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  mListenerInfoList.AppendElement(nsListenerInfo(listener, aNotifyMask));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
