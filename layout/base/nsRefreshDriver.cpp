@@ -1204,14 +1204,13 @@ nsRefreshDriver::MostRecentRefresh() const
   return mMostRecentRefresh;
 }
 
-bool
+void
 nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
                                     FlushType aFlushType)
 {
   ObserverArray& array = ArrayFor(aFlushType);
-  bool success = array.AppendElement(aObserver) != nullptr;
+  array.AppendElement(aObserver);
   EnsureTimerStarted();
-  return success;
 }
 
 bool
