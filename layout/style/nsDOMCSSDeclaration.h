@@ -23,10 +23,10 @@ class nsIPrincipal;
 class nsIDocument;
 struct JSContext;
 class JSObject;
-struct DeclarationBlockMutationClosure;
 
 namespace mozilla {
 class DeclarationBlock;
+struct DeclarationBlockMutationClosure;
 namespace css {
 class Loader;
 class Rule;
@@ -219,7 +219,7 @@ protected:
   nsresult RemovePropertyInternal(const nsAString& aProperty);
 
   virtual void
-  GetPropertyChangeClosure(DeclarationBlockMutationClosure* aClosure,
+  GetPropertyChangeClosure(mozilla::DeclarationBlockMutationClosure* aClosure,
                            mozilla::MutationClosureData* aClosureData)
   {
   }

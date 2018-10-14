@@ -4,15 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* types defined to pass values through Gecko_* and Servo_* FFI functions */
+
 #ifndef mozilla_ServoTypes_h
 #define mozilla_ServoTypes_h
 
+#include "mozilla/RefPtr.h"
+#include "mozilla/SheetType.h"
 #include "mozilla/TypedEnumBits.h"
+#include "nsCoord.h"
 
-/*
- * Type definitions used to interact with Servo. This gets included by nsINode,
- * so don't add significant include dependencies to this file.
- */
+struct RawServoFontFaceRule;
+
+namespace mozilla {
+  struct LangGroupFontPrefs;
+}
+
+// used for associating sheet type with specific @font-face rules
+struct nsFontFaceRuleContainer
+{
+  RefPtr<RawServoFontFaceRule> mRule;
+  mozilla::SheetType mSheetType;
+};
 
 namespace mozilla {
 
@@ -134,11 +147,32 @@ public:
   {}
 };
 
-template <typename T>
-struct ServoRawOffsetArc {
-  // Again, a strong reference, but
-  // managed by the Rust code
-  T* mPtr;
+// A callback that can be sent via FFI which will be invoked _right before_
+// being mutated, and at most once.
+struct DeclarationBlockMutationClosure
+{
+  // The callback function. The argument is `data`.
+  void (*function)(void*) = nullptr;
+  void* data = nullptr;
+};
+
+struct MediumFeaturesChangedResult
+{
+  bool mAffectsDocumentRules;
+  bool mAffectsNonDocumentRules;
+  bool mUsesViewportUnits;
+};
+
+struct FontSizePrefs
+{
+  void CopyFrom(const mozilla::LangGroupFontPrefs&);
+  nscoord mDefaultVariableSize;
+  nscoord mDefaultFixedSize;
+  nscoord mDefaultSerifSize;
+  nscoord mDefaultSansSerifSize;
+  nscoord mDefaultMonospaceSize;
+  nscoord mDefaultCursiveSize;
+  nscoord mDefaultFantasySize;
 };
 
 } // namespace mozilla
