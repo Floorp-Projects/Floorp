@@ -81,8 +81,9 @@ internal class SignatureVerifier(
         val response = client.get(url)
         val reader = BufferedReader(StringReader(response))
         val firstLine = reader.readLine()
-        if (firstLine != "-----BEGIN CERTIFICATE-----")
+        if (firstLine != "-----BEGIN CERTIFICATE-----") {
             throw ExperimentDownloadException("")
+        }
         var certPem = firstLine
         certPem += '\n'
 

@@ -35,10 +35,11 @@ abstract class ReversibleString private constructor(
      * Reverses this string.
      */
     fun reverse(): ReversibleString =
-        if (isReversed)
+        if (isReversed) {
             ForwardString(string, offsetStart, offsetEnd)
-        else
+        } else {
             ReverseString(string, offsetStart, offsetEnd)
+        }
 
     private class ForwardString(string: String, offsetStart: Int, offsetEnd: Int)
         : ReversibleString(string, offsetStart, offsetEnd

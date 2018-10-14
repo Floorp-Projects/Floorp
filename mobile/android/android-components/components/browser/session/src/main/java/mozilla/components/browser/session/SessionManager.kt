@@ -390,8 +390,9 @@ class SessionManager(
         // Removing the all the thumbnails except for the selected session to
         // reduce memory consumption.
         sessions.forEach {
-            if (it != selectedSession)
+            if (it != selectedSession) {
                 it.thumbnail = null
+            }
         }
     }
 

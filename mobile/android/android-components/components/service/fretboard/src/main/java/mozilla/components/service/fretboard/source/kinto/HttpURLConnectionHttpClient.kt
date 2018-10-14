@@ -24,8 +24,9 @@ internal class HttpURLConnectionHttpClient : HttpClient {
             headers?.forEach { urlConnection.setRequestProperty(it.key, it.value) }
 
             val responseCode = urlConnection.responseCode
-            if (responseCode !in HTTP_OK_START..HTTP_OK_END)
+            if (responseCode !in HTTP_OK_START..HTTP_OK_END) {
                 throw ExperimentDownloadException("Status code: $responseCode")
+            }
 
             return urlConnection.inputStream.bufferedReader().use { it.readText() }
         } catch (e: IOException) {

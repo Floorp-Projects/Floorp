@@ -42,20 +42,21 @@ internal class WhiteList {
      * @param host the resources URI
      */
     fun contains(hostUri: Uri, resource: Uri): Boolean {
-        if (TextUtils.isEmpty(hostUri.host) || TextUtils.isEmpty(resource.host) || hostUri.scheme == "data")
-            return false
-
-        return if (resource.scheme.isPermittedResourceProtocol() && hostUri.scheme.isSupportedProtocol())
-            contains(hostUri.host.reverse(), resource.host.reverse(), rootNode)
-        else
+        return if (TextUtils.isEmpty(hostUri.host) || TextUtils.isEmpty(resource.host) || hostUri.scheme == "data") {
             false
+        } else if (resource.scheme.isPermittedResourceProtocol() && hostUri.scheme.isSupportedProtocol()) {
+            contains(hostUri.host.reverse(), resource.host.reverse(), rootNode)
+        } else {
+            false
+        }
     }
 
     private fun contains(site: ReversibleString, resource: ReversibleString, revHostTrie: Trie): Boolean {
         val next = revHostTrie.children.get(site.charAt(0).toInt()) as? WhiteListTrie ?: return false
 
-        if (next.whitelist?.findNode(resource) != null)
-                return true
+        if (next.whitelist?.findNode(resource) != null) {
+            return true
+        }
 
         return if (site.length() == 1) false else contains(site.substring(1), resource, next)
     }

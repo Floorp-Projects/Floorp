@@ -492,17 +492,19 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
             }
 
             override fun commitText(text: CharSequence, newCursorPosition: Int): Boolean {
-                return if (removeAutocompleteOnComposing(text))
+                return if (removeAutocompleteOnComposing(text)) {
                     false
-                else
+                } else {
                     super.commitText(text, newCursorPosition)
+                }
             }
 
             override fun setComposingText(text: CharSequence, newCursorPosition: Int): Boolean {
-                return if (removeAutocompleteOnComposing(text))
+                return if (removeAutocompleteOnComposing(text)) {
                     false
-                else
+                } else {
                     super.setComposingText(text, newCursorPosition)
+                }
             }
         }
     }

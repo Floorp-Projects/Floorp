@@ -64,10 +64,7 @@ internal class DisplayToolbar(
     internal var menuBuilder: BrowserMenuBuilder? = null
         set(value) {
             field = value
-            menuView.visibility = if (value == null)
-                View.GONE
-            else
-                View.VISIBLE
+            menuView.visibility = if (value == null) View.GONE else View.VISIBLE
         }
 
     internal val iconView = ImageView(context).apply {

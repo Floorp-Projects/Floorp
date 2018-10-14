@@ -176,10 +176,7 @@ open class AnimatedProgressBar @JvmOverloads constructor(
 
     private fun buildWrapDrawable(original: Drawable, isWrap: Boolean, duration: Int, resID: Int): Drawable {
         return if (isWrap) {
-            val interpolator = if (resID > 0)
-                AnimationUtils.loadInterpolator(context, resID)
-            else
-                null
+            val interpolator = if (resID > 0) AnimationUtils.loadInterpolator(context, resID) else null
             ShiftDrawable(original, duration, interpolator)
         } else {
             original
