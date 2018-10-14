@@ -1804,7 +1804,8 @@ nsDocShell::AddWeakPrivacyTransitionObserver(
   if (!weakObs) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mPrivacyObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
+  mPrivacyObservers.AppendElement(weakObs);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1814,7 +1815,8 @@ nsDocShell::AddWeakReflowObserver(nsIReflowObserver* aObserver)
   if (!weakObs) {
     return NS_ERROR_FAILURE;
   }
-  return mReflowObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
+  mReflowObservers.AppendElement(weakObs);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2515,7 +2517,8 @@ nsDocShell::AddWeakScrollObserver(nsIScrollObserver* aObserver)
   if (!weakObs) {
     return NS_ERROR_FAILURE;
   }
-  return mScrollObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
+  mScrollObservers.AppendElement(weakObs);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
