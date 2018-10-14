@@ -9,7 +9,6 @@
   -moz-appearance: none;
   display: inline-flex;
   flex: 1;
-  cursor: default;
   background-color: inherit;
   color: inherit;
   min-width: 0;
@@ -23,7 +22,6 @@
 
 .datetime-edit-field {
   display: inline;
-  cursor: default;
   -moz-user-select: none;
   text-align: center;
   padding: 1px 3px;
