@@ -120,8 +120,8 @@ public:
   mozilla::TimeStamp MostRecentRefresh() const;
 
   /**
-   * Add / remove refresh observers.  Returns whether the operation
-   * succeeded.
+   * Add / remove refresh observers.
+   * RemoveRefreshObserver returns true if aObserver was found.
    *
    * The flush type affects:
    *   + the order in which the observers are notified (lowest flush
@@ -137,16 +137,16 @@ public:
    *
    * The observer will be called even if there is no other activity.
    */
-  bool AddRefreshObserver(nsARefreshObserver *aObserver,
+  void AddRefreshObserver(nsARefreshObserver* aObserver,
                           mozilla::FlushType aFlushType);
-  bool RemoveRefreshObserver(nsARefreshObserver *aObserver,
+  bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
                              mozilla::FlushType aFlushType);
   /**
    * Add / remove an observer wants to know the time when the refresh driver
    * updated the most recent refresh time due to its active timer changes.
    */
-  bool AddTimerAdjustmentObserver(nsATimerAdjustmentObserver *aObserver);
-  bool RemoveTimerAdjustmentObserver(nsATimerAdjustmentObserver *aObserver);
+  void AddTimerAdjustmentObserver(nsATimerAdjustmentObserver* aObserver);
+  void RemoveTimerAdjustmentObserver(nsATimerAdjustmentObserver* aObserver);
 
   void PostScrollEvent(mozilla::Runnable* aScrollEvent);
   void DispatchScrollEvents();
