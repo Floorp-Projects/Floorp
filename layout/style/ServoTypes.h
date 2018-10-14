@@ -14,28 +14,7 @@
  * so don't add significant include dependencies to this file.
  */
 
-struct ServoNodeData;
 namespace mozilla {
-
-/*
- * Replaced types. These get mapped to associated Servo types in bindgen.
- */
-
-template<typename T>
-struct ServoUnsafeCell {
-  T value;
-
-  // Ensure that primitive types (i.e. pointers) get zero-initialized.
-  ServoUnsafeCell() : value() {};
-};
-
-template<typename T>
-struct ServoCell {
-  ServoUnsafeCell<T> value;
-  T Get() const { return value.value; }
-  void Set(T arg) { value.value = arg; }
-  ServoCell() : value() {};
-};
 
 // Indicates whether the Servo style system should expect the style on an element
 // to have already been resolved (i.e. via a parallel traversal), or whether it
