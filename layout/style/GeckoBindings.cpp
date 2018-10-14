@@ -124,13 +124,6 @@ ThreadSafeGetDefaultFontHelper(const nsPresContext* aPresContext,
   return retval;
 }
 
-void
-AssertIsMainThreadOrServoLangFontPrefsCacheLocked()
-{
-  MOZ_ASSERT(NS_IsMainThread() || sServoFFILock->LockedForWritingByCurrentThread());
-}
-
-
 /*
  * Does this child count as significant for selector matching?
  *
