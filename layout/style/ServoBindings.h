@@ -139,12 +139,7 @@ void Servo_StyleSheet_GetSourceURL(
 // they wrap the value in a struct.
 uint8_t Servo_StyleSheet_GetOrigin(RawServoStyleSheetContentsBorrowed sheet);
 
-// TODO(heycam): RawGeckoPresContextOwned feels like the wrong type to use here
-// to indicate what we're doing. nsPresContext is a refcounted type, but we hold
-// a weak reference to it in the style set we create. Using
-// RawGeckoPresContextOwned makes it seem like we are passing ownership to
-// Servo_StyleSet_Init, which is not true.
-RawServoStyleSet* Servo_StyleSet_Init(RawGeckoPresContextOwned pres_context);
+RawServoStyleSet* Servo_StyleSet_Init(RawGeckoPresContextBorrowed pres_context);
 void Servo_StyleSet_RebuildCachedData(RawServoStyleSetBorrowed set);
 
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
