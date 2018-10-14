@@ -319,8 +319,8 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
 
       // We're pretty-printing now.  See whether we should wait up on
       // stylesheet loads
-      if (mDocument->CSSLoader()->HasPendingLoads() &&
-          NS_SUCCEEDED(mDocument->CSSLoader()->AddObserver(this))) {
+      if (mDocument->CSSLoader()->HasPendingLoads()) {
+        mDocument->CSSLoader()->AddObserver(this);
         // wait for those sheets to load
         startLayout = false;
       }
