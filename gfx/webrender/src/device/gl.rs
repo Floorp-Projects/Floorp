@@ -14,6 +14,7 @@ use internal_types::{FastHashMap, RenderTargetInfo};
 use log::Level;
 use smallvec::SmallVec;
 use std::cell::RefCell;
+use std::cmp;
 use std::fs::File;
 use std::io::Read;
 use std::marker::PhantomData;
@@ -44,12 +45,6 @@ impl Add<usize> for FrameId {
         FrameId(self.0 + other)
     }
 }
-
-const GL_FORMAT_RGBA: gl::GLuint = gl::RGBA;
-
-const GL_FORMAT_BGRA_GL: gl::GLuint = gl::BGRA;
-
-const GL_FORMAT_BGRA_GLES: gl::GLuint = gl::BGRA_EXT;
 
 const SHADER_VERSION_GL: &str = "#version 150\n";
 const SHADER_VERSION_GLES: &str = "#version 300 es\n";
@@ -737,7 +732,8 @@ pub struct Device {
     #[cfg(feature = "debug_renderer")]
     capabilities: Capabilities,
 
-    bgra_format: gl::GLuint,
+    bgra_format_internal: gl::GLuint,
+    bgra_format_external: gl::GLuint,
 
     // debug
     inside_frame: bool,
@@ -752,6 +748,12 @@ pub struct Device {
     // Frame counter. This is used to map between CPU
     // frames and GPU frames.
     frame_id: FrameId,
+
+    /// Whether glTexStorage* is supported. We prefer this over glTexImage*
+    /// because it guarantees that mipmaps won't be generated (which they
+    /// otherwise are on some drivers, particularly ANGLE), If it's not
+    /// supported, we fall back to glTexImage*.
+    supports_texture_storage: bool,
 
     // GL extensions
     extensions: Vec<String>,
@@ -781,14 +783,33 @@ impl Device {
             extensions.push(gl.get_string_i(gl::EXTENSIONS, i));
         }
 
+        // Our common-case image data in Firefox is BGRA, so we make an effort
+        // to use BGRA as the internal texture storage format to avoid the need
+        // to swizzle during upload. Currently we only do this on GLES (and thus
+        // for Windows, via ANGLE).
+        //
+        // On Mac, Apple docs [1] claim that BGRA is a more efficient internal
+        // format, so we may want to consider doing that at some point, since it
+        // would give us both a more efficient internal format and avoid the
+        // swizzling in the common case.
+        //
+        // We also need our internal format types to be sized, since glTexStorage*
+        // will reject non-sized internal format types.
+        //
+        // [1] https://developer.apple.com/library/archive/documentation/
+        //     GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_texturedata/
+        //     opengl_texturedata.html#//apple_ref/doc/uid/TP40001987-CH407-SW22
         let supports_bgra = supports_extension(&extensions, "GL_EXT_texture_format_BGRA8888");
-        let bgra_format = match gl.get_type() {
-            gl::GlType::Gl => GL_FORMAT_BGRA_GL,
-            gl::GlType::Gles => if supports_bgra {
-                GL_FORMAT_BGRA_GLES
-            } else {
-                GL_FORMAT_RGBA
-            }
+        let (bgra_format_internal, bgra_format_external) = if supports_bgra {
+            assert_eq!(gl.get_type(), gl::GlType::Gles, "gleam only detects bgra on gles");
+            (gl::BGRA8_EXT, gl::BGRA_EXT)
+        } else {
+            (gl::RGBA8, gl::BGRA)
+        };
+
+        let supports_texture_storage = match gl.get_type() {
+            gl::GlType::Gl => supports_extension(&extensions, "GL_ARB_texture_storage"),
+            gl::GlType::Gles => true,
         };
 
         Device {
@@ -805,7 +826,8 @@ impl Device {
                 supports_multisampling: false, //TODO
             },
 
-            bgra_format,
+            bgra_format_internal,
+            bgra_format_external,
 
             bound_textures: [0; 16],
             bound_program: 0,
@@ -821,6 +843,7 @@ impl Device {
             cached_programs,
             frame_id: FrameId(0),
             extensions,
+            supports_texture_storage,
         }
     }
 
@@ -1182,7 +1205,7 @@ impl Device {
         }
     }
 
-    pub fn create_texture<T: Texel>(
+    pub fn create_texture(
         &mut self,
         target: TextureTarget,
         format: ImageFormat,
@@ -1191,7 +1214,6 @@ impl Device {
         filter: TextureFilter,
         render_target: Option<RenderTargetInfo>,
         layer_count: i32,
-        pixels: Option<&[T]>,
     ) -> Texture {
         debug_assert!(self.inside_frame);
 
@@ -1220,36 +1242,69 @@ impl Device {
 
         // Allocate storage.
         let desc = self.gl_describe_format(texture.format);
-        match texture.target {
-            gl::TEXTURE_2D_ARRAY => {
+        let is_array = match texture.target {
+            gl::TEXTURE_2D_ARRAY => true,
+            gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES => false,
+            _ => panic!("BUG: Unexpected texture target!"),
+        };
+        assert!(is_array || texture.layer_count == 1);
+
+        // Firefox doesn't use mipmaps, but Servo uses them for standalone image
+        // textures images larger than 512 pixels. This is the only case where
+        // we set the filter to trilinear.
+        let mipmap_levels =  if texture.filter == TextureFilter::Trilinear {
+            let max_dimension = cmp::max(width, height);
+            ((max_dimension) as f64).log2() as gl::GLint + 1
+        } else {
+            1
+        };
+
+        // Use glTexStorage where available, since it avoids allocating
+        // unnecessary mipmap storage and generally improves performance with
+        // stronger invariants.
+        match (self.supports_texture_storage, is_array) {
+            (true, true) =>
+                self.gl.tex_storage_3d(
+                    gl::TEXTURE_2D_ARRAY,
+                    mipmap_levels,
+                    desc.internal,
+                    texture.width as gl::GLint,
+                    texture.height as gl::GLint,
+                    texture.layer_count,
+                ),
+            (true, false) =>
+                self.gl.tex_storage_2d(
+                    texture.target,
+                    mipmap_levels,
+                    desc.internal,
+                    texture.width as gl::GLint,
+                    texture.height as gl::GLint,
+                ),
+            (false, true) =>
                 self.gl.tex_image_3d(
                     gl::TEXTURE_2D_ARRAY,
                     0,
-                    desc.internal,
-                    texture.width as _,
-                    texture.height as _,
+                    desc.internal as gl::GLint,
+                    texture.width as gl::GLint,
+                    texture.height as gl::GLint,
                     texture.layer_count,
                     0,
                     desc.external,
                     desc.pixel_type,
-                    pixels.map(texels_to_u8_slice),
-                )
-            }
-            gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES => {
-                assert_eq!(texture.layer_count, 1);
+                    None,
+                ),
+            (false, false) =>
                 self.gl.tex_image_2d(
                     texture.target,
                     0,
-                    desc.internal,
-                    texture.width as _,
-                    texture.height as _,
+                    desc.internal as gl::GLint,
+                    texture.width as gl::GLint,
+                    texture.height as gl::GLint,
                     0,
                     desc.external,
                     desc.pixel_type,
-                    pixels.map(texels_to_u8_slice),
-                )
-            },
-            _ => panic!("BUG: Unexpected texture target!"),
+                    None,
+                ),
         }
 
         // Set up FBOs, if required.
@@ -1300,6 +1355,26 @@ impl Device {
             self.blit_render_target(rect, rect);
         }
         self.bind_read_target(None);
+    }
+
+    /// Notifies the device that the contents of a render target are no longer
+    /// needed.
+    pub fn invalidate_render_target(&mut self, texture: &Texture) {
+        let attachments: &[gl::GLenum] = if texture.has_depth() {
+            &[gl::COLOR_ATTACHMENT0, gl::DEPTH_ATTACHMENT]
+        } else {
+            &[gl::COLOR_ATTACHMENT0]
+        };
+
+        let original_bound_fbo = self.bound_draw_fbo;
+        for fbo_id in texture.fbo_ids.iter() {
+            // Note: The invalidate extension may not be supported, in which
+            // case this is a no-op. That's ok though, because it's just a
+            // hint.
+            self.bind_external_draw_target(*fbo_id);
+            self.gl.invalidate_framebuffer(gl::FRAMEBUFFER, attachments);
+        }
+        self.bind_external_draw_target(original_bound_fbo);
     }
 
     /// Notifies the device that a render target is about to be reused.
@@ -1579,11 +1654,50 @@ impl Device {
         TextureUploader {
             target: UploadTarget {
                 gl: &*self.gl,
-                bgra_format: self.bgra_format,
+                bgra_format: self.bgra_format_external,
                 texture,
             },
             buffer,
             marker: PhantomData,
+        }
+    }
+
+    /// Performs an immediate (non-PBO) texture upload.
+    pub fn upload_texture_immediate<T: Texel>(
+        &mut self,
+        texture: &Texture,
+        pixels: &[T]
+    ) {
+        self.bind_texture(DEFAULT_TEXTURE, texture);
+        let desc = self.gl_describe_format(texture.format);
+        match texture.target {
+            gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES =>
+                self.gl.tex_sub_image_2d(
+                    texture.target,
+                    0,
+                    0,
+                    0,
+                    texture.width as gl::GLint,
+                    texture.height as gl::GLint,
+                    desc.external,
+                    desc.pixel_type,
+                    texels_to_u8_slice(pixels),
+                ),
+            gl::TEXTURE_2D_ARRAY =>
+                self.gl.tex_sub_image_3d(
+                    texture.target,
+                    0,
+                    0,
+                    0,
+                    0,
+                    texture.width as gl::GLint,
+                    texture.height as gl::GLint,
+                    texture.layer_count as gl::GLint,
+                    desc.external,
+                    desc.pixel_type,
+                    texels_to_u8_slice(pixels),
+                ),
+            _ => panic!("BUG: Unexpected texture target!"),
         }
     }
 
@@ -1613,7 +1727,7 @@ impl Device {
             ReadPixelsFormat::Rgba8 => {
                 (4, FormatDesc {
                     external: gl::RGBA,
-                    internal: gl::RGBA8 as _,
+                    internal: gl::RGBA8,
                     pixel_type: gl::UNSIGNED_BYTE,
                 })
             }
@@ -2170,38 +2284,34 @@ impl Device {
     fn gl_describe_format(&self, format: ImageFormat) -> FormatDesc {
         match format {
             ImageFormat::R8 => FormatDesc {
-                internal: gl::R8 as _,
+                internal: gl::R8,
                 external: gl::RED,
                 pixel_type: gl::UNSIGNED_BYTE,
             },
             ImageFormat::R16 => FormatDesc {
-                internal: gl::R16 as _,
+                internal: gl::R16,
                 external: gl::RED,
                 pixel_type: gl::UNSIGNED_SHORT,
             },
             ImageFormat::BGRA8 => {
-                let external = self.bgra_format;
                 FormatDesc {
-                    internal: match self.gl.get_type() {
-                        gl::GlType::Gl => gl::RGBA as _,
-                        gl::GlType::Gles => external as _,
-                    },
-                    external,
+                    internal: self.bgra_format_internal,
+                    external: self.bgra_format_external,
                     pixel_type: gl::UNSIGNED_BYTE,
                 }
             },
             ImageFormat::RGBAF32 => FormatDesc {
-                internal: gl::RGBA32F as _,
+                internal: gl::RGBA32F,
                 external: gl::RGBA,
                 pixel_type: gl::FLOAT,
             },
             ImageFormat::RGBAI32 => FormatDesc {
-                internal: gl::RGBA32I as _,
+                internal: gl::RGBA32I,
                 external: gl::RGBA_INTEGER,
                 pixel_type: gl::INT,
             },
             ImageFormat::RG8 => FormatDesc {
-                internal: gl::RG8 as _,
+                internal: gl::RG8,
                 external: gl::RG,
                 pixel_type: gl::UNSIGNED_BYTE,
             },
@@ -2210,7 +2320,7 @@ impl Device {
 }
 
 struct FormatDesc {
-    internal: gl::GLint,
+    internal: gl::GLenum,
     external: gl::GLuint,
     pixel_type: gl::GLuint,
 }

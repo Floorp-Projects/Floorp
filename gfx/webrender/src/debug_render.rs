@@ -123,7 +123,7 @@ impl DebugRenderer {
         let line_vao = device.create_vao(&DESC_COLOR);
         let tri_vao = device.create_vao(&DESC_COLOR);
 
-        let font_texture = device.create_texture::<u8>(
+        let font_texture = device.create_texture(
             TextureTarget::Array,
             ImageFormat::R8,
             debug_font_data::BMP_WIDTH,
@@ -131,7 +131,10 @@ impl DebugRenderer {
             TextureFilter::Linear,
             None,
             1,
-            Some(&debug_font_data::FONT_BITMAP),
+        );
+        device.upload_texture_immediate(
+            &font_texture,
+            &debug_font_data::FONT_BITMAP
         );
 
         Ok(DebugRenderer {
