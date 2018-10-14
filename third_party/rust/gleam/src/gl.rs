@@ -283,12 +283,36 @@ declare_gl_apis! {
                             format: GLenum,
                             ty: GLenum,
                             offset: usize);
+    fn tex_storage_2d(&self,
+                      target: GLenum,
+                      levels: GLint,
+                      internal_format: GLenum,
+                      width: GLsizei,
+                      height: GLsizei);
+    fn tex_storage_3d(&self,
+                      target: GLenum,
+                      levels: GLint,
+                      internal_format: GLenum,
+                      width: GLsizei,
+                      height: GLsizei,
+                      depth: GLsizei);
     fn get_tex_image_into_buffer(&self,
                                 target: GLenum,
                                 level: GLint,
                                 format: GLenum,
                                 ty: GLenum,
                                 output: &mut [u8]);
+
+    fn invalidate_framebuffer(&self,
+                              target: GLenum,
+                              attachments: &[GLenum]);
+    fn invalidate_sub_framebuffer(&self,
+                                  target: GLenum,
+                                  attachments: &[GLenum],
+                                  xoffset: GLint,
+                                  yoffset: GLint,
+                                  width: GLsizei,
+                                  height: GLsizei);
 
     unsafe fn get_integer_v(&self, name: GLenum, result: &mut [GLint]);
     unsafe fn get_integer_64v(&self, name: GLenum, result: &mut [GLint64]);

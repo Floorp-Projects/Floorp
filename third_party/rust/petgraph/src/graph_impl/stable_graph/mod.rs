@@ -741,8 +741,6 @@ impl<N, E, Ty, Ix> StableGraph<N, E, Ty, Ix>
     /// The order edges are visited is not specified.
     ///
     /// The edge indices of the removed edes are invalidated, but none other.
-    /// Edge indices are invalidated as they would be following the removal of
-    /// each edge with an endpoint in a removed edge.
     ///
     /// Computes in **O(e'')** time, **e'** is the number of affected edges,
     /// including the calls to `.remove_edge()` for each removed edge.
@@ -1170,7 +1168,7 @@ impl<'a, N, Ix> Iterator for NodeReferences<'a, N, Ix>
     type Item = (NodeIndex<Ix>, &'a N);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.find_map(|(i, node)| {
+        self.iter.ex_find_map(|(i, node)| {
             node.weight.as_ref().map(move |w| (node_index(i), w))
         })
     }
@@ -1185,7 +1183,7 @@ impl<'a, N, Ix> DoubleEndedIterator for NodeReferences<'a, N, Ix>
     where Ix: IndexType
 {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.rfind_map(|(i, node)| {
+        self.iter.ex_rfind_map(|(i, node)| {
             node.weight.as_ref().map(move |w| (node_index(i), w))
         })
     }
@@ -1362,7 +1360,7 @@ impl<'a, E, Ix> Iterator for EdgeReferences<'a, E, Ix>
     type Item = EdgeReference<'a, E, Ix>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.find_map(|(i, edge)|
+        self.iter.ex_find_map(|(i, edge)|
             edge.weight.as_ref().map(move |weight| {
                 EdgeReference {
                     index: edge_index(i),
@@ -1377,7 +1375,7 @@ impl<'a, E, Ix> DoubleEndedIterator for EdgeReferences<'a, E, Ix>
     where Ix: IndexType
 {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.rfind_map(|(i, edge)|
+        self.iter.ex_rfind_map(|(i, edge)|
             edge.weight.as_ref().map(move |weight| {
                 EdgeReference {
                     index: edge_index(i),
@@ -1526,7 +1524,7 @@ impl<'a, N, Ix: IndexType> Iterator for NodeIndices<'a, N, Ix> {
     type Item = NodeIndex<Ix>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.find_map(|(i, node)| {
+        self.iter.ex_find_map(|(i, node)| {
             if node.weight.is_some() {
                 Some(node_index(i))
             } else { None }
@@ -1541,7 +1539,7 @@ impl<'a, N, Ix: IndexType> Iterator for NodeIndices<'a, N, Ix> {
 
 impl<'a, N, Ix: IndexType> DoubleEndedIterator for NodeIndices<'a, N, Ix> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.rfind_map(|(i, node)| {
+        self.iter.ex_rfind_map(|(i, node)| {
             if node.weight.is_some() {
                 Some(node_index(i))
             } else { None }
@@ -1572,7 +1570,7 @@ impl<'a, E, Ix: IndexType> Iterator for EdgeIndices<'a, E, Ix> {
     type Item = EdgeIndex<Ix>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.find_map(|(i, node)| {
+        self.iter.ex_find_map(|(i, node)| {
             if node.weight.is_some() {
                 Some(edge_index(i))
             } else { None }
@@ -1587,7 +1585,7 @@ impl<'a, E, Ix: IndexType> Iterator for EdgeIndices<'a, E, Ix> {
 
 impl<'a, E, Ix: IndexType> DoubleEndedIterator for EdgeIndices<'a, E, Ix> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.rfind_map(|(i, node)| {
+        self.iter.ex_rfind_map(|(i, node)| {
             if node.weight.is_some() {
                 Some(edge_index(i))
             } else { None }

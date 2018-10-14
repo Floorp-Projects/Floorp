@@ -12,7 +12,7 @@
 
 [package]
 name = "lalrpop"
-version = "0.15.1"
+version = "0.16.0"
 authors = ["Niko Matsakis <niko@alum.mit.edu>"]
 build = "build.rs"
 description = "convenient LR(1) parser generator"
@@ -28,40 +28,47 @@ doctest = false
 version = "1.0"
 
 [dependencies.atty]
-version = "0.1.2"
+version = "0.2"
 
 [dependencies.bit-set]
-version = "0.4.0"
+version = "0.5"
 
 [dependencies.diff]
 version = "0.1.9"
+
+[dependencies.digest]
+version = "0.7"
+features = ["std"]
 
 [dependencies.docopt]
 version = "0.8"
 
 [dependencies.ena]
-version = "0.5"
+version = "0.9"
 
 [dependencies.itertools]
 version = "0.7"
 
 [dependencies.lalrpop-util]
-version = "0.15.1"
+version = "0.16.0"
 
 [dependencies.petgraph]
-version = "0.4.4"
+version = "0.4.13"
 
 [dependencies.regex]
-version = "0.2.1"
+version = "1"
 
 [dependencies.regex-syntax]
-version = "0.4.0"
+version = "0.6.0"
 
 [dependencies.serde]
 version = "1.0"
 
 [dependencies.serde_derive]
 version = "1.0"
+
+[dependencies.sha2]
+version = "0.7.0"
 
 [dependencies.string_cache]
 version = "0.7.1"
@@ -74,4 +81,4 @@ version = "0.1"
 [dev-dependencies.rand]
 version = "0.4"
 [build-dependencies.lalrpop-snap]
-version = "0.15.1"
+version = "0.16.0"

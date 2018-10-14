@@ -12,7 +12,7 @@
 
 [package]
 name = "webidl"
-version = "0.6.0"
+version = "0.8.0"
 authors = ["Scott Godwin <sgodwincs@gmail.com>"]
 build = "build.rs"
 exclude = ["tests/*.zip"]
@@ -28,11 +28,11 @@ version = "0.0.165"
 optional = true
 
 [dependencies.lalrpop-util]
-version = "0.15.1"
+version = "0.16"
 [dev-dependencies.zip]
 version = "0.2.6"
 [build-dependencies.lalrpop]
-version = "0.15.1"
+version = "0.16"
 
 [features]
 default = []

@@ -213,7 +213,7 @@ fn predecessor_sets_to_idx_vecs<N>(post_order: &[N],
                         .map(|p| *node_to_post_order_idx.get(&p).unwrap())
                         .collect()
                 })
-                .unwrap_or(vec![])
+                .unwrap_or_else(Vec::new)
         })
         .collect()
 }

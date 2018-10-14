@@ -813,7 +813,7 @@ struct TextureResolver {
 impl TextureResolver {
     fn new(device: &mut Device) -> TextureResolver {
         let dummy_cache_texture = device
-            .create_texture::<u8>(
+            .create_texture(
                 TextureTarget::Array,
                 ImageFormat::BGRA8,
                 1,
@@ -821,7 +821,6 @@ impl TextureResolver {
                 TextureFilter::Linear,
                 None,
                 1,
-                None,
             );
 
         TextureResolver {
@@ -855,9 +854,11 @@ impl TextureResolver {
 
     fn end_frame(&mut self, device: &mut Device, frame_id: FrameId) {
         // return the cached targets to the pool
-        self.end_pass(None, None);
+        self.end_pass(device, None, None);
         // return the saved targets as well
-        self.render_target_pool.extend(self.saved_targets.drain(..));
+        while let Some(target) = self.saved_targets.pop() {
+            self.return_to_pool(device, target);
+        }
 
         // GC the render target pool.
         //
@@ -869,6 +870,12 @@ impl TextureResolver {
         //
         // [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1494099
         self.retain_targets(device, |texture| texture.used_recently(frame_id, 30));
+    }
+
+    /// Transfers ownership of a render target back to the pool.
+    fn return_to_pool(&mut self, device: &mut Device, target: Texture) {
+        device.invalidate_render_target(&target);
+        self.render_target_pool.push(target);
     }
 
     /// Drops all targets from the render target pool that do not satisfy the predicate.
@@ -887,6 +894,7 @@ impl TextureResolver {
 
     fn end_pass(
         &mut self,
+        device: &mut Device,
         a8_texture: Option<ActiveTexture>,
         rgba8_texture: Option<ActiveTexture>,
     ) {
@@ -899,7 +907,7 @@ impl TextureResolver {
                 assert_eq!(self.saved_targets.len(), index.0);
                 self.saved_targets.push(at.texture);
             } else {
-                self.render_target_pool.push(at.texture);
+                self.return_to_pool(device, at.texture);
             }
         }
         if let Some(at) = self.prev_pass_alpha.take() {
@@ -907,7 +915,7 @@ impl TextureResolver {
                 assert_eq!(self.saved_targets.len(), index.0);
                 self.saved_targets.push(at.texture);
             } else {
-                self.render_target_pool.push(at.texture);
+                self.return_to_pool(device, at.texture);
             }
         }
 
@@ -1103,7 +1111,7 @@ impl GpuCacheTexture {
         }
 
         // Create the new texture.
-        let mut texture = device.create_texture::<u8>(
+        let mut texture = device.create_texture(
             TextureTarget::Default,
             ImageFormat::RGBAF32,
             new_size.width,
@@ -1111,7 +1119,6 @@ impl GpuCacheTexture {
             TextureFilter::Nearest,
             rt_info,
             1,
-            None,
         );
 
         // Blit the contents of the previous texture, if applicable.
@@ -1400,7 +1407,7 @@ impl VertexDataTexture {
             }
             let new_height = (needed_height + 127) & !127;
 
-            let texture = device.create_texture::<u8>(
+            let texture = device.create_texture(
                 TextureTarget::Default,
                 self.format,
                 width,
@@ -1408,7 +1415,6 @@ impl VertexDataTexture {
                 TextureFilter::Nearest,
                 None,
                 1,
-                None,
             );
             self.texture = Some(texture);
         }
@@ -1756,7 +1762,7 @@ impl Renderer {
                 21,
             ];
 
-            let mut texture = device.create_texture::<u8>(
+            let mut texture = device.create_texture(
                 TextureTarget::Default,
                 ImageFormat::R8,
                 8,
@@ -1764,8 +1770,8 @@ impl Renderer {
                 TextureFilter::Nearest,
                 None,
                 1,
-                Some(&dither_matrix),
             );
+            device.upload_texture_immediate(&texture, &dither_matrix);
 
             Some(texture)
         } else {
@@ -2774,7 +2780,7 @@ impl Renderer {
                         //
                         // Ensure no PBO is bound when creating the texture storage,
                         // or GL will attempt to read data from there.
-                        let texture = self.device.create_texture::<u8>(
+                        let texture = self.device.create_texture(
                             TextureTarget::Array,
                             format,
                             width,
@@ -2782,7 +2788,6 @@ impl Renderer {
                             filter,
                             render_target,
                             layer_count,
-                            None,
                         );
                         self.texture_resolver.texture_cache_map.insert(update.id, texture);
                     }
@@ -3815,7 +3820,7 @@ impl Renderer {
             t
         } else {
             counters.targets_created.inc();
-            let mut t = self.device.create_texture::<u8>(
+            self.device.create_texture(
                 TextureTarget::Array,
                 list.format,
                 list.max_size.width,
@@ -3823,9 +3828,7 @@ impl Renderer {
                 TextureFilter::Linear,
                 Some(rt_info),
                 list.targets.len() as _,
-                None,
-            );
-            t
+            )
         };
 
         list.check_ready(&texture);
@@ -4016,6 +4019,7 @@ impl Renderer {
             };
 
             self.texture_resolver.end_pass(
+                &mut self.device,
                 cur_alpha,
                 cur_color,
             );
@@ -4763,8 +4767,8 @@ impl Renderer {
             plain.filter,
             plain.render_target,
             plain.size.2,
-            Some(texels.as_slice()),
         );
+        device.upload_texture_immediate(&texture, &texels);
 
         (texture, texels)
     }

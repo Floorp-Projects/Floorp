@@ -18,11 +18,14 @@
 //! ensure that any changes you make this with this pointer are rolled back, you must invoke
 //! `record` to record any changes you make and also supplying a delegate capable of reversing
 //! those changes.
+
 use self::UndoLog::*;
 
+use std::fmt;
 use std::mem;
 use std::ops;
 
+#[derive(Debug)]
 pub enum UndoLog<D: SnapshotVecDelegate> {
     /// Indicates where a snapshot started.
     OpenSnapshot,
@@ -45,6 +48,20 @@ pub struct SnapshotVec<D: SnapshotVecDelegate> {
     undo_log: Vec<UndoLog<D>>,
 }
 
+impl<D> fmt::Debug for SnapshotVec<D>
+    where D: SnapshotVecDelegate,
+          D: fmt::Debug,
+          D::Undo: fmt::Debug,
+          D::Value: fmt::Debug
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("SnapshotVec")
+            .field("values", &self.values)
+            .field("undo_log", &self.undo_log)
+            .finish()
+    }
+}
+
 // Snapshots are tokens that should be created/consumed linearly.
 pub struct Snapshot {
     // Length of the undo log at the time the snapshot was taken.
@@ -62,6 +79,13 @@ impl<D: SnapshotVecDelegate> SnapshotVec<D> {
     pub fn new() -> SnapshotVec<D> {
         SnapshotVec {
             values: Vec::new(),
+            undo_log: Vec::new(),
+        }
+    }
+
+    pub fn with_capacity(c: usize) -> SnapshotVec<D> {
+        SnapshotVec {
+            values: Vec::with_capacity(c),
             undo_log: Vec::new(),
         }
     }
@@ -95,6 +119,12 @@ impl<D: SnapshotVecDelegate> SnapshotVec<D> {
         &self.values[index]
     }
 
+    /// Reserve space for new values, just like an ordinary vec.
+    pub fn reserve(&mut self, additional: usize) {
+        // This is not affected by snapshots or anything.
+        self.values.reserve(additional);
+    }
+
     /// Returns a mutable pointer into the vec; whatever changes you make here cannot be undone
     /// automatically, so you should be sure call `record()` with some sort of suitable undo
     /// action.
@@ -111,8 +141,24 @@ impl<D: SnapshotVecDelegate> SnapshotVec<D> {
         }
     }
 
+    /// Updates all elements. Potentially more efficient -- but
+    /// otherwise equivalent to -- invoking `set` for each element.
+    pub fn set_all(&mut self, mut new_elems: impl FnMut(usize) -> D::Value) {
+        if !self.in_snapshot() {
+            for (slot, index) in self.values.iter_mut().zip(0..) {
+                *slot = new_elems(index);
+            }
+        } else {
+            for i in 0..self.values.len() {
+                self.set(i, new_elems(i));
+            }
+        }
+    }
+
     pub fn update<OP>(&mut self, index: usize, op: OP)
-        where OP: FnOnce(&mut D::Value), D::Value: Clone
+    where
+        OP: FnOnce(&mut D::Value),
+        D::Value: Clone,
     {
         if self.in_snapshot() {
             let old_elem = self.values[index].clone();
@@ -224,8 +270,21 @@ impl<D: SnapshotVecDelegate> ops::IndexMut<usize> for SnapshotVec<D> {
     }
 }
 
+impl<D: SnapshotVecDelegate> Extend<D::Value> for SnapshotVec<D> {
+    fn extend<T>(&mut self, iterable: T)
+    where
+        T: IntoIterator<Item = D::Value>,
+    {
+        for item in iterable {
+            self.push(item);
+        }
+    }
+}
+
 impl<D: SnapshotVecDelegate> Clone for SnapshotVec<D>
-    where D::Value: Clone, D::Undo: Clone,
+where
+    D::Value: Clone,
+    D::Undo: Clone,
 {
     fn clone(&self) -> Self {
         SnapshotVec {
@@ -236,7 +295,9 @@ impl<D: SnapshotVecDelegate> Clone for SnapshotVec<D>
 }
 
 impl<D: SnapshotVecDelegate> Clone for UndoLog<D>
-    where D::Value: Clone, D::Undo: Clone,
+where
+    D::Value: Clone,
+    D::Undo: Clone,
 {
     fn clone(&self) -> Self {
         match *self {
@@ -248,4 +309,3 @@ impl<D: SnapshotVecDelegate> Clone for UndoLog<D>
         }
     }
 }
-

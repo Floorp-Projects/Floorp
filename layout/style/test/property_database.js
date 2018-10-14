@@ -4585,7 +4585,7 @@ var gCSSProperties = {
     applies_to_first_line: true,
     applies_to_placeholder: true,
     initial_values: [ "none" ],
-    other_values: [ "capitalize", "uppercase", "lowercase", "full-width" ],
+    other_values: [ "capitalize", "uppercase", "lowercase", "full-width", "full-size-kana" ],
     invalid_values: []
   },
   "top": {

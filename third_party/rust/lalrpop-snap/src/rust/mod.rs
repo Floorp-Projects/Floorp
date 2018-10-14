@@ -161,7 +161,6 @@ impl<W: Write> RustWrite<W> {
     }
 
     pub fn write_module_attributes(&mut self, grammar: &Grammar) -> io::Result<()> {
-        rust!(self, "#![cfg_attr(rustfmt, rustfmt_skip)]");
         for attribute in grammar.module_attributes.iter() {
             rust!(self, "{}", attribute);
         }

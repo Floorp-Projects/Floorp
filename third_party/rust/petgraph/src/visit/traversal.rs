@@ -95,7 +95,7 @@ impl<N, VM> Dfs<N, VM>
     pub fn next<G>(&mut self, graph: G) -> Option<N>
         where G: IntoNeighbors<NodeId=N>,
     {
-        while let Some(node) = self.stack.pop() {
+        if let Some(node) = self.stack.pop() {
             for succ in graph.neighbors(node) {
                 if self.discovered.visit(succ) {
                     self.stack.push(succ);
@@ -251,7 +251,7 @@ impl<N, VM> Bfs<N, VM>
     pub fn next<G>(&mut self, graph: G) -> Option<N>
         where G: IntoNeighbors<NodeId=N>
     {
-        while let Some(node) = self.stack.pop_front() {
+        if let Some(node) = self.stack.pop_front() {
             for succ in graph.neighbors(node) {
                 if self.discovered.visit(succ) {
                     self.stack.push_back(succ);
