@@ -21,7 +21,6 @@ struct RawServoStyleSet;
 struct RawServoSelectorList;
 struct RawServoSourceSizeList;
 struct RawServoAnimationValueMap;
-struct RustString;
 struct StyleUseCounters;
 
 #define SERVO_ARC_TYPE(name_, type_) struct type_;
@@ -42,12 +41,8 @@ struct ComputedTiming;
 struct Keyframe;
 struct PropertyValuePair;
 struct PropertyStyleAnimationValuePair;
-enum class OriginFlags : uint8_t;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 } // namespace mozilla
-namespace nsStyleTransformMatrix {
-enum class MatrixTransformOperator: uint8_t;
-}
 
 class nsCSSPropertyIDSet;
 class nsCSSValue;
@@ -55,7 +50,6 @@ struct nsFontFaceRuleContainer;
 class nsIDocument;
 class nsINode;
 class nsPresContext;
-class nsSimpleContentList;
 struct nsTimingFunction;
 class nsXBLBinding;
 
