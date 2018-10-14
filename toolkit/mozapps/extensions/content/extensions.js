@@ -278,6 +278,18 @@ function isDiscoverEnabled() {
   return true;
 }
 
+function setSearchLabel(type) {
+  let searchLabel = document.getElementById("search-label");
+  if (type == "extension" || type == "theme") {
+    searchLabel
+      .textContent = gStrings.ext.GetStringFromName(`searchLabel.${type}`);
+    searchLabel.hidden = false;
+  } else {
+    searchLabel.textContent = "";
+    searchLabel.hidden = true;
+  }
+}
+
 /**
  * Obtain the main DOMWindow for the current context.
  */
@@ -2383,6 +2395,7 @@ var gListView = {
     try {
       document.getElementById("list-view-heading-name")
         .textContent = gStrings.ext.GetStringFromName(`listHeading.${aType}`);
+      setSearchLabel(aType);
     } catch (e) {
       // In tests we sometimes render this view with a type we don't support, that's fine.
     }
@@ -2585,6 +2598,8 @@ var gDetailView = {
   },
 
   _updateView(aAddon, aIsRemote, aScrollToPreferences) {
+    setSearchLabel(aAddon.type);
+
     AddonManager.addManagerListener(this);
     this.clearLoading();
 
