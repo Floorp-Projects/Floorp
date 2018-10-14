@@ -1204,14 +1204,13 @@ nsRefreshDriver::MostRecentRefresh() const
   return mMostRecentRefresh;
 }
 
-bool
+void
 nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
                                     FlushType aFlushType)
 {
   ObserverArray& array = ArrayFor(aFlushType);
-  bool success = array.AppendElement(aObserver) != nullptr;
+  array.AppendElement(aObserver);
   EnsureTimerStarted();
-  return success;
 }
 
 bool
@@ -1222,21 +1221,20 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
   return array.RemoveElement(aObserver);
 }
 
-bool
+void
 nsRefreshDriver::AddTimerAdjustmentObserver(
-  nsATimerAdjustmentObserver *aObserver)
+  nsATimerAdjustmentObserver* aObserver)
 {
   MOZ_ASSERT(!mTimerAdjustmentObservers.Contains(aObserver));
-
-  return mTimerAdjustmentObservers.AppendElement(aObserver) != nullptr;
+  mTimerAdjustmentObservers.AppendElement(aObserver);
 }
 
-bool
+void
 nsRefreshDriver::RemoveTimerAdjustmentObserver(
-  nsATimerAdjustmentObserver *aObserver)
+  nsATimerAdjustmentObserver* aObserver)
 {
   MOZ_ASSERT(mTimerAdjustmentObservers.Contains(aObserver));
-  return mTimerAdjustmentObservers.RemoveElement(aObserver);
+  mTimerAdjustmentObservers.RemoveElement(aObserver);
 }
 
 void

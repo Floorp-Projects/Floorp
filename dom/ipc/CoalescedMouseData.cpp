@@ -88,9 +88,7 @@ CoalescedMouseMoveFlusher::StartObserver()
   RemoveObserver();
   if (refreshDriver) {
     mRefreshDriver = refreshDriver;
-    DebugOnly<bool> success =
-      mRefreshDriver->AddRefreshObserver(this, FlushType::Event);
-    MOZ_ASSERT(success);
+    mRefreshDriver->AddRefreshObserver(this, FlushType::Event);
   }
 }
 
