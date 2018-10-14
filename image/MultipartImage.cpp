@@ -41,14 +41,16 @@ public:
 
   void BlockUntilDecodedAndFinishObserving()
   {
-    // Use GetFrame() to block until our image finishes decoding.
-    RefPtr<SourceSurface> surface =
-      mImage->GetFrame(imgIContainer::FRAME_CURRENT,
-                       imgIContainer::FLAG_SYNC_DECODE);
+    // Use RequestDecodeForSize() to block until our image finishes decoding.
+    // The size is ignored because we don't pass the FLAG_HIGH_QUALITY_SCALING
+    // flag.
+    mImage->RequestDecodeForSize(gfx::IntSize(0, 0),
+                                 imgIContainer::FLAG_SYNC_DECODE);
 
-    // GetFrame() should've sent synchronous notifications that would have
-    // caused us to call FinishObserving() (and null out mImage) already. If for
-    // some reason it didn't, we should do so here.
+
+    // RequestDecodeForSize() should've sent synchronous notifications that
+    // would have caused us to call FinishObserving() (and null out mImage)
+    // already. If for some reason it didn't, we should do so here.
     if (mImage) {
       FinishObserving();
     }
