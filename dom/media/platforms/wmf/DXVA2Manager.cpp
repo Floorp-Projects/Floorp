@@ -974,9 +974,9 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
       // Our video frame is stored in a non-sharable ID3D11Texture2D. We need
       // to create a copy of that frame as a sharable resource, save its share
       // handle, and put that handle into the rendering pipeline.
-      MOZ_DIAGNOSTIC_ASSERT(outDesc.Width <= inDesc.Width &&
-                            outDesc.Height <= inDesc.Height);
-      D3D11_BOX srcBox = { 0, 0, 0, outDesc.Width, outDesc.Height, 1 };
+      UINT width = std::min(inDesc.Width, outDesc.Width);
+      UINT height = std::min(inDesc.Height, outDesc.Height);
+      D3D11_BOX srcBox = { 0, 0, 0, width, height, 1 };
 
       UINT index;
       dxgiBuf->GetSubresourceIndex(&index);
