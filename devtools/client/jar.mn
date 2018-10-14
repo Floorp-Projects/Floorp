@@ -204,7 +204,6 @@ devtools.jar:
     skin/images/jump-definition.svg (themes/images/jump-definition.svg)
     skin/images/tracer-icon.png (themes/images/tracer-icon.png)
     skin/images/tracer-icon@2x.png (themes/images/tracer-icon@2x.png)
-    skin/floating-scrollbars-dark-theme.css (themes/floating-scrollbars-dark-theme.css)
     skin/floating-scrollbars-responsive-design.css (themes/floating-scrollbars-responsive-design.css)
     skin/inspector.css (themes/inspector.css)
     skin/images/profiler-stopwatch.svg (themes/images/profiler-stopwatch.svg)
