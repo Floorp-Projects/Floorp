@@ -317,6 +317,8 @@ style:
     ignoreAnnotation: false
     ignoreNamedArgument: true
     ignoreEnums: false
+  MandatoryBracesIfStatements:
+    active: true
   MaxLineLength:
     active: true
     maxLineLength: 120
