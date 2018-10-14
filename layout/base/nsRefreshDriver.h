@@ -145,8 +145,8 @@ public:
    * Add / remove an observer wants to know the time when the refresh driver
    * updated the most recent refresh time due to its active timer changes.
    */
-  bool AddTimerAdjustmentObserver(nsATimerAdjustmentObserver *aObserver);
-  bool RemoveTimerAdjustmentObserver(nsATimerAdjustmentObserver *aObserver);
+  void AddTimerAdjustmentObserver(nsATimerAdjustmentObserver* aObserver);
+  void RemoveTimerAdjustmentObserver(nsATimerAdjustmentObserver* aObserver);
 
   void PostScrollEvent(mozilla::Runnable* aScrollEvent);
   void DispatchScrollEvents();
