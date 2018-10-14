@@ -7,6 +7,7 @@ package mozilla.components.service.fretboard
 import android.content.Context
 import android.os.Build
 import java.util.Locale
+import java.util.MissingResourceException
 
 /**
  * Class used to provide
@@ -19,7 +20,11 @@ open class ValuesProvider {
      * @return user's language as a three-letter abbreviation
      */
     open fun getLanguage(context: Context): String {
-        return Locale.getDefault().isO3Language
+        return try {
+            Locale.getDefault().isO3Language
+        } catch (e: MissingResourceException) {
+            Locale.getDefault().language
+        }
     }
 
     /**
@@ -73,7 +78,11 @@ open class ValuesProvider {
      * @return user's country, as a three-letter abbreviation
      */
     open fun getCountry(context: Context): String {
-        return Locale.getDefault().isO3Country
+        return try {
+            Locale.getDefault().isO3Country
+        } catch (e: MissingResourceException) {
+            Locale.getDefault().country
+        }
     }
 
     /**
