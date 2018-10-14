@@ -216,70 +216,72 @@
         <vbox id="headered-views" flex="1">
           <!-- main header -->
           <hbox id="header" align="center">
-            <button id="show-all-extensions" hidden="true"
-                    label="&showAllExtensions.button.label;"
-                    command="cmd_showAllExtensions"/>
-            <spacer flex="1"/>
-            <hbox id="updates-container" align="center">
-              <image class="spinner"/>
-              <label id="updates-noneFound" hidden="true"
-                     value="&updates.noneFound.label;"/>
-              <button id="updates-manualUpdatesFound-btn" class="button-link"
-                      hidden="true" label="&updates.manualUpdatesFound.label;"
-                      command="cmd_goToAvailableUpdates"/>
-              <label id="updates-progress" hidden="true"
-                     value="&updates.updating.label;"/>
-              <label id="updates-installed" hidden="true"
-                     value="&updates.installed.label;"/>
-              <label id="updates-downloaded" hidden="true"
-                     value="&updates.downloaded.label;"/>
-              <button id="updates-restart-btn" class="button-link" hidden="true"
-                      label="&updates.restart.label;"
-                      command="cmd_restartApp"/>
+            <hbox id="header-inner">
+              <button id="show-all-extensions" hidden="true"
+                      label="&showAllExtensions.button.label;"
+                      command="cmd_showAllExtensions"/>
+              <spacer flex="1"/>
+              <hbox id="updates-container" align="center">
+                <image class="spinner"/>
+                <label id="updates-noneFound" hidden="true"
+                       value="&updates.noneFound.label;"/>
+                <button id="updates-manualUpdatesFound-btn" class="button-link"
+                        hidden="true" label="&updates.manualUpdatesFound.label;"
+                        command="cmd_goToAvailableUpdates"/>
+                <label id="updates-progress" hidden="true"
+                       value="&updates.updating.label;"/>
+                <label id="updates-installed" hidden="true"
+                       value="&updates.installed.label;"/>
+                <label id="updates-downloaded" hidden="true"
+                       value="&updates.downloaded.label;"/>
+                <button id="updates-restart-btn" class="button-link" hidden="true"
+                        label="&updates.restart.label;"
+                        command="cmd_restartApp"/>
+              </hbox>
+              <button id="show-disabled-unsigned-extensions" hidden="true"
+                      class="warning"
+                      label="&showUnsignedExtensions.button.label;"
+                      command="cmd_showUnsignedExtensions"/>
+              <toolbarbutton id="header-utils-btn" class="header-button" type="menu"
+                             tooltiptext="&toolsMenu.tooltip;">
+                <menupopup id="utils-menu">
+                  <menuitem id="utils-updateNow"
+                            label="&updates.checkForUpdates.label;"
+                            accesskey="&updates.checkForUpdates.accesskey;"
+                            command="cmd_findAllUpdates"/>
+                  <menuitem id="utils-viewUpdates"
+                            label="&updates.viewUpdates.label;"
+                            accesskey="&updates.viewUpdates.accesskey;"
+                            command="cmd_goToRecentUpdates"/>
+                  <menuseparator id="utils-installFromFile-separator"/>
+                  <menuitem id="utils-installFromFile"
+                            label="&installAddonFromFile.label;"
+                            accesskey="&installAddonFromFile.accesskey;"
+                            command="cmd_installFromFile"/>
+                  <menuitem id="utils-debugAddons"
+                            label="&debugAddons.label;"
+                            accesskey="&debugAddons.accesskey;"
+                            command="cmd_debugAddons"/>
+                  <menuseparator/>
+                  <menuitem id="utils-autoUpdateDefault"
+                            label="&updates.updateAddonsAutomatically.label;"
+                            accesskey="&updates.updateAddonsAutomatically.accesskey;"
+                            type="checkbox" autocheck="false"
+                            command="cmd_toggleAutoUpdateDefault"/>
+                  <menuitem id="utils-resetAddonUpdatesToAutomatic"
+                            label="&updates.resetUpdatesToAutomatic.label;"
+                            accesskey="&updates.resetUpdatesToAutomatic.accesskey;"
+                            command="cmd_resetAddonAutoUpdate"/>
+                  <menuitem id="utils-resetAddonUpdatesToManual"
+                            label="&updates.resetUpdatesToManual.label;"
+                            accesskey="&updates.resetUpdatesToManual.accesskey;"
+                            command="cmd_resetAddonAutoUpdate"/>
+                </menupopup>
+              </toolbarbutton>
+              <textbox id="header-search" type="search" searchbutton="true"
+                       searchbuttonlabel="&search.buttonlabel;"
+                       placeholder="&search.placeholder2;" maxlength="100"/>
             </hbox>
-            <button id="show-disabled-unsigned-extensions" hidden="true"
-                    class="warning"
-                    label="&showUnsignedExtensions.button.label;"
-                    command="cmd_showUnsignedExtensions"/>
-            <toolbarbutton id="header-utils-btn" class="header-button" type="menu"
-                           tooltiptext="&toolsMenu.tooltip;">
-              <menupopup id="utils-menu">
-                <menuitem id="utils-updateNow"
-                          label="&updates.checkForUpdates.label;"
-                          accesskey="&updates.checkForUpdates.accesskey;"
-                          command="cmd_findAllUpdates"/>
-                <menuitem id="utils-viewUpdates"
-                          label="&updates.viewUpdates.label;"
-                          accesskey="&updates.viewUpdates.accesskey;"
-                          command="cmd_goToRecentUpdates"/>
-                <menuseparator id="utils-installFromFile-separator"/>
-                <menuitem id="utils-installFromFile"
-                          label="&installAddonFromFile.label;"
-                          accesskey="&installAddonFromFile.accesskey;"
-                          command="cmd_installFromFile"/>
-                <menuitem id="utils-debugAddons"
-                          label="&debugAddons.label;"
-                          accesskey="&debugAddons.accesskey;"
-                          command="cmd_debugAddons"/>
-                <menuseparator/>
-                <menuitem id="utils-autoUpdateDefault"
-                          label="&updates.updateAddonsAutomatically.label;"
-                          accesskey="&updates.updateAddonsAutomatically.accesskey;"
-                          type="checkbox" autocheck="false"
-                          command="cmd_toggleAutoUpdateDefault"/>
-                <menuitem id="utils-resetAddonUpdatesToAutomatic"
-                          label="&updates.resetUpdatesToAutomatic.label;"
-                          accesskey="&updates.resetUpdatesToAutomatic.accesskey;"
-                          command="cmd_resetAddonAutoUpdate"/>
-                <menuitem id="utils-resetAddonUpdatesToManual"
-                          label="&updates.resetUpdatesToManual.label;"
-                          accesskey="&updates.resetUpdatesToManual.accesskey;"
-                          command="cmd_resetAddonAutoUpdate"/>
-              </menupopup>
-            </toolbarbutton>
-            <textbox id="header-search" type="search" searchbutton="true"
-                     searchbuttonlabel="&search.buttonlabel;"
-                     placeholder="&search.placeholder2;" maxlength="100"/>
           </hbox>
 
           <deck id="headered-views-content" flex="1" selectedIndex="0">
@@ -430,7 +432,7 @@
             </vbox>
 
             <!-- detail view -->
-            <scrollbox id="detail-view" flex="1" class="view-pane addon-view" orient="vertical" tabindex="0"
+            <scrollbox id="detail-view" class="view-pane addon-view" orient="vertical" tabindex="0"
                        role="document">
               <!-- global warnings -->
               <hbox class="global-warning-container global-warning">
@@ -462,8 +464,7 @@
                         command="cmd_enableUpdateSecurity"/>
                 <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
               </hbox>
-              <hbox flex="1">
-                <spacer flex="1"/>
+              <hbox class="detail-view-wrapper">
                 <!-- "loading" splash screen -->
                 <vbox class="alert-container">
                   <spacer class="alert-spacer-before"/>
@@ -474,7 +475,7 @@
                   <spacer class="alert-spacer-after"/>
                 </vbox>
                 <!-- actual detail view -->
-                <vbox class="detail-view-container" flex="3" contextmenu="addonitem-popup">
+                <vbox class="detail-view-container" contextmenu="addonitem-popup">
                   <vbox id="detail-notifications">
                     <hbox id="warning-container" align="center" class="warning">
                       <image class="warning-icon"/>
@@ -501,32 +502,29 @@
                       <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                     </hbox>
                   </vbox>
-                  <hbox align="start">
-                    <vbox id="detail-icon-container" align="end">
-                      <image id="detail-icon" class="icon"/>
-                    </vbox>
+                  <hbox class="card addon-detail" align="start">
                     <vbox flex="1">
-                      <vbox id="detail-summary">
-                        <hbox id="detail-name-container" class="name-container"
-                              align="start">
-                          <label id="detail-name" flex="1"/>
-                          <label id="detail-version"/>
-                          <label id="detail-legacy-warning" class="legacy-warning text-link" value="&addon.legacy.label;"/>
-                          <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
-                          <label class="update-postfix" value="&addon.update.postfix;"/>
-                          <spacer flex="5000"/> <!-- Necessary to allow the name to wrap -->
-                        </hbox>
-                        <label id="detail-creator" class="creator"/>
-                      </vbox>
-                      <hbox id="detail-desc-container" align="start">
-                        <vbox id="detail-screenshot-box" pack="center" hidden="true"> <!-- Necessary to work around bug 394738 -->
-                          <image id="detail-screenshot"/>
+                      <hbox align="start">
+                        <vbox id="detail-icon-container" align="end">
+                          <image id="detail-icon" class="icon"/>
                         </vbox>
-                        <vbox flex="1">
-                          <description id="detail-desc"/>
-                          <description id="detail-fulldesc"/>
+                        <vbox id="detail-summary">
+                          <hbox id="detail-name-container" class="name-container"
+                                align="start">
+                            <label id="detail-name" flex="1"/>
+                            <label id="detail-version"/>
+                            <label id="detail-legacy-warning" class="legacy-warning text-link" value="&addon.legacy.label;"/>
+                            <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
+                            <label class="update-postfix" value="&addon.update.postfix;"/>
+                            <spacer flex="5000"/> <!-- Necessary to allow the name to wrap -->
+                          </hbox>
+                          <label id="detail-creator" class="creator"/>
                         </vbox>
                       </hbox>
+                      <vbox id="detail-desc-container" align="start" flex="1">
+                        <description id="detail-desc"/>
+                        <description id="detail-fulldesc"/>
+                      </vbox>
                       <vbox id="detail-contributions">
                         <description id="detail-contrib-description">
                           &detail.contributions.description;
