@@ -287,6 +287,10 @@
           <deck id="headered-views-content" flex="1" selectedIndex="0">
             <!-- list view -->
             <vbox id="list-view" flex="1" class="view-pane" align="stretch" tabindex="0">
+              <hbox id="list-view-heading">
+                <label id="list-view-heading-name" class="header-name" flex="1"/>
+              </hbox>
+
               <!-- info UI for add-ons that have been disabled for being unsigned -->
               <vbox id="disabled-unsigned-addons-info" hidden="true">
                 <label id="disabled-unsigned-addons-heading" value="&disabledUnsigned.heading;"/>
