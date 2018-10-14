@@ -980,9 +980,9 @@ static uint32_t GetCandidateIpAndTransportMask(const RTCIceCandidateStats *cand)
   uint32_t res = 0;
 
   nsAutoCString transport;
-  // prefer local transport for local relay candidates
-  if (cand->mMozLocalTransport.WasPassed()) {
-    transport.Assign(NS_ConvertUTF16toUTF8(cand->mMozLocalTransport.Value()));
+  // prefer relay transport for local relay candidates
+  if (cand->mRelayProtocol.WasPassed()) {
+    transport.Assign(NS_ConvertUTF16toUTF8(cand->mRelayProtocol.Value()));
   } else {
     transport.Assign(NS_ConvertUTF16toUTF8(cand->mTransport.Value()));
   }

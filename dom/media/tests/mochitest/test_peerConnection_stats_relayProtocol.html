@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="nonTrickleIce.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1435789",
+    title: "WebRTC local-candidate relayProtocol stats attribute"
+  });
+var PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE = test => {
+  return test.pcLocal.getStats().then(stats => {
+    let haveRelayProtocol = {};
+    for (let [k, v] of stats) {
+      if (v.type == "local-candidate") {
+        haveRelayProtocol[v.candidateType + "-" + v.relayProtocol] = v.relayProtocol;
+      }
+    }
+    is(haveRelayProtocol["host-undefined"], undefined, "relayProtocol not set for host candidates");
+    is(haveRelayProtocol["serverreflexive-undefined"], undefined, "relayProtocol not set for serverreflexive candidates");
+    ok(haveRelayProtocol["relayed-udp"], "Has UDP relay candidate");
+    ok(haveRelayProtocol["relayed-tcp"], "Has TCP relay candidate");
+    // TURN/TLS does not work, see https://bugzilla.mozilla.org/show_bug.cgi?id=1323439
+    // With TURN/TLS working, we should have exactly five entries in haveRelayProtocol.
+    todo(haveRelayProtocol["relayed-tls"], "Has TLS relay candidate. See https://bugzilla.mozilla.org/show_bug.cgi?id=1323439");
+    is(Object.keys(haveRelayProtocol).length, 4, "All candidate types are accounted for");
+  });
+}
+
+runNetworkTest(options => {
+  // uses NAT simulator in order to get srflx candidates.
+  SpecialPowers.pushPrefEnv(
+    {
+      'set': [
+        ['media.peerconnection.nat_simulator.filtering_type', 'ENDPOINT_INDEPENDENT'],
+        ['media.peerconnection.nat_simulator.mapping_type', 'ENDPOINT_INDEPENDENT']
+      ]
+    }, function (options) {
+      const test = new PeerConnectionTest(options);
+      makeOffererNonTrickle(test.chain);
+      makeAnswererNonTrickle(test.chain);
+
+      test.chain.removeAfter("PC_LOCAL_WAIT_FOR_MEDIA_FLOW");
+      test.chain.append([PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE]);
+
+      test.setMediaConstraints([{ audio: true }], [{ audio: true }]);
+      test.run();
+    })
+}, { useIceServer: true });
+</script>
+</pre>
+</body>
+</html>

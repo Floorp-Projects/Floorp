@@ -6539,6 +6539,30 @@ nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder)
   return true;
 }
 
+/**
+ * Returns true if this nsDisplayOpacity contains only a filter or a mask item
+ * that has the same frame as the opacity item. In this case the opacity item
+ * can be optimized away.
+ */
+bool
+nsDisplayOpacity::IsEffectsWrapper() const
+{
+  if (mList.Count() != 1) {
+    return false;
+  }
+
+  const nsDisplayItem* item = mList.GetBottom();
+
+  if (item->Frame() != mFrame) {
+    // The effect item needs to have the same frame as the opacity item.
+    return false;
+  }
+
+  const DisplayItemType type = item->GetType();
+  return type == DisplayItemType::TYPE_MASK ||
+         type == DisplayItemType::TYPE_FILTER;
+}
+
 bool
 nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 {
@@ -6559,6 +6583,13 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 
   if (mList.IsEmpty()) {
     return false;
+  }
+
+  if (IsEffectsWrapper()) {
+    MOZ_ASSERT(nsSVGIntegrationUtils::UsingEffectsForFrame(mFrame));
+    static_cast<nsDisplayEffectsBase*>(mList.GetBottom())->SetHandleOpacity();
+    mChildOpacityState = ChildOpacityState::Applied;
+    return true;
   }
 
   // Return true if we successfully applied opacity to child items, or if
@@ -9445,7 +9476,6 @@ nsDisplayEffectsBase::nsDisplayEffectsBase(
   nsDisplayListBuilder* aBuilder,
   nsIFrame* aFrame,
   nsDisplayList* aList,
-  bool aHandleOpacity,
   const ActiveScrolledRoot* aActiveScrolledRoot,
   bool aClearClipChain)
   : nsDisplayWrapList(aBuilder,
@@ -9453,17 +9483,16 @@ nsDisplayEffectsBase::nsDisplayEffectsBase(
                       aList,
                       aActiveScrolledRoot,
                       aClearClipChain)
-  , mHandleOpacity(aHandleOpacity)
+  , mHandleOpacity(false)
 {
   MOZ_COUNT_CTOR(nsDisplayEffectsBase);
 }
 
 nsDisplayEffectsBase::nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
                                            nsIFrame* aFrame,
-                                           nsDisplayList* aList,
-                                           bool aHandleOpacity)
+                                           nsDisplayList* aList)
   : nsDisplayWrapList(aBuilder, aFrame, aList)
-  , mHandleOpacity(aHandleOpacity)
+  , mHandleOpacity(false)
 {
   MOZ_COUNT_CTOR(nsDisplayEffectsBase);
 }
@@ -9512,7 +9541,9 @@ nsDisplayEffectsBase::ComputeInvalidationRegion(
   nsRect bounds = GetBounds(aBuilder, &snap);
   if (geometry->mFrameOffsetToReferenceFrame != ToReferenceFrame() ||
       geometry->mUserSpaceOffset != UserSpaceOffset() ||
-      !geometry->mBBox.IsEqualInterior(BBoxInUserSpace())) {
+      !geometry->mBBox.IsEqualInterior(BBoxInUserSpace()) ||
+      geometry->mOpacity != mFrame->StyleEffects()->mOpacity ||
+      geometry->mHandleOpacity != ShouldHandleOpacity()) {
     // Filter and mask output can depend on the location of the frame's user
     // space and on the frame's BBox. We need to invalidate if either of these
     // change relative to the reference frame.
@@ -9633,12 +9664,10 @@ nsDisplayMasksAndClipPaths::nsDisplayMasksAndClipPaths(
                               nsDisplayListBuilder* aBuilder,
                               nsIFrame* aFrame,
                               nsDisplayList* aList,
-                              bool aHandleOpacity,
                               const ActiveScrolledRoot* aActiveScrolledRoot)
   : nsDisplayEffectsBase(aBuilder,
                          aFrame,
                          aList,
-                         aHandleOpacity,
                          aActiveScrolledRoot,
                          true)
 {
@@ -9836,11 +9865,6 @@ nsDisplayMasksAndClipPaths::ComputeInvalidationRegion(
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
 
-  if (mFrame->StyleEffects()->mOpacity != geometry->mOpacity ||
-      mHandleOpacity != geometry->mHandleOpacity) {
-    aInvalidRegion->Or(*aInvalidRegion, bounds);
-  }
-
   if (mDestRects.Length() != geometry->mDestRects.Length()) {
     aInvalidRegion->Or(bounds, geometry->mBounds);
   } else {
@@ -10032,7 +10056,7 @@ nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo)
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
   bool first = true;
   aTo += " effects=(";
-  if (mFrame->StyleEffects()->mOpacity != 1.0f && mHandleOpacity) {
+  if (mHandleOpacity) {
     first = false;
     aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
   }
@@ -10069,9 +10093,8 @@ nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo)
 
 nsDisplayFilters::nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame,
-                                   nsDisplayList* aList,
-                                   bool aHandleOpacity)
-  : nsDisplayEffectsBase(aBuilder, aFrame, aList, aHandleOpacity)
+                                   nsDisplayList* aList)
+  : nsDisplayEffectsBase(aBuilder, aFrame, aList)
   , mEffectsBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
 {
   MOZ_COUNT_CTOR(nsDisplayFilters);
@@ -10320,7 +10343,7 @@ nsDisplayFilters::PrintEffects(nsACString& aTo)
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
   bool first = true;
   aTo += " effects=(";
-  if (mFrame->StyleEffects()->mOpacity != 1.0f && mHandleOpacity) {
+  if (mHandleOpacity) {
     first = false;
     aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
   }

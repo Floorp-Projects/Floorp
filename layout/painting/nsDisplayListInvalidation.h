@@ -302,6 +302,8 @@ public:
   gfxRect mBBox;
   gfxPoint mUserSpaceOffset;
   nsPoint mFrameOffsetToReferenceFrame;
+  float mOpacity;
+  bool mHandleOpacity;
 };
 
 class nsDisplayMasksAndClipPathsGeometry
@@ -318,8 +320,6 @@ public:
   }
 
   nsTArray<nsRect> mDestRects;
-  float mOpacity;
-  bool mHandleOpacity;
 };
 
 class nsDisplayFiltersGeometry

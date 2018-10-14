@@ -131,6 +131,8 @@ nsDisplaySVGEffectGeometry::nsDisplaySVGEffectGeometry(
   , mBBox(aItem->BBoxInUserSpace())
   , mUserSpaceOffset(aItem->UserSpaceOffset())
   , mFrameOffsetToReferenceFrame(aItem->ToReferenceFrame())
+  , mOpacity(aItem->Frame()->StyleEffects()->mOpacity)
+  , mHandleOpacity(aItem->ShouldHandleOpacity())
 {
 }
 
@@ -147,8 +149,6 @@ nsDisplayMasksAndClipPathsGeometry::nsDisplayMasksAndClipPathsGeometry(
   : nsDisplaySVGEffectGeometry(aItem, aBuilder)
   , nsImageGeometryMixin(aItem, aBuilder)
   , mDestRects(aItem->GetDestRects())
-  , mOpacity(aItem->Frame()->StyleEffects()->mOpacity)
-  , mHandleOpacity(aItem->ShouldHandleOpacity())
 {
 }
 

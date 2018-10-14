@@ -581,9 +581,8 @@ var PC_REMOTE_TEST_REMOTE_STATS = test => {
   });
 }
 
-var test;
 runNetworkTest(function (options) {
-  test = new PeerConnectionTest(options);
+  const test = new PeerConnectionTest(options);
 
   test.chain.insertAfter("PC_LOCAL_WAIT_FOR_MEDIA_FLOW",
     [PC_LOCAL_TEST_LOCAL_STATS]);

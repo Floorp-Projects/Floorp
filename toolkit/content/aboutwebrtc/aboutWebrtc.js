@@ -850,7 +850,7 @@ ICEStats.prototype = {
     var type = c.candidateType;
 
     if (c.type == "local-candidate" && c.candidateType == "relayed") {
-      type = `${c.candidateType}-${c.mozLocalTransport}`;
+      type = `${c.candidateType}-${c.relayProtocol}`;
     }
 
     return `${c.ipAddress}:${c.portNumber}/${c.transport}(${type})`;
