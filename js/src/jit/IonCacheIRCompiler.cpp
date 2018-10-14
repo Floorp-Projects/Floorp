@@ -2266,28 +2266,6 @@ IonCacheIRCompiler::emitCallProxySetByValue()
 }
 
 bool
-IonCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper()
-{
-    AutoSaveLiveRegisters save(*this);
-
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Register id = allocator.useRegister(masm, reader.int32OperandId());
-    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-    bool strict = reader.readBool();
-
-    Label done;
-    prepareVMCall(masm, save);
-
-    masm.Push(Imm32(strict));
-    masm.Push(val);
-    masm.Push(id);
-    masm.Push(obj);
-
-    return callVM(masm, AddOrUpdateSparseElementHelperInfo);
-}
-
-
-bool
 IonCacheIRCompiler::emitMegamorphicSetElement()
 {
     AutoSaveLiveRegisters save(*this);
