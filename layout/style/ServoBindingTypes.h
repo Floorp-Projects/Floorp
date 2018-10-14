@@ -156,12 +156,11 @@
 #include "nsStyleAutoArray.h"
 #include "nsTArray.h"
 
-struct RawServoAuthorStyles;
-struct RawServoStyleSet;
-struct RawServoSelectorList;
-struct RawServoSourceSizeList;
 struct RawServoAnimationValueMap;
-struct StyleUseCounters;
+
+#define SERVO_BOXED_TYPE(name_, type_) struct type_;
+#include "mozilla/ServoBoxedTypeList.h"
+#undef SERVO_BOXED_TYPE
 
 #define SERVO_ARC_TYPE(name_, type_) struct type_;
 #include "mozilla/ServoArcTypeList.h"
@@ -249,6 +248,11 @@ typedef mozilla::dom::StyleChildrenIterator RawGeckoStyleChildrenIterator;
 #include "mozilla/ServoArcTypeList.h"
 #undef SERVO_ARC_TYPE
 
+// TODO(heycam): Handle these elsewhere.
+DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoAnimationValueMap)
+DECL_BORROWED_REF_TYPE_FOR(RawServoAnimationValueMap)
+DECL_BORROWED_MUT_REF_TYPE_FOR(RawServoAnimationValueMap)
+
 typedef mozilla::ComputedStyle const* ComputedStyleBorrowed;
 typedef mozilla::ComputedStyle const* ComputedStyleBorrowedOrNull;
 typedef ServoComputedData const* ServoComputedDataBorrowed;
@@ -269,17 +273,18 @@ struct MOZ_MUST_USE_TYPE ComputedStyleStrong
   DECL_NULLABLE_BORROWED_REF_TYPE_FOR(type_)       \
   DECL_NULLABLE_BORROWED_MUT_REF_TYPE_FOR(type_)
 
+#define SERVO_BOXED_TYPE(name_, type_)    \
+  DECL_OWNED_REF_TYPE_FOR(type_)          \
+  DECL_NULLABLE_OWNED_REF_TYPE_FOR(type_)
+#include "mozilla/ServoBoxedTypeList.h"
+#undef SERVO_BOXED_TYPE
+
 // This is a reference to a reference of RawServoDeclarationBlock, which
 // corresponds to Option<&Arc<Locked<RawServoDeclarationBlock>>> in Servo side.
 DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoDeclarationBlockStrong)
-DECL_OWNED_REF_TYPE_FOR(RawServoAuthorStyles)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoAuthorStyles)
-DECL_OWNED_REF_TYPE_FOR(RawServoStyleSet)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoStyleSet)
 DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
 DECL_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
 DECL_OWNED_REF_TYPE_FOR(ServoElementSnapshot)
-DECL_OWNED_REF_TYPE_FOR(RawServoAnimationValueMap)
 
 // We don't use BorrowedMut because the nodes may alias
 // Servo itself doesn't directly read or mutate these;
@@ -319,15 +324,6 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSPropertyIDSet)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoCSSPropertyIDList)
 DECL_BORROWED_REF_TYPE_FOR(nsXBLBinding)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleChildrenIterator)
-DECL_OWNED_REF_TYPE_FOR(RawServoSelectorList)
-DECL_BORROWED_REF_TYPE_FOR(RawServoSelectorList)
-DECL_OWNED_REF_TYPE_FOR(RawServoSourceSizeList)
-DECL_BORROWED_REF_TYPE_FOR(RawServoSourceSizeList)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoSourceSizeList)
-DECL_OWNED_REF_TYPE_FOR(StyleUseCounters)
-DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleUseCounters)
-DECL_BORROWED_REF_TYPE_FOR(StyleUseCounters)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(StyleUseCounters)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR
@@ -355,7 +351,7 @@ DECL_NULLABLE_BORROWED_REF_TYPE_FOR(StyleUseCounters)
 #include "mozilla/ServoArcTypeList.h"
 #undef SERVO_ARC_TYPE
 
-#define DEFINE_BOXED_TYPE(name_, type_)                     \
+#define SERVO_BOXED_TYPE(name_, type_)                      \
   extern "C" void Servo_##name_##_Drop(type_##Owned ptr);   \
   namespace mozilla {                                       \
   template<>                                                \
@@ -368,14 +364,8 @@ DECL_NULLABLE_BORROWED_REF_TYPE_FOR(StyleUseCounters)
     }                                                       \
   };                                                        \
   }
-
-DEFINE_BOXED_TYPE(StyleSet, RawServoStyleSet);
-DEFINE_BOXED_TYPE(AuthorStyles, RawServoAuthorStyles);
-DEFINE_BOXED_TYPE(SelectorList, RawServoSelectorList);
-DEFINE_BOXED_TYPE(SourceSizeList, RawServoSourceSizeList);
-DEFINE_BOXED_TYPE(UseCounters, StyleUseCounters);
-
-#undef DEFINE_BOXED_TYPE
+#include "mozilla/ServoBoxedTypeList.h"
+#undef SERVO_BOXED_TYPE
 
 #define DEFINE_ARRAY_TYPE_FOR(type_)                                \
   struct nsTArrayBorrowed_##type_ {                                 \

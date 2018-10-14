@@ -92,6 +92,7 @@ EXPORTS.mozilla += [
     'ServoArcTypeList.h',
     'ServoBindings.h',
     'ServoBindingTypes.h',
+    'ServoBoxedTypeList.h',
     'ServoComputedData.h',
     'ServoComputedDataInlines.h',
     'ServoCSSParser.h',
