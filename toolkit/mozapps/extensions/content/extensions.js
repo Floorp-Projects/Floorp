@@ -2380,6 +2380,13 @@ var gListView = {
     this.node.setAttribute("type", aType);
     this.showEmptyNotice(false);
 
+    try {
+      document.getElementById("list-view-heading-name")
+        .textContent = gStrings.ext.GetStringFromName(`listHeading.${aType}`);
+    } catch (e) {
+      // In tests we sometimes render this view with a type we don't support, that's fine.
+    }
+
     this._listBox.textContent = "";
 
     if (aType == "plugin") {
