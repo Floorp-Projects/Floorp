@@ -62,8 +62,8 @@ impl GpuGlyphRenderer {
             TextureFilter::Linear,
             None,
             1,
-            Some(area_lut_pixels)
         );
+        device.upload_texture_immediate(&area_lut_texture, area_lut_pixels);
 
         let vector_stencil_vao =
             device.create_vao_with_new_instances(&renderer::desc::VECTOR_STENCIL, prim_vao);
@@ -110,7 +110,7 @@ impl Renderer {
 
         let _timer = self.gpu_profile.start_timer(GPU_TAG_GLYPH_STENCIL);
 
-        let texture = self.device.create_texture::<f32>(
+        let texture = self.device.create_texture(
             TextureTarget::Default,
             ImageFormat::RGBAF32,
             target_size.width,
@@ -120,7 +120,6 @@ impl Renderer {
                 has_depth: false,
             }),
             1,
-            None
         );
 
         // Initialize temporary framebuffer.
@@ -188,8 +187,8 @@ impl Renderer {
             TextureFilter::Nearest,
             None,
             1,
-            Some(&path_info_texels)
         );
+        self.device.upload_texture_immediate(&path_info_texture, &path_info_texels);
 
         self.gpu_glyph_renderer.vector_stencil.bind(&mut self.device,
                                                     projection,
