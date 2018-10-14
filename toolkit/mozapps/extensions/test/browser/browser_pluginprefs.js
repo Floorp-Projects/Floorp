@@ -39,7 +39,8 @@ add_test(async function() {
   let button = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "preferences-btn");
   is_element_visible(button, "Preferences button should be visible");
 
-  EventUtils.synthesizeMouseAtCenter(pluginEl, { clickCount: 1 }, gManagerWindow);
+  button = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
+  EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   Services.obs.addObserver(async function observer(subject, topic, data) {
     Services.obs.removeObserver(observer, topic);

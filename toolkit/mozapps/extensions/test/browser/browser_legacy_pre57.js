@@ -63,7 +63,8 @@ add_task(async function() {
     }
 
     // Click down to the details page.
-    EventUtils.synthesizeMouseAtCenter(item, {}, mgrWin);
+    let detailsButton = document.getAnonymousElementByAttribute(item, "anonid", "details-btn");
+    EventUtils.synthesizeMouseAtCenter(detailsButton, {}, mgrWin);
     await new Promise(resolve => wait_for_view_load(mgrWin, resolve));
 
     // And check the badge

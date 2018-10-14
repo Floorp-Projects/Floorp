@@ -250,80 +250,43 @@ button {
 }
 
 .addon-target-container {
+  background: #fff;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.12);
   list-style-type: none;
-  margin: 16px 0;
+  font-size: 13px;
+  margin: 0 0 8px;
+  padding: 4px 16px;
+  transition: box-shadow 150ms;
 }
 
-.target-card-heading {
-  margin: 0;
+.addon-target-container:hover {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
-.target-card-heading {
+.addon-target-container .target {
   align-items: center;
   display: flex;
   margin: 0;
-  padding: 0 0 16px;
+  padding: 16px 0;
+}
 
+.addon-target-name {
   font-size: 15px;
   font-weight: 600;
 }
 
-.target-card-heading-icon {
-  height: 24px;
-  width: 24px;
-  margin-inline-end: 16px;
-}
-
-.target-card-actions {
+.addon-target-actions {
   border-top: 1px solid rgba(0, 0, 0, 0.2);
-  padding-top: 16px;
 }
 
-.target-card-action-link {
-  background: none;
-  border: none;
-  color: #0087ff;
-  font-size: 13px;
-  /* Use some negative top margin to account for the padding and keep the
-   * button vertically centred. */
-  margin: -4px 0 0 12px;
-  min-width: auto;
-  padding: 4px;
-  transition: color 150ms;
-}
-
-.target-card-action-link:first-of-type {
-  /* Other action buttons will have 12px of margin to space between each other,
-   * but for the first button subtract the start padding to align with the border. */
-  margin-inline-start: -4px;
-}
-
-.target-card-action-link:active,
-.target-card-action-link:hover,
-.target-card-action-link:enabled:hover:active {
-  background: none;
-}
-
-.target-card-action-link:disabled {
-  color: #999;
-  opacity: 1;
-}
-
-.target-card-action-link:enabled:focus,
-.target-card-action-link:enabled:hover {
-  background: none;
-  color: #0052cc;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.target-card-action-link:enabled:hover:active {
-  color: #003399;
-  text-decoration: none;
-}
-
-.addon-target-icon.target-icon {
+.addon-target-container .target-icon {
   margin-inline-end: 16px;
+}
+
+.addon-target-container .name {
+  align-self: center;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .addon-target-info {
@@ -346,6 +309,47 @@ button {
 
 .addon-target-info-more {
   padding-left: 1ch;
+}
+
+.addon-target-button {
+  background: none;
+  border: none;
+  color: #0087ff;
+  font-size: 13px;
+  margin: 12px;
+  min-width: auto;
+  padding: 4px;
+  transition: color 150ms;
+}
+
+.addon-target-button:active,
+.addon-target-button:hover,
+.addon-target-button:enabled:hover:active {
+  background: none;
+}
+
+.addon-target-button:disabled {
+  color: #999;
+  opacity: 1;
+}
+
+.addon-target-button:enabled:focus,
+.addon-target-button:enabled:hover {
+  background: none;
+  color: #0052cc;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.addon-target-button:enabled:hover:active {
+  color: #003399;
+  text-decoration: none;
+}
+
+.addon-target-button:first-of-type {
+  /* Subtract the start padding so the button is still a bigger click target but
+   * lines up with the icon. */
+  margin-inline-start: -4px;
 }
 
 .addon-target-messages {

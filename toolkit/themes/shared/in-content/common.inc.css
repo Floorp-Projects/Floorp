@@ -40,24 +40,13 @@
   --in-content-table-background: #ebebeb;
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
-
-  --blue-50: #0a84ff;
-  --blue-50-a30: rgba(10, 132, 255, 0.3);
   --grey-20: #ededf0;
-  --grey-30: #d7d7db;
-  --grey-60: #4a4a4f;
   --grey-90: #0c0c0d;
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
   --yellow-50: #ffe900;
   --yellow-90: #3e2800;
-
-  --shadow-10: 0 1px 4px var(--grey-90-a10);
-  --card-shadow: var(--shadow-10);
-  --card-outline-color: var(--grey-30);
-  --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
-  --card-shadow-focus: 0 0 0 2px var(--blue-50), 0 0 0 6px var(--blue-50-a30);
 }
 
 html|html,
@@ -855,19 +844,6 @@ xul|treechildren::-moz-tree-image(selected) {
 
 .message-bar-warning > .message-bar-icon {
   list-style-image: url("chrome://browser/skin/warning.svg");
-}
-
-.card {
-  background: var(--in-content-box-background);
-  border-radius: 4px;
-  box-shadow: var(--card-shadow);
-  margin: 0 0 8px;
-  padding: 16px;
-  transition: box-shadow 150ms;
-}
-
-.card:hover {
-  box-shadow: var(--card-shadow-hover);
 }
 
 .sidebar-footer-button {

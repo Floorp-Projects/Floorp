@@ -385,6 +385,8 @@ add_task(async function() {
   is(get_node(addon, "name").value, "Test add-on replacement", "Name should be correct");
   is(name, "Test add-on replacement", "Tooltip name should be correct");
   is(version, "2.0", "Tooltip version should be correct");
+  is_element_visible(get_node(addon, "description"), "Description should be visible");
+  is(get_node(addon, "description").value, "A test add-on with a new description", "Description should be correct");
   is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
   is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
   is(get_node(addon, "date-updated").value, formatDate(gDate), "Update date should be correct");
@@ -422,8 +424,11 @@ add_task(async function() {
 
   let addon = items["Test add-on 6"];
   addon.parentNode.ensureElementIsVisible(addon);
-  addon.parentNode.focus();
+  EventUtils.synthesizeMouseAtCenter(addon, { }, gManagerWindow);
   is(Services.focus.focusedElement, addon.parentNode, "Focus should have moved to the list");
+
+  EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
+  is(Services.focus.focusedElement, get_node(addon, "details-btn"), "Focus should have moved to the more button");
 
   EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);
   is(Services.focus.focusedElement, get_node(addon, "disable-btn"), "Focus should have moved to the disable button");
@@ -438,7 +443,8 @@ add_task(async function() {
   is(Services.focus.focusedElement, get_node(addon, "remove-btn"), "Focus should have moved to the remove button");
 
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
-  is(Services.focus.focusedElement, get_node(addon, "disable-btn"), "Focus should have moved to the disable button");
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
+  is(Services.focus.focusedElement, get_node(addon, "details-btn"), "Focus should have moved to the more button");
 
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, gManagerWindow);
   is(Services.focus.focusedElement, addon.parentNode, "Focus should have moved to the list");
