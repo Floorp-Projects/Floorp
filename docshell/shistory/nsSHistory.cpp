@@ -782,8 +782,8 @@ nsSHistory::AddSHistoryListener(nsISHistoryListener* aListener)
     return NS_ERROR_FAILURE;
   }
 
-  return mListeners.AppendElementUnlessExists(listener) ?
-    NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  mListeners.AppendElementUnlessExists(listener);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
