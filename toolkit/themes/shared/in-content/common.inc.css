@@ -846,6 +846,18 @@ xul|treechildren::-moz-tree-image(selected) {
   list-style-image: url("chrome://browser/skin/warning.svg");
 }
 
+.card {
+  background: #fff;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.12);
+  margin: 0 0 8px;
+  padding: 16px;
+  transition: box-shadow 150ms;
+}
+
+.card:hover {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
 .sidebar-footer-button {
   padding: 1px; /* Adding padding around help label in order to make entire keyboard focusing outline visible */
 }
