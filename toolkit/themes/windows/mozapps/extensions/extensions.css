@@ -12,6 +12,7 @@
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg");
   -moz-context-properties: fill;
   fill: #424f5a;
+  margin-inline-end: 16px;
 }
 
 @media (-moz-windows-default-theme: 0) {

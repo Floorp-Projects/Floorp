@@ -14,8 +14,8 @@
 }
 
 .view-pane > .list > scrollbox {
-  padding-right: 24px;
-  padding-left: 24px;
+  padding-right: 48px;
+  padding-left: 48px;
 }
 
 
@@ -226,26 +226,11 @@ button.warning {
 
 /*** header ***/
 
-#header-inner {
-  margin: 20px 4px 4px;
-  width: 692px;
-}
-
-#header-search {
-  margin-top: 0;
-  margin-bottom: 0;
-  min-height: 32px;
-}
-
-#header-search > moz-input-box > .textbox-search-sign {
-  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
-  margin-inline-end: 5px;
-}
-
-#search-label {
-  margin: 0;
-  margin-inline-end: 4px;
-  margin-bottom: 2px;
+#header {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-right: 48px;
+  margin-left: 48px;
 }
 
 @media (max-width: 600px) {
@@ -254,18 +239,18 @@ button.warning {
   }
 }
 
-.list-view-heading-inner {
-  width: 664px;
+.view-header {
+  margin: 0 48px;
+  border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
 #header-utils-btn {
+  height: 30px;
   line-height: 20px;
   border-color: var(--in-content-box-border-color);
   background-color: var(--in-content-page-background);
   padding-right: 10px;
   padding-left: 10px;
-  /* This button is too tall, adding margin-bottom shrinks it. */
-  margin-bottom: 2px;
 }
 
 #header-utils-btn:not([disabled="true"]):active:hover,
@@ -293,12 +278,6 @@ button.warning {
 
 .header-button > .toolbarbutton-text {
   display: none;
-}
-
-#list-view-heading {
-  margin-top: 24px;
-  margin-bottom: 16px;
-  margin-inline-start: 28px;
 }
 
 /*** discover view ***/
@@ -344,16 +323,43 @@ button.warning {
   background-color: transparent;
 }
 
+.list > scrollbox > .scrollbox-innerbox {
+  border: 1px dotted transparent;
+}
+
+.list:-moz-focusring > scrollbox > .scrollbox-innerbox {
+  border-color: var(--in-content-border-focus);
+}
+
 richlistbox.list > richlistitem.addon {
   color: var(--in-content-text-color);
+  border-bottom: 1px solid var(--in-content-box-border-color);
+  padding: 5px;
   background-origin: border-box;
+}
+
+.addon:not(:only-child):last-child {
+  border-bottom-width: 0;
+}
+
+.details {
+  cursor: pointer;
+  margin: 0;
+  margin-inline-start: 10px;
+}
+
+.icon-container {
+  width: 48px;
+  height: 48px;
+  margin: 3px 7px;
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
 
 .icon {
   list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.svg");
-  max-width: 24px;
-  max-height: 24px;
-  margin-inline-end: 16px;
+  max-width: 32px;
+  max-height: 32px;
 }
 
 .content-inner-container {
@@ -362,11 +368,6 @@ richlistbox.list > richlistitem.addon {
 
 .addon[active="false"] .icon {
   filter: grayscale(1);
-}
-
-.addon label,
-.addon {
-  cursor: pointer;
 }
 
 .addon-view[type="theme"] .icon {
@@ -390,7 +391,8 @@ richlistbox.list > richlistitem.addon {
 }
 
 .name-container {
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: bold;
   -moz-box-align: end;
   -moz-box-flex: 1;
 }
@@ -423,7 +425,7 @@ richlistbox.list > richlistitem.addon {
 }
 
 .creator {
-  font-size: 1.2rem;
+  font-weight: bold;
 }
 
 .description-container {
@@ -475,7 +477,8 @@ richlistbox.list > richlistitem.addon {
   -moz-box-pack: start;
 }
 
-.status-container {
+.status-container,
+.control-container {
   -moz-box-pack: end;
 }
 
@@ -556,15 +559,10 @@ richlistbox.list > richlistitem.addon {
 }
 
 .list > .addon[selected] {
-  background-color: var(--in-content-box-background);
-}
-
-.list:focus > .addon[selected] {
-  box-shadow: var(--card-shadow-focus);
-}
-
-.list > .addon {
-  margin: 8px;
+  background-color: var(--in-content-page-background);
+  color: var(--in-content-page-color);
+  padding-inline-start: 1px; /* compensate the 4px border */
+  border-inline-start: solid 4px var(--in-content-border-focus);
 }
 
 #addon-list .addon[active="false"] > .content-container > .content-inner-container {
@@ -598,7 +596,8 @@ richlistbox.list > richlistitem.addon {
 /*** detail view ***/
 
 #detail-view > .scrollbox-innerbox {
-  margin: 32px;
+  margin-right: 48px;
+  margin-left: 48px;
 }
 
 #detail-view .loading {
@@ -612,16 +611,15 @@ richlistbox.list > richlistitem.addon {
 }
 
 .detail-view-container {
-  width: 664px;
+  padding-inline-end: 2em;
+  padding-bottom: 2em;
+  font-size: 1.25rem;
+  color: #333;
 }
 
 #detail-notifications {
   margin-top: 1em;
   margin-bottom: 2em;
-}
-
-#detail-view:not([notification="warning"]):not([notification="error"]):not([pending]) #detail-notifications {
-  display: none;
 }
 
 #detail-notifications .warning,
@@ -632,23 +630,22 @@ richlistbox.list > richlistitem.addon {
 
 #detail-icon-container {
   width: 64px;
+  margin-inline-end: 10px;
   margin-top: 6px;
 }
 
 #detail-icon {
-  max-width: 32px;
-  max-height: 32px;
+  max-width: 64px;
+  max-height: 64px;
 }
 
-.name-container > label,
-#detail-creator,
-#detail-name-container > label {
-  margin-inline-start: 0;
+#detail-summary {
+  margin-bottom: 2em;
 }
 
-#detail-controls {
-  margin-inline-start: -4px;
-  margin-inline-end: -4px;
+#detail-name-container {
+  font-size: 2.5rem;
+  font-weight: normal;
 }
 
 #detail-screenshot-box {
@@ -682,27 +679,11 @@ richlistbox.list > richlistitem.addon {
 }
 
 #detail-desc-container {
-  line-height: 1.3;
-  margin: 1em 0;
-}
-
-#detail-controls > button {
-  margin-bottom: 0;
-}
-
-.addon.card {
-  max-width: 664px;
-  /* The .addon-control element on the end has 4px of margin, remove it
-   * from the padding to stay balanced. */
-  padding-inline-end: 12px;
-}
-
-.addon-detail.card:hover {
-  box-shadow: none;
+  margin-bottom: 2em;
 }
 
 #detail-desc, #detail-fulldesc {
-  margin-inline-start: 0;
+  margin-inline-start: 6px;
   /* This is necessary to fix layout issues with multi-line descriptions, see
      bug 592712*/
   outline: solid transparent;
@@ -774,6 +755,10 @@ richlistbox.list > richlistitem.addon {
   min-height: 35px;
   line-height: 20px;
   text-shadow: 0 1px 1px #fefffe;
+}
+
+#detail-controls {
+  margin-bottom: 1em;
 }
 
 .inline-options-browser {
@@ -937,15 +922,6 @@ richlistbox.list > richlistitem.addon {
 
 .addon-control[disabled="true"]:not(.no-auto-hide) {
   display: none;
-}
-
-.addon-control {
-  cursor: default;
-  margin-top: 0;
-  margin-bottom: 0;
-  min-height: auto;
-  min-width: auto;
-  padding: 2px 4px;
 }
 
 .no-auto-hide .addon-control {
