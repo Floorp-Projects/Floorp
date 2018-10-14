@@ -83,7 +83,7 @@ headers = [
     "mozilla/dom/NameSpaceConstants.h",
     "mozilla/LookAndFeel.h",
     "mozilla/StaticPrefs.h",
-    "mozilla/ServoBindings.h",
+    "mozilla/GeckoBindings.h",
     "mozilla/ComputedStyle.h",
     "mozilla/ServoTraversalStatistics.h",
     "mozilla/SizeOfState.h",
@@ -459,7 +459,12 @@ fixups = [
 ]
 
 [bindings]
-headers = ["mozilla/ServoBindings.h"]
+headers = [
+    "mozilla/GeckoBindings.h",
+    # We include ServoBindings.h so we can type check the C function declarations
+    # in there against the function definitions in servo/ports/gecko/glue.rs.
+    "mozilla/ServoBindings.h",
+]
 hide-types = [
     "nsACString_internal",
     "nsAString_internal",

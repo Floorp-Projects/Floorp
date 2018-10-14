@@ -260,4 +260,19 @@ struct nsFontFaceRuleContainer
   mozilla::SheetType mSheetType;
 };
 
+#define DEFINE_ARRAY_TYPE_FOR(type_)                                \
+  struct nsTArrayBorrowed_##type_ {                                 \
+    nsTArray<type_>* mArray;                                        \
+    MOZ_IMPLICIT nsTArrayBorrowed_##type_(nsTArray<type_>* aArray)  \
+      : mArray(aArray) {}                                           \
+  }
+DEFINE_ARRAY_TYPE_FOR(uintptr_t);
+#undef DEFINE_ARRAY_TYPE_FOR
+
+struct MediumFeaturesChangedResult {
+  bool mAffectsDocumentRules;
+  bool mAffectsNonDocumentRules;
+  bool mUsesViewportUnits;
+};
+
 #endif // mozilla_ServoBindingTypes_h
