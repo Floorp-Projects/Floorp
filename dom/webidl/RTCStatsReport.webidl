@@ -155,7 +155,8 @@ dictionary RTCIceCandidateStats : RTCStats {
   DOMString candidateId;
   DOMString ipAddress;
   DOMString transport;
-  DOMString mozLocalTransport; // needs standardization
+  DOMString mozLocalTransport; // obsoleted by relayProtocol
+  DOMString relayProtocol;
   long portNumber;
   RTCStatsIceCandidateType candidateType;
 };
