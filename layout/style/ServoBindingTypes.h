@@ -156,7 +156,7 @@
 #include "nsStyleAutoArray.h"
 #include "nsTArray.h"
 
-struct RawServoAnimationValueMap;
+// Forward declarations.
 
 #define SERVO_BOXED_TYPE(name_, type_) struct type_;
 #include "mozilla/ServoBoxedTypeList.h"
@@ -166,102 +166,38 @@ struct RawServoAnimationValueMap;
 #include "mozilla/ServoArcTypeList.h"
 #undef SERVO_ARC_TYPE
 
-namespace mozilla {
-class ServoElementSnapshot;
-class ComputedStyle;
-struct StyleAnimation;
-struct URLExtraData;
-namespace dom {
-class Element;
-class StyleChildrenIterator;
-} // namespace dom
-struct AnimationPropertySegment;
-struct ComputedTiming;
-struct Keyframe;
-struct PropertyValuePair;
-struct PropertyStyleAnimationValuePair;
-using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
-} // namespace mozilla
-
 class nsCSSPropertyIDSet;
 class nsCSSValue;
-struct nsFontFaceRuleContainer;
 class nsIDocument;
 class nsINode;
 class nsPresContext;
-struct nsTimingFunction;
 class nsXBLBinding;
+struct nsFontFaceRuleContainer;
+struct nsTimingFunction;
 
-using mozilla::dom::StyleChildrenIterator;
-using mozilla::ServoElementSnapshot;
+namespace mozilla {
+class ComputedStyle;
+class ServoElementSnapshot;
+struct AnimationPropertySegment;
+struct ComputedTiming;
+struct Keyframe;
+struct PropertyStyleAnimationValuePair;
+struct PropertyValuePair;
+struct StyleAnimation;
+struct URLExtraData;
+using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
+using GfxMatrix4x4 = mozilla::gfx::Float[16];
 
-typedef void* RawServoAnimationValueTableBorrowed;
+namespace dom {
+class StyleChildrenIterator;
+class Element;
+} // namespace dom
+} // namespace mozilla
 
-typedef nsINode RawGeckoNode;
-typedef mozilla::dom::Element RawGeckoElement;
-typedef nsIDocument RawGeckoDocument;
-typedef nsPresContext RawGeckoPresContext;
-typedef nsXBLBinding RawGeckoXBLBinding;
-typedef mozilla::URLExtraData RawGeckoURLExtraData;
-typedef nsTArray<RefPtr<RawServoAnimationValue>> RawGeckoServoAnimationValueList;
-typedef nsTArray<mozilla::Keyframe> RawGeckoKeyframeList;
-typedef nsTArray<mozilla::PropertyValuePair> RawGeckoPropertyValuePairList;
-typedef nsTArray<mozilla::ComputedKeyframeValues> RawGeckoComputedKeyframeValuesList;
-typedef nsStyleAutoArray<mozilla::StyleAnimation> RawGeckoStyleAnimationList;
-typedef nsTArray<nsFontFaceRuleContainer> RawGeckoFontFaceRuleList;
-typedef mozilla::AnimationPropertySegment RawGeckoAnimationPropertySegment;
-typedef mozilla::ComputedTiming RawGeckoComputedTiming;
-typedef nsTArray<const RawServoStyleRule*> RawGeckoServoStyleRuleList;
-typedef nsTArray<nsCSSPropertyID> RawGeckoCSSPropertyIDList;
-typedef mozilla::gfx::Float RawGeckoGfxMatrix4x4[16];
-typedef mozilla::dom::StyleChildrenIterator RawGeckoStyleChildrenIterator;
-
-// We have these helper types so that we can directly generate
-// things like &T or Borrowed<T> on the Rust side in the function, providing
-// additional safety benefits.
-//
-// FFI has a problem with templated types, so we just use raw pointers here.
-//
-// The "Borrowed" types generate &T or Borrowed<T> in the nullable case.
-//
-// The "Owned" types generate Owned<T> or OwnedOrNull<T>. Some of these
-// are Servo-managed and can be converted to Box<ServoType> on the
-// Servo side.
-//
-// The "Arc" types are Servo-managed Arc<ServoType>s, which are passed
-// over FFI as Strong<T> (which is nullable).
-// Note that T != ServoType, rather T is ArcInner<ServoType>
 #define DECL_BORROWED_REF_TYPE_FOR(type_) typedef type_ const* type_##Borrowed;
 #define DECL_NULLABLE_BORROWED_REF_TYPE_FOR(type_) typedef type_ const* type_##BorrowedOrNull;
 #define DECL_BORROWED_MUT_REF_TYPE_FOR(type_) typedef type_* type_##BorrowedMut;
 #define DECL_NULLABLE_BORROWED_MUT_REF_TYPE_FOR(type_) typedef type_* type_##BorrowedMutOrNull;
-
-#define SERVO_ARC_TYPE(name_, type_)         \
-  DECL_NULLABLE_BORROWED_REF_TYPE_FOR(type_) \
-  DECL_BORROWED_REF_TYPE_FOR(type_)          \
-  DECL_BORROWED_MUT_REF_TYPE_FOR(type_)      \
-  struct MOZ_MUST_USE_TYPE type_##Strong     \
-  {                                          \
-    type_* mPtr;                             \
-    already_AddRefed<type_> Consume();       \
-  };
-#include "mozilla/ServoArcTypeList.h"
-#undef SERVO_ARC_TYPE
-
-// TODO(heycam): Handle these elsewhere.
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoAnimationValueMap)
-DECL_BORROWED_REF_TYPE_FOR(RawServoAnimationValueMap)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawServoAnimationValueMap)
-
-typedef mozilla::ComputedStyle const* ComputedStyleBorrowed;
-typedef mozilla::ComputedStyle const* ComputedStyleBorrowedOrNull;
-typedef ServoComputedData const* ServoComputedDataBorrowed;
-
-struct MOZ_MUST_USE_TYPE ComputedStyleStrong
-{
-  mozilla::ComputedStyle* mPtr;
-  already_AddRefed<mozilla::ComputedStyle> Consume();
-};
 
 #define DECL_OWNED_REF_TYPE_FOR(type_)    \
   typedef type_* type_##Owned;            \
@@ -273,67 +209,27 @@ struct MOZ_MUST_USE_TYPE ComputedStyleStrong
   DECL_NULLABLE_BORROWED_REF_TYPE_FOR(type_)       \
   DECL_NULLABLE_BORROWED_MUT_REF_TYPE_FOR(type_)
 
-#define SERVO_BOXED_TYPE(name_, type_)    \
-  DECL_OWNED_REF_TYPE_FOR(type_)          \
-  DECL_NULLABLE_OWNED_REF_TYPE_FOR(type_)
-#include "mozilla/ServoBoxedTypeList.h"
-#undef SERVO_BOXED_TYPE
-
-// This is a reference to a reference of RawServoDeclarationBlock, which
-// corresponds to Option<&Arc<Locked<RawServoDeclarationBlock>>> in Servo side.
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoDeclarationBlockStrong)
-DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
-DECL_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
-DECL_OWNED_REF_TYPE_FOR(ServoElementSnapshot)
-
-// We don't use BorrowedMut because the nodes may alias
-// Servo itself doesn't directly read or mutate these;
-// it only asks Gecko to do so. In case we wish to in
-// the future, we should ensure that things being mutated
-// are protected from noalias violations by a cell type
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoNode)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoNode)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoElement)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoElement)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoDocument)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoDocument)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoXBLBinding)
-DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoXBLBinding)
-DECL_BORROWED_MUT_REF_TYPE_FOR(StyleChildrenIterator)
-DECL_BORROWED_MUT_REF_TYPE_FOR(ServoElementSnapshot)
-DECL_BORROWED_REF_TYPE_FOR(nsCSSValue)
-DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSValue)
-DECL_OWNED_REF_TYPE_FOR(RawGeckoPresContext)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoPresContext)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoServoAnimationValueList)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoServoAnimationValueList)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoKeyframeList)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoKeyframeList)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoPropertyValuePairList)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoPropertyValuePairList)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoComputedKeyframeValuesList)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleAnimationList)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoStyleAnimationList)
-DECL_BORROWED_MUT_REF_TYPE_FOR(nsTimingFunction)
-DECL_BORROWED_REF_TYPE_FOR(nsTimingFunction)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoFontFaceRuleList)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoAnimationPropertySegment)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoComputedTiming)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoServoStyleRuleList)
-DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSPropertyIDSet)
-DECL_BORROWED_REF_TYPE_FOR(RawGeckoCSSPropertyIDList)
-DECL_BORROWED_REF_TYPE_FOR(nsXBLBinding)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleChildrenIterator)
-
-#undef DECL_ARC_REF_TYPE_FOR
-#undef DECL_OWNED_REF_TYPE_FOR
-#undef DECL_NULLABLE_OWNED_REF_TYPE_FOR
-#undef DECL_BORROWED_REF_TYPE_FOR
-#undef DECL_NULLABLE_BORROWED_REF_TYPE_FOR
-#undef DECL_BORROWED_MUT_REF_TYPE_FOR
-#undef DECL_NULLABLE_BORROWED_MUT_REF_TYPE_FOR
+#define GECKO_BORROWED_TYPE(geckotype_, ffitype_)      \
+  using ffitype_ = geckotype_;                         \
+  using ffitype_##Borrowed = const ffitype_*;          \
+  using ffitype_##BorrowedOrNull = const ffitype_*;
+#define GECKO_BORROWED_TYPE_MUT(geckotype_, ffitype_)  \
+  GECKO_BORROWED_TYPE(geckotype_, ffitype_)            \
+  using ffitype_##BorrowedMut = ffitype_*;             \
+  using ffitype_##BorrowedMutOrNull = ffitype_*;
+#include "mozilla/BorrowedTypeList.h"
+#undef GECKO_BORROWED_TYPE_MUT
+#undef GECKO_BORROWED_TYPE
 
 #define SERVO_ARC_TYPE(name_, type_)                 \
+  DECL_NULLABLE_BORROWED_REF_TYPE_FOR(type_)         \
+  DECL_BORROWED_REF_TYPE_FOR(type_)                  \
+  DECL_BORROWED_MUT_REF_TYPE_FOR(type_)              \
+  struct MOZ_MUST_USE_TYPE type_##Strong             \
+  {                                                  \
+    type_* mPtr;                                     \
+    already_AddRefed<type_> Consume();               \
+  };                                                 \
   extern "C" {                                       \
   void Servo_##name_##_AddRef(type_##Borrowed ptr);  \
   void Servo_##name_##_Release(type_##Borrowed ptr); \
@@ -352,6 +248,8 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleChildrenIterator)
 #undef SERVO_ARC_TYPE
 
 #define SERVO_BOXED_TYPE(name_, type_)                      \
+  DECL_OWNED_REF_TYPE_FOR(type_)                            \
+  DECL_NULLABLE_OWNED_REF_TYPE_FOR(type_)                   \
   extern "C" void Servo_##name_##_Drop(type_##Owned ptr);   \
   namespace mozilla {                                       \
   template<>                                                \
@@ -375,5 +273,38 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleChildrenIterator)
   }
 DEFINE_ARRAY_TYPE_FOR(uintptr_t);
 #undef DEFINE_ARRAY_TYPE_FOR
+
+
+// Other special cases.
+
+typedef void* RawServoAnimationValueTableBorrowed;
+
+// TODO(heycam): Handle these elsewhere.
+struct RawServoAnimationValueMap;
+DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoAnimationValueMap)
+DECL_BORROWED_REF_TYPE_FOR(RawServoAnimationValueMap)
+DECL_BORROWED_MUT_REF_TYPE_FOR(RawServoAnimationValueMap)
+
+typedef mozilla::ComputedStyle const* ComputedStyleBorrowed;
+typedef mozilla::ComputedStyle const* ComputedStyleBorrowedOrNull;
+typedef ServoComputedData const* ServoComputedDataBorrowed;
+
+struct MOZ_MUST_USE_TYPE ComputedStyleStrong
+{
+  mozilla::ComputedStyle* mPtr;
+  already_AddRefed<mozilla::ComputedStyle> Consume();
+};
+
+// This is a reference to a reference of RawServoDeclarationBlock, which
+// corresponds to Option<&Arc<Locked<RawServoDeclarationBlock>>> in Servo side.
+DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoDeclarationBlockStrong)
+
+#undef DECL_ARC_REF_TYPE_FOR
+#undef DECL_OWNED_REF_TYPE_FOR
+#undef DECL_NULLABLE_OWNED_REF_TYPE_FOR
+#undef DECL_BORROWED_REF_TYPE_FOR
+#undef DECL_NULLABLE_BORROWED_REF_TYPE_FOR
+#undef DECL_BORROWED_MUT_REF_TYPE_FOR
+#undef DECL_NULLABLE_BORROWED_MUT_REF_TYPE_FOR
 
 #endif // mozilla_ServoBindingTypes_h
