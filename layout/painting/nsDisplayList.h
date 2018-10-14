@@ -5790,6 +5790,7 @@ public:
 
 private:
   bool ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder);
+  bool IsEffectsWrapper() const;
 
   float mOpacity;
   bool mForEventsAndPluginsOnly : 1;
@@ -6688,13 +6689,11 @@ public:
   nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
                        nsIFrame* aFrame,
                        nsDisplayList* aList,
-                       bool aHandleOpacity,
                        const ActiveScrolledRoot* aActiveScrolledRoot,
                        bool aClearClipChain = false);
   nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
                        nsIFrame* aFrame,
-                       nsDisplayList* aList,
-                       bool aHandleOpacity);
+                       nsDisplayList* aList);
 
   nsDisplayEffectsBase(nsDisplayListBuilder* aBuilder,
                        const nsDisplayEffectsBase& aOther)
@@ -6716,12 +6715,15 @@ public:
                HitTestState* aState,
                nsTArray<nsIFrame*>* aOutFrames) override;
 
+  void RestoreState() override { mHandleOpacity = false; }
+
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override
   {
     return false;
   }
 
-  bool ShouldHandleOpacity() { return mHandleOpacity; }
+  void SetHandleOpacity() { mHandleOpacity = true; }
+  bool ShouldHandleOpacity() const { return mHandleOpacity; }
 
   gfxRect BBoxInUserSpace() const;
   gfxPoint UserSpaceOffset() const;
@@ -6757,7 +6759,6 @@ public:
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame,
                              nsDisplayList* aList,
-                             bool aHandleOpacity,
                              const ActiveScrolledRoot* aActiveScrolledRoot);
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
                              const nsDisplayMasksAndClipPaths& aOther)
@@ -6869,8 +6870,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase
 public:
   nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                    nsIFrame* aFrame,
-                   nsDisplayList* aList,
-                   bool aHandleOpacity);
+                   nsDisplayList* aList);
 
   nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                    const nsDisplayFilters& aOther)

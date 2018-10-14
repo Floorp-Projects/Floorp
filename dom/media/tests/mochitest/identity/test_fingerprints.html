@@ -1,46 +1,43 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript">var scriptRelativePath = "../";</script>
+<script type="application/javascript" src="../pc.js"></script>
 </head>
 <body>
-  <script class="testbody" type="application/javascript">
-'use strict';
+<script class="testbody" type="application/javascript">
+createHTML({ title: "Test multiple identity fingerprints",  bug: "1005152" });
 
 // here we call the identity provider directly
-function getIdentityAssertion(fpArray) {
-  var Cu = SpecialPowers.Cu;
-  var rtcid = Cu.import('resource://gre/modules/media/IdpSandbox.jsm');
-  var sandbox = new rtcid.IdpSandbox('example.com', 'idp.js', window);
-  return sandbox.start()
-    .then(idp => SpecialPowers.wrap(idp)
-                   .generateAssertion(JSON.stringify({ fingerprint: fpArray }),
-                                      'https://example.com',
-                                      {}))
-    .then(assertion => {
-      assertion = SpecialPowers.wrap(assertion);
-      var assertionString = btoa(JSON.stringify(assertion));
-      sandbox.stop();
-      return assertionString;
-    });
+async function getIdentityAssertion(fingerprint) {
+  const {Cu} = SpecialPowers;
+  const rtcid = Cu.import('resource://gre/modules/media/IdpSandbox.jsm');
+  const sandbox = new rtcid.IdpSandbox('example.com', 'idp.js', window);
+  const idp = SpecialPowers.wrap(await sandbox.start());
+  const assertion = SpecialPowers.wrap(await
+      idp.generateAssertion(JSON.stringify({ fingerprint }),
+                            'https://example.com',
+                            {}));
+  const assertionString = btoa(JSON.stringify(assertion));
+  sandbox.stop();
+  return assertionString;
 }
 
 // This takes a real fingerprint and makes some extra bad ones.
-function makeFingerprints(algo, digest) {
-  var fingerprints = [];
-  fingerprints.push({ algorithm: algo, digest: digest });
+function makeFingerprints(algorithm, digest) {
+  const fingerprints = [];
+  fingerprints.push({ algorithm, digest });
   for (var i = 0; i < 3; ++i) {
     fingerprints.push({
-      algorithm: algo,
+      algorithm,
       digest: digest.replace(/:./g, ':' + i.toString(16))
     });
   }
   return fingerprints;
 }
 
-var fingerprintRegex = /^a=fingerprint:(\S+) (\S+)/m;
-var identityRegex = /^a=identity:(\S+)/m;
+const fingerprintRegex = /^a=fingerprint:(\S+) (\S+)/m;
+const identityRegex = /^a=identity:(\S+)/m;
 
 function fingerprintSdp(fingerprints) {
   return fingerprints.map(fp => 'a=fInGeRpRiNt:' + fp.algorithm +
@@ -50,73 +47,45 @@ function fingerprintSdp(fingerprints) {
 // Firefox only uses a single fingerprint.
 // That doesn't mean we have it create SDP that describes two.
 // This function synthesizes that SDP and tries to set it.
-function testMultipleFingerprints() {
+
+runNetworkTest(async () => {
   // this one fails setRemoteDescription if the identity is not good
-  var pcStrict = new RTCPeerConnection({ peerIdentity: 'someone@example.com'});
+  const pcStrict = new RTCPeerConnection({ peerIdentity: 'someone@example.com'});
   // this one will be manually tweaked to have two fingerprints
-  var pcDouble = new RTCPeerConnection({});
+  const pcDouble = new RTCPeerConnection({});
 
-  var offer, match, fingerprints;
+  const stream = await getUserMedia({ video: true });
+  ok(stream, 'Got test stream');
+  const [track] = stream.getTracks();
+  pcDouble.addTrack(track, stream);
+  try {
+    const offer = await pcDouble.createOffer();
+    ok(offer, 'Got offer');
+    const match = offer.sdp.match(fingerprintRegex);
+    if (!match) {
+      throw new Error('No fingerprint in offer SDP');
+    }
+    const fingerprints = makeFingerprints(match[1], match[2]);
+    const assertion = await getIdentityAssertion(fingerprints);
+    ok(assertion, 'Should have assertion');
 
-  var fail = msg =>
-      (e => ok(false, 'error in ' + msg + ': ' +
-               (e.message ? (e.message + '\n' + e.stack) : e)));
+    const sdp = offer.sdp.slice(0, match.index) +
+        'a=identity:' + assertion + '\n' +
+        fingerprintSdp(fingerprints.slice(1)) +
+        offer.sdp.slice(match.index);
 
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-      ok(stream, 'Got test stream');
-      pcDouble.addStream(stream);
-      return pcDouble.createOffer();
-    })
-    .then(o => {
-      offer = o;
-      ok(offer, 'Got offer');
-
-      match = offer.sdp.match(fingerprintRegex);
-      if (!match) {
-        throw new Error('No fingerprint in offer SDP');
-      }
-      fingerprints = makeFingerprints(match[1], match[2]);
-      return getIdentityAssertion(fingerprints);
-    })
-    .then(assertion => {
-      ok(assertion, 'Should have assertion');
-
-      var sdp = offer.sdp.slice(0, match.index) +
-          'a=identity:' + assertion + '\n' +
-          fingerprintSdp(fingerprints.slice(1)) +
-          offer.sdp.slice(match.index);
-
-      return pcStrict.setRemoteDescription({ type: 'offer', sdp });
-    })
-    .then(() => {
-      ok(true, 'Modified fingerprints were accepted');
-    }, error => {
-      var e = SpecialPowers.wrap(error);
-      ok(false, 'error in test: ' +
-         (e.message ? (e.message + '\n' + e.stack) : e));
-    })
-    .then(() => {
-      pcStrict.close();
-      pcDouble.close();
-      SimpleTest.finish();
-    });
-}
-
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({
-  set: [
-    [ 'media.peerconnection.identity.enabled', true ],
-    // Disable permission to skip prompt when on platforms the use loopback
-    // test devices (these would normally trigger a prompt).
-    [ 'media.navigator.permission.disabled', true ],
-    // Since this test doesn't include head.js or pc.js, we need to set the fake
-    // device pref manually. On platforms where loopback devices are used they
-    // should still take precedence, however on some platforms no prefs would
-    // be set and the test would fail.
-    [ 'media.navigator.streams.fake', true ]
-  ]
-}, testMultipleFingerprints);
+    await pcStrict.setRemoteDescription({ type: 'offer', sdp });
+    ok(true, 'Modified fingerprints were accepted');
+  } catch (error) {
+    const e = SpecialPowers.wrap(error);
+    ok(false, 'error in test: ' +
+       (e.message ? (e.message + '\n' + e.stack) : e));
+  }
+  pcStrict.close();
+  pcDouble.close();
+  track.stop();
+  networkTestFinished();
+});
 </script>
-  </body>
+</body>
 </html>

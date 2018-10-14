@@ -1156,6 +1156,10 @@ static void ToRTCIceCandidateStats(
     if (candidateType == RTCStatsType::Local_candidate) {
       cand.mMozLocalTransport.Construct(
           NS_ConvertASCIItoUTF16(candidate.local_addr.transport.c_str()));
+      if (RTCStatsIceCandidateType(candidate.type) == RTCStatsIceCandidateType::Relayed) {
+        cand.mRelayProtocol.Construct(
+            NS_ConvertASCIItoUTF16(candidate.local_addr.transport.c_str()));
+      }
     }
     report->mIceCandidateStats.Value().AppendElement(cand, fallible);
     if (candidate.trickled) {

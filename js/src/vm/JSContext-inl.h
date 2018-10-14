@@ -45,15 +45,15 @@ class ContextChecks
      * realm/compartment/zone mismatches.
      */
     static void fail(JS::Realm* r1, JS::Realm* r2, int argIndex) {
-        MOZ_CRASH_UNSAFE_PRINTF("*** Realm mismatch %p vs. %p at argument %d\n",
+        MOZ_CRASH_UNSAFE_PRINTF("*** Realm mismatch %p vs. %p at argument %d",
                                 r1, r2, argIndex);
     }
     static void fail(JS::Compartment* c1, JS::Compartment* c2, int argIndex) {
-        MOZ_CRASH_UNSAFE_PRINTF("*** Compartment mismatch %p vs. %p at argument %d\n",
+        MOZ_CRASH_UNSAFE_PRINTF("*** Compartment mismatch %p vs. %p at argument %d",
                                 c1, c2, argIndex);
     }
     static void fail(JS::Zone* z1, JS::Zone* z2, int argIndex) {
-        MOZ_CRASH_UNSAFE_PRINTF("*** Zone mismatch %p vs. %p at argument %d\n",
+        MOZ_CRASH_UNSAFE_PRINTF("*** Zone mismatch %p vs. %p at argument %d",
                                 z1, z2, argIndex);
     }
 
@@ -94,7 +94,7 @@ class ContextChecks
         // zone, see JS_MarkCrossZoneId.
         if (zone()) {
             if (!cx->runtime()->gc.atomMarking.atomIsMarked(zone(), thing)) {
-                MOZ_CRASH_UNSAFE_PRINTF("*** Atom not marked for zone %p at argument %d\n",
+                MOZ_CRASH_UNSAFE_PRINTF("*** Atom not marked for zone %p at argument %d",
                                         zone(), argIndex);
             }
         }
