@@ -2316,11 +2316,7 @@ History::RegisterVisitedCallback(nsIURI* aURI,
                "Already tracking this Link object!");
 
   // Start tracking our Link.
-  if (!observers.AppendElement(aLink)) {
-    // Curses - unregister and return failure.
-    (void)UnregisterVisitedCallback(aURI, aLink);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  observers.AppendElement(aLink);
 
   // If this link has already been visited, we cannot synchronously mark
   // ourselves as visited, so instead we fire a runnable into our docgroup,
