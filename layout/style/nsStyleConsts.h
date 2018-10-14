@@ -806,6 +806,7 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_TEXT_TRANSFORM_LOWERCASE       2
 #define NS_STYLE_TEXT_TRANSFORM_UPPERCASE       3
 #define NS_STYLE_TEXT_TRANSFORM_FULL_WIDTH      4
+#define NS_STYLE_TEXT_TRANSFORM_FULL_SIZE_KANA  5
 
 // See nsStyleDisplay
 #define NS_STYLE_TOUCH_ACTION_NONE            (1 << 0)

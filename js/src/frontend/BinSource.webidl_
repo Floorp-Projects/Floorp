@@ -4,6 +4,7 @@ typedef FrozenArray<(SpreadElement or Expression)> Arguments;
 typedef DOMString string;
 typedef string Identifier;
 typedef string IdentifierName;
+typedef string PropertyKey;
 typedef string Label;
 
 enum VariableDeclarationKind {

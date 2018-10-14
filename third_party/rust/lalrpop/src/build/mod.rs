@@ -16,6 +16,7 @@ use session::{ColorConfig, Session};
 use term;
 use tls::Tls;
 use tok;
+use sha2::{Sha256, Digest};
 
 use std::fs;
 use std::io::{self, BufRead, Write};
@@ -35,6 +36,17 @@ const LALRPOP_VERSION_HEADER: &'static str = concat!(
     env!("CARGO_PKG_VERSION"),
     "\""
 );
+
+fn hash_file(file: &Path) -> io::Result<String> {
+    let mut file = try!(fs::File::open(&file));
+    let hash = try!(Sha256::digest_reader(&mut file));
+
+    let mut hash_str = "// sha256: ".to_owned();
+    for byte in hash {
+        hash_str.push_str(&format!("{:x}", byte));
+    }
+    Ok(hash_str)
+}
 
 pub fn process_dir<P: AsRef<Path>>(session: Rc<Session>, root_dir: P) -> io::Result<()> {
     let lalrpop_files = try!(lalrpop_files(root_dir));
@@ -117,6 +129,7 @@ fn process_file_into(
             let buffer = try!(emit_recursive_ascent(&session, &grammar, &report_file));
             let mut output_file = try!(fs::File::create(&rs_file));
             try!(writeln!(output_file, "{}", LALRPOP_VERSION_HEADER));
+            try!(writeln!(output_file, "{}", try!(hash_file(&lalrpop_file))));
             try!(output_file.write_all(&buffer));
         }
 
@@ -139,53 +152,23 @@ fn remove_old_file(rs_file: &Path) -> io::Result<()> {
 }
 
 fn needs_rebuild(lalrpop_file: &Path, rs_file: &Path) -> io::Result<bool> {
-    return match fs::metadata(&rs_file) {
-        Ok(rs_metadata) => {
-            let lalrpop_metadata = try!(fs::metadata(&lalrpop_file));
-            if compare_modification_times(&lalrpop_metadata, &rs_metadata) {
-                return Ok(true);
-            }
+    match fs::File::open(&rs_file) {
+        Ok(rs_file) => {
+            let mut version_str = String::new();
+            let mut hash_str = String::new();
 
-            compare_lalrpop_version(rs_file)
+            let mut f = io::BufReader::new(rs_file);
+
+            try!(f.read_line(&mut version_str));
+            try!(f.read_line(&mut hash_str));
+
+            Ok(hash_str.trim() != try!(hash_file(&lalrpop_file)) 
+               || version_str.trim() != LALRPOP_VERSION_HEADER)
         }
         Err(e) => match e.kind() {
             io::ErrorKind::NotFound => Ok(true),
             _ => Err(e),
         },
-    };
-
-    #[cfg(unix)]
-    fn compare_modification_times(
-        lalrpop_metadata: &fs::Metadata,
-        rs_metadata: &fs::Metadata,
-    ) -> bool {
-        use std::os::unix::fs::MetadataExt;
-        lalrpop_metadata.mtime() >= rs_metadata.mtime()
-    }
-
-    #[cfg(windows)]
-    fn compare_modification_times(
-        lalrpop_metadata: &fs::Metadata,
-        rs_metadata: &fs::Metadata,
-    ) -> bool {
-        use std::os::windows::fs::MetadataExt;
-        lalrpop_metadata.last_write_time() >= rs_metadata.last_write_time()
-    }
-
-    #[cfg(not(any(unix, windows)))]
-    fn compare_modification_times(
-        lalrpop_metadata: &fs::Metadata,
-        rs_metadata: &fs::Metadata,
-    ) -> bool {
-        true
-    }
-
-    fn compare_lalrpop_version(rs_file: &Path) -> io::Result<bool> {
-        let mut input_str = String::new();
-        let mut f = io::BufReader::new(try!(fs::File::open(&rs_file)));
-        try!(f.read_line(&mut input_str));
-
-        Ok(input_str.trim() != LALRPOP_VERSION_HEADER)
     }
 }
 
@@ -325,7 +308,7 @@ fn report_content(content: &Content) -> term::Result<()> {
     let try_colors = match Tls::session().color_config {
         ColorConfig::Yes => true,
         ColorConfig::No => false,
-        ColorConfig::IfTty => atty::is(),
+        ColorConfig::IfTty => atty::is(atty::Stream::Stdout),
     };
 
     if try_colors {

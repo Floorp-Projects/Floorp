@@ -639,6 +639,38 @@ impl Gl for GlesFns {
         }
     }
 
+    fn tex_storage_2d(&self,
+                      target: GLenum,
+                      levels: GLint,
+                      internal_format: GLenum,
+                      width: GLsizei,
+                      height: GLsizei) {
+        unsafe {
+            self.ffi_gl_.TexStorage2D(target,
+                                      levels,
+                                      internal_format,
+                                      width,
+                                      height);
+        }
+    }
+
+    fn tex_storage_3d(&self,
+                      target: GLenum,
+                      levels: GLint,
+                      internal_format: GLenum,
+                      width: GLsizei,
+                      height: GLsizei,
+                      depth: GLsizei) {
+        unsafe {
+            self.ffi_gl_.TexStorage3D(target,
+                                      levels,
+                                      internal_format,
+                                      width,
+                                      height,
+                                      depth);
+        }
+    }
+
     #[allow(unused_variables)]
     fn get_tex_image_into_buffer(&self,
                                  target: GLenum,
@@ -647,6 +679,38 @@ impl Gl for GlesFns {
                                  ty: GLenum,
                                  output: &mut [u8]) {
         panic!("not supported");
+    }
+
+    fn invalidate_framebuffer(&self,
+                              target: GLenum,
+                              attachments: &[GLenum]) {
+        unsafe {
+            self.ffi_gl_.InvalidateFramebuffer(
+                target,
+                attachments.len() as GLsizei,
+                attachments.as_ptr(),
+            );
+        }
+    }
+
+    fn invalidate_sub_framebuffer(&self,
+                                  target: GLenum,
+                                  attachments: &[GLenum],
+                                  xoffset: GLint,
+                                  yoffset: GLint,
+                                  width: GLsizei,
+                                  height: GLsizei) {
+        unsafe {
+            self.ffi_gl_.InvalidateSubFramebuffer(
+                target,
+                attachments.len() as GLsizei,
+                attachments.as_ptr(),
+                xoffset,
+                yoffset,
+                width,
+                height,
+            );
+        }
     }
 
     #[inline]
