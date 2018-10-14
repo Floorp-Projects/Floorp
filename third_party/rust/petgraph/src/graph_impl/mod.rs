@@ -2020,11 +2020,16 @@ impl<'a, E, Ix> ExactSizeIterator for EdgeReferences<'a, E, Ix>
 pub mod stable_graph;
 mod frozen;
 
-/// `Frozen` only allows shared access (read-only) to the
+/// `Frozen` is a graph wrapper.
+///
+/// The `Frozen` only allows shared access (read-only) to the
 /// underlying graph `G`, but it allows mutable access to its
 /// node and edge weights.
 ///
 /// This is used to ensure immutability of the graph's structure
-/// while permitting weights to change.
+/// while permitting weights to be both read and written.
+///
+/// See indexing implementations and the traits `Data` and `DataMap`
+/// for read-write access to the graph's weights.
 pub struct Frozen<'a, G: 'a>(&'a mut G);
 

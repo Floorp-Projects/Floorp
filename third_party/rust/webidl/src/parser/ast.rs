@@ -134,8 +134,9 @@ pub enum ConstType {
 pub enum ConstValue {
     BooleanLiteral(bool),
     FloatLiteral(f64),
-    IntegerLiteral(i64),
     Null,
+    SignedIntegerLiteral(i64),
+    UnsignedIntegerLiteral(u64),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -396,9 +397,10 @@ pub enum Other {
 
     FloatLiteral(f64),
     Identifier(Identifier),
-    IntegerLiteral(i64),
     OtherLiteral(char),
+    SignedIntegerLiteral(i64),
     StringLiteral(String),
+    UnsignedIntegerLiteral(u64),
 
     Colon,
     Ellipsis,
@@ -611,25 +613,23 @@ mod test {
 
     #[test]
     fn test_flatten_asts() {
-        let ast1 = vec![
-            Definition::Interface(Interface::NonPartial(NonPartialInterface {
+        let ast1 = vec![Definition::Interface(Interface::NonPartial(
+            NonPartialInterface {
                 extended_attributes: vec![],
                 inherits: None,
                 members: vec![],
                 name: "Node".to_string(),
-            })),
-        ];
-        let ast2 = vec![
-            Definition::Typedef(Typedef {
+            },
+        ))];
+        let ast2 = vec![Definition::Typedef(Typedef {
+            extended_attributes: vec![],
+            name: "Typedef".to_string(),
+            type_: Box::new(Type {
                 extended_attributes: vec![],
-                name: "Typedef".to_string(),
-                type_: Box::new(Type {
-                    extended_attributes: vec![],
-                    kind: TypeKind::Any,
-                    nullable: false,
-                }),
+                kind: TypeKind::Any,
+                nullable: false,
             }),
-        ];
+        })];
 
         assert_eq!(
             flatten_asts(vec![ast1.clone(), ast2.clone()]),

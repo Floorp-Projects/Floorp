@@ -10,6 +10,8 @@
 //! - [`GraphMap`](./graphmap/struct.GraphMap.html) is an adjacency list graph
 //! which is backed by a hash table and the node identifiers are the keys
 //! into the table.
+//! - [`CSR`](./csr/struct.Csr.html) is a sparse adjacency matrix graph with
+//! arbitrary associated data.
 //!
 //! Optional crate feature: `"serde-1"`, see the Readme for more information.
 //!

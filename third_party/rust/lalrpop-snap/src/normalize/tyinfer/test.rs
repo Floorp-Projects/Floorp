@@ -236,7 +236,7 @@ grammar;
         vec![
             (
                 "Z",
-                "__lalrpop_util::ParseError<usize, Token<'input>, &'static str>",
+                "__lalrpop_util::ErrorRecovery<usize, Token<'input>, &'static str>",
             ),
         ],
     )

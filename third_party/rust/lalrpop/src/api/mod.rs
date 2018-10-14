@@ -76,6 +76,20 @@ impl Configuration {
         self
     }
 
+    /// Write output files in the same directory of the input files.
+    ///
+    /// If this option is enabled, you have to load the parser as a module:
+    ///
+    /// ```no_run
+    /// mod parser; // synthesized from parser.lalrpop
+    /// ```
+    ///
+    /// This was the default behaviour up to version 0.15.
+    pub fn generate_in_source_tree(&mut self) -> &mut Self {
+        self.set_in_dir(Path::new("."))
+            .set_out_dir(Path::new("."))
+    }
+
     /// If true, always convert `.lalrpop` files into `.rs` files, even if the
     /// `.rs` file is newer. Default is false.
     pub fn force_build(&mut self, val: bool) -> &mut Configuration {
@@ -149,7 +163,25 @@ impl Configuration {
 
     /// Process all `.lalrpop` files in `path`.
     pub fn process_dir<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<Error>> {
-        let session = Rc::new(self.session.clone());
+        let mut session = self.session.clone();
+
+        // If in/out dir are empty, use cargo conventions by default.
+        // See https://github.com/lalrpop/lalrpop/issues/280
+        if session.in_dir.is_none() {
+            let mut in_dir = try!(env::current_dir());
+            in_dir.push("src");
+            session.in_dir = Some(in_dir);
+        }
+
+        if session.out_dir.is_none() {
+            let out_dir = match env::var_os("OUT_DIR") {
+                Some(var) => var,
+                None => return Err("missing OUT_DIR variable")?,
+            };
+            session.out_dir = Some(PathBuf::from(out_dir));
+        }
+
+        let session = Rc::new(session);
         try!(build::process_dir(session, path));
         Ok(())
     }
