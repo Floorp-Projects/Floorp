@@ -105,6 +105,7 @@ function testError() {
 function testRedirect() {
   var res = Response.redirect("./redirect.response");
   is(res.status, 302, "Default redirect has status code 302");
+  is(res.statusText, "", "Default redirect has status text empty");
   var h = res.headers.get("location");
   ok(h === (new URL("./redirect.response", self.location.href)).href, "Location header should be correct absolute URL");
   try {
