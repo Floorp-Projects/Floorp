@@ -277,6 +277,12 @@ button.warning {
   display: none;
 }
 
+#list-view-heading {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  margin-inline-start: 28px;
+}
+
 /*** discover view ***/
 
 .discover-spacer-before,
