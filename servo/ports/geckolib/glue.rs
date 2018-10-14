@@ -102,7 +102,7 @@ use style::gecko_bindings::structs::OriginFlags_Author;
 use style::gecko_bindings::structs::OriginFlags_User;
 use style::gecko_bindings::structs::OriginFlags_UserAgent;
 use style::gecko_bindings::structs::RawGeckoGfxMatrix4x4;
-use style::gecko_bindings::structs::RawGeckoPresContextOwned;
+use style::gecko_bindings::structs::RawGeckoPresContextBorrowed;
 use style::gecko_bindings::structs::RawServoFontFaceRule;
 use style::gecko_bindings::structs::RawServoSelectorList;
 use style::gecko_bindings::structs::RawServoSourceSizeList;
@@ -3355,7 +3355,7 @@ pub extern "C" fn Servo_ComputedValues_GetStyleRuleList(
 /// device alive).
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_Init(
-    pres_context: RawGeckoPresContextOwned,
+    pres_context: RawGeckoPresContextBorrowed,
 ) -> *mut RawServoStyleSet {
     let data = Box::new(PerDocumentStyleData::new(pres_context));
     Box::into_raw(data) as *mut RawServoStyleSet
