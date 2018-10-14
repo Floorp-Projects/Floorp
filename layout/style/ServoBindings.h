@@ -689,9 +689,7 @@ void Gecko_AnnotateCrashReport(uint32_t key, const char* value_str);
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
-#define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
 #include "mozilla/ServoBindingList.h"
-#undef SERVO_BINDING_FUNC
 
 bool Gecko_ErrorReportingEnabled(const mozilla::StyleSheet* sheet,
                                  const mozilla::css::Loader* loader);
