@@ -2675,13 +2675,12 @@ WrapSeparatorTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 // one, return an empty Maybe.
 // The returned clip rect, if there is one, is relative to |aMaskedFrame|.
 static Maybe<nsRect>
-ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame,
-                       bool aHandleOpacity)
+ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame)
 {
   const nsStyleSVGReset* svgReset = aMaskedFrame->StyleSVGReset();
 
   nsSVGUtils::MaskUsage maskUsage;
-  nsSVGUtils::DetermineMaskUsage(aMaskedFrame, aHandleOpacity, maskUsage);
+  nsSVGUtils::DetermineMaskUsage(aMaskedFrame, false, maskUsage);
 
   nsPoint offsetToUserSpace = nsLayoutUtils::ComputeOffsetToUserSpace(aBuilder, aMaskedFrame);
   int32_t devPixelRatio = aMaskedFrame->PresContext()->AppUnitsPerDevPixel();
@@ -2935,16 +2934,18 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
   }
 
+  // We build an opacity item if it's not going to be drawn by SVG content.
+  // We could in principle skip creating an nsDisplayOpacity item if
+  // nsDisplayOpacity::NeedsActiveLayer returns false and usingSVGEffects is
+  // true (the nsDisplayFilter/nsDisplayMasksAndClipPaths could handle the
+  // opacity). Since SVG has perf issues where we sometimes spend a lot of
+  // time creating display list items that might be helpful.  We'd need to
+  // restore our mechanism to do that (changed in bug 1482403), and we'd
+  // need to invalidate the frame if the value that would be return from
+  // NeedsActiveLayer was to change, which we don't currently do.
+  bool useOpacity =
+    HasVisualOpacity(effectSet) && !nsSVGUtils::CanOptimizeOpacity(this);
 
-  bool needsActiveOpacityLayer = false;
-  // We build an opacity item if it's not going to be drawn by SVG content, or
-  // SVG effects. SVG effects won't handle the opacity if we want an active
-  // layer (for async animations), see
-  // nsSVGIntegrationsUtils::PaintMaskAndClipPath or
-  // nsSVGIntegrationsUtils::PaintFilter.
-  bool useOpacity = HasVisualOpacity(effectSet) &&
-                    !nsSVGUtils::CanOptimizeOpacity(this) &&
-                    ((needsActiveOpacityLayer = nsDisplayOpacity::NeedsActiveLayer(aBuilder, this)) || !usingSVGEffects);
   bool useBlendMode = effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   bool useStickyPosition = disp->mPosition == NS_STYLE_POSITION_STICKY &&
     IsScrollFrameActive(aBuilder,
@@ -3016,7 +3017,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   Maybe<nsRect> clipForMask;
   if (usingMask) {
-    clipForMask = ComputeClipForMaskItem(aBuilder, this, !useOpacity);
+    clipForMask = ComputeClipForMaskItem(aBuilder, this);
   }
 
   nsDisplayListCollection set(aBuilder);
@@ -3195,15 +3196,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     // Skip all filter effects while generating glyph mask.
     if (usingFilter && !aBuilder->IsForGenerateGlyphMask()) {
-      // If we are going to create a mask display item, handle opacity effect
-      // in that mask display item; Otherwise, take care of opacity in this
-      // filter display item.
-      bool handleOpacity = !usingMask && !useOpacity;
-
       /* List now emptied, so add the new list to the top. */
-      resultList.AppendToTop(
-        MakeDisplayItem<nsDisplayFilters>(aBuilder, this, &resultList,
-                                          handleOpacity));
+      resultList.AppendToTop(MakeDisplayItem<nsDisplayFilters>(
+        aBuilder, this, &resultList));
     }
 
     if (usingMask) {
@@ -3221,9 +3216,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                         ? aBuilder->CurrentActiveScrolledRoot()
                                         : containerItemASR;
       /* List now emptied, so add the new list to the top. */
-      resultList.AppendToTop(
-        MakeDisplayItem<nsDisplayMasksAndClipPaths>(aBuilder, this, &resultList,
-                                                    !useOpacity, maskASR));
+      resultList.AppendToTop(MakeDisplayItem<nsDisplayMasksAndClipPaths>(
+        aBuilder, this, &resultList, maskASR));
     }
 
     // Also add the hoisted scroll info items. We need those for APZ scrolling
@@ -3243,6 +3237,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // The clip we would set on an element with opacity would clip
     // all descendant content, but some should not be clipped.
     DisplayListClipState::AutoSaveRestore opacityClipState(aBuilder);
+    const bool needsActiveOpacityLayer =
+      nsDisplayOpacity::NeedsActiveLayer(aBuilder, this);
+
     resultList.AppendToTop(
       MakeDisplayItem<nsDisplayOpacity>(aBuilder, this, &resultList,
                                         containerItemASR,
