@@ -13,8 +13,6 @@
 #include "mozilla/TypeTraits.h"
 #include "MainThreadUtils.h"
 
-void AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
-
 namespace mozilla {
 
 // Defined in GeckoBindings.cpp.
