@@ -11,61 +11,38 @@
 
 #include <stdint.h>
 
-#include "mozilla/AtomArray.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/ServoComputedDataInlines.h"
-#include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/css/DocumentMatchingFunction.h"
 #include "mozilla/css/SheetLoadData.h"
-#include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
-#include "nsChangeHint.h"
-#include "nsIDocument.h"
+#include "nsCSSValue.h"
+#include "nsStyleStruct.h"
 
 class nsAtom;
-class nsIPrincipal;
 class nsIURI;
-struct nsFont;
-namespace mozilla {
-  class FontFamilyList;
-  struct FontFamilyName;
-  enum FontFamilyType : uint8_t;
-  class SharedFontList;
-  enum class CSSPseudoElementType : uint8_t;
-  struct Keyframe;
-  struct StyleTransition;
-  namespace css {
-    class ErrorReporter;
-    struct URLValue;
-    class LoaderReusableStyleSheets;
-  };
-  namespace dom {
-    enum class IterationCompositeOperation : uint8_t;
-  };
-  enum class UpdateAnimationsTasks : uint8_t;
-  struct LangGroupFontPrefs;
-  class SeenPtrs;
-  class ComputedStyle;
-  class StyleSheet;
-  class ServoElementSnapshotTable;
-  enum class PointerCapabilities : uint8_t;
-}
-using mozilla::FontFamilyList;
-using mozilla::FontFamilyName;
-using mozilla::FontFamilyType;
-using mozilla::ServoElementSnapshot;
-using mozilla::SharedFontList;
-struct nsMediaFeature;
 class nsSimpleContentList;
-struct nsStyleList;
-struct nsStyleImage;
-struct nsStyleGradientStop;
-class nsStyleGradient;
-class nsStyleCoord;
-struct nsStyleDisplay;
-class nsXBLBinding;
+struct nsFont;
+
+namespace mozilla {
+  class ComputedStyle;
+  class SeenPtrs;
+  class ServoElementSnapshot;
+  class ServoElementSnapshotTable;
+  class SharedFontList;
+  class StyleSheet;
+  enum class CSSPseudoElementType : uint8_t;
+  enum class PointerCapabilities : uint8_t;
+  enum class UpdateAnimationsTasks : uint8_t;
+  struct FontFamilyName;
+  struct Keyframe;
+  struct LangGroupFontPrefs;
+
+  namespace css {
+    class LoaderReusableStyleSheets;
+  }
+}
 
 #ifdef NIGHTLY_BUILD
 const bool GECKO_IS_NIGHTLY = true;
@@ -120,7 +97,7 @@ struct FontSizePrefs
 
 // Debugging stuff.
 void Gecko_Element_DebugListAttributes(RawGeckoElementBorrowed, nsCString*);
-void Gecko_Snapshot_DebugListAttributes(const ServoElementSnapshot*, nsCString*);
+void Gecko_Snapshot_DebugListAttributes(const mozilla::ServoElementSnapshot*, nsCString*);
 
 bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node, bool whitespace_is_significant);
 RawGeckoNodeBorrowedOrNull Gecko_GetLastChild(RawGeckoNodeBorrowed node);
@@ -202,7 +179,7 @@ const nsAttrValue* Gecko_GetSVGAnimatedClass(RawGeckoElementBorrowed);
 
 SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_, RawGeckoElementBorrowed)
 SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,
-                                              const ServoElementSnapshot*)
+                                              const mozilla::ServoElementSnapshot*)
 
 #undef SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS
 
@@ -277,12 +254,12 @@ void Gecko_ReleaseAtom(nsAtom* aAtom);
 
 // Font style
 void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src);
-void Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<FontFamilyName>* aNames, nsAtom* aName, bool aQuoted);
-void Gecko_nsTArray_FontFamilyName_AppendGeneric(nsTArray<FontFamilyName>* aNames, FontFamilyType aType);
+void Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<mozilla::FontFamilyName>* aNames, nsAtom* aName, bool aQuoted);
+void Gecko_nsTArray_FontFamilyName_AppendGeneric(nsTArray<mozilla::FontFamilyName>* aNames, mozilla::FontFamilyType aType);
 // Returns an already-AddRefed SharedFontList with an empty mNames array.
-SharedFontList* Gecko_SharedFontList_Create();
-size_t Gecko_SharedFontList_SizeOfIncludingThis(SharedFontList* fontlist);
-size_t Gecko_SharedFontList_SizeOfIncludingThisIfUnshared(SharedFontList* fontlist);
+mozilla::SharedFontList* Gecko_SharedFontList_Create();
+size_t Gecko_SharedFontList_SizeOfIncludingThis(mozilla::SharedFontList* fontlist);
+size_t Gecko_SharedFontList_SizeOfIncludingThisIfUnshared(mozilla::SharedFontList* fontlist);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::SharedFontList, SharedFontList);
 // will not run destructors on dst, give it uninitialized memory
 // font_id is LookAndFeel::FontID
