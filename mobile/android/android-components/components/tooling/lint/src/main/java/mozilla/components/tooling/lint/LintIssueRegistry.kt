@@ -12,5 +12,6 @@ import com.android.tools.lint.detector.api.Issue
  */
 @Suppress("unused")
 class LintIssueRegistry : IssueRegistry() {
+    override val api: Int = com.android.tools.lint.detector.api.CURRENT_API
     override val issues: List<Issue> = LintLogChecks.issues
 }
