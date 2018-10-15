@@ -2328,7 +2328,7 @@ Toolbox.prototype = {
   onSelectFrame: function(frameId) {
     // Send packet to the backend to select specified frame and
     // wait for 'frameUpdate' event packet to update the UI.
-    this.target.activeTab.switchToFrame(frameId);
+    this.target.activeTab.switchToFrame({ windowId: frameId });
   },
 
   /**

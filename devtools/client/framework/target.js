@@ -741,7 +741,11 @@ TabTarget.prototype = {
           // it. We just need to detach from the tab, if already attached.
           // |detach| may fail if the connection is already dead, so proceed with
           // cleanup directly after this.
-          this.activeTab.detach();
+          try {
+            await this.activeTab.detach();
+          } catch (e) {
+            console.warn(`Error while detaching target: ${e.message}`);
+          }
           cleanupAndResolve();
         } else {
           cleanupAndResolve();
