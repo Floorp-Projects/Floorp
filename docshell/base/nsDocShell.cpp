@@ -946,8 +946,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-        MOZ_ASSERT(false, "LoadURI: System principal required.");
-        triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+      triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
     }
   }
 
@@ -4206,7 +4205,6 @@ nsDocShell::LoadURI(const nsAString& aURI,
                     nsIInputStream* aHeaderStream,
                     nsIPrincipal* aTriggeringPrincipal)
 {
-  MOZ_ASSERT(aTriggeringPrincipal, "LoadURI: Need a valid triggeringPrincipal");
   return LoadURIWithOptions(aURI, aLoadFlags, aReferringURI,
                             RP_Unset, aPostStream,
                             aHeaderStream, nullptr, aTriggeringPrincipal);
@@ -4241,9 +4239,6 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI,
   // Eliminate embedded newlines, which single-line text fields now allow:
   uriString.StripCRLF();
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
-
-  MOZ_ASSERT(aTriggeringPrincipal, "LoadURIWithOptions: Need a valid triggeringPrincipal");
-
 
   rv = NS_NewURI(getter_AddRefs(uri), uriString);
   if (uri) {
@@ -9137,7 +9132,6 @@ public:
     , mSourceDocShell(aSourceDocShell)
     , mBaseURI(aBaseURI)
   {
-    MOZ_ASSERT(mTriggeringPrincipal, "InternalLoadEvent: Should always have a principal here");
     // Make sure to keep null things null as needed
     if (aTypeHint) {
       mTypeHint = aTypeHint;
@@ -13227,7 +13221,6 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
                         bool aIsTrusted,
                         nsIPrincipal* aTriggeringPrincipal)
 {
-  MOZ_ASSERT(aTriggeringPrincipal, "Need a valid triggeringPrincipal");
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
   if (!IsNavigationAllowed() || !IsOKToLoadURI(aURI)) {
