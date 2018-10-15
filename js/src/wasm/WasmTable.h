@@ -28,6 +28,17 @@ namespace wasm {
 // A Table is an indexable array of opaque values. Tables are first-class
 // stateful objects exposed to WebAssembly. asm.js also uses Tables to represent
 // its homogeneous function-pointer tables.
+//
+// A table of AnyFunction holds either ExternalTableElems, which are
+// (instance*,index) pairs, where the instance must be traced, or raw code
+// pointers which need not be traced.
+//
+// A table of AnyRef holds JSObject pointers, which must be traced.
+//
+// `external_` is true only for a table of AnyFunction with ExternalTableElems.
+// To distinguish other cases, look at `kind_`.
+
+typedef GCVector<JS::Heap<JSObject*>, 0, SystemAllocPolicy> TableAnyRefVector;
 
 class Table : public ShareableBase<Table>
 {
@@ -38,7 +49,8 @@ class Table : public ShareableBase<Table>
 
     ReadBarrieredWasmTableObject maybeObject_;
     InstanceSet                  observers_;
-    UniqueByteArray              array_;
+    UniqueByteArray              array_;     // either array_ has data
+    TableAnyRefVector            objects_;   //   or objects_, but not both
     const TableKind              kind_;
     uint32_t                     length_;
     const Maybe<uint32_t>        maximum_;
@@ -47,6 +59,8 @@ class Table : public ShareableBase<Table>
     template <class> friend struct js::MallocProvider;
     Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
           UniqueByteArray array);
+    Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
+          TableAnyRefVector&& objects);
 
     void tracePrivate(JSTracer* trc);
     friend class js::WasmTableObject;
@@ -57,16 +71,31 @@ class Table : public ShareableBase<Table>
     void trace(JSTracer* trc);
 
     bool external() const { return external_; }
+    TableKind kind() const { return kind_; }
     bool isTypedFunction() const { return kind_ == TableKind::TypedFunction; }
     uint32_t length() const { return length_; }
     Maybe<uint32_t> maximum() const { return maximum_; }
-    uint8_t* base() const { return array_.get(); }
 
-    // All table updates must go through set() or setNull().
+    // Only for function values.  Raw pointer to the table.
+    uint8_t* functionBase() const;
 
+    // Only for non-external function values
     void** internalArray() const;
+
+    // Only for external function values
     ExternalTableElem* externalArray() const;
-    void set(uint32_t index, void* code, const Instance* instance);
+
+    // Only for non-function values
+    TableAnyRefVector& objectArray();
+
+    const TableAnyRefVector& objectArray() const;
+
+    // All table updates must go through setAnyFunc(), setAnyRef(), or setNull().
+    // setAnyFunc is allowed only on table-of-anyfunc.
+    // setAnyRef is allowed only on table-of-anyref.
+
+    void setAnyFunc(uint32_t index, void* code, const Instance* instance);
+    void setAnyRef(uint32_t index, HandleObject obj);
     void setNull(uint32_t index);
 
     // Copy entry at |srcIndex| to |dstIndex|.  Used by table.copy.

@@ -4438,17 +4438,32 @@ ParseGlobalType(WasmParseContext& c, AstValType* type, bool* isMutable)
 }
 
 static bool
-ParseElemType(WasmParseContext& c)
+ParseElemType(WasmParseContext& c, TableKind* tableKind)
 {
-    // Only AnyFunc is allowed at the moment.
-    return c.ts.match(WasmToken::AnyFunc, c.error);
+    WasmToken token;
+    if (c.ts.getIf(WasmToken::AnyFunc, &token)) {
+        *tableKind = TableKind::AnyFunction;
+        return true;
+    }
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+    if (c.ts.getIf(WasmToken::ValueType, &token) &&
+        token.valueType() == ValType::AnyRef)
+    {
+        *tableKind = TableKind::AnyRef;
+        return true;
+    }
+    c.ts.generateError(token, "'anyfunc' or 'anyref' required", c.error);
+#else
+    c.ts.generateError(token, "'anyfunc' required", c.error);
+#endif
+    return false;
 }
 
 static bool
-ParseTableSig(WasmParseContext& c, Limits* table)
+ParseTableSig(WasmParseContext& c, Limits* table, TableKind* tableKind)
 {
     return ParseLimits(c, table, Shareable::False) &&
-           ParseElemType(c);
+           ParseElemType(c, tableKind);
 }
 
 static AstImport*
@@ -4489,15 +4504,17 @@ ParseImport(WasmParseContext& c, AstModule* module)
                 name = c.ts.getIfName();
             }
 
+            TableKind tableKind;
             Limits table;
-            if (!ParseTableSig(c, &table)) {
+            if (!ParseTableSig(c, &table, &tableKind)) {
                 return nullptr;
             }
             if (!c.ts.match(WasmToken::CloseParen, c.error)) {
                 return nullptr;
             }
+
             return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
-                                         DefinitionKind::Table, table);
+                                         table, tableKind);
         }
         if (c.ts.getIf(WasmToken::Global)) {
             if (name.empty()) {
@@ -4657,13 +4674,14 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
                 return false;
             }
 
+            TableKind tableKind;
             Limits table;
-            if (!ParseTableSig(c, &table)) {
+            if (!ParseTableSig(c, &table, &tableKind)) {
                 return false;
             }
 
             auto* import = new(c.lifo) AstImport(name, names.module.text(), names.field.text(),
-                                                 DefinitionKind::Table, table);
+                                                 table, tableKind);
 
             return import && module->append(import);
         }
@@ -4684,15 +4702,17 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
 
     // Either: min max? anyfunc
     if (c.ts.peek().kind() == WasmToken::Index) {
+        TableKind tableKind;
         Limits table;
-        if (!ParseTableSig(c, &table)) {
+        if (!ParseTableSig(c, &table, &tableKind)) {
             return false;
         }
-        return module->addTable(name, table);
+        return module->addTable(name, table, tableKind);
     }
 
     // Or: anyfunc (elem 1 2 ...)
-    if (!ParseElemType(c)) {
+    TableKind tableKind;
+    if (!ParseElemType(c, &tableKind)) {
         return false;
     }
 
@@ -4721,7 +4741,9 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         return false;
     }
 
-    if (!module->addTable(name, Limits(numElements, Some(numElements), Shareable::False))) {
+    if (!module->addTable(name, Limits(numElements, Some(numElements), Shareable::False),
+                          tableKind))
+    {
         return false;
     }
 
@@ -5778,7 +5800,7 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
         }
     }
 
-    for (const AstResizable& table : module->tables()) {
+    for (const AstTable& table : module->tables()) {
         if (table.imported) {
             continue;
         }
@@ -5787,7 +5809,7 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
         }
     }
 
-    for (const AstResizable& memory : module->memories()) {
+    for (const AstMemory& memory : module->memories()) {
         if (memory.imported) {
             continue;
         }
@@ -6670,10 +6692,21 @@ EncodeLimits(Encoder& e, const Limits& limits)
 }
 
 static bool
-EncodeTableLimits(Encoder& e, const Limits& limits)
+EncodeTableLimits(Encoder& e, const Limits& limits, TableKind tableKind)
 {
-    if (!e.writeVarU32(uint32_t(TypeCode::AnyFunc))) {
-        return false;
+    switch (tableKind) {
+      case TableKind::AnyFunction:
+        if (!e.writeVarU32(uint32_t(TypeCode::AnyFunc))) {
+            return false;
+        }
+        break;
+      case TableKind::AnyRef:
+        if (!e.writeVarU32(uint32_t(TypeCode::AnyRef))) {
+            return false;
+        }
+        break;
+      default:
+        MOZ_CRASH("Unexpected table kind");
     }
 
     return EncodeLimits(e, limits);
@@ -6714,7 +6747,7 @@ EncodeImport(Encoder& e, AstImport& imp)
         }
         break;
       case DefinitionKind::Table:
-        if (!EncodeTableLimits(e, imp.limits())) {
+        if (!EncodeTableLimits(e, imp.limits(), imp.tableKind())) {
             return false;
         }
         break;
@@ -6758,7 +6791,7 @@ static bool
 EncodeMemorySection(Encoder& e, AstModule& module)
 {
     size_t numOwnMemories = 0;
-    for (const AstResizable& memory : module.memories()) {
+    for (const AstMemory& memory : module.memories()) {
         if (!memory.imported) {
             numOwnMemories++;
         }
@@ -6777,7 +6810,7 @@ EncodeMemorySection(Encoder& e, AstModule& module)
         return false;
     }
 
-    for (const AstResizable& memory : module.memories()) {
+    for (const AstMemory& memory : module.memories()) {
         if (memory.imported) {
             continue;
         }
@@ -6870,7 +6903,7 @@ static bool
 EncodeTableSection(Encoder& e, AstModule& module)
 {
     size_t numOwnTables = 0;
-    for (const AstResizable& table : module.tables()) {
+    for (const AstTable& table : module.tables()) {
         if (!table.imported) {
             numOwnTables++;
         }
@@ -6889,11 +6922,11 @@ EncodeTableSection(Encoder& e, AstModule& module)
         return false;
     }
 
-    for (const AstResizable& table : module.tables()) {
+    for (const AstTable& table : module.tables()) {
         if (table.imported) {
             continue;
         }
-        if (!EncodeTableLimits(e, table.limits)) {
+        if (!EncodeTableLimits(e, table.limits, table.tableKind)) {
             return false;
         }
     }

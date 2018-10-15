@@ -1955,6 +1955,7 @@ struct Limits
 enum class TableKind
 {
     AnyFunction,
+    AnyRef,
     TypedFunction
 };
 
@@ -2105,14 +2106,15 @@ struct TableTls
     // Length of the table in number of elements (not bytes).
     uint32_t length;
 
-    // Pointer to the array of elements (of type either ExternalTableElem or
-    // void*).
-    void* base;
+    // Pointer to the array of function elements (of type either
+    // ExternalTableElem or void*).  For tables of anyref this is null.
+    void* functionBase;
 };
 
 // When a table can contain functions from other instances (it is "external"),
 // the internal representation is an array of ExternalTableElem instead of just
-// an array of code pointers.
+// an array of code pointers (for table-of-anyfunc) or object pointers (for
+// table-of-anyref).
 
 struct ExternalTableElem
 {
@@ -2233,9 +2235,9 @@ class CalleeDesc
         MOZ_ASSERT(isTable());
         return u.table.globalDataOffset_ + offsetof(TableTls, length);
     }
-    uint32_t tableBaseGlobalDataOffset() const {
+    uint32_t tableFunctionBaseGlobalDataOffset() const {
         MOZ_ASSERT(isTable());
-        return u.table.globalDataOffset_ + offsetof(TableTls, base);
+        return u.table.globalDataOffset_ + offsetof(TableTls, functionBase);
     }
     bool wasmTableIsExternal() const {
         MOZ_ASSERT(which_ == WasmTable);

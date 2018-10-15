@@ -696,9 +696,8 @@ WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp)
+TestGCEnabled(JSContext* cx)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef ENABLE_WASM_GC
     bool isSupported = cx->options().wasmBaseline() && cx->options().wasmGc();
 # ifdef ENABLE_WASM_CRANELIFT
@@ -706,6 +705,28 @@ WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp)
         isSupported = false;
     }
 # endif
+    return isSupported;
+#else
+    return false;
+#endif
+}
+
+static bool
+WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(TestGCEnabled(cx));
+    return true;
+}
+
+static bool
+WasmGeneralizedTables(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+    // Generalized tables depend on anyref, though not currently on (ref T)
+    // types nor on structures or other GC-proposal features.
+    bool isSupported = TestGCEnabled(cx);
 #else
     bool isSupported = false;
 #endif
@@ -6143,6 +6164,12 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmGcEnabled", WasmGcEnabled, 1, 0,
 "wasmGcEnabled(bool)",
 "  Returns a boolean indicating whether the WebAssembly GC support is enabled."),
+
+    JS_FN_HELP("wasmGeneralizedTables", WasmGeneralizedTables, 1, 0,
+"wasmGeneralizedTables(bool)",
+"  Returns a boolean indicating whether generalized tables are available.\n"
+"  This feature set includes 'anyref' as a table type, and new instructions\n"
+"  including table.get, table.set, table.grow, and table.size."),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",

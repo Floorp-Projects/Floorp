@@ -828,9 +828,8 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
             SharedTable table;
             if (td.external) {
                 MOZ_ASSERT(!tableObj);
-                MOZ_ASSERT(td.kind == TableKind::AnyFunction);
 
-                tableObj.set(WasmTableObject::create(cx, td.limits));
+                tableObj.set(WasmTableObject::create(cx, td.limits, td.kind));
                 if (!tableObj) {
                     return false;
                 }
