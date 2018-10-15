@@ -242,7 +242,13 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     if (parseContext_ && syntax == FunctionSyntaxKind::Statement) {
         auto ptr = parseContext_->varScope().lookupDeclaredName(atom);
         MOZ_ASSERT(ptr);
-        ptr->value()->alterKind(DeclarationKind::BodyLevelFunction);
+        // FIXME: Should be merged with ParseContext::tryDeclareVarHelper
+        //        (bug 1499044).
+        DeclarationKind declaredKind = ptr->value()->kind();
+        if (DeclarationKindIsVar(declaredKind)) {
+            MOZ_ASSERT(declaredKind != DeclarationKind::VarForAnnexBLexicalFunction);
+            ptr->value()->alterKind(DeclarationKind::BodyLevelFunction);
+        }
     }
 
     // Allocate the function before walking down the tree.
