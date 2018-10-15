@@ -2345,12 +2345,23 @@ BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t st
 
     RootedAtom name(cx_);
     MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
-    // FIXME: The following checks should be performed inside
-    // checkPositionalParameterIndices to match the spec's order
-    // (bug 1490976).
-    if (index >= positionalParams.get().length()) {
-        return raiseError("AssertedPositionalParameterName.length out of range");
+    // `positionalParams` vector can be shorter than the actual
+    // parameter length. Resize on demand.
+    // (see also ListOfAssertedMaybePositionalParameterName)
+    size_t prevLength = positionalParams.get().length();
+    if (index >= prevLength) {
+        // This is implementation limit, which is not in the spec.
+        size_t newLength = index + 1;
+        if (newLength >= ARGNO_LIMIT) {
+            return raiseError("AssertedPositionalParameterName.index is too big");
+        }
+
+        BINJS_TRY(positionalParams.get().resize(newLength));
+        for (uint32_t i = prevLength; i < newLength; i++) {
+            positionalParams.get()[i] = nullptr;
+        }
     }
+
     if (positionalParams.get()[index]) {
         return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
     }
@@ -5481,13 +5492,14 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
     MOZ_TRY(tokenizer_->enterList(length, guard));
     (void) start;
     auto result = Ok();
-    if (length >= ARGNO_LIMIT) {
-        return raiseError("Too many function parameters");
-    }
-    BINJS_TRY(positionalParams.get().resize(length));
-    for (uint32_t i = 0; i < length; i++) {
-        positionalParams.get()[i] = nullptr;
-    }
+    // This list contains also destructuring parameters, and the number of
+    // list items can be greater than the actual parameters, or more than
+    // ARGNO_LIMIT even if the number of parameters fits into ARGNO_LIMIT.
+    // Also, the number of parameters can be greater than this list's length
+    // if one of destructuring parameter is empty.
+    //
+    // We resize `positionalParams` vector on demand, to keep the vector
+    // length match to the known maximum positional parameter index + 1.
 
     for (uint32_t i = 0; i < length; ++i) {
         MOZ_TRY(parseAssertedMaybePositionalParameterName(
