@@ -152,9 +152,7 @@ JS_GetArrayBufferViewBuffer(JSContext* cx, HandleObject objArg, bool* isSharedMe
     if (!obj) {
         return nullptr;
     }
-    MOZ_ASSERT(obj->is<ArrayBufferViewObject>());
-
-    Rooted<ArrayBufferViewObject*> viewObject(cx, static_cast<ArrayBufferViewObject*>(obj));
+    Rooted<ArrayBufferViewObject*> viewObject(cx, &obj->as<ArrayBufferViewObject>());
     ArrayBufferObjectMaybeShared* buffer = ArrayBufferViewObject::bufferObject(cx, viewObject);
     *isSharedMemory = buffer->is<SharedArrayBufferObject>();
     return buffer;

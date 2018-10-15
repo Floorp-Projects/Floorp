@@ -509,23 +509,22 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
 
     // Update all views of the buffer to account for the buffer having been
     // detached, and clear the buffer's data and list of views.
+    //
+    // Typed object buffers are not exposed and cannot be detached.
 
     auto& innerViews = ObjectRealm::get(buffer).innerViews.get();
     if (InnerViewTable::ViewVector* views = innerViews.maybeViewsUnbarriered(buffer)) {
         for (size_t i = 0; i < views->length(); i++) {
-            NoteViewBufferWasDetached((*views)[i], newContents, cx);
+            JSObject* view = (*views)[i];
+            NoteViewBufferWasDetached(&view->as<ArrayBufferViewObject>(), newContents, cx);
         }
         innerViews.removeViews(buffer);
     }
-    if (buffer->firstView()) {
-        if (buffer->forInlineTypedObject()) {
-            // The buffer points to inline data in its first view, so to keep
-            // this pointer alive we don't clear out the first view.
-            MOZ_ASSERT(buffer->firstView()->is<InlineTransparentTypedObject>());
-        } else {
-            NoteViewBufferWasDetached(buffer->firstView(), newContents, cx);
-            buffer->setFirstView(nullptr);
-        }
+    if (JSObject* view = buffer->firstView()) {
+        MOZ_ASSERT(!buffer->forInlineTypedObject(),
+                   "Typed object buffers cannot be detached");
+        NoteViewBufferWasDetached(&view->as<ArrayBufferViewObject>(), newContents, cx);
+        buffer->setFirstView(nullptr);
     }
 
     if (newContents.data() != buffer->dataPointer()) {
@@ -590,11 +589,13 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents,
     auto& innerViews = ObjectRealm::get(this).innerViews.get();
     if (InnerViewTable::ViewVector* views = innerViews.maybeViewsUnbarriered(this)) {
         for (size_t i = 0; i < views->length(); i++) {
-            changeViewContents(cx, (*views)[i], oldDataPointer, newContents);
+            JSObject* view = (*views)[i];
+            changeViewContents(cx, &view->as<ArrayBufferViewObject>(), oldDataPointer,
+                               newContents);
         }
     }
-    if (firstView()) {
-        changeViewContents(cx, firstView(), oldDataPointer, newContents);
+    if (JSObject* view = firstView()) {
+        changeViewContents(cx, &view->as<ArrayBufferViewObject>(), oldDataPointer, newContents);
     }
 }
 
@@ -1481,33 +1482,32 @@ ArrayBufferObject::objectMoved(JSObject* obj, JSObject* old)
     return 0;
 }
 
-ArrayBufferViewObject*
+JSObject*
 ArrayBufferObject::firstView()
 {
     return getFixedSlot(FIRST_VIEW_SLOT).isObject()
-        ? static_cast<ArrayBufferViewObject*>(&getFixedSlot(FIRST_VIEW_SLOT).toObject())
+        ? &getFixedSlot(FIRST_VIEW_SLOT).toObject()
         : nullptr;
 }
 
 void
-ArrayBufferObject::setFirstView(ArrayBufferViewObject* view)
+ArrayBufferObject::setFirstView(JSObject* view)
 {
+    MOZ_ASSERT_IF(view,
+                  view->is<ArrayBufferViewObject>() || view->is<TypedObject>());
     setFixedSlot(FIRST_VIEW_SLOT, ObjectOrNullValue(view));
 }
 
 bool
-ArrayBufferObject::addView(JSContext* cx, JSObject* viewArg)
+ArrayBufferObject::addView(JSContext* cx, JSObject* view)
 {
-    // Note: we don't pass in an ArrayBufferViewObject as the argument due to
-    // tricky inheritance in the various view classes. View classes do not
-    // inherit from ArrayBufferViewObject so won't be upcast automatically.
-    MOZ_ASSERT(viewArg->is<ArrayBufferViewObject>() || viewArg->is<TypedObject>());
-    ArrayBufferViewObject* view = static_cast<ArrayBufferViewObject*>(viewArg);
+    MOZ_ASSERT(view->is<ArrayBufferViewObject>() || view->is<TypedObject>());
 
     if (!firstView()) {
         setFirstView(view);
         return true;
     }
+
     return ObjectRealm::get(this).innerViews.get().addView(cx, this, view);
 }
 
@@ -1518,7 +1518,7 @@ ArrayBufferObject::addView(JSContext* cx, JSObject* viewArg)
 constexpr size_t VIEW_LIST_MAX_LENGTH = 500;
 
 bool
-InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer, ArrayBufferViewObject* view)
+InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer, JSObject* view)
 {
     // ArrayBufferObject entries are only added when there are multiple views.
     MOZ_ASSERT(buffer->firstView());
