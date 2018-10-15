@@ -72,20 +72,12 @@ class DataViewObject : public ArrayBufferViewObject
         return v;
     }
 
-    static Value bufferValue(const DataViewObject* view) {
-        return view->getFixedSlot(BUFFER_SLOT);
-    }
-
     uint32_t byteOffset() const {
         return byteOffsetValue(this).toInt32();
     }
 
     uint32_t byteLength() const {
         return byteLengthValue(this).toInt32();
-    }
-
-    ArrayBufferObjectMaybeShared& arrayBufferEither() const {
-        return bufferValue(this).toObject().as<ArrayBufferObjectMaybeShared>();
     }
 
     static bool construct(JSContext* cx, unsigned argc, Value* vp);
@@ -143,8 +135,6 @@ class DataViewObject : public ArrayBufferViewObject
                      NativeType* val);
     template<typename NativeType>
     static bool write(JSContext* cx, Handle<DataViewObject*> obj, const CallArgs& args);
-
-    void notifyBufferDetached(void* newData);
 
   private:
     static const JSFunctionSpec methods[];

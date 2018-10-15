@@ -1735,19 +1735,27 @@ JSObject::is<js::ArrayBufferObjectMaybeShared>() const
 void
 ArrayBufferViewObject::notifyBufferDetached(JSContext* cx, void* newData)
 {
-    if (is<DataViewObject>()) {
-        if (as<DataViewObject>().isSharedMemory()) {
-            return;
-        }
-        as<DataViewObject>().notifyBufferDetached(newData);
-    } else if (is<TypedArrayObject>()) {
-        if (as<TypedArrayObject>().isSharedMemory()) {
-            return;
-        }
-        as<TypedArrayObject>().notifyBufferDetached(cx, newData);
-    } else {
-        as<OutlineTypedObject>().notifyBufferDetached(newData);
+    if (isSharedMemory()) {
+        return;
     }
+
+    MOZ_ASSERT(!isSharedMemory());
+    setFixedSlot(LENGTH_SLOT, Int32Value(0));
+    setFixedSlot(BYTEOFFSET_SLOT, Int32Value(0));
+
+    // If the object is in the nursery, the buffer will be freed by the next
+    // nursery GC. Free the data slot pointer if the object has no inline data.
+    if (is<TypedArrayObject>()) {
+        TypedArrayObject& tarr = as<TypedArrayObject>();
+        Nursery& nursery = cx->nursery();
+        if (isTenured() && !hasBuffer() && !tarr.hasInlineElements() &&
+            !nursery.isInside(tarr.elements()))
+        {
+            js_free(tarr.elements());
+        }
+    }
+
+    setPrivate(newData);
 }
 
 uint8_t*
@@ -1771,10 +1779,8 @@ ArrayBufferViewObject::bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*
         if (!TypedArrayObject::ensureHasBuffer(cx, typedArray)) {
             return nullptr;
         }
-        return thisObject->as<TypedArrayObject>().bufferEither();
     }
-    MOZ_ASSERT(thisObject->is<DataViewObject>());
-    return &thisObject->as<DataViewObject>().arrayBufferEither();
+    return thisObject->bufferEither();
 }
 
 /* JS Friend API */

@@ -78,25 +78,6 @@ TypedArrayObject::dataOffset()
     return NativeObject::getPrivateDataOffset(DATA_SLOT);
 }
 
-void
-TypedArrayObject::notifyBufferDetached(JSContext* cx, void* newData)
-{
-    MOZ_ASSERT(!isSharedMemory());
-    setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
-    setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
-
-    // If the object is in the nursery, the buffer will be freed by the next
-    // nursery GC. Free the data slot pointer if the object has no inline data.
-    Nursery& nursery = cx->nursery();
-    if (isTenured() && !hasBuffer() && !hasInlineElements() &&
-        !nursery.isInside(elements()))
-    {
-        js_free(elements());
-    }
-
-    setPrivate(newData);
-}
-
 /* static */ bool
 TypedArrayObject::is(HandleValue v)
 {
