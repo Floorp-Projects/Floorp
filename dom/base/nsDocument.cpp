@@ -13806,6 +13806,7 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
                  promise->MaybeRejectWithUndefined();
                });
     } else {
+      outer->SetHasStorageAccess(true);
       promise->MaybeResolveWithUndefined();
     }
   }
