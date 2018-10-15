@@ -215,11 +215,12 @@ function measureTTFI() {
     // 30 seconds).  Some pages will never get 5 seconds without a busy
     // period!
     if (gRetryCounter <= 25 * (1000 / 200)) {
-      console.log("\TTFI is not yet available (0), retry number " + gRetryCounter + "...\n");
+      console.log("TTFI is not yet available (0), retry number " + gRetryCounter + "...\n");
       window.setTimeout(measureTTFI, 200);
     } else {
-      // unable to get a value for TTFI - filter out later
-      sendResult("ttfi", 0);
+      // unable to get a value for TTFI - negative value will be filtered out later
+      console.log("TTFI was not available for this pageload");
+      sendResult("ttfi", -1);
     }
   }
 }
@@ -256,7 +257,9 @@ function sendResult(_type, _value) {
   // send result back to background runner script
   console.log("sending result back to runner: " + _type + " " + _value);
   chrome.runtime.sendMessage({"type": _type, "value": _value}, function(response) {
-    console.log(response.text);
+    if (response !== undefined) {
+      console.log(response.text);
+    }
   });
 }
 
