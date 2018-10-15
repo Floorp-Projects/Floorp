@@ -2332,9 +2332,8 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
       }
       // New cell isn't first in row,
       // so stop after we find the cell just before new cell's column
-      if (cellDataAtInsertionPoint.mFirst.mColumn +
-            cellDataAtInsertionPoint.mEffectiveColSpan ==
-              cellData.mFirst.mColumn) {
+      if (cellDataAtInsertionPoint.NextColumnIndex() ==
+            cellData.mFirst.mColumn) {
         break;
       }
       // If cell found is AFTER desired new cell colum,
