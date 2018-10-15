@@ -94,6 +94,12 @@ class ProfileAgeImpl {
     this.profilePath = profile || OS.Constants.Path.profileDir;
     this._times = times;
     this._log = Log.repository.getLogger("Toolkit.ProfileAge");
+
+    if ("firstUse" in this._times && this._times.firstUse === null) {
+      // Indicates that this is a new profile that needs a first use timestamp.
+      this._times.firstUse = Date.now();
+      this.writeTimes();
+    }
   }
 
   /**
@@ -120,6 +126,17 @@ class ProfileAgeImpl {
     }
 
     return this._created;
+  }
+
+  /**
+   * Returns a promise to the time of first use of the profile. This may be
+   * undefined if the first use time is unknown.
+   */
+  get firstUse() {
+    if ("firstUse" in this._times) {
+      return Promise.resolve(this._times.firstUse);
+    }
+    return Promise.resolve(undefined);
   }
 
   /**
@@ -176,7 +193,10 @@ async function initProfileAge(profile) {
     let times = await CommonUtils.readJSON(timesPath);
     return new ProfileAgeImpl(profile, times || {});
   } catch (e) {
-    return new ProfileAgeImpl(profile, {});
+    // Indicates that the file was missing or broken. In this case we want to
+    // record the first use time as now. The constructor will set this and write
+    // times.json
+    return new ProfileAgeImpl(profile, { firstUse: null });
   }
 }
 

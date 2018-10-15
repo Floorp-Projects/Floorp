@@ -818,7 +818,7 @@ nsToolkitProfileService::CreateTimesInternal(nsIFile* aProfileDir)
     rv = creationLog->OpenNSPRFileDesc(PR_WRONLY, 0700, &writeFile);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PR_fprintf(writeFile, "{\n\"created\": %lld\n}\n", msec);
+    PR_fprintf(writeFile, "{\n\"created\": %lld,\n\"firstUse\": null\n}\n", msec);
     PR_Close(writeFile);
     return NS_OK;
 }
