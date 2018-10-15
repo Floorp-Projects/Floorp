@@ -5087,6 +5087,7 @@ BinASTParser<Tok>::parseInterfaceWithStatement(const size_t start, const BinKind
 
     BINJS_MOZ_TRY_DECL(body, parseStatement());
 
+    parseContext_->sc()->setBindingsAccessedDynamically();
     BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
     return result;
 }

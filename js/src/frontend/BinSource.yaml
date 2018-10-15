@@ -1342,5 +1342,6 @@ WhileStatement:
         BINJS_TRY_DECL(result, factory_.newWhileStatement(start, test, body));
 
 WithStatement:
-    build:
+    build: |
+        parseContext_->sc()->setBindingsAccessedDynamically();
         BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
