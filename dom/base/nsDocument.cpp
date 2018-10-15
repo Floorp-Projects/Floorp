@@ -7302,10 +7302,10 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     nsAutoString minScaleStr;
     GetHeaderData(nsGkAtoms::viewport_minimum_scale, minScaleStr);
 
-    nsresult errorCode;
-    mScaleMinFloat = LayoutDeviceToScreenScale(minScaleStr.ToFloat(&errorCode));
+    nsresult scaleMinErrorCode;
+    mScaleMinFloat = LayoutDeviceToScreenScale(minScaleStr.ToFloat(&scaleMinErrorCode));
 
-    if (NS_FAILED(errorCode)) {
+    if (NS_FAILED(scaleMinErrorCode)) {
       mScaleMinFloat = kViewportMinScale;
     }
 
@@ -7322,6 +7322,12 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 
     if (NS_FAILED(scaleMaxErrorCode)) {
       mScaleMaxFloat = kViewportMaxScale;
+    }
+
+    // Resolve min-zoom and max-zoom values.
+    // https://drafts.csswg.org/css-device-adapt/#constraining-min-max-zoom
+    if (NS_SUCCEEDED(scaleMaxErrorCode) && NS_SUCCEEDED(scaleMinErrorCode)) {
+      mScaleMaxFloat = std::max(mScaleMinFloat, mScaleMaxFloat);
     }
 
     mScaleMaxFloat = mozilla::clamped(
