@@ -19,7 +19,7 @@
     var constraints = {video: true};
 
     return getUserMedia(constraints).then(stream => {
-      var playback = new LocalMediaStreamPlayback(testVideo, stream);
+      var playback = new MediaStreamPlayback(testVideo, stream);
       var video = playback.mediaElement;
 
       video.srcObject = stream;

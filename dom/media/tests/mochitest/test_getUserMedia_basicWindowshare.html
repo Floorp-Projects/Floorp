@@ -12,7 +12,7 @@
   });
   /**
    * Run a test to verify that we can complete a start and stop media playback
-   * cycle for an screenshare LocalMediaStream on a video HTMLMediaElement.
+   * cycle for an screenshare MediaStream on a video HTMLMediaElement.
    */
   runTest(function () {
     var testVideo = createMediaElement('video', 'testVideo');
@@ -25,8 +25,8 @@
     };
 
     return getUserMedia(constraints).then(stream => {
-      var playback = new LocalMediaStreamPlayback(testVideo, stream);
-      return playback.playMediaWithDeprecatedStreamStop(false);
+      var playback = new MediaStreamPlayback(testVideo, stream);
+      return playback.playMedia(false);
     });
 
   });

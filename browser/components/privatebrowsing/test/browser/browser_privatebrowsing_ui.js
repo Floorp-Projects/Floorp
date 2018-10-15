@@ -8,6 +8,8 @@
 function test() {
   // initialization
   waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                      true]]});
   let windowsToClose = [];
   let testURI = "about:blank";
   let pbMenuItem;

@@ -400,7 +400,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
     }
 
-    if (!bytecode->append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength())) {
+    if (!bytecode->append((uint8_t*)code->dataPointerEither().unwrap(), code->byteLength())) {
         ReportOutOfMemory(cx);
         return false;
     }
