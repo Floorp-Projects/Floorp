@@ -886,3 +886,21 @@ async function expandContainerByClick(inspector, container) {
   await onChildren;
   await onUpdated;
 }
+
+/**
+ * Simulate a color change in a given color picker tooltip.
+ *
+ * @param  {Spectrum} colorPicker
+ *         The color picker widget.
+ * @param  {Array} newRgba
+ *         Array of the new rgba values to be set in the color widget.
+ */
+async function simulateColorPickerChange(colorPicker, newRgba) {
+  info("Getting the spectrum colorpicker object");
+  const spectrum = await colorPicker.spectrum;
+  info("Setting the new color");
+  spectrum.rgb = newRgba;
+  info("Applying the change");
+  spectrum.updateUI();
+  spectrum.onChange();
+}
