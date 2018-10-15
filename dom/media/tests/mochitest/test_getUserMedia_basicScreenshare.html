@@ -106,7 +106,7 @@
        `Height setting ${settings.height} should be set after gUM (or 0 per bug 1453247)`);
     draw(helper.red, helper.blue,
          helper.green, helper.grey);
-    let playback = new LocalMediaStreamPlayback(testVideo, stream);
+    let playback = new MediaStreamPlayback(testVideo, stream);
     playback.startMedia();
     await playback.verifyPlaying();
     settings = stream.getTracks()[0].getSettings();
@@ -149,7 +149,7 @@
        `Height setting ${settings.height} should be correct after gUM (or 0 per bug 1453247)`);
     draw(helper.green, helper.red,
          helper.grey, helper.blue);
-    playback = new LocalMediaStreamPlayback(testVideo, stream);
+    playback = new MediaStreamPlayback(testVideo, stream);
     playback.startMedia();
     await playback.verifyPlaying();
     settings = stream.getTracks()[0].getSettings();
@@ -206,7 +206,7 @@
     await verifyScreenshare(testVideo, helper,
                             helper.grey, helper.green,
                             helper.blue, helper.red);
-    await playback.deprecatedStopStreamInMediaPlayback();
+    await playback.stopTracksForStreamInMediaPlayback();
     playback.detachFromMediaElement();
 
     SpecialPowers.wrap(document).exitFullscreen();
