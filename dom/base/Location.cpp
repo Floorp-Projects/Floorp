@@ -206,15 +206,17 @@ Location::GetURI(nsIURI** aURI, bool aGetInnermostURI)
   return urifixup->CreateExposableURI(uri, aURI);
 }
 
-nsresult
-Location::SetURI(nsIURI* aURI, bool aReplace)
+void
+Location::SetURI(nsIURI* aURI, ErrorResult& aRv, bool aReplace)
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (docShell) {
     RefPtr<nsDocShellLoadInfo> loadInfo;
 
-    if(NS_FAILED(CheckURL(aURI, getter_AddRefs(loadInfo))))
-      return NS_ERROR_FAILURE;
+    if (NS_FAILED(CheckURL(aURI, getter_AddRefs(loadInfo)))) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
 
     if (aReplace) {
       loadInfo->SetLoadType(LOAD_STOP_CONTENT_AND_REPLACE);
@@ -229,11 +231,12 @@ Location::SetURI(nsIURI* aURI, bool aReplace)
       loadInfo->SetSourceDocShell(sourceWindow->GetDocShell());
     }
 
-    return docShell->LoadURI(aURI, loadInfo,
-                             nsIWebNavigation::LOAD_FLAGS_NONE, true);
+    nsresult rv = docShell->LoadURI(aURI, loadInfo,
+                                    nsIWebNavigation::LOAD_FLAGS_NONE, true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+    }
   }
-
-  return NS_OK;
 }
 
 void
@@ -305,7 +308,7 @@ Location::SetHash(const nsAString& aHash,
     return;
   }
 
-  aRv = SetURI(uri);
+  SetURI(uri, aRv);
 }
 
 void
@@ -359,7 +362,7 @@ Location::SetHost(const nsAString& aHost,
     return;
   }
 
-  aRv = SetURI(uri);
+  SetURI(uri, aRv);
 }
 
 void
@@ -404,7 +407,7 @@ Location::SetHostname(const nsAString& aHostname,
     return;
   }
 
-  aRv = SetURI(uri);
+  SetURI(uri, aRv);
 }
 
 nsresult
@@ -440,13 +443,12 @@ Location::DoSetHref(const nsAString& aHref, bool aReplace, ErrorResult& aRv)
 {
   // Get the source of the caller
   nsCOMPtr<nsIURI> base = GetSourceBaseURL();
-
-  aRv = SetHrefWithBase(aHref, base, aReplace);
+  SetHrefWithBase(aHref, base, aReplace, aRv);
 }
 
-nsresult
+void
 Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
-                          bool aReplace)
+                          bool aReplace, ErrorResult& aRv)
 {
   nsresult result;
   nsCOMPtr<nsIURI> newUri;
@@ -488,9 +490,11 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
       }
     }
 
-    return SetURI(newUri, aReplace || inScriptTag);
+    SetURI(newUri, aRv, aReplace || inScriptTag);
+    return;
   }
-  return result;
+
+  aRv.Throw(result);
 }
 
 void
@@ -571,7 +575,7 @@ Location::SetPathname(const nsAString& aPathname,
     return;
   }
 
-  aRv = SetURI(uri);
+  SetURI(uri, aRv);
 }
 
 void
@@ -640,7 +644,7 @@ Location::SetPort(const nsAString& aPort,
     return;
   }
 
-  aRv = SetURI(uri);
+  SetURI(uri, aRv);
 }
 
 void
@@ -737,7 +741,7 @@ Location::SetProtocol(const nsAString& aProtocol,
     return;
   }
 
-  aRv = SetURI(uri);
+  SetURI(uri, aRv);
 }
 
 void
@@ -802,7 +806,7 @@ Location::SetSearch(const nsAString& aSearch,
     return;
   }
 
-  aRv = SetURI(uri);
+  SetURI(uri, aRv);
 }
 
 nsresult
