@@ -1192,9 +1192,22 @@
               InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5381"
             ${EndUnless}
 
-            ; Pin the shortcut to the TaskBar. 5386 is the shell32.dll resource
-            ; id for the "Pin to Taskbar" string.
-            InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5386"
+            ${If} ${AtMostWin2012R2}
+              ; Pin the shortcut to the TaskBar. 5386 is the shell32.dll
+              ; resource id for the "Pin to Taskbar" string.
+              InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5386"
+            ${Else}
+              ; In Windows 10 the "Pin to Taskbar" resource was removed, so we
+              ; can't access the verb that way anymore. We have a create a
+              ; command key using the GUID that's assigned to this action and
+              ; then invoke that as a verb.
+              ReadRegStr $R9 HKLM \
+                "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\Windows.taskbarpin" \
+                "ExplorerCommandHandler"
+              WriteRegStr HKCU "Software\Classes\*\shell\${AppRegName}-$AppUserModelID" "ExplorerCommandHandler" $R9
+              InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "${AppRegName}-$AppUserModelID"
+              DeleteRegKey HKCU "Software\Classes\*\shell\${AppRegName}-$AppUserModelID"
+            ${EndIf}
 
             ; Delete the shortcut if it was created
             ${If} "$8" == "true"
