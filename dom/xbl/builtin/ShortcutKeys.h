@@ -8,8 +8,11 @@
 #include "nsIObserver.h"
 
 class nsXBLPrototypeHandler;
+class nsAtom;
 
 namespace mozilla {
+
+class WidgetKeyboardEvent;
 
 typedef struct
 {
@@ -36,6 +39,9 @@ public:
 
   // Returns a pointer to the first handler for the given type.
   static nsXBLPrototypeHandler* GetHandlers(HandlerType aType);
+
+  // Gets the event type for a widget keyboard event.
+  static nsAtom* ConvertEventToDOMEventType(const WidgetKeyboardEvent* aWidgetKeyboardEvent);
 
 protected:
   ShortcutKeys();
