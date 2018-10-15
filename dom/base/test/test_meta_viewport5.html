@@ -14,7 +14,9 @@
   <script type="application/javascript">
     "use strict";
 
-    add_task(function test1() {
+    add_task(async function test1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
       let info = getViewportInfo(800, 480);
       is(info.allowZoom, true, "user-scalable values are case-sensitive; 'NO' is not valid");
     });
