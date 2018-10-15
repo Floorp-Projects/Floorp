@@ -40,7 +40,7 @@ var BrowserTabs = {
   async Add(uri) {
     let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
     let browser = mainWindow.getBrowser();
-    let newtab = browser.addTab(uri);
+    let newtab = browser.addTrustedTab(uri);
 
     // Wait for the tab to load.
     await new Promise(resolve => {
@@ -84,9 +84,10 @@ var BrowserTabs = {
             return true;
           }
         }
-        }
-        Logger.logInfo(`Dumping tabs for ${client.clientName}...\n` + JSON.stringify(client.tabs));
       }
+      Logger.logInfo(`Dumping tabs for ${client.name}...\n` +
+                     JSON.stringify(tabClient.tabs, null, 2));
+    }
     return false;
   },
 };
