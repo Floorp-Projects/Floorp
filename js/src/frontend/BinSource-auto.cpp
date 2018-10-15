@@ -73,17 +73,13 @@ BinASTParser<Tok>::parseSumAssertedMaybePositionalParameterName(const size_t sta
     Ok result;
     switch (kind) {
       case BinKind::AssertedParameterName:
-        MOZ_TRY_VAR(result, parseInterfaceAssertedParameterName(start, kind, fields,
-            scopeKind, positionalParams));
-        break;
+        return raiseError("FIXME: Not implemented yet in this preview release (AssertedParameterName)");
       case BinKind::AssertedPositionalParameterName:
         MOZ_TRY_VAR(result, parseInterfaceAssertedPositionalParameterName(start, kind, fields,
             scopeKind, positionalParams));
         break;
       case BinKind::AssertedRestParameterName:
-        MOZ_TRY_VAR(result, parseInterfaceAssertedRestParameterName(start, kind, fields,
-            scopeKind, positionalParams));
-        break;
+        return raiseError("FIXME: Not implemented yet in this preview release (AssertedRestParameterName)");
       default:
         return raiseInvalidKind("AssertedMaybePositionalParameterName", kind);
     }
@@ -1935,13 +1931,13 @@ BinASTParser<Tok>::parseSumVariableDeclarationOrExpression(const size_t start, c
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceArrayAssignmentTarget(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ArrayAssignmentTarget)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ArrayAssignmentTarget)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceArrayBinding(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ArrayBinding)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ArrayBinding)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -1994,7 +1990,7 @@ BinASTParser<Tok>::parseArrowExpressionContentsWithExpression()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceArrowExpressionContentsWithExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ArrowExpressionContentsWithExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ArrowExpressionContentsWithExpression)");
 }
 
 
@@ -2027,7 +2023,7 @@ BinASTParser<Tok>::parseArrowExpressionContentsWithFunctionBody()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceArrowExpressionContentsWithFunctionBody(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ArrowExpressionContentsWithFunctionBody)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ArrowExpressionContentsWithFunctionBody)");
 }
 
 
@@ -2243,29 +2239,10 @@ BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(const size_t start, const 
     return result;
 }
 
-template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseInterfaceAssertedParameterName(const size_t start, const BinKind kind, const BinFields& fields,
-        AssertedScopeKind scopeKind,
-        MutableHandle<GCVector<JSAtom*>> positionalParams)
+template<typename Tok> JS::Result<ParseNode*>
+BinASTParser<Tok>::parseInterfaceAssertedParameterName(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    MOZ_ASSERT(kind == BinKind::AssertedParameterName);
-    BINJS_TRY(CheckRecursionLimit(cx_));
-
-#if defined(DEBUG)
-    const BinField expected_fields[2] = { BinField::Name, BinField::IsCaptured };
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
-#endif // defined(DEBUG)
-
-    RootedAtom name(cx_);
-    MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
-
-    BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool());
-    ParseContext::Scope* scope;
-    DeclarationKind declKind;
-    MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
-    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
-    auto result = Ok();
-    return result;
+    return raiseError("FIXME: Not implemented yet in this preview release (AssertedParameterName)");
 }
 
 
@@ -2345,12 +2322,23 @@ BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t st
 
     RootedAtom name(cx_);
     MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
-    // FIXME: The following checks should be performed inside
-    // checkPositionalParameterIndices to match the spec's order
-    // (bug 1490976).
-    if (index >= positionalParams.get().length()) {
-        return raiseError("AssertedPositionalParameterName.length out of range");
+    // `positionalParams` vector can be shorter than the actual
+    // parameter length. Resize on demand.
+    // (see also ListOfAssertedMaybePositionalParameterName)
+    size_t prevLength = positionalParams.get().length();
+    if (index >= prevLength) {
+        // This is implementation limit, which is not in the spec.
+        size_t newLength = index + 1;
+        if (newLength >= ARGNO_LIMIT) {
+            return raiseError("AssertedPositionalParameterName.index is too big");
+        }
+
+        BINJS_TRY(positionalParams.get().resize(newLength));
+        for (uint32_t i = prevLength; i < newLength; i++) {
+            positionalParams.get()[i] = nullptr;
+        }
     }
+
     if (positionalParams.get()[index]) {
         return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
     }
@@ -2364,29 +2352,10 @@ BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t st
     return result;
 }
 
-template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseInterfaceAssertedRestParameterName(const size_t start, const BinKind kind, const BinFields& fields,
-        AssertedScopeKind scopeKind,
-        MutableHandle<GCVector<JSAtom*>> positionalParams)
+template<typename Tok> JS::Result<ParseNode*>
+BinASTParser<Tok>::parseInterfaceAssertedRestParameterName(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    MOZ_ASSERT(kind == BinKind::AssertedRestParameterName);
-    BINJS_TRY(CheckRecursionLimit(cx_));
-
-#if defined(DEBUG)
-    const BinField expected_fields[2] = { BinField::Name, BinField::IsCaptured };
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
-#endif // defined(DEBUG)
-
-    RootedAtom name(cx_);
-    MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
-
-    BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool());
-    ParseContext::Scope* scope;
-    DeclarationKind declKind;
-    MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
-    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
-    auto result = Ok();
-    return result;
+    return raiseError("FIXME: Not implemented yet in this preview release (AssertedRestParameterName)");
 }
 
 
@@ -2565,25 +2534,25 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(const size_t start, 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceAssignmentTargetPropertyIdentifier(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (AssignmentTargetPropertyIdentifier)");
+    return raiseError("FIXME: Not implemented yet in this preview release (AssignmentTargetPropertyIdentifier)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceAssignmentTargetPropertyProperty(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (AssignmentTargetPropertyProperty)");
+    return raiseError("FIXME: Not implemented yet in this preview release (AssignmentTargetPropertyProperty)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceAssignmentTargetWithInitializer(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (AssignmentTargetWithInitializer)");
+    return raiseError("FIXME: Not implemented yet in this preview release (AssignmentTargetWithInitializer)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceAwaitExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (AwaitExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (AwaitExpression)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -2747,19 +2716,19 @@ BinASTParser<Tok>::parseInterfaceBindingIdentifier(const size_t start, const Bin
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceBindingPropertyIdentifier(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (BindingPropertyIdentifier)");
+    return raiseError("FIXME: Not implemented yet in this preview release (BindingPropertyIdentifier)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceBindingPropertyProperty(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (BindingPropertyProperty)");
+    return raiseError("FIXME: Not implemented yet in this preview release (BindingPropertyProperty)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceBindingWithInitializer(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (BindingWithInitializer)");
+    return raiseError("FIXME: Not implemented yet in this preview release (BindingWithInitializer)");
 }
 
 
@@ -2946,7 +2915,7 @@ BinASTParser<Tok>::parseInterfaceCatchClause(const size_t start, const BinKind k
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceClassDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ClassDeclaration)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ClassDeclaration)");
 }
 
 
@@ -2977,13 +2946,13 @@ BinASTParser<Tok>::parseClassElement()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceClassElement(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ClassElement)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ClassElement)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceClassExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ClassExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ClassExpression)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -3087,7 +3056,7 @@ BinASTParser<Tok>::parseInterfaceComputedMemberExpression(const size_t start, co
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceComputedPropertyName(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ComputedPropertyName)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ComputedPropertyName)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -3170,7 +3139,7 @@ BinASTParser<Tok>::parseInterfaceDataProperty(const size_t start, const BinKind 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceDebuggerStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (DebuggerStatement)");
+    return raiseError("FIXME: Not implemented yet in this preview release (DebuggerStatement)");
 }
 
 
@@ -3239,13 +3208,13 @@ BinASTParser<Tok>::parseInterfaceDoWhileStatement(const size_t start, const BinK
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerArrowExpressionWithExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (EagerArrowExpressionWithExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (EagerArrowExpressionWithExpression)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerArrowExpressionWithFunctionBody(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (EagerArrowExpressionWithFunctionBody)");
+    return raiseError("FIXME: Not implemented yet in this preview release (EagerArrowExpressionWithFunctionBody)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -3517,25 +3486,25 @@ MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceExport(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (Export)");
+    return raiseError("FIXME: Not implemented yet in this preview release (Export)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceExportAllFrom(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ExportAllFrom)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ExportAllFrom)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceExportDefault(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ExportDefault)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ExportDefault)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceExportFrom(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ExportFrom)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ExportFrom)");
 }
 
 
@@ -3566,7 +3535,7 @@ BinASTParser<Tok>::parseExportFromSpecifier()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceExportFromSpecifier(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ExportFromSpecifier)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ExportFromSpecifier)");
 }
 
 
@@ -3597,13 +3566,13 @@ BinASTParser<Tok>::parseExportLocalSpecifier()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceExportLocalSpecifier(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ExportLocalSpecifier)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ExportLocalSpecifier)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceExportLocals(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ExportLocals)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ExportLocals)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -3689,7 +3658,7 @@ BinASTParser<Tok>::parseInterfaceForInStatement(const size_t start, const BinKin
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceForOfStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ForOfStatement)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ForOfStatement)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -3771,8 +3740,7 @@ BinASTParser<Tok>::parseInterfaceFormalParameters(const size_t start, const BinK
 
     auto result = items;
     if (rest) {
-        BINJS_TRY_DECL(spread, factory_.newSpread(start, rest));
-        factory_.addList(result, spread);
+        return raiseError("Rest parameter is not supported in this preview release");
     }
     return result;
 }
@@ -4047,13 +4015,13 @@ BinASTParser<Tok>::parseInterfaceIfStatement(const size_t start, const BinKind k
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceImport(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (Import)");
+    return raiseError("FIXME: Not implemented yet in this preview release (Import)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceImportNamespace(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ImportNamespace)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ImportNamespace)");
 }
 
 
@@ -4084,7 +4052,7 @@ BinASTParser<Tok>::parseImportSpecifier()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceImportSpecifier(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ImportSpecifier)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ImportSpecifier)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -4113,13 +4081,13 @@ BinASTParser<Tok>::parseInterfaceLabelledStatement(const size_t start, const Bin
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyArrowExpressionWithExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazyArrowExpressionWithExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (LazyArrowExpressionWithExpression)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyArrowExpressionWithFunctionBody(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazyArrowExpressionWithFunctionBody)");
+    return raiseError("FIXME: Not implemented yet in this preview release (LazyArrowExpressionWithFunctionBody)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -4233,19 +4201,19 @@ BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(const size_t start, cons
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyGetter(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazyGetter)");
+    return raiseError("FIXME: Not implemented yet in this preview release (LazyGetter)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyMethod(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazyMethod)");
+    return raiseError("FIXME: Not implemented yet in this preview release (LazyMethod)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazySetter(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazySetter)");
+    return raiseError("FIXME: Not implemented yet in this preview release (LazySetter)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -4268,7 +4236,7 @@ BinASTParser<Tok>::parseInterfaceLiteralBooleanExpression(const size_t start, co
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralInfinityExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LiteralInfinityExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (LiteralInfinityExpression)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -4389,7 +4357,7 @@ BinASTParser<Tok>::parseInterfaceLiteralStringExpression(const size_t start, con
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceModule(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (Module)");
+    return raiseError("FIXME: Not implemented yet in this preview release (Module)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -4414,19 +4382,19 @@ BinASTParser<Tok>::parseInterfaceNewExpression(const size_t start, const BinKind
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceNewTargetExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (NewTargetExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (NewTargetExpression)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceObjectAssignmentTarget(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ObjectAssignmentTarget)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ObjectAssignmentTarget)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceObjectBinding(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (ObjectBinding)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ObjectBinding)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -4581,7 +4549,7 @@ BinASTParser<Tok>::parseInterfaceShorthandProperty(const size_t start, const Bin
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceSpreadElement(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (SpreadElement)");
+    return raiseError("FIXME: Not implemented yet in this preview release (SpreadElement)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -4637,7 +4605,7 @@ BinASTParser<Tok>::parseInterfaceStaticMemberExpression(const size_t start, cons
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceSuper(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (Super)");
+    return raiseError("FIXME: Not implemented yet in this preview release (Super)");
 }
 
 
@@ -4781,13 +4749,13 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(const size_t start, 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceTemplateElement(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (TemplateElement)");
+    return raiseError("FIXME: Not implemented yet in this preview release (TemplateElement)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceTemplateExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (TemplateExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (TemplateExpression)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
@@ -5125,13 +5093,13 @@ BinASTParser<Tok>::parseInterfaceWithStatement(const size_t start, const BinKind
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceYieldExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (YieldExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (YieldExpression)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceYieldStarExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (YieldStarExpression)");
+    return raiseError("FIXME: Not implemented yet in this preview release (YieldStarExpression)");
 }
 
 
@@ -5481,13 +5449,14 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
     MOZ_TRY(tokenizer_->enterList(length, guard));
     (void) start;
     auto result = Ok();
-    if (length >= ARGNO_LIMIT) {
-        return raiseError("Too many function parameters");
-    }
-    BINJS_TRY(positionalParams.get().resize(length));
-    for (uint32_t i = 0; i < length; i++) {
-        positionalParams.get()[i] = nullptr;
-    }
+    // This list contains also destructuring parameters, and the number of
+    // list items can be greater than the actual parameters, or more than
+    // ARGNO_LIMIT even if the number of parameters fits into ARGNO_LIMIT.
+    // Also, the number of parameters can be greater than this list's length
+    // if one of destructuring parameter is empty.
+    //
+    // We resize `positionalParams` vector on demand, to keep the vector
+    // length match to the known maximum positional parameter index + 1.
 
     for (uint32_t i = 0; i < length; ++i) {
         MOZ_TRY(parseAssertedMaybePositionalParameterName(
@@ -5502,25 +5471,25 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfAssignmentTargetOrAssignmentTargetWithInitializer()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfAssignmentTargetOrAssignmentTargetWithInitializer)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfAssignmentTargetOrAssignmentTargetWithInitializer)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfAssignmentTargetProperty()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfAssignmentTargetProperty)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfAssignmentTargetProperty)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfBindingProperty()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfBindingProperty)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfBindingProperty)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfClassElement()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfClassElement)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfClassElement)");
 }
 
 template<typename Tok> JS::Result<ListNode*>
@@ -5545,31 +5514,31 @@ BinASTParser<Tok>::parseListOfDirective()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfExportFromSpecifier()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfExportFromSpecifier)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfExportFromSpecifier)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfExportLocalSpecifier()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfExportLocalSpecifier)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfExportLocalSpecifier)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfExpressionOrTemplateElement()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfExpressionOrTemplateElement)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfExpressionOrTemplateElement)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfImportDeclarationOrExportDeclarationOrStatement()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfImportDeclarationOrExportDeclarationOrStatement)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfImportDeclarationOrExportDeclarationOrStatement)");
 }
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfImportSpecifier()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfImportSpecifier)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfImportSpecifier)");
 }
 
 template<typename Tok> JS::Result<ListNode*>
@@ -5596,7 +5565,7 @@ BinASTParser<Tok>::parseListOfObjectProperty()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseListOfOptionalBindingOrBindingWithInitializer()
 {
-    return raiseError("FIXME: Not implemented yet (ListOfOptionalBindingOrBindingWithInitializer)");
+    return raiseError("FIXME: Not implemented yet in this preview release (ListOfOptionalBindingOrBindingWithInitializer)");
 }
 
 template<typename Tok> JS::Result<ListNode*>
