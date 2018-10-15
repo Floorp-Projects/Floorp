@@ -279,7 +279,7 @@ AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
     time[m] = -static_cast<float>(age) / 1000.0f;  // in seconds
     index--;
     m++;
-  } while (index > 0);
+  } while (index >= 0);
 
   if (m == 0) {
     return velocity;  // no data
