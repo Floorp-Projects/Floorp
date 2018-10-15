@@ -1598,15 +1598,29 @@ DecodeLimits(Decoder& d, Limits* limits, Shareable allowShared = Shareable::Fals
 }
 
 static bool
-DecodeTableLimits(Decoder& d, TableDescVector* tables)
+DecodeTableTypeAndLimits(Decoder& d, HasGcTypes gcTypesEnabled, TableDescVector* tables)
 {
     uint8_t elementType;
     if (!d.readFixedU8(&elementType)) {
         return d.fail("expected table element type");
     }
 
-    if (elementType != uint8_t(TypeCode::AnyFunc)) {
+    TableKind tableKind;
+    if (elementType == uint8_t(TypeCode::AnyFunc)) {
+        tableKind = TableKind::AnyFunction;
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+    } else if (elementType == uint8_t(TypeCode::AnyRef)) {
+        if (gcTypesEnabled == HasGcTypes::False) {
+            return d.fail("reference types not enabled");
+        }
+        tableKind = TableKind::AnyRef;
+#endif
+    } else {
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+        return d.fail("expected 'anyfunc' or 'anyref' element type");
+#else
         return d.fail("expected 'anyfunc' element type");
+#endif
     }
 
     Limits limits;
@@ -1626,7 +1640,7 @@ DecodeTableLimits(Decoder& d, TableDescVector* tables)
         return d.fail("already have default table");
     }
 
-    return tables->emplaceBack(TableKind::AnyFunction, limits);
+    return tables->emplaceBack(tableKind, limits);
 }
 
 static bool
@@ -1775,7 +1789,7 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
         break;
       }
       case DefinitionKind::Table: {
-        if (!DecodeTableLimits(d, &env->tables)) {
+        if (!DecodeTableTypeAndLimits(d, env->gcTypesEnabled(), &env->tables)) {
             return false;
         }
         env->tables.back().external = true;
@@ -1910,7 +1924,7 @@ DecodeTableSection(Decoder& d, ModuleEnvironment* env)
     }
 
     for (uint32_t i = 0; i < numTables; ++i) {
-        if (!DecodeTableLimits(d, &env->tables)) {
+        if (!DecodeTableTypeAndLimits(d, env->gcTypesEnabled(), &env->tables)) {
             return false;
         }
     }
@@ -2334,6 +2348,10 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
                 return false;
             }
             seg->offsetIfActive.emplace(offset);
+        }
+
+        if (env->tables[0].kind != TableKind::AnyFunction) {
+            return d.fail("only tables of 'anyfunc' may have element segments");
         }
 
         uint32_t numElems;

@@ -635,12 +635,12 @@ Instance::initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffs
                 const CodeRange& calleeCodeRange =
                     calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
                 void* code = calleeInstance.codeBase(calleeTier) + calleeCodeRange.funcTableEntry();
-                table.set(dstOffset + i, code, &calleeInstance);
+                table.setAnyFunc(dstOffset + i, code, &calleeInstance);
                 continue;
             }
         }
         void* code = codeBaseTier + codeRanges[funcToCodeRange[funcIndex]].funcTableEntry();
-        table.set(dstOffset + i, code, this);
+        table.setAnyFunc(dstOffset + i, code, this);
     }
 }
 
@@ -660,6 +660,10 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
     const ElemSegment& seg = *instance->passiveElemSegments_[segIndex];
     MOZ_RELEASE_ASSERT(!seg.active());
     const Table& table = *instance->tables()[0];
+
+    // Element segments cannot currently contain arbitrary values, and anyref
+    // tables cannot be initialized from segments.
+    MOZ_ASSERT(table.kind() == TableKind::AnyFunction);
 
     // We are proposing to copy
     //
@@ -847,7 +851,7 @@ Instance::Instance(JSContext* cx,
         const TableDesc& td = metadata().tables[i];
         TableTls& table = tableTls(td);
         table.length = tables_[i]->length();
-        table.base = tables_[i]->base();
+        table.functionBase = tables_[i]->functionBase();
     }
 
     for (size_t i = 0; i < metadata().globals.length(); i++) {
@@ -1252,7 +1256,7 @@ Instance::onMovingGrowTable()
     MOZ_ASSERT(tables_.length() == 1);
     TableTls& table = tableTls(metadata().tables[0]);
     table.length = tables_[0]->length();
-    table.base = tables_[0]->base();
+    table.functionBase = tables_[0]->functionBase();
 }
 
 void

@@ -1784,10 +1784,6 @@ OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex, Value* callee, ValueVe
 {
     MOZ_ASSERT(Classify(op_) == OpKind::CallIndirect);
 
-    if (!env_.tables.length()) {
-        return fail("can't call_indirect without a table");
-    }
-
     if (!readVarU32(funcTypeIndex)) {
         return fail("unable to read call_indirect signature index");
     }
@@ -1796,6 +1792,8 @@ OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex, Value* callee, ValueVe
         return fail("signature index out of range");
     }
 
+    uint32_t tableIndex = 0;
+
     uint8_t flags;
     if (!readFixedU8(&flags)) {
         return false;
@@ -1803,6 +1801,18 @@ OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex, Value* callee, ValueVe
 
     if (flags != uint8_t(MemoryTableFlags::Default)) {
         return fail("unexpected flags");
+    }
+
+    if (tableIndex >= env_.tables.length()) {
+        // Special case this for improved user experience.
+        if (!env_.tables.length()) {
+            return fail("can't call_indirect without a table");
+        }
+        return fail("table index out of range");
+    }
+
+    if (env_.tables[tableIndex].kind != TableKind::AnyFunction) {
+        return fail("indirect calls must go through a table of 'anyfunc'");
     }
 
     if (!popWithType(ValType::I32, callee)) {
@@ -2190,6 +2200,11 @@ OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
         // Same comment as for readMemOrTableDrop.
         dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
     } else {
+        // Element segments must carry functions exclusively and anyfunc is not
+        // yet a subtype of anyref.
+        if (env_.tables[0].kind != TableKind::AnyFunction) {
+            return fail("only tables of 'anyfunc' may have element segments");
+        }
         if (*segIndex >= env_.elemSegments.length()) {
             return fail("table.init index out of range");
         }

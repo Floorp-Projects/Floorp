@@ -22,6 +22,14 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+// Actually we depend only on the reftypes proposal; this guard will change once
+// reftypes and GC are pried apart properly.
+#  ifndef ENABLE_WASM_GC
+#    error "Generalized tables require the GC feature"
+#  endif
+#endif
+
 #ifdef DEBUG
 
 # ifdef ENABLE_WASM_GC

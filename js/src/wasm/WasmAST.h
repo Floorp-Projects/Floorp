@@ -1239,6 +1239,7 @@ class AstImport : public AstNode
 
     AstRef funcType_;
     Limits limits_;
+    TableKind tableKind_;
     AstGlobal global_;
 
   public:
@@ -1248,6 +1249,12 @@ class AstImport : public AstNode
     AstImport(AstName name, AstName module, AstName field, DefinitionKind kind,
               const Limits& limits)
       : name_(name), module_(module), field_(field), kind_(kind), limits_(limits)
+    {
+        MOZ_ASSERT(kind != DefinitionKind::Table, "A table must have a kind");
+    }
+    AstImport(AstName name, AstName module, AstName field, const Limits& limits, TableKind tableKind)
+      : name_(name), module_(module), field_(field), kind_(DefinitionKind::Table), limits_(limits),
+        tableKind_(tableKind)
     {}
     AstImport(AstName name, AstName module, AstName field, const AstGlobal& global)
       : name_(name), module_(module), field_(field), kind_(DefinitionKind::Global), global_(global)
@@ -1258,6 +1265,10 @@ class AstImport : public AstNode
     AstName field() const { return field_; }
 
     DefinitionKind kind() const { return kind_; }
+    TableKind tableKind() const {
+        MOZ_ASSERT(kind_ == DefinitionKind::Table);
+        return tableKind_;
+    }
     AstRef& funcType() {
         MOZ_ASSERT(kind_ == DefinitionKind::Function);
         return funcType_;
@@ -1343,15 +1354,30 @@ class AstStartFunc : public AstNode
     }
 };
 
-struct AstResizable
+struct AstMemory
 {
     AstName name;
     Limits limits;
     bool imported;
 
-    AstResizable(const Limits& limits, bool imported, AstName name = AstName())
+    AstMemory(const Limits& limits, bool imported, AstName name = AstName())
       : name(name),
         limits(limits),
+        imported(imported)
+    {}
+};
+
+struct AstTable
+{
+    AstName name;
+    Limits limits;
+    TableKind tableKind;
+    bool imported;
+
+    AstTable(const Limits& limits, TableKind tableKind, bool imported, AstName name = AstName())
+      : name(name),
+        limits(limits),
+        tableKind(tableKind),
         imported(imported)
     {}
 };
@@ -1364,7 +1390,8 @@ class AstModule : public AstNode
     typedef AstVector<AstExport*> ExportVector;
     typedef AstVector<AstTypeDef*> TypeDefVector;
     typedef AstVector<AstName> NameVector;
-    typedef AstVector<AstResizable> AstResizableVector;
+    typedef AstVector<AstMemory> AstMemoryVector;
+    typedef AstVector<AstTable> AstTableVector;
 
   private:
     typedef AstHashMap<AstFuncType*, uint32_t, AstFuncType> FuncTypeMap;
@@ -1374,8 +1401,8 @@ class AstModule : public AstNode
     FuncTypeMap          funcTypeMap_;
     ImportVector         imports_;
     NameVector           funcImportNames_;
-    AstResizableVector   tables_;
-    AstResizableVector   memories_;
+    AstTableVector       tables_;
+    AstMemoryVector      memories_;
 #ifdef ENABLE_WASM_GC
     uint32_t             gcFeatureOptIn_;
 #endif
@@ -1408,12 +1435,12 @@ class AstModule : public AstNode
         numGlobalImports_(0)
     {}
     bool addMemory(AstName name, const Limits& memory) {
-        return memories_.append(AstResizable(memory, false, name));
+        return memories_.append(AstMemory(memory, false, name));
     }
     bool hasMemory() const {
         return !!memories_.length();
     }
-    const AstResizableVector& memories() const {
+    const AstMemoryVector& memories() const {
         return memories_;
     }
 #ifdef ENABLE_WASM_GC
@@ -1425,13 +1452,13 @@ class AstModule : public AstNode
         return gcFeatureOptIn_;
     }
 #endif
-    bool addTable(AstName name, const Limits& table) {
-        return tables_.append(AstResizable(table, false, name));
+    bool addTable(AstName name, const Limits& table, TableKind tableKind) {
+        return tables_.append(AstTable(table, tableKind, false, name));
     }
     bool hasTable() const {
         return !!tables_.length();
     }
-    const AstResizableVector& tables() const {
+    const AstTableVector& tables() const {
         return tables_;
     }
     bool append(AstDataSegment* seg) {
@@ -1508,12 +1535,12 @@ class AstModule : public AstNode
             }
             break;
           case DefinitionKind::Table:
-            if (!tables_.append(AstResizable(imp->limits(), true))) {
+            if (!tables_.append(AstTable(imp->limits(), imp->tableKind(), true))) {
                 return false;
             }
             break;
           case DefinitionKind::Memory:
-            if (!memories_.append(AstResizable(imp->limits(), true))) {
+            if (!memories_.append(AstMemory(imp->limits(), true))) {
                 return false;
             }
             break;

@@ -38,7 +38,22 @@ Table::Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeOb
     length_(desc.limits.initial),
     maximum_(desc.limits.maximum),
     external_(desc.external)
-{}
+{
+    MOZ_ASSERT(kind_ != TableKind::AnyRef);
+}
+
+Table::Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
+             TableAnyRefVector&& objects)
+  : maybeObject_(maybeObject),
+    observers_(cx->zone()),
+    objects_(std::move(objects)),
+    kind_(desc.kind),
+    length_(desc.limits.initial),
+    maximum_(desc.limits.maximum),
+    external_(desc.external)
+{
+    MOZ_ASSERT(kind_ == TableKind::AnyRef);
+}
 
 /* static */ SharedTable
 Table::create(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject)
@@ -46,16 +61,27 @@ Table::create(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeO
     // The raw element type of a Table depends on whether it is external: an
     // external table can contain functions from multiple instances and thus
     // must store an additional instance pointer in each element.
-    UniqueByteArray array;
     if (desc.external) {
-        array.reset((uint8_t*)cx->pod_calloc<ExternalTableElem>(desc.limits.initial));
-    } else {
-        array.reset((uint8_t*)cx->pod_calloc<void*>(desc.limits.initial));
+        MOZ_ASSERT(desc.kind == TableKind::AnyFunction);
+        UniqueByteArray array((uint8_t*)cx->pod_calloc<ExternalTableElem>(desc.limits.initial));
+        if (!array) {
+            return nullptr;
+        }
+        return SharedTable(cx->new_<Table>(cx, desc, maybeObject, std::move(array)));
     }
+
+    if (desc.kind == TableKind::AnyRef) {
+        TableAnyRefVector objects;
+        if (!objects.resize(desc.limits.initial)) {
+            return nullptr;
+        }
+        return SharedTable(cx->new_<Table>(cx, desc, maybeObject, std::move(objects)));
+    }
+
+    UniqueByteArray array((uint8_t*)cx->pod_calloc<void*>(desc.limits.initial));
     if (!array) {
         return nullptr;
     }
-
     return SharedTable(cx->new_<Table>(cx, desc, maybeObject, std::move(array)));
 }
 
@@ -81,6 +107,8 @@ Table::tracePrivate(JSTracer* trc)
                 MOZ_ASSERT(!array[i].code);
             }
         }
+    } else if (kind_ == TableKind::AnyRef) {
+        objectArray().trace(trc);
     }
 }
 
@@ -102,7 +130,7 @@ Table::trace(JSTracer* trc)
 void**
 Table::internalArray() const
 {
-    MOZ_ASSERT(!external_);
+    MOZ_ASSERT(!external_ && kind_ == TableKind::AnyFunction);
     return (void**)array_.get();
 }
 
@@ -113,9 +141,34 @@ Table::externalArray() const
     return (ExternalTableElem*)array_.get();
 }
 
-void
-Table::set(uint32_t index, void* code, const Instance* instance)
+uint8_t*
+Table::functionBase() const
 {
+    if (kind() == TableKind::AnyRef) {
+        return nullptr;
+    }
+    return array_.get();
+}
+
+TableAnyRefVector&
+Table::objectArray()
+{
+    MOZ_ASSERT(!external_ && kind_ == TableKind::AnyRef);
+    return objects_;
+}
+
+const TableAnyRefVector&
+Table::objectArray() const
+{
+    MOZ_ASSERT(!external_ && kind_ == TableKind::AnyRef);
+    return objects_;
+}
+
+void
+Table::setAnyFunc(uint32_t index, void* code, const Instance* instance)
+{
+    MOZ_ASSERT(kind_ == TableKind::AnyFunction);
+
     if (external_) {
         ExternalTableElem& elem = externalArray()[index];
         if (elem.tls) {
@@ -133,16 +186,28 @@ Table::set(uint32_t index, void* code, const Instance* instance)
 }
 
 void
+Table::setAnyRef(uint32_t index, HandleObject new_obj)
+{
+    objectArray()[index] = new_obj;
+}
+
+void
 Table::setNull(uint32_t index)
 {
-    // Only external tables can set elements to null after initialization.
-    ExternalTableElem& elem = externalArray()[index];
-    if (elem.tls) {
-        JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
-    }
+    if (kind_ == TableKind::AnyFunction) {
+        // Only external tables can set elements to null after initialization.
+        ExternalTableElem& elem = externalArray()[index];
+        if (elem.tls) {
+            JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+        }
 
-    elem.code = nullptr;
-    elem.tls = nullptr;
+        elem.code = nullptr;
+        elem.tls = nullptr;
+    } else if (kind_ == TableKind::AnyRef) {
+        objectArray()[index] = nullptr;
+    } else {
+        MOZ_CRASH("Should not happen");
+    }
 }
 
 void
@@ -165,6 +230,8 @@ Table::copy(uint32_t dstIndex, uint32_t srcIndex)
         } else {
             MOZ_ASSERT(!dst.code);
         }
+    } else if (kind_ == TableKind::AnyRef) {
+        objectArray()[dstIndex] = objectArray()[srcIndex];
     } else {
         internalArray()[dstIndex] = internalArray()[srcIndex];
     }
@@ -195,18 +262,29 @@ Table::grow(uint32_t delta, JSContext* cx)
 
     JSRuntime* rt = cx->runtime();  // Use JSRuntime's MallocProvider to avoid throwing.
 
-    // Note that realloc does not release array_'s pointee (which is returned by
-    // externalArray()) on failure which is exactly what we need here.
-    ExternalTableElem* newArray = rt->pod_realloc(externalArray(), length_, newLength.value());
-    if (!newArray) {
-        return -1;
-    }
-    Unused << array_.release();
-    array_.reset((uint8_t*)newArray);
+    if (external_) {
+        // Note that realloc does not release array_'s pointee (which is returned by
+        // externalArray()) on failure which is exactly what we need here.
+        ExternalTableElem* newArray = rt->pod_realloc(externalArray(), length_, newLength.value());
+        if (!newArray) {
+            return -1;
+        }
+        Unused << array_.release();
+        array_.reset((uint8_t*)newArray);
 
-    // Realloc does not zero the delta for us.
-    PodZero(newArray + length_, delta);
-    length_ = newLength.value();
+        // Realloc does not zero the delta for us.
+        PodZero(newArray + length_, delta);
+        length_ = newLength.value();
+    } else if (kind_ == TableKind::AnyRef) {
+        if (!objectArray().resize(newLength.value())) {
+            return -1;
+        }
+        length_ = newLength.value();
+    } else {
+        // Currently we can only grow exported arrays, so non-external anyfunc
+        // arrays are non-growable.
+        MOZ_CRASH("Should not happen");
+    }
 
     for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront()) {
         r.front()->instance().onMovingGrowTable();
@@ -237,5 +315,8 @@ Table::addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance)
 size_t
 Table::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return mallocSizeOf(array_.get());
+    if (external_ || kind_ == TableKind::AnyFunction) {
+        return mallocSizeOf(array_.get());
+    }
+    return objects_.sizeOfExcludingThis(mallocSizeOf);
 }
