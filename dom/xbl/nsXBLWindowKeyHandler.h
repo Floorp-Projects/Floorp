@@ -50,17 +50,16 @@ public:
 protected:
   virtual ~nsXBLWindowKeyHandler();
 
-  nsresult WalkHandlers(KeyboardEvent* aKeyEvent, nsAtom* aEventType);
+  nsresult WalkHandlers(KeyboardEvent* aKeyEvent);
 
   // walk the handlers, looking for one to handle the event
   bool WalkHandlersInternal(KeyboardEvent* aKeyEvent,
-                            nsAtom* aEventType,
                             bool aExecute,
                             bool* aOutReservedForChrome = nullptr);
 
   // walk the handlers for aEvent, aCharCode and aIgnoreModifierState. Execute
   // it if aExecute = true.
-  bool WalkHandlersAndExecute(KeyboardEvent* aKeyEvent, nsAtom* aEventType,
+  bool WalkHandlersAndExecute(KeyboardEvent* aKeyEvent,
                               uint32_t aCharCode,
                               const IgnoreModifierState& aIgnoreModifierState,
                               bool aExecute,
@@ -81,12 +80,6 @@ protected:
   // key is not sent to a content process or single-process equivalent.
   bool IsReservedKey(mozilla::WidgetKeyboardEvent* aKeyEvent,
                      nsXBLPrototypeHandler* aHandler);
-
-  // Returns event type for matching between aWidgetKeyboardEvent and
-  // shortcut key handlers.  This is used for calling WalkHandlers(),
-  // WalkHandlersInternal() and WalkHandlersAndExecute().
-  nsAtom* ConvertEventToDOMEventType(
-             const mozilla::WidgetKeyboardEvent& aWidgetKeyboardEvent) const;
 
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document
