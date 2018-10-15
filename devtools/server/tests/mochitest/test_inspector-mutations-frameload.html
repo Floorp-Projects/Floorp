@@ -20,28 +20,21 @@ window.onload = function() {
 
 let gInspectee = null;
 let gWalker = null;
-let gClient = null;
-let gCleanupConnection = null;
+let gTarget = null;
 
 async function setup(callback) {
   const url = document.getElementById("inspectorContent").href;
-  const { client, target, doc, cleanup } = await attachURL(url);
+  const { target, doc } = await attachURL(url);
   gInspectee = doc;
-  gClient = client;
+  gTarget = target;
   const inspector = target.getInspector();
   gWalker = await inspector.getWalker();
-  gCleanupConnection = cleanup;
   await callback();
 }
 
 function teardown() {
   gWalker = null;
-  gClient = null;
   gInspectee = null;
-  if (gCleanupConnection) {
-    gCleanupConnection();
-    gCleanupConnection = null;
-  }
 }
 
 function assertOwnership() {
@@ -87,7 +80,7 @@ addTest(function loadNewChild() {
 
       assertOwnership();
 
-      return checkMissing(gClient, unloaded);
+      return checkMissing(gTarget, unloaded);
     }).then(() => {
       teardown();
     }).then(runNextTest));
@@ -150,7 +143,7 @@ addTest(function loadNewChildTwiceAndCareAboutIt() {
 
       assertOwnership();
 
-      return checkMissing(gClient, unloaded);
+      return checkMissing(gTarget, unloaded);
     }).then(() => {
       teardown();
     }).then(runNextTest));
@@ -183,7 +176,7 @@ addTest(function testBack() {
 
       assertOwnership();
 
-      return checkMissing(gClient, unloaded);
+      return checkMissing(gTarget, unloaded);
     }).then(() => {
       teardown();
     }).then(runNextTest));

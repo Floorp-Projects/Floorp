@@ -24,27 +24,21 @@ const InspectorUtils = require("InspectorUtils");
 
 let gInspectee = null;
 let gWalker = null;
-let gCleanupConnection = null;
 
 async function setup(callback) {
   const url = document.getElementById("inspectorContent").href;
-  const { target, doc, cleanup } = await attachURL(url);
+  const { target, doc } = await attachURL(url);
   gInspectee = doc;
   const inspector = target.getInspector();
   const walker = await inspector.getWalker();
   ok(walker, "getWalker() should return an actor.");
   gWalker = walker;
-  gCleanupConnection = cleanup;
   runNextTest();
 }
 
 function teardown() {
   gWalker = null;
   gInspectee = null;
-  if (gCleanupConnection) {
-    gCleanupConnection();
-    gCleanupConnection = null;
-  }
 }
 
 function checkChange(change, expectation) {

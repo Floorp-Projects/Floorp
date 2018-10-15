@@ -20,26 +20,20 @@ window.onload = function() {
 
 let gInspectee = null;
 let gWalker = null;
-let gCleanupConnection = null;
 
 async function setup(callback) {
   const url = document.getElementById("inspectorContent").href;
-  const { target, doc, cleanup } = await attachURL(url);
+  const { target, doc } = await attachURL(url);
   gInspectee = doc;
   const inspector = target.getInspector();
   gWalker = await inspector.getWalker();
   ok(gWalker, "getWalker() should return an actor.");
-  gCleanupConnection = cleanup;
   callback();
 }
 
 function teardown() {
   gWalker = null;
   gInspectee = null;
-  if (gCleanupConnection) {
-    gCleanupConnection();
-    gCleanupConnection = null;
-  }
 }
 
 function assertOwnership() {
