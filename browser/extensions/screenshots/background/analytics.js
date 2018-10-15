@@ -16,7 +16,7 @@ this.analytics = (function() {
     method: "POST",
     mode: "cors",
     headers: { "content-type": "application/json" },
-    credentials: "include"
+    credentials: "include",
   };
 
   function flushEvents() {
@@ -63,7 +63,7 @@ this.analytics = (function() {
       timingCategory,
       timingLabel,
       timingVar,
-      timingValue
+      timingValue,
     });
     if (!timingsTimeoutHandle) {
       timingsTimeoutHandle = setTimeout(() => {
@@ -115,7 +115,7 @@ this.analytics = (function() {
       event: eventCategory,
       action,
       label,
-      options
+      options,
     });
     if (!eventsTimeoutHandle) {
       eventsTimeoutHandle = setTimeout(() => {
@@ -173,8 +173,8 @@ this.analytics = (function() {
     cancel: [
       { action: "cancel-shot" },
       { action: "internal", label: "document-hidden" },
-      { action: "internal", label: "unhide-onboarding-frame" }
-    ]
+      { action: "internal", label: "unhide-onboarding-frame" },
+    ],
   }, {
     name: "context-menu",
     start: { action: "start-shot", label: "context-menu" },
@@ -182,8 +182,8 @@ this.analytics = (function() {
     cancel: [
       { action: "cancel-shot" },
       { action: "internal", label: "document-hidden" },
-      { action: "internal", label: "unhide-onboarding-frame" }
-    ]
+      { action: "internal", label: "unhide-onboarding-frame" },
+    ],
   }, {
     name: "page-action-onboarding",
     start: { action: "start-shot", label: "toolbar-button" },
@@ -191,8 +191,8 @@ this.analytics = (function() {
     cancel: [
       { action: "cancel-shot" },
       { action: "internal", label: "document-hidden" },
-      { action: "internal", label: "unhide-preselection-frame" }
-    ]
+      { action: "internal", label: "unhide-preselection-frame" },
+    ],
   }, {
     name: "context-menu-onboarding",
     start: { action: "start-shot", label: "context-menu" },
@@ -200,84 +200,84 @@ this.analytics = (function() {
     cancel: [
       { action: "cancel-shot" },
       { action: "internal", label: "document-hidden" },
-      { action: "internal", label: "unhide-preselection-frame" }
-    ]
+      { action: "internal", label: "unhide-preselection-frame" },
+    ],
   }, {
     name: "capture-full-page",
     start: { action: "capture-full-page" },
     end: { action: "internal", label: "unhide-preview-frame" },
     cancel: [
       { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" }
-    ]
+      { action: "internal", label: "document-hidden" },
+    ],
   }, {
     name: "capture-visible",
     start: { action: "capture-visible" },
     end: { action: "internal", label: "unhide-preview-frame" },
     cancel: [
       { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" }
-    ]
+      { action: "internal", label: "document-hidden" },
+    ],
   }, {
     name: "make-selection",
     start: { action: "make-selection" },
     end: { action: "internal", label: "unhide-selection-frame" },
     cancel: [
       { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" }
-    ]
+      { action: "internal", label: "document-hidden" },
+    ],
   }, {
     name: "save-shot",
     start: { action: "save-shot" },
     end: { action: "internal", label: "open-shot-tab" },
-    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }]
+    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
   }, {
     name: "save-visible",
     start: { action: "save-visible" },
     end: { action: "internal", label: "open-shot-tab" },
-    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }]
+    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
   }, {
     name: "save-full-page",
     start: { action: "save-full-page" },
     end: { action: "internal", label: "open-shot-tab" },
-    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }]
+    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
   }, {
     name: "save-full-page-truncated",
     start: { action: "save-full-page-truncated" },
     end: { action: "internal", label: "open-shot-tab" },
-    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }]
+    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
   }, {
     name: "download-shot",
     start: { action: "download-shot" },
     end: { action: "internal", label: "deactivate" },
     cancel: [
       { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" }
-    ]
+      { action: "internal", label: "document-hidden" },
+    ],
   }, {
     name: "download-full-page",
     start: { action: "download-full-page" },
     end: { action: "internal", label: "deactivate" },
     cancel: [
       { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" }
-    ]
+      { action: "internal", label: "document-hidden" },
+    ],
   }, {
     name: "download-full-page-truncated",
     start: { action: "download-full-page-truncated" },
     end: { action: "internal", label: "deactivate" },
     cancel: [
       { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" }
-    ]
+      { action: "internal", label: "document-hidden" },
+    ],
   }, {
     name: "download-visible",
     start: { action: "download-visible" },
     end: { action: "internal", label: "deactivate" },
     cancel: [
       { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" }
-    ]
+      { action: "internal", label: "document-hidden" },
+    ],
   }];
 
   // Match a filter (action and optional label) against an action and label.
