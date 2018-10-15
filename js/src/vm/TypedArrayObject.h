@@ -87,9 +87,6 @@ class TypedArrayObject : public ArrayBufferViewObject
     inline Scalar::Type type() const;
     inline size_t bytesPerElement() const;
 
-    static Value bufferValue(const TypedArrayObject* tarr) {
-        return tarr->getFixedSlot(BUFFER_SLOT);
-    }
     static Value byteOffsetValue(const TypedArrayObject* tarr) {
         Value v = tarr->getFixedSlot(BYTEOFFSET_SLOT);
         MOZ_ASSERT(v.toInt32() >= 0);
@@ -105,12 +102,6 @@ class TypedArrayObject : public ArrayBufferViewObject
     static bool
     ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray);
 
-    bool hasBuffer() const {
-        return bufferValue(this).isObject();
-    }
-    JSObject* bufferObject() const {
-        return bufferValue(this).toObjectOrNull();
-    }
     uint32_t byteOffset() const {
         return byteOffsetValue(this).toInt32();
     }
@@ -146,8 +137,6 @@ class TypedArrayObject : public ArrayBufferViewObject
      */
     void getElements(Value* vp);
 
-    void notifyBufferDetached(JSContext* cx, void* newData);
-
     static bool
     GetTemplateObjectForNative(JSContext* cx, Native native, uint32_t len,
                                MutableHandleObject res);
@@ -160,49 +149,6 @@ class TypedArrayObject : public ArrayBufferViewObject
     static const uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
 
     static bool isOriginalLengthGetter(Native native);
-
-    ArrayBufferObject* bufferUnshared() const {
-        MOZ_ASSERT(!isSharedMemory());
-        JSObject* obj = bufferObject();
-        if (!obj) {
-            return nullptr;
-        }
-        return &obj->as<ArrayBufferObject>();
-    }
-    SharedArrayBufferObject* bufferShared() const {
-        MOZ_ASSERT(isSharedMemory());
-        JSObject* obj = bufferObject();
-        if (!obj) {
-            return nullptr;
-        }
-        return &obj->as<SharedArrayBufferObject>();
-    }
-    ArrayBufferObjectMaybeShared* bufferEither() const {
-        JSObject* obj = bufferObject();
-        if (!obj) {
-            return nullptr;
-        }
-        if (isSharedMemory()) {
-            return &obj->as<SharedArrayBufferObject>();
-        }
-        return &obj->as<ArrayBufferObject>();
-    }
-
-    bool hasDetachedBuffer() const {
-        // Shared buffers can't be detached.
-        if (isSharedMemory()) {
-            return false;
-        }
-
-        // A typed array with a null buffer has never had its buffer exposed to
-        // become detached.
-        ArrayBufferObject* buffer = bufferUnshared();
-        if (!buffer) {
-            return false;
-        }
-
-        return buffer->isDetached();
-    }
 
     static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);

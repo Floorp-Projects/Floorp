@@ -91,6 +91,30 @@ AsAnyArrayBuffer(HandleValue val)
     return val.toObject().as<SharedArrayBufferObject>();
 }
 
+inline SharedArrayBufferObject*
+ArrayBufferViewObject::bufferShared() const
+{
+    MOZ_ASSERT(isSharedMemory());
+    JSObject* obj = bufferObject();
+    if (!obj) {
+        return nullptr;
+    }
+    return &obj->as<SharedArrayBufferObject>();
+}
+
+inline ArrayBufferObjectMaybeShared*
+ArrayBufferViewObject::bufferEither() const
+{
+    JSObject* obj = bufferObject();
+    if (!obj) {
+        return nullptr;
+    }
+    if (isSharedMemory()) {
+        return &obj->as<SharedArrayBufferObject>();
+    }
+    return &obj->as<ArrayBufferObject>();
+}
+
 } // namespace js
 
 #endif // vm_ArrayBufferObject_inl_h

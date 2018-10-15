@@ -412,7 +412,7 @@ DataViewObject::read(JSContext* cx, Handle<DataViewObject*> obj, const CallArgs&
     bool isLittleEndian = args.length() >= 2 && ToBoolean(args[1]);
 
     // Steps 6-7.
-    if (obj->arrayBufferEither().isDetached()) {
+    if (obj->hasDetachedBuffer()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
@@ -500,7 +500,7 @@ DataViewObject::write(JSContext* cx, Handle<DataViewObject*> obj, const CallArgs
     bool isLittleEndian = args.length() >= 3 && ToBoolean(args[2]);
 
     // Steps 7-8.
-    if (obj->arrayBufferEither().isDetached()) {
+    if (obj->hasDetachedBuffer()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
@@ -892,7 +892,7 @@ DataViewObject::byteLengthGetterImpl(JSContext* cx, const CallArgs& args)
     Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     // Step 6.
-    if (thisView->arrayBufferEither().isDetached()) {
+    if (thisView->hasDetachedBuffer()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
@@ -915,7 +915,7 @@ DataViewObject::byteOffsetGetterImpl(JSContext* cx, const CallArgs& args)
     Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     // Step 6.
-    if (thisView->arrayBufferEither().isDetached()) {
+    if (thisView->hasDetachedBuffer()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
@@ -1006,14 +1006,6 @@ const JSPropertySpec DataViewObject::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "DataView", JSPROP_READONLY),
     JS_PS_END
 };
-
-void
-DataViewObject::notifyBufferDetached(void* newData)
-{
-    setFixedSlot(LENGTH_SLOT, Int32Value(0));
-    setFixedSlot(BYTEOFFSET_SLOT, Int32Value(0));
-    setPrivate(newData);
-}
 
 JS_FRIEND_API(bool)
 JS_IsDataViewObject(JSObject* obj)
