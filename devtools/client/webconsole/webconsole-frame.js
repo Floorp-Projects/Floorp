@@ -155,6 +155,16 @@ WebConsoleFrame.prototype = {
     }
   },
 
+  inspectObjectActor(objectActor) {
+    this.consoleOutput.dispatchMessageAdd({
+      helperResult: {
+        type: "inspectObject",
+        object: objectActor
+      }
+    }, true);
+    return this.consoleOutput;
+  },
+
   _onUpdateListeners() {
 
   },

@@ -2757,9 +2757,7 @@ Toolbox.prototype = {
       // when the objectActor doesn't represent an undefined or null value.
       await this.openSplitConsole();
       const panel = this.getPanel("webconsole");
-      const jsterm = panel.hud.jsterm;
-
-      jsterm.inspectObjectActor(objectActor);
+      panel.hud.ui.inspectObjectActor(objectActor);
     }
   },
 
