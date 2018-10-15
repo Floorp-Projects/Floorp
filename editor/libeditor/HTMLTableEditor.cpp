@@ -232,7 +232,8 @@ HTMLEditor::InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
   }
 
   // We control selection resetting after the insert.
-  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table,
+                                             cellDataAtSelection.mCurrent.mRow,
                                              newCellIndex, ePreviousColumn,
                                              false);
   // So, suppress Rules System selection munging.
@@ -490,7 +491,8 @@ HTMLEditor::InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
   }
 
   // We control selection resetting after the insert.
-  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table,
+                                             cellDataAtSelection.mCurrent.mRow,
                                              startColIndex, ePreviousRow,
                                              false);
   // Suppress Rules System selection munging.
@@ -727,7 +729,7 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
         continue;
       }
 
-      if (curStartRowIndex < startRowIndex) {
+      if (curStartRowIndex < cellData.mCurrent.mRow) {
         // We have a cell spanning this location.  Increase its rowspan.
         // Note that if rowspan is 0, we do nothing since that cell should
         // automatically extend into the new row.
@@ -773,7 +775,7 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
       }
 
       // Save cell from the last row that we will use below
-      if (!cellForRowParent && curStartRowIndex == kLastRowIndex) {
+      if (!cellForRowParent && curStartRowIndex == cellData.mCurrent.mRow) {
         cellForRowParent = std::move(cellElement);
       }
     }
@@ -1447,7 +1449,7 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
 
     // Delete the cell
     int32_t numberOfCellsInRow =
-      GetNumberOfCellsInRow(aTableElement, rowIndex);
+      GetNumberOfCellsInRow(aTableElement, cellData.mCurrent.mRow);
     NS_WARNING_ASSERTION(numberOfCellsInRow > 0,
       "Failed to count existing cells in the row");
     if (numberOfCellsInRow != 1) {
@@ -1705,7 +1707,7 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
 
     // Compensate for cells that don't start or extend below the row we are
     // deleting.
-    if (startRowIndex < aRowIndex) {
+    if (startRowIndex < cellData.mCurrent.mRow) {
       // If a cell starts in row above us, decrease its rowspan to keep table
       // rectangular but we don't need to do this if rowspan=0, since it will
       // be automatically adjusted.
@@ -1713,7 +1715,7 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
         // Build list of cells to change rowspan.  We can't do it now since
         // it upsets cell map, so we will do it after deleting the row.
         int32_t newRowSpanValue =
-          std::max(aRowIndex - startRowIndex, actualRowSpan - 1);
+          std::max(cellData.mCurrent.mRow - startRowIndex, actualRowSpan - 1);
         spanCellArray.AppendElement(SpanCell(cell, newRowSpanValue));
       }
     } else {
@@ -1721,7 +1723,8 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
         // Cell spans below row to delete, so we must insert new cells to
         // keep rows below.  Note that we test "rowSpan" so we don't do this
         // if rowSpan = 0 (automatic readjustment).
-        int32_t aboveRowToInsertNewCellInto = aRowIndex - startRowIndex + 1;
+        int32_t aboveRowToInsertNewCellInto =
+          cellData.mCurrent.mRow - startRowIndex + 1;
         int32_t numOfRawSpanRemainingBelow = actualRowSpan - 1;
         nsresult rv =
           SplitCellIntoRows(&aTableElement, startRowIndex, startColIndex,
@@ -1922,7 +1925,7 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
       // XXX So, we should distinguish whether CellData returns error or just
       //     not found later.
       if (!isSelected && cell &&
-          row == currentRowIndex && col == currentColIndex) {
+          cellData.mCurrent.mRow == currentRowIndex && col == currentColIndex) {
         rv = AppendNodeToSelectionAsRange(cell);
         if (NS_FAILED(rv)) {
           break;
@@ -1996,7 +1999,9 @@ HTMLEditor::SelectAllTableCells()
       // Skip cells that are spanned from previous rows or columns
       // XXX So, we should distinguish whether CellData returns error or just
       //     not found later.
-      if (cell && row == currentRowIndex && col == currentColIndex) {
+      if (cell &&
+          cellData.mCurrent.mRow == currentRowIndex &&
+          col == currentColIndex) {
         rv =  AppendNodeToSelectionAsRange(cell);
         if (NS_FAILED(rv)) {
           break;
@@ -2089,7 +2094,9 @@ HTMLEditor::SelectTableRow()
     // Skip cells that are spanned from previous rows or columns
     // XXX So, we should distinguish whether CellData returns error or just
     //     not found later.
-    if (cell && currentRowIndex == startRowIndex && currentColIndex == col) {
+    if (cell &&
+        currentRowIndex == cellData.mCurrent.mRow &&
+        currentColIndex == col) {
       rv = AppendNodeToSelectionAsRange(cell);
       if (NS_FAILED(rv)) {
         break;
@@ -2177,7 +2184,9 @@ HTMLEditor::SelectTableColumn()
     // Skip cells that are spanned from previous rows or columns
     // XXX So, we should distinguish whether CellData returns error or just
     //     not found later.
-    if (cell && currentRowIndex == row && currentColIndex == startColIndex) {
+    if (cell &&
+        currentRowIndex == cellData.mCurrent.mRow &&
+        currentColIndex == startColIndex) {
       rv = AppendNodeToSelectionAsRange(cell);
       if (NS_FAILED(rv)) {
         break;
@@ -2416,7 +2425,7 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
     // bool    isSelected2 =    cellDataAtInsertionPoint.mIsSelected;
 
     // Skip over cells spanned from above (like the one we are splitting!)
-    if (cell2 && startRowIndex2 == rowBelowIndex) {
+    if (cell2 && startRowIndex2 == cellDataAtInsertionPoint.mCurrent.mRow) {
       if (!insertAfter) {
         // Inserting before, so stop at first cell in row we want to insert
         // into.
@@ -2636,7 +2645,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             // We've just found the first selected cell in this row
             firstColInRow = colIndex;
           }
-          if (rowIndex > firstSelectedCell.mIndexes.mRow &&
+          if (cellData.mCurrent.mRow > firstSelectedCell.mIndexes.mRow &&
               firstColInRow != firstSelectedCell.mIndexes.mColumn) {
             // We're in at least the second row,
             // but left boundary is "ragged" (not the same as 1st row's start)
@@ -2644,7 +2653,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             // and keep previous lastColIndex
             //TODO: We could try to find the Maximum firstColInRow
             //      so our block can still extend down more rows?
-            lastRowIndex = std::max(0, rowIndex - 1);
+            lastRowIndex = std::max(0, cellData.mCurrent.mRow - 1);
             lastRowIsSet = true;
             break;
           }
@@ -2653,11 +2662,11 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           cellFoundInRow = true;
         } else if (cellFoundInRow) {
           // No cell or not selected, but at least one cell in row was found
-          if (rowIndex > firstSelectedCell.mIndexes.mRow + 1 &&
+          if (cellData.mCurrent.mRow > firstSelectedCell.mIndexes.mRow + 1 &&
               colIndex <= lastColIndex) {
             // Cell is in a column less than current right border in
             //  the third or higher selected row, so stop block at the previous row
-            lastRowIndex = std::max(0, rowIndex - 1);
+            lastRowIndex = std::max(0, cellData.mCurrent.mRow - 1);
             lastRowIsSet = true;
           }
           // We're done with this row
@@ -2722,15 +2731,16 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
         // Merge only selected cells (skip cell we're merging into, of course)
         if (isSelected2 && cell2 != firstSelectedCell.mElement) {
-          if (rowIndex >= firstSelectedCell.mIndexes.mRow &&
-              rowIndex <= lastRowIndex &&
+          if (cellData.mCurrent.mRow >= firstSelectedCell.mIndexes.mRow &&
+              cellData.mCurrent.mRow <= lastRowIndex &&
               colIndex >= firstSelectedCell.mIndexes.mColumn &&
               colIndex <= lastColIndex) {
             // We are within the join region
             // Problem: It is very tricky to delete cells as we merge,
             //  since that will upset the cellmap
             //  Instead, build a list of cells to delete and do it later
-            NS_ASSERTION(startRowIndex2 == rowIndex, "JoinTableCells: StartRowIndex is in row above");
+            NS_ASSERTION(startRowIndex2 == cellData.mCurrent.mRow,
+                         "JoinTableCells: StartRowIndex is in row above");
 
             if (actualColSpan2 > 1) {
               //Check if cell "hangs" off the boundary because of colspan > 1
@@ -2855,11 +2865,12 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     }
 
     // sanity check
-    NS_ASSERTION((startRowIndex >= startRowIndex2),"JoinCells: startRowIndex < startRowIndex2");
+    NS_ASSERTION(rightCellData.mCurrent.mRow >= startRowIndex2,
+                 "JoinCells: rightCellData.mCurrent.mRow < startRowIndex2");
 
     // Figure out span of merged cell starting from target's starting row
     // to handle case of merged cell starting in a row above
-    int32_t spanAboveMergedCell = startRowIndex - startRowIndex2;
+    int32_t spanAboveMergedCell = rightCellData.mCurrent.mRow - startRowIndex2;
     int32_t effectiveRowSpan2 = actualRowSpan2 - spanAboveMergedCell;
 
     if (effectiveRowSpan2 > actualRowSpan) {
@@ -2875,7 +2886,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     // Delete the cell now only if it starts in the same row
     //   and has enough row "height"
     rv = MergeCells(targetCell, cell2,
-                    (startRowIndex2 == startRowIndex) &&
+                    (startRowIndex2 == rightCellData.mCurrent.mRow) &&
                     (effectiveRowSpan2 >= actualRowSpan));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3015,7 +3026,7 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
     }
 
     if (rowSpan > 0 &&
-        startRowIndex == aRowIndex &&
+        startRowIndex == cellData.mCurrent.mRow &&
         (rowSpan < minRowSpan || minRowSpan == -1)) {
       minRowSpan = rowSpan;
     }
@@ -3046,7 +3057,7 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
       // XXX So, this does not assume that CellData returns error when just
       //     not found a cell.  Fix this later.
       if (cell && rowSpan > 0 &&
-          startRowIndex == aRowIndex &&
+          startRowIndex == cellData.mCurrent.mRow &&
           startColIndex ==  colIndex ) {
         nsresult rv = SetRowSpan(cell, rowSpan-rowsReduced);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3141,7 +3152,7 @@ HTMLEditor::FixBadColSpan(Element* aTable,
       //     not found a cell.  Fix this later.
       if (cell && colSpan > 0 &&
           startColIndex == aColIndex &&
-          startRowIndex ==  rowIndex) {
+          startRowIndex == cellData.mCurrent.mRow) {
         nsresult rv = SetColSpan(cell, colSpan-colsReduced);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -3271,11 +3282,11 @@ HTMLEditor::NormalizeTable(Selection& aSelection,
         // Set this so we use returned new "cell" to set
         // previousCellElementInRow below.
         if (cellElement) {
-          startRowIndex = rowIndex;
+          startRowIndex = cellData.mCurrent.mRow;
         }
       }
       // Save the last cell found in the same row we are scanning
-      if (startRowIndex == rowIndex) {
+      if (startRowIndex == cellData.mCurrent.mRow) {
         previousCellElementInRow = cellElement;
       }
     }
@@ -3409,7 +3420,7 @@ HTMLEditor::GetNumberOfCellsInRow(Element& aTableElement,
 
     if (cellElement) {
       // Only count cells that start in row we are working with
-      if (startRowIndex == aRowIndex) {
+      if (startRowIndex == cellData.mCurrent.mRow) {
         numberOfCells++;
       }
       // Next possible location for a cell
@@ -4447,7 +4458,7 @@ HTMLEditor::AllCellsInColumnSelected(Element* aTable,
     // XXX So, this does not assume that CellData returns error when just
     //     not found a cell.  Fix this later.
     if (NS_WARN_IF(!cell)) {
-      return row > 0;
+      return cellData.mCurrent.mRow > 0;
     }
 
     // Return as soon as a non-selected cell is found.
