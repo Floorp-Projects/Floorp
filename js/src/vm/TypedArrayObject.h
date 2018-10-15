@@ -37,41 +37,11 @@ namespace js {
  * the subclasses.
  */
 
-class TypedArrayObject : public NativeObject
+class TypedArrayObject : public ArrayBufferViewObject
 {
   public:
-    // Underlying (Shared)ArrayBufferObject.
-    static const size_t BUFFER_SLOT = 0;
-    static_assert(BUFFER_SLOT == JS_TYPEDARRAYLAYOUT_BUFFER_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right buffer slot");
-
-    // Slot containing length of the view in number of typed elements.
-    static const size_t LENGTH_SLOT = 1;
-    static_assert(LENGTH_SLOT == JS_TYPEDARRAYLAYOUT_LENGTH_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right length slot");
-
-    // Offset of view within underlying (Shared)ArrayBufferObject.
-    static const size_t BYTEOFFSET_SLOT = 2;
-    static_assert(BYTEOFFSET_SLOT == JS_TYPEDARRAYLAYOUT_BYTEOFFSET_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right byteOffset slot");
-
-    static const size_t RESERVED_SLOTS = 3;
-
-#ifdef DEBUG
-    static const uint8_t ZeroLengthArrayData = 0x4A;
-#endif
-
     static int lengthOffset();
     static int dataOffset();
-
-    // The raw pointer to the buffer memory, the "private" value.
-    //
-    // This offset is exposed for performance reasons - so that it
-    // need not be looked up on accesses.
-    static const size_t DATA_SLOT = 3;
 
     static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                   "bad inlined constant in jsfriendapi.h");

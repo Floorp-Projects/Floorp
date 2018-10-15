@@ -14,7 +14,6 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
-#include "vm/TypedArrayObject.h"
 
 namespace js {
 
@@ -23,7 +22,7 @@ namespace js {
 // should not be exposed without sharedness information accompanying
 // it.
 
-class DataViewObject : public NativeObject
+class DataViewObject : public ArrayBufferViewObject
 {
   private:
     static const ClassSpec classSpec_;
@@ -62,19 +61,19 @@ class DataViewObject : public NativeObject
     static const Class protoClass_;
 
     static Value byteOffsetValue(const DataViewObject* view) {
-        Value v = view->getFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT);
+        Value v = view->getFixedSlot(BYTEOFFSET_SLOT);
         MOZ_ASSERT(v.toInt32() >= 0);
         return v;
     }
 
     static Value byteLengthValue(const DataViewObject* view) {
-        Value v = view->getFixedSlot(TypedArrayObject::LENGTH_SLOT);
+        Value v = view->getFixedSlot(LENGTH_SLOT);
         MOZ_ASSERT(v.toInt32() >= 0);
         return v;
     }
 
     static Value bufferValue(const DataViewObject* view) {
-        return view->getFixedSlot(TypedArrayObject::BUFFER_SLOT);
+        return view->getFixedSlot(BUFFER_SLOT);
     }
 
     uint32_t byteOffset() const {

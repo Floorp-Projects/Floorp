@@ -71,9 +71,9 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
         obj->setIsSharedMemory();
     }
 
-    obj->setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(byteOffset));
-    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(byteLength));
-    obj->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*arrayBuffer));
+    obj->setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
+    obj->setFixedSlot(LENGTH_SLOT, Int32Value(byteLength));
+    obj->setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
 
     SharedMem<uint8_t*> ptr = arrayBuffer->dataPointerEither();
     // A pointer to raw shared memory is exposed through the private slot.  This
@@ -98,7 +98,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     }
 
     // Verify that the private slot is at the expected place
-    MOZ_ASSERT(obj->numFixedSlots() == TypedArrayObject::DATA_SLOT);
+    MOZ_ASSERT(obj->numFixedSlots() == DATA_SLOT);
 
     if (arrayBuffer->is<ArrayBufferObject>()) {
         if (!arrayBuffer->as<ArrayBufferObject>().addView(cx, obj)) {
@@ -967,7 +967,7 @@ const ClassSpec DataViewObject::classSpec_ = {
 const Class DataViewObject::class_ = {
     "DataView",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     &DataViewObjectClassOps,
     &DataViewObject::classSpec_
@@ -1013,8 +1013,8 @@ const JSPropertySpec DataViewObject::properties[] = {
 void
 DataViewObject::notifyBufferDetached(void* newData)
 {
-    setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
-    setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
+    setFixedSlot(LENGTH_SLOT, Int32Value(0));
+    setFixedSlot(BYTEOFFSET_SLOT, Int32Value(0));
     setPrivate(newData);
 }
 
