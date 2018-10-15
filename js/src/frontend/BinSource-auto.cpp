@@ -5090,6 +5090,7 @@ BinASTParser<Tok>::parseInterfaceWithStatement(const size_t start, const BinKind
 
     BINJS_MOZ_TRY_DECL(object, parseExpression());
 
+    ParseContext::Statement stmt(parseContext_, StatementKind::With);
     BINJS_MOZ_TRY_DECL(body, parseStatement());
 
     parseContext_->sc()->setBindingsAccessedDynamically();

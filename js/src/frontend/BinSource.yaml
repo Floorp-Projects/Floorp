@@ -1347,6 +1347,10 @@ WhileStatement:
         BINJS_TRY_DECL(result, factory_.newWhileStatement(start, test, body));
 
 WithStatement:
+    fields:
+        body:
+            before: |
+                ParseContext::Statement stmt(parseContext_, StatementKind::With);
     build: |
         parseContext_->sc()->setBindingsAccessedDynamically();
         BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
