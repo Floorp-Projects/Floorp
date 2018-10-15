@@ -8,7 +8,7 @@
 /**
  * The nsICodeCoverage component allows controlling the code coverage counters
  * collected by Firefox during execution.
- * By resetting and dumping the counters, one can analyze the coverage information
+ * By flushing the counters, one can analyze the coverage information
  * for a subset of the program execution (e.g. startup code coverage).
  *
  */
@@ -17,14 +17,8 @@
 interface nsICodeCoverage : nsISupports
 {
   /**
-   * Write the coverage counters to disk.
+   * Write the coverage counters to disk, and reset them in memory to 0.
    */
   [implicit_jscontext]
-  Promise dumpCounters();
-
-  /**
-   * Reset the coverage counters to 0 (as if nothing was executed).
-   */
-  [implicit_jscontext]
-  Promise resetCounters();
+  Promise flushCounters();
 };

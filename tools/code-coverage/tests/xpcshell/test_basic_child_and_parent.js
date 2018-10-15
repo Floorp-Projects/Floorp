@@ -9,8 +9,7 @@ function run_test() {
   sendCommand("let v = 'test';", async function() {
       let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].getService(Ci.nsICodeCoverage);
 
-      await codeCoverage.dumpCounters();
-      await codeCoverage.resetCounters();
+      await codeCoverage.flushCounters();
 
       do_test_finished();
   });

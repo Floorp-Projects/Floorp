@@ -13,9 +13,7 @@ async function run_test() {
   let codeCoverage = codeCoverageCc.getService(Ci.nsICodeCoverage);
   Assert.ok(!!codeCoverage);
 
-  await codeCoverage.dumpCounters();
-
-  await codeCoverage.resetCounters();
+  await codeCoverage.flushCounters();
 
   do_test_finished();
 }
