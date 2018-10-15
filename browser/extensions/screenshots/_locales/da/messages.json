@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "Tag udklip og skærmbilleder fra nettet og gem dem midlertidigt eller permanent."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Tag et skærmbillede"
+  },
+  "myShotsLink": {
+    "message": "Mine skærmbilleder"
+  },
+  "screenshotInstructions": {
+    "message": "Træk eller klik på siden for at vælge et område. Tryk på ESC for at fortryde."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Gem"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Gem synligt område"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Gem hele siden"
+  },
+  "cancelScreenshot": {
+    "message": "Fortryd"
+  },
+  "downloadScreenshot": {
+    "message": "Hent"
+  },
+  "downloadOnlyNotice": {
+    "message": "Du kan i øjeblikket kun hente skærmbilleder."
+  },
+  "downloadOnlyDetails": {
+    "message": "I følgende situationer lader Firefox Screenshots dig kun hente skærmbilleder:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "I et privat browsing-vindue."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Når tredjeparts cookies er deaktiveret."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Når Firefox-indstillingen “Aldrig gemme historik” er valgt."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Du bruger Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Uploads er blevet deaktiveret."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Link kopieret"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Linket til dit skærmbillede er blevet gemt i udklipsholderen. Tryk på $META_KEY$-V for at sætte ind. ",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopier"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Skærmbillede kopieret"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Dit skærmbillede er blevet kopieret til udklipsholderen. Tryk $META_KEY$-V for at indsætte.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Gemt billede vil blive beskåret til $PIXELS$px i højden.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Ude af funktion"
+  },
+  "requestErrorDetails": {
+    "message": "Vi kunne desværre ikke gemme dit skærmbillede. Prøv igen senere."
+  },
+  "connectionErrorTitle": {
+    "message": "Vi kan ikke oprette forbindelse til dine skærmbilleder."
+  },
+  "connectionErrorDetails": {
+    "message": "Kontroller din internet-forbindelse. Hvis du ikke kan oprette forbindelse til internettet, kan der være et midlertidigt teknisk problem med Firefox Screenshots. "
+  },
+  "loginErrorDetails": {
+    "message": "Vi kunne ikke gemme dit skærmbillede, fordi der er et teknisk problem med Firefox Screenshots. Prøv igen senere. "
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Vi kan ikke tage et skærmbillede af denne side. "
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Dette er ikke en almindelig webside, så du kan ikke tage skærmbilleder af den. "
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Du kan ikke tage skærmbilleder af en side i Firefox Screenshots."
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Din markering er for lille"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots er deaktiveret i privat browsing-tilstand"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Vi beklager ulejligheden. Vi arbejder på at få funktionen til at virke i fremtidige udgivelser."
+  },
+  "genericErrorTitle": {
+    "message": "Hov! Noget gik helt galt med Firefox Screenshots."
+  },
+  "genericErrorDetails": {
+    "message": "Vi er ikke sikre på, hvad der lige skete. Vil du prøve igen - eller vil du tage et skærmbillede af en anden side?"
+  },
+  "tourBodyIntro": {
+    "message": "Tag, gem og del skærmbilleder uden at forlade Firefox. "
+  },
+  "tourHeaderPageAction": {
+    "message": "En ny måde at gemme på"
+  },
+  "tourBodyPageAction": {
+    "message": "Klik på Sidehandlinger i adressefeltet, når du vil tage et skærmbillede."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Gem lige hvad du vil."
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Klik og træk for at tage et udklip af en del af en side. Du kan også holde markøren over for at fremhæve din markering."
+  },
+  "tourHeaderFullPage": {
+    "message": "Tag skærmbilleder af vinduer eller hele sider."
+  },
+  "tourBodyFullPage": {
+    "message": "Brug knapperne øverst til højre for at tage et skærmbillede af det synlige område i vinduet eller for at tage et skærmbillede af hele siden."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Som du vil have det."
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Gem dine beskårne skærmbilleder på nettet for nemmere at dele dem - eller hent dem ned på din computer. Du kan også klikke på knappen \"Mine skærmbilleder\" for at finde de skærmbilleder, du har taget."
+  },
+  "tourHeaderAccounts": {
+    "message": "Skærmbilleder på farten"
+  },
+  "tourBodyAccounts": {
+    "message": "Log ind med din Firefox-konto for at få adgang til dine skærmbilleder på alle dine enheder, og gem dine favoritter for evigt."
+  },
+  "tourSkip": {
+    "message": "SPRING OVER"
+  },
+  "tourNext": {
+    "message": "Næste side"
+  },
+  "tourPrevious": {
+    "message": "Forrige side"
+  },
+  "tourDone": {
+    "message": "Færdig"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Ved at anvende Firefox Screenshots godkender du vores $TERMSANDPRIVACYNOTICETERMSLINK$ og $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "vilkår"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "privatlivspolitik"
+  },
+  "libraryLabel": {
+    "message": "Skærmbilleder"
+  }
+}
