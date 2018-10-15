@@ -66,7 +66,7 @@ AnimationEffect::IsInEffect() const
 }
 
 void
-AnimationEffect::SetSpecifiedTiming(const TimingParams& aTiming)
+AnimationEffect::SetSpecifiedTiming(TimingParams&& aTiming)
 {
   if (mTiming == aTiming) {
     return;
@@ -342,7 +342,7 @@ AnimationEffect::UpdateTiming(const OptionalEffectTiming& aTiming,
     return;
   }
 
-  SetSpecifiedTiming(timing);
+  SetSpecifiedTiming(std::move(timing));
 }
 
 Nullable<TimeDuration>
