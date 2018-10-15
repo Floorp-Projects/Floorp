@@ -737,6 +737,12 @@ public:
     return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
   }
 
+  void ParentWindowChanged()
+  {
+    // Reset our storage access flag when we get reparented.
+    mHasStorageAccess = false;
+  }
+
 public:
   int32_t GetInnerWidthOuter(mozilla::ErrorResult& aError);
 protected:
