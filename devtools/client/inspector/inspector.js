@@ -113,8 +113,9 @@ function Inspector(toolbox) {
   this.panelWin = window;
   this.panelWin.inspector = this;
   this.telemetry = toolbox.telemetry;
-
   this.store = Store();
+
+  this._markupBox = this.panelDoc.getElementById("markup-box");
 
   // Map [panel id => panel instance]
   // Stores all the instances of sidebar panels like rule view, computed view, ...
@@ -1165,8 +1166,8 @@ Inspector.prototype = {
       this._pendingSelection = null;
       this.selection.setNodeFront(defaultNode, { reason: "navigateaway" });
 
-      this._initMarkup();
       this.once("markuploaded", this.onMarkupLoaded);
+      this._initMarkup();
 
       // Setup the toolbar again, since its content may depend on the current document.
       this.setupToolbar();
@@ -1449,6 +1450,11 @@ Inspector.prototype = {
       this._highlighters = null;
     }
 
+    if (this._markupFrame) {
+      this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
+      this._markupFrame.removeEventListener("contextmenu", this._onContextMenu);
+    }
+
     if (this._search) {
       this._search.destroy();
       this._search = null;
@@ -1471,6 +1477,8 @@ Inspector.prototype = {
 
     this._is3PaneModeChromeEnabled = null;
     this._is3PaneModeEnabled = null;
+    this._markupBox = null;
+    this._markupFrame = null;
     this._notificationBox = null;
     this._target = null;
     this._toolbox = null;
@@ -1939,41 +1947,35 @@ Inspector.prototype = {
   },
 
   _initMarkup: function() {
-    const doc = this.panelDoc;
+    if (!this._markupFrame) {
+      this._markupFrame = this.panelDoc.createElement("iframe");
+      this._markupFrame.setAttribute("aria-label",
+        INSPECTOR_L10N.getStr("inspector.panelLabel.markupView"));
+      this._markupFrame.setAttribute("flex", "1");
+      // This is needed to enable tooltips inside the iframe document.
+      this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
+      this._markupFrame.addEventListener("contextmenu", this._onContextMenu);
 
-    this._markupBox = doc.getElementById("markup-box");
+      this._markupBox.style.visibility = "hidden";
+      this._markupBox.appendChild(this._markupFrame);
 
-    // create tool iframe
-    this._markupFrame = doc.createElement("iframe");
-    this._markupFrame.setAttribute("flex", "1");
-    // This is needed to enable tooltips inside the iframe document.
-    this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
-    this._markupFrame.addEventListener("contextmenu", this._onContextMenu);
-
-    this._markupBox.style.visibility = "hidden";
-    this._markupBox.appendChild(this._markupFrame);
-
-    this._markupFrame.addEventListener("load", this._onMarkupFrameLoad, true);
-    this._markupFrame.setAttribute("src", "markup/markup.xhtml");
-    this._markupFrame.setAttribute("aria-label",
-      INSPECTOR_L10N.getStr("inspector.panelLabel.markupView"));
+      this._markupFrame.addEventListener("load", this._onMarkupFrameLoad, true);
+      this._markupFrame.setAttribute("src", "markup/markup.xhtml");
+    } else {
+      this._onMarkupFrameLoad();
+    }
   },
 
   _onMarkupFrameLoad: function() {
     this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
     this._markupFrame.contentWindow.focus();
-    this.markup = new MarkupView(this, this._markupFrame, this._toolbox.win);
     this._markupBox.style.visibility = "visible";
+    this.markup = new MarkupView(this, this._markupFrame, this._toolbox.win);
     this.emit("markuploaded");
   },
 
   _destroyMarkup: function() {
     let destroyPromise;
-
-    if (this._markupFrame) {
-      this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
-      this._markupFrame.removeEventListener("contextmenu", this._onContextMenu);
-    }
 
     if (this.markup) {
       destroyPromise = this.markup.destroy();
@@ -1982,12 +1984,7 @@ Inspector.prototype = {
       destroyPromise = promise.resolve();
     }
 
-    if (this._markupFrame) {
-      this._markupFrame.remove();
-      this._markupFrame = null;
-    }
-
-    this._markupBox = null;
+    this._markupBox.style.visibility = "hidden";
 
     return destroyPromise;
   },

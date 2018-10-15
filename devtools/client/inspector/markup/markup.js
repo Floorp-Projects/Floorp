@@ -73,7 +73,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._frame = frame;
   this.win = this._frame.contentWindow;
   this.doc = this._frame.contentDocument;
-  this._elt = this.doc.querySelector("#root");
+  this._elt = this.doc.getElementById("root");
   this.telemetry = this.inspector.telemetry;
 
   this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize",
@@ -1961,12 +1961,13 @@ MarkupView.prototype = {
                            this._onCollapseAttributesPrefChange);
     this._prefObserver.destroy();
 
-    this._elt = null;
-
     for (const [, container] of this._containers) {
       container.destroy();
     }
     this._containers = null;
+
+    this._elt.innerHTML = "";
+    this._elt = null;
 
     this.controllerWindow = null;
     this.doc = null;
