@@ -235,8 +235,10 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     MOZ_ASSERT_IF(!parseContext_, lazyScript_);
 
     RootedAtom atom(cx_);
-    if (name) {
-        atom = name->name();
+
+    // Name might be any of {Identifier,ComputedPropertyName,LiteralPropertyName}
+    if (name && name->is<NameNode>()) {
+        atom = name->as<NameNode>().atom();
     }
 
     if (parseContext_ && syntax == FunctionSyntaxKind::Statement) {
@@ -351,7 +353,25 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
         }
     }
 
-    // Check all our bindings after maybe adding function This.
+    if (funbox->needsDotGeneratorName()) {
+        ParseContext::Scope& funScope = parseContext_->functionScope();
+        HandlePropertyName dotGenerator = cx_->names().dotGenerator;
+        ParseContext::Scope::AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
+        if (!p) {
+            BINJS_TRY(funScope.addDeclaredName(parseContext_, p, dotGenerator, DeclarationKind::Var,
+                                               DeclaredNameInfo::npos));
+        }
+
+        BINJS_TRY(usedNames_.noteUse(cx_, dotGenerator, parseContext_->scriptId(),
+                                     parseContext_->innermostScope()->id()));
+
+        BINJS_TRY_DECL(dotGen, factory_.newName(dotGenerator,
+                                                tokenizer_->pos(tokenizer_->offset()), cx_));
+
+        BINJS_TRY(factory_.prependInitialYield(&body->as<ListNode>(), dotGen));
+    }
+
+    // Check all our bindings after maybe adding function metavars.
     MOZ_TRY(checkFunctionClosedVars());
 
     BINJS_TRY_DECL(bindings,
