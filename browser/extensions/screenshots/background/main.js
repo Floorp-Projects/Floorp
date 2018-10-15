@@ -132,7 +132,7 @@ this.main = (function() {
           return;
         }
         senderror.showError({
-          popupMessage: "UNSHOOTABLE_PAGE"
+          popupMessage: "UNSHOOTABLE_PAGE",
         });
         return;
       }
@@ -200,7 +200,7 @@ this.main = (function() {
         type: "basic",
         iconUrl: "../icons/copied-notification.svg",
         title: browser.i18n.getMessage("notificationLinkCopiedTitle"),
-        message: browser.i18n.getMessage("notificationLinkCopiedDetails", pasteSymbol)
+        message: browser.i18n.getMessage("notificationLinkCopiedDetails", pasteSymbol),
       });
     }
     return null;
@@ -234,7 +234,7 @@ this.main = (function() {
             type: "basic",
             iconUrl: "../icons/copied-notification.svg",
             title: browser.i18n.getMessage("notificationImageCopiedTitle"),
-            message: browser.i18n.getMessage("notificationImageCopiedDetails", pasteSymbol)
+            message: browser.i18n.getMessage("notificationImageCopiedDetails", pasteSymbol),
           });
         });
     });
@@ -261,7 +261,7 @@ this.main = (function() {
       return browser.downloads.download({
         url,
         incognito: windowInfo.incognito,
-        filename: info.filename
+        filename: info.filename,
       }).catch((error) => {
         // We are not logging error message when user cancels download
         if (error && error.message && !error.message.includes("canceled")) {
@@ -286,7 +286,7 @@ this.main = (function() {
     // Note, we only show the error but don't report it, as we know that we can't
     // take shots of these pages:
     senderror.showError({
-      popupMessage: "UNSHOOTABLE_PAGE"
+      popupMessage: "UNSHOOTABLE_PAGE",
     });
   });
 
