@@ -1,0 +1,20 @@
+{
+  "saveScreenshotSelectedArea": {
+    "message": "ಉಳಿಸು"
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourDone": {
+    "message": "ಆಯಿತು"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "ನಿಯಮಗಳು"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ಗೌಪ್ಯತಾ ಸೂಚನೆ"
+  },
+  "libraryLabel": {
+    "message": "ತೆರೆಚಿತ್ರಗಳು"
+  }
+}
