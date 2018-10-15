@@ -51,8 +51,8 @@
                     permissions-remove-all.label,
                     permissions-button-cancel.label,
                     permissions-button-ok.label,
-                    permissions-exceptions-content-blocking-window.title,
-                    permissions-exceptions-content-blocking-desc,
+                    permissions-exceptions-tracking-protection-window.title,
+                    permissions-exceptions-tracking-protection-desc,
                   "/>
         </hbox>
       </vbox>
