@@ -211,7 +211,6 @@ HTMLEditor::InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
   }
   MOZ_ASSERT(curCell == cellDataAtSelection.mElement);
 
-  // int32_t actualColSpan =    cellDataAtSelection.mEffectiveColSpan;
   // bool    isSelected =       cellDataAtSelection.mIsSelected;
 
   int32_t newCellIndex;
@@ -446,7 +445,6 @@ HTMLEditor::InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
   }
   MOZ_ASSERT(curCell == cellDataAtSelection.mElement);
 
-  int32_t    actualColSpan =    cellDataAtSelection.mEffectiveColSpan;
   // bool    isSelected =       cellDataAtSelection.mIsSelected;
 
   ErrorResult error;
@@ -468,13 +466,14 @@ HTMLEditor::InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
       break;
     case InsertPosition::eAfterSelectedCell:
       // Use column after current cell.
-      startColIndex += actualColSpan;
+      startColIndex += cellDataAtSelection.mEffectiveColSpan;
 
       // Detect when user is adding after a colspan=0 case.
       // Assume they want to stop the "0" behavior and really add a new column.
       // Thus we set the colspan to its true value.
       if (!cellDataAtSelection.mColSpan) {
-        SetColSpan(cellDataAtSelection.mElement, actualColSpan);
+        SetColSpan(cellDataAtSelection.mElement,
+                   cellDataAtSelection.mEffectiveColSpan);
       }
       break;
     default:
@@ -511,7 +510,6 @@ HTMLEditor::InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
         return NS_ERROR_FAILURE;
       }
 
-      // int32_t actualColSpan =          cellData.mEffectiveColSpan;
       // bool    isSelected =             cellData.mIsSelected;
 
       // Don't fail entire process if we fail to find a cell (may fail just in
@@ -640,7 +638,6 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
   }
   MOZ_ASSERT(curCell == cellDataAtSelection.mElement);
 
-  // int32_t actualColSpan =    cellDataAtSelection.mEffectiveColSpan;
   // bool isSelected =          cellDataAtSelection.mIsSelected;
 
   ErrorResult error;
@@ -695,7 +692,6 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
         break; // Perhaps, we reach end of the row.
       }
 
-                 actualColSpan =              cellData.mEffectiveColSpan;
       // bool    isSelected =                 cellData.mIsSelected;
 
       // XXX So, this is impossible case. Will be removed.
@@ -703,6 +699,8 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
         actualColSpan = 1;
         continue;
       }
+
+      actualColSpan = cellData.mEffectiveColSpan;
 
       if (cellData.IsSpannedFromOtherRow()) {
         // We have a cell spanning this location.  Increase its rowspan.
@@ -736,8 +734,9 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
         break; // Perhaps, we reach end of the row.
       }
 
-                 actualColSpan =              cellData.mEffectiveColSpan;
       // bool    isSelected =                 cellData.mIsSelected;
+
+     actualColSpan = cellData.mEffectiveColSpan;
 
       if (!cellData.mRowSpan) {
         MOZ_ASSERT(cellsInRow >= actualColSpan);
@@ -1385,7 +1384,6 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
       return NS_OK;
     }
 
-    // int32_t actualColSpan =       cellData.mEffectiveColSpan;
     // bool    isSelected =          cellData.mIsSelected;
 
     // Find cells that don't start in column we are deleting.
@@ -1657,7 +1655,6 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
       return NS_ERROR_FAILURE;
     }
 
-    int32_t    actualColSpan =       cellData.mEffectiveColSpan;
     // bool    isSelected =          cellData.mIsSelected;
 
     // XXX So, we should distinguish if CellDate returns error or just not
@@ -1703,7 +1700,7 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
       }
     }
     // Skip over other columns spanned by this cell
-    columnIndex += actualColSpan;
+    columnIndex += cellData.mEffectiveColSpan;
   }
 
   // Things are messed up if we didn't find a cell in the row!
@@ -1876,7 +1873,6 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
         return NS_ERROR_FAILURE;
       }
 
-                 actualColSpan =       cellData.mEffectiveColSpan;
       bool       isSelected =          cellData.mIsSelected;
 
       // Skip cells that already selected or are spanned from previous locations
@@ -1889,6 +1885,8 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
           break;
         }
       }
+
+      actualColSpan = cellData.mEffectiveColSpan;
     }
   }
   // NS_OK, otherwise, the last failure of AppendNodeToSelectionAsRange().
@@ -1945,7 +1943,6 @@ HTMLEditor::SelectAllTableCells()
         break;
       }
 
-                 actualColSpan =       cellData.mEffectiveColSpan;
       // bool    isSelected =          cellData.mIsSelected;
 
       // Skip cells that are spanned from previous rows or columns
@@ -1959,6 +1956,8 @@ HTMLEditor::SelectAllTableCells()
         }
         cellSelected = true;
       }
+
+      actualColSpan = cellData.mEffectiveColSpan;
     }
   }
   // Safety code to select starting cell if nothing else was selected
@@ -2033,7 +2032,6 @@ HTMLEditor::SelectTableRow()
       break;
     }
 
-               actualColSpan =       cellData.mEffectiveColSpan;
     // bool    isSelected =          cellData.mIsSelected;
 
     // Skip cells that are spanned from previous rows or columns
@@ -2047,6 +2045,8 @@ HTMLEditor::SelectTableRow()
       }
       cellSelected = true;
     }
+
+    actualColSpan = cellData.mEffectiveColSpan;
   }
   // Safety code to select starting cell if nothing else was selected
   if (!cellSelected) {
@@ -2116,7 +2116,6 @@ HTMLEditor::SelectTableColumn()
       break;
     }
 
-    // int32_t actualColSpan =       cellData.mEffectiveColSpan;
     // bool    isSelected =          cellData.mIsSelected;
 
     // Skip cells that are spanned from previous rows or columns
@@ -2254,11 +2253,11 @@ HTMLEditor::SplitCellIntoColumns(Element* aTable,
     return NS_ERROR_FAILURE;
   }
 
-  int32_t    actualColSpan =       cellData.mEffectiveColSpan;
   // bool    isSelected =          cellData.mIsSelected;
 
   // We can't split!
-  if (actualColSpan <= 1 || (aColSpanLeft + aColSpanRight) > actualColSpan) {
+  if (cellData.mEffectiveColSpan <= 1 ||
+      aColSpanLeft + aColSpanRight > cellData.mEffectiveColSpan) {
     return NS_OK;
   }
 
@@ -2312,7 +2311,6 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
     return NS_ERROR_FAILURE;
   }
 
-  int32_t    actualColSpan =       cellData.mEffectiveColSpan;
   // bool    isSelected =          cellData.mIsSelected;
 
   // We can't split!
@@ -2347,7 +2345,6 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
       return NS_ERROR_FAILURE;
     }
 
-               actualColSpan2 = cellDataAtInsertionPoint.mEffectiveColSpan;
     // bool    isSelected2 =    cellDataAtInsertionPoint.mIsSelected;
 
     // FYI: Don't use std::move() here since the following checks will use
@@ -2365,8 +2362,9 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
       }
       // New cell isn't first in row,
       // so stop after we find the cell just before new cell's column
-      if (cellDataAtInsertionPoint.mFirst.mColumn + actualColSpan2 ==
-            cellData.mFirst.mColumn) {
+      if (cellDataAtInsertionPoint.mFirst.mColumn +
+            cellDataAtInsertionPoint.mEffectiveColSpan ==
+              cellData.mFirst.mColumn) {
         break;
       }
       // If cell found is AFTER desired new cell colum,
@@ -2379,6 +2377,8 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
       }
       lastCellFound = std::move(cellDataAtInsertionPoint.mElement);
     }
+
+    actualColSpan2 = cellDataAtInsertionPoint.mEffectiveColSpan;
   }
 
   if (!cellElementAtInsertionPoint && lastCellFound) {
@@ -2399,7 +2399,8 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
   // Insert new cell after using the remaining span
   //  and always get the new cell so we can copy the background color;
   RefPtr<Element> newCell;
-  rv = InsertCell(cellElementAtInsertionPoint, aRowSpanBelow, actualColSpan,
+  rv = InsertCell(cellElementAtInsertionPoint,
+                  aRowSpanBelow, cellData.mEffectiveColSpan,
                   insertAfter, false, getter_AddRefs(newCell));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -2568,7 +2569,6 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           return NS_ERROR_FAILURE;
         }
 
-                   actualColSpan2 =          cellData.mEffectiveColSpan;
         bool       isSelected2 =             cellData.mIsSelected;
 
         if (isSelected2) {
@@ -2589,7 +2589,8 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             break;
           }
           // Save max selected column in this row, including extra colspan
-          lastColInRow = cellData.mCurrent.mColumn + actualColSpan2 - 1;
+          lastColInRow =
+            cellData.mCurrent.mColumn + cellData.mEffectiveColSpan - 1;
           cellFoundInRow = true;
         } else if (cellFoundInRow) {
           // No cell or not selected, but at least one cell in row was found
@@ -2603,6 +2604,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           // We're done with this row
           break;
         }
+        actualColSpan2 = cellData.mEffectiveColSpan;
       } // End of column loop
 
       // Done with this row
@@ -2646,11 +2648,10 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           return NS_ERROR_FAILURE;
         }
 
-                   actualColSpan2 =       cellData.mEffectiveColSpan;
         bool       isSelected2 =          cellData.mIsSelected;
 
         // If this is 0, we are past last cell in row, so exit the loop
-        if (!actualColSpan2) {
+        if (!cellData.mEffectiveColSpan) {
           break;
         }
 
@@ -2667,17 +2668,18 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             NS_ASSERTION(!cellData.IsSpannedFromOtherRow(),
                          "JoinTableCells: StartRowIndex is in row above");
 
-            if (actualColSpan2 > 1) {
+            if (cellData.mEffectiveColSpan > 1) {
               //Check if cell "hangs" off the boundary because of colspan > 1
               //  Use split methods to chop off excess
               int32_t extraColSpan =
-                cellData.mFirst.mColumn + actualColSpan2 - (lastColIndex + 1);
+                cellData.mFirst.mColumn + cellData.mEffectiveColSpan -
+                  (lastColIndex + 1);
               if ( extraColSpan > 0) {
-                rv = SplitCellIntoColumns(table,
-                                          cellData.mFirst.mRow,
-                                          cellData.mFirst.mColumn,
-                                          actualColSpan2 - extraColSpan,
-                                          extraColSpan, nullptr);
+                rv = SplitCellIntoColumns(
+                       table,
+                       cellData.mFirst.mRow, cellData.mFirst.mColumn,
+                       cellData.mEffectiveColSpan - extraColSpan,
+                       extraColSpan, nullptr);
                 if (NS_WARN_IF(NS_FAILED(rv))) {
                   return rv;
                 }
@@ -2701,6 +2703,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             }
           }
         }
+        actualColSpan2 = cellData.mEffectiveColSpan;
       }
     }
 
@@ -2764,19 +2767,18 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
       return NS_ERROR_FAILURE;
     }
 
-    int32_t    actualColSpan =             leftCellData.mEffectiveColSpan;
     // bool    isSelected =                leftCellData.mIsSelected;
 
     // Get data for cell to the right.
-    CellData rightCellData(*this, *table,
-                           leftCellData.mFirst.mRow,
-                           leftCellData.mFirst.mColumn + actualColSpan,
-                           ignoredError);
+    CellData rightCellData(
+               *this, *table,
+               leftCellData.mFirst.mRow,
+               leftCellData.mFirst.mColumn + leftCellData.mEffectiveColSpan,
+               ignoredError);
     if (NS_WARN_IF(rightCellData.FailedOrNotFound())) {
       return NS_ERROR_FAILURE;
     }
 
-    int32_t    actualColSpan2 =       rightCellData.mEffectiveColSpan;
     // bool    isSelected2 =          rightCellData.mIsSelected;
 
     // XXX So, this does not assume that CellData returns error when just not
@@ -2837,7 +2839,9 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     }
 
     // Reset target cell's colspan to encompass cell to the right
-    rv = SetColSpan(leftCellData.mElement, actualColSpan+actualColSpan2);
+    rv = SetColSpan(leftCellData.mElement,
+                    leftCellData.mEffectiveColSpan +
+                      rightCellData.mEffectiveColSpan);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2943,7 +2947,6 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
       return NS_ERROR_FAILURE;
     }
 
-               actualColSpan =       cellData.mEffectiveColSpan;
     // bool    isSelected =          cellData.mIsSelected;
 
     // XXX So, this does not assume that CellData returns error when just not
@@ -2957,7 +2960,8 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
         (cellData.mRowSpan < minRowSpan || minRowSpan == -1)) {
       minRowSpan = cellData.mRowSpan;
     }
-    NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in FixBadRowSpan");
+    MOZ_ASSERT(cellData.mEffectiveColSpan > 0);
+    actualColSpan = cellData.mEffectiveColSpan;
   }
   if (minRowSpan > 1) {
     // The amount to reduce everyone's rowspan
@@ -2971,7 +2975,6 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
         return NS_ERROR_FAILURE;
       }
 
-                 actualColSpan =       cellData.mEffectiveColSpan;
       // bool    isSelected =          cellData.mIsSelected;
 
       // Fixup rowspans only for cells starting in current row
@@ -2985,7 +2988,8 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
           return rv;
         }
       }
-      NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in FixBadRowSpan");
+      MOZ_ASSERT(cellData.mEffectiveColSpan > 0);
+      actualColSpan = cellData.mEffectiveColSpan;
     }
   }
   tableSize.Update(*this, *aTable, error);
@@ -3026,7 +3030,6 @@ HTMLEditor::FixBadColSpan(Element* aTable,
       return NS_ERROR_FAILURE;
     }
 
-    // int32_t actualColSpan =       cellData.mEffectiveColSpan;
     // bool    isSelected =          cellData.mIsSelected;
 
     // XXX So, this does not assume that CellData returns error when just
@@ -3054,7 +3057,6 @@ HTMLEditor::FixBadColSpan(Element* aTable,
         return NS_ERROR_FAILURE;
       }
 
-      // int32_t actualColSpan =       cellData.mEffectiveColSpan;
       // bool    isSelected =          cellData.mIsSelected;
 
       // Fixup colspans only for cells starting in current column
@@ -3165,7 +3167,6 @@ HTMLEditor::NormalizeTable(Selection& aSelection,
         return NS_ERROR_FAILURE;
       }
 
-      // int32_t actualColSpan =              cellData.mEffectiveColSpan;
       // bool    isSelected =                 cellData.mIsSelected;
 
       if (cellData.mElement) {
@@ -3315,7 +3316,6 @@ HTMLEditor::GetNumberOfCellsInRow(Element& aTableElement,
       break;
     }
 
-    int32_t    actualColSpan =              cellData.mEffectiveColSpan;
     // bool    isSelected =                 cellData.mIsSelected;
 
     if (cellData.mElement) {
@@ -3324,7 +3324,7 @@ HTMLEditor::GetNumberOfCellsInRow(Element& aTableElement,
         numberOfCells++;
       }
       // Next possible location for a cell
-      columnIndex += actualColSpan;
+      columnIndex += cellData.mEffectiveColSpan;
     } else {
       columnIndex++;
     }
@@ -4297,7 +4297,6 @@ HTMLEditor::AllCellsInRowSelected(Element* aTable,
       return false;
     }
 
-               actualColSpan =       cellData.mEffectiveColSpan;
     bool       isSelected =          cellData.mIsSelected;
 
     // If no cell, we may have a "ragged" right edge, so return TRUE only if
@@ -4315,7 +4314,8 @@ HTMLEditor::AllCellsInRowSelected(Element* aTable,
       return false;
     }
 
-    MOZ_ASSERT(actualColSpan > 0);
+    MOZ_ASSERT(cellData.mEffectiveColSpan > 0);
+    actualColSpan = cellData.mEffectiveColSpan;
   }
   return true;
 }
@@ -4338,7 +4338,6 @@ HTMLEditor::AllCellsInColumnSelected(Element* aTable,
       return false;
     }
 
-    // int32_t actualColSpan =       cellData.mEffectiveColSpan;
     bool       isSelected =          cellData.mIsSelected;
 
     // If no cell, we must have a "ragged" right edge on the last column so
