@@ -17,7 +17,7 @@
   %sanitizeDTD;
 ]>
 
-<dialog id="SanitizeDialog" type="child" class="prefwindow"
+<dialog id="SanitizeDialog" type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
@@ -35,62 +35,59 @@
     <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
   </keyset>
 
-  <vbox id="SanitizeDialogPane" class="prefpane">
+  <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
 
-    <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
+  <description>&clearDataSettings4.label;</description>
 
-    <description>&clearDataSettings4.label;</description>
-
-    <groupbox>
-      <caption><label>&historySection.label;</label></caption>
-      <grid flex="1">
-        <columns>
-          <column style="width: &sanitizePrefs2.column.width;"/>
-          <column flex="1"/>
-        </columns>
-        <rows>
-          <row>
-            <checkbox label="&itemHistoryAndDownloads.label;"
-                      accesskey="&itemHistoryAndDownloads.accesskey;"
-                      preference="privacy.clearOnShutdown.history"/>
-            <checkbox label="&itemCookies.label;"
-                      accesskey="&itemCookies.accesskey;"
-                      preference="privacy.clearOnShutdown.cookies"/>
-          </row>
-          <row>
-            <checkbox label="&itemActiveLogins.label;"
-                      accesskey="&itemActiveLogins.accesskey;"
-                      preference="privacy.clearOnShutdown.sessions"/>
-            <checkbox label="&itemCache.label;"
-                      accesskey="&itemCache.accesskey;"
-                      preference="privacy.clearOnShutdown.cache"/>
-          </row>
-          <row>
-            <checkbox label="&itemFormSearchHistory.label;"
-                      accesskey="&itemFormSearchHistory.accesskey;"
-                      preference="privacy.clearOnShutdown.formdata"/>
-          </row>
-        </rows>
-      </grid>
-    </groupbox>
-    <groupbox>
-      <caption><label>&dataSection.label;</label></caption>
-      <grid flex="1">
-        <columns>
-          <column style="width: &sanitizePrefs2.column.width;"/>
-          <column flex="1"/>
-        </columns>
-        <rows>
-          <row>
-            <checkbox label="&itemSitePreferences.label;"
-                      accesskey="&itemSitePreferences.accesskey;"
-                      preference="privacy.clearOnShutdown.siteSettings"/>
-            <checkbox label="&itemOfflineApps.label;"
-                      accesskey="&itemOfflineApps.accesskey;"
-                      preference="privacy.clearOnShutdown.offlineApps"/>
-          </row>
-        </rows>
-      </grid>
-    </groupbox>
-  </vbox>
+  <groupbox>
+    <caption><label>&historySection.label;</label></caption>
+    <grid flex="1">
+      <columns>
+        <column style="width: &sanitizePrefs2.column.width;"/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row>
+          <checkbox label="&itemHistoryAndDownloads.label;"
+                    accesskey="&itemHistoryAndDownloads.accesskey;"
+                    preference="privacy.clearOnShutdown.history"/>
+          <checkbox label="&itemCookies.label;"
+                    accesskey="&itemCookies.accesskey;"
+                    preference="privacy.clearOnShutdown.cookies"/>
+        </row>
+        <row>
+          <checkbox label="&itemActiveLogins.label;"
+                    accesskey="&itemActiveLogins.accesskey;"
+                    preference="privacy.clearOnShutdown.sessions"/>
+          <checkbox label="&itemCache.label;"
+                    accesskey="&itemCache.accesskey;"
+                    preference="privacy.clearOnShutdown.cache"/>
+        </row>
+        <row>
+          <checkbox label="&itemFormSearchHistory.label;"
+                    accesskey="&itemFormSearchHistory.accesskey;"
+                    preference="privacy.clearOnShutdown.formdata"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+  <groupbox>
+    <caption><label>&dataSection.label;</label></caption>
+    <grid flex="1">
+      <columns>
+        <column style="width: &sanitizePrefs2.column.width;"/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row>
+          <checkbox label="&itemSitePreferences.label;"
+                    accesskey="&itemSitePreferences.accesskey;"
+                    preference="privacy.clearOnShutdown.siteSettings"/>
+          <checkbox label="&itemOfflineApps.label;"
+                    accesskey="&itemOfflineApps.accesskey;"
+                    preference="privacy.clearOnShutdown.offlineApps"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
 </dialog>

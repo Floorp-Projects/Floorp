@@ -30,7 +30,7 @@
     <key data-l10n-id="colors-close-key" modifiers="accel" oncommand="Preferences.close(event)"/>
   </keyset>
 
-  <vbox id="ColorsDialogPane" class="prefpane">
+  <vbox>
 
     <script type="application/javascript" src="chrome://browser/content/preferences/colors.js"/>
 

@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/syncDisconnect.css" type="text/css"?>
 
-<window id="syncDisconnectDialog" class="windowDialog"
+<window id="syncDisconnectDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         role="dialog"
         onload="gSyncDisconnectDialog.init();"

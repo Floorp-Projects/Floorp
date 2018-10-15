@@ -4,10 +4,8 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-dialog,
 window,
-.prefpane,
-.windowDialog {
+dialog {
   -moz-appearance: none;
   background-color: #fbfbfb;
   color: #424e5a;
@@ -16,7 +14,18 @@ window,
 }
 
 .contentPane {
-  margin: 0;
+  -moz-box-flex: 1;
+}
+
+.contentPane,
+dialog > .dialog-content-box {
+  /* This allows the focus ring to display fully when scrolling is enabled. */
+  padding: 4px;
+}
+
+.contentPane.doScroll,
+dialog.doScroll > .dialog-content-box {
+  overflow-y: auto;
 }
 
 tree:not(#rejectsTree) {
@@ -24,7 +33,7 @@ tree:not(#rejectsTree) {
 }
 
 .actionButtons {
-  margin: 3px 0 0 !important;
+  margin: 3px 0 0;
 }
 
 menulist label {
