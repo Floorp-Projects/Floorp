@@ -442,7 +442,6 @@ AndroidDynamicToolbarAnimator::FirstPaint()
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mCompositorReceivedFirstPaint = true;
-  PostMessage(FIRST_PAINT);
 }
 
 void

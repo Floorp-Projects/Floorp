@@ -51,6 +51,7 @@ public:
 
   // Called when a layer has been updated so the UI thread may be notified if necessary.
   void NotifyLayersUpdated();
+  void NotifyFirstPaint();
 
 private:
   explicit UiCompositorControllerParent(const LayersId& aRootLayerTreeId);
