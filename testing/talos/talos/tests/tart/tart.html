@@ -1,4 +1,4 @@
-﻿<html>
+<html>
 <head>
 
 <meta charset="UTF-8"/>
@@ -16,9 +16,14 @@ function $(id) {
 // doneCallback will be called once done and, if applicable, with the result as argument.
 // Execution might finish quickly (e.g. when setting prefs) or
 // take a while (e.g. when triggering the test run)
+let _replyId = 1;
 function chromeExec(commandName, data, doneCallback) {
-  // dispatch an event to the framescript which will take it from there.
-  doneCallback = doneCallback || function dummy() {};
+  let replyEvent = `tart@mozilla.org:chrome-exec-reply:${_replyId++}`;
+  if (doneCallback) {
+    addEventListener(replyEvent, e => { doneCallback(e.detail); },
+                     {once: true});
+  }
+
   dispatchEvent(
     new CustomEvent("tart@mozilla.org:chrome-exec-event", {
       bubbles: true,
@@ -27,7 +32,7 @@ function chromeExec(commandName, data, doneCallback) {
           name: commandName,
           data,
         },
-        doneCallback
+        replyEvent,
       }
     })
   );
@@ -47,6 +52,22 @@ function toClipboard(text) {
 
 function runTest(config, doneCallback) {
   chromeExec("runTest", config, doneCallback);
+}
+
+// Returns a Promise that resolves when the test extension is loaded.
+function waitForLoad() {
+  async function tryPing() {
+    let pingPromise = new Promise(resolve => chromeExec("ping", null, resolve));
+    let timeoutPromise = new Promise((resolve, reject) => setTimeout(reject, 500));
+
+    try {
+      await Promise.race([pingPromise, timeoutPromise]);
+    } catch (e) {
+      return tryPing();
+    }
+    return null;
+  }
+  return tryPing();
 }
 
 
@@ -116,6 +137,15 @@ function doneTest(dispResult) {
 
     // eslint-disable-next-line no-unsanitized/property
     $("run-results").innerHTML = "<hr/><br/>Results <button onclick='toClipboard(lastResults)'>[ Copy to clipboard as JSON ]</button>:<br/>" + dispStats + dispResult.join("<br/>");
+
+    let testNames = [], testResults = [];
+    for (let result of JSON.parse(lastResults)) {
+      if (!Array.isArray(result.value)) {
+        testNames.push(result.name);
+        testResults.push(result.value);
+      }
+    }
+    window.tpRecordTime(testResults.join(","), 0, testNames.join(","));
   }
 }
 
@@ -127,7 +157,9 @@ function triggerStart() {
   $("show-during-run").style.display = "block";
   $("run-results").innerHTML = "";
 
-  runTest(config, doneTest);
+  waitForLoad().then(() => {
+    runTest(config, doneTest);
+  });
 }
 
 var defaultConfig = {
