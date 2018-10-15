@@ -1,0 +1,184 @@
+{
+  "addonDescription": {
+    "message": "Tog cliopaichean is glacaidhean-sgrìn on lìon is sàbhail iad rè seal no gu buan."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Tog glacadh-sgrìn"
+  },
+  "myShotsLink": {
+    "message": "Na glacaidhean agam"
+  },
+  "screenshotInstructions": {
+    "message": "Dèan briogadh no slaodadh air an duilleag airson raon a thaghadh. Brùth ESC airson sgur dheth."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Sàbhail"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Sàbhail na tha ri fhaicinn"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Sàbhail an duilleag shlàn"
+  },
+  "cancelScreenshot": {
+    "message": "Sguir dheth"
+  },
+  "downloadScreenshot": {
+    "message": "Luchdaich a-nuas"
+  },
+  "downloadOnlyNotice": {
+    "message": "Tha thu sa mhodh luchdaidh a-nuas a-mhàin."
+  },
+  "downloadOnlyDetails": {
+    "message": "Bidh gleus glacaidhean-sgrìn Firefox sa mhodh luchdaidh a-nuas gu fèin-obrachail sna suidheachaidhean a leanas:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Ann an uinneag brabhsaidh phrìobhaidich."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Tha briosgaidean threas-phàrtaidhean à comas."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Tha “Na cuimhnich an eachdraidh idir” an comas."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Tha thu a’ cleachdadh Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Chaidh an luchdadh suas a chur à comas."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Chaidh lethbhreac a dhèanamh dhen cheangal"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Chaidh lethbhreac de cheangal a’ ghlacaidh agad a chur air an stòr-bhòrd. Brùth $META_KEY$-V airson a chur ann.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Dèan lethbhreac"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Chaidh lethbhreac a dhèanamh dhen ghlacadh"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Chaidh lethbhreac dhen ghlacadh agad a chur air an stòr-bhòrd. Brùth $META_KEY$-V airson a chur ann.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "Chaidh an dealbh a bhearradh is tha e $PIXELS$px a-nis.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Tuibriste."
+  },
+  "requestErrorDetails": {
+    "message": "Tha sinn duilich! Cha b’ urrainn dhuinn an glacadh agad a shàbhaladh. Feuch ris a-rithist an ceann greis."
+  },
+  "connectionErrorTitle": {
+    "message": "Cha b’ urrainn dhuinn na glacaidhean-sgrìn agad a shàbhaladh."
+  },
+  "connectionErrorDetails": {
+    "message": "Thoir sùil air a’ cheangal agad ris an eadar-lìon. Ma tha ceangal agad ris, dh’fhaoidte gu bheil duilgheadas sealach aig seirbheis glacaidhean-sgrìn Firefox."
+  },
+  "loginErrorDetails": {
+    "message": "Cha b’ urrainn dhuinn an glacadh agad a shàbhaladh air sgàth duilgheadas le seirbheis glacaidhean-sgrìn Firefox. Feuch ris a-rithist an ceann greis."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Chan urrainn dhuinn glacadh-sgrìn a dhèanamh dhen duilleag seo."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Chan eil duilleag-lìn àbhaisteach a tha seo ’s chan urrainn dhut glacadh-sgrìn a dhèanamh dheth."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Chan urrainn dhut glacadh a thogail de dhuilleag ghlacaidhean-sgrìn Firefox!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Tha na thagh thu ro bheag"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Tha gleus nan glacaidhean-sgrìn à comas ann am modh a’ bhrabhsaidh phrìobhaidich"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Tha sinn duilich mu dhèidhinn. Tha sinn ag obair air agus an dòchas gum bi e ri làimh a dh’aithghearr."
+  },
+  "genericErrorTitle": {
+    "message": "Ìoc! Sin glacaidhean-sgrìn Firefox air feadh na fìdhle."
+  },
+  "genericErrorDetails": {
+    "message": "Chan eil sinn cinnteach dè thachair. A bheil thu airson feuchainn ris a-rithist no glacadh a thogail de dhuilleag eile?"
+  },
+  "tourBodyIntro": {
+    "message": "Tog, sàbhail is co-roinn glacadh-sgrìn gun Firefix fhàgail."
+  },
+  "tourHeaderPageAction": {
+    "message": "Dòigh ùr airson sàbhaladh"
+  },
+  "tourBodyPageAction": {
+    "message": "Leudaich clàr-taice gnìomhan na duilleige ann am bàr an t-seòlaidh uair sam bith a tha thu airson glacadh-sgrìn a thogail."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Na glac ach dìreach na tha a dhìth ort"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Dèan briogadh is slaodadh airson earrann de dhuilleag a ghlacadh. ’S urrainn dhut fantainn os cionn rud cuideachd airson na thagh thu a shoillseachadh."
+  },
+  "tourHeaderFullPage": {
+    "message": "Glac uinneagan no duilleagan slàna"
+  },
+  "tourBodyFullPage": {
+    "message": "Tagh na putanan air an taobh deas gu h-àrd airson na tha ri fhaicinn san uinneag a ghlacadh no airson duilleag shlàn a ghlacadh."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Do thoil fhèin"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Sàbhail na glacaidhean bearrte air an lìon ach am bi e furasta an co-roinneadh no luchdaich a-nuas iad dhan choimpiutair agad. ’S urrainn dhut briogadh air a’ phutan “Na glacaidhean agam” cuideachd is chì thu gach glacadh a thog thu."
+  },
+  "tourSkip": {
+    "message": "LEUM SEACHAD"
+  },
+  "tourNext": {
+    "message": "An ath-shleamhnag"
+  },
+  "tourPrevious": {
+    "message": "An t-sleamhnag roimhe"
+  },
+  "tourDone": {
+    "message": "Dèanta"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Ma chleachdas tu gleus nan glacaidhean-sgrìn aig Firefox, bidh thu ag aontachadh ris na $TERMSANDPRIVACYNOTICETERMSLINK$ agus $TERMSANDPRIVACYNOTICEPRIVACYLINK$ againn.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "na teirmichean"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "an aithris prìobhaideachd"
+  },
+  "libraryLabel": {
+    "message": "Glacaidhean-sgrìn"
+  }
+}
