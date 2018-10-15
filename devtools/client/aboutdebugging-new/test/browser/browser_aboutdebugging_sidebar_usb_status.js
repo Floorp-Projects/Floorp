@@ -4,6 +4,7 @@
 "use strict";
 
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
+const { ADB } = require("devtools/shared/adb/adb");
 
 /**
  * This test asserts that the sidebar shows a message describing the status of the USB
@@ -32,6 +33,13 @@ add_task(async function() {
   info("Install the adb extension and wait for the message to udpate");
   adbAddon.install();
   await waitUntil(() => usbStatusElement.textContent.includes("USB devices enabled"));
+
+  // Right now we are resuming as soon as "USB devices enabled" is displayed, but ADB
+  // might still be starting up. If we move to uninstall directly, the ADB startup will
+  // fail and we will have an unhandled promise rejection.
+  // See Bug 1498469.
+  info("Wait until ADB has started.");
+  await waitUntil(() => ADB.ready);
 
   info("Uninstall the adb extension and wait for the message to udpate");
   adbAddon.uninstall();
