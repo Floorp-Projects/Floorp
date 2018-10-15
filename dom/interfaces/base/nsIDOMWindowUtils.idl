@@ -115,7 +115,7 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Information retrieved from the <meta name="viewport"> tag.
-   * See nsContentUtils::GetViewportInfo for more information.
+   * See nsIDocument::GetViewportInfo for more information.
    */
   void getViewportInfo(in uint32_t aDisplayWidth, in uint32_t aDisplayHeight,
                        out double aDefaultZoom, out boolean aAllowZoom,
