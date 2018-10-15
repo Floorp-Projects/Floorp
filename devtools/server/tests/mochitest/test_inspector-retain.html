@@ -25,17 +25,13 @@ function assertOwnership() {
   return assertOwnershipTrees(gWalker);
 }
 
-addTest(function setup() {
+addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
-    gInspectee = doc;
-    const {InspectorFront} = require("devtools/shared/fronts/inspector");
-    const inspector = InspectorFront(client, tab);
-    promiseDone(inspector.getWalker().then(walker => {
-      ok(walker, "getWalker() should return an actor.");
-      gWalker = walker;
-    }).then(runNextTest));
-  });
+  const { target, doc } = await attachURL(url);
+  const inspector = target.getInspector();
+  gInspectee = doc;
+  gWalker = await inspector.getWalker();
+  runNextTest();
 });
 
 // Retain a node, and a second-order child (in another document, for kicks)
