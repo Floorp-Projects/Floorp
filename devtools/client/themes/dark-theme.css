@@ -251,14 +251,6 @@ div.CodeMirror span.eval-text {
   min-height: 1.4em;
 }
 
-.devtools-textinput,
-.devtools-searchinput,
-.devtools-filterinput {
-  /* in between grey-85 and grey-90 */
-  background-color: #141416;
-  color: var(--theme-highlight-gray);
-}
-
 .CodeMirror-Tern-fname {
   color: #f7f7f7;
 }
