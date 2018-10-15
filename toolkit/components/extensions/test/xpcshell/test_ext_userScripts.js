@@ -325,9 +325,16 @@ add_task(async function test_userScripts_exported_APIs() {
     });
 
     async function userScript() {
-      // Explicitly retrieve the custom exported API methods
-      // to prevent eslint to raise a no-undef validation
-      // error for them.
+      // Redefine Promise and Error globals to verify that it doesn't break the WebExtensions internals
+      // that are going to use them.
+      const {Error} = this;
+      this.Promise.resolve = function() {
+        throw new Error("Promise poisoning");
+      };
+      this.Error = {};
+
+      // Explicitly retrieve the custom exported API methods to prevent eslint to raise a no-undef
+      // validation error for them.
       const {
         US_sync_api,
         US_async_api_with_callback,
@@ -335,7 +342,14 @@ add_task(async function test_userScripts_exported_APIs() {
       } = this;
       this.userScriptGlobalVar = "global-sandbox-value";
 
-      const syncAPIResult = US_sync_api("param1", "param2");
+      // Redefine the includes method on the Array prototype, to explicitly verify that the method
+      // redefined in the userScript is not used when accessing arrayParam.includes from the API script.
+      Array.prototype.includes = () => { // eslint-disable-line no-extend-native
+        throw new Error("Unexpected prototype leakage");
+      };
+      const arrayParam = new Array(1, 2, 3); // eslint-disable-line no-array-constructor
+
+      const syncAPIResult = US_sync_api("param1", "param2", arrayParam);
       const cb = (cbParam) => {
         return `callback param: ${JSON.stringify(cbParam)}`;
       };
@@ -379,7 +393,7 @@ add_task(async function test_userScripts_exported_APIs() {
     this.Error = {};
 
     browser.userScripts.setScriptAPIs({
-      US_sync_api([param1, param2], scriptMetadata, scriptGlobal) {
+      US_sync_api([param1, param2, arrayParam], scriptMetadata, scriptGlobal) {
         browser.test.assertEq("test-user-script-exported-apis", scriptMetadata.name,
                               "Got the expected value for a string scriptMetadata property");
         browser.test.assertEq(null, scriptMetadata.nullProperty,
@@ -394,6 +408,9 @@ add_task(async function test_userScripts_exported_APIs() {
 
         browser.test.assertEq("param1", param1, "Got the expected parameter value");
         browser.test.assertEq("param2", param2, "Got the expected parameter value");
+
+        browser.test.assertEq(3, arrayParam.length, "Got the expected lenght on the array param");
+        browser.test.assertTrue(arrayParam.includes(1), "Got the expected result when calling arrayParam.includes");
 
         browser.test.sendMessage("US_sync_api", {param1, param2});
 
