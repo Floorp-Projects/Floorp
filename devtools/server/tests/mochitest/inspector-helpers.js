@@ -63,25 +63,23 @@ async function attachURL(url) {
   // the test tab, to reference the webpage being tested against, which is in another
   // tab.
   const windowOpened = BrowserTestUtils.waitForNewTab(gBrowser, url);
-  let win = window.open(url, "_blank");
+  const win = window.open(url, "_blank");
   await windowOpened;
 
   const target = await getTargetForSelectedTab(gBrowser);
-  const client = target.client;
   await target.attach();
 
   const cleanup = async function() {
-    if (client) {
-      await client.close();
+    if (target.client) {
+      await target.client.close();
     }
     if (win) {
       win.close();
-      win = null;
     }
   };
 
   gAttachCleanups.push(cleanup);
-  return { client, target, doc: win.document, cleanup };
+  return { target, doc: win.document };
 }
 
 function promiseOnce(target, event) {
@@ -168,7 +166,7 @@ function assertOwnershipTrees(walker) {
 }
 
 // Verify that an actorID is inaccessible both from the client library and the server.
-function checkMissing(client, actorID) {
+function checkMissing({client}, actorID) {
   return new Promise(resolve => {
     const front = client.getActor(actorID);
     ok(!front, "Front shouldn't be accessible from the client for actorID: " + actorID);
@@ -185,7 +183,7 @@ function checkMissing(client, actorID) {
 }
 
 // Verify that an actorID is accessible both from the client library and the server.
-function checkAvailable(client, actorID) {
+function checkAvailable({client}, actorID) {
   return new Promise(resolve => {
     const front = client.getActor(actorID);
     ok(front, "Front should be accessible from the client for actorID: " + actorID);
