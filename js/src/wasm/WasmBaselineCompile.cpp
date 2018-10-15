@@ -9779,7 +9779,7 @@ BaseCompiler::emitStructNew()
     // Null pointer check.
 
     Label ok;
-    masm.branchTestPtr(Assembler::NotEqual, ReturnReg, ReturnReg, &ok);
+    masm.branchTestPtr(Assembler::NonZero, ReturnReg, ReturnReg, &ok);
     trap(Trap::ThrowReported);
     masm.bind(&ok);
 
@@ -9908,7 +9908,7 @@ BaseCompiler::emitStructGet()
     RegPtr rp = popRef();
 
     Label ok;
-    masm.branchTestPtr(Assembler::NotEqual, rp, rp, &ok);
+    masm.branchTestPtr(Assembler::NonZero, rp, rp, &ok);
     trap(Trap::NullPointerDereference);
     masm.bind(&ok);
 
@@ -10013,7 +10013,7 @@ BaseCompiler::emitStructSet()
     RegPtr rp = popRef();
 
     Label ok;
-    masm.branchTestPtr(Assembler::NotEqual, rp, rp, &ok);
+    masm.branchTestPtr(Assembler::NonZero, rp, rp, &ok);
     trap(Trap::NullPointerDereference);
     masm.bind(&ok);
 
@@ -10085,7 +10085,7 @@ BaseCompiler::emitStructNarrow()
     Label done;
     Label doTest;
     RegPtr rp = popRef();
-    masm.branchTestPtr(Assembler::NotEqual, rp, rp, &doTest);
+    masm.branchTestPtr(Assembler::NonZero, rp, rp, &doTest);
     pushRef(NULLREF_VALUE);
     masm.jump(&done);
 
