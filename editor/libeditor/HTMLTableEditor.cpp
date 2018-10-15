@@ -217,8 +217,8 @@ HTMLEditor::InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
       newCellIndex = cellDataAtSelection.mCurrent.mColumn;
       break;
     case InsertPosition::eAfterSelectedCell:
-      newCellIndex =
-        cellDataAtSelection.mCurrent.mColumn + cellDataAtSelection.mColSpan;
+      MOZ_ASSERT(!cellDataAtSelection.IsSpannedFromOtherRowOrColumn());
+      newCellIndex = cellDataAtSelection.NextColumnIndex();
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid InsertPosition");
