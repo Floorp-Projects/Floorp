@@ -265,10 +265,7 @@ Object.defineProperty(this, "gURLBar", {
 
     let element = document.getElementById("urlbar");
 
-    // For now, always use the legacy implementation in the first window to
-    // have a usable address bar e.g. for accessing about:config.
-    if (BrowserWindowTracker.windowCount <= 1 ||
-        !Services.prefs.getBoolPref("browser.urlbar.quantumbar", false)) {
+    if (!Services.prefs.getBoolPref("browser.urlbar.quantumbar", false)) {
       return this.gURLBar = element;
     }
 
