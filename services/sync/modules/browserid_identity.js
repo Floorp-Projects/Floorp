@@ -256,7 +256,9 @@ this.BrowserIDManager.prototype = {
       }
       // There's no need to wait for sync to complete and it would deadlock
       // our AsyncObserver.
-      Weave.Service.sync({why: "login"});
+      if (!Svc.Prefs.get("testing.tps", false)) {
+        Weave.Service.sync({why: "login"});
+      }
       break;
     }
 

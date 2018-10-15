@@ -11,7 +11,7 @@ EnableEngines(["addons"]);
 var phases = {
   "phase01": "profile1",
   "phase02": "profile1",
-  "phase03": "profile1",
+  "phase03": "profile1"
 };
 
 const id1 = "restartless-xpi@tests.mozilla.org";
