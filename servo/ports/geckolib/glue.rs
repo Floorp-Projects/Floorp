@@ -36,6 +36,7 @@ use style::gecko::wrapper::{GeckoElement, GeckoNode};
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::{RawGeckoElementBorrowed, RawGeckoElementBorrowedOrNull, RawGeckoNodeBorrowed};
 use style::gecko_bindings::bindings::{RawGeckoKeyframeListBorrowed, RawGeckoKeyframeListBorrowedMut};
+use style::gecko_bindings::bindings::RawGeckoPresContextBorrowed;
 use style::gecko_bindings::bindings::{RawServoAuthorStyles, RawServoAuthorStylesBorrowed};
 use style::gecko_bindings::bindings::{RawServoAuthorStylesBorrowedMut, RawServoAuthorStylesOwned};
 use style::gecko_bindings::bindings::{RawServoCounterStyleRule, RawServoCounterStyleRuleBorrowed};
@@ -102,7 +103,6 @@ use style::gecko_bindings::structs::OriginFlags_Author;
 use style::gecko_bindings::structs::OriginFlags_User;
 use style::gecko_bindings::structs::OriginFlags_UserAgent;
 use style::gecko_bindings::structs::RawGeckoGfxMatrix4x4;
-use style::gecko_bindings::structs::RawGeckoPresContextOwned;
 use style::gecko_bindings::structs::RawServoFontFaceRule;
 use style::gecko_bindings::structs::RawServoSelectorList;
 use style::gecko_bindings::structs::RawServoSourceSizeList;
@@ -1689,11 +1689,9 @@ pub extern "C" fn Servo_CssRules_ListTypes(
     result: nsTArrayBorrowed_uintptr_t,
 ) {
     read_locked_arc(rules, |rules: &CssRules| {
-        let iter = rules.0.iter().map(|rule| rule.rule_type() as usize);
-        let (size, upper) = iter.size_hint();
-        debug_assert_eq!(size, upper.unwrap());
-        unsafe { result.set_len(size as u32) };
-        result.iter_mut().zip(iter).fold((), |_, (r, v)| *r = v);
+        result.assign_from_iter_pod(
+            rules.0.iter().map(|rule| rule.rule_type() as usize)
+        );
     })
 }
 
@@ -3340,14 +3338,13 @@ pub extern "C" fn Servo_ComputedValues_GetStyleRuleList(
         result.push(style_rule);
     }
 
-    unsafe { rules.set_len(result.len() as u32) };
-    for (ref src, ref mut dest) in result.into_iter().zip(rules.iter_mut()) {
+    rules.assign_from_iter_pod(result.into_iter().map(|src| {
         src.with_arc(|a| {
             a.with_raw_offset_arc(|arc| {
-                **dest = *Locked::<StyleRule>::arc_as_borrowed(arc);
+                *Locked::<StyleRule>::arc_as_borrowed(arc) as *const _
             })
-        });
-    }
+        })
+    }))
 }
 
 /// See the comment in `Device` to see why it's ok to pass an owned reference to
@@ -3355,7 +3352,7 @@ pub extern "C" fn Servo_ComputedValues_GetStyleRuleList(
 /// device alive).
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_Init(
-    pres_context: RawGeckoPresContextOwned,
+    pres_context: RawGeckoPresContextBorrowed,
 ) -> *mut RawServoStyleSet {
     let data = Box::new(PerDocumentStyleData::new(pres_context));
     Box::into_raw(data) as *mut RawServoStyleSet

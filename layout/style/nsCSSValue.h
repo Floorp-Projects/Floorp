@@ -13,7 +13,7 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ServoTypes.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/UniquePtr.h"
