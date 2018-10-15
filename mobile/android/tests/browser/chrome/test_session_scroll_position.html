@@ -29,10 +29,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
   let BrowserApp = chromeWin.BrowserApp;
 
+  const BASE = "http://example.org/chrome/mobile/android/tests/browser/chrome/";
   // Use something with ample space for scrolling and zooming.
-  const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/browser_scrollPositions_sample.html";
+  const URL = BASE + "browser_scrollPositions_sample.html";
   // Same content but under a different URL, so we have something to navigate to and from.
-  const URL2 = "http://example.org/chrome/mobile/android/tests/browser/chrome/browser_scrollPositions_sample2.html";
+  const URL2 = BASE + "browser_scrollPositions_sample2.html";
   // Reader mode URL
   const URL_reader = "about:reader?url=http%3A%2F%2Fexample.org%2Fchrome%2Fmobile%2Fandroid%2Ftests%2Fbrowser%2Fchrome%2Fbasic_article_mobile.html";
 
@@ -48,19 +49,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
   const SCROLL2_STR = SCROLL2_X + "," + SCROLL2_Y;
   const ZOOM2 = 1.5 + 0.5 * Math.random();
 
-  function dispatchUIEvent(browser, type) {
-    let event = browser.contentDocument.createEvent("UIEvents");
-    event.initUIEvent(type, true, false, browser.contentDocument.defaultView, 0);
-    browser.dispatchEvent(event);
+  function getFrame(browser, data) {
+    let frame = browser.contentWindow;
+    if (data.hasOwnProperty("frame")) {
+      frame = browser.contentWindow.frames[data.frame];
+    }
+    return frame;
   }
 
-  function setScrollPosition(browser, x, y) {
-    browser.contentWindow.scrollTo(x, y);
-    dispatchUIEvent(browser, "scroll");
+  function setScrollPosition(browser, data) {
+    let {x, y, zoom} = data;
+    x = x || 0;
+    y = y || 0;
+    let frame = getFrame(browser, data);
+    if (data.hasOwnProperty("zoom")) {
+      browser.contentWindow.windowUtils.setResolutionAndScaleTo(zoom);
+    }
+    frame.scrollTo(x, y);
   }
 
-  function setZoomLevel(browser, zoom) {
-    browser.contentWindow.windowUtils.setResolutionAndScaleTo(zoom);
+  function checkScroll(browser, data) {
+    let {x, y, zoom} = data;
+    let utils = getFrame(browser, data).windowUtils;
+
+    let actualX = {}, actualY = {}, actualZoom = {};
+    utils.getResolution(actualZoom);
+    utils.getScrollXY(false, actualX, actualY);
+
+    if (data.hasOwnProperty("x")) {
+      is(actualX.value, x, "scrollX set correctly");
+    }
+    if (data.hasOwnProperty("y")) {
+      is(actualY.value, y, "scrollY set correctly");
+    }
+    if (data.hasOwnProperty("zoom")) {
+      ok(fuzzyEquals(actualZoom.value, zoom), "zoom set correctly");
+    }
   }
 
   // Track the tabs where the tests are happening.
@@ -80,6 +104,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
   add_task(async function test_sessionStoreScrollPositionReaderMode() {
+    let testData = {x: 0, y: SCROLL_Y};
     // Creates a tab, sets a scroll position and closes the tab.
     function createAndRemoveReaderTab() {
       return Task.spawn(function* () {
@@ -89,15 +114,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
         yield promiseBrowserEvent(browser, "AboutReaderContentReady");
 
         // Modify scroll position.
-        setScrollPosition(browser, 0, SCROLL_Y);
+        setScrollPosition(browser, testData);
         yield promiseTabEvent(browser, "SSTabScrollCaptured");
 
         // Check that we've actually scrolled.
-        let utils = browser.contentWindow.windowUtils;
-        let scrollX = {}, scrollY = {};
-        utils.getScrollXY(false, scrollX, scrollY);
-        is(scrollX.value, 0, "scrollX set correctly");
-        is(scrollY.value, SCROLL_Y, "scrollY set correctly");
+        checkScroll(browser, testData);
 
         // Remove the tab.
         BrowserApp.closeTab(tabScroll);
@@ -116,17 +137,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     await promiseBrowserEvent(browser, "AboutReaderContentReady");
 
     // Check the scroll position.
-    let utils = browser.contentWindow.windowUtils;
-    let scrollX = {}, scrollY = {};
-    utils.getScrollXY(false, scrollX, scrollY);
-    is(scrollX.value, 0, "scrollX restored correctly");
-    is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
+    checkScroll(browser, testData);
 
     // Remove the tab.
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
   });
 
   add_task(async function test_sessionStoreScrollPositionAndZoomLevel() {
+    let testData1 = {x: SCROLL_X, y: SCROLL_Y, zoom: ZOOM};
+    let testData2 = {x: SCROLL2_X, y: SCROLL2_Y, zoom: ZOOM2};
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
     function createAndRemoveTab() {
       return Task.spawn(function* () {
@@ -136,32 +155,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
         yield promiseBrowserEvent(browser, "pageshow");
 
         // Modify scroll position and zoom level.
-        setZoomLevel(browser, ZOOM);
-        setScrollPosition(browser, SCROLL_X, SCROLL_Y);
+        setScrollPosition(browser, testData1);
         yield promiseTabEvent(browser, "SSTabScrollCaptured");
 
         // Check that we've actually scrolled and zoomed.
-        let utils = browser.contentWindow.windowUtils;
-        let scrollX = {}, scrollY = {}, zoom = {};
-        utils.getResolution(zoom);
-        utils.getScrollXY(false, scrollX, scrollY);
-        ok(fuzzyEquals(zoom.value, ZOOM), "zoom set correctly");
-        is(scrollX.value, SCROLL_X, "scrollX set correctly");
-        is(scrollY.value, SCROLL_Y, "scrollY set correctly");
+        checkScroll(browser, testData1);
 
         // Navigate to a different page and scroll/zoom there as well.
         browser.loadURI(URL2);
         yield promiseBrowserEvent(browser, "pageshow");
 
-        setZoomLevel(browser, ZOOM2);
-        setScrollPosition(browser, SCROLL2_X, SCROLL2_Y);
+        setScrollPosition(browser, testData2);
         yield promiseTabEvent(browser, "SSTabScrollCaptured");
 
-        utils.getResolution(zoom);
-        utils.getScrollXY(false, scrollX, scrollY);
-        ok(fuzzyEquals(zoom.value, ZOOM2), "zoom set correctly");
-        is(scrollX.value, SCROLL2_X, "scrollX set correctly");
-        is(scrollY.value, SCROLL2_Y, "scrollY set correctly");
+        checkScroll(browser, testData2);
 
         // Remove the tab.
         BrowserApp.closeTab(tabScroll);
@@ -184,13 +191,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     await scroll;
 
     // Check the scroll position and zoom level.
-    let utils = browser.contentWindow.windowUtils;
-    let scrollX = {}, scrollY = {}, zoom = {};
-    utils.getResolution(zoom);
-    utils.getScrollXY(false, scrollX, scrollY);
-    ok(fuzzyEquals(zoom.value, ZOOM2), "zoom restored correctly");
-    is(scrollX.value, SCROLL2_X, "scrollX restored correctly");
-    is(scrollY.value, SCROLL2_Y, "scrollY restored correctly");
+    checkScroll(browser, testData2);
 
     // Now go back in history and check that the scroll position
     // is restored there as well.
@@ -201,17 +202,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     await pageshow;
     await scroll;
 
-    utils.getResolution(zoom);
-    utils.getScrollXY(false, scrollX, scrollY);
-    ok(fuzzyEquals(zoom.value, ZOOM), "zoom restored correctly");
-    is(scrollX.value, SCROLL_X, "scrollX restored correctly");
-    is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
+    checkScroll(browser, testData1);
 
     // Remove the tab.
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
   });
 
   add_task(async function test_sessionStoreZoomLevelRecalc() {
+    let testData = {x: SCROLL_X, y: SCROLL_Y, zoom: ZOOM};
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
     function createAndRemoveTab() {
       return Task.spawn(function* () {
@@ -221,18 +219,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
         yield promiseBrowserEvent(browser, "pageshow");
 
         // Modify scroll position and zoom level.
-        setZoomLevel(browser, ZOOM);
-        setScrollPosition(browser, SCROLL_X, SCROLL_Y);
+        setScrollPosition(browser, testData);
         yield promiseTabEvent(browser, "SSTabScrollCaptured");
 
         // Check that we've actually scrolled and zoomed.
-        let utils = browser.contentWindow.windowUtils;
-        let scrollX = {}, scrollY = {}, zoom = {};
-        utils.getResolution(zoom);
-        utils.getScrollXY(false, scrollX, scrollY);
-        ok(fuzzyEquals(zoom.value, ZOOM), "zoom set correctly");
-        is(scrollX.value, SCROLL_X, "scrollX set correctly");
-        is(scrollY.value, SCROLL_Y, "scrollY set correctly");
+        checkScroll(browser, testData);
 
         // Remove the tab.
         BrowserApp.closeTab(tabScroll);
@@ -258,13 +249,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     await promiseBrowserEvent(browser, "pageshow");
 
     // Check the scroll position and zoom level.
-    let utils = browser.contentWindow.windowUtils;
-    let scrollX = {}, scrollY = {}, zoom = {};
-    utils.getResolution(zoom);
-    utils.getScrollXY(false, scrollX, scrollY);
-    ok(fuzzyEquals(zoom.value, ZOOM * displayWidth / displayHeight), "recalculated zoom restored correctly");
-    is(scrollX.value, SCROLL_X, "scrollX restored correctly");
-    is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
+    testData.zoom = ZOOM * displayWidth / displayHeight;
+    checkScroll(browser, testData);
 
     // Remove the tab.
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
