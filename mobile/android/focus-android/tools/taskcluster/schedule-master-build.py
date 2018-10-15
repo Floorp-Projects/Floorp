@@ -52,7 +52,7 @@ def generate_webview_X86_ui_test_task(dependencies):
 			command = ('echo "--" > .adjust_token'
 					   ' && ./gradlew --no-daemon clean assembleFocusX86Debug assembleFocusX86DebugAndroidTest'
 					   ' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-					   ' && tools/taskcluster/execute-firebase-test.sh focusX86 app-focus-x86-debug model=Nexus9,version=23'),
+					   ' && tools/taskcluster/execute-firebase-tests.sh x86 webview'),
 			dependencies = dependencies,
 			scopes = [ 'secrets:get:project/focus/firebase' ],
 			artifacts = {
@@ -70,7 +70,7 @@ def generate_webview_ARM_ui_test_task(dependencies):
 		command = ('echo "--" > .adjust_token'
 				   ' && ./gradlew --no-daemon clean assembleFocusArmDebug assembleFocusArmDebugAndroidTest'
 				   ' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-				   ' && tools/taskcluster/execute-firebase-test.sh focusArm app-focus-arm-debug model=walleye,version=26 model=shamu,version=23'),
+                                   ' && tools/taskcluster/execute-firebase-tests.sh arm webview'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/firebase' ],
 		artifacts = {
@@ -88,7 +88,7 @@ def generate_gecko_X86_ui_test_task(dependencies):
 		command = ('echo "--" > .adjust_token'
 			' && ./gradlew --no-daemon clean assembleKlarX86Debug assembleKlarX86DebugAndroidTest'
 			' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-			' && tools/taskcluster/execute-firebase-test.sh klarX86 app-klar-x86-debug model=Nexus9,version=25'),
+                        ' && tools/taskcluster/execute-firebase-tests.sh x86 geckoview'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/firebase' ],
 		artifacts = {
@@ -106,7 +106,7 @@ def generate_gecko_ARM_ui_test_task(dependencies):
 		command = ('echo "--" > .adjust_token'
 			' && ./gradlew --no-daemon clean assembleKlarArmDebug assembleKlarArmDebugAndroidTest'
 			' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-			' && tools/taskcluster/execute-firebase-test.sh klarArm app-klar-arm-debug model=sailfish,version=26'),
+                        ' && tools/taskcluster/execute-firebase-tests.sh arm geckoview'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/firebase' ],
 		artifacts = {
