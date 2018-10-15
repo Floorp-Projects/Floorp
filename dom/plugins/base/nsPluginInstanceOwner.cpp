@@ -50,6 +50,7 @@ using mozilla::DefaultXDisplay;
 #include "nsIContentInlines.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Element.h"
@@ -482,6 +483,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
     mozilla::OriginAttributes attrs =
       BasePrincipal::Cast(content->NodePrincipal())->OriginAttributesRef();
     triggeringPrincipal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+  } else {
+    triggeringPrincipal = NullPrincipal::CreateWithInheritedAttributes(content->NodePrincipal());
   }
 
   rv = lh->OnLinkClick(content, uri, unitarget.get(), VoidString(),
