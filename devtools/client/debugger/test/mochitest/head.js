@@ -450,7 +450,7 @@ function ensureThreadClientState(aPanel, aState) {
 
 function reload(aPanel, aUrl) {
   let activeTab = aPanel.panelWin.DebuggerController._target.activeTab;
-  aUrl ? activeTab.navigateTo(aUrl) : activeTab.reload();
+  aUrl ? activeTab.navigateTo({ url: aUrl }) : activeTab.reload();
 }
 
 function navigateActiveTabTo(aPanel, aUrl, aWaitForEventName, aEventRepeat) {
