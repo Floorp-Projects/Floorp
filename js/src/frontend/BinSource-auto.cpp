@@ -3132,7 +3132,12 @@ BinASTParser<Tok>::parseInterfaceDataProperty(const size_t start, const BinKind 
         return raiseError("DataProperty key kind");
     }
 
-    BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
+    ParseNode* result;
+    if (name->template is<NameNode>() && name->template as<NameNode>().atom() == cx_->names().proto) {
+        BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProto, start, expression));
+    } else {
+        BINJS_TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
+    }
     return result;
 }
 
