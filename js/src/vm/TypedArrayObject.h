@@ -151,7 +151,6 @@ class TypedArrayObject : public ArrayBufferViewObject
 
     static bool isOriginalLengthGetter(Native native);
 
-    static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);
     static size_t objectMoved(JSObject* obj, JSObject* old);
 
