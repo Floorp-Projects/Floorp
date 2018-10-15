@@ -81,13 +81,7 @@ public:
   // presshell pointer on the document has been cleared.
   void ClearFrames(nsPresContext* aPresContext);
 
-  static void LoadImage(nsIURI* aURI,
-                        nsIPrincipal* aPrincipal,
-                        nsIURI* aReferrer,
-                        mozilla::net::ReferrerPolicy aPolicy,
-                        nsIDocument* aDocument,
-                        URLValue* aImage,
-                        CORSMode aCorsMode);
+  static void LoadImage(URLValue* aImage, nsIDocument* aLoadingDoc);
 
   // Cancels the image load for the given css::URLValue and deregisters
   // it from any ImageLoaders it was registered with.

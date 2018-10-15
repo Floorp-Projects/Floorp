@@ -1005,13 +1005,7 @@ css::URLValue::LoadImage(nsIDocument* aDocument)
   }
 
   // Kick off the load in the loading document.
-  ImageLoader::LoadImage(GetURI(),
-                         mExtraData->Principal(),
-                         mExtraData->GetReferrer(),
-                         mExtraData->GetReferrerPolicy(),
-                         loadingDoc,
-                         this,
-                         mCORSMode);
+  ImageLoader::LoadImage(this, loadingDoc);
 
   // Register the image in the document that's using it.
   return aDocument->StyleImageLoader()->RegisterCSSImage(this);
