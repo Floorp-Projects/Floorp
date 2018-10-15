@@ -1753,15 +1753,7 @@ ArrayBufferViewObject::notifyBufferDetached(JSContext* cx, void* newData)
 uint8_t*
 ArrayBufferViewObject::dataPointerUnshared(const JS::AutoRequireNoGC& nogc)
 {
-    if (is<DataViewObject>()) {
-        MOZ_ASSERT(!as<DataViewObject>().isSharedMemory());
-        return static_cast<uint8_t*>(as<DataViewObject>().dataPointerUnshared());
-    }
-    if (is<TypedArrayObject>()) {
-        MOZ_ASSERT(!as<TypedArrayObject>().isSharedMemory());
-        return static_cast<uint8_t*>(as<TypedArrayObject>().viewDataUnshared());
-    }
-    MOZ_CRASH("Unknown ArrayBufferViewObject");
+    return static_cast<uint8_t*>(dataPointerUnshared());
 }
 
 void
@@ -2057,14 +2049,10 @@ JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoReq
     if (!obj) {
         return nullptr;
     }
-    if (obj->is<DataViewObject>()) {
-        DataViewObject& dv = obj->as<DataViewObject>();
-        *isSharedMemory = dv.isSharedMemory();
-        return dv.dataPointerEither().unwrap(/*safe - caller sees isSharedMemory flag*/);
-    }
-    TypedArrayObject& ta = obj->as<TypedArrayObject>();
-    *isSharedMemory = ta.isSharedMemory();
-    return ta.viewDataEither().unwrap(/*safe - caller sees isSharedMemory flag*/);
+
+    ArrayBufferViewObject& view = obj->as<ArrayBufferViewObject>();
+    *isSharedMemory = view.isSharedMemory();
+    return view.dataPointerEither().unwrap(/*safe - caller sees isSharedMemory flag*/);
 }
 
 JS_FRIEND_API(JSObject*)
@@ -2134,18 +2122,10 @@ js::GetArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, bool* isSha
               ? obj->as<DataViewObject>().byteLength()
               : obj->as<TypedArrayObject>().byteLength();
 
-    if (obj->is<DataViewObject>()) {
-        DataViewObject& dv = obj->as<DataViewObject>();
-        *isSharedMemory = dv.isSharedMemory();
-        *data = static_cast<uint8_t*>(
-            dv.dataPointerEither().unwrap(/*safe - caller sees isShared flag*/));
-    }
-    else {
-        TypedArrayObject& ta = obj->as<TypedArrayObject>();
-        *isSharedMemory = ta.isSharedMemory();
-        *data = static_cast<uint8_t*>(
-            ta.viewDataEither().unwrap(/*safe - caller sees isShared flag*/));
-    }
+    ArrayBufferViewObject& view = obj->as<ArrayBufferViewObject>();
+    *isSharedMemory = view.isSharedMemory();
+    *data = static_cast<uint8_t*>(
+            view.dataPointerEither().unwrap(/*safe - caller sees isShared flag*/));
 }
 
 JS_FRIEND_API(JSObject*)
