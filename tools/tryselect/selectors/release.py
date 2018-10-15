@@ -13,6 +13,11 @@ from ..cli import BaseTryParser
 from ..push import push_to_try, vcs
 
 
+def read_file(path):
+    with open(path) as fh:
+        return fh.read()
+
+
 class ReleaseParser(BaseTryParser):
     name = 'release'
     arguments = [
@@ -30,11 +35,18 @@ class ReleaseParser(BaseTryParser):
           'choices': ['central-to-beta', 'beta-to-release'],
           'help': "Migration to run for the release (can be specified multiple times).",
           }],
+        [['--no-limit-locales'],
+         {'action': 'store_false',
+          'dest': 'limit_locales',
+          'help': "Don't build a limited number of locales in the staging release.",
+          }],
     ]
     common_groups = ['push']
 
 
-def run_try_release(version, migrations=(), push=True, message='{msg}', **kwargs):
+def run_try_release(
+    version, migrations=(), push=True, message='{msg}', limit_locales=True, **kwargs
+):
 
     if version.is_beta:
         app_version = attr.evolve(version, beta_number=None)
@@ -73,9 +85,14 @@ def run_try_release(version, migrations=(), push=True, message='{msg}', **kwargs
             if path in files_to_change:
                 contents = files_to_change[path]
             else:
-                with open(path) as fh:
-                    contents = fh.read()
+                contents = read_file(path)
             files_to_change[path] = contents.replace(from_, to)
+
+    if limit_locales:
+        files_to_change['browser/locales/l10n-changesets.json'] = read_file(
+            os.path.join(vcs.path, 'browser/locales/l10n-onchange-changesets.json'))
+        files_to_change['browser/locales/shipped-locales'] = "en-US\n" + read_file(
+            os.path.join(vcs.path, 'browser/locales/onchange-locales'))
 
     msg = 'staging release: {}'.format(version)
     return push_to_try(
