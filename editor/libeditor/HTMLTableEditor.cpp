@@ -1409,7 +1409,7 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
           "Failed to remove all children of the cell element");
       }
       // Skip rows which the removed cell spanned.
-      rowIndex += cellData.mEffectiveRowSpan - 1;
+      rowIndex += cellData.NumberOfFollowingRows();
       continue;
     }
 
@@ -1426,7 +1426,7 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
         return rv;
       }
       // Skip rows which the removed cell spanned.
-      rowIndex += cellData.mEffectiveRowSpan - 1;
+      rowIndex += cellData.NumberOfFollowingRows();
       continue;
     }
 
@@ -1677,7 +1677,7 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
         // it upsets cell map, so we will do it after deleting the row.
         int32_t newRowSpanValue =
           std::max(cellData.NumberOfPrecedingRows(),
-                   cellData.mEffectiveRowSpan - 1);
+                   cellData.NumberOfFollowingRows());
         spanCellArray.AppendElement(
                         SpanCell(cellData.mElement, newRowSpanValue));
       }
@@ -1688,12 +1688,11 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
         // if rowSpan = 0 (automatic readjustment).
         int32_t aboveRowToInsertNewCellInto =
           cellData.NumberOfPrecedingRows() + 1;
-        int32_t numOfRawSpanRemainingBelow = cellData.mEffectiveRowSpan - 1;
         nsresult rv =
           SplitCellIntoRows(&aTableElement,
                             cellData.mFirst.mRow, cellData.mFirst.mColumn,
                             aboveRowToInsertNewCellInto,
-                            numOfRawSpanRemainingBelow, nullptr);
+                            cellData.NumberOfFollowingRows(), nullptr);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
