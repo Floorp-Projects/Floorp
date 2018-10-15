@@ -214,13 +214,13 @@ BinASTParser<Tok>::parseLazyFunction(ScriptSource* scriptSource, const size_t fi
 }
 
 template<typename Tok> void
-BinASTParser<Tok>::forceStrictIfNecessary(FunctionBox* funbox, ListNode* directives)
+BinASTParser<Tok>::forceStrictIfNecessary(SharedContext* sc, ListNode* directives)
 {
     JSAtom* useStrict = cx_->names().useStrict;
 
     for (const ParseNode* directive : directives->contents()) {
         if (directive->as<NameNode>().atom() == useStrict) {
-            funbox->strictScript = true;
+            sc->strictScript = true;
             break;
         }
     }
