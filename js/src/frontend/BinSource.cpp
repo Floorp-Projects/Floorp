@@ -340,16 +340,27 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
     // as they don't yet apply to us.
     HandlePropertyName arguments = cx_->names().arguments;
     if (hasUsedName(arguments) || parseContext_->functionBox()->bindingsAccessedDynamically()) {
+        funbox->usesArguments = true;
+
         ParseContext::Scope& funScope = parseContext_->functionScope();
         ParseContext::Scope::AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(arguments);
         if (!p) {
             BINJS_TRY(funScope.addDeclaredName(parseContext_, p, arguments, DeclarationKind::Var,
                                                DeclaredNameInfo::npos));
             funbox->declaredArguments = true;
-            funbox->usesArguments = true;
+        } else if (p->value()->kind() != DeclarationKind::Var) {
+            // Lexicals, formal parameters, and body level functions shadow.
+            funbox->usesArguments = false;
+        }
 
+        if (funbox->usesArguments) {
             funbox->setArgumentsHasLocalBinding();
-            funbox->setDefinitelyNeedsArgsObj();
+
+            if (parseContext_->sc()->bindingsAccessedDynamically() ||
+                parseContext_->sc()->hasDebuggerStatement())
+            {
+                funbox->setDefinitelyNeedsArgsObj();
+            }
         }
     }
 
