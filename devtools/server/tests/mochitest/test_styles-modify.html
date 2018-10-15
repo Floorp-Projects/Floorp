@@ -26,16 +26,10 @@ var gInspectee = null;
 
 addAsyncTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  let inspector;
 
-  await new Promise(resolve => {
-    attachURL(url, function(err, client, tab, doc) {
-      gInspectee = doc;
-      const {InspectorFront} = require("devtools/shared/fronts/inspector");
-      inspector = InspectorFront(client, tab);
-      resolve();
-    });
-  });
+  const { target, doc } = await attachURL(url);
+  const inspector = target.getInspector();
+  gInspectee = doc;
 
   gWalker = await inspector.getWalker();
   gStyles = await inspector.getPageStyle();

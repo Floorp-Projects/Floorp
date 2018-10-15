@@ -14,7 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835896
 
 window.onload = function() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  const {InspectorFront} = require("devtools/shared/fronts/inspector");
   const {WalkerSearch, WalkerIndex} =
     require("devtools/server/actors/utils/walker-search");
 
@@ -34,14 +33,9 @@ window.onload = function() {
 
     const url = document.getElementById("inspectorContent").href;
 
-    // eslint-disable-next-line new-cap
-    await new Promise(resolve => {
-      attachURL(url, function(err, client, tab, doc) {
-        inspectee = doc;
-        inspector = InspectorFront(client, tab);
-        resolve();
-      });
-    });
+    const { target, doc } = await attachURL(url);
+    inspectee = doc;
+    inspector = target.getInspector();
 
     const walkerFront = await inspector.getWalker();
     ok(walkerFront, "getWalker() should return an actor.");
