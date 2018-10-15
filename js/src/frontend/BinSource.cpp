@@ -241,7 +241,10 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
 
     if (parseContext_ && syntax == FunctionSyntaxKind::Statement) {
         auto ptr = parseContext_->varScope().lookupDeclaredName(atom);
-        MOZ_ASSERT(ptr);
+        if (!ptr) {
+            return raiseError("FunctionDeclaration without corresponding AssertedDeclaredName.");
+        }
+
         // FIXME: Should be merged with ParseContext::tryDeclareVarHelper
         //        (bug 1499044).
         DeclarationKind declaredKind = ptr->value()->kind();
