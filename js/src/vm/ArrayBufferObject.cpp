@@ -1761,34 +1761,14 @@ ArrayBufferViewObject::dataPointerUnshared(const JS::AutoRequireNoGC& nogc)
         MOZ_ASSERT(!as<TypedArrayObject>().isSharedMemory());
         return static_cast<uint8_t*>(as<TypedArrayObject>().viewDataUnshared());
     }
-    return as<TypedObject>().typedMem(nogc);
+    MOZ_CRASH("Unknown ArrayBufferViewObject");
 }
-
-#ifdef DEBUG
-bool
-ArrayBufferViewObject::isSharedMemory()
-{
-    if (is<TypedArrayObject>()) {
-        return as<TypedArrayObject>().isSharedMemory();
-    }
-    return false;
-}
-#endif
 
 void
 ArrayBufferViewObject::setDataPointerUnshared(uint8_t* data)
 {
-    if (is<DataViewObject>()) {
-        MOZ_ASSERT(!as<DataViewObject>().isSharedMemory());
-        as<DataViewObject>().setPrivate(data);
-    } else if (is<TypedArrayObject>()) {
-        MOZ_ASSERT(!as<TypedArrayObject>().isSharedMemory());
-        as<TypedArrayObject>().setPrivate(data);
-    } else if (is<OutlineTypedObject>()) {
-        as<OutlineTypedObject>().setData(data);
-    } else {
-        MOZ_CRASH();
-    }
+    MOZ_ASSERT(!isSharedMemory());
+    setPrivate(data);
 }
 
 /* static */ ArrayBufferObjectMaybeShared*
