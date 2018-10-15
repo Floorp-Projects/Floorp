@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "截取网页截图，可临时或永久存储。"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "截图"
+  },
+  "myShotsLink": {
+    "message": "我的截图"
+  },
+  "screenshotInstructions": {
+    "message": "在此页上拖拽或单击选择截图区域。按 ESC 键取消截图。"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "保存"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "截取可见范围"
+  },
+  "saveScreenshotFullPage": {
+    "message": "截取整个页面"
+  },
+  "cancelScreenshot": {
+    "message": "取消"
+  },
+  "downloadScreenshot": {
+    "message": "下载"
+  },
+  "downloadOnlyNotice": {
+    "message": "您目前处在仅下载模式。"
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots 在如下情况将自动变更为仅下载模式："
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "处于隐私浏览窗口。"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "第三方 Cookie 已禁用。"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "已启用“不记录历史记录”。"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "您目前使用 Firefox ESR 版本。"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "上传已被禁用。"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "链接已复制"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "已将您的截图的链接复制到剪贴板。按 $META_KEY$-V 即可粘贴。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "复制"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "截图已复制"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "已将您的截图复制到剪贴板。按 $META_KEY$-V 即可粘贴。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "保存的图片高度将被裁剪至 $PIXELS$ 像素。",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "出故障了。"
+  },
+  "requestErrorDetails": {
+    "message": "很抱歉，我们无法为您保存截图。请稍后再试。"
+  },
+  "connectionErrorTitle": {
+    "message": "我们无法连接到您的截图。"
+  },
+  "connectionErrorDetails": {
+    "message": "请检查您的互联网连接。如果您正常连接到互联网，可能是 Firefox Screenshots 的服务器临时出了问题。"
+  },
+  "loginErrorDetails": {
+    "message": "Firefox Screenshots 服务遇到问题，我们现在无法保存您的截图。请稍后再试。"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "我们无法截图此页面。"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "这不是一个标准的网页，所以无法截图。"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "您不能截取 Firefox Screenshots 的页面！"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "您选择的范围太小"
+  },
+  "privateWindowErrorTitle": {
+    "message": "隐私浏览模式下屏幕截图已被禁用"
+  },
+  "privateWindowErrorDetails": {
+    "message": "很抱歉因此带来的不便。我们将在后续版本中提供此功能。"
+  },
+  "genericErrorTitle": {
+    "message": "哎呀，Firefox Screenshots 遇到问题。"
+  },
+  "genericErrorDetails": {
+    "message": "我们不确定发生了什么。您可以再试一次或者试试另一个页面。"
+  },
+  "tourBodyIntro": {
+    "message": "截取、保存和分享屏幕截图，无需 Firefox 以外的工具。"
+  },
+  "tourHeaderPageAction": {
+    "message": "新的保存方法"
+  },
+  "tourBodyPageAction": {
+    "message": "随时可以展开地址栏中的页面操作菜单来截图。"
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "截取你所需"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "单击并拖动以截取页面某个区域。您也可以把光标移到你要的地方，高亮后单击即可截图。"
+  },
+  "tourHeaderFullPage": {
+    "message": "截取窗口或整个页面"
+  },
+  "tourBodyFullPage": {
+    "message": "选择右上角的按钮可以截取窗口中的可见区域或者整个页面。"
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "做您所想"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "将您裁剪后的截图保存到网上以便共享，或者下载到您的计算机。您也可以点击“我的截图”按钮找到您截取的所有截图。"
+  },
+  "tourHeaderAccounts": {
+    "message": "Screenshots to Go"
+  },
+  "tourBodyAccounts": {
+    "message": "登录您的 Firefox 账户，即可访问您在所有设备上的截图，并永久保存您收藏的截图。"
+  },
+  "tourSkip": {
+    "message": "跳过"
+  },
+  "tourNext": {
+    "message": "下一页"
+  },
+  "tourPrevious": {
+    "message": "上一页"
+  },
+  "tourDone": {
+    "message": "完成"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "使用 Firefox Screenshots 即代表您同意我们的$TERMSANDPRIVACYNOTICETERMSLINK$和$TERMSANDPRIVACYNOTICEPRIVACYLINK$。",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "使用条款"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "隐私声明"
+  },
+  "libraryLabel": {
+    "message": "屏幕截图"
+  }
+}
