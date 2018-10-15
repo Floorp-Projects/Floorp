@@ -62,29 +62,44 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
    *
    * @returns Promise<String>
    */
-  transferHeapSnapshot: protocol.custom(function(snapshotId) {
+  transferHeapSnapshot: protocol.custom(async function(snapshotId) {
     if (!this.heapSnapshotFileActorID) {
       throw new Error("MemoryFront initialized without a rootForm");
     }
 
-    const request = this._client.request({
-      to: this.heapSnapshotFileActorID,
-      type: "transferHeapSnapshot",
-      snapshotId
-    });
+    try {
+      const request = this._client.request({
+        to: this.heapSnapshotFileActorID,
+        type: "transferHeapSnapshot",
+        snapshotId
+      });
 
-    return new Promise((resolve, reject) => {
       const outFilePath =
         HeapSnapshotFileUtils.getNewUniqueHeapSnapshotTempFilePath();
       const outFile = new FileUtils.File(outFilePath);
-
       const outFileStream = FileUtils.openSafeFileOutputStream(outFile);
-      request.on("bulk-reply", async function({ copyTo }) {
-        await copyTo(outFileStream);
-        FileUtils.closeSafeFileOutputStream(outFileStream);
-        resolve(outFilePath);
-      });
-    });
+
+      // This request is a bulk request. That's why the result of the request is
+      // an object with the `copyTo` function that can transfer the data to
+      // another stream.
+      // See devtools/shared/transport/transport.js to know more about this mode.
+      const { copyTo } = await request;
+      await copyTo(outFileStream);
+
+      FileUtils.closeSafeFileOutputStream(outFileStream);
+      return outFilePath;
+    } catch (e) {
+      if (e.error) {
+        // This isn't a real error, rather this is a message coming from the
+        // server. So let's throw a real error instead.
+        throw new Error(
+          `The server's actor threw an error: (${e.error}) ${e.message}`
+        );
+      }
+
+      // Otherwise, rethrow the error
+      throw e;
+    }
   })
 });
 
