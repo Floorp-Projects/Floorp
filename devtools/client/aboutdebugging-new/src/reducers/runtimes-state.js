@@ -82,10 +82,8 @@ function runtimesReducer(state = RuntimesState(), action) {
       const networkRuntimes = locations.map(location => {
         const [ host, port ] = location.split(":");
         return {
+          connectionParameters: { host, port },
           id: location,
-          extra: {
-            connectionParameters: { host, port },
-          },
           name: location,
           type: RUNTIMES.NETWORK,
         };
@@ -101,12 +99,10 @@ function runtimesReducer(state = RuntimesState(), action) {
       const { runtimes } = action;
       const usbRuntimes = runtimes.map(runtime => {
         return {
+          connectionParameters: { socketPath: runtime._socketPath },
           id: runtime.id,
-          extra: {
-            connectionParameters: { socketPath: runtime._socketPath },
-            deviceName: runtime.deviceName,
-          },
-          name: runtime.shortName,
+          model: runtime._model,
+          name: runtime.name,
           type: RUNTIMES.USB,
         };
       });

@@ -13,8 +13,8 @@ const Localized = createFactory(FluentReact.Localized);
 
 const { PAGES, RUNTIMES } = require("../../constants");
 
-const SidebarFixedItem = createFactory(require("./SidebarFixedItem"));
-const SidebarRuntimeItem = createFactory(require("./SidebarRuntimeItem"));
+const DeviceSidebarItemAction = createFactory(require("./DeviceSidebarItemAction"));
+const SidebarItem = createFactory(require("./SidebarItem"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
@@ -58,16 +58,22 @@ class Sidebar extends PureComponent {
       const pageId = runtime.type + "-" + runtime.id;
       const runtimeHasConnection = !!runtime.connection;
 
-      return SidebarRuntimeItem({
+      const connectComponent = DeviceSidebarItemAction({
+        connected: runtimeHasConnection,
+        dispatch,
+        runtimeId: runtime.id,
+      });
+
+      return SidebarItem({
+        connectComponent,
         id: pageId,
-        deviceName: runtime.extra.deviceName,
         dispatch,
         icon,
-        isConnected: runtimeHasConnection,
         isSelected: selectedPage === pageId,
         key: pageId,
         name: runtime.name,
         runtimeId: runtime.id,
+        selectable: runtimeHasConnection,
       });
     });
   }
@@ -83,23 +89,25 @@ class Sidebar extends PureComponent {
         {},
         Localized(
           { id: "about-debugging-sidebar-this-firefox", attrs: { name: true } },
-          SidebarFixedItem({
+          SidebarItem({
             id: PAGES.THIS_FIREFOX,
             dispatch,
             icon: FIREFOX_ICON,
             isSelected: PAGES.THIS_FIREFOX === selectedPage,
             name: "This Firefox",
             runtimeId: RUNTIMES.THIS_FIREFOX,
+            selectable: true,
           })
         ),
         Localized(
           { id: "about-debugging-sidebar-connect", attrs: { name: true } },
-          SidebarFixedItem({
+          SidebarItem({
             id: PAGES.CONNECT,
             dispatch,
             icon: CONNECT_ICON,
             isSelected: PAGES.CONNECT === selectedPage,
             name: "Connect",
+            selectable: true,
           })
         ),
         dom.hr(),
