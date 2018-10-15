@@ -777,10 +777,8 @@ pref("apz.y_stationary_size_multiplier", "1.5");
 pref("gfx.hidpi.enabled", 2);
 #endif
 
-#if !defined(MOZ_WIDGET_ANDROID)
-// Use containerless scrolling for now on desktop.
-pref("layout.scroll.root-frame-containers", false);
-#endif
+// Default to containerless scrolling
+pref("layout.scroll.root-frame-containers", 0);
 
 pref("layout.scrollbars.always-layerize-track", false);
 
@@ -2614,6 +2612,8 @@ pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,about,addons,cache
 // the following prefs are for testing purposes only.
 pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
+// assertion flag will be set to false after fixing Bug 1473549
+pref("security.allow_eval_with_system_principal", true);
 #endif
 
 // Default Content Security Policy to apply to signed contents.

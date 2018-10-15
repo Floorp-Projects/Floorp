@@ -5,6 +5,9 @@
 Services.scriptloader.loadSubScript(new URL("head_webNavigation.js", gTestPath).href,
                                     this);
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                    true]]});
+
 async function background() {
   const tabs = await browser.tabs.query({active: true, currentWindow: true});
   const sourceTabId = tabs[0].id;
