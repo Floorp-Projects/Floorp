@@ -108,7 +108,7 @@ add_task(async function startup() {
     // moves away from bootstrap (bug 1422437)
     "chrome.override_package.global": {
       min: 0,
-      max: 50,
+      max: 70,
     },
   };
 
