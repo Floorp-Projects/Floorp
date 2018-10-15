@@ -194,16 +194,14 @@ this.uicontrol = (function() {
     onClickFullPage: () => {
       sendEvent("capture-full-page", "selection-button");
       captureType = "fullPage";
-      let width = getDocumentWidth();
+      const width = getDocumentWidth();
       if (width > MAX_PAGE_WIDTH) {
         captureType = "fullPageTruncated";
       }
-      width = Math.min(width, MAX_PAGE_WIDTH);
-      let height = getDocumentHeight();
+      const height = getDocumentHeight();
       if (height > MAX_PAGE_HEIGHT) {
         captureType = "fullPageTruncated";
       }
-      height = Math.min(height, MAX_PAGE_HEIGHT);
       selectedPos = new Selection(
         0, 0,
         width, height);
@@ -211,6 +209,13 @@ this.uicontrol = (function() {
     },
     onSavePreview: () => {
       sendEvent(`save-${captureType.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`, "save-preview-button");
+      if (captureType === "fullPageTruncated") {
+        selectedPos = new Selection(
+          0, 0,
+          Math.min(selectedPos.right, MAX_PAGE_WIDTH),
+          Math.min(selectedPos.bottom, MAX_PAGE_HEIGHT));
+        dataUrl = null;
+      }
       shooter.takeShot(captureType, selectedPos, dataUrl);
     },
     onDownloadPreview: () => {
@@ -668,6 +673,9 @@ this.uicontrol = (function() {
 
     mousemove(event) {
       this._resize(event);
+      if (resizeDirection !== "move") {
+        ui.PixelDimensions.display(event.pageX, event.pageY, selectedPos.width, selectedPos.height);
+      }
       return false;
     },
 
@@ -723,6 +731,7 @@ this.uicontrol = (function() {
     end() {
       resizeDirection = resizeStartPos = resizeStartSelected = null;
       selectedPos.sortCoords();
+      ui.PixelDimensions.remove();
     }
   };
 
