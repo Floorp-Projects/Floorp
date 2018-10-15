@@ -24,20 +24,15 @@ let gWalker = null;
 let gStyles = null;
 let gInspectee = null;
 
-addTest(function setup() {
+addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
-    gInspectee = doc;
-    const {InspectorFront} = require("devtools/shared/fronts/inspector");
-    const inspector = InspectorFront(client, tab);
-    promiseDone(inspector.getWalker().then(walker => {
-      ok(walker, "getWalker() should return an actor.");
-      gWalker = walker;
-      return inspector.getPageStyle();
-    }).then(styles => {
-      gStyles = styles;
-    }).then(runNextTest));
-  });
+  const { target, doc } = await attachURL(url);
+  gInspectee = doc;
+  const inspector = target.getInspector();
+  gWalker = await inspector.getWalker();
+  ok(gWalker, "getWalker() should return an actor.");
+  gStyles = await inspector.getPageStyle();
+  runNextTest();
 });
 
 addTest(function testMatchedStyles() {

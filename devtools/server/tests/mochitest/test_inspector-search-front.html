@@ -13,9 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835896
 "use strict";
 
 window.onload = function() {
-  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  const {InspectorFront} = require("devtools/shared/fronts/inspector");
-
   SimpleTest.waitForExplicitFinish();
 
   let walkerFront = null;
@@ -31,14 +28,8 @@ window.onload = function() {
 
     const url = document.getElementById("inspectorContent").href;
 
-    // eslint-disable-next-line new-cap
-    await new Promise(resolve => {
-      attachURL(url, function(err, client, tab, doc) {
-        inspector = InspectorFront(client, tab);
-        resolve();
-      });
-    });
-
+    const { target } = await attachURL(url);
+    inspector = target.getInspector();
     walkerFront = await inspector.getWalker();
     ok(walkerFront, "getWalker() should return an actor.");
 

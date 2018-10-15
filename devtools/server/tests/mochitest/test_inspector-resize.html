@@ -14,9 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1222409
 "use strict";
 
 window.onload = function() {
-  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  const {InspectorFront} = require("devtools/shared/fronts/inspector");
-
   SimpleTest.waitForExplicitFinish();
 
   let win = null;
@@ -27,15 +24,9 @@ window.onload = function() {
 
     const url = document.getElementById("inspectorContent").href;
 
-    // eslint-disable-next-line new-cap
-    await new Promise(resolve => {
-      attachURL(url, function(err, client, tab, doc) {
-        win = doc.defaultView;
-        inspector = InspectorFront(client, tab);
-        resolve();
-      });
-    });
-
+    const { target, doc } = await attachURL(url);
+    inspector = target.getInspector();
+    win = doc.defaultView;
     runNextTest();
   });
 

@@ -23,17 +23,15 @@ let gWalker = null;
 let gClient = null;
 let gCleanupConnection = null;
 
-function setup(callback) {
+async function setup(callback) {
   const url = document.getElementById("inspectorContent").href;
-  gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
-    gInspectee = doc;
-    const {InspectorFront} = require("devtools/shared/fronts/inspector");
-    const inspector = InspectorFront(client, tab);
-    promiseDone(inspector.getWalker().then(walker => {
-      gClient = client;
-      gWalker = walker;
-    }).then(callback));
-  });
+  const { client, target, doc, cleanup } = await attachURL(url);
+  gInspectee = doc;
+  gClient = client;
+  const inspector = target.getInspector();
+  gWalker = await inspector.getWalker();
+  gCleanupConnection = cleanup;
+  await callback();
 }
 
 function teardown() {
