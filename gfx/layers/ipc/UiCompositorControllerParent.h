@@ -49,6 +49,10 @@ public:
   void ToolbarAnimatorMessageFromCompositor(int32_t aMessage);
   bool AllocPixelBuffer(const int32_t aSize, Shmem* aMem);
 
+  // Called when a layer has been updated so the UI thread may be notified if necessary.
+  void NotifyLayersUpdated();
+  void NotifyFirstPaint();
+
 private:
   explicit UiCompositorControllerParent(const LayersId& aRootLayerTreeId);
   ~UiCompositorControllerParent();
@@ -62,6 +66,7 @@ private:
 
 #if defined(MOZ_WIDGET_ANDROID)
   RefPtr<AndroidDynamicToolbarAnimator> mAnimator;
+  bool mCompositorLayersUpdateEnabled;  // Flag set to true when the UI thread is expecting to be notified when a layer has been updated
 #endif // defined(MOZ_WIDGET_ANDROID)
 
   int32_t mMaxToolbarHeight;

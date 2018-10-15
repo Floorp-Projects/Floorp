@@ -157,8 +157,6 @@ runTest(() => getUserMedia({audio: true, video: true})
        "video element should capture only 1 video track until ended");
 
     untilEndedElement.srcObject.getTracks().forEach(t => t.stop());
-    // TODO(1208316) We stop the stream to make the media element end.
-    untilEndedElement.srcObject.stop();
 
     return Promise.all([
       haveEvent(untilEndedElement, "ended", wait(50000, new Error("Timeout"))),

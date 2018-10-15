@@ -189,7 +189,7 @@ class SharedOps
     }
 
     static SharedMem<void*> extract(TypedArrayObject* obj) {
-        return obj->viewDataEither();
+        return obj->dataPointerEither();
     }
 };
 
@@ -239,7 +239,7 @@ class UnsharedOps
     }
 
     static SharedMem<void*> extract(TypedArrayObject* obj) {
-        return SharedMem<void*>::unshared(obj->viewDataUnshared());
+        return SharedMem<void*>::unshared(obj->dataPointerUnshared());
     }
 };
 
@@ -271,11 +271,11 @@ class ElementSpecific
             return setFromOverlappingTypedArray(target, source, offset);
         }
 
-        SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset;
+        SharedMem<T*> dest = target->dataPointerEither().template cast<T*>() + offset;
         uint32_t count = source->length();
 
         if (source->type() == target->type()) {
-            Ops::podCopy(dest, source->viewDataEither().template cast<T*>(), count);
+            Ops::podCopy(dest, source->dataPointerEither().template cast<T*>(), count);
             return true;
         }
 
@@ -375,7 +375,7 @@ class ElementSpecific
             // the first potentially side-effectful lookup or conversion.
             uint32_t bound = Min(source->as<NativeObject>().getDenseInitializedLength(), len);
 
-            SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset;
+            SharedMem<T*> dest = target->dataPointerEither().template cast<T*>() + offset;
 
             MOZ_ASSERT(!canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE)),
                        "the following loop must abort on holes");
@@ -411,7 +411,7 @@ class ElementSpecific
 
             // Compute every iteration in case getElement/valueToNative
             // detaches the underlying array buffer or GC moves the data.
-            SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset + i;
+            SharedMem<T*> dest = target->dataPointerEither().template cast<T*>() + offset + i;
             Ops::store(dest, n);
         }
 
@@ -437,7 +437,7 @@ class ElementSpecific
         // Attempt fast-path infallible conversion of dense elements up to the
         // first potentially side-effectful conversion.
 
-        SharedMem<T*> dest = target->viewDataEither().template cast<T*>();
+        SharedMem<T*> dest = target->dataPointerEither().template cast<T*>();
 
         const Value* srcValues = source->getDenseElements();
         for (; i < len; i++) {
@@ -472,7 +472,7 @@ class ElementSpecific
             MOZ_ASSERT(i < target->length());
 
             // Compute every iteration in case GC moves the data.
-            SharedMem<T*> newDest = target->viewDataEither().template cast<T*>();
+            SharedMem<T*> newDest = target->dataPointerEither().template cast<T*>();
             Ops::store(newDest + i, n);
         }
 
@@ -499,11 +499,11 @@ class ElementSpecific
         MOZ_ASSERT(offset <= target->length());
         MOZ_ASSERT(source->length() <= target->length() - offset);
 
-        SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset;
+        SharedMem<T*> dest = target->dataPointerEither().template cast<T*>() + offset;
         uint32_t len = source->length();
 
         if (source->type() == target->type()) {
-            SharedMem<T*> src = source->viewDataEither().template cast<T*>();
+            SharedMem<T*> src = source->dataPointerEither().template cast<T*>();
             Ops::podMove(dest, src, len);
             return true;
         }
@@ -515,7 +515,7 @@ class ElementSpecific
             return false;
         }
         Ops::memcpy(SharedMem<void*>::unshared(data),
-                    source->viewDataEither(),
+                    source->dataPointerEither(),
                     sourceByteLen);
 
         switch (source->type()) {

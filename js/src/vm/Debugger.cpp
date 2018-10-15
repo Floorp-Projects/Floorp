@@ -7898,7 +7898,7 @@ DebuggerSource_getBinary(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    memcpy(arr->as<TypedArrayObject>().viewDataUnshared(), bytecode.begin(), bytecode.length());
+    memcpy(arr->as<TypedArrayObject>().dataPointerUnshared(), bytecode.begin(), bytecode.length());
 
     args.rval().setObject(*arr);
     return true;

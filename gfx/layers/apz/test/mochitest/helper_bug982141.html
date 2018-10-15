@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
   <meta name="viewport" content="user-scalable=no">
   <title>Test for Bug 982141, helper page</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
     // -------------------------------------------------------------------
@@ -15,21 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
     // -------------------------------------------------------------------
     var SimpleTest = window.opener.SimpleTest;
 
-    window.onload = function() {
-        window.addEventListener("MozAfterPaint", afterPaint);
-    };
-    var utils = SpecialPowers.getDOMWindowUtils(window);
-    function afterPaint(e) {
-      // If there is another paint pending, wait for it.
-      if (utils.isMozAfterPaintPending) {
-          return;
-      }
-
-      // Once there are no more paints pending, remove the
-      // MozAfterPaint listener and run the test logic.
-      window.removeEventListener("MozAfterPaint", afterPaint);
-      testBug982141();
-    }
+    waitUntilApzStable().then(testBug982141);
 
     // --------------------------------------------------------------------
     // The actual logic for testing bug 982141.
@@ -41,6 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
 
     function testBug982141() {
       // Get the content- and compositor-side test data from nsIDOMWindowUtils.
+      var utils = SpecialPowers.getDOMWindowUtils(window);
       var contentTestData = utils.getContentAPZTestData();
       var compositorTestData = utils.getCompositorAPZTestData();
 
