@@ -71,9 +71,9 @@ NS_IMPL_RELEASE_INHERITED(KeyframeEffect, AnimationEffect)
 KeyframeEffect::KeyframeEffect(
   nsIDocument* aDocument,
   const Maybe<OwningAnimationTarget>& aTarget,
-  const TimingParams& aTiming,
+  TimingParams&& aTiming,
   const KeyframeEffectParams& aOptions)
-  : AnimationEffect(aDocument, aTiming)
+  : AnimationEffect(aDocument, std::move(aTiming))
   , mTarget(aTarget)
   , mEffectOptions(aOptions)
   , mInEffectOnLastAnimationTimingUpdate(false)
@@ -661,7 +661,7 @@ KeyframeEffect::ConstructKeyframeEffect(
 
   Maybe<OwningAnimationTarget> target = ConvertTarget(aTarget);
   RefPtr<KeyframeEffect> effect =
-    new KeyframeEffect(doc, target, timingParams, effectOptions);
+    new KeyframeEffect(doc, target, std::move(timingParams), effectOptions);
 
   effect->SetKeyframes(aGlobal.Context(), aKeyframes, aRv);
   if (aRv.Failed()) {
@@ -873,7 +873,7 @@ KeyframeEffect::Constructor(const GlobalObject& aGlobal,
   RefPtr<KeyframeEffect> effect =
     new KeyframeEffect(doc,
                        aSource.mTarget,
-                       aSource.SpecifiedTiming(),
+                       TimingParams(aSource.SpecifiedTiming()),
                        aSource.mEffectOptions);
   // Copy cumulative change hint. mCumulativeChangeHint should be the same as
   // the source one because both of targets are the same.
