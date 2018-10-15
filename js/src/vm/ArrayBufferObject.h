@@ -52,19 +52,20 @@ int32_t LiveMappedBufferCount();
 // The inheritance hierarchy for the various classes relating to typed arrays
 // is as follows.
 //
-// - NativeObject
-//   - ArrayBufferObjectMaybeShared
-//     - ArrayBufferObject
-//     - SharedArrayBufferObject
-//   - DataViewObject
-//   - TypedArrayObject (declared in vm/TypedArrayObject.h)
-//     - TypedArrayObjectTemplate
-//       - Int8ArrayObject
-//       - Uint8ArrayObject
-//       - ...
+//
 // - JSObject
-//   - ArrayBufferViewObject
 //   - TypedObject (declared in builtin/TypedObject.h)
+//   - NativeObject
+//     - ArrayBufferObjectMaybeShared
+//       - ArrayBufferObject
+//       - SharedArrayBufferObject
+//     - ArrayBufferViewObject
+//       - DataViewObject
+//       - TypedArrayObject (declared in vm/TypedArrayObject.h)
+//         - TypedArrayObjectTemplate
+//           - Int8ArrayObject
+//           - Uint8ArrayObject
+//           - ...
 //
 // Note that |TypedArrayObjectTemplate| is just an implementation
 // detail that makes implementing its various subclasses easier.
@@ -461,13 +462,39 @@ bool CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
 class ArrayBufferViewObject : public NativeObject
 {
   public:
+    // Underlying (Shared)ArrayBufferObject.
+    static constexpr size_t BUFFER_SLOT = 0;
+    static_assert(BUFFER_SLOT == JS_TYPEDARRAYLAYOUT_BUFFER_SLOT,
+                  "self-hosted code with burned-in constants must get the "
+                  "right buffer slot");
+
+    // Slot containing length of the view in number of typed elements.
+    static constexpr size_t LENGTH_SLOT = 1;
+    static_assert(LENGTH_SLOT == JS_TYPEDARRAYLAYOUT_LENGTH_SLOT,
+                  "self-hosted code with burned-in constants must get the "
+                  "right length slot");
+
+    // Offset of view within underlying (Shared)ArrayBufferObject.
+    static constexpr size_t BYTEOFFSET_SLOT = 2;
+    static_assert(BYTEOFFSET_SLOT == JS_TYPEDARRAYLAYOUT_BYTEOFFSET_SLOT,
+                  "self-hosted code with burned-in constants must get the "
+                  "right byteOffset slot");
+
+    static constexpr size_t RESERVED_SLOTS = 3;
+
+#ifdef DEBUG
+    static const uint8_t ZeroLengthArrayData = 0x4A;
+#endif
+
+    // The raw pointer to the buffer memory, the "private" value.
+    //
+    // This offset is exposed for performance reasons - so that it
+    // need not be looked up on accesses.
+    static constexpr size_t DATA_SLOT = 3;
+
     static ArrayBufferObjectMaybeShared* bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*> obj);
 
     void notifyBufferDetached(JSContext* cx, void* newData);
-
-#ifdef DEBUG
-    bool isSharedMemory();
-#endif
 
     // By construction we only need unshared variants here.  See
     // comments in ArrayBufferObject.cpp.
