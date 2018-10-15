@@ -96,7 +96,7 @@ nsLanguageAtomService::GetLanguageGroup(nsAtom *aLanguage, bool* aNeedsToCache)
     RefPtr<nsAtom> uncached = GetUncachedLanguageGroup(aLanguage);
     retVal = uncached.get();
 
-    AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
+    AssertIsMainThreadOrServoFontMetricsLocked();
     // The hashtable will keep an owning reference to the atom
     mLangToGroup.Put(aLanguage, uncached);
   }

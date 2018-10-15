@@ -4,752 +4,1179 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* FFI functions for Gecko to call into Servo */
+
 #ifndef mozilla_ServoBindings_h
 #define mozilla_ServoBindings_h
 
 #include <stdint.h>
 
 #include "mozilla/AtomArray.h"
-#include "mozilla/ServoTypes.h"
-#include "mozilla/ServoBindingTypes.h"
-#include "mozilla/ServoComputedDataInlines.h"
-#include "mozilla/ServoElementSnapshot.h"
-#include "mozilla/css/DocumentMatchingFunction.h"
 #include "mozilla/css/SheetLoadData.h"
 #include "mozilla/css/SheetParsingMode.h"
-#include "mozilla/EffectCompositor.h"
-#include "mozilla/ComputedTimingFunction.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "nsChangeHint.h"
-#include "nsIDocument.h"
+#include "nsColor.h"
+#include "nsCSSValue.h"
 
-/*
- * API for Servo to access Gecko data structures.
- *
- * Functions beginning with Gecko_ are implemented in Gecko and invoked from Servo.
- * Functions beginning with Servo_ are implemented in Servo and invoked from Gecko.
- */
-
+class gfxFontFeatureValueSet;
 class nsAtom;
-class nsIPrincipal;
-class nsIURI;
-struct nsFont;
+class nsSimpleContentList;
+struct gfxFontFeature;
+
 namespace mozilla {
-  class FontFamilyList;
-  struct FontFamilyName;
-  enum FontFamilyType : uint8_t;
+  class SeenPtrs;
+  class ServoElementSnapshotTable;
   class SharedFontList;
+  class StyleSheet;
   enum class CSSPseudoElementType : uint8_t;
+  enum class OriginFlags : uint8_t;
   struct Keyframe;
-  struct StyleTransition;
+
   namespace css {
-    class ErrorReporter;
-    struct URLValue;
     class LoaderReusableStyleSheets;
-  };
+  }
+
+  namespace gfx {
+    struct FontVariation;
+  }
+
   namespace dom {
     enum class IterationCompositeOperation : uint8_t;
-  };
-  enum class UpdateAnimationsTasks : uint8_t;
-  struct LangGroupFontPrefs;
-  class SeenPtrs;
-  class ComputedStyle;
-  class StyleSheet;
-  class ServoElementSnapshotTable;
-  enum class PointerCapabilities : uint8_t;
-}
-using mozilla::FontFamilyList;
-using mozilla::FontFamilyName;
-using mozilla::FontFamilyType;
-using mozilla::ServoElementSnapshot;
-using mozilla::SharedFontList;
-struct nsMediaFeature;
-class nsSimpleContentList;
-struct nsStyleList;
-struct nsStyleImage;
-struct nsStyleGradientStop;
-class nsStyleGradient;
-class nsStyleCoord;
-struct nsStyleDisplay;
-class nsXBLBinding;
-
-#ifdef NIGHTLY_BUILD
-const bool GECKO_IS_NIGHTLY = true;
-#else
-const bool GECKO_IS_NIGHTLY = false;
-#endif
-
-#define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
-  void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
-  void Gecko_Release##name_##ArbitraryThread(class_* aPtr);
-#define NS_IMPL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
-  static_assert(class_::HasThreadSafeRefCnt::value,                           \
-                "NS_DECL_THREADSAFE_FFI_REFCOUNTING can only be used with "   \
-                "classes that have thread-safe refcounting");                 \
-  void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr)                     \
-  { NS_ADDREF(aPtr); }                                                        \
-  void Gecko_Release##name_##ArbitraryThread(class_* aPtr)                    \
-  { NS_RELEASE(aPtr); }
-
-#define NS_DECL_FFI_REFCOUNTING(class_, name_)  \
-  void Gecko_##name_##_AddRef(class_* aPtr);    \
-  void Gecko_##name_##_Release(class_* aPtr);
-#define NS_IMPL_FFI_REFCOUNTING(class_, name_)                    \
-  void Gecko_##name_##_AddRef(class_* aPtr)                       \
-    { MOZ_ASSERT(NS_IsMainThread()); NS_ADDREF(aPtr); }           \
-  void Gecko_##name_##_Release(class_* aPtr)                      \
-    { MOZ_ASSERT(NS_IsMainThread()); NS_RELEASE(aPtr); }
-
-#define DEFINE_ARRAY_TYPE_FOR(type_)                                \
-  struct nsTArrayBorrowed_##type_ {                                 \
-    nsTArray<type_>* mArray;                                        \
-    MOZ_IMPLICIT nsTArrayBorrowed_##type_(nsTArray<type_>* aArray)  \
-      : mArray(aArray) {}                                           \
   }
-DEFINE_ARRAY_TYPE_FOR(uintptr_t);
-#undef DEFINE_ARRAY_TYPE_FOR
+}
+
+namespace nsStyleTransformMatrix {
+  enum class MatrixTransformOperator: uint8_t;
+}
 
 extern "C" {
 
-class ServoBundledURI
-{
-public:
-  // NOTE(emilio): Not calling IntoCssUrl will cause to leak the
-  // string, so don't do that :)
-  already_AddRefed<mozilla::css::URLValue> IntoCssUrl(mozilla::CORSMode);
-  mozilla::ServoRawOffsetArc<RustString> mURLString;
-  mozilla::URLExtraData* mExtraData;
-};
+// Element data
+void Servo_Element_ClearData(RawGeckoElementBorrowed node);
 
-struct FontSizePrefs
-{
-  void CopyFrom(const mozilla::LangGroupFontPrefs&);
-  nscoord mDefaultVariableSize;
-  nscoord mDefaultFixedSize;
-  nscoord mDefaultSerifSize;
-  nscoord mDefaultSansSerifSize;
-  nscoord mDefaultMonospaceSize;
-  nscoord mDefaultCursiveSize;
-  nscoord mDefaultFantasySize;
-};
+size_t Servo_Element_SizeOfExcludingThisAndCVs(
+  mozilla::MallocSizeOf malloc_size_of,
+  mozilla::MallocSizeOf malloc_enclosing_size_of,
+  mozilla::SeenPtrs* seen_ptrs,
+  RawGeckoElementBorrowed node);
 
-struct MediumFeaturesChangedResult {
-  bool mAffectsDocumentRules;
-  bool mAffectsNonDocumentRules;
-  bool mUsesViewportUnits;
-};
+bool Servo_Element_HasPrimaryComputedValues(RawGeckoElementBorrowed node);
 
-// Debugging stuff.
-void Gecko_Element_DebugListAttributes(RawGeckoElementBorrowed, nsCString*);
-void Gecko_Snapshot_DebugListAttributes(const ServoElementSnapshot*, nsCString*);
+ComputedStyleStrong Servo_Element_GetPrimaryComputedValues(
+  RawGeckoElementBorrowed node);
 
-bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node, bool whitespace_is_significant);
-RawGeckoNodeBorrowedOrNull Gecko_GetLastChild(RawGeckoNodeBorrowed node);
-RawGeckoNodeBorrowedOrNull Gecko_GetPreviousSibling(RawGeckoNodeBorrowed node);
-RawGeckoNodeBorrowedOrNull Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed node);
-RawGeckoElementBorrowedOrNull Gecko_GetBeforeOrAfterPseudo(RawGeckoElementBorrowed element, bool is_before);
-nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(RawGeckoElementBorrowed element);
-const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(RawGeckoElementBorrowed element);
-void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
+bool Servo_Element_HasPseudoComputedValues(
+  RawGeckoElementBorrowed node,
+  size_t index);
 
-void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* context,
-                              RawGeckoPresContextBorrowed pres_context,
-                              ServoComputedDataBorrowed values,
-                              mozilla::CSSPseudoElementType pseudo_type,
-                              nsAtom* pseudo_tag);
-void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle* context);
+ComputedStyleStrong Servo_Element_GetPseudoComputedValues(
+  RawGeckoElementBorrowed node,
+  size_t index);
 
-// By default, Servo walks the DOM by traversing the siblings of the DOM-view
-// first child. This generally works, but misses anonymous children, which we
-// want to traverse during styling. To support these cases, we create an
-// optional stack-allocated iterator in aIterator for nodes that need it.
-void Gecko_ConstructStyleChildrenIterator(RawGeckoElementBorrowed aElement,
-                                          RawGeckoStyleChildrenIteratorBorrowedMut aIterator);
-void Gecko_DestroyStyleChildrenIterator(RawGeckoStyleChildrenIteratorBorrowedMut aIterator);
-RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(RawGeckoStyleChildrenIteratorBorrowedMut it);
+bool Servo_Element_IsDisplayNone(RawGeckoElementBorrowed element);
+bool Servo_Element_IsDisplayContents(RawGeckoElementBorrowed element);
 
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder, SheetLoadDataHolder);
+bool Servo_Element_IsPrimaryStyleReusedViaRuleNode(
+  RawGeckoElementBorrowed element);
 
-void Gecko_StyleSheet_FinishAsyncParse(mozilla::css::SheetLoadDataHolder* data,
-                                       RawServoStyleSheetContentsStrong sheet_contents,
-                                       StyleUseCountersOwnedOrNull use_counters);
+void Servo_InvalidateStyleForDocStateChanges(
+  RawGeckoElementBorrowed root,
+  RawServoStyleSetBorrowed doc_styles,
+  const nsTArray<RawServoAuthorStylesBorrowed>* non_document_styles,
+  uint64_t aStatesChanged);
 
-mozilla::StyleSheet*
-Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
-                     mozilla::StyleSheet* parent,
-                     mozilla::css::SheetLoadData* parent_load_data,
-                     mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
-                     ServoBundledURI url,
-                     RawServoMediaListStrong media_list);
+// Styleset and Stylesheet management
 
-void
-Gecko_LoadStyleSheetAsync(mozilla::css::SheetLoadDataHolder* parent_data,
-                          ServoBundledURI url,
-                          RawServoMediaListStrong media_list,
-                          RawServoImportRuleStrong import_rule);
+RawServoStyleSheetContentsStrong Servo_StyleSheet_FromUTF8Bytes(
+  mozilla::css::Loader* loader,
+  mozilla::StyleSheet* gecko_stylesheet,
+  mozilla::css::SheetLoadData* load_data,
+  const nsACString* bytes,
+  mozilla::css::SheetParsingMode parsing_mode,
+  RawGeckoURLExtraData* extra_data,
+  uint32_t line_number_offset,
+  nsCompatibility quirks_mode,
+  mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
+  StyleUseCountersBorrowedOrNull use_counters);
 
-// Selector Matching.
-uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
-bool Gecko_IsRootElement(RawGeckoElementBorrowed element);
-bool Gecko_MatchLang(RawGeckoElementBorrowed element,
-                     nsAtom* override_lang, bool has_override_lang,
-                     const char16_t* value);
-nsAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
-nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(const nsIDocument* aDocument);
-bool Gecko_IsTableBorderNonzero(RawGeckoElementBorrowed element);
-bool Gecko_IsBrowserFrame(RawGeckoElementBorrowed element);
+void Servo_StyleSheet_FromUTF8BytesAsync(
+  mozilla::css::SheetLoadDataHolder* load_data,
+  RawGeckoURLExtraData* extra_data,
+  const nsACString* bytes,
+  mozilla::css::SheetParsingMode parsing_mode,
+  uint32_t line_number_offset,
+  nsCompatibility quirks_mode,
+  bool should_record_use_counters);
 
-// Attributes.
-#define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
-  nsAtom* prefix_##LangValue(implementor_ element);                           \
-  bool prefix_##HasAttr(implementor_ element, nsAtom* ns, nsAtom* name);      \
-  bool prefix_##AttrEquals(implementor_ element, nsAtom* ns, nsAtom* name,    \
-                           nsAtom* str, bool ignoreCase);                     \
-  bool prefix_##AttrDashEquals(implementor_ element, nsAtom* ns,              \
-                               nsAtom* name, nsAtom* str, bool ignore_case);  \
-  bool prefix_##AttrIncludes(implementor_ element, nsAtom* ns,                \
-                             nsAtom* name, nsAtom* str, bool ignore_case);    \
-  bool prefix_##AttrHasSubstring(implementor_ element, nsAtom* ns,            \
-                                 nsAtom* name, nsAtom* str,                   \
-                                 bool ignore_case);                           \
-  bool prefix_##AttrHasPrefix(implementor_ element, nsAtom* ns,               \
-                              nsAtom* name, nsAtom* str, bool ignore_case);   \
-  bool prefix_##AttrHasSuffix(implementor_ element, nsAtom* ns,               \
-                              nsAtom* name, nsAtom* str, bool ignore_case);
+RawServoStyleSheetContentsStrong Servo_StyleSheet_Empty(
+  mozilla::css::SheetParsingMode parsing_mode);
 
-bool Gecko_AssertClassAttrValueIsSane(const nsAttrValue*);
-const nsAttrValue* Gecko_GetSVGAnimatedClass(RawGeckoElementBorrowed);
+bool Servo_StyleSheet_HasRules(RawServoStyleSheetContentsBorrowed sheet);
 
+ServoCssRulesStrong Servo_StyleSheet_GetRules(
+  RawServoStyleSheetContentsBorrowed sheet);
 
-SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_, RawGeckoElementBorrowed)
-SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,
-                                              const ServoElementSnapshot*)
+RawServoStyleSheetContentsStrong Servo_StyleSheet_Clone(
+  RawServoStyleSheetContentsBorrowed sheet,
+  const mozilla::StyleSheet* reference_sheet);
 
-#undef SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS
+size_t Servo_StyleSheet_SizeOfIncludingThis(
+  mozilla::MallocSizeOf malloc_size_of,
+  mozilla::MallocSizeOf malloc_enclosing_size_of,
+  RawServoStyleSheetContentsBorrowed sheet);
 
-// Style attributes.
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed element);
-void Gecko_UnsetDirtyStyleAttr(RawGeckoElementBorrowed element);
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed element);
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetExtraContentStyleDeclarations(RawGeckoElementBorrowed element);
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetUnvisitedLinkAttrDeclarationBlock(RawGeckoElementBorrowed element);
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetVisitedLinkAttrDeclarationBlock(RawGeckoElementBorrowed element);
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetActiveLinkAttrDeclarationBlock(RawGeckoElementBorrowed element);
+void Servo_StyleSheet_GetSourceMapURL(
+  RawServoStyleSheetContentsBorrowed sheet,
+  nsAString* result);
 
-// Visited handling.
+void Servo_StyleSheet_GetSourceURL(
+  RawServoStyleSheetContentsBorrowed sheet,
+  nsAString* result);
 
-// Returns whether visited styles are enabled for a given document.
-bool Gecko_VisitedStylesEnabled(const nsIDocument*);
+// We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
+// work as return values with the Linux 32-bit ABI at the moment because
+// they wrap the value in a struct.
+uint8_t Servo_StyleSheet_GetOrigin(RawServoStyleSheetContentsBorrowed sheet);
 
-// Animations
-bool
-Gecko_GetAnimationRule(RawGeckoElementBorrowed aElementOrPseudo,
-                       mozilla::EffectCompositor::CascadeLevel aCascadeLevel,
-                       RawServoAnimationValueMapBorrowedMut aAnimationValues);
-bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
-                                 RawGeckoStyleAnimationListBorrowed);
-void Gecko_CopyAnimationNames(RawGeckoStyleAnimationListBorrowedMut aDest,
-                              RawGeckoStyleAnimationListBorrowed aSrc);
-// This function takes an already addrefed nsAtom
-void Gecko_SetAnimationName(mozilla::StyleAnimation* aStyleAnimation,
-                            nsAtom* aAtom);
-void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElementOrPseudo,
-                            ComputedStyleBorrowedOrNull aOldComputedValues,
-                            ComputedStyleBorrowedOrNull aComputedValues,
-                            mozilla::UpdateAnimationsTasks aTasks);
-size_t Gecko_GetAnimationEffectCount(RawGeckoElementBorrowed aElementOrPseudo);
-bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElementOrPseudo);
-bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElementOrPseudo);
-bool Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElementOrPseudo);
-size_t Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElementOrPseudo);
-nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(
-  RawGeckoElementBorrowed aElementOrPseudo,
-  size_t aIndex);
-RawServoAnimationValueBorrowedOrNull Gecko_ElementTransitions_EndValueAt(
-  RawGeckoElementBorrowed aElementOrPseudo,
-  size_t aIndex);
-double Gecko_GetProgressFromComputedTiming(RawGeckoComputedTimingBorrowed aComputedTiming);
-double Gecko_GetPositionInSegment(
-  RawGeckoAnimationPropertySegmentBorrowed aSegment,
-  double aProgress,
-  mozilla::ComputedTimingFunction::BeforeFlag aBeforeFlag);
-// Get servo's AnimationValue for |aProperty| from the cached base style
-// |aBaseStyles|.
-// |aBaseStyles| is nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>.
-// We use RawServoAnimationValueTableBorrowed to avoid exposing nsRefPtrHashtable in FFI.
-RawServoAnimationValueBorrowedOrNull Gecko_AnimationGetBaseStyle(
-  RawServoAnimationValueTableBorrowed aBaseStyles,
-  nsCSSPropertyID aProperty);
-void Gecko_StyleTransition_SetUnsupportedProperty(
-  mozilla::StyleTransition* aTransition,
-  nsAtom* aAtom);
+RawServoStyleSet* Servo_StyleSet_Init(RawGeckoPresContextBorrowed pres_context);
+void Servo_StyleSet_RebuildCachedData(RawServoStyleSetBorrowed set);
 
-// Atoms.
-nsAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
-nsAtom* Gecko_Atomize16(const nsAString* aString);
-void Gecko_AddRefAtom(nsAtom* aAtom);
-void Gecko_ReleaseAtom(nsAtom* aAtom);
+// We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
+// work as return values with the Linux 32-bit ABI at the moment because
+// they wrap the value in a struct.
+mozilla::MediumFeaturesChangedResult Servo_StyleSet_MediumFeaturesChanged(
+  RawServoStyleSetBorrowed document_set,
+  nsTArray<RawServoAuthorStylesBorrowedMut>* non_document_sets,
+  bool may_affect_default_style);
 
-// Font style
-void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src);
-void Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<FontFamilyName>* aNames, nsAtom* aName, bool aQuoted);
-void Gecko_nsTArray_FontFamilyName_AppendGeneric(nsTArray<FontFamilyName>* aNames, FontFamilyType aType);
-// Returns an already-AddRefed SharedFontList with an empty mNames array.
-SharedFontList* Gecko_SharedFontList_Create();
-size_t Gecko_SharedFontList_SizeOfIncludingThis(SharedFontList* fontlist);
-size_t Gecko_SharedFontList_SizeOfIncludingThisIfUnshared(SharedFontList* fontlist);
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::SharedFontList, SharedFontList);
-// will not run destructors on dst, give it uninitialized memory
-// font_id is LookAndFeel::FontID
-void Gecko_nsFont_InitSystem(nsFont* dst, int32_t font_id,
-                             const nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
-void Gecko_nsFont_Destroy(nsFont* dst);
+void Servo_StyleSet_Drop(RawServoStyleSetOwned set);
+void Servo_StyleSet_CompatModeChanged(RawServoStyleSetBorrowed raw_data);
 
-// The gfxFontFeatureValueSet returned from this function has zero reference.
-gfxFontFeatureValueSet* Gecko_ConstructFontFeatureValueSet();
-nsTArray<unsigned int>* Gecko_AppendFeatureValueHashEntry(
-  gfxFontFeatureValueSet* value_set, nsAtom* family, uint32_t alternate, nsAtom* name);
-void Gecko_nsFont_SetFontFeatureValuesLookup(nsFont* font,
-                                             const RawGeckoPresContext* pres_context);
-void Gecko_nsFont_ResetFontFeatureValuesLookup(nsFont* font);
+void Servo_StyleSet_AppendStyleSheet(
+  RawServoStyleSetBorrowed set,
+  const mozilla::StyleSheet* gecko_sheet);
 
-// Font variant alternates
-void Gecko_ClearAlternateValues(nsFont* font, size_t length);
-void Gecko_AppendAlternateValues(nsFont* font, uint32_t alternate_name, nsAtom* atom);
-void Gecko_CopyAlternateValuesFrom(nsFont* dest, const nsFont* src);
+void Servo_StyleSet_PrependStyleSheet(
+  RawServoStyleSetBorrowed set,
+  const mozilla::StyleSheet* gecko_sheet);
 
-// Visibility style
-void Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,
-                               uint8_t aOrientation,
-                               bool aFlip);
-void Gecko_SetImageOrientationAsFromImage(nsStyleVisibility* aVisibility);
-void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
-                                    const nsStyleVisibility* aSrc);
+void Servo_StyleSet_RemoveStyleSheet(
+  RawServoStyleSetBorrowed set,
+  const mozilla::StyleSheet* gecko_sheet);
 
-// Counter style.
-// This function takes an already addrefed nsAtom
-void Gecko_SetCounterStyleToName(mozilla::CounterStylePtr* ptr, nsAtom* name,
-                                 RawGeckoPresContextBorrowed pres_context);
-void Gecko_SetCounterStyleToSymbols(mozilla::CounterStylePtr* ptr,
-                                    uint8_t symbols_type,
-                                    nsACString const* const* symbols,
-                                    uint32_t symbols_count);
-void Gecko_SetCounterStyleToString(mozilla::CounterStylePtr* ptr,
-                                   const nsACString* symbol);
-void Gecko_CopyCounterStyle(mozilla::CounterStylePtr* dst,
-                            const mozilla::CounterStylePtr* src);
-nsAtom* Gecko_CounterStyle_GetName(const mozilla::CounterStylePtr* ptr);
-const mozilla::AnonymousCounterStyle*
-Gecko_CounterStyle_GetAnonymous(const mozilla::CounterStylePtr* ptr);
+void Servo_StyleSet_InsertStyleSheetBefore(
+  RawServoStyleSetBorrowed set,
+  const mozilla::StyleSheet* gecko_sheet,
+  const mozilla::StyleSheet* before);
 
-// background-image style.
-void Gecko_SetNullImageValue(nsStyleImage* image);
-void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
-void Gecko_SetLayerImageImageValue(nsStyleImage* image,
-                                   mozilla::css::URLValue* image_value);
+void Servo_StyleSet_FlushStyleSheets(
+  RawServoStyleSetBorrowed set,
+  RawGeckoElementBorrowedOrNull doc_elem,
+  const mozilla::ServoElementSnapshotTable* snapshots);
 
-void Gecko_SetImageElement(nsStyleImage* image, nsAtom* atom);
-void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
-void Gecko_InitializeImageCropRect(nsStyleImage* image);
+void Servo_StyleSet_SetAuthorStyleDisabled(
+  RawServoStyleSetBorrowed set,
+  bool author_style_disabled);
 
-nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
-                                      uint8_t size,
-                                      bool repeating,
-                                      bool legacy_syntax,
-                                      bool moz_legacy_syntax,
-                                      uint32_t stops);
+void Servo_StyleSet_NoteStyleSheetsChanged(
+  RawServoStyleSetBorrowed set,
+  mozilla::OriginFlags changed_origins);
 
-const nsStyleImageRequest* Gecko_GetImageRequest(const nsStyleImage* image);
-nsAtom* Gecko_GetImageElement(const nsStyleImage* image);
-const nsStyleGradient* Gecko_GetGradientImageValue(const nsStyleImage* image);
+bool Servo_StyleSet_GetKeyframesForName(
+  RawServoStyleSetBorrowed set,
+  RawGeckoElementBorrowed element,
+  ComputedStyleBorrowed style,
+  nsAtom* name,
+  nsTimingFunctionBorrowed timing_function,
+  RawGeckoKeyframeListBorrowedMut keyframe_list);
 
-// list-style-image style.
-void Gecko_SetListStyleImageNone(nsStyleList* style_struct);
-void Gecko_SetListStyleImageImageValue(nsStyleList* style_struct,
-                                  mozilla::css::URLValue* aImageValue);
-void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
+void Servo_StyleSet_GetFontFaceRules(
+  RawServoStyleSetBorrowed set,
+  RawGeckoFontFaceRuleListBorrowedMut list);
 
-// cursor style.
-void Gecko_SetCursorArrayLength(nsStyleUI* ui, size_t len);
-void Gecko_SetCursorImageValue(nsCursorImage* aCursor,
-                               mozilla::css::URLValue* aImageValue);
-void Gecko_CopyCursorArrayFrom(nsStyleUI* dest, const nsStyleUI* src);
-
-void Gecko_SetContentDataImageValue(nsStyleContentData* aList,
-                                    mozilla::css::URLValue* aImageValue);
-nsStyleContentData::CounterFunction* Gecko_SetCounterFunction(
-    nsStyleContentData* content_data, mozilla::StyleContentType);
-
-// Dirtiness tracking.
-void Gecko_SetNodeFlags(RawGeckoNodeBorrowed node, uint32_t flags);
-void Gecko_UnsetNodeFlags(RawGeckoNodeBorrowed node, uint32_t flags);
-void Gecko_NoteDirtyElement(RawGeckoElementBorrowed element);
-void Gecko_NoteDirtySubtreeForInvalidation(RawGeckoElementBorrowed element);
-void Gecko_NoteAnimationOnlyDirtyElement(RawGeckoElementBorrowed element);
-
-bool Gecko_AnimationNameMayBeReferencedFromStyle(
-  RawGeckoPresContextBorrowed pres_context,
+const RawServoCounterStyleRule* Servo_StyleSet_GetCounterStyleRule(
+  RawServoStyleSetBorrowed set,
   nsAtom* name);
 
-// Incremental restyle.
-mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
+// This function may return nullptr or gfxFontFeatureValueSet with zero
+// references.
+gfxFontFeatureValueSet* Servo_StyleSet_BuildFontFeatureValueSet(
+  RawServoStyleSetBorrowed set);
+
+ComputedStyleStrong Servo_StyleSet_ResolveForDeclarations(
+  RawServoStyleSetBorrowed set,
+  ComputedStyleBorrowedOrNull parent_style,
+  RawServoDeclarationBlockBorrowed declarations);
+
+void Servo_SelectorList_Drop(RawServoSelectorListOwned selector_list);
+RawServoSelectorList* Servo_SelectorList_Parse(const nsACString* selector_list);
+RawServoSourceSizeList* Servo_SourceSizeList_Parse(const nsACString* value);
+
+int32_t Servo_SourceSizeList_Evaluate(
+  RawServoStyleSetBorrowed set,
+  RawServoSourceSizeListBorrowedOrNull);
+
+void Servo_SourceSizeList_Drop(RawServoSourceSizeListOwned);
+
+bool Servo_SelectorList_Matches(
+  RawGeckoElementBorrowed,
+  RawServoSelectorListBorrowed);
+
+const RawGeckoElement* Servo_SelectorList_Closest(
+  RawGeckoElementBorrowed,
+  RawServoSelectorListBorrowed);
+
+const RawGeckoElement* Servo_SelectorList_QueryFirst(
+  RawGeckoNodeBorrowed,
+  RawServoSelectorListBorrowed,
+  bool may_use_invalidation);
+
+void Servo_SelectorList_QueryAll(
+  RawGeckoNodeBorrowed,
+  RawServoSelectorListBorrowed,
+  nsSimpleContentList* content_list,
+  bool may_use_invalidation);
+
+void Servo_StyleSet_AddSizeOfExcludingThis(
+  mozilla::MallocSizeOf malloc_size_of,
+  mozilla::MallocSizeOf malloc_enclosing_size_of,
+  mozilla::ServoStyleSetSizes* sizes,
+  RawServoStyleSetBorrowed set);
+
+void Servo_UACache_AddSizeOf(
+  mozilla::MallocSizeOf malloc_size_of,
+  mozilla::MallocSizeOf malloc_enclosing_size_of,
+  mozilla::ServoStyleSetSizes* sizes);
+
+// AuthorStyles
+
+RawServoAuthorStyles* Servo_AuthorStyles_Create();
+void Servo_AuthorStyles_Drop(RawServoAuthorStylesOwned self);
+
+// TODO(emilio): These will need to take a master style set to implement
+// invalidation for Shadow DOM.
+void Servo_AuthorStyles_AppendStyleSheet(
+  RawServoAuthorStylesBorrowedMut self,
+  const mozilla::StyleSheet* gecko_sheet);
+
+void Servo_AuthorStyles_RemoveStyleSheet(
+  RawServoAuthorStylesBorrowedMut self,
+  const mozilla::StyleSheet* gecko_sheet);
+
+void Servo_AuthorStyles_InsertStyleSheetBefore(
+  RawServoAuthorStylesBorrowedMut self,
+  const mozilla::StyleSheet* gecko_sheet,
+  const mozilla::StyleSheet* before);
+
+void Servo_AuthorStyles_ForceDirty(RawServoAuthorStylesBorrowedMut self);
+
+// TODO(emilio): This will need to take an element and a master style set to
+// implement invalidation for Shadow DOM.
+void Servo_AuthorStyles_Flush(
+  RawServoAuthorStylesBorrowedMut self,
+  RawServoStyleSetBorrowed document_styles);
+
+size_t Servo_AuthorStyles_SizeOfIncludingThis(
+  mozilla::MallocSizeOf malloc_size_of,
+  mozilla::MallocSizeOf malloc_enclosing_size_of,
+  RawServoAuthorStylesBorrowed self);
+
+void Servo_ComputedStyle_AddRef(ComputedStyleBorrowed ctx);
+
+void Servo_ComputedStyle_Release(ComputedStyleBorrowed ctx);
+
+bool Servo_StyleSet_MightHaveAttributeDependency(
+  RawServoStyleSetBorrowed set,
+  RawGeckoElementBorrowed element,
+  nsAtom* local_name);
+
+bool Servo_StyleSet_HasStateDependency(
+  RawServoStyleSetBorrowed set,
+  RawGeckoElementBorrowed element,
+  uint64_t state);
+
+bool Servo_StyleSet_HasDocumentStateDependency(
+  RawServoStyleSetBorrowed set,
+  uint64_t state);
+
+// CSSRuleList
+
+void Servo_CssRules_ListTypes(
+  ServoCssRulesBorrowed rules,
+  nsTArrayBorrowed_uintptr_t result);
+
+nsresult Servo_CssRules_InsertRule(
+  ServoCssRulesBorrowed rules,
+  RawServoStyleSheetContentsBorrowed sheet,
+  const nsACString* rule,
+  uint32_t index,
+  bool nested,
+  mozilla::css::Loader* loader,
+  mozilla::StyleSheet* gecko_stylesheet,
+  uint16_t* rule_type);
+
+nsresult Servo_CssRules_DeleteRule(ServoCssRulesBorrowed rules, uint32_t index);
+
+// CSS Rules
+
+#define BASIC_RULE_FUNCS_WITHOUT_GETTER(type_)                             \
+  void Servo_##type_##_Debug(                                              \
+    RawServo##type_##Borrowed rule,                                        \
+    nsACString* result);                                                   \
+  void Servo_##type_##_GetCssText(                                         \
+    RawServo##type_##Borrowed rule,                                        \
+    nsAString* result);
+
+#define BASIC_RULE_FUNCS(type_)                                           \
+  RawServo##type_##RuleStrong Servo_CssRules_Get##type_##RuleAt(          \
+    ServoCssRulesBorrowed rules,                                          \
+    uint32_t index,                                                       \
+    uint32_t* line,                                                       \
+    uint32_t* column);                                                    \
+  BASIC_RULE_FUNCS_WITHOUT_GETTER(type_##Rule)
+
+#define GROUP_RULE_FUNCS(type_)                                           \
+  BASIC_RULE_FUNCS(type_)                                                 \
+  ServoCssRulesStrong Servo_##type_##Rule_GetRules(                       \
+    RawServo##type_##RuleBorrowed rule);
+
+BASIC_RULE_FUNCS(Style)
+BASIC_RULE_FUNCS(Import)
+BASIC_RULE_FUNCS_WITHOUT_GETTER(Keyframe)
+BASIC_RULE_FUNCS(Keyframes)
+GROUP_RULE_FUNCS(Media)
+GROUP_RULE_FUNCS(MozDocument)
+BASIC_RULE_FUNCS(Namespace)
+BASIC_RULE_FUNCS(Page)
+GROUP_RULE_FUNCS(Supports)
+BASIC_RULE_FUNCS(FontFeatureValues)
+BASIC_RULE_FUNCS(FontFace)
+BASIC_RULE_FUNCS(CounterStyle)
+
+#undef GROUP_RULE_FUNCS
+#undef BASIC_RULE_FUNCS
+#undef BASIC_RULE_FUNCS_WITHOUT_GETTER
+
+RawServoDeclarationBlockStrong Servo_StyleRule_GetStyle(
+  RawServoStyleRuleBorrowed rule);
+
+void Servo_StyleRule_SetStyle(
+  RawServoStyleRuleBorrowed rule,
+  RawServoDeclarationBlockBorrowed declarations);
+
+void Servo_StyleRule_GetSelectorText(
+  RawServoStyleRuleBorrowed rule,
+  nsAString* result);
+
+void Servo_StyleRule_GetSelectorTextAtIndex(
+  RawServoStyleRuleBorrowed rule,
+  uint32_t index,
+  nsAString* result);
+
+void Servo_StyleRule_GetSpecificityAtIndex(
+  RawServoStyleRuleBorrowed rule,
+  uint32_t index,
+  uint64_t* specificity);
+
+void Servo_StyleRule_GetSelectorCount(
+  RawServoStyleRuleBorrowed rule,
+  uint32_t* count);
+
+bool Servo_StyleRule_SelectorMatchesElement(
+  RawServoStyleRuleBorrowed,
+  RawGeckoElementBorrowed,
+  uint32_t index,
+  mozilla::CSSPseudoElementType pseudo_type);
+
+bool Servo_StyleRule_SetSelectorText(
+  RawServoStyleSheetContentsBorrowed sheet,
+  RawServoStyleRuleBorrowed rule,
+  const nsAString* text);
+
+void Servo_ImportRule_GetHref(
+  RawServoImportRuleBorrowed rule,
+  nsAString* result);
+
+const mozilla::StyleSheet* Servo_ImportRule_GetSheet(
+  RawServoImportRuleBorrowed rule);
+
+void Servo_ImportRule_SetSheet(
+  RawServoImportRuleBorrowed rule,
+  mozilla::StyleSheet* sheet);
+
+void Servo_Keyframe_GetKeyText(
+  RawServoKeyframeBorrowed keyframe,
+  nsAString* result);
+
+// Returns whether it successfully changes the key text.
+bool Servo_Keyframe_SetKeyText(
+  RawServoKeyframeBorrowed keyframe,
+  const nsACString* text);
+
+RawServoDeclarationBlockStrong Servo_Keyframe_GetStyle(
+  RawServoKeyframeBorrowed keyframe);
+
+void Servo_Keyframe_SetStyle(
+  RawServoKeyframeBorrowed keyframe,
+  RawServoDeclarationBlockBorrowed declarations);
+
+nsAtom* Servo_KeyframesRule_GetName(RawServoKeyframesRuleBorrowed rule);
+
+// This method takes an addrefed nsAtom.
+void Servo_KeyframesRule_SetName(
+  RawServoKeyframesRuleBorrowed rule,
+  nsAtom* name);
+
+uint32_t Servo_KeyframesRule_GetCount(RawServoKeyframesRuleBorrowed rule);
+
+RawServoKeyframeStrong Servo_KeyframesRule_GetKeyframeAt(
+  RawServoKeyframesRuleBorrowed rule,
+  uint32_t index,
+  uint32_t* line,
+  uint32_t* column);
+
+// Returns the index of the rule, max value of uint32_t if nothing found.
+uint32_t Servo_KeyframesRule_FindRule(
+  RawServoKeyframesRuleBorrowed rule,
+  const nsACString* key);
+
+// Returns whether it successfully appends the rule.
+bool Servo_KeyframesRule_AppendRule(
+  RawServoKeyframesRuleBorrowed rule,
+  RawServoStyleSheetContentsBorrowed sheet,
+  const nsACString* css);
+
+void Servo_KeyframesRule_DeleteRule(
+  RawServoKeyframesRuleBorrowed rule,
+  uint32_t index);
+
+RawServoMediaListStrong Servo_MediaRule_GetMedia(
+  RawServoMediaRuleBorrowed rule);
+
+nsAtom* Servo_NamespaceRule_GetPrefix(RawServoNamespaceRuleBorrowed rule);
+nsAtom* Servo_NamespaceRule_GetURI(RawServoNamespaceRuleBorrowed rule);
+
+RawServoDeclarationBlockStrong Servo_PageRule_GetStyle(
+  RawServoPageRuleBorrowed rule);
+
+void Servo_PageRule_SetStyle(
+  RawServoPageRuleBorrowed rule,
+  RawServoDeclarationBlockBorrowed declarations);
+
+void Servo_SupportsRule_GetConditionText(
+  RawServoSupportsRuleBorrowed rule,
+  nsAString* result);
+
+void Servo_MozDocumentRule_GetConditionText(
+  RawServoMozDocumentRuleBorrowed rule,
+  nsAString* result);
+
+void Servo_FontFeatureValuesRule_GetFontFamily(
+  RawServoFontFeatureValuesRuleBorrowed rule,
+  nsAString* result);
+
+void Servo_FontFeatureValuesRule_GetValueText(
+  RawServoFontFeatureValuesRuleBorrowed rule,
+  nsAString* result);
+
+RawServoFontFaceRuleStrong Servo_FontFaceRule_CreateEmpty();
+
+RawServoFontFaceRuleStrong Servo_FontFaceRule_Clone(
+  RawServoFontFaceRuleBorrowed rule);
+
+void Servo_FontFaceRule_GetSourceLocation(
+  RawServoFontFaceRuleBorrowed rule,
+  uint32_t* line,
+  uint32_t* column);
+
+uint32_t Servo_FontFaceRule_Length(RawServoFontFaceRuleBorrowed rule);
+
+nsCSSFontDesc Servo_FontFaceRule_IndexGetter(
+  RawServoFontFaceRuleBorrowed rule,
+  uint32_t index);
+
+void Servo_FontFaceRule_GetDeclCssText(
+  RawServoFontFaceRuleBorrowed rule,
+  nsAString* result);
+
+bool Servo_FontFaceRule_GetFontWeight(
+  RawServoFontFaceRuleBorrowed rule,
+  mozilla::StyleComputedFontWeightRange* out);
+
+bool Servo_FontFaceRule_GetFontDisplay(
+  RawServoFontFaceRuleBorrowed rule,
+  mozilla::StyleFontDisplay* out);
+
+bool Servo_FontFaceRule_GetFontStyle(
+  RawServoFontFaceRuleBorrowed rule,
+  mozilla::StyleComputedFontStyleDescriptor* out);
+
+bool Servo_FontFaceRule_GetFontStretch(
+  RawServoFontFaceRuleBorrowed rule,
+  mozilla::StyleComputedFontStretchRange* out);
+
+bool Servo_FontFaceRule_GetFontLanguageOverride(
+  RawServoFontFaceRuleBorrowed rule,
+  mozilla::StyleFontLanguageOverride* out);
+
+nsAtom* Servo_FontFaceRule_GetFamilyName(RawServoFontFaceRuleBorrowed rule);
+
+const mozilla::StyleUnicodeRange* Servo_FontFaceRule_GetUnicodeRanges(
+  RawServoFontFaceRuleBorrowed rule,
+  size_t* out_len);
+
+void Servo_FontFaceRule_GetSources(
+  RawServoFontFaceRuleBorrowed rule,
+  nsTArray<mozilla::StyleFontFaceSourceListComponent>* components);
+
+void Servo_FontFaceRule_GetVariationSettings(
+  RawServoFontFaceRuleBorrowed rule,
+  nsTArray<mozilla::gfx::FontVariation>* out);
+
+void Servo_FontFaceRule_GetFeatureSettings(
+  RawServoFontFaceRuleBorrowed rule,
+  nsTArray<gfxFontFeature>* out);
+
+void Servo_FontFaceRule_GetDescriptorCssText(
+  RawServoFontFaceRuleBorrowed rule,
+  nsCSSFontDesc desc,
+  nsAString* result);
+
+bool Servo_FontFaceRule_SetDescriptor(
+  RawServoFontFaceRuleBorrowed rule,
+  nsCSSFontDesc desc,
+  const nsACString* value,
+  RawGeckoURLExtraData* data);
+
+void Servo_FontFaceRule_ResetDescriptor(
+  RawServoFontFaceRuleBorrowed rule,
+  nsCSSFontDesc desc);
+
+nsAtom* Servo_CounterStyleRule_GetName(RawServoCounterStyleRuleBorrowed rule);
+
+bool Servo_CounterStyleRule_SetName(
+  RawServoCounterStyleRuleBorrowed rule,
+  const nsACString* name);
+
+uint32_t Servo_CounterStyleRule_GetGeneration(
+  RawServoCounterStyleRuleBorrowed rule);
+
+uint8_t Servo_CounterStyleRule_GetSystem(RawServoCounterStyleRuleBorrowed rule);
+
+nsAtom* Servo_CounterStyleRule_GetExtended(
+  RawServoCounterStyleRuleBorrowed rule);
+
+int32_t Servo_CounterStyleRule_GetFixedFirstValue(
+  RawServoCounterStyleRuleBorrowed rule);
+
+nsAtom* Servo_CounterStyleRule_GetFallback(
+  RawServoCounterStyleRuleBorrowed rule);
+
+void Servo_CounterStyleRule_GetDescriptor(
+  RawServoCounterStyleRuleBorrowed rule,
+  nsCSSCounterDesc desc,
+  nsCSSValueBorrowedMut result);
+
+void Servo_CounterStyleRule_GetDescriptorCssText(
+  RawServoCounterStyleRuleBorrowed rule,
+  nsCSSCounterDesc desc,
+  nsAString* result);
+
+bool Servo_CounterStyleRule_SetDescriptor(
+  RawServoCounterStyleRuleBorrowed rule,
+  nsCSSCounterDesc desc,
+  const nsACString* value);
+
+// Animations API
+
+RawServoDeclarationBlockStrong Servo_ParseProperty(
+  nsCSSPropertyID property,
+  const nsACString* value,
+  RawGeckoURLExtraData* data,
+  mozilla::ParsingMode parsing_mode,
+  nsCompatibility quirks_mode,
+  mozilla::css::Loader* loader);
+
+bool Servo_ParseEasing(
+  const nsAString* easing,
+  RawGeckoURLExtraData* data,
+  nsTimingFunctionBorrowedMut output);
+
+void Servo_GetComputedKeyframeValues(
+  RawGeckoKeyframeListBorrowed keyframes,
+  RawGeckoElementBorrowed element,
+  ComputedStyleBorrowed style,
+  RawServoStyleSetBorrowed set,
+  RawGeckoComputedKeyframeValuesListBorrowedMut result);
+
+RawServoAnimationValueStrong Servo_ComputedValues_ExtractAnimationValue(
+  ComputedStyleBorrowed computed_values,
+  nsCSSPropertyID property);
+
+bool Servo_ComputedValues_SpecifiesAnimationsOrTransitions(
+  ComputedStyleBorrowed computed_values);
+
+bool Servo_Property_IsAnimatable(nsCSSPropertyID property);
+bool Servo_Property_IsTransitionable(nsCSSPropertyID property);
+bool Servo_Property_IsDiscreteAnimatable(nsCSSPropertyID property);
+
+void Servo_GetProperties_Overriding_Animation(
+  RawGeckoElementBorrowed,
+  RawGeckoCSSPropertyIDListBorrowed,
+  nsCSSPropertyIDSetBorrowedMut);
+
+void Servo_MatrixTransform_Operate(
+  nsStyleTransformMatrix::MatrixTransformOperator matrix_operator,
+  const RawGeckoGfxMatrix4x4* from,
+  const RawGeckoGfxMatrix4x4* to,
+  double progress,
+  RawGeckoGfxMatrix4x4* result);
+
+void Servo_GetAnimationValues(
+  RawServoDeclarationBlockBorrowed declarations,
+  RawGeckoElementBorrowed element,
+  ComputedStyleBorrowed style,
+  RawServoStyleSetBorrowed style_set,
+  RawGeckoServoAnimationValueListBorrowedMut animation_values);
+
+// AnimationValues handling
+
+RawServoAnimationValueStrong Servo_AnimationValues_Interpolate(
+  RawServoAnimationValueBorrowed from,
+  RawServoAnimationValueBorrowed to,
+  double progress);
+
+bool Servo_AnimationValues_IsInterpolable(
+  RawServoAnimationValueBorrowed from,
+  RawServoAnimationValueBorrowed to);
+
+RawServoAnimationValueStrong Servo_AnimationValues_Add(
+  RawServoAnimationValueBorrowed a,
+  RawServoAnimationValueBorrowed b);
+
+RawServoAnimationValueStrong Servo_AnimationValues_Accumulate(
+  RawServoAnimationValueBorrowed a,
+  RawServoAnimationValueBorrowed b,
+  uint64_t count);
+
+RawServoAnimationValueStrong Servo_AnimationValues_GetZeroValue(
+  RawServoAnimationValueBorrowed value_to_match);
+
+double Servo_AnimationValues_ComputeDistance(
+  RawServoAnimationValueBorrowed from,
+  RawServoAnimationValueBorrowed to);
+
+void Servo_AnimationValue_Serialize(
+  RawServoAnimationValueBorrowed value,
+  nsCSSPropertyID property,
+  nsAString* buffer);
+
+float Servo_AnimationValue_GetOpacity(RawServoAnimationValueBorrowed value);
+RawServoAnimationValueStrong Servo_AnimationValue_Opacity(float);
+
+void Servo_AnimationValue_GetTransform(
+  RawServoAnimationValueBorrowed value,
+  RefPtr<nsCSSValueSharedList>* list);
+
+RawServoAnimationValueStrong Servo_AnimationValue_Transform(
+  const nsCSSValueSharedList& list);
+
+bool Servo_AnimationValue_DeepEqual(
+  RawServoAnimationValueBorrowed,
+  RawServoAnimationValueBorrowed);
+
+RawServoDeclarationBlockStrong Servo_AnimationValue_Uncompute(
+  RawServoAnimationValueBorrowed value);
+
+RawServoAnimationValueStrong Servo_AnimationValue_Compute(
+  RawGeckoElementBorrowed element,
+  RawServoDeclarationBlockBorrowed declarations,
+  ComputedStyleBorrowed style,
+  RawServoStyleSetBorrowed raw_data);
+
+// Style attribute
+
+RawServoDeclarationBlockStrong Servo_ParseStyleAttribute(
+  const nsACString* data,
+  RawGeckoURLExtraData* extra_data,
+  nsCompatibility quirks_mode,
+  mozilla::css::Loader* loader);
+
+RawServoDeclarationBlockStrong Servo_DeclarationBlock_CreateEmpty();
+
+RawServoDeclarationBlockStrong Servo_DeclarationBlock_Clone(
+  RawServoDeclarationBlockBorrowed declarations);
+
+bool Servo_DeclarationBlock_Equals(
+  RawServoDeclarationBlockBorrowed a,
+  RawServoDeclarationBlockBorrowed b);
+
+void Servo_DeclarationBlock_GetCssText(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsAString* result);
+
+void Servo_DeclarationBlock_SerializeOneValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  nsAString* buffer,
+  ComputedStyleBorrowedOrNull computed_values,
+  RawServoDeclarationBlockBorrowedOrNull custom_properties);
+
+uint32_t Servo_DeclarationBlock_Count(
+  RawServoDeclarationBlockBorrowed declarations);
+
+bool Servo_DeclarationBlock_GetNthProperty(
+  RawServoDeclarationBlockBorrowed declarations,
+  uint32_t index,
+  nsAString* result);
+
+void Servo_DeclarationBlock_GetPropertyValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  const nsACString* property,
+  nsAString* value);
+
+void Servo_DeclarationBlock_GetPropertyValueById(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  nsAString* value);
+
+bool Servo_DeclarationBlock_GetPropertyIsImportant(
+  RawServoDeclarationBlockBorrowed declarations,
+  const nsACString* property);
+
+bool Servo_DeclarationBlock_SetProperty(
+  RawServoDeclarationBlockBorrowed declarations,
+  const nsACString* property,
+  const nsACString* value,
+  bool is_important,
+  RawGeckoURLExtraData* data,
+  mozilla::ParsingMode parsing_mode,
+  nsCompatibility quirks_mode,
+  mozilla::css::Loader* loader,
+  mozilla::DeclarationBlockMutationClosure);
+
+bool Servo_DeclarationBlock_SetPropertyToAnimationValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  RawServoAnimationValueBorrowed animation_value);
+
+bool Servo_DeclarationBlock_SetPropertyById(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  const nsACString* value,
+  bool is_important,
+  RawGeckoURLExtraData* data,
+  mozilla::ParsingMode parsing_mode,
+  nsCompatibility quirks_mode,
+  mozilla::css::Loader* loader,
+  mozilla::DeclarationBlockMutationClosure);
+
+bool Servo_DeclarationBlock_RemoveProperty(
+  RawServoDeclarationBlockBorrowed declarations,
+  const nsACString* property,
+  mozilla::DeclarationBlockMutationClosure);
+
+bool Servo_DeclarationBlock_RemovePropertyById(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  mozilla::DeclarationBlockMutationClosure);
+
+bool Servo_DeclarationBlock_HasCSSWideKeyword(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property);
+
+// Compose animation value for a given property.
+// |base_values| is nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>.
+// We use RawServoAnimationValueTableBorrowed to avoid exposing
+// nsRefPtrHashtable in FFI.
+void Servo_AnimationCompose(
+  RawServoAnimationValueMapBorrowedMut animation_values,
+  RawServoAnimationValueTableBorrowed base_values,
+  nsCSSPropertyID property,
+  RawGeckoAnimationPropertySegmentBorrowed animation_segment,
+  RawGeckoAnimationPropertySegmentBorrowed last_segment,
+  RawGeckoComputedTimingBorrowed computed_timing,
+  mozilla::dom::IterationCompositeOperation iter_composite);
+
+// Calculate the result of interpolating given animation segment at the given
+// progress and current iteration.
+// This includes combining the segment endpoints with the underlying value
+// and/or last value depending the composite modes specified on the
+// segment endpoints and the supplied iteration composite mode.
+// The caller is responsible for providing an underlying value and
+// last value in all situations where there are needed.
+RawServoAnimationValueStrong Servo_ComposeAnimationSegment(
+  RawGeckoAnimationPropertySegmentBorrowed animation_segment,
+  RawServoAnimationValueBorrowedOrNull underlying_value,
+  RawServoAnimationValueBorrowedOrNull last_value,
+  mozilla::dom::IterationCompositeOperation iter_composite,
+  double progress,
+  uint64_t current_iteration);
+
+// presentation attributes
+
+bool Servo_DeclarationBlock_PropertyIsSet(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property);
+
+void Servo_DeclarationBlock_SetIdentStringValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  nsAtom* value);
+
+void Servo_DeclarationBlock_SetKeywordValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  int32_t value);
+
+void Servo_DeclarationBlock_SetIntValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  int32_t value);
+
+void Servo_DeclarationBlock_SetPixelValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  float value);
+
+void Servo_DeclarationBlock_SetLengthValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  float value,
+  nsCSSUnit unit);
+
+void Servo_DeclarationBlock_SetNumberValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  float value);
+
+void Servo_DeclarationBlock_SetPercentValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  float value);
+
+void Servo_DeclarationBlock_SetAutoValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property);
+
+void Servo_DeclarationBlock_SetCurrentColor(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property);
+
+void Servo_DeclarationBlock_SetColorValue(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsCSSPropertyID property,
+  nscolor value);
+
+void Servo_DeclarationBlock_SetFontFamily(
+  RawServoDeclarationBlockBorrowed declarations,
+  const nsAString& value);
+
+void Servo_DeclarationBlock_SetTextDecorationColorOverride(
+  RawServoDeclarationBlockBorrowed declarations);
+
+void Servo_DeclarationBlock_SetBackgroundImage(
+  RawServoDeclarationBlockBorrowed declarations,
+  const nsAString& value,
+  RawGeckoURLExtraData* extra_data);
+
+// MediaList
+
+RawServoMediaListStrong Servo_MediaList_Create();
+
+RawServoMediaListStrong Servo_MediaList_DeepClone(
+  RawServoMediaListBorrowed list);
+
+bool Servo_MediaList_Matches(
+  RawServoMediaListBorrowed list,
+  RawServoStyleSetBorrowed set);
+
+void Servo_MediaList_GetText(RawServoMediaListBorrowed list, nsAString* result);
+
+void Servo_MediaList_SetText(
+  RawServoMediaListBorrowed list,
+  const nsACString* text,
+  mozilla::dom::CallerType aCallerType);
+
+uint32_t Servo_MediaList_GetLength(RawServoMediaListBorrowed list);
+
+bool Servo_MediaList_GetMediumAt(
+  RawServoMediaListBorrowed list,
+  uint32_t index,
+  nsAString* result);
+
+void Servo_MediaList_AppendMedium(
+  RawServoMediaListBorrowed list,
+  const nsACString* new_medium);
+
+bool Servo_MediaList_DeleteMedium(
+  RawServoMediaListBorrowed list,
+  const nsACString* old_medium);
+
+size_t Servo_MediaList_SizeOfIncludingThis(
+  mozilla::MallocSizeOf malloc_size_of,
+  mozilla::MallocSizeOf malloc_enclosing_size_of,
+  RawServoMediaListBorrowed list);
+
+// CSS supports();
+
+bool Servo_CSSSupports2(const nsACString* name, const nsACString* value);
+bool Servo_CSSSupports(const nsACString* cond);
+
+// Computed style data
+
+ComputedStyleStrong Servo_ComputedValues_GetForAnonymousBox(
+  ComputedStyleBorrowedOrNull parent_style_or_null,
+  nsAtom* pseudo_tag,
+  RawServoStyleSetBorrowed set);
+
+ComputedStyleStrong Servo_ComputedValues_Inherit(
+  RawServoStyleSetBorrowed set,
+  nsAtom* pseudo_tag,
+  ComputedStyleBorrowedOrNull parent_style,
+  mozilla::InheritTarget target);
+
+uint8_t Servo_ComputedValues_GetStyleBits(ComputedStyleBorrowed values);
+
+bool Servo_ComputedValues_EqualCustomProperties(
+  ServoComputedDataBorrowed first,
+  ServoComputedDataBorrowed second);
+
+// Gets the source style rules for the computed values. This returns
+// the result via rules, which would include a list of unowned pointers
+// to RawServoStyleRule.
+void Servo_ComputedValues_GetStyleRuleList(
+  ComputedStyleBorrowed values,
+  RawGeckoServoStyleRuleListBorrowedMut rules);
+
+// Initialize Servo components. Should be called exactly once at startup.
+void Servo_Initialize(RawGeckoURLExtraData* dummy_url_data);
+
+// Initialize Servo on a cooperative Quantum DOM thread.
+void Servo_InitializeCooperativeThread();
+
+// Shut down Servo components. Should be called exactly once at shutdown.
+void Servo_Shutdown();
+
+// Restyle and change hints.
+void Servo_NoteExplicitHints(
+  RawGeckoElementBorrowed element,
+  nsRestyleHint restyle_hint,
+  nsChangeHint change_hint);
+
 // We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
-uint32_t Gecko_CalcStyleDifference(ComputedStyleBorrowed old_style,
-                                   ComputedStyleBorrowed new_style,
-                                   bool* any_style_struct_changed,
-                                   bool* reset_only_changed);
+uint32_t Servo_TakeChangeHint(
+  RawGeckoElementBorrowed element,
+  bool* was_restyled);
 
-// Get an element snapshot for a given element from the table.
-const ServoElementSnapshot*
-Gecko_GetElementSnapshot(const mozilla::ServoElementSnapshotTable* table,
-                         RawGeckoElementBorrowed element);
+ComputedStyleStrong Servo_ResolveStyle(
+  RawGeckoElementBorrowed element,
+  RawServoStyleSetBorrowed set);
 
-// Have we seen this pointer before?
-bool
-Gecko_HaveSeenPtr(mozilla::SeenPtrs* table, const void* ptr);
+ComputedStyleStrong Servo_ResolvePseudoStyle(
+  RawGeckoElementBorrowed element,
+  mozilla::CSSPseudoElementType pseudo_type,
+  bool is_probe,
+  ComputedStyleBorrowedOrNull inherited_style,
+  RawServoStyleSetBorrowed set);
 
-// `array` must be an nsTArray
-// If changing this signature, please update the
-// friend function declaration in nsTArray.h
-void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
+ComputedStyleStrong Servo_ComputedValues_ResolveXULTreePseudoStyle(
+  RawGeckoElementBorrowed element,
+  nsAtom* pseudo_tag,
+  ComputedStyleBorrowed inherited_style,
+  const mozilla::AtomArray* input_word,
+  RawServoStyleSetBorrowed set);
 
-// Same here, `array` must be an nsTArray<T>, for some T.
+void Servo_SetExplicitStyle(
+  RawGeckoElementBorrowed element,
+  ComputedStyleBorrowed primary_style);
+
+bool Servo_HasAuthorSpecifiedRules(
+  ComputedStyleBorrowed style,
+  RawGeckoElementBorrowed element,
+  mozilla::CSSPseudoElementType pseudo_type,
+  uint32_t rule_type_mask,
+  bool author_colors_allowed);
+
+// Resolves style for an element or pseudo-element without processing pending
+// restyles first. The Element and its ancestors may be unstyled, have pending
+// restyles, or be in a display:none subtree. Styles are cached when possible,
+// though caching is not possible within display:none subtrees, and the styles
+// may be invalidated by already-scheduled restyles.
 //
-// Important note: Only valid for POD types, since destructors won't be run
-// otherwise. This is ensured with rust traits for the relevant structs.
-void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
+// The tree must be in a consistent state such that a normal traversal could be
+// performed, and this function maintains that invariant.
 
-void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* array, uint32_t length);
+ComputedStyleStrong Servo_ResolveStyleLazily(
+  RawGeckoElementBorrowed element,
+  mozilla::CSSPseudoElementType pseudo_type,
+  mozilla::StyleRuleInclusion rule_inclusion,
+  const mozilla::ServoElementSnapshotTable* snapshots,
+  RawServoStyleSetBorrowed set);
 
-void Gecko_SetStyleGridTemplate(mozilla::UniquePtr<nsStyleGridTemplate>* grid_template,
-                                nsStyleGridTemplate* value);
+// Reparents style to the new parents.
+ComputedStyleStrong Servo_ReparentStyle(
+  ComputedStyleBorrowed style_to_reparent,
+  ComputedStyleBorrowed parent_style,
+  ComputedStyleBorrowed parent_style_ignoring_first_line,
+  ComputedStyleBorrowed layout_parent_style,
+  // element is null if there is no content node involved, or if it's not an
+  // element.
+  RawGeckoElementBorrowedOrNull element,
+  RawServoStyleSetBorrowed set);
 
-nsStyleGridTemplate* Gecko_CreateStyleGridTemplate(uint32_t track_sizes,
-                                                   uint32_t name_size);
+// Use ServoStyleSet::PrepareAndTraverseSubtree instead of calling this
+// directly
+bool Servo_TraverseSubtree(
+  RawGeckoElementBorrowed root,
+  RawServoStyleSetBorrowed set,
+  const mozilla::ServoElementSnapshotTable* snapshots,
+  mozilla::ServoTraversalFlags flags);
 
-void Gecko_CopyStyleGridTemplateValues(mozilla::UniquePtr<nsStyleGridTemplate>* grid_template,
-                                       const nsStyleGridTemplate* other);
+// Assert that the tree has no pending or unconsumed restyles.
+void Servo_AssertTreeIsClean(RawGeckoElementBorrowed root);
 
-mozilla::css::GridTemplateAreasValue* Gecko_NewGridTemplateAreasValue(uint32_t areas,
-                                                                      uint32_t templates,
-                                                                      uint32_t columns);
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::GridTemplateAreasValue, GridTemplateAreasValue);
+// Returns true if the current thread is a Servo parallel worker thread.
+bool Servo_IsWorkerThread();
 
-// Clear the mContents, mCounterIncrements, or mCounterResets field in nsStyleContent. This is
-// needed to run the destructors, otherwise we'd leak the images, strings, and whatnot.
-void Gecko_ClearAndResizeStyleContents(nsStyleContent* content,
-                                       uint32_t how_many);
-void Gecko_ClearAndResizeCounterIncrements(nsStyleContent* content,
-                                           uint32_t how_many);
-void Gecko_ClearAndResizeCounterResets(nsStyleContent* content,
-                                       uint32_t how_many);
-void Gecko_CopyStyleContentsFrom(nsStyleContent* content, const nsStyleContent* other);
-void Gecko_CopyCounterResetsFrom(nsStyleContent* content, const nsStyleContent* other);
-void Gecko_CopyCounterIncrementsFrom(nsStyleContent* content, const nsStyleContent* other);
+// Checks whether the rule tree has crossed its threshold for unused rule nodes,
+// and if so, frees them.
+void Servo_MaybeGCRuleTree(RawServoStyleSetBorrowed set);
 
-void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len,
-                                   nsStyleImageLayers::LayerType layer_type);
+// Returns computed values for the given element without any animations rules.
+ComputedStyleStrong Servo_StyleSet_GetBaseComputedValuesForElement(
+  RawServoStyleSetBorrowed set,
+  RawGeckoElementBorrowed element,
+  ComputedStyleBorrowed existing_style,
+  const mozilla::ServoElementSnapshotTable* snapshots);
 
-void Gecko_EnsureStyleAnimationArrayLength(void* array, size_t len);
-void Gecko_EnsureStyleTransitionArrayLength(void* array, size_t len);
+// Returns computed values for the given element by adding an animation value.
+ComputedStyleStrong Servo_StyleSet_GetComputedValuesByAddingAnimation(
+  RawServoStyleSetBorrowed set,
+  RawGeckoElementBorrowed element,
+  ComputedStyleBorrowed existing_style,
+  const mozilla::ServoElementSnapshotTable* snapshots,
+  RawServoAnimationValueBorrowed animation);
 
-void Gecko_ClearWillChange(nsStyleDisplay* display, size_t length);
-void Gecko_AppendWillChange(nsStyleDisplay* display, nsAtom* atom);
-void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, nsStyleDisplay* src);
+// For canvas font.
+void Servo_SerializeFontValueForCanvas(
+  RawServoDeclarationBlockBorrowed declarations,
+  nsAString* buffer);
 
-// Searches from the beginning of |keyframes| for a Keyframe object with the
-// specified offset and timing function. If none is found, a new Keyframe object
-// with the specified |offset| and |timingFunction| will be prepended to
-// |keyframes|.
-//
-// @param keyframes  An array of Keyframe objects, sorted by offset.
-//                   The first Keyframe in the array, if any, MUST have an
-//                   offset greater than or equal to |offset|.
-// @param offset  The offset to search for, or, if no suitable Keyframe is
-//                found, the offset to use for the created Keyframe.
-//                Must be a floating point number in the range [0.0, 1.0].
-// @param timingFunction  The timing function to match, or, if no suitable
-//                        Keyframe is found, to set on the created Keyframe.
-//
-// @returns  The matching or created Keyframe.
-mozilla::Keyframe* Gecko_GetOrCreateKeyframeAtStart(
-  RawGeckoKeyframeListBorrowedMut keyframes,
-  float offset,
-  const nsTimingFunction* timingFunction);
+// GetComputedStyle APIs.
+bool Servo_GetCustomPropertyValue(
+  ComputedStyleBorrowed computed_values,
+  const nsAString* name,
+  nsAString* value);
 
-// As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
-// from the beginning of |keyframes| for a Keyframe with matching timing
-// function and an offset of 0.0.
-// Furthermore, if a matching Keyframe is not found, a new Keyframe will be
-// inserted after the *last* Keyframe in |keyframes| with offset 0.0.
-mozilla::Keyframe* Gecko_GetOrCreateInitialKeyframe(
-  RawGeckoKeyframeListBorrowedMut keyframes,
-  const nsTimingFunction* timingFunction);
+uint32_t Servo_GetCustomPropertiesCount(ComputedStyleBorrowed computed_values);
 
-// As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
-// from the *end* of |keyframes| for a Keyframe with matching timing function
-// and an offset of 1.0. If a matching Keyframe is not found, a new Keyframe
-// will be appended to the end of |keyframes|.
-mozilla::Keyframe* Gecko_GetOrCreateFinalKeyframe(
-  RawGeckoKeyframeListBorrowedMut keyframes,
-  const nsTimingFunction* timingFunction);
+bool Servo_GetCustomPropertyNameAt(
+  ComputedStyleBorrowed,
+  uint32_t index,
+  nsAString* name);
 
-// Appends and returns a new PropertyValuePair to |aProperties| initialized with
-// its mProperty member set to |aProperty| and all other members initialized to
-// their default values.
-mozilla::PropertyValuePair* Gecko_AppendPropertyValuePair(
-  RawGeckoPropertyValuePairListBorrowedMut aProperties,
-  nsCSSPropertyID aProperty);
+void Servo_GetPropertyValue(
+  ComputedStyleBorrowed computed_values,
+  nsCSSPropertyID property,
+  nsAString* value);
 
-// Clean up pointer-based coordinates
-void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
+void Servo_ProcessInvalidations(
+  RawServoStyleSetBorrowed set,
+  RawGeckoElementBorrowed element,
+  const mozilla::ServoElementSnapshotTable* snapshots);
 
-// Set an nsStyleCoord to a computed `calc()` value
-void Gecko_SetStyleCoordCalcValue(nsStyleUnit* unit, nsStyleUnion* value, nsStyleCoord::CalcValue calc);
+bool Servo_HasPendingRestyleAncestor(RawGeckoElementBorrowed element);
 
-void Gecko_CopyShapeSourceFrom(mozilla::StyleShapeSource* dst, const mozilla::StyleShapeSource* src);
+void Servo_GetArcStringData(
+  const RustString*,
+  uint8_t const** chars,
+  uint32_t* len);
 
-void Gecko_DestroyShapeSource(mozilla::StyleShapeSource* shape);
-void Gecko_NewBasicShape(mozilla::StyleShapeSource* shape,
-                         mozilla::StyleBasicShapeType type);
-void Gecko_NewShapeImage(mozilla::StyleShapeSource* shape);
-void Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* shape, mozilla::css::URLValue* uri);
-void Gecko_NewStyleSVGPath(mozilla::StyleShapeSource* shape);
-void Gecko_SetStyleMotion(mozilla::UniquePtr<mozilla::StyleMotion>* aMotion,
-                          mozilla::StyleMotion* aValue);
-mozilla::StyleMotion* Gecko_NewStyleMotion();
-void Gecko_CopyStyleMotions(mozilla::UniquePtr<mozilla::StyleMotion>* motion,
-                            const mozilla::StyleMotion* other);
+void Servo_ReleaseArcStringData(
+  const mozilla::ServoRawOffsetArc<RustString>* string);
 
-void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
-void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);
-void Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* effects, mozilla::css::URLValue* uri);
+// CSS parsing utility functions.
 
-void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* dest, const nsStyleSVGPaint* src);
-void Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* paint, mozilla::css::URLValue* uri);
-void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* paint);
+bool Servo_IsValidCSSColor(const nsAString* value);
 
-void Gecko_nsStyleSVG_SetDashArrayLength(nsStyleSVG* svg, uint32_t len);
-void Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* dst, const nsStyleSVG* src);
-void Gecko_nsStyleSVG_SetContextPropertiesLength(nsStyleSVG* svg, uint32_t len);
-void Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* dst, const nsStyleSVG* src);
+bool Servo_ComputeColor(
+  RawServoStyleSetBorrowedOrNull set,
+  nscolor current_color,
+  const nsAString* value,
+  nscolor* result_color,
+  bool* was_current_color,
+  mozilla::css::Loader* loader);
 
-mozilla::css::URLValue* Gecko_URLValue_Create(ServoBundledURI uri, mozilla::CORSMode aCORSMode);
-size_t Gecko_URLValue_SizeOfIncludingThis(mozilla::css::URLValue* url);
-void Gecko_GetComputedURLSpec(const mozilla::css::URLValue* url, nsCString* spec);
-void Gecko_GetComputedImageURLSpec(const mozilla::css::URLValue* url, nsCString* spec);
-void Gecko_nsIURI_Debug(nsIURI*, nsCString* spec);
+bool Servo_IntersectionObserverRootMargin_Parse(
+  const nsAString* value,
+  nsStyleSides* result);
 
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::URLValue, CSSURLValue);
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(RawGeckoURLExtraData, URLExtraData);
+void Servo_IntersectionObserverRootMargin_ToString(
+  const nsStyleSides* rect,
+  nsAString* result);
 
-void Gecko_FillAllImageLayers(nsStyleImageLayers* layers, uint32_t max_len);
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
+// Returning false means the parsed transform contains relative lengths or
+// percentage value, so we cannot compute the matrix. In this case, we keep
+// |result| and |contains_3d_transform| as-is.
+bool Servo_ParseTransformIntoMatrix(
+  const nsAString* value,
+  bool* contains_3d_transform,
+  RawGeckoGfxMatrix4x4* result);
 
-nsCSSShadowArray* Gecko_NewCSSShadowArray(uint32_t len);
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
+bool Servo_ParseFontShorthandForMatching(
+  const nsAString* value,
+  RawGeckoURLExtraData* data,
+  RefPtr<mozilla::SharedFontList>* family,
+  // We use ComputedFontStyleDescriptor just for convenience,
+  // but the two values of Oblique are the same.
+  mozilla::StyleComputedFontStyleDescriptor* style,
+  float* stretch,
+  float* weight);
 
-nsStyleQuoteValues* Gecko_NewStyleQuoteValues(uint32_t len);
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleQuoteValues, QuoteValues);
+nsCSSPropertyID Servo_ResolveLogicalProperty(
+  nsCSSPropertyID,
+  ComputedStyleBorrowed);
 
-nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t len);
-nsCSSValueSharedList* Gecko_NewNoneTransform();
+nsCSSPropertyID Servo_Property_LookupEnabledForAllContent(
+  const nsACString* name);
 
-// Getter for nsCSSValue
-nsCSSValueBorrowedMut Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut css_value, int32_t index);
-// const version of the above function.
-nsCSSValueBorrowed Gecko_CSSValue_GetArrayItemConst(nsCSSValueBorrowed css_value, int32_t index);
-nsCSSKeyword Gecko_CSSValue_GetKeyword(nsCSSValueBorrowed aCSSValue);
-float Gecko_CSSValue_GetNumber(nsCSSValueBorrowed css_value);
-float Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed css_value);
-nsStyleCoord::CalcValue Gecko_CSSValue_GetCalc(nsCSSValueBorrowed aCSSValue);
+const uint8_t* Servo_Property_GetName(nsCSSPropertyID, uint32_t* out_length);
+bool Servo_Property_IsShorthand(const nsACString* name, bool* found);
+bool Servo_Property_IsInherited(const nsACString* name);
 
-void Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut css_value, float number);
-void Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut css_value, nsCSSKeyword keyword);
-void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent);
-void Gecko_CSSValue_SetPixelLength(nsCSSValueBorrowedMut aCSSValue, float aLen);
-void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
-void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
-void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value,
-                              const uint8_t* string, uint32_t len, nsCSSUnit unit);
-void Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut css_value,
-                                      nsAtom* atom, nsCSSUnit unit);
-// Take an addrefed nsAtom and set it to the nsCSSValue
-void Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut css_value, nsAtom* atom);
-void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
-void Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut css_value, int32_t integer, nsCSSUnit unit);
-void Gecko_CSSValue_SetFloat(nsCSSValueBorrowedMut css_value, float value, nsCSSUnit unit);
-void Gecko_CSSValue_SetPair(nsCSSValueBorrowedMut css_value,
-                            nsCSSValueBorrowed xvalue, nsCSSValueBorrowed yvalue);
-void Gecko_CSSValue_SetList(nsCSSValueBorrowedMut css_value, uint32_t len);
-void Gecko_CSSValue_SetPairList(nsCSSValueBorrowedMut css_value, uint32_t len);
-void Gecko_CSSValue_InitSharedList(nsCSSValueBorrowedMut css_value, uint32_t len);
-void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
+bool Servo_Property_SupportsType(
+  const nsACString* name,
+  uint32_t ty,
+  bool* found);
 
-float Gecko_FontStretch_ToFloat(mozilla::FontStretch aStretch);
-void Gecko_FontStretch_SetFloat(mozilla::FontStretch* aStretch,
-                                float aFloatValue);
-float Gecko_FontSlantStyle_ToFloat(mozilla::FontSlantStyle aStyle);
-void Gecko_FontSlantStyle_SetNormal(mozilla::FontSlantStyle*);
-void Gecko_FontSlantStyle_SetItalic(mozilla::FontSlantStyle*);
-void Gecko_FontSlantStyle_SetOblique(mozilla::FontSlantStyle*, float angle_degrees);
-void Gecko_FontSlantStyle_Get(mozilla::FontSlantStyle,
-                              bool* normal,
-                              bool* italic,
-                              float* oblique_angle);
+void Servo_Property_GetCSSValuesForProperty(
+  const nsACString* name,
+  bool* found,
+  nsTArray<nsString>* result);
 
-float Gecko_FontWeight_ToFloat(mozilla::FontWeight aWeight);
-void Gecko_FontWeight_SetFloat(mozilla::FontWeight* aWeight,
-                               float aFloatValue);
+uint64_t Servo_PseudoClass_GetStates(const nsACString* name);
 
-void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsAtom* atom);
-void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
-void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* font,
-                                        RawGeckoPresContextBorrowed pres_context);
-void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* font,
-                                                RawGeckoPresContextBorrowed pres_context,
-                                                uint8_t generic_id);
-void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* font,
-                                        RawGeckoPresContextBorrowed pres_context);
-FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
+StyleUseCounters* Servo_UseCounters_Create();
+void Servo_UseCounters_Drop(StyleUseCountersOwned);
 
-// XBL related functions.
-RawGeckoElementBorrowedOrNull Gecko_GetBindingParent(RawGeckoElementBorrowed aElement);
-RawServoAuthorStylesBorrowedOrNull Gecko_XBLBinding_GetRawServoStyles(RawGeckoXBLBindingBorrowed aXBLBinding);
-bool Gecko_XBLBinding_InheritsStyle(RawGeckoXBLBindingBorrowed aXBLBinding);
+void Servo_UseCounters_Merge(
+  StyleUseCountersBorrowed doc_counters,
+  StyleUseCountersBorrowed sheet_counters);
 
-struct GeckoFontMetrics
-{
-  nscoord mChSize;
-  nscoord mXSize;
-};
+bool Servo_IsCssPropertyRecordedInUseCounter(
+  StyleUseCountersBorrowed,
+  const nsACString* property,
+  bool* out_known_prop);
 
-GeckoFontMetrics Gecko_GetFontMetrics(RawGeckoPresContextBorrowed pres_context,
-                                      bool is_vertical,
-                                      const nsStyleFont* font,
-                                      nscoord font_size,
-                                      bool use_user_font_set);
-int32_t Gecko_GetAppUnitsPerPhysicalInch(RawGeckoPresContextBorrowed pres_context);
-void InitializeServo();
-void ShutdownServo();
-void AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
-
-mozilla::StyleSheet* Gecko_StyleSheet_Clone(
-    const mozilla::StyleSheet* aSheet,
-    const mozilla::StyleSheet* aNewParentSheet);
-void Gecko_StyleSheet_AddRef(const mozilla::StyleSheet* aSheet);
-void Gecko_StyleSheet_Release(const mozilla::StyleSheet* aSheet);
-
-nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* string, uint32_t len);
-const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
-
-bool Gecko_IsDocumentBody(RawGeckoElementBorrowed element);
-// We use an int32_t here instead of a LookAndFeel::ColorID
-// because forward-declaring a nested enum/struct is impossible
-nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
-                                        RawGeckoPresContextBorrowed pres_context);
-
-void Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut, nsCSSPropertyID);
-
-// Style-struct management.
-#define STYLE_STRUCT(name)                                            \
-  void Gecko_Construct_Default_nsStyle##name(                         \
-    nsStyle##name* ptr,                                               \
-    RawGeckoPresContextBorrowed pres_context);                        \
-  void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,          \
-                                         const nsStyle##name* other); \
-  void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr);
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
-void Gecko_RegisterProfilerThread(const char* name);
-void Gecko_UnregisterProfilerThread();
-
-bool Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed,
-                                           const nsACString* aPattern,
-                                           mozilla::css::DocumentMatchingFunction);
-
-// Allocator hinting.
-void Gecko_SetJemallocThreadLocalArena(bool enabled);
-
-void Gecko_AddBufferToCrashReport(const void* addr, size_t len);
-void Gecko_AnnotateCrashReport(uint32_t key, const char* value_str);
-
-// Pseudo-element flags.
-#define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-  const uint32_t SERVO_CSS_PSEUDO_ELEMENT_FLAGS_##name_ = flags_;
-#include "nsCSSPseudoElementList.h"
-#undef CSS_PSEUDO_ELEMENT
-
-#define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
-#include "mozilla/ServoBindingList.h"
-#undef SERVO_BINDING_FUNC
-
-bool Gecko_ErrorReportingEnabled(const mozilla::StyleSheet* sheet,
-                                 const mozilla::css::Loader* loader);
-void Gecko_ReportUnexpectedCSSError(const mozilla::StyleSheet* sheet,
-                                    const mozilla::css::Loader* loader,
-                                    nsIURI* uri,
-                                    const char* message,
-                                    const char* param,
-                                    uint32_t paramLen,
-                                    const char* prefix,
-                                    const char* prefixParam,
-                                    uint32_t prefixParamLen,
-                                    const char* suffix,
-                                    const char* source,
-                                    uint32_t sourceLen,
-                                    uint32_t lineNumber,
-                                    uint32_t colNumber);
-
-// DOM APIs.
-void Gecko_ContentList_AppendAll(nsSimpleContentList* aContentList,
-                                 const RawGeckoElement** aElements,
-                                 size_t aLength);
-
-// FIXME(emilio): These two below should be a single function that takes a
-// `const DocumentOrShadowRoot*`, but that doesn't make MSVC builds happy for a
-// reason I haven't really dug into.
-const nsTArray<mozilla::dom::Element*>* Gecko_Document_GetElementsWithId(
-    const nsIDocument* aDocument,
-    nsAtom* aId);
-
-const nsTArray<mozilla::dom::Element*>* Gecko_ShadowRoot_GetElementsWithId(
-    const mozilla::dom::ShadowRoot* aDocument,
-    nsAtom* aId);
-
-// Check the value of the given bool preference. The pref name needs to
-// be null-terminated.
-bool Gecko_GetBoolPrefValue(const char* pref_name);
-
-// Returns true if we're currently performing the servo traversal.
-bool Gecko_IsInServoTraversal();
-
-// Returns true if we're currently on the main thread.
-bool Gecko_IsMainThread();
-
-// Media feature helpers.
-mozilla::StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(nsIDocument*);
-uint32_t Gecko_MediaFeatures_GetColorDepth(nsIDocument*);
-void Gecko_MediaFeatures_GetDeviceSize(nsIDocument*, nscoord* width, nscoord* height);
-float Gecko_MediaFeatures_GetResolution(nsIDocument*);
-bool Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument*);
-mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(nsIDocument*);
-mozilla::PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(nsIDocument*);
-float Gecko_MediaFeatures_GetDevicePixelRatio(nsIDocument*);
-bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument*,
-                                         nsAtom* metric,
-                                         bool is_accessible_from_content);
-bool Gecko_MediaFeatures_IsResourceDocument(nsIDocument*);
-nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument*);
+// AddRef / Release functions
+#define SERVO_ARC_TYPE(name_, type_)              \
+  void Servo_##name_##_AddRef(type_##Borrowed);   \
+  void Servo_##name_##_Release(type_##Borrowed);
+#include "mozilla/ServoArcTypeList.h"
+#undef SERVO_ARC_TYPE
 
 } // extern "C"
 

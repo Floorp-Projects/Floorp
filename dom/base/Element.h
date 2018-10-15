@@ -16,7 +16,7 @@
 #include "mozilla/dom/FragmentOrElement.h" // for base class
 #include "nsChangeHint.h"                  // for enum
 #include "mozilla/EventStates.h"           // for member
-#include "mozilla/ServoTypes.h"
+#include "mozilla/RustCell.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "nsILinkHandler.h"
 #include "nsINodeList.h"
@@ -60,6 +60,7 @@ class nsDOMCSSAttributeDeclaration;
 class nsISMILAttr;
 class nsDocument;
 class nsDOMStringMap;
+struct ServoNodeData;
 
 namespace mozilla {
 class DeclarationBlock;
@@ -1984,7 +1985,7 @@ private:
   //
   // There should not be data on nodes that are in the flattened tree, or
   // descendants of display: none elements.
-  mozilla::ServoCell<ServoNodeData*> mServoData;
+  mozilla::RustCell<ServoNodeData*> mServoData;
 };
 
 class RemoveFromBindingManagerRunnable : public mozilla::Runnable

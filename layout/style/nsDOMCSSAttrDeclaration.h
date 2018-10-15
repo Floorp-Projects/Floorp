@@ -58,7 +58,7 @@ public:
   static void MutationClosureFunction(void* aData);
 
   void
-  GetPropertyChangeClosure(DeclarationBlockMutationClosure* aClosure,
+  GetPropertyChangeClosure(mozilla::DeclarationBlockMutationClosure* aClosure,
                            mozilla::MutationClosureData* aClosureData) final
   {
     if (!mIsSMILOverride) {
