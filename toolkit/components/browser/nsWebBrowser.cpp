@@ -512,6 +512,7 @@ nsWebBrowser::LoadURIWithOptions(const nsAString& aURI, uint32_t aLoadFlags,
                                  nsIURI* aBaseURI,
                                  nsIPrincipal* aTriggeringPrincipal)
 {
+  MOZ_ASSERT(aTriggeringPrincipal, "nsWebBrowser::LoadURIWithOptions - Need a valid triggeringPrincipal");
   NS_ENSURE_STATE(mDocShell);
 
   return mDocShellAsNav->LoadURIWithOptions(
@@ -533,6 +534,7 @@ nsWebBrowser::LoadURI(const nsAString& aURI, uint32_t aLoadFlags,
                       nsIInputStream* aExtraHeaderStream,
                       nsIPrincipal* aTriggeringPrincipal)
 {
+  MOZ_ASSERT(aTriggeringPrincipal, "nsWebBrowser::LoadURI - Need a valid triggeringPrincipal");
   NS_ENSURE_STATE(mDocShell);
 
   return mDocShellAsNav->LoadURI(aURI, aLoadFlags, aReferringURI,

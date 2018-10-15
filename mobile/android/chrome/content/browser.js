@@ -3882,7 +3882,7 @@ Tab.prototype = {
       url = this.originalURI.spec;
     }
 
-    this.browser.docShell.loadURI(url, flags, null, null, null);
+    this.browser.docShell.loadURI(url, flags, null, null, null, this.browser.contentPrincipal);
   },
 
   destroy: function() {
@@ -5051,7 +5051,14 @@ var ErrorPageEventHandler = {
             // Allow users to override and continue through to the site,
             let webNav = BrowserApp.selectedBrowser.docShell.QueryInterface(Ci.nsIWebNavigation);
             let location = BrowserApp.selectedBrowser.contentWindow.location;
-            webNav.loadURI(location, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER, null, null, null);
+            let attrs = {};
+            let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(BrowserApp.selectedBrowser);
+            if (isPrivate) {
+              attrs["privateBrowsingId"] = 1;
+            }
+
+            let triggeringPrincipal = nullServices.scriptSecurityManager.createNullPrincipal(attrs);
+            webNav.loadURI(location, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER, null, null, triggeringPrincipal);
 
             // ....but add a notify bar as a reminder, so that they don't lose
             // track after, e.g., tab switching.
