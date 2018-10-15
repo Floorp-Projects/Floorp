@@ -492,6 +492,14 @@ class ArrayBufferViewObject : public NativeObject
     // need not be looked up on accesses.
     static constexpr size_t DATA_SLOT = 3;
 
+  private:
+    void* dataPointerEither_() const {
+        // Note, do not check whether shared or not
+        // Keep synced with js::Get<Type>ArrayLengthAndData in jsfriendapi.h!
+        return static_cast<void*>(getPrivate(DATA_SLOT));
+    }
+
+  public:
     static ArrayBufferObjectMaybeShared* bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*> obj);
 
     void notifyBufferDetached(JSContext* cx, void* newData);
@@ -500,6 +508,31 @@ class ArrayBufferViewObject : public NativeObject
     // comments in ArrayBufferObject.cpp.
     uint8_t* dataPointerUnshared(const JS::AutoRequireNoGC&);
     void setDataPointerUnshared(uint8_t* data);
+
+    void initDataPointer(SharedMem<uint8_t*> viewData) {
+        // Install a pointer to the buffer location that corresponds
+        // to offset zero within the typed array.
+        //
+        // The following unwrap is safe because the DATA_SLOT is
+        // accessed only from jitted code and from the
+        // dataPointerEither_() accessor above; in neither case does the
+        // raw pointer escape untagged into C++ code.
+        initPrivate(viewData.unwrap(/*safe - see above*/));
+    }
+
+    SharedMem<void*> dataPointerShared() const {
+        return SharedMem<void*>::shared(dataPointerEither_());
+    }
+    SharedMem<void*> dataPointerEither() const {
+        if (isSharedMemory()) {
+            return SharedMem<void*>::shared(dataPointerEither_());
+        }
+        return SharedMem<void*>::unshared(dataPointerEither_());
+    }
+    void* dataPointerUnshared() const {
+        MOZ_ASSERT(!isSharedMemory());
+        return dataPointerEither_();
+    }
 
     static void trace(JSTracer* trc, JSObject* obj);
 };

@@ -76,10 +76,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     obj->setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
 
     SharedMem<uint8_t*> ptr = arrayBuffer->dataPointerEither();
-    // A pointer to raw shared memory is exposed through the private slot.  This
-    // is safe so long as getPrivate() is not used willy-nilly.  It is wrapped in
-    // other accessors in TypedArrayObject.h.
-    obj->initPrivate(ptr.unwrap(/*safe - see above*/) + byteOffset);
+    obj->initDataPointer(ptr + byteOffset);
 
     // Include a barrier if the data view's data pointer is in the nursery, as
     // is done for typed arrays.

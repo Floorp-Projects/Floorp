@@ -2094,7 +2094,7 @@ class ConstraintDataFreezeObjectForTypedArrayData
   public:
     explicit ConstraintDataFreezeObjectForTypedArrayData(TypedArrayObject& tarray)
       : obj(&tarray),
-        viewData(tarray.viewDataEither().unwrapValue()),
+        viewData(tarray.dataPointerEither().unwrapValue()),
         length(tarray.length())
     {
         MOZ_ASSERT(tarray.isSingleton());
@@ -2107,7 +2107,7 @@ class ConstraintDataFreezeObjectForTypedArrayData
     bool invalidateOnNewObjectState(const AutoSweepObjectGroup& sweep, ObjectGroup* group) {
         MOZ_ASSERT(obj->group() == group);
         TypedArrayObject& tarr = obj->as<TypedArrayObject>();
-        return tarr.viewDataEither().unwrapValue() != viewData || tarr.length() != length;
+        return tarr.dataPointerEither().unwrapValue() != viewData || tarr.length() != length;
     }
 
     bool constraintHolds(const AutoSweepObjectGroup& sweep, JSContext* cx,

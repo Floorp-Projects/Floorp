@@ -88,24 +88,6 @@ class DataViewObject : public ArrayBufferViewObject
         return bufferValue(this).toObject().as<ArrayBufferObjectMaybeShared>();
     }
 
-    SharedMem<void*> dataPointerEither() const {
-        void *p = getPrivate();
-        if (isSharedMemory()) {
-            return SharedMem<void*>::shared(p);
-        }
-        return SharedMem<void*>::unshared(p);
-    }
-
-    void* dataPointerUnshared() const {
-        MOZ_ASSERT(!isSharedMemory());
-        return getPrivate();
-    }
-
-    void* dataPointerShared() const {
-        MOZ_ASSERT(isSharedMemory());
-        return getPrivate();
-    }
-
     static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
     static bool getInt8Impl(JSContext* cx, const CallArgs& args);
