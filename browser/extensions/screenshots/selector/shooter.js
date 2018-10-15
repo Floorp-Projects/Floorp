@@ -152,9 +152,9 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
           location: selectedPos,
           dimensions: {
             x: selectedPos.right - selectedPos.left,
-            y: selectedPos.bottom - selectedPos.top
-          }
-        }
+            y: selectedPos.bottom - selectedPos.top,
+          },
+        },
       });
     }
     catcher.watchPromise(callBackground("takeShot", {
@@ -164,12 +164,12 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
         scrollX: window.scrollX,
         scrollY: window.scrollY,
         innerHeight: window.innerHeight,
-        innerWidth: window.innerWidth
+        innerWidth: window.innerWidth,
       },
       selectedPos,
       shotId: shotObject.id,
       shot: shotObject.toJSON(),
-      imageBlob
+      imageBlob,
     }).then((url) => {
       return clipboard.copy(url).then((copied) => {
         return callBackground("openShot", { url, copied });
@@ -206,7 +206,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
             scrollX: window.scrollX,
             scrollY: window.scrollY,
             innerHeight: window.innerHeight,
-            innerWidth: window.innerWidth
+            innerWidth: window.innerWidth,
           });
       }
       catcher.watchPromise(promise.then((dataUrl) => {
@@ -218,8 +218,8 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
           image: {
             url: dataUrl,
             type,
-            location: selectedPos
-          }
+            location: selectedPos,
+          },
         });
         ui.triggerDownload(dataUrl, shotObject.filename);
         uicontrol.deactivate();
@@ -272,7 +272,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       backend,
       randomString(RANDOM_STRING_LENGTH) + "/" + domainFromUrl(location),
       {
-        origin: shot.originFromUrl(location.href)
+        origin: shot.originFromUrl(location.href),
       }
     );
     shotObject.update(documentMetadata());
