@@ -367,6 +367,7 @@ UNIFIED_SOURCES += [
     'util/Unicode.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
+    'vm/ArrayBufferViewObject.cpp',
     'vm/AsyncFunction.cpp',
     'vm/AsyncIteration.cpp',
     'vm/BytecodeUtil.cpp',
