@@ -121,7 +121,9 @@ this.tabExtras = class extends ExtensionAPI {
           return new Promise(resolve => {
             const listener = {
               onLocationChange(browser, webProgress, request, locationURI, flags) {
-                if (webProgress.isTopLevel && browser === tab.browser) {
+                if (webProgress.isTopLevel &&
+                    browser === tab.browser &&
+                    locationURI.spec === url) {
                   windowTracker.removeListener("progress", listener);
                   resolve();
                 }

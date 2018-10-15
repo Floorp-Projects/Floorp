@@ -155,6 +155,8 @@ public:
 
   uint64_t LoadID() const { return mLoadID; }
 
+  CORSMode CorsMode() const { return mCORSMode; }
+
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
   // invalid, even once resolved.

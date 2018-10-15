@@ -614,6 +614,7 @@ class Marionette(object):
         self.baseurl = baseurl
         self._test_name = None
         self.crashed = 0
+        self.is_shutting_down = False
 
         if socket_timeout is None:
             self.socket_timeout = self.DEFAULT_SOCKET_TIMEOUT
@@ -1250,6 +1251,7 @@ class Marionette(object):
         :param timeout: Optional timeout in seconds for the server to be ready.
         :returns: A dictionary of the capabilities offered.
         """
+
         if timeout is None:
             timeout = self.startup_timeout
 

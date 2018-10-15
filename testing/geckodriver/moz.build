@@ -6,17 +6,15 @@ RUST_PROGRAMS += ["geckodriver"]
 # Some Rust build scripts compile C/C++ sources, don't error on warnings for them.
 AllowCompilerWarnings()
 
-# https://bugzil.la/1425365
-if CONFIG["OS_ARCH"] != "WINNT":
-    RUST_TESTS = [
-        "geckodriver",
-        "webdriver",
+RUST_TESTS = [
+    "geckodriver",
+    "webdriver",
 
-        # TODO: Move to mozbase/rust/moz.build once those crates can be
-        # tested separately.
-        "mozprofile",
-        "mozrunner",
-        "mozversion",
+    # TODO: Move to mozbase/rust/moz.build once those crates can be
+    # tested separately.
+    "mozprofile",
+    "mozrunner",
+    "mozversion",
 ]
 
 with Files("**"):
