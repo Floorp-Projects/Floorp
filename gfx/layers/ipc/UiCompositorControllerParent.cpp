@@ -303,7 +303,8 @@ UiCompositorControllerParent::Initialize()
 #if defined(MOZ_WIDGET_ANDROID)
   AndroidDynamicToolbarAnimator* animator = state->mParent->GetAndroidDynamicToolbarAnimator();
   // It is possible the compositor has already started shutting down and
-  // the AndroidDynamicToolbarAnimator could be a nullptr.
+  // the AndroidDynamicToolbarAnimator could be a nullptr. Or this could be
+  // non-Fennec in which case the animator is null anyway.
   if (animator) {
     animator->Initialize(mRootLayerTreeId);
   }

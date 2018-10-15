@@ -1016,10 +1016,11 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                 Compositor* compositor = mLayerManager->GetCompositor();
                 if (CompositorBridgeParent* bridge = compositor->GetCompositorBridgeParent()) {
                   AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator();
-                  MOZ_ASSERT(animator);
                   if (mIsFirstPaint) {
-                    animator->UpdateRootFrameMetrics(metrics);
-                    animator->FirstPaint();
+                    if (animator) {
+                      animator->UpdateRootFrameMetrics(metrics);
+                      animator->FirstPaint();
+                    }
                     LayersId rootLayerTreeId = bridge->RootLayerTreeId();
                     if (RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(rootLayerTreeId)) {
                       uiController->NotifyFirstPaint();
@@ -1035,7 +1036,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                   }
                   // If this is not actually the root content then the animator is not getting updated in AsyncPanZoomController::NotifyLayersUpdated
                   // because the root content document is not scrollable. So update it here so it knows if the root composition size has changed.
-                  if (!metrics.IsRootContent()) {
+                  if (animator && !metrics.IsRootContent()) {
                     animator->MaybeUpdateCompositionSizeAndRootFrameMetrics(metrics);
                   }
                 }
@@ -1320,9 +1321,9 @@ AsyncCompositionManager::TransformShadowTree(
 #if defined(MOZ_WIDGET_ANDROID)
   Compositor* compositor = mLayerManager->GetCompositor();
   if (CompositorBridgeParent* bridge = compositor->GetCompositorBridgeParent()) {
-    AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator();
-    MOZ_ASSERT(animator);
-    wantNextFrame |= animator->UpdateAnimation(nextFrame);
+    if (AndroidDynamicToolbarAnimator* animator = bridge->GetAndroidDynamicToolbarAnimator()) {
+      wantNextFrame |= animator->UpdateAnimation(nextFrame);
+    }
   }
 #endif // defined(MOZ_WIDGET_ANDROID)
 
