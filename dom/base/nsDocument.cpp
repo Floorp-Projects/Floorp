@@ -2137,6 +2137,11 @@ nsDocument::Init()
 
   mScriptLoader = new dom::ScriptLoader(this);
 
+  // we need to create a policy here so getting the policy within
+  // ::Policy() can *always* return a non null policy
+  mFeaturePolicy = new FeaturePolicy(this);
+  mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
+
   mozilla::HoldJSObjects(this);
 
   return NS_OK;
@@ -3012,11 +3017,9 @@ nsIDocument::InitCSP(nsIChannel* aChannel)
 nsresult
 nsIDocument::InitFeaturePolicy(nsIChannel* aChannel)
 {
-  MOZ_ASSERT(!mFeaturePolicy, "we should only call init once");
+  MOZ_ASSERT(mFeaturePolicy, "we should only call init once");
 
-  // we need to create a policy here so getting the policy within
-  // ::Policy() can *always* return a non null policy
-  mFeaturePolicy = new FeaturePolicy(this);
+  mFeaturePolicy->ResetDeclaredPolicy();
 
   if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
     return NS_OK;

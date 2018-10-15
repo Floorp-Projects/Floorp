@@ -82,7 +82,7 @@ class ParamsPanel extends Component {
   getProperties(arr) {
     return arr.reduce((map, obj) => {
       const value = map[obj.name];
-      if (value) {
+      if (value || value === "") {
         if (typeof value !== "object") {
           map[obj.name] = [value];
         }

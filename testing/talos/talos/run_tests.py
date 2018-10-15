@@ -16,7 +16,8 @@ import urllib
 import mozhttpd
 import mozinfo
 import mozversion
-import utils
+
+from talos import utils
 from mozlog import get_proxy_logger
 from talos.config import get_configs, ConfigurationError
 from talos.mitmproxy import mitmproxy

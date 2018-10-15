@@ -42,9 +42,8 @@ exports.getSnapshotTitle = function(snapshot) {
   }
 
   if (snapshot.imported) {
-    // Strip out the extension if it's the expected ".fxsnapshot.gz"
-    // (".gz" optional)
-    return OS.Path.basename(snapshot.path.replace(/\.fxsnapshot(?:\.gz)?$/, ""));
+    // Strip out the extension if it's the expected ".fxsnapshot"
+    return OS.Path.basename(snapshot.path.replace(/\.fxsnapshot$/, ""));
   }
 
   const date = new Date(snapshot.creationTime / 1000);
