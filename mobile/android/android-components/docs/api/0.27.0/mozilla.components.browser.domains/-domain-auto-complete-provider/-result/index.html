@@ -1,0 +1,72 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>DomainAutoCompleteProvider.Result - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.browser.domains</a>&nbsp;/&nbsp;<a href="../index.html">DomainAutoCompleteProvider</a>&nbsp;/&nbsp;<a href="./index.html">Result</a><br/>
+<br/>
+<h1>Result</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Result</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/domains/src/main/java/mozilla/components/browser/domains/DomainAutoCompleteProvider.kt#L36">(source)</a>
+<p>Represents a result of auto-completion.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Result</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.domains.DomainAutoCompleteProvider.Result$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Int)/text">text</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.domains.DomainAutoCompleteProvider.Result$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Int)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.domains.DomainAutoCompleteProvider.Result$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Int)/source">source</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.domains.DomainAutoCompleteProvider.Result$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Int)/size">size</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span></code>
+<p>Represents a result of auto-completion.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="size.html">size</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">size</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>total number of available autocomplete domains
+in this source</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="source.html">source</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">source</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>the source identifier of the autocomplete source</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="text.html">text</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">text</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>the result text starting with the raw search text as passed
+to <a href="../autocomplete.html">autocomplete</a> followed by the completion text (e.g. moz =&gt; mozilla.org)</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="url.html">url</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">url</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>the complete url (containing the protocol) as provided
+when the domain was saved. (e.g. https://mozilla.org)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

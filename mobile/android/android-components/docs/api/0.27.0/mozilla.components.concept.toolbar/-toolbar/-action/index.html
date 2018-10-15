@@ -1,0 +1,87 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Toolbar.Action - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.toolbar</a>&nbsp;/&nbsp;<a href="../index.html">Toolbar</a>&nbsp;/&nbsp;<a href="./index.html">Action</a><br/>
+<br/>
+<h1>Action</h1>
+<code><span class="keyword">interface </span><span class="identifier">Action</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L81">(source)</a>
+<p>Generic interface for actions to be added to the toolbar.</p>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="visible.html">visible</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">val </span><span class="identifier">visible</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="bind.html">bind</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">bind</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar.Action$bind(android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="create-view.html">createView</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">createView</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar.Action$createView(android.view.ViewGroup)/parent">parent</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-action-button/index.html">ActionButton</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ActionButton</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Action</span></a></code>
+<p>An action button to be added to the toolbar.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-action-image/index.html">ActionImage</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ActionImage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Action</span></a></code>
+<p>An action that just shows a static, non-clickable image.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-action-space/index.html">ActionSpace</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ActionSpace</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Action</span></a></code>
+<p>An "empty" action with a desired width to be used as "placeholder".</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-action-toggle-button/index.html">ActionToggleButton</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ActionToggleButton</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Action</span></a></code>
+<p>An action button with two states, selected and unselected. When the button is pressed, the
+state changes automatically.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

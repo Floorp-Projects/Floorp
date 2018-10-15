@@ -1,0 +1,65 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TelemetryStorage - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">org.mozilla.telemetry.storage</a>&nbsp;/&nbsp;<a href="./index.html">TelemetryStorage</a><br/>
+<br/>
+<h1>TelemetryStorage</h1>
+<code><span class="keyword">interface </span><span class="identifier">TelemetryStorage</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/storage/TelemetryStorage.java#L9">(source)</a>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-telemetry-storage-callback/index.html">TelemetryStorageCallback</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">TelemetryStorageCallback</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="count-stored-pings.html">countStoredPings</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">countStoredPings</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.storage.TelemetryStorage$countStoredPings(kotlin.String)/pingType">pingType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="process.html">process</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">process</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.storage.TelemetryStorage$process(kotlin.String, org.mozilla.telemetry.storage.TelemetryStorage.TelemetryStorageCallback)/pingType">pingType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.storage.TelemetryStorage$process(kotlin.String, org.mozilla.telemetry.storage.TelemetryStorage.TelemetryStorageCallback)/callback">callback</span><span class="symbol">:</span>&nbsp;<a href="-telemetry-storage-callback/index.html"><span class="identifier">TelemetryStorageCallback</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="store.html">store</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">store</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.storage.TelemetryStorage$store(org.mozilla.telemetry.ping.TelemetryPing)/ping">ping</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.ping/-telemetry-ping/index.html"><span class="identifier">TelemetryPing</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-file-telemetry-storage/index.html">FileTelemetryStorage</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">FileTelemetryStorage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryStorage</span></a></code>
+<p>TelemetryStorage implementation that stores pings as files on disk.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

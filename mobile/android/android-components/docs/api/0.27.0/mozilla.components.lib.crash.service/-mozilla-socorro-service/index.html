@@ -1,0 +1,52 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>MozillaSocorroService - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.crash.service</a>&nbsp;/&nbsp;<a href="./index.html">MozillaSocorroService</a><br/>
+<br/>
+<h1>MozillaSocorroService</h1>
+<code><span class="keyword">class </span><span class="identifier">MozillaSocorroService</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-crash-reporter-service/index.html"><span class="identifier">CrashReporterService</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/MozillaSocorroService.kt#L23">(source)</a>
+<p>A <a href="../-crash-reporter-service/index.html">CrashReporterService</a> implementation uploading crash reports to crash-stats.mozilla.com.</p>
+<h3>Parameters</h3>
+<p><a name="applicationContext"></a>
+<code>applicationContext</code> - The application <a href="https://developer.android.com/reference/android/content/Context.html">Context</a>.</p>
+<p><a name="appName"></a>
+<code>appName</code> - A human-readable app name. This name is used on crash-stats.mozilla.com to filter crashes by app.
+    The name needs to be whitelisted for the server to accept the crash.
+    <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro">File a bug</a> if you would like to get your
+    app added to the whitelist.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">MozillaSocorroService</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.crash.service.MozillaSocorroService$<init>(android.content.Context, kotlin.String)/applicationContext">applicationContext</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.crash.service.MozillaSocorroService$<init>(android.content.Context, kotlin.String)/appName">appName</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span></code>
+<p>A <a href="../-crash-reporter-service/index.html">CrashReporterService</a> implementation uploading crash reports to crash-stats.mozilla.com.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="report.html">report</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">report</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.crash.service.MozillaSocorroService$report(mozilla.components.lib.crash.Crash.UncaughtExceptionCrash)/crash">crash</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.lib.crash/-crash/-uncaught-exception-crash/index.html"><span class="identifier">UncaughtExceptionCrash</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Submits a crash report for this <a href="../../mozilla.components.lib.crash/-crash/-uncaught-exception-crash/index.html">Crash.UncaughtExceptionCrash</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">report</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.crash.service.MozillaSocorroService$report(mozilla.components.lib.crash.Crash.NativeCodeCrash)/crash">crash</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.lib.crash/-crash/-native-code-crash/index.html"><span class="identifier">NativeCodeCrash</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Submits a crash report for this <a href="../../mozilla.components.lib.crash/-crash/-native-code-crash/index.html">Crash.NativeCodeCrash</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

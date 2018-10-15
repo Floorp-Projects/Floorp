@@ -1,0 +1,208 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TelemetryMeasurement - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">org.mozilla.telemetry.measurement</a>&nbsp;/&nbsp;<a href="./index.html">TelemetryMeasurement</a><br/>
+<br/>
+<h1>TelemetryMeasurement</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">TelemetryMeasurement</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/measurement/TelemetryMeasurement.java#L7">(source)</a>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">TelemetryMeasurement</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.measurement.TelemetryMeasurement$<init>(kotlin.String)/fieldName">fieldName</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="flush.html">flush</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">flush</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a></code>
+<p>Flush this measurement in order for serializing a ping. Calling this method should create an Object representing the current state of this measurement. Optionally this measurement might be reset. For example a TelemetryMeasurement implementation for the OS version of the device might just return a String like "7.0.1". However a TelemetryMeasurement implementation for counting the usage of search engines might return a HashMap mapping search engine names to search counts. Additionally those counts will be reset after flushing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-field-name.html">getFieldName</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getFieldName</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-arch-measurement/index.html">ArchMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ArchMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-client-id-measurement/index.html">ClientIdMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ClientIdMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code>
+<p>A unique, randomly generated UUID for this client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-created-date-measurement/index.html">CreatedDateMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">CreatedDateMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-created-date-measurement-new/index.html">CreatedDateMeasurementNew</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">CreatedDateMeasurementNew</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code>
+<p>The field 'created' from CreatedDateMeasurement will be deprecated for the `createdDate` field</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-created-timestamp-measurement/index.html">CreatedTimestampMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">CreatedTimestampMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-created-timestamp-measurement-new/index.html">CreatedTimestampMeasurementNew</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">CreatedTimestampMeasurementNew</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code>
+<p>The field 'created' from CreatedTimestampMeasurement will be deprecated for the `createdTimestamp` field</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-default-search-measurement/index.html">DefaultSearchMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">DefaultSearchMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-device-measurement/index.html">DeviceMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">DeviceMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-events-measurement/index.html">EventsMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">EventsMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-experiments-measurement/index.html">ExperimentsMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ExperimentsMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-first-run-profile-date-measurement/index.html">FirstRunProfileDateMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">FirstRunProfileDateMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code>
+<p>This measurement will save the timestamp of the first time it was instantiated and report this as profile creation date.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-locale-measurement/index.html">LocaleMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">LocaleMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-metrics-measurement/index.html">MetricsMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">MetricsMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-process-start-timestamp-measurement/index.html">ProcessStartTimestampMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">ProcessStartTimestampMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-searches-measurement/index.html">SearchesMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">SearchesMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code>
+<p>A TelemetryMeasurement implementation to count the number of times a user has searched with a specific engine from a specific location.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-sequence-measurement/index.html">SequenceMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">SequenceMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session-count-measurement/index.html">SessionCountMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">SessionCountMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session-duration-measurement/index.html">SessionDurationMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">SessionDurationMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-settings-measurement/index.html">SettingsMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">SettingsMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-static-measurement/index.html">StaticMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">StaticMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-timezone-offset-measurement/index.html">TimezoneOffsetMeasurement</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">TimezoneOffsetMeasurement</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">TelemetryMeasurement</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

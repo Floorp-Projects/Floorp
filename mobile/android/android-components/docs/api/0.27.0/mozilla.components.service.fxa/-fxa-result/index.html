@@ -1,0 +1,129 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FxaResult - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="./index.html">FxaResult</a><br/>
+<br/>
+<h1>FxaResult</h1>
+<code><span class="keyword">class </span><span class="identifier">FxaResult</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaResult.kt#L10">(source)</a>
+<p>FxaResult is a class that represents an asynchronous result.</p>
+<p><strong>Parameters</strong><br/>
+</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-on-exception-listener/index.html">OnExceptionListener</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">OnExceptionListener</span><span class="symbol">&lt;</span><span class="identifier">V</span><span class="symbol">&gt;</span></code>
+<p>An interface used to deliver exceptions to listeners of a <a href="./index.html">FxaResult</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-on-value-listener/index.html">OnValueListener</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">OnValueListener</span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">, </span><span class="identifier">U</span><span class="symbol">&gt;</span></code>
+<p>An interface used to deliver values to listeners of a <a href="./index.html">FxaResult</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">FxaResult</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>FxaResult is a class that represents an asynchronous result.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="complete.html">complete</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">complete</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$complete(mozilla.components.service.fxa.FxaResult.T)/value">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This completes the result with the specified value. IllegalStateException is thrown
+if the result is already complete.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="complete-exceptionally.html">completeExceptionally</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">completeExceptionally</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$completeExceptionally(java.lang.Exception)/exception">exception</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>This completes the result with the specified <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html">Exception</a>. IllegalStateException is thrown
+if the result is already complete.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="then.html">then</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">U</span><span class="symbol">&gt;</span> <span class="identifier">then</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$then(kotlin.Function1((mozilla.components.service.fxa.FxaResult.T, mozilla.components.service.fxa.FxaResult((mozilla.components.service.fxa.FxaResult.then.U)))))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="identifier">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="./index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="then.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="then.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span></code>
+<p>Adds a value listener to be called when the <a href="./index.html">FxaResult</a> is completed with
+a value. Listeners will be invoked on the same thread in which the
+<a href="./index.html">FxaResult</a> was completed.</p>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">U</span><span class="symbol">&gt;</span> <span class="identifier">then</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$then(kotlin.Function1((mozilla.components.service.fxa.FxaResult.T, mozilla.components.service.fxa.FxaResult((mozilla.components.service.fxa.FxaResult.then.U)))), kotlin.Function1((java.lang.Exception, mozilla.components.service.fxa.FxaResult((mozilla.components.service.fxa.FxaResult.then.U)))))/vfn">vfn</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="identifier">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="./index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="then.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$then(kotlin.Function1((mozilla.components.service.fxa.FxaResult.T, mozilla.components.service.fxa.FxaResult((mozilla.components.service.fxa.FxaResult.then.U)))), kotlin.Function1((java.lang.Exception, mozilla.components.service.fxa.FxaResult((mozilla.components.service.fxa.FxaResult.then.U)))))/efn">efn</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="./index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="then.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="then.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span></code><br/>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">U</span><span class="symbol">&gt;</span> <span class="identifier">then</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$then(mozilla.components.service.fxa.FxaResult.OnValueListener((mozilla.components.service.fxa.FxaResult.T, mozilla.components.service.fxa.FxaResult.then.U)), mozilla.components.service.fxa.FxaResult.OnExceptionListener((mozilla.components.service.fxa.FxaResult.then.U)))/valueListener">valueListener</span><span class="symbol">:</span>&nbsp;<a href="-on-value-listener/index.html"><span class="identifier">OnValueListener</span></a><span class="symbol">&lt;</span><a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">,</span>&nbsp;<a href="then.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$then(mozilla.components.service.fxa.FxaResult.OnValueListener((mozilla.components.service.fxa.FxaResult.T, mozilla.components.service.fxa.FxaResult.then.U)), mozilla.components.service.fxa.FxaResult.OnExceptionListener((mozilla.components.service.fxa.FxaResult.then.U)))/exceptionListener">exceptionListener</span><span class="symbol">:</span>&nbsp;<a href="-on-exception-listener/index.html"><span class="identifier">OnExceptionListener</span></a><span class="symbol">&lt;</span><a href="then.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="then.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span></code>
+<p>Adds listeners to be called when the <a href="./index.html">FxaResult</a> is completed either with
+a value or <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html">Exception</a>. Listeners will be invoked on the same thread in which the
+<a href="./index.html">FxaResult</a> was completed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="when-complete.html">whenComplete</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">whenComplete</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$whenComplete(kotlin.Function1((mozilla.components.service.fxa.FxaResult.T, kotlin.Unit)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="identifier">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Adds a value listener to be called when the <a href="./index.html">FxaResult</a> and the whole chain of <a href="then.html">then</a>
+calls is completed with a value. Listeners will be invoked on the same thread in
+which the <a href="./index.html">FxaResult</a> was completed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="from-exception.html">fromException</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">fromException</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult.Companion$fromException(java.lang.Exception)/exception">exception</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="from-exception.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span></code>
+<p>This constructs a result that is completed with the specified <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html">Exception</a>.
+May not be null.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="from-value.html">fromValue</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">U</span><span class="symbol">&gt;</span> <span class="identifier">fromValue</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult.Companion$fromValue(mozilla.components.service.fxa.FxaResult.Companion.fromValue.U)/value">value</span><span class="symbol">:</span>&nbsp;<a href="from-value.html#U"><span class="identifier">U</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="from-value.html#U"><span class="identifier">U</span></a><span class="symbol">&gt;</span></code>
+<p>This constructs a result that is fulfilled with the specified value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
