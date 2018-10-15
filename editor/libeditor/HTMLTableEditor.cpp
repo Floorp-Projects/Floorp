@@ -1703,8 +1703,7 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
         // Build list of cells to change rowspan.  We can't do it now since
         // it upsets cell map, so we will do it after deleting the row.
         int32_t newRowSpanValue =
-          std::max(cellData.mCurrent.mRow - cellData.mFirst.mRow,
-                   actualRowSpan - 1);
+          std::max(cellData.NumberOfPrecedingRows(), actualRowSpan - 1);
         spanCellArray.AppendElement(
                         SpanCell(cellData.mElement, newRowSpanValue));
       }
@@ -1714,7 +1713,7 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
         // keep rows below.  Note that we test "rowSpan" so we don't do this
         // if rowSpan = 0 (automatic readjustment).
         int32_t aboveRowToInsertNewCellInto =
-          cellData.mCurrent.mRow - cellData.mFirst.mRow + 1;
+          cellData.NumberOfPrecedingRows() + 1;
         int32_t numOfRawSpanRemainingBelow = actualRowSpan - 1;
         nsresult rv =
           SplitCellIntoRows(&aTableElement, cellData.mFirst.mRow, startColIndex,
@@ -2858,15 +2857,13 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
     // Figure out span of merged cell starting from target's starting row
     // to handle case of merged cell starting in a row above
-    int32_t spanAboveMergedCell =
-      rightCellData.mCurrent.mRow - rightCellData.mFirst.mRow;
+    int32_t spanAboveMergedCell = rightCellData.NumberOfPrecedingRows();
     int32_t effectiveRowSpan2 = actualRowSpan2 - spanAboveMergedCell;
-
     if (effectiveRowSpan2 > actualRowSpan) {
       // Cell to the right spans into row below target
       // Split off portion below target cell's bottom-most row
       rv = SplitCellIntoRows(table, rightCellData.mFirst.mRow, startColIndex2,
-                             spanAboveMergedCell+actualRowSpan,
+                             spanAboveMergedCell + actualRowSpan,
                              effectiveRowSpan2-actualRowSpan, nullptr);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
