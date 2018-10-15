@@ -14,6 +14,8 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
                                "resource://gre/modules/WebNavigationFrames.jsm");
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
 });
@@ -322,6 +324,7 @@ class NetErrorChild extends ActorChild {
     detailLink.append(input.data.codeString);
     detailLink.title = input.data.codeString;
     detailLink.id = "errorCode";
+    detailLink.dataset.telemetryId = "error_code_link";
     let fragment = BrowserUtils.getLocalizedFragment(doc, linkPrefix, detailLink);
     technicalInfo.appendChild(fragment);
     var errorCode = doc.getElementById("errorCode");
@@ -352,6 +355,12 @@ class NetErrorChild extends ActorChild {
     let es = doc.getElementById("errorWhatToDoText");
     let errWhatToDoTitle = doc.getElementById("edd_nssBadCert");
     let est = doc.getElementById("errorWhatToDoTitleText");
+
+    doc.body.setAttribute("code", msg.data.codeString);
+
+    // Need to do this here (which is not exactly at load but a few ticks later),
+    // because this is the first time we have access to the error code.
+    this.recordLoadEvent(doc);
 
     switch (msg.data.code) {
       case SSL_ERROR_BAD_CERT_DOMAIN:
@@ -530,11 +539,13 @@ class NetErrorChild extends ActorChild {
     case "click":
       if (aEvent.button == 0) {
         if (this.isAboutCertError(doc)) {
+          this.recordClick(aEvent.originalTarget);
           this.onCertError(aEvent.originalTarget, doc.defaultView);
         } else {
           this.onClick(aEvent);
         }
       }
+      break;
     }
   }
 
@@ -693,6 +704,38 @@ class NetErrorChild extends ActorChild {
       elementId: target.getAttribute("id"),
       isTopFrame: (win.parent === win),
       securityInfoAsString: getSerializedSecurityInfo(win.docShell),
+    });
+  }
+
+  getCSSClass(doc) {
+    let searchParams = new URL(doc.documentURI).searchParams;
+    return searchParams.get("s");
+  }
+
+  recordLoadEvent(doc) {
+    let cssClass = this.getCSSClass(doc);
+    // Telemetry values for events are max. 80 bytes.
+    let errorCode = doc.body.getAttribute("code").substring(0, 40);
+    Services.telemetry.recordEvent("security.ui.certerror", "load", "aboutcerterror", errorCode, {
+      "has_sts": (cssClass == "badStsCert").toString(),
+      "is_frame": (doc.ownerGlobal.parent != doc.ownerGlobal).toString(),
+    });
+  }
+
+  recordClick(element) {
+    let telemetryId = element.dataset.telemetryId;
+    if (!telemetryId) {
+      return;
+    }
+    let doc = element.ownerDocument;
+    let cssClass = this.getCSSClass(doc);
+    // Telemetry values for events are max. 80 bytes.
+    let errorCode = doc.body.getAttribute("code").substring(0, 40);
+    let panel = doc.getElementById("badCertAdvancedPanel");
+    Services.telemetry.recordEvent("security.ui.certerror", "click", telemetryId, errorCode, {
+      "panel_open": (panel.style.display == "none").toString(),
+      "has_sts": (cssClass == "badStsCert").toString(),
+      "is_frame": (doc.ownerGlobal.parent != doc.ownerGlobal).toString(),
     });
   }
 
