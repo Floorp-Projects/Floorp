@@ -105,6 +105,10 @@ def update_configfile(source, target, replacements):
 
 def main():
     parser = optparse.OptionParser('Usage: %prog [options] path_to_venv')
+    parser.add_option('--keep-config',
+                      dest='keep_config',
+                      action='store_true',
+                      help='Keep the existing config file.')
     parser.add_option('--password',
                       type='string',
                       dest='password',
@@ -170,21 +174,22 @@ def main():
         testdir = os.path.join(here, 'tests')
         extdir = os.path.join(here, 'extensions')
 
-    update_configfile(os.path.join(here, 'config', 'config.json.in'),
-                      os.path.join(target, 'config.json'),
-                      replacements={
-                      '__TESTDIR__': testdir.replace('\\','/'),
-                      '__EXTENSIONDIR__': extdir.replace('\\','/'),
-                      '__FX_ACCOUNT_USERNAME__': options.username,
-                      '__FX_ACCOUNT_PASSWORD__': options.password,
-                      '__SYNC_ACCOUNT_USERNAME__': options.sync_username,
-                      '__SYNC_ACCOUNT_PASSWORD__': options.sync_password,
-                      '__SYNC_ACCOUNT_PASSPHRASE__': options.sync_passphrase})
+    if not options.keep_config:
+        update_configfile(os.path.join(here, 'config', 'config.json.in'),
+                          os.path.join(target, 'config.json'),
+                          replacements={
+                          '__TESTDIR__': testdir.replace('\\','/'),
+                          '__EXTENSIONDIR__': extdir.replace('\\','/'),
+                          '__FX_ACCOUNT_USERNAME__': options.username,
+                          '__FX_ACCOUNT_PASSWORD__': options.password,
+                          '__SYNC_ACCOUNT_USERNAME__': options.sync_username,
+                          '__SYNC_ACCOUNT_PASSWORD__': options.sync_password,
+                          '__SYNC_ACCOUNT_PASSPHRASE__': options.sync_passphrase})
 
-    if not (options.username and options.password):
-        print '\nFirefox Account credentials not specified.'
-    if not (options.sync_username and options.sync_password and options.passphrase):
-        print '\nFirefox Sync account credentials not specified.'
+        if not (options.username and options.password):
+            print '\nFirefox Account credentials not specified.'
+        if not (options.sync_username and options.sync_password and options.passphrase):
+            print '\nFirefox Sync account credentials not specified.'
 
     # Print the user instructions
     print usage_message.format(TARGET=target,
