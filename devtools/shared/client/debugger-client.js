@@ -29,6 +29,7 @@ loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-cl
 loader.lazyRequireGetter(this, "WorkerClient", "devtools/shared/client/worker-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Pool", "devtools/shared/protocol", true);
+loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
 
 // Retrieve the major platform version, i.e. if we are on Firefox 64.0a1, it will be 64.
 const PLATFORM_MAJOR_VERSION = AppConstants.MOZ_APP_VERSION.match(/\d+/)[0];
@@ -1046,7 +1047,11 @@ DebuggerClient.prototype = {
     // fronts, forming a tree.  Descend through all the pools to locate all child fronts.
     while (poolsToVisit.length) {
       const pool = poolsToVisit.shift();
-      fronts.add(pool);
+      // `_pools` contains either Front's or Pool's, we only want to collect Fronts here.
+      // Front inherits from Pool which exposes `poolChildren`.
+      if (pool instanceof Front) {
+        fronts.add(pool);
+      }
       for (const child of pool.poolChildren()) {
         poolsToVisit.push(child);
       }
