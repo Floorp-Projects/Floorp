@@ -195,7 +195,7 @@ class MenuButton extends PureComponent {
   // flag if we get one.
   onTouchStart(evt) {
     const touchend = () => {
-      const anchorRect = this.buttonRef.current.getClientRects()[0];
+      const anchorRect = this.buttonRef.getClientRects()[0];
       const { clientX, clientY } = evt.changedTouches[0];
       // We need to check that the click is inside the bounds since when the
       // menu is being closed the button will currently have
