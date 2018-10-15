@@ -10,6 +10,11 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
   this);
 
+// Load the shared Redux helpers into this compartment.
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
+  this);
+
 // Make sure the flexbox inspector is enabled before running the tests.
 Services.prefs.setBoolPref("devtools.flexboxinspector.enabled", true);
 

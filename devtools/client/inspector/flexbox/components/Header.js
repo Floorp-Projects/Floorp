@@ -52,6 +52,7 @@ class Header extends PureComponent {
     return createElement(Fragment, null,
       dom.div({ className: "devtools-separator" }),
       dom.input({
+        id: "flexbox-checkbox-toggle",
         className: "devtools-checkbox-toggle",
         checked: this.props.highlighted,
         onChange: this.onFlexboxCheckboxClick,
