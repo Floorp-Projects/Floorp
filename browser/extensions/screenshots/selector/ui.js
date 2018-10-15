@@ -140,6 +140,8 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
           this.element.id = "firefox-screenshots-selection-iframe";
           this.element.style.display = "none";
           this.element.style.setProperty("position", "absolute", "important");
+          this.element.style.setProperty("background-color", "transparent");
+          this.element.setAttribute("role", "dialog");
           this.updateElementSize();
           this.element.addEventListener("load", watchFunction(() => {
             this.document = this.element.contentDocument;
@@ -274,8 +276,10 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
           this.element = initializeIframe();
           this.element.id = "firefox-screenshots-preselection-iframe";
           this.element.style.setProperty("position", "fixed", "important");
+          this.element.style.setProperty("background-color", "transparent");
           this.element.style.width = "100%";
           this.element.style.height = "100%";
+          this.element.setAttribute("role", "dialog");
           this.element.addEventListener("load", watchFunction(() => {
             this.document = this.element.contentDocument;
             assertIsBlankDocument(this.document);
@@ -297,11 +301,11 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                      <button class="cancel-shot">${browser.i18n.getMessage("cancelScreenshot")}</button>
                      <div class="myshots-all-buttons-container">
                        ${isDownloadOnly() ? "" : `
-                         <button class="myshots-button" tabindex="1" data-l10n-id="myShotsLink"></button>
+                         <button class="myshots-button" tabindex="3" data-l10n-id="myShotsLink"></button>
                          <div class="spacer"></div>
                        `}
                        <button class="visible" tabindex="2" data-l10n-id="saveScreenshotVisibleArea"></button>
-                       <button class="full-page" tabindex="3" data-l10n-id="saveScreenshotFullPage"></button>
+                       <button class="full-page" tabindex="1" data-l10n-id="saveScreenshotFullPage"></button>
                      </div>
                    </div>
                  </div>
@@ -385,8 +389,10 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
           this.element.id = "firefox-screenshots-preview-iframe";
           this.element.style.display = "none";
           this.element.style.setProperty("position", "fixed", "important");
+          this.element.style.setProperty("background-color", "transparent");
           this.element.style.height = "100%";
           this.element.style.width = "100%";
+          this.element.setAttribute("role", "dialog");
           this.element.onload = watchFunction(() => {
             this.document = this.element.contentDocument;
             // eslint-disable-next-line no-unsanitized/property
@@ -625,7 +631,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       this.bgTop.style.left = "0px";
       this.bgTop.style.width = "100%";
       this.bgBottom.style.top = `${pos.bottom}px`;
-      this.bgBottom.style.height = "100vh";
+      this.bgBottom.style.height = `calc(100vh - ${pos.bottom}px)`;
       this.bgBottom.style.left = "0px";
       this.bgBottom.style.width = "100%";
       this.bgLeft.style.top = `${pos.top}px`;
@@ -635,7 +641,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       this.bgRight.style.top = `${pos.top}px`;
       this.bgRight.style.height = `${pos.bottom - pos.top}px`;
       this.bgRight.style.left = `${pos.right}px`;
-      this.bgRight.style.width = `${document.body.scrollWidth - pos.right}px`;
+      this.bgRight.style.width = `calc(100% - ${pos.right}px)`;
       // the download notice is injected into an iframe that matches the document size
       // in order to reposition it on scroll we need to bind an updated positioning
       // function to some window events.
@@ -856,8 +862,8 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
         this.el.appendChild(this.yEl);
         iframe.document().body.appendChild(this.el);
       }
-      this.xEl.textContent = x;
-      this.yEl.textContent = y;
+      this.xEl.textContent = Math.round(x);
+      this.yEl.textContent = Math.round(y);
       this.el.style.top = (yPos + 12) + "px";
       this.el.style.left = (xPos + 12) + "px";
     },
@@ -874,16 +880,15 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       img.src = URL.createObjectURL(imgBlob);
       iframe.document().querySelector(".preview-image").appendChild(img);
       if (showCropWarning && !(isDownloadOnly())) {
-        const imageCroppedEl = makeEl("table", "notice");
-        imageCroppedEl.style.bottom = "10px";
+        const imageCroppedEl = makeEl("table", "notice middle");
         imageCroppedEl.innerHTML = `<tbody>
           <tr class="notice-wrapper">
             <td class="notice-content"></td>
           </tr>
         </tbody>`;
         const contentCell = imageCroppedEl.getElementsByTagName("td");
-        contentCell[0].textContent = browser.i18n.getMessage("imageCroppedWarning", buildSettings.maxImageHeight);
-        iframe.document().querySelector(".preview-overlay").appendChild(imageCroppedEl);
+        contentCell[0].textContent = browser.i18n.getMessage("imageCropPopupWarning", buildSettings.maxImageHeight);
+        iframe.document().querySelector(".preview-buttons").appendChild(imageCroppedEl);
       }
     }
   };

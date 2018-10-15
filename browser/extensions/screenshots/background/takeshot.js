@@ -5,12 +5,11 @@
 this.takeshot = (function() {
   const exports = {};
   const Shot = shot.AbstractShot;
-  const { sendEvent } = analytics;
+  const { sendEvent, incrementCount } = analytics;
 
   communication.register("takeShot", catcher.watchFunction((sender, options) => {
     const { captureType, captureText, scroll, selectedPos, shotId } = options;
     const shot = new Shot(main.getBackend(), shotId, options.shot);
-    shot.favicon = sender.tab.favIconUrl;
     let imageBlob = options.imageBlob;
     let capturePromise = Promise.resolve();
     let openedTab;
@@ -56,7 +55,9 @@ this.takeshot = (function() {
       } else {
         shot.thumbnail = thumbnailImage;
       }
-    }).then(() => {
+      return browser.experiments.screenshots.getUpdateChannel();
+    }).then((firefoxChannel) => {
+      shot.firefoxChannel = firefoxChannel;
       return browser.tabs.create({url: shot.creatingUrl});
     }).then((tab) => {
       openedTab = tab;
@@ -76,7 +77,7 @@ this.takeshot = (function() {
         }
       );
     }).then(() => {
-      catcher.watchPromise(communication.sendToBootstrap("incrementCount", {scalar: "upload"}));
+      catcher.watchPromise(incrementCount("upload"));
       return shot.viewUrl;
     }).catch((error) => {
       browser.tabs.remove(openedTab.id);
