@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "Ta klipp og skjermbilde frå nettet og lagre dei mellombels eller permanent."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Ta eit skjermbilde"
+  },
+  "myShotsLink": {
+    "message": "Mine skjermbilde"
+  },
+  "screenshotInstructions": {
+    "message": "Drag eller klikk på sida for å velje eit område. Trykk på ESC for å avbryte."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Lagre"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Lagre synleg område"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Lagre heile sida"
+  },
+  "cancelScreenshot": {
+    "message": "Avbryt"
+  },
+  "downloadScreenshot": {
+    "message": "Last ned"
+  },
+  "downloadOnlyNotice": {
+    "message": "Du er for tida i nedlastingsmodus."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots endrar automatisk til nedlastingsmodus i følgjande situasjonar:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "I eit privat nettlesingsvindauge."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Tredjeparts infokapslar er deaktiverte."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "«Hugs aldri historikk» er aktivert."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Du brukar Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Opplastingar er slått av."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Lenke kopiert"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Lenka til skjermbildet ditt er kopiert til utklippstavla. Trykk på $META_KEY$-V for å lime inn.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopier"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Bilde kopiert"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Bildet ditt er kopiert til utklippstavla. Trykk på $META_KEY$-V for å lime det inn.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Lagra bilde vil bli skore til, til dei er $PIXELS$px i høgda.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "I ustand."
+  },
+  "requestErrorDetails": {
+    "message": "Beklagar! Vi klarte ikkje å lagre skjermbiildet ditt. Prøv igjen seinare."
+  },
+  "connectionErrorTitle": {
+    "message": "Vi kan ikkje kople til skjermbilda dine."
+  },
+  "connectionErrorDetails": {
+    "message": "Kontroller internett-tilkoplinga di. Om du kan kople til internett, kan det vere eit mellombels problem med tenesta Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Vi klarte ikkje å lagre skjermbildet ditt, fordi det er eit problem med tenesta Firefox Screenshots. Prøv igjen seinare."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Vi kan ikkje ta skjermbilde av sida."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Dette er ikkje ei vanleg nettside, og du kan ikkje ta skjermbilde av henne."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Du kan ikkje ta skjermbilde av sida Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Markeringa di er for lita"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Skjermbildeknipsing er slått av i Privat nettlesings-modus"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Ein er lei for ulempa. Vi jobbar med denne funksjonen for framtidige versjonar."
+  },
+  "genericErrorTitle": {
+    "message": "Oj! Det ser ut til at Firefox Screenshots ikkje fungerer korrekt."
+  },
+  "genericErrorDetails": {
+    "message": "Vi er ikkje sikre på kva som hende. Kan du prøve igjen eller ta eit bilde på ei anna side?"
+  },
+  "tourBodyIntro": {
+    "message": "Ta, lagre og del skjermbilde utan å forlate Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Ein ny måte å lagre på"
+  },
+  "tourBodyPageAction": {
+    "message": "Utvid sidehandlingsmenyen i adresselinja når du vil ta eit skjermbilde."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Knips akkurat det du vil"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Klikk for å drage og knipse berre ein del av sida. Du kan også føre musa over for å framheve merkt område."
+  },
+  "tourHeaderFullPage": {
+    "message": "Knips vindauge eller heile sider"
+  },
+  "tourBodyFullPage": {
+    "message": "Vel knappane i det øvre høgre hjørnet for å knipse det synlege området i vindauget eller for å knipse ei heil side."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Som du vil ha det"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Lagre dei tilskorne bilda dine på nettet for enklare deling, eller last dei ned til datamaskina di. Du kan også klikke på knappen Mine skjermbilde for å finne alle bilda du har tatt."
+  },
+  "tourHeaderAccounts": {
+    "message": "Skjermbilde til å ta med"
+  },
+  "tourBodyAccounts": {
+    "message": "Logg på med Firefox-kontoen din for å få tilgang til bilda dine på alle einingane dine og lagre favorittbilda dine for alltid."
+  },
+  "tourSkip": {
+    "message": "Hopp over"
+  },
+  "tourNext": {
+    "message": "Neste slide"
+  },
+  "tourPrevious": {
+    "message": "Føregåande slide"
+  },
+  "tourDone": {
+    "message": "Ferdig"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Ved å bruke Firefox Screenshots, seier du deg samd i $TERMSANDPRIVACYNOTICETERMSLINK$ og $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Vilkår"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Personvernmerknad"
+  },
+  "libraryLabel": {
+    "message": "Skjermbilde"
+  }
+}
