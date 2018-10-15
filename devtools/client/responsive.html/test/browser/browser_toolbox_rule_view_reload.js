@@ -26,9 +26,11 @@ add_task(async function() {
 
   info("Reload the current page");
   const onNewRoot = inspector.once("new-root");
+  const onRuleViewRefreshed = inspector.once("rule-view-refreshed");
   await testActor.reload();
   await onNewRoot;
   await inspector.markup._waitForChildren();
+  await onRuleViewRefreshed;
 
   is(numberOfRules(view), 2, "Rule view still has two rules and is not empty.");
 
