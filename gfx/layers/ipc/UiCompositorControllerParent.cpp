@@ -246,6 +246,13 @@ UiCompositorControllerParent::NotifyLayersUpdated()
 #endif
 }
 
+void
+UiCompositorControllerParent::NotifyFirstPaint()
+{
+  ToolbarAnimatorMessageFromCompositor(FIRST_PAINT);
+}
+
+
 UiCompositorControllerParent::UiCompositorControllerParent(const LayersId& aRootLayerTreeId)
   : mRootLayerTreeId(aRootLayerTreeId)
 #ifdef MOZ_WIDGET_ANDROID
