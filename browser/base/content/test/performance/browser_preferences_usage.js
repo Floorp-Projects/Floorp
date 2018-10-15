@@ -92,7 +92,7 @@ add_task(async function startup() {
     },
     "layout.css.dpi": {
       min: 45,
-      max: 75,
+      max: 81,
     },
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
