@@ -4451,7 +4451,7 @@ BinASTParser<Tok>::parseInterfaceScript(const size_t start, const BinKind kind, 
     MOZ_TRY(parseAssertedScriptGlobalScope());
 
     BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
-
+    forceStrictIfNecessary(parseContext_->sc(), directives);
     BINJS_MOZ_TRY_DECL(statements, parseListOfStatement());
 
     MOZ_TRY(checkClosedVars(parseContext_->varScope())); BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));

@@ -1096,6 +1096,10 @@ ReturnStatement:
         BINJS_TRY_DECL(result, factory_.newReturnStatement(expression, tokenizer_->pos(start)));
 
 Script:
+    fields:
+        directives:
+            after: |
+                forceStrictIfNecessary(parseContext_->sc(), directives);
     build:
         MOZ_TRY(checkClosedVars(parseContext_->varScope()));
         BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
