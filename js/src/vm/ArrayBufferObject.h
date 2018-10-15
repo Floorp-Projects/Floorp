@@ -326,7 +326,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     // below. Buffers usually only have one view, so this slot optimizes for
     // the common case. Avoiding entries in the InnerViewTable saves memory and
     // non-incrementalized sweep time.
-    ArrayBufferViewObject* firstView();
+    JSObject* firstView();
 
     bool addView(JSContext* cx, JSObject* view);
 
@@ -341,7 +341,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
   private:
     void changeViewContents(JSContext* cx, ArrayBufferViewObject* view,
                             uint8_t* oldDataPointer, BufferContents newContents);
-    void setFirstView(ArrayBufferViewObject* view);
+    void setFirstView(JSObject* view);
 
     uint8_t* inlineDataPointer() const;
 
@@ -562,7 +562,7 @@ template<> inline bool TypeIsUnsigned<uint32_t>() { return true; }
 class InnerViewTable
 {
   public:
-    typedef Vector<ArrayBufferViewObject*, 1, SystemAllocPolicy> ViewVector;
+    typedef Vector<JSObject*, 1, SystemAllocPolicy> ViewVector;
 
     friend class ArrayBufferObject;
 
@@ -604,7 +604,7 @@ class InnerViewTable
     // Sweep an entry during GC, returning whether the entry should be removed.
     static bool sweepEntry(JSObject** pkey, ViewVector& views);
 
-    bool addView(JSContext* cx, ArrayBufferObject* obj, ArrayBufferViewObject* view);
+    bool addView(JSContext* cx, ArrayBufferObject* buffer, JSObject* view);
     ViewVector* maybeViewsUnbarriered(ArrayBufferObject* obj);
     void removeViews(ArrayBufferObject* obj);
 
