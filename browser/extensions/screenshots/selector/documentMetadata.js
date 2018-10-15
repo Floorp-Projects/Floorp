@@ -3,12 +3,12 @@
 this.documentMetadata = (function() {
 
   function findSiteName() {
-    let el = document.querySelector("meta[property='og:site_name']");
+    let el = document.querySelector("meta[property~='og:site_name'][content]");
     if (el) {
       return el.getAttribute("content");
     }
     // nytimes.com uses this property:
-    el = document.querySelector("meta[name='cre']");
+    el = document.querySelector("meta[name='cre'][content]");
     if (el) {
       return el.getAttribute("content");
     }
@@ -29,7 +29,7 @@ this.documentMetadata = (function() {
     profile:first_name profile:last_name profile:username profile:gender
     `.split(/\s+/g);
     for (const prop of openGraphProperties) {
-      let elems = document.querySelectorAll(`meta[property='og:${prop}']`);
+      let elems = document.querySelectorAll(`meta[property~='og:${prop}'][content]`);
       if (forceSingle.includes(prop) && elems.length > 1) {
         elems = [elems[0]];
       }
@@ -63,7 +63,7 @@ this.documentMetadata = (function() {
     player player:width player:height player:stream player:stream:content_type
     `.split(/\s+/g);
     for (const prop of properties) {
-      const elem = document.querySelector(`meta[name='twitter:${prop}']`);
+      const elem = document.querySelector(`meta[name='twitter:${prop}'][content]`);
       if (elem) {
         const value = elem.getAttribute("content");
         if (value) {

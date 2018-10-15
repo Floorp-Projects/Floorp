@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "33.0.0",
+  "version": "35.0.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
@@ -59,6 +59,7 @@
     "icons/onboarding-3.png",
     "icons/onboarding-4.png",
     "icons/onboarding-5.png",
+    "icons/onboarding-6.png",
     "icons/done.svg",
     "icons/icon-welcome-face-without-eyes.svg"
   ],
@@ -71,9 +72,20 @@
     "clipboardWrite",
     "contextMenus",
     "mozillaAddons",
+    "telemetry",
     "<all_urls>",
     "https://screenshots.firefox.com/",
     "resource://pdf.js/",
     "about:reader*"
-  ]
+  ],
+  "experiment_apis": {
+    "screenshots": {
+      "schema": "experiments/screenshots/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/screenshots/api.js",
+        "paths": [["experiments", "screenshots"]]
+      }
+    }
+  }
 }
