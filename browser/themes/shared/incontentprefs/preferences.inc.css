@@ -517,11 +517,6 @@ button > hbox > label {
   width: 66ch;
 }
 
-.largeDialogContainer.doScroll {
-  overflow-y: auto;
-  -moz-box-flex: 1;
-}
-
 /**
  * End Dialog
  */

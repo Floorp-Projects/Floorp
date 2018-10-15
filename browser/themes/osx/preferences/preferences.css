@@ -7,31 +7,8 @@
 
 %include ../../../../toolkit/themes/osx/global/shared.inc
 
-.windowDialog {
-  padding: 12px;
+window {
   font: -moz-dialog;
-}
-
-.prefwindow {
-  padding: 0;
-}
-
-.prefwindow[type="child"] {
-  padding-top: 18px;
-  padding-bottom: 15px;
-  padding-inline-start: 18px;
-  padding-inline-end: 20px;
-}
-
-.prefpane {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  padding-inline-start: 0;
-  padding-inline-end: 12px;
-}
-
-.prefwindow[type="child"] > .prefpane {
-  padding: 0;
 }
 
 tabpanels {

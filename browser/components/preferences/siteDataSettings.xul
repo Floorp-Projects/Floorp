@@ -12,7 +12,6 @@
 <window id="SiteDataSettingsDialog" windowtype="Browser:SiteDataSettings"
         data-l10n-id="site-data-settings-window"
         data-l10n-attrs="title"
-        class="windowDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 45em;"
         onload="gSiteDataSettings.init();"
