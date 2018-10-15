@@ -105,7 +105,7 @@ async function startTest() {
       element.onpause = onpause;
       element.pause();
     } else if (steps == 2) {
-      stream.stop();
+      stream.getTracks().forEach(t => t.stop());
     }
   }
 
