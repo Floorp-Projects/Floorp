@@ -721,7 +721,7 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
         continue;
       }
 
-      if (cellData.mFirst.mRow < cellData.mCurrent.mRow) {
+      if (cellData.IsSpannedFromOtherRow()) {
         // We have a cell spanning this location.  Increase its rowspan.
         // Note that if rowspan is 0, we do nothing since that cell should
         // automatically extend into the new row.
@@ -765,7 +765,7 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
       }
 
       // Save cell from the last row that we will use below
-      if (!cellForRowParent && cellData.mFirst.mRow == cellData.mCurrent.mRow) {
+      if (!cellForRowParent && !cellData.IsSpannedFromOtherRow()) {
         cellForRowParent = std::move(cellData.mElement);
       }
     }
@@ -1695,7 +1695,7 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
 
     // Compensate for cells that don't start or extend below the row we are
     // deleting.
-    if (cellData.mFirst.mRow < cellData.mCurrent.mRow) {
+    if (cellData.IsSpannedFromOtherRow()) {
       // If a cell starts in row above us, decrease its rowspan to keep table
       // rectangular but we don't need to do this if rowspan=0, since it will
       // be automatically adjusted.
@@ -1914,7 +1914,7 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
       // XXX So, we should distinguish whether CellData returns error or just
       //     not found later.
       if (!isSelected && cellData.mElement &&
-          cellData.mCurrent.mRow == cellData.mFirst.mRow &&
+          !cellData.IsSpannedFromOtherRow() &&
           cellData.mCurrent.mColumn == currentColIndex) {
         rv = AppendNodeToSelectionAsRange(cellData.mElement);
         if (NS_FAILED(rv)) {
@@ -1988,7 +1988,7 @@ HTMLEditor::SelectAllTableCells()
       // XXX So, we should distinguish whether CellData returns error or just
       //     not found later.
       if (cellData.mElement &&
-          cellData.mCurrent.mRow == cellData.mFirst.mRow &&
+          !cellData.IsSpannedFromOtherRow() &&
           cellData.mCurrent.mColumn == currentColIndex) {
         rv =  AppendNodeToSelectionAsRange(cellData.mElement);
         if (NS_FAILED(rv)) {
@@ -2081,7 +2081,7 @@ HTMLEditor::SelectTableRow()
     // XXX So, we should distinguish whether CellData returns error or just
     //     not found later.
     if (cellData.mElement &&
-        cellData.mFirst.mRow == cellData.mCurrent.mRow &&
+        !cellData.IsSpannedFromOtherRow() &&
         currentColIndex == cellData.mCurrent.mColumn) {
       rv = AppendNodeToSelectionAsRange(cellData.mElement);
       if (NS_FAILED(rv)) {
@@ -2169,7 +2169,7 @@ HTMLEditor::SelectTableColumn()
     // XXX So, we should distinguish whether CellData returns error or just
     //     not found later.
     if (cellData.mElement &&
-        cellData.mFirst.mRow == cellData.mCurrent.mRow &&
+        !cellData.IsSpannedFromOtherRow() &&
         currentColIndex == cellData.mCurrent.mColumn) {
       rv = AppendNodeToSelectionAsRange(cellData.mElement);
       if (NS_FAILED(rv)) {
@@ -2413,8 +2413,7 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
 
     // Skip over cells spanned from above (like the one we are splitting!)
     if (cellDataAtInsertionPoint.mElement &&
-        cellDataAtInsertionPoint.mFirst.mRow ==
-          cellDataAtInsertionPoint.mCurrent.mRow) {
+        !cellDataAtInsertionPoint.IsSpannedFromOtherRow()) {
       if (!insertAfter) {
         // Inserting before, so stop at first cell in row we want to insert
         // into.
@@ -2728,7 +2727,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             // Problem: It is very tricky to delete cells as we merge,
             //  since that will upset the cellmap
             //  Instead, build a list of cells to delete and do it later
-            NS_ASSERTION(cellData.mFirst.mRow == cellData.mCurrent.mRow,
+            NS_ASSERTION(!cellData.IsSpannedFromOtherRow(),
                          "JoinTableCells: StartRowIndex is in row above");
 
             if (actualColSpan2 > 1) {
@@ -2878,7 +2877,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     // Delete the cell now only if it starts in the same row
     //   and has enough row "height"
     rv = MergeCells(leftCellData.mElement, rightCellData.mElement,
-                    rightCellData.mFirst.mRow == rightCellData.mCurrent.mRow &&
+                    !rightCellData.IsSpannedFromOtherRow() &&
                     (effectiveRowSpan2 >= actualRowSpan));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -3022,7 +3021,7 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
     }
 
     if (rowSpan > 0 &&
-        cellData.mFirst.mRow == cellData.mCurrent.mRow &&
+        !cellData.IsSpannedFromOtherRow() &&
         (rowSpan < minRowSpan || minRowSpan == -1)) {
       minRowSpan = rowSpan;
     }
@@ -3051,7 +3050,7 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
       // XXX So, this does not assume that CellData returns error when just
       //     not found a cell.  Fix this later.
       if (cellData.mElement && rowSpan > 0 &&
-          cellData.mFirst.mRow == cellData.mCurrent.mRow &&
+          !cellData.IsSpannedFromOtherRow() &&
           startColIndex == cellData.mCurrent.mColumn) {
         nsresult rv = SetRowSpan(cellData.mElement, rowSpan-rowsReduced);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3142,7 +3141,7 @@ HTMLEditor::FixBadColSpan(Element* aTable,
       //     not found a cell.  Fix this later.
       if (cellData.mElement && colSpan > 0 &&
           startColIndex == cellData.mCurrent.mColumn &&
-          cellData.mFirst.mRow == cellData.mCurrent.mRow) {
+          !cellData.IsSpannedFromOtherRow()) {
         nsresult rv = SetColSpan(cellData.mElement, colSpan-colsReduced);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -3253,7 +3252,7 @@ HTMLEditor::NormalizeTable(Selection& aSelection,
 
       if (cellData.mElement) {
         // Save the last cell found in the same row we are scanning
-        if (cellData.mFirst.mRow == cellData.mCurrent.mRow) {
+        if (!cellData.IsSpannedFromOtherRow()) {
           previousCellElementInRow = std::move(cellData.mElement);
         }
         continue;
@@ -3407,7 +3406,7 @@ HTMLEditor::GetNumberOfCellsInRow(Element& aTableElement,
 
     if (cellData.mElement) {
       // Only count cells that start in row we are working with
-      if (cellData.mFirst.mRow == cellData.mCurrent.mRow) {
+      if (!cellData.IsSpannedFromOtherRow()) {
         numberOfCells++;
       }
       // Next possible location for a cell
