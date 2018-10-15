@@ -493,12 +493,26 @@ BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> pos
     // CreatePositionalParameterIndices (3.1.5 CheckPositionalParameterIndices
     // step 1) are done implicitly.
     uint32_t i = 0;
+    const bool hasRest = parseContext_->functionBox()->hasRest();
     for (ParseNode* param : params->contents()) {
         if (param->isKind(ParseNodeKind::Assign)) {
             param = param->as<AssignmentNode>().left();
         }
 
-        if (param->isKind(ParseNodeKind::Name)) {
+        // At this point, function body is not part of params list.
+        const bool isRest = hasRest && !param->pn_next;
+        if (isRest) {
+            // Rest parameter
+
+            // Step 3.
+            if (i >= positionalParams.get().length()) {
+                continue;
+            }
+
+            if (positionalParams.get()[i]) {
+                return raiseError("Expected positional parameter per AssertedParameterScope.paramNames, got rest parameter");
+            }
+        } else if (param->isKind(ParseNodeKind::Name)) {
             // Simple or default parameter.
 
             // Step 2.a.
@@ -509,23 +523,22 @@ BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> pos
             JSAtom* name = positionalParams.get()[i];
             if (!name) {
                 // Step 2.a.ii.1.
-                return raiseError("AssertedParameterScope.paramNames asserted destructuring/rest parameter, got positional parameter");
+                return raiseError("Expected destructuring/rest parameter per AssertedParameterScope.paramNames, got positional parameter");
             }
 
             // Step 2.a.i.
             if (param->name() != name) {
                 // Step 2.a.ii.1.
-                return raiseError("AssertedPositionalParameterName: name mismatch");
+                return raiseError("Name mismatch between AssertedPositionalParameterName in AssertedParameterScope.paramNames and actual parameter");
             }
 
             // Step 2.a.i.1.
             // Implicitly done.
         } else {
-            // Destructuring or rest parameter.
+            // Destructuring parameter.
 
             MOZ_ASSERT(param->isKind(ParseNodeKind::Object) ||
-                       param->isKind(ParseNodeKind::Array) ||
-                       param->isKind(ParseNodeKind::Spread));
+                       param->isKind(ParseNodeKind::Array));
 
             // Step 3.
             if (i >= positionalParams.get().length()) {
@@ -533,11 +546,7 @@ BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> pos
             }
 
             if (positionalParams.get()[i]) {
-                if (param->isKind(ParseNodeKind::Spread)) {
-                    return raiseError("AssertedParameterScope.paramNames asserted positional parameter, got rest parameter");
-                } else {
-                    return raiseError("AssertedParameterScope.paramNames asserted positional parameter, got destructuring parameter");
-                }
+                return raiseError("Expected positional parameter per AssertedParameterScope.paramNames, got destructuring parameter");
             }
         }
 

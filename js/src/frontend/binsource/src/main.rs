@@ -58,6 +58,9 @@ struct FieldRules {
 #[derive(Clone, Default)]
 struct SumRules {
     after_arm: Option<String>,
+
+    // Disable this arm (false by default).
+    disabled: bool,
 }
 
 
@@ -354,6 +357,15 @@ impl GlobalRules {
                                     "after" => {
                                         update_rule(&mut sum_rule.after_arm, arm_config_entry)
                                             .unwrap_or_else(|()| panic!("Rule {}.sum-arms.{}.{} must be a string", node_key, sum_arm_key, arm_config_key));
+                                    }
+                                    "disabled" => {
+                                        if let Some(disabled) = arm_config_entry.as_bool() {
+                                            if disabled {
+                                                sum_rule.disabled = true;
+                                            }
+                                        } else {
+                                            panic!("Rule {}.sum-arms.{}.{} must be a bool", node_key, sum_arm_key, arm_config_key);
+                                        }
                                     }
                                     _ => {
                                         panic!("Unexpected {}.sum-arms.{}.{}", node_key, sum_arm_key, arm_config_key);
@@ -1180,6 +1192,18 @@ impl CPPExporter {
         // Generate inner method
         let mut buffer_cases = String::new();
         for node in nodes {
+            let rule_for_this_arm = rules_for_this_sum.by_sum.get(&node)
+                .cloned()
+                .unwrap_or_default();
+
+            if rule_for_this_arm.disabled {
+                buffer_cases.push_str(&format!("
+      case BinKind::{variant_name}:
+        return raiseError(\"FIXME: Not implemented yet in this preview release ({variant_name})\");",
+                    variant_name = node.to_cpp_enum_case()));
+                continue;
+            }
+
             buffer_cases.push_str(&format!("
       case BinKind::{variant_name}:
 {call}
@@ -1190,9 +1214,7 @@ impl CPPExporter {
                                             MethodCallKind::AlwaysVar)
                     .reindent("        "),
                 variant_name = node.to_cpp_enum_case(),
-                arm_after = rules_for_this_sum.by_sum.get(&node)
-                    .cloned()
-                    .unwrap_or_default().after_arm.reindent("        ")
+                arm_after = rule_for_this_arm.after_arm.reindent("        ")
                     .newline_if_not_empty()));
         }
         buffer.push_str(&format!("\n{first_line}
@@ -1248,7 +1270,7 @@ impl CPPExporter {
                 let rendered = format!("
 {first_line}
 {{
-    return raiseError(\"FIXME: Not implemented yet ({kind})\");
+    return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
 }}\n",
                     first_line = first_line,
                     kind = kind,
@@ -1458,7 +1480,7 @@ impl CPPExporter {
                         if build_result.len() == 0 {
                             buffer.push_str(&format!("{first_line}
 {{
-    return raiseError(\"FIXME: Not implemented yet ({kind})\");
+    return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
 }}
 
 ",
@@ -1487,7 +1509,7 @@ impl CPPExporter {
                         if build_result.len() == 0 {
                             buffer.push_str(&format!("{first_line}
 {{
-    return raiseError(\"FIXME: Not implemented yet ({kind})\");
+    return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
 }}
 
 ",
@@ -1517,7 +1539,7 @@ impl CPPExporter {
                         if build_result.len() == 0 {
                             buffer.push_str(&format!("{first_line}
 {{
-    return raiseError(\"FIXME: Not implemented yet ({kind})\");
+    return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
 }}
 
 ",
@@ -1763,7 +1785,7 @@ impl CPPExporter {
         if build_result == "" {
             buffer.push_str(&format!("{first_line}
 {{
-    return raiseError(\"FIXME: Not implemented yet ({class_name})\");
+    return raiseError(\"FIXME: Not implemented yet in this preview release ({class_name})\");
 }}
 
 ",
