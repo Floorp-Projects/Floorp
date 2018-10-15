@@ -97,11 +97,6 @@ public:
   void UpdateRootFrameMetrics(const FrameMetrics& aMetrics);
   // Only update the frame metrics if the root composition size has changed
   void MaybeUpdateCompositionSizeAndRootFrameMetrics(const FrameMetrics& aMetrics);
-  // When aEnable is set to true, it informs the animator that the UI thread expects to
-  // be notified when the layer tree  has been updated. Enabled currently by robocop tests.
-  void EnableLayersUpdateNotifications(bool aEnable);
-  // Called when a layer has been updated so the UI thread may be notified if necessary.
-  void NotifyLayersUpdated();
   // Adopts the Shmem containing the toolbar snapshot sent from the UI thread.
   // The AndroidDynamicToolbarAnimator is responsible for deallocating the Shmem when
   // it is done being used.
@@ -226,7 +221,6 @@ protected:
   // Compositor thread only
   bool mCompositorShutdown;             // Set to true when the compositor has been shutdown
   bool mCompositorAnimationDeferred;    // An animation has been deferred until the toolbar is unlocked
-  bool mCompositorLayersUpdateEnabled;  // Flag set to true when the UI thread is expecting to be notified when a layer has been updated
   bool mCompositorAnimationStarted;     // Set to true when the compositor has actually started animating the static snapshot.
   bool mCompositorReceivedFirstPaint;   // Set to true when a first paint occurs. Used by toolbar animator to detect a new page load.
   bool mCompositorWaitForPageResize;    // Set to true if the bottom of the page has been reached and the toolbar animator should wait for the page to resize before ending animation.
