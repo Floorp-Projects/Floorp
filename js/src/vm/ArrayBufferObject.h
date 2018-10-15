@@ -534,6 +534,44 @@ class ArrayBufferViewObject : public NativeObject
         return dataPointerEither_();
     }
 
+    static Value bufferValue(const ArrayBufferViewObject* view) {
+        return view->getFixedSlot(BUFFER_SLOT);
+    }
+    bool hasBuffer() const {
+        return bufferValue(this).isObject();
+    }
+    JSObject* bufferObject() const {
+        return bufferValue(this).toObjectOrNull();
+    }
+
+    ArrayBufferObject* bufferUnshared() const {
+        MOZ_ASSERT(!isSharedMemory());
+        JSObject* obj = bufferObject();
+        if (!obj) {
+            return nullptr;
+        }
+        return &obj->as<ArrayBufferObject>();
+    }
+
+    inline SharedArrayBufferObject* bufferShared() const;
+    inline ArrayBufferObjectMaybeShared* bufferEither() const;
+
+    bool hasDetachedBuffer() const {
+        // Shared buffers can't be detached.
+        if (isSharedMemory()) {
+            return false;
+        }
+
+        // A typed array with a null buffer has never had its buffer exposed to
+        // become detached.
+        ArrayBufferObject* buffer = bufferUnshared();
+        if (!buffer) {
+            return false;
+        }
+
+        return buffer->isDetached();
+    }
+
     static void trace(JSTracer* trc, JSObject* obj);
 };
 
