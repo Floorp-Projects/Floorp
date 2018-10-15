@@ -13,6 +13,7 @@
 #include "gc/Barrier.h"
 #include "js/Class.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/ArrayBufferViewObject.h"
 #include "vm/JSObject.h"
 #include "vm/SharedArrayObject.h"
 
@@ -37,41 +38,11 @@ namespace js {
  * the subclasses.
  */
 
-class TypedArrayObject : public NativeObject
+class TypedArrayObject : public ArrayBufferViewObject
 {
   public:
-    // Underlying (Shared)ArrayBufferObject.
-    static const size_t BUFFER_SLOT = 0;
-    static_assert(BUFFER_SLOT == JS_TYPEDARRAYLAYOUT_BUFFER_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right buffer slot");
-
-    // Slot containing length of the view in number of typed elements.
-    static const size_t LENGTH_SLOT = 1;
-    static_assert(LENGTH_SLOT == JS_TYPEDARRAYLAYOUT_LENGTH_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right length slot");
-
-    // Offset of view within underlying (Shared)ArrayBufferObject.
-    static const size_t BYTEOFFSET_SLOT = 2;
-    static_assert(BYTEOFFSET_SLOT == JS_TYPEDARRAYLAYOUT_BYTEOFFSET_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right byteOffset slot");
-
-    static const size_t RESERVED_SLOTS = 3;
-
-#ifdef DEBUG
-    static const uint8_t ZeroLengthArrayData = 0x4A;
-#endif
-
     static int lengthOffset();
     static int dataOffset();
-
-    // The raw pointer to the buffer memory, the "private" value.
-    //
-    // This offset is exposed for performance reasons - so that it
-    // need not be looked up on accesses.
-    static const size_t DATA_SLOT = 3;
 
     static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                   "bad inlined constant in jsfriendapi.h");
@@ -117,9 +88,6 @@ class TypedArrayObject : public NativeObject
     inline Scalar::Type type() const;
     inline size_t bytesPerElement() const;
 
-    static Value bufferValue(const TypedArrayObject* tarr) {
-        return tarr->getFixedSlot(BUFFER_SLOT);
-    }
     static Value byteOffsetValue(const TypedArrayObject* tarr) {
         Value v = tarr->getFixedSlot(BYTEOFFSET_SLOT);
         MOZ_ASSERT(v.toInt32() >= 0);
@@ -135,12 +103,6 @@ class TypedArrayObject : public NativeObject
     static bool
     ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray);
 
-    bool hasBuffer() const {
-        return bufferValue(this).isObject();
-    }
-    JSObject* bufferObject() const {
-        return bufferValue(this).toObjectOrNull();
-    }
     uint32_t byteOffset() const {
         return byteOffsetValue(this).toInt32();
     }
@@ -176,8 +138,6 @@ class TypedArrayObject : public NativeObject
      */
     void getElements(Value* vp);
 
-    void notifyBufferDetached(JSContext* cx, void* newData);
-
     static bool
     GetTemplateObjectForNative(JSContext* cx, Native native, uint32_t len,
                                MutableHandleObject res);
@@ -191,82 +151,6 @@ class TypedArrayObject : public NativeObject
 
     static bool isOriginalLengthGetter(Native native);
 
-    ArrayBufferObject* bufferUnshared() const {
-        MOZ_ASSERT(!isSharedMemory());
-        JSObject* obj = bufferObject();
-        if (!obj) {
-            return nullptr;
-        }
-        return &obj->as<ArrayBufferObject>();
-    }
-    SharedArrayBufferObject* bufferShared() const {
-        MOZ_ASSERT(isSharedMemory());
-        JSObject* obj = bufferObject();
-        if (!obj) {
-            return nullptr;
-        }
-        return &obj->as<SharedArrayBufferObject>();
-    }
-    ArrayBufferObjectMaybeShared* bufferEither() const {
-        JSObject* obj = bufferObject();
-        if (!obj) {
-            return nullptr;
-        }
-        if (isSharedMemory()) {
-            return &obj->as<SharedArrayBufferObject>();
-        }
-        return &obj->as<ArrayBufferObject>();
-    }
-
-    SharedMem<void*> viewDataShared() const {
-        return SharedMem<void*>::shared(viewDataEither_());
-    }
-    SharedMem<void*> viewDataEither() const {
-        if (isSharedMemory()) {
-            return SharedMem<void*>::shared(viewDataEither_());
-        }
-        return SharedMem<void*>::unshared(viewDataEither_());
-    }
-    void initViewData(SharedMem<uint8_t*> viewData) {
-        // Install a pointer to the buffer location that corresponds
-        // to offset zero within the typed array.
-        //
-        // The following unwrap is safe because the DATA_SLOT is
-        // accessed only from jitted code and from the
-        // viewDataEither_() accessor below; in neither case does the
-        // raw pointer escape untagged into C++ code.
-        initPrivate(viewData.unwrap(/*safe - see above*/));
-    }
-    void* viewDataUnshared() const {
-        MOZ_ASSERT(!isSharedMemory());
-        return viewDataEither_();
-    }
-
-    bool hasDetachedBuffer() const {
-        // Shared buffers can't be detached.
-        if (isSharedMemory()) {
-            return false;
-        }
-
-        // A typed array with a null buffer has never had its buffer exposed to
-        // become detached.
-        ArrayBufferObject* buffer = bufferUnshared();
-        if (!buffer) {
-            return false;
-        }
-
-        return buffer->isDetached();
-    }
-
-  private:
-    void* viewDataEither_() const {
-        // Note, do not check whether shared or not
-        // Keep synced with js::Get<Type>ArrayLengthAndData in jsfriendapi.h!
-        return static_cast<void*>(getPrivate(DATA_SLOT));
-    }
-
-  public:
-    static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);
     static size_t objectMoved(JSObject* obj, JSObject* old);
 

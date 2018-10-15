@@ -109,7 +109,7 @@ async function openWebCompatTab(compatInfo) {
     params.label.push(`type-tracking-protection-${compatInfo.blockList}`);
   }
 
-  const tab = await browser.tabs.create({});
+  const tab = await browser.tabs.create({url: "about:blank"});
   const json = stripNonASCIIChars(JSON.stringify(params));
   await browser.tabExtras.loadURIWithPostData(tab.id, url.href, json,
                                               "application/json");

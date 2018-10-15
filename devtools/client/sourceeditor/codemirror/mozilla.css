@@ -89,22 +89,6 @@
   cursor: default;
 }
 
-/* This is to avoid the fake horizontal scrollbar div of codemirror to go 0
-height when floating scrollbars are active. Make sure that this value is equal
-to the maximum of `min-height` specific to the `scrollbar[orient="horizontal"]`
-selector in floating-scrollbar-light.css across all platforms. */
-.CodeMirror-hscrollbar {
-  min-height: 10px;
-}
-
-/* This is to avoid the fake vertical scrollbar div of codemirror to go 0
-width when floating scrollbars are active. Make sure that this value is equal
-to the maximum of `min-width` specific to the `scrollbar[orient="vertical"]`
-selector in floating-scrollbar-light.css across all platforms. */
-.CodeMirror-vscrollbar {
-  min-width: 10px;
-}
-
 .cm-trailingspace {
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==");
   opacity: 0.75;

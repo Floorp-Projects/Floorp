@@ -13,7 +13,7 @@ var cacheTemplate, appPluginsPath, profPlugins;
  * Test reading from search.json.mozlz4
  */
 function run_test() {
-  let cacheTemplateFile = do_get_file("data/search_blacklist.json");
+  let cacheTemplateFile = do_get_file("data/search_ignorelist.json");
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
 

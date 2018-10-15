@@ -16,20 +16,19 @@
     return getUserMedia({video: true})
       .then(videoStream => {
         var testVideo = createMediaElement('video', 'testVideo');
-        var videoPlayback = new LocalMediaStreamPlayback(testVideo,
-                                                         videoStream);
+        var videoPlayback = new MediaStreamPlayback(testVideo,
+                                                    videoStream);
 
-        return videoPlayback.playMedia(false)
+        return videoPlayback.playMediaWithoutStoppingTracks(false)
           .then(() => getUserMedia({audio: true}))
           .then(audioStream => {
             var testAudio = createMediaElement('audio', 'testAudio');
-            var audioPlayback = new LocalMediaStreamPlayback(testAudio,
-                                                             audioStream);
+            var audioPlayback = new MediaStreamPlayback(testAudio,
+                                                        audioStream);
 
-            return audioPlayback.playMedia(false)
-              .then(() => audioStream.stop());
+            return audioPlayback.playMedia(false);
           })
-          .then(() => videoStream.stop());
+          .then(() => videoStream.getTracks().forEach(t => t.stop()));
       });
   });
 

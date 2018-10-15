@@ -11,6 +11,7 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
@@ -39,6 +40,7 @@ import java.util.Locale;
 
 import static org.mozilla.gecko.Tabs.INTENT_EXTRA_SESSION_UUID;
 import static org.mozilla.gecko.Tabs.INTENT_EXTRA_TAB_ID;
+import static org.mozilla.gecko.util.FileUtils.getFilePathFromUri;
 
 public final class IntentHelper implements BundleEventListener {
 
@@ -494,6 +496,13 @@ public final class IntentHelper implements BundleEventListener {
             // Don't log the exception to prevent leaking URIs.
             Log.w(LOGTAG, "Unable to parse Intent URI - loading about:neterror");
             errorResponse.putBoolean("isFallback", false);
+            callback.sendError(errorResponse);
+            return;
+        }
+
+        if (FileUtils.isContentUri(uri)) {
+            errorResponse.putString("uri", getFilePathFromUri(getContext(), intent.getData()));
+            errorResponse.putBoolean("isFallback", true);
             callback.sendError(errorResponse);
             return;
         }

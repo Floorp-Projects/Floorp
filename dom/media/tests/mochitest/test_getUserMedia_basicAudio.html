@@ -9,14 +9,14 @@
   createHTML({ title: "getUserMedia Basic Audio Test", bug: "781534" });
   /**
    * Run a test to verify that we can complete a start and stop media playback
-   * cycle for an audio LocalMediaStream on an audio HTMLMediaElement.
+   * cycle for an audio MediaStream on an audio HTMLMediaElement.
    */
   runTest(function () {
     var testAudio = createMediaElement('audio', 'testAudio');
     var constraints = {audio: true};
 
     return getUserMedia(constraints).then(stream => {
-      var playback = new LocalMediaStreamPlayback(testAudio, stream);
+      var playback = new MediaStreamPlayback(testAudio, stream);
       return playback.playMedia(false);
     });
   });

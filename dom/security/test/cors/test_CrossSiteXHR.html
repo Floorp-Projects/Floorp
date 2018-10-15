@@ -25,7 +25,9 @@ var gen;
 function initTest() {
   SimpleTest.waitForExplicitFinish();
   // Allow all cookies, then do the actual test initialization
-  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, initTestCallback);
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0],
+  																	 ["security.allow_eval_with_system_principal", true]]},
+  																	  initTestCallback);
 }
 
 function initTestCallback() {
