@@ -17,9 +17,9 @@ import lib.tasks
 
 
 TASK_ID = os.environ.get('TASK_ID')
-REPO_URL = os.environ.get('GITHUB_HEAD_REPO_URL')
-BRANCH = os.environ.get('GITHUB_HEAD_BRANCH')
-COMMIT = os.environ.get('GITHUB_HEAD_SHA')
+REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
+BRANCH = os.environ.get('MOBILE_HEAD_BRANCH')
+COMMIT = os.environ.get('MOBILE_HEAD_REV')
 PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
 
 # If we see this text inside a pull request title then we will not execute any tasks for this PR.

@@ -8,13 +8,14 @@ import taskcluster
 
 
 class TaskBuilder(object):
-    def __init__(self, task_id, repo_url, branch, commit, owner, source):
+    def __init__(self, task_id, repo_url, branch, commit, owner, source, scheduler_id):
         self.task_id = task_id
         self.repo_url = repo_url
         self.branch = branch
         self.commit = commit
         self.owner = owner
         self.source = source
+        self.scheduler_id = scheduler_id
 
     def build_task(self, name, description, command, dependencies=[],
                    artifacts={}, scopes=[], routes=[], features={},
@@ -31,6 +32,7 @@ class TaskBuilder(object):
         return {
             "workerType": worker_type,
             "taskGroupId": self.task_id,
+            "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
             "retries": 5,
             "created": taskcluster.stringDate(created),
@@ -72,6 +74,7 @@ class TaskBuilder(object):
         return {
             "workerType": "gecko-focus",
             "taskGroupId": self.task_id,
+            "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
             "retries": 5,
             "created": taskcluster.stringDate(created),
@@ -114,6 +117,7 @@ class TaskBuilder(object):
         return {
             "workerType": "mobile-beetmover-v1",
             "taskGroupId": self.task_id,
+            "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
             "retries": 5,
             "created": taskcluster.stringDate(created),
