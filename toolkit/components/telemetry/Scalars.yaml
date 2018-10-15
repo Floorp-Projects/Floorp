@@ -444,6 +444,21 @@ services.sync:
     record_in_processes:
       - main
 
+identity.fxaccounts:
+  missed_commands_fetched:
+    bug_numbers:
+      - 1496638
+    description: >
+      The number of missed FxA commands we have recovered.
+    expires: "68"
+    kind: uint
+    keyed: false
+    notification_emails:
+      - fxa-staff@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 security:
   pkcs11_modules_loaded:
     bug_numbers:
