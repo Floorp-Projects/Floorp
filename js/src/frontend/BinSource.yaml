@@ -271,6 +271,11 @@ AssertedMaybePositionalParameterName:
         MutableHandle<GCVector<JSAtom*>> positionalParams
     extra-args: |
         scopeKind, positionalParams
+    sum-arms:
+        AssertedRestParameterName:
+            disabled: true
+        AssertedParameterName:
+            disabled: true
 
 AssertedPositionalParameterName:
     inherits: AssertedMaybePositionalParameterName
@@ -298,12 +303,6 @@ AssertedPositionalParameterName:
                     return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
                 }
                 positionalParams.get()[index] = name;
-
-AssertedRestParameterName:
-    inherits: AssertedMaybePositionalParameterName
-
-AssertedParameterName:
-    inherits: AssertedMaybePositionalParameterName
 
 AssertedBoundNamesScope:
     inherits: AssertedBlockScope
@@ -850,8 +849,7 @@ FormalParameters:
     build: |
         auto result = items;
         if (rest) {
-            BINJS_TRY_DECL(spread, factory_.newSpread(start, rest));
-            factory_.addList(result, spread);
+            return raiseError("Rest parameter is not supported in this preview release");
         }
 
 ForStatement:
