@@ -478,50 +478,73 @@ template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> positionalParams,
                                                    ListNode* params)
 {
-#ifdef DEBUG
-    // positionalParams should have the same length as non-rest parameters.
-    size_t paramsCount = params->count();
-    if (paramsCount > 0) {
-        if (params->last()->isKind(ParseNodeKind::Spread)) {
-            paramsCount--;
-        }
-    }
-    MOZ_ASSERT(positionalParams.get().length() == paramsCount);
-#endif
+    // positionalParams should have the corresponding entry up to the last
+    // positional parameter.
 
+    // `positionalParams` corresponds to `expectedParams` parameter in the spec.
+    // `params` corresponds to `parseTree` in 3.1.9 CheckAssertedScope, and
+    // `positionalParamNames` parameter
+
+    // Steps 1-3.
+    // PositionalParameterNames (3.1.9 CheckAssertedScope step 5.d) and
+    // CreatePositionalParameterIndices (3.1.5 CheckPositionalParameterIndices
+    // step 1) are done implicitly.
     uint32_t i = 0;
     for (ParseNode* param : params->contents()) {
         if (param->isKind(ParseNodeKind::Assign)) {
             param = param->as<AssignmentNode>().left();
         }
-        if (param->isKind(ParseNodeKind::Spread)) {
-            continue;
-        }
 
-        MOZ_ASSERT(param->isKind(ParseNodeKind::Name) ||
-                   param->isKind(ParseNodeKind::Object) ||
-                   param->isKind(ParseNodeKind::Array));
-
-        if (JSAtom* name = positionalParams.get()[i]) {
+        if (param->isKind(ParseNodeKind::Name)) {
             // Simple or default parameter.
-            if (param->isKind(ParseNodeKind::Object) || param->isKind(ParseNodeKind::Array)) {
-                return raiseError("AssertedPositionalParameterName: expected positional parameter, got destructuring parameter");
-            }
-            if (param->isKind(ParseNodeKind::Spread)) {
-                return raiseError("AssertedPositionalParameterName: expected positional parameter, got rest parameter");
+
+            // Step 2.a.
+            if (i >= positionalParams.get().length()) {
+                return raiseError("AssertedParameterScope.paramNames doesn't have corresponding entry to positional parameter");
             }
 
+            JSAtom* name = positionalParams.get()[i];
+            if (!name) {
+                // Step 2.a.ii.1.
+                return raiseError("AssertedParameterScope.paramNames asserted destructuring/rest parameter, got positional parameter");
+            }
+
+            // Step 2.a.i.
             if (param->name() != name) {
+                // Step 2.a.ii.1.
                 return raiseError("AssertedPositionalParameterName: name mismatch");
             }
+
+            // Step 2.a.i.1.
+            // Implicitly done.
         } else {
             // Destructuring or rest parameter.
-            if (param->isKind(ParseNodeKind::Name)) {
-                return raiseError("AssertedParameterName/AssertedRestParameterName: expected destructuring/rest parameter, got positional parameter");
+
+            MOZ_ASSERT(param->isKind(ParseNodeKind::Object) ||
+                       param->isKind(ParseNodeKind::Array) ||
+                       param->isKind(ParseNodeKind::Spread));
+
+            // Step 3.
+            if (i >= positionalParams.get().length()) {
+                continue;
+            }
+
+            if (positionalParams.get()[i]) {
+                if (param->isKind(ParseNodeKind::Spread)) {
+                    return raiseError("AssertedParameterScope.paramNames asserted positional parameter, got rest parameter");
+                } else {
+                    return raiseError("AssertedParameterScope.paramNames asserted positional parameter, got destructuring parameter");
+                }
             }
         }
 
         i++;
+    }
+
+    // Step 3.
+    if (positionalParams.get().length() > params->count()) {
+        // `positionalParams` has unchecked entries.
+        return raiseError("AssertedParameterScope.paramNames has unmatching items than the actual parameters");
     }
 
     return Ok();
