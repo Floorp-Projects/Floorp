@@ -284,7 +284,9 @@ DebuggerClient.prototype = {
     this._eventsEnabled = false;
 
     const cleanup = () => {
-      this._transport.close();
+      if (this._transport) {
+        this._transport.close();
+      }
       this._transport = null;
     };
 
