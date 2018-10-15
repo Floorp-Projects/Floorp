@@ -238,7 +238,8 @@ class GeckoWebViewProvider : IWebViewProvider {
                 -> geckoRuntime!!.settings.webFontsEnabled =
                         !Settings.getInstance(context).shouldBlockWebFonts()
                 context.getString(R.string.pref_key_remote_debugging) ->
-                    geckoRuntime!!.settings.remoteDebuggingEnabled = false
+                    geckoRuntime!!.settings.remoteDebuggingEnabled =
+                            Settings.getInstance(context).shouldEnableRemoteDebugging()
                 context.getString(R.string.pref_key_performance_enable_cookies) -> {
                     val cookiesValue = if (Settings.getInstance(context).shouldBlockCookies() &&
                         Settings.getInstance(context).shouldBlockThirdPartyCookies()

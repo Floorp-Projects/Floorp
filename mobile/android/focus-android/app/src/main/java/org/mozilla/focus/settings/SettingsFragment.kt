@@ -9,13 +9,15 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import org.mozilla.focus.R
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.AppConstants
 
 class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     override fun onCreatePreferences(bundle: Bundle?, s: String?) {
         addPreferencesFromResource(R.xml.settings)
-        // TODO: #2869 Enable Debugging and Expose Advanced Setting
-        preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_advanced_screen)))
+        if (!AppConstants.isGeckoBuild) {
+            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_advanced_screen)))
+        }
     }
 
     override fun onResume() {
