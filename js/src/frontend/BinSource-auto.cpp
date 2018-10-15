@@ -4538,11 +4538,12 @@ BinASTParser<Tok>::parseInterfaceShorthandProperty(const size_t start, const Bin
 
     BINJS_MOZ_TRY_DECL(name, parseIdentifierExpression());
 
-    if (!factory_.isUsableAsObjectPropertyName(name)) {
-        BINJS_TRY_VAR(name, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
-    }
+    MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
+    MOZ_ASSERT(!factory_.isUsableAsObjectPropertyName(name));
+    BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
 
-    BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, name, AccessorType::None));
+    BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(propName, name, AccessorType::None));
+    result->setKind(ParseNodeKind::Shorthand);
     return result;
 }
 
