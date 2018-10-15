@@ -211,8 +211,6 @@ HTMLEditor::InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
   }
   MOZ_ASSERT(curCell == cellDataAtSelection.mElement);
 
-  // bool    isSelected =       cellDataAtSelection.mIsSelected;
-
   int32_t newCellIndex;
   switch (aInsertPosition) {
     case InsertPosition::eBeforeSelectedCell:
@@ -445,8 +443,6 @@ HTMLEditor::InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
   }
   MOZ_ASSERT(curCell == cellDataAtSelection.mElement);
 
-  // bool    isSelected =       cellDataAtSelection.mIsSelected;
-
   ErrorResult error;
   TableSize tableSize(*this, *table, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -509,8 +505,6 @@ HTMLEditor::InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
       if (NS_WARN_IF(cellData.FailedOrNotFound())) {
         return NS_ERROR_FAILURE;
       }
-
-      // bool    isSelected =             cellData.mIsSelected;
 
       // Don't fail entire process if we fail to find a cell (may fail just in
       // particular rows with < adequate cells per row).
@@ -638,8 +632,6 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
   }
   MOZ_ASSERT(curCell == cellDataAtSelection.mElement);
 
-  // bool isSelected =          cellDataAtSelection.mIsSelected;
-
   ErrorResult error;
   TableSize tableSize(*this, *table, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -692,8 +684,6 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
         break; // Perhaps, we reach end of the row.
       }
 
-      // bool    isSelected =                 cellData.mIsSelected;
-
       // XXX So, this is impossible case. Will be removed.
       if (NS_WARN_IF(!cellData.mElement)) {
         actualColSpan = 1;
@@ -733,8 +723,6 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
       if (cellData.FailedOrNotFound()) {
         break; // Perhaps, we reach end of the row.
       }
-
-      // bool    isSelected =                 cellData.mIsSelected;
 
      actualColSpan = cellData.mEffectiveColSpan;
 
@@ -1384,8 +1372,6 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
       return NS_OK;
     }
 
-    // bool    isSelected =          cellData.mIsSelected;
-
     // Find cells that don't start in column we are deleting.
     MOZ_ASSERT(cellData.mColSpan >= 0);
     if (cellData.IsSpannedFromOtherColumn() || cellData.mColSpan != 1) {
@@ -1655,8 +1641,6 @@ HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
       return NS_ERROR_FAILURE;
     }
 
-    // bool    isSelected =          cellData.mIsSelected;
-
     // XXX So, we should distinguish if CellDate returns error or just not
     //     found later.
     if (!cellData.mElement) {
@@ -1873,12 +1857,10 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
         return NS_ERROR_FAILURE;
       }
 
-      bool       isSelected =          cellData.mIsSelected;
-
       // Skip cells that already selected or are spanned from previous locations
       // XXX So, we should distinguish whether CellData returns error or just
       //     not found later.
-      if (!isSelected && cellData.mElement &&
+      if (!cellData.mIsSelected && cellData.mElement &&
           !cellData.IsSpannedFromOtherRowOrColumn()) {
         rv = AppendNodeToSelectionAsRange(cellData.mElement);
         if (NS_FAILED(rv)) {
@@ -1942,8 +1924,6 @@ HTMLEditor::SelectAllTableCells()
         rv = NS_ERROR_FAILURE;
         break;
       }
-
-      // bool    isSelected =          cellData.mIsSelected;
 
       // Skip cells that are spanned from previous rows or columns
       // XXX So, we should distinguish whether CellData returns error or just
@@ -2032,8 +2012,6 @@ HTMLEditor::SelectTableRow()
       break;
     }
 
-    // bool    isSelected =          cellData.mIsSelected;
-
     // Skip cells that are spanned from previous rows or columns
     // XXX So, we should distinguish whether CellData returns error or just
     //     not found later.
@@ -2115,8 +2093,6 @@ HTMLEditor::SelectTableColumn()
       rv = NS_ERROR_FAILURE;
       break;
     }
-
-    // bool    isSelected =          cellData.mIsSelected;
 
     // Skip cells that are spanned from previous rows or columns
     // XXX So, we should distinguish whether CellData returns error or just
@@ -2253,8 +2229,6 @@ HTMLEditor::SplitCellIntoColumns(Element* aTable,
     return NS_ERROR_FAILURE;
   }
 
-  // bool    isSelected =          cellData.mIsSelected;
-
   // We can't split!
   if (cellData.mEffectiveColSpan <= 1 ||
       aColSpanLeft + aColSpanRight > cellData.mEffectiveColSpan) {
@@ -2311,8 +2285,6 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
     return NS_ERROR_FAILURE;
   }
 
-  // bool    isSelected =          cellData.mIsSelected;
-
   // We can't split!
   if (cellData.mEffectiveRowSpan <= 1 ||
       aRowSpanAbove + aRowSpanBelow > cellData.mEffectiveRowSpan) {
@@ -2344,8 +2316,6 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
     if (NS_WARN_IF(cellDataAtInsertionPoint.FailedOrNotFound())) {
       return NS_ERROR_FAILURE;
     }
-
-    // bool    isSelected2 =    cellDataAtInsertionPoint.mIsSelected;
 
     // FYI: Don't use std::move() here since the following checks will use
     //      utility methods of cellDataAtInsertionPoint, but some of them
@@ -2569,9 +2539,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           return NS_ERROR_FAILURE;
         }
 
-        bool       isSelected2 =             cellData.mIsSelected;
-
-        if (isSelected2) {
+        if (cellData.mIsSelected) {
           if (!cellFoundInRow) {
             // We've just found the first selected cell in this row
             firstColInRow = cellData.mCurrent.mColumn;
@@ -2648,15 +2616,14 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           return NS_ERROR_FAILURE;
         }
 
-        bool       isSelected2 =          cellData.mIsSelected;
-
         // If this is 0, we are past last cell in row, so exit the loop
         if (!cellData.mEffectiveColSpan) {
           break;
         }
 
         // Merge only selected cells (skip cell we're merging into, of course)
-        if (isSelected2 && cellData.mElement != firstSelectedCell.mElement) {
+        if (cellData.mIsSelected &&
+            cellData.mElement != firstSelectedCell.mElement) {
           if (cellData.mCurrent.mRow >= firstSelectedCell.mIndexes.mRow &&
               cellData.mCurrent.mRow <= lastRowIndex &&
               cellData.mCurrent.mColumn >= firstSelectedCell.mIndexes.mColumn &&
@@ -2767,8 +2734,6 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
       return NS_ERROR_FAILURE;
     }
 
-    // bool    isSelected =                leftCellData.mIsSelected;
-
     // Get data for cell to the right.
     CellData rightCellData(
                *this, *table,
@@ -2778,8 +2743,6 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     if (NS_WARN_IF(rightCellData.FailedOrNotFound())) {
       return NS_ERROR_FAILURE;
     }
-
-    // bool    isSelected2 =          rightCellData.mIsSelected;
 
     // XXX So, this does not assume that CellData returns error when just not
     //     found.  We need to fix this later.
@@ -2947,8 +2910,6 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
       return NS_ERROR_FAILURE;
     }
 
-    // bool    isSelected =          cellData.mIsSelected;
-
     // XXX So, this does not assume that CellData returns error when just not
     //     found.  We need to fix this later.
     if (!cellData.mElement) {
@@ -2974,8 +2935,6 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
       if (NS_WARN_IF(cellData.FailedOrNotFound())) {
         return NS_ERROR_FAILURE;
       }
-
-      // bool    isSelected =          cellData.mIsSelected;
 
       // Fixup rowspans only for cells starting in current row
       // XXX So, this does not assume that CellData returns error when just
@@ -3030,8 +2989,6 @@ HTMLEditor::FixBadColSpan(Element* aTable,
       return NS_ERROR_FAILURE;
     }
 
-    // bool    isSelected =          cellData.mIsSelected;
-
     // XXX So, this does not assume that CellData returns error when just
     //     not found a cell.  Fix this later.
     if (!cellData.mElement) {
@@ -3056,8 +3013,6 @@ HTMLEditor::FixBadColSpan(Element* aTable,
       if (NS_WARN_IF(cellData.FailedOrNotFound())) {
         return NS_ERROR_FAILURE;
       }
-
-      // bool    isSelected =          cellData.mIsSelected;
 
       // Fixup colspans only for cells starting in current column
       // XXX So, this does not assume that CellData returns error when just
@@ -3166,8 +3121,6 @@ HTMLEditor::NormalizeTable(Selection& aSelection,
       if (NS_WARN_IF(cellData.FailedOrNotFound())) {
         return NS_ERROR_FAILURE;
       }
-
-      // bool    isSelected =                 cellData.mIsSelected;
 
       if (cellData.mElement) {
         // Save the last cell found in the same row we are scanning
@@ -3315,8 +3268,6 @@ HTMLEditor::GetNumberOfCellsInRow(Element& aTableElement,
     if (cellData.FailedOrNotFound()) {
       break;
     }
-
-    // bool    isSelected =                 cellData.mIsSelected;
 
     if (cellData.mElement) {
       // Only count cells that start in row we are working with
@@ -4297,8 +4248,6 @@ HTMLEditor::AllCellsInRowSelected(Element* aTable,
       return false;
     }
 
-    bool       isSelected =          cellData.mIsSelected;
-
     // If no cell, we may have a "ragged" right edge, so return TRUE only if
     // we already found a cell in the row.
     // XXX So, this does not assume that CellData returns error when just
@@ -4310,7 +4259,7 @@ HTMLEditor::AllCellsInRowSelected(Element* aTable,
     // Return as soon as a non-selected cell is found.
     // XXX Odd, this is testing if each cell element is selected.  Why do
     //     we need to warn if it's false??
-    if (NS_WARN_IF(!isSelected)) {
+    if (NS_WARN_IF(!cellData.mIsSelected)) {
       return false;
     }
 
@@ -4338,8 +4287,6 @@ HTMLEditor::AllCellsInColumnSelected(Element* aTable,
       return false;
     }
 
-    bool       isSelected =          cellData.mIsSelected;
-
     // If no cell, we must have a "ragged" right edge on the last column so
     // return TRUE only if we already found a cell in the row.
     // XXX So, this does not assume that CellData returns error when just
@@ -4351,7 +4298,7 @@ HTMLEditor::AllCellsInColumnSelected(Element* aTable,
     // Return as soon as a non-selected cell is found.
     // XXX Odd, this is testing if each cell element is selected.  Why do
     //     we need to warn if it's false??
-    if (NS_WARN_IF(!isSelected)) {
+    if (NS_WARN_IF(!cellData.mIsSelected)) {
       return false;
     }
 
