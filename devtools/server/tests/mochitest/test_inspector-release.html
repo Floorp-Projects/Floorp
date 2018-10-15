@@ -19,7 +19,7 @@ window.onload = function() {
 };
 
 let gWalker = null;
-let gClient = null;
+let gTarget = null;
 
 function assertOwnership() {
   return assertOwnershipTrees(gWalker);
@@ -27,9 +27,9 @@ function assertOwnership() {
 
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  const { client, target } = await attachURL(url);
+  const { target } = await attachURL(url);
   const inspector = target.getInspector();
-  gClient = client;
+  gTarget = target;
   gWalker = await inspector.getWalker();
   ok(gWalker, "getWalker() should return an actor.");
   runNextTest();
@@ -73,15 +73,15 @@ addTest(function testReleaseSubtree() {
     is(newOwnershipSize, originalOwnershipSize - 53,
       "Ownership tree should be lower");
     // Now verify that some nodes have gone away
-    return checkMissing(gClient, longlist);
+    return checkMissing(gTarget, longlist);
   }).then(() => {
-    return checkMissing(gClient, firstChild);
+    return checkMissing(gTarget, firstChild);
   }).then(runNextTest));
 });
 
 addTest(function cleanup() {
   gWalker = null;
-  gClient = null;
+  gTarget = null;
   runNextTest();
 });
   </script>
