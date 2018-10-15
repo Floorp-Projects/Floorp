@@ -72,7 +72,7 @@ function getVisibleMenuItems(aMenu, aData) {
                        item.id != "fill-login-no-logins" &&
                        // XXX Screenshots doesn't have an access key. This needs
                        // at least bug 1320462 fixing first.
-                       item.id != "screenshots_mozilla_org_create-screenshot") {
+                       item.id != "screenshots_mozilla_org-menuitem-_create-screenshot") {
               ok(key, "menuitem " + item.id + " has an access key");
               if (accessKeys[key])
                   ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
@@ -331,7 +331,7 @@ async function test_contextmenu(selector, menuItems, options = {}) {
         !Services.prefs.getBoolPref("extensions.screenshots.disabled", false)) {
       let screenshotItems = [
         "---", null,
-        "screenshots_mozilla_org_create-screenshot", true,
+        "screenshots_mozilla_org-menuitem-_create-screenshot", true,
       ];
 
       menuItems = menuItems.concat(screenshotItems);
