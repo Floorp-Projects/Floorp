@@ -33,6 +33,9 @@ mem[0] = 314159;
 assertEq(w[0], 314159);		// Shares memory (locally) with what we put in?
 mem[0] = 0;
 
+setSharedObject(3.14);	// Share numbers
+assertEq(getSharedObject(), 3.14);
+
 setSharedObject(null);	// Setting to null clears to null
 assertEq(getSharedObject(), null);
 
@@ -51,7 +54,6 @@ assertThrowsInstanceOf(() => setSharedObject([1,2]), Error);
 assertThrowsInstanceOf(() => setSharedObject(new ArrayBuffer(10)), Error);
 assertThrowsInstanceOf(() => setSharedObject(new Int32Array(10)), Error);
 assertThrowsInstanceOf(() => setSharedObject(false), Error);
-assertThrowsInstanceOf(() => setSharedObject(3.14), Error);
 assertThrowsInstanceOf(() => setSharedObject(mem), Error);
 assertThrowsInstanceOf(() => setSharedObject("abracadabra"), Error);
 assertThrowsInstanceOf(() => setSharedObject(() => 37), Error);

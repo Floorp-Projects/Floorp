@@ -6401,7 +6401,8 @@ enum class MailboxTag {
     Empty,
     SharedArrayBuffer,
     WasmMemory,
-    WasmModule
+    WasmModule,
+    Number,
 };
 
 struct SharedObjectMailbox
@@ -6412,6 +6413,7 @@ struct SharedObjectMailbox
             uint32_t              length;
         } sarb;
         const wasm::Module*       module;
+        double                    number;
     };
 
     SharedObjectMailbox() : tag(MailboxTag::Empty) {}
@@ -6441,6 +6443,7 @@ DestructSharedObjectMailbox()
         auto mbx = sharedObjectMailbox->lock();
         switch (mbx->tag) {
           case MailboxTag::Empty:
+          case MailboxTag::Number:
             break;
           case MailboxTag::SharedArrayBuffer:
           case MailboxTag::WasmMemory:
@@ -6469,6 +6472,10 @@ GetSharedObject(JSContext* cx, unsigned argc, Value* vp)
         switch (mbx->tag) {
           case MailboxTag::Empty: {
             break;
+          }
+          case MailboxTag::Number: {
+            args.rval().setNumber(mbx->val.number);
+            return true;
           }
           case MailboxTag::SharedArrayBuffer:
           case MailboxTag::WasmMemory: {
@@ -6589,6 +6596,10 @@ SetSharedObject(JSContext* cx, unsigned argc, Value* vp)
             JS_ReportErrorASCII(cx, "Invalid argument to SetSharedObject");
             return false;
         }
+    } else if (args.get(0).isNumber()) {
+        tag = MailboxTag::Number;
+        value.number = args.get(0).toNumber();
+        // Nothing
     } else if (args.get(0).isNullOrUndefined()) {
         // Nothing
     } else {
@@ -6601,6 +6612,7 @@ SetSharedObject(JSContext* cx, unsigned argc, Value* vp)
 
         switch (mbx->tag) {
           case MailboxTag::Empty:
+          case MailboxTag::Number:
             break;
           case MailboxTag::SharedArrayBuffer:
           case MailboxTag::WasmMemory:

@@ -72,6 +72,7 @@ enum ThreadType {
     THREAD_TYPE_ION_FREE,       // 9
     THREAD_TYPE_WASM_TIER2,     // 10
     THREAD_TYPE_WORKER,         // 11
+    THREAD_TYPE_CURRENT,        // 12 -- Special code to only track the current thread.
     THREAD_TYPE_MAX             // Used to check shell function arguments
 };
 
@@ -92,16 +93,24 @@ namespace oom {
 // like. Testing worker threads is not supported.
 const ThreadType FirstThreadTypeToTest = THREAD_TYPE_MAIN;
 const ThreadType LastThreadTypeToTest = THREAD_TYPE_WASM_TIER2;
+const ThreadType WorkerFirstThreadTypeToTest = THREAD_TYPE_CURRENT;
+const ThreadType WorkerLastThreadTypeToTest = THREAD_TYPE_CURRENT;
 
 extern bool InitThreadType(void);
 extern void SetThreadType(ThreadType);
 extern JS_FRIEND_API(uint32_t) GetThreadType(void);
+extern JS_FRIEND_API(uint32_t) GetAllocationThreadType(void);
+extern JS_FRIEND_API(uint32_t) GetStackCheckThreadType(void);
+extern JS_FRIEND_API(uint32_t) GetInterruptCheckThreadType(void);
 
 # else
 
 inline bool InitThreadType(void) { return true; }
 inline void SetThreadType(ThreadType t) {};
 inline uint32_t GetThreadType(void) { return 0; }
+inline uint32_t GetAllocationThreadType(void) { return 0; }
+inline uint32_t GetStackCheckThreadType(void) { return 0; }
+inline uint32_t GetInterruptCheckThreadType(void) { return 0; }
 
 # endif
 
@@ -143,7 +152,8 @@ ResetSimulatedOOM();
 inline bool
 IsThreadSimulatingOOM()
 {
-    return js::oom::targetThread && js::oom::targetThread == js::oom::GetThreadType();
+    return js::oom::targetThread &&
+        js::oom::targetThread == js::oom::GetAllocationThreadType();
 }
 
 inline bool
@@ -191,7 +201,8 @@ ResetSimulatedStackOOM();
 inline bool
 IsThreadSimulatingStackOOM()
 {
-    return js::oom::stackTargetThread && js::oom::stackTargetThread == js::oom::GetThreadType();
+    return js::oom::stackTargetThread &&
+        js::oom::stackTargetThread == js::oom::GetStackCheckThreadType();
 }
 
 inline bool
@@ -240,7 +251,8 @@ ResetSimulatedInterrupt();
 inline bool
 IsThreadSimulatingInterrupt()
 {
-    return js::oom::interruptTargetThread && js::oom::interruptTargetThread == js::oom::GetThreadType();
+    return js::oom::interruptTargetThread &&
+        js::oom::interruptTargetThread == js::oom::GetInterruptCheckThreadType();
 }
 
 inline bool
