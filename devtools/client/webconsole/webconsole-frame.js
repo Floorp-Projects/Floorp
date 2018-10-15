@@ -140,7 +140,6 @@ WebConsoleFrame.prototype = {
     if (clearStorage) {
       this.webConsoleClient.clearMessagesCache();
     }
-    this.jsterm.focus();
     this.emit("messages-cleared");
   },
 
