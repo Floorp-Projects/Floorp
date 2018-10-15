@@ -1023,7 +1023,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                     mIsFirstPaint = false;
                   }
                   if (mLayersUpdated) {
-                    animator->NotifyLayersUpdated();
+                    LayersId rootLayerTreeId = bridge->RootLayerTreeId();
+                    if (RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(rootLayerTreeId)) {
+                      uiController->NotifyLayersUpdated();
+                    }
                     mLayersUpdated = false;
                   }
                   // If this is not actually the root content then the animator is not getting updated in AsyncPanZoomController::NotifyLayersUpdated
