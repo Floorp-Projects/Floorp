@@ -186,6 +186,14 @@ public:
    */
   void ScheduleGenerateFrame();
 
+  /**
+   * Schedule forced frame rendering at next composite timing.
+   *
+   * WebRender could skip frame rendering if there is no update.
+   * This function is used to force rendering even when there is not update.
+   */
+  void ScheduleForcedGenerateFrame();
+
   wr::Epoch UpdateWebRender(CompositorVsyncScheduler* aScheduler,
                             wr::WebRenderAPI* aApi,
                             AsyncImagePipelineManager* aImageMgr,
