@@ -25,7 +25,7 @@ const noop = () => {};
  * is a front to the thread actor created in the server side, hiding the
  * protocol details in a traditional JavaScript API.
  *
- * @param client DebuggerClient|TabClient
+ * @param client DebuggerClient, WorkerClient or BrowsingContextFront
  *        The parent of the thread (tab for target-scoped debuggers,
  *        DebuggerClient for chrome debuggers).
  * @param actor string

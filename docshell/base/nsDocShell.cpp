@@ -2988,6 +2988,12 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
   // Our parent has changed. Recompute scriptability.
   RecomputeCanExecuteScripts();
 
+  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
+  if (window) {
+    auto* win = nsGlobalWindowOuter::Cast(window);
+    win->ParentWindowChanged();
+  }
+
   NS_ASSERTION(mInheritPrivateBrowsingId || wasPrivate == UsePrivateBrowsing(),
                "Private browsing state changed while inheritance was disabled");
 

@@ -774,7 +774,7 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    memcpy(binary->as<TypedArrayObject>().viewDataUnshared(), bytes.begin(), bytes.length());
+    memcpy(binary->as<TypedArrayObject>().dataPointerUnshared(), bytes.begin(), bytes.length());
 
     if (!withOffsets) {
         args.rval().setObject(*binary);

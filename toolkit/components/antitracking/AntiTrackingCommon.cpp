@@ -564,6 +564,42 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
   LOG(("Result: %s", NS_SUCCEEDED(rv) ? "success" : "failure"));
 }
 
+// static
+bool
+AntiTrackingCommon::IsStorageAccessPermission(nsIPermission* aPermission,
+                                              nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(aPermission);
+  MOZ_ASSERT(aPrincipal);
+
+  nsAutoCString origin;
+  nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  // The permission key may belong either to a tracking origin on the same
+  // origin as the granted origin, or on another origin as the granted origin
+  // (for example when a tracker in a third-party context uses window.open to
+  // open another origin where that second origin would be the granted origin.)
+  // But even in the second case, the type of the permission would still be
+  // formed by concatenating the granted origin to the end of the type name
+  // (see CreatePermissionKey).  Therefore, we pass in the same argument to
+  // both tracking origin and granted origin here in order to compute the
+  // shorter permission key and will then do a prefix match on the type of the
+  // input permission to see if it is a storage access permission or not.
+  nsAutoCString permissionKey;
+  CreatePermissionKey(origin, origin, permissionKey);
+
+  nsAutoCString type;
+  rv = aPermission->GetType(type);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return StringBeginsWith(type, permissionKey);
+}
+
 bool
 AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWindow,
                                                         nsIURI* aURI,

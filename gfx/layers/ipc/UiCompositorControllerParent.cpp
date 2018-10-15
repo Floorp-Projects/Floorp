@@ -165,9 +165,8 @@ mozilla::ipc::IPCResult
 UiCompositorControllerParent::RecvEnableLayerUpdateNotifications(const bool& aEnable)
 {
 #if defined(MOZ_WIDGET_ANDROID)
-  if (mAnimator) {
-    mAnimator->EnableLayersUpdateNotifications(aEnable);
-  }
+  // Layers updates are need by Robocop test which enables them
+  mCompositorLayersUpdateEnabled = aEnable;
 #endif // defined(MOZ_WIDGET_ANDROID)
 
   return IPC_OK();
@@ -237,8 +236,28 @@ UiCompositorControllerParent::AllocPixelBuffer(const int32_t aSize, ipc::Shmem* 
   return AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC, aMem);
 }
 
+void
+UiCompositorControllerParent::NotifyLayersUpdated()
+{
+#ifdef MOZ_WIDGET_ANDROID
+  if (mCompositorLayersUpdateEnabled) {
+    ToolbarAnimatorMessageFromCompositor(LAYERS_UPDATED);
+  }
+#endif
+}
+
+void
+UiCompositorControllerParent::NotifyFirstPaint()
+{
+  ToolbarAnimatorMessageFromCompositor(FIRST_PAINT);
+}
+
+
 UiCompositorControllerParent::UiCompositorControllerParent(const LayersId& aRootLayerTreeId)
   : mRootLayerTreeId(aRootLayerTreeId)
+#ifdef MOZ_WIDGET_ANDROID
+  , mCompositorLayersUpdateEnabled(false)
+#endif
   , mMaxToolbarHeight(0)
 {
   MOZ_COUNT_CTOR(UiCompositorControllerParent);
@@ -284,7 +303,8 @@ UiCompositorControllerParent::Initialize()
 #if defined(MOZ_WIDGET_ANDROID)
   AndroidDynamicToolbarAnimator* animator = state->mParent->GetAndroidDynamicToolbarAnimator();
   // It is possible the compositor has already started shutting down and
-  // the AndroidDynamicToolbarAnimator could be a nullptr.
+  // the AndroidDynamicToolbarAnimator could be a nullptr. Or this could be
+  // non-Fennec in which case the animator is null anyway.
   if (animator) {
     animator->Initialize(mRootLayerTreeId);
   }

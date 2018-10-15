@@ -14,6 +14,9 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+																		true]]});
+
 let expectedProps = [];
 
 function startTest() {

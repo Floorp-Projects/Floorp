@@ -408,6 +408,6 @@ function reload(target, waitForTargetEvent = "navigate") {
  * @param  {String} waitForTargetEvent Event to wait for after reload.
  */
 function navigate(target, url, waitForTargetEvent = "navigate") {
-  executeSoon(() => target.activeTab.navigateTo(url));
+  executeSoon(() => target.activeTab.navigateTo({ url }));
   return once(target, waitForTargetEvent);
 }

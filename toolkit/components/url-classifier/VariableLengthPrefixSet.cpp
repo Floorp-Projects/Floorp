@@ -39,6 +39,7 @@ VariableLengthPrefixSet::VariableLengthPrefixSet()
 nsresult
 VariableLengthPrefixSet::Init(const nsACString& aName)
 {
+  mName = aName;
   mMemoryReportPath =
     nsPrintfCString(
       "explicit/storage/prefix-set/%s",
@@ -304,7 +305,7 @@ VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in)
   NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
   if (magic != PREFIXSET_VERSION_MAGIC) {
-    LOG(("Version magic mismatch, not loading"));
+    LOG(("[%s] Version magic mismatch, not loading", mName.get()));
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -315,6 +316,7 @@ VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
+  uint32_t totalPrefixes = 0;
   for(;count > 0; count--) {
     uint8_t prefixSize;
     rv = in->Read(reinterpret_cast<char*>(&prefixSize), sizeof(uint8_t), &read);
@@ -330,6 +332,9 @@ VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in)
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
+    NS_ENSURE_TRUE(stringLength % prefixSize == 0, NS_ERROR_FILE_CORRUPTED);
+    uint32_t prefixCount = stringLength / prefixSize;
+
     nsCString* vlPrefixes = new nsCString();
     if (!vlPrefixes->SetLength(stringLength, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -340,7 +345,13 @@ VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in)
     NS_ENSURE_TRUE(read == stringLength, NS_ERROR_FAILURE);
 
     mVLPrefixSet.Put(prefixSize, vlPrefixes);
+    totalPrefixes += prefixCount;
+    LOG(("[%s] Loaded %u %u-byte prefixes", mName.get(), prefixCount,
+         prefixSize));
   }
+
+  LOG(("[%s] Loading VLPrefixSet successful (%u total prefixes)", mName.get(),
+       totalPrefixes));
 
   return NS_OK;
 }
