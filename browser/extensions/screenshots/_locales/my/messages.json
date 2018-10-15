@@ -1,0 +1,184 @@
+{
+  "addonDescription": {
+    "message": "ဝဘ်ထံမှ ဓါတ်ပုံများနှင့် မျက်နှာပြင်ပုံဖမ်းချက်များကို ရိုက်ယူပြီး ယာယီ သို့မဟုတ် အမြဲတမ်းသိုလှောင်ရာတွင် သိမ်းဆည်းပါ။"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "မျက်နှာပြင်ပုံရိပ် ဖမ်းယူပါ"
+  },
+  "myShotsLink": {
+    "message": "ရိုက်ကူးထားသော ပုံများ"
+  },
+  "screenshotInstructions": {
+    "message": "နယ်ပယ်ရွေးရန်စာမျက်နှာကို ဆွဲတင်သို့မဟုတ်ကလစ်နှိပ်ပါ. မလုပ်ဆောင်လိုလှျင်ESC နှိပ်ပါ"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "သိမ်းရန်"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "မြင်ရသည်များကို သိမ်းပါ"
+  },
+  "saveScreenshotFullPage": {
+    "message": "စာမျက်နှာတစ်ခုလုံးကို သိမ်းပါ"
+  },
+  "cancelScreenshot": {
+    "message": "မဆောင်ရွက်တော့ပါ"
+  },
+  "downloadScreenshot": {
+    "message": "ဆွဲယူရန်"
+  },
+  "downloadOnlyNotice": {
+    "message": "ဆွဲချမှု တစ်မျိုးသာသုံးသော ပုံစံဖြင့် သင်အခုသုံးနေသည်"
+  },
+  "downloadOnlyDetails": {
+    "message": "ဒီအခြေအနေတွင် Firefoxမှ ရိုက်ချက်များသည် အလိုအလျောက် ဆွဲချမှုတစ်မျိုးတည်းသာသုံးသောပုံစံသို့ ပြောင်းလဲသည်"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "သီးသန့်ကြည့်ရှုခြင်းပုံစံ"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "အခြားအပြင်ကွတ်ကီးများကို ပိတ်ထားပါ"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“မှတ်တမ်းဖျက်ခြင်း” ကို လုပ်ပါ"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Firefoxမှ ESR ကို သင့်သုံးနေပါပြီ"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "ဆွဲတင်မှုပြုလုပ်မှု ပိတ်ထားပြီးပြီ"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "လင့်ခ်ကို ကူယူပြီး"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "သင်ဖမ်းယူခဲ့သော ပုံ၏ လင့်ခ်ကို ကလစ်ဘုတ်သို့ ကူးယူပြီးပြီ။ ပွားယူရန် $META_KEY$-V ကို နှိပ်ပါ။",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "ကူးပါ"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "ရိုက်ချက်ကူးပါ"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "သင်ဖမ်းယူခဲ့သော ပုံကို ကလစ်ဘုတ်သို့ ကူးယူပြီးပြီ။ ပွားယူရန် $META_KEY$-V ကို နှိပ်ပါ။",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "သိမ်းထားသောပုံကို အမြင့်အားဖြင့် $PIXELS$px ဖြတ်ထုတ်ပါမည်။",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "ပျက်နေသည်"
+  },
+  "requestErrorDetails": {
+    "message": "စိတ်မကောင်းပါ၊ သင်ရိုက်ကူးထားသော ပုံကို မသိမ်းနိုင်ပါ။ နောင်တွင် ပြန်စမ်းကြည့်ပါ။"
+  },
+  "connectionErrorTitle": {
+    "message": "သင်ရိုက်ကူးထားသော မျက်နှာပြင်ပုံရိပ်များထံ မချိတ်ဆက်နိုင်ပါ။"
+  },
+  "connectionErrorDetails": {
+    "message": "အင်တာနက်ချိတ်ဆက်မှုကို ကျေးဇူးပြု၍ စစ်ဆေးပါ။ အကယ်၍ အင်တာနက်ကို ချိတ်ဆက်နိုင်ပါက Firefox Screenshots ဝန်ဆောင်မှုတွင် ယာယီအမှားတစ်ခု ရှိကောင်း ရှိနေလိမ့်မည်။"
+  },
+  "loginErrorDetails": {
+    "message": "သင်ဖမ်းယူခဲ့သော ပုံကို မသိမ်းနိုင်ခဲ့ပါ။ အဘယ့်ကြောင့်ဆိုသော် Firefox Screenshots ဝန်ဆောင်မှုတွင် အမှားတစ်ခု ဖြစ်ပေါ်နေ၍ ဖြစ်သည်။ ကျေးဇူးပြု၍ ထပ်ကြိုးစားကြည့်ပါ။"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "ဒီစာမျက်နှာ၏ မျက်နှာပြင်ပုံရိပ်ကို မရိုက်ကူးနိုင်ပါ။"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "ယခုဝဘ်စာမျက်နှာသည် စံနှင့်ကိုက်ညီသော ဝဘ်စာမျက်နှာ မဟုတ်ပါ။ ထို့ကြောင့် မျက်နှာပြင်ပုံဖမ်းခြင်း ပြုလုပ်နိုင်မည် မဟုတ်ပါ။"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "စာမျက်နှာတွင် Firefoxမှ ပုံဖမ်းရိုက်ချက်များကို သင်မရယူနိုင်ပါ"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "သင့်ရွေးချယ်မှု အရမ်းသေးလွန်းပါသည်"
+  },
+  "privateWindowErrorTitle": {
+    "message": "သီးသန့်ကြည့်ရှုခြင်းပုံစံတွင် ပုံဖမ်းရိုက်ချက်ရယူခြင်းပိတ်ပါ"
+  },
+  "privateWindowErrorDetails": {
+    "message": "အဆင်မပြေမှုများအတွက် တောင်းပန်ပါတယ်။ ယခုလုပ်ဆောင်ချက်ကို နောင်ထုတ်ကုန်တွင် ပါဝင်စေရန် ဆောင်ရွက်နေပါသည်။"
+  },
+  "genericErrorTitle": {
+    "message": "ဝိုး။ Firefox Screenshots မှာ အမှားဖြစ်ပေါ်ခဲ့သည်။"
+  },
+  "genericErrorDetails": {
+    "message": "ဘာဖြစ်သွားခဲ့မှန်း သေချာမသိခဲ့ပါ။ ထပ်စမ်းကြည့်လိုပါသလား သို့မဟုတ် အခြားဝဘ်စာမျက်နှာကို ပုံရိပ်ဖမ်းလိုပါသလား။"
+  },
+  "tourBodyIntro": {
+    "message": "Firefox ကနေ ထွက်ခွာရန် မလိုဘဲ မျက်နှာပြင်ပုံရိပ်များကို ရိုက်ကူး၊ သိမ်းဆည်း၊ မျှဝေပါ။"
+  },
+  "tourHeaderPageAction": {
+    "message": "သိမ်းဆဲရန် နည်းလမ်းအသစ်"
+  },
+  "tourBodyPageAction": {
+    "message": "သင် မျက်နှာပြင်ပုံရိပ်ဖမ်းလိုသည့် အခါတိုင်း လိပ်စာဘားတန်းရှိ စာမျက်နှာလုပ်ဆောင်ချက်များ မီနူးကို ဖြန့်ချပါ။"
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "ကိုယ်နှစ်သက်ရာ စာမျက်နှာများကို ဖမ်းယူပါ"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "စာမျက်နှာ၏ အစိတ်အပိုင်းကို ဖမ်းယူရန် ကလစ်နှိပ်ပြီး ဖိဆွဲပါ။ သင့်ရွေးချယ်မှုကို ထင်ရှားစေရန် ညွှန်တံမြားကို ဆိုင်ရာအစိတ်အပိုင်းပေါ် ရွှေ့နိုင်သည်။"
+  },
+  "tourHeaderFullPage": {
+    "message": "ဝင်ဒိုးများ သို့မဟုတ် စာမျက်နှာတစ်ခုလုံးကို ဖမ်းယူပါ"
+  },
+  "tourBodyFullPage": {
+    "message": "ဝင်းဒိုးထဲရှိ မြင်ရသော အကျယ်အဝန်းကို ဖမ်းယူရန် သို့မဟုတ် စာမျက်နှာတစ်ခုလုံးကို ဖမ်းယူရန် ညာဘက်အပေါ်ဘက်ရှိ ခလုတ်များကို ရွေးပါ။"
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "နှစ်သက်သလို"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "ဝဘ်တွင် အလွယ်တကူ မျှဝေရန် သို့မဟုတ် ကွန်ပျူတာထဲသို့ ဆွဲယူကူးရန် ဖြတ်တောက်ထားသော ပုံဖမ်းချက်များကို သိမ်းပါ။ ရိုက်ထားသမျှပုံများအားလုံးကို ရှာဖွေကြည့်ရှုရန် ရိုက်ထားသောပုံများတွင်လည်း ကလစ်နှိပ်ကြည့်နိုင်သည်။"
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "နောက်ဆလိုက်"
+  },
+  "tourPrevious": {
+    "message": "အရင်ကဆလိုက်"
+  },
+  "tourDone": {
+    "message": "ပြီးပြီ"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Firefoxမှ ပုံဖမ်းယူခြင်းများကို သုံးစွဲခြင်းဖြင့် သင် $TERMSANDPRIVACYNOTICETERMSLINK$ နှင့် $TERMSANDPRIVACYNOTICEPRIVACYLINK$များတွင်ပါသောအရာများကို သဘောတူညီပါသည်",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "စကားရပ်များ"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ကိုယ်ရေးကာကွယ်မှု သတိပေးချက်"
+  },
+  "libraryLabel": {
+    "message": "ပုံဖမ်းရိုက်ချက်များ"
+  }
+}
