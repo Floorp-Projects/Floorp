@@ -19,6 +19,8 @@ window.inlineSelectionCss = `
   transition: background 150ms cubic-bezier(0.07, 0.95, 0, 1), border 150ms cubic-bezier(0.07, 0.95, 0, 1);
   user-select: none;
   white-space: nowrap; }
+  .button.hidden, .hidden.highlight-button-cancel, .hidden.highlight-button-save, .hidden.highlight-button-download, .hidden.highlight-button-copy, .hidden.preview-button-save {
+    display: none; }
   .button.small, .small.highlight-button-cancel, .small.highlight-button-save, .small.highlight-button-download, .small.highlight-button-copy, .small.preview-button-save {
     height: 32px;
     line-height: 32px;
@@ -92,27 +94,15 @@ window.inlineSelectionCss = `
       background-color: #ededf0; }
     .button.edit:active, .edit.highlight-button-cancel:active, .edit.highlight-button-save:active, .edit.highlight-button-download:active, .edit.highlight-button-copy:active, .edit.preview-button-save:active {
       background-color: #dedede; }
-  .button.flag, .flag.highlight-button-cancel, .flag.highlight-button-save, .flag.highlight-button-download, .flag.highlight-button-copy, .flag.preview-button-save {
-    background-image: url("../img/icon-flag.svg"); }
-    .button.flag:hover, .flag.highlight-button-cancel:hover, .flag.highlight-button-save:hover, .flag.highlight-button-download:hover, .flag.highlight-button-copy:hover, .flag.preview-button-save:hover {
-      background-color: #ededf0; }
-    .button.flag:active, .flag.highlight-button-cancel:active, .flag.highlight-button-save:active, .flag.highlight-button-download:active, .flag.highlight-button-copy:active, .flag.preview-button-save:active {
-      background-color: #dedede; }
 
-.inverse-color-scheme {
-  background: #38383d;
-  color: #f9f9fa; }
-  .inverse-color-scheme a {
-    color: #e1e1e6; }
-
-.default-color-scheme {
+.app-body {
   background: #f9f9fa;
   color: #38383d; }
-  .default-color-scheme a {
-    color: #009ec0; }
+  .app-body a {
+    color: #0a84ff; }
 
 .highlight-color-scheme {
-  background: #009ec0;
+  background: #0a84ff;
   color: #fff; }
   .highlight-color-scheme a {
     color: #fff;
@@ -128,12 +118,12 @@ window.inlineSelectionCss = `
     text-decoration: underline; }
 
 .button.primary, .primary.highlight-button-cancel, .highlight-button-save, .primary.highlight-button-download, .primary.highlight-button-copy, .preview-button-save {
-  background-color: #009ec0;
+  background-color: #0a84ff;
   color: #fff; }
   .button.primary:hover, .primary.highlight-button-cancel:hover, .highlight-button-save:hover, .primary.highlight-button-download:hover, .primary.highlight-button-copy:hover, .preview-button-save:hover, .button.primary:focus, .primary.highlight-button-cancel:focus, .highlight-button-save:focus, .primary.highlight-button-download:focus, .primary.highlight-button-copy:focus, .preview-button-save:focus {
-    background-color: #00819c; }
+    background-color: #0072e5; }
   .button.primary:active, .primary.highlight-button-cancel:active, .highlight-button-save:active, .primary.highlight-button-download:active, .primary.highlight-button-copy:active, .preview-button-save:active {
-    background-color: #006c83; }
+    background-color: #0065cc; }
 
 .button.secondary, .highlight-button-cancel, .secondary.highlight-button-save, .highlight-button-download, .highlight-button-copy, .secondary.preview-button-save {
   background-color: #f9f9fa;
@@ -160,21 +150,19 @@ window.inlineSelectionCss = `
     background: #a11910; }
 
 .subtitle-link {
-  color: #009ec0; }
+  color: #0a84ff; }
 
 .loader {
-  background: #2e2d30;
+  background: rgba(12, 12, 13, 0.2);
   border-radius: 2px;
   height: 4px;
   overflow: hidden;
   position: relative;
   width: 200px; }
-  #shot-index .loader {
-    background-color: #dedede; }
 
 .loader-inner {
   animation: bounce infinite alternate 1250ms cubic-bezier(0.7, 0, 0.3, 1);
-  background: #04d1e6;
+  background: #45a1ff;
   border-radius: 2px;
   height: 4px;
   transform: translateX(-40px);
@@ -400,6 +388,14 @@ window.inlineSelectionCss = `
     background-repeat: no-repeat;
     height: 16px;
     width: 16px; }
+  .notice.middle {
+    display: none;
+    top: calc(50% - 21px); }
+
+.preview-button-save:active ~ .notice.middle,
+.preview-button-save:focus ~ .notice.middle,
+.preview-button-save:hover ~ .notice.middle {
+  display: block; }
 
 .notice-tooltip {
   background: #fff;

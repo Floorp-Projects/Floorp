@@ -52,6 +52,8 @@ this.startBackground = (function() {
     });
   });
 
+  browser.experiments.screenshots.initLibraryButton();
+
   browser.runtime.onMessage.addListener((req, sender, sendResponse) => {
     loadIfNecessary().then(() => {
       return communication.onMessage(req, sender, sendResponse);

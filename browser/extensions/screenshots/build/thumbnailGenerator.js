@@ -1,4 +1,4 @@
-this.thumbnailGenerator = (function () {let exports={}; // This is used in addon/webextension/background/takeshot.js,
+this.thumbnailGenerator = (function () {let exports={}; // This is used in webextension/background/takeshot.js,
 // server/src/pages/shot/controller.js, and
 // server/scr/pages/shotindex/view.js. It is used in a browser
 // environment.
