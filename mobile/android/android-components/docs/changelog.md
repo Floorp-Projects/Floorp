@@ -4,12 +4,13 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.27.0-SNAPTSHOT (In Development)
+# 0.27.0
 
-Release date: TBD
+Release date: 2018-10-16
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.26.0..master),
-[Milestone](https://github.com/mozilla-mobile/android-components/milestone/27?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.26.0...v0.27.0),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/27?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.27.0/index)
 
 * Compiled against:
   * Android (SDK: 27, Support Libraries: 27.1.1)
