@@ -86,6 +86,7 @@ function assertMarkupViewIsLoaded(inspector) {
 }
 
 function assertMarkupViewIsEmpty(inspector) {
-  const markupViewBox = inspector.panelDoc.getElementById("markup-box");
-  is(markupViewBox.childNodes.length, 0, "The markup-view is unloaded");
+  const markupFrame = inspector._markupFrame;
+  is(markupFrame.contentDocument.getElementById("root").childNodes.length, 0,
+    "The markup-view is unloaded");
 }
