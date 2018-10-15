@@ -67,8 +67,7 @@ async function loadURL(url, {frameCount}) {
   Services.obs.addObserver(loadObserver, "content-document-global-created");
 
   let webNav = Services.appShell.createWindowlessBrowser(false);
-  let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-  webNav.loadURI(url, 0, null, null, null, systemPrincipal);
+  webNav.loadURI(url, 0, null, null, null);
 
   await loadPromise;
 
