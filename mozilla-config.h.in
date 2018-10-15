@@ -45,17 +45,6 @@
  */
 #if defined(CHROMIUM_SANDBOX_BUILD) && defined(XP_WIN)
 #include "base/win/sdkdecls.h"
-
-#ifdef __MINGW32__
-/*
- * MinGW doesn't support __try / __except. There are a few mechanisms available
- * to hack around it and pseudo-support it, but these are untested in Firefox.
- * What is tested (and works) is replacing them with if(true) and else.
- */
-#define __try if(true)
-#define __except(x) else
-
-#endif /* __MINGW32__ */
 #endif /* defined(CHROMIUM_SANDBOX_BUILD) && defined(XP_WIN) */
 
 #endif /* MOZILLA_CONFIG_H */
