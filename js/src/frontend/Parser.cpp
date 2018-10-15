@@ -1397,7 +1397,7 @@ PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(CodeNo
     return true;
 }
 
-static bool
+bool
 DeclarationKindIsVar(DeclarationKind kind)
 {
     return kind == DeclarationKind::Var ||

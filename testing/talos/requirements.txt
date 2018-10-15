@@ -7,6 +7,7 @@ mozinfo>=0.8
 mozprocess>=0.22
 mozversion>=1.3
 mozprofile>=0.25
+mozrunner>=7.1.0
 psutil>=3.1.1
 simplejson>=2.1.1
 requests>=2.9.1

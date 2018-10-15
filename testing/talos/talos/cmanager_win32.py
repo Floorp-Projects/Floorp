@@ -10,8 +10,8 @@ from ctypes import windll
 from ctypes.wintypes import DWORD, HANDLE, LPSTR, LPCSTR, LPCWSTR, Structure, \
     pointer, LONG
 
-from cmanager_base import CounterManager
-from utils import TalosError
+from talos.cmanager_base import CounterManager
+from talos.utils import TalosError
 
 pdh = windll.pdh
 

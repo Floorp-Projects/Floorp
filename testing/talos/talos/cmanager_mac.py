@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function
 import subprocess
 import sys
 
-from cmanager_base import CounterManager
+from talos.cmanager_base import CounterManager
 
 
 def GetProcessData(pid):

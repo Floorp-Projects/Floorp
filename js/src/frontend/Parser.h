@@ -1700,6 +1700,10 @@ JSFunction*
 AllocNewFunction(JSContext* cx, HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                  HandleObject proto, bool isSelfHosting = false, bool inFunctionBox = false);
 
+// Returns true if the declaration is `var` or equivalent.
+bool
+DeclarationKindIsVar(DeclarationKind kind);
+
 } /* namespace frontend */
 } /* namespace js */
 
