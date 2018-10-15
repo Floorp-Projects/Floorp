@@ -8,6 +8,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
   const { AbstractShot } = shot;
 
   const RANDOM_STRING_LENGTH = 16;
+  const MAX_CANVAS_DIMENSION = 32767;
   let backend;
   let shotObject;
   let supportsDrawWindow;
@@ -40,10 +41,12 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
   })();
 
   function captureToCanvas(selectedPos, captureType) {
-    const height = selectedPos.bottom - selectedPos.top;
-    const width = selectedPos.right - selectedPos.left;
+    let height = selectedPos.bottom - selectedPos.top;
+    let width = selectedPos.right - selectedPos.left;
     const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     const ctx = canvas.getContext("2d");
+
+    // Scale the canvas for high-density displays, except for full-page shots.
     let expand = window.devicePixelRatio !== 1;
     if (captureType === "fullPage" || captureType === "fullPageTruncated") {
       expand = false;
@@ -56,6 +59,19 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     if (expand) {
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
+
+    // Double-check canvas width and height are within the canvas pixel limit.
+    // If the canvas dimensions are too great, crop the canvas and also crop
+    // the selection by a devicePixelRatio-scaled amount.
+    if (canvas.width > MAX_CANVAS_DIMENSION) {
+      canvas.width = MAX_CANVAS_DIMENSION;
+      width = expand ? Math.floor(canvas.width / window.devicePixelRatio) : canvas.width;
+    }
+    if (canvas.height > MAX_CANVAS_DIMENSION) {
+      canvas.height = MAX_CANVAS_DIMENSION;
+      height = expand ? Math.floor(canvas.height / window.devicePixelRatio) : canvas.height;
+    }
+
     ui.iframe.hide();
     ctx.drawWindow(window, selectedPos.left, selectedPos.top, width, height, "#fff");
     return canvas;

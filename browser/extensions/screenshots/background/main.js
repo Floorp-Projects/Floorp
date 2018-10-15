@@ -6,7 +6,7 @@ this.main = (function() {
   const exports = {};
 
   const pasteSymbol = (window.navigator.platform.match(/Mac/i)) ? "\u2318" : "Ctrl";
-  const { sendEvent } = analytics;
+  const { sendEvent, incrementCount } = analytics;
 
   const manifest = browser.runtime.getManifest();
   let backend;
@@ -71,7 +71,7 @@ this.main = (function() {
       if (!isLoaded) {
         sendEvent("start-shot", "site-request", {incognito: tab.incognito});
         setIconActive(true, tab.id);
-        selectorLoader.toggle(tab.id, false);
+        selectorLoader.toggle(tab.id, Promise.resolve(false));
       }
     });
   }
@@ -96,7 +96,7 @@ this.main = (function() {
           sendEvent("goto-myshots", "about-newtab", {incognito: tab.incognito});
         }));
         catcher.watchPromise(
-          auth.authHeaders()
+          auth.maybeLogin()
           .then(() => browser.tabs.update({url: backend + "/shots"})));
       } else {
         catcher.watchPromise(
@@ -189,7 +189,7 @@ this.main = (function() {
 
   communication.register("openMyShots", (sender) => {
     return catcher.watchPromise(
-      auth.authHeaders()
+      auth.maybeLogin()
       .then(() => browser.tabs.create({url: backend + "/shots"})));
   });
 
@@ -229,7 +229,7 @@ this.main = (function() {
     return blobConverters.blobToArray(blob).then(buffer => {
       return browser.clipboard.setImageData(
         buffer, blob.type.split("/", 2)[1]).then(() => {
-          catcher.watchPromise(communication.sendToBootstrap("incrementCount", {scalar: "copy"}));
+          catcher.watchPromise(incrementCount("copy"));
           return browser.notifications.create({
             type: "basic",
             iconUrl: "../icons/copied-notification.svg",
@@ -256,7 +256,7 @@ this.main = (function() {
       }
     });
     browser.downloads.onChanged.addListener(onChangedCallback);
-    catcher.watchPromise(communication.sendToBootstrap("incrementCount", {scalar: "download"}));
+    catcher.watchPromise(incrementCount("download"));
     return browser.windows.getLastFocused().then(windowInfo => {
       return browser.downloads.download({
         url,
@@ -299,6 +299,11 @@ this.main = (function() {
     return catcher.watchPromise(browser.runtime.getPlatformInfo().then(platformInfo => {
       return platformInfo.os;
     }));
+  });
+
+  // This allows the web site show notifications through sitehelper.js
+  communication.register("showNotification", (sender, notification) => {
+    return browser.notifications.create(notification);
   });
 
   return exports;

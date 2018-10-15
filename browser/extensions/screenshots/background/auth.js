@@ -11,19 +11,26 @@ this.auth = (function() {
   let authHeader = null;
   let sentryPublicDSN = null;
   let abTests = {};
+  let accountId = null;
 
-  const registrationInfoFetched = catcher.watchPromise(browser.storage.local.get(["registrationInfo", "abTests"]).then((result) => {
-    if (result.abTests) {
-      abTests = result.abTests;
-    }
-    if (result.registrationInfo) {
-      registrationInfo = result.registrationInfo;
-    } else {
+  const fetchStoredInfo = catcher.watchPromise(
+    browser.storage.local.get(["registrationInfo", "abTests"]).then((result) => {
+      if (result.abTests) {
+        abTests = result.abTests;
+      }
+      if (result.registrationInfo) {
+        registrationInfo = result.registrationInfo;
+      }
+  }));
+
+  function getRegistrationInfo() {
+    if (!registrationInfo) {
       registrationInfo = generateRegistrationInfo();
       log.info("Generating new device authentication ID", registrationInfo);
       browser.storage.local.set({registrationInfo});
     }
-  }));
+    return registrationInfo;
+  }
 
   exports.getDeviceId = function() {
     return registrationInfo && registrationInfo.deviceId;
@@ -77,59 +84,63 @@ this.auth = (function() {
   function login(options) {
     const { ownershipCheck, noRegister } = options || {};
     return new Promise((resolve, reject) => {
-      const loginUrl = main.getBackend() + "/api/login";
-      // TODO: replace xhr with Fetch #2261
-      const req = new XMLHttpRequest();
-      req.open("POST", loginUrl);
-      req.onload = catcher.watchFunction(() => {
-        if (req.status === 404) {
-          if (noRegister) {
-            resolve(false);
+      return fetchStoredInfo.then(() => {
+        const registrationInfo = getRegistrationInfo();
+        const loginUrl = main.getBackend() + "/api/login";
+        // TODO: replace xhr with Fetch #2261
+        const req = new XMLHttpRequest();
+        req.open("POST", loginUrl);
+        req.onload = catcher.watchFunction(() => {
+          if (req.status === 404) {
+            if (noRegister) {
+              resolve(false);
+            } else {
+              resolve(register());
+            }
+          } else if (req.status >= 300) {
+            log.warn("Error in response:", req.responseText);
+            const exc = new Error("Could not log in: " + req.status);
+            exc.popupMessage = "LOGIN_ERROR";
+            analytics.sendEvent("login-failed", `bad-response-${req.status}`);
+            reject(exc);
+          } else if (req.status === 0) {
+            const error = new Error("Could not log in, server unavailable");
+            error.popupMessage = "LOGIN_CONNECTION_ERROR";
+            analytics.sendEvent("login-failed", "connection-error");
+            reject(error);
           } else {
-            resolve(register());
+            initialized = true;
+            const jsonResponse = JSON.parse(req.responseText);
+            log.info("Screenshots logged in");
+            analytics.sendEvent("login");
+            saveAuthInfo(jsonResponse);
+            if (ownershipCheck) {
+              resolve({isOwner: jsonResponse.isOwner});
+            } else {
+              resolve(true);
+            }
           }
-        } else if (req.status >= 300) {
-          log.warn("Error in response:", req.responseText);
-          const exc = new Error("Could not log in: " + req.status);
-          exc.popupMessage = "LOGIN_ERROR";
-          analytics.sendEvent("login-failed", `bad-response-${req.status}`);
-          reject(exc);
-        } else if (req.status === 0) {
-          const error = new Error("Could not log in, server unavailable");
-          error.popupMessage = "LOGIN_CONNECTION_ERROR";
+        });
+        req.onerror = catcher.watchFunction(() => {
           analytics.sendEvent("login-failed", "connection-error");
-          reject(error);
-        } else {
-          initialized = true;
-          const jsonResponse = JSON.parse(req.responseText);
-          log.info("Screenshots logged in");
-          analytics.sendEvent("login");
-          saveAuthInfo(jsonResponse);
-          if (ownershipCheck) {
-            resolve({isOwner: jsonResponse.isOwner});
-          } else {
-            resolve(true);
-          }
-        }
+          const exc = new Error("Connection failed");
+          exc.url = loginUrl;
+          exc.popupMessage = "CONNECTION_ERROR";
+          reject(exc);
+        });
+        req.setRequestHeader("content-type", "application/json");
+        req.send(JSON.stringify({
+          deviceId: registrationInfo.deviceId,
+          secret: registrationInfo.secret,
+          deviceInfo: JSON.stringify(deviceInfo()),
+          ownershipCheck,
+        }));
       });
-      req.onerror = catcher.watchFunction(() => {
-        analytics.sendEvent("login-failed", "connection-error");
-        const exc = new Error("Connection failed");
-        exc.url = loginUrl;
-        exc.popupMessage = "CONNECTION_ERROR";
-        reject(exc);
-      });
-      req.setRequestHeader("content-type", "application/json");
-      req.send(JSON.stringify({
-        deviceId: registrationInfo.deviceId,
-        secret: registrationInfo.secret,
-        deviceInfo: JSON.stringify(deviceInfo()),
-        ownershipCheck
-      }));
     });
   }
 
   function saveAuthInfo(responseJson) {
+    accountId = responseJson.accountId;
     if (responseJson.sentryPublicDSN) {
       sentryPublicDSN = responseJson.sentryPublicDSN;
     }
@@ -146,8 +157,12 @@ this.auth = (function() {
     }
   }
 
-  exports.getDeviceId = function() {
-    return registrationInfo.deviceId;
+  exports.maybeLogin = function() {
+    if (!registrationInfo) {
+      return Promise.resolve();
+    }
+
+    return exports.authHeaders();
   };
 
   exports.authHeaders = function() {
@@ -173,27 +188,33 @@ this.auth = (function() {
   };
 
   exports.isRegistered = function() {
-    return registrationInfo.registered;
+    return registrationInfo && registrationInfo.registered;
   };
 
   communication.register("getAuthInfo", (sender, ownershipCheck) => {
-    return registrationInfoFetched.then(() => {
-      return exports.authHeaders();
-    }).then((authHeaders) => {
-      let info = registrationInfo;
-      if (info.registered) {
-        return login({ownershipCheck}).then((result) => {
-          return {
-            isOwner: result && result.isOwner,
-            deviceId: registrationInfo.deviceId,
-            authHeaders
-          };
-        });
+    return fetchStoredInfo.then(() => {
+      // If a device id was never generated, report back accordingly.
+      if (!registrationInfo) {
+        return null;
       }
-      info = Object.assign({authHeaders}, info);
-      return info;
-    });
+
+      return exports.authHeaders().then((authHeaders) => {
+        let info = registrationInfo;
+        if (info.registered) {
+          return login({ownershipCheck}).then((result) => {
+            return {
+              isOwner: result && result.isOwner,
+              deviceId: registrationInfo.deviceId,
+              accountId,
+              authHeaders,
+            };
+          });
+        }
+        info = Object.assign({authHeaders}, info);
+        return info;
+      });
   });
+});
 
   return exports;
 })();
