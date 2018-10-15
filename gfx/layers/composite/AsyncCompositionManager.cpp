@@ -1020,6 +1020,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                   if (mIsFirstPaint) {
                     animator->UpdateRootFrameMetrics(metrics);
                     animator->FirstPaint();
+                    LayersId rootLayerTreeId = bridge->RootLayerTreeId();
+                    if (RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(rootLayerTreeId)) {
+                      uiController->NotifyFirstPaint();
+                    }
                     mIsFirstPaint = false;
                   }
                   if (mLayersUpdated) {
