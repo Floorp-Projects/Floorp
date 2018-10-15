@@ -14,6 +14,7 @@
 namespace js {
 namespace jit {
 
+// clang-format off
 //{{{ check_macroassembler_style
 
 void
@@ -758,6 +759,7 @@ MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src, Register 
 }
 
 //}}} check_macroassembler_style
+// clang-format on
 // ===============================================================
 
 // The specializations for cmpPtrSet are outside the braces because check_macroassembler_style can't yet
