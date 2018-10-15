@@ -81,7 +81,7 @@ function setup(settings) {
     getFCP = settings.measure.fcp;
     if (getFCP) {
       console.log("will be measuring first-contentful-paint");
-      measureFirstContentfulPaint();
+      measureFCP();
     }
   }
 
@@ -224,16 +224,16 @@ function measureTTFI() {
   }
 }
 
-function measureFirstContentfulPaint() {
+function measureFCP() {
   // see https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming
   var resultType = "fcp";
   var result = 0;
 
-  let performanceEntries = perfData.getEntriesByType("paint");
+  let perfEntries = perfData.getEntriesByType("paint");
 
-  if (performanceEntries.length >= 2) {
-    if (performanceEntries[1].startTime != undefined)
-      result = performanceEntries[1].startTime;
+  if (perfEntries.length >= 2) {
+    if (perfEntries[1].name == "first-contentful-paint" && perfEntries[1].startTime != undefined)
+      result = perfEntries[1].startTime;
   }
 
   if (result > 0) {
@@ -245,7 +245,7 @@ function measureFirstContentfulPaint() {
     gRetryCounter += 1;
     if (gRetryCounter <= 10) {
       console.log("\ntime to first-contentful-paint is not yet available (0), retry number " + gRetryCounter + "...\n");
-      window.setTimeout(measureFirstContentfulPaint, 100);
+      window.setTimeout(measureFCP, 100);
     } else {
       console.log("\nunable to get a value for time-to-fcp after " + gRetryCounter + " retries\n");
     }
