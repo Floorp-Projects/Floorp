@@ -2557,8 +2557,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             break;
           }
           // Save max selected column in this row, including extra colspan
-          lastColInRow =
-            cellData.mCurrent.mColumn + cellData.NumberOfFollowingColumns();
+          lastColInRow = cellData.LastColumnIndex();
           cellFoundInRow = true;
         } else if (cellFoundInRow) {
           // No cell or not selected, but at least one cell in row was found
