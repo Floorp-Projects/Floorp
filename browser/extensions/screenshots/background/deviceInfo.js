@@ -27,7 +27,7 @@ this.deviceInfo = (function() {
       // platformVersion: system.platformVersion,
       userAgent: navigator.userAgent,
       appVendor: appName,
-      appName
+      appName,
     };
   };
 

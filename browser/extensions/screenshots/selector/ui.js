@@ -130,7 +130,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       timer: null,
       windowDelayer: null,
       lastHeight: null,
-      lastWidth: null
+      lastWidth: null,
     },
     document: null,
     display(installHandlerOnDocument) {
@@ -262,7 +262,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       this.stopSizeWatch();
       util.removeNode(this.element);
       this.element = this.document = null;
-    }
+    },
   };
 
   iframeSelection.onResize = watchFunction(assertIsTrusted(onResize.bind(iframeSelection)), true);
@@ -376,7 +376,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       util.removeNode(this.element);
       this.element = null;
       this.document = null;
-    }
+    },
   };
 
   const iframePreview = exports.iframePreview = {
@@ -480,7 +480,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       util.removeNode(this.element);
       this.element = null;
       this.document = null;
-    }
+    },
   };
 
   iframePreSelection.onResize = watchFunction(onResize.bind(iframePreSelection), true);
@@ -544,7 +544,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       }
       this.currentIframe = iframePreview;
       this.unhide();
-    }
+    },
   };
 
   const movements = ["topLeft", "top", "topRight", "left", "right", "bottomLeft", "bottom", "bottomRight"];
@@ -815,7 +815,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     boxTopEl: null,
     boxLeftEl: null,
     boxRightEl: null,
-    boxBottomEl: null
+    boxBottomEl: null,
   };
 
   exports.HoverBox = {
@@ -846,7 +846,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     remove() {
       util.removeNode(this.el);
       this.el = null;
-    }
+    },
   };
 
   exports.PixelDimensions = {
@@ -870,7 +870,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     remove() {
       util.removeNode(this.el);
       this.el = this.xEl = this.yEl = null;
-    }
+    },
   };
 
   exports.Preview = {
@@ -890,7 +890,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
         contentCell[0].textContent = browser.i18n.getMessage("imageCropPopupWarning", buildSettings.maxImageHeight);
         iframe.document().querySelector(".preview-buttons").appendChild(imageCroppedEl);
       }
-    }
+    },
   };
 
   /** Removes every UI this module creates */
