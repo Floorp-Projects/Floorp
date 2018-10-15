@@ -1641,8 +1641,8 @@ function sortList(aList, aSortBy, aAscending) {
   var elements = Array.slice(aList.childNodes, 0);
   sortElements(elements, [aSortBy], aAscending);
 
-  while (aList.listChild)
-    aList.removeChild(aList.lastChild);
+  while (aList.lastChild)
+    aList.lastChild.remove();
 
   for (let element of elements)
     aList.appendChild(element);
