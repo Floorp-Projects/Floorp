@@ -12,6 +12,7 @@ import org.mozilla.focus.web.IWebView
 import mozilla.components.browser.session.Session
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.shouldRequestDesktopSite
+import org.mozilla.focus.utils.AppConstants
 
 @Suppress("TooManyFunctions")
 class SessionCallbackProxy(private val session: Session, private val delegate: IWebView.Callback) : IWebView.Callback {
@@ -25,7 +26,9 @@ class SessionCallbackProxy(private val session: Session, private val delegate: I
         // from the WebView.
         session.progress = MINIMUM_PROGRESS
 
-        session.url = url
+        if (!AppConstants.isGeckoBuild) {
+            session.url = url
+        }
     }
 
     override fun onPageFinished(isSecure: Boolean) {
