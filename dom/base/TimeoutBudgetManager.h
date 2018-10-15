@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_timeoutbudgetmanager_h
 #define mozilla_dom_timeoutbudgetmanager_h
 
-#include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 
 namespace mozilla {
@@ -22,24 +21,11 @@ public:
   void StartRecording(const TimeStamp& aNow);
   void StopRecording();
   TimeDuration RecordExecution(const TimeStamp& aNow,
-                               const Timeout* aTimeout,
-                               bool aIsBackground);
-  void MaybeCollectTelemetry(const TimeStamp& aNow);
+                               const Timeout* aTimeout);
 private:
-  TimeoutBudgetManager() : mLastCollection(TimeStamp::Now()) {}
-  struct TelemetryData
-  {
-    TimeDuration mForegroundTracking;
-    TimeDuration mForegroundNonTracking;
-    TimeDuration mBackgroundTracking;
-    TimeDuration mBackgroundNonTracking;
-  };
+  TimeoutBudgetManager() = default;
 
-  void Accumulate(Telemetry::HistogramID aId, const TimeDuration& aSample);
-
-  TelemetryData mTelemetryData;
   TimeStamp mStart;
-  TimeStamp mLastCollection;
 };
 
 } // namespace dom

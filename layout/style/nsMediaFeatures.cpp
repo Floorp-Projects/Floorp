@@ -22,6 +22,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/GeckoBindings.h"
 
 using namespace mozilla;
 

@@ -4,41 +4,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* types defined to pass values through Gecko_* and Servo_* FFI functions */
+
 #ifndef mozilla_ServoTypes_h
 #define mozilla_ServoTypes_h
 
+#include "mozilla/RefPtr.h"
+#include "mozilla/SheetType.h"
 #include "mozilla/TypedEnumBits.h"
+#include "nsCoord.h"
 
-/*
- * Type definitions used to interact with Servo. This gets included by nsINode,
- * so don't add significant include dependencies to this file.
- */
+struct RawServoFontFaceRule;
 
-class nsWindowSizes;
-struct ServoNodeData;
 namespace mozilla {
+  struct LangGroupFontPrefs;
+}
 
-class SizeOfState;
-
-/*
- * Replaced types. These get mapped to associated Servo types in bindgen.
- */
-
-template<typename T>
-struct ServoUnsafeCell {
-  T value;
-
-  // Ensure that primitive types (i.e. pointers) get zero-initialized.
-  ServoUnsafeCell() : value() {};
+// used for associating sheet type with specific @font-face rules
+struct nsFontFaceRuleContainer
+{
+  RefPtr<RawServoFontFaceRule> mRule;
+  mozilla::SheetType mSheetType;
 };
 
-template<typename T>
-struct ServoCell {
-  ServoUnsafeCell<T> value;
-  T Get() const { return value.value; }
-  void Set(T arg) { value.value = arg; }
-  ServoCell() : value() {};
-};
+namespace mozilla {
 
 // Indicates whether the Servo style system should expect the style on an element
 // to have already been resolved (i.e. via a parallel traversal), or whether it
@@ -158,11 +147,32 @@ public:
   {}
 };
 
-template <typename T>
-struct ServoRawOffsetArc {
-  // Again, a strong reference, but
-  // managed by the Rust code
-  T* mPtr;
+// A callback that can be sent via FFI which will be invoked _right before_
+// being mutated, and at most once.
+struct DeclarationBlockMutationClosure
+{
+  // The callback function. The argument is `data`.
+  void (*function)(void*) = nullptr;
+  void* data = nullptr;
+};
+
+struct MediumFeaturesChangedResult
+{
+  bool mAffectsDocumentRules;
+  bool mAffectsNonDocumentRules;
+  bool mUsesViewportUnits;
+};
+
+struct FontSizePrefs
+{
+  void CopyFrom(const mozilla::LangGroupFontPrefs&);
+  nscoord mDefaultVariableSize;
+  nscoord mDefaultFixedSize;
+  nscoord mDefaultSerifSize;
+  nscoord mDefaultSansSerifSize;
+  nscoord mDefaultMonospaceSize;
+  nscoord mDefaultCursiveSize;
+  nscoord mDefaultFantasySize;
 };
 
 } // namespace mozilla

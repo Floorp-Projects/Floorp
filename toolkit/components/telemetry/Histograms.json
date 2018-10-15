@@ -13179,51 +13179,6 @@
     "keyed": true,
     "description": "Measures the number of milliseconds we spend waiting for sync message manager IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds are included in this probe."
   },
-  "TIMEOUT_EXECUTION_FG_MS":
-  {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1355480],
-    "expires_in_version": "61",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 20,
-    "description": "Time in ms used to execute callbacks from setTimeout/setInterval, when the script belongs to a tab in the foreground and the script is not on the tracking list. Multiple events are aggregated over a 1s interval."
-  },
-  "TIMEOUT_EXECUTION_FG_TRACKING_MS":
-  {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1355480],
-    "expires_in_version": "61",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 20,
-    "description": "Time in ms used to execute callbacks from setTimeout/setInterval, when the script belongs to a tab in the foreground and the script is on the tracking list. Multiple events are aggregated over a 1s interval."
-  },
-  "TIMEOUT_EXECUTION_BG_MS":
-  {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1355480],
-    "expires_in_version": "61",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 20,
-    "description": "Time in ms used to execute callbacks from setTimeout/setInterval, when the script belongs to a tab in the background and the script is not on the tracking list. Multiple events are aggregated over a 1s interval."
-  },
-  "TIMEOUT_EXECUTION_BG_TRACKING_MS":
-  {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1355480],
-    "expires_in_version": "61",
-    "kind": "exponential",
-    "low": 1,
-    "high": 1000,
-    "n_buckets": 10,
-    "description": "Time in ms used to execute callbacks from setTimeout/setInterval, when the script belongs to a tab in the background and the script is on the tracking list. Multiple events are aggregated over a 1s interval."
-  },
   "TIME_TO_DOM_LOADING_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["hbambas@mozilla.com", "vgosu@mozilla.com", "jduell@mozilla.com"],
