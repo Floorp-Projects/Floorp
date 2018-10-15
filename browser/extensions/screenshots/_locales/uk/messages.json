@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "Робіть вирізки та знімки екрану в Інтернеті та зберігайте їх для подальшої роботи."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Зробити знімок екрану"
+  },
+  "myShotsLink": {
+    "message": "Мої знімки"
+  },
+  "screenshotInstructions": {
+    "message": "Потягніть або клацніть на сторінці для вибору області. Натисніть ESC для скасування."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Зберегти"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Зберегти видиму область"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Зберегти всю сторінку"
+  },
+  "cancelScreenshot": {
+    "message": "Скасувати"
+  },
+  "downloadScreenshot": {
+    "message": "Завантажити"
+  },
+  "downloadOnlyNotice": {
+    "message": "Ви зараз в режимі лише завантаження."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots автоматично переходить в режим лише завантаження в таких випадках:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "У вікні приватного перегляду."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Сторонні куки вимкнено."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Активовано налаштування “Ніколи не пам'ятати історії”."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Ви використовуєте Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Вивантаження було вимкнено."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Посилання скопійовано"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Посилання на ваш знімок було скопійоване до буфера обміну. Натисніть $META_KEY$-V для вставлення.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Копіювати"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Знімок скопійовано"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Ваш знімок був скопійований в буфер обміну. Натисніть $META_KEY$-V, щоб вставити.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Збережене зображення буде обрізано до $PIXELS$ пікселів по висоті.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Сталася помилка."
+  },
+  "requestErrorDetails": {
+    "message": "Вибачте! Нам не вдалося зберегти ваш знімок. Спробуйте знову пізніше."
+  },
+  "connectionErrorTitle": {
+    "message": "Ми не можемо отримати доступ до ваших знімків."
+  },
+  "connectionErrorDetails": {
+    "message": "Будь ласка, перевірте ваше підключення до Інтернету. Якщо у вас все в порядку з Інтернетом, можливо, виникли тимчасові проблеми зі службою Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Нам не вдалося зберегти ваш знімок, тому що виникли проблеми зі службою Firefox Screenshots. Спробуйте знову пізніше."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ми не можемо зробити знімок цієї сторінки."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Це не стандартна веб-сторінка, тому ви не можете зробити її знімок."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Ви не можете зробити знімок сторінки Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Обрана область є замалою"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Знімки екрану вимкнено в приватному перегляді"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Вибачте за незручності. Ми працюємо над цією функцією для майбутніх випусків."
+  },
+  "genericErrorTitle": {
+    "message": "Оу! З Firefox Screenshots щось негаразд."
+  },
+  "genericErrorDetails": {
+    "message": "Ми не впевнені, в чому проблема. Спробувати ще раз, або ж зробити знімок іншої сторінки?"
+  },
+  "tourBodyIntro": {
+    "message": "Робіть знімки екрану, зберігайте та діліться ними прямо в Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Новий спосіб збереження"
+  },
+  "tourBodyPageAction": {
+    "message": "Розгорніть меню дій для сторінки в панелі адреси, коли ви хочете зробити знімок екрану."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Робіть знімки чого завгодно"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Клацніть і потягніть мишею для захоплення частини сторінки. Ви також можете навести курсор миші для підсвічення вибраної області."
+  },
+  "tourHeaderFullPage": {
+    "message": "Захоплюйте вікна або цілі сторінки"
+  },
+  "tourBodyFullPage": {
+    "message": "За допомогою кнопок у верхній правій частині обирайте захоплення видимої області вікна, або сторінки повністю."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Як вам подобається"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Зберігайте свої знімки в Інтернеті, щоб легко ними ділитися, або завантажуйте їх на свій комп'ютер. Ви також можете переглянути всі збережені знімки, натиснувши на кнопку Мої знімки."
+  },
+  "tourHeaderAccounts": {
+    "message": "Знімки екрану на ходу"
+  },
+  "tourBodyAccounts": {
+    "message": "Увійдіть в обліковий запис Firefox, щоб отримати доступ до своїх знімків на всіх пристроях і зберігати обрані знімки без обмежень."
+  },
+  "tourSkip": {
+    "message": "Пропустити"
+  },
+  "tourNext": {
+    "message": "Наступний слайд"
+  },
+  "tourPrevious": {
+    "message": "Попередній слайд"
+  },
+  "tourDone": {
+    "message": "Готово"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Використовуючи Firefox Screenshots, ви погоджуєтеся з нашими $TERMSANDPRIVACYNOTICETERMSLINK$ та $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Умовами використання"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Повідомленням про приватність"
+  },
+  "libraryLabel": {
+    "message": "Знімки екрану"
+  }
+}

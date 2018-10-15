@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "გადაუღეთ ვიდეოები და სურათები ვებგვერდებს და შეინახეთ დროებით, ან მუდმივად."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "ეკრანისთვის სურათის გადაღება"
+  },
+  "myShotsLink": {
+    "message": "ჩემი გადაღებულები"
+  },
+  "screenshotInstructions": {
+    "message": "გადაადგილეთ ან დააწკაპეთ გვერდზე სივრცის მოსანიშნად. გასაუქმებლად დააჭირეთ ESC-ს."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "შენახვა"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "ხილული ნაწილის შენახვა"
+  },
+  "saveScreenshotFullPage": {
+    "message": "მთლიანი გვერდის შენახვა"
+  },
+  "cancelScreenshot": {
+    "message": "გაუქმება"
+  },
+  "downloadScreenshot": {
+    "message": "ჩამოტვირთვა"
+  },
+  "downloadOnlyNotice": {
+    "message": "თქვენ ახლა იმყოფებით „მხოლოდ ჩამოტვირთვის“ რეჟიმში."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots გადადის „მხოლოდ ჩამოტვირთვის“ რეჟიმზე, შემდეგ შემთხვევებში:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "პირადი ფანჯრით სარგებლობისას."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "მესამე მხარის ფუნთუშების შენახვა, შეზღუდულია."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "მითითებულია, რომ “არასოდეს დაიმახსოვრებს ისტორიას” ბრაუზერი."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "თქვენ იყენებთ Firefox ESR-ს."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "ატვირთვა შეზღუდულია."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "ბმული დაკოპირებულია"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "თქვენი სურათის ბმული დაკოპირებულია. ჩასმისთვის დააწექით $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "კოპირება"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "სურათი დაკოპირებულია"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "თქვენი სურათი დაკოპირებულია. ჩასმისთვის დააწექით $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "შენახული სურათები მოიჭრება $PIXELS$px სიმაღლით.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "გაფუჭებულია."
+  },
+  "requestErrorDetails": {
+    "message": "ვწუხვარ! გადაღებული სურათის შენახვა ვერ ხერხდება. მოგვიანებით სცადეთ."
+  },
+  "connectionErrorTitle": {
+    "message": "თქვენს გადაღებულ სურათებთან კავშირი ვერ ხერხდება."
+  },
+  "connectionErrorDetails": {
+    "message": "გთხოვთ შეამოწმოთ ქსელთან კავშირი. თუ ინტერნეტში თავისუფლად გადიხართ, ე.ი. Firefox Screenshot-ის მომსახურებას აქვს დროებითი პრობლემა."
+  },
+  "loginErrorDetails": {
+    "message": "თქვენი სურათის შენახვა ვერ ხერხდება, რადგან შეფერხებაა Firefox Screenshots მომსახურებასთან დაკავშირებით. გთხოვთ სცადოთ მოგვიანებით."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "ამ გვერდისთვის სურათის გადაღება ვერ ხერხდება."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "ეს არ არის ჩვეულებრივი ვებგვერდი, ამიტომაც შეუძლებელია სურათის გადაღება."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox Screenshots-ის გვერდისთვის სურათის გადაღება არ შეგიძლიათ!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "შერჩეული სივრცე ძალიან მცირეა"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots გათიშულია პირადი თვალიერების რეჟიმისას"
+  },
+  "privateWindowErrorDetails": {
+    "message": "ბოდიშს გიხდით გაუგებრობის გამო. ჩვენ ვმუშაობთ ამ შესაძლებლობის დამატებაზე, სამომავლო ვერსიებში."
+  },
+  "genericErrorTitle": {
+    "message": "ვაი! Firefox Screenshots მწყობრიდან გამოვიდა."
+  },
+  "genericErrorDetails": {
+    "message": "გაუგებარია რა მოხდა. ისევ ცდით ხელახლა, თუ სხვა ვებგვერდს გადაუღებთ სურათს?"
+  },
+  "tourBodyIntro": {
+    "message": "გადაიღეთ, შეინახეთ და გააზიარეთ ეკრანის სურათები Firefox-იდან გაუსვლელად."
+  },
+  "tourHeaderPageAction": {
+    "message": "შენახვის ახალი ხერხი"
+  },
+  "tourBodyPageAction": {
+    "message": "როცა მოგესურვებათ ეკრანისთვის სურათის გადაღება, ჩამოშალეთ გვერდზე მოქმედებების მენიუ, რომელიც მდებარეობს მისამართების ველში."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "გადაუღეთ სურათი რასაც გინდათ"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "გადაადგილეთ ან დააწკაპეთ გვერდზე გადასაღები სივრცის შესარჩევად. ასევე, მაჩვენებელი ისრის გადატარებით შეგიძლიათ მონიშნოთ სასურველი არე."
+  },
+  "tourHeaderFullPage": {
+    "message": "გადაუღეთ სურათები ფანჯრებს ან მთლიან ვებგვერდებს"
+  },
+  "tourBodyFullPage": {
+    "message": "მარჯვენა ზედა კუთხეში არსებული ღილაკების საშუალებით, შეგიძლიათ გადაუღოთ სურათი ხილულ ნაწილს ან მთლიან გვერდს."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "როგორც გენებოთ"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "ამოჭრილი სურათები შეგიძლიათ განათავსოთ ინტერნეტში, მარტივად გასაზიარებლად, ან ჩამოტვირთოთ კომპიუტერში. ასევე, „ჩემი გადაღებულების“ ღილაკზე დაწკაპებით, იხილავთ თქვენ მიერ გადაღებულ ყველა სურათს."
+  },
+  "tourHeaderAccounts": {
+    "message": "თან წაიყოლეთ Screenshots"
+  },
+  "tourBodyAccounts": {
+    "message": "შედით Firefox-ანგარიშზე თქვენს გადაღებულ სურათებთან წვდომის მისაღებად ყველა თქვენი მოწყობილობიდან და სასურველი სურათების სამუდამოდ შესანახად."
+  },
+  "tourSkip": {
+    "message": "გამოტოვება"
+  },
+  "tourNext": {
+    "message": "შემდეგი"
+  },
+  "tourPrevious": {
+    "message": "წინა"
+  },
+  "tourDone": {
+    "message": "მზადაა"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox Screenshots-ის გამოყენებით, თქვენ ეთანხმებით $TERMSANDPRIVACYNOTICETERMSLINK$ და $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "პირობებსა"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "პირადი მონაცემების დაცვის განაცხადს"
+  },
+  "libraryLabel": {
+    "message": "Screenshots"
+  }
+}
