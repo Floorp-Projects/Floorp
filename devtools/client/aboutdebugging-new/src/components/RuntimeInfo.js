@@ -18,14 +18,14 @@ class RuntimeInfo extends PureComponent {
   static get propTypes() {
     return {
       icon: PropTypes.string.isRequired,
-      deviceName: PropTypes.string,
+      model: PropTypes.string,
       name: PropTypes.string.isRequired,
       version: PropTypes.string.isRequired,
     };
   }
 
   render() {
-    const { icon, deviceName, name, version } = this.props;
+    const { icon, model, name, version } = this.props;
 
     return dom.h1(
       {
@@ -39,13 +39,13 @@ class RuntimeInfo extends PureComponent {
       ),
       Localized(
         {
-          id: deviceName ? "about-debugging-runtime-info-with-model"
-                          : "about-debugging-runtime-info",
+          id: model ? "about-debugging-runtime-info-with-model"
+                    : "about-debugging-runtime-info",
           $name: name,
-          $deviceName: deviceName,
+          $model: model,
           $version: version,
         },
-        dom.label({}, `${ name } on ${ deviceName } (${ version })`)
+        dom.label({}, `${ name } on ${ model } (${ version })`)
       )
     );
   }

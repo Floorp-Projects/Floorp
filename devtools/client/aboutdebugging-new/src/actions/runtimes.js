@@ -55,15 +55,15 @@ async function createUSBClient(socketPath) {
 }
 
 async function createClientForRuntime(runtime) {
-  const { extra, type } = runtime;
+  const { connectionParameters, type } = runtime;
 
   if (type === RUNTIMES.THIS_FIREFOX) {
     return createLocalClient();
   } else if (type === RUNTIMES.NETWORK) {
-    const { host, port } = extra.connectionParameters;
+    const { host, port } = connectionParameters;
     return createNetworkClient(host, port);
   } else if (type === RUNTIMES.USB) {
-    const { socketPath } = extra.connectionParameters;
+    const { socketPath } = connectionParameters;
     return createUSBClient(socketPath);
   }
 
@@ -71,7 +71,7 @@ async function createClientForRuntime(runtime) {
 }
 
 async function getRuntimeInfo(runtime, client) {
-  const { extra, type } = runtime;
+  const { model, type } = runtime;
   const deviceFront = await client.mainRoot.getFront("device");
   const { brandName: name, channel, version } = await deviceFront.getDescription();
   const icon =
@@ -81,7 +81,7 @@ async function getRuntimeInfo(runtime, client) {
 
   return {
     icon,
-    deviceName: extra ? extra.deviceName : undefined,
+    model,
     name,
     type,
     version,
