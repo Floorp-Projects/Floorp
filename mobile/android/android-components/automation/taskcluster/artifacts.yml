@@ -98,6 +98,11 @@
           name: browser-domains
           old_artifact_id: domains
           new_group_id: org.mozilla.components
+        public/build/service.glean.maven.zip:
+          path: /build/android-components/components/service/glean/build/target.maven.zip
+          name: service-glean
+          old_artifact_id: service-glean
+          new_group_id: org.mozilla.components
         public/build/service.telemetry.maven.zip:
           path: /build/android-components/components/service/telemetry/build/target.maven.zip
           name: service-telemetry

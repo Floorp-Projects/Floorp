@@ -109,6 +109,9 @@ project(':service-sync-logins').projectDir = new File('components/service/sync-l
 include ':service-fretboard'
 project(':service-fretboard').projectDir = new File('components/service/fretboard')
 
+include ':service-glean'
+project(':service-glean').projectDir = new File('components/service/glean')
+
 include ':service-telemetry'
 project(':service-telemetry').projectDir = new File('components/service/telemetry')
 
