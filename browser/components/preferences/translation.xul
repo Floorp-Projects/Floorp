@@ -7,7 +7,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<window id="TranslationDialog" class="windowDialog"
+<window id="TranslationDialog"
         windowtype="Browser:TranslationExceptions"
         data-l10n-id="translation-window"
         data-l10n-attrs="title, style"
@@ -27,8 +27,8 @@
     <key data-l10n-id="translation-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
-  <vbox class="largeDialogContainer">
-    <vbox class="contentPane" flex="1">
+  <vbox class="contentPane">
+    <vbox flex="1">
       <label id="languagesLabel"
              data-l10n-id="translation-languages-disabled-desc"
              control="permissionsTree"/>
@@ -43,21 +43,19 @@
         <treechildren/>
       </tree>
     </vbox>
-    <hbox align="end">
-      <hbox class="actionButtons" flex="1">
-        <button id="removeLanguage" disabled="true"
-                data-l10n-id="translation-languages-button-remove"
-                icon="remove"
-                oncommand="gTranslationExceptions.onLanguageDeleted();"/>
-        <button id="removeAllLanguages"
-                data-l10n-id="translation-languages-button-remove-all"
-                icon="clear"
-                oncommand="gTranslationExceptions.onAllLanguagesDeleted();"/>
-        <spacer flex="1"/>
-      </hbox>
+    <hbox class="actionButtons" align="end">
+      <button id="removeLanguage" disabled="true"
+              data-l10n-id="translation-languages-button-remove"
+              icon="remove"
+              oncommand="gTranslationExceptions.onLanguageDeleted();"/>
+      <button id="removeAllLanguages"
+              data-l10n-id="translation-languages-button-remove-all"
+              icon="clear"
+              oncommand="gTranslationExceptions.onAllLanguagesDeleted();"/>
+      <spacer flex="1"/>
     </hbox>
     <separator/>
-    <vbox class="contentPane" flex="1">
+    <vbox flex="1">
       <label id="languagesLabel"
              data-l10n-id="translation-sites-disabled-desc"
              control="permissionsTree"/>
@@ -73,19 +71,18 @@
       </tree>
     </vbox>
   </vbox>
-  <hbox align="end">
-    <hbox class="actionButtons" flex="1">
-      <button id="removeSite" disabled="true"
-              data-l10n-id="translation-sites-button-remove"
-              icon="remove"
-              oncommand="gTranslationExceptions.onSiteDeleted();"/>
-      <button id="removeAllSites"
-              data-l10n-id="translation-sites-button-remove-all"
-              icon="clear"
-              oncommand="gTranslationExceptions.onAllSitesDeleted();"/>
-      <spacer flex="1"/>
-      <button oncommand="close();" icon="close"
-              data-l10n-id="translation-button-close"/>
-    </hbox>
+
+  <hbox class="actionButtons" align="end">
+    <button id="removeSite" disabled="true"
+            data-l10n-id="translation-sites-button-remove"
+            icon="remove"
+            oncommand="gTranslationExceptions.onSiteDeleted();"/>
+    <button id="removeAllSites"
+            data-l10n-id="translation-sites-button-remove-all"
+            icon="clear"
+            oncommand="gTranslationExceptions.onAllSitesDeleted();"/>
+    <spacer flex="1"/>
+    <button oncommand="close();" icon="close"
+            data-l10n-id="translation-button-close"/>
   </hbox>
 </window>

@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://browser/content/preferences/sitePermissions.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<window id="SitePermissionsDialog" class="windowDialog"
+<window id="SitePermissionsDialog"
         windowtype="Browser:SitePermissions"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-id="permissions-window"
@@ -30,7 +30,7 @@
     <key data-l10n-id="permissions-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
-  <vbox class="contentPane largeDialogContainer" flex="1">
+  <vbox class="contentPane">
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
     <hbox align="start">
@@ -50,33 +50,33 @@
       </listheader>
     </richlistbox>
   </vbox>
-  <vbox>
-    <hbox class="actionButtons" align="left" flex="1">
-      <button id="removePermission" disabled="true"
-              data-l10n-id="permissions-remove"
-              icon="remove"
-              oncommand="gSitePermissionsManager.onPermissionDelete();"/>
-      <button id="removeAllPermissions"
-              data-l10n-id="permissions-remove-all"
-              icon="clear"
-              oncommand="gSitePermissionsManager.onAllPermissionsDelete();"/>
-    </hbox>
-    <spacer flex="1"/>
-    <checkbox id="permissionsDisableCheckbox"/>
-    <description id="permissionsDisableDescription"/>
-    <spacer flex="1"/>
-    <hbox id="browserNotificationsPermissionExtensionContent" 
-          class="extension-controlled" align="center" hidden="true">
-      <description control="disableNotificationsPermissionExtension" flex="1"/>
-      <button id="disableNotificationsPermissionExtension"
-              class="extension-controlled-button accessory-button"
-              data-l10n-id="disable-extension"/>
-    </hbox>
-    <hbox class="actionButtons" align="right" flex="1">
-      <button oncommand="close();" icon="close" id="cancel"
-              data-l10n-id="permissions-button-cancel" />
-      <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();" icon="save"
-              data-l10n-id="permissions-button-ok" />
-    </hbox>
-  </vbox>
+
+  <hbox class="actionButtons" align="left" flex="1">
+    <button id="removePermission" disabled="true"
+            data-l10n-id="permissions-remove"
+            icon="remove"
+            oncommand="gSitePermissionsManager.onPermissionDelete();"/>
+    <button id="removeAllPermissions"
+            data-l10n-id="permissions-remove-all"
+            icon="clear"
+            oncommand="gSitePermissionsManager.onAllPermissionsDelete();"/>
+  </hbox>
+
+  <spacer flex="1"/>
+  <checkbox id="permissionsDisableCheckbox"/>
+  <description id="permissionsDisableDescription"/>
+  <spacer flex="1"/>
+  <hbox id="browserNotificationsPermissionExtensionContent" 
+        class="extension-controlled" align="center" hidden="true">
+    <description control="disableNotificationsPermissionExtension" flex="1"/>
+    <button id="disableNotificationsPermissionExtension"
+            class="extension-controlled-button accessory-button"
+            data-l10n-id="disable-extension"/>
+  </hbox>
+  <hbox class="actionButtons" align="right" flex="1">
+    <button oncommand="close();" icon="close" id="cancel"
+            data-l10n-id="permissions-button-cancel" />
+    <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();" icon="save"
+            data-l10n-id="permissions-button-ok" />
+  </hbox>
 </window>
