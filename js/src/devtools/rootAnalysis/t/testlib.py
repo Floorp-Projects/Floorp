@@ -119,10 +119,6 @@ sixgill_bin = '{bindir}'
             gctypes[collection].append(typename)
         return gctypes
 
-    def load_typeInfo(self, filename="typeInfo.txt"):
-        with open(os.path.join(self.outdir, filename)) as fh:
-            return json.load(fh)
-
     def load_gcFunctions(self):
         return self.load_text_file('gcFunctions.lst', extract=extract_unmangled)
 
