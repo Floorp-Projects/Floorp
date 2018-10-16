@@ -25,11 +25,22 @@ Release date: 2018-10-16
     ```kotlin
     @Before
     fun setup() {
-      SystemEngine.defaultUserAgent = "test-ua-string"
+        SystemEngine.defaultUserAgent = "test-ua-string"
     }
     ```
 * **browser-engine-servo**:
   * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
+* **browser-engine-gecko-nightly**:
+  * Enabled [Java 8 support](https://developer.android.com/studio/write/java8-support) to meet upstream [GeckoView requirements](https://mail.mozilla.org/pipermail/mobile-firefox-dev/2018-September/002411.html). Apps using this component need to enable Java 8 support as well:
+  ```Groovy
+  android {
+    ...
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_1_8
+      targetCompatibility JavaVersion.VERSION_1_8
+    }
+  }
+  ```
 * **browser-search**
   * Fixed an issue where a locale change at runtime would not update the search engines.
 * **browser-session**:
@@ -60,27 +71,26 @@ Release date: 2018-10-16
   ```
 * **browser-errorpages**
   * Added more detailed documentation in the README.
+* **feature-downloads**
+  * A new components for apps that want to process downloads, for more examples take a look at [here](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/README.md).
+* **lib-crash**
+  * A new generic crash reporter component that can report crashes to multiple services ([documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/README.md)).
 * **support-ktx**
   * Added new helper method to run a block of code with a different StrictMode policy:
   ```kotlin
   StrictMode.allowThreadDiskReads().resetAfter {
     // In this block disk reads are not triggering a strict mode violation
   }
-
   ```
   * Added a new helper for checking if you have permission to do something or not:
   ```kotlin
     var isGranted = context.isPermissionGranted(INTERNET)
-    if(isGranted){
+    if (isGranted) {
         //You can proceed
-    }else{
+    } else {
         //Request permission
     }
   ```
-* **feature-downloads**
-  * A new components for apps that want to process downloads, for more examples take a look at [here](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/README.md).
-* **lib-crash**
-  * A new generic crash reporter component that can report crashes to multiple services.
 * **support-test**
   * Added a new helper for granting permissions in  Robolectric tests:
   ```kotlin
@@ -94,18 +104,6 @@ Release date: 2018-10-16
      isGranted = context.isPermissionGranted(INTERNET)
 
      assertTrue(isGranted) // True :D
-  ```
-
-* browser-engine-gecko-nightly:
-  * Enabled [Java 8 support](https://developer.android.com/studio/write/java8-support) to meet upstream [GeckoView requirements](https://mail.mozilla.org/pipermail/mobile-firefox-dev/2018-September/002411.html). Apps using this component need to enable Java 8 support as well:
-  ```Groovy
-  android {
-    ...
-    compileOptions {
-      sourceCompatibility JavaVersion.VERSION_1_8
-      targetCompatibility JavaVersion.VERSION_1_8
-    }
-  }
   ```
 
 # 0.26.0
