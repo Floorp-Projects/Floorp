@@ -738,11 +738,7 @@ PeerConnectionMedia::UpdateTransportFlow(bool aIsRtcp,
     }
   }
 
-  std::vector<uint16_t> srtpCiphers;
-  srtpCiphers.push_back(kDtlsSrtpAeadAes256Gcm);
-  srtpCiphers.push_back(kDtlsSrtpAeadAes128Gcm);
-  srtpCiphers.push_back(kDtlsSrtpAes128CmHmacSha1_80);
-  srtpCiphers.push_back(kDtlsSrtpAes128CmHmacSha1_32);
+  std::vector<uint16_t> srtpCiphers = TransportLayerDtls::GetDefaultSrtpCiphers();
 
   rv = dtls->SetSrtpCiphers(srtpCiphers);
   if (NS_FAILED(rv)) {
