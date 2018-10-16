@@ -713,8 +713,13 @@ class ADBDevice(ADBCommand):
                 return
             device = devices[0]
 
+        # Allow : in device serial if it matches a tcpip device serial.
+        re_device_serial_tcpip = re.compile(r'[^:]+:[0-9]+$')
+
         def is_valid_serial(serial):
-            return ":" not in serial or serial.startswith("usb:")
+            return serial.startswith("usb:") or \
+                re_device_serial_tcpip.match(serial) is not None or \
+                ":" not in serial
 
         if isinstance(device, (str, unicode)):
             # Treat this as a device serial
