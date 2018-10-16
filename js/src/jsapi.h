@@ -3021,7 +3021,7 @@ JS_DecompileFunction(JSContext* cx, JS::Handle<JSFunction*> fun);
 
 namespace JS {
 
-using ModuleResolveHook = JSObject* (*)(JSContext*, HandleObject, HandleString);
+using ModuleResolveHook = JSObject* (*)(JSContext*, HandleValue, HandleString);
 
 /**
  * Get the HostResolveImportedModule hook for the runtime.
@@ -3035,7 +3035,7 @@ GetModuleResolveHook(JSRuntime* rt);
 extern JS_PUBLIC_API(void)
 SetModuleResolveHook(JSRuntime* rt, ModuleResolveHook func);
 
-using ModuleMetadataHook = bool (*)(JSContext*, HandleObject, HandleObject);
+using ModuleMetadataHook = bool (*)(JSContext*, HandleValue, HandleObject);
 
 /**
  * Get the hook for populating the import.meta metadata object.
@@ -3059,17 +3059,30 @@ CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf, JS::MutableHandleObject moduleRecord);
 
 /**
- * Set the [[HostDefined]] field of a source text module record to the given
- * value.
+ * Set a private value associated with a source text module record.
  */
 extern JS_PUBLIC_API(void)
-SetModuleHostDefinedField(JSObject* module, const JS::Value& value);
+SetModulePrivate(JSObject* module, const JS::Value& value);
 
 /**
- * Get the [[HostDefined]] field of a source text module record.
+ * Get the private value associated with a source text module record.
  */
 extern JS_PUBLIC_API(JS::Value)
-GetModuleHostDefinedField(JSObject* module);
+GetModulePrivate(JSObject* module);
+
+/**
+ * Set a private value associated with a script. Note that this value is shared
+ * by all nested scripts compiled from a single source file.
+ */
+extern JS_PUBLIC_API(void)
+SetScriptPrivate(JSScript* script, const JS::Value& value);
+
+/**
+ * Get the private value associated with a script. Note that this value is
+ * shared by all nested scripts compiled from a single source file.
+ */
+extern JS_PUBLIC_API(JS::Value)
+GetScriptPrivate(JSScript* script);
 
 /*
  * Perform the ModuleInstantiate operation on the given source text module
