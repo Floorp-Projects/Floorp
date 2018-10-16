@@ -14151,5 +14151,16 @@
     "bug_numbers": [1490074],
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
     "releaseChannelCollection": "opt-out"
+  },
+  "QM_REPOSITORIES_INITIALIZATION_TIME": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "68",
+    "bug_numbers": [1481716],
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 30,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["ttung@mozilla.com"],
+    "description": "Time (ms) for the QuotaManager to initialize repositories."
   }
 }
