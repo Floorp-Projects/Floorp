@@ -32,6 +32,7 @@
     <div id="errorContainer">
       <div id="errorPageTitlesContainer">
         <span id="ept_nssBadCert">&certerror.pagetitle2;</span>
+        <span id="ept_nssBadCert_sts">&certerror.sts.pagetitle;</span>
         <span id="ept_captivePortal">&captivePortal.title;</span>
         <span id="ept_dnsNotFound">&dnsNotFound.pageTitle;</span>
         <span id="ept_malformedURI">&malformedURI.pageTitle;</span>
@@ -60,6 +61,7 @@
         <h1 id="et_unsafeContentType">&unsafeContentType.title;</h1>
         <h1 id="et_nssFailure2">&nssFailure2.title;</h1>
         <h1 id="et_nssBadCert">&certerror.longpagetitle2;</h1>
+        <h1 id="et_nssBadCert_sts">&certerror.sts.longpagetitle;</h1>
         <h1 id="et_cspBlocked">&cspBlocked.title;</h1>
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentErrorv2">&corruptedContentErrorv2.title;</h1>
@@ -91,6 +93,7 @@
         <div id="ed_unsafeContentType">&unsafeContentType.longDesc;</div>
         <div id="ed_nssFailure2">&nssFailure2.longDesc2;</div>
         <div id="ed_nssBadCert">&certerror.introPara2;</div>
+        <div id="ed_nssBadCert_sts">&certerror.sts.introPara;</div>
         <div id="ed_cspBlocked">&cspBlocked.longDesc;</div>
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentErrorv2">&corruptedContentErrorv2.longDesc;</div>
@@ -116,6 +119,10 @@
         <div id="es_nssBadCert_SSL_ERROR_BAD_CERT_DOMAIN">&certerror.badCertDomain.whatCanYouDoAboutIt;</div>
         <div id="es_nssBadCert_SEC_ERROR_OCSP_INVALID_SIGNING_CERT">&certerror.badCertDomain.whatCanYouDoAboutIt;</div>
       </div>
+      <!-- Stores an alternative text for when we don't want to add "Recommended" to the
+           return button. This is one of many l10n atrocities in this file and should be
+           removed when we finally switch to Fluent. -->
+      <span id="stsReturnButtonText">&returnToPreviousPage.label;</span>
     </div>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
