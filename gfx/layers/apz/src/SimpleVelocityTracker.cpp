@@ -86,7 +86,7 @@ SimpleVelocityTracker::HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
   return velocity;
 }
 
-float
+Maybe<float>
 SimpleVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
 {
   float velocity = 0;
@@ -102,7 +102,7 @@ SimpleVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
   if (count > 1) {
     velocity /= count;
   }
-  return velocity;
+  return Some(velocity);
 }
 
 void

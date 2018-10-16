@@ -81,7 +81,7 @@ function setup(settings) {
     getFCP = settings.measure.fcp;
     if (getFCP) {
       console.log("will be measuring first-contentful-paint");
-      measureFirstContentfulPaint();
+      measureFCP();
     }
   }
 
@@ -215,25 +215,26 @@ function measureTTFI() {
     // 30 seconds).  Some pages will never get 5 seconds without a busy
     // period!
     if (gRetryCounter <= 25 * (1000 / 200)) {
-      console.log("\TTFI is not yet available (0), retry number " + gRetryCounter + "...\n");
+      console.log("TTFI is not yet available (0), retry number " + gRetryCounter + "...\n");
       window.setTimeout(measureTTFI, 200);
     } else {
-      // unable to get a value for TTFI - filter out later
-      sendResult("ttfi", 0);
+      // unable to get a value for TTFI - negative value will be filtered out later
+      console.log("TTFI was not available for this pageload");
+      sendResult("ttfi", -1);
     }
   }
 }
 
-function measureFirstContentfulPaint() {
+function measureFCP() {
   // see https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming
   var resultType = "fcp";
   var result = 0;
 
-  let performanceEntries = perfData.getEntriesByType("paint");
+  let perfEntries = perfData.getEntriesByType("paint");
 
-  if (performanceEntries.length >= 2) {
-    if (performanceEntries[1].startTime != undefined)
-      result = performanceEntries[1].startTime;
+  if (perfEntries.length >= 2) {
+    if (perfEntries[1].name == "first-contentful-paint" && perfEntries[1].startTime != undefined)
+      result = perfEntries[1].startTime;
   }
 
   if (result > 0) {
@@ -245,7 +246,7 @@ function measureFirstContentfulPaint() {
     gRetryCounter += 1;
     if (gRetryCounter <= 10) {
       console.log("\ntime to first-contentful-paint is not yet available (0), retry number " + gRetryCounter + "...\n");
-      window.setTimeout(measureFirstContentfulPaint, 100);
+      window.setTimeout(measureFCP, 100);
     } else {
       console.log("\nunable to get a value for time-to-fcp after " + gRetryCounter + " retries\n");
     }
@@ -256,7 +257,9 @@ function sendResult(_type, _value) {
   // send result back to background runner script
   console.log("sending result back to runner: " + _type + " " + _value);
   chrome.runtime.sendMessage({"type": _type, "value": _value}, function(response) {
-    console.log(response.text);
+    if (response !== undefined) {
+      console.log(response.text);
+    }
   });
 }
 

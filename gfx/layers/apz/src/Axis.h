@@ -72,8 +72,10 @@ public:
    * Compute an estimate of the axis's current velocity, based on recent
    * position samples. It's up to implementation how many samples to consider
    * and how to perform the computation.
+   * If the tracker doesn't have enough samples to compute a result, it
+   * may return Nothing{}.
    */
-  virtual float ComputeVelocity(uint32_t aTimestampMs) = 0;
+  virtual Maybe<float> ComputeVelocity(uint32_t aTimestampMs) = 0;
   /**
    * Clear all state in the velocity tracker.
    */
