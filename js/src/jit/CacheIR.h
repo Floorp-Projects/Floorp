@@ -222,6 +222,7 @@ extern const char* const CacheKindNames[];
     _(GuardHasGetterSetter)               \
     _(GuardGroupHasUnanalyzedNewScript)   \
     _(GuardIndexIsNonNegative)            \
+    _(GuardIndexGreaterThanDenseInitLength) \
     _(GuardTagNotEqual)                   \
     _(GuardXrayExpandoShapeAndDefaultProto) \
     _(GuardFunctionPrototype)             \
@@ -805,6 +806,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
 
     void guardIndexIsNonNegative(Int32OperandId index) {
         writeOpWithOperandId(CacheOp::GuardIndexIsNonNegative, index);
+    }
+    void guardIndexGreaterThanDenseInitLength(ObjOperandId obj, Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::GuardIndexGreaterThanDenseInitLength, obj);
+        writeOperandId(index);
     }
     void guardTagNotEqual(ValueTagOperandId lhs, ValueTagOperandId rhs) {
         writeOpWithOperandId(CacheOp::GuardTagNotEqual, lhs);

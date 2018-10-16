@@ -174,6 +174,8 @@ async function dragAndDrop(tab1, tab2, copy, destWindow = window) {
 
   let originalTPos = tab1._tPos;
   EventUtils.synthesizeDrop(tab1, tab2, null, copy ? "copy" : "move", window, destWindow, event);
+  // Ensure dnd suppression is cleared.
+  EventUtils.synthesizeMouseAtCenter(tab2, { type: "mouseup" }, destWindow);
   if (!copy && destWindow == window) {
     await BrowserTestUtils.waitForCondition(() => tab1._tPos != originalTPos,
       "Waiting for tab position to be updated");

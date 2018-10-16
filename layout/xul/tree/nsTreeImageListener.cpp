@@ -37,6 +37,15 @@ nsTreeImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRec
     // corresponding call to Decrement for this. This Increment will be
     // 'cleaned up' by the Request when it is destroyed, but only then.
     aRequest->IncrementAnimationConsumers();
+
+    if (mTreeFrame) {
+      nsCOMPtr<imgIContainer> image;
+      aRequest->GetImage(getter_AddRefs(image));
+      if (image) {
+        nsPresContext* presContext = mTreeFrame->PresContext();
+        image->SetAnimationMode(presContext->ImageAnimationMode());
+      }
+    }
   }
 
   if (aType == imgINotificationObserver::FRAME_UPDATE) {

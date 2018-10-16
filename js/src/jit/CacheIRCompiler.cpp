@@ -2821,6 +2821,32 @@ CacheIRCompiler::emitGuardIndexIsNonNegative()
 }
 
 bool
+CacheIRCompiler::emitGuardIndexGreaterThanDenseInitLength()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegister scratch(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure)) {
+        return false;
+    }
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Ensure index >= capacity.
+    Label outOfBounds;
+    Address capacity(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.spectreBoundsCheck32(index, capacity, scratch2, &outOfBounds);
+    masm.jump(failure->label());
+    masm.bind(&outOfBounds);
+
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardTagNotEqual()
 {
     Register lhs = allocator.useRegister(masm, reader.valueTagOperandId());
