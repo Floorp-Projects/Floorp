@@ -18,9 +18,6 @@ var origOut = os.file.redirect(callgraphOut_filename);
 var memoized = new Map();
 var memoizedCount = 0;
 
-var JSNativeCaller = Object.create(null);
-var JSNatives = [];
-
 var unmangled2id = new Set();
 
 function getId(name)
@@ -105,11 +102,8 @@ function processBody(functionName, body)
         return;
 
 
-    for (var tag of getAnnotations(functionName, body).values()) {
+    for (var tag of getAnnotations(functionName, body).values())
         print("T " + functionId(functionName) + " " + tag);
-        if (tag == "Calls JSNatives")
-            JSNativeCaller[functionName] = true;
-    }
 
     // Set of all callees that have been output so far, in order to suppress
     // repeated callgraph edges from being recorded. This uses a Map from
@@ -228,8 +222,6 @@ function process(functionName, functionBodies)
         printOnce("D " + functionId(inChargeXTor) + " " + functionId(functionName));
     }
 
-    const [ mangled, unmangled ] = splitFunction(functionName);
-
     // Further note: from https://itanium-cxx-abi.github.io/cxx-abi/abi.html the
     // different kinds of constructors/destructors are:
     // C1	# complete object constructor
@@ -264,6 +256,7 @@ function process(functionName, functionBodies)
     // Currently, allocating constructors are never used.
     //
     if (functionName.indexOf("C4") != -1) {
+        var [ mangled, unmangled ] = splitFunction(functionName);
         // E terminates the method name (and precedes the method parameters).
         // If eg "C4E" shows up in the mangled name for another reason, this
         // will create bogus edges in the callgraph. But it will affect little
@@ -312,17 +305,6 @@ function process(functionName, functionBodies)
         printOnce("D " + functionId(D1) + " " + functionId(D2));
         printOnce("D " + functionId(D2) + " " + functionId(functionName));
     }
-
-    if (isJSNative(mangled))
-        JSNatives.push(functionName);
-}
-
-function postprocess_callgraph() {
-    for (const caller of Object.keys(JSNativeCaller)) {
-        const caller_id = functionId(caller);
-        for (const callee of JSNatives)
-            printOnce(`D ${caller_id} ${functionId(callee)}`);
-    }
 }
 
 for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
@@ -332,7 +314,5 @@ for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
     xdb.free_string(name);
     xdb.free_string(data);
 }
-
-postprocess_callgraph();
 
 os.file.close(os.file.redirect(origOut));
