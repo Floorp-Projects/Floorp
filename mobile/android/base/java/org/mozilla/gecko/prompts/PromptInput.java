@@ -219,6 +219,14 @@ public abstract class PromptInput {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-'W'ww", mValue,
                                                           DateTimePicker.PickersState.WEEK, mMinValue, mMaxValue);
                 mView = (View)input;
+            } else if (mType.equals("time") && mSecondEnabled) {
+                // When seconds are requested, use DateTimePicker since FocusableDatePicker does not support seconds.
+                DateTimePicker input = new DateTimePicker(context, "HH:mm:ss",
+                                                          formatDateTimeSeconds(mValue),
+                                                          DateTimePicker.PickersState.TIME,
+                                                          formatDateTimeSeconds(mMinValue),
+                                                          formatDateTimeSeconds(mMaxValue));
+                mView = (View)input;
             } else if (mType.equals("time")) {
                 // FocusableDatePicker allow us to have priority in responding to scroll events.
                 TimePicker input = new FocusableTimePicker(context);
@@ -284,6 +292,12 @@ public abstract class PromptInput {
         @Override
         public Object getValue() {
             if (mType.equals("time")) {
+                if (mSecondEnabled) {
+                    DateTimePicker dp = (DateTimePicker) mView;
+                    GregorianCalendar calendar = new GregorianCalendar();
+                    calendar.setTimeInMillis(dp.getTimeInMillis());
+                    return formatDateString("HH:mm:ss", calendar);
+                }
                 TimePicker tp = (TimePicker)mView;
                 GregorianCalendar calendar =
                     new GregorianCalendar(0, 0, 0, tp.getCurrentHour(), tp.getCurrentMinute());

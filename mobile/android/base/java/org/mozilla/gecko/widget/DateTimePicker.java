@@ -195,6 +195,12 @@ public class DateTimePicker extends FrameLayout {
         if (mState == PickersState.DATETIME_WITH_SECOND) {
             return;
         }
+        if (mState == PickersState.TIME) {
+            setYearShown(false);
+            setMonthShown(false);
+            setDayShown(false);
+            return;
+        }
 
         setHourShown(false);
         setMinuteShown(false);
@@ -547,7 +553,7 @@ public class DateTimePicker extends FrameLayout {
     }
 
     public void toggleCalendar(boolean shown) {
-        if (mState != PickersState.DATE && mState != PickersState.DATETIME && mState != PickersState.DATETIME_WITH_SECOND) {
+        if (mState != PickersState.DATE && mState != PickersState.DATETIME && mState != PickersState.DATETIME_WITH_SECOND && mState != PickersState.TIME) {
             return;
         }
 
