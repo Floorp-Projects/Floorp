@@ -13,6 +13,7 @@ import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
+import org.mozilla.geckoview.WebRequestError;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -63,7 +64,7 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public GeckoResult<String> onLoadError(GeckoSession session, String uri, int category, int error) {
+        public GeckoResult<String> onLoadError(GeckoSession session, String uri, WebRequestError error) {
             return null;
         }
     };

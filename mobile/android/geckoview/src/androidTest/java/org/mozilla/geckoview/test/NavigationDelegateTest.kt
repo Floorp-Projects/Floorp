@@ -4,13 +4,14 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
+import org.mozilla.geckoview.GeckoSessionSettings
+import org.mozilla.geckoview.WebRequestError
+
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
@@ -21,7 +22,6 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
-import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,10 +51,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
                     @AssertCalled(count = 1, order = [3])
                     override fun onLoadError(session: GeckoSession, uri: String?,
-                                             category: Int, error: Int): GeckoResult<String>? {
-                        assertThat("Error category should match", category,
+                                             error: WebRequestError): GeckoResult<String>? {
+                        assertThat("Error category should match", error.category,
                                 equalTo(expectedCategory))
-                        assertThat("Error should match", error,
+                        assertThat("Error code should match", error.code,
                                 equalTo(expectedError))
                         return GeckoResult.fromValue(errorPageUrl)
                     }
@@ -104,10 +104,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
                     @AssertCalled(count = 1, order = [1])
                     override fun onLoadError(session: GeckoSession, uri: String?,
-                                             category: Int, error: Int): GeckoResult<String>? {
-                        assertThat("Error category should match", category,
+                                             error: WebRequestError): GeckoResult<String>? {
+                        assertThat("Error category should match", error.category,
                                 equalTo(expectedCategory))
-                        assertThat("Error should match", error,
+                        assertThat("Error code should match", error.code,
                                 equalTo(expectedError))
                         return GeckoResult.fromValue(errorPageUrl)
                     }
@@ -138,26 +138,26 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun loadFileNotFound() {
         testLoadExpectError("file:///test.mozilla",
-                GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
-                GeckoSession.NavigationDelegate.ERROR_FILE_NOT_FOUND)
+                WebRequestError.ERROR_CATEGORY_URI,
+                WebRequestError.ERROR_FILE_NOT_FOUND)
     }
 
     @Test fun loadUnknownHost() {
         testLoadExpectError(UNKNOWN_HOST_URI,
-                GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
-                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_HOST)
+                WebRequestError.ERROR_CATEGORY_URI,
+                WebRequestError.ERROR_UNKNOWN_HOST)
     }
 
     @Test fun loadInvalidUri() {
         testLoadEarlyError(INVALID_URI,
-                GeckoSession.NavigationDelegate.ERROR_CATEGORY_URI,
-                GeckoSession.NavigationDelegate.ERROR_MALFORMED_URI)
+                WebRequestError.ERROR_CATEGORY_URI,
+                WebRequestError.ERROR_MALFORMED_URI)
     }
 
     @Test fun loadBadPort() {
         testLoadEarlyError("http://localhost:1/",
-                GeckoSession.NavigationDelegate.ERROR_CATEGORY_NETWORK,
-                GeckoSession.NavigationDelegate.ERROR_PORT_BLOCKED)
+                WebRequestError.ERROR_CATEGORY_NETWORK,
+                WebRequestError.ERROR_PORT_BLOCKED)
     }
 
     @Test fun loadUntrusted() {
@@ -167,8 +167,8 @@ class NavigationDelegateTest : BaseSessionTest() {
             "https://expired.badssl.com/"
         }
         testLoadExpectError(uri,
-                GeckoSession.NavigationDelegate.ERROR_CATEGORY_SECURITY,
-                GeckoSession.NavigationDelegate.ERROR_SECURITY_BAD_CERT);
+                WebRequestError.ERROR_CATEGORY_SECURITY,
+                WebRequestError.ERROR_SECURITY_BAD_CERT);
     }
 
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
@@ -246,8 +246,8 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.runtime.settings.blockPhishing = true
 
         testLoadExpectError(phishingUri,
-                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
-                        GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_PHISHING_URI)
+                        WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
+                        WebRequestError.ERROR_SAFEBROWSING_PHISHING_URI)
 
         sessionRule.runtime.settings.blockPhishing = false
 
@@ -258,7 +258,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
-                                     category: Int, error: Int): GeckoResult<String>? {
+                                     error: WebRequestError): GeckoResult<String>? {
                 return null
             }
         })
@@ -270,8 +270,8 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.runtime.settings.blockMalware = true
 
         testLoadExpectError(malwareUri,
-                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
-                        GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_MALWARE_URI)
+                        WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
+                        WebRequestError.ERROR_SAFEBROWSING_MALWARE_URI)
 
         sessionRule.runtime.settings.blockMalware = false
 
@@ -282,7 +282,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
-                                     category: Int, error: Int): GeckoResult<String>? {
+                                     error: WebRequestError): GeckoResult<String>? {
                 return null
             }
         })
@@ -294,8 +294,8 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.runtime.settings.blockMalware = true
 
         testLoadExpectError(unwantedUri,
-                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
-                        GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_UNWANTED_URI)
+                        WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
+                        WebRequestError.ERROR_SAFEBROWSING_UNWANTED_URI)
 
         sessionRule.runtime.settings.blockMalware = false
 
@@ -306,7 +306,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
-                                     category: Int, error: Int): GeckoResult<String>? {
+                                     error: WebRequestError): GeckoResult<String>? {
                 return null
             }
         })
@@ -318,8 +318,8 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.runtime.settings.blockMalware = true
 
         testLoadExpectError(harmfulUri,
-                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
-                        GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_HARMFUL_URI)
+                        WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
+                        WebRequestError.ERROR_SAFEBROWSING_HARMFUL_URI)
 
         sessionRule.runtime.settings.blockMalware = false
 
@@ -330,7 +330,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
-                                     category: Int, error: Int): GeckoResult<String>? {
+                                     error: WebRequestError): GeckoResult<String>? {
                 return null
             }
         })

@@ -204,7 +204,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         /** Set whether or not known malware sites should be blocked.
          *
          * Note: For each blocked site, {@link GeckoSession.NavigationDelegate#onLoadError}
-         * with error category {@link GeckoSession.NavigationDelegate#ERROR_CATEGORY_SAFEBROWSING}
+         * with error category {@link WebRequestError#ERROR_CATEGORY_SAFEBROWSING}
          * is called.
          *
          * @param enabled A flag determining whether or not to block malware
@@ -220,7 +220,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set whether or not known phishing sites should be blocked.
          *
          * Note: For each blocked site, {@link GeckoSession.NavigationDelegate#onLoadError}
-         * with error category {@link GeckoSession.NavigationDelegate#ERROR_CATEGORY_SAFEBROWSING}
+         * with error category {@link WebRequestError#ERROR_CATEGORY_SAFEBROWSING}
          * is called.
          *
          * @param enabled A flag determining whether or not to block phishing
@@ -734,7 +734,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * Set whether or not known malware sites should be blocked.
      *
      * Note: For each blocked site, {@link GeckoSession.NavigationDelegate#onLoadError}
-     * with error category {@link GeckoSession.NavigationDelegate#ERROR_CATEGORY_SAFEBROWSING}
+     * with error category {@link WebRequestError#ERROR_CATEGORY_SAFEBROWSING}
      * is called.
      *
      * @param enabled A flag determining whether or not to block malware sites.
@@ -758,7 +758,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * Set whether or not known phishing sites should be blocked.
      *
      * Note: For each blocked site, {@link GeckoSession.NavigationDelegate#onLoadError}
-     * with error category {@link GeckoSession.NavigationDelegate#ERROR_CATEGORY_SAFEBROWSING}
+     * with error category {@link WebRequestError#ERROR_CATEGORY_SAFEBROWSING}
      * is called.
      *
      * @param enabled A flag determining whether or not to block phishing sites.
