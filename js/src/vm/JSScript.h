@@ -1221,12 +1221,22 @@ class ScriptSourceObject : public NativeObject
         return value.toGCThing()->as<JSScript>();
     }
 
+    void setPrivate(const Value& value) {
+        setReservedSlot(PRIVATE_SLOT, value);
+    }
+    Value getPrivate() const {
+        return getReservedSlot(PRIVATE_SLOT);
+    }
+
   private:
-    static const uint32_t SOURCE_SLOT = 0;
-    static const uint32_t ELEMENT_SLOT = 1;
-    static const uint32_t ELEMENT_PROPERTY_SLOT = 2;
-    static const uint32_t INTRODUCTION_SCRIPT_SLOT = 3;
-    static const uint32_t RESERVED_SLOTS = 4;
+    enum {
+        SOURCE_SLOT = 0,
+        ELEMENT_SLOT,
+        ELEMENT_PROPERTY_SLOT,
+        INTRODUCTION_SCRIPT_SLOT,
+        PRIVATE_SLOT,
+        RESERVED_SLOTS
+    };
 };
 
 enum class GeneratorKind : bool { NotGenerator, Generator };
