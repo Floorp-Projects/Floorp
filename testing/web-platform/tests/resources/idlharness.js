@@ -1643,7 +1643,7 @@ IdlInterface.prototype.test_self = function()
             if (exposed_in(exposure_set(this, this.exposureSet)) && 'document' in self) {
                 for (alias of aliases) {
                     assert_true(alias in self, alias + " should exist");
-                    assert_equals(self[alias], this.get_interface_object(), "self." + alias + " should be the same value as the interface object");
+                    assert_equals(self[alias], this.get_interface_object(), "self." + alias + " should be the same value as self." + this.get_qualified_name());
                     var desc = Object.getOwnPropertyDescriptor(self, alias);
                     assert_equals(desc.value, this.get_interface_object(), "wrong value in " + alias + " property descriptor");
                     assert_true(desc.writable, alias + " should be writable");
