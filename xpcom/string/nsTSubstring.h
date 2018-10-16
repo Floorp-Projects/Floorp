@@ -475,8 +475,8 @@ public:
 
   // AssignLiteral must ONLY be applied to an actual literal string, or
   // a character array *constant* declared without an explicit size.
-  // Do not attempt to use it with a regular character pointer, or with a
-  // non-constant chararacter array variable. Use AssignASCII for those.
+  // Do not attempt to use it with a non-constant character array variable.
+  // Use AssignASCII for that.
   //
   // This method does not need a fallible version, because it uses the
   // POD buffer of the literal as the string's buffer without allocating.
@@ -490,9 +490,9 @@ public:
   }
 
   // AssignLiteral must ONLY be applied to an actual literal string, or
-  // a character array *constant* declared without an explicit size.
-  // Do not attempt to use it with a regular character pointer, or with a
-  // non-constant chararacter array variable. Use AssignASCII for those.
+  // a char array *constant* declared without an explicit size.
+  // Do not attempt to use it with a non-constant char array variable.
+  // Use AssignASCII for that.
   //
   // This method takes an 8-bit (ASCII-only!) string that is expanded
   // into a 16-bit string at run time causing a run-time allocation.
@@ -593,8 +593,8 @@ public:
                                              const fallible_t&);
 
   // ReplaceLiteral must ONLY be applied to an actual literal string.
-  // Do not attempt to use it with a regular char* pointer, or with a char
-  // array variable. Use Replace or ReplaceASCII for those.
+  // Do not attempt to use it with a character array variable.
+  // Use Replace or ReplaceASCII for that.
   template<int N>
   void ReplaceLiteral(index_type aCutStart, size_type aCutLength,
                       const char_type (&aStr)[N])
@@ -641,8 +641,8 @@ public:
   // in the 16-bit case) to the string.
   //
   // AppendLiteral must ONLY be applied to an actual literal string.
-  // Do not attempt to use it with a regular character pointer, or with a
-  // character array variable. Use Append or AppendASCII for those.
+  // Do not attempt to use it with a character array variable.
+  // Use Append or AppendASCII for that.
   template<int N>
   void AppendLiteral(const char_type (&aStr)[N])
   {
@@ -802,8 +802,8 @@ public:
   }
 
   // InsertLiteral must ONLY be applied to an actual literal string.
-  // Do not attempt to use it with a regular char* pointer, or with a char
-  // array variable. Use Insert for those.
+  // Do not attempt to use it with a character array variable.
+  // Use Insert for that.
   template<int N>
   void InsertLiteral(const char_type (&aStr)[N], index_type aPos)
   {

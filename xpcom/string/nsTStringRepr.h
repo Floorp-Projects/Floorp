@@ -259,8 +259,8 @@ public:
 
   // EqualsLiteral must ONLY be applied to an actual literal string, or
   // a char array *constant* declared without an explicit size.
-  // Do not attempt to use it with a regular char* pointer, or with a
-  // non-constant char array variable. Use EqualsASCII for them.
+  // Do not attempt to use it with a non-constant char array variable.
+  // Use EqualsASCII for that.
   // The template trick to acquire the array length at compile time without
   // using a macro is due to Corey Kosak, with much thanks.
   template<int N>
@@ -281,9 +281,8 @@ public:
 
   // LowerCaseEqualsLiteral must ONLY be applied to an actual
   // literal string, or a char array *constant* declared without an
-  // explicit size.  Do not attempt to use it with a regular char*
-  // pointer, or with a non-constant char array variable. Use
-  // LowerCaseEqualsASCII for them.
+  // explicit size.  Do not attempt to use it with a non-constant char array
+  // variable. Use LowerCaseEqualsASCII for that.
   template<int N>
   bool LowerCaseEqualsLiteral(const char (&aStr)[N]) const
   {
