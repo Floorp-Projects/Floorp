@@ -1573,7 +1573,7 @@ JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* worked)
 
     // XXX On-demand source is currently only UTF-16.  Perhaps it should be
     //     changed to UTF-8, or UTF-8 be allowed in addition to UTF-16?
-    if (!ss->setSource(cx, EntryChars<char16_t>(src), length)) {
+    if (!ss->setSource(cx, EntryUnits<char16_t>(src), length)) {
         return false;
     }
 
@@ -1610,12 +1610,12 @@ UncompressedSourceCache::releaseEntry(AutoHoldEntry& holder)
     holder_ = nullptr;
 }
 
-template<typename CharT>
-const CharT*
+template<typename Unit>
+const Unit*
 UncompressedSourceCache::lookup(const ScriptSourceChunk& ssc, AutoHoldEntry& holder)
 {
     MOZ_ASSERT(!holder_);
-    MOZ_ASSERT(ssc.ss->compressedSourceIs<CharT>());
+    MOZ_ASSERT(ssc.ss->compressedSourceIs<Unit>());
 
     if (!map_) {
         return nullptr;
@@ -1623,7 +1623,7 @@ UncompressedSourceCache::lookup(const ScriptSourceChunk& ssc, AutoHoldEntry& hol
 
     if (Map::Ptr p = map_->lookup(ssc)) {
         holdEntry(holder, ssc);
-        return static_cast<const CharT*>(p->value().get());
+        return static_cast<const Unit*>(p->value().get());
     }
 
     return nullptr;
@@ -1679,24 +1679,24 @@ UncompressedSourceCache::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     return n;
 }
 
-template<typename CharT>
-const CharT*
-ScriptSource::chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
+template<typename Unit>
+const Unit*
+ScriptSource::chunkUnits(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                          size_t chunk)
 {
-    const Compressed<CharT>& c = data.as<Compressed<CharT>>();
+    const Compressed<Unit>& c = data.as<Compressed<Unit>>();
 
     ScriptSourceChunk ssc(this, chunk);
-    if (const CharT* decompressed = cx->caches().uncompressedSourceCache.lookup<CharT>(ssc, holder)) {
+    if (const Unit* decompressed = cx->caches().uncompressedSourceCache.lookup<Unit>(ssc, holder)) {
         return decompressed;
     }
 
-    size_t totalLengthInBytes = length() * sizeof(CharT);
+    size_t totalLengthInBytes = length() * sizeof(Unit);
     size_t chunkBytes = Compressor::chunkSize(totalLengthInBytes, chunk);
 
-    MOZ_ASSERT((chunkBytes % sizeof(CharT)) == 0);
-    const size_t lengthWithNull = (chunkBytes / sizeof(CharT)) + 1;
-    EntryChars<CharT> decompressed(js_pod_malloc<CharT>(lengthWithNull));
+    MOZ_ASSERT((chunkBytes % sizeof(Unit)) == 0);
+    const size_t lengthWithNull = (chunkBytes / sizeof(Unit)) + 1;
+    EntryUnits<Unit> decompressed(js_pod_malloc<Unit>(lengthWithNull));
     if (!decompressed) {
         JS_ReportOutOfMemory(cx);
         return nullptr;
@@ -1713,9 +1713,9 @@ ScriptSource::chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& 
         return nullptr;
     }
 
-    decompressed[lengthWithNull - 1] = CharT('\0');
+    decompressed[lengthWithNull - 1] = Unit('\0');
 
-    const CharT* ret = decompressed.get();
+    const Unit* ret = decompressed.get();
     if (!cx->caches().uncompressedSourceCache.put(ssc, ToSourceData(std::move(decompressed)),
                                                   holder))
     {
@@ -1725,7 +1725,7 @@ ScriptSource::chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& 
     return ret;
 }
 
-template<typename CharT>
+template<typename Unit>
 void
 ScriptSource::movePendingCompressedSource()
 {
@@ -1733,7 +1733,7 @@ ScriptSource::movePendingCompressedSource()
         return;
     }
 
-    Compressed<CharT>& pending = pendingCompressed_.ref<Compressed<CharT>>();
+    Compressed<Unit>& pending = pendingCompressed_.ref<Compressed<Unit>>();
 
     MOZ_ASSERT(!hasCompressedSource());
     MOZ_ASSERT_IF(hasUncompressedSource(),
@@ -1743,128 +1743,128 @@ ScriptSource::movePendingCompressedSource()
     pendingCompressed_.destroy();
 }
 
-template<typename CharT>
-ScriptSource::PinnedChars<CharT>::~PinnedChars()
+template<typename Unit>
+ScriptSource::PinnedUnits<Unit>::~PinnedUnits()
 {
-    if (chars_) {
+    if (units_) {
         MOZ_ASSERT(*stack_ == this);
         *stack_ = prev_;
         if (!prev_) {
-            source_->movePendingCompressedSource<CharT>();
+            source_->movePendingCompressedSource<Unit>();
         }
     }
 }
 
-template<typename CharT>
-const CharT*
-ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
+template<typename Unit>
+const Unit*
+ScriptSource::units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                     size_t begin, size_t len)
 {
     MOZ_ASSERT(begin <= length());
     MOZ_ASSERT(begin + len <= length());
 
-    if (data.is<Uncompressed<CharT>>()) {
-        const CharT* chars = data.as<Uncompressed<CharT>>().chars();
-        if (!chars) {
+    if (data.is<Uncompressed<Unit>>()) {
+        const Unit* units = data.as<Uncompressed<Unit>>().units();
+        if (!units) {
             return nullptr;
         }
-        return chars + begin;
+        return units + begin;
     }
 
     if (data.is<Missing>()) {
-        MOZ_CRASH("ScriptSource::chars() on ScriptSource with SourceType = Missing");
+        MOZ_CRASH("ScriptSource::units() on ScriptSource with SourceType = Missing");
     }
 
-    MOZ_ASSERT(data.is<Compressed<CharT>>());
+    MOZ_ASSERT(data.is<Compressed<Unit>>());
 
     // Determine which chunk(s) we are interested in, and the offsets within
     // these chunks.
     size_t firstChunk, lastChunk;
     size_t firstChunkOffset, lastChunkOffset;
     MOZ_ASSERT(len > 0);
-    Compressor::toChunkOffset(begin * sizeof(CharT), &firstChunk, &firstChunkOffset);
-    Compressor::toChunkOffset((begin + len - 1) * sizeof(CharT), &lastChunk, &lastChunkOffset);
+    Compressor::toChunkOffset(begin * sizeof(Unit), &firstChunk, &firstChunkOffset);
+    Compressor::toChunkOffset((begin + len - 1) * sizeof(Unit), &lastChunk, &lastChunkOffset);
 
-    MOZ_ASSERT(firstChunkOffset % sizeof(CharT) == 0);
-    size_t firstChar = firstChunkOffset / sizeof(CharT);
+    MOZ_ASSERT(firstChunkOffset % sizeof(Unit) == 0);
+    size_t firstUnit = firstChunkOffset / sizeof(Unit);
 
     if (firstChunk == lastChunk) {
-        const CharT* chars = chunkChars<CharT>(cx, holder, firstChunk);
-        if (!chars) {
+        const Unit* units = chunkUnits<Unit>(cx, holder, firstChunk);
+        if (!units) {
             return nullptr;
         }
 
-        return chars + firstChar;
+        return units + firstUnit;
     }
 
     // We need multiple chunks. Allocate a (null-terminated) buffer to hold
-    // |len| chars and copy uncompressed chars from the chunks into it. We use
-    // chunkChars() so we benefit from chunk caching by UncompressedSourceCache.
+    // |len| units and copy uncompressed units from the chunks into it. We use
+    // chunkUnits() so we benefit from chunk caching by UncompressedSourceCache.
 
     MOZ_ASSERT(firstChunk < lastChunk);
 
     size_t lengthWithNull = len + 1;
-    EntryChars<CharT> decompressed(js_pod_malloc<CharT>(lengthWithNull));
+    EntryUnits<Unit> decompressed(js_pod_malloc<Unit>(lengthWithNull));
     if (!decompressed) {
         JS_ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    size_t totalLengthInBytes = length() * sizeof(CharT);
-    CharT* cursor = decompressed.get();
+    size_t totalLengthInBytes = length() * sizeof(Unit);
+    Unit* cursor = decompressed.get();
 
     for (size_t i = firstChunk; i <= lastChunk; i++) {
         UncompressedSourceCache::AutoHoldEntry chunkHolder;
-        const CharT* chars = chunkChars<CharT>(cx, chunkHolder, i);
-        if (!chars) {
+        const Unit* units = chunkUnits<Unit>(cx, chunkHolder, i);
+        if (!units) {
             return nullptr;
         }
 
-        size_t numChars = Compressor::chunkSize(totalLengthInBytes, i) / sizeof(CharT);
+        size_t numUnits = Compressor::chunkSize(totalLengthInBytes, i) / sizeof(Unit);
         if (i == firstChunk) {
-            MOZ_ASSERT(firstChar < numChars);
-            chars += firstChar;
-            numChars -= firstChar;
+            MOZ_ASSERT(firstUnit < numUnits);
+            units += firstUnit;
+            numUnits -= firstUnit;
         } else if (i == lastChunk) {
-            size_t numCharsNew = lastChunkOffset / sizeof(CharT) + 1;
-            MOZ_ASSERT(numCharsNew <= numChars);
-            numChars = numCharsNew;
+            size_t numUnitsNew = lastChunkOffset / sizeof(Unit) + 1;
+            MOZ_ASSERT(numUnitsNew <= numUnits);
+            numUnits = numUnitsNew;
         }
-        mozilla::PodCopy(cursor, chars, numChars);
-        cursor += numChars;
+        mozilla::PodCopy(cursor, units, numUnits);
+        cursor += numUnits;
     }
 
     // XXX Bug 1499192: can we remove the null-termination?  It's unclear if
     //     anyone uses chunk implicit null-termination, chunks can contain
     //     nulls anyway, and the extra character risks size-class goofs.
-    *cursor++ = CharT('\0');
+    *cursor++ = Unit('\0');
     MOZ_ASSERT(PointerRangeSize(decompressed.get(), cursor) == lengthWithNull);
 
     // Transfer ownership to |holder|.
-    const CharT* ret = decompressed.get();
-    holder.holdChars(std::move(decompressed));
+    const Unit* ret = decompressed.get();
+    holder.holdUnits(std::move(decompressed));
     return ret;
 }
 
-template<typename CharT>
-ScriptSource::PinnedChars<CharT>::PinnedChars(JSContext* cx, ScriptSource* source,
-                                              UncompressedSourceCache::AutoHoldEntry& holder,
-                                              size_t begin, size_t len)
-  : PinnedCharsBase(source)
+template<typename Unit>
+ScriptSource::PinnedUnits<Unit>::PinnedUnits(JSContext* cx, ScriptSource* source,
+                                             UncompressedSourceCache::AutoHoldEntry& holder,
+                                             size_t begin, size_t len)
+  : PinnedUnitsBase(source)
 {
-    MOZ_ASSERT(source->hasSourceType<CharT>(),
-               "must pin chars of source's type");
+    MOZ_ASSERT(source->hasSourceType<Unit>(),
+               "must pin units of source's type");
 
-    chars_ = source->chars<CharT>(cx, holder, begin, len);
-    if (chars_) {
-        stack_ = &source->pinnedCharsStack_;
+    units_ = source->units<Unit>(cx, holder, begin, len);
+    if (units_) {
+        stack_ = &source->pinnedUnitsStack_;
         prev_ = *stack_;
         *stack_ = this;
     }
 }
 
-template class ScriptSource::PinnedChars<Utf8Unit>;
-template class ScriptSource::PinnedChars<char16_t>;
+template class ScriptSource::PinnedUnits<Utf8Unit>;
+template class ScriptSource::PinnedUnits<char16_t>;
 
 JSFlatString*
 ScriptSource::substring(JSContext* cx, size_t start, size_t stop)
@@ -1876,22 +1876,22 @@ ScriptSource::substring(JSContext* cx, size_t start, size_t stop)
 
     // UTF-8 source text.
     if (hasSourceType<Utf8Unit>()) {
-        PinnedChars<Utf8Unit> chars(cx, this, holder, start, len);
-        if (!chars.get()) {
+        PinnedUnits<Utf8Unit> units(cx, this, holder, start, len);
+        if (!units.asChars()) {
             return nullptr;
         }
 
-        char* str = SourceTypeTraits<Utf8Unit>::toString(chars.get());
+        const char* str = units.asChars();
         return NewStringCopyUTF8N<CanGC>(cx, JS::UTF8Chars(str, len));
     }
 
     // UTF-16 source text.
-    PinnedChars<char16_t> chars(cx, this, holder, start, len);
-    if (!chars.get()) {
+    PinnedUnits<char16_t> units(cx, this, holder, start, len);
+    if (!units.asChars()) {
         return nullptr;
     }
 
-    return NewStringCopyN<CanGC>(cx, chars.get(), len);
+    return NewStringCopyN<CanGC>(cx, units.asChars(), len);
 }
 
 JSFlatString*
@@ -1904,12 +1904,12 @@ ScriptSource::substringDontDeflate(JSContext* cx, size_t start, size_t stop)
 
     // UTF-8 source text.
     if (hasSourceType<Utf8Unit>()) {
-        PinnedChars<Utf8Unit> chars(cx, this, holder, start, len);
-        if (!chars.get()) {
+        PinnedUnits<Utf8Unit> units(cx, this, holder, start, len);
+        if (!units.asChars()) {
             return nullptr;
         }
 
-        char* str = SourceTypeTraits<Utf8Unit>::toString(chars.get());
+        const char* str = units.asChars();
 
         // There doesn't appear to be a non-deflating UTF-8 string creation
         // function -- but then again, it's not entirely clear how current
@@ -1918,12 +1918,12 @@ ScriptSource::substringDontDeflate(JSContext* cx, size_t start, size_t stop)
     }
 
     // UTF-16 source text.
-    PinnedChars<char16_t> chars(cx, this, holder, start, len);
-    if (!chars.get()) {
+    PinnedUnits<char16_t> units(cx, this, holder, start, len);
+    if (!units.asChars()) {
         return nullptr;
     }
 
-    return NewStringCopyNDontDeflate<CanGC>(cx, chars.get(), len);
+    return NewStringCopyNDontDeflate<CanGC>(cx, units.asChars(), len);
 }
 
 bool
@@ -1938,14 +1938,14 @@ ScriptSource::appendSubstring(JSContext* cx, StringBuffer& buf, size_t start, si
         MOZ_CRASH("for now");
         return false;
     } else {
-        PinnedChars<char16_t> chars(cx, this, holder, start, len);
-        if (!chars.get()) {
+        PinnedUnits<char16_t> units(cx, this, holder, start, len);
+        if (!units.asChars()) {
             return false;
         }
         if (len > SourceDeflateLimit && !buf.ensureTwoByteChars()) {
             return false;
         }
-        return buf.append(chars.get(), len);
+        return buf.append(units.asChars(), len);
     }
 }
 
@@ -1959,28 +1959,28 @@ ScriptSource::functionBodyString(JSContext* cx)
     return substring(cx, start, stop);
 }
 
-template<typename CharT>
+template<typename Unit>
 void
-ScriptSource::setSource(typename SourceTypeTraits<CharT>::SharedImmutableString uncompressed)
+ScriptSource::setSource(typename SourceTypeTraits<Unit>::SharedImmutableString uncompressed)
 {
     MOZ_ASSERT(data.is<Missing>());
-    data = SourceType(Uncompressed<CharT>(std::move(uncompressed)));
+    data = SourceType(Uncompressed<Unit>(std::move(uncompressed)));
 }
 
-template<typename CharT>
+template<typename Unit>
 MOZ_MUST_USE bool
-ScriptSource::setSource(JSContext* cx, EntryChars<CharT>&& source, size_t length)
+ScriptSource::setSource(JSContext* cx, EntryUnits<Unit>&& source, size_t length)
 {
     auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
 
-    auto uniqueChars = SourceTypeTraits<CharT>::toCacheable(std::move(source));
+    auto uniqueChars = SourceTypeTraits<Unit>::toCacheable(std::move(source));
     auto deduped = cache.getOrCreate(std::move(uniqueChars), length);
     if (!deduped) {
         ReportOutOfMemory(cx);
         return false;
     }
 
-    setSource<CharT>(std::move(*deduped));
+    setSource<Unit>(std::move(*deduped));
     return true;
 }
 
@@ -2071,22 +2071,22 @@ ScriptSource::tryCompressOffThread(JSContext* cx)
     return EnqueueOffThreadCompression(cx, std::move(task));
 }
 
-template<typename CharT>
+template<typename Unit>
 void
 ScriptSource::setCompressedSource(SharedImmutableString raw, size_t uncompressedLength)
 {
     MOZ_ASSERT(data.is<Missing>() || hasUncompressedSource());
     MOZ_ASSERT_IF(hasUncompressedSource(), length() == uncompressedLength);
 
-    if (pinnedCharsStack_) {
+    if (pinnedUnitsStack_) {
         MOZ_ASSERT(pendingCompressed_.empty());
-        pendingCompressed_.construct<Compressed<CharT>>(std::move(raw), uncompressedLength);
+        pendingCompressed_.construct<Compressed<Unit>>(std::move(raw), uncompressedLength);
     } else {
-        data = SourceType(Compressed<CharT>(std::move(raw), uncompressedLength));
+        data = SourceType(Compressed<Unit>(std::move(raw), uncompressedLength));
     }
 }
 
-template<typename CharT>
+template<typename Unit>
 MOZ_MUST_USE bool
 ScriptSource::setCompressedSource(JSContext* cx, UniqueChars&& compressed, size_t rawLength,
                                   size_t sourceLength)
@@ -2100,7 +2100,7 @@ ScriptSource::setCompressedSource(JSContext* cx, UniqueChars&& compressed, size_
         return false;
     }
 
-    setCompressedSource<CharT>(std::move(*deduped), sourceLength);
+    setCompressedSource<Unit>(std::move(*deduped), sourceLength);
     return true;
 }
 
@@ -2151,23 +2151,23 @@ reallocUniquePtr(UniqueChars& unique, size_t size)
     return true;
 }
 
-template<typename CharT>
+template<typename Unit>
 void
 SourceCompressionTask::workEncodingSpecific()
 {
     ScriptSource* source = sourceHolder_.get();
-    MOZ_ASSERT(source->data.is<ScriptSource::Uncompressed<CharT>>());
+    MOZ_ASSERT(source->data.is<ScriptSource::Uncompressed<Unit>>());
 
     // Try to keep the maximum memory usage down by only allocating half the
     // size of the string, first.
-    size_t inputBytes = source->length() * sizeof(CharT);
+    size_t inputBytes = source->length() * sizeof(Unit);
     size_t firstSize = inputBytes / 2;
     UniqueChars compressed(js_pod_malloc<char>(firstSize));
     if (!compressed) {
         return;
     }
 
-    const CharT* chars = source->data.as<ScriptSource::Uncompressed<CharT>>().chars();
+    const Unit* chars = source->data.as<ScriptSource::Uncompressed<Unit>>().units();
     Compressor comp(reinterpret_cast<const unsigned char*>(chars), inputBytes);
     if (!comp.init()) {
         return;
@@ -2233,9 +2233,9 @@ struct SourceCompressionTask::PerformTaskWork
       : task_(task)
     {}
 
-    template<typename CharT>
-    void match(const ScriptSource::Uncompressed<CharT>&) {
-        task_->workEncodingSpecific<CharT>();
+    template<typename Unit>
+    void match(const ScriptSource::Uncompressed<Unit>&) {
+        task_->workEncodingSpecific<Unit>();
     }
 
     template<typename T>
@@ -2365,7 +2365,7 @@ ScriptSource::xdrFinalizeEncoder(JS::TranscodeBuffer& buffer)
     return res.isOk();
 }
 
-template<typename CharT>
+template<typename Unit>
 struct SourceDecoder
 {
     XDRState<XDR_DECODE>* const xdr_;
@@ -2381,15 +2381,15 @@ struct SourceDecoder
     {}
 
     XDRResult decode() {
-        auto sourceChars =
-            xdr_->cx()->make_pod_array<CharT>(Max<size_t>(uncompressedLength_, 1));
-        if (!sourceChars) {
+        auto sourceUnits =
+            xdr_->cx()->make_pod_array<Unit>(Max<size_t>(uncompressedLength_, 1));
+        if (!sourceUnits) {
             return xdr_->fail(JS::TranscodeResult_Throw);
         }
 
-        MOZ_TRY(xdr_->codeChars(sourceChars.get(), uncompressedLength_));
+        MOZ_TRY(xdr_->codeChars(sourceUnits.get(), uncompressedLength_));
 
-        if (!scriptSource_->setSource(xdr_->cx(), std::move(sourceChars),
+        if (!scriptSource_->setSource(xdr_->cx(), std::move(sourceUnits),
                                       uncompressedLength_))
         {
             return xdr_->fail(JS::TranscodeResult_Throw);
@@ -2420,7 +2420,7 @@ ScriptSource::xdrUncompressedSource<XDR_DECODE>(XDRState<XDR_DECODE>* xdr,
 
 } // namespace js
 
-template<typename CharT>
+template<typename Unit>
 struct SourceEncoder
 {
     XDRState<XDR_ENCODE>* const xdr_;
@@ -2434,9 +2434,9 @@ struct SourceEncoder
     {}
 
     XDRResult encode() {
-        CharT* sourceChars = const_cast<CharT*>(source_->uncompressedData<CharT>());
+        Unit* sourceUnits = const_cast<Unit*>(source_->uncompressedData<Unit>());
 
-        return xdr_->codeChars(sourceChars, uncompressedLength_);
+        return xdr_->codeChars(sourceUnits, uncompressedLength_);
     }
 };
 
@@ -2692,20 +2692,20 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 
             if (hasSourceType<Utf8Unit>()) {
                 // UTF-8 source text.
-                ScriptSource::PinnedChars<Utf8Unit> chars(xdr->cx(), this, holder, 0, length());
-                if (!chars.get()) {
+                ScriptSource::PinnedUnits<Utf8Unit> units(xdr->cx(), this, holder, 0, length());
+                if (!units.get()) {
                     return xdr->fail(JS::TranscodeResult_Throw);
                 }
                 mozilla::recordreplay::NoteContentParse8(this, filename(), "application/javascript",
-                                                         chars.get(), length());
+                                                         units.get(), length());
             } else {
                 // UTF-16 source text.
-                ScriptSource::PinnedChars<char16_t> chars(xdr->cx(), this, holder, 0, length());
-                if (!chars.get()) {
+                ScriptSource::PinnedUnits<char16_t> units(xdr->cx(), this, holder, 0, length());
+                if (!units.get()) {
                     return xdr->fail(JS::TranscodeResult_Throw);
                 }
                 mozilla::recordreplay::NoteContentParse16(this, filename(), "application/javascript",
-                                                          chars.get(), length());
+                                                          units.get(), length());
             }
         }
     }
