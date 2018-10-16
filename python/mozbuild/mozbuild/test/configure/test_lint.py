@@ -321,6 +321,25 @@ class TestLint(unittest.TestCase):
                           '--with-foo should be used instead of '
                           '--without-foo with default=False')
 
+    def test_default_func(self):
+        # Help text for an option with variable default should contain
+        # {enable|disable} rule.
+        with self.moz_configure('''
+            option(env='FOO', help='foo')
+            option('--enable-bar', default=depends('FOO')(lambda x: bool(x)),
+                   help='{Enable|Disable} bar')
+        '''):
+            self.lint_test()
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option(env='FOO', help='foo')
+                option('--enable-bar', default=depends('FOO')(lambda x: bool(x)),
+                       help='Enable bar')
+            '''):
+                self.lint_test()
+        self.assertEquals(e.exception.message,
+                          '--enable-bar has a non-constant default. '
+                          'Its help should contain "{Enable|Disable}"')
 
 if __name__ == '__main__':
     main()
