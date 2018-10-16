@@ -8,7 +8,7 @@ import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.content.Intent
-import junit.framework.Assert.assertFalse
+import org.junit.Assert.assertFalse
 import mozilla.components.browser.session.Download
 import mozilla.components.support.test.robolectric.grantPermission
 import org.junit.Before

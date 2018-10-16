@@ -13,13 +13,14 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.feature.downloads.DownloadsFeature
+import mozilla.components.feature.downloads.SimpleDownloadDialogFragment.DownloadDialogListener
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.samples.browser.ext.components
 
-class BrowserFragment : Fragment(), BackHandler {
+class BrowserFragment : Fragment(), BackHandler, DownloadDialogListener {
     private lateinit var sessionFeature: SessionFeature
     private lateinit var toolbarFeature: ToolbarFeature
     private lateinit var tabsToolbarFeature: TabsToolbarFeature
@@ -52,7 +53,11 @@ class BrowserFragment : Fragment(), BackHandler {
 
         tabsToolbarFeature = TabsToolbarFeature(requireContext(), toolbar, ::showTabs)
 
-        downloadsFeature = DownloadsFeature(requireContext(), sessionManager = components.sessionManager)
+        downloadsFeature = DownloadsFeature(
+            requireContext(),
+            sessionManager = components.sessionManager,
+            fragmentManager = childFragmentManager
+        )
 
         downloadsFeature.onNeedToRequestPermissions = { _, _ ->
             requestPermissions(arrayOf(WRITE_EXTERNAL_STORAGE), PERMISSION_WRITE_STORAGE_REQUEST)

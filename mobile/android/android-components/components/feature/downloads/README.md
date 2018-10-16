@@ -38,6 +38,8 @@ val downloadsFeature =
     DownloadsFeature(context,
     onNeedToRequestPermissions /*Optional*/,
     onDownloadCompleted /*Optional*/,
+    fragmentManager /*Optional, if it is provided, before every download a dialog will be shown*/,
+    dialog /*Optional, if it is not provided a simple dialog will be shown before every download, with a positive button and negative button.*/,
     sessionManager = sessionManager)
 
 //Starts observing the selected session for new downloads and forward it to
@@ -49,37 +51,133 @@ downloadsFeature.stop()
 
 ```
 
-### DownloadManager
-It is our representation to of the [Android downloads manager](https://developer.android.com/reference/android/app/DownloadManager). It allows you to download files and be subscribed for download events.
+### DownloadDialogFragment
+ This is general representation of a dialog meant to be used in collaboration with `DownloadsFeature`
+ to show a dialog before a download is triggered. If `SimpleDownloadDialogFragment` is not flexible enough for your use case you should inherit for this class.
 
 ```kotlin
- val onDownloadComplete = { download: Download, downloadId: Long ->
-    //Show some UI.
+class FocusDialogDownloadFragment : DownloadDialogFragment() {
+
+    /*Creating a customized the dialog*/
+    override fun onCreateDialog(bundle: Bundle?): AlertDialog {
+        //DownloadsFeature will add these metadata before calling show() on the dialog.
+        val fileName = arguments?.getString(KEY_FILE_NAME)
+        //Not used, just for the sake you can use this metadata
+        val url = arguments?.getString(KEY_URL)
+        val contentLength = arguments?.getString(KEY_CONTENT_LENGTH)
+
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setCancelable(true)
+        builder.setTitle(getString(R.string.download_dialog_title))
+
+        val inflater = activity!!.layoutInflater
+        val dialogView = inflater.inflate(R.layout.download_dialog, null)
+        builder.setView(dialogView)
+
+        dialogView.download_dialog_icon.setImageResource(R.drawable.ic_download)
+        dialogView.download_dialog_file_name.text = fileName
+        dialogView.download_dialog_cancel.text = getString(R.string.download_dialog_action_cancel)
+        dialogView.download_dialog_download.text =
+            getString(R.string.download_dialog_action_download)
+
+        dialogView.download_dialog_warning.text = getString(R.string.download_dialog_warning)
+
+        setCancelButton(dialogView.download_dialog_cancel)
+        setDownloadButton(dialogView.download_dialog_download)
+
+        return builder.create()
+    }
+
+    private fun setDownloadButton(button: Button) {
+        button.setOnClickListener {
+            //Letting know DownloadFeature that can proceed with the download
+            onStartDownload()
+            TelemetryWrapper.downloadDialogDownloadEvent(true)
+            dismiss()
+        }
+    }
+
+    private fun setCancelButton(button: Button) {
+        button.setOnClickListener {
+           TelemetryWrapper.downloadDialogDownloadEvent(false)
+            dismiss()
+        }
+    }
 }
 
-val manager = DownloadManager(applicationContext, onDownloadComplete /*Optional*/)
+//Adding our dialog to DownloadsFeature
+val downloadsFeature = DownloadsFeature(
+            context(),
+            sessionManager = sessionManager,
+            fragmentManager = fragmentManager,
+            dialog = FocusDialogDownloadFragment()
+        )
 
-val download = Download(
-    "http://ipv4.download.thinkbroadband.com/5MB.zip",
-    null, "application/zip", 5242880,
-    "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
-)
-
-val refererURL = "https://www.mozilla.org/"
-val cookie = "yummy_cookie=choco"
-
-val downloadId = manager.download(
-    download,
-    refererURL /*Optional*/,
-    cookie /*Optional*/
-)
-
-//If you want to stop listening.
-manager.unregisterListener()
+downloadsFeature.start()
 ```
 
+### SimpleDownloadDialogFragment
+ A confirmation dialog to be called before a download is trigger.
 
+SimpleDownloadDialogFragment is the default dialog if you don't provide a value to DownloadsFeature.
+ It is composed by a title, a negative and a positive bottoms. When the positive button is clicked the download it triggered.
 
+```kotlin
+//To use the default behavior, just provide a fragmentManager/childFragmentManager.
+        downloadsFeature = DownloadsFeature(
+            requireContext(),
+            sessionManager = components.sessionManager,
+            fragmentManager = fragmentManager /*If you're inside a Fragment use childFragmentManager '*/
+        )
+
+        downloadsFeature.start()
+```
+Customizing SimpleDownloadDialogFragment.
+
+```kotlin
+        val dialog = SimpleDownloadDialogFragment.newInstance(
+                dialogTitleText = R.string.dialog_title,
+                positiveButtonText = R.string.download,
+                negativeButtonText = R.string.cancel,
+                cancelable = true,
+                themeResId = R.style.your_theme
+            )
+
+        downloadsFeature = DownloadsFeature(
+            requireContext(),
+            sessionManager = components.sessionManager,
+            fragmentManager = fragmentManager,
+            dialog = dialog
+        )
+
+        downloadsFeature.start()
+  ```
+
+### Things to keep in mind:
+
+:squirrel: You must implement the DownloadDialogListener interface to ensure that you will get notified notify on positiveButtonClick and negativeButtonClick events after activity/fragment recreations, if you don't do that you will get a ClassCastException.
+
+```kotlin
+    interface DownloadDialogListener {
+        fun onPositiveButtonClick() = Unit
+        fun onNegativeButtonClick() = Unit
+    }
+  ```
+
+🕵️ If you are using SimpleDownloadDialogFragment class from a  Fragment you must use a childFragmentManager you will get a ClassCastException.
+
+```kotlin
+        val dialog = SimpleDownloadDialogFragment.newInstance()
+
+        downloadsFeature = DownloadsFeature(
+            requireContext(),
+            sessionManager = components.sessionManager,
+            fragmentManager = childFragmentManager,
+            dialog = dialog
+        )
+
+        downloadsFeature.start()
+  ```
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

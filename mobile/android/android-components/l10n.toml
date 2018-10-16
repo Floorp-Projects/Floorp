@@ -21,3 +21,7 @@ locales = [
 [[paths]]
   reference = "components/feature/tabs/src/main/res/values/strings.xml"
   l10n = "{l10n_base}/components/feature/tabs/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
+  reference = "components/feature/downloads/src/main/res/values/strings.xml"
+  l10n = "{l10n_base}/components/feature/downloads/src/main/res/values-{android_locale}/strings.xml"
