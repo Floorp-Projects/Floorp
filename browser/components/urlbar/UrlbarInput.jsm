@@ -527,7 +527,7 @@ class CopyCutController {
 
       let event = urlbar.document.createEvent("UIEvents");
       event.initUIEvent("input", true, false, this.window, 0);
-      urlbar.dispatchEvent(event);
+      urlbar.textbox.dispatchEvent(event);
 
       urlbar.window.SetPageProxyState("invalid");
     }
