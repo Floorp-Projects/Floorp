@@ -442,8 +442,7 @@ ReflowInput::Init(nsPresContext*     aPresContext,
   } else {
     const nsStyleCoord& bSizeCoord = mStylePosition->BSize(mWritingMode);
     const nsStyleCoord& maxBSizeCoord = mStylePosition->MaxBSize(mWritingMode);
-    if ((bSizeCoord.GetUnit() != eStyleUnit_Auto ||
-         maxBSizeCoord.GetUnit() != eStyleUnit_None) &&
+    if ((!bSizeCoord.IsAutoOrEnum() || !maxBSizeCoord.IsAutoOrEnum()) &&
          // Don't set NS_FRAME_IN_CONSTRAINED_BSIZE on body or html elements.
          (mFrame->GetContent() &&
         !(mFrame->GetContent()->IsAnyOfHTMLElements(nsGkAtoms::body,
@@ -1568,8 +1567,7 @@ ReflowInput::CalculateHypotheticalPosition(
 
     nscoord boxBSize;
     nsStyleCoord styleBSize = mStylePosition->BSize(wm);
-    bool isAutoBSize = styleBSize.GetUnit() == eStyleUnit_Auto;
-    if (isAutoBSize) {
+    if (styleBSize.IsAutoOrEnum()) {
       if (NS_FRAME_IS_REPLACED(mFrameType) && knowIntrinsicSize) {
         // It's a replaced element with an 'auto' block size so the box
         // block size is its intrinsic size plus any border/padding/margin
@@ -1889,7 +1887,7 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     }
   }
 
-  bool bSizeIsAuto = eStyleUnit_Auto == mStylePosition->BSize(cbwm).GetUnit();
+  bool bSizeIsAuto = mStylePosition->BSize(cbwm).IsAutoOrEnum();
   if (bStartIsAuto) {
     // solve for block-start
     if (bSizeIsAuto) {
@@ -2283,7 +2281,9 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
 
     // For calculating the size of this box, we use its own writing mode
     const nsStyleCoord &blockSize = mStylePosition->BSize(wm);
-    nsStyleUnit blockSizeUnit = blockSize.GetUnit();
+    nsStyleUnit blockSizeUnit = blockSize.IsAutoOrEnum()
+                                ? eStyleUnit_Auto
+                                : blockSize.GetUnit();
 
     // Check for a percentage based block size and a containing block
     // block size that depends on the content block size
@@ -3021,7 +3021,7 @@ SizeComputationInput::ComputePadding(WritingMode aWM,
 }
 
 void
-ReflowInput::ComputeMinMaxValues(const LogicalSize&aCBSize)
+ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize)
 {
   WritingMode wm = GetWritingMode();
 
@@ -3057,49 +3057,37 @@ ReflowInput::ComputeMinMaxValues(const LogicalSize&aCBSize)
   }
 
   // Check for percentage based values and a containing block height that
-  // depends on the content height. Treat them like 'auto'
+  // depends on the content height. Treat them like the initial value.
   // Likewise, check for calc() with percentages on internal table elements;
-  // that's treated as 'auto' too.
+  // that's treated as the initial value too.
   // Likewise, if we're a child of a flex container who's measuring our
-  // intrinsic height, then we want to disregard our min-height.
+  // intrinsic height, then we want to disregard our min-height/max-height.
+  const nscoord& bPercentageBasis = aCBSize.BSize(wm);
+  auto BSizeBehavesAsInitialValue = [&](const nsStyleCoord& aBSize) {
+    return nsLayoutUtils::IsAutoBSize(aBSize, bPercentageBasis) ||
+             (mFrameType == NS_CSS_FRAME_TYPE_INTERNAL_TABLE &&
+              aBSize.IsCalcUnit() && aBSize.CalcHasPercent()) ||
+             mFlags.mIsFlexContainerMeasuringBSize;
+  };
 
   // NOTE: min-height:auto resolves to 0, except on a flex item. (But
   // even there, it's supposed to be ignored (i.e. treated as 0) until
   // the flex container explicitly resolves & considers it.)
-  if (eStyleUnit_Auto == minBSize.GetUnit() ||
-      (NS_AUTOHEIGHT == aCBSize.BSize(wm) &&
-       minBSize.HasPercent()) ||
-      (mFrameType == NS_CSS_FRAME_TYPE_INTERNAL_TABLE &&
-       minBSize.IsCalcUnit() && minBSize.CalcHasPercent()) ||
-      mFlags.mIsFlexContainerMeasuringBSize) {
+  if (BSizeBehavesAsInitialValue(minBSize)) {
     ComputedMinBSize() = 0;
   } else {
-    ComputedMinBSize() = ComputeBSizeValue(aCBSize.BSize(wm),
+    ComputedMinBSize() = ComputeBSizeValue(bPercentageBasis,
                                            mStylePosition->mBoxSizing,
                                            minBSize);
   }
-  nsStyleUnit maxBSizeUnit = maxBSize.GetUnit();
-  if (eStyleUnit_None == maxBSizeUnit) {
+
+  if (BSizeBehavesAsInitialValue(maxBSize)) {
     // Specified value of 'none'
     ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;  // no limit
   } else {
-    // Check for percentage based values and a containing block height that
-    // depends on the content height. Treat them like 'none'
-    // Likewise, check for calc() with percentages on internal table elements;
-    // that's treated as 'auto' too.
-    // Likewise, if we're a child of a flex container who's measuring our
-    // intrinsic height, then we want to disregard our max-height.
-    if ((NS_AUTOHEIGHT == aCBSize.BSize(wm) &&
-         maxBSize.HasPercent()) ||
-        (mFrameType == NS_CSS_FRAME_TYPE_INTERNAL_TABLE &&
-         maxBSize.IsCalcUnit() && maxBSize.CalcHasPercent()) ||
-        mFlags.mIsFlexContainerMeasuringBSize) {
-      ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
-    } else {
-      ComputedMaxBSize() = ComputeBSizeValue(aCBSize.BSize(wm),
-                                             mStylePosition->mBoxSizing,
-                                             maxBSize);
-    }
+    ComputedMaxBSize() = ComputeBSizeValue(bPercentageBasis,
+                                           mStylePosition->mBoxSizing,
+                                           maxBSize);
   }
 
   // If the computed value of 'min-height' is greater than the value of
