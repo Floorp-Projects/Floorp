@@ -1,0 +1,23 @@
+
+basepath = "."
+
+locales = [
+
+  ]
+[env]
+
+[[paths]]
+  reference = "components/ui/tabcounter/src/main/res/values/strings.xml"
+  l10n = "{l10n_base}/components/ui/tabcounter/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
+  reference = "components/browser/errorpages/src/main/res/values/strings.xml"
+  l10n = "{l10n_base}/components/browser/errorpages/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
+  reference = "components/browser/toolbar/src/main/res/values/strings.xml"
+  l10n = "{l10n_base}/components/browser/toolbar/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
+  reference = "components/feature/tabs/src/main/res/values/strings.xml"
+  l10n = "{l10n_base}/components/feature/tabs/src/main/res/values-{android_locale}/strings.xml"
