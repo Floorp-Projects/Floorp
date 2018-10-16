@@ -576,7 +576,8 @@ struct ContentInfo
   const void* mToken;
   char* mURL;
   char* mContentType;
-  InfallibleVector<char16_t> mContent;
+  InfallibleVector<char> mContent8;
+  InfallibleVector<char16_t> mContent16;
 
   ContentInfo(const void* aToken, const char* aURL, const char* aContentType)
     : mToken(aToken),
@@ -588,7 +589,8 @@ struct ContentInfo
     : mToken(aOther.mToken),
       mURL(aOther.mURL),
       mContentType(aOther.mContentType),
-      mContent(std::move(aOther.mContent))
+      mContent8(std::move(aOther.mContent8)),
+      mContent16(std::move(aOther.mContent16))
   {
     aOther.mURL = nullptr;
     aOther.mContentType = nullptr;
@@ -623,18 +625,37 @@ RecordReplayInterface_BeginContentParse(const void* aToken,
 }
 
 MOZ_EXPORT void
-RecordReplayInterface_AddContentParseData(const void* aToken,
-                                          const char16_t* aBuffer, size_t aLength)
+RecordReplayInterface_AddContentParseData8(const void* aToken,
+                                           const Utf8Unit* aUtf8Buffer, size_t aLength)
 {
   MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
   MOZ_RELEASE_ASSERT(aToken);
 
-  RecordReplayAssert("AddContentParseDataForRecordReplay %d", (int) aLength);
+  RecordReplayAssert("AddContentParseData8ForRecordReplay %d", (int) aLength);
 
   MonitorAutoLock lock(*child::gMonitor);
   for (ContentInfo& info : gContent) {
     if (info.mToken == aToken) {
-      info.mContent.append(aBuffer, aLength);
+      info.mContent8.append(reinterpret_cast<const char*>(aUtf8Buffer), aLength);
+      return;
+    }
+  }
+  MOZ_CRASH("Unknown content parse token");
+}
+
+MOZ_EXPORT void
+RecordReplayInterface_AddContentParseData16(const void* aToken,
+                                            const char16_t* aBuffer, size_t aLength)
+{
+  MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
+  MOZ_RELEASE_ASSERT(aToken);
+
+  RecordReplayAssert("AddContentParseData16ForRecordReplay %d", (int) aLength);
+
+  MonitorAutoLock lock(*child::gMonitor);
+  for (ContentInfo& info : gContent) {
+    if (info.mToken == aToken) {
+      info.mContent16.append(aBuffer, aLength);
       return;
     }
   }
@@ -667,9 +688,19 @@ FetchContent(JSContext* aCx, HandleString aURL,
   for (ContentInfo& info : gContent) {
     if (JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(aURL), info.mURL)) {
       aContentType.set(JS_NewStringCopyZ(aCx, info.mContentType));
-      aContent.set(JS_NewUCStringCopyN(aCx, (const char16_t*) info.mContent.begin(),
-                                       info.mContent.length()));
-      return aContentType && aContent;
+      if (!aContentType) {
+        return false;
+      }
+
+      MOZ_ASSERT(info.mContent8.length() == 0 ||
+                 info.mContent16.length() == 0,
+                 "should have content data of only one type");
+
+      aContent.set(info.mContent8.length() > 0
+                   ? JS_NewStringCopyUTF8N(aCx, JS::UTF8Chars(info.mContent8.begin(),
+                                                              info.mContent8.length()))
+                   : JS_NewUCStringCopyN(aCx, info.mContent16.begin(), info.mContent16.length()));
+      return aContent != nullptr;
     }
   }
   aContentType.set(JS_NewStringCopyZ(aCx, "text/plain"));

@@ -66,8 +66,6 @@ treeherder:
         'TMW': 'Toolchain builds for Windows MinGW'
         'TW32': 'Toolchain builds for Windows 32-bits'
         'TW64': 'Toolchain builds for Windows 64-bits'
-        'WM32': 'MinGW builds for Windows 32-bits'
-        'WM64': 'MinGW builds for Windows 64-bits'
         'WMC32': 'MinGW-Clang builds for Windows 32-bits'
         'WMC64': 'MinGW-Clang builds for Windows 64-bits'
         'Searchfox': 'Searchfox builds'

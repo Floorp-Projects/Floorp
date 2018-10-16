@@ -36,6 +36,7 @@
 #include "frontend/ForOfLoopControl.h"
 #include "frontend/IfEmitter.h"
 #include "frontend/NameOpEmitter.h"
+#include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "frontend/PropOpEmitter.h"
 #include "frontend/SwitchEmitter.h"
@@ -53,7 +54,6 @@
 #include "vm/Stack.h"
 #include "wasm/AsmJS.h"
 
-#include "frontend/ParseNode-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;
@@ -1716,9 +1716,9 @@ BytecodeEmitter::emitGetNameAtLocation(JSAtom* name, const NameLocation& loc)
 }
 
 bool
-BytecodeEmitter::emitGetName(ParseNode* pn)
+BytecodeEmitter::emitGetName(NameNode* name)
 {
-    return emitGetName(pn->name());
+    return emitGetName(name->name());
 }
 
 bool
@@ -2221,7 +2221,7 @@ BytecodeEmitter::emitSetThis(BinaryNode* setThisNode)
     MOZ_ASSERT(setThisNode->isKind(ParseNodeKind::SetThis));
     MOZ_ASSERT(setThisNode->left()->isKind(ParseNodeKind::Name));
 
-    RootedAtom name(cx, setThisNode->left()->name());
+    RootedAtom name(cx, setThisNode->left()->as<NameNode>().name());
 
     // The 'this' binding is not lexical, but due to super() semantics this
     // initialization needs to be treated as a lexical one.
@@ -2558,7 +2558,7 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
     } else {
         switch (target->getKind()) {
           case ParseNodeKind::Name: {
-            RootedAtom name(cx, target->name());
+            RootedAtom name(cx, target->as<NameNode>().name());
             NameLocation loc;
             NameOpEmitter::Kind kind;
             switch (flav) {
@@ -3027,7 +3027,7 @@ BytecodeEmitter::emitInitializer(ParseNode* initializer, ParseNode* pattern)
 
     if (initializer->isDirectRHSAnonFunction()) {
         MOZ_ASSERT(!pattern->isInParens());
-        RootedAtom name(cx, pattern->name());
+        RootedAtom name(cx, pattern->as<NameNode>().name());
         if (!setOrEmitSetFunName(initializer, name)) {
             return false;
         }
@@ -3769,7 +3769,8 @@ BytecodeEmitter::emitDeclarationList(ListNode* declList)
                 return false;
             }
         } else {
-            if (!emitSingleDeclaration(declList, decl, decl->as<NameNode>().initializer())) {
+            NameNode* name = &decl->as<NameNode>();
+            if (!emitSingleDeclaration(declList, name, name->initializer())) {
                 return false;
             }
         }
@@ -3778,7 +3779,7 @@ BytecodeEmitter::emitDeclarationList(ListNode* declList)
 }
 
 bool
-BytecodeEmitter::emitSingleDeclaration(ParseNode* declList, ParseNode* decl,
+BytecodeEmitter::emitSingleDeclaration(ListNode* declList, NameNode* decl,
                                        ParseNode* initializer)
 {
     MOZ_ASSERT(decl->isKind(ParseNodeKind::Name));
@@ -3865,8 +3866,10 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
     // Name assignments are handled separately because choosing ops and when
     // to emit BINDNAME is involved and should avoid duplication.
     if (lhs->isKind(ParseNodeKind::Name)) {
+        NameNode* nameNode = &lhs->as<NameNode>();
+        RootedAtom name(cx, nameNode->name());
         NameOpEmitter noe(this,
-                          lhs->name(),
+                          name,
                           isCompound
                           ? NameOpEmitter::Kind::CompoundAssignment
                           : NameOpEmitter::Kind::SimpleAssignment);
@@ -3881,9 +3884,8 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp, ParseNode* rhs)
             return false;
         }
         if (rhs && rhs->isDirectRHSAnonFunction()) {
-            MOZ_ASSERT(!lhs->isInParens());
+            MOZ_ASSERT(!nameNode->isInParens());
             MOZ_ASSERT(!isCompound);
-            RootedAtom name(cx, lhs->name());
             if (!setOrEmitSetFunName(rhs, name)) {         // ENV? VAL? RHS
                 return false;
             }
@@ -4236,13 +4238,13 @@ ParseNode::getConstantValue(JSContext* cx, AllowConstantObjects allowObjects,
 }
 
 bool
-BytecodeEmitter::emitSingletonInitialiser(ParseNode* pn)
+BytecodeEmitter::emitSingletonInitialiser(ListNode* objOrArray)
 {
     NewObjectKind newKind =
-        (pn->getKind() == ParseNodeKind::Object) ? SingletonObject : TenuredObject;
+        (objOrArray->getKind() == ParseNodeKind::Object) ? SingletonObject : TenuredObject;
 
     RootedValue value(cx);
-    if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value, nullptr, 0, newKind)) {
+    if (!objOrArray->getConstantValue(cx, ParseNode::AllowObjects, &value, nullptr, 0, newKind)) {
         return false;
     }
 
@@ -4327,7 +4329,7 @@ BytecodeEmitter::emitCatch(BinaryNode* catchClause)
             break;
 
           case ParseNodeKind::Name:
-            if (!emitLexicalInitialization(param)) {
+            if (!emitLexicalInitialization(&param->as<NameNode>())) {
                 return false;
             }
             if (!emit1(JSOP_POP)) {
@@ -4909,7 +4911,8 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead)
     target = parser->astGenerator().singleBindingFromDeclaration(&target->as<ListNode>());
 
     if (target->isKind(ParseNodeKind::Name)) {
-        NameOpEmitter noe(this, target->name(), NameOpEmitter::Kind::Initialize);
+        NameNode* nameNode = &target->as<NameNode>();
+        NameOpEmitter noe(this, nameNode->name(), NameOpEmitter::Kind::Initialize);
         if (!noe.prepareForRhs()) {
             return false;
         }
@@ -4965,8 +4968,7 @@ BytecodeEmitter::emitForOf(ForNode* forOfLoop, const EmitterScope* headLexicalEm
     bool allowSelfHostedIter = false;
     if (emitterMode == BytecodeEmitter::SelfHosting &&
         forHeadExpr->isKind(ParseNodeKind::Call) &&
-        forHeadExpr->as<BinaryNode>().left()->name() == cx->names().allowContentIter)
-    {
+        forHeadExpr->as<BinaryNode>().left()->isName(cx->names().allowContentIter)) {
         allowSelfHostedIter = true;
     }
 
@@ -5036,7 +5038,8 @@ BytecodeEmitter::emitForIn(ForNode* forInLoop, const EmitterScope* headLexicalEm
                     return false;
                 }
 
-                NameOpEmitter noe(this, decl->name(), NameOpEmitter::Kind::Initialize);
+                NameNode* nameNode = &decl->as<NameNode>();
+                NameOpEmitter noe(this, nameNode->name(), NameOpEmitter::Kind::Initialize);
                 if (!noe.prepareForRhs()) {
                     return false;
                 }
@@ -5617,13 +5620,12 @@ BytecodeEmitter::emitContinue(PropertyName* label)
 }
 
 bool
-BytecodeEmitter::emitGetFunctionThis(ParseNode* pn)
+BytecodeEmitter::emitGetFunctionThis(NameNode* thisName)
 {
     MOZ_ASSERT(sc->thisBinding() == ThisBinding::Function);
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Name));
-    MOZ_ASSERT(pn->name() == cx->names().dotThis);
+    MOZ_ASSERT(thisName->isName(cx->names().dotThis));
 
-    return emitGetFunctionThis(Some(pn->pn_pos.begin));
+    return emitGetFunctionThis(Some(thisName->pn_pos.begin));
 }
 
 bool
@@ -5651,13 +5653,15 @@ bool
 BytecodeEmitter::emitGetThisForSuperBase(UnaryNode* superBase)
 {
     MOZ_ASSERT(superBase->isKind(ParseNodeKind::SuperBase));
-    return emitGetFunctionThis(superBase->kid());         // THIS
+    NameNode* nameNode = &superBase->kid()->as<NameNode>();
+    return emitGetFunctionThis(nameNode);                 // THIS
 }
 
 bool
 BytecodeEmitter::emitThisLiteral(ThisLiteral* pn)
 {
-    if (ParseNode* thisName = pn->kid()) {
+    if (ParseNode* kid = pn->kid()) {
+        NameNode* thisName = &kid->as<NameNode>();
         return emitGetFunctionThis(thisName);             // THIS
     }
 
@@ -6520,7 +6524,7 @@ BytecodeEmitter::emitSelfHostedCallFunction(BinaryNode* callNode)
     //
     // argc is set to the amount of actually emitted args and the
     // emitting of args below is disabled by setting emitArgs to false.
-    ParseNode* calleeNode = callNode->left();
+    NameNode* calleeNode = &callNode->left()->as<NameNode>();
     ListNode* argsList = &callNode->right()->as<ListNode>();
 
     const char* errorName = SelfHostedCallFunctionName(calleeNode->name(), cx);
@@ -6540,8 +6544,7 @@ BytecodeEmitter::emitSelfHostedCallFunction(BinaryNode* callNode)
     ParseNode* funNode = argsList->head();
     if (constructing) {
         callOp = JSOP_NEW;
-    } else if (funNode->getKind() == ParseNodeKind::Name &&
-               funNode->name() == cx->names().std_Function_apply) {
+    } else if (funNode->isName(cx->names().std_Function_apply)) {
         callOp = JSOP_FUNAPPLY;
     }
 
@@ -6735,7 +6738,7 @@ BytecodeEmitter::emitSelfHostedGetPropertySuper(BinaryNode* callNode)
 }
 
 bool
-BytecodeEmitter::isRestParameter(ParseNode* pn)
+BytecodeEmitter::isRestParameter(ParseNode* expr)
 {
     if (!sc->isFunctionBox()) {
         return false;
@@ -6747,20 +6750,20 @@ BytecodeEmitter::isRestParameter(ParseNode* pn)
         return false;
     }
 
-    if (!pn->isKind(ParseNodeKind::Name)) {
-        if (emitterMode == BytecodeEmitter::SelfHosting && pn->isKind(ParseNodeKind::Call)) {
-            BinaryNode* callNode = &pn->as<BinaryNode>();
+    if (!expr->isKind(ParseNodeKind::Name)) {
+        if (emitterMode == BytecodeEmitter::SelfHosting &&
+            expr->isKind(ParseNodeKind::Call))
+        {
+            BinaryNode* callNode = &expr->as<BinaryNode>();
             ParseNode* calleeNode = callNode->left();
-            if (calleeNode->getKind() == ParseNodeKind::Name &&
-                calleeNode->name() == cx->names().allowContentIter)
-            {
+            if (calleeNode->isName(cx->names().allowContentIter)) {
                 return isRestParameter(callNode->right()->as<ListNode>().head());
             }
         }
         return false;
     }
 
-    JSAtom* name = pn->name();
+    JSAtom* name = expr->as<NameNode>().name();
     Maybe<NameLocation> paramLoc = locationOfNameBoundInFunctionScope(name);
     if (paramLoc && lookupName(name) == *paramLoc) {
         FunctionScope::Data* bindings = funbox->functionScopeBindings();
@@ -6781,8 +6784,8 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, CallOrNew
 {
     switch (callee->getKind()) {
       case ParseNodeKind::Name:
-        if (!cone.emitNameCallee(callee->name())) {       // CALLEE THIS
-            return false;
+        if (!cone.emitNameCallee(callee->as<NameNode>().name())) {
+            return false;                                 // CALLEE THIS
         }
         break;
       case ParseNodeKind::Dot: {
@@ -6958,7 +6961,7 @@ BytecodeEmitter::emitCallOrNew(BinaryNode* callNode,
         // Calls to "forceInterpreter", "callFunction",
         // "callContentFunction", or "resumeGenerator" in self-hosted
         // code generate inline bytecode.
-        PropertyName* calleeName = calleeNode->name();
+        PropertyName* calleeName = calleeNode->as<NameNode>().name();
         if (calleeName == cx->names().callFunction ||
             calleeName == cx->names().callContentFunction ||
             calleeName == cx->names().constructContentFunction)
@@ -7665,8 +7668,7 @@ BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count)
 
                 if (emitterMode == BytecodeEmitter::SelfHosting &&
                     expr->isKind(ParseNodeKind::Call) &&
-                    expr->as<BinaryNode>().left()->name() == cx->names().allowContentIter)
-                {
+                    expr->as<BinaryNode>().left()->isName(cx->names().allowContentIter)) {
                     allowSelfHostedIter = true;
                 }
             } else {
@@ -7955,7 +7957,7 @@ BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody)
                 return false;
             }
         } else if (hasParameterExprs || isRest) {
-            RootedAtom paramName(cx, bindingElement->name());
+            RootedAtom paramName(cx, bindingElement->as<NameNode>().name());
             NameLocation paramLoc = *locationOfNameBoundInScope(paramName, funScope);
             NameOpEmitter noe(this, paramName, paramLoc, NameOpEmitter::Kind::Initialize);
             if (!noe.prepareForRhs()) {
@@ -8102,9 +8104,9 @@ BytecodeEmitter::emitFunctionBody(ParseNode* funBody)
 }
 
 bool
-BytecodeEmitter::emitLexicalInitialization(ParseNode* pn)
+BytecodeEmitter::emitLexicalInitialization(NameNode* name)
 {
-    NameOpEmitter noe(this, pn->name(), NameOpEmitter::Kind::Initialize);
+    NameOpEmitter noe(this, name->name(), NameOpEmitter::Kind::Initialize);
     if (!noe.prepareForRhs()) {
         return false;
     }
@@ -8326,7 +8328,7 @@ BytecodeEmitter::emitClass(ClassNode* classNode)
     }
 
     if (names) {
-        ParseNode* innerName = names->innerBinding();
+        NameNode* innerName = names->innerBinding();
         if (!emitLexicalInitialization(innerName)) {            // ... CONSTRUCTOR
             return false;
         }
@@ -8337,8 +8339,7 @@ BytecodeEmitter::emitClass(ClassNode* classNode)
         }
         emitterScope.reset();
 
-        ParseNode* outerName = names->outerBinding();
-        if (outerName) {
+        if (NameNode* outerName = names->outerBinding()) {
             if (!emitLexicalInitialization(outerName)) {        // ... CONSTRUCTOR
                 return false;
             }
@@ -8368,7 +8369,7 @@ BytecodeEmitter::emitExportDefault(BinaryNode* exportNode)
     }
 
     if (ParseNode* binding = exportNode->right()) {
-        if (!emitLexicalInitialization(binding)) {
+        if (!emitLexicalInitialization(&binding->as<NameNode>())) {
             return false;
         }
 
@@ -8804,7 +8805,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::Name:
-        if (!emitGetName(pn)) {
+        if (!emitGetName(&pn->as<NameNode>())) {
             return false;
         }
         break;
