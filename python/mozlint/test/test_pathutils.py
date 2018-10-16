@@ -43,6 +43,7 @@ TEST_CASES = (
         'exclude': ['**/c.py', 'subdir1/subdir3'],
         'extensions': ['py'],
         'expected': ['.'],
+        'expected_exclude': ['subdir2/c.py', 'subdir1/subdir3'],
     },
     {
         'paths': ['a.py', 'a.js', 'subdir1/b.py', 'subdir2/c.py', 'subdir1/subdir3/d.py'],
@@ -64,9 +65,11 @@ TEST_CASES = (
 @pytest.mark.parametrize('test', TEST_CASES)
 def test_filterpaths(test):
     expected = test.pop('expected')
+    expected_exclude = test.pop('expected_exclude', [])
 
     paths, exclude = pathutils.filterpaths(root, **test)
     assert_paths(paths, expected)
+    assert_paths(exclude, expected_exclude)
 
 
 @pytest.mark.parametrize('paths,expected', [
