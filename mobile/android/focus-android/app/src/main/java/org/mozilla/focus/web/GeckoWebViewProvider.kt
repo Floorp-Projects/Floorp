@@ -19,7 +19,10 @@ import android.util.Log
 import android.view.View
 import android.webkit.WebSettings
 import kotlinx.coroutines.experimental.launch
+import mozilla.components.browser.errorpages.ErrorPages
+import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.session.Session
+import mozilla.components.support.ktx.android.util.Base64
 import org.json.JSONException
 import org.mozilla.focus.IO
 import org.mozilla.focus.R
@@ -39,6 +42,7 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.SessionFinder
 
@@ -436,7 +440,13 @@ class GeckoWebViewProvider : IWebViewProvider {
                     category: Int,
                     error: Int
                 ): GeckoResult<String> {
-                    return GeckoResult(null)
+                    ErrorPages.createErrorPage(
+                        context,
+                        geckoErrorToErrorType(error)
+                    ).apply {
+                        return GeckoResult.fromValue(Base64.encodeToUriString(this))
+                    }
+                    return GeckoResult.fromValue(null)
                 }
 
                 override fun onLoadRequest(
@@ -462,9 +472,6 @@ class GeckoWebViewProvider : IWebViewProvider {
                         IntentUtils.handleExternalUri(context, this@GeckoWebView, uri)
                     ) {
                         response.complete(true)
-                    } else if (uri == "about:neterror" || uri == "about:certerror") {
-                        response.complete(true)
-                        TODO("Error Page handling with Components ErrorPages #2471")
                     } else {
                         callback?.onRequest(flags == GeckoSession.NavigationDelegate.LOAD_REQUEST_IS_USER_TRIGGERED)
 
@@ -685,5 +692,40 @@ class GeckoWebViewProvider : IWebViewProvider {
         const val WEBVIEW_TITLE = "webViewTitle"
         const val CURRENT_URL = "currentUrl"
         const val ABOUT_BLANK = "about:blank"
+
+        /**
+         * Provides an ErrorType corresponding to the error code provided.
+         */
+        @Suppress("ComplexMethod")
+        internal fun geckoErrorToErrorType(@GeckoSession.NavigationDelegate.LoadError errorCode: Int) =
+            when (errorCode) {
+                NavigationDelegate.ERROR_UNKNOWN -> ErrorType.UNKNOWN
+                NavigationDelegate.ERROR_SECURITY_SSL -> ErrorType.ERROR_SECURITY_SSL
+                NavigationDelegate.ERROR_SECURITY_BAD_CERT -> ErrorType.ERROR_SECURITY_BAD_CERT
+                NavigationDelegate.ERROR_NET_INTERRUPT -> ErrorType.ERROR_NET_INTERRUPT
+                NavigationDelegate.ERROR_NET_TIMEOUT -> ErrorType.ERROR_NET_TIMEOUT
+                NavigationDelegate.ERROR_CONNECTION_REFUSED -> ErrorType.ERROR_CONNECTION_REFUSED
+                NavigationDelegate.ERROR_UNKNOWN_SOCKET_TYPE -> ErrorType.ERROR_UNKNOWN_SOCKET_TYPE
+                NavigationDelegate.ERROR_REDIRECT_LOOP -> ErrorType.ERROR_REDIRECT_LOOP
+                NavigationDelegate.ERROR_OFFLINE -> ErrorType.ERROR_OFFLINE
+                NavigationDelegate.ERROR_PORT_BLOCKED -> ErrorType.ERROR_PORT_BLOCKED
+                NavigationDelegate.ERROR_NET_RESET -> ErrorType.ERROR_NET_RESET
+                NavigationDelegate.ERROR_UNSAFE_CONTENT_TYPE -> ErrorType.ERROR_UNSAFE_CONTENT_TYPE
+                NavigationDelegate.ERROR_CORRUPTED_CONTENT -> ErrorType.ERROR_CORRUPTED_CONTENT
+                NavigationDelegate.ERROR_CONTENT_CRASHED -> ErrorType.ERROR_CONTENT_CRASHED
+                NavigationDelegate.ERROR_INVALID_CONTENT_ENCODING -> ErrorType.ERROR_INVALID_CONTENT_ENCODING
+                NavigationDelegate.ERROR_UNKNOWN_HOST -> ErrorType.ERROR_UNKNOWN_HOST
+                NavigationDelegate.ERROR_MALFORMED_URI -> ErrorType.ERROR_MALFORMED_URI
+                NavigationDelegate.ERROR_UNKNOWN_PROTOCOL -> ErrorType.ERROR_UNKNOWN_PROTOCOL
+                NavigationDelegate.ERROR_FILE_NOT_FOUND -> ErrorType.ERROR_FILE_NOT_FOUND
+                NavigationDelegate.ERROR_FILE_ACCESS_DENIED -> ErrorType.ERROR_FILE_ACCESS_DENIED
+                NavigationDelegate.ERROR_PROXY_CONNECTION_REFUSED -> ErrorType.ERROR_PROXY_CONNECTION_REFUSED
+                NavigationDelegate.ERROR_UNKNOWN_PROXY_HOST -> ErrorType.ERROR_UNKNOWN_PROXY_HOST
+                NavigationDelegate.ERROR_SAFEBROWSING_MALWARE_URI -> ErrorType.ERROR_SAFEBROWSING_MALWARE_URI
+                NavigationDelegate.ERROR_SAFEBROWSING_UNWANTED_URI -> ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI
+                NavigationDelegate.ERROR_SAFEBROWSING_HARMFUL_URI -> ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI
+                NavigationDelegate.ERROR_SAFEBROWSING_PHISHING_URI -> ErrorType.ERROR_SAFEBROWSING_PHISHING_URI
+                else -> ErrorType.UNKNOWN
+            }
     }
 }
