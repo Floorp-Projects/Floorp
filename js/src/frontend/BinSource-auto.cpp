@@ -2328,11 +2328,10 @@ BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t st
     size_t prevLength = positionalParams.get().length();
     if (index >= prevLength) {
         // This is implementation limit, which is not in the spec.
-        size_t newLength = index + 1;
-        if (newLength >= ARGNO_LIMIT) {
+        if (index >= ARGNO_LIMIT - 1) {
             return raiseError("AssertedPositionalParameterName.index is too big");
         }
-
+        size_t newLength = index + 1;
         BINJS_TRY(positionalParams.get().resize(newLength));
         for (uint32_t i = prevLength; i < newLength; i++) {
             positionalParams.get()[i] = nullptr;
