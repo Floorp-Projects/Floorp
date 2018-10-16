@@ -11,7 +11,15 @@
  */
 
 .sidebar-runtime-item {
+  font-size: 0.8em;
   align-items: center;
   display: grid;
-  grid-template-columns: 1fr max-content;
+  grid-column-gap: var(--base-distance);
+  grid-template-columns: 20px 1fr auto;
+}
+
+.sidebar-runtime-item__icon {
+  fill: currentColor;
+  -moz-context-properties: fill;
+  margin-inline-end: var(--base-distance);
 }
