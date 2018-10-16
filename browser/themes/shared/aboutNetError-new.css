@@ -98,7 +98,7 @@ body:not(.clockSkewError) #advancedPanelErrorTryAgain {
   display: none;
 }
 
-body:not(.clockSkewError) #moreInformationButton {
+body:not(:-moz-any(.clockSkewError,.badStsCert)) #moreInformationButton {
   display: none;
 }
 
@@ -106,7 +106,7 @@ body:not(.clockSkewError) #moreInformationButton {
   margin-inline-start: 0;
 }
 
-body:not(.neterror):not(.clockSkewError) #advancedButton {
+body:not(:-moz-any(.clockSkewError,.badStsCert,.neterror)) #advancedButton {
   display: block;
 }
 
