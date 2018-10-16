@@ -308,9 +308,6 @@ ThrottledEventQueue::Create(nsISerialEventTarget* aBaseTarget)
   MOZ_ASSERT(aBaseTarget);
 
   RefPtr<Inner> inner = Inner::Create(aBaseTarget);
-  if (NS_WARN_IF(!inner)) {
-    return nullptr;
-  }
 
   RefPtr<ThrottledEventQueue> ref =
     new ThrottledEventQueue(inner.forget());
