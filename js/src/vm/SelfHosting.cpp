@@ -2190,7 +2190,8 @@ intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject result(cx);
-    result = moduleResolveHook(cx, module, specifier);
+    RootedValue referencingPrivate(cx, JS::GetModulePrivate(module));
+    result = moduleResolveHook(cx, referencingPrivate, specifier);
     if (!result) {
         return false;
     }
