@@ -29,7 +29,7 @@ set_config('JS_STANDALONE', js_standalone)
 set_define('JS_STANDALONE', js_standalone)
 add_old_configure_assignment('JS_STANDALONE', js_standalone)
 js_option('--disable-js-shell', default=building_js,
-          help='Do not build the JS shell')
+          help='{Build|Do not build} the JS shell')
 
 @depends('--disable-js-shell')
 def js_disable_shell(value):
@@ -47,10 +47,10 @@ set_define('JS_NUNBOX32', depends(target)(lambda t: t.bitness == 32 or None))
 # SpiderMonkey as a shared library, and how its symbols are exported
 # ==================================================================
 js_option('--disable-shared-js', default=building_js,
-          help='Do not create a shared library')
+          help='{Create|Do not create} a shared library')
 
 js_option('--disable-export-js', default=building_js,
-          help='Do not mark JS symbols as DLL exported/visible')
+          help='{Mark|Do not mark} JS symbols as DLL exported/visible')
 
 @depends('--disable-shared-js', '--disable-export-js')
 def shared_js(shared_js, export_js):
@@ -131,7 +131,7 @@ def ion_default(target, enable_bigint):
 
 js_option('--enable-ion',
           default=ion_default,
-          help='Enable use of the IonMonkey JIT')
+          help='{Enable|Disable} use of the IonMonkey JIT')
 
 set_config('ENABLE_ION', depends_if('--enable-ion')(lambda x: True))
 
@@ -263,8 +263,8 @@ def enable_profiling(milestone, help):
     return milestone.is_nightly
 
 js_option('--enable-profiling', env='MOZ_PROFILING', default=enable_profiling,
-          help='Set compile flags necessary for using sampling profilers '
-               '(e.g. shark, perf)')
+          help='{Set|Do not set} compile flags necessary for using sampling '
+                'profilers (e.g. shark, perf)')
 
 @depends('--enable-profiling')
 def profiling(value):
@@ -311,7 +311,7 @@ set_define('JS_GC_TRACE', gc_trace)
 
 js_option('--enable-gczeal',
           default=depends(when=moz_debug)(lambda: True),
-          help='Enable zealous GCing')
+          help='{Enable|Disable} zealous GCing')
 
 set_define('JS_GC_ZEAL',
            depends_if('--enable-gczeal')(lambda _: True))
@@ -332,7 +332,7 @@ set_define('JS_GC_SMALL_CHUNK_SIZE',
 # =======================================================
 js_option('--enable-trace-logging',
           default=depends(when=moz_debug)(lambda: True),
-          help='Enable trace logging')
+          help='{Enable|Disable} trace logging')
 
 set_config('ENABLE_TRACE_LOGGING',
            depends_if('--enable-trace-logging')(lambda x: True))
@@ -362,7 +362,8 @@ set_define('JS_ION_PERF', ion_perf)
 
 js_option('--enable-jitspew',
           default=depends(when=moz_debug)(lambda: True),
-          help='Enable the Jit spew and IONFLAGS environment variable.')
+          help='{Enable|Disable} the Jit spew and IONFLAGS environment '
+               'variable')
 
 set_define('JS_JITSPEW',
            depends_if('--enable-jitspew')(lambda _: True))
@@ -375,7 +376,7 @@ set_config('JS_JITSPEW',
 # dumping registers on and off the stack.
 js_option('--enable-masm-verbose',
           default=depends(when=moz_debug)(lambda: True),
-          help='Enable MacroAssembler verbosity of generated code.')
+          help='{Enable|Disable} MacroAssembler verbosity of generated code.')
 set_define('JS_MASM_VERBOSE',
            depends_if('--enable-masm-verbose')(lambda _: True))
 set_config('JS_MASM_VERBOSE',
@@ -399,8 +400,9 @@ set_define('JS_MORE_DETERMINISTIC', more_deterministic)
 def ctypes_default(building_js, _):
     return not building_js
 
-js_option('--enable-ctypes', help='Enable js-ctypes',
-          default=ctypes_default)
+js_option('--enable-ctypes',
+          default=ctypes_default,
+          help='{Enable|Disable} js-ctypes')
 
 build_ctypes = depends_if('--enable-ctypes')(lambda _: True)
 
@@ -504,7 +506,7 @@ def default_cranelift(is_nightly):
 
 js_option('--enable-cranelift',
           default=default_cranelift,
-          help='Enable Cranelift code generator for wasm')
+          help='{Enable|Disable} Cranelift code generator for wasm')
 
 set_config('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: True))
 set_define('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: True))
