@@ -31,7 +31,16 @@ class BaseType(object):
                          the definition, but passed in by a consumer.
         :returns: A list of :class:`~result.Issue` objects.
         """
-        paths = filterpaths(paths, config, **lintargs)
+        if lintargs.get('use_filters', True):
+            paths, exclude = filterpaths(
+                lintargs['root'],
+                paths,
+                config['include'],
+                config.get('exclude', []) + lintargs.get('exclude', []),
+                config.get('extensions', []),
+            )
+            lintargs['exclude'] = exclude
+
         if not paths:
             return
 
