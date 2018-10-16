@@ -15,40 +15,31 @@ Bug 1023018 - Tests if the framerate actor keeps recording after navigations.
 <script>
 "use strict";
 
-window.onload = function() {
+window.onload = async function() {
   SimpleTest.waitForExplicitFinish();
-  const {FramerateFront} = require("devtools/shared/fronts/framerate");
-  const {TargetFactory} = require("devtools/client/framework/target");
 
   const url = document.getElementById("testContent").href;
-  attachURL(url, onTab);
+  const { client, target, doc } = await attachURL(url);
+  const contentWin = doc.defaultView;
+  const chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
 
-  async function onTab(_, client, form, contentDoc) {
-    const contentWin = contentDoc.defaultView;
-    const chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    const selectedTab = chromeWin.gBrowser.selectedTab;
+  const front = target.getFront("framerate");
 
-    const target = await TargetFactory.forTab(selectedTab);
-    await target.attach();
-    const front = FramerateFront(client, form);
-
-    front.startRecording().then(() => {
-      window.setTimeout(() => {
-        front.getPendingTicks().then(firstBatch => {
-          /* eslint-disable max-nested-callbacks */
-          target.once("will-navigate", () => {
-            window.setTimeout(() => {
-              front.stopRecording().then(secondBatch => {
-                onRecordingStopped(client, firstBatch, secondBatch);
-              });
-            }, 1000);
+  await front.startRecording();
+  window.setTimeout(() => {
+    front.getPendingTicks().then(firstBatch => {
+      /* eslint-disable max-nested-callbacks */
+      target.once("will-navigate", () => {
+        window.setTimeout(() => {
+          front.stopRecording().then(secondBatch => {
+            onRecordingStopped(client, firstBatch, secondBatch);
           });
-          /* eslint-enable max-nested-callbacks */
-          contentWin.location.reload();
-        });
-      }, 1000);
+        }, 1000);
+      });
+      /* eslint-enable max-nested-callbacks */
+      contentWin.location.reload();
     });
-  }
+  }, 1000);
 
   function onRecordingStopped(client, firstBatch, secondBatch) {
     ok(firstBatch, "There should be a first batch recording available.");
