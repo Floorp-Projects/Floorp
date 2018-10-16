@@ -317,6 +317,13 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return get_repository_object(self.topsrcdir)
 
+    def reload_config_environment(self):
+        '''Force config.status to be re-read and return the new value
+        of ``self.config_environment``.
+        '''
+        self._config_environment = None
+        return self.config_environment
+
     def mozbuild_reader(self, config_mode='build', vcs_revision=None,
                         vcs_check_clean=True):
         """Obtain a ``BuildReader`` for evaluating moz.build files.
