@@ -1443,6 +1443,11 @@ Toolbox.prototype = {
       this.frameButton.disabled = false;
       this.frameButton.description = L10N.getStr("toolbox.frames.tooltip");
     }
+
+    // Highlight the button when a child frame is selected
+    const selectedFrame = this.frameMap.get(this.selectedFrameId) || {};
+    this.frameButton.isChecked = selectedFrame.parentID != null;
+
     this.frameButton.isVisible = this._commandIsVisible(this.frameButton);
   },
 
@@ -2394,18 +2399,6 @@ Toolbox.prototype = {
       const frames = [...this.frameMap.values()];
       const topFrames = frames.filter(frame => !frame.parentID);
       this.selectedFrameId = topFrames.length ? topFrames[0].id : null;
-    }
-
-    // Check out whether top frame is currently selected.
-    // Note that only child frame has parentID.
-    const frame = this.frameMap.get(this.selectedFrameId);
-    const topFrameSelected = frame ? !frame.parentID : false;
-    this._framesButtonChecked = false;
-
-    // If non-top level frame is selected the toolbar button is
-    // marked as 'checked' indicating that a child frame is active.
-    if (!topFrameSelected && this.selectedFrameId) {
-      this._framesButtonChecked = false;
     }
 
     // We may need to hide/show the frames button now.
