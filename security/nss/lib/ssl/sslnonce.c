@@ -1093,12 +1093,10 @@ ssl_CacheExternalToken(sslSocket *ss)
     PRINT_BUF(40, (ss, "SSL: encoded resumption token",
                    SSL_BUFFER_BASE(&encodedToken),
                    SSL_BUFFER_LEN(&encodedToken)));
-    SECStatus rv = ss->resumptionTokenCallback(
-        ss->fd, SSL_BUFFER_BASE(&encodedToken), SSL_BUFFER_LEN(&encodedToken),
-        ss->resumptionTokenContext);
-    if (rv == SECSuccess) {
-        sid->cached = in_external_cache;
-    }
+    ss->resumptionTokenCallback(ss->fd, SSL_BUFFER_BASE(&encodedToken),
+                                SSL_BUFFER_LEN(&encodedToken),
+                                ss->resumptionTokenContext);
+
     sslBuffer_Clear(&encodedToken);
 }
 
@@ -1202,23 +1200,17 @@ ssl3_SetSIDSessionTicket(sslSessionID *sid,
     PORT_Assert(newSessionTicket->ticket.data);
     PORT_Assert(newSessionTicket->ticket.len != 0);
 
-    /* If this is in the client cache, we are updating an existing entry that is
-     * already cached or was once cached, so we need to acquire and release the
-     * write lock. Otherwise, this is a new session that isn't shared with
-     * anything yet, so no locking is needed.
+    /* if sid->u.ssl3.lock, we are updating an existing entry that is already
+     * cached or was once cached, so we need to acquire and release the write
+     * lock. Otherwise, this is a new session that isn't shared with anything
+     * yet, so no locking is needed.
      */
     if (sid->u.ssl3.lock) {
-        PORT_Assert(sid->cached == in_client_cache);
         PR_RWLock_Wlock(sid->u.ssl3.lock);
-    }
-    /* If this was in the client cache, then we might have to free the old
-     * ticket.  In TLS 1.3, we might get a replacement ticket if the server
-     * sends more than one ticket. */
-    if (sid->u.ssl3.locked.sessionTicket.ticket.data) {
-        PORT_Assert(sid->cached == in_client_cache ||
-                    sid->version >= SSL_LIBRARY_VERSION_TLS_1_3);
-        SECITEM_FreeItem(&sid->u.ssl3.locked.sessionTicket.ticket,
-                         PR_FALSE);
+        if (sid->u.ssl3.locked.sessionTicket.ticket.data) {
+            SECITEM_FreeItem(&sid->u.ssl3.locked.sessionTicket.ticket,
+                             PR_FALSE);
+        }
     }
 
     PORT_Assert(!sid->u.ssl3.locked.sessionTicket.ticket.data);
