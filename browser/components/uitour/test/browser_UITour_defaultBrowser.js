@@ -28,7 +28,6 @@ MockShellService.prototype = {
   openApplication(aApplication) {},
   desktopBackgroundColor: 0,
   openApplicationWithURI(aApplication, aURI) {},
-  defaultFeedReader: 0,
 };
 
 var mockShellService = new MockObjectRegisterer("@mozilla.org/browser/shell-service;1",

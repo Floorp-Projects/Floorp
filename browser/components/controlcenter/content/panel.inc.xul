@@ -89,7 +89,7 @@
                   class="identity-popup-content-blocking-category" align="center" role="group">
               <image class="identity-popup-content-blocking-category-icon fastblock-icon"/>
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.fastBlock.label;</label>
-              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.fastBlock.blocked.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.fastBlock.blocking.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
                      onclick="ContentBlocking.openPreferences('identityPopup-CB-fastblock'); gIdentityHandler.recordClick('fb_add_blocking');">&contentBlocking.fastBlock.add.label;</label>
             </hbox>
@@ -97,7 +97,7 @@
                   class="identity-popup-content-blocking-category" align="center" role="group">
               <image class="identity-popup-content-blocking-category-icon tracking-protection-icon"/>
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection3.label;</label>
-              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.trackingProtection.blocked.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.trackingProtection.blocking.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
                      id="identity-popup-tracking-protection-add-blocking"
                      onclick="ContentBlocking.openPreferences('identityPopup-CB-tracking-protection'); gIdentityHandler.recordClick('tp_add_blocking');">&contentBlocking.trackingProtection.add.label;</label>
@@ -106,7 +106,7 @@
                   class="identity-popup-content-blocking-category" align="center" role="group">
               <image class="identity-popup-content-blocking-category-icon thirdpartycookies-icon"/>
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.3rdPartyCookies.label;</label>
-              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.3rdPartyCookies.blocked.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.3rdPartyCookies.blocking.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
                      id="identity-popup-3rdpartycookies-add-blocking"
                      onclick="ContentBlocking.openPreferences('identityPopup-CB-3rdpartycookies'); gIdentityHandler.recordClick('cookies_add_blocking');">&contentBlocking.3rdPartyCookies.add.label;</label>

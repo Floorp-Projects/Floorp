@@ -1,6 +1,0 @@
-<rss version="2.0">
-  <channel>
-    <link>http://example.org/</link>
-    <title>t</title>
-  </channel>
-</rss>

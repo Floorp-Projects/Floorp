@@ -144,37 +144,51 @@ FirefoxOnAndroidRuntime.detect = async function(device, model) {
 
 FirefoxOnAndroidRuntime.prototype = Object.create(Runtime.prototype);
 
+FirefoxOnAndroidRuntime.prototype._channel = function() {
+  const packageName = this._packageName();
+
+  switch (packageName) {
+    case "org.mozilla.firefox":
+      return "";
+    case "org.mozilla.firefox_beta":
+      return "Beta";
+    case "org.mozilla.fennec":
+    case "org.mozilla.fennec_aurora":
+      // This package name is now the one for Firefox Nightly distributed
+      // through the Google Play Store since "dawn project"
+      // cf. https://bugzilla.mozilla.org/show_bug.cgi?id=1357351#c8
+      return "Nightly";
+    default:
+      return "Custom";
+  }
+};
+
+FirefoxOnAndroidRuntime.prototype._packageName = function() {
+  // If using abstract socket address, it is "@org.mozilla.firefox/..."
+  // If using path base socket, it is "/data/data/<package>...""
+  // Until Fennec 62 only supports path based UNIX domain socket, but
+  // Fennec 63+ supports both path based and abstract socket.
+  return this._socketPath.startsWith("@") ?
+    this._socketPath.substr(1).split("/")[0] :
+    this._socketPath.split("/")[3];
+};
+
+Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "shortName", {
+  get() {
+    return `Firefox ${this._channel()}`;
+  }
+});
+
+Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "deviceName", {
+  get() {
+    return this._model || this.device.id;
+  }
+});
+
 Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "name", {
   get() {
-    // If using abstract socket address, it is "@org.mozilla.firefox/..."
-    // If using path base socket, it is "/data/data/<package>...""
-    // Until Fennec 62 only supports path based UNIX domain socket, but
-    // Fennec 63+ supports both path based and abstract socket.
-    const packageName = this._socketPath.startsWith("@") ?
-                        this._socketPath.substr(1).split("/")[0] :
-                        this._socketPath.split("/")[3];
-    let channel;
-    switch (packageName) {
-      case "org.mozilla.firefox":
-        channel = "";
-        break;
-      case "org.mozilla.firefox_beta":
-        channel = " Beta";
-        break;
-      case "org.mozilla.fennec_aurora":
-        // This package name is now the one for Firefox Nightly distributed
-        // through the Google Play Store since "dawn project"
-        // cf. https://bugzilla.mozilla.org/show_bug.cgi?id=1357351#c8
-        channel = " Nightly";
-        break;
-      case "org.mozilla.fennec":
-        channel = " Nightly";
-        break;
-      default:
-        channel = " Custom";
-    }
-    return "Firefox" + channel + " on Android (" +
-           (this._model || this.device.id) + ")";
+    const channel = this._channel();
+    return "Firefox " + channel + " on Android (" + this.deviceName + ")";
   }
 });
 

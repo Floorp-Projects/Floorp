@@ -1004,18 +1004,19 @@ static nsresult
 DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
                   nsTArray<uint32_t>& aDecoded)
 {
-  if (!aEncoding.has_first_value()) {
-    PARSER_LOG(("The encoding info is incomplete."));
-    return NS_ERROR_UC_PARSER_MISSING_PARAM;
-  }
   if (aEncoding.num_entries() > 0 &&
       (!aEncoding.has_rice_parameter() || !aEncoding.has_encoded_data())) {
     PARSER_LOG(("Rice parameter or encoded data is missing."));
     return NS_ERROR_UC_PARSER_MISSING_PARAM;
+  } else if (aEncoding.num_entries() == 0 && !aEncoding.has_first_value()) {
+    PARSER_LOG(("Missing first_value for an single-integer Rice encoding."));
+    return NS_ERROR_UC_PARSER_MISSING_VALUE;
   }
 
+  auto first_value = aEncoding.has_first_value() ? aEncoding.first_value() : 0;
+
   PARSER_LOG(("* Encoding info:"));
-  PARSER_LOG(("  - First value: %" PRId64, aEncoding.first_value()));
+  PARSER_LOG(("  - First value: %" PRId64, first_value));
   PARSER_LOG(("  - Num of entries: %d", aEncoding.num_entries()));
   PARSER_LOG(("  - Rice parameter: %d", aEncoding.rice_parameter()));
 
@@ -1034,7 +1035,7 @@ DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
 
   // Decode!
   bool rv = decoder.Decode(aEncoding.rice_parameter(),
-                           aEncoding.first_value(), // first value.
+                           first_value,
                            aEncoding.num_entries(), // # of entries (first value not included).
                            &aDecoded[0]);
 

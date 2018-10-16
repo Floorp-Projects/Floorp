@@ -51,15 +51,23 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
         time.sleep(5)
 
     def wait_for_ping(self, action_func, ping_filter_func):
+        # Filter pings initially using `ping_filter_func`
+        self.ping_list = [p for p in self.ping_list if ping_filter_func(p)]
+
         current_num_pings = len(self.ping_list)
+
         if callable(action_func):
             action_func()
+
+        def wait_func(*args, **kwargs):
+            # Filter pings based on type and reason to make sure right ping is captured.
+            self.ping_list = [p for p in self.ping_list if ping_filter_func(p)]
+            return len(self.ping_list) > current_num_pings
+
         try:
-            Wait(self.marionette, 60).until(lambda _: len(self.ping_list) > current_num_pings)
+            Wait(self.marionette, 60).until(wait_func)
         except Exception as e:
             self.fail('Error generating ping: {}'.format(e.message))
-        # Filter pings based on type and reason to make sure right ping is captured.
-        self.ping_list = [p for p in self.ping_list if ping_filter_func(p)]
 
         # TODO: Bug 1380748 - Pings are being cached between test
         # runs when using --repeat flag in marionette harness

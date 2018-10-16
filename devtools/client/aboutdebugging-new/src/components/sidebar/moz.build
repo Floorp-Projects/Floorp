@@ -3,10 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'DeviceSidebarItemAction.css',
-    'DeviceSidebarItemAction.js',
     'Sidebar.css',
     'Sidebar.js',
+    'SidebarFixedItem.css',
+    'SidebarFixedItem.js',
     'SidebarItem.css',
     'SidebarItem.js',
+    'SidebarRuntimeItem.css',
+    'SidebarRuntimeItem.js',
 )

@@ -120,6 +120,10 @@ bool NS_EscapeURL(const char* aStr,
                   uint32_t aFlags,
                   nsACString& aResult);
 
+bool NS_EscapeURLSpan(mozilla::Span<const char> aStr,
+                      uint32_t aFlags,
+                      nsACString& aResult);
+
 /**
  * Expands URL escape sequences... beware embedded null bytes!
  *
@@ -165,7 +169,7 @@ NS_UnescapeURL(char* aStr)
 inline const nsACString&
 NS_EscapeURL(const nsACString& aStr, uint32_t aFlags, nsACString& aResult)
 {
-  if (NS_EscapeURL(aStr.Data(), aStr.Length(), aFlags, aResult)) {
+  if (NS_EscapeURLSpan(aStr, aFlags, aResult)) {
     return aResult;
   }
   return aStr;

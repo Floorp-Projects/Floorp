@@ -886,11 +886,6 @@ notification[value="translation"] {
 }
 
 /* Bookmarks roots menu-items */
-#subscribeToPageMenuitem:not([disabled]),
-#subscribeToPageMenupopup {
-  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
-}
-
 #bookmarksToolbarFolderMenu,
 #BMB_bookmarksToolbar,
 #panelMenu_bookmarksToolbar {

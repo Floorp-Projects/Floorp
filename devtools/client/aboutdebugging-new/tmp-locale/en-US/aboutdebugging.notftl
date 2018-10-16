@@ -13,6 +13,11 @@ about-debugging-sidebar-this-firefox =
 about-debugging-sidebar-connect =
   .name = Connect
 
+# Connection status (connected) for runtime items in the sidebar
+aboutdebugging-sidebar-runtime-connection-status-connected = Connected
+# Connection status (disconnected) for runtime items in the sidebar
+aboutdebugging-sidebar-runtime-connection-status-disconnected = Disconnected
+
 # Text displayed in the about:debugging sidebar when no device was found.
 about-debugging-sidebar-no-devices = No devices discovered
 
@@ -173,8 +178,8 @@ about-debugging-worker-status-registering = Registering
 # { $version } is version such as "64.0a1"
 about-debugging-runtime-info = { $name } ({ $version })
 
-# Displayed for runtime info in runtime page when we display the model as well.
+# Displayed for runtime info in runtime page when we display the device model as well.
 # { $name } is brand name such as "Firefox Nightly"
 # { $version } is version such as "64.0a1"
-# { $model } is model name of device
-about-debugging-runtime-info-with-model = { $name } on { $model } ({ $version })
+# { $deviceName } is model name of device
+about-debugging-runtime-info-with-model = { $name } on { $deviceName } ({ $version })

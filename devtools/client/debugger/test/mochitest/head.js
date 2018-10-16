@@ -1119,14 +1119,10 @@ function attachThread(workerClient, options) {
   return workerClient.attachThread(options);
 }
 
-function waitForWorkerClose(workerClient) {
+async function waitForWorkerClose(workerClient) {
   info("Waiting for worker to close.");
-  return new Promise(function (resolve) {
-    workerClient.addOneTimeListener("close", function () {
-      info("Worker did close.");
-      resolve();
-    });
-  });
+  await workerClient.once("close");
+  info("Worker did close.");
 }
 
 function resume(threadClient) {

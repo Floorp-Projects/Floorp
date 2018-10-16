@@ -1093,6 +1093,7 @@ with modules["URL_CLASSIFIER"]:
     errors["NS_ERROR_UC_PARSER_MISSING_PARAM"] = FAILURE(12)
     errors["NS_ERROR_UC_PARSER_DECODE_FAILURE"] = FAILURE(13)
     errors["NS_ERROR_UC_PARSER_UNKNOWN_THREAT"] = FAILURE(14)
+    errors["NS_ERROR_UC_PARSER_MISSING_VALUE"] = FAILURE(15)
 
 
 # =======================================================================

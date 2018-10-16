@@ -728,7 +728,6 @@ xul|treechildren::-moz-tree-row(hover) {
 
 xul|treechildren::-moz-tree-row(selected) {
   background-color: var(--in-content-item-selected);
-  color: var(--in-content-selected-text);
 }
 
 /* Trees */
@@ -796,11 +795,13 @@ xul|treechildren::-moz-tree-row {
 
 /* Color needs to be set on tree cell in order to be applied */
 xul|treechildren::-moz-tree-cell-text,
+xul|treechildren::-moz-tree-twisty,
 xul|treechildren::-moz-tree-image {
   color: var(--in-content-text-color);
 }
 
 xul|treechildren::-moz-tree-cell-text(selected),
+xul|treechildren::-moz-tree-twisty(selected),
 xul|treechildren::-moz-tree-image(selected) {
   color: var(--in-content-selected-text);
 }

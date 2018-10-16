@@ -21,9 +21,6 @@ browser.jar:
 * skin/classic/browser/customizableui/panelUI.css       (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsView.css   (downloads/allDownloadsView.css)
 * skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
-  skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
-  skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
-  skin/classic/browser/feeds/subscribe.css                     (feeds/subscribe.css)
   skin/classic/browser/notification-icons/geo-blocked.svg      (notification-icons/geo-blocked.svg)
   skin/classic/browser/notification-icons/geo-detailed.svg     (notification-icons/geo-detailed.svg)
   skin/classic/browser/notification-icons/geo.svg              (notification-icons/geo.svg)
@@ -56,9 +53,3 @@ browser.jar:
   skin/classic/browser/window-controls/restore-highcontrast.svg  (window-controls/restore-highcontrast.svg)
   skin/classic/browser/window-controls/restore-themes.svg        (window-controls/restore-themes.svg)
   skin/classic/browser/e10s-64@2x.png                            (../shared/e10s-64@2x.png)
-
-% override chrome://browser/skin/page-livemarks.png                   chrome://browser/skin/feeds/feedIcon16.png
-% override chrome://browser/skin/feeds/audioFeedIcon.png              chrome://browser/skin/feeds/feedIcon.png
-% override chrome://browser/skin/feeds/audioFeedIcon16.png            chrome://browser/skin/feeds/feedIcon16.png
-% override chrome://browser/skin/feeds/videoFeedIcon.png              chrome://browser/skin/feeds/feedIcon.png
-% override chrome://browser/skin/feeds/videoFeedIcon16.png            chrome://browser/skin/feeds/feedIcon16.png

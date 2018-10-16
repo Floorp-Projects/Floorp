@@ -334,15 +334,7 @@ class Output(object):
                                       'replicates': []}
                 _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
 
-        total_subtest = {
-            'unit': test.subtest_unit,
-            'alertThreshold': float(test.alert_threshold),
-            'lowerIsBetter': test.subtest_lower_is_better,
-            'replicates': [],
-            'name': 'benchmark_score',
-            'value': 0
-        }
-        subtests = [total_subtest]
+        subtests = []
         vals = []
 
         names = _subtests.keys()

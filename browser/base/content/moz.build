@@ -122,9 +122,6 @@ with Files("browser-compacttheme.js"):
 with Files("browser-customization.js"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
-with Files("browser-feeds.js"):
-    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
-
 with Files("browser-fullZoom.js"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browsing")
 

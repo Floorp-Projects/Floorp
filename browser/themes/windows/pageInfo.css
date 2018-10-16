@@ -58,15 +58,6 @@
   -moz-image-region: rect(32px, 64px, 64px, 32px)
 }
 
-#feedTab {
-  -moz-image-region: rect(0px, 96px, 32px, 64px)
-}
-
-#feedTab:hover,
-#feedTab[selected="true"] {
-  -moz-image-region: rect(32px, 96px, 64px, 64px)
-}
-
 #permTab {
   -moz-image-region: rect(0px, 128px, 32px, 96px)
 }
@@ -159,29 +150,6 @@ textbox[disabled] {
 treechildren::-moz-tree-cell-text(broken) {
   font-style: italic;
   color: graytext;
-}
-
-/* Feeds Tab */
-#feedtree {
-  margin-bottom: 0px;
-}
-
-#feedListbox richlistitem {
-  padding-top: 6px;
-  padding-bottom: 6px;
-  padding-inline-start: 7px;
-  padding-inline-end: 7px;
-  min-height: 25px;
-  border-bottom: 1px dotted ThreeDShadow;
-}
-
-#feedListbox richlistitem[selected="true"] {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-}
-
-.feedTitle {
-  font-weight: bold;
 }
 
 /* Permissions Tab */
