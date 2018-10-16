@@ -122,6 +122,24 @@
             android:focusableInTouchMode="true"
             />
 
+        <TextView android:id="@+id/seccolon"
+            android:text="@string/colon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="1dip"
+            android:layout_marginRight="1dip"/>
+
+        <!-- Second -->
+        <android.widget.NumberPicker
+            android:id="@+id/second"
+            android:layout_width="60dip"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="1dip"
+            android:layout_marginRight="1dip"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
+
         <!-- AMPM -->
         <android.widget.NumberPicker
             android:id="@+id/ampm"

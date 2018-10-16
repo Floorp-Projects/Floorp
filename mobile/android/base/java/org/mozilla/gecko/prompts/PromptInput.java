@@ -46,6 +46,7 @@ public abstract class PromptInput {
     protected String mValue;
     protected final String mMinValue;
     protected final String mMaxValue;
+    protected final boolean mSecondEnabled;
     protected OnChangeListener mListener;
     protected View mView;
     public static final String LOGTAG = "GeckoPromptInput";
@@ -233,9 +234,11 @@ public abstract class PromptInput {
                 input.setCurrentMinute(calendar.get(GregorianCalendar.MINUTE));
                 mView = (View)input;
             } else if (mType.equals("datetime-local") || mType.equals("datetime")) {
-                DateTimePicker input = new DateTimePicker(context, "yyyy-MM-dd HH:mm", mValue.replace("T", " ").replace("Z", ""),
-                                                          DateTimePicker.PickersState.DATETIME,
-                                                          mMinValue.replace("T", " ").replace("Z", ""), mMaxValue.replace("T", " ").replace("Z", ""));
+                DateTimePicker input = new DateTimePicker(context, "yyyy-MM-dd'T'HH:mm:ss",
+                                                          formatDateTimeSeconds(mValue),
+                                                          mSecondEnabled ? DateTimePicker.PickersState.DATETIME_WITH_SECOND : DateTimePicker.PickersState.DATETIME,
+                                                          formatDateTimeSeconds(mMinValue),
+                                                          formatDateTimeSeconds(mMaxValue));
                 mView = (View)input;
             } else if (mType.equals("month")) {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-MM", mValue,
@@ -250,6 +253,28 @@ public abstract class PromptInput {
             mView.setLayoutParams(parentParams);
 
             return mView;
+        }
+
+        private static String formatDateTimeSeconds(String dateString) {
+            // Reformat the datetime value so that it can be parsed by
+            // SimpleDateFormat ending with "HH:mm:ss".
+
+            // datetime may contain a 'Z' at the end.
+            dateString = dateString.replace("Z", "");
+
+            int i = dateString.indexOf(":"); // Separator in "HH:mm".
+            if (i == -1) {
+                // Unparseable input.
+                return dateString;
+            }
+
+            i = dateString.indexOf(":", i + 1); // Separator in "mm:ss".
+            if (i == -1) {
+                // Append seconds.
+                return dateString + ":00";
+            }
+
+            return dateString;
         }
 
         private static String formatDateString(String dateFormat, Calendar calendar) {
@@ -276,6 +301,9 @@ public abstract class PromptInput {
                 if (mType.equals("week")) {
                     return formatDateString("yyyy-'W'ww", calendar);
                 } else if (mType.equals("datetime-local")) {
+                    if (mSecondEnabled) {
+                        return formatDateString("yyyy-MM-dd'T'HH:mm:ss", calendar);
+                    }
                     return formatDateString("yyyy-MM-dd'T'HH:mm", calendar);
                 } else if (mType.equals("datetime")) {
                     calendar.set(GregorianCalendar.ZONE_OFFSET, 0);
@@ -375,6 +403,9 @@ public abstract class PromptInput {
         mValue = obj.getString("value", "");
         mMaxValue = obj.getString("max", "");
         mMinValue = obj.getString("min", "");
+
+        long timeStepInMs = obj.getLong("step", 0);
+        mSecondEnabled = (timeStepInMs % 60000) != 0;
     }
 
     public void saveCurrentInput(@NonNull final GeckoBundle userInput) {
