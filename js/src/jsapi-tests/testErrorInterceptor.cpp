@@ -37,25 +37,25 @@ BEGIN_TEST(testErrorInterceptor)
 {
     // Run the following snippets.
     const char* SAMPLES[] = {
-        "throw new Error('I am an Error')",
-        "throw new TypeError('I am a TypeError')",
-        "throw new ReferenceError('I am a ReferenceError')",
-        "throw new SyntaxError('I am a SyntaxError')",
-        "throw 5",
-        "undefined[0]",
-        "foo[0]",
-        "b[",
+        "throw new Error('I am an Error')\0",
+        "throw new TypeError('I am a TypeError')\0",
+        "throw new ReferenceError('I am a ReferenceError')\0",
+        "throw new SyntaxError('I am a SyntaxError')\0",
+        "throw 5\0",
+        "undefined[0]\0",
+        "foo[0]\0",
+        "b[\0",
     };
     // With the simpleInterceptor, we should end up with the following error:
     const char* TO_STRING[] = {
-        "Error: I am an Error",
-        "TypeError: I am a TypeError",
-        "ReferenceError: I am a ReferenceError",
-        "SyntaxError: I am a SyntaxError",
-        "5",
-        "TypeError: can't access property 0 of undefined",
-        "ReferenceError: foo is not defined",
-        "SyntaxError: expected expression, got end of script",
+        "Error: I am an Error\0",
+        "TypeError: I am a TypeError\0",
+        "ReferenceError: I am a ReferenceError\0",
+        "SyntaxError: I am a SyntaxError\0",
+        "5\0",
+        "TypeError: can't access property 0 of undefined\0",
+        "ReferenceError: foo is not defined\0",
+        "SyntaxError: expected expression, got end of script\0",
     };
     MOZ_ASSERT(mozilla::ArrayLength(SAMPLES) == mozilla::ArrayLength(TO_STRING));
 

@@ -15,7 +15,7 @@ for (var i = 0; i < 3; i++) {
 	x.toString();
 	assertEq(0, 1);
     } catch (e) {
-	assertEq(e.message === `y is undefined; can't access its "length" property` ||
+	assertEq(e.message === `y is undefined, can't access property "length" of it` ||
 		 e.message === `can't access property "length" of undefined`, true);
     }
 }
