@@ -82,13 +82,6 @@ import kotlin.reflect.KClass;
 public class GeckoSessionTestRule implements TestRule {
     private static final String LOGTAG = "GeckoSessionTestRule";
 
-    private static final long DEFAULT_TIMEOUT_MILLIS = 10000;
-    private static final long DEFAULT_ARM_DEVICE_TIMEOUT_MILLIS = 30000;
-    private static final long DEFAULT_ARM_EMULATOR_TIMEOUT_MILLIS = 120000;
-    private static final long DEFAULT_X86_DEVICE_TIMEOUT_MILLIS = 30000;
-    private static final long DEFAULT_X86_EMULATOR_TIMEOUT_MILLIS = 5000;
-    private static final long DEFAULT_IDE_DEBUG_TIMEOUT_MILLIS = 86400000;
-
     public static final String APK_URI_PREFIX = "resource://android/";
 
     private static final Method sOnPageStart;
@@ -113,7 +106,7 @@ public class GeckoSessionTestRule implements TestRule {
 
     /**
      * Specify the timeout for any of the wait methods, in milliseconds, relative to
-     * {@link #DEFAULT_TIMEOUT_MILLIS}. When the default timeout scales to account
+     * {@link Environment#DEFAULT_TIMEOUT_MILLIS}. When the default timeout scales to account
      * for differences in the device under test, the timeout value here will be
      * scaled as well. Can be used on classes or methods.
      */
@@ -998,7 +991,7 @@ public class GeckoSessionTestRule implements TestRule {
             if (TimeoutMillis.class.equals(annotation.annotationType())) {
                 // Scale timeout based on the default timeout to account for the device under test.
                 final long value = ((TimeoutMillis) annotation).value();
-                final long timeout = value * getScaledTimeoutMillis() / DEFAULT_TIMEOUT_MILLIS;
+                final long timeout = value * env.getScaledTimeoutMillis() / Environment.DEFAULT_TIMEOUT_MILLIS;
                 mTimeoutMillis = Math.max(timeout, 1000);
             } else if (Setting.class.equals(annotation.annotationType())) {
                 ((Setting) annotation).key().set(settings, ((Setting) annotation).value());
@@ -1038,23 +1031,9 @@ public class GeckoSessionTestRule implements TestRule {
         return new RuntimeException(cause != null ? cause : e);
     }
 
-    private long getScaledTimeoutMillis() {
-        if ("x86".equals(env.getCPUArch())) {
-            return env.isEmulator() ? DEFAULT_X86_EMULATOR_TIMEOUT_MILLIS
-                                    : DEFAULT_X86_DEVICE_TIMEOUT_MILLIS;
-        }
-        return env.isEmulator() ? DEFAULT_ARM_EMULATOR_TIMEOUT_MILLIS
-                                : DEFAULT_ARM_DEVICE_TIMEOUT_MILLIS;
-    }
-
-    private long getDefaultTimeoutMillis() {
-        return env.isDebugging() ? DEFAULT_IDE_DEBUG_TIMEOUT_MILLIS
-                                 : getScaledTimeoutMillis();
-    }
-
     protected void prepareStatement(final Description description) throws Throwable {
         final GeckoSessionSettings settings = new GeckoSessionSettings(mDefaultSettings);
-        mTimeoutMillis = getDefaultTimeoutMillis();
+        mTimeoutMillis = env.getDefaultTimeoutMillis();
         mNullDelegates = new HashSet<>();
         mClosedSession = false;
         mWithDevTools = false;
@@ -1292,7 +1271,7 @@ public class GeckoSessionTestRule implements TestRule {
             };
 
             do {
-                UiThreadUtils.loopUntilIdle(getDefaultTimeoutMillis());
+                UiThreadUtils.loopUntilIdle(env.getDefaultTimeoutMillis());
             } while (mCallRecordHandler != null);
 
         } finally {
