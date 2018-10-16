@@ -6,11 +6,11 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <meta name="viewport" content="user-scalable=NO">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, maximum-scale=0">
   <script src="viewport_helpers.js"></script>
 </head>
 <body>
-  <p>user-scalable=NO</p>
+  <p>width=device-width, minimum-scale=1, maximum-scale=0</p>
   <script type="application/javascript">
     "use strict";
 
@@ -18,7 +18,11 @@
       await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
 
       let info = getViewportInfo(800, 480);
-      is(info.allowZoom, true, "user-scalable values are case-sensitive; 'NO' is not valid");
+      is(info.maxZoom,     1,   "maximum_scale should be clamped");
+      is(info.defaultZoom, 1,   "initial scale should be 1");
+      is(info.minZoom,     1,   "minimum scale should be 1");
+      is(info.width,       800, "width should be 800");
+      is(info.height,      480, "height should be 480");
     });
   </script>
 </body>
