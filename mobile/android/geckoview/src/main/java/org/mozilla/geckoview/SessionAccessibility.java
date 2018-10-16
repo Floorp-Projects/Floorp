@@ -338,11 +338,17 @@ public class SessionAccessibility {
                 // Set CollectionInfo
                 GeckoBundle collectionBundle = nodeInfo.getBundle("collectionInfo");
                 if (collectionBundle != null) {
-                    final CollectionInfo collectionInfo = CollectionInfo.obtain(
-                            collectionBundle.getInt("rowCount"),
-                            collectionBundle.getInt("columnCount"),
-                            collectionBundle.getBoolean("isHierarchical", false),
-                            collectionBundle.getInt("selectionMode", 0));
+                    // selectionMode is only supported in SDK >= 21.
+                    final CollectionInfo collectionInfo = Build.VERSION.SDK_INT >= 21
+                            ? CollectionInfo.obtain(
+                                collectionBundle.getInt("rowCount"),
+                                collectionBundle.getInt("columnCount"),
+                                collectionBundle.getBoolean("isHierarchical", false),
+                                collectionBundle.getInt("selectionMode", 0))
+                            : CollectionInfo.obtain(
+                                collectionBundle.getInt("rowCount"),
+                                collectionBundle.getInt("columnCount"),
+                                collectionBundle.getBoolean("isHierarchical", false));
                     node.setCollectionInfo(collectionInfo);
                 }
 
