@@ -638,11 +638,10 @@ class MOZ_RAII AutoWritableJitCodeFallible
     JSRuntime* rt_;
     void* addr_;
     size_t size_;
-    bool madeWritable_;
 
   public:
     AutoWritableJitCodeFallible(JSRuntime* rt, void* addr, size_t size)
-      : rt_(rt), addr_(addr), size_(size), madeWritable_(false)
+      : rt_(rt), addr_(addr), size_(size)
     {
         rt_->toggleAutoWritableJitCodeActive(true);
     }
@@ -657,15 +656,12 @@ class MOZ_RAII AutoWritableJitCodeFallible
     {}
 
     MOZ_MUST_USE bool makeWritable() {
-        madeWritable_ = ExecutableAllocator::makeWritable(addr_, size_);
-        return madeWritable_;
+        return ExecutableAllocator::makeWritable(addr_, size_);
     }
 
     ~AutoWritableJitCodeFallible() {
-        if (madeWritable_) {
-            if (!ExecutableAllocator::makeExecutable(addr_, size_)) {
-                MOZ_CRASH();
-            }
+        if (!ExecutableAllocator::makeExecutable(addr_, size_)) {
+            MOZ_CRASH();
         }
         rt_->toggleAutoWritableJitCodeActive(false);
     }
