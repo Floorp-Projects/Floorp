@@ -1745,11 +1745,17 @@ VARCACHE_PREF(
 // Feature-Policy prefs
 //---------------------------------------------------------------------------
 
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   "dom.security.featurePolicy.enabled",
    dom_security_featurePolicy_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 //---------------------------------------------------------------------------
 // End of prefs
