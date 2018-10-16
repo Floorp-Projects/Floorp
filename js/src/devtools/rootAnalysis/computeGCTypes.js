@@ -18,8 +18,6 @@ var typeInfo = {
     'RootedPointers': {},
     'RootedBases': {'JS::AutoGCRooter': true},
     'InheritFromTemplateArgs': {},
-    'OtherCSUTags': {},
-    'OtherFieldTags': {},
 
     // RAII types within which we should assume GC is suppressed, eg
     // AutoSuppressGC.
@@ -61,14 +59,12 @@ function processCSU(csu, body)
             typeInfo.GCSuppressors[csu] = true;
         else if (tag == 'moz_inherit_type_annotations_from_template_args')
             typeInfo.InheritFromTemplateArgs[csu] = true;
-        else
-            addToKeyedList(typeInfo.OtherCSUTags, csu, tag);
     }
 
     for (let { 'Base': base } of (body.CSUBaseClass || []))
         addBaseClass(csu, base);
 
-    for (const field of (body.DataField || [])) {
+    for (let field of (body.DataField || [])) {
         var type = field.Field.Type;
         var fieldName = field.Field.Name[0];
         if (type.Kind == "Pointer") {
@@ -83,24 +79,6 @@ function processCSU(csu, body)
         }
         if (type.Kind == "CSU")
             addNestedStructure(csu, type.Name, fieldName);
-
-        for (const { 'Name': [ annType, tag ] } of (field.Annotation || [])) {
-            if (!(csu in typeInfo.OtherFieldTags))
-                typeInfo.OtherFieldTags[csu] = [];
-            addToKeyedList(typeInfo.OtherFieldTags[csu], fieldName, tag);
-        }
-    }
-
-    for (const funcfield of (body.FunctionField || [])) {
-        const fields = funcfield.Field;
-        // Pure virtual functions will not have field.Variable; others will.
-        for (const field of funcfield.Field) {
-            for (const {'Name': [annType, tag]} of (field.Annotation || [])) {
-                if (!(csu in typeInfo.OtherFieldTags))
-                    typeInfo.OtherFieldTags[csu] = {};
-                addToKeyedList(typeInfo.OtherFieldTags[csu], field.Name[0], tag);
-            }
-        }
     }
 }
 
