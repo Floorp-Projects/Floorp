@@ -71,8 +71,10 @@ class LineType(BaseType):
         else:
             patterns = ['**/*.{}'.format(e) for e in config['extensions']]
 
+        exclude = [os.path.relpath(e, path) for e in lintargs.get('exclude', [])]
+        finder = FileFinder(path, ignore=exclude)
+
         errors = []
-        finder = FileFinder(path, ignore=lintargs.get('exclude', []))
         for pattern in patterns:
             for p, f in finder.find(pattern):
                 errors.extend(self._lint(os.path.join(path, p), config, **lintargs))
