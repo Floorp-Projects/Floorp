@@ -3569,43 +3569,39 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
 void
 JSScript::assertValidJumpTargets() const
 {
-    jsbytecode* end = codeEnd();
-    jsbytecode* mainEntry = main();
-    for (jsbytecode* pc = code(); pc != end; pc = GetNextPc(pc)) {
+    BytecodeLocation mainLoc = mainLocation();
+    BytecodeLocation endLoc = endLocation();
+    AllBytecodesIterable iter(this);
+    for (BytecodeLocation loc : iter) {
         // Check jump instructions' target.
-        if (IsJumpOpcode(JSOp(*pc))) {
-            jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
-            MOZ_ASSERT(mainEntry <= target && target < end);
-            MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*target)));
+        if (loc.isJump()){
+            BytecodeLocation target = loc.getJumpTarget();
+            MOZ_ASSERT(mainLoc <= target && target < endLoc);
+            MOZ_ASSERT(target.isJumpTarget());
 
             // Check fallthrough of conditional jump instructions.
-            if (BytecodeFallsThrough(JSOp(*pc))) {
-                jsbytecode* fallthrough = GetNextPc(pc);
-                MOZ_ASSERT(mainEntry <= fallthrough && fallthrough < end);
-                MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*fallthrough)));
+            if (loc.fallsThrough()) {
+                BytecodeLocation fallthrough = loc.next();
+                MOZ_ASSERT(mainLoc <= fallthrough && fallthrough < endLoc);
+                MOZ_ASSERT(fallthrough.isJumpTarget());
             }
         }
 
         // Check table switch case labels.
-        if (JSOp(*pc) == JSOP_TABLESWITCH) {
-            jsbytecode* pc2 = pc;
-            int32_t len = GET_JUMP_OFFSET(pc2);
+        if (loc.is(JSOP_TABLESWITCH)) {
+            BytecodeLocation target = loc.getJumpTarget();
 
             // Default target.
-            MOZ_ASSERT(mainEntry <= pc + len && pc + len < end);
-            MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*(pc + len))));
+            MOZ_ASSERT(mainLoc <= target && target < endLoc);
+            MOZ_ASSERT(target.isJumpTarget());
 
-            pc2 += JUMP_OFFSET_LEN;
-            int32_t low = GET_JUMP_OFFSET(pc2);
-            pc2 += JUMP_OFFSET_LEN;
-            int32_t high = GET_JUMP_OFFSET(pc2);
+            int32_t low = loc.getTableSwitchLow();
+            int32_t high = loc.getTableSwitchHigh();
 
             for (int i = 0; i < high - low + 1; i++) {
-                pc2 += JUMP_OFFSET_LEN;
-                int32_t off = (int32_t) GET_JUMP_OFFSET(pc2);
-                // Case (i + low)
-                MOZ_ASSERT_IF(off, mainEntry <= pc + off && pc + off < end);
-                MOZ_ASSERT_IF(off, BytecodeIsJumpTarget(JSOp(*(pc + off))));
+                BytecodeLocation switchCase = loc.getTableSwitchCaseByIndex(i);
+                MOZ_ASSERT_IF(switchCase != loc, mainLoc <= switchCase && switchCase < endLoc);
+                MOZ_ASSERT_IF(switchCase != loc, switchCase.isJumpTarget());
             }
         }
     }
@@ -3613,6 +3609,9 @@ JSScript::assertValidJumpTargets() const
     // Check catch/finally blocks as jump targets.
     if (hasTrynotes()) {
         for (const JSTryNote& tn : trynotes()) {
+            jsbytecode* end = codeEnd();
+            jsbytecode* mainEntry = main();
+
             jsbytecode* tryStart = offsetToPC(tn.start);
             jsbytecode* tryPc = tryStart - 1;
             if (tn.kind != JSTRY_CATCH && tn.kind != JSTRY_FINALLY) {
