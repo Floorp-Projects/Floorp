@@ -90,11 +90,6 @@ tasks:
               && git config advice.detachedHead false
               && git checkout ${event.after}
               && python tools/taskcluster/schedule-master-build.py
-          artifacts:
-            public:
-              type: directory
-              path: /build/fenix/preview
-              expires: {$fromNow: '1 month'}
         metadata:
           name: (Focus for Android) Schedule tasks
           description: Scheduling tasks for master push
