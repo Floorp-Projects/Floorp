@@ -17,9 +17,7 @@ var gAppManagerDialog = {
       window);
 
     const appDescElem = document.getElementById("appDescription");
-    if (this.handlerInfo.type == TYPE_MAYBE_FEED) {
-      document.l10n.setAttributes(appDescElem, "app-manager-handle-webfeeds");
-    } else if (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) {
+    if (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) {
       document.l10n.setAttributes(appDescElem, "app-manager-handle-file", {
         type: this.handlerInfo.typeDescription,
       });

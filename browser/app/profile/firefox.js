@@ -742,10 +742,6 @@ pref("layout.spellcheckDefault", 1);
 
 pref("browser.send_pings", false);
 
-pref("browser.feeds.handler", "ask");
-pref("browser.videoFeeds.handler", "ask");
-pref("browser.audioFeeds.handler", "ask");
-
 // At startup, if the handler service notices that the version number in the
 // region.properties file is newer than the version number in the handler
 // service datastore, it will add any new handlers it finds in the prefs (as

@@ -1352,7 +1352,6 @@ var gBrowserInit = {
     gPageStyleMenu.init();
     LanguageDetectionListener.init();
     BrowserOnClick.init();
-    FeedHandler.init();
     ContentBlocking.init();
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
@@ -1932,8 +1931,6 @@ var gBrowserInit = {
     gTabletModePageCounter.finish();
 
     BrowserOnClick.uninit();
-
-    FeedHandler.uninit();
 
     ContentBlocking.uninit();
 

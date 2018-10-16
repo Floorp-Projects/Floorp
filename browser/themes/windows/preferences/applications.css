@@ -40,11 +40,6 @@ menuitem[appHandlerIcon="save"] {
   list-style-image: url("chrome://browser/skin/preferences/saveFile.png");
 }
 
-richlistitem[appHandlerIcon="feed"],
-menuitem[appHandlerIcon="feed"] {
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
-}
-
 richlistitem[appHandlerIcon="plugin"],
 menuitem[appHandlerIcon="plugin"] {
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.svg");

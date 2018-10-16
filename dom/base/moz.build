@@ -129,7 +129,6 @@ if CONFIG['MOZ_WEBRTC']:
 
 EXPORTS.mozilla += [
     'CORSMode.h',
-    'FeedWriterEnabled.h',
     'FlushType.h',
     'FullscreenChange.h',
     'RangeBoundary.h',
