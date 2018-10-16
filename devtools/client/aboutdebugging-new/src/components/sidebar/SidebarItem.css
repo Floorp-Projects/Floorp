@@ -9,21 +9,9 @@
   --sidebar-background-hover: var(--in-content-category-background-hover);
 }
 
-/*
- * Layout of a sidebar item
- *
- *  +--------+----------------+---------------------------+
- *  | Icon   | Name           | Connect button (optional) |
- *  +--------+----------------+---------------------------+
- */
 .sidebar-item {
-  align-items: center;
-  border-radius: 2px;
   color: var(--sidebar-text-color);
-  display: grid;
-  grid-template-columns: 34px auto max-content;
-  font-size: 16px;
-  height: 48px;
+  border-radius: 2px;
   padding-inline-end: 10px;
   padding-inline-start: 10px;
   transition: background-color 150ms;
@@ -36,14 +24,6 @@
 
 .sidebar-item--selectable:hover {
   background-color: var(--sidebar-background-hover);
-}
-
-.sidebar-item__icon {
-  fill: currentColor;
-  height: 24px;
-  margin-inline-end: 9px;
-  width: 24px;
-  -moz-context-properties: fill;
 }
 
 .sidebar-item--selected {

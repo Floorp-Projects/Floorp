@@ -15,6 +15,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { button } = dom;
 const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 
+const isMacOS = Services.appinfo.OS === "Darwin";
+
 loader.lazyRequireGetter(this, "createPortal", "devtools/client/shared/vendor/react-dom", true);
 
 // Return a copy of |obj| minus |fields|.
@@ -344,6 +346,16 @@ class MenuButton extends PureComponent {
           if (this.tooltip.focusEnd()) {
             e.preventDefault();
           }
+        }
+        break;
+      case "t":
+        if (isMacOS && e.metaKey || !isMacOS && e.ctrlKey) {
+          // Close the menu if the user opens a new tab while it is still open.
+          //
+          // Bug 1499271: Once toolbox has been converted to XUL we should watch
+          // for the 'visibilitychange' event instead of explicitly looking for
+          // Ctrl+T.
+          this.hideMenu();
         }
         break;
     }

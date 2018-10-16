@@ -571,9 +571,6 @@
                      onclick="PanelUI.hide();"/>
     </panelview>
 
-    <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);">
-    </panelview>
-
     <panelview id="PanelUI-containers" flex="1">
       <vbox id="PanelUI-containersItems"/>
     </panelview>

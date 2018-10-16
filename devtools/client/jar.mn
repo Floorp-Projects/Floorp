@@ -265,6 +265,8 @@ devtools.jar:
     skin/tooltip/arrow-vertical-light.png (themes/tooltip/arrow-vertical-light.png)
     skin/tooltip/arrow-vertical-light@2x.png (themes/tooltip/arrow-vertical-light@2x.png)
     skin/images/reload.svg (themes/images/reload.svg)
+    skin/images/file-type-general.svg (netmonitor/src/assets/icons/file-type-general.svg)
+    skin/images/file-type-image.svg (netmonitor/src/assets/icons/file-type-image.svg)
     skin/images/security-state-broken.svg (themes/images/security-state-broken.svg)
     skin/images/security-state-insecure.svg (themes/images/security-state-insecure.svg)
     skin/images/security-state-secure.svg (themes/images/security-state-secure.svg)

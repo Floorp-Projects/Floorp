@@ -5,6 +5,7 @@
 <em:name>DAMP - Devtools At Maximum Performance</em:name>
 <em:version>0.0.16</em:version>
 <em:bootstrap>true</em:bootstrap>
+<em:multiprocessCompatible>true</em:multiprocessCompatible>
 
 <em:targetApplication>
     <Description>

@@ -10,8 +10,6 @@ app-manager-remove =
     .label = Remove
     .accesskey = R
 
-app-manager-handle-webfeeds = The following applications can be used to handle Web Feeds.
-
 # Variables:
 #   $type (String) - the URI scheme of the link (e.g. mailto:)
 app-manager-handle-protocol = The following applications can be used to handle { $type } links.
