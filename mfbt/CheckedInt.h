@@ -558,7 +558,7 @@ public:
    * argument is valid.
    */
   template<typename U>
-  MOZ_IMPLICIT MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT constexpr CheckedInt(U aValue)
+  MOZ_IMPLICIT constexpr CheckedInt(U aValue) MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT
     : mValue(T(aValue)),
       mIsValid(detail::IsInRange<T>(aValue))
   {
