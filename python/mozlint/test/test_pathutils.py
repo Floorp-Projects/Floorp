@@ -59,6 +59,14 @@ TEST_CASES = (
         'extensions': ['py'],
         'expected': ['a.py', 'subdir2'],
     },
+    {
+        'paths': ['subdir1'],
+        'include': ['.'],
+        'exclude': ['subdir1/subdir3'],
+        'extensions': ['py'],
+        'expected': ['subdir1'],
+        'expected_exclude': ['subdir1/subdir3'],
+    },
 )
 
 

@@ -188,6 +188,7 @@ def filterpaths(root, paths, include, exclude=None, extensions=None):
                 # no exclude paths in-between them.
                 if not any(e.contains(path) for e in excs):
                     keep.add(path)
+                    discard.update([e for e in excs if path.contains(e)])
 
         # Next expand excludes with globs in them so we can add them to
         # the set of files to discard.
