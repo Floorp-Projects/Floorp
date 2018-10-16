@@ -54,8 +54,8 @@ Release date: TBD
          // Progress of selected session changed
       }
 
-      // More observer functions...      
-  }  
+      // More observer functions...
+  }
   ```
 * **browser-errorpages**
   * Added more detailed documentation in the README.
@@ -77,7 +77,7 @@ Release date: TBD
     }
   ```
 * **feature-downloads**
-  * A new components for apps that want to process downloads, for more examples take a look at [here](components/feature/downloads/README.md).
+  * A new components for apps that want to process downloads, for more examples take a look at [here](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/README.md).
 * **lib-crash**
   * A new generic crash reporter component that can report crashes to multiple services.
 * **support-test**
