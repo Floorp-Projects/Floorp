@@ -56,7 +56,7 @@ class MOZ_STACK_CLASS JS_FRIEND_API(AutoStableStringChars) final
 
     /* Ensure the string is kept alive while we're using its chars. */
     Rooted<JSString*> s_;
-    union MOZ_INIT_OUTSIDE_CTOR {
+    MOZ_INIT_OUTSIDE_CTOR union {
         const char16_t* twoByteChars_;
         const Latin1Char* latin1Chars_;
     };

@@ -15,18 +15,15 @@
 # define JS_HAZ_GC_THING __attribute__((annotate("GC Thing")))
 
 // Mark a type as holding a pointer to a GC thing (eg JS::Value has this
-// annotation.) "Inherited" by templatized types with
-// MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS.
+// annotation.)
 # define JS_HAZ_GC_POINTER __attribute__((annotate("GC Pointer")))
 
 // Mark a type as a rooted pointer, suitable for use on the stack (eg all
-// Rooted<T> instantiations should have this.) "Inherited" by templatized types with
-// MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS.
+// Rooted<T> instantiations should have this.)
 # define JS_HAZ_ROOTED __attribute__((annotate("Rooted Pointer")))
 
 // Mark a type as something that should not be held live across a GC, but which
-// is not itself a GC pointer. Note that this property is *not* inherited by
-// templatized types with MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS.
+// is not itself a GC pointer.
 # define JS_HAZ_GC_INVALIDATED __attribute__((annotate("Invalidated by GC")))
 
 // Mark a class as a base class of rooted types, eg CustomAutoRooter. All

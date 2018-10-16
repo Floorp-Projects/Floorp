@@ -36,12 +36,9 @@ ac_add_options --without-ccache
 
 ac_add_options --disable-replace-malloc
 
-# -Wattributes is very verbose due to attributes being ignored on template
-# instantiations. -Wignored-attributes is very verbose due to attributes being
-# ignored on template parameters.
-CFLAGS="$CFLAGS -Wno-attributes -Wno-ignored-attributes"
-CPPFLAGS="$CPPFLAGS -Wno-attributes -Wno-ignored-attributes"
-CXXFLAGS="$CXXFLAGS -Wno-attributes -Wno-ignored-attributes"
+CFLAGS="$CFLAGS -Wno-attributes"
+CPPFLAGS="$CPPFLAGS -Wno-attributes"
+CXXFLAGS="$CXXFLAGS -Wno-attributes"
 
 NODEJS="$TOOLTOOL_DIR/node/bin/node"
 
