@@ -6,4 +6,5 @@
 
 DevToolsModules(
     'browsing-context.js',
+    'worker.js',
 )

@@ -20,7 +20,6 @@ module.exports = {
   "globals": {
     "AddonManagerPermissions": false,
     "BroadcastChannel": false,
-    "BrowserFeedWriter": false,
     "CSSAnimation": false,
     "CSSPrimitiveValue": false,
     "CSSValueList": false,

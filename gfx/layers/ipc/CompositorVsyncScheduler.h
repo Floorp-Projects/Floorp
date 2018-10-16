@@ -141,7 +141,7 @@ private:
 
   bool mAsapScheduling;
   bool mIsObservingVsync;
-  uint32_t mNeedsComposite;
+  TimeStamp mCompositeRequestedAt;
   int32_t mVsyncNotificationsSkipped;
   widget::CompositorWidget* mWidget;
   RefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;

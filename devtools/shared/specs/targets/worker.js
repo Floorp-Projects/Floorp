@@ -28,6 +28,19 @@ const workerTargetSpec = generateActorSpec({
       response: RetVal("json")
     },
   },
+
+  events: {
+    // WorkerTargetActor still uses old sendActorEvent function,
+    // but it should use emit instead.
+    close: {
+      type: "close",
+    },
+    // newSource is being sent by ThreadActor in the name of its parent,
+    // i.e. WorkerTargetActor
+    newSource: {
+      type: "newSource",
+    }
+  }
 });
 
 exports.workerTargetSpec = workerTargetSpec;

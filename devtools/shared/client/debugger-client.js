@@ -25,8 +25,8 @@ loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/c
 loader.lazyRequireGetter(this, "AddonClient", "devtools/shared/client/addon-client");
 loader.lazyRequireGetter(this, "RootClient", "devtools/shared/client/root-client");
 loader.lazyRequireGetter(this, "BrowsingContextFront", "devtools/shared/fronts/targets/browsing-context", true);
+loader.lazyRequireGetter(this, "WorkerTargetFront", "devtools/shared/fronts/targets/worker", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
-loader.lazyRequireGetter(this, "WorkerClient", "devtools/shared/client/worker-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Pool", "devtools/shared/protocol", true);
 loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
@@ -380,22 +380,15 @@ DebuggerClient.prototype = {
     return [response, front];
   },
 
-  attachWorker: function(workerTargetActor) {
-    let workerClient = this._clients.get(workerTargetActor);
-    if (workerClient !== undefined) {
-      const response = {
-        from: workerClient.actor,
-        type: "attached",
-        url: workerClient.url
-      };
-      return promise.resolve([response, workerClient]);
+  attachWorker: async function(workerTargetActor) {
+    let front = this._frontPool.actor(workerTargetActor);
+    if (!front) {
+      front = new WorkerTargetFront(this, { actor: workerTargetActor });
+      this._frontPool.manage(front);
     }
 
-    return this.request({ to: workerTargetActor, type: "attach" }).then(response => {
-      workerClient = new WorkerClient(this, response);
-      this.registerClient(workerClient);
-      return [response, workerClient];
-    });
+    const response = await front.attach();
+    return [response, front];
   },
 
   /**

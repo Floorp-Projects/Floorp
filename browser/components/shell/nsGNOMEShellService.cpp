@@ -684,9 +684,3 @@ nsGNOMEShellService::OpenApplicationWithURI(nsIFile* aApplication, const nsACStr
   const char* specStr = spec.get();
   return process->Run(false, &specStr, 1);
 }
-
-NS_IMETHODIMP
-nsGNOMEShellService::GetDefaultFeedReader(nsIFile** _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}

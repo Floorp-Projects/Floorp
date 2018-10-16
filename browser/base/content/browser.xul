@@ -615,20 +615,20 @@ xmlns="http://www.w3.org/1999/xhtml"
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
 
     <tooltip id="back-button-tooltip">
-      <label class="tooltip-label" value="&backButton.tooltip;"/>
+      <description class="tooltip-label" value="&backButton.tooltip;"/>
 #ifdef XP_MACOSX
-      <label class="tooltip-label" value="&backForwardButtonMenuMac.tooltip;"/>
+      <description class="tooltip-label" value="&backForwardButtonMenuMac.tooltip;"/>
 #else
-      <label class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
+      <description class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
 #endif
     </tooltip>
 
     <tooltip id="forward-button-tooltip">
-      <label class="tooltip-label" value="&forwardButton.tooltip;"/>
+      <description class="tooltip-label" value="&forwardButton.tooltip;"/>
 #ifdef XP_MACOSX
-      <label class="tooltip-label" value="&backForwardButtonMenuMac.tooltip;"/>
+      <description class="tooltip-label" value="&backForwardButtonMenuMac.tooltip;"/>
 #else
-      <label class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
+      <description class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
 #endif
     </tooltip>
 
