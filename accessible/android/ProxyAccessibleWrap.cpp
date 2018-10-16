@@ -72,6 +72,38 @@ ProxyAccessibleWrap::ChildCount() const
   return Proxy()->ChildrenCount();
 }
 
+Accessible*
+ProxyAccessibleWrap::GetChildAt(uint32_t aIndex) const
+{
+  ProxyAccessible* child = Proxy()->ChildAt(aIndex);
+  return child ? WrapperFor(child) : nullptr;
+}
+
+ENameValueFlag
+ProxyAccessibleWrap::Name(nsString& aName) const
+{
+  Proxy()->Name(aName);
+  return eNameOK;
+}
+
+void
+ProxyAccessibleWrap::Value(nsString& aValue) const
+{
+  Proxy()->Value(aValue);
+}
+
+uint64_t
+ProxyAccessibleWrap::State()
+{ 
+  return Proxy()->State();
+}
+
+nsIntRect
+ProxyAccessibleWrap::Bounds() const
+{
+  return Proxy()->Bounds();
+}
+
 void
 ProxyAccessibleWrap::ScrollTo(uint32_t aHow) const
 {
@@ -102,46 +134,38 @@ ProxyAccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
   return Proxy()->SelectionBoundsAt(0, unused, aStartOffset, aEndOffset);
 }
 
-mozilla::java::GeckoBundle::LocalRef
-ProxyAccessibleWrap::ToBundle()
+role
+ProxyAccessibleWrap::WrapperRole()
 {
-  ProxyAccessible* proxy = Proxy();
-  if (!proxy) {
-    return nullptr;
+  return Proxy()->Role();
+}
+
+AccessibleWrap*
+ProxyAccessibleWrap::WrapperParent()
+{
+  return Proxy()->Parent() ? WrapperFor(Proxy()->Parent()) : nullptr;
+}
+
+bool
+ProxyAccessibleWrap::WrapperRangeInfo(double* aCurVal,
+                                      double* aMinVal,
+                                      double* aMaxVal,
+                                      double* aStep)
+{
+  if (HasNumericValue()) {
+    ProxyAccessible* proxy = Proxy();
+    *aCurVal = proxy->CurValue();
+    *aMinVal = proxy->MinValue();
+    *aMaxVal = proxy->MaxValue();
+    *aStep = proxy->Step();
+    return true;
   }
 
-  int32_t parentID = proxy->Parent() ?
-    WrapperFor(proxy->Parent())->VirtualViewID() : 0;
+  return false;
+}
 
-  nsAutoString name;
-  proxy->Name(name);
-
-  nsAutoString value;
-  proxy->Value(value);
-
-  nsAutoString viewIdResourceName;
-  proxy->DOMNodeID(viewIdResourceName);
-
-  nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
-
-  auto childCount = proxy->ChildrenCount();
-  nsTArray<int32_t> children(childCount);
-  for (uint32_t i = 0; i < childCount; i++) {
-    auto child = WrapperFor(proxy->ChildAt(i));
-    children.AppendElement(child->VirtualViewID());
-  }
-
-  return CreateBundle(parentID,
-                      proxy->Role(),
-                      proxy->State(),
-                      name,
-                      value,
-                      viewIdResourceName,
-                      proxy->Bounds(),
-                      proxy->CurValue(),
-                      proxy->MinValue(),
-                      proxy->MaxValue(),
-                      proxy->Step(),
-                      attributes,
-                      children);
+void
+ProxyAccessibleWrap::WrapperDOMNodeID(nsString& aDOMNodeID)
+{
+  Proxy()->DOMNodeID(aDOMNodeID);
 }
