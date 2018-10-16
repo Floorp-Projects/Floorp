@@ -33,8 +33,7 @@ def test(mod, path, entity=None):
     if mod == "browser" and path == "chrome/browser-region/region.properties":
         # only region.properties exceptions remain, compare all others
         return ("ignore"
-                if (re.match(r"browser\.search\.order\.[1-9]", entity) or
-                    re.match(r"browser\.contentHandlers\.types\.[0-5]", entity) or
+                if (re.match(r"browser\.contentHandlers\.types\.[0-5]", entity) or
                     re.match(r"gecko\.handlerService\.schemes\.", entity) or
                     re.match(r"gecko\.handlerService\.defaultHandlersVersion", entity))
                 else "error")
