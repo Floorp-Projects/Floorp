@@ -4192,7 +4192,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
 ) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
-    use style::values::specified::{BorderSideWidth, MozLength, BorderCornerRadius};
+    use style::values::generics::length::MozLength;
+    use style::values::specified::{BorderSideWidth, BorderCornerRadius};
     use style::values::specified::length::{NoCalcLength, NonNegativeLength, LengthOrPercentage};
 
     let long = get_longhand_from_id!(property);
@@ -4249,7 +4250,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
 ) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
-    use style::values::specified::MozLength;
+    use style::values::generics::length::MozLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
     use style::values::specified::length::{LengthOrPercentage, NoCalcLength};
 
@@ -4307,7 +4308,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
 ) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::values::computed::Percentage;
-    use style::values::specified::MozLength;
+    use style::values::generics::length::MozLength;
     use style::values::specified::length::LengthOrPercentage;
 
     let long = get_longhand_from_id!(property);
