@@ -178,7 +178,6 @@ public abstract class PromptInput {
             "week",
             "time",
             "datetime-local",
-            "datetime",
             "month"
         };
 
@@ -241,7 +240,7 @@ public abstract class PromptInput {
                 input.setCurrentHour(calendar.get(GregorianCalendar.HOUR_OF_DAY));
                 input.setCurrentMinute(calendar.get(GregorianCalendar.MINUTE));
                 mView = (View)input;
-            } else if (mType.equals("datetime-local") || mType.equals("datetime")) {
+            } else if (mType.equals("datetime-local")) {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-MM-dd'T'HH:mm:ss",
                                                           formatDateTimeSeconds(mValue),
                                                           mSecondEnabled ? DateTimePicker.PickersState.DATETIME_WITH_SECOND : DateTimePicker.PickersState.DATETIME,
@@ -266,9 +265,6 @@ public abstract class PromptInput {
         private static String formatDateTimeSeconds(String dateString) {
             // Reformat the datetime value so that it can be parsed by
             // SimpleDateFormat ending with "HH:mm:ss".
-
-            // datetime may contain a 'Z' at the end.
-            dateString = dateString.replace("Z", "");
 
             int i = dateString.indexOf(":"); // Separator in "HH:mm".
             if (i == -1) {
@@ -319,10 +315,6 @@ public abstract class PromptInput {
                         return formatDateString("yyyy-MM-dd'T'HH:mm:ss", calendar);
                     }
                     return formatDateString("yyyy-MM-dd'T'HH:mm", calendar);
-                } else if (mType.equals("datetime")) {
-                    calendar.set(GregorianCalendar.ZONE_OFFSET, 0);
-                    calendar.setTimeInMillis(dp.getTimeInMillis());
-                    return formatDateString("yyyy-MM-dd'T'HH:mm'Z'", calendar);
                 } else if (mType.equals("month")) {
                     return formatDateString("yyyy-MM", calendar);
                 }
