@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "Effectuez des captures d’écran sur le Web et sauvegardez-les de manière temporaire ou permanente."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Effectuer une capture d’écran"
+  },
+  "myShotsLink": {
+    "message": "Mes captures d’écran"
+  },
+  "screenshotInstructions": {
+    "message": "Sélectionnez une zone de la page par cliquer-glisser ou en cliquant sur l’élément à sélectionner. Appuyez sur Échap pour annuler."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Enregistrer"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Capturer la zone visible"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Capturer la page complète"
+  },
+  "cancelScreenshot": {
+    "message": "Annuler"
+  },
+  "downloadScreenshot": {
+    "message": "Télécharger"
+  },
+  "downloadOnlyNotice": {
+    "message": "Vous êtes actuellement dans un mode ne permettant que le téléchargement."
+  },
+  "downloadOnlyDetails": {
+    "message": "Dans les situations suivantes, Firefox Screenshots permet uniquement les téléchargements :"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "lorsque vous naviguez en navigation privée."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "lorsque les cookies tiers sont désactivés."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "lorsque « Ne jamais conserver l’historique » est activé."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Vous utilisez Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "L’envoi de fichiers est désactivé."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Lien copié"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Le lien de votre capture a été copié dans le presse-papiers. Appuyez sur $META_KEY$-V pour le coller.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copier"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Capture copiée"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Votre capture a été copiée dans le presse-papiers. Appuyez sur $META_KEY$-V pour la coller.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "La hauteur de l’image sauvegardée sera limitée à $PIXELS$ px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Impossible d’effectuer cette action."
+  },
+  "requestErrorDetails": {
+    "message": "Votre capture d’écran n’a pas pu être enregistrée. Veuillez réessayer plus tard."
+  },
+  "connectionErrorTitle": {
+    "message": "Nous ne pouvons pas nous connecter à vos captures d’écran."
+  },
+  "connectionErrorDetails": {
+    "message": "Veuillez vérifier votre connexion à Internet. Si celle-ci fonctionne normalement, il peut y avoir un problème temporaire avec le service de Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nous n’avons pas pu enregistrer votre capture d’écran, car le service de Firefox Screenshot rencontre des difficultés. Veuillez réessayer plus tard."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Impossible d’effectuer une capture de cette page."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Impossible d’effectuer une capture d’écran, car cette page web n’est pas standard."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Vous ne pouvez pas effectuer une capture d’écran d’une page Firefox Screenshots."
+  },
+  "emptySelectionErrorTitle": {
+    "message": "La zone sélectionnée est trop petite"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots est désactivé en mode de navigation privée"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Désolé pour la gêne occasionnée. Nous travaillons sur cette fonctionnalité pour de prochaines versions."
+  },
+  "genericErrorTitle": {
+    "message": "Firefox Screenshots semble avoir un problème."
+  },
+  "genericErrorDetails": {
+    "message": "Un problème non identifié est survenu. Vous pouvez réessayer ou effectuer une capture d’écran d’une autre page."
+  },
+  "tourBodyIntro": {
+    "message": "Effectuez des captures d’écran, enregistrez et partagez-les sans quitter Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Une nouvelle façon d’enregistrer ses captures"
+  },
+  "tourBodyPageAction": {
+    "message": "Dès que vous voulez effectuer une capture d’écran, il vous suffit d’ouvrir le menu d’actions de la page, depuis la barre d’adresse."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Capturez ce que vous voulez"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Cliquez et glissez pour capturer seulement une partie de la page. Vous pouvez aussi survoler une zone avec votre curseur pour surligner votre sélection."
+  },
+  "tourHeaderFullPage": {
+    "message": "Effectuez des captures d’écran de fenêtres ou de pages entières"
+  },
+  "tourBodyFullPage": {
+    "message": "Utilisez les boutons en haut à droite pour capturer au choix la zone visible dans la fenêtre ou la page entière."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "À votre guise"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Sauvegardez en ligne vos captures recadrées pour les partager plus facilement, ou téléchargez-les sur votre ordinateur. Vous pouvez aussi cliquer sur « Mes captures d’écran » pour retrouver toutes vos captures."
+  },
+  "tourHeaderAccounts": {
+    "message": "Captures à emporter"
+  },
+  "tourBodyAccounts": {
+    "message": "Connectez-vous avec votre compte Firefox pour accéder à vos captures sur tous vos appareils et enregistrer définitivement vos préférées."
+  },
+  "tourSkip": {
+    "message": "IGNORER"
+  },
+  "tourNext": {
+    "message": "Écran suivant"
+  },
+  "tourPrevious": {
+    "message": "Écran précédent"
+  },
+  "tourDone": {
+    "message": "Terminé"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "En utilisant Firefox Screenshots, vous acceptez nos $TERMSANDPRIVACYNOTICETERMSLINK$ et notre $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "mentions légales"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "politique de confidentialité"
+  },
+  "libraryLabel": {
+    "message": "Captures d’écran"
+  }
+}

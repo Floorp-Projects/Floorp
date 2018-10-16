@@ -774,11 +774,10 @@ var gMainPane = {
     let checkbox = document.getElementById("browserRestoreSession");
     if (pbAutoStartPref.value || startupPref.locked) {
       checkbox.setAttribute("disabled", "true");
-      newValue = false;
     } else {
       checkbox.removeAttribute("disabled");
-      newValue = startupPref.value === this.STARTUP_PREF_RESTORE_SESSION;
     }
+    newValue = pbAutoStartPref.value ? false : startupPref.value === this.STARTUP_PREF_RESTORE_SESSION;
     if (checkbox.checked !== newValue) {
       checkbox.checked = newValue;
     }
