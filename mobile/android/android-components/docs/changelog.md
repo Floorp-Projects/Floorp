@@ -28,8 +28,6 @@ Release date: 2018-10-16
         SystemEngine.defaultUserAgent = "test-ua-string"
     }
     ```
-* **browser-engine-servo**:
-  * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
 * **browser-engine-gecko-nightly**:
   * Enabled [Java 8 support](https://developer.android.com/studio/write/java8-support) to meet upstream [GeckoView requirements](https://mail.mozilla.org/pipermail/mobile-firefox-dev/2018-September/002411.html). Apps using this component need to enable Java 8 support as well:
   ```Groovy
