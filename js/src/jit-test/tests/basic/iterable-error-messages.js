@@ -15,7 +15,7 @@ function testForOf(val) {
 for (v of [{}, Math, new Proxy({}, {})]) {
     assertThrowsMsg(() => testForOf(v), "val is not iterable");
 }
-assertThrowsMsg(() => testForOf(null), "val is null, can't access property Symbol.iterator of it");
+assertThrowsMsg(() => testForOf(null), "val is null");
 assertThrowsMsg(() => { for (var x of () => 1) {}}, "() => 1 is not iterable");
 
 // Destructuring
@@ -25,7 +25,7 @@ function testDestr(val) {
 for (v of [{}, Math, new Proxy({}, {})]) {
     assertThrowsMsg(() => testDestr(v), "val is not iterable");
 }
-assertThrowsMsg(() => testDestr(null), "val is null, can't access property Symbol.iterator of it");
+assertThrowsMsg(() => testDestr(null), "val is null");
 assertThrowsMsg(() => { [a, b] = () => 1; }, "() => 1 is not iterable");
 
 // Spread
@@ -35,5 +35,5 @@ function testSpread(val) {
 for (v of [{}, Math, new Proxy({}, {})]) {
     assertThrowsMsg(() => testSpread(v), "val is not iterable");
 }
-assertThrowsMsg(() => testSpread(null), "val is null, can't access property Symbol.iterator of it");
+assertThrowsMsg(() => testSpread(null), "val is null");
 assertThrowsMsg(() => { [...() => 1]; }, "() => 1 is not iterable");
