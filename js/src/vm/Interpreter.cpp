@@ -263,7 +263,7 @@ SetPropertyOperation(JSContext* cx, JSOp op, HandleValue lval, HandleId id, Hand
 {
     MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
 
-    RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, lval, id));
+    RootedObject obj(cx, ToObjectFromStack(cx, lval));
     if (!obj)
         return false;
 
@@ -1542,10 +1542,10 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
 #define POP_COPY_TO(v)           (v) = *--REGS.sp
 #define POP_RETURN_VALUE()       REGS.fp()->setReturnValue(*--REGS.sp)
 
-#define FETCH_OBJECT(cx, n, obj, key)                                         \
+#define FETCH_OBJECT(cx, n, obj)                                              \
     JS_BEGIN_MACRO                                                            \
         HandleValue val = REGS.stackHandleAt(n);                              \
-        obj = ToObjectFromStackForPropertyAccess((cx), (val), (key));         \
+        obj = ToObjectFromStack((cx), (val));                                 \
         if (!obj)                                                             \
             goto error;                                                       \
     JS_END_MACRO
@@ -2848,7 +2848,7 @@ CASE(JSOP_STRICTDELPROP)
                   "delprop and strictdelprop must be the same size");
     ReservedRooted<jsid> id(&rootId0, NameToId(script->getName(REGS.pc)));
     ReservedRooted<JSObject*> obj(&rootObject0);
-    FETCH_OBJECT(cx, -1, obj, id);
+    FETCH_OBJECT(cx, -1, obj);
 
     ObjectOpResult result;
     if (!DeleteProperty(cx, obj, id, result))
@@ -2869,8 +2869,9 @@ CASE(JSOP_STRICTDELELEM)
                   "delelem and strictdelelem must be the same size");
     /* Fetch the left part and resolve it to a non-null object. */
     ReservedRooted<JSObject*> obj(&rootObject0);
+    FETCH_OBJECT(cx, -2, obj);
+
     ReservedRooted<Value> propval(&rootValue0, REGS.sp[-1]);
-    FETCH_OBJECT(cx, -2, obj, propval);
 
     ObjectOpResult result;
     ReservedRooted<jsid> id(&rootId0);
@@ -3134,7 +3135,7 @@ CASE(JSOP_STRICTSETELEM)
                   "setelem and strictsetelem must be the same size");
     HandleValue receiver = REGS.stackHandleAt(-3);
     ReservedRooted<JSObject*> obj(&rootObject0);
-    obj = ToObjectFromStackForPropertyAccess(cx, receiver, REGS.stackHandleAt(-2));
+    obj = ToObjectFromStack(cx, receiver);
     if (!obj)
         goto error;
     ReservedRooted<jsid> id(&rootId0);
@@ -4637,7 +4638,7 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
     }
 
     RootedValue receiver(cx, v);
-    RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, v, name));
+    RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
 
@@ -4782,7 +4783,7 @@ template <bool strict>
 bool
 js::DeletePropertyJit(JSContext* cx, HandleValue v, HandlePropertyName name, bool* bp)
 {
-    RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, v, name));
+    RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
 
@@ -4810,7 +4811,7 @@ template <bool strict>
 bool
 js::DeleteElementJit(JSContext* cx, HandleValue val, HandleValue index, bool* bp)
 {
-    RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, val, index));
+    RootedObject obj(cx, ToObjectFromStack(cx, val));
     if (!obj)
         return false;
 
