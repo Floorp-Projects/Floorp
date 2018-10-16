@@ -1187,7 +1187,7 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
 
   FlushSceneBuilds();
   FlushFrameGeneration();
-  mApi->Readback(start, size, buffer, buffer_size);
+  mApi->Readback(start, size, Range<uint8_t>(buffer, buffer_size));
 
   return IPC_OK();
 }

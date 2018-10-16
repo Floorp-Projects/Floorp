@@ -278,7 +278,7 @@ RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender)
     startTime = info->mStartTimes.front();
   }
 
-  UpdateAndRender(aWindowId, startTime, aRender, /* aReadback */ false);
+  UpdateAndRender(aWindowId, startTime, aRender, /* aReadbackSize */ Nothing(), /* aReadbackBuffer */ Nothing());
   FrameRenderingComplete(aWindowId);
 }
 
@@ -356,11 +356,12 @@ void
 RenderThread::UpdateAndRender(wr::WindowId aWindowId,
                               const TimeStamp& aStartTime,
                               bool aRender,
-                              bool aReadback)
+                              const Maybe<gfx::IntSize>& aReadbackSize,
+                              const Maybe<Range<uint8_t>>& aReadbackBuffer)
 {
   AUTO_PROFILER_TRACING("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
-  MOZ_ASSERT(aRender || !aReadback);
+  MOZ_ASSERT(aRender || aReadbackBuffer.isNothing());
 
   auto it = mRenderers.find(aWindowId);
   MOZ_ASSERT(it != mRenderers.end());
@@ -371,7 +372,7 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
   auto& renderer = it->second;
 
   if (aRender) {
-    renderer->UpdateAndRender(aReadback);
+    renderer->UpdateAndRender(aReadbackSize, aReadbackBuffer);
   } else {
     renderer->Update();
   }
