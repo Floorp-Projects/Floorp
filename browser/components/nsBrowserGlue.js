@@ -1553,13 +1553,6 @@ BrowserGlue.prototype = {
       ContextualIdentityService.load();
     });
 
-    Services.tm.idleDispatchToMainThread(() => {
-      let enableCertErrorUITelemetry =
-        Services.prefs.getBoolPref("security.certerrors.recordEventTelemetry", false);
-      Services.telemetry.setEventRecordingEnabled("security.ui.certerror",
-        enableCertErrorUITelemetry);
-    });
-
     // Load the Login Manager data from disk off the main thread, some time
     // after startup.  If the data is required before this runs, for example
     // because a restored page contains a password field, it will be loaded on
