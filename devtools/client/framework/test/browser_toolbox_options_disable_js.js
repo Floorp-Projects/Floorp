@@ -7,19 +7,12 @@
 
 const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_js.html";
 
-function test() {
-  addTab(TEST_URI).then(async (tab) => {
-    const target = await TargetFactory.forTab(tab);
-    gDevTools.showToolbox(target).then(testSelectTool);
-  });
-}
+add_task(async function() {
+  const tab = await addTab(TEST_URI);
+  const target = await TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target);
 
-function testSelectTool(toolbox) {
-  toolbox.once("options-selected", () => testToggleJS(toolbox));
-  toolbox.selectTool("options");
-}
-
-const testToggleJS = async function(toolbox) {
+  await toolbox.selectTool("options");
   ok(true, "Toolbox selected via selectTool method");
 
   await testJSEnabled();
@@ -37,8 +30,9 @@ const testToggleJS = async function(toolbox) {
   await testJSEnabled();
   await testJSEnabledIframe();
 
-  finishUp(toolbox);
-};
+  await toolbox.destroy();
+  gBrowser.removeCurrentTab();
+});
 
 async function testJSEnabled() {
   info("Testing that JS is enabled");
@@ -108,12 +102,5 @@ async function testJSDisabledIframe() {
     iframeDoc.querySelector("#logJSDisabled").click();
     ok(output.textContent !== "JavaScript Disabled",
        'output is not "JavaScript Disabled" in iframe');
-  });
-}
-
-function finishUp(toolbox) {
-  toolbox.destroy().then(function() {
-    gBrowser.removeCurrentTab();
-    finish();
   });
 }
