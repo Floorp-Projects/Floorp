@@ -58,11 +58,11 @@
           name: browser-engine-gecko-nightly
           old_artifact_id: engine-gecko-nightly
           new_group_id: org.mozilla.components
-        public/build/browser.engine-servo.maven.zip:
-          path: /build/android-components/components/browser/engine-servo/build/target.maven.zip
-          name: browser-engine-servo
-          old_artifact_id: browser-engine-servo
-          new_group_id: org.mozilla.components
+        # public/build/browser.engine-servo.maven.zip:
+        #   path: /build/android-components/components/browser/engine-servo/build/target.maven.zip
+        #   name: browser-engine-servo
+        #   old_artifact_id: browser-engine-servo
+        #   new_group_id: org.mozilla.components
         public/build/browser.engine-system.maven.zip:
           path: /build/android-components/components/browser/engine-system/build/target.maven.zip
           name: browser-engine-system
