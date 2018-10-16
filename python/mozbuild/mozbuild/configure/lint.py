@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import inspect
+import types
 from functools import wraps
 from StringIO import StringIO
 from . import (
@@ -14,6 +15,7 @@ from . import (
     DependsFunction,
     SandboxedGlobal,
     TrivialDependsFunction,
+    SandboxDependsFunction,
 )
 from .lint_util import disassemble_as_iter
 from mozbuild.util import memoize
@@ -27,6 +29,9 @@ class LintSandbox(ConfigureSandbox):
         environ = environ or {}
         argv = argv or []
         self._wrapped = {}
+        self._bool_options = []
+        self._bool_func_options = []
+        self.LOG = ""
         super(LintSandbox, self).__init__({}, environ=environ, argv=argv,
                                           stdout=stdout, stderr=stderr)
 
@@ -122,7 +127,40 @@ class LintSandbox(ConfigureSandbox):
         when = self._conditions.get(result)
         if when:
             self._value_for(when, need_help_dependency=True)
+
+        self._check_option(*args, **kwargs)
+
         return result
+
+    def _check_option(self, *args, **kwargs):
+        if 'default' not in kwargs:
+            return
+        if len(args) == 0:
+            return
+
+        name = args[0]
+        default = kwargs['default']
+
+        if type(default) != bool:
+            return
+
+        table = {
+            True: {
+                'enable': 'disable',
+                'with': 'without',
+            },
+            False: {
+                'disable': 'enable',
+                'without': 'with',
+            }
+        }
+        for prefix, replacement in table[default].iteritems():
+            if name.startswith('--{}-'.format(prefix)):
+                raise ConfigureError(('{} should be used instead of '
+                                      '{} with default={}').format(
+                                          name.replace('--{}-'.format(prefix),
+                                                       '--{}-'.format(replacement)),
+                                          name, default))
 
     def unwrap(self, func):
         glob = func.func_globals
