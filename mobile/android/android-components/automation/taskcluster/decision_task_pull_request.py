@@ -38,6 +38,9 @@ def fetch_module_names():
 
 
 def create_task(name, description, command):
+    return create_raw_task(name, description, "./gradlew --no-daemon clean %s" % command)
+
+def create_raw_task(name, description, full_command):
     created = datetime.datetime.now()
     expires = taskcluster.fromNow('1 year')
     deadline = taskcluster.fromNow('1 day')
@@ -64,7 +67,7 @@ def create_task(name, description, command):
                 "/bin/bash",
                 "--login",
                 "-cx",
-                "export TERM=dumb && git fetch %s %s && git config advice.detachedHead false && git checkout %s && ./gradlew --no-daemon clean %s" % (REPO_URL, BRANCH, COMMIT, command)
+                "export TERM=dumb && git fetch %s %s && git config advice.detachedHead false && git checkout %s && %s" % (REPO_URL, BRANCH, COMMIT, full_command)
             ],
             "artifacts": {}
         },
@@ -99,6 +102,13 @@ def create_ktlint_task():
         command='ktlint')
 
 
+def create_compare_locales_task():
+    return create_raw_task(
+        name='Android Components - compare-locales',
+        description='Validate strings.xml with compare-locales',
+        full_command='pip install "compare-locales>=4.0.1,<5.0" && compare-locales --validate l10n.toml .')
+
+
 if __name__ == "__main__":
     if SKIP_TASKS_TRIGGER in PR_TITLE:
         print "Pull request title contains", SKIP_TASKS_TRIGGER
@@ -120,3 +130,4 @@ if __name__ == "__main__":
 
     lib.tasks.schedule_task(queue, taskcluster.slugId(), create_detekt_task())
     lib.tasks.schedule_task(queue, taskcluster.slugId(), create_ktlint_task())
+    lib.tasks.schedule_task(queue, taskcluster.slugId(), create_compare_locales_task())
