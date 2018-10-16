@@ -16,61 +16,70 @@ Bug 1171489 - Tests if the framerate actor does not record timestamps from multi
 "use strict";
 
 window.onload = async function() {
+  // inspector-helpers doesnt wait for explicit finish
   SimpleTest.waitForExplicitFinish();
 
+  const TICK = 1000;
   const url = document.getElementById("testContent").href;
-  const { client, target, doc } = await attachURL(url);
+  const { target, doc } = await attachURL(url);
   const contentWin = doc.defaultView;
 
   const front = target.getFront("framerate");
 
   await front.startRecording();
-  window.setTimeout(() => {
-    // Wait for the iframe to be loaded again
+  await waitFor(TICK);
+  const onWindowReady = waitForWindowReady();
+  contentWin.location.reload();
+
+  // Wait for the iframe to be loaded again
+  await onWindowReady;
+  await waitFor(TICK);
+  const ticks = await front.stopRecording();
+  await onRecordingStopped(ticks);
+
+  await target.destroy();
+  SimpleTest.finish();
+};
+
+// Local Helpers
+function waitFor(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function waitForWindowReady() {
+  return new Promise(resolve => {
     window.addEventListener("message", function loaded(event) {
       if (event.data === "ready") {
         window.removeEventListener("message", loaded);
-        /* eslint-disable max-nested-callbacks */
-        window.setTimeout(async () => {
-          front.stopRecording().then(ticks => {
-            onRecordingStopped(client, ticks);
-          });
-        }, 1000);
-        /* eslint-enable max-nested-callbacks */
+        resolve();
       }
     });
-    contentWin.location.reload();
-  }, 1000);
+  });
+}
 
-  function onRecordingStopped(client, ticks) {
-    const diffs = [];
+function onRecordingStopped(ticks) {
+  const diffs = [];
 
-    info(`Got ${ticks.length} ticks.`);
+  info(`Got ${ticks.length} ticks.`);
 
-    for (let i = 1; i < ticks.length; i++) {
-      const prev = ticks[i - 1];
-      const curr = ticks[i];
-      diffs.push(curr - prev);
-      info(curr + " - " + (curr - prev));
-    }
-
-    // 1000 / 60 => 16.666... so we shouldn't get more than diffs of 16.66.. but
-    // when we get ticks from other frames they're usually at diffs of < 1. Sometimes
-    // ticks can still be less than 16ms even on one frame (usually following a very slow
-    // frame), so use a low number (2) to be our threshold
-    const THRESHOLD = 2;
-    ok(ticks.length >= 20,
-       "we should have atleast 20 ticks over the course of two seconds.");
-    const belowThreshold = diffs.filter(v => v <= THRESHOLD);
-    ok(belowThreshold.length <= 10,
-       "we should have very few frames less than the threshold");
-
-    client.close().then(() => {
-      DebuggerServer.destroy();
-      SimpleTest.finish();
-    });
+  for (let i = 1; i < ticks.length; i++) {
+    const prev = ticks[i - 1];
+    const curr = ticks[i];
+    diffs.push(curr - prev);
+    info(curr + " - " + (curr - prev));
   }
-};
+
+  // 1000 / 60 => 16.666... so we shouldn't get more than diffs of 16.66.. but
+  // when we get ticks from other frames they're usually at diffs of < 1. Sometimes
+  // ticks can still be less than 16ms even on one frame (usually following a very slow
+  // frame), so use a low number (2) to be our threshold
+  const THRESHOLD = 2;
+  ok(ticks.length >= 20,
+     "we should have atleast 20 ticks over the course of two seconds.");
+  const belowThreshold = diffs.filter(v => v <= THRESHOLD);
+  ok(belowThreshold.length <= 10,
+     "we should have very few frames less than the threshold");
+}
 </script>
 </pre>
 <a id="testContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
