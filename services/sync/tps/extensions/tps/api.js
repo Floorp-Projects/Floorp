@@ -42,6 +42,7 @@ async function tpsStartup() {
       // Note: This calls quit() under the hood
       TPS.DumpError("Test initialization failed", e);
     }
+    dump(`TPS test initialization failed: ${e} - ${e.stack}\n`);
     // Try and quit right away, no reason to wait around for python
     // to kill us if initialization failed.
     Services.startup.quit(Ci.nsIAppStartup.eForceQuit);

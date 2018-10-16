@@ -1,0 +1,184 @@
+{
+  "addonDescription": {
+    "message": "Internetdan lavha va skrinshotlar oling hamda ularni vaqtincha yoki butunlay saqlab oling."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Skrinshot olish"
+  },
+  "myShotsLink": {
+    "message": "Men olgan skrinshotlar"
+  },
+  "screenshotInstructions": {
+    "message": "Hududni belgilash uchun kerakli hududni tanlang va bosing. Chiqish uchun “ESC” tugmasidan foydalaning."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Saqlash"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Ko‘rinadiganini saqlash"
+  },
+  "saveScreenshotFullPage": {
+    "message": "To‘liq sahifani saqlash"
+  },
+  "cancelScreenshot": {
+    "message": "Bekor qilish"
+  },
+  "downloadScreenshot": {
+    "message": "Yuklab olish"
+  },
+  "downloadOnlyNotice": {
+    "message": "Siz hozirda \"Faqat yuklab olish\" rejimidasiz."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots bunday holatda \"Faqat yuklab olish\" rejimiga avtomatik tarzda o‘tadi:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Maxfiy ko‘rish oynasida."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Uchinchi tomon kukilari o‘chirib qo‘yilgan."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "\"Tarix saqlanmasin\" funksiyasi yoqilgan."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Siz Firefox ESRdan foydalanyapsiz."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Yuklab qo‘yish o‘chirib qo‘yilgan."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Havoladan nusxa olindi"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Skrinshot havolasidan vaqtinchalik xotiraga nusxa olindi. Qo‘yish uchun $META_KEY$-V tugmalarini bosing.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Nusxa olish"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Skrinshotdan nusxa olindi"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Skrinshotdan vaqtinchalik xotiraga nusxa olindi. Biror joyga qo‘yish uchun $META_KEY$-V tugmalaridan foydalaning.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Saqlangan rasm $PIXELS$px uzunlikda kesiladi.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Xizmat hozircha ishlamayapti."
+  },
+  "requestErrorDetails": {
+    "message": "Uzr! Rasmni saqlay olmaymiz. Keyinroq urinib ko‘ring."
+  },
+  "connectionErrorTitle": {
+    "message": "Skrinshotlaringiz sahifasiga ulana olmadik."
+  },
+  "connectionErrorDetails": {
+    "message": "Internetga ulanishni tekshiring. Ulana olsangiz, demak Firefox Screenshot xizmatida vaqtinchalik muammo bo‘lishi mumkin."
+  },
+  "loginErrorDetails": {
+    "message": "Olingan rasmni saqlay olmaymiz, chunki Firefox Screenshot xizmatida muammo mavjud. Keyinroq urinib ko‘ring."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Bu sahifani rasmga tushira olmaymiz."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Bu sahifa standart sahifa emas, shuning uchun uni rasmga tushira olmaymiz."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox Screenshot sahifasini rasmga tushirish mumkin emas!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Tanlangan hudud juda kichik"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Maxfiy ko‘rish rejimida rasmga olib bo‘lmaydi"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Noqulaylik uchun uzr. Biz keyingi versiyalar uchun bu funksiya ustida ishlayapmiz."
+  },
+  "genericErrorTitle": {
+    "message": "Obbo! Firefox Screenshots ishdan chiqdi."
+  },
+  "genericErrorDetails": {
+    "message": "Nima yuz berganiga tushunmadik. Yana urinib ko‘ring yoki boshqa sahifada skrinshot olib ko‘ring."
+  },
+  "tourBodyIntro": {
+    "message": "Firefox brauzeridan chiqmasdan sahifalarni rasmga olish, saqlash va bo‘lishish mumkin."
+  },
+  "tourHeaderPageAction": {
+    "message": "Saqlashning yangi usuli"
+  },
+  "tourBodyPageAction": {
+    "message": "Skrinshot olish uchun xohlagan vaqtingizda manzil panelidagi sahifa amallari menyusidan foydalaning."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Xohlaganingizni rasmga oling"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Sahifadan tanlash uchun sichqonchani bosing va kerakli qismni tanlang. Tanlovni ajratish uchun sichqoncha ko‘rsatkichini olib borsangiz ham bo‘ladi."
+  },
+  "tourHeaderFullPage": {
+    "message": "Oynani yoki butun sahifani rasmga olish"
+  },
+  "tourBodyFullPage": {
+    "message": "Butun sahifani yoki oynadagi ko‘rinib turgan hududni rasmga olish uchun yuqori o‘ng burchakdagi tugmalardan foydalaning."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Sizga yoqdimi"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Oson ulashish yoki kompyuterga yuklab olish uchun kesilgan skrinshotlarni internetga saqlang. O‘zingiz olgan skrinshotlarning barchasini topish uchun \"Skrinshotlar\" tugmasiga bosing."
+  },
+  "tourSkip": {
+    "message": "TASHLAB KETISH"
+  },
+  "tourNext": {
+    "message": "Keyingi slayd"
+  },
+  "tourPrevious": {
+    "message": "Avvalgi slayd"
+  },
+  "tourDone": {
+    "message": "Tayyor"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox Skrinshot xizmatidan foydalanish orqali siz $TERMSANDPRIVACYNOTICETERMSLINK$ va $TERMSANDPRIVACYNOTICEPRIVACYLINK$ga rozilik bildirgan hisoblanasiz.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Shartlar"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Maxfiylik eslatmasi"
+  },
+  "libraryLabel": {
+    "message": "Rasmlar"
+  }
+}

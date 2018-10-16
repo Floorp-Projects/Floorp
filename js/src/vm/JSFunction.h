@@ -69,8 +69,10 @@ class JSFunction : public js::NativeObject
         LAMBDA           = 0x0040,  /* function comes from a FunctionExpression, ArrowFunction, or
                                        Function() call (not a FunctionDeclaration or nonstandard
                                        function-statement) */
-        SELF_HOSTED      = 0x0080,  /* function is self-hosted builtin and must not be
-                                       decompilable nor constructible. */
+        SELF_HOSTED      = 0x0080,  /* On an interpreted function, indicates a self-hosted builtin,
+                                       which must not be decompilable nor constructible. On a native
+                                       function, indicates an 'intrinsic', intended for use from
+                                       self-hosted code only. */
         HAS_INFERRED_NAME = 0x0100, /* function had no explicit name, but a name was
                                        set by SetFunctionName at compile time or
                                        SetFunctionNameIfNoOwnName at runtime. See
@@ -111,6 +113,11 @@ class JSFunction : public js::NativeObject
         INTERPRETED_GENERATOR_OR_ASYNC = INTERPRETED,
         NO_XDR_FLAGS = RESOLVED_LENGTH | RESOLVED_NAME,
 
+        /* Flags preserved when cloning a function.
+           (Exception: js::MakeDefaultConstructor produces default constructors for ECMAScript
+           classes by cloning self-hosted functions, and then clearing their SELF_HOSTED bit,
+           setting their CONSTRUCTOR bit, and otherwise munging them to look like they originated
+           with the class definition.) */
         STABLE_ACROSS_CLONES = CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK
     };
 
@@ -273,8 +280,6 @@ class JSFunction : public js::NativeObject
     // (see the comment above hasUncompletedScript for more details).
     bool hasScript()                const { return flags() & INTERPRETED; }
 
-    bool infallibleIsDefaultClassConstructor(JSContext* cx) const;
-
     // Arrow functions store their lexical new.target in the first extended slot.
     bool isArrow()                  const { return kind() == Arrow; }
     // Every class-constructor is also a method.
@@ -348,6 +353,10 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(isConstructor());
 
         setKind(ClassConstructor);
+    }
+
+    void clearIsSelfHosted() {
+        flags_ &= ~SELF_HOSTED;
     }
 
     // Can be called multiple times by the parser.

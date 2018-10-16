@@ -14,7 +14,7 @@ var phases = {
   "phase05": "profile1",
   "phase06": "profile2",
   "phase07": "profile1",
-  "phase08": "profile2",
+  "phase08": "profile2"
 };
 
 const id = "test-webext@quality.mozilla.org";
