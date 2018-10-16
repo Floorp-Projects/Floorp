@@ -203,6 +203,97 @@ LifoAlloc::getOrCreateChunk(size_t n)
     return true;
 }
 
+void*
+LifoAlloc::allocImplColdPath(size_t n)
+{
+    void* result;
+    if (!getOrCreateChunk(n)) {
+        return nullptr;
+    }
+
+    // Since we just created a large enough chunk, this can't fail.
+    result = chunks_.last()->tryAlloc(n);
+    MOZ_ASSERT(result);
+    return result;
+}
+
+bool
+LifoAlloc::ensureUnusedApproximateColdPath(size_t n, size_t total)
+{
+    for (detail::BumpChunk& bc : unused_) {
+        total += bc.unused();
+        if (total >= n) {
+            return true;
+        }
+    }
+
+    UniqueBumpChunk newChunk = newChunkWithCapacity(n);
+    if (!newChunk) {
+        return false;
+    }
+    size_t size = newChunk->computedSizeOfIncludingThis();
+    unused_.pushFront(std::move(newChunk));
+    incrementCurSize(size);
+    return true;
+}
+
+LifoAlloc::Mark
+LifoAlloc::mark()
+{
+    markCount++;
+    if (chunks_.empty()) {
+        return Mark();
+    }
+    return chunks_.last()->mark();
+}
+
+void
+LifoAlloc::release(Mark mark)
+{
+    markCount--;
+
+    // Move the blocks which are after the mark to the set of unused chunks.
+    BumpChunkList released;
+    if (!mark.markedChunk()) {
+        released = std::move(chunks_);
+    } else {
+        released = chunks_.splitAfter(mark.markedChunk());
+    }
+
+    // Release the content of all the blocks which are after the marks.
+    for (detail::BumpChunk& bc : released) {
+        bc.release();
+    }
+    unused_.appendAll(std::move(released));
+
+    // Release everything which follows the mark in the last chunk.
+    if (!chunks_.empty()) {
+        chunks_.last()->release(mark);
+    }
+}
+
+void
+LifoAlloc::steal(LifoAlloc* other)
+{
+    MOZ_ASSERT(!other->markCount);
+    MOZ_DIAGNOSTIC_ASSERT(unused_.empty());
+    MOZ_DIAGNOSTIC_ASSERT(chunks_.empty());
+
+    // Copy everything from |other| to |this| except for |peakSize_|, which
+    // requires some care.
+    chunks_ = std::move(other->chunks_);
+    unused_ = std::move(other->unused_);
+    markCount = other->markCount;
+    defaultChunkSize_ = other->defaultChunkSize_;
+    curSize_ = other->curSize_;
+    peakSize_ = Max(peakSize_, other->peakSize_);
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    fallibleScope_ = other->fallibleScope_;
+#endif
+
+    other->reset(defaultChunkSize_);
+}
+
 void
 LifoAlloc::transferFrom(LifoAlloc* other)
 {
@@ -229,3 +320,27 @@ LifoAlloc::transferUnusedFrom(LifoAlloc* other)
     incrementCurSize(size);
     other->decrementCurSize(size);
 }
+
+#ifdef LIFO_CHUNK_PROTECT
+void
+LifoAlloc::setReadOnly()
+{
+    for (detail::BumpChunk& bc : chunks_) {
+        bc.setReadOnly();
+    }
+    for (detail::BumpChunk& bc : unused_) {
+        bc.setReadOnly();
+    }
+}
+
+void
+LifoAlloc::setReadWrite()
+{
+    for (detail::BumpChunk& bc : chunks_) {
+        bc.setReadWrite();
+    }
+    for (detail::BumpChunk& bc : unused_) {
+        bc.setReadWrite();
+    }
+}
+#endif
