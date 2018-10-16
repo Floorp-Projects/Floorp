@@ -324,8 +324,11 @@ add_task(async function test_countryFieldLabels() {
 
       // Check that the labels were filled
       for (let labelEl of mutatableLabels) {
-        await TestUtils.waitForCondition(() => labelEl.textContent,
-                                         "Wait for label to be populated by the mutation observer");
+        if (!labelEl.textContent) {
+          await TestUtils.waitForCondition(() => labelEl.textContent,
+                                           "Wait for label to be populated by the mutation observer",
+                                           10);
+        }
         isnot(labelEl.textContent, "",
               "Ensure textContent is non-empty for: " + countryOption.value);
         is(labelEl.dataset.localization, undefined,
