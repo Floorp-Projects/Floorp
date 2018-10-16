@@ -27,7 +27,7 @@ function run_test() {
   }(gClient.request));
   gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
                              test_simple_listsources();
                            });

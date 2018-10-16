@@ -27,7 +27,7 @@ function run_test() {
 
     attachTestTabAndResume(
       gClient, "test-wasm-source",
-      function(response, tabClient, threadClient) {
+      function(response, targetFront, threadClient) {
         gThreadClient = threadClient;
         gThreadClient.reconfigure({
           observeAsmJS: true,

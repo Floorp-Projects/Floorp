@@ -20,7 +20,7 @@ function run_test() {
   gClient.connect().then(function() {
     attachTestTabAndResume(
       gClient, "test-source-map",
-      function(response, tabClient, threadClient) {
+      function(response, targetFront, threadClient) {
         gThreadClient = threadClient;
         Promise.resolve(define_code())
           .then(run_code)

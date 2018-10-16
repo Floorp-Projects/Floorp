@@ -10,7 +10,7 @@
 var gDebuggee;
 var gClient;
 var gThreadClient;
-var gTabClient;
+var gTargetFront;
 
 const {SourceNode} = require("source-map");
 
@@ -20,9 +20,9 @@ function run_test() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
-                             gTabClient = tabClient;
+                             gTargetFront = targetFront;
                              setup_code();
                            });
   });
@@ -64,7 +64,7 @@ function test_initial_sources() {
     sources = sources.filter(source => source.url);
     Assert.equal(sources.length, 1);
     Assert.equal(sources[0].url, getFileUrl(TEMP_FILE_1, true));
-    reload(gTabClient).then(setup_new_code);
+    reload(gTargetFront).then(setup_new_code);
   });
 }
 

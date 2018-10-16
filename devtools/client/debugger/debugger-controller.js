@@ -468,7 +468,7 @@ function Workers() {
 }
 
 Workers.prototype = {
-  get _tabClient() {
+  get _targetFront() {
     return DebuggerController._target.activeTab;
   },
 
@@ -479,29 +479,29 @@ Workers.prototype = {
 
     this._updateWorkerList();
 
-    // `_tabClient` can be BrowsingContextTargetFront (protocol.js front) or
+    // `_targetFront` can be BrowsingContextTargetFront (protocol.js front) or
     // WorkerClient/DebuggerClient (old fashion client)
-    if (typeof(this._tabClient.on) == "function") {
-      this._tabClient.on("workerListChanged", this._onWorkerListChanged);
+    if (typeof(this._targetFront.on) == "function") {
+      this._targetFront.on("workerListChanged", this._onWorkerListChanged);
     } else {
-      this._tabClient.addListener("workerListChanged", this._onWorkerListChanged);
+      this._targetFront.addListener("workerListChanged", this._onWorkerListChanged);
     }
   },
 
   disconnect: function () {
-    if (typeof(this._tabClient.on) == "function") {
-      this._tabClient.off("workerListChanged", this._onWorkerListChanged);
+    if (typeof(this._targetFront.on) == "function") {
+      this._targetFront.off("workerListChanged", this._onWorkerListChanged);
     } else {
-      this._tabClient.removeListener("workerListChanged", this._onWorkerListChanged);
+      this._targetFront.removeListener("workerListChanged", this._onWorkerListChanged);
     }
   },
 
   _updateWorkerList: function () {
-    if (!this._tabClient.listWorkers) {
+    if (!this._targetFront.listWorkers) {
       return;
     }
 
-    this._tabClient.listWorkers().then((response) => {
+    this._targetFront.listWorkers().then((response) => {
       let workerForms = Object.create(null);
       for (let worker of response.workers) {
         workerForms[worker.actor] = worker;

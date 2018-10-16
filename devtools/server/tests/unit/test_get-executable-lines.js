@@ -22,7 +22,7 @@ function run_test() {
     attachTestTabAndResume(
       gClient,
       "test-get-executable-lines",
-      function(response, tabClient, threadClient) {
+      function(response, targetFront, threadClient) {
         gThreadClient = threadClient;
         test_executable_lines();
       }
