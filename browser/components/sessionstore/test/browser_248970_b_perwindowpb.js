@@ -10,7 +10,7 @@ function test() {
   let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
   let filePath = file.path;
   let fieldList = {
-    "//input[@name='input']":     Date.now().toString(),
+    "//input[@name='input']":     Date.now().toString(16),
     "//input[@name='spaced 1']":  Math.random().toString(),
     "//input[3]":                 "three",
     "//input[@type='checkbox']":  true,

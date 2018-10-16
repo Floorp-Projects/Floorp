@@ -44,6 +44,7 @@ class UrlbarInput {
 
     this.panel = options.panel;
     this.window = this.textbox.ownerGlobal;
+    this.document = this.window.document;
     this.controller = options.controller || new UrlbarController({
       window: this.window,
     });
@@ -236,6 +237,11 @@ class UrlbarInput {
 
   get focused() {
     return this.textbox.getAttribute("focused") == "true";
+  }
+
+  get goButton() {
+    return this.document.getAnonymousElementByAttribute(this.textbox, "anonid",
+      "urlbar-go-button");
   }
 
   get value() {
@@ -519,7 +525,7 @@ class CopyCutController {
                                 urlbar.inputField.value.substring(end);
       urlbar.selectionStart = urlbar.selectionEnd = start;
 
-      let event = urlbar.window.document.createEvent("UIEvents");
+      let event = urlbar.document.createEvent("UIEvents");
       event.initUIEvent("input", true, false, this.window, 0);
       urlbar.dispatchEvent(event);
 
