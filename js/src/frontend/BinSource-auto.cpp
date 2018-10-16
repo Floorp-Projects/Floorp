@@ -20,13 +20,13 @@
 #include "frontend/BinSource.h"
 #include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
+#include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "frontend/SharedContext.h"
 
 #include "vm/RegExpObject.h"
 
 #include "frontend/ParseContext-inl.h"
-#include "frontend/ParseNode-inl.h"
 
 namespace js {
 namespace frontend {
@@ -2843,8 +2843,9 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
 
     // Check for direct calls to `eval`.
     if (factory_.isEvalName(callee, cx_)) {
-        if (!parseContext_->varScope().lookupDeclaredNameForAdd(callee->name())
-         && !parseContext_->innermostScope()->lookupDeclaredNameForAdd(callee->name())) {
+        if (!parseContext_->varScope().lookupDeclaredNameForAdd(cx_->names().eval)
+         && !parseContext_->innermostScope()->lookupDeclaredNameForAdd(cx_->names().eval))
+        {
             // This is a direct call to `eval`.
             if (!parseContext_->sc()->hasDirectEval()) {
                 return raiseMissingDirectEvalInAssertedScope();
@@ -4545,7 +4546,7 @@ BinASTParser<Tok>::parseInterfaceShorthandProperty(const size_t start, const Bin
 
     MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
     MOZ_ASSERT(!factory_.isUsableAsObjectPropertyName(name));
-    BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
+    BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(name->template as<NameNode>().name(), tokenizer_->pos(start)));
 
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(propName, name, AccessorType::None));
     result->setKind(ParseNodeKind::Shorthand);
