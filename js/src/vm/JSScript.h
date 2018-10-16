@@ -12,9 +12,15 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MaybeOneOf.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Span.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
+
+#include <type_traits> // std::is_same
+#include <utility> // std::move
 
 #include "jstypes.h"
 
@@ -26,6 +32,7 @@
 #include "js/CompileOptions.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
+#include "js/Utility.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
@@ -295,17 +302,17 @@ class ScriptSource;
 
 struct ScriptSourceChunk
 {
-    ScriptSource* ss;
-    uint32_t chunk;
+    ScriptSource* ss = nullptr;
+    uint32_t chunk = 0;
 
-    ScriptSourceChunk()
-      : ss(nullptr), chunk(0)
-    {}
+    ScriptSourceChunk() = default;
+
     ScriptSourceChunk(ScriptSource* ss, uint32_t chunk)
       : ss(ss), chunk(chunk)
     {
-        MOZ_ASSERT(valid());;
+        MOZ_ASSERT(valid());
     }
+
     bool valid() const { return ss != nullptr; }
 
     bool operator==(const ScriptSourceChunk& other) const {
@@ -325,40 +332,103 @@ struct ScriptSourceChunkHasher
     }
 };
 
+template<typename CharT>
+using EntryChars = mozilla::UniquePtr<CharT[], JS::FreePolicy>;
+
+// The uncompressed source cache contains *either* UTF-8 source data *or*
+// UTF-16 source data.  ScriptSourceChunk implies a ScriptSource that
+// contains either UTF-8 data or UTF-16 data, so the nature of the key to
+// Map below indicates how each SourceData ought to be interpreted.
+using SourceData = mozilla::UniquePtr<void, JS::FreePolicy>;
+
+template<typename CharT>
+inline SourceData
+ToSourceData(EntryChars<CharT> chars)
+{
+    static_assert(std::is_same<SourceData::DeleterType,
+                               typename EntryChars<CharT>::DeleterType>::value,
+                  "EntryChars and SourceData must share the same deleter "
+                  "type, that need not know the type of the data being freed, "
+                  "for the upcast below to be safe");
+    return SourceData(chars.release());
+}
+
 class UncompressedSourceCache
 {
-    typedef HashMap<ScriptSourceChunk,
-                    UniqueTwoByteChars,
-                    ScriptSourceChunkHasher,
-                    SystemAllocPolicy> Map;
+    using Map = HashMap<ScriptSourceChunk,
+                        SourceData,
+                        ScriptSourceChunkHasher,
+                        SystemAllocPolicy>;
 
   public:
     // Hold an entry in the source data cache and prevent it from being purged on GC.
     class AutoHoldEntry
     {
-        UncompressedSourceCache* cache_;
-        ScriptSourceChunk sourceChunk_;
-        UniqueTwoByteChars charsToFree_;
+        UncompressedSourceCache* cache_ = nullptr;
+        ScriptSourceChunk sourceChunk_ = {};
+        SourceData data_ = nullptr;
+
       public:
-        explicit AutoHoldEntry();
-        ~AutoHoldEntry();
-        void holdChars(UniqueTwoByteChars chars);
+        explicit AutoHoldEntry() = default;
+
+        ~AutoHoldEntry() {
+            if (cache_) {
+                MOZ_ASSERT(sourceChunk_.valid());
+                cache_->releaseEntry(*this);
+            }
+        }
+
+        template<typename CharT>
+        void holdChars(EntryChars<CharT> chars) {
+            MOZ_ASSERT(!cache_);
+            MOZ_ASSERT(!sourceChunk_.valid());
+            MOZ_ASSERT(!data_);
+
+            data_ = ToSourceData(std::move(chars));
+        }
+
       private:
-        void holdEntry(UncompressedSourceCache* cache, const ScriptSourceChunk& sourceChunk);
-        void deferDelete(UniqueTwoByteChars chars);
+        void holdEntry(UncompressedSourceCache* cache, const ScriptSourceChunk& sourceChunk) {
+            // Initialise the holder for a specific cache and script source.
+            // This will hold on to the cached source chars in the event that
+            // the cache is purged.
+            MOZ_ASSERT(!cache_);
+            MOZ_ASSERT(!sourceChunk_.valid());
+            MOZ_ASSERT(!data_);
+
+            cache_ = cache;
+            sourceChunk_ = sourceChunk;
+        }
+
+        void deferDelete(SourceData data) {
+            // Take ownership of source chars now the cache is being purged. Remove our
+            // reference to the ScriptSource which might soon be destroyed.
+            MOZ_ASSERT(cache_);
+            MOZ_ASSERT(sourceChunk_.valid());
+            MOZ_ASSERT(!data_);
+
+            cache_ = nullptr;
+            sourceChunk_ = ScriptSourceChunk();
+
+            data_ = std::move(data);
+        }
+
+
         const ScriptSourceChunk& sourceChunk() const { return sourceChunk_; }
         friend class UncompressedSourceCache;
     };
 
   private:
-    UniquePtr<Map> map_;
-    AutoHoldEntry* holder_;
+    UniquePtr<Map> map_ = nullptr;
+    AutoHoldEntry* holder_ = nullptr;
 
   public:
-    UncompressedSourceCache() : holder_(nullptr) {}
+    UncompressedSourceCache() = default;
 
-    const char16_t* lookup(const ScriptSourceChunk& ssc, AutoHoldEntry& asp);
-    bool put(const ScriptSourceChunk& ssc, UniqueTwoByteChars chars, AutoHoldEntry& asp);
+    template<typename CharT>
+    const CharT* lookup(const ScriptSourceChunk& ssc, AutoHoldEntry& asp);
+
+    bool put(const ScriptSourceChunk& ssc, SourceData data, AutoHoldEntry& asp);
 
     void purge();
 
@@ -369,9 +439,68 @@ class UncompressedSourceCache
     void releaseEntry(AutoHoldEntry& holder);
 };
 
+template<typename CharT>
+struct SourceTypeTraits;
+
+template<>
+struct SourceTypeTraits<mozilla::Utf8Unit>
+{
+    using SharedImmutableString = js::SharedImmutableString;
+
+    static const mozilla::Utf8Unit* chars(const SharedImmutableString& string) {
+        // Casting |char| data to |Utf8Unit| is safe because |Utf8Unit|
+        // contains a |char|.  See the long comment in |Utf8Unit|'s definition.
+        return reinterpret_cast<const mozilla::Utf8Unit*>(string.chars());
+    }
+
+    static char* toString(const mozilla::Utf8Unit* units) {
+        auto asUnsigned = const_cast<unsigned char*>(mozilla::Utf8AsUnsignedChars(units));
+        return reinterpret_cast<char*>(asUnsigned);
+    }
+
+    static UniqueChars toCacheable(EntryChars<mozilla::Utf8Unit> str) {
+        // The cache only stores strings of |char| or |char16_t|, and right now
+        // it seems best not to gunk up the cache with |Utf8Unit| too.  So
+        // cache |Utf8Unit| strings by interpreting them as |char| strings.
+        char* chars = toString(str.release());
+        return UniqueChars(chars);
+    }
+};
+
+template<>
+struct SourceTypeTraits<char16_t>
+{
+    using SharedImmutableString = js::SharedImmutableTwoByteString;
+
+    static const char16_t* chars(const SharedImmutableString& string) {
+        return string.chars();
+    }
+
+    static char16_t* toString(char16_t* units) {
+        return units;
+    }
+
+    static UniqueTwoByteChars toCacheable(EntryChars<char16_t> str) {
+        return UniqueTwoByteChars(std::move(str));
+    }
+};
+
 class ScriptSource
 {
     friend class SourceCompressionTask;
+
+    class PinnedCharsBase
+    {
+      protected:
+        PinnedCharsBase** stack_ = nullptr;
+        PinnedCharsBase* prev_ = nullptr;
+
+        ScriptSource* source_;
+
+        explicit PinnedCharsBase(ScriptSource* source)
+          : source_(source)
+        {}
+    };
 
   public:
     // Any users that wish to manipulate the char buffer of the ScriptSource
@@ -379,13 +508,10 @@ class ScriptSource
     // ScriptSources. If the source were initially uncompressed, then any raw
     // pointers to the char buffer would now point to the freed, uncompressed
     // chars. This is analogous to Rooted.
-    class PinnedChars
+    template<typename CharT>
+    class PinnedChars : public PinnedCharsBase
     {
-        PinnedChars** stack_;
-        PinnedChars* prev_;
-
-        ScriptSource* source_;
-        const char16_t* chars_;
+        const CharT* chars_;
 
       public:
         PinnedChars(JSContext* cx, ScriptSource* source,
@@ -394,7 +520,7 @@ class ScriptSource
 
         ~PinnedChars();
 
-        const char16_t* get() const {
+        const CharT* get() const {
             return chars_;
         }
     };
@@ -408,26 +534,39 @@ class ScriptSource
     // on the main thread.
 
     // Indicate which field in the |data| union is active.
-
     struct Missing { };
 
-    struct Uncompressed
+    template<typename CharT>
+    class Uncompressed
     {
-        SharedImmutableTwoByteString string;
+        typename SourceTypeTraits<CharT>::SharedImmutableString string_;
 
-        explicit Uncompressed(SharedImmutableTwoByteString&& str)
-          : string(std::move(str))
-        { }
+
+      public:
+        explicit Uncompressed(typename SourceTypeTraits<CharT>::SharedImmutableString str)
+          : string_(std::move(str))
+        {}
+
+        const CharT* chars() const {
+            return SourceTypeTraits<CharT>::chars(string_);
+        }
+
+        size_t length() const {
+            return string_.length();
+        }
     };
 
+    template<typename CharT>
     struct Compressed
     {
+        // Single-byte compressed text, regardless whether the original text
+        // was single-byte or two-byte.
         SharedImmutableString raw;
         size_t uncompressedLength;
 
-        Compressed(SharedImmutableString&& raw, size_t uncompressedLength)
-          : raw(std::move(raw))
-          , uncompressedLength(uncompressedLength)
+        Compressed(SharedImmutableString raw, size_t uncompressedLength)
+          : raw(std::move(raw)),
+            uncompressedLength(uncompressedLength)
         { }
     };
 
@@ -439,14 +578,18 @@ class ScriptSource
         { }
     };
 
-    using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed, BinAST>;
+    using SourceType =
+        mozilla::Variant<Compressed<mozilla::Utf8Unit>, Uncompressed<mozilla::Utf8Unit>,
+                         Compressed<char16_t>, Uncompressed<char16_t>,
+                         Missing,
+                         BinAST>;
     SourceType data;
 
     // If the GC attempts to call setCompressedSource with PinnedChars
     // present, the first PinnedChars (that is, bottom of the stack) will set
     // the compressed chars upon destruction.
-    PinnedChars* pinnedCharsStack_;
-    mozilla::Maybe<Compressed> pendingCompressed_;
+    PinnedCharsBase* pinnedCharsStack_;
+    mozilla::MaybeOneOf<Compressed<mozilla::Utf8Unit>, Compressed<char16_t>> pendingCompressed_;
 
     // The filename of this script.
     UniqueChars filename_;
@@ -512,17 +655,20 @@ class ScriptSource
 
     UniquePtr<frontend::BinASTSourceMetadata> binASTMetadata_;
 
-    const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
-                               size_t chunk);
+    template<typename CharT>
+    const CharT* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
+                            size_t chunk);
 
     // Return a string containing the chars starting at |begin| and ending at
     // |begin + len|.
     //
     // Warning: this is *not* GC-safe! Any chars to be handed out should use
     // PinnedChars. See comment below.
-    const char16_t* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
-                          size_t begin, size_t len);
+    template<typename CharT>
+    const CharT* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
+                       size_t begin, size_t len);
 
+    template<typename CharT>
     void movePendingCompressedSource();
 
   public:
@@ -568,8 +714,6 @@ class ScriptSource
     bool sourceRetrievable() const { return sourceRetrievable_; }
     bool hasSourceText() const { return hasUncompressedSource() || hasCompressedSource(); }
     bool hasBinASTSource() const { return data.is<BinAST>(); }
-    bool hasUncompressedSource() const { return data.is<Uncompressed>(); }
-    bool hasCompressedSource() const { return data.is<Compressed>(); }
 
     void setBinASTSourceMetadata(frontend::BinASTSourceMetadata* metadata) {
         MOZ_ASSERT(hasBinASTSource());
@@ -580,29 +724,237 @@ class ScriptSource
         return binASTMetadata_.get();
     }
 
+  private:
+    struct UncompressedDataMatcher
+    {
+        template<typename CharT>
+        const void* match(const Uncompressed<CharT>& u) {
+            return u.chars();
+        }
+
+        template<typename T>
+        const void* match(const T&) {
+            MOZ_CRASH("attempting to access uncompressed data in a "
+                      "ScriptSource not containing it");
+            return nullptr;
+        }
+    };
+
+  public:
+    template<typename CharT>
+    const CharT* uncompressedData() {
+        return static_cast<const CharT*>(data.match(UncompressedDataMatcher()));
+    }
+
+  private:
+    struct CompressedDataMatcher
+    {
+        template<typename CharT>
+        char* match(const Compressed<CharT>& c) {
+            return const_cast<char*>(c.raw.chars());
+        }
+
+        template<typename T>
+        char* match(const T&) {
+            MOZ_CRASH("attempting to access compressed data in a ScriptSource "
+                      "not containing it");
+            return nullptr;
+        }
+    };
+
+  public:
+    template<typename CharT>
+    char* compressedData() {
+        return data.match(CompressedDataMatcher());
+    }
+
+  private:
+    struct BinASTDataMatcher
+    {
+        void* match(const BinAST& b) {
+            return const_cast<char*>(b.string.chars());
+        }
+
+        void notBinAST() {
+            MOZ_CRASH("ScriptSource isn't backed by BinAST data");
+        }
+
+        template<typename T>
+        void* match(const T&) {
+            notBinAST();
+            return nullptr;
+        }
+    };
+
+  public:
+    void* binASTData() {
+        return data.match(BinASTDataMatcher());
+    }
+
+  private:
+    struct HasUncompressedSource
+    {
+        template<typename CharT>
+        bool match(const Uncompressed<CharT>&) { return true; }
+
+        template<typename CharT>
+        bool match(const Compressed<CharT>&) { return false; }
+
+        bool match(const BinAST&) { return false; }
+
+        bool match(const Missing&) { return false; }
+    };
+
+  public:
+    bool hasUncompressedSource() const {
+        return data.match(HasUncompressedSource());
+    }
+
+    template<typename CharT>
+    bool uncompressedSourceIs() const {
+        MOZ_ASSERT(hasUncompressedSource());
+        return data.is<Uncompressed<CharT>>();
+    }
+
+  private:
+    struct HasCompressedSource
+    {
+        template<typename CharT>
+        bool match(const Compressed<CharT>&) { return true; }
+
+        template<typename CharT>
+        bool match(const Uncompressed<CharT>&) { return false; }
+
+        bool match(const BinAST&) { return false; }
+
+        bool match(const Missing&) { return false; }
+    };
+
+  public:
+    bool hasCompressedSource() const {
+        return data.match(HasCompressedSource());
+    }
+
+    template<typename CharT>
+    bool compressedSourceIs() const {
+        MOZ_ASSERT(hasCompressedSource());
+        return data.is<Compressed<CharT>>();
+    }
+
+  private:
+    template<typename CharT>
+    struct SourceTypeMatcher
+    {
+        template<template<typename C> class Data>
+        bool match(const Data<CharT>&) {
+            return true;
+        }
+
+        template<template<typename C> class Data, typename NotCharT>
+        bool match(const Data<NotCharT>&) {
+            return false;
+        }
+
+        bool match(const BinAST&) {
+            MOZ_CRASH("doesn't make sense to ask source type of BinAST data");
+            return false;
+        }
+
+        bool match(const Missing&) {
+            MOZ_CRASH("doesn't make sense to ask source type when missing");
+            return false;
+        }
+    };
+
+  public:
+    template<typename CharT>
+    bool hasSourceType() const {
+        return data.match(SourceTypeMatcher<CharT>());
+    }
+
+  private:
+    struct SourceCharSizeMatcher
+    {
+        template<template<typename C> class Data, typename CharT>
+        uint8_t match(const Data<CharT>& data) {
+            static_assert(std::is_same<CharT, mozilla::Utf8Unit>::value ||
+                          std::is_same<CharT, char16_t>::value,
+                          "should only have UTF-8 or UTF-16 source char");
+            return sizeof(CharT);
+        }
+
+        uint8_t match(const BinAST&) {
+            MOZ_CRASH("BinAST source has no source-char size");
+            return 0;
+        }
+
+        uint8_t match(const Missing&) {
+            MOZ_CRASH("missing source has no source-char size");
+            return 0;
+        }
+    };
+
+  public:
+    uint8_t sourceCharSize() const {
+        return data.match(SourceCharSizeMatcher());
+    }
+
+  private:
+    struct UncompressedLengthMatcher
+    {
+        template<typename CharT>
+        size_t match(const Uncompressed<CharT>& u) {
+            return u.length();
+        }
+
+        template<typename CharT>
+        size_t match(const Compressed<CharT>& u) {
+            return u.uncompressedLength;
+        }
+
+        size_t match(const BinAST& b) {
+            return b.string.length();
+        }
+
+        size_t match(const Missing& m) {
+            MOZ_CRASH("ScriptSource::length on a missing source");
+            return 0;
+        }
+    };
+
+  public:
     size_t length() const {
-        struct LengthMatcher
-        {
-            size_t match(const Uncompressed& u) {
-                return u.string.length();
-            }
-
-            size_t match(const Compressed& c) {
-                return c.uncompressedLength;
-            }
-
-            size_t match(const BinAST& b) {
-                return b.string.length();
-            }
-
-            size_t match(const Missing& m) {
-                MOZ_CRASH("ScriptSource::length on a missing source");
-                return 0;
-            }
-        };
-
         MOZ_ASSERT(hasSourceText() || hasBinASTSource());
-        return data.match(LengthMatcher());
+        return data.match(UncompressedLengthMatcher());
+    }
+
+  private:
+    struct CompressedLengthOrZeroMatcher
+    {
+        template<typename CharT>
+        size_t match(const Uncompressed<CharT>&) {
+            return 0;
+        }
+
+        template<typename CharT>
+        size_t match(const Compressed<CharT>& c) {
+            return c.raw.length();
+        }
+
+        size_t match(const BinAST&) {
+            MOZ_CRASH("trying to get compressed length for BinAST data");
+            return 0;
+        }
+
+        size_t match(const Missing&) {
+            MOZ_CRASH("missing source data");
+            return 0;
+        }
+    };
+
+  public:
+    size_t compressedLengthOrZero() const {
+        return data.match(CompressedLengthOrZeroMatcher());
     }
 
     JSFlatString* substring(JSContext* cx, size_t start, size_t stop);
@@ -618,18 +970,24 @@ class ScriptSource
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 JS::ScriptSourceInfo* info) const;
 
+    template<typename CharT>
     MOZ_MUST_USE bool setSource(JSContext* cx,
-                                UniqueTwoByteChars&& source,
+                                EntryChars<CharT>&& source,
                                 size_t length);
-    void setSource(SharedImmutableTwoByteString&& string);
+
+    template<typename CharT>
+    void setSource(typename SourceTypeTraits<CharT>::SharedImmutableString uncompressed);
 
     MOZ_MUST_USE bool tryCompressOffThread(JSContext* cx);
 
-    MOZ_MUST_USE bool setCompressedSource(JSContext* cx,
-                                          UniqueChars&& raw,
-                                          size_t rawLength,
+    // The CharT parameter determines which type of compressed source is
+    // recorded, but raw compressed source is always single-byte.
+    template<typename CharT>
+    void setCompressedSource(SharedImmutableString compressed, size_t sourceLength);
+
+    template<typename CharT>
+    MOZ_MUST_USE bool setCompressedSource(JSContext* cx, UniqueChars&& raw, size_t rawLength,
                                           size_t sourceLength);
-    void setCompressedSource(SharedImmutableString&& raw, size_t sourceLength);
 
 #if defined(JS_BUILD_BINAST)
 
@@ -650,10 +1008,61 @@ class ScriptSource
 
 #endif /* JS_BUILD_BINAST */
 
+  private:
+    void performTaskWork(SourceCompressionTask* task);
+
+    struct SetCompressedSourceFromTask
+    {
+        ScriptSource* const source_;
+        SharedImmutableString& compressed_;
+
+        SetCompressedSourceFromTask(ScriptSource* source, SharedImmutableString& compressed)
+          : source_(source),
+            compressed_(compressed)
+        {}
+
+        template<typename CharT>
+        void match(const Uncompressed<CharT>&) {
+            source_->setCompressedSource<CharT>(std::move(compressed_), source_->length());
+        }
+
+        template<typename CharT>
+        void match(const Compressed<CharT>&) {
+            MOZ_CRASH("can't set compressed source when source is already "
+                      "compressed -- ScriptSource::tryCompressOffThread "
+                      "shouldn't have queued up this task?");
+        }
+
+        void match(const BinAST&) {
+            MOZ_CRASH("doesn't make sense to set compressed source for BinAST "
+                      "data");
+        }
+
+        void match(const Missing&) {
+            MOZ_CRASH("doesn't make sense to set compressed source for "
+                      "missing source -- ScriptSource::tryCompressOffThread "
+                      "shouldn't have queued up this task?");
+        }
+    };
+
+    void setCompressedSourceFromTask(SharedImmutableString compressed);
+
+  public:
     // XDR handling
     template <XDRMode mode>
     MOZ_MUST_USE XDRResult performXDR(XDRState<mode>* xdr);
 
+  private:
+    // It'd be better to make this function take <XDRMode, CharT>, as both
+    // specializations of this function contain nested CharT-parametrized
+    // helper classes that do everything the function needs to do.  But then
+    // we'd need template function partial specialization to hold XDRMode
+    // constant while varying CharT, so that idea's no dice.
+    template <XDRMode mode>
+    MOZ_MUST_USE XDRResult xdrUncompressedSource(XDRState<mode>* xdr, uint8_t sourceCharSize,
+                                                 uint32_t uncompressedLength);
+
+  public:
     MOZ_MUST_USE bool setFilename(JSContext* cx, const char* filename);
     const char* introducerFilename() const {
         return introducerFilename_ ? introducerFilename_.get() : filename_.get();
