@@ -45,7 +45,7 @@ function test()
   }
   reportCompare(expect, actual, summary);
 
-  expect = `TypeError: x is undefined; can't access its "y" property`;
+  expect = `TypeError: x is undefined, can't access property "y" of it`;
   actual = 'No Error';
 
   try
@@ -59,7 +59,7 @@ function test()
   }
   reportCompare(expect, actual, summary);
 
-  expect = `TypeError: x is null; can't access its "y" property`;
+  expect = `TypeError: x is null, can't access property "y" of it`;
   actual = 'No Error';
 
   try
