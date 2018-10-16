@@ -176,8 +176,6 @@
 @BINPATH@/components/nsDNSServiceDiscovery.js
 #endif
 @RESPATH@/browser/components/BrowserFeeds.manifest
-@RESPATH@/browser/components/FeedConverter.js
-@RESPATH@/browser/components/FeedWriter.js
 @RESPATH@/browser/components/WebContentConverter.js
 @RESPATH@/browser/components/BrowserComponents.manifest
 @RESPATH@/browser/components/nsBrowserContentHandler.js
