@@ -36,10 +36,10 @@ class BaseType(object):
                 lintargs['root'],
                 paths,
                 config['include'],
-                config.get('exclude', []) + lintargs.get('exclude', []),
+                config.get('exclude', []),
                 config.get('extensions', []),
             )
-            lintargs['exclude'] = exclude
+            config['exclude'] = exclude
 
         if not paths:
             return
@@ -80,7 +80,7 @@ class LineType(BaseType):
         else:
             patterns = ['**/*.{}'.format(e) for e in config['extensions']]
 
-        exclude = [os.path.relpath(e, path) for e in lintargs.get('exclude', [])]
+        exclude = [os.path.relpath(e, path) for e in config.get('exclude', [])]
         finder = FileFinder(path, ignore=exclude)
 
         errors = []
