@@ -9,6 +9,6 @@ try {
     err = e;
 }
 assertEq(err instanceof TypeError, true);
-assertEq(err.message, "[][j] is undefined, can't access property 2 of it");
+assertEq(err.message, "[][j] is undefined");
 
 reportCompare(0, 0, 'ok');

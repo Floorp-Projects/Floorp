@@ -18,7 +18,7 @@ function check_one(expected, f, err) {
 ieval = eval;
 function check(expr, expected=expr, testStrict=true) {
     var end, err;
-    for ([end, err] of [[".random_prop", ` is undefined, can't access property \"random_prop" of it`], ["()", " is not a function"]]) {
+    for ([end, err] of [[".random_prop", " is undefined"], ["()", " is not a function"]]) {
         var statement = "o = {};" + expr + end, f;
         var cases = [
             // Global scope
@@ -102,7 +102,7 @@ check_one("6", (function () { 6() }), " is not a function");
 check_one("4", (function() { (4||eval)(); }), " is not a function");
 check_one("0", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
 check_one("[...][Symbol.iterator](...).next(...).value",
-          function () { ieval("{ let x; var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined, can't access property Symbol.iterator of it");
+          function () { ieval("{ let x; var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
 check_one("(void 1)", function() { (void 1)(); }, " is not a function");
 check_one("(void o[1])", function() { var o = []; (void o[1])() }, " is not a function");
 
