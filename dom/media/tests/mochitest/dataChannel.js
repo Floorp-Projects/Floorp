@@ -190,7 +190,7 @@ var commandsCheckDataChannel = [
 
 var commandsCheckLargeXfer = [
   function SEND_BIG_BUFFER(test) {
-    var size = 512*1024; // SCTP internal buffer is 256K, so we'll have ~256K queued
+    var size = 2*1024*1024; // SCTP internal buffer is now 1MB, so use 2MB to ensure the buffer gets full
     var buffer = new ArrayBuffer(size);
     // note: type received is always blob for binary data
     var options = {};
@@ -207,6 +207,5 @@ function addInitialDataChannel(chain) {
   chain.insertBefore('PC_LOCAL_CREATE_OFFER', commandsCreateDataChannel);
   chain.insertBefore('PC_LOCAL_WAIT_FOR_MEDIA_FLOW', commandsWaitForDataChannel);
   chain.removeAfter('PC_REMOTE_CHECK_ICE_CONNECTIONS');
-  chain.append(commandsCheckLargeXfer);
   chain.append(commandsCheckDataChannel);
 }

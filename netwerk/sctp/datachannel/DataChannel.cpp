@@ -501,6 +501,19 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aMa
     return false;
   }
 
+  int buf_size = 1024 * 1024;
+
+  if (usrsctp_setsockopt(mMasterSocket, SOL_SOCKET, SO_RCVBUF,
+                         (const void *)&buf_size, sizeof(buf_size)) < 0) {
+    LOG(("Couldn't change receive buffer size on SCTP socket"));
+    goto error_cleanup;
+  }
+  if (usrsctp_setsockopt(mMasterSocket, SOL_SOCKET, SO_SNDBUF,
+                         (const void *)&buf_size, sizeof(buf_size)) < 0) {
+    LOG(("Couldn't change send buffer size on SCTP socket"));
+    goto error_cleanup;
+  }
+
   // Make non-blocking for bind/connect.  SCTP over UDP defaults to non-blocking
   // in associations for normal IO
   if (usrsctp_set_non_blocking(mMasterSocket, 1) < 0) {
