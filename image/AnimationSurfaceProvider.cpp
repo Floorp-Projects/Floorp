@@ -426,8 +426,7 @@ AnimationSurfaceProvider::RequestFrameDiscarding()
   // required to know when it is safe to recycle.
   MOZ_ASSERT(!mDecoder->GetFrameRecycler());
   if (gfxPrefs::ImageAnimatedDecodeOnDemandRecycle() &&
-      mDecoder->ShouldBlendAnimation() &&
-      (!gfxVars::GetUseWebRenderOrDefault() || !gfxPrefs::ImageMemShared())) {
+      mDecoder->ShouldBlendAnimation()) {
     mFrames.reset(new AnimationFrameRecyclingQueue(std::move(*oldFrameQueue)));
     mDecoder->SetFrameRecycler(this);
   } else {
