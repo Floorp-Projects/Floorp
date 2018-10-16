@@ -54,8 +54,6 @@ MSG_DEF(JSMSG_CANT_CONVERT_TO,         2, JSEXN_TYPEERR, "can't convert {0} to {
 MSG_DEF(JSMSG_TOPRIMITIVE_NOT_CALLABLE, 2, JSEXN_TYPEERR, "can't convert {0} to {1}: its [Symbol.toPrimitive] property is not a function")
 MSG_DEF(JSMSG_TOPRIMITIVE_RETURNED_OBJECT, 2, JSEXN_TYPEERR, "can't convert {0} to {1}: its [Symbol.toPrimitive] method returned an object")
 MSG_DEF(JSMSG_NO_PROPERTIES,           1, JSEXN_TYPEERR, "{0} has no properties")
-MSG_DEF(JSMSG_PROPERTY_FAIL,           2, JSEXN_TYPEERR, "can't access property {0} of {1}")
-MSG_DEF(JSMSG_PROPERTY_FAIL_EXPR,      3, JSEXN_TYPEERR, "{0} is {1}, can't access property {2} of it")
 MSG_DEF(JSMSG_BAD_REGEXP_FLAG,         1, JSEXN_SYNTAXERR, "invalid regular expression flag {0}")
 MSG_DEF(JSMSG_INVALID_DATA_VIEW_LENGTH, 0, JSEXN_RANGEERR, "invalid data view length")
 MSG_DEF(JSMSG_OFFSET_LARGER_THAN_FILESIZE, 0, JSEXN_RANGEERR, "offset is larger than filesize")

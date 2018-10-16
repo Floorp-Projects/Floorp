@@ -53,7 +53,7 @@ BEGIN_TEST(testErrorInterceptor)
         "ReferenceError: I am a ReferenceError\0",
         "SyntaxError: I am a SyntaxError\0",
         "5\0",
-        "TypeError: can't access property 0 of undefined\0",
+        "TypeError: undefined has no properties\0",
         "ReferenceError: foo is not defined\0",
         "SyntaxError: expected expression, got end of script\0",
     };
