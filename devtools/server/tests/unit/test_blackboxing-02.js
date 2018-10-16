@@ -21,7 +21,7 @@ function run_test() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-black-box",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
                              test_black_box();
                            });

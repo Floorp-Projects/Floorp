@@ -28,7 +28,7 @@ function run_test_with_server(server, callback) {
   gClient.connect().then(function() {
     attachTestTabAndResume(gClient,
                            "test-breakpoints",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
                              test_column_breakpoint();
                            });
