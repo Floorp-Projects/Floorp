@@ -9,7 +9,7 @@ void brush_vs(
     int prim_address,
     RectWithSize local_rect,
     RectWithSize segment_rect,
-    ivec3 user_data,
+    ivec4 user_data,
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
@@ -30,6 +30,7 @@ void main(void) {
     int segment_index = aData.z & 0xffff;
     int edge_flags = (aData.z >> 16) & 0xff;
     int brush_flags = (aData.z >> 24) & 0xff;
+    int segment_user_data = aData.w;
     PrimitiveHeader ph = fetch_prim_header(prim_header_address);
 
     // Fetch the segment of this brush primitive we are drawing.
@@ -102,7 +103,7 @@ void main(void) {
         ph.specific_prim_address,
         ph.local_rect,
         local_segment_rect,
-        ph.user_data,
+        ivec4(ph.user_data, segment_user_data),
         transform.m,
         pic_task,
         brush_flags,
