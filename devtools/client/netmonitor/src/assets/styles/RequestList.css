@@ -283,6 +283,26 @@
   text-align: start;
 }
 
+.requests-file-type-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 4px;
+  vertical-align: text-bottom;
+}
+
+.request-list-item.selected .requests-file-type-icon {
+  filter: brightness(1.3);
+}
+
+.file-type-general {
+  background-image: url(chrome://devtools/skin/images/file-type-general.svg);
+}
+
+.file-type-image {
+  background-image: url(chrome://devtools/skin/images/file-type-image.svg);
+}
+
 /* Protocol column */
 
 .requests-list-protocol {
