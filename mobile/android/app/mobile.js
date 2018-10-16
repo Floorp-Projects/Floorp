@@ -840,7 +840,6 @@ pref("dom.vr.enabled", true);
 pref("browser.tabs.showAudioPlayingIcon", true);
 
 pref("dom.serviceWorkers.enabled", true);
-pref("dom.serviceWorkers.interception.enabled", true);
 
 // Allow service workers to open windows for a longer period after a notification
 // click on mobile.  This is to account for some devices being quite slow.

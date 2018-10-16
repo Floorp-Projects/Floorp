@@ -509,7 +509,14 @@ class Nursery
         return *chunks_[index];
     }
 
-    void setCurrentChunk(unsigned chunkno);
+    /*
+     * Set the current chunk. This updates the currentChunk_, position_
+     * currentEnd_ and currentStringEnd_ values as approprite. It'll also
+     * poison the chunk, either a portion of the chunk if it is already the
+     * current chunk, or the whole chunk if fullPoison is true or it is not
+     * the current chunk.
+     */
+    void setCurrentChunk(unsigned chunkno, bool fullPoison = false);
     void setStartPosition();
 
     /*
