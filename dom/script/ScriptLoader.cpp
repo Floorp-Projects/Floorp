@@ -759,13 +759,13 @@ ScriptLoader::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
 
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, specifier)
 JSObject*
-HostResolveImportedModule(JSContext* aCx, JS::Handle<JSObject*> aModule,
+HostResolveImportedModule(JSContext* aCx,
+                          JS::Handle<JS::Value> aReferencingPrivate,
                           JS::Handle<JSString*> aSpecifier)
 {
   // Let referencing module script be referencingModule.[[HostDefined]].
-  JS::Value value = JS::GetModuleHostDefinedField(aModule);
-  auto script = static_cast<ModuleScript*>(value.toPrivate());
-  MOZ_ASSERT(script->ModuleRecord() == aModule);
+  auto script = static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
+  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) == aReferencingPrivate);
 
   // Let url be the result of resolving a module specifier given referencing
   // module script and specifier.
@@ -792,19 +792,12 @@ HostResolveImportedModule(JSContext* aCx, JS::Handle<JSObject*> aModule,
 }
 
 bool
-HostPopulateImportMeta(JSContext* aCx, JS::Handle<JSObject*> aModule,
+HostPopulateImportMeta(JSContext* aCx,
+                       JS::Handle<JS::Value> aReferencingPrivate,
                        JS::Handle<JSObject*> aMetaObject)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aModule);
-
-  JS::Value value = JS::GetModuleHostDefinedField(aModule);
-  if (value.isUndefined()) {
-    JS_ReportErrorASCII(aCx, "Module script not found");
-    return false;
-  }
-
-  auto script = static_cast<ModuleScript*>(value.toPrivate());
-  MOZ_DIAGNOSTIC_ASSERT(script->ModuleRecord() == aModule);
+  auto script = static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
+  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) == aReferencingPrivate);
 
   nsAutoCString url;
   MOZ_DIAGNOSTIC_ASSERT(script->BaseURL());

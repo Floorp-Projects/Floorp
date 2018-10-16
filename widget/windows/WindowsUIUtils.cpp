@@ -35,6 +35,7 @@ using namespace ABI::Windows::UI::ViewManagement;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::Foundation;
+using namespace ABI::Windows::ApplicationModel::DataTransfer;
 
 /* All of this is win10 stuff and we're compiling against win81 headers
  * for now, so we may need to do some legwork: */
@@ -88,6 +89,21 @@ IUIViewSettingsInterop : public IInspectable
 public:
   virtual HRESULT STDMETHODCALLTYPE GetForWindow(HWND hwnd, REFIID riid, void **ppv) = 0;
 };
+#endif
+
+#ifndef __IDataTransferManagerInterop_INTERFACE_DEFINED__
+#define __IDataTransferManagerInterop_INTERFACE_DEFINED__
+
+typedef interface IDataTransferManagerInterop IDataTransferManagerInterop;
+
+MIDL_INTERFACE("3A3DCD6C-3EAB-43DC-BCDE-45671CE800C8")
+IDataTransferManagerInterop : public IUnknown
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE GetForWindow(HWND appWindow, REFIID riid, void **dataTransferManager) = 0;
+    virtual HRESULT STDMETHODCALLTYPE ShowShareUIForWindow(HWND appWindow) = 0;
+};
+
 #endif
 
 #endif
@@ -174,6 +190,127 @@ WindowsUIUtils::UpdateTabletModeState()
       }
     }
   }
+#endif
+
+  return NS_OK;
+}
+
+struct HStringDeleter
+{
+  typedef HSTRING pointer;
+  void operator()(pointer aString)
+  {
+      WindowsDeleteString(aString);
+  }
+};
+
+typedef mozilla::UniquePtr<HSTRING, HStringDeleter> HStringUniquePtr;
+
+NS_IMETHODIMP
+WindowsUIUtils::ShareUrl(const nsAString& aUrlToShare,
+                         const nsAString& aShareTitle)
+{
+#ifndef __MINGW32__
+  if (!IsWin10OrLater()) {
+    return NS_OK;
+  }
+
+  HSTRING rawTitle;
+  HRESULT hr = WindowsCreateString(PromiseFlatString(aShareTitle).get(), aShareTitle.Length(), &rawTitle);
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+  HStringUniquePtr title(rawTitle);
+
+  HSTRING rawUrl;
+  hr = WindowsCreateString(PromiseFlatString(aUrlToShare).get(), aUrlToShare.Length(), &rawUrl);
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+  HStringUniquePtr url(rawUrl);
+
+  ComPtr<IUriRuntimeClassFactory> uriFactory;
+  hr = GetActivationFactory(HStringReference(RuntimeClass_Windows_Foundation_Uri).Get(), &uriFactory);
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+
+  ComPtr<IUriRuntimeClass> uri;
+  hr = uriFactory->CreateUri(url.get(), &uri);
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+
+  HWND hwnd = GetForegroundWindow();
+  if (!hwnd) {
+    return NS_OK;
+  }
+
+  ComPtr<IDataTransferManagerInterop> dtmInterop;
+  hr = RoGetActivationFactory(HStringReference(
+    RuntimeClass_Windows_ApplicationModel_DataTransfer_DataTransferManager)
+                         .Get(), IID_PPV_ARGS(&dtmInterop));
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+
+  ComPtr<IDataTransferManager> dtm;
+  hr = dtmInterop->GetForWindow(hwnd, IID_PPV_ARGS(&dtm));
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+
+  auto callback = Callback < ITypedEventHandler<DataTransferManager*, DataRequestedEventArgs* >> (
+          [uri = std::move(uri), title = std::move(title)](IDataTransferManager*, IDataRequestedEventArgs* pArgs) -> HRESULT
+    {
+      ComPtr<IDataRequest> spDataRequest;
+      HRESULT hr = pArgs->get_Request(&spDataRequest);
+      if (FAILED(hr)) {
+        return hr;
+      }
+
+      ComPtr<IDataPackage> spDataPackage;
+      hr = spDataRequest->get_Data(&spDataPackage);
+      if (FAILED(hr)) {
+        return hr;
+      }
+
+      ComPtr<IDataPackage2> spDataPackage2;
+      hr = spDataPackage->QueryInterface(IID_PPV_ARGS(&spDataPackage2));
+      if (FAILED(hr)) {
+        return hr;
+      }
+
+      ComPtr<IDataPackagePropertySet> spDataPackageProperties;
+      hr = spDataPackage->get_Properties(&spDataPackageProperties);
+      if (FAILED(hr)) {
+        return hr;
+      }
+
+      hr = spDataPackageProperties->put_Title(title.get());
+      if (FAILED(hr)) {
+        return hr;
+      }
+
+      hr = spDataPackage2->SetWebLink(uri.Get());
+      if (FAILED(hr)) {
+        return hr;
+      }
+
+      return S_OK;
+    });
+
+  EventRegistrationToken dataRequestedToken;
+  hr = dtm->add_DataRequested(callback.Get(), &dataRequestedToken);
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+
+  hr = dtmInterop->ShowShareUIForWindow(hwnd);
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+
 #endif
 
   return NS_OK;

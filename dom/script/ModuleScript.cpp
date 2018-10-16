@@ -56,9 +56,8 @@ ModuleScript::UnlinkModuleRecord()
 {
   // Remove module's back reference to this object request if present.
   if (mModuleRecord) {
-    MOZ_ASSERT(JS::GetModuleHostDefinedField(mModuleRecord).toPrivate() ==
-               this);
-    JS::SetModuleHostDefinedField(mModuleRecord, JS::UndefinedValue());
+    MOZ_ASSERT(JS::GetModulePrivate(mModuleRecord).toPrivate() == this);
+    JS::SetModulePrivate(mModuleRecord, JS::UndefinedValue());
     mModuleRecord = nullptr;
   }
 }
@@ -81,7 +80,7 @@ ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord)
 
   // Make module's host defined field point to this module script object.
   // This is cleared in the UnlinkModuleRecord().
-  JS::SetModuleHostDefinedField(mModuleRecord, JS::PrivateValue(this));
+  JS::SetModulePrivate(mModuleRecord, JS::PrivateValue(this));
   HoldJSObjects(this);
 }
 

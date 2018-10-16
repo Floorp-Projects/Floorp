@@ -38,6 +38,7 @@ browser.jar:
 * skin/classic/browser/preferences/in-content/preferences.css  (preferences/in-content/preferences.css)
 * skin/classic/browser/preferences/in-content/dialog.css       (preferences/in-content/dialog.css)
   skin/classic/browser/preferences/applications.css            (preferences/applications.css)
+  skin/classic/browser/share.svg                               (share.svg)
   skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/window-controls/close.svg                 (window-controls/close.svg)
   skin/classic/browser/window-controls/close-highcontrast.svg    (window-controls/close-highcontrast.svg)
