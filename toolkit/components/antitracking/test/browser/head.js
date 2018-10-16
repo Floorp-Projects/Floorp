@@ -1,7 +1,6 @@
 const TEST_DOMAIN = "http://example.net";
 const TEST_3RD_PARTY_DOMAIN = "https://tracking.example.org";
 const TEST_3RD_PARTY_DOMAIN_TP = "https://tracking.example.com";
-const TEST_4TH_PARTY_DOMAIN = "http://not-tracking.example.com";
 
 const TEST_PATH = "/browser/toolkit/components/antitracking/test/browser/";
 
@@ -12,7 +11,6 @@ const TEST_3RD_PARTY_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_3RD_PARTY_PAGE_WO = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyWO.html";
 const TEST_3RD_PARTY_PAGE_UI = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyUI.html";
 const TEST_3RD_PARTY_PAGE_WITH_SVG = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartySVG.html";
-const TEST_4TH_PARTY_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 
 const BEHAVIOR_ACCEPT         = Ci.nsICookieService.BEHAVIOR_ACCEPT;
 const BEHAVIOR_REJECT_FOREIGN = Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
@@ -27,8 +25,7 @@ requestLongerTimeout(5);
 this.AntiTracking = {
   runTest(name, callbackTracking, callbackNonTracking, cleanupFunction, extraPrefs,
           windowOpenTest = true, userInteractionTest = true, expectedBlockingNotifications = true,
-          runInPrivateWindow = false, iframeSandbox = null, accessRemoval = null,
-          callbackAfterRemoval = null) {
+          runInPrivateWindow = false, iframeSandbox = null) {
     // Here we want to test that a 3rd party context is simply blocked.
     this._createTask({
       name,
@@ -41,8 +38,6 @@ this.AntiTracking = {
       expectedBlockingNotifications,
       runInPrivateWindow,
       iframeSandbox,
-      accessRemoval,
-      callbackAfterRemoval,
     });
     this._createCleanupTask(cleanupFunction);
 
@@ -57,8 +52,6 @@ this.AntiTracking = {
       expectedBlockingNotifications,
       runInPrivateWindow,
       iframeSandbox,
-      accessRemoval,
-      callbackAfterRemoval,
     });
     this._createCleanupTask(cleanupFunction);
 
@@ -92,8 +85,6 @@ this.AntiTracking = {
           options.blockingByAllowList = false;
         }
         callbackNonTracking = options.callback;
-        options.accessRemoval = null;
-        options.callbackAfterRemoval = null;
       }
 
       // Phase 1: Here we want to test that a 3rd party context is not blocked if pref is off.
@@ -116,8 +107,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -132,8 +121,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -148,8 +135,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -164,8 +149,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -180,8 +163,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -196,8 +177,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -212,8 +191,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -228,8 +205,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -244,8 +219,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -260,8 +233,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -276,8 +247,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -292,8 +261,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval,
-          callbackAfterRemoval,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -308,8 +275,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval,
-          callbackAfterRemoval,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -324,8 +289,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval,
-          callbackAfterRemoval,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -340,8 +303,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval,
-          callbackAfterRemoval,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -356,8 +317,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval,
-          callbackAfterRemoval,
         });
         this._createCleanupTask(cleanupFunction);
       } else if (!options.blockingByContentBlocking) {
@@ -373,8 +332,6 @@ this.AntiTracking = {
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
-          accessRemoval,
-          callbackAfterRemoval,
         });
         this._createCleanupTask(cleanupFunction);
       }
@@ -444,11 +401,7 @@ this.AntiTracking = {
                          (options.blockingByContentBlockingRTUI ? "" : "no") + " contentBlocking third-party cookies UI with" +
                          (options.allowList ? "" : "out") + " allow list test " + options.name +
                          " running in a " + (options.runInPrivateWindow ? "private" : "normal") + " window " +
-                         " with iframe sandbox set to " + options.iframeSandbox +
-                         " and access removal set to " + options.accessRemoval);
-
-      is(!!options.callbackAfterRemoval, !!options.accessRemoval,
-         "callbackAfterRemoval must be passed when accessRemoval is non-null");
+                         " with iframe sandbox set to " + options.iframeSandbox);
 
       let win = window;
       if (options.runInPrivateWindow) {
@@ -550,25 +503,13 @@ this.AntiTracking = {
       }
 
       info("Creating a 3rd party content");
-      let doAccessRemovalChecks = typeof options.accessRemoval == "string" &&
-                                  options.cookieBehavior == BEHAVIOR_REJECT_TRACKER &&
-                                  options.blockingByContentBlocking &&
-                                  options.blockingByContentBlockingRTUI &&
-                                  !options.allowList;
       await ContentTask.spawn(browser,
                               { page: TEST_3RD_PARTY_PAGE,
-                                nextPage: TEST_4TH_PARTY_PAGE,
                                 callback: options.callback.toString(),
-                                callbackAfterRemoval: options.callbackAfterRemoval ?
-                                  options.callbackAfterRemoval.toString() : null,
-                                accessRemoval: options.accessRemoval,
-                                iframeSandbox: options.iframeSandbox,
-                                doAccessRemovalChecks },
+                                iframeSandbox: options.iframeSandbox },
                               async function(obj) {
-        let id = "id" + Math.random();
         await new content.Promise(resolve => {
           let ifr = content.document.createElement("iframe");
-          ifr.id = id;
           ifr.onload = function() {
             info("Sending code to the 3rd party content");
             ifr.contentWindow.postMessage(obj.callback, "*");
@@ -600,50 +541,6 @@ this.AntiTracking = {
           content.document.body.appendChild(ifr);
           ifr.src = obj.page;
         });
-
-        if (obj.doAccessRemovalChecks) {
-          info(`Running after removal checks (${obj.accessRemoval})`);
-          switch (obj.accessRemoval) {
-          case "navigate-subframe":
-            await new content.Promise(resolve => {
-              let ifr = content.document.getElementById(id);
-              let oldWindow = ifr.contentWindow;
-              ifr.onload = function() {
-                info("Sending code to the old 3rd party content");
-                oldWindow.postMessage(obj.callbackAfterRemoval, "*");
-              };
-              if (typeof obj.iframeSandbox == "string") {
-                ifr.setAttribute("sandbox", obj.iframeSandbox);
-              }
-
-              content.addEventListener("message", function msg(event) {
-                if (event.data.type == "finish") {
-                  content.removeEventListener("message", msg);
-                  resolve();
-                  return;
-                }
-
-                if (event.data.type == "ok") {
-                  ok(event.data.what, event.data.msg);
-                  return;
-                }
-
-                if (event.data.type == "info") {
-                  info(event.data.msg);
-                  return;
-                }
-
-                ok(false, "Unknown message");
-              });
-
-              ifr.src = obj.nextPage;
-            });
-            break;
-          default:
-            ok(false, "Unexpected accessRemoval code passed: " + obj.accessRemoval);
-            break;
-          }
-        }
       });
 
       if (options.allowList) {
