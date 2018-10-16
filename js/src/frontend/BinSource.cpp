@@ -214,13 +214,13 @@ BinASTParser<Tok>::parseLazyFunction(ScriptSource* scriptSource, const size_t fi
 }
 
 template<typename Tok> void
-BinASTParser<Tok>::forceStrictIfNecessary(FunctionBox* funbox, ListNode* directives)
+BinASTParser<Tok>::forceStrictIfNecessary(SharedContext* sc, ListNode* directives)
 {
     JSAtom* useStrict = cx_->names().useStrict;
 
     for (const ParseNode* directive : directives->contents()) {
         if (directive->as<NameNode>().atom() == useStrict) {
-            funbox->strictScript = true;
+            sc->strictScript = true;
             break;
         }
     }
@@ -235,8 +235,10 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     MOZ_ASSERT_IF(!parseContext_, lazyScript_);
 
     RootedAtom atom(cx_);
-    if (name) {
-        atom = name->name();
+
+    // Name might be any of {Identifier,ComputedPropertyName,LiteralPropertyName}
+    if (name && name->is<NameNode>()) {
+        atom = name->as<NameNode>().atom();
     }
 
     if (parseContext_ && syntax == FunctionSyntaxKind::Statement) {
@@ -338,20 +340,49 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
     // as they don't yet apply to us.
     HandlePropertyName arguments = cx_->names().arguments;
     if (hasUsedName(arguments) || parseContext_->functionBox()->bindingsAccessedDynamically()) {
+        funbox->usesArguments = true;
+
         ParseContext::Scope& funScope = parseContext_->functionScope();
         ParseContext::Scope::AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(arguments);
         if (!p) {
             BINJS_TRY(funScope.addDeclaredName(parseContext_, p, arguments, DeclarationKind::Var,
                                                DeclaredNameInfo::npos));
             funbox->declaredArguments = true;
-            funbox->usesArguments = true;
+        } else if (p->value()->kind() != DeclarationKind::Var) {
+            // Lexicals, formal parameters, and body level functions shadow.
+            funbox->usesArguments = false;
+        }
 
+        if (funbox->usesArguments) {
             funbox->setArgumentsHasLocalBinding();
-            funbox->setDefinitelyNeedsArgsObj();
+
+            if (parseContext_->sc()->bindingsAccessedDynamically() ||
+                parseContext_->sc()->hasDebuggerStatement())
+            {
+                funbox->setDefinitelyNeedsArgsObj();
+            }
         }
     }
 
-    // Check all our bindings after maybe adding function This.
+    if (funbox->needsDotGeneratorName()) {
+        ParseContext::Scope& funScope = parseContext_->functionScope();
+        HandlePropertyName dotGenerator = cx_->names().dotGenerator;
+        ParseContext::Scope::AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
+        if (!p) {
+            BINJS_TRY(funScope.addDeclaredName(parseContext_, p, dotGenerator, DeclarationKind::Var,
+                                               DeclaredNameInfo::npos));
+        }
+
+        BINJS_TRY(usedNames_.noteUse(cx_, dotGenerator, parseContext_->scriptId(),
+                                     parseContext_->innermostScope()->id()));
+
+        BINJS_TRY_DECL(dotGen, factory_.newName(dotGenerator,
+                                                tokenizer_->pos(tokenizer_->offset()), cx_));
+
+        BINJS_TRY(factory_.prependInitialYield(&body->as<ListNode>(), dotGen));
+    }
+
+    // Check all our bindings after maybe adding function metavars.
     MOZ_TRY(checkFunctionClosedVars());
 
     BINJS_TRY_DECL(bindings,
