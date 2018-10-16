@@ -460,9 +460,8 @@ OptionsPanel.prototype = {
     }
 
     if (this.target.activeTab && !this.target.chrome) {
-      const response = await this.target.activeTab.attach();
-      this._origJavascriptEnabled = !response.javascriptEnabled;
-      this.disableJSNode.checked = this._origJavascriptEnabled;
+      this.disableJSNode.checked =
+        !this.target.activeTab.configureOptions.javascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
     } else {
       // Hide the checkbox and label

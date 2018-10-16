@@ -15,6 +15,12 @@ const BrowsingContextFront = protocol.FrontClassWithSpec(browsingContextTargetSp
 
     this.thread = null;
 
+    // Cache the value of some target properties that are being returned by `attach`
+    // request and then keep them up-to-date in `reconfigure` request.
+    this.configureOptions = {
+      javascriptEnabled: null,
+    };
+
     // TODO: remove once ThreadClient becomes a front
     this.client = client;
   },
@@ -47,13 +53,24 @@ const BrowsingContextFront = protocol.FrontClassWithSpec(browsingContextTargetSp
     const response = await this._attach();
 
     this._threadActor = response.threadActor;
-    this.javascriptEnabled = response.javascriptEnabled;
-    this.cacheDisabled = response.cacheDisabled;
+    this.configureOptions.javascriptEnabled = response.javascriptEnabled;
     this.traits = response.traits || {};
 
     return response;
   }, {
     impl: "_attach"
+  }),
+
+  reconfigure: custom(async function({ options }) {
+    const response = await this._reconfigure({ options });
+
+    if (typeof options.javascriptEnabled != "undefined") {
+      this.configureOptions.javascriptEnabled = options.javascriptEnabled;
+    }
+
+    return response;
+  }, {
+    impl: "_reconfigure"
   }),
 
   detach: custom(async function() {
