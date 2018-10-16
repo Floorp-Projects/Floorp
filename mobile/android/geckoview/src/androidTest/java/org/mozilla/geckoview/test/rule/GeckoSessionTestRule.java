@@ -2243,46 +2243,14 @@ public class GeckoSessionTestRule implements TestRule {
      * @param <T> The type of the value held by the {@link GeckoResult}
      * @return The value of the completed {@link GeckoResult}.
      */
-    public <T> T waitForResult(@NonNull GeckoResult<T> result) {
-        final ResultHolder<T> holder = new ResultHolder<>(result);
-
+    public <T> T waitForResult(@NonNull GeckoResult<T> result) throws Throwable {
+        beforeWait();
         try {
-            beforeWait();
-            while (!holder.isComplete) {
-                UiThreadUtils.loopUntilIdle(mTimeoutMillis);
-            }
+            return UiThreadUtils.waitForResult(result, mTimeoutMillis);
+        } catch (final Throwable e) {
+            throw unwrapRuntimeException(e);
         } finally {
             afterWait(mCallRecords.size());
-        }
-
-        if (holder.error != null) {
-            throw unwrapRuntimeException(holder.error);
-        }
-
-        return holder.value;
-    }
-
-    private static class ResultHolder<T> {
-        public T value;
-        public Throwable error;
-        public boolean isComplete;
-
-        public ResultHolder(GeckoResult<T> result) {
-            result.then(new OnValueListener<T, Void>() {
-                @Override
-                public GeckoResult<Void> onValue(T value) {
-                    ResultHolder.this.value = value;
-                    isComplete = true;
-                    return null;
-                }
-            }, new OnExceptionListener<Void>() {
-                @Override
-                public GeckoResult<Void> onException(Throwable error) {
-                    ResultHolder.this.error = error;
-                    isComplete = true;
-                    return null;
-                }
-            });
         }
     }
 }
