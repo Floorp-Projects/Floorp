@@ -153,6 +153,17 @@ function getAbbreviatedMimeType(mimeType) {
 }
 
 /**
+ * Helpers for getting a filename from a mime type.
+ *
+ * @param {string} baseNameWithQuery - unicode basename and query of a url
+ * @return {string} unicode filename portion of a url
+ */
+function getFileName(baseNameWithQuery) {
+  const basename = baseNameWithQuery && baseNameWithQuery.split("?")[0];
+  return basename && basename.includes(".") ? basename : null;
+}
+
+/**
  * Helpers for retrieving a URL object from a string
  *
  * @param {string} url - unvalidated url string
@@ -524,6 +535,7 @@ module.exports = {
   formDataURI,
   writeHeaderText,
   getAbbreviatedMimeType,
+  getFileName,
   getEndTime,
   getFormattedProtocol,
   getResponseHeader,
