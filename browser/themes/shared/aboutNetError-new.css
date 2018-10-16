@@ -9,11 +9,14 @@
 }
 
 body.certerror {
+  width: 100%;
+  justify-content: normal;
+}
+
+body.caution {
   border-style: solid;
   border-color: #ffe900;
   border-width: 16px;
-  width: 100%;
-  justify-content: normal;
 }
 
 body.captiveportal .title {
