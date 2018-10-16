@@ -957,8 +957,6 @@ pref("browser.security.newcerterrorpage.enabled", true);
 pref("browser.security.newcerterrorpage.enabled", false);
 #endif
 
-pref("security.certerrors.recordEventTelemetry", true);
-
 // Whether to start the private browsing mode at application startup
 pref("browser.privatebrowsing.autostart", false);
 
