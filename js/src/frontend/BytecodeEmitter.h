@@ -597,7 +597,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
                                             ParseNode* initializer);
 
     MOZ_MUST_USE bool emitNewInit();
-    MOZ_MUST_USE bool emitSingletonInitialiser(ParseNode* pn);
+    MOZ_MUST_USE bool emitSingletonInitialiser(ListNode* objOrArray);
 
     MOZ_MUST_USE bool emitPrepareIteratorResult();
     MOZ_MUST_USE bool emitFinishIteratorResult(bool done);
@@ -793,7 +793,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitFunctionFormalParametersAndBody(ListNode* paramsBody);
     MOZ_MUST_USE bool emitFunctionFormalParameters(ListNode* paramsBody);
     MOZ_MUST_USE bool emitInitializeFunctionSpecialNames();
-    MOZ_MUST_USE bool emitFunctionBody(ParseNode* pn);
+    MOZ_MUST_USE bool emitFunctionBody(ParseNode* funBody);
     MOZ_MUST_USE bool emitLexicalInitialization(NameNode* name);
 
     // Emit bytecode for the spread operator.

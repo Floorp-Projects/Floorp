@@ -4238,13 +4238,13 @@ ParseNode::getConstantValue(JSContext* cx, AllowConstantObjects allowObjects,
 }
 
 bool
-BytecodeEmitter::emitSingletonInitialiser(ParseNode* pn)
+BytecodeEmitter::emitSingletonInitialiser(ListNode* objOrArray)
 {
     NewObjectKind newKind =
-        (pn->getKind() == ParseNodeKind::Object) ? SingletonObject : TenuredObject;
+        (objOrArray->getKind() == ParseNodeKind::Object) ? SingletonObject : TenuredObject;
 
     RootedValue value(cx);
-    if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value, nullptr, 0, newKind)) {
+    if (!objOrArray->getConstantValue(cx, ParseNode::AllowObjects, &value, nullptr, 0, newKind)) {
         return false;
     }
 
