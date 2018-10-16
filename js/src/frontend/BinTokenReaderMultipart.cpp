@@ -496,6 +496,10 @@ BinTokenReaderMultipart::readInternalUint32()
         if ((byte & 1) == 0) {
             return result;
         }
+
+        if (shift >= 32) {
+            return raiseError("Overflow during readInternalUint32");
+        }
     }
 }
 
