@@ -348,9 +348,12 @@
           "items": {
             "type": "URL"
           }
+        },
+        "StartPage": {
+          "type": "string",
+          "enum": ["none", "homepage", "previous-session"]
         }
-      },
-      "required": ["URL"]
+      }
     },
 
     "InstallAddonsPermission": {
