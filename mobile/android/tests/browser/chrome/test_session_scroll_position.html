@@ -43,13 +43,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
   // Randomized set of scroll positions and zoom factors we will use in this test.
   const SCROLL_X = Math.round(100 * (1 + Math.random()));
   const SCROLL_Y = Math.round(200 * (1 + Math.random()));
-  const SCROLL_STR = SCROLL_X + "," + SCROLL_Y;
-  const SCROLL_STR_Y_ONLY = 0 + "," + SCROLL_Y;
   const ZOOM = 1 + 0.5 * Math.random();
 
   const SCROLL2_X = Math.round(300 * (1 + Math.random()));
   const SCROLL2_Y = Math.round(400 * (1 + Math.random()));
-  const SCROLL2_STR = SCROLL2_X + "," + SCROLL2_Y;
   const ZOOM2 = 1.5 + 0.5 * Math.random();
 
   function getFrame(browser, data) {
@@ -88,6 +85,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     if (data.hasOwnProperty("zoom")) {
       ok(fuzzyEquals(actualZoom.value, zoom), "zoom set correctly");
     }
+  }
+
+  function getScrollString(data) {
+    let {x, y} = data;
+    x = x || 0;
+    y = y || 0;
+    return x + "," + y;
   }
 
   // Track the tabs where the tests are happening.
@@ -132,7 +136,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     await createAndRemoveReaderTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL_STR_Y_ONLY, "stored scroll position is correct");
+    is(scrolldata.scroll, getScrollString(testData), "stored scroll position is correct");
 
     // Restore the closed tab.
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
@@ -182,7 +186,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     await createAndRemoveTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL2_STR, "stored scroll position is correct");
+    is(scrolldata.scroll, getScrollString(testData2), "stored scroll position is correct");
     ok(fuzzyEquals(scrolldata.zoom.resolution, ZOOM2), "stored zoom level is correct");
 
     // Restore the closed tab.
@@ -237,7 +241,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     await createAndRemoveTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL_STR, "stored scroll position is correct");
+    is(scrolldata.scroll, getScrollString(testData), "stored scroll position is correct");
     ok(fuzzyEquals(scrolldata.zoom.resolution, ZOOM), "stored zoom level is correct");
 
     // Pretend the zoom level was originally saved on a rotated device.
@@ -260,7 +264,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
   });
 
   add_task(async function test_sessionStoreScrollPositionForFrames() {
-    let testDataParent = {x: 0, y: SCROLL_Y, zoom: 2.0};
+    let testDataParent = {x: 0, y: Math.round(SCROLL_Y / 2), zoom: 2.0};
     let testData1 = {x: SCROLL_X, y: SCROLL_Y, frame: 0};
     let testData2 = {x: SCROLL2_X, y: SCROLL2_Y, frame: 1};
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
@@ -295,9 +299,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     await createAndRemoveTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL_STR_Y_ONLY, "stored scroll position for frameset is correct");
-    is(scrolldata.children[0].scroll, SCROLL_STR, "stored scroll position for frame 1 is correct");
-    is(scrolldata.children[1].scroll, SCROLL2_STR, "stored scroll position for frame 2 is correct");
+    is(scrolldata.scroll, getScrollString(testDataParent), "stored scroll position for frameset is correct");
+    is(scrolldata.children[0].scroll, getScrollString(testData1), "stored scroll position for frame 1 is correct");
+    is(scrolldata.children[1].scroll, getScrollString(testData2), "stored scroll position for frame 2 is correct");
 
     // Restore the closed tab.
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
