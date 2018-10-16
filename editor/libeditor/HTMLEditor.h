@@ -1125,6 +1125,7 @@ protected: // Shouldn't be used by friend classes
                          ErrorResult& aRv) const;
 
   struct CellAndIndexes;
+  struct CellData;
 
   /**
    * CellIndexes store both row index and column index of a table cell.
@@ -1184,6 +1185,15 @@ protected: // Shouldn't be used by friend classes
     void Update(HTMLEditor& aHTMLEditor, Selection& aSelection,
                 ErrorResult& aRv);
 
+    bool operator==(const CellIndexes& aOther) const
+    {
+      return mRow == aOther.mRow && mColumn == aOther.mColumn;
+    }
+    bool operator!=(const CellIndexes& aOther) const
+    {
+      return mRow != aOther.mRow || mColumn != aOther.mColumn;
+    }
+
   private:
     CellIndexes()
       : mRow(-1)
@@ -1192,6 +1202,7 @@ protected: // Shouldn't be used by friend classes
     }
 
     friend struct CellAndIndexes;
+    friend struct CellData;
   };
 
   struct MOZ_STACK_CLASS CellAndIndexes final
@@ -1219,6 +1230,193 @@ protected: // Shouldn't be used by friend classes
      */
     void Update(HTMLEditor& aHTMLEditor, Selection& aSelection,
                 ErrorResult& aRv);
+  };
+
+  struct MOZ_STACK_CLASS CellData final
+  {
+    RefPtr<Element> mElement;
+    // Current indexes which this is initialized with.
+    CellIndexes mCurrent;
+    // First column/row indexes of the cell.  When current position is spanned
+    // from other column/row, this value becomes different from mCurrent.
+    CellIndexes mFirst;
+    // Computed rowspan/colspan values which are specified to the cell.
+    // Note that if the cell has larger rowspan/colspan value than actual
+    // table size, these values are the larger values.
+    int32_t mRowSpan;
+    int32_t mColSpan;
+    // Effective rowspan/colspan value at the index.  For example, if first
+    // cell element in first row has rowspan="3", then, if this is initialized
+    // with 0-0 indexes, effective rowspan is 3.  However, if this is
+    // initialized with 1-0 indexes, effective rowspan is 2.
+    int32_t mEffectiveRowSpan;
+    int32_t mEffectiveColSpan;
+    // mIsSelected is set to true if mElement itself or its parent <tr> or
+    // <table> is selected.  Otherwise, e.g., the cell just contains selection
+    // range, this is set to false.
+    bool mIsSelected;
+
+    CellData()
+      : mRowSpan(-1)
+      , mColSpan(-1)
+      , mEffectiveRowSpan(-1)
+      , mEffectiveColSpan(-1)
+      , mIsSelected(false)
+    {
+    }
+
+    /**
+     * Those constructors initializes the members with a <table> element and
+     * both row and column index to specify a cell element.
+     */
+    CellData(HTMLEditor& aHTMLEditor,
+             Element& aTableElement,
+             int32_t aRowIndex,
+             int32_t aColumnIndex,
+             ErrorResult& aRv)
+    {
+      Update(aHTMLEditor, aTableElement, aRowIndex, aColumnIndex, aRv);
+    }
+
+    CellData(HTMLEditor& aHTMLEditor,
+             Element& aTableElement,
+             const CellIndexes& aIndexes,
+             ErrorResult& aRv)
+    {
+      Update(aHTMLEditor, aTableElement, aIndexes, aRv);
+    }
+
+    /**
+     * Those Update() methods updates the members with a <table> element and
+     * both row and column index to specify a cell element.
+     */
+    void Update(HTMLEditor& aHTMLEditor,
+                Element& aTableElement,
+                int32_t aRowIndex,
+                int32_t aColumnIndex,
+                ErrorResult& aRv)
+    {
+      mCurrent.mRow = aRowIndex;
+      mCurrent.mColumn = aColumnIndex;
+      Update(aHTMLEditor, aTableElement, aRv);
+    }
+
+    void Update(HTMLEditor& aHTMLEditor,
+                Element& aTableElement,
+                const CellIndexes& aIndexes,
+                ErrorResult& aRv)
+    {
+      mCurrent = aIndexes;
+      Update(aHTMLEditor, aTableElement, aRv);
+    }
+
+    void Update(HTMLEditor& aHTMLEditor,
+                Element& aTableElement,
+                ErrorResult& aRv);
+
+    /**
+     * FailedOrNotFound() returns true if this failed to initialize/update
+     * or succeeded but found no cell element.
+     */
+    bool FailedOrNotFound() const { return !mElement; }
+
+    /**
+     * IsSpannedFromOtherRowOrColumn(), IsSpannedFromOtherColumn and
+     * IsSpannedFromOtherRow() return true if there is no cell element
+     * at the index because of spanning from other row and/or column.
+     */
+    bool IsSpannedFromOtherRowOrColumn() const
+    {
+      return mElement && mCurrent != mFirst;
+    }
+    bool IsSpannedFromOtherColumn() const
+    {
+      return mElement && mCurrent.mColumn != mFirst.mColumn;
+    }
+    bool IsSpannedFromOtherRow() const
+    {
+      return mElement && mCurrent.mRow != mFirst.mRow;
+    }
+
+    /**
+     * NextColumnIndex() and NextRowIndex() return column/row index of
+     * next cell.  Note that this does not check whether there is next
+     * cell or not actually.
+     */
+    int32_t NextColumnIndex() const
+    {
+      if (NS_WARN_IF(FailedOrNotFound())) {
+        return -1;
+      }
+      return mCurrent.mColumn + mEffectiveColSpan;
+    }
+    int32_t NextRowIndex() const
+    {
+      if (NS_WARN_IF(FailedOrNotFound())) {
+        return -1;
+      }
+      return mCurrent.mRow + mEffectiveRowSpan;
+    }
+
+    /**
+     * LastColumnIndex() and LastRowIndex() return column/row index of
+     * column/row which is spanned by the cell.
+     */
+    int32_t LastColumnIndex() const
+    {
+      if (NS_WARN_IF(FailedOrNotFound())) {
+        return -1;
+      }
+      return NextColumnIndex() - 1;
+    }
+    int32_t LastRowIndex() const
+    {
+      if (NS_WARN_IF(FailedOrNotFound())) {
+        return -1;
+      }
+      return NextRowIndex() - 1;
+    }
+
+    /**
+     * NumberOfPrecedingColmuns() and NumberOfPrecedingRows() return number of
+     * preceding columns/rows if current index is spanned from other column/row.
+     * Otherwise, i.e., current point is not spanned form other column/row,
+     * returns 0.
+     */
+    int32_t NumberOfPrecedingColmuns() const
+    {
+      if (NS_WARN_IF(FailedOrNotFound())) {
+        return -1;
+      }
+      return mCurrent.mColumn - mFirst.mColumn;
+    }
+    int32_t NumberOfPrecedingRows() const
+    {
+      if (NS_WARN_IF(FailedOrNotFound())) {
+        return -1;
+      }
+      return mCurrent.mRow - mFirst.mRow;
+    }
+
+    /**
+     * NumberOfFollowingColumns() and NumberOfFollowingRows() return
+     * number of remaining columns/rows if the cell spans to other
+     * column/row.
+     */
+    int32_t NumberOfFollowingColumns() const
+    {
+      if (NS_WARN_IF(FailedOrNotFound())) {
+        return -1;
+      }
+      return mEffectiveColSpan - 1;
+    }
+    int32_t NumberOfFollowingRows() const
+    {
+      if (NS_WARN_IF(FailedOrNotFound())) {
+        return -1;
+      }
+      return mEffectiveRowSpan - 1;
+    }
   };
 
   /**
