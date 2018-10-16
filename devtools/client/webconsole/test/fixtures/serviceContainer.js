@@ -5,6 +5,7 @@
 
 module.exports = {
   attachRefToHud: () => {},
+  canRewind: () => false,
   emitNewMessage: () => {},
   hudProxy: {
     client: {},

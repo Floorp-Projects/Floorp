@@ -327,7 +327,10 @@ describe("ConsoleAPICall component:", () => {
     it("render with arguments", () => {
       const message = stubPreparedMessages.get(
         "console.trace('bar', {'foo': 'bar'}, [1,2,3])");
-      const wrapper = render(ConsoleApiCall({ message, serviceContainer, open: true }));
+      // We need to wrap the ConsoleApiElement in a Provider in order for the
+      // ObjectInspector to work.
+      const wrapper = render(Provider({ store: setupStore() },
+        ConsoleApiCall({ message, serviceContainer, open: true })));
 
       const filepath = "http://example.com/browser/devtools/client/webconsole/" +
                        "test/fixtures/stub-generators/test-console-api.html";
