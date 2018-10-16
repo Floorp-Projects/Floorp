@@ -26,6 +26,9 @@ with Files('configobj/**'):
 with Files('dlmanager/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files('enum34/**'):
+    BUG_COMPONENT = ('Release Engineering', 'General Automation')
+
 with Files('futures/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
@@ -40,6 +43,9 @@ with Files('lldbutils/**'):
 
 with Files('mock-1.0.0/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
+
+with Files('mozilla-version/**'):
+    BUG_COMPONENT = ('Release Engineering', 'General Automation')
 
 with Files('psutil/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
