@@ -92,9 +92,4 @@ interface nsIShellService : nsISupports
    *          The uri to be loaded by the application
    */
   void openApplicationWithURI(in nsIFile aApplication, in ACString aURI);
-
-  /**
-   * The default system handler for web feeds
-   */
-  readonly attribute nsIFile defaultFeedReader;
 };

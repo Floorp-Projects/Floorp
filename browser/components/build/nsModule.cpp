@@ -24,7 +24,6 @@
 #include "nsIEHistoryEnumerator.h"
 #endif
 
-#include "nsFeedSniffer.h"
 #include "AboutRedirector.h"
 #include "nsIAboutModule.h"
 
@@ -51,15 +50,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacAttributionService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEHistoryEnumerator)
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFeedSniffer)
-
 NS_DEFINE_NAMED_CID(NS_BROWSERDIRECTORYPROVIDER_CID);
 #if defined(XP_WIN)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 #elif defined(MOZ_WIDGET_GTK)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_FEEDSNIFFER_CID);
 NS_DEFINE_NAMED_CID(NS_BROWSER_ABOUT_REDIRECTOR_CID);
 #if defined(XP_WIN)
 NS_DEFINE_NAMED_CID(NS_WINIEHISTORYENUMERATOR_CID);
@@ -78,7 +74,6 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
 #elif defined(MOZ_WIDGET_GTK)
     { &kNS_SHELLSERVICE_CID, false, nullptr, nsGNOMEShellServiceConstructor },
 #endif
-    { &kNS_FEEDSNIFFER_CID, false, nullptr, nsFeedSnifferConstructor },
     { &kNS_BROWSER_ABOUT_REDIRECTOR_CID, false, nullptr, AboutRedirector::Create },
 #if defined(XP_WIN)
     { &kNS_WINIEHISTORYENUMERATOR_CID, false, nullptr, nsIEHistoryEnumeratorConstructor },
@@ -100,11 +95,9 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 #elif defined(MOZ_WIDGET_GTK)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
 #endif
-    { NS_FEEDSNIFFER_CONTRACTID, &kNS_FEEDSNIFFER_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "blocked", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "certerror", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "tabcrashed", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
-    { NS_ABOUT_MODULE_CONTRACTID_PREFIX "feeds", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "privatebrowsing", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "rights", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "robots", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
@@ -134,7 +127,6 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 
 static const mozilla::Module::CategoryEntry kBrowserCategories[] = {
     { XPCOM_DIRECTORY_PROVIDER_CATEGORY, "browser-directory-provider", NS_BROWSERDIRECTORYPROVIDER_CONTRACTID },
-    { NS_CONTENT_SNIFFER_CATEGORY, "Feed Sniffer", NS_FEEDSNIFFER_CONTRACTID },
     { nullptr }
 };
 

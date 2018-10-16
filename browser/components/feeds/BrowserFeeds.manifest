@@ -1,10 +1,2 @@
-component {229fa115-9412-4d32-baf3-2fc407f76fb1} FeedConverter.js
-contract @mozilla.org/streamconv;1?from=application/vnd.mozilla.maybe.feed&to=*/* {229fa115-9412-4d32-baf3-2fc407f76fb1}
-contract @mozilla.org/streamconv;1?from=application/vnd.mozilla.maybe.video.feed&to=*/* {229fa115-9412-4d32-baf3-2fc407f76fb1}
-contract @mozilla.org/streamconv;1?from=application/vnd.mozilla.maybe.audio.feed&to=*/* {229fa115-9412-4d32-baf3-2fc407f76fb1}
-component {2376201c-bbc6-472f-9b62-7548040a61c6} FeedConverter.js
-contract @mozilla.org/browser/feeds/result-service;1 {2376201c-bbc6-472f-9b62-7548040a61c6}
-component {49bb6593-3aff-4eb3-a068-2712c28bd58e} FeedWriter.js
-contract @mozilla.org/browser/feeds/result-writer;1 {49bb6593-3aff-4eb3-a068-2712c28bd58e}
 component {792a7e82-06a0-437c-af63-b2d12e808acc} WebContentConverter.js
 contract @mozilla.org/embeddor.implemented/web-content-handler-registrar;1 {792a7e82-06a0-437c-af63-b2d12e808acc}

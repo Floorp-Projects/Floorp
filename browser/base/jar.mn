@@ -44,7 +44,6 @@ browser.jar:
 #ifndef MOZILLA_OFFICIAL
         content/browser/browser-development-helpers.js (content/browser-development-helpers.js)
 #endif
-        content/browser/browser-feeds.js              (content/browser-feeds.js)
         content/browser/browser-fullScreenAndPointerLock.js  (content/browser-fullScreenAndPointerLock.js)
         content/browser/browser-fullZoom.js           (content/browser-fullZoom.js)
         content/browser/browser-gestureSupport.js     (content/browser-gestureSupport.js)
