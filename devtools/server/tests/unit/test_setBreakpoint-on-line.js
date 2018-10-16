@@ -18,9 +18,9 @@ function run_test() {
 
     const { tabs } = await listTabs(client);
     const tab = findTab(tabs, "test");
-    const [, tabClient] = await attachTarget(client, tab);
+    const [, targetFront] = await attachTarget(client, tab);
 
-    const [, threadClient] = await attachThread(tabClient);
+    const [, threadClient] = await attachThread(targetFront);
     await resume(threadClient);
 
     const promise = waitForNewSource(threadClient, SOURCE_URL);
