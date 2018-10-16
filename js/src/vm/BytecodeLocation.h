@@ -123,9 +123,47 @@ class BytecodeLocation
         return BytecodeIsJumpTarget(getOp());
     }
 
+    bool isJump() const {
+        return IsJumpOpcode(getOp());
+    }
+
+    bool fallsThrough() const {
+        return BytecodeFallsThrough(getOp());
+    }
+
     // Accessors:
     JSOp getOp() const {
         return JSOp(*rawBytecode_);
+    }
+
+    BytecodeLocation getJumpTarget() const {
+        // The default target of a JSOP_TABLESWITCH also follows this format.
+        MOZ_ASSERT(isJump() || is(JSOP_TABLESWITCH));
+        return BytecodeLocation(*this, rawBytecode_ + GET_JUMP_OFFSET(rawBytecode_));
+    }
+
+    // Return the 'low' parameter to the tableswitch opcode
+    int32_t getTableSwitchLow() const {
+        MOZ_ASSERT(is(JSOP_TABLESWITCH));
+        return GET_JUMP_OFFSET(rawBytecode_ + JUMP_OFFSET_LEN);
+    }
+
+    // Return the 'high' parameter to the tableswitch opcode
+    int32_t getTableSwitchHigh() const {
+        MOZ_ASSERT(is(JSOP_TABLESWITCH));
+        return GET_JUMP_OFFSET(rawBytecode_ + (2 * JUMP_OFFSET_LEN));
+    }
+
+    // Return the BytecodeLocation referred to by index number in the table
+    // of the table switch.
+    //
+    // Returns (effectively) |this| on a gap in the table.
+    BytecodeLocation getTableSwitchCaseByIndex(size_t index) const {
+        MOZ_ASSERT(is(JSOP_TABLESWITCH));
+        RawBytecode offsetLoc = rawBytecode_ +
+                                (3 *  JUMP_OFFSET_LEN) + // Skip over low and high
+                                (index * JUMP_OFFSET_LEN); // Select table entry
+        return BytecodeLocation(*this, rawBytecode_ + GET_JUMP_OFFSET(offsetLoc));
     }
 
 #ifdef DEBUG
