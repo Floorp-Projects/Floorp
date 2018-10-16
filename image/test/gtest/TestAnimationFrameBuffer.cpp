@@ -488,7 +488,15 @@ static void TestDiscardingQueueLoop(AnimationFrameDiscardingQueue& aQueue,
   EXPECT_EQ(size_t(1), aQueue.Display().size());
   VerifyInsertAndAdvance(aQueue, 6, AnimationFrameBuffer::InsertStatus::CONTINUE);
   EXPECT_EQ(size_t(1), aQueue.Display().size());
-  VerifyInsertAndAdvance(aQueue, 7, AnimationFrameBuffer::InsertStatus::CONTINUE);
+
+  // We actually will yield if we are recycling instead of continuing because
+  // the pending calculation is slightly different. We will actually request one
+  // less frame than we have to recycle.
+  if (aQueue.IsRecycling()) {
+    VerifyInsertAndAdvance(aQueue, 7, AnimationFrameBuffer::InsertStatus::YIELD);
+  } else {
+    VerifyInsertAndAdvance(aQueue, 7, AnimationFrameBuffer::InsertStatus::CONTINUE);
+  }
   EXPECT_EQ(size_t(1), aQueue.Display().size());
 
   // We should get throttled if we insert too much.
