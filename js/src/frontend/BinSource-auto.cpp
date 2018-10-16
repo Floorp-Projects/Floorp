@@ -3132,7 +3132,12 @@ BinASTParser<Tok>::parseInterfaceDataProperty(const size_t start, const BinKind 
         return raiseError("DataProperty key kind");
     }
 
-    BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
+    ParseNode* result;
+    if (name->template is<NameNode>() && name->template as<NameNode>().atom() == cx_->names().proto) {
+        BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProto, start, expression));
+    } else {
+        BINJS_TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
+    }
     return result;
 }
 
@@ -4451,7 +4456,7 @@ BinASTParser<Tok>::parseInterfaceScript(const size_t start, const BinKind kind, 
     MOZ_TRY(parseAssertedScriptGlobalScope());
 
     BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
-
+    forceStrictIfNecessary(parseContext_->sc(), directives);
     BINJS_MOZ_TRY_DECL(statements, parseListOfStatement());
 
     MOZ_TRY(checkClosedVars(parseContext_->varScope())); BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
@@ -4538,11 +4543,12 @@ BinASTParser<Tok>::parseInterfaceShorthandProperty(const size_t start, const Bin
 
     BINJS_MOZ_TRY_DECL(name, parseIdentifierExpression());
 
-    if (!factory_.isUsableAsObjectPropertyName(name)) {
-        BINJS_TRY_VAR(name, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
-    }
+    MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
+    MOZ_ASSERT(!factory_.isUsableAsObjectPropertyName(name));
+    BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
 
-    BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, name, AccessorType::None));
+    BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(propName, name, AccessorType::None));
+    result->setKind(ParseNodeKind::Shorthand);
     return result;
 }
 
@@ -5084,8 +5090,10 @@ BinASTParser<Tok>::parseInterfaceWithStatement(const size_t start, const BinKind
 
     BINJS_MOZ_TRY_DECL(object, parseExpression());
 
+    ParseContext::Statement stmt(parseContext_, StatementKind::With);
     BINJS_MOZ_TRY_DECL(body, parseStatement());
 
+    parseContext_->sc()->setBindingsAccessedDynamically();
     BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
     return result;
 }
