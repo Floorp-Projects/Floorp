@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview.test;
 
+import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
@@ -50,10 +51,10 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public GeckoResult<Boolean> onLoadRequest(GeckoSession session, String uri, int target,
-                                                  int flags) {
+        public GeckoResult<AllowOrDeny> onLoadRequest(GeckoSession session, String uri,
+                                                      int target, int flags) {
             // Allow Gecko to load all URIs
-            return GeckoResult.fromValue(false);
+            return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
 
         @Override
