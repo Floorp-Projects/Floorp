@@ -46,8 +46,7 @@ var progressListener = {
     onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
         // Put progress meter in undetermined mode.
-        // dialog.progress.setAttribute( "value", 0 );
-        dialog.progress.setAttribute( "mode", "undetermined" );
+        dialog.progress.removeAttribute("value");
       }
 
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
@@ -58,7 +57,6 @@ var progressListener = {
 
         // Put progress meter at 100%.
         dialog.progress.setAttribute( "value", 100 );
-        dialog.progress.setAttribute( "mode", "normal" );
         var percentPrint = getString( "progressText" );
         percentPrint = replaceInsert( percentPrint, 1, 100 );
         dialog.progressText.setAttribute("value", percentPrint);
@@ -87,7 +85,7 @@ var progressListener = {
     onProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
       if (switchUI) {
         dialog.tempLabel.setAttribute("hidden", "true");
-        dialog.progress.setAttribute("hidden", "false");
+        dialog.progressBox.removeAttribute("hidden");
 
         var progressLabel = getString("progress");
         if (progressLabel == "") {
@@ -118,8 +116,6 @@ var progressListener = {
         if ( percent > 100 )
           percent = 100;
 
-        dialog.progress.removeAttribute( "mode");
-
         // Advance progress meter.
         dialog.progress.setAttribute( "value", percent );
 
@@ -129,7 +125,7 @@ var progressListener = {
         dialog.progressText.setAttribute("value", percentPrint);
       } else {
         // Progress meter should be barber-pole in this case.
-        dialog.progress.setAttribute( "mode", "undetermined" );
+        dialog.progress.removeAttribute("value");
         // Update percentage label on progress meter.
         dialog.progressText.setAttribute("value", "");
       }
@@ -209,11 +205,12 @@ function onLoad() {
     dialog.title        = document.getElementById("dialog.title");
     dialog.titleLabel   = document.getElementById("dialog.titleLabel");
     dialog.progress     = document.getElementById("dialog.progress");
+    dialog.progressBox     = document.getElementById("dialog.progressBox");
     dialog.progressText = document.getElementById("dialog.progressText");
     dialog.progressLabel = document.getElementById("dialog.progressLabel");
     dialog.tempLabel    = document.getElementById("dialog.tempLabel");
 
-    dialog.progress.setAttribute("hidden", "true");
+    dialog.progressBox.setAttribute("hidden", "true");
 
     var progressLabel = getString("preparing");
     if (progressLabel == "") {

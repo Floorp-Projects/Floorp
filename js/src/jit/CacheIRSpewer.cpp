@@ -156,20 +156,29 @@ CacheIRSpewer::valueProperty(const char* name, const Value& v)
         }
     } else if (v.isObject()) {
         JSObject& object = v.toObject();
-        bool indexed = object.isNative() && object.as<NativeObject>().isIndexed();
-        j.formatProperty("value", "%p (shape: %p)%s", &object, object.maybeShape(),
-                         indexed ? " indexed" : "");
-        if (indexed) {
-            NativeObject& native = object.as<NativeObject>();
-            j.beginObjectProperty("indexed");
+        j.formatProperty("value", "%p (shape: %p)", &object, object.maybeShape());
+        if (NativeObject* nobj = object.isNative() ? &object.as<NativeObject>() : nullptr) {
+            j.beginListProperty("flags");
             {
-                j.property("denseInitializedLength",native.getDenseInitializedLength());
-                j.property("denseCapacity",native.getDenseCapacity());
-                j.property("denseElementsAreSealed", native.denseElementsAreSealed());
-                j.property("denseElementsAreCopyOnWrite", native.denseElementsAreCopyOnWrite());
-                j.property("denseElementsAreFrozen", native.denseElementsAreFrozen());
+                if (nobj->isIndexed()) {
+                    j.value("indexed");
+                }
+                if (nobj->inDictionaryMode()) {
+                    j.value("dictionaryMode");
+                }
             }
-            j.endObject();
+            j.endList();
+            if (nobj->isIndexed()) {
+                j.beginObjectProperty("indexed");
+                {
+                    j.property("denseInitializedLength", nobj->getDenseInitializedLength());
+                    j.property("denseCapacity", nobj->getDenseCapacity());
+                    j.property("denseElementsAreSealed", nobj->denseElementsAreSealed());
+                    j.property("denseElementsAreCopyOnWrite", nobj->denseElementsAreCopyOnWrite());
+                    j.property("denseElementsAreFrozen", nobj->denseElementsAreFrozen());
+                }
+                j.endObject();
+            }
         }
     }
 

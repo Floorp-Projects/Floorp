@@ -149,7 +149,7 @@ public:
 
   void AssertIsOnTargetThread() const
   {
-    MOZ_ASSERT(IsTargetThread());
+    MOZ_DIAGNOSTIC_ASSERT(IsTargetThread());
   }
 
   bool IsTargetThread() const
