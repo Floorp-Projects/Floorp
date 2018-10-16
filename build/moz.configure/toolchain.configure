@@ -32,10 +32,9 @@ add_old_configure_assignment('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 # Code optimization
 # ==============================================================
 
-js_option('--enable-optimize',
+js_option('--disable-optimize',
           nargs='?',
-          default=True,
-          help='Enable optimizations via compiler flags')
+          help='Disable optimizations via compiler flags')
 
 
 @depends('--enable-optimize')
@@ -1146,10 +1145,9 @@ option(env='MOZ_DEBUG_FLAGS',
 imply_option('--enable-debug-symbols',
              depends_if('--enable-debug')(lambda v: v))
 
-js_option('--enable-debug-symbols',
+js_option('--disable-debug-symbols',
           nargs='?',
-          default=True,
-          help='Enable debug symbols using the given compiler flags')
+          help='Disable debug symbols using the given compiler flags')
 
 set_config('MOZ_DEBUG_SYMBOLS',
            depends_if('--enable-debug-symbols')(lambda _: True))
