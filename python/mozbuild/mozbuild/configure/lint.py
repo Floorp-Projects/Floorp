@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import inspect
+import re
 import types
 from functools import wraps
 from StringIO import StringIO
@@ -17,6 +18,7 @@ from . import (
     TrivialDependsFunction,
     SandboxDependsFunction,
 )
+from .help import HelpFormatter
 from .lint_util import disassemble_as_iter
 from mozbuild.util import memoize
 
@@ -128,16 +130,20 @@ class LintSandbox(ConfigureSandbox):
         if when:
             self._value_for(when, need_help_dependency=True)
 
-        self._check_option(*args, **kwargs)
+        self._check_option(result, *args, **kwargs)
 
         return result
 
-    def _check_option(self, *args, **kwargs):
+    def _check_option(self, option, *args, **kwargs):
         if 'default' not in kwargs:
             return
         if len(args) == 0:
             return
 
+        self._check_prefix_for_bool_option(*args, **kwargs)
+        self._check_help_for_option_with_func_default(option, *args, **kwargs)
+
+    def _check_prefix_for_bool_option(self, *args, **kwargs):
         name = args[0]
         default = kwargs['default']
 
@@ -161,6 +167,33 @@ class LintSandbox(ConfigureSandbox):
                                           name.replace('--{}-'.format(prefix),
                                                        '--{}-'.format(replacement)),
                                           name, default))
+
+    def _check_help_for_option_with_func_default(self, option, *args, **kwargs):
+        name = args[0]
+        default = kwargs['default']
+
+        if not isinstance(default, SandboxDependsFunction):
+            return
+
+        if not option.prefix:
+            return
+
+        default = self._resolve(default)
+        if type(default) in (str, unicode):
+            return
+
+        help = kwargs['help']
+        match = re.search(HelpFormatter.RE_FORMAT, help)
+        if match:
+            return
+
+        if option.prefix in ('enable', 'disable'):
+            rule = '{Enable|Disable}'
+        else:
+            rule = '{With|Without}'
+
+        raise ConfigureError(('{} has a non-constant default. '
+                              'Its help should contain "{}"').format(name, rule))
 
     def unwrap(self, func):
         glob = func.func_globals
