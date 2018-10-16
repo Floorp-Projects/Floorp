@@ -12,7 +12,6 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const { PAGES, RUNTIMES } = require("../../constants");
-loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 
 const DeviceSidebarItemAction = createFactory(require("./DeviceSidebarItemAction"));
 const SidebarItem = createFactory(require("./SidebarItem"));
@@ -24,28 +23,11 @@ const USB_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg"
 class Sidebar extends PureComponent {
   static get propTypes() {
     return {
-      adbAddonStatus: PropTypes.string,
       className: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
       runtimes: PropTypes.object.isRequired,
       selectedPage: PropTypes.string,
     };
-  }
-
-  renderAdbAddonStatus() {
-    const isAddonInstalled = this.props.adbAddonStatus === ADB_ADDON_STATES.INSTALLED;
-    const localizationId = isAddonInstalled ? "about-debugging-sidebar-usb-enabled" :
-                                              "about-debugging-sidebar-usb-disabled";
-    return Localized(
-      {
-        id: localizationId
-      }, dom.aside(
-        {
-          className: "sidebar__devices__message js-sidebar-usb-status"
-        },
-        localizationId
-      )
-    );
   }
 
   renderDevices() {
@@ -54,9 +36,9 @@ class Sidebar extends PureComponent {
       return Localized(
         {
           id: "about-debugging-sidebar-no-devices"
-        }, dom.aside(
+        }, dom.span(
           {
-            className: "sidebar__devices__message js-sidebar-no-devices"
+            className: "sidebar__devices__no-devices-message js-sidebar-no-devices"
           },
           "No devices discovered"
         )
@@ -129,7 +111,6 @@ class Sidebar extends PureComponent {
           })
         ),
         dom.hr(),
-        this.renderAdbAddonStatus(),
         this.renderDevices()
       )
     );
