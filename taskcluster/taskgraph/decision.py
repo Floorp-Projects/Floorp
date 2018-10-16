@@ -282,14 +282,20 @@ def get_decision_parameters(config, options):
 
 
 def set_try_config(parameters, task_config_file):
-    parameters['try_mode'] = None
     if os.path.isfile(task_config_file):
         logger.info("using try tasks from {}".format(task_config_file))
-        parameters['try_mode'] = 'try_task_config'
         with open(task_config_file, 'r') as fh:
-            parameters['try_task_config'] = json.load(fh)
-    else:
-        parameters['try_task_config'] = None
+            task_config = json.load(fh)
+        task_config_version = task_config.get('version', 1)
+        if task_config_version == 1:
+            parameters['try_mode'] = 'try_task_config'
+            parameters['try_task_config'] = task_config
+        elif task_config_version == 2:
+            parameters.update(task_config['parameters'])
+            return
+        else:
+            raise Exception(
+                "Unknown `try_task_config.json` version: {}".format(task_config_version))
 
     if 'try:' in parameters['message']:
         parameters['try_mode'] = 'try_option_syntax'
