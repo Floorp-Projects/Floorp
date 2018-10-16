@@ -2,7 +2,7 @@
 <tooltip id="bhTooltip" noautohide="true"
          onpopupshowing="return window.top.BookmarksEventHandler.fillInBHTooltip(document, event)">
   <vbox id="bhTooltipTextBox" flex="1">
-    <label id="bhtTitleText" class="tooltip-label" />
-    <label id="bhtUrlText" crop="center" class="tooltip-label uri-element" />
+    <description id="bhtTitleText" class="tooltip-label" />
+    <description id="bhtUrlText" crop="center" class="tooltip-label uri-element" />
   </vbox>
 </tooltip>
