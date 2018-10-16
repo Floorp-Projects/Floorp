@@ -37,6 +37,8 @@
   <string name="preference_category_general">Ntaka</string>
   <string name="preference_category_data_collection_use">Nastutu datos jii a ni´i</string>
   <string name="preference_category_search">Nánuku</string>
+  <string name="preference_show_search_suggestions">Ni´in tu´un nánuku</string>
+  <string name="preference_show_search_suggestions_summary">%1$s chuichi a tenu nuu ka̱a̱ nánuku</string>
   <string name="preference_search_engine_default">Kua vaji</string>
   <string name="preference_state_on">Tɨɨn</string>
   <string name="preference_state_off">Xina´va</string>
@@ -77,8 +79,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">Nkuvi</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Nakasɨ ntu xini cookies daa inka</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Kuvi</string>
+  <string name="preference_security_biometric">Ni´in ka̱a̱ na´a tɨɨ saa kuvi síne ka̱a̱ ya´a</string>
+  <string name="preference_security_biometric_summary">Na´a tii noo´o kuvi síne %1$s iin URL dee nune. Jee tɨɨ ka̱a̱ chiyu´u.</string>
   <string name="preference_privacy_secure_mode">Ntu tuvi</string>
-  <string name="preference_privacy_stealth_summary">Chiyu´u daa tutu web saa sama ka̱a̱</string>
+  <string name="preference_privacy_stealth_summary">Chiyu´u daa tutu web saa sama ka̱a̱ jee chiyu´u ka̱a̱ natava.</string>
   <string name="preference_category_performance">Naja satiñu</string>
   <string name="preference_performance_block_webfonts">Chiyu´u tu´un web</string>
   <string name="preference_performance_block_webfonts_summary">Kuvi tuvi íconos a xiin nkutuvi tutu natava</string>

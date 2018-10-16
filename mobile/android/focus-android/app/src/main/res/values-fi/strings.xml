@@ -223,7 +223,7 @@
   <string name="enable_search_suggestions_yes">Kyllä</string>
   <string name="no_suggestions_message">Jotkin hakukoneet eivät voi näyttää ehdotuksia.</string>
   <string name="dismiss_no_suggestions_prompt_button">Hylkää</string>
-  <string name="tip_disable_tracking_protection">Sivusto käyttäytyy odottamattomasti?\n Kokeile kytkeä seurannan suojaus pois päältä</string>
+  <string name="tip_disable_tracking_protection">Käyttäytyykö sivusto odottamattomasti?\n Kokeile kytkeä seurannan suojaus pois päältä</string>
   <string name="tip_add_to_homescreen">Pääsy yhdellä napautuksella sivustoille, joilla useimmiten vierailet%1$s Valikko &gt; Lisää linkki aloitusnäyttöön</string>
   <string name="tip_set_default_browser">Avaa jokainen linkki selaimella %1$s\n Aseta %1$s oletusselaimeksi</string>
   <string name="tip_autocomplete_url">Täydennä osoitteet sivustoille, joita käytät eniten\n Paina pitkään osoitekentässä olevia osoitteita</string>

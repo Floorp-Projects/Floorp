@@ -67,47 +67,47 @@
   <string name="preference_language">ਭਾਸ਼ਾ</string>
   <string name="preference_language_systemdefault">ਸਿਸਟਮ ਮੂਲ</string>
   <string name="preference_category_privacy">ਪਰਦੇਦਾਰੀ</string>
-  <string name="preference_privacy_block_ads">ਬਲਾਕ ਵਿਗਿਆਪਨ ਟਰੈਕਰਜ</string>
-  <string name="preference_privacy_block_ads_summary">ਕੁਝ ਵਿਗਿਆਪਨ ਸਾਈਟ ਦੇ ਦੌਰੇ ਨੂੰ ਟਰੈਕ ਕਰਦੇ ਹਨ, ਭਾਵੇਂ ਤੁਸੀਂ ਇਸ਼ਤਿਹਾਰਾਂ ਤੇ ਨਹੀਂ ਕਲਿਕ ਕਰਦੇ</string>
-  <string name="preference_privacy_block_analytics">ਵਿਸ਼ਲੇਸ਼ਣ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_block_ads">ਇਸ਼ਤਿਹਾਰ ਟਰੈਕਰਾਂ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
+  <string name="preference_privacy_block_ads_summary">ਕੁਝ ਇਸ਼ਤਿਹਾਰ ਸਾਈਟ ਦੇ ਦੌਰੇ ਨੂੰ ਟਰੈਕ ਕਰਦੇ ਹਨ, ਭਾਵੇਂ ਤੁਸੀਂ ਇਸ਼ਤਿਹਾਰਾਂ ਤੇ ਨਹੀਂ ਕਲਿਕ ਕਰਦੇ</string>
+  <string name="preference_privacy_block_analytics">ਵਿਸ਼ਲੇਸ਼ਣ ਟਰੈਕਰਾਂ ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
   <string name="preference_privacy_block_analytics_summary">ਟੇਪਿੰਗ ਅਤੇ ਸਕ੍ਰੌਲਿੰਗ ਵਰਗੀਆਂ ਗਤੀਵਿਧੀਆਂ ਇਕੱਤਰ ਕਰਨ, ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨ ਅਤੇ ਮਾਪਣ ਲਈ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ</string>
-  <string name="preference_privacy_block_social">ਸਮਾਜਿਕ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
-  <string name="preference_privacy_block_content">ਹੋਰ ਸਮੱਗਰੀ ਟਰੈਕਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_block_social">ਸਮਾਜਿਕ ਟਰੈਕਰਾਂ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
+  <string name="preference_privacy_block_content">ਹੋਰ ਸਮੱਗਰੀ ਟਰੈਕਰਾਂ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
   <string name="preference_privacy_block_content_summary2">ਸਮਰੱਥ ਬਣਾਉਣ ਨਾਲ ਕੁਝ ਪੰਨੇ ਅਚਾਨਕ ਵਿਹਾਰ ਕਰ ਸਕਦੇ ਹਨ</string>
-  <string name="preference_privacy_category_cookies">ਕੂਕੀਜ਼ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_category_cookies">ਕੂਕੀਜ਼ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
   <string name="preference_privacy_should_block_cookies_no_option">ਨਹੀਂ</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">ਸਿਰਫ ਤੀਜੀ ਪਾਰਟੀ ਕੂਕੀਜ਼ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">ਸਿਰਫ 3ਜੀ ਪਾਰਟੀ ਕੂਕੀਜ਼ ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
   <string name="preference_privacy_should_block_cookies_yes_option">ਹਾਂ</string>
   <string name="preference_security_biometric">ਐਪ ਅਣ-ਲਾਕ ਕਰਨ ਲਈ ਫਿੰਗਰਪਰਿੰਟ ਵਰਤੋ</string>
   <string name="preference_privacy_secure_mode">ਭੇਤ</string>
   <string name="preference_privacy_stealth_summary">ਐਪਾਂ ਸਵਿੱਚ ਕਰਨ ਦੌਰਾਨ ਵੈੱਬ ਸਫ਼ੇ ਲੁਕਾਓ ਅਤੇ ਸਕਰੀਨਸ਼ਾਟ ਲੈਣ ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ।</string>
   <string name="preference_category_security">ਸੁਰੱਖਿਆ</string>
   <string name="preference_category_performance">ਕਾਰਗੁਜ਼ਾਰੀ</string>
-  <string name="preference_performance_block_webfonts">ਵੈੱਬ ਅੱਖਰ ਬਲਾੱਕ ਕਰੋ</string>
+  <string name="preference_performance_block_webfonts">ਵੈੱਬ ਫ਼ੋਂਟ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
   <string name="preference_performance_block_webfonts_summary">ਨਤੀਜੇ ਵਜੋਂ ਆਈਕਾਨ ਜਾਂ ਚਿੱਤਰ ਲਾਪਤਾ ਹੋ ਸਕਦੇ ਹਨ</string>
-  <string name="preference_performance_block_javascript">JavaScript ਬਲਾੱਕ ਕਰੋ</string>
-  <string name="preference_performance_block_javascript_summary">ਪੰਨੇ ਤੇਜ਼ੀ ਨਾਲ ਲੋਡ ਹੋ ਸਕਦੇ ਹਨ, ਪਰ ਅਚਾਨਕ ਹੀ ਵਿਵਹਾਰ ਕੀਤਾ ਜਾ ਸਕਦਾ ਹੈ</string>
-  <string name="preference_default_browser2">%1$s ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+  <string name="preference_performance_block_javascript">JavaScript \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
+  <string name="preference_performance_block_javascript_summary">ਸਫ਼ੇ ਤੇਜ਼ੀ ਨਾਲ ਲੋਡ ਹੋ ਸਕਦੇ ਹਨ, ਪਰ ਅਚਾਨਕ ਹੀ ਵਿਵਹਾਰ ਕੀਤਾ ਜਾ ਸਕਦਾ ਹੈ</string>
+  <string name="preference_default_browser2">%1$s ਨੂੰ ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
   <string name="preference_category_mozilla">ਮੋਜ਼ੀਲਾ</string>
   <string name="preference_mozilla_telemetry2">ਵਰਤੋਂ ਸਬੰਧੀ ਡੇਟਾ ਭੇਜੋ</string>
   <string name="preference_mozilla_telemetry_summary">ਹੋਰ ਜਾਣੋ</string>
-  <string name="preference_mozilla_telemetry_summary2">ਮੌਜ਼ਿਲਾ ਭਰਪੂਰ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ ਕਿ ਸਿਰਫ ਉਹੀ ਕੁੱਝ ਇਕੱਠਾ ਕੀਤਾ ਜਾਵੇ ਜੋ ਕਿ %1$s ਨੂੰ ਹਰੇਕ ਲਈ ਮੁਹੱਈਆ ਕਰਾਉਣ ਅਤੇ ਹੋਰ ਸੁਧਾਰਨ ਲਈ ਲੋੜੀਂਦਾ ਹੋਵੇ।</string>
+  <string name="preference_mozilla_telemetry_summary2">ਮੌਜ਼ੀਲਾ ਭਰਪੂਰ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ ਕਿ ਸਿਰਫ ਉਹੀ ਕੁੱਝ ਇਕੱਠਾ ਕੀਤਾ ਜਾਵੇ ਜੋ ਕਿ %1$s ਨੂੰ ਹਰੇਕ ਲਈ ਮੁਹੱਈਆ ਕਰਾਉਣ ਅਤੇ ਹੋਰ ਸੁਧਾਰਨ ਲਈ ਲੋੜੀਂਦਾ ਹੋਵੇ।</string>
   <string name="preference_privacy_notice">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
   <string name="preference_about">%1$s ਦੇ ਬਾਰੇ</string>
   <string name="preference_search_installed_search_engines">ਇੰਸਟਾਲ ਕੀਤੇ ਖੋਜ ਇੰਜਣ</string>
-  <string name="preference_search_restore">ਮੂਲ ਖੋਜ ਇੰਜਣ ਨੂੰ ਮੁੜ-ਸਟੋਰ ਕਰੋ</string>
-  <string name="preference_search_add2">+ਹੋਰ ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
+  <string name="preference_search_restore">ਮੂਲ ਖੋਜ ਇੰਜਣ ਨੂੰ ਬਹਾਲ ਕਰੋ</string>
+  <string name="preference_search_add2">+ ਹੋਰ ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
   <string name="preference_search_remove_title">ਖੋਜ ਇੰਜਣਾਂ ਨੂੰ ਹਟਾਓ</string>
   <string name="preference_search_remove">ਹਟਾਓ</string>
   <string name="preference_homescreen_tips">ਮੁੱਖ ਸਕਰੀਨ ਦੇ ਗੁਰ ਵੇਖਾਓ</string>
   <string name="action_option_add_search_engine">ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
   <string name="search_add_manually_name_hint">ਖੋਜ ਇੰਜਣ ਨਾਂਮ</string>
-  <string name="search_add_manually_string">ਵਰਤਣ ਲਈ ਖੋਜ ਸਟ੍ਰਿੰਗ</string>
+  <string name="search_add_manually_string">ਵਰਤਣ ਲਈ ਖੋਜ ਸਤਰ</string>
   <string name="search_add_manually_save">ਸੰਭਾਲੋ</string>
-  <string name="search_add_manually_example">ਉਦਾਹਰਨ: example.com/search/?q=%s</string>
+  <string name="search_add_manually_example">ਜਿਵੇਂ: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">ਨਵਾਂ ਖੋਜ ਇੰਜਣ ਜੋੜਿਆ ਗਿਆ।</string>
-  <string name="search_add_error_empty_name">ਖੋਜ ਇੰਜਣ ਨਾਂਮ ਦਰਜ ਕਰੋ</string>
-  <string name="search_add_error_duplicate_name">ਇੱਕ ਇੰਸਟੌਲ ਕੀਤੇ ਖੋਜ ਇੰਜਣ ਪਹਿਲਾਂ ਹੀ ਉਹ ਨਾਂ ਵਰਤ ਰਿਹਾ ਹੈ।</string>
+  <string name="search_add_error_empty_name">ਖੋਜ ਇੰਜਣ ਨਾਂ ਦਿਓ</string>
+  <string name="search_add_error_duplicate_name">ਇੱਕ ਇੰਸਟਾਲ ਕੀਤੇ ਖੋਜ ਇੰਜਣ ਪਹਿਲਾਂ ਹੀ ਉਹ ਨਾਂ ਵਰਤ ਰਿਹਾ ਹੈ।</string>
   <string name="search_add_error_empty_search">ਖੋਜ ਸਤਰ ਦਾਖਲ ਕਰੋ</string>
   <string name="search_add_error_format">ਜਾਂਚ ਕਰੋ ਕਿ ਖੋਜ ਲਾਈਨ ਮਿਲਦੀ ਹੈ ਉਦਾਹਰਨ ਫਾਰਮੈਟ</string>
   <string name="content_description_clear_input">ਇਨਪੁਟ ਨੂੰ ਹਟਾਓ</string>
@@ -124,13 +124,13 @@
   <string name="content_description_stop">ਵੈੱਬਸਾਈਟ ਨੂੰ ਲੋਡ ਕਰਨਾ ਬੰਦ ਕਰੋ</string>
   <string name="content_description_customtab_exit">ਪਿਛਲੇ ਐਪ \'ਤੇ ਜਾਓ</string>
   <string name="content_description_trackers_blocked">ਪਾਬੰਦੀ ਲਾਏ ਟਰੈਕਾਂ ਦੀ ਗਿਣਤੀ</string>
-  <string name="content_description_blocking_switch">ਟ੍ਰੈਕਰਾਂ ਨੂੰ ਬਲੌਕ ਕਰੋ</string>
+  <string name="content_description_blocking_switch">ਟਰੈਕਰਾਂ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
   <string name="your_rights">ਤੁਹਾਡੇ ਹੱਕ</string>
   <string name="external_app_prompt_title">ਲਿੰਕ ਨੂੰ ਹੋਰ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
   <string name="external_app_prompt">ਤੁਸੀਂ %2$s ਵਿੱਚ ਇਹ ਲਿੰਕ ਖੋਲ੍ਹਣ ਲਈ %1$s ਨੂੰ ਛੱਡ ਸਕਦੇ ਹੋ।</string>
   <string name="external_app_prompt_no_app_title">ਅਜਿਹੀ ਐਪ ਲੱਭੋ ਜੋ ਲਿੰਕ ਨੂੰ ਖੋਲ੍ਹ ਸਕੇ</string>
   <string name="external_app_prompt_no_app">ਤੁਹਾਡੇ ਯੰਤਰ ਉੱਪਰਲੀ ਕੋਈ ਵੀ ਐਪ ਇਸ ਤੰਦ ਨੂੰ ਖੋਲ੍ਹਣ ਦੇ ਕਾਬਲ ਨਹੀਂ ਹੈ। ਤੁਸੀਂ %2$s ਦੇ ਲਈ ਕਿਸੇ ਕਾਬਲ ਐਪ ਨੂੰ ਲੱਭਣ ਲਈ %1$s ਛੱਡ ਸਕਦੇ ਹੋ।</string>
-  <string name="external_multiple_apps_matched_exit">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਤੋਂ ਬਾਹਰ ਨਿਕਲੋ?</string>
+  <string name="external_multiple_apps_matched_exit">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਤੋਂ ਬਾਹਰ ਨਿਕਲਣਾ ਹੈ?</string>
   <string name="download_snackbar_finished">%1$s ਮੁਕੰਮਲ</string>
   <string name="download_snackbar_open">ਖੋਲ੍ਹੋ</string>
   <string name="download_dialog_warning"><![CDATA["ਡਾਊਨਲੋਡ ਕੀਤੀਆਂ ਫਾਈਲਾਂ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#2606;&#2623;&#2591;&#2622; &#2598;&#2623;&#2673;&#2596;&#2624;&#2566;&#2562; &#2588;&#2622;&#2595;&#2583;&#2624;&#2566;&#2562; "</b>" ਜਦੋਂ ਤੁਸੀਂ %1$s ਇਤਿਹਾਸ ਨੂੰ ਮਿਟਾਉਂਦੇ ਹੋ।"]]></string>
@@ -144,7 +144,7 @@
   <string name="error_hostLookup_title">ਸਰਵਰ ਨਹੀਂ ਲੱਭਿਆ</string>
   <string name="error_malformedURI_title">ਐਡਰੈੱਸ ਠੀਕ ਨਹੀਂ ਹੈ</string>
   <string name="error_redirectLoop_title">ਸਫ਼ਾ ਠੀਕ ਤਰ੍ਹਾਂ ਰੀ-ਡਾਇਰੈਕਟ ਨਹੀਂ ਕੀਤਾ ਗਿਆ ਹੈ</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"                                                                                                                                                                                                                                                                                                                                                                                  "<li>&#2567;&#2617; &#2616;&#2606;&#2673;&#2616;&#2623;&#2566; &#2581;&#2625;&#2589; &#2613;&#2622;&#2608; &#2581;&#2626;&#2581;&#2624;&#2588;&#2620; &#2600;&#2626;&#2672; &#2566;&#2607;&#2635;&#2583; &#2581;&#2608;&#2600; &#2588;&#2622;&#2562; &#2610;&#2632;&#2595; &#2596;&#2635;&#2562; &#2567;&#2600;&#2581;&#2622;&#2608; &#2581;&#2608;&#2581;&#2631; &#2566; &#2616;&#2581;&#2598;&#2624; &#2617;&#2632;&#2404;</li>\n</ul>\n]]></string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n "<li>&#2567;&#2617; &#2616;&#2606;&#2673;&#2616;&#2623;&#2566; &#2581;&#2625;&#2589; &#2613;&#2622;&#2608; &#2581;&#2626;&#2581;&#2624;&#2588;&#2620; &#2600;&#2626;&#2672; &#2566;&#2607;&#2635;&#2583; &#2581;&#2608;&#2600; &#2588;&#2622;&#2562; &#2610;&#2632;&#2595; &#2596;&#2635;&#2562; &#2567;&#2600;&#2581;&#2622;&#2608; &#2581;&#2608;&#2581;&#2631; &#2566; &#2616;&#2581;&#2598;&#2624; &#2617;&#2632;&#2404;</li>\n</ul>\n]]></string>
   <string name="error_unsupportedprotocol_title">ਐਡਰੈਸ ਦੀ ਸਮਝ ਨਹੀਂ ਆਈ</string>
   <string name="error_sslhandshake_title">ਸੁਰੱਖਿਅਤ ਕੁਨੈਕਸ਼ਨ ਫੇਲ੍ਹ ਹੋਇਆ</string>
   <string name="error_generic_title">ਓ ਹੋ</string>
@@ -173,7 +173,7 @@
   <string name="download_firefox">ਫਾਇਰਫਾਕਸ ਡਾਊਨਲੋਡ ਕਰੋ</string>
   <string name="your_rights_content1">ਮੋਜ਼ੀਲਾ ਅਤੇ ਹੋਰ ਯੋਗਦਾਨੀਆਂ ਦੁਆਰਾ ਬਣਾਏ ਗਏ %1$s ਮੁਫ਼ਤ ਅਤੇ ਓਪਨ ਸੋਰਸ ਸਾਫਟਵੇਅਰ ਹੈ।</string>
   <string name="your_rights_content2"><![CDATA["%1$s ਤੁਹਾਨੂੰ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2606;&#2636;&#2588;&#2620;&#2624;&#2610;&#2622; &#2588;&#2600;&#2596;&#2581; &#2610;&#2616;&#2672;&#2616;</a>" ਅਤੇ ਹੋਰ ਖੁੱਲ੍ਹੇ ਵਸੀਲਿਆਂ ਦੇ ਲਸੰਸਾਂ ਦੀਆਂ ਸ਼ਰਤਾਂ ਹੇਠ ਮੁਹੱਈਆ ਕਰਵਾਇਆ ਗਿਆ ਹੈ।"]]></string>
-  <string name="gv_prompt_username_hint">ਯੂਜ਼ਰ ਨਾਂ</string>
+  <string name="gv_prompt_username_hint">ਵਰਤੋਂਕਾਰ-ਨਾਂ</string>
   <string name="gv_prompt_password_hint">ਪਾਸਵਰਡ</string>
   <string name="gv_prompt_clear">ਸਾਫ ਕਰੋ</string>
   <string name="security_popup_secure_connection">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ</string>
@@ -189,7 +189,7 @@
   <string name="accessibility_previous_result">ਪਿਛਲਾ ਨਤੀਜਾ ਲੱਭੋ</string>
   <string name="accessibility_dismiss_find_in_page">ਸਫ਼ੇ ਵਿੱਚ ਲੱਭਣ ਨੂੰ ਖਾਰਜ ਕਰੋ</string>
   <string name="http_auth_dialog_title">ਪ੍ਰਮਾਣਿਕਤਾ ਲੋੜੀਂਦੀ ਹੈ</string>
-  <string name="http_auth_dialog_username">ਯੂਜ਼ਰ ਨਾਂ</string>
+  <string name="http_auth_dialog_username">ਵਰਤੋਂਕਾਰ-ਨਾਂ</string>
   <string name="http_auth_dialog_password">ਪਾਸਵਰਡ</string>
   <string name="preference_performance_request_desktop_site">ਡੈਸਕਟਾਪ ਸਾਈਟ ਦੀ ਮੰਗ</string>
   <string name="custom_tab_copy_url_action">URL ਕਾਪੀ ਕੀਤਾ</string>

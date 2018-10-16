@@ -94,11 +94,11 @@
   <string name="preference_mozilla_telemetry2">Trimite date privind utilizarea</string>
   <string name="preference_mozilla_telemetry_summary">Află mai multe</string>
   <string name="preference_mozilla_telemetry_summary2">La Mozilla noi colectăm doar strictul necesar pentru a crea și îmbunătăți %1$s pentru toată lumea.</string>
-  <string name="preference_privacy_notice">Politica de confidențialitate</string>
+  <string name="preference_privacy_notice">Notificare privind confidențialitatea</string>
   <string name="preference_about">Despre %1$s</string>
   <string name="preference_search_installed_search_engines">Motoare de căutare instalate</string>
   <string name="preference_search_restore">Restaurează motoarele de căutare implicite</string>
-  <string name="preference_search_add2">+ Adaugă un alt motor de căutare</string>
+  <string name="preference_search_add2">+ Adaugă alt motor de căutare</string>
   <string name="preference_search_remove_title">Elimină motoare de căutare</string>
   <string name="preference_search_remove">Elimină</string>
   <string name="preference_homescreen_tips">Arată indicii în ecranul principal</string>
@@ -181,7 +181,7 @@
   <string name="notification_browsing_session_channel_name">Sesiune de navigare privată</string>
   <string name="notification_browsing_session_channel_description">Notificările îți permit să ştergi sesiunea %1$s cu o atingere. Nu ai nevoie să deschizi aplicaţia sau să vezi ce rulează în browser.</string>
   <string name="tabs_tray_action_erase">Șterge istoricul de navigare</string>
-  <string name="download_firefox">Descarcă acum</string>
+  <string name="download_firefox">Descarcă Firefox</string>
   <string name="your_rights_content1">%1$s este un program liber și cu sursă deschisă realizat de Mozilla și alți colaboratori.</string>
   <string name="your_rights_content2"><![CDATA["%1$s este disponibil sub termenii "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;ei Publice Mozilla</a>" și alte licențe cu sursă deschisă."]]></string>
   <string name="your_rights_content3"><![CDATA["Nu vi se acordă niciun drept sau licență asupra mărcilor comerciale ale Mozilla Foundation sau ale oricărei părți, inclusiv numele sau logourile Mozilla, Firefox sau %1$s. Informații suplimentare pot fi găsite "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aici</a>.]]></string>
