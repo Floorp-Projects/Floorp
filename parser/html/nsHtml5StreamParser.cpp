@@ -854,7 +854,7 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, false);
     if (recordreplay::IsRecordingOrReplaying()) {
-      recordreplay::AddContentParseData(this, dst.data(), written);
+      recordreplay::AddContentParseData16(this, dst.data(), written);
     }
     if (hadErrors && !mHasHadErrors) {
       mHasHadErrors = true;
@@ -1113,7 +1113,7 @@ nsHtml5StreamParser::DoStopRequest()
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, true);
     if (recordreplay::IsRecordingOrReplaying()) {
-      recordreplay::AddContentParseData(this, dst.data(), written);
+      recordreplay::AddContentParseData16(this, dst.data(), written);
     }
     if (hadErrors && !mHasHadErrors) {
       mHasHadErrors = true;

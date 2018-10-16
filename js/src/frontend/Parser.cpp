@@ -35,6 +35,7 @@
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
+#include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
 #include "vm/BytecodeUtil.h"
@@ -47,7 +48,6 @@
 #include "wasm/AsmJS.h"
 
 #include "frontend/ParseContext-inl.h"
-#include "frontend/ParseNode-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 
 using namespace js;
