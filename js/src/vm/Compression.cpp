@@ -37,7 +37,8 @@ Compressor::Compressor(const unsigned char* inp, size_t inplen)
       currentChunkSize(0),
       chunkOffsets()
 {
-    MOZ_ASSERT(inplen > 0);
+    MOZ_ASSERT(inplen > 0, "data to compress can't be empty");
+
     zs.opaque = nullptr;
     zs.next_in = (Bytef*)inp;
     zs.avail_in = 0;

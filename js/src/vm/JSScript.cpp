@@ -1726,8 +1726,8 @@ ScriptSource::chunkUnits(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& 
     size_t chunkBytes = Compressor::chunkSize(totalLengthInBytes, chunk);
 
     MOZ_ASSERT((chunkBytes % sizeof(Unit)) == 0);
-    const size_t lengthWithNull = (chunkBytes / sizeof(Unit)) + 1;
-    EntryUnits<Unit> decompressed(js_pod_malloc<Unit>(lengthWithNull));
+    const size_t chunkLength = chunkBytes / sizeof(Unit);
+    EntryUnits<Unit> decompressed(js_pod_malloc<Unit>(chunkLength));
     if (!decompressed) {
         JS_ReportOutOfMemory(cx);
         return nullptr;
@@ -1743,8 +1743,6 @@ ScriptSource::chunkUnits(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& 
         JS_ReportOutOfMemory(cx);
         return nullptr;
     }
-
-    decompressed[lengthWithNull - 1] = Unit('\0');
 
     const Unit* ret = decompressed.get();
     if (!cx->caches().uncompressedSourceCache.put(ssc, ToSourceData(std::move(decompressed)),
@@ -1814,7 +1812,7 @@ ScriptSource::units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
     size_t firstChunkOffset, lastChunkOffset;
     MOZ_ASSERT(len > 0);
     Compressor::toChunkOffset(begin * sizeof(Unit), &firstChunk, &firstChunkOffset);
-    Compressor::toChunkOffset((begin + len - 1) * sizeof(Unit), &lastChunk, &lastChunkOffset);
+    Compressor::toChunkOffset((begin + len) * sizeof(Unit), &lastChunk, &lastChunkOffset);
 
     MOZ_ASSERT(firstChunkOffset % sizeof(Unit) == 0);
     size_t firstUnit = firstChunkOffset / sizeof(Unit);
@@ -1828,14 +1826,13 @@ ScriptSource::units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
         return units + firstUnit;
     }
 
-    // We need multiple chunks. Allocate a (null-terminated) buffer to hold
-    // |len| units and copy uncompressed units from the chunks into it. We use
-    // chunkUnits() so we benefit from chunk caching by UncompressedSourceCache.
+    // We need multiple chunks. Allocate a buffer to hold |len| units and copy
+    // uncompressed units from the chunks into it.  We use chunkUnits() so we
+    // benefit from chunk caching by UncompressedSourceCache.
 
     MOZ_ASSERT(firstChunk < lastChunk);
 
-    size_t lengthWithNull = len + 1;
-    EntryUnits<Unit> decompressed(js_pod_malloc<Unit>(lengthWithNull));
+    EntryUnits<Unit> decompressed(js_pod_malloc<Unit>(len));
     if (!decompressed) {
         JS_ReportOutOfMemory(cx);
         return nullptr;
@@ -1857,7 +1854,7 @@ ScriptSource::units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
             units += firstUnit;
             numUnits -= firstUnit;
         } else if (i == lastChunk) {
-            size_t numUnitsNew = lastChunkOffset / sizeof(Unit) + 1;
+            size_t numUnitsNew = lastChunkOffset / sizeof(Unit);
             MOZ_ASSERT(numUnitsNew <= numUnits);
             numUnits = numUnitsNew;
         }
@@ -1865,11 +1862,7 @@ ScriptSource::units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
         cursor += numUnits;
     }
 
-    // XXX Bug 1499192: can we remove the null-termination?  It's unclear if
-    //     anyone uses chunk implicit null-termination, chunks can contain
-    //     nulls anyway, and the extra character risks size-class goofs.
-    *cursor++ = Unit('\0');
-    MOZ_ASSERT(PointerRangeSize(decompressed.get(), cursor) == lengthWithNull);
+    MOZ_ASSERT(PointerRangeSize(decompressed.get(), cursor) == len);
 
     // Transfer ownership to |holder|.
     const Unit* ret = decompressed.get();
