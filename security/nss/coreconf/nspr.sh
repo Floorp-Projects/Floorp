@@ -32,9 +32,6 @@ nspr_build()
     if [ "$opt_build" = 1 ]; then
         extra_params+=(--disable-debug --enable-optimize)
     fi
-    if [ "$target_arch" = "x64" ]; then
-        extra_params+=(--enable-64bit)
-    fi
 
     echo "NSPR [1/3] configure ..."
     pushd "$nspr_dir" >/dev/null

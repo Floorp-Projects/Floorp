@@ -5,7 +5,8 @@ set +e
 
 # Default to clang if CC is not set.
 if [ -z "$CC" ]; then
-    if ! command -v clang &> /dev/null 2>&1; then
+    command -v clang &> /dev/null 2>&1
+    if [ $? != 0 ]; then
         echo "Fuzzing requires clang!"
         exit 1
     fi
@@ -23,8 +24,8 @@ if [ "$fuzz_oss" = 1 ]; then
   gyp_params+=(-Dno_zdefs=1 -Dfuzz_oss=1)
 else
   enable_sanitizer asan
-  # Ubsan only builds on x64 for the moment.
-  if [ "$target_arch" = "x64" ]; then
+  # Ubsan doesn't build on 32-bit at the moment. Disable it.
+  if [ "$build_64" = 1 ]; then
     enable_ubsan
   fi
   enable_sancov

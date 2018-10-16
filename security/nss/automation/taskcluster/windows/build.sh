@@ -2,12 +2,12 @@
 
 set -v -e -x
 
-if [[ "$USE_64" == 1 ]]; then
-    m=x64
+# Set up the toolchain.
+if [ "$USE_64" = 1 ]; then
+  source $(dirname $0)/setup64.sh
 else
-    m=x86
+  source $(dirname $0)/setup32.sh
 fi
-source "$(dirname "$0")/setup.sh"
 
 # Clone NSPR.
 hg_clone https://hg.mozilla.org/projects/nspr nspr default
