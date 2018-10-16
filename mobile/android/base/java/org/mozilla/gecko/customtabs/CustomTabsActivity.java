@@ -56,6 +56,7 @@ import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.webapps.WebApps;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
+import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
@@ -583,18 +584,18 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public GeckoResult<Boolean> onLoadRequest(final GeckoSession session, final String urlStr,
-                                              final int target,
-                                              final int flags) {
+    public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session, final String urlStr,
+                                                  final int target,
+                                                  final int flags) {
         if (target != GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
-            return GeckoResult.fromValue(false);
+            return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
 
         final Uri uri = Uri.parse(urlStr);
         if (uri == null) {
             // We can't handle this, so deny it.
             Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
-            return GeckoResult.fromValue(true);
+            return GeckoResult.fromValue(AllowOrDeny.DENY);
         }
 
         // Always use Fennec for these schemes.
@@ -619,7 +620,7 @@ public class CustomTabsActivity extends AppCompatActivity
             }
         }
 
-        return GeckoResult.fromValue(true);
+        return GeckoResult.fromValue(AllowOrDeny.DENY);
     }
 
     @Override

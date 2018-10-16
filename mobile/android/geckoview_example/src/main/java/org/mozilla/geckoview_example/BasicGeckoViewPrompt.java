@@ -48,6 +48,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
@@ -916,7 +917,7 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
     }
 
     @Override
-    public GeckoResult<Boolean> onPopupRequest(final GeckoSession session, final String targetUri) {
-        return GeckoResult.fromValue(true);
+    public GeckoResult<AllowOrDeny> onPopupRequest(final GeckoSession session, final String targetUri) {
+        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
     }
 }
