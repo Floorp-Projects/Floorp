@@ -25,7 +25,7 @@ function test()
     var [a, b, [c0, c1]] = [x, x, x];
   }
 
-  expect = `TypeError: [...][Symbol.iterator](...).next(...).value is null; can't access its Symbol.iterator property`;
+  expect = `TypeError: [...][Symbol.iterator](...).next(...).value is null, can't access property Symbol.iterator of it`;
   actual = 'No Error';
   try
   {
