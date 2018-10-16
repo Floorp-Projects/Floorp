@@ -27,8 +27,8 @@ object ErrorPages {
         return context.resources.openRawResource(htmlResource)
             .bufferedReader()
             .use { it.readText() }
-            .replace("%pageTitle%", context.getString(R.string.errorpage_title))
-            .replace("%button%", context.getString(R.string.errorpage_refresh))
+            .replace("%pageTitle%", context.getString(R.string.error_page_title))
+            .replace("%button%", context.getString(R.string.error_page_refresh))
             .replace("%messageShort%", context.getString(errorType.titleRes))
             .replace("%messageLong%", context.getString(errorType.messageRes, uri))
             .replace("%css%", css)
