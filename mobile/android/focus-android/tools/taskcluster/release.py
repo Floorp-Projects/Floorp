@@ -70,9 +70,13 @@ def generate_signing_task(build_task_id, apks, tag):
         artifacts.append("public/" + os.path.basename(apk))
 
     routes = []
+
+    # Only nightlies are signed with autograph. Releases are kept on the signing servers
+    signing_format = "focus-jar" if tag else "autograph_focus"
+
     scopes = [
         "project:mobile:focus:releng:signing:cert:release-signing",
-        "project:mobile:focus:releng:signing:format:focus-jar"
+        "project:mobile:focus:releng:signing:format:{}".format(signing_format),
     ]
 
     if tag:
@@ -90,7 +94,8 @@ def generate_signing_task(build_task_id, apks, tag):
         description="Sign release builds of Focus/Klar",
         apks=artifacts,
         scopes=scopes,
-        routes=routes
+        routes=routes,
+        signing_format=signing_format
     )
 
 def generate_push_task(signing_task_id, apks, track, commit):

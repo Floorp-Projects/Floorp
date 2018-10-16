@@ -65,7 +65,7 @@ class TaskBuilder(object):
         }
 
 
-    def build_signing_task(self, build_task_id, name, description, apks=[], scopes=[], routes=[]):
+    def build_signing_task(self, build_task_id, name, description, apks=[], scopes=[], routes=[], signing_format='focus-jar'):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
@@ -89,9 +89,7 @@ class TaskBuilder(object):
                 "upstreamArtifacts": [
                     {
                     "paths": apks,
-                    "formats": [
-                        "focus-jar"
-                    ],
+                    "formats": [signing_format],
                     "taskId": build_task_id,
                     "taskType": "build"
                     }
