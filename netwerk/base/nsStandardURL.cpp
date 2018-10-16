@@ -91,57 +91,93 @@ nsStandardURL::nsSegmentEncoder::nsSegmentEncoder(const Encoding* encoding)
 }
 
 int32_t nsStandardURL::
-nsSegmentEncoder::EncodeSegmentCount(const char *str,
-                                     const URLSegment &seg,
-                                     int16_t mask,
-                                     nsCString& result,
-                                     bool &appended,
-                                     uint32_t extraLen)
+nsSegmentEncoder::EncodeSegmentCount(const char *aStr,
+                                     const URLSegment& aSeg,
+                                     int16_t aMask,
+                                     nsCString& aOut,
+                                     bool &aAppended,
+                                     uint32_t aExtraLen)
 {
-    // extraLen is characters outside the segment that will be
+    // aExtraLen is characters outside the segment that will be
     // added when the segment is not empty (like the @ following
     // a username).
-    appended = false;
-    if (!str)
+    if (!aStr || aSeg.mLen <= 0) {
+        // Empty segment, so aExtraLen not added per above.
+        aAppended = false;
         return 0;
-    int32_t len = 0;
-    if (seg.mLen > 0) {
-        uint32_t pos = seg.mPos;
-        len = seg.mLen;
-
-        // first honor the origin charset if appropriate. as an optimization,
-        // only do this if the segment is non-ASCII.  Further, if mEncoding is
-        // null, then the origin charset is UTF-8 and there is nothing to do.
-        nsAutoCString encBuf;
-        if (mEncoding && !nsCRT::IsAscii(str + pos, len)) {
-          // we have to encode this segment
-          nsresult rv;
-          const Encoding* ignored;
-          Tie(rv, ignored) =
-            mEncoding->Encode(Substring(str + pos, str + pos + len), encBuf);
-          if (NS_SUCCEEDED(rv)) {
-            str = encBuf.get();
-            pos = 0;
-            len = encBuf.Length();
-          }
-          // else some failure occurred... assume UTF-8 is ok.
-        }
-
-        uint32_t initLen = result.Length();
-
-        // now perform any required escaping
-        if (NS_EscapeURL(str + pos, len, mask, result)) {
-            len = result.Length() - initLen;
-            appended = true;
-        }
-        else if (str == encBuf.get()) {
-            result += encBuf; // append only!!
-            len = encBuf.Length();
-            appended = true;
-        }
-        len += extraLen;
     }
-    return len;
+
+    uint32_t origLen = aOut.Length();
+
+    Span<const char> span = MakeSpan(aStr + aSeg.mPos, aSeg.mLen);
+
+    // first honor the origin charset if appropriate. as an optimization,
+    // only do this if the segment is non-ASCII.  Further, if mEncoding is
+    // null, then the origin charset is UTF-8 and there is nothing to do.
+    if (mEncoding) {
+        size_t upTo = Encoding::ASCIIValidUpTo(AsBytes(span));
+        if (upTo != span.Length()) {
+            // we have to encode this segment
+            char bufferArr[512];
+            Span<char> buffer = MakeSpan(bufferArr);
+
+            auto encoder = mEncoding->NewEncoder();
+
+            nsAutoCString valid; // has to be declared in this scope
+            if (MOZ_UNLIKELY(!IsUTF8(span.From(upTo)))) {
+                MOZ_ASSERT_UNREACHABLE("Invalid UTF-8 passed to nsStandardURL.");
+                // It's UB to pass invalid UTF-8 to
+                // EncodeFromUTF8WithoutReplacement(), so let's make our input valid
+                // UTF-8 by replacing invalid sequences with the REPLACEMENT
+                // CHARACTER.
+                UTF_8_ENCODING->Decode(
+                    nsDependentCSubstring(span.Elements(), span.Length()), valid);
+                // This assigment is OK. `span` can't be used after `valid` has
+                // been destroyed because the only way out of the scope that `valid`
+                // was declared in is via return inside the loop below. Specifically,
+                // the return is the only way out of the loop.
+                span = valid;
+            }
+
+            size_t totalRead = 0;
+            for (;;) {
+                uint32_t encoderResult;
+                size_t read;
+                size_t written;
+                Tie(encoderResult, read, written) =
+                    encoder->EncodeFromUTF8WithoutReplacement(
+                        AsBytes(span.From(totalRead)), AsWritableBytes(buffer), true);
+                totalRead += read;
+                auto bufferWritten = buffer.To(written);
+                if (!NS_EscapeURLSpan(bufferWritten, aMask, aOut)) {
+                    aOut.Append(bufferWritten);
+                }
+                if (encoderResult == kInputEmpty) {
+                    aAppended = true;
+                    // Difference between original and current output
+                    // string lengths plus extra length
+                    return aOut.Length() - origLen + aExtraLen;
+                }
+                if (encoderResult == kOutputFull) {
+                    continue;
+                }
+                aOut.AppendLiteral("%26%23");
+                aOut.AppendInt(encoderResult);
+                aOut.AppendLiteral("%3B");
+            }
+            MOZ_RELEASE_ASSERT(false, "There's supposed to be no way out of the above loop except return.");
+        }
+    }
+
+    if (NS_EscapeURLSpan(span, aMask, aOut)) {
+        aAppended = true;
+        // Difference between original and current output
+        // string lengths plus extra length
+        return aOut.Length() - origLen + aExtraLen;
+    }
+    aAppended = false;
+    // Original segment length plus extra length
+    return span.Length() + aExtraLen;
 }
 
 const nsACString &nsStandardURL::
@@ -922,7 +958,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec,
         }
         CoalescePath(coalesceFlag, buf + mDirectory.mPos);
     }
-    mSpec.SetLength(strlen(buf));
+    mSpec.Truncate(strlen(buf));
     NS_ASSERTION(mSpec.Length() <= approxLen, "We've overflowed the mSpec buffer!");
     MOZ_ASSERT(mSpec.Length() <= (uint32_t) net_GetURLMaxLength(),
                "The spec should never be this long, we missed a check.");
