@@ -678,19 +678,17 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
     // We are inserting above an existing row.  Get each cell in the insert
     // row to adjust for colspan effects while we count how many cells are
     // needed.
-    for (int32_t colIndex = 0, actualColSpan = 0;; colIndex += actualColSpan) {
-      CellData cellData(*this, *table, startRowIndex, colIndex, ignoredError);
+    CellData cellData;
+    for (int32_t colIndex = 0;; colIndex = cellData.NextColumnIndex()) {
+      cellData.Update(*this, *table, startRowIndex, colIndex, ignoredError);
       if (cellData.FailedOrNotFound()) {
         break; // Perhaps, we reach end of the row.
       }
 
       // XXX So, this is impossible case. Will be removed.
       if (NS_WARN_IF(!cellData.mElement)) {
-        actualColSpan = 1;
-        continue;
+        break;
       }
-
-      actualColSpan = cellData.mEffectiveColSpan;
 
       if (cellData.IsSpannedFromOtherRow()) {
         // We have a cell spanning this location.  Increase its rowspan.
@@ -703,10 +701,13 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
         continue;
       }
 
-      cellsInRow += actualColSpan;
+      cellsInRow += cellData.mEffectiveColSpan;
       if (!cellForRowParent) {
-        cellForRowParent = std::move(cellData.mElement);
+        // FYI: Don't use std::move() here since NextColumnIndex() needs it.
+        cellForRowParent = cellData.mElement;
       }
+
+      MOZ_ASSERT(colIndex < cellData.NextColumnIndex());
     }
   } else {
     // We are adding a new row after all others.  If it weren't for colspan=0
@@ -718,23 +719,25 @@ HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
 
     // but we must compensate for all cells with rowspan = 0 in the last row.
     const int32_t kLastRowIndex = tableSize.mRowCount - 1;
-    for (int32_t colIndex = 0, actualColSpan = 0;; colIndex += actualColSpan) {
-      CellData cellData(*this, *table, kLastRowIndex, colIndex, ignoredError);
+    CellData cellData;
+    for (int32_t colIndex = 0;; colIndex = cellData.NextColumnIndex()) {
+      cellData.Update(*this, *table, kLastRowIndex, colIndex, ignoredError);
       if (cellData.FailedOrNotFound()) {
         break; // Perhaps, we reach end of the row.
       }
 
-     actualColSpan = cellData.mEffectiveColSpan;
-
       if (!cellData.mRowSpan) {
-        MOZ_ASSERT(cellsInRow >= actualColSpan);
-        cellsInRow -= actualColSpan;
+        MOZ_ASSERT(cellsInRow >= cellData.mEffectiveColSpan);
+        cellsInRow -= cellData.mEffectiveColSpan;
       }
 
       // Save cell from the last row that we will use below
       if (!cellForRowParent && !cellData.IsSpannedFromOtherRow()) {
-        cellForRowParent = std::move(cellData.mElement);
+        // FYI: Don't use std::move() here since NextColumnIndex() needs it.
+        cellForRowParent = cellData.mElement;
       }
+
+      MOZ_ASSERT(colIndex < cellData.NextColumnIndex());
     }
   }
 
@@ -1849,10 +1852,11 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
   nsresult rv = NS_OK;
   IgnoredErrorResult ignoredError;
   for (int32_t row = minRow; row <= maxRow; row++) {
-    for (int32_t col = minColumn, actualColSpan = 0;
+    CellData cellData;
+    for (int32_t col = minColumn;
          col <= maxColumn;
-         col += std::max(actualColSpan, 1)) {
-      CellData cellData(*this, *table, row, col, ignoredError);
+         col = cellData.NextColumnIndex()) {
+      cellData.Update(*this, *table, row, col, ignoredError);
       if (cellData.FailedOrNotFound()) {
         return NS_ERROR_FAILURE;
       }
@@ -1867,8 +1871,7 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell,
           break;
         }
       }
-
-      actualColSpan = cellData.mEffectiveColSpan;
+      MOZ_ASSERT(col < cellData.NextColumnIndex());
     }
   }
   // NS_OK, otherwise, the last failure of AppendNodeToSelectionAsRange().
@@ -1916,10 +1919,11 @@ HTMLEditor::SelectAllTableCells()
   bool cellSelected = false;
   IgnoredErrorResult ignoredError;
   for (int32_t row = 0; row < tableSize.mRowCount; row++) {
-    for (int32_t col = 0, actualColSpan = 0;
+    CellData cellData;
+    for (int32_t col = 0;
          col < tableSize.mColumnCount;
-         col += std::max(actualColSpan, 1)) {
-      CellData cellData(*this, *table, row, col, ignoredError);
+         col = cellData.NextColumnIndex()) {
+      cellData.Update(*this, *table, row, col, ignoredError);
       if (NS_WARN_IF(cellData.FailedOrNotFound())) {
         rv = NS_ERROR_FAILURE;
         break;
@@ -1936,8 +1940,7 @@ HTMLEditor::SelectAllTableCells()
         }
         cellSelected = true;
       }
-
-      actualColSpan = cellData.mEffectiveColSpan;
+      MOZ_ASSERT(col < cellData.NextColumnIndex());
     }
   }
   // Safety code to select starting cell if nothing else was selected
@@ -2003,10 +2006,11 @@ HTMLEditor::SelectTableRow()
   // Select all cells in the same row as current cell
   bool cellSelected = false;
   IgnoredErrorResult ignoredError;
-  for (int32_t col = 0, actualColSpan = 0;
+  CellData cellData;
+  for (int32_t col = 0;
        col < tableSize.mColumnCount;
-       col += std::max(actualColSpan, 1)) {
-    CellData cellData(*this, *table, startRowIndex, col, ignoredError);
+       col = cellData.NextColumnIndex()) {
+    cellData.Update(*this, *table, startRowIndex, col, ignoredError);
     if (NS_WARN_IF(cellData.FailedOrNotFound())) {
       rv = NS_ERROR_FAILURE;
       break;
@@ -2023,8 +2027,7 @@ HTMLEditor::SelectTableRow()
       }
       cellSelected = true;
     }
-
-    actualColSpan = cellData.mEffectiveColSpan;
+    MOZ_ASSERT(col < cellData.NextColumnIndex());
   }
   // Safety code to select starting cell if nothing else was selected
   if (!cellSelected) {
@@ -2085,10 +2088,11 @@ HTMLEditor::SelectTableColumn()
   // Select all cells in the same column as current cell
   bool cellSelected = false;
   IgnoredErrorResult ignoredError;
-  for (int32_t row = 0, actualRowSpan = 0;
+  CellData cellData;
+  for (int32_t row = 0;
        row < tableSize.mRowCount;
-       row += std::max(actualRowSpan, 1)) {
-    CellData cellData(*this, *table, row, startColIndex, ignoredError);
+       row = cellData.NextRowIndex()) {
+    cellData.Update(*this, *table, row, startColIndex, ignoredError);
     if (NS_WARN_IF(cellData.FailedOrNotFound())) {
       rv = NS_ERROR_FAILURE;
       break;
@@ -2105,7 +2109,7 @@ HTMLEditor::SelectTableColumn()
       }
       cellSelected = true;
     }
-    actualRowSpan = cellData.mEffectiveRowSpan;
+    MOZ_ASSERT(row < cellData.NextRowIndex());
   }
   // Safety code to select starting cell if nothing else was selected
   if (!cellSelected) {
@@ -2301,12 +2305,13 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
   RefPtr<Element> cellElementAtInsertionPoint;
   RefPtr<Element> lastCellFound;
   bool insertAfter = (cellData.mFirst.mColumn > 0);
-  for (int32_t colIndex = 0, actualColSpan2 = 0,
+  CellData cellDataAtInsertionPoint;
+  for (int32_t colIndex = 0,
                rowBelowIndex = cellData.mFirst.mRow + aRowSpanAbove;
        colIndex <= tableSize.mColumnCount;
-       colIndex += std::max(actualColSpan2, 1)) {
-    CellData cellDataAtInsertionPoint(*this, *aTable, rowBelowIndex, colIndex,
-                                      ignoredError);
+       colIndex = cellData.NextColumnIndex()) {
+    cellDataAtInsertionPoint.Update(*this, *aTable, rowBelowIndex, colIndex,
+                                    ignoredError);
     // If we fail here, it could be because row has bad rowspan values,
     // such as all cells having rowspan > 1 (Call FixRowSpan first!).
     // XXX According to the comment, this does not assume that
@@ -2344,10 +2349,11 @@ HTMLEditor::SplitCellIntoRows(Element* aTable,
         insertAfter = false;
         break;
       }
-      lastCellFound = std::move(cellDataAtInsertionPoint.mElement);
+      // FYI: Don't use std::move() here since
+      //      cellDataAtInsertionPoint.NextColumnIndex() needs it.
+      lastCellFound = cellDataAtInsertionPoint.mElement;
     }
-
-    actualColSpan2 = cellDataAtInsertionPoint.mEffectiveColSpan;
+    MOZ_ASSERT(colIndex < cellDataAtInsertionPoint.NextColumnIndex());
   }
 
   if (!cellElementAtInsertionPoint && lastCellFound) {
@@ -2530,10 +2536,10 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
       int32_t lastColInRow = 0;
       int32_t firstColInRow = firstSelectedCell.mIndexes.mColumn;
       int32_t colIndex = firstSelectedCell.mIndexes.mColumn;
-      for (int32_t actualColSpan2 = 0;
+      for (CellData cellData;
            colIndex < tableSize.mColumnCount;
-           colIndex += std::max(actualColSpan2, 1)) {
-        CellData cellData(*this, *table, rowIndex, colIndex, ignoredError);
+           colIndex = cellData.NextColumnIndex()) {
+        cellData.Update(*this, *table, rowIndex, colIndex, ignoredError);
         if (NS_WARN_IF(cellData.FailedOrNotFound())) {
           return NS_ERROR_FAILURE;
         }
@@ -2570,7 +2576,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           // We're done with this row
           break;
         }
-        actualColSpan2 = cellData.mEffectiveColSpan;
+        MOZ_ASSERT(colIndex < cellData.NextColumnIndex());
       } // End of column loop
 
       // Done with this row
@@ -2606,10 +2612,11 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
     // 2nd pass: Do the joining and merging
     for (int32_t rowIndex = 0; rowIndex < tableSize.mRowCount; rowIndex++) {
-      for (int32_t colIndex = 0, actualColSpan2 = 0;
+      CellData cellData;
+      for (int32_t colIndex = 0;
            colIndex < tableSize.mColumnCount;
-           colIndex += std::max(actualColSpan2, 1)) {
-        CellData cellData(*this, *table, rowIndex, colIndex, ignoredError);
+           colIndex = cellData.NextColumnIndex()) {
+        cellData.Update(*this, *table, rowIndex, colIndex, ignoredError);
         if (NS_WARN_IF(cellData.FailedOrNotFound())) {
           return NS_ERROR_FAILURE;
         }
@@ -2668,7 +2675,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             }
           }
         }
-        actualColSpan2 = cellData.mEffectiveColSpan;
+        MOZ_ASSERT(colIndex < cellData.NextColumnIndex());
       }
     }
 
@@ -2895,10 +2902,11 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
 
   int32_t minRowSpan = -1;
   IgnoredErrorResult ignoredError;
-  for (int32_t colIndex = 0, actualColSpan = 0;
+  CellData cellData;
+  for (int32_t colIndex = 0;
        colIndex < tableSize.mColumnCount;
-       colIndex += std::max(actualColSpan, 1)) {
-    CellData cellData(*this, *aTable, aRowIndex, colIndex, ignoredError);
+       colIndex = cellData.NextColumnIndex()) {
+    cellData.Update(*this, *aTable, aRowIndex, colIndex, ignoredError);
     // NOTE: This is a *real* failure.
     // CellData passes if cell is missing from cellmap
     // XXX If <table> has large rowspan value or colspan value than actual
@@ -2919,17 +2927,18 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
         (cellData.mRowSpan < minRowSpan || minRowSpan == -1)) {
       minRowSpan = cellData.mRowSpan;
     }
-    MOZ_ASSERT(cellData.mEffectiveColSpan > 0);
-    actualColSpan = cellData.mEffectiveColSpan;
+    MOZ_ASSERT(colIndex < cellData.NextColumnIndex());
   }
+
   if (minRowSpan > 1) {
     // The amount to reduce everyone's rowspan
     // so at least one cell has rowspan = 1
     int32_t rowsReduced = minRowSpan - 1;
-    for (int32_t colIndex = 0, actualColSpan = 0;
+    CellData cellData;
+    for (int32_t colIndex = 0;
          colIndex < tableSize.mColumnCount;
-         colIndex += std::max(actualColSpan, 1)) {
-      CellData cellData(*this, *aTable, aRowIndex, colIndex, ignoredError);
+         colIndex = cellData.NextColumnIndex()) {
+      cellData.Update(*this, *aTable, aRowIndex, colIndex, ignoredError);
       if (NS_WARN_IF(cellData.FailedOrNotFound())) {
         return NS_ERROR_FAILURE;
       }
@@ -2945,8 +2954,7 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
           return rv;
         }
       }
-      MOZ_ASSERT(cellData.mEffectiveColSpan > 0);
-      actualColSpan = cellData.mEffectiveColSpan;
+      MOZ_ASSERT(colIndex < cellData.NextColumnIndex());
     }
   }
   tableSize.Update(*this, *aTable, error);
@@ -2974,10 +2982,11 @@ HTMLEditor::FixBadColSpan(Element* aTable,
 
   int32_t minColSpan = -1;
   IgnoredErrorResult ignoredError;
-  for (int32_t rowIndex = 0, actualRowSpan = 0;
+  CellData cellData;
+  for (int32_t rowIndex = 0;
        rowIndex < tableSize.mRowCount;
-       rowIndex += std::max(actualRowSpan, 1)) {
-    CellData cellData(*this, *aTable, rowIndex, aColIndex, ignoredError);
+       rowIndex = cellData.NextRowIndex()) {
+    cellData.Update(*this, *aTable, rowIndex, aColIndex, ignoredError);
     // NOTE: This is a *real* failure.
     // CellData passes if cell is missing from cellmap
     // XXX If <table> has large rowspan value or colspan value than actual
@@ -2997,17 +3006,18 @@ HTMLEditor::FixBadColSpan(Element* aTable,
         (cellData.mColSpan < minColSpan || minColSpan == -1)) {
       minColSpan = cellData.mColSpan;
     }
-    MOZ_ASSERT(cellData.mEffectiveRowSpan > 0);
-    actualRowSpan = cellData.mEffectiveRowSpan;
+    MOZ_ASSERT(rowIndex < cellData.NextRowIndex());
   }
+
   if (minColSpan > 1) {
     // The amount to reduce everyone's colspan
     // so at least one cell has colspan = 1
     int32_t colsReduced = minColSpan - 1;
-    for (int32_t rowIndex = 0, actualRowSpan = 0;
+    CellData cellData;
+    for (int32_t rowIndex = 0;
          rowIndex < tableSize.mRowCount;
-         rowIndex += std::max(actualRowSpan, 1)) {
-      CellData cellData(*this, *aTable, rowIndex, aColIndex, ignoredError);
+         rowIndex = cellData.NextRowIndex()) {
+      cellData.Update(*this, *aTable, rowIndex, aColIndex, ignoredError);
       if (NS_WARN_IF(cellData.FailedOrNotFound())) {
         return NS_ERROR_FAILURE;
       }
@@ -3023,8 +3033,7 @@ HTMLEditor::FixBadColSpan(Element* aTable,
           return rv;
         }
       }
-      MOZ_ASSERT(cellData.mEffectiveRowSpan > 0);
-      actualRowSpan = cellData.mEffectiveRowSpan;
+      MOZ_ASSERT(rowIndex < cellData.NextRowIndex());
     }
   }
   tableSize.Update(*this, *aTable, error);
@@ -3256,9 +3265,11 @@ HTMLEditor::GetNumberOfCellsInRow(Element& aTableElement,
   }
 
   int32_t numberOfCells = 0;
-  for (int32_t columnIndex = 0; columnIndex < tableSize.mColumnCount;) {
-    CellData cellData(*this, aTableElement, aRowIndex, columnIndex,
-                      ignoredError);
+  CellData cellData;
+  for (int32_t columnIndex = 0;
+       columnIndex < tableSize.mColumnCount;
+       columnIndex = cellData.NextColumnIndex()) {
+    cellData.Update(*this, aTableElement, aRowIndex, columnIndex, ignoredError);
     // Failure means that there is no more cell in the row.  In this case,
     // we shouldn't return error since we just reach the end of the row.
     // XXX So, this method assumes that CellData won't return error when
@@ -3267,16 +3278,11 @@ HTMLEditor::GetNumberOfCellsInRow(Element& aTableElement,
       break;
     }
 
-    if (cellData.mElement) {
-      // Only count cells that start in row we are working with
-      if (!cellData.IsSpannedFromOtherRow()) {
-        numberOfCells++;
-      }
-      // Next possible location for a cell
-      columnIndex += cellData.mEffectiveColSpan;
-    } else {
-      columnIndex++;
+    // Only count cells that start in row we are working with
+    if (cellData.mElement && !cellData.IsSpannedFromOtherRow()) {
+      numberOfCells++;
     }
+    MOZ_ASSERT(columnIndex < cellData.NextColumnIndex());
   }
   return numberOfCells;
 }
@@ -4238,10 +4244,11 @@ HTMLEditor::AllCellsInRowSelected(Element* aTable,
   }
 
   IgnoredErrorResult ignoredError;
-  for (int32_t col = 0, actualColSpan = 0;
+  CellData cellData;
+  for (int32_t col = 0;
        col < aNumberOfColumns;
-       col += std::max(actualColSpan, 1)) {
-    CellData cellData(*this, *aTable, aRowIndex, col, ignoredError);
+       col = cellData.NextColumnIndex()) {
+    cellData.Update(*this, *aTable, aRowIndex, col, ignoredError);
     if (NS_WARN_IF(cellData.FailedOrNotFound())) {
       return false;
     }
@@ -4261,8 +4268,7 @@ HTMLEditor::AllCellsInRowSelected(Element* aTable,
       return false;
     }
 
-    MOZ_ASSERT(cellData.mEffectiveColSpan > 0);
-    actualColSpan = cellData.mEffectiveColSpan;
+    MOZ_ASSERT(col < cellData.NextColumnIndex());
   }
   return true;
 }
@@ -4277,10 +4283,11 @@ HTMLEditor::AllCellsInColumnSelected(Element* aTable,
   }
 
   IgnoredErrorResult ignoredError;
-  for (int32_t row = 0, actualRowSpan = 0;
+  CellData cellData;
+  for (int32_t row = 0;
        row < aNumberOfRows;
-       row += std::max(actualRowSpan, 1)) {
-    CellData cellData(*this, *aTable, row, aColIndex, ignoredError);
+       row = cellData.NextRowIndex()) {
+    cellData.Update(*this, *aTable, row, aColIndex, ignoredError);
     if (NS_WARN_IF(cellData.FailedOrNotFound())) {
       return false;
     }
@@ -4300,7 +4307,7 @@ HTMLEditor::AllCellsInColumnSelected(Element* aTable,
       return false;
     }
 
-    actualRowSpan = cellData.mEffectiveRowSpan;
+    MOZ_ASSERT(row < cellData.NextRowIndex());
   }
   return true;
 }

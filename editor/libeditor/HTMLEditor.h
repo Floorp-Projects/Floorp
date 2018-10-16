@@ -1256,6 +1256,15 @@ protected: // Shouldn't be used by friend classes
     // range, this is set to false.
     bool mIsSelected;
 
+    CellData()
+      : mRowSpan(-1)
+      , mColSpan(-1)
+      , mEffectiveRowSpan(-1)
+      , mEffectiveColSpan(-1)
+      , mIsSelected(false)
+    {
+    }
+
     /**
      * Those constructors initializes the members with a <table> element and
      * both row and column index to specify a cell element.
