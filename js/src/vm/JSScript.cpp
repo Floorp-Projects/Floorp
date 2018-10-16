@@ -47,6 +47,8 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/BytecodeIterator.h"
+#include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
@@ -62,6 +64,8 @@
 #include "vtune/VTuneWrapper.h"
 
 #include "gc/Marking-inl.h"
+#include "vm/BytecodeIterator-inl.h"
+#include "vm/BytecodeLocation-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSFunction-inl.h"
@@ -1129,11 +1133,12 @@ JSScript::initScriptCounts(JSContext* cx)
 
     // Record all pc which are the first instruction of a basic block.
     mozilla::Vector<jsbytecode*, 16, SystemAllocPolicy> jumpTargets;
-    jsbytecode* mainPc = main();
-    jsbytecode* end = codeEnd();
-    for (jsbytecode* pc = code(); pc != end; pc = GetNextPc(pc)) {
-        if (BytecodeIsJumpTarget(JSOp(*pc)) || pc == mainPc) {
-            if (!jumpTargets.append(pc)) {
+
+    js::BytecodeLocation main = mainLocation();
+    AllBytecodesIterable iterable(this);
+    for (auto& loc : iterable) {
+        if (loc.isJumpTarget() || loc == main) {
+            if (!jumpTargets.append(loc.toRawBytecode())) {
                 ReportOutOfMemory(cx);
                 return false;
             }
