@@ -163,10 +163,24 @@ ReplayDebugger.prototype = {
     return this._scripts[data.id];
   },
 
-  findScripts() {
-    // Note: Debugger's findScripts() method takes a query argument, which
-    // we ignore here.
-    const data = this._sendRequest({ type: "findScripts" });
+  _convertScriptQuery(query) {
+    // Make a copy of the query, converting properties referring to debugger
+    // things into their associated ids.
+    const rv = Object.assign({}, query);
+    if ("global" in query) {
+      rv.global = query.global._data.id;
+    }
+    if ("source" in query) {
+      rv.source = query.source._data.id;
+    }
+    return rv;
+  },
+
+  findScripts(query) {
+    const data = this._sendRequest({
+      type: "findScripts",
+      query: this._convertScriptQuery(query)
+    });
     return data.map(script => this._addScript(script));
   },
 
@@ -604,7 +618,8 @@ ReplayDebuggerObject.prototype = {
 
   getOwnPropertyDescriptor(name) {
     this._ensureProperties();
-    return this._properties[name];
+    const desc = this._properties[name];
+    return desc ? this._convertPropertyDescriptor(desc) : null;
   },
 
   _ensureProperties() {
@@ -614,19 +629,22 @@ ReplayDebuggerObject.prototype = {
         id: this._data.id
       });
       this._properties = {};
-      properties.forEach(({name, desc}) => {
-        if ("value" in desc) {
-          desc.value = this._dbg._convertValue(desc.value);
-        }
-        if ("get" in desc) {
-          desc.get = this._dbg._getObject(desc.get);
-        }
-        if ("set" in desc) {
-          desc.set = this._dbg._getObject(desc.set);
-        }
-        this._properties[name] = desc;
-      });
+      properties.forEach(({name, desc}) => { this._properties[name] = desc; });
     }
+  },
+
+  _convertPropertyDescriptor(desc) {
+    const rv = Object.assign({}, desc);
+    if ("value" in desc) {
+      rv.value = this._dbg._convertValue(desc.value);
+    }
+    if ("get" in desc) {
+      rv.get = this._dbg._getObject(desc.get);
+    }
+    if ("set" in desc) {
+      rv.set = this._dbg._getObject(desc.set);
+    }
+    return rv;
   },
 
   get allocationSite() { NYI(); },
