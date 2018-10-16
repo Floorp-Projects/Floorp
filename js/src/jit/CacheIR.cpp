@@ -2361,6 +2361,7 @@ GetPropIRGenerator::tryAttachGenericElement(HandleObject obj, ObjOperandId objId
         NativeObject* nobj = &obj->as<NativeObject>();
         TestMatchingNativeReceiver(writer, nobj, objId);
     }
+    writer.guardIndexGreaterThanDenseInitLength(objId, indexId);
     writer.callNativeGetElementResult(objId, indexId);
     writer.typeMonitorResult();
 
