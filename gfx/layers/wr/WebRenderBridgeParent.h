@@ -143,6 +143,7 @@ public:
   bool IsPendingComposite() override { return false; }
   void FinishPendingComposite() override { }
   void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
+  TimeDuration GetVsyncInterval() const override;
 
   // CompositableParentManager
   bool IsSameProcess() const override;
