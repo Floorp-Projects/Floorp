@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Layout of a fixed sidebar item
+ *
+ *  +--------+----------------+
+ *  | Icon   | Name           |
+ *  +--------+----------------+
+ */
+
+.sidebar-fixed-item {
+  align-items: center;
+  border-radius: 2px;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  font-size: 16px;
+  height: 48px;
+  padding-inline-end: 10px;
+  padding-inline-start: 10px;
+}
+
+.sidebar-fixed-item__icon {
+  fill: currentColor;
+  height: 24px;
+  margin-inline-end: 9px;
+  width: 24px;
+  -moz-context-properties: fill;
+}
+
