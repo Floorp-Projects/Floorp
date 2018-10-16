@@ -511,7 +511,7 @@ static inline void js_free(void* p)
 #define JS_DECLARE_NEW_METHODS(NEWNAME, ALLOCATOR, QUALIFIERS) \
     template <class T, typename... Args> \
     QUALIFIERS T * \
-    MOZ_HEAP_ALLOCATOR NEWNAME(Args&&... args) { \
+    NEWNAME(Args&&... args) MOZ_HEAP_ALLOCATOR { \
         void* memory = ALLOCATOR(sizeof(T)); \
         return MOZ_LIKELY(memory) \
             ? new(memory) T(std::forward<Args>(args)...) \
@@ -531,7 +531,7 @@ static inline void js_free(void* p)
 #define JS_DECLARE_MAKE_METHODS(MAKENAME, NEWNAME, QUALIFIERS)\
     template <class T, typename... Args> \
     QUALIFIERS mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
-    MOZ_HEAP_ALLOCATOR MAKENAME(Args&&... args) { \
+    MAKENAME(Args&&... args) MOZ_HEAP_ALLOCATOR { \
         T* ptr = NEWNAME<T>(std::forward<Args>(args)...); \
         return mozilla::UniquePtr<T, JS::DeletePolicy<T>>(ptr); \
     }

@@ -2,11 +2,6 @@
 
 struct Cell { int f; } ANNOTATE("GC Thing");
 
-template<typename T, typename U>
-struct UntypedContainer {
-    char data[sizeof(T) + sizeof(U)];
-} ANNOTATE("moz_inherit_type_annotations_from_template_args");
-
 struct RootedCell { RootedCell(Cell*) {} } ANNOTATE("Rooted Pointer");
 
 class AutoSuppressGC_Base {
@@ -62,12 +57,6 @@ struct GCInDestructor {
     }
 };
 
-template <typename T>
-void
-usecontainer(T* value) {
-    if (value) asm("");
-}
-
 Cell*
 f()
 {
@@ -95,23 +84,6 @@ f()
     usecell(cell3);
     Cell* cell5 = &cell;
     usecell(cell5);
-
-    {
-        // Templatized container that inherits attributes from Cell*, should
-        // report a hazard.
-        UntypedContainer<int, Cell*> container1;
-        usecontainer(&container1);
-        GC();
-        usecontainer(&container1);
-    }
-
-    {
-        // As above, but with a non-GC type.
-        UntypedContainer<int, double> container2;
-        usecontainer(&container2);
-        GC();
-        usecontainer(&container2);
-    }
 
     // Hazard in return value due to ~GCInDestructor
     Cell* cell6 = &cell;
