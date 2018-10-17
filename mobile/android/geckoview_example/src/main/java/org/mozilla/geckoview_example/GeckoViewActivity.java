@@ -632,10 +632,13 @@ public class GeckoViewActivity extends AppCompatActivity {
         }
 
         @Override
-        public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session, final String uri,
-                                                       final int target, final int flags) {
-            Log.d(LOGTAG, "onLoadRequest=" + uri + " where=" + target +
-                  " flags=" + flags);
+        public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session,
+                                                      final LoadRequest request) {
+            Log.d(LOGTAG, "onLoadRequest=" + request.uri +
+                  " triggerUri=" + request.triggerUri +
+                  " where=" + request.target +
+                  " isUserTriggered=" + request.isUserTriggered);
+
             return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
 
