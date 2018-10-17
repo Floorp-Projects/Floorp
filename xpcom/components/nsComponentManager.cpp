@@ -357,17 +357,17 @@ nsComponentManagerImpl::Init()
 
   nsCategoryManager::GetSingleton()->SuppressNotifications(true);
 
-  RegisterModule(&kXPCOMModule, nullptr);
+  RegisterModule(&kXPCOMModule);
 
   for (auto module : AllStaticModules()) {
     if (module) { // On local Windows builds, the list may contain null
                   // pointers from padding.
-      RegisterModule(module, nullptr);
+      RegisterModule(module);
     }
   }
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
-    RegisterModule((*sExtraStaticModules)[i], nullptr);
+    RegisterModule((*sExtraStaticModules)[i]);
   }
 
   bool loadChromeManifests = (XRE_GetProcessType() != GeckoProcessType_GPU);
@@ -521,8 +521,7 @@ AsLiteralCString(const char* aStr)
 }
 
 void
-nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
-                                       FileLocation* aFile)
+nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule)
 {
   mLock.AssertNotCurrentThreadOwns();
 
@@ -537,19 +536,8 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
     // category manager.
     MutexLock lock(mLock);
 
-    KnownModule* m;
-    if (aFile) {
-      nsCString uri;
-      aFile->GetURIString(uri);
-      NS_ASSERTION(!mKnownModules.Get(uri),
-                   "Must not register a binary module twice.");
-
-      m = new KnownModule(aModule, *aFile);
-      mKnownModules.Put(uri, m);
-    } else {
-      m = new KnownModule(aModule);
-      mKnownStaticModules.AppendElement(m);
-    }
+    KnownModule* m = new KnownModule(aModule);
+    mKnownStaticModules.AppendElement(m);
 
     if (aModule->mCIDs) {
       const mozilla::Module::CIDEntry* entry;
@@ -1948,8 +1936,7 @@ XRE_AddStaticComponent(const mozilla::Module* aComponent)
   if (nsComponentManagerImpl::gComponentManager &&
       nsComponentManagerImpl::NORMAL ==
         nsComponentManagerImpl::gComponentManager->mStatus) {
-    nsComponentManagerImpl::gComponentManager->RegisterModule(aComponent,
-                                                              nullptr);
+    nsComponentManagerImpl::gComponentManager->RegisterModule(aComponent);
   }
 
   return NS_OK;

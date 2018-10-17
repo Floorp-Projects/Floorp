@@ -156,7 +156,7 @@ class TestPACMan : public ::testing::Test {
         nsresult rv = nsComponentManagerImpl::gComponentManager->UnregisterFactory(kNS_TESTDHCPCLIENTSERVICE_CID, factoryEntry->mFactory);
         ASSERT_EQ(NS_OK, rv);
       }
-      nsComponentManagerImpl::gComponentManager->RegisterModule(&kSysDHCPClientModule, nullptr);
+      nsComponentManagerImpl::gComponentManager->RegisterModule(&kSysDHCPClientModule);
 
       mPACMan = new nsPACMan(nullptr);
       mPACMan->SetWPADOverDHCPEnabled(true);
