@@ -1519,6 +1519,11 @@ pref("browser.contentblocking.global-toggle.enabled", true);
 pref("browser.contentblocking.global-toggle.enabled", false);
 #endif
 
+#ifdef NIGHTLY_BUILD
+// Enable the Storage Access API in Nightly
+pref("dom.storage_access.enabled", true);
+#endif
+
 // Disable the UI for FastBlock in product.
 pref("browser.contentblocking.fastblock.ui.enabled", false);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", false);
