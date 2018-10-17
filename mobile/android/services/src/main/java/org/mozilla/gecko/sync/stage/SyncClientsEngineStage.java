@@ -79,6 +79,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
   protected volatile boolean shouldWipe;
   protected volatile boolean shouldUploadLocalRecord;     // Set if, e.g., we received commands or need to refresh our version.
+  protected volatile boolean shouldNotifyOtherClients = false; // If set, ask the FxA server to notify other clients that the client collection changed.
   protected final AtomicInteger uploadAttemptsCount = new AtomicInteger();
   protected final List<ClientRecord> modifiedClientsToUpload = new ArrayList<ClientRecord>();
 
@@ -144,11 +145,10 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
       // If we successfully downloaded all records but ours was not one of them
       // then reset the timestamp.
-      boolean isFirstLocalClientRecordUpload = false;
       if (!localAccountGUIDDownloaded) {
         Logger.info(LOG_TAG, "Local client GUID does not exist on the server. Upload timestamp will be reset.");
         session.config.persistServerClientRecordTimestamp(0);
-        isFirstLocalClientRecordUpload = true;
+        shouldNotifyOtherClients = true;
       }
       localAccountGUIDDownloaded = false;
 
@@ -184,7 +184,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
         uploadRemoteRecords();
 
         // We will send a push notification later anyway.
-        if (!isFirstLocalClientRecordUpload && account != null) {
+        if (!shouldNotifyOtherClients && account != null) {
           // Notify the clients who got their record written
           final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
           notifyClients(fxAccount, devicesToNotify, NOTIFY_TAB_SENT_TTL_SECS, COLLECTION_MODIFIED_REASON_SENDTAB);
@@ -193,7 +193,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
         return;
       }
       checkAndUpload();
-      if (isFirstLocalClientRecordUpload && account != null) {
+      if (shouldNotifyOtherClients && account != null) {
         final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
         notifyAllClients(fxAccount, 0, COLLECTION_MODIFIED_REASON_FIRSTSYNC);
       }
@@ -585,6 +585,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
         !getLocalClientVersion().equals(r.version) ||
         !getLocalClientProtocols().equals(r.protocols)) {
       shouldUploadLocalRecord = true;
+      shouldNotifyOtherClients = true;
     }
     processCommands(r.commands);
   }
