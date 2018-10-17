@@ -3498,14 +3498,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 }
 
-- (void)setNeedsDisplayInRect:(NSRect)aRect
-{
-  if (![self isUsingOpenGL]) {
-    [super setNeedsDisplayInRect:aRect];
-    return;
-  }
-}
-
 - (NSString*)description
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
