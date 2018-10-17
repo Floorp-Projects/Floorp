@@ -64,6 +64,10 @@ js::ExecutionPoint CurrentExecutionPoint(const js::BreakpointPosition& aPosition
 // executing into an ExecutionPoint.
 js::ExecutionPoint TimeWarpTargetExecutionPoint(ProgressCounter aTarget);
 
+// Synchronously paint the current contents into the graphics shared memory
+// object, returning the size of the painted area via aWidth/aHeight.
+void Repaint(size_t* aWidth, size_t* aHeight);
+
 // Called when running forward, immediately before hitting a normal or
 // temporary checkpoint.
 void BeforeCheckpoint();
