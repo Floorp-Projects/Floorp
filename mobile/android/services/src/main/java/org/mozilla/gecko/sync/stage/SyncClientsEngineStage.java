@@ -571,7 +571,18 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   protected void handleDownloadedLocalRecord(ClientRecord r) {
     session.config.persistServerClientRecordTimestamp(r.lastModified);
 
-    if (!getLocalClientVersion().equals(r.version) ||
+    final Context context = session.getContext();
+    final Account account = FirefoxAccounts.getFirefoxAccount(context);
+    String fxaDeviceId;
+    if (account != null) {
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+      fxaDeviceId = fxAccount.getDeviceId();
+    } else {
+      fxaDeviceId = null;
+    }
+
+    if (!TextUtils.equals(r.fxaDeviceId, fxaDeviceId) ||
+        !getLocalClientVersion().equals(r.version) ||
         !getLocalClientProtocols().equals(r.protocols)) {
       shouldUploadLocalRecord = true;
     }
