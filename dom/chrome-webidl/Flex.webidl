@@ -9,10 +9,33 @@
  * dev tools.
  */
 
+/**
+ * A flex container's main and cross axes are either horizontal or
+ * vertical, each with two possible directions.
+ */
+enum FlexPhysicalDirection {
+  "horizontal-lr",
+  "horizontal-rl",
+  "vertical-tb",
+  "vertical-bt",
+};
+
 [ChromeOnly]
 interface Flex
 {
   sequence<FlexLineValues> getLines();
+
+  /**
+   * The physical direction in which successive flex items are placed,
+   * within a flex line in this flex container.
+   */
+  readonly attribute FlexPhysicalDirection mainAxisDirection;
+
+  /**
+   * The physical direction in which successive flex lines are placed
+   * in this flex container (if it is or were multi-line).
+   */
+  readonly attribute FlexPhysicalDirection crossAxisDirection;
 };
 
 /**

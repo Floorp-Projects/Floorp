@@ -55,5 +55,17 @@ Flex::GetLines(nsTArray<RefPtr<FlexLineValues>>& aResult)
   aResult.AppendElements(mLines);
 }
 
+FlexPhysicalDirection
+Flex::MainAxisDirection() const
+{
+  return mMainAxisDirection;
+}
+
+FlexPhysicalDirection
+Flex::CrossAxisDirection() const
+{
+  return mCrossAxisDirection;
+}
+
 } // namespace dom
 } // namespace mozilla
