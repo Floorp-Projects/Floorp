@@ -19,6 +19,7 @@ class MobileMetricsPingStorage(
     private val atomicFile = AtomicFile(file)
 
     fun shouldStoreMetrics(): Boolean = !file.exists()
+    fun clearStorage() { file.delete() }
 
     suspend fun save(json: JSONObject) {
         val stream = atomicFile.startWrite()

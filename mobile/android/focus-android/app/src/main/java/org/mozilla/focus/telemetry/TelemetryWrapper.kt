@@ -271,7 +271,10 @@ object TelemetryWrapper {
                         if (!dayPassedSinceLastUpload(context)) return@also
 
                         runBlocking {
-                            val mobileMetrics = MobileMetricsPingStorage(context).load() ?: JSONObject()
+                            val metricsStorage = MobileMetricsPingStorage(context)
+                            val mobileMetrics = metricsStorage.load() ?: JSONObject()
+                            metricsStorage.clearStorage()
+
                             it.addPingBuilder(TelemetryMobileMetricsPingBuilder(mobileMetrics,
                                     configuration))
                         }
