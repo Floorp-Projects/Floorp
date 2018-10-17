@@ -59,7 +59,6 @@ UNIFIED_SOURCES += [
     'TestThreadPoolListener.cpp',
     'TestThreads.cpp',
     'TestThreadUtils.cpp',
-    'TestThrottledEventQueue.cpp',
     'TestTimers.cpp',
     'TestTimeStamp.cpp',
     'TestTokenizer.cpp',
