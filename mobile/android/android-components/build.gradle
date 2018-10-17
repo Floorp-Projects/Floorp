@@ -80,6 +80,10 @@ allprojects {
         maven {
             url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision.${geckoRelease['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
         }
+
+        maven {
+            url "https://download.servo.org/nightly/maven"
+        }
     }
 }
 

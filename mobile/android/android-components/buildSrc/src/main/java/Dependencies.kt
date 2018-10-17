@@ -27,6 +27,7 @@ private object Versions {
     const val sentry = "1.7.10"
 
     const val mozilla_app_services = "0.5.1"
+    const val servo = "0.0.1.20181017.aa95911"
 }
 
 // Synchronized dependencies used by (some) modules
@@ -63,6 +64,7 @@ object Deps {
 
     const val mozilla_fxa = "org.mozilla.fxa_client:fxa_client:${Versions.mozilla_app_services}"
     const val mozilla_sync_logins = "org.mozilla.sync15:logins:${Versions.mozilla_app_services}"
+    const val mozilla_servo = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
 
     const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
 

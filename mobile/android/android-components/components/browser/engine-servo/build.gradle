@@ -31,18 +31,12 @@ android {
     }
 }
 
-repositories {
-    flatDir {
-        dirs 'libs'
-    }
-}
-
 dependencies {
     implementation project(':concept-engine')
     implementation project(':support-ktx')
     implementation project(':support-utils')
 
-    implementation(name: 'servo-2018-10-08', ext: 'aar')
+    implementation Deps.mozilla_servo
 
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines
