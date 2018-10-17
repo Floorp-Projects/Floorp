@@ -15,6 +15,7 @@ import android.os.StrictMode
 import android.preference.PreferenceManager
 import android.support.annotation.CheckResult
 import android.support.annotation.VisibleForTesting
+import android.util.Log
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.json.JSONObject

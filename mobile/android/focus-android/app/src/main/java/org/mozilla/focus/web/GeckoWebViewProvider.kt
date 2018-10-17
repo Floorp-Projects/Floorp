@@ -637,11 +637,14 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         private fun storeTelemetrySnapshots() {
+            val storage = MobileMetricsPingStorage(context)
+            if (!storage.shouldStoreMetrics()) return
+
             geckoRuntime!!.telemetry.getSnapshots(true).then({ value ->
                 launch(IO) {
                     try {
                         value?.toJSONObject()?.also {
-                            MobileMetricsPingStorage(context).save(it)
+                            storage.save(it)
                         }
                     } catch (e: JSONException) {
                         Log.e("getSnapshots failed", e.message)

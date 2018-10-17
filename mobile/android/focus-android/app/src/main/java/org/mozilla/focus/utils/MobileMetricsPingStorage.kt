@@ -14,9 +14,11 @@ import java.io.IOException
 
 class MobileMetricsPingStorage(
         private val context: Context,
-        file: File = File("${context.cacheDir}/$STORAGE_FOLDER/$FILE_NAME")
+        private val file: File = File("${context.cacheDir}/$STORAGE_FOLDER/$FILE_NAME")
 ) {
     private val atomicFile = AtomicFile(file)
+
+    fun shouldStoreMetrics(): Boolean = !file.exists()
 
     suspend fun save(json: JSONObject) {
         val stream = atomicFile.startWrite()
@@ -41,8 +43,8 @@ class MobileMetricsPingStorage(
         }
     }
 
-    fun remove() {
-        atomicFile.delete()
+    suspend fun remove() {
+
     }
 
     companion object {
