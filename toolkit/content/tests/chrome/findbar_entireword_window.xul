@@ -132,8 +132,7 @@
           });
         });
       });
-      gBrowser.loadURI(kBaseURL + "/sample_entireword_" + testName + ".html",
-                       { triggeringPrincipal: window.document.nodePrincipal });
+      gBrowser.loadURI(kBaseURL + "/sample_entireword_" + testName + ".html");
       await promise;
       await onDocumentLoaded(testName);
     }

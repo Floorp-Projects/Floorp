@@ -52,8 +52,7 @@ find-menu appears in editor element which has had makeEditable() called but desi
           });
         });
       });
-      gBrowser.loadURI("data:text/html;charset=utf-8,some%20random%20text",
-                       { triggeringPrincipal: window.document.nodePrincipal });
+      gBrowser.loadURI("data:text/html;charset=utf-8,some%20random%20text");
       await promise;
       await onDocumentLoaded();
     }
