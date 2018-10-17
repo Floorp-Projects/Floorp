@@ -6563,9 +6563,20 @@ ssl3_HandleServerHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
         goto alert_loser;
     }
 
-    /* The server didn't pick 1.3 although we either received a
-     * HelloRetryRequest, or we prepared to send early app data. */
+    /* There are three situations in which the server must pick
+     * TLS 1.3.
+     *
+     * 1. We offered ESNI.
+     * 2. We received HRR
+     * 3. We sent early app data.
+     *
+     */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        if (ss->xtnData.esniPrivateKey) {
+            desc = protocol_version;
+            errCode = SSL_ERROR_UNSUPPORTED_VERSION;
+            goto alert_loser;
+        }
         if (isHelloRetry || ss->ssl3.hs.helloRetry) {
             /* SSL3_SendAlert() will uncache the SID. */
             desc = illegal_parameter;
