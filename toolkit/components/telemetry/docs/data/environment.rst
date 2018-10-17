@@ -171,7 +171,7 @@ Structure:
               ...
             ],
             features: {
-              compositor: <string>,     // Layers backend for compositing (eg "d3d11", "none", "opengl")
+              compositor: <string>,     // Layers backend for compositing (e.g. "d3d11", "none", "opengl", "webrender")
 
               // Each the following features can have one of the following statuses:
               //   "unused"      - This feature has not been requested.
