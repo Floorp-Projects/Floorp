@@ -234,10 +234,12 @@ Thread::SpawnThread(Thread* aThread)
 /* static */ NativeThreadId
 Thread::StartThread(Callback aStart, void* aArgument, bool aNeedsJoin)
 {
-  EnsureNotDivergedFromRecording();
-
   Thread* thread = Thread::Current();
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
+    EnsureNotDivergedFromRecording();
+    Unreachable();
+  }
 
   MonitorAutoLock lock(*gMonitor);
 

@@ -526,15 +526,6 @@ RR_WriteBufferViaRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aEr
   aEvents.RecordOrReplayBytes(buf, rval + Offset);
 }
 
-// Insert an atomic access while recording/replaying so that calls to this
-// function replay in the same order they occurred in while recording. This is
-// used for functions that are used in inter-thread synchronization.
-static inline void
-RR_OrderCall(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
-{
-  AutoOrderedAtomicAccess();
-}
-
 // Record/replay a scalar return value.
 static inline void
 RR_ScalarRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
