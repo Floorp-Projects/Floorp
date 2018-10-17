@@ -1098,6 +1098,8 @@ void Servo_CssUrlData_GetSerialization(
 RawGeckoURLExtraDataBorrowedMut Servo_CssUrlData_GetExtraData(
   RawServoCssUrlDataBorrowed url);
 
+bool Servo_CssUrlData_IsLocalRef(RawServoCssUrlDataBorrowed url);
+
 // CSS parsing utility functions.
 
 bool Servo_IsValidCSSColor(const nsAString* value);

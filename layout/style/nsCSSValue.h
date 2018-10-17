@@ -94,6 +94,8 @@ class CSSStyleSheet;
 extern "C" {
   RawGeckoURLExtraDataBorrowedMut Servo_CssUrlData_GetExtraData(
     RawServoCssUrlDataBorrowed url);
+
+  bool Servo_CssUrlData_IsLocalRef(RawServoCssUrlDataBorrowed url);
 }
 
 namespace mozilla {
@@ -119,7 +121,7 @@ public:
   bool Equals(const URLValue& aOther) const;
 
   // Returns true iff we know for sure, by comparing the mBaseURI pointer,
-  // the specified url() value mString, and the mIsLocalRef, that these
+  // the specified url() value mString, and IsLocalRef(), that these
   // two URLValue objects represent the same computed url() value.
   //
   // Doesn't look at mReferrer or mOriginPrincipal.
@@ -133,18 +135,21 @@ public:
 
   nsIURI* GetURI() const;
 
-  bool IsLocalRef() const;
+  bool IsLocalRef() const
+  {
+    return Servo_CssUrlData_IsLocalRef(mCssUrl);
+  }
 
   bool HasRef() const;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValue)
 
-  // When matching a url with mIsLocalRef set, resolve it against aURI;
-  // Otherwise, ignore aURL and return mURL directly.
+  // When matching a local ref URL, resolve it against aURI;
+  // Otherwise, ignore aURL and return mURI directly.
   already_AddRefed<nsIURI> ResolveLocalRef(nsIURI* aURI) const;
   already_AddRefed<nsIURI> ResolveLocalRef(nsIContent* aContent) const;
 
-  // Serializes mURI as a computed URI value, taking into account mIsLocalRef
+  // Serializes mURI as a computed URI value, taking into account IsLocalRef()
   // and serializing just the fragment if true.
   void GetSourceString(nsString& aRef) const;
 
@@ -169,9 +174,6 @@ private:
   mutable nsCOMPtr<nsIURI> mURI;
 
   mutable bool mURIResolved;
-
-  // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
-  mutable Maybe<bool> mIsLocalRef;
 
   RefPtr<RawServoCssUrlData> mCssUrl;
 
