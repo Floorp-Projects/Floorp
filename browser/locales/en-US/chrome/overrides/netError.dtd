@@ -12,6 +12,7 @@
 <!ENTITY advanced.label "Advanced">
 <!ENTITY continue2.label "More…">
 <!ENTITY moreInformation.label "More Information">
+<!ENTITY viewCertificate.label "View Certificate">
 
 <!-- Specific error messages -->
 
