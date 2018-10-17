@@ -93,6 +93,7 @@ public:
   nsresult Recreate(bool aMemoryOnly, nsICacheEntry * *_retval);
   nsresult GetDataSize(int64_t *aDataSize);
   nsresult GetAltDataSize(int64_t *aAltDataSize);
+  nsresult GetAltDataType(nsACString &aAltDataType);
   nsresult OpenAlternativeOutputStream(const nsACString & type, int64_t predictedSize, nsIOutputStream * *_retval);
   nsresult OpenAlternativeInputStream(const nsACString & type, nsIInputStream * *_retval);
   nsresult GetLoadContextInfo(nsILoadContextInfo * *aLoadContextInfo);
@@ -461,6 +462,7 @@ public:
   NS_IMETHOD Recreate(bool aMemoryOnly, nsICacheEntry * *_retval) override { return mEntry->Recreate(aMemoryOnly, _retval); }
   NS_IMETHOD GetDataSize(int64_t *aDataSize) override { return mEntry->GetDataSize(aDataSize); }
   NS_IMETHOD GetAltDataSize(int64_t *aAltDataSize) override { return mEntry->GetAltDataSize(aAltDataSize); }
+  NS_IMETHOD GetAltDataType(nsACString &aType) override { return mEntry->GetAltDataType(aType); }
   NS_IMETHOD OpenAlternativeOutputStream(const nsACString & type, int64_t predictedSize, nsIOutputStream * *_retval) override { return mEntry->OpenAlternativeOutputStream(type, predictedSize, _retval); }
   NS_IMETHOD OpenAlternativeInputStream(const nsACString & type, nsIInputStream * *_retval) override { return mEntry->OpenAlternativeInputStream(type, _retval); }
   NS_IMETHOD GetLoadContextInfo(nsILoadContextInfo * *aLoadContextInfo) override { return mEntry->GetLoadContextInfo(aLoadContextInfo); }
