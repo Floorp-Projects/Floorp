@@ -77,11 +77,6 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
       // Preferences are initialized via the SetXPCOMProcessAttributes message.
       PreferencesLoaded();
     }
-    if (type == dom::PBrowser::Msg_RenderLayers__ID) {
-      // Graphics are being loaded or unloaded for a tab, so update what we are
-      // showing to the UI process according to the last paint performed.
-      UpdateGraphicsInUIProcess(nullptr);
-    }
     return false;
   }
 

@@ -120,6 +120,8 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
     return;
   }
 
+  bool hadFailure = !aMsg;
+
   // Make sure there is a sandbox which is running the graphics JS module.
   if (!gGraphicsSandbox) {
     InitGraphicsSandbox();
@@ -160,10 +162,11 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
     JS_NewArrayBufferWithExternalContents(cx, width * height * 4, memory);
   MOZ_RELEASE_ASSERT(bufferObject);
 
-  JS::AutoValueArray<3> args(cx);
+  JS::AutoValueArray<4> args(cx);
   args[0].setObject(*bufferObject);
   args[1].setInt32(width);
   args[2].setInt32(height);
+  args[3].setBoolean(hadFailure);
 
   // Call into the graphics module to update the canvas it manages.
   RootedValue rval(cx);
