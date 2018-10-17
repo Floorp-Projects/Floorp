@@ -686,21 +686,6 @@ Toolbox.prototype = {
   },
 
   /**
-   * A common access point for the client-side parser service that any panel can use.
-   */
-  get parserService() {
-    if (this._parserService) {
-      return this._parserService;
-    }
-
-    this._parserService =
-      this.browserRequire("devtools/client/debugger/new/src/workers/parser/index");
-    this._parserService
-      .start("resource://devtools/client/debugger/new/dist/parser-worker.js", this.win);
-    return this._parserService;
-  },
-
-  /**
    * Clients wishing to use source maps but that want the toolbox to
    * track the source and style sheet actor mapping can use this
    * source map service.  This is a higher-level service than the one
@@ -1458,6 +1443,11 @@ Toolbox.prototype = {
       this.frameButton.disabled = false;
       this.frameButton.description = L10N.getStr("toolbox.frames.tooltip");
     }
+
+    // Highlight the button when a child frame is selected
+    const selectedFrame = this.frameMap.get(this.selectedFrameId) || {};
+    this.frameButton.isChecked = selectedFrame.parentID != null;
+
     this.frameButton.isVisible = this._commandIsVisible(this.frameButton);
   },
 
@@ -2411,18 +2401,6 @@ Toolbox.prototype = {
       this.selectedFrameId = topFrames.length ? topFrames[0].id : null;
     }
 
-    // Check out whether top frame is currently selected.
-    // Note that only child frame has parentID.
-    const frame = this.frameMap.get(this.selectedFrameId);
-    const topFrameSelected = frame ? !frame.parentID : false;
-    this._framesButtonChecked = false;
-
-    // If non-top level frame is selected the toolbar button is
-    // marked as 'checked' indicating that a child frame is active.
-    if (!topFrameSelected && this.selectedFrameId) {
-      this._framesButtonChecked = false;
-    }
-
     // We may need to hide/show the frames button now.
     const wasVisible = this.frameButton.isVisible;
     const wasDisabled = this.frameButton.disabled;
@@ -2873,11 +2851,6 @@ Toolbox.prototype = {
     if (this._sourceMapService) {
       this._sourceMapService.stopSourceMapWorker();
       this._sourceMapService = null;
-    }
-
-    if (this._parserService) {
-      this._parserService.stop();
-      this._parserService = null;
     }
 
     if (this.webconsolePanel) {

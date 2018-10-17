@@ -243,20 +243,37 @@ WebConsole.prototype = {
    */
   getMappedExpression(expression) {
     const toolbox = gDevTools.getToolbox(this.target);
-    if (!toolbox) {
-      return null;
-    }
 
-    const panel = toolbox.getPanel("jsdebugger");
+    // We need to check if the debugger is open, since it may perform a variable name
+    // substitution for sourcemapped script (i.e. evaluated `myVar.trim()` might need to
+    // be transformed into `a.trim()`).
+    const panel = toolbox && toolbox.getPanel("jsdebugger");
     if (panel) {
       return panel.getMappedExpression(expression);
     }
 
-    if (toolbox.parserService && expression.includes("await ")) {
-      return toolbox.parserService.mapExpression(expression);
+    if (this.parserService && expression.includes("await ")) {
+      return this.parserService.mapExpression(expression);
     }
 
     return null;
+  },
+
+  /**
+   * A common access point for the client-side parser service that any panel can use.
+   */
+  get parserService() {
+    if (this._parserService) {
+      return this._parserService;
+    }
+
+    this._parserService =
+      require("devtools/client/debugger/new/src/workers/parser/index");
+
+    this._parserService.start(
+      "resource://devtools/client/debugger/new/dist/parser-worker.js",
+      this.browserWindow);
+    return this._parserService;
   },
 
   /**
@@ -307,6 +324,11 @@ WebConsole.prototype = {
         } catch (ex) {
           // Tab focus can fail if the tab or target is closed.
         }
+      }
+
+      if (this._parserService) {
+        this._parserService.stop();
+        this._parserService = null;
       }
 
       const id = Utils.supportsString(this.hudId);

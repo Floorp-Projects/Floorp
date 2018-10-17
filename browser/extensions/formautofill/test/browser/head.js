@@ -364,9 +364,9 @@ async function waitForFocusAndFormReady(win) {
 }
 
 async function testDialog(url, testFn, arg = undefined) {
-  if (url == EDIT_CREDIT_CARD_DIALOG_URL && arg) {
-    arg = Object.assign({}, arg, {
-      "cc-number": await MasterPassword.decrypt(arg["cc-number-encrypted"]),
+  if (url == EDIT_CREDIT_CARD_DIALOG_URL && arg && arg.record) {
+    arg.record = Object.assign({}, arg.record, {
+      "cc-number": await MasterPassword.decrypt(arg.record["cc-number-encrypted"]),
     });
   }
   let win = window.openDialog(url, null, "width=600,height=600", arg);

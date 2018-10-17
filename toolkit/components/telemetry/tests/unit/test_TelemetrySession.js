@@ -935,31 +935,33 @@ add_task(async function test_environmentChange() {
   gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
   now = fakeNow(futureDate(now, 10 * MILLISECONDS_PER_MINUTE));
 
-  fakePrioEncode();
+  if (Services.prefs.getBoolPref("prio.enabled", false)) {
+    fakePrioEncode();
 
-  // Set histograms to expected state.
-  let prioMeasures = [
-    "BROWSER_IS_USER_DEFAULT",
-    "NEWTAB_PAGE_ENABLED",
-  ];
+    // Set histograms to expected state.
+    let prioMeasures = [
+      "BROWSER_IS_USER_DEFAULT",
+      "NEWTAB_PAGE_ENABLED",
+    ];
 
-  for (let measure of prioMeasures) {
-    const value = Telemetry.getHistogramById(measure);
-    value.clear();
-    value.add(1);
+    for (let measure of prioMeasures) {
+      const value = Telemetry.getHistogramById(measure);
+      value.clear();
+      value.add(1);
+    }
+
+    let expectedPrioResult = {
+      "browserIsUserDefault": true,
+      "newTabPageEnabled": true,
+      "pdfViewerUsed": false,
+    };
+
+    Preferences.set(PREF_TEST, 3);
+    ping = await PingServer.promiseNextPing();
+    Assert.ok(!!ping);
+
+    Assert.deepEqual(ping.payload.prio, expectedPrioResult);
   }
-
-  let expectedPrioResult = {
-    "browserIsUserDefault": true,
-    "newTabPageEnabled": true,
-    "pdfViewerUsed": false,
-  };
-
-  Preferences.set(PREF_TEST, 3);
-  ping = await PingServer.promiseNextPing();
-  Assert.ok(!!ping);
-
-  Assert.deepEqual(ping.payload.prio, expectedPrioResult);
 
   await TelemetryController.testShutdown();
 });

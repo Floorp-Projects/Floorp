@@ -25,6 +25,7 @@
 
   async function runTests() {
     ok(MozXULElement, "MozXULElement defined on the window");
+    testMixin();
     testParseXULToFragment();
     await testCustomInterface();
 
@@ -37,6 +38,12 @@
 
     ok(htmlWin.MozXULElement, "MozXULElement defined on a chrome HTML window");
     SimpleTest.finish();
+  }
+
+  function testMixin() {
+    ok(MozElementMixin, "Mixin exists");
+    let MixedHTMLElement = MozElementMixin(HTMLElement);
+    ok(MixedHTMLElement.insertFTLIfNeeded, "Mixed in class contains helper functions");
   }
 
   function testParseXULToFragment() {

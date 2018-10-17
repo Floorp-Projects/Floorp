@@ -14,6 +14,8 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
                                "resource://gre/modules/WebNavigationFrames.jsm");
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
 });
@@ -81,6 +83,14 @@ class NetErrorChild extends ActorChild {
     return doc.documentURI.startsWith("about:certerror");
   }
 
+  getParams(doc) {
+    let searchParams = new URL(doc.documentURI).searchParams;
+    return {
+      cssClass: searchParams.get("s"),
+      error: searchParams.get("e"),
+    };
+  }
+
   _getCertValidityRange(docShell) {
     let {securityInfo} = docShell.failedChannel;
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
@@ -98,9 +108,7 @@ class NetErrorChild extends ActorChild {
 
   _setTechDetails(input, doc) {
     // CSS class and error code are set from nsDocShell.
-    let searchParams = new URLSearchParams(doc.documentURI.split("?")[1]);
-    let cssClass = searchParams.get("s");
-    let error = searchParams.get("e");
+    let {cssClass, error} = this.getParams(doc);
     let technicalInfo = doc.getElementById("badCertTechnicalInfo");
     technicalInfo.textContent = "";
 
@@ -353,6 +361,9 @@ class NetErrorChild extends ActorChild {
     let errWhatToDoTitle = doc.getElementById("edd_nssBadCert");
     let est = doc.getElementById("errorWhatToDoTitleText");
 
+    // This is set to true later if the user's system clock is at fault for this error.
+    let clockSkew = false;
+
     switch (msg.data.code) {
       case SSL_ERROR_BAD_CERT_DOMAIN:
       case SEC_ERROR_OCSP_INVALID_SIGNING_CERT:
@@ -407,7 +418,6 @@ class NetErrorChild extends ActorChild {
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
 
         learnMoreLink.href = baseURL + "time-errors";
-        let clockSkew = false;
         // We check against the remote-settings server time first if available, because that allows us
         // to give the user an approximation of what the correct time is.
         let difference = Services.prefs.getIntPref(PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, 0);
@@ -507,6 +517,22 @@ class NetErrorChild extends ActorChild {
             updateContainerPosition();
         }
         break;
+    }
+
+    // Add slightly more alarming UI unless there are indicators that
+    // show that the error is harmless or can not be skipped anyway.
+    if (newErrorPagesEnabled) {
+      let {cssClass} = this.getParams(doc);
+      // Don't alarm users when they can't continue to the website anyway...
+      if (cssClass != "badStsCert" &&
+          // Errors in iframes can't be skipped either...
+          doc.ownerGlobal.parent == doc.ownerGlobal &&
+          // Also don't bother if it's just the user's clock being off...
+          !clockSkew &&
+          // Symantec distrust is likely harmless as well.
+          msg.data.code != MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED) {
+        doc.body.classList.add("caution");
+      }
     }
   }
 

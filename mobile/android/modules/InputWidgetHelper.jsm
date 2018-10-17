@@ -39,10 +39,10 @@ var InputWidgetHelper = {
   },
 
   show: function(aElement) {
-    let type = aElement.getAttribute("type");
+    let type = aElement.type;
     new Prompt({
       window: aElement.ownerGlobal,
-      title: this.strings().GetStringFromName("inputWidgetHelper." + aElement.getAttribute("type")),
+      title: this.strings().GetStringFromName("inputWidgetHelper." + type),
       buttons: [
         this.strings().GetStringFromName("inputWidgetHelper.set"),
         this.strings().GetStringFromName("inputWidgetHelper.clear"),
@@ -51,6 +51,7 @@ var InputWidgetHelper = {
     }).addDatePicker({
       value: aElement.value,
       type: type,
+      step: this._getInputTimeStep(aElement),
       min: aElement.min,
       max: aElement.max,
     }).show(data => {
@@ -84,8 +85,8 @@ var InputWidgetHelper = {
     if (!(aElement instanceof win.HTMLInputElement))
       return false;
 
-    let type = aElement.getAttribute("type");
-    if (type == "date" || type == "datetime" || type == "datetime-local" ||
+    let type = aElement.type;
+    if (type == "date" || type == "datetime-local" ||
         type == "week" || type == "month" || type == "time") {
       return true;
     }
@@ -110,5 +111,20 @@ var InputWidgetHelper = {
       currentElement = currentElement.parentElement;
     }
     return false;
+  },
+
+  // The step in milliseconds.
+  _getInputTimeStep: function(aElement) {
+    try {
+      // Delegate the implementation to HTMLInputElement::GetStep.
+      let tmpInput = aElement.ownerDocument.createElement("input");
+      tmpInput.type = aElement.type;
+      tmpInput.step = aElement.step;
+      // May throw if the type is unsupported.
+      tmpInput.stepUp();
+      return tmpInput.valueAsNumber || 0; // Prefer 0 over NaN.
+    } catch (e) {
+      return 0;
+    }
   }
 };

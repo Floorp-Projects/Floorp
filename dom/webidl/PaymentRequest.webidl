@@ -20,15 +20,10 @@ dictionary PaymentCurrencyAmount {
   required DOMString value;
 };
 
-enum PaymentItemType {
-  "tax"
-};
-
 dictionary PaymentItem {
   required DOMString             label;
   required PaymentCurrencyAmount amount;
            boolean               pending = false;
-           PaymentItemType       type;
 };
 
 dictionary PaymentShippingOption {
