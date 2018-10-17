@@ -153,6 +153,12 @@ class StoreBuffer
             MOZ_ASSERT(!head_);
             if (!storage_) {
                 storage_ = js_new<LifoAlloc>(LifoAllocBlockSize);
+                // This prevents LifoAlloc::Enum from crashing with a release
+                // assertion if we ever allocate one entry larger than
+                // LifoAllocBlockSize.
+                if (storage_) {
+                    storage_->disableOversize();
+                }
             }
             clear();
             return bool(storage_);
