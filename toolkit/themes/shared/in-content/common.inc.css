@@ -876,6 +876,12 @@ xul|treechildren::-moz-tree-image(selected) {
   box-shadow: var(--card-shadow-hover);
 }
 
+.card-heading-image {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  margin: -16px -16px 16px;
+}
+
 .sidebar-footer-button {
   padding: 1px; /* Adding padding around help label in order to make entire keyboard focusing outline visible */
 }
