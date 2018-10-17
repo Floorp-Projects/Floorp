@@ -655,18 +655,12 @@ add_task(async function test_getDuplicateGuid() {
   // This number differs from TEST_CREDIT_CARD_3 by swapping the order of the
   // 09 and 90 adjacent digits, which is still a valid credit card number.
   record["cc-number"] = "358999378390" + last4Digits;
-  Assert.equal(await profileStorage.creditCards.getDuplicateGuid(record), null);
 
-  // ... However, we treat numbers with the same last 4 digits as a duplicate if
-  // the master password is enabled.
-  let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(Ci.nsIPK11TokenDB);
-  let token = tokendb.getInternalKeyToken();
-  token.reset();
-  token.initPassword("password");
+  // We treat numbers with the same last 4 digits as a duplicate.
   Assert.equal(await profileStorage.creditCards.getDuplicateGuid(record), guid);
 
-  // ... Even though the master password is enabled and the last 4 digits are the
-  // same, an invalid credit card number should never be treated as a duplicate.
+  // Even though the last 4 digits are the same, an invalid credit card number
+  // should never be treated as a duplicate.
   record["cc-number"] = "************" + last4Digits;
   Assert.equal(await profileStorage.creditCards.getDuplicateGuid(record), null);
 });

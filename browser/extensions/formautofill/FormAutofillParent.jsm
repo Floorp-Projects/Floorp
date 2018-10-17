@@ -42,7 +42,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormAutofillPreferences: "resource://formautofill/FormAutofillPreferences.jsm",
   FormAutofillDoorhanger: "resource://formautofill/FormAutofillDoorhanger.jsm",
   FormAutofillUtils: "resource://formautofill/FormAutofillUtils.jsm",
-  MasterPassword: "resource://formautofill/MasterPassword.jsm",
+  OSKeyStore: "resource://formautofill/OSKeyStore.jsm",
 });
 
 this.log = null;
@@ -225,8 +225,8 @@ FormAutofillParent.prototype = {
         break;
       }
       case "FormAutofill:SaveCreditCard": {
-        if (!await MasterPassword.ensureLoggedIn()) {
-          log.warn("User canceled master password entry");
+        if (!await OSKeyStore.ensureLoggedIn()) {
+          log.warn("User canceled encryption login");
           return;
         }
         await this.formAutofillStorage.creditCards.add(data.creditcard);
@@ -253,12 +253,12 @@ FormAutofillParent.prototype = {
         let {cipherText, reauth} = data;
         let string;
         try {
-          string = await MasterPassword.decrypt(cipherText, reauth);
+          string = await OSKeyStore.decrypt(cipherText, reauth);
         } catch (e) {
           if (e.result != Cr.NS_ERROR_ABORT) {
             throw e;
           }
-          log.warn("User canceled master password entry");
+          log.warn("User canceled encryption login");
         }
         target.sendAsyncMessage("FormAutofill:DecryptedString", string);
         break;
@@ -292,7 +292,7 @@ FormAutofillParent.prototype = {
   /**
    * Get the records from profile store and return results back to content
    * process. It will decrypt the credit card number and append
-   * "cc-number-decrypted" to each record if MasterPassword isn't set.
+   * "cc-number-decrypted" to each record if OSKeyStore isn't set.
    *
    * @private
    * @param  {string} data.collectionName
@@ -317,8 +317,8 @@ FormAutofillParent.prototype = {
       return;
     }
 
-    let isCCAndMPEnabled = collectionName == CREDITCARDS_COLLECTION_NAME && MasterPassword.isEnabled;
-    // We don't filter "cc-number" when MasterPassword is set.
+    let isCCAndMPEnabled = collectionName == CREDITCARDS_COLLECTION_NAME && OSKeyStore.isEnabled;
+    // We don't filter "cc-number" when OSKeyStore is set.
     if (isCCAndMPEnabled && info.fieldName == "cc-number") {
       recordsInCollection = recordsInCollection.filter(record => !!record["cc-number"]);
       target.sendAsyncMessage("FormAutofill:Records", recordsInCollection);
@@ -335,9 +335,9 @@ FormAutofillParent.prototype = {
       }
 
       // Cache the decrypted "cc-number" in each record for content to preview
-      // when MasterPassword isn't set.
+      // when OSKeyStore isn't set.
       if (!isCCAndMPEnabled && record["cc-number-encrypted"]) {
-        record["cc-number-decrypted"] = await MasterPassword.decrypt(record["cc-number-encrypted"]);
+        record["cc-number-decrypted"] = await OSKeyStore.decrypt(record["cc-number-encrypted"]);
       }
 
       // Filter "cc-number" based on the decrypted one.
@@ -538,8 +538,8 @@ FormAutofillParent.prototype = {
         return;
       }
 
-      if (!await MasterPassword.ensureLoggedIn()) {
-        log.warn("User canceled master password entry");
+      if (!await OSKeyStore.ensureLoggedIn()) {
+        log.warn("User canceled encryption login");
         return;
       }
 
