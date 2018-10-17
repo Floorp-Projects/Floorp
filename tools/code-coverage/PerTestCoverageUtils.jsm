@@ -62,11 +62,11 @@ var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
       return;
     }
 
-    // Reset the counters.
+    // Flush the counters.
     let codeCoverageService = Cc["@mozilla.org/tools/code-coverage;1"].getService(Ci.nsICodeCoverage);
-    await codeCoverageService.resetCounters();
+    await codeCoverageService.flushCounters();
 
-    // Remove any gcda file that might have been created between the end of a previous test and the beginning of the next one (e.g. some tests can create a new content process for every sub-test).
+    // Remove gcda files created by the flush, and those that might have been created between the end of a previous test and the beginning of the next one (e.g. some tests can create a new content process for every sub-test).
     removeDirectoryContents(gcovPrefixDir);
 
     // Move gcda files from the GCOV_RESULTS_DIR directory, so we can accumulate the counters.
@@ -83,9 +83,9 @@ var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
       return;
     }
 
-    // Dump the counters.
+    // Flush the counters.
     let codeCoverageService = Cc["@mozilla.org/tools/code-coverage;1"].getService(Ci.nsICodeCoverage);
-    await codeCoverageService.dumpCounters();
+    await codeCoverageService.flushCounters();
 
     // Move the gcda files in the GCOV_RESULTS_DIR, so that the execution from now to shutdown (or next test) is not counted.
     moveDirectoryContents(gcovPrefixDir, gcovResultsDir);

@@ -331,6 +331,7 @@ pub struct BrushInstance {
     pub segment_index: i32,
     pub edge_flags: EdgeAaSegmentMask,
     pub brush_flags: BrushFlags,
+    pub user_data: i32,
 }
 
 impl From<BrushInstance> for PrimitiveInstanceData {
@@ -342,7 +343,7 @@ impl From<BrushInstance> for PrimitiveInstanceData {
                 instance.segment_index |
                 ((instance.edge_flags.bits() as i32) << 16) |
                 ((instance.brush_flags.bits() as i32) << 24),
-                0,
+                instance.user_data,
             ]
         }
     }

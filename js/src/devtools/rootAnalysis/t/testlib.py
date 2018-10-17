@@ -8,8 +8,23 @@ from collections import defaultdict, namedtuple
 
 scriptdir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-HazardSummary = namedtuple(
-    'HazardSummary', ['function', 'variable', 'type', 'GCFunction', 'location'])
+HazardSummary = namedtuple('HazardSummary', [
+    'function',
+    'variable',
+    'type',
+    'GCFunction',
+    'location'])
+
+Callgraph = namedtuple('Callgraph', [
+    'functionNames',
+    'nameToId',
+    'mangledToUnmangled',
+    'unmangledToMangled',
+    'calleesOf',
+    'callersOf',
+    'tags',
+    'calleeGraph',
+    'callerGraph'])
 
 
 def equal(got, expected):
@@ -90,7 +105,7 @@ sixgill_bin = '{bindir}'
         return list(filter(lambda _: _ is not None, values))
 
     def load_suppressed_functions(self):
-        return set(self.load_text_file("suppressedFunctions.lst"))
+        return set(self.load_text_file("limitedFunctions.lst", extract=lambda l: l.split(' ')[1]))
 
     def load_gcTypes(self):
         def grab_type(line):
@@ -106,6 +121,68 @@ sixgill_bin = '{bindir}'
 
     def load_gcFunctions(self):
         return self.load_text_file('gcFunctions.lst', extract=extract_unmangled)
+
+    def load_callgraph(self):
+        data = Callgraph(
+            functionNames=['dummy'],
+            nameToId={},
+            mangledToUnmangled={},
+            unmangledToMangled={},
+            calleesOf=defaultdict(list),
+            callersOf=defaultdict(list),
+            tags=defaultdict(set),
+            calleeGraph=defaultdict(dict),
+            callerGraph=defaultdict(dict),
+        )
+
+        def lookup(id):
+            mangled = data.functionNames[int(id)]
+            return data.mangledToUnmangled.get(mangled, mangled)
+
+        def add_call(caller, callee, limit):
+            data.calleesOf[caller].append(callee)
+            data.callersOf[callee].append(caller)
+            data.calleeGraph[caller][callee] = True
+            data.callerGraph[callee][caller] = True
+
+        def process(line):
+            if line.startswith('#'):
+                name = line.split(" ", 1)[1]
+                data.nameToId[name] = len(data.functionNames)
+                data.functionNames.append(name)
+                return
+
+            if line.startswith('='):
+                m = re.match(r'^= (\d+) (.*)', line)
+                mangled = data.functionNames[int(m.group(1))]
+                unmangled = m.group(2)
+                data.nameToId[unmangled] = id
+                data.mangledToUnmangled[mangled] = unmangled
+                data.unmangledToMangled[unmangled] = mangled
+                return
+
+            limit = 0
+            m = re.match(r'^\w (?:/(\d+))? ', line)
+            if m:
+                limit = int(m[1])
+
+            tokens = line.split(' ')
+            if tokens[0] in ('D', 'R'):
+                _, caller, callee = tokens
+                add_call(lookup(caller), lookup(callee), limit)
+            elif tokens[0] == 'T':
+                data.tags[tokens[1]].add(line.split(' ', 2)[2])
+            elif tokens[0] in ('F', 'V'):
+                m = re.match(r'^[FV] (\d+) (\d+) CLASS (.*?) FIELD (.*)', line)
+                caller, callee, csu, field = m.groups()
+                add_call(lookup(caller), lookup(callee), limit)
+
+            elif tokens[0] == 'I':
+                m = re.match(r'^I (\d+) VARIABLE ([^\,]*)', line)
+                pass
+
+        self.load_text_file('callgraph.txt', extract=process)
+        return data
 
     def load_hazards(self):
         def grab_hazard(line):

@@ -2668,6 +2668,7 @@ impl Renderer {
             self.device.echo_driver_messages();
         }
 
+        stats.texture_upload_kb = self.profile_counters.texture_data_uploaded.get();
         self.backend_profile_counters.reset();
         self.profile_counters.reset();
         self.profile_counters.frame_counter.inc();
@@ -4606,6 +4607,7 @@ pub struct RendererStats {
     pub total_draw_calls: usize,
     pub alpha_target_count: usize,
     pub color_target_count: usize,
+    pub texture_upload_kb: usize,
 }
 
 impl RendererStats {
@@ -4614,6 +4616,7 @@ impl RendererStats {
             total_draw_calls: 0,
             alpha_target_count: 0,
             color_target_count: 0,
+            texture_upload_kb: 0,
         }
     }
 }

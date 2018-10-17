@@ -88,7 +88,7 @@ def generate_hazards(config, outfilename):
                         '%(analysis_scriptdir)s/analyzeRoots.js',
                         '%(gcFunctions_list)s',
                         '%(gcEdges)s',
-                        '%(suppressedFunctions_list)s',
+                        '%(limitedFunctions_list)s',
                         '%(gcTypes)s',
                         '%(typeInfo)s',
                         str(i+1), '%(jobs)s',
@@ -133,13 +133,14 @@ JOBS = {'dbs':
          ()),
 
         'callgraph':
-        (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js', '%(typeInfo)s'),
-         'callgraph.txt'),
+        (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js', '%(typeInfo)s',
+          '[callgraph]'),
+         ('callgraph.txt',)),
 
         'gcFunctions':
         (('%(js)s', '%(analysis_scriptdir)s/computeGCFunctions.js', '%(callgraph)s',
-          '[gcFunctions]', '[gcFunctions_list]', '[gcEdges]', '[suppressedFunctions_list]'),
-         ('gcFunctions.txt', 'gcFunctions.lst', 'gcEdges.txt', 'suppressedFunctions.lst')),
+          '[gcFunctions]', '[gcFunctions_list]', '[gcEdges]', '[limitedFunctions_list]'),
+         ('gcFunctions.txt', 'gcFunctions.lst', 'gcEdges.txt', 'limitedFunctions.lst')),
 
         'gcTypes':
         (('%(js)s', '%(analysis_scriptdir)s/computeGCTypes.js',

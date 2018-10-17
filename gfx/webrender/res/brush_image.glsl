@@ -47,7 +47,7 @@ void brush_vs(
     int prim_address,
     RectWithSize prim_rect,
     RectWithSize segment_rect,
-    ivec3 user_data,
+    ivec4 user_data,
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
@@ -63,7 +63,7 @@ void brush_vs(
     vec2 texture_size = vec2(textureSize(sColor0, 0));
 #endif
 
-    ImageResource res = fetch_image_resource(user_data.x);
+    ImageResource res = fetch_image_resource(user_data.w);
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 
@@ -106,8 +106,8 @@ void brush_vs(
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    int color_mode = user_data.y >> 16;
-    int raster_space = user_data.y & 0xffff;
+    int color_mode = user_data.x;
+    int raster_space = user_data.y;
 
     if (color_mode == COLOR_MODE_FROM_PASS) {
         color_mode = uMode;
@@ -121,7 +121,7 @@ void brush_vs(
             // Since the screen space UVs specify an arbitrary quad, do
             // a bilinear interpolation to get the correct UV for this
             // local position.
-            ImageResourceExtra extra_data = fetch_image_resource_extra(user_data.x);
+            ImageResourceExtra extra_data = fetch_image_resource_extra(user_data.w);
             vec2 x = mix(extra_data.st_tl, extra_data.st_tr, f.x);
             vec2 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
             f = mix(x, y, f.y);
