@@ -946,6 +946,36 @@ TEST_F(TlsConnectDatagram13, SendSessionTicketDtls) {
   EXPECT_EQ(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_VERSION, PORT_GetError());
 }
 
+TEST_F(TlsConnectStreamTls13, ExternalResumptionUseSecondTicket) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+
+  struct ResumptionTicketState {
+    std::vector<uint8_t> ticket;
+    size_t invoked = 0;
+  } ticket_state;
+  auto cb = [](PRFileDesc* fd, const PRUint8* ticket, unsigned int ticket_len,
+               void* arg) -> SECStatus {
+    auto state = reinterpret_cast<ResumptionTicketState*>(arg);
+    state->ticket.assign(ticket, ticket + ticket_len);
+    state->invoked++;
+    return SECSuccess;
+  };
+  SSL_SetResumptionTokenCallback(client_->ssl_fd(), cb, &ticket_state);
+
+  Connect();
+  EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), nullptr, 0));
+  SendReceive();
+  EXPECT_EQ(2U, ticket_state.invoked);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  client_->SetResumptionToken(ticket_state.ticket);
+  ExpectResumption(RESUME_TICKET);
+  Connect();
+  SendReceive();
+}
+
 TEST_F(TlsConnectTest, TestTls13ResumptionDowngrade) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);

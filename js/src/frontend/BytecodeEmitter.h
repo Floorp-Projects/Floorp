@@ -266,8 +266,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
                     HandleScript script, Handle<LazyScript*> lazyScript, uint32_t lineNum,
                     EmitterMode emitterMode = Normal);
 
-    template<typename CharT>
-    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, CharT>* parser,
+    template<typename Unit>
+    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, Unit>* parser,
                     SharedContext* sc, HandleScript script, Handle<LazyScript*> lazyScript,
                     uint32_t lineNum, EmitterMode emitterMode = Normal)
       : BytecodeEmitter(parent, EitherParser(parser), sc, script, lazyScript,
@@ -296,8 +296,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         initFromBodyPosition(bodyPosition);
     }
 
-    template<typename CharT>
-    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, CharT>* parser,
+    template<typename Unit>
+    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler, Unit>* parser,
                     SharedContext* sc, HandleScript script, Handle<LazyScript*> lazyScript,
                     TokenPos bodyPosition, EmitterMode emitterMode = Normal)
       : BytecodeEmitter(parent, EitherParser(parser), sc, script, lazyScript,
