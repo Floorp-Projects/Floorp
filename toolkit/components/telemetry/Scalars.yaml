@@ -1490,6 +1490,67 @@ devtools.toolbox:
     record_in_processes:
       - 'main'
 
+devtools.webreplay:
+  new_recording:
+    bug_numbers:
+     - 1495910
+    description: >
+      Number of times a blank recording tab was created.
+    expires: never
+    kind: uint
+    notification_emails:
+     - bhackett@mozilla.com
+    record_in_processes:
+     - 'main'
+
+  reload_recording:
+    bug_numbers:
+     - 1495910
+    description: >
+      Number of times a non-recording tab was reloaded to create a recording tab.
+    expires: never
+    kind: uint
+    notification_emails:
+     - bhackett@mozilla.com
+    record_in_processes:
+     - 'main'
+
+  stop_recording:
+    bug_numbers:
+     - 1495910
+    description: >
+      Number of times a recording tab was reloaded to create a non-recording tab.
+    expires: never
+    kind: uint
+    notification_emails:
+     - bhackett@mozilla.com
+    record_in_processes:
+     - 'main'
+
+  save_recording:
+    bug_numbers:
+     - 1495910
+    description: >
+      Number of times a recording was saved.
+    expires: never
+    kind: uint
+    notification_emails:
+     - bhackett@mozilla.com
+    record_in_processes:
+     - 'main'
+
+  load_recording:
+    bug_numbers:
+     - 1495910
+    description: >
+      Number of times a recording was loaded.
+    expires: never
+    kind: uint
+    notification_emails:
+     - bhackett@mozilla.com
+    record_in_processes:
+     - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:
