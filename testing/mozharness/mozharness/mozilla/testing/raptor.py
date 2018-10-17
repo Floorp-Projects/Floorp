@@ -440,6 +440,9 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         env['SCRIPTSPATH'] = scripts_path
         env['EXTERNALTOOLSPATH'] = external_tools_path
 
+        # disable "GC poisoning" Bug# 1499043
+        env['JSGC_DISABLE_POISONING'] = '1'
+
         if self.repo_path is not None:
             env['MOZ_DEVELOPER_REPO_DIR'] = self.repo_path
         if self.obj_path is not None:
