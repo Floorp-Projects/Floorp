@@ -445,7 +445,8 @@ private:
   Monitor mMonitor;
 
   // Buffer for message data received from the other side of the channel.
-  InfallibleVector<char, 0, AllocPolicy<MemoryKind::Generic>> mMessageBuffer;
+  typedef InfallibleVector<char, 0, AllocPolicy<MemoryKind::Generic>> MessageBuffer;
+  MessageBuffer* mMessageBuffer;
 
   // The number of bytes of data already in the message buffer.
   size_t mMessageBytes;

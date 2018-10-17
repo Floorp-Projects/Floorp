@@ -12,6 +12,7 @@
 
 #include "MainThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "base/eintr_wrapper.h"
 #include "base/process_util.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/FileDescriptor.h"
@@ -65,6 +66,7 @@ Channel::Channel(size_t aId, bool aMiddlemanRecording, const MessageHandler& aHa
   , mInitialized(false)
   , mConnectionFd(0)
   , mFd(0)
+  , mMessageBuffer(nullptr)
   , mMessageBytes(0)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -179,27 +181,29 @@ Channel::SendMessage(const Message& aMsg)
 Message*
 Channel::WaitForMessage()
 {
-  if (!mMessageBuffer.length()) {
-    mMessageBuffer.appendN(0, PageSize);
+  if (!mMessageBuffer) {
+    mMessageBuffer = (MessageBuffer*) AllocateMemory(sizeof(MessageBuffer), MemoryKind::Generic);
+    mMessageBuffer->appendN(0, PageSize);
   }
 
   size_t messageSize = 0;
   while (true) {
     if (mMessageBytes >= sizeof(Message)) {
-      Message* msg = (Message*) mMessageBuffer.begin();
+      Message* msg = (Message*) mMessageBuffer->begin();
       messageSize = msg->mSize;
+      MOZ_RELEASE_ASSERT(messageSize >= sizeof(Message));
       if (mMessageBytes >= messageSize) {
         break;
       }
     }
 
     // Make sure the buffer is large enough for the entire incoming message.
-    if (messageSize > mMessageBuffer.length()) {
-      mMessageBuffer.appendN(0, messageSize - mMessageBuffer.length());
+    if (messageSize > mMessageBuffer->length()) {
+      mMessageBuffer->appendN(0, messageSize - mMessageBuffer->length());
     }
 
-    ssize_t nbytes = HANDLE_EINTR(recv(mFd, &mMessageBuffer[mMessageBytes],
-                                       mMessageBuffer.length() - mMessageBytes, 0));
+    ssize_t nbytes = HANDLE_EINTR(recv(mFd, &mMessageBuffer->begin()[mMessageBytes],
+                                       mMessageBuffer->length() - mMessageBytes, 0));
     if (nbytes < 0) {
       MOZ_RELEASE_ASSERT(errno == EAGAIN);
       continue;
@@ -215,12 +219,12 @@ Channel::WaitForMessage()
     mMessageBytes += nbytes;
   }
 
-  Message* res = ((Message*)mMessageBuffer.begin())->Clone();
+  Message* res = ((Message*)mMessageBuffer->begin())->Clone();
 
   // Remove the message we just received from the incoming buffer.
   size_t remaining = mMessageBytes - messageSize;
   if (remaining) {
-    memmove(mMessageBuffer.begin(), &mMessageBuffer[messageSize], remaining);
+    memmove(mMessageBuffer->begin(), &mMessageBuffer->begin()[messageSize], remaining);
   }
   mMessageBytes = remaining;
 
