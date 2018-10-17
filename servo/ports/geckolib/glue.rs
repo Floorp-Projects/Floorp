@@ -4499,24 +4499,26 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
     let condition = unsafe { cond.as_ref().unwrap().as_str_unchecked() };
     let mut input = ParserInput::new(&condition);
     let mut input = Parser::new(&mut input);
-    let cond = input.parse_entirely(|i| parse_condition_or_declaration(i));
-    if let Ok(cond) = cond {
-        let url_data = unsafe { dummy_url_data() };
-        // NOTE(emilio): The supports API is not associated to any stylesheet,
-        // so the fact that there is no namespace map here is fine.
-        let context = ParserContext::new_for_cssom(
-            url_data,
-            Some(CssRuleType::Style),
-            ParsingMode::DEFAULT,
-            QuirksMode::NoQuirks,
-            None,
-            None,
-        );
+    let cond = match input.parse_entirely(parse_condition_or_declaration) {
+        Ok(c) => c,
+        Err(..) => return false,
+    };
 
-        cond.eval(&context)
-    } else {
-        false
-    }
+    let url_data = unsafe { dummy_url_data() };
+
+    // NOTE(emilio): The supports API is not associated to any stylesheet,
+    // so the fact that there is no namespace map here is fine.
+    let context = ParserContext::new_for_cssom(
+        url_data,
+        Some(CssRuleType::Style),
+        ParsingMode::DEFAULT,
+        QuirksMode::NoQuirks,
+        None,
+        None,
+    );
+
+    let namespaces = Default::default();
+    cond.eval(&context, &namespaces)
 }
 
 #[no_mangle]
