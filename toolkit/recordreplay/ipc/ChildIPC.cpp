@@ -16,7 +16,10 @@
 #include "ipc/Channel.h"
 #include "mac/handler/exception_handler.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/VsyncDispatcher.h"
 
@@ -589,6 +592,29 @@ CompositorCanPerformMiddlemanCalls()
   // requests to the middleman anymore.
   MonitorAutoLock lock(*gMonitor);
   return gNumPendingPaints != 0;
+}
+
+bool
+SuppressMessageAfterDiverge(IPC::Message* aMsg)
+{
+  MOZ_RELEASE_ASSERT(HasDivergedFromRecording());
+
+  // Only messages necessary for compositing can be sent after the sending
+  // thread has diverged from the recording. Sending other messages can risk
+  // deadlocking when a necessary lock is held by an idle thread (we probably
+  // need a more robust way to deal with this problem).
+
+  IPC::Message::msgid_t type = aMsg->type();
+  if (type >= layers::PLayerTransaction::PLayerTransactionStart &&
+      type <= layers::PLayerTransaction::PLayerTransactionEnd) {
+    return false;
+  }
+
+  if (type == layers::PCompositorBridge::Msg_PTextureConstructor__ID) {
+    return false;
+  }
+
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
