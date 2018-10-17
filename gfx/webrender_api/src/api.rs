@@ -232,7 +232,7 @@ impl Transaction {
     }
 
     pub fn set_pinch_zoom(&mut self, pinch_zoom: ZoomFactor) {
-        self.scene_ops.push(SceneMsg::SetPinchZoom(pinch_zoom));
+        self.frame_ops.push(FrameMsg::SetPinchZoom(pinch_zoom));
     }
 
     pub fn set_pan(&mut self, pan: DeviceIntPoint) {
@@ -523,7 +523,6 @@ pub struct AddFontInstance {
 pub enum SceneMsg {
     UpdateEpoch(PipelineId, Epoch),
     SetPageZoom(ZoomFactor),
-    SetPinchZoom(ZoomFactor),
     SetRootPipeline(PipelineId),
     RemovePipeline(PipelineId),
     SetDisplayList {
@@ -554,6 +553,7 @@ pub enum FrameMsg {
     GetScrollNodeState(MsgSender<Vec<ScrollNodeState>>),
     UpdateDynamicProperties(DynamicProperties),
     AppendDynamicProperties(DynamicProperties),
+    SetPinchZoom(ZoomFactor),
 }
 
 impl fmt::Debug for SceneMsg {
@@ -562,7 +562,6 @@ impl fmt::Debug for SceneMsg {
             SceneMsg::UpdateEpoch(..) => "SceneMsg::UpdateEpoch",
             SceneMsg::SetDisplayList { .. } => "SceneMsg::SetDisplayList",
             SceneMsg::SetPageZoom(..) => "SceneMsg::SetPageZoom",
-            SceneMsg::SetPinchZoom(..) => "SceneMsg::SetPinchZoom",
             SceneMsg::RemovePipeline(..) => "SceneMsg::RemovePipeline",
             SceneMsg::SetWindowParameters { .. } => "SceneMsg::SetWindowParameters",
             SceneMsg::SetRootPipeline(..) => "SceneMsg::SetRootPipeline",
@@ -582,6 +581,7 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::EnableFrameOutput(..) => "FrameMsg::EnableFrameOutput",
             FrameMsg::UpdateDynamicProperties(..) => "FrameMsg::UpdateDynamicProperties",
             FrameMsg::AppendDynamicProperties(..) => "FrameMsg::AppendDynamicProperties",
+            FrameMsg::SetPinchZoom(..) => "FrameMsg::SetPinchZoom",
         })
     }
 }
@@ -791,6 +791,7 @@ pub struct MemoryReport {
     pub vertex_data_textures: usize,
     pub render_target_textures: usize,
     pub texture_cache_textures: usize,
+    pub depth_target_textures: usize,
 }
 
 impl ::std::ops::AddAssign for MemoryReport {
@@ -808,6 +809,7 @@ impl ::std::ops::AddAssign for MemoryReport {
         self.vertex_data_textures += other.vertex_data_textures;
         self.render_target_textures += other.render_target_textures;
         self.texture_cache_textures += other.texture_cache_textures;
+        self.depth_target_textures += other.depth_target_textures;
     }
 }
 

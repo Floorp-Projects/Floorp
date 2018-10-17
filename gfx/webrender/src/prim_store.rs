@@ -7,10 +7,10 @@ use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, ExtendMode, DeviceRect
 use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemRange, TileOffset};
 use api::{RasterSpace, LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, LayoutToWorldTransform};
 use api::{LayoutVector2D, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat};
-use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, LayoutToWorldScale, NormalBorder, WorldRect};
+use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, NormalBorder, WorldRect, LayoutToWorldScale};
 use api::{PicturePixel, RasterPixel, ColorDepth, LineStyle, LineOrientation, LayoutSizeAu, AuHelpers};
 use app_units::Au;
-use border::{BorderCacheKey, BorderRenderTaskInfo};
+use border::{get_max_scale_for_border, build_border_instances, create_normal_border_prim};
 use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
 use clip::{ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem, ClipNodeCollector};
 use euclid::{TypedTransform3D, TypedRect, TypedScale};
@@ -25,7 +25,7 @@ use intern;
 use picture::{PictureCompositeMode, PicturePrimitive};
 #[cfg(debug_assertions)]
 use render_backend::FrameId;
-use render_task::{BlitSource, RenderTask, RenderTaskCacheKey};
+use render_task::{BlitSource, RenderTask, RenderTaskCacheKey, to_cache_size};
 use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
@@ -345,13 +345,21 @@ pub struct VisibleGradientTile {
     pub local_clip_rect: LayoutRect,
 }
 
+/// Information about how to cache a border segment,
+/// along with the current render task cache entry.
+#[derive(Debug)]
+pub struct BorderSegmentInfo {
+    pub handle: Option<RenderTaskCacheEntryHandle>,
+    pub local_task_size: LayoutSize,
+    pub cache_key: RenderTaskCacheKey,
+    pub is_opaque: bool,
+}
+
 #[derive(Debug)]
 pub enum BorderSource {
     Image(ImageRequest),
     Border {
-        handle: Option<RenderTaskCacheEntryHandle>,
-        cache_key: BorderCacheKey,
-        task_info: Option<BorderRenderTaskInfo>,
+        segments: SmallVec<[BorderSegmentInfo; 8]>,
         border: NormalBorder,
         widths: LayoutSideOffsets,
     },
@@ -456,18 +464,19 @@ impl BrushKind {
 
     // Construct a brush that is a border with `border` style and `widths`
     // dimensions.
-    pub fn new_border(mut border: NormalBorder, widths: LayoutSideOffsets) -> BrushKind {
+    pub fn new_border(
+        mut border: NormalBorder,
+        widths: LayoutSideOffsets,
+        segments: SmallVec<[BorderSegmentInfo; 8]>,
+    ) -> BrushKind {
         // FIXME(emilio): Is this the best place to do this?
         border.normalize(&widths);
 
-        let cache_key = BorderCacheKey::new(&border, &widths);
         BrushKind::Border {
             source: BorderSource::Border {
                 border,
                 widths,
-                cache_key,
-                task_info: None,
-                handle: None,
+                segments,
             }
         }
     }
@@ -1412,7 +1421,11 @@ impl PrimitiveContainer {
     // Create a clone of this PrimitiveContainer, applying whatever
     // changes are necessary to the primitive to support rendering
     // it as part of the supplied shadow.
-    pub fn create_shadow(&self, shadow: &Shadow) -> PrimitiveContainer {
+    pub fn create_shadow(
+        &self,
+        shadow: &Shadow,
+        prim_rect: &LayoutRect,
+    ) -> PrimitiveContainer {
         match *self {
             PrimitiveContainer::TextRun(ref info) => {
                 let mut font = FontInstance {
@@ -1440,22 +1453,25 @@ impl PrimitiveContainer {
                         ))
                     }
                     BrushKind::Border { ref source } => {
-                        let source = match *source {
+                        let prim = match *source {
                             BorderSource::Image(request) => {
-                                BrushKind::Border {
-                                    source: BorderSource::Image(request)
-                                }
-                            },
+                                BrushPrimitive::new(
+                                    BrushKind::Border {
+                                        source: BorderSource::Image(request)
+                                    },
+                                    None,
+                                )
+                            }
                             BorderSource::Border { border, widths, .. } => {
                                 let border = border.with_color(shadow.color);
-                                BrushKind::new_border(border, widths)
-
+                                create_normal_border_prim(
+                                    prim_rect,
+                                    border,
+                                    widths,
+                                )
                             }
                         };
-                        PrimitiveContainer::Brush(BrushPrimitive::new(
-                            source,
-                            None,
-                        ))
+                        PrimitiveContainer::Brush(prim)
                     }
                     BrushKind::LineDecoration { style, orientation, wavy_line_thickness, .. } => {
                         PrimitiveContainer::Brush(BrushPrimitive::new_line_decoration(
@@ -1959,13 +1975,6 @@ impl PrimitiveStore {
             };
 
             prim_instance.clipped_world_rect = Some(clipped_world_rect);
-
-            prim.build_prim_segments_if_needed(
-                prim_instance,
-                pic_state,
-                frame_state,
-                frame_context,
-            );
 
             prim.update_clip_task(
                 prim_instance,
@@ -2839,9 +2848,46 @@ impl Primitive {
                                     );
                                 }
                             }
-                            BorderSource::Border { .. } => {
-                                // Handled earlier since we need to update the segment
-                                // descriptor *before* update_clip_task() is called.
+                            BorderSource::Border { ref border, ref widths, ref mut segments, .. } => {
+                                // TODO(gw): When drawing in screen raster mode, we should also incorporate a
+                                //           scale factor from the world transform to get an appropriately
+                                //           sized border task.
+                                let world_scale = LayoutToWorldScale::new(1.0);
+                                let mut scale = world_scale * frame_context.device_pixel_scale;
+                                let max_scale = get_max_scale_for_border(&border.radius, widths);
+                                scale.0 = scale.0.min(max_scale.0);
+
+                                // For each edge and corner, request the render task by content key
+                                // from the render task cache. This ensures that the render task for
+                                // this segment will be available for batching later in the frame.
+                                for segment in segments {
+                                    // Update the cache key device size based on requested scale.
+                                    segment.cache_key.size = to_cache_size(segment.local_task_size * scale);
+
+                                    segment.handle = Some(frame_state.resource_cache.request_render_task(
+                                        segment.cache_key.clone(),
+                                        frame_state.gpu_cache,
+                                        frame_state.render_tasks,
+                                        None,
+                                        segment.is_opaque,
+                                        |render_tasks| {
+                                            let task = RenderTask::new_border_segment(
+                                                segment.cache_key.size,
+                                                build_border_instances(
+                                                    &segment.cache_key,
+                                                    border,
+                                                    scale,
+                                                ),
+                                            );
+
+                                            let task_id = render_tasks.add(task);
+
+                                            pic_state.tasks.push(task_id);
+
+                                            task_id
+                                        }
+                                    ));
+                                }
                             }
                         }
                     }
@@ -3089,95 +3135,6 @@ impl Primitive {
                 }
                 prim_instance.clip_task_id = Some(clip_task_id);
                 pic_state.tasks.push(clip_task_id);
-            }
-        }
-    }
-
-    fn build_prim_segments_if_needed(
-        &mut self,
-        prim_instance: &mut PrimitiveInstance,
-        pic_state: &mut PictureState,
-        frame_state: &mut FrameBuildingState,
-        frame_context: &FrameBuildingContext,
-    ) {
-        let brush = match self.details {
-            PrimitiveDetails::Brush(ref mut brush) => brush,
-            PrimitiveDetails::TextRun(..) => return,
-        };
-
-        if let BrushKind::Border {
-            source: BorderSource::Border {
-                ref border,
-                ref mut cache_key,
-                ref widths,
-                ref mut handle,
-                ref mut task_info,
-                ..
-            }
-        } = brush.kind {
-            // TODO(gw): When drawing in screen raster mode, we should also incorporate a
-            //           scale factor from the world transform to get an appropriately
-            //           sized border task.
-            let world_scale = LayoutToWorldScale::new(1.0);
-            let mut scale = world_scale * frame_context.device_pixel_scale;
-            let max_scale = BorderRenderTaskInfo::get_max_scale(&border.radius, &widths);
-            scale.0 = scale.0.min(max_scale.0);
-            let scale_au = Au::from_f32_px(scale.0);
-
-            // NOTE(emilio): This `needs_update` relies on the local rect for a
-            // given primitive being immutable. If that changes, this code
-            // should probably handle changes to it as well, retaining the old
-            // size in cache_key.
-            let needs_update = scale_au != cache_key.scale;
-
-            let mut new_segments = BrushSegmentVec::new();
-
-            let local_rect = &self.metadata.local_rect;
-            if needs_update {
-                cache_key.scale = scale_au;
-
-                *task_info = BorderRenderTaskInfo::new(
-                    local_rect,
-                    border,
-                    widths,
-                    scale,
-                    &mut new_segments,
-                );
-            }
-
-            *handle = task_info.as_ref().map(|task_info| {
-                frame_state.resource_cache.request_render_task(
-                    RenderTaskCacheKey {
-                        size: task_info.cache_key_size(&local_rect.size, scale),
-                        kind: RenderTaskCacheKeyKind::Border(cache_key.clone()),
-                    },
-                    frame_state.gpu_cache,
-                    frame_state.render_tasks,
-                    None,
-                    false,          // todo
-                    |render_tasks| {
-                        let task = RenderTask::new_border(
-                            task_info.size,
-                            task_info.build_instances(border),
-                        );
-
-                        let task_id = render_tasks.add(task);
-
-                        pic_state.tasks.push(task_id);
-
-                        task_id
-                    }
-                )
-            });
-
-            if needs_update {
-                brush.segment_desc = Some(BrushSegmentDescriptor {
-                    segments: new_segments,
-                });
-
-                // The segments have changed, so force the GPU cache to
-                // re-upload the primitive information.
-                frame_state.gpu_cache.invalidate(&mut prim_instance.gpu_location);
             }
         }
     }
