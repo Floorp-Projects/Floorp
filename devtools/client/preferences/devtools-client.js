@@ -33,7 +33,7 @@ pref("devtools.command-button-noautohide.enabled", false);
 // Enable the Inspector
 pref("devtools.inspector.enabled", true);
 // What was the last active sidebar in the inspector
-pref("devtools.inspector.activeSidebar", "ruleview");
+pref("devtools.inspector.activeSidebar", "layoutview");
 pref("devtools.inspector.remote", false);
 
 // Enable the 3 pane mode in the inspector
