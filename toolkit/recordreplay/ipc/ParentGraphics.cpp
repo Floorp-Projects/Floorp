@@ -175,6 +175,19 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
   }
 }
 
+bool
+InRepaintStressMode()
+{
+  static bool checked = false;
+  static bool rv;
+  if (!checked) {
+    AutoEnsurePassThroughThreadEvents pt;
+    rv = TestEnv("MOZ_RECORD_REPLAY_REPAINT_STRESS");
+    checked = true;
+  }
+  return rv;
+}
+
 } // namespace parent
 } // namespace recordreplay
 } // namespace mozilla
