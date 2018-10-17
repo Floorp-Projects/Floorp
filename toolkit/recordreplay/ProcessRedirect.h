@@ -520,7 +520,7 @@ template <size_t ReturnValue>
 static inline PreambleResult
 Preamble_Veto(CallArguments* aArguments)
 {
-  aArguments->Rval<size_t>() = 0;
+  aArguments->Rval<size_t>() = ReturnValue;
   return PreambleResult::Veto;
 }
 
@@ -531,7 +531,7 @@ Preamble_VetoIfNotPassedThrough(CallArguments* aArguments)
   if (AreThreadEventsPassedThrough()) {
     return PreambleResult::PassThrough;
   }
-  aArguments->Rval<size_t>() = 0;
+  aArguments->Rval<size_t>() = ReturnValue;
   return PreambleResult::Veto;
 }
 
