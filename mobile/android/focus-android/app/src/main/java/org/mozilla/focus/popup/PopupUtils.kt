@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.support.v4.content.ContextCompat
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -63,10 +64,10 @@ object PopupUtils {
     }
 
     private fun setOrigin(hostInfo: TextView, origin: String?, url: String) {
-        if (origin != null) {
-            hostInfo.text = origin
+        hostInfo.text = if (!TextUtils.isEmpty(origin)) {
+            origin
         } else {
-            hostInfo.text = try {
+            try {
                 URL(url).host
             } catch (e: MalformedURLException) {
                 url
@@ -87,7 +88,7 @@ object PopupUtils {
             getScaledDrawable(context, R.dimen.doorhanger_small_icon, checkIcon), null,
             null, null)
         identityState.setTextColor(photonGreen)
-        if (verifierInfo != null) {
+        if (!TextUtils.isEmpty(verifierInfo)) {
             verifier.text = context.getString(R.string.security_popup_security_verified,
                 verifierInfo)
             verifier.visibility = View.VISIBLE
