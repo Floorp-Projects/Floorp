@@ -226,6 +226,7 @@ static void RecvHitBreakpoint(const HitBreakpointMessage& aMsg);
 static void RecvDebuggerResponse(const DebuggerResponseMessage& aMsg);
 static void RecvRecordingFlushed();
 static void RecvAlwaysMarkMajorCheckpoints();
+static void RecvMiddlemanCallRequest(const MiddlemanCallRequestMessage& aMsg);
 
 // The role taken by the active child.
 class ChildRoleActive final : public ChildRole
@@ -266,6 +267,12 @@ public:
       break;
     case MessageType::AlwaysMarkMajorCheckpoints:
       RecvAlwaysMarkMajorCheckpoints();
+      break;
+    case MessageType::MiddlemanCallRequest:
+      RecvMiddlemanCallRequest((const MiddlemanCallRequestMessage&) aMsg);
+      break;
+    case MessageType::ResetMiddlemanCalls:
+      ResetMiddlemanCalls();
       break;
     default:
       MOZ_CRASH("Unexpected message");
@@ -1197,6 +1204,18 @@ HitForcedPauseBreakpoints(bool aRecordingBoundary)
                                                          newBreakpoints, breakpoints.length(),
                                                          aRecordingBoundary));
   }
+}
+
+static void
+RecvMiddlemanCallRequest(const MiddlemanCallRequestMessage& aMsg)
+{
+  InfallibleVector<char> outputData;
+  ProcessMiddlemanCall(aMsg.BinaryData(), aMsg.BinaryDataSize(), &outputData);
+
+  MiddlemanCallResponseMessage* response =
+    MiddlemanCallResponseMessage::New(outputData.begin(), outputData.length());
+  gActiveChild->SendMessage(*response);
+  free(response);
 }
 
 } // namespace parent
