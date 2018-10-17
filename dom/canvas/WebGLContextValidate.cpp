@@ -621,10 +621,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
         return false;
     }
 
-    mDefaultVertexArray = WebGLVertexArray::Create(this);
-    mDefaultVertexArray->mAttribs.SetLength(mGLMaxVertexAttribs);
-    mBoundVertexArray = mDefaultVertexArray;
-
     // OpenGL core profiles remove the default VAO object from version
     // 4.0.0. We create a default VAO for all core profiles,
     // regardless of version.
@@ -633,11 +629,9 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     // (https://www.opengl.org/registry/doc/glspec40.core.20100311.pdf)
     // in Section E.2.2 "Removed Features", pg 397: "[...] The default
     // vertex array object (the name zero) is also deprecated. [...]"
-
-    if (gl->IsCoreProfile()) {
-        mDefaultVertexArray->GenVertexArray();
-        mDefaultVertexArray->BindVertexArray();
-    }
+    mDefaultVertexArray = WebGLVertexArray::Create(this);
+    mDefaultVertexArray->BindVertexArray();
+    mDefaultVertexArray->mAttribs.SetLength(mGLMaxVertexAttribs);
 
     mPixelStore_FlipY = false;
     mPixelStore_PremultiplyAlpha = false;
