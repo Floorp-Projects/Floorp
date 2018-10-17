@@ -117,7 +117,7 @@ class KeyframeEffect : public AnimationEffect
 public:
   KeyframeEffect(nsIDocument* aDocument,
                  const Maybe<OwningAnimationTarget>& aTarget,
-                 const TimingParams& aTiming,
+                 TimingParams&& aTiming,
                  const KeyframeEffectParams& aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
