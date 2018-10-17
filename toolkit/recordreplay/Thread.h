@@ -134,6 +134,7 @@ private:
   // and whether the callback has been invoked yet while the main thread is
   // waiting for threads to become idle. Protected by the thread monitor.
   std::function<void()> mUnrecordedWaitCallback;
+  bool mUnrecordedWaitOnlyWhenDiverged;
   bool mUnrecordedWaitNotified;
 
 public:
@@ -277,7 +278,8 @@ public:
   static void WaitForeverNoIdle();
 
   // See RecordReplay.h.
-  void NotifyUnrecordedWait(const std::function<void()>& aCallback);
+  void NotifyUnrecordedWait(const std::function<void()>& aCallback,
+                            bool aOnlyWhenDiverged);
   static void MaybeWaitForCheckpointSave();
 
   // Wait for all other threads to enter the idle state necessary for saving
