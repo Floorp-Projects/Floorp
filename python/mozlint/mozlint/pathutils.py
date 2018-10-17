@@ -100,6 +100,9 @@ def collapse(paths, base=None, dotfiles=False):
         if not os.path.isdir(base):
             base = os.path.dirname(base)
 
+    if base in paths:
+        return [base]
+
     covered = set()
     full = set()
     for name in os.listdir(base):
