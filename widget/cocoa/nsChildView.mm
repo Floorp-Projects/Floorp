@@ -183,7 +183,6 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect;
 - (BOOL)isUsingOpenGL;
-- (void)drawUsingOpenGL;
 
 - (BOOL)hasRoundedBottomCorners;
 - (CGFloat)cornerRadius;
@@ -3659,8 +3658,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mGeckoChild->ClearVibrantAreas();
     [self clearCorners];
 
-    // Do GL composition and return.
-    [self drawUsingOpenGL];
+    // Force a sync OMTC composite into the OpenGL context and return.
+    LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
+    LayoutDeviceIntRegion region(geckoBounds);
+    mGeckoChild->PaintWindow(region);
     return;
   }
 
@@ -3703,19 +3704,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return NO;
 
   return mGLContext || mUsingOMTCompositor;
-}
-
-- (void)drawUsingOpenGL
-{
-  AUTO_PROFILER_LABEL("ChildView::drawUsingOpenGL", OTHER);
-
-  if (![self isUsingOpenGL] || !mGeckoChild->IsVisible())
-    return;
-
-  LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
-  LayoutDeviceIntRegion region(geckoBounds);
-
-  mGeckoChild->PaintWindow(region);
 }
 
 - (BOOL)hasRoundedBottomCorners
