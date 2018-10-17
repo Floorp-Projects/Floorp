@@ -52,7 +52,8 @@
           });
         });
       });
-      gBrowser.loadURI("data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
+      gBrowser.loadURI("data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>",
+                       { triggeringPrincipal: window.document.nodePrincipal });
       await promise;
       await onDocumentLoaded();
     }
