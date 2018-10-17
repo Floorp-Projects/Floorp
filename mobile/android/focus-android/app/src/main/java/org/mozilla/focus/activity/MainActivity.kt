@@ -48,6 +48,11 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (!isTaskRoot) {
+            finish()
+            return
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             SentryWrapper.init(this)
         }
