@@ -51,7 +51,7 @@ SetVsyncObserver(VsyncObserver* aObserver)
   MOZ_CRASH();
 }
 
-void
+bool
 OnVsync()
 {
   MOZ_CRASH();

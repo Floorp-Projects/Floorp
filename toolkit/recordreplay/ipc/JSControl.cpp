@@ -414,7 +414,7 @@ Middleman_HadRepaint(JSContext* aCx, unsigned aArgc, Value* aVp)
   size_t width = args.get(0).toNumber();
   size_t height = args.get(1).toNumber();
 
-  PaintMessage message(width, height);
+  PaintMessage message(CheckpointId::Invalid, width, height);
   parent::UpdateGraphicsInUIProcess(&message);
 
   args.rval().setUndefined();

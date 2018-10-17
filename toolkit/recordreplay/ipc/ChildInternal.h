@@ -76,6 +76,9 @@ void BeforeCheckpoint();
 // when running forward or immediately after rewinding.
 void AfterCheckpoint(const CheckpointId& aCheckpoint);
 
+// Get the ID of the last normal checkpoint.
+size_t LastNormalCheckpoint();
+
 } // namespace navigation
 
 namespace child {
