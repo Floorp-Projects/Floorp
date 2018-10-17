@@ -8,6 +8,7 @@
 #define mozilla_dom_Flex_h
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FlexBinding.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
@@ -38,10 +39,14 @@ public:
   }
 
   void GetLines(nsTArray<RefPtr<FlexLineValues>>& aResult);
+  FlexPhysicalDirection MainAxisDirection() const;
+  FlexPhysicalDirection CrossAxisDirection() const;
 
 protected:
   nsCOMPtr<Element> mParent;
   nsTArray<RefPtr<FlexLineValues>> mLines;
+  FlexPhysicalDirection mMainAxisDirection;
+  FlexPhysicalDirection mCrossAxisDirection;
 };
 
 } // namespace dom
