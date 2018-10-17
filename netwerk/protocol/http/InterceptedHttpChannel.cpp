@@ -1348,6 +1348,15 @@ InterceptedHttpChannel::OpenAlternativeOutputStream(const nsACString & type, int
 }
 
 NS_IMETHODIMP
+InterceptedHttpChannel::GetOriginalInputStream(nsIInputStreamReceiver *aReceiver)
+{
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->GetOriginalInputStream(aReceiver);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 InterceptedHttpChannel::GetCacheKey(uint32_t* key)
 {
   if (mSynthesizedCacheInfo) {

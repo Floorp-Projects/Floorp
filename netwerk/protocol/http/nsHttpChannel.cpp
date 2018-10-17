@@ -8349,6 +8349,23 @@ nsHttpChannel::OpenAlternativeOutputStream(const nsACString & type, int64_t pred
     return rv;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetOriginalInputStream(nsIInputStreamReceiver *aReceiver)
+{
+    if (aReceiver == nullptr) {
+        return NS_ERROR_INVALID_ARG;
+    }
+    nsCOMPtr<nsIInputStream> inputStream;
+
+    nsCOMPtr<nsICacheEntry> cacheEntry = mCacheEntry ? mCacheEntry
+                                                     : mAltDataCacheEntry;
+    if (cacheEntry) {
+        cacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
+    }
+    aReceiver->OnInputStreamReady(inputStream);
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsICachingChannel
 //-----------------------------------------------------------------------------

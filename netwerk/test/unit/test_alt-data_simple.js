@@ -152,7 +152,15 @@ function readAltContent(request, buffer)
   Assert.equal(buffer, altContent);
   check_has_alt_data_in_index(true);
 
-  requestAgain();
+  cc.getOriginalInputStream({
+    onInputStreamReady: function(aInputStream) {
+      executeSoon(function() {
+        let originalData = read_stream(aInputStream, aInputStream.available());
+        Assert.equal(originalData, responseContent);
+        requestAgain();
+      });
+    }
+  });
 }
 
 function requestAgain()
