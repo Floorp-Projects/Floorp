@@ -1,6 +1,10 @@
 job-defaults:
     instance-size: xlarge
     max-run-time: 5400
+    serviceworker-e10s:
+        by-test-platform:
+            linux64/debug: both
+            default: false
     mozharness:
         script: web_platform_tests.py
         config:
