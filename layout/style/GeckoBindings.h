@@ -130,13 +130,11 @@ mozilla::StyleSheet* Gecko_LoadStyleSheet(
   mozilla::css::SheetLoadData* parent_load_data,
   mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
   RawServoCssUrlDataStrong url,
-  RawGeckoURLExtraData* url_extra_data,
   RawServoMediaListStrong media_list);
 
 void Gecko_LoadStyleSheetAsync(
   mozilla::css::SheetLoadDataHolder* parent_data,
   RawServoCssUrlDataStrong url,
-  RawGeckoURLExtraData* url_extra_data,
   RawServoMediaListStrong media_list,
   RawServoImportRuleStrong import_rule);
 
@@ -644,7 +642,6 @@ void Gecko_nsStyleSVG_CopyContextProperties(
 
 mozilla::css::URLValue* Gecko_URLValue_Create(
   RawServoCssUrlDataStrong url,
-  RawGeckoURLExtraData* extra_data,
   mozilla::CORSMode aCORSMode);
 
 size_t Gecko_URLValue_SizeOfIncludingThis(mozilla::css::URLValue* url);

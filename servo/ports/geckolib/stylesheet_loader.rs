@@ -56,7 +56,6 @@ impl StyleStylesheetLoader for StylesheetLoader {
                                  self.2,
                                  self.3,
                                  url.0.clone().into_strong(),
-                                 url.0.extra_data.0.get(),
                                  media.into_strong())
         };
 
@@ -147,7 +146,6 @@ impl StyleStylesheetLoader for AsyncStylesheetParser {
         lock: &SharedRwLock,
         media: Arc<Locked<MediaList>>,
     ) -> Arc<Locked<ImportRule>> {
-        let extra_data = url.0.extra_data.0.get();
         let stylesheet = ImportSheet::new_pending(self.origin, self.quirks_mode);
         let rule = Arc::new(lock.wrap(ImportRule { url: url.clone(), source_location, stylesheet }));
 
@@ -155,7 +153,6 @@ impl StyleStylesheetLoader for AsyncStylesheetParser {
             bindings::Gecko_LoadStyleSheetAsync(
                 self.load_data.get(),
                 url.0.into_strong(),
-                extra_data,
                 media.into_strong(),
                 rule.clone().into_strong()
             );

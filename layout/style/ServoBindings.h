@@ -1095,6 +1095,9 @@ void Servo_CssUrlData_GetSerialization(
   uint8_t const** chars,
   uint32_t* len);
 
+RawGeckoURLExtraDataBorrowedMut Servo_CssUrlData_GetExtraData(
+  RawServoCssUrlDataBorrowed url);
+
 // CSS parsing utility functions.
 
 bool Servo_IsValidCSSColor(const nsAString* value);
