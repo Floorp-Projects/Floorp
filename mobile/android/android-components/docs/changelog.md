@@ -62,6 +62,8 @@ Release date: TBD
   * The `TabCounter` class is now open and can get extended.
 * **feature-downloads**
   * Now you're able to provide a dialog before a download starts and customize it to your wish. Take a look at the [updated docs](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/README.md).
+* **sample-toolbar**
+  * Bug fixed: issue [#980](https://github.com/mozilla-mobile/android-components/issues/980) Add pressed state for unselected toggle buttons
 
 # 0.27.0
 
