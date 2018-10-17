@@ -523,6 +523,13 @@ function forwardToScript(name) {
 
 const gRequestHandlers = {
 
+  repaint() {
+    if (!RecordReplayControl.maybeDivergeFromRecording()) {
+      return {};
+    }
+    return RecordReplayControl.repaint();
+  },
+
   findScripts(request) {
     const query = Object.assign({}, request.query);
     if ("global" in query) {

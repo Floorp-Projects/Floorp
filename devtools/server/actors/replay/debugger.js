@@ -62,7 +62,11 @@ ReplayDebugger.prototype = {
   replayResumeBackward() { RecordReplayControl.resume(/* forward = */ false); },
   replayResumeForward() { RecordReplayControl.resume(/* forward = */ true); },
   replayTimeWarp: RecordReplayControl.timeWarp,
-  replayPause: RecordReplayControl.pause,
+
+  replayPause() {
+    RecordReplayControl.pause();
+    this._repaint();
+  },
 
   addDebuggee() {},
   removeAllDebuggees() {},
@@ -88,6 +92,18 @@ ReplayDebugger.prototype = {
   _sendRequestAllowDiverge(request) {
     RecordReplayControl.maybeSwitchToReplayingChild();
     return this._sendRequest(request);
+  },
+
+  // Update graphics according to the current state of the child process. This
+  // should be done anytime we pause and allow the user to interact with the
+  // debugger.
+  _repaint() {
+    const rv = this._sendRequestAllowDiverge({ type: "repaint" });
+    if ("width" in rv && "height" in rv) {
+      RecordReplayControl.hadRepaint(rv.width, rv.height);
+    } else {
+      RecordReplayControl.hadRepaintFailure();
+    }
   },
 
   _setBreakpoint(handler, position, data) {
@@ -329,7 +345,8 @@ ReplayDebugger.prototype = {
   get onEnterFrame() { return this._breakpointKindGetter("EnterFrame"); },
   set onEnterFrame(handler) {
     this._breakpointKindSetter("EnterFrame", handler,
-                               () => handler.call(this, this.getNewestFrame()));
+                               () => { this._repaint();
+                                       handler.call(this, this.getNewestFrame()); });
   },
 
   get replayingOnPopFrame() {
@@ -340,7 +357,8 @@ ReplayDebugger.prototype = {
 
   set replayingOnPopFrame(handler) {
     if (handler) {
-      this._setBreakpoint(() => handler.call(this, this.getNewestFrame()),
+      this._setBreakpoint(() => { this._repaint();
+                                  handler.call(this, this.getNewestFrame()); },
                           { kind: "OnPop" }, handler);
     } else {
       this._clearMatchingBreakpoints(({position}) => {
@@ -354,7 +372,8 @@ ReplayDebugger.prototype = {
   },
   set replayingOnForcedPause(handler) {
     this._breakpointKindSetter("ForcedPause", handler,
-                               () => handler.call(this, this.getNewestFrame()));
+                               () => { this._repaint();
+                                       handler.call(this, this.getNewestFrame()); });
   },
 
   getNewConsoleMessage() {
@@ -402,7 +421,8 @@ ReplayDebuggerScript.prototype = {
   getPredecessorOffsets(pc) { return this._forward("getPredecessorOffsets", pc); },
 
   setBreakpoint(offset, handler) {
-    this._dbg._setBreakpoint(() => { handler.hit(this._dbg.getNewestFrame()); },
+    this._dbg._setBreakpoint(() => { this._dbg._repaint();
+                                     handler.hit(this._dbg.getNewestFrame()); },
                              { kind: "Break", script: this._data.id, offset },
                              handler);
   },
@@ -519,7 +539,8 @@ ReplayDebuggerFrame.prototype = {
     this._clearOnStepBreakpoints();
     offsets.forEach(offset => {
       this._dbg._setBreakpoint(
-        () => handler.call(this._dbg.getNewestFrame()),
+        () => { this._dbg._repaint();
+                handler.call(this._dbg.getNewestFrame()); },
         { kind: "OnStep",
           script: this._data.script,
           offset,
@@ -537,6 +558,7 @@ ReplayDebuggerFrame.prototype = {
   set onPop(handler) {
     if (handler) {
       this._dbg._setBreakpoint(() => {
+          this._dbg._repaint();
           const result = this._dbg._sendRequest({ type: "popFrameResult" });
           handler.call(this._dbg.getNewestFrame(),
                        this._dbg._convertCompletionValue(result));
