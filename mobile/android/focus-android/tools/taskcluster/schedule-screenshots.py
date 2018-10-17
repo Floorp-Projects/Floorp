@@ -87,7 +87,7 @@ if __name__ == "__main__":
 	print "Task:", TASK_ID
 
 	queue = taskcluster.Queue(options={
-		'rootUrl': 'https://taskcluster.net'
+		'rootUrl': 'https://taskcluster'
 	})
 
 	for chunk in chunks(SCREENSHOT_LOCALES, LOCALES_PER_TASK):
