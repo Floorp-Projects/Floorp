@@ -11,8 +11,12 @@ Release date: TBD
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.27.0...master),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/30?closed=1)
 
+* **concept-engine**
+  * Added `HistoryTrackingDelegate` interface for integrating engine implementations with history storage backends. Intended to be used via engine settings.
 * **browser-engine**
   * `Download.fileName` cannot be `null` anymore. All engine implementations are guaranteed to return a proposed file name for Downloads now.
+* **browser-engine-gecko-**, **browser-engine-system**
+  * Added support for `HistoryTrackingDelegate`, if it's specified in engine settings.
 * **browser-engine-servo**
   * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
 * **service-glean**
