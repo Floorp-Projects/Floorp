@@ -3039,8 +3039,15 @@ var BrowserOnClick = {
 
   onCertError(browser, elementId, isTopFrame, location, securityInfoAsString, frameId) {
     let securityInfo;
+    let cert;
 
     switch (elementId) {
+      case "viewCertificate":
+        securityInfo = getSecurityInfo(securityInfoAsString);
+        cert = securityInfo.serverCert;
+        Services.ww.openWindow(window, "chrome://pippki/content/certViewer.xul",
+                               "_blank", "centerscreen,chrome", cert);
+        break;
       case "exceptionDialogButton":
         securityInfo = getSecurityInfo(securityInfoAsString);
         let params = { exceptionAdded: false,
@@ -3059,7 +3066,7 @@ var BrowserOnClick = {
             flags |= overrideService.ERROR_TIME;
           }
           let uri = Services.uriFixup.createFixupURI(location, 0);
-          let cert = securityInfo.serverCert;
+          cert = securityInfo.serverCert;
           overrideService.rememberValidityOverride(
             uri.asciiHost, uri.port,
             cert,
