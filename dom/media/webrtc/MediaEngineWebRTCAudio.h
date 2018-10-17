@@ -35,15 +35,12 @@ public:
                                     bool aDelayAgnostic,
                                     bool aExtendedFilter);
 
-  bool RequiresSharing() const override
-  {
-    return false;
-  }
+  bool RequiresSharing() const override { return false; }
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
 
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
@@ -133,7 +130,8 @@ private:
   // The current settings for the underlying device.
   // Constructed on the MediaManager thread, and then only ever accessed on the
   // main thread.
-  const nsMainThreadPtrHandle<media::Refcountable<dom::MediaTrackSettings>> mSettings;
+  const nsMainThreadPtrHandle<media::Refcountable<dom::MediaTrackSettings>>
+    mSettings;
 
   // Current state of the resource for this source.
   MediaEngineSourceState mState;
@@ -265,17 +263,14 @@ private:
   bool mEnded;
 };
 
-
 class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource
 {
 public:
-  explicit MediaEngineWebRTCAudioCaptureSource(const char* aUuid)
-  {
-  }
+  explicit MediaEngineWebRTCAudioCaptureSource(const char* aUuid) {}
   nsString GetName() const override;
   nsCString GetUUID() const override;
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                    const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     AllocationHandle** aOutHandle,
