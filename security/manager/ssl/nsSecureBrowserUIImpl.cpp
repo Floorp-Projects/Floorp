@@ -396,12 +396,15 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     return NS_OK;
   }
 
-  // Clear any state that varies by location.
-  if (!(aFlags & LOCATION_CHANGE_SAME_DOCUMENT)) {
-    mOldState = 0;
-    mState = 0;
-    mTopLevelSecurityInfo = nullptr;
+  // If this is a same-document location change, we don't need to update our
+  // state or notify anyone.
+  if (aFlags & LOCATION_CHANGE_SAME_DOCUMENT) {
+    return NS_OK;
   }
+
+  mOldState = 0;
+  mState = 0;
+  mTopLevelSecurityInfo = nullptr;
 
   if (aFlags & LOCATION_CHANGE_ERROR_PAGE) {
     mState = STATE_IS_INSECURE;
