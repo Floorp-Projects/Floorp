@@ -345,3 +345,26 @@ raptor-assorted-dom-chrome:
     fetches:
         fetch:
             - assorted-dom
+
+raptor-wasm-godot-firefox:
+    description: "Raptor Wasm GoDot on Firefox"
+    try-name: raptor-wasm-godot-firefox
+    treeherder-symbol: Rap(godot)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-godot
+
+raptor-wasm-godot-chrome:
+    description: "Raptor Wasm GoDot on Chrome"
+    try-name: raptor-wasm-godot-chrome
+    treeherder-symbol: Rap-C(godot)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-godot
+            - --app=chrome
