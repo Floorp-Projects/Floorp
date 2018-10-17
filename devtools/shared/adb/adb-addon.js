@@ -8,8 +8,8 @@ const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-const PREF_ADB_EXTENSION_URL = "devtools.remote.adb.extensionURL";
-const PREF_ADB_EXTENSION_ID = "devtools.remote.adb.extensionID";
+const ADB_LINK = Services.prefs.getCharPref("devtools.remote.adb.extensionURL");
+const ADB_ADDON_ID = Services.prefs.getCharPref("devtools.remote.adb.extensionID");
 
 // Extension ID for adb helper extension that might be installed on Firefox 63 or older.
 const OLD_ADB_ADDON_ID = "adbhelper@mozilla.org";
@@ -65,13 +65,8 @@ class ADBAddon extends EventEmitter {
     return this._status;
   }
 
-  async _getAddon() {
-    const addonId = Services.prefs.getCharPref(PREF_ADB_EXTENSION_ID);
-    return AddonManager.getAddonByID(addonId);
-  }
-
   async updateInstallStatus() {
-    const addon = await this._getAddon();
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
       this.status = ADB_ADDON_STATES.INSTALLED;
     } else {
@@ -97,8 +92,7 @@ class ADBAddon extends EventEmitter {
       }
     }
 
-    const xpiLink = Services.prefs.getCharPref(PREF_ADB_EXTENSION_URL);
-    return xpiLink.replace(/#OS#/g, OS);
+    return ADB_LINK.replace(/#OS#/g, OS);
   }
 
   /**
@@ -109,7 +103,7 @@ class ADBAddon extends EventEmitter {
    *        String passed to the AddonManager for telemetry.
    */
   async install(source) {
-    const addon = await this._getAddon();
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
       this.status = ADB_ADDON_STATES.INSTALLED;
       return;
@@ -130,7 +124,7 @@ class ADBAddon extends EventEmitter {
   }
 
   async uninstall() {
-    const addon = await this._getAddon();
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     addon.uninstall();
   }
 
