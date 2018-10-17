@@ -698,7 +698,7 @@ WebGLTexture::BindTexture(TexTarget texTarget)
         return false;
     }
 
-    const bool isFirstBinding = !HasEverBeenBound();
+    const bool isFirstBinding = !mTarget;
     if (!isFirstBinding && mTarget != texTarget) {
         mContext->ErrorInvalidOperation("bindTexture: This texture has already been bound"
                                         " to a different target.");
@@ -854,12 +854,6 @@ WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
     default:
         MOZ_CRASH("GFX: Unhandled pname.");
     }
-}
-
-bool
-WebGLTexture::IsTexture() const
-{
-    return HasEverBeenBound() && !IsDeleted();
 }
 
 // Here we have to support all pnames with both int and float params.

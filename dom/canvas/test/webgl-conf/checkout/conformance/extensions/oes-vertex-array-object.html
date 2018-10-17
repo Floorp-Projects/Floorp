@@ -645,12 +645,13 @@ function runBoundDeleteTests() {
         wtu.glErrorShouldBe(gl, expectedError,
                             "Draw call should " + (expectRetained ? "not " : "") + "fail.");
 
-        if (!gl.isBuffer(positionBuffer)) {
-            testFailed("References from unbound VAOs keep Position buffer alive.");
-        }
-        if (!gl.isBuffer(colorBuffer)) {
-            testFailed("References from unbound VAOs keep Color buffer alive");
-        }
+        // https://github.com/KhronosGroup/WebGL/pull/2731
+        //if (!gl.isBuffer(positionBuffer)) {
+        //    testFailed("References from unbound VAOs keep Position buffer alive.");
+        //}
+        //if (!gl.isBuffer(colorBuffer)) {
+        //    testFailed("References from unbound VAOs keep Color buffer alive");
+        //}
     }
 }
 

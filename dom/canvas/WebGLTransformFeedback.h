@@ -30,6 +30,7 @@ class WebGLTransformFeedback final
 
 public:
     const GLuint mGLName;
+    bool mHasBeenBound = false;
 private:
     // GLES 3.0.4 p267, Table 6.24 "Transform Feedback State"
     // It's not yet in the ES3 spec, but the generic TF buffer bind point has been moved
