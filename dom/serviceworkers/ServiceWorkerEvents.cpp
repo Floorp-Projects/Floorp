@@ -343,8 +343,9 @@ public:
     // Get the preferred alternative data type of outter channel
     nsAutoCString preferredAltDataType(EmptyCString());
     nsCOMPtr<nsICacheInfoChannel> outerChannel = do_QueryInterface(underlyingChannel);
-    if (outerChannel) {
-      outerChannel->GetPreferredAlternativeDataType(preferredAltDataType);
+    if (outerChannel && !outerChannel->PreferredAlternativeDataTypes().IsEmpty()) {
+      // TODO: handle multiple types properly.
+      preferredAltDataType.Assign(mozilla::Get<0>(outerChannel->PreferredAlternativeDataTypes()[0]));
     }
 
     // Get the alternative data type saved in the InternalResponse
