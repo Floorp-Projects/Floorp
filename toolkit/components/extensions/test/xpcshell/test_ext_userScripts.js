@@ -599,7 +599,7 @@ add_task(async function test_userScripts_pref_disabled() {
       background,
       manifest: {
         permissions: ["http://*/*/file_sample.html"],
-        user_scripts: {},
+        user_scripts: {api_script: ""},
         content_scripts: [
           {
             matches:  ["http://*/*/file_sample.html"],
@@ -628,6 +628,40 @@ add_task(async function test_userScripts_pref_disabled() {
 
   await runWithPrefs([["extensions.webextensions.userScripts.enabled", false]],
                      run_userScript_on_pref_disabled_test);
+});
+
+// This test verify that userScripts.setScriptAPIs is not available without
+// a "user_scripts.api_script" property in the manifest.
+add_task(async function test_user_script_api_script_required() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          matches: ["http://localhost/*/file_sample.html"],
+          js: ["content_script.js"],
+          run_at: "document_start",
+        },
+      ],
+      user_scripts: {},
+    },
+    files: {
+      "content_script.js": function() {
+        browser.test.assertEq(undefined, browser.userScripts && browser.userScripts.setScriptAPIs,
+                              "Got an undefined setScriptAPIs as expected");
+        browser.test.sendMessage("no-setScriptAPIs:done");
+      },
+    },
+  });
+
+  await extension.startup();
+
+  let url = `${BASE_URL}/file_sample.html`;
+  let contentPage = await ExtensionTestUtils.loadContentPage(url);
+
+  await extension.awaitMessage("no-setScriptAPIs:done");
+
+  await extension.unload();
+  await contentPage.close();
 });
 
 add_task(async function test_scriptMetaData() {
