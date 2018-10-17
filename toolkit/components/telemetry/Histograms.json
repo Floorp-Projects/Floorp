@@ -1719,6 +1719,23 @@
     "kind": "boolean",
     "description": "Whether a HTTP transaction routed via Alt-Svc was scheme=http"
   },
+  "HTTP_ALTSVC_ENTRIES_PER_HEADER": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "bug_numbers": [1499149],
+    "alert_emails": ["hurley@mozilla.com"],
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "How many alt-svc productions were seen in a single Alt-Svc header"
+  },
+  "HTTP_ALTSVC_MAPPING_CHANGED_TARGET": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "bug_numbers": [1499149],
+    "alert_emails": ["hurley@mozilla.com"],
+    "kind": "boolean",
+    "description": "Whether or not a new alt-svc mapping would change the target hostname of the existing mapping"
+  },
   "HTTP_SCHEME_UPGRADE_TYPE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "jkt@mozilla.com"],

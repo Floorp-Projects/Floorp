@@ -157,6 +157,7 @@ devtools.jar:
     skin/images/command-chevron.svg (themes/images/command-chevron.svg)
     skin/markup.css (themes/markup.css)
     skin/images/editor-error.png (themes/images/editor-error.png)
+    skin/images/webconsole/globe.svg (themes/images/webconsole/globe.svg)
     skin/images/breakpoint.svg (themes/images/breakpoint.svg)
     skin/webconsole.css (themes/webconsole.css)
     skin/images/webconsole/alert.svg (themes/images/webconsole/alert.svg)
