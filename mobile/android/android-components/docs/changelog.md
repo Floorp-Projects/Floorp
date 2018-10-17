@@ -4,6 +4,20 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 0.28.0-SNAPSHOT (In Development)
+
+Release date: TBD
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.27.0...master),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/30?closed=1),
+
+* **browser-engine**
+ * `Download.fileName` cannot be `null` anymore. All engine implementations are guaranteed to return a proposed file name for Downloads now.
+* **browser-engine-servo**
+ * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
+* **service-glean**
+ * A new client-side telemetry SDK for collecting metrics and sending them to Mozilla's telemetry service. This component is going to eventually replace `service-telemetry`. The SDK is currently in development and the component is not ready to be used yet.
+
 # 0.27.0
 
 Release date: 2018-10-16
