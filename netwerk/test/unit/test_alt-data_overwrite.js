@@ -26,7 +26,7 @@ function make_and_open_channel(url, altContentType, callback) {
   let chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
   if (altContentType) {
     let cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-    cc.preferAlternativeDataType(altContentType);
+    cc.preferAlternativeDataType(altContentType, "");
   }
   chan.asyncOpen2(new ChannelListener(callback, null));
 }

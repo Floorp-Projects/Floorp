@@ -1275,6 +1275,11 @@ nsresult CacheEntry::OpenAlternativeOutputStream(const nsACString & type, int64_
 
   nsresult rv;
 
+  if (type.IsEmpty()) {
+    // The empty string is reserved to mean no alt-data available.
+    return NS_ERROR_INVALID_ARG;
+  }
+
   mozilla::MutexAutoLock lock(mLock);
 
   if (!mHasData || mState < READY || mOutputStream || mIsDoomed) {
@@ -1554,7 +1559,6 @@ nsresult CacheEntry::GetDataSize(int64_t *aDataSize)
   return NS_OK;
 }
 
-
 nsresult CacheEntry::GetAltDataSize(int64_t *aDataSize)
 {
   LOG(("CacheEntry::GetAltDataSize [this=%p]", this));
@@ -1564,6 +1568,14 @@ nsresult CacheEntry::GetAltDataSize(int64_t *aDataSize)
   return mFile->GetAltDataSize(aDataSize);
 }
 
+nsresult CacheEntry::GetAltDataType(nsACString &aType)
+{
+  LOG(("CacheEntry::GetAltDataType [this=%p]", this));
+  if (NS_FAILED(mFileStatus)) {
+    return mFileStatus;
+  }
+  return mFile->GetAltDataType(aType);
+}
 
 nsresult CacheEntry::MarkValid()
 {
