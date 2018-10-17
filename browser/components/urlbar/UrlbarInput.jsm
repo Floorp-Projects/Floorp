@@ -255,6 +255,11 @@ class UrlbarInput {
     this.inputField.value = val;
     this.formatValue();
 
+    // Dispatch ValueChange event for accessibility.
+    let event = this.document.createEvent("Events");
+    event.initEvent("ValueChange", true, true);
+    this.inputField.dispatchEvent(event);
+
     return val;
   }
 
