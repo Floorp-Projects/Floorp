@@ -20,9 +20,9 @@ WebGLVertexArray::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
     return dom::WebGLVertexArrayObject_Binding::Wrap(cx, this, givenProto);
 }
 
-WebGLVertexArray::WebGLVertexArray(WebGLContext* webgl)
+WebGLVertexArray::WebGLVertexArray(WebGLContext* const webgl, const GLuint name)
     : WebGLRefCountedObject(webgl)
-    , mGLName(0)
+    , mGLName(name)
 {
     mAttribs.SetLength(mContext->mGLMaxVertexAttribs);
     mContext->mVertexArrays.insertBack(this);
@@ -63,12 +63,6 @@ WebGLVertexArray::Delete()
     LinkedListElement<WebGLVertexArray>::removeFrom(mContext->mVertexArrays);
     mElementArrayBuffer = nullptr;
     mAttribs.Clear();
-}
-
-bool
-WebGLVertexArray::IsVertexArray() const
-{
-    return IsVertexArrayImpl();
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLVertexArray,
