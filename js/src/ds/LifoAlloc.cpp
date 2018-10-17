@@ -27,7 +27,6 @@ namespace detail {
 UniquePtr<BumpChunk>
 BumpChunk::newWithCapacity(size_t size)
 {
-    MOZ_DIAGNOSTIC_ASSERT(RoundUpPow2(size) == size);
     MOZ_DIAGNOSTIC_ASSERT(size >= sizeof(BumpChunk));
     void* mem = js_malloc(size);
     if (!mem) {
@@ -114,10 +113,14 @@ LifoAlloc::reset(size_t defaultChunkSize)
     while (!chunks_.empty()) {
         chunks_.popFirst();
     }
+    while (!oversize_.empty()) {
+        chunks_.popFirst();
+    }
     while (!unused_.empty()) {
         unused_.popFirst();
     }
     defaultChunkSize_ = defaultChunkSize;
+    oversizeThreshold_ = defaultChunkSize;
     markCount = 0;
     curSize_ = 0;
 }
@@ -127,6 +130,10 @@ LifoAlloc::freeAll()
 {
     while (!chunks_.empty()) {
         UniqueBumpChunk bc = chunks_.popFirst();
+        decrementCurSize(bc->computedSizeOfIncludingThis());
+    }
+    while (!oversize_.empty()) {
+        UniqueBumpChunk bc = oversize_.popFirst();
         decrementCurSize(bc->computedSizeOfIncludingThis());
     }
     while (!unused_.empty()) {
@@ -139,8 +146,18 @@ LifoAlloc::freeAll()
     MOZ_ASSERT(curSize_ == 0);
 }
 
+static size_t
+MallocGoodSize(size_t aSize)
+{
+# if defined(MOZ_MEMORY)
+    return malloc_good_size(aSize);
+# else
+    return aSize;
+# endif
+}
+
 LifoAlloc::UniqueBumpChunk
-LifoAlloc::newChunkWithCapacity(size_t n)
+LifoAlloc::newChunkWithCapacity(size_t n, bool oversize)
 {
     MOZ_ASSERT(fallibleScope_, "[OOM] Cannot allocate a new chunk in an infallible scope.");
 
@@ -154,8 +171,9 @@ LifoAlloc::newChunkWithCapacity(size_t n)
         return nullptr;
     }
 
-    const size_t chunkSize = minSize > defaultChunkSize_
-                             ?  RoundUpPow2(minSize)
+    MOZ_ASSERT(curSize_ >= oversizeSize_);
+    const size_t chunkSize = (oversize || minSize > defaultChunkSize_)
+                             ? MallocGoodSize(minSize)
                              : defaultChunkSize_;
 
     // Create a new BumpChunk, and allocate space for it.
@@ -167,7 +185,7 @@ LifoAlloc::newChunkWithCapacity(size_t n)
     return result;
 }
 
-bool
+LifoAlloc::UniqueBumpChunk
 LifoAlloc::getOrCreateChunk(size_t n)
 {
     // Look for existing unused BumpChunks to satisfy the request, and pick the
@@ -175,8 +193,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
     // chunks.
     if (!unused_.empty()) {
         if (unused_.begin()->canAlloc(n)) {
-            chunks_.append(unused_.popFirst());
-            return true;
+            return unused_.popFirst();
         }
 
         BumpChunkList::Iterator e(unused_.end());
@@ -185,34 +202,52 @@ LifoAlloc::getOrCreateChunk(size_t n)
             MOZ_ASSERT(elem->empty());
             if (elem->canAlloc(n)) {
                 BumpChunkList temp = unused_.splitAfter(i.get());
-                chunks_.append(temp.popFirst());
+                UniqueBumpChunk newChunk = temp.popFirst();
                 unused_.appendAll(std::move(temp));
-                return true;
+                return newChunk;
             }
         }
     }
 
     // Allocate a new BumpChunk with enough space for the next allocation.
-    UniqueBumpChunk newChunk = newChunkWithCapacity(n);
+    UniqueBumpChunk newChunk = newChunkWithCapacity(n, false);
     if (!newChunk) {
-        return false;
+        return newChunk;
     }
     size_t size = newChunk->computedSizeOfIncludingThis();
-    chunks_.append(std::move(newChunk));
     incrementCurSize(size);
-    return true;
+    return newChunk;
 }
 
 void*
 LifoAlloc::allocImplColdPath(size_t n)
 {
     void* result;
-    if (!getOrCreateChunk(n)) {
+    UniqueBumpChunk newChunk = getOrCreateChunk(n);
+    if (!newChunk) {
         return nullptr;
     }
 
     // Since we just created a large enough chunk, this can't fail.
+    chunks_.append(std::move(newChunk));
     result = chunks_.last()->tryAlloc(n);
+    MOZ_ASSERT(result);
+    return result;
+}
+
+void*
+LifoAlloc::allocImplOversize(size_t n)
+{
+    void* result;
+    UniqueBumpChunk newChunk = newChunkWithCapacity(n, true);
+    if (!newChunk) {
+        return nullptr;
+    }
+    incrementCurSize(newChunk->computedSizeOfIncludingThis());
+
+    // Since we just created a large enough chunk, this can't fail.
+    oversize_.append(std::move(newChunk));
+    result = oversize_.last()->tryAlloc(n);
     MOZ_ASSERT(result);
     return result;
 }
@@ -227,7 +262,7 @@ LifoAlloc::ensureUnusedApproximateColdPath(size_t n, size_t total)
         }
     }
 
-    UniqueBumpChunk newChunk = newChunkWithCapacity(n);
+    UniqueBumpChunk newChunk = newChunkWithCapacity(n, false);
     if (!newChunk) {
         return false;
     }
@@ -241,34 +276,65 @@ LifoAlloc::Mark
 LifoAlloc::mark()
 {
     markCount++;
-    if (chunks_.empty()) {
-        return Mark();
+    Mark res;
+    if (!chunks_.empty()) {
+        res.chunk = chunks_.last()->mark();
     }
-    return chunks_.last()->mark();
+    if (!oversize_.empty()) {
+        res.oversize = oversize_.last()->mark();
+    }
+    return res;
 }
 
 void
 LifoAlloc::release(Mark mark)
 {
     markCount--;
+#ifdef DEBUG
+    auto assertIsContained = [](const detail::BumpChunk::Mark& m, BumpChunkList& list) {
+        if (m.markedChunk()) {
+            bool contained = false;
+            for (const detail::BumpChunk& chunk : list) {
+                if (&chunk == m.markedChunk() && chunk.contains(m)) {
+                    contained = true;
+                    break;
+                }
+            }
+            MOZ_ASSERT(contained);
+        }
+    };
+    assertIsContained(mark.chunk, chunks_);
+    assertIsContained(mark.oversize, oversize_);
+#endif
 
-    // Move the blocks which are after the mark to the set of unused chunks.
     BumpChunkList released;
-    if (!mark.markedChunk()) {
-        released = std::move(chunks_);
-    } else {
-        released = chunks_.splitAfter(mark.markedChunk());
-    }
+    auto cutAtMark = [&released](const detail::BumpChunk::Mark& m, BumpChunkList& list) {
+        // Move the blocks which are after the mark to the set released chunks.
+        if (!m.markedChunk()) {
+            released = std::move(list);
+        } else {
+            released = list.splitAfter(m.markedChunk());
+        }
 
-    // Release the content of all the blocks which are after the marks.
+        // Release everything which follows the mark in the last chunk.
+        if (!list.empty()) {
+            list.last()->release(m);
+        }
+    };
+
+    // Release the content of all the blocks which are after the marks, and keep
+    // blocks as unused.
+    cutAtMark(mark.chunk, chunks_);
     for (detail::BumpChunk& bc : released) {
         bc.release();
     }
     unused_.appendAll(std::move(released));
 
-    // Release everything which follows the mark in the last chunk.
-    if (!chunks_.empty()) {
-        chunks_.last()->release(mark);
+    // Free the content of all the blocks which are after the marks.
+    cutAtMark(mark.oversize, oversize_);
+    while (!released.empty()) {
+        UniqueBumpChunk bc = released.popFirst();
+        decrementCurSize(bc->computedSizeOfIncludingThis());
     }
 }
 
@@ -278,13 +344,16 @@ LifoAlloc::steal(LifoAlloc* other)
     MOZ_ASSERT(!other->markCount);
     MOZ_DIAGNOSTIC_ASSERT(unused_.empty());
     MOZ_DIAGNOSTIC_ASSERT(chunks_.empty());
+    MOZ_DIAGNOSTIC_ASSERT(oversize_.empty());
 
     // Copy everything from |other| to |this| except for |peakSize_|, which
     // requires some care.
     chunks_ = std::move(other->chunks_);
+    oversize_ = std::move(other->oversize_);
     unused_ = std::move(other->unused_);
     markCount = other->markCount;
     defaultChunkSize_ = other->defaultChunkSize_;
+    oversizeThreshold_ = other->oversizeThreshold_;
     curSize_ = other->curSize_;
     peakSize_ = Max(peakSize_, other->peakSize_);
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
@@ -303,6 +372,7 @@ LifoAlloc::transferFrom(LifoAlloc* other)
     incrementCurSize(other->curSize_);
     appendUnused(std::move(other->unused_));
     appendUsed(std::move(other->chunks_));
+    oversize_.appendAll(std::move(other->oversize_));
     other->curSize_ = 0;
 }
 
@@ -328,6 +398,9 @@ LifoAlloc::setReadOnly()
     for (detail::BumpChunk& bc : chunks_) {
         bc.setReadOnly();
     }
+    for (detail::BumpChunk& bc : oversize_) {
+        bc.setReadOnly();
+    }
     for (detail::BumpChunk& bc : unused_) {
         bc.setReadOnly();
     }
@@ -337,6 +410,9 @@ void
 LifoAlloc::setReadWrite()
 {
     for (detail::BumpChunk& bc : chunks_) {
+        bc.setReadWrite();
+    }
+    for (detail::BumpChunk& bc : oversize_) {
         bc.setReadWrite();
     }
     for (detail::BumpChunk& bc : unused_) {
