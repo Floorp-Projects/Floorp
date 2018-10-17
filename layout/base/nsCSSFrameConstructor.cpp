@@ -3927,9 +3927,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
              maybeAbsoluteContainingBlockDisplay->IsFixedPosContainingBlock(
                  maybeAbsoluteContainingBlockStyleFrame)) &&
             !nsSVGUtils::IsInSVGTextSubtree(maybeAbsoluteContainingBlockStyleFrame)) {
-          nsContainerFrame* cf = static_cast<nsContainerFrame*>(
-              maybeAbsoluteContainingBlock);
-          aState.PushAbsoluteContainingBlock(cf, cf, absoluteSaveState);
+          auto* cf = static_cast<nsContainerFrame*>(maybeAbsoluteContainingBlock);
+          aState.PushAbsoluteContainingBlock(cf, maybeAbsoluteContainingBlockStyleFrame, absoluteSaveState);
         }
       }
 
