@@ -38,6 +38,7 @@ use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::{RawGeckoElementBorrowed, RawGeckoElementBorrowedOrNull, RawGeckoNodeBorrowed};
 use style::gecko_bindings::bindings::{RawGeckoKeyframeListBorrowed, RawGeckoKeyframeListBorrowedMut};
 use style::gecko_bindings::bindings::RawGeckoPresContextBorrowed;
+use style::gecko_bindings::bindings::RawGeckoURLExtraDataBorrowedMut;
 use style::gecko_bindings::bindings::{RawServoAuthorStyles, RawServoAuthorStylesBorrowed};
 use style::gecko_bindings::bindings::{RawServoAuthorStylesBorrowedMut, RawServoAuthorStylesOwned};
 use style::gecko_bindings::bindings::{RawServoCounterStyleRule, RawServoCounterStyleRuleBorrowed};
@@ -5476,8 +5477,8 @@ pub unsafe extern "C" fn Servo_CssUrlData_GetSerialization(
 #[no_mangle]
 pub extern "C" fn Servo_CssUrlData_GetExtraData(
     url: RawServoCssUrlDataBorrowed,
-) -> *mut URLExtraData {
-    CssUrlData::as_arc(&url).extra_data.0.get()
+) -> RawGeckoURLExtraDataBorrowedMut {
+    unsafe { &mut *CssUrlData::as_arc(&url).extra_data.0.get() }
 }
 
 #[no_mangle]
