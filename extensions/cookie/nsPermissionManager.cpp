@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/DebugOnly.h"
 
 #include "mozilla/dom/ContentParent.h"
@@ -137,7 +138,9 @@ static const char* kPreloadPermissions[] = {
   // removed.  See bug 1428130.
   "cookie",
   "trackingprotection",
-  "trackingprotection-pb"
+  "trackingprotection-pb",
+
+  USER_INTERACTION_PERM
 };
 
 // A list of permissions that can have a fallback default permission
