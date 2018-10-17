@@ -180,7 +180,6 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect;
 - (BOOL)isUsingOpenGL;
 
@@ -3639,14 +3638,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
 {
-  CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  [self drawRect:aRect inContext:cgContext];
-}
-
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
-{
   if (!mGeckoChild || !mGeckoChild->IsVisible())
     return;
+  CGContextRef cgContext =
+    (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
   if ([self isUsingOpenGL]) {
     // Since this view is usually declared as opaque, the window's pixel
@@ -3672,29 +3667,30 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // multiple dev pixels. But Gecko expects its supplied context to be scaled
   // to device pixels, so we need to reverse the scaling.
   double scale = mGeckoChild->BackingScaleFactor();
-  CGContextSaveGState(aContext);
-  CGContextScaleCTM(aContext, 1.0 / scale, 1.0 / scale);
+  CGContextSaveGState(cgContext);
+  CGContextScaleCTM(cgContext, 1.0 / scale, 1.0 / scale);
 
   NSSize viewSize = [self bounds].size;
   gfx::IntSize backingSize = gfx::IntSize::Truncate(viewSize.width * scale, viewSize.height * scale);
   LayoutDeviceIntRegion region = [self nativeDirtyRegionWithBoundingRect:aRect];
 
-  bool painted = mGeckoChild->PaintWindowInContext(aContext, region, backingSize);
+  bool painted =
+    mGeckoChild->PaintWindowInContext(cgContext, region, backingSize);
 
   // Undo the scale transform so that from now on the context is in
   // CocoaPoints again.
-  CGContextRestoreGState(aContext);
+  CGContextRestoreGState(cgContext);
 
   if (!painted && [self isOpaque]) {
     // Gecko refused to draw, but we've claimed to be opaque, so we have to
     // draw something--fill with white.
-    CGContextSetRGBFillColor(aContext, 1, 1, 1, 1);
-    CGContextFillRect(aContext, NSRectToCGRect(aRect));
+    CGContextSetRGBFillColor(cgContext, 1, 1, 1, 1);
+    CGContextFillRect(cgContext, NSRectToCGRect(aRect));
   }
 
   if ([self isCoveringTitlebar]) {
     [self drawTitleString];
-    [self maskTopCornersInContext:aContext];
+    [self maskTopCornersInContext:cgContext];
   }
 }
 
