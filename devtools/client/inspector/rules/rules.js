@@ -97,10 +97,8 @@ const INSET_POINT_TYPES = ["top", "right", "bottom", "left"];
  *        The CSS rule view can use this object to store metadata
  *        that might outlast the rule view, particularly the current
  *        set of disabled properties.
- * @param {PageStyleFront} pageStyle
- *        The PageStyleFront for communicating with the remote server.
  */
-function CssRuleView(inspector, document, store, pageStyle) {
+function CssRuleView(inspector, document, store) {
   EventEmitter.decorate(this);
 
   this.inspector = inspector;
@@ -111,7 +109,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   // References to rules marked by various editors where they intend to write changes.
   // @see selectRule(), unselectRule()
   this.selectedRules = new Map();
-  this.pageStyle = pageStyle;
+  this.pageStyle = inspector.pageStyle;
 
   // Allow tests to override debouncing behavior, as this can cause intermittents.
   this.debounce = debounce;
