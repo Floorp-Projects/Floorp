@@ -2607,7 +2607,6 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mDebugger(nullptr)
   , mJSContext(nullptr)
   , mPRThread(nullptr)
-  , mMainThreadEventTarget(GetMainThreadEventTarget())
   , mWorkerControlEventTarget(new WorkerEventTarget(this,
                                                     WorkerEventTarget::Behavior::ControlOnly))
   , mWorkerHybridEventTarget(new WorkerEventTarget(this,
