@@ -51,6 +51,9 @@ char* gRecordingFilename;
 // Current process ID.
 static int gPid;
 
+// ID of the process which produced the recording.
+static int gRecordingPid;
+
 // Whether to spew record/replay messages to stderr.
 static bool gSpewEnabled;
 
@@ -154,6 +157,7 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
 
   Lock::InitializeLocks();
   InitializeRewindState();
+  gRecordingPid = RecordReplayValue(gPid);
 
   gInitialized = true;
 }
@@ -325,6 +329,12 @@ ThreadEventName(ThreadEvent aEvent)
   }
   size_t callId = (size_t) aEvent - (size_t) ThreadEvent::CallStart;
   return gRedirections[callId].mName;
+}
+
+int
+GetRecordingPid()
+{
+  return gRecordingPid;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
