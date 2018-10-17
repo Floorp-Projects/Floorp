@@ -19,8 +19,8 @@ ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
                                "resource://formautofill/FormAutofillStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "MasterPassword",
-                               "resource://formautofill/MasterPassword.jsm");
+ChromeUtils.defineModuleGetter(this, "OSKeyStore",
+                               "resource://formautofill/OSKeyStore.jsm");
 
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, "manageAddresses");
@@ -313,9 +313,9 @@ class ManageCreditCards extends ManageRecords {
     elements.add.setAttribute("searchkeywords", FormAutofillUtils.EDIT_CREDITCARD_KEYWORDS
                                                   .map(key => FormAutofillUtils.stringBundle.GetStringFromName(key))
                                                   .join("\n"));
-    this._hasMasterPassword = MasterPassword.isEnabled;
+    this._hasOSKeyStore = OSKeyStore.isEnabled;
     this._isDecrypted = false;
-    if (this._hasMasterPassword) {
+    if (this._hasOSKeyStore) {
       elements.showHideCreditCards.setAttribute("hidden", true);
     }
   }
@@ -326,12 +326,11 @@ class ManageCreditCards extends ManageRecords {
    * @param  {object} creditCard [optional]
    */
   async openEditDialog(creditCard) {
-    // If master password is set, ask for password if user is trying to edit an
-    // existing credit card.
-    if (!creditCard || !this._hasMasterPassword || await MasterPassword.ensureLoggedIn(true)) {
+    // Ask for reauth if user is trying to edit an existing credit card.
+    if (!creditCard || !this._hasOSKeyStore || await OSKeyStore.ensureLoggedIn(true)) {
       let decryptedCCNumObj = {};
       if (creditCard) {
-        decryptedCCNumObj["cc-number"] = await MasterPassword.decrypt(creditCard["cc-number-encrypted"]);
+        decryptedCCNumObj["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
       }
       let decryptedCreditCard = Object.assign({}, creditCard, decryptedCCNumObj);
       this.prefWin.gSubDialog.open(EDIT_CREDIT_CARD_URL, "resizable=no", {
