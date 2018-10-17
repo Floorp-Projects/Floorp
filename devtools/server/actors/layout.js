@@ -171,7 +171,8 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
       for (const name in properties) {
         let value = "";
         // Look first on the element style.
-        if (this.element.style[name] && this.element.style[name] !== "auto") {
+        if (this.element.style &&
+            this.element.style[name] && this.element.style[name] !== "auto") {
           value = this.element.style[name];
         } else {
           // And then on the rules that apply to the element.
