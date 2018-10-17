@@ -12,7 +12,7 @@
 [ChromeOnly]
 interface Flex
 {
-  sequence<FlexLine> getLines();
+  sequence<FlexLineValues> getLines();
 };
 
 /**
@@ -22,7 +22,7 @@ interface Flex
 enum FlexLineGrowthState { "unchanged", "shrinking", "growing" };
 
 [ChromeOnly]
-interface FlexLine
+interface FlexLineValues
 {
   readonly attribute FlexLineGrowthState growthState;
   readonly attribute double crossStart;
@@ -35,14 +35,14 @@ interface FlexLine
   readonly attribute double lastBaselineOffset;
 
   /**
-   * getItems() returns FlexItems only for the Elements in this Flex
-   * container -- ignoring struts and abs-pos Elements.
+   * getItems() returns FlexItemValues only for the Elements in
+   * this Flex container -- ignoring struts and abs-pos Elements.
    */
-  sequence<FlexItem> getItems();
+  sequence<FlexItemValues> getItems();
 };
 
 [ChromeOnly]
-interface FlexItem
+interface FlexItemValues
 {
   readonly attribute Node? node;
   readonly attribute double mainBaseSize;

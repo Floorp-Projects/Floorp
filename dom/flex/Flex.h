@@ -16,7 +16,7 @@ class nsFlexContainerFrame;
 namespace mozilla {
 namespace dom {
 
-class FlexLine;
+class FlexLineValues;
 
 class Flex : public nsISupports
            , public nsWrapperCache
@@ -37,11 +37,11 @@ public:
     return mParent;
   }
 
-  void GetLines(nsTArray<RefPtr<FlexLine>>& aResult);
+  void GetLines(nsTArray<RefPtr<FlexLineValues>>& aResult);
 
 protected:
   nsCOMPtr<Element> mParent;
-  nsTArray<RefPtr<FlexLine>> mLines;
+  nsTArray<RefPtr<FlexLineValues>> mLines;
 };
 
 } // namespace dom
