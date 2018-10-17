@@ -4,25 +4,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FlexLine.h"
+#include "FlexLineValues.h"
 
-#include "FlexItem.h"
+#include "FlexItemValues.h"
 #include "mozilla/dom/FlexBinding.h"
 #include "nsFlexContainerFrame.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FlexLine, mParent, mItems)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(FlexLine)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(FlexLine)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FlexLine)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FlexLineValues, mParent, mItems)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FlexLineValues)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FlexLineValues)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FlexLineValues)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-FlexLine::FlexLine(Flex* aParent,
-                   const ComputedFlexLineInfo* aLine)
+FlexLineValues::FlexLineValues(Flex* aParent,
+                               const ComputedFlexLineInfo* aLine)
   : mParent(aParent)
 {
   MOZ_ASSERT(aLine,
@@ -56,50 +56,50 @@ FlexLine::FlexLine(Flex* aParent,
   mItems.SetLength(aLine->mItems.Length());
   uint32_t index = 0;
   for (auto&& i : aLine->mItems) {
-    FlexItem* item = new FlexItem(this, &i);
+    FlexItemValues* item = new FlexItemValues(this, &i);
     mItems.ElementAt(index) = item;
     index++;
   }
 }
 
 JSObject*
-FlexLine::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FlexLineValues::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FlexLine_Binding::Wrap(aCx, this, aGivenProto);
+  return FlexLineValues_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 FlexLineGrowthState
-FlexLine::GrowthState() const
+FlexLineValues::GrowthState() const
 {
   return mGrowthState;
 }
 
 double
-FlexLine::CrossStart() const
+FlexLineValues::CrossStart() const
 {
   return mCrossStart;
 }
 
 double
-FlexLine::CrossSize() const
+FlexLineValues::CrossSize() const
 {
   return mCrossSize;
 }
 
 double
-FlexLine::FirstBaselineOffset() const
+FlexLineValues::FirstBaselineOffset() const
 {
   return mFirstBaselineOffset;
 }
 
 double
-FlexLine::LastBaselineOffset() const
+FlexLineValues::LastBaselineOffset() const
 {
   return mLastBaselineOffset;
 }
 
 void
-FlexLine::GetItems(nsTArray<RefPtr<FlexItem>>& aResult)
+FlexLineValues::GetItems(nsTArray<RefPtr<FlexItemValues>>& aResult)
 {
   aResult.AppendElements(mItems);
 }

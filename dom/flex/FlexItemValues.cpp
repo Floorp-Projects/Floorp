@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FlexItem.h"
+#include "FlexItemValues.h"
 
 #include "mozilla/dom/FlexBinding.h"
 #include "nsFlexContainerFrame.h"
@@ -12,10 +12,10 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FlexItem, mParent)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(FlexItem)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(FlexItem)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FlexItem)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FlexItemValues, mParent)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FlexItemValues)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FlexItemValues)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FlexItemValues)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
@@ -38,8 +38,8 @@ ToPossiblyUnconstrainedPixels(nscoord aSize)
   return nsPresContext::AppUnitsToDoubleCSSPixels(aSize);
 }
 
-FlexItem::FlexItem(FlexLine* aParent,
-                   const ComputedFlexItemInfo* aItem)
+FlexItemValues::FlexItemValues(FlexLineValues* aParent,
+                               const ComputedFlexItemInfo* aItem)
   : mParent(aParent)
 {
   MOZ_ASSERT(aItem,
@@ -63,49 +63,49 @@ FlexItem::FlexItem(FlexLine* aParent,
 }
 
 JSObject*
-FlexItem::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FlexItemValues::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FlexItem_Binding::Wrap(aCx, this, aGivenProto);
+  return FlexItemValues_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsINode*
-FlexItem::GetNode() const
+FlexItemValues::GetNode() const
 {
   return mNode;
 }
 
 double
-FlexItem::MainBaseSize() const
+FlexItemValues::MainBaseSize() const
 {
   return mMainBaseSize;
 }
 
 double
-FlexItem::MainDeltaSize() const
+FlexItemValues::MainDeltaSize() const
 {
   return mMainDeltaSize;
 }
 
 double
-FlexItem::MainMinSize() const
+FlexItemValues::MainMinSize() const
 {
   return mMainMinSize;
 }
 
 double
-FlexItem::MainMaxSize() const
+FlexItemValues::MainMaxSize() const
 {
   return mMainMaxSize;
 }
 
 double
-FlexItem::CrossMinSize() const
+FlexItemValues::CrossMinSize() const
 {
   return mCrossMinSize;
 }
 
 double
-FlexItem::CrossMaxSize() const
+FlexItemValues::CrossMaxSize() const
 {
   return mCrossMaxSize;
 }

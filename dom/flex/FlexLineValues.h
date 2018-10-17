@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_FlexLine_h
-#define mozilla_dom_FlexLine_h
+#ifndef mozilla_dom_FlexLineValues_h
+#define mozilla_dom_FlexLineValues_h
 
 #include "mozilla/dom/FlexBinding.h"
 #include "nsISupports.h"
@@ -17,21 +17,21 @@ namespace mozilla {
 namespace dom {
 
 class Flex;
-class FlexItem;
+class FlexItemValues;
 
-class FlexLine : public nsISupports
-               , public nsWrapperCache
+class FlexLineValues : public nsISupports
+                     , public nsWrapperCache
 {
 public:
-  explicit FlexLine(Flex* aParent,
-                    const ComputedFlexLineInfo* aLine);
+  explicit FlexLineValues(Flex* aParent,
+                          const ComputedFlexLineInfo* aLine);
 
 protected:
-  virtual ~FlexLine() = default;
+  virtual ~FlexLineValues() = default;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FlexLine)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FlexLineValues)
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   Flex* GetParentObject()
@@ -45,7 +45,7 @@ public:
   double FirstBaselineOffset() const;
   double LastBaselineOffset() const;
 
-  void GetItems(nsTArray<RefPtr<FlexItem>>& aResult);
+  void GetItems(nsTArray<RefPtr<FlexItemValues>>& aResult);
 
 protected:
   RefPtr<Flex> mParent;
@@ -56,10 +56,10 @@ protected:
   double mFirstBaselineOffset;
   double mLastBaselineOffset;
 
-  nsTArray<RefPtr<FlexItem>> mItems;
+  nsTArray<RefPtr<FlexItemValues>> mItems;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif /* mozilla_dom_FlexLine_h */
+#endif /* mozilla_dom_FlexLineValues_h */
