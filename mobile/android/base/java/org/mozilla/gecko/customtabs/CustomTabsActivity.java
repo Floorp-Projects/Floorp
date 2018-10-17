@@ -584,17 +584,16 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session, final String urlStr,
-                                                  final int target,
-                                                  final int flags) {
-        if (target != GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
+    public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session,
+                                                  final LoadRequest request) {
+        if (request.target != GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
             return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
 
-        final Uri uri = Uri.parse(urlStr);
+        final Uri uri = Uri.parse(request.uri);
         if (uri == null) {
             // We can't handle this, so deny it.
-            Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
+            Log.w(LOGTAG, "Failed to parse URL for navigation: " + request.uri);
             return GeckoResult.fromValue(AllowOrDeny.DENY);
         }
 
@@ -608,7 +607,7 @@ public class CustomTabsActivity extends AppCompatActivity
             try {
                 startActivity(intent);
             } catch (ActivityNotFoundException e) {
-                Log.w(LOGTAG, "No activity handler found for: " + urlStr);
+                Log.w(LOGTAG, "No activity handler found for: " + request.uri);
             }
         } else {
             final Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -616,7 +615,7 @@ public class CustomTabsActivity extends AppCompatActivity
             try {
                 startActivity(intent);
             } catch (ActivityNotFoundException e) {
-                Log.w(LOGTAG, "No activity handler found for: " + urlStr);
+                Log.w(LOGTAG, "No activity handler found for: " + request.uri);
             }
         }
 
