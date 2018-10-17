@@ -14,7 +14,6 @@ Services.scriptloader.loadSubScript(
 
 const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
-const { ExtensionTestCommon } = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
 
 async function openAboutDebugging(page, win) {
   info("opening about:debugging");
@@ -166,16 +165,12 @@ function getTabList(document) {
     document.querySelector("#tabs.targets");
 }
 
-async function installAddon({document, path, file, name, isWebExtension}) {
+async function installAddon({document, path, name, isWebExtension}) {
   // Mock the file picker to select a test addon
   const MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
-  if (path) {
-    file = getSupportsFile(path);
-    MockFilePicker.setFiles([file.file]);
-  } else {
-    MockFilePicker.setFiles([file]);
-  }
+  const file = getSupportsFile(path);
+  MockFilePicker.setFiles([file.file]);
 
   let onAddonInstalled;
 
@@ -346,7 +341,7 @@ function waitForDelayedStartupFinished(win) {
 /**
  * open the about:debugging page and install an addon
  */
-async function setupTestAboutDebuggingWebExtension(name, file) {
+async function setupTestAboutDebuggingWebExtension(name, path) {
   await new Promise(resolve => {
     const options = {"set": [
       // Force enabling of addons debugging
@@ -365,7 +360,7 @@ async function setupTestAboutDebuggingWebExtension(name, file) {
 
   await installAddon({
     document,
-    file,
+    path,
     name,
     isWebExtension: true,
   });

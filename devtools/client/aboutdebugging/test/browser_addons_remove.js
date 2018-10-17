@@ -44,20 +44,10 @@ add_task(async function removeWebextension() {
   const { tab, document } = await openAboutDebugging("addons");
   await waitForInitialAddonList(document);
 
-  const addonFile = ExtensionTestCommon.generateXPI({
-    manifest: {
-      name: addonName,
-      applications: {
-        gecko: {id: addonID},
-      },
-    },
-  });
-  registerCleanupFunction(() => addonFile.remove(false));
-
   // Install this add-on, and verify that it appears in the about:debugging UI
   await installAddon({
     document,
-    file: addonFile,
+    path: "addons/test-devtools-webextension/manifest.json",
     name: addonName,
     isWebExtension: true,
   });
