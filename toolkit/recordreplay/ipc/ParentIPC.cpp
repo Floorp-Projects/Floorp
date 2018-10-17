@@ -857,6 +857,19 @@ MaybeSwitchToReplayingChild()
   }
 }
 
+Maybe<double>
+GetRecordingPosition()
+{
+  if (gActiveChild->IsRecording()) {
+    return Nothing();
+  }
+
+  // Get the fraction of the recording that the active child has reached so far.
+  double fraction = (gActiveChild->MostRecentCheckpoint() - CheckpointId::First)
+                  / (double) (gCheckpointTimes.length() - CheckpointId::First);
+  return Some(fraction);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Initialization
 ///////////////////////////////////////////////////////////////////////////////
