@@ -86,7 +86,8 @@ void InitializeGraphicsMemory();
 void SendGraphicsMemoryToChild();
 
 // Update the graphics painted in the UI process, per painting data received
-// from a child process, or null for the last paint performed.
+// from a child process, or null if a repaint was triggered and failed due to
+// an unhandled recording divergence.
 void UpdateGraphicsInUIProcess(const PaintMessage* aMsg);
 
 // ID for the mach message sent from a child process to the middleman to
