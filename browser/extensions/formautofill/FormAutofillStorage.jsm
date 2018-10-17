@@ -142,8 +142,8 @@ ChromeUtils.defineModuleGetter(this, "FormAutofillNameUtils",
                                "resource://formautofill/FormAutofillNameUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "MasterPassword",
-                               "resource://formautofill/MasterPassword.jsm");
+ChromeUtils.defineModuleGetter(this, "OSKeyStore",
+                               "resource://formautofill/OSKeyStore.jsm");
 ChromeUtils.defineModuleGetter(this, "PhoneNumber",
                                "resource://formautofill/phonenumberutils/PhoneNumber.jsm");
 
@@ -1604,7 +1604,7 @@ class CreditCards extends AutofillRecords {
       if ("cc-number" in creditCard) {
         let ccNumber = creditCard["cc-number"];
         creditCard["cc-number"] = CreditCard.getLongMaskedNumber(ccNumber);
-        creditCard["cc-number-encrypted"] = await MasterPassword.encrypt(ccNumber);
+        creditCard["cc-number-encrypted"] = await OSKeyStore.encrypt(ccNumber);
       } else {
         creditCard["cc-number-encrypted"] = "";
       }
@@ -1615,7 +1615,7 @@ class CreditCards extends AutofillRecords {
 
   async _stripComputedFields(creditCard) {
     if (creditCard["cc-number-encrypted"]) {
-      creditCard["cc-number"] = await MasterPassword.decrypt(creditCard["cc-number-encrypted"]);
+      creditCard["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
     }
     await super._stripComputedFields(creditCard);
   }
@@ -1692,12 +1692,12 @@ class CreditCards extends AutofillRecords {
           return !creditCard[field];
         }
         if (field == "cc-number" && creditCard[field]) {
-          if (MasterPassword.isEnabled) {
-            // Compare the masked numbers instead when the master password is
-            // enabled because we don't want to leak the credit card number.
+          if (OSKeyStore.isEnabled) {
+            // Compare the masked numbers instead when decryption requires a password
+            // because we don't want to leak the credit card number.
             return CreditCard.getLongMaskedNumber(clonedTargetCreditCard[field]) == creditCard[field];
           }
-          return (clonedTargetCreditCard[field] == await MasterPassword.decrypt(creditCard["cc-number-encrypted"]));
+          return (clonedTargetCreditCard[field] == await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]));
         }
         return clonedTargetCreditCard[field] == creditCard[field];
       })).then(fieldResults => fieldResults.every(result => result));
