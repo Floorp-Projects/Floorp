@@ -41,7 +41,7 @@ class Sidebar extends PureComponent {
         id: localizationId
       }, dom.aside(
         {
-          className: "sidebar__devices__message"
+          className: "sidebar__devices__message js-sidebar-usb-status"
         },
         localizationId
       )
