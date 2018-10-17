@@ -3341,6 +3341,36 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString & aType, int64_t 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpChannelChild::GetOriginalInputStream(nsIInputStreamReceiver *aReceiver)
+{
+  if (aReceiver == nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!mIPCOpen) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mInputStreamReceiver = aReceiver;
+  Unused << SendOpenOriginalCacheInputStream();
+
+  return NS_OK;
+}
+
+mozilla::ipc::IPCResult
+HttpChannelChild::RecvOriginalCacheInputStreamAvailable(const OptionalIPCStream& aStream)
+{
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);
+  nsCOMPtr<nsIInputStreamReceiver> receiver;
+  receiver.swap(mInputStreamReceiver);
+  if (receiver) {
+    receiver->OnInputStreamReady(stream);
+  }
+
+  return IPC_OK();
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsIResumableChannel
 //-----------------------------------------------------------------------------

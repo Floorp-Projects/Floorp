@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIOutputStream;
+interface nsIInputStream;
 
 %{C++
 namespace mozilla {
@@ -13,6 +14,12 @@ template<typename... Elements> class Tuple;
 %}
 
 [ref] native ConstPreferenceArray(const nsTArray<mozilla::Tuple<nsCString, nsCString>>);
+
+[scriptable, uuid(1fb8ccf2-5fa5-45ec-bc57-8c8022a5d0d3)]
+interface nsIInputStreamReceiver : nsISupports
+{
+  void onInputStreamReady(in nsIInputStream aStream);
+};
 
 [scriptable, uuid(72c34415-c6eb-48af-851f-772fa9ee5972)]
 interface nsICacheInfoChannel : nsISupports
@@ -115,6 +122,13 @@ interface nsICacheInfoChannel : nsISupports
    * Can only be called during or after OnStartRequest.
    */
   readonly attribute ACString alternativeDataType;
+
+  /**
+   * Sometimes when the channel is delivering alt-data, we may want to somehow
+   * access the original content too. This method asynchronously opens the
+   * input stream and delivers it to the receiver.
+   */
+  void getOriginalInputStream(in nsIInputStreamReceiver aReceiver);
 
   /**
    * Opens and returns an output stream that a consumer may use to save an

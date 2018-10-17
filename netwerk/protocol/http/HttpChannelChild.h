@@ -182,6 +182,8 @@ protected:
 
   mozilla::ipc::IPCResult RecvCancelRedirected() override;
 
+  mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(const OptionalIPCStream& aStream) override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void DoNotifyListenerCleanup() override;
@@ -326,6 +328,8 @@ private:
   nsCOMPtr<nsIInterceptedBodyCallback> mSynthesizedCallback;
   nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   RefPtr<ChannelEventQueue> mEventQ;
+
+  nsCOMPtr<nsIInputStreamReceiver> mInputStreamReceiver;
 
   // Used to ensure atomicity of mBgChild and mBgInitFailCallback
   Mutex mBgChildMutex;
