@@ -3390,14 +3390,14 @@
     "bug_numbers": [1460589],
     "description": "DNS: success distribution when both native and TRR were used"
   },
-  "DNS_TRR_FIRST": {
+  "DNS_TRR_FIRST2": {
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "labels": ["TRRWorked", "NativeFallback", "BothFailed"],
-    "bug_numbers": [1472659],
-    "description": "TRR-first mode distribution. 0=Worked, 1=fell back to native, 2=both failed"
+    "labels": ["TRR", "NativeAfterTRR", "Native", "BothFailed"],
+    "bug_numbers": [1497252],
+    "description": "TRR-first mode distribution. 0=Worked, 1=fell back fine after TRR fail, 2=native worked, 3=both failed"
   },
   "DNS_TRR_DISABLED": {
     "record_in_processes": ["main"],
