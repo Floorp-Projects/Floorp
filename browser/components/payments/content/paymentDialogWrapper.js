@@ -12,15 +12,10 @@
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 
-const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
-                     .getService(Ci.nsIPaymentUIService);
-
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
-                               "resource:///modules/BrowserWindowTracker.jsm");
 ChromeUtils.defineModuleGetter(this, "OSKeyStore",
                                "resource://formautofill/OSKeyStore.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
@@ -221,7 +216,7 @@ var paymentDialogWrapper = {
     if (AppConstants.platform == "win") {
       this.frame.setAttribute("selectmenulist", "ContentSelectDropdown-windows");
     }
-    this.frame.setAttribute("src", "resource://payments/paymentRequest.xhtml");
+    this.frame.loadURI("resource://payments/paymentRequest.xhtml");
 
     this.temporaryStore = {
       addresses: new TempCollection("addresses"),
@@ -457,7 +452,7 @@ var paymentDialogWrapper = {
     Services.obs.addObserver(this, "formautofill-storage-changed", true);
 
     let requestSerialized = this._serializeRequest(this.request);
-    let chromeWindow = window.frameElement.ownerGlobal;
+    let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
     let isPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWindow);
 
     let [savedAddresses, savedBasicCards] =
@@ -479,25 +474,28 @@ var paymentDialogWrapper = {
       Cu.reportError("devtools.chrome.enabled must be enabled to debug the frame");
       return;
     }
+    let chromeWindow = Services.wm.getMostRecentWindow(null);
     let {
       gDevToolsBrowser,
     } = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm", {});
     gDevToolsBrowser.openContentProcessToolbox({
-      selectedBrowser: document.getElementById("paymentRequestFrame").frameLoader,
+      selectedBrowser: chromeWindow.document.getElementById("paymentRequestFrame").frameLoader,
     });
   },
 
   onOpenPreferences() {
-    BrowserWindowTracker.getTopWindow().openPreferences("privacy-form-autofill");
+    let prefsURL = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    prefsURL.data = "about:preferences#privacy-form-autofill";
+    Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no",
+                           prefsURL);
   },
 
   onPaymentCancel() {
     const showResponse = this.createShowResponse({
       acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
     });
-
     paymentSrv.respondPayment(showResponse);
-    paymentUISrv.closePayment(this.request.requestId);
+    window.close();
   },
 
   async onPay({
@@ -577,7 +575,7 @@ var paymentDialogWrapper = {
 
   onCloseDialogMessage() {
     // The PR is complete(), just close the dialog
-    paymentUISrv.closePayment(this.request.requestId);
+    window.close();
   },
 
   async onUpdateAutofillRecord(collectionName, record, guid, messageID) {
@@ -687,12 +685,6 @@ var paymentDialogWrapper = {
         this.onPaymentCancel();
         break;
       }
-      case "paymentDialogReady": {
-        window.dispatchEvent(new Event("tabmodaldialogready", {
-          bubbles: true,
-        }));
-        break;
-      }
       case "pay": {
         this.onPay(data);
         break;
@@ -700,9 +692,6 @@ var paymentDialogWrapper = {
       case "updateAutofillRecord": {
         this.onUpdateAutofillRecord(data.collectionName, data.record, data.guid, data.messageID);
         break;
-      }
-      default: {
-        throw new Error(`paymentDialogWrapper: Unexpected messageType: ${messageType}`);
       }
     }
   },
