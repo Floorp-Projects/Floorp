@@ -289,7 +289,7 @@ var TestRunner = {
       this.mochitestScope.info(
         `\tSkipped configuration ` +
         `[ ${combo.map((e) => e.name).join(", ")} ] ` +
-        `for "${reason}" in  ${config.name}.${func}`);
+        `for "${reason}" in ${config.name}.${func}`);
     }
   },
 

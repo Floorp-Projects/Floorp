@@ -35,15 +35,12 @@ public:
                                     bool aDelayAgnostic,
                                     bool aExtendedFilter);
 
-  bool RequiresSharing() const override
-  {
-    return false;
-  }
+  bool RequiresSharing() const override { return false; }
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
 
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
@@ -95,45 +92,32 @@ protected:
 
 private:
   /**
-   * Reevaluates the aggregated constraints of all allocations and restarts the
-   * underlying device if necessary.
+   * From a set of constraints and about:config preferences, output the correct
+   * set of preferences that can be sent to AudioInputProcessing.
    *
-   * If the given AllocationHandle was already registered, its constraints will
-   * be updated before reevaluation. If not, they will be added before
-   * reevaluation.
+   * This can fail if the number of channels requested is zero, negative, or
+   * more than the device supports.
    */
-  nsresult ReevaluateAllocation(const RefPtr<AllocationHandle>& aHandle,
-                                const NormalizedConstraints* aConstraintsUpdate,
-                                const MediaEnginePrefs& aPrefs,
-                                const nsString& aDeviceId,
-                                const char** aOutBadConstraint);
+  nsresult EvaluateSettings(const NormalizedConstraints& aConstraintsUpdate,
+                            const MediaEnginePrefs& aInPrefs,
+                            MediaEnginePrefs* aOutPrefs,
+                            const char** aOutBadConstraint);
+  /**
+   * From settings output by EvaluateSettings, send those settings to the
+   * AudioInputProcessing instance and the main thread (for use in GetSettings).
+   */
+  void ApplySettings(const MediaEnginePrefs& aPrefs);
 
   /**
-   * Updates the underlying (single) device with the aggregated constraints
-   * aNetConstraints. If the chosen settings for the device changes based on
-   * these new constraints, and capture is active, the device will be restarted.
+   * Sent the AudioProcessingModule parameter for a given processing algorithm.
    */
-  nsresult UpdateSingleSource(const RefPtr<const AllocationHandle>& aHandle,
-                              const NormalizedConstraints& aNetConstraints,
-                              const MediaEnginePrefs& aPrefs,
-                              const nsString& aDeviceId,
-                              const char** aOutBadConstraint);
-
-  // These methods send a message to the AudioInputProcessing instance.
   void UpdateAECSettingsIfNeeded(bool aEnable, webrtc::EcModes aMode);
   void UpdateAGCSettingsIfNeeded(bool aEnable, webrtc::AgcModes aMode);
   void UpdateNSSettingsIfNeeded(bool aEnable, webrtc::NsModes aMode);
   void UpdateAPMExtraOptions(bool aExtendedFilter, bool aDelayAgnostic);
-  void ApplySettings(const MediaEnginePrefs& aPrefs,
-                     RefPtr<MediaStreamGraphImpl> aGraph);
-
-  bool HasEnabledTrack() const;
-
-  RefPtr<AllocationHandle> mHandle;
 
   TrackID mTrackID = TRACK_NONE;
   PrincipalHandle mPrincipal = PRINCIPAL_HANDLE_NONE;
-  bool mEnabled = false;
 
   const RefPtr<AudioDeviceInfo> mDeviceInfo;
   const bool mDelayAgnostic;
@@ -146,11 +130,8 @@ private:
   // The current settings for the underlying device.
   // Constructed on the MediaManager thread, and then only ever accessed on the
   // main thread.
-  const nsMainThreadPtrHandle<media::Refcountable<dom::MediaTrackSettings>> mSettings;
-  // To only update microphone when needed, we keep track of the prefs
-  // representing the currently applied settings for this source. This is the
-  // net result of the prefs across all allocations.
-  MediaEnginePrefs mNetPrefs;
+  const nsMainThreadPtrHandle<media::Refcountable<dom::MediaTrackSettings>>
+    mSettings;
 
   // Current state of the resource for this source.
   MediaEngineSourceState mState;
@@ -174,8 +155,7 @@ public:
                        TrackID aTrackID,
                        const PrincipalHandle& aPrincipalHandle);
 
-  void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream,
+  void Pull(const RefPtr<SourceMediaStream>& aStream,
             TrackID aTrackID,
             StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle);
@@ -283,17 +263,14 @@ private:
   bool mEnded;
 };
 
-
 class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource
 {
 public:
-  explicit MediaEngineWebRTCAudioCaptureSource(const char* aUuid)
-  {
-  }
+  explicit MediaEngineWebRTCAudioCaptureSource(const char* aUuid) {}
   nsString GetName() const override;
   nsCString GetUUID() const override;
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                    const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     AllocationHandle** aOutHandle,

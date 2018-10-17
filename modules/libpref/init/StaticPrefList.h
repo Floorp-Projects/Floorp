@@ -712,6 +712,18 @@ VARCACHE_PREF(
   bool, false
 )
 
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "layout.css.supports-selector.enabled",
+   layout_css_supports_selector_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Pref to control whether @-moz-document url-prefix() is parsed in content
 // pages. Only effective when layout.css.moz-document.content.enabled is false.
 #ifdef EARLY_BETA_OR_EARLIER

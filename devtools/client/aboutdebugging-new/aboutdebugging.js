@@ -34,6 +34,8 @@ const {
   removeUSBRuntimesObserver,
 } = require("./src/modules/usb-runtimes");
 
+loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
+
 const App = createFactory(require("./src/components/App"));
 
 const { PAGES, RUNTIMES } = require("./src/constants");
@@ -46,6 +48,7 @@ const AboutDebugging = {
       return;
     }
 
+    this.onAdbAddonUpdated = this.onAdbAddonUpdated.bind(this);
     this.onNetworkLocationsUpdated = this.onNetworkLocationsUpdated.bind(this);
     this.onUSBRuntimesUpdated = this.onUSBRuntimesUpdated.bind(this);
 
@@ -65,6 +68,9 @@ const AboutDebugging = {
     addNetworkLocationsObserver(this.onNetworkLocationsUpdated);
     addUSBRuntimesObserver(this.onUSBRuntimesUpdated);
     await enableUSBRuntimes();
+
+    adbAddon.on("update", this.onAdbAddonUpdated);
+    this.onAdbAddonUpdated();
   },
 
   async createMessageContexts() {
@@ -92,6 +98,10 @@ const AboutDebugging = {
     return contexts;
   },
 
+  onAdbAddonUpdated() {
+    this.actions.updateAdbAddonStatus(adbAddon.status);
+  },
+
   onNetworkLocationsUpdated() {
     this.actions.updateNetworkLocations(getNetworkLocations());
   },
@@ -113,6 +123,7 @@ const AboutDebugging = {
     removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
     removeUSBRuntimesObserver(this.onUSBRuntimesUpdated);
     disableUSBRuntimes();
+    adbAddon.off("update", this.onAdbAddonUpdated);
     setDebugTargetCollapsibilities(state.ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);
   },
