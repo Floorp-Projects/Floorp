@@ -325,9 +325,11 @@ DebuggerRunsInMiddleman()
 }
 
 void
-MaybeCreateInitialCheckpoint()
+CreateCheckpoint()
 {
-  NewCheckpoint(/* aTemporary = */ false);
+  if (!HasDivergedFromRecording()) {
+    NewCheckpoint(/* aTemporary = */ false);
+  }
 }
 
 void

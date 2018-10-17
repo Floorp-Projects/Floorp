@@ -29,8 +29,8 @@ void InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv);
 base::ProcessId MiddlemanProcessId();
 base::ProcessId ParentProcessId();
 
-// Create a normal checkpoint, if no such checkpoint has been created yet.
-void MaybeCreateInitialCheckpoint();
+// Create a normal checkpoint, if execution has not diverged from the recording.
+void CreateCheckpoint();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Painting Coordination
