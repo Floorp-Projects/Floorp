@@ -37,11 +37,11 @@ struct ElementPropertyTransition : public dom::KeyframeEffect
 {
   ElementPropertyTransition(nsIDocument* aDocument,
                             Maybe<OwningAnimationTarget>& aTarget,
-                            const TimingParams &aTiming,
+                            TimingParams&& aTiming,
                             AnimationValue aStartForReversingTest,
                             double aReversePortion,
                             const KeyframeEffectParams& aEffectOptions)
-    : dom::KeyframeEffect(aDocument, aTarget, aTiming, aEffectOptions)
+    : dom::KeyframeEffect(aDocument, aTarget, std::move(aTiming), aEffectOptions)
     , mStartForReversingTest(aStartForReversingTest)
     , mReversePortion(aReversePortion)
   { }
