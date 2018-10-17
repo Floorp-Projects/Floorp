@@ -885,16 +885,6 @@ css::URLValue::GetURI() const
 }
 
 bool
-css::URLValue::IsLocalRef() const
-{
-  if (mIsLocalRef.isNothing()) {
-    // IsLocalRefURL is O(N), use it only when IsLocalRef is called.
-    mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(GetString()));
-  }
-  return mIsLocalRef.value();
-}
-
-bool
 css::URLValue::HasRef() const
 {
   if (IsLocalRef()) {

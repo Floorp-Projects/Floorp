@@ -5481,6 +5481,13 @@ pub extern "C" fn Servo_CssUrlData_GetExtraData(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_CssUrlData_IsLocalRef(
+    url: RawServoCssUrlDataBorrowed
+) -> bool {
+    CssUrlData::as_arc(&url).is_fragment()
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_ProcessInvalidations(
     set: RawServoStyleSetBorrowed,
     element: RawGeckoElementBorrowed,
