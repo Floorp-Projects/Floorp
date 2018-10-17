@@ -24,7 +24,7 @@ nsCodeCoverage::~nsCodeCoverage()
 {
 }
 
-enum RequestType { Dump, Reset };
+enum RequestType { Flush };
 
 class ProcessCount final {
   NS_INLINE_DECL_REFCOUNTING(ProcessCount);
@@ -61,10 +61,8 @@ nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType)
     ++processCount;
   }
 
-  if (requestType == RequestType::Dump) {
-    CodeCoverageHandler::DumpCounters();
-  } else if (requestType == RequestType::Reset) {
-    CodeCoverageHandler::ResetCounters();
+  if (requestType == RequestType::Flush) {
+    CodeCoverageHandler::FlushCounters();
   }
 
   if (processCount == 0) {
@@ -83,10 +81,8 @@ nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType)
     };
 
     for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-      if (requestType == RequestType::Dump) {
-        cp->SendDumpCodeCoverageCounters(resolve, reject);
-      } else if (requestType == RequestType::Reset) {
-        cp->SendResetCodeCoverageCounters(resolve, reject);
+      if (requestType == RequestType::Flush) {
+        cp->SendFlushCodeCoverageCounters(resolve, reject);
       }
     }
   }
@@ -95,12 +91,7 @@ nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCodeCoverage::DumpCounters(JSContext *cx, Promise** aPromise)
+NS_IMETHODIMP nsCodeCoverage::FlushCounters(JSContext *cx, Promise** aPromise)
 {
-  return Request(cx, aPromise, RequestType::Dump);
-}
-
-NS_IMETHODIMP nsCodeCoverage::ResetCounters(JSContext *cx, Promise** aPromise)
-{
-  return Request(cx, aPromise, RequestType::Reset);
+  return Request(cx, aPromise, RequestType::Flush);
 }

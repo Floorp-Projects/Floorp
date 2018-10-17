@@ -36,6 +36,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // Constants
 const uint32_t kMaxDropDownRows         = 20; // This matches the setting for 4.x browsers
@@ -279,25 +280,33 @@ nsListControlFrame::AccessibleType()
 }
 #endif
 
-static nscoord
-GetMaxOptionBSize(nsIFrame* aContainer, WritingMode aWM)
+// Return true if we found at least one <option> or non-empty <optgroup> label
+// that has a frame.  aResult will be the maximum BSize of those.
+static bool
+GetMaxRowBSize(nsIFrame* aContainer, WritingMode aWM, nscoord* aResult)
 {
-  nscoord result = 0;
-  for (nsIFrame* option : aContainer->PrincipalChildList()) {
-    nscoord optionBSize;
-    if (HTMLOptGroupElement::FromNode(option->GetContent())) {
-      // An optgroup; drill through any scroll frame and recurse.  |frame| might
-      // be null here though if |option| is an anonymous leaf frame of some sort.
-      auto frame = option->GetContentInsertionFrame();
-      optionBSize = frame ? GetMaxOptionBSize(frame, aWM) : 0;
+  bool found = false;
+  for (nsIFrame* child : aContainer->PrincipalChildList()) {
+    if (child->GetContent()->IsHTMLElement(nsGkAtoms::optgroup)) {
+      // An optgroup; drill through any scroll frame and recurse.  |inner| might
+      // be null here though if |inner| is an anonymous leaf frame of some sort.
+      auto inner = child->GetContentInsertionFrame();
+      if (inner && GetMaxRowBSize(inner, aWM, aResult)) {
+        found = true;
+      }
     } else {
-      // an option
-      optionBSize = option->BSize(aWM);
+      // an option or optgroup label
+      bool isOptGroupLabel = child->Style()->IsPseudoElement() &&
+        aContainer->GetContent()->IsHTMLElement(nsGkAtoms::optgroup);
+      nscoord childBSize = child->BSize(aWM);
+      // XXX bug 1499176: skip empty <optgroup> labels (zero bsize) for now
+      if (!isOptGroupLabel || childBSize > nscoord(0)) {
+        found = true;
+        *aResult = std::max(childBSize, *aResult);
+      }
     }
-    if (result < optionBSize)
-      result = optionBSize;
   }
-  return result;
+  return found;
 }
 
 //-----------------------------------------------------------------
@@ -312,17 +321,13 @@ nsListControlFrame::CalcBSizeOfARow()
   // since there may be option groups in addition to option elements,
   // either of which may be visible or invisible, may use different
   // fonts, etc.
-  int32_t blockSizeOfARow = GetMaxOptionBSize(GetOptionsContainer(),
-                                              GetWritingMode());
-
-  // Check to see if we have zero items (and optimize by checking
-  // blockSizeOfARow first)
-  if (blockSizeOfARow == 0 && GetNumberOfOptions() == 0) {
+  nscoord rowBSize(0);
+  if (!GetMaxRowBSize(GetOptionsContainer(), GetWritingMode(), &rowBSize)) {
+    // We don't have any <option>s or <optgroup> labels with a frame.
     float inflation = nsLayoutUtils::FontSizeInflationFor(this);
-    blockSizeOfARow = CalcFallbackRowBSize(inflation);
+    rowBSize = CalcFallbackRowBSize(inflation);
   }
-
-  return blockSizeOfARow;
+  return rowBSize;
 }
 
 nscoord
@@ -1143,7 +1148,7 @@ nsListControlFrame::GetNonDisabledOptionFrom(int32_t aFromIndex,
     if (!node) {
       break;
     }
-    if (!selectElement->IsOptionDisabled(node)) {
+    if (IsOptionInteractivelySelectable(selectElement, node)) {
       if (aFoundIndex) {
         *aFoundIndex = i;
       }
@@ -1545,16 +1550,23 @@ nsListControlFrame::GetBSizeOfARow()
   return BSizeOfARow();
 }
 
-nsresult
-nsListControlFrame::IsOptionDisabled(int32_t anIndex, bool &aIsDisabled)
+bool
+nsListControlFrame::IsOptionInteractivelySelectable(int32_t aIndex) const
 {
-  RefPtr<dom::HTMLSelectElement> sel =
-    dom::HTMLSelectElement::FromNode(mContent);
-  if (sel) {
-    sel->IsOptionDisabled(anIndex, &aIsDisabled);
-    return NS_OK;
+  if (HTMLSelectElement* sel = HTMLSelectElement::FromNode(mContent)) {
+    if (HTMLOptionElement* item = sel->Item(aIndex)) {
+      return IsOptionInteractivelySelectable(sel, item);
+    }
   }
-  return NS_ERROR_FAILURE;
+  return false;
+}
+
+bool
+nsListControlFrame::IsOptionInteractivelySelectable(HTMLSelectElement* aSelect,
+                                                    HTMLOptionElement* aOption)
+{
+  return !aSelect->IsOptionDisabled(aOption) &&
+         aOption->GetPrimaryFrame();
 }
 
 //----------------------------------------------------------------------
@@ -1660,10 +1672,8 @@ nsListControlFrame::MouseUp(dom::Event* aMouseEvent)
 
     int32_t selectedIndex;
     if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
-      // If it's disabled, disallow the click and leave.
-      bool isDisabled = false;
-      IsOptionDisabled(selectedIndex, isDisabled);
-      if (isDisabled) {
+      // If it's not selectable, disallow the click and leave.
+      if (!IsOptionInteractivelySelectable(selectedIndex)) {
         aMouseEvent->PreventDefault();
         aMouseEvent->StopPropagation();
         CaptureMouseEvents(false);
@@ -2032,9 +2042,8 @@ nsListControlFrame::AdjustIndexForDisabledOpt(int32_t aStartIndex,
   }
 
   while (1) {
-    // if the newIndex isn't disabled, we are golden, bail out
-    bool isDisabled = true;
-    if (NS_SUCCEEDED(IsOptionDisabled(newIndex, isDisabled)) && !isDisabled) {
+    // if the newIndex is selectable, we are golden, bail out
+    if (IsOptionInteractivelySelectable(newIndex)) {
       break;
     }
 

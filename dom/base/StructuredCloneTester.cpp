@@ -76,22 +76,23 @@ StructuredCloneTester::ReadStructuredClone(JSContext* aCx,
     return nullptr;
   }
 
-  // Prevent the return value from being trashed by a GC during ~nsRefPtr
-  JS::RootedObject result(aCx);
+  // Prevent the return value from being trashed by a GC during ~RefPtr
+  JS::Rooted<JSObject*> result(aCx);
+  {
+    RefPtr<StructuredCloneTester> sct = new StructuredCloneTester(
+      global,
+      static_cast<bool>(serializable),
+      static_cast<bool>(deserializable)
+    );
 
-  RefPtr<StructuredCloneTester> sct = new StructuredCloneTester(
-    global,
-    static_cast<bool>(serializable),
-    static_cast<bool>(deserializable)
-  );
+    // "Fail" deserialization
+    if (!sct->Deserializable()) {
+      xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+      return nullptr;
+    }
 
-  // "Fail" deserialization
-  if (!sct->Deserializable()) {
-    xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
-    return nullptr;
+    result = sct->WrapObject(aCx, nullptr);
   }
-
-  result = sct->WrapObject(aCx, nullptr);
 
   return result;
 }
