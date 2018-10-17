@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview.test.util
 
+import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
@@ -54,7 +55,7 @@ class Callbacks private constructor() {
         }
 
         override fun onLoadRequest(session: GeckoSession, uri: String, where: Int,
-                                   flags: Int): GeckoResult<Boolean>? {
+                                   flags: Int): GeckoResult<AllowOrDeny>? {
             return null
         }
 
@@ -129,7 +130,7 @@ class Callbacks private constructor() {
             callback.dismiss()
         }
 
-        override fun onPopupRequest(session: GeckoSession, targetUri: String): GeckoResult<Boolean>? {
+        override fun onPopupRequest(session: GeckoSession, targetUri: String): GeckoResult<AllowOrDeny>? {
             return null
         }
     }

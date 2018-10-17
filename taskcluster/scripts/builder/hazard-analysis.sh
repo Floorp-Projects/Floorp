@@ -5,13 +5,15 @@
 [ -n "$GECKO_DIR" ]
 
 HAZARD_SHELL_OBJDIR=$WORKSPACE/obj-haz-shell
+JSBIN="$HAZARD_SHELL_OBJDIR/dist/bin/js"
 JS_SRCDIR=$GECKO_DIR/js/src
 ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
+GCCDIR="$TOOLTOOL_DIR/gcc"
 
-export CC="$TOOLTOOL_DIR/gcc/bin/gcc"
-export CXX="$TOOLTOOL_DIR/gcc/bin/g++"
-export PATH="$TOOLTOOL_DIR/gcc/bin:$PATH"
-export LD_LIBRARY_PATH="$TOOLTOOL_DIR/gcc/lib64"
+export CC="$GCCDIR/bin/gcc"
+export CXX="$GCCDIR/bin/g++"
+export PATH="$GCCDIR/bin:$PATH"
+export LD_LIBRARY_PATH="$GCCDIR/lib64"
 export RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
 export CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"
 export LLVM_CONFIG="$TOOLTOOL_DIR/clang/bin/llvm-config"
@@ -20,7 +22,6 @@ PYTHON=python2.7
 if ! which $PYTHON; then
     PYTHON=python
 fi
-
 
 function check_commit_msg () {
     ( set +e;
@@ -68,7 +69,7 @@ function configure_analysis () {
     (
         cd "$analysis_dir"
         cat > defaults.py <<EOF
-js = "$HAZARD_SHELL_OBJDIR/dist/bin/js"
+js = "$JSBIN"
 analysis_scriptdir = "$ANALYSIS_SRCDIR"
 objdir = "$MOZ_OBJDIR"
 source = "$GECKO_DIR"
@@ -105,6 +106,10 @@ function run_analysis () {
         cd "$analysis_dir"
         $PYTHON "$ANALYSIS_SRCDIR/analyze.py" -v --buildcommand="$GECKO_DIR/taskcluster/scripts/builder/hazard-${build_type}.sh"
     )
+}
+
+function analysis_self_test () {
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(dirname "$JSBIN")" $PYTHON "$ANALYSIS_SRCDIR/run-test.py" -v --js "$JSBIN" --sixgill "$TOOLTOOL_DIR/sixgill" --gccdir "$GCCDIR"
 }
 
 function grab_artifacts () {
@@ -161,23 +166,27 @@ function check_hazards () {
     echo "TinderboxPrint: (unnecessary roots)<br/>$NUM_UNNECESSARY"
     echo "TinderboxPrint: heap write hazards<br/>$NUM_WRITE_HAZARDS"
 
+    # Display errors in a way that will get picked up by the taskcluster scraper.
+    perl -le 'print "TEST-UNEXPECTED-FAIL | hazards | $ENV{NUM_HAZARDS} rooting hazards" if $ENV{NUM_HAZARDS}'
+    perl -lne 'print "TEST-UNEXPECTED-FAIL | hazards | $1 $2" if /^Function.* has (unrooted .*live across GC call).* (at .*)$/' "$1"/hazards.txt
+
     exit_status=0
 
     if [ $NUM_HAZARDS -gt 0 ]; then
-        echo "TEST-UNEXPECTED-FAIL $NUM_HAZARDS rooting hazards detected" >&2
+        echo "TEST-UNEXPECTED-FAIL | hazards | $NUM_HAZARDS rooting hazards detected" >&2
         echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_rooting_hazards_failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit_status=1
     fi
 
     NUM_ALLOWED_WRITE_HAZARDS=0
     if [ $NUM_WRITE_HAZARDS -gt $NUM_ALLOWED_WRITE_HAZARDS ]; then
-        echo "TEST-UNEXPECTED-FAIL $NUM_WRITE_HAZARDS heap write hazards detected out of $NUM_ALLOWED_WRITE_HAZARDS allowed" >&2
+        echo "TEST-UNEXPECTED-FAIL | heap-write-hazards | $NUM_WRITE_HAZARDS heap write hazards detected out of $NUM_ALLOWED_WRITE_HAZARDS allowed" >&2
         echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_heap_write_hazard_failure'>heap write hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit_status = 1
     fi
 
     if [ $NUM_DROPPED -gt 0 ]; then
-        echo "TEST-UNEXPECTED-FAIL $NUM_DROPPED CFGs dropped" >&2
+        echo "TEST-UNEXPECTED-FAIL | hazards | $NUM_DROPPED CFGs dropped" >&2
         echo "TinderboxPrint: sixgill unable to handle constructs<br/>$NUM_DROPPED"
         exit_status=1
     fi

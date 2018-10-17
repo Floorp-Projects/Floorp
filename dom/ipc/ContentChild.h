@@ -639,10 +639,7 @@ public:
   RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvDumpCodeCoverageCounters(DumpCodeCoverageCountersResolver&& aResolver) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvResetCodeCoverageCounters(ResetCodeCoverageCountersResolver&& aResolver) override;
+  RecvFlushCodeCoverageCounters(FlushCodeCoverageCountersResolver&& aResolver) override;
 
   virtual mozilla::ipc::IPCResult
   RecvSetInputEventQueueEnabled() override;
