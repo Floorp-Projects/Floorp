@@ -358,6 +358,8 @@ class UrlInputFragment :
     override fun onStart() {
         super.onStart()
 
+        activity?.let {
+            if (Settings.getInstance(it.applicationContext).shouldShowFirstrun()) return@onStart }
         showKeyboard()
     }
 
