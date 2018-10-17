@@ -182,10 +182,8 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect;
-- (BOOL)isUsingMainThreadOpenGL;
 - (BOOL)isUsingOpenGL;
 - (void)drawUsingOpenGL;
-- (void)drawUsingOpenGLCallback;
 
 - (BOOL)hasRoundedBottomCorners;
 - (CGFloat)cornerRadius;
@@ -3506,24 +3504,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     [super setNeedsDisplayInRect:aRect];
     return;
   }
-
-  if ([[self window] isVisible] && [self isUsingMainThreadOpenGL]) {
-    // Draw without calling drawRect. This prevent us from
-    // needing to access the normal window buffer surface unnecessarily, so we
-    // waste less time synchronizing the two surfaces. (These synchronizations
-    // show up in a profiler as CGSDeviceLock / _CGSLockWindow /
-    // _CGSSynchronizeWindowBackingStore.) It also means that Cocoa doesn't
-    // have any potentially expensive invalid rect management for us.
-    if (!mWaitingForPaint) {
-      mWaitingForPaint = YES;
-      // Use NSRunLoopCommonModes instead of the default NSDefaultRunLoopMode
-      // so that the timer also fires while a native menu is open.
-      [self performSelector:@selector(drawUsingOpenGLCallback)
-                 withObject:nil
-                 afterDelay:0
-                    inModes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
-    }
-  }
 }
 
 - (NSString*)description
@@ -3690,12 +3670,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
 
   if ([self isUsingOpenGL]) {
-    // For Gecko-initiated repaints in OpenGL mode, drawUsingOpenGL is
-    // directly called from a delayed perform callback - without going through
-    // drawRect.
-    // Paints that come through here are triggered by something that Cocoa
-    // controls, for example by window resizing or window focus changes.
-
     // Since this view is usually declared as opaque, the window's pixel
     // buffer may now contain garbage which we need to prevent from reaching
     // the screen. The only place where garbage can show is in the window
@@ -3758,20 +3732,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
 }
 
-- (BOOL)isUsingMainThreadOpenGL
-{
-  if (!mGeckoChild || ![self window])
-    return NO;
-
-  return mGeckoChild->GetLayerManager(nullptr)->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_OPENGL;
-}
-
 - (BOOL)isUsingOpenGL
 {
   if (!mGeckoChild || ![self window])
     return NO;
 
-  return mGLContext || mUsingOMTCompositor || [self isUsingMainThreadOpenGL];
+  return mGLContext || mUsingOMTCompositor;
 }
 
 - (void)drawUsingOpenGL
@@ -3781,21 +3747,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (![self isUsingOpenGL] || !mGeckoChild->IsVisible())
     return;
 
-  mWaitingForPaint = NO;
-
   LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
   LayoutDeviceIntRegion region(geckoBounds);
 
   mGeckoChild->PaintWindow(region);
-}
-
-// Called asynchronously after setNeedsDisplay in order to avoid entering the
-// normal drawing machinery.
-- (void)drawUsingOpenGLCallback
-{
-  if (mWaitingForPaint) {
-    [self drawUsingOpenGL];
-  }
 }
 
 - (BOOL)hasRoundedBottomCorners
