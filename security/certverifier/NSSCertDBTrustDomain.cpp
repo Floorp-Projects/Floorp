@@ -582,7 +582,6 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
     Result tempRV = DoOCSPRequest(aiaLocation, mOriginAttributes,
                                   std::move(ocspRequest), GetOCSPTimeout(),
                                   ocspResponse);
-    MOZ_ASSERT((tempRV != Success) || ocspResponse.length() > 0);
     if (tempRV != Success) {
       rv = tempRV;
     } else if (response.Init(ocspResponse.begin(), ocspResponse.length())
