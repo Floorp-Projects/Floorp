@@ -2413,6 +2413,9 @@ impl CascadeData {
         if let Some(ref mut slotted_rules) = self.slotted_rules {
             slotted_rules.clear();
         }
+        if let Some(ref mut host_rules) = self.host_rules {
+            host_rules.clear();
+        }
         self.animations.clear();
         self.extra_data.clear();
         self.rules_source_order = 0;
@@ -2437,6 +2440,9 @@ impl CascadeData {
         self.normal_rules.add_size_of(ops, sizes);
         if let Some(ref slotted_rules) = self.slotted_rules {
             slotted_rules.add_size_of(ops, sizes);
+        }
+        if let Some(ref host_rules) = self.host_rules {
+            host_rules.add_size_of(ops, sizes);
         }
         sizes.mInvalidationMap += self.invalidation_map.size_of(ops);
         sizes.mRevalidationSelectors += self.selectors_for_cache_revalidation.size_of(ops);
