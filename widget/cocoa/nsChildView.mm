@@ -3649,18 +3649,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild || !mGeckoChild->IsVisible())
     return;
 
-#ifdef DEBUG_UPDATE
-  LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
-
-  fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
-           self, mGeckoChild,
-           aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height, aContext,
-           geckoBounds.x, geckoBounds.y, geckoBounds.width, geckoBounds.height);
-
-  CGAffineTransform xform = CGContextGetCTM(aContext);
-  fprintf (stderr, "  xform in: [%f %f %f %f %f %f]\n", xform.a, xform.b, xform.c, xform.d, xform.tx, xform.ty);
-#endif
-
   if ([self isUsingOpenGL]) {
     // Since this view is usually declared as opaque, the window's pixel
     // buffer may now contain garbage which we need to prevent from reaching
@@ -3707,21 +3695,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     [self drawTitleString];
     [self maskTopCornersInContext:aContext];
   }
-
-#ifdef DEBUG_UPDATE
-  fprintf (stderr, "---- update done ----\n");
-
-#if 0
-  CGContextSetRGBStrokeColor (aContext,
-                            ((((unsigned long)self) & 0xff)) / 255.0,
-                            ((((unsigned long)self) & 0xff00) >> 8) / 255.0,
-                            ((((unsigned long)self) & 0xff0000) >> 16) / 255.0,
-                            0.5);
-#endif
-  CGContextSetRGBStrokeColor(aContext, 1, 0, 0, 0.8);
-  CGContextSetLineWidth(aContext, 4.0);
-  CGContextStrokeRect(aContext, NSRectToCGRect(aRect));
-#endif
 }
 
 - (BOOL)isUsingOpenGL
