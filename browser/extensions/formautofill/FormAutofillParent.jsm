@@ -247,7 +247,7 @@ FormAutofillParent.prototype = {
       }
       case "FormAutofill:OpenPreferences": {
         const win = BrowserWindowTracker.getTopWindow();
-        win.openPreferences("panePrivacy", {origin: "autofillFooter"});
+        win.openPreferences("privacy-form-autofill", {origin: "autofillFooter"});
         break;
       }
       case "FormAutofill:GetDecryptedString": {

@@ -9,9 +9,7 @@ const kCID = Components.ID("{1f9f7181-e6c5-4f4c-8f71-08005cec8468}");
 const kContract = "@testing/notxpcomtest";
 
 function run_test() {
-  let manifest = do_get_file("xpcomtest.manifest");
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.autoRegister(manifest);
 
   ok(Ci.ScriptableWithNotXPCOM);
 

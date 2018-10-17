@@ -548,23 +548,41 @@ var Policies = {
       // |homepages| will be a string containing a pipe-separated ('|') list of
       // URLs because that is what the "Home page" section of about:preferences
       // (and therefore what the pref |browser.startup.homepage|) accepts.
-      let homepages = param.URL.href;
-      if (param.Additional && param.Additional.length > 0) {
-        homepages += "|" + param.Additional.map(url => url.href).join("|");
+      if (param.URL) {
+        let homepages = param.URL.href;
+        if (param.Additional && param.Additional.length > 0) {
+          homepages += "|" + param.Additional.map(url => url.href).join("|");
+        }
+        if (param.Locked) {
+          setAndLockPref("browser.startup.homepage", homepages);
+          setAndLockPref("pref.browser.homepage.disable_button.current_page", true);
+          setAndLockPref("pref.browser.homepage.disable_button.bookmark_page", true);
+          setAndLockPref("pref.browser.homepage.disable_button.restore_default", true);
+        } else {
+          setDefaultPref("browser.startup.homepage", homepages);
+          runOncePerModification("setHomepage", homepages, () => {
+            Services.prefs.clearUserPref("browser.startup.homepage");
+          });
+        }
       }
-      if (param.Locked) {
-        setAndLockPref("browser.startup.homepage", homepages);
-        setAndLockPref("browser.startup.page", 1);
-        setAndLockPref("pref.browser.homepage.disable_button.current_page", true);
-        setAndLockPref("pref.browser.homepage.disable_button.bookmark_page", true);
-        setAndLockPref("pref.browser.homepage.disable_button.restore_default", true);
-      } else {
-        setDefaultPref("browser.startup.homepage", homepages);
-        setDefaultPref("browser.startup.page", 1);
-        runOncePerModification("setHomepage", homepages, () => {
-          Services.prefs.clearUserPref("browser.startup.homepage");
-          Services.prefs.clearUserPref("browser.startup.page");
-        });
+      if (param.StartPage) {
+        let prefValue;
+        switch (param.StartPage) {
+          case "none":
+            prefValue = 0;
+            break;
+          case "homepage":
+            prefValue = 1;
+            break;
+          case "previous-session":
+            prefValue = 3;
+            break;
+        }
+        if (param.Locked) {
+          setAndLockPref("browser.startup.page", prefValue);
+        } else {
+          setDefaultPref("browser.startup.page", prefValue);
+        }
       }
     },
   },
