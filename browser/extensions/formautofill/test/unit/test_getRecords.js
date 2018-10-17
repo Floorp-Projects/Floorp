@@ -7,9 +7,10 @@
 ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 let FormAutofillParent;
+let OSKeyStore;
 add_task(async function setup() {
   ({FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {}));
-  ChromeUtils.import("resource://formautofill/MasterPassword.jsm");
+  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", {}));
 });
 
 const TEST_ADDRESS_1 = {
@@ -176,37 +177,24 @@ add_task(async function test_getRecords_creditCards() {
   let encryptedCCRecords = await Promise.all([TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2].map(async record => {
     let clonedRecord = Object.assign({}, record);
     clonedRecord["cc-number"] = CreditCard.getLongMaskedNumber(record["cc-number"]);
-    clonedRecord["cc-number-encrypted"] = await MasterPassword.encrypt(record["cc-number"]);
+    clonedRecord["cc-number-encrypted"] = await OSKeyStore.encrypt(record["cc-number"]);
     return clonedRecord;
   }));
   sinon.stub(collection, "getAll", () =>
     Promise.resolve([Object.assign({}, encryptedCCRecords[0]), Object.assign({}, encryptedCCRecords[1])]));
-  let CreditCardsWithDecryptedNumber = [
-    Object.assign({}, encryptedCCRecords[0], {"cc-number-decrypted": TEST_CREDIT_CARD_1["cc-number"]}),
-    Object.assign({}, encryptedCCRecords[1], {"cc-number-decrypted": TEST_CREDIT_CARD_2["cc-number"]}),
-  ];
 
   let testCases = [
     {
-      description: "If the search string could match 1 creditCard (without masterpassword)",
-      filter: {
-        collectionName: "creditCards",
-        info: {fieldName: "cc-name"},
-        searchString: "John Doe",
-      },
-      expectedResult: CreditCardsWithDecryptedNumber.slice(0, 1),
-    },
-    {
-      description: "If the search string could match multiple creditCards (without masterpassword)",
+      description: "If the search string could match multiple creditCards",
       filter: {
         collectionName: "creditCards",
         info: {fieldName: "cc-name"},
         searchString: "John",
       },
-      expectedResult: CreditCardsWithDecryptedNumber,
+      expectedResult: encryptedCCRecords,
     },
     {
-      description: "If the search string could not match any creditCard (without masterpassword)",
+      description: "If the search string could not match any creditCard",
       filter: {
         collectionName: "creditCards",
         info: {fieldName: "cc-name"},
@@ -215,25 +203,17 @@ add_task(async function test_getRecords_creditCards() {
       expectedResult: [],
     },
     {
-      description: "If the search number string could match 1 creditCard (without masterpassword)",
-      filter: {
-        collectionName: "creditCards",
-        info: {fieldName: "cc-number"},
-        searchString: "411",
-      },
-      expectedResult: CreditCardsWithDecryptedNumber.slice(0, 1),
-    },
-    {
-      description: "If the search string could match multiple creditCards (without masterpassword)",
+      description: "Return all creditCards if focused field is cc number; " +
+        "if the search string could match multiple creditCards",
       filter: {
         collectionName: "creditCards",
         info: {fieldName: "cc-number"},
         searchString: "4",
       },
-      expectedResult: CreditCardsWithDecryptedNumber,
+      expectedResult: encryptedCCRecords,
     },
     {
-      description: "If the search string could match 1 creditCard (with masterpassword)",
+      description: "If the search string could match 1 creditCard",
       filter: {
         collectionName: "creditCards",
         info: {fieldName: "cc-name"},
@@ -243,7 +223,7 @@ add_task(async function test_getRecords_creditCards() {
       expectedResult: encryptedCCRecords.slice(0, 1),
     },
     {
-      description: "Return all creditCards if focused field is cc number (with masterpassword)",
+      description: "Return all creditCards if focused field is cc number",
       filter: {
         collectionName: "creditCards",
         info: {fieldName: "cc-number"},

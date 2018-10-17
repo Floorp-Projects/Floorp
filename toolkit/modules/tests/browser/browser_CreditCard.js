@@ -4,38 +4,39 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
-ChromeUtils.import("resource://formautofill/MasterPassword.jsm");
+ChromeUtils.import("resource://formautofill/OSKeyStore.jsm");
+ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm");
 
 let oldGetters = {};
 let gFakeLoggedIn = true;
 
 add_task(function setup() {
-  oldGetters._token = Object.getOwnPropertyDescriptor(MasterPassword, "_token").get;
-  oldGetters.isEnabled = Object.getOwnPropertyDescriptor(MasterPassword, "isEnabled").get;
-  oldGetters.isLoggedIn = Object.getOwnPropertyDescriptor(MasterPassword, "isLoggedIn").get;
-  MasterPassword.__defineGetter__("_token", () => { return {hasPassword: true}; });
-  MasterPassword.__defineGetter__("isEnabled", () => true);
-  MasterPassword.__defineGetter__("isLoggedIn", () => gFakeLoggedIn);
-  registerCleanupFunction(() => {
-    MasterPassword.__defineGetter__("_token", oldGetters._token);
-    MasterPassword.__defineGetter__("isEnabled", oldGetters.isEnabled);
-    MasterPassword.__defineGetter__("isLoggedIn", oldGetters.isLoggedIn);
+  OSKeyStoreTestUtils.setup();
+  oldGetters.isEnabled = Object.getOwnPropertyDescriptor(OSKeyStore, "isEnabled").get;
+  oldGetters.isLoggedIn = Object.getOwnPropertyDescriptor(OSKeyStore, "isLoggedIn").get;
+  OSKeyStore.__defineGetter__("isEnabled", () => true);
+  OSKeyStore.__defineGetter__("isLoggedIn", () => gFakeLoggedIn);
+  registerCleanupFunction(async () => {
+    OSKeyStore.__defineGetter__("isEnabled", oldGetters.isEnabled);
+    OSKeyStore.__defineGetter__("isLoggedIn", oldGetters.isLoggedIn);
+    await OSKeyStoreTestUtils.cleanup();
 
-    // CreditCard.jsm and MasterPassword.jsm are imported into the global scope
-    // -- the window -- above. If they're not deleted, they outlive the test and
-    // are reported as a leak.
-    delete window.MasterPassword;
+    // CreditCard.jsm, OSKeyStore.jsm, and OSKeyStoreTestUtils.jsm are imported
+    // into the global scope -- the window -- above. If they're not deleted,
+    // they outlive the test and are reported as a leak.
+    delete window.OSKeyStore;
     delete window.CreditCard;
+    delete window.OSKeyStoreTestUtils;
   });
 });
 
-add_task(async function test_getLabel_withMasterPassword() {
-  ok(MasterPassword.isEnabled, "Confirm that MasterPassword is faked and thinks it is enabled");
-  ok(MasterPassword.isLoggedIn, "Confirm that MasterPassword is faked and thinks it is logged in");
+add_task(async function test_getLabel_withOSKeyStore() {
+  ok(OSKeyStore.isEnabled, "Confirm that OSKeyStore is faked and thinks it is enabled");
+  ok(OSKeyStore.isLoggedIn, "Confirm that OSKeyStore is faked and thinks it is logged in");
 
   const ccNumber = "4111111111111111";
-  const encryptedNumber = await MasterPassword.encrypt(ccNumber);
-  const decryptedNumber = await MasterPassword.decrypt(encryptedNumber);
+  const encryptedNumber = await OSKeyStore.encrypt(ccNumber);
+  const decryptedNumber = await OSKeyStore.decrypt(encryptedNumber);
   is(decryptedNumber, ccNumber, "Decrypted CC number should match original");
 
   const name = "Foxkeh";
