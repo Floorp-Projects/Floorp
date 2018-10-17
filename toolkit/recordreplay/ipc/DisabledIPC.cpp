@@ -40,7 +40,7 @@ ParentProcessId()
   MOZ_CRASH();
 }
 
-void MaybeCreateInitialCheckpoint()
+void CreateCheckpoint()
 {
   MOZ_CRASH();
 }

@@ -125,6 +125,7 @@ NewCheckpoint(bool aTemporary)
 {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
+  MOZ_RELEASE_ASSERT(!HasDivergedFromRecording());
   MOZ_RELEASE_ASSERT(IsReplaying() || !aTemporary);
 
   navigation::BeforeCheckpoint();
