@@ -98,9 +98,9 @@ function attachTarget(client, tab) {
   return client.attachTarget(tab.actor);
 }
 
-function listWorkers(tabClient) {
+function listWorkers(targetFront) {
   info("Listing workers.");
-  return tabClient.listWorkers();
+  return targetFront.listWorkers();
 }
 
 function findWorker(workers, url) {
@@ -113,9 +113,9 @@ function findWorker(workers, url) {
   return null;
 }
 
-function attachWorker(tabClient, worker) {
+function attachWorker(targetFront, worker) {
   info("Attaching to worker with url '" + worker.url + "'.");
-  return tabClient.attachWorker(worker.actor);
+  return targetFront.attachWorker(worker.actor);
 }
 
 function attachThread(workerClient, options) {
@@ -159,12 +159,12 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 
   const tab = await addTab(TAB_URL);
   const { tabs } = await listTabs(client);
-  const [, tabClient] = await attachTarget(client, findTab(tabs, TAB_URL));
+  const [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
 
   await createWorkerInTab(tab, WORKER_URL);
 
-  const { workers } = await listWorkers(tabClient);
-  const [, workerClient] = await attachWorker(tabClient,
+  const { workers } = await listWorkers(targetFront);
+  const [, workerClient] = await attachWorker(targetFront,
                                              findWorker(workers, WORKER_URL));
 
   const toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
@@ -177,7 +177,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 
   const context = createDebuggerContext(toolbox);
 
-  return { ...context, client, tab, tabClient, workerClient, toolbox, gDebugger};
+  return { ...context, client, tab, targetFront, workerClient, toolbox, gDebugger};
 }
 
 // Override addTab/removeTab as defined by shared-head, since these have

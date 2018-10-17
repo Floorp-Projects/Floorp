@@ -21,7 +21,7 @@ function run_test() {
   do_test_pending();
 }
 
-const testBreakpoint = async function(threadResponse, tabClient,
+const testBreakpoint = async function(threadResponse, targetFront,
                                              threadClient, tabResponse) {
   evalSetupCode();
 

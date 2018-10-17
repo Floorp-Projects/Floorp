@@ -98,7 +98,7 @@ WebGLContext::VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfl
 
     ////
 
-    mGenericVertexAttribTypes[index] = LOCAL_GL_FLOAT;
+    mGenericVertexAttribTypes[index] = webgl::AttribBaseType::Float;
     mGenericVertexAttribTypeInvalidator.InvalidateCaches();
 
     if (!index) {
@@ -125,7 +125,7 @@ WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
 
     ////
 
-    mGenericVertexAttribTypes[index] = LOCAL_GL_INT;
+    mGenericVertexAttribTypes[index] = webgl::AttribBaseType::Int;
     mGenericVertexAttribTypeInvalidator.InvalidateCaches();
 
     if (!index) {
@@ -152,7 +152,7 @@ WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLui
 
     ////
 
-    mGenericVertexAttribTypes[index] = LOCAL_GL_UNSIGNED_INT;
+    mGenericVertexAttribTypes[index] = webgl::AttribBaseType::UInt;
     mGenericVertexAttribTypeInvalidator.InvalidateCaches();
 
     if (!index) {
@@ -243,17 +243,20 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
         {
             JS::RootedObject obj(cx);
             switch (mGenericVertexAttribTypes[index]) {
-            case LOCAL_GL_FLOAT:
+            case webgl::AttribBaseType::Float:
                 obj = GetVertexAttribFloat32Array(cx, index);
                 break;
 
-            case LOCAL_GL_INT:
+            case webgl::AttribBaseType::Int:
                 obj =  GetVertexAttribInt32Array(cx, index);
                 break;
 
-            case LOCAL_GL_UNSIGNED_INT:
+            case webgl::AttribBaseType::UInt:
                 obj = GetVertexAttribUint32Array(cx, index);
                 break;
+
+            case webgl::AttribBaseType::Bool:
+                MOZ_CRASH("impossible");
             }
 
             if (!obj) {

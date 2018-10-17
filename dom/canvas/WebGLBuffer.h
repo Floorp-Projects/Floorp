@@ -8,7 +8,7 @@
 
 #include <map>
 
-#include "CacheMap.h"
+#include "CacheInvalidator.h"
 #include "GLDefs.h"
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
@@ -127,7 +127,7 @@ protected:
     mutable std::map<IndexRange, Maybe<uint32_t>> mIndexRanges;
 
 public:
-    CacheMapInvalidator mFetchInvalidator;
+    CacheInvalidator mFetchInvalidator;
 
     void ResetLastUpdateFenceId() const;
 };

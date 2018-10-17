@@ -14,7 +14,7 @@ function run_test() {
   const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(function(type, traits) {
-    attachTestTab(gClient, "test-1", function(reply, tabClient) {
+    attachTestTab(gClient, "test-1", function(reply, targetFront) {
       test_close(transport);
     });
   });

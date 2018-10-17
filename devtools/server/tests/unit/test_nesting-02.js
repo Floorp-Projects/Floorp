@@ -17,7 +17,7 @@ function run_test() {
   gClient.connect().then(function() {
     attachTestTabAndResume(
       gClient, "test-nesting",
-      function(response, tabClient, threadClient) {
+      function(response, targetFront, threadClient) {
         // Reach over the protocol connection and get a reference to the thread
         // actor.
         gThreadActor =
