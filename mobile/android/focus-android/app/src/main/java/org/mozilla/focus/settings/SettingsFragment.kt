@@ -15,7 +15,7 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
 
     override fun onCreatePreferences(bundle: Bundle?, s: String?) {
         addPreferencesFromResource(R.xml.settings)
-        if (!AppConstants.isGeckoBuild) {
+        if (!AppConstants.isGeckoBuild && !AppConstants.isDevBuild) {
             preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_advanced_screen)))
         }
     }
