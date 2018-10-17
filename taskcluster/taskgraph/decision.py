@@ -231,6 +231,9 @@ def get_decision_parameters(config, options):
     parameters['release_partner_build_number'] = 1
     parameters['release_enable_emefree'] = False
     parameters['release_product'] = None
+    parameters['try_mode'] = None
+    parameters['try_task_config'] = None
+    parameters['try_options'] = None
 
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
     # case, fake it
@@ -271,40 +274,45 @@ def get_decision_parameters(config, options):
 
     # load try settings
     if 'try' in project:
-        parameters['try_mode'] = None
-        if os.path.isfile(task_config_file):
-            logger.info("using try tasks from {}".format(task_config_file))
-            parameters['try_mode'] = 'try_task_config'
-            with open(task_config_file, 'r') as fh:
-                parameters['try_task_config'] = json.load(fh)
-        else:
-            parameters['try_task_config'] = None
-
-        if 'try:' in parameters['message']:
-            parameters['try_mode'] = 'try_option_syntax'
-            args = parse_message(parameters['message'])
-            parameters['try_options'] = args
-        else:
-            parameters['try_options'] = None
-
-        if parameters['try_mode']:
-            # The user has explicitly requested a set of jobs, so run them all
-            # regardless of optimization.  Their dependencies can be optimized,
-            # though.
-            parameters['optimize_target_tasks'] = False
-        else:
-            # For a try push with no task selection, apply the default optimization
-            # process to all of the tasks.
-            parameters['optimize_target_tasks'] = True
-
-    else:
-        parameters['try_mode'] = None
-        parameters['try_task_config'] = None
-        parameters['try_options'] = None
+        set_try_config(parameters, task_config_file)
 
     result = Parameters(**parameters)
     result.check()
     return result
+
+
+def set_try_config(parameters, task_config_file):
+    if os.path.isfile(task_config_file):
+        logger.info("using try tasks from {}".format(task_config_file))
+        with open(task_config_file, 'r') as fh:
+            task_config = json.load(fh)
+        task_config_version = task_config.get('version', 1)
+        if task_config_version == 1:
+            parameters['try_mode'] = 'try_task_config'
+            parameters['try_task_config'] = task_config
+        elif task_config_version == 2:
+            parameters.update(task_config['parameters'])
+            return
+        else:
+            raise Exception(
+                "Unknown `try_task_config.json` version: {}".format(task_config_version))
+
+    if 'try:' in parameters['message']:
+        parameters['try_mode'] = 'try_option_syntax'
+        args = parse_message(parameters['message'])
+        parameters['try_options'] = args
+    else:
+        parameters['try_options'] = None
+
+    if parameters['try_mode']:
+        # The user has explicitly requested a set of jobs, so run them all
+        # regardless of optimization.  Their dependencies can be optimized,
+        # though.
+        parameters['optimize_target_tasks'] = False
+    else:
+        # For a try push with no task selection, apply the default optimization
+        # process to all of the tasks.
+        parameters['optimize_target_tasks'] = True
 
 
 def write_artifact(filename, data):

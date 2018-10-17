@@ -208,6 +208,7 @@
             </hbox>
             <spacer class="alert-spacer-after"/>
           </vbox>
+
           <browser id="discover-browser" type="content" flex="1"
                    disablehistory="true"/>
         </deck>
@@ -314,19 +315,14 @@
                   </description>
                 </vbox>
               </vbox>
-              <vbox id="plugindeprecation-notice" class="alert-container">
-                <vbox class="alert">
-                  <description>&pluginDeprecation.description; &#160;
+              <vbox id="plugindeprecation-notice" class="list-view-notice" align="start">
+                <hbox class="message-bar">
+                  <image class="message-bar-icon"/>
+                  <description class="message-bar-description">
+                    &pluginDeprecation.description;
                     <label class="text-link plain" id="plugindeprecation-learnmore-link">&pluginDeprecation.learnMore;</label>
                   </description>
-                </vbox>
-              </vbox>
-              <vbox id="getthemes-container" class="alert-container">
-                <vbox class="alert">
-                  <description>&getThemes.description; &#160;
-                    <label class="text-link plain" id="getthemes-learnmore-link">&getThemes.learnMore;</label>
-                  </description>
-                </vbox>
+                </hbox>
               </vbox>
               <hbox class="view-header global-warning-container">
                 <!-- global warnings -->
@@ -513,6 +509,7 @@
                   </vbox>
                   <hbox class="card addon-detail" align="start">
                     <vbox flex="1">
+                      <image class="card-heading-image theme-screenshot" hidden="true"/>
                       <hbox align="start">
                         <vbox id="detail-icon-container" align="end">
                           <image id="detail-icon" class="icon"/>

@@ -3231,13 +3231,6 @@ public:
   static bool
   IsLocalRefURL(const nsString& aString);
 
-  /**
-   * Detect whether a string is a local-url.
-   * https://drafts.csswg.org/css-values/#local-urls
-   */
-  static bool
-  IsLocalRefURL(const nsACString& aString);
-
   static bool
   IsCustomElementsEnabled() { return sIsCustomElementsEnabled; }
 

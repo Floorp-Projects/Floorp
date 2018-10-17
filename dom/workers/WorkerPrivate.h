@@ -1367,8 +1367,7 @@ private:
   nsTArray<WorkerPrivate*> mChildWorkers;
   nsTObserverArray<WorkerHolder*> mHolders;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
-  RefPtr<ThrottledEventQueue> mMainThreadThrottledEventQueue;
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  RefPtr<ThrottledEventQueue> mMainThreadEventTarget;
   RefPtr<WorkerEventTarget> mWorkerControlEventTarget;
   RefPtr<WorkerEventTarget> mWorkerHybridEventTarget;
 

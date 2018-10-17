@@ -701,6 +701,10 @@ richlistbox.list > richlistitem.addon {
   box-shadow: none;
 }
 
+.addon.card > .card-heading-image {
+  margin-inline-end: -12px;
+}
+
 #detail-desc, #detail-fulldesc {
   margin-inline-start: 0;
   /* This is necessary to fix layout issues with multi-line descriptions, see

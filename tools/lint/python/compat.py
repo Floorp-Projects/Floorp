@@ -58,7 +58,7 @@ def run_linter(python, paths, config, **lintargs):
 
     root = lintargs['root']
     pattern = "**/*.py"
-    exclude = [mozpath.join(root, e) for e in lintargs.get('exclude', [])]
+    exclude = [mozpath.join(root, e) for e in config.get('exclude', [])]
     files = []
     for path in paths:
         path = mozpath.normsep(path)

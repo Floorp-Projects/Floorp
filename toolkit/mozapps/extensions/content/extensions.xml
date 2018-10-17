@@ -605,6 +605,8 @@
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
 
+      <xul:image class="card-heading-image" anonid="theme-screenshot" hidden="true"/>
+
       <xul:hbox class="content-container" align="center">
         <xul:vbox class="icon-container">
           <xul:image anonid="icon" class="icon"/>
