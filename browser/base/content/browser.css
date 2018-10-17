@@ -76,10 +76,6 @@ toolbar[customizable="true"] {
 }
 %endif
 
-#toolbar-menubar[autohide="true"] {
-  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-menubar-autohide");
-}
-
 panelmultiview {
   -moz-box-align: start;
 }
