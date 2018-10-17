@@ -450,4 +450,21 @@ TEST_P(TlsConnectTls13, ConnectBogusEsniExtensionEE) {
   ConnectExpectAlert(client_, illegal_parameter);
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_ESNI_EXTENSION);
 }
+
+// ESNI is a commitment to doing TLS 1.3 or above.
+// The TLS 1.2 server ignores ESNI and processes the dummy SNI.
+// The client then aborts when it sees the server did TLS 1.2.
+TEST_P(TlsConnectTls13, EsniButTLS12Server) {
+  EnsureTlsSetup();
+  SetupEsni(client_, server_);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  ConnectExpectAlert(client_, kTlsAlertProtocolVersion);
+  client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
+  server_->CheckErrorCode(SSL_ERROR_PROTOCOL_VERSION_ALERT);
+  ASSERT_FALSE(SSLInt_ExtensionNegotiated(server_->ssl_fd(),
+                                          ssl_tls13_encrypted_sni_xtn));
+}
 }
