@@ -1381,14 +1381,6 @@ Gecko_CounterStyle_GetAnonymous(const CounterStylePtr* aPtr)
   return aPtr->AsAnonymous();
 }
 
-already_AddRefed<css::URLValue>
-ServoBundledURI::IntoCssUrl(CORSMode aCorsMode)
-{
-  RefPtr<css::URLValue> urlValue =
-    new css::URLValue(mURLString, do_AddRef(mExtraData), aCorsMode);
-  return urlValue.forget();
-}
-
 void
 Gecko_SetNullImageValue(nsStyleImage* aImage)
 {
@@ -2005,9 +1997,9 @@ Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* aDst, const nsStyleSVG* aSrc)
 
 
 css::URLValue*
-Gecko_URLValue_Create(ServoBundledURI aURI, mozilla::CORSMode aCORSMode)
+Gecko_URLValue_Create(RawServoCssUrlDataStrong aCssUrl, CORSMode aCORSMode)
 {
-  RefPtr<css::URLValue> url = aURI.IntoCssUrl(aCORSMode);
+  RefPtr<css::URLValue> url = new css::URLValue(aCssUrl.Consume(), aCORSMode);
   return url.forget().take();
 }
 
@@ -2575,7 +2567,7 @@ LoadImportSheet(css::Loader* aLoader,
       NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:invalid"));
     }
     emptySheet->SetURIs(uri, uri, uri);
-    emptySheet->SetPrincipal(aURL->mExtraData->Principal());
+    emptySheet->SetPrincipal(aURL->ExtraData()->Principal());
     emptySheet->SetComplete();
     aParent->PrependStyleSheet(emptySheet);
     return emptySheet.forget();
@@ -2591,28 +2583,29 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
                      StyleSheet* aParent,
                      SheetLoadData* aParentLoadData,
                      css::LoaderReusableStyleSheets* aReusableSheets,
-                     ServoBundledURI aServoURL,
+                     RawServoCssUrlDataStrong aCssUrl,
                      RawServoMediaListStrong aMediaList)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // The CORS mode in the URLValue is irrelevant here.
   // (CORS_NONE is used for all imported sheets in Load::LoadChildSheet.)
-  RefPtr<css::URLValue> url = aServoURL.IntoCssUrl(CORS_NONE);
+  RefPtr<css::URLValue> url = new css::URLValue(aCssUrl.Consume(), CORS_NONE);
   return LoadImportSheet(aLoader, aParent, aParentLoadData, aReusableSheets,
                          url, aMediaList.Consume()).take();
 }
 
 void
 Gecko_LoadStyleSheetAsync(css::SheetLoadDataHolder* aParentData,
-                          ServoBundledURI aServoURL,
+                          RawServoCssUrlDataStrong aCssUrl,
                           RawServoMediaListStrong aMediaList,
                           RawServoImportRuleStrong aImportRule)
 {
   RefPtr<SheetLoadDataHolder> loadData = aParentData;
   // The CORS mode in the URLValue is irrelevant here.
   // (CORS_NONE is used for all imported sheets in Load::LoadChildSheet.)
-  RefPtr<css::URLValue> urlVal = aServoURL.IntoCssUrl(CORS_NONE);
+  RefPtr<css::URLValue> urlVal =
+    new css::URLValue(aCssUrl.Consume(), CORS_NONE);
   RefPtr<RawServoMediaList> mediaList = aMediaList.Consume();
   RefPtr<RawServoImportRule> importRule = aImportRule.Consume();
   NS_DispatchToMainThread(NS_NewRunnableFunction(__func__,

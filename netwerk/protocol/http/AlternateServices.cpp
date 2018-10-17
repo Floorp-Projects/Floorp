@@ -79,6 +79,7 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
 
   LOG(("Alt-Svc Response Header %s\n", buf.get()));
   ParsedHeaderValueListList parsedAltSvc(buf);
+  int32_t numEntriesInHeader = parsedAltSvc.mValues.Length();
 
   for (uint32_t index = 0; index < parsedAltSvc.mValues.Length(); ++index) {
     uint32_t maxage = 86400; // default
@@ -98,6 +99,7 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
       if (!pairIndex) {
         if (currentName.EqualsLiteral("clear")) {
           clearEntry = true;
+          --numEntriesInHeader; // Only want to keep track of actual alt-svc maps, not clearing
           break;
         }
 
@@ -159,6 +161,10 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
       gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps,
                                             originAttributes);
     }
+  }
+
+  if (numEntriesInHeader) { // Ignore headers that were just "alt-svc: clear"
+    Telemetry::Accumulate(Telemetry::HTTP_ALTSVC_ENTRIES_PER_HEADER, numEntriesInHeader);
   }
 }
 
@@ -885,6 +891,7 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
                this, map, existing.get()));
         }
       }
+      Telemetry::Accumulate(Telemetry::HTTP_ALTSVC_MAPPING_CHANGED_TARGET, false);
       return;
     }
 
@@ -897,6 +904,7 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
     // new alternate. start new validation
     LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p may overwrite %p\n",
          this, map, existing.get()));
+    Telemetry::Accumulate(Telemetry::HTTP_ALTSVC_MAPPING_CHANGED_TARGET, true);
   }
 
   if (existing && !existing->Validated()) {
