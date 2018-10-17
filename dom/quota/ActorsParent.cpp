@@ -4588,6 +4588,65 @@ QuotaManager::MaybeRemoveOldDirectories()
   return NS_OK;
 }
 
+template<typename Helper>
+nsresult
+QuotaManager::UpgradeStorage(const int32_t aOldVersion,
+                             const int32_t aNewVersion,
+                             mozIStorageConnection* aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aNewVersion > aOldVersion);
+  MOZ_ASSERT(aNewVersion <= kStorageVersion);
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv;
+
+  for (const PersistenceType persistenceType : kAllPersistenceTypes) {
+    nsCOMPtr<nsIFile> directory;
+    rv = NS_NewLocalFile(GetStoragePath(persistenceType), false,
+                         getter_AddRefs(directory));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool exists;
+    rv = directory->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!exists) {
+      continue;
+    }
+
+    bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
+    RefPtr<RepositoryOperationBase> helper = new Helper(directory, persistent);
+    rv = helper->ProcessRepository();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+#ifdef DEBUG
+  {
+    int32_t storageVersion;
+    rv = aConnection->GetSchemaVersion(&storageVersion);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(storageVersion == aOldVersion);
+  }
+#endif
+
+  rv = aConnection->SetSchemaVersion(aNewVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 QuotaManager::UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection)
 {
@@ -4609,47 +4668,10 @@ QuotaManager::UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection)
     return rv;
   }
 
-  for (const PersistenceType persistenceType : kAllPersistenceTypes) {
-    nsCOMPtr<nsIFile> directory;
-    rv = NS_NewLocalFile(GetStoragePath(persistenceType), false,
-                         getter_AddRefs(directory));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool exists;
-    rv = directory->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!exists) {
-      continue;
-    }
-
-    bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
-    RefPtr<UpgradeStorageFrom0_0To1_0Helper> helper =
-      new UpgradeStorageFrom0_0To1_0Helper(directory, persistent);
-
-    rv = helper->ProcessRepository();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-#ifdef DEBUG
-  {
-    int32_t storageVersion;
-    rv = aConnection->GetSchemaVersion(&storageVersion);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(storageVersion == 0);
-  }
-#endif
-
-  rv = aConnection->SetSchemaVersion(MakeStorageVersion(1, 0));
+  rv =
+    UpgradeStorage<UpgradeStorageFrom0_0To1_0Helper>(0,
+                                                     MakeStorageVersion(1, 0),
+                                                     aConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4730,49 +4752,10 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
   // manager directories without the ".files" suffix then prevent current
   // Firefox from initializing and using the storage.
 
-  nsresult rv;
-
-  for (const PersistenceType persistenceType : kAllPersistenceTypes) {
-    nsCOMPtr<nsIFile> directory;
-    rv = NS_NewLocalFile(GetStoragePath(persistenceType), false,
-                         getter_AddRefs(directory));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool exists;
-    rv = directory->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!exists) {
-      continue;
-    }
-
-    bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
-    RefPtr<UpgradeStorageFrom1_0To2_0Helper> helper =
-      new UpgradeStorageFrom1_0To2_0Helper(directory, persistent);
-
-    rv = helper->ProcessRepository();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-#ifdef DEBUG
-  {
-    int32_t storageVersion;
-    rv = aConnection->GetSchemaVersion(&storageVersion);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(storageVersion == MakeStorageVersion(1, 0));
-  }
-#endif
-
-  rv = aConnection->SetSchemaVersion(MakeStorageVersion(2, 0));
+  nsresult rv =
+    UpgradeStorage<UpgradeStorageFrom1_0To2_0Helper>(MakeStorageVersion(1, 0),
+                                                     MakeStorageVersion(2, 0),
+                                                     aConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4789,49 +4772,10 @@ QuotaManager::UpgradeStorageFrom2_0To2_1(mozIStorageConnection* aConnection)
   // The upgrade is mainly to create a directory padding file in DOM Cache
   // directory to record the overall padding size of an origin.
 
-  nsresult rv;
-
-  for (const PersistenceType persistenceType : kAllPersistenceTypes) {
-    nsCOMPtr<nsIFile> directory;
-    rv = NS_NewLocalFile(GetStoragePath(persistenceType), false,
-                         getter_AddRefs(directory));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool exists;
-    rv = directory->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!exists) {
-      continue;
-    }
-
-    bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
-    RefPtr<UpgradeStorageFrom2_0To2_1Helper> helper =
-      new UpgradeStorageFrom2_0To2_1Helper(directory, persistent);
-
-    rv = helper->ProcessRepository();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-#ifdef DEBUG
-  {
-    int32_t storageVersion;
-    rv = aConnection->GetSchemaVersion(&storageVersion);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(storageVersion == MakeStorageVersion(2, 0));
-  }
-#endif
-
-  rv = aConnection->SetSchemaVersion(MakeStorageVersion(2, 1));
+  nsresult rv =
+    UpgradeStorage<UpgradeStorageFrom2_0To2_1Helper>(MakeStorageVersion(2, 0),
+                                                     MakeStorageVersion(2, 1),
+                                                     aConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
