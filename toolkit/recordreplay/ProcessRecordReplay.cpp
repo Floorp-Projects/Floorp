@@ -111,6 +111,7 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
   EarlyInitializeRedirections();
 
   if (!IsRecordingOrReplaying()) {
+    InitializeMiddlemanCalls();
     return;
   }
 
@@ -144,6 +145,7 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
   Thread::SpawnAllThreads();
   InitializeCountdownThread();
   SetupDirtyMemoryHandler();
+  InitializeMiddlemanCalls();
 
   // Don't create a stylo thread pool when recording or replaying.
   putenv((char*) "STYLO_THREADS=1");
