@@ -1267,7 +1267,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   // message but request the cache entry to be kept by the parent.
   // If the channel has failed, the cache entry is in a non-writtable state and
   // we want to release it to not block following consumers.
-  if (NS_SUCCEEDED(channelStatus) && !mPreferredCachedAltDataType.IsEmpty()) {
+  if (NS_SUCCEEDED(channelStatus) && !mPreferredCachedAltDataTypes.IsEmpty()) {
     mKeptAlive = true;
     SendDocumentChannelCleanup(false); // don't clear cache entry
     return;
@@ -1374,7 +1374,7 @@ HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus,
   // If a preferred alt-data type was set, the parent would hold a reference to
   // the cache entry in case the child calls openAlternativeOutputStream().
   // (see nsHttpChannel::OnStopRequest)
-  if (!mPreferredCachedAltDataType.IsEmpty()) {
+  if (!mPreferredCachedAltDataTypes.IsEmpty()) {
     mAltDataCacheEntryAvailable = mCacheEntryAvailable;
   }
   mCacheEntryAvailable = false;
@@ -2874,7 +2874,7 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.loadFlags() = mLoadFlags;
   openArgs.requestHeaders() = mClientSetRequestHeaders;
   mRequestHead.Method(openArgs.requestMethod());
-  openArgs.preferredAlternativeType() = mPreferredCachedAltDataType;
+  openArgs.preferredAlternativeTypes() = mPreferredCachedAltDataTypes;
 
   AutoIPCStream autoStream(openArgs.uploadStream());
   if (mUploadStream) {
@@ -3271,23 +3271,23 @@ HttpChannelChild::GetAllowStaleCacheContent(bool *aAllowStaleCacheContent)
 }
 
 NS_IMETHODIMP
-HttpChannelChild::PreferAlternativeDataType(const nsACString & aType)
+HttpChannelChild::PreferAlternativeDataType(const nsACString& aType,
+                                            const nsACString& aContentType)
 {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
   if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->PreferAlternativeDataType(aType);
+    return mSynthesizedCacheInfo->PreferAlternativeDataType(aType, aContentType);
   }
 
-  mPreferredCachedAltDataType = aType;
+  mPreferredCachedAltDataTypes.AppendElement(MakePair(nsCString(aType), nsCString(aContentType)));
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HttpChannelChild::GetPreferredAlternativeDataType(nsACString & aType)
+const nsTArray<mozilla::Tuple<nsCString, nsCString>>&
+HttpChannelChild::PreferredAlternativeDataTypes()
 {
-  aType = mPreferredCachedAltDataType;
-  return NS_OK;
+  return mPreferredCachedAltDataTypes;
 }
 
 NS_IMETHODIMP

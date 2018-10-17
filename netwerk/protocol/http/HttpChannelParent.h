@@ -173,7 +173,7 @@ protected:
               const uint64_t&            aChannelId,
               const nsString&            aIntegrityMetadata,
               const uint64_t&            aContentWindowId,
-              const nsCString&           aPreferredAlternativeType,
+              const ArrayOfStringPairs&  aPreferredAlternativeTypes,
               const uint64_t&            aTopLevelOuterContentWindowId,
               const TimeStamp&           aLaunchServiceWorkerStart,
               const TimeStamp&           aLaunchServiceWorkerEnd,

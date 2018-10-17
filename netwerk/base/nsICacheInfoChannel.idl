@@ -6,6 +6,14 @@
 
 interface nsIOutputStream;
 
+%{C++
+namespace mozilla {
+template<typename... Elements> class Tuple;
+} // namespace mozilla
+%}
+
+[ref] native ConstPreferenceArray(const nsTArray<mozilla::Tuple<nsCString, nsCString>>);
+
 [scriptable, uuid(72c34415-c6eb-48af-851f-772fa9ee5972)]
 interface nsICacheInfoChannel : nsISupports
 {
@@ -79,16 +87,25 @@ interface nsICacheInfoChannel : nsISupports
    * Calling this method instructs the channel to serve the alternative data
    * if that was previously saved in the cache, otherwise it will serve the
    * real data.
+   * @param type
+   *        a string identifying the alt-data format
+   * @param contentType
+   *        the contentType for which the preference applies.
+   *        an empty contentType means the preference applies for ANY contentType
+   *
+   * The method may be called several times, with different type and contentType.
+   *
    * Must be called before AsyncOpen.
    */
-  void preferAlternativeDataType(in ACString type);
+  void preferAlternativeDataType(in ACString type, in ACString contentType);
 
   /**
    * Get the preferred alternative data type set by preferAlternativeDataType().
-   * This attribute stands for the desired data type instead of the type of the
+   * The returned types stand for the desired data type instead of the type of the
    * information retrieved from the network stack.
    */
-  readonly attribute ACString preferredAlternativeDataType;
+  [noscript, notxpcom, nostdcall]
+  ConstPreferenceArray preferredAlternativeDataTypes();
 
   /**
    * Holds the type of the alternative data representation that the channel

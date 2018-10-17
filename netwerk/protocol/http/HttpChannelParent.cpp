@@ -153,7 +153,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.allowStaleCacheContent(), a.contentTypeHint(),
                        a.corsMode(), a.redirectMode(),
                        a.channelId(), a.integrityMetadata(),
-                       a.contentWindowId(), a.preferredAlternativeType(),
+                       a.contentWindowId(), a.preferredAlternativeTypes(),
                        a.topLevelOuterContentWindowId(),
                        a.launchServiceWorkerStart(),
                        a.launchServiceWorkerEnd(),
@@ -455,7 +455,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const uint64_t&            aChannelId,
                                  const nsString&            aIntegrityMetadata,
                                  const uint64_t&            aContentWindowId,
-                                 const nsCString&           aPreferredAlternativeType,
+                                 const ArrayOfStringPairs&  aPreferredAlternativeTypes,
                                  const uint64_t&            aTopLevelOuterContentWindowId,
                                  const TimeStamp&           aLaunchServiceWorkerStart,
                                  const TimeStamp&           aLaunchServiceWorkerEnd,
@@ -614,7 +614,9 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     do_QueryInterface(static_cast<nsIChannel*>(httpChannel.get()));
   if (cacheChannel) {
     cacheChannel->SetCacheKey(aCacheKey);
-    cacheChannel->PreferAlternativeDataType(aPreferredAlternativeType);
+    for (auto& pair : aPreferredAlternativeTypes) {
+      cacheChannel->PreferAlternativeDataType(mozilla::Get<0>(pair), mozilla::Get<1>(pair));
+    }
 
     cacheChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
 
