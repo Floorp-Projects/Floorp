@@ -10,7 +10,6 @@ flat varying vec4 vUvSampleBounds;
 #ifdef WR_VERTEX_SHADER
 struct SplitGeometry {
     vec2 local[4];
-    RectWithSize local_rect;
 };
 
 SplitGeometry fetch_split_geometry(int address) {
@@ -18,7 +17,6 @@ SplitGeometry fetch_split_geometry(int address) {
 
     vec4 data0 = TEXEL_FETCH(sGpuCache, uv, 0, ivec2(0, 0));
     vec4 data1 = TEXEL_FETCH(sGpuCache, uv, 0, ivec2(1, 0));
-    vec4 data2 = TEXEL_FETCH(sGpuCache, uv, 0, ivec2(2, 0));
 
     SplitGeometry geo;
     geo.local = vec2[4](
@@ -27,7 +25,6 @@ SplitGeometry fetch_split_geometry(int address) {
         data1.xy,
         data1.zw
     );
-    geo.local_rect = RectWithSize(data2.xy, data2.zw);
 
     return geo;
 }
@@ -98,7 +95,7 @@ void main(void) {
         max_uv - vec2(0.5)
     ) / texture_size.xyxy;
 
-    vec2 f = (local_pos - geometry.local_rect.p0) / geometry.local_rect.size;
+    vec2 f = (local_pos - ph.local_rect.p0) / ph.local_rect.size;
 
     f = bilerp(
         extra_data.st_tl, extra_data.st_tr,

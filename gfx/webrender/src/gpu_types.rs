@@ -89,7 +89,7 @@ pub struct ScalingInstance {
     pub src_task_address: RenderTaskAddress,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -318,6 +318,8 @@ bitflags! {
         const SEGMENT_REPEAT_X = 0x4;
         /// Repeat UVs vertically.
         const SEGMENT_REPEAT_Y = 0x8;
+        /// The extra segment data is a texel rect.
+        const SEGMENT_TEXEL_RECT = 0x10;
     }
 }
 
