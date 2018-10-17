@@ -18,7 +18,6 @@ import org.mozilla.focus.BuildConfig
  * value with true (upload is disabled by default in dev builds).
  */
 object SentryWrapper {
-
     private const val TAG_BUILD_FLAVOR: String = "build_flavor"
     private const val TAG_BUILD_TYPE: String = "build_type"
 

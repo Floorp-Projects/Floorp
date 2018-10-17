@@ -18,8 +18,10 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.webkit.WebSettings
+import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.session.Session
 import org.json.JSONException
+import org.mozilla.focus.IO
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedWebViewState
@@ -29,6 +31,7 @@ import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.IntentUtils
+import org.mozilla.focus.utils.MobileMetricsPingStorage
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.webview.SystemWebView
@@ -176,9 +179,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun onResume() {
-            if (TelemetryWrapper.dayPassedSinceLastUpload(context)) {
-                sendTelemetrySnapshots()
-            }
+            storeTelemetrySnapshots()
         }
 
         override fun stopLoading() {
@@ -635,16 +636,18 @@ class GeckoWebViewProvider : IWebViewProvider {
             currentUrl = historyURL
         }
 
-        private fun sendTelemetrySnapshots() {
+        private fun storeTelemetrySnapshots() {
             geckoRuntime!!.telemetry.getSnapshots(true).then({ value ->
-                if (value != null) {
+                launch(IO) {
                     try {
-                        val jsonData = value.toJSONObject()
-                        TelemetryWrapper.addMobileMetricsPing(jsonData)
+                        value?.toJSONObject()?.also {
+                            MobileMetricsPingStorage(context).save(it)
+                        }
                     } catch (e: JSONException) {
                         Log.e("getSnapshots failed", e.message)
                     }
                 }
+
                 GeckoResult<Void>()
             }, { _ ->
                 GeckoResult<Void>()

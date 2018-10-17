@@ -24,7 +24,8 @@ class FileUtils {
         fun truncateCacheDirectory(context: Context) = deleteContent(context.cacheDir, doNotEraseWhitelist = setOf(
                 // If the folder or its contents are deleted, WebView will stop using the disk cache entirely.
                 WEBVIEW_CACHE_DIR,
-                SENTRY_CACHE_DIR
+                SENTRY_CACHE_DIR,
+                MobileMetricsPingStorage.STORAGE_FOLDER
         ))
 
         @JvmStatic

@@ -23,6 +23,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.utils.AppConstants
+import org.mozilla.focus.utils.MobileMetricsPingStorage
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.activeExperimentNames
@@ -265,6 +266,21 @@ object TelemetryWrapper {
             TelemetryHolder.set(Telemetry(configuration, storage, client, scheduler)
                     .addPingBuilder(TelemetryCorePingBuilder(configuration))
                     .addPingBuilder(TelemetryEventPingBuilder(configuration))
+                    .also {
+                        if (!dayPassedSinceLastUpload(context)) return@also
+
+                        runBlocking {
+                            val mobileMetrics = MobileMetricsPingStorage(context).load() ?: JSONObject()
+                            it.addPingBuilder(TelemetryMobileMetricsPingBuilder(mobileMetrics,
+                                    configuration))
+                        }
+
+                        // Record new edited date
+                        PreferenceManager.getDefaultSharedPreferences(context)
+                                .edit()
+                                .putLong(LAST_MOBILE_METRICS_PINGS, (dateFormat.format(Date()).toLong()))
+                                .apply()
+                    }
                     .setDefaultSearchProvider(createDefaultSearchProvider(context)))
 
             TelemetryWrapper.recordActiveExperiments(context)
@@ -328,19 +344,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun addMobileMetricsPing(mobileMetrics: JSONObject) {
-        val telemetry = TelemetryHolder.get()
-        telemetry.addPingBuilder(TelemetryMobileMetricsPingBuilder(mobileMetrics,
-                telemetry.configuration))
-        telemetry.queuePing(TelemetryMobileMetricsPingBuilder.TYPE)
-        // Record new edited date
-        PreferenceManager.getDefaultSharedPreferences(telemetry.configuration.context)
-                .edit()
-                .putLong(LAST_MOBILE_METRICS_PINGS, (dateFormat.format(Date()).toLong()))
-                .apply()
-    }
-
-    @JvmStatic
     fun stopSession() {
         TelemetryHolder.get().recordSessionEnd()
 
@@ -373,6 +376,7 @@ object TelemetryWrapper {
         TelemetryHolder.get()
                 .queuePing(TelemetryCorePingBuilder.TYPE)
                 .queuePing(TelemetryEventPingBuilder.TYPE)
+                .queuePing(TelemetryMobileMetricsPingBuilder.TYPE)
                 .scheduleUpload()
     }
 
