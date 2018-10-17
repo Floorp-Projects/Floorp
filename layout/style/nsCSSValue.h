@@ -90,22 +90,25 @@ class CSSStyleSheet;
     }                                                                          \
   }
 
+// Forward declaration copied here since ServoBindings.h #includes nsCSSValue.h.
+extern "C" {
+  RawGeckoURLExtraDataBorrowedMut Servo_CssUrlData_GetExtraData(
+    RawServoCssUrlDataBorrowed url);
+}
+
 namespace mozilla {
 namespace css {
 
 struct URLValue final
 {
 public:
-  // aCssUrl and aExtraData must not be null.
+  // aCssUrl must not be null.
   URLValue(already_AddRefed<RawServoCssUrlData> aCssUrl,
-           URLExtraData* aExtraData,
            CORSMode aCORSMode)
-    : mExtraData(aExtraData)
-    , mURIResolved(false)
+    : mURIResolved(false)
     , mCssUrl(aCssUrl)
     , mCORSMode(aCORSMode)
   {
-    MOZ_ASSERT(mExtraData);
     MOZ_ASSERT(mCssUrl);
   }
 
@@ -155,15 +158,16 @@ public:
 
   CORSMode CorsMode() const { return mCORSMode; }
 
+  URLExtraData* ExtraData() const
+  {
+    return Servo_CssUrlData_GetExtraData(mCssUrl);
+  }
+
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
   // invalid, even once resolved.
   mutable nsCOMPtr<nsIURI> mURI;
 
-public:
-  RefPtr<URLExtraData> mExtraData;
-
-private:
   mutable bool mURIResolved;
 
   // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.

@@ -5474,6 +5474,13 @@ pub unsafe extern "C" fn Servo_CssUrlData_GetSerialization(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_CssUrlData_GetExtraData(
+    url: RawServoCssUrlDataBorrowed,
+) -> *mut URLExtraData {
+    CssUrlData::as_arc(&url).extra_data.0.get()
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_ProcessInvalidations(
     set: RawServoStyleSetBorrowed,
     element: RawGeckoElementBorrowed,
