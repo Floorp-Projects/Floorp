@@ -147,11 +147,6 @@ class WidgetRenderingContext;
   // when acceptsFirstMouse: is called, we store the event here (strong)
   NSEvent* mClickThroughMouseDownEvent;
 
-  // rects that were invalidated during a draw, so have pending drawing
-  NSMutableArray* mPendingDirtyRects;
-  BOOL mPendingFullDisplay;
-  BOOL mPendingDisplay;
-
   // WheelStart/Stop events should always come in pairs. This BOOL records the
   // last received event so that, when we receive one of the events, we make sure
   // to send its pair event first, in case we didn't yet for any reason.
