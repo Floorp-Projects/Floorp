@@ -1397,10 +1397,6 @@ CodeGeneratorShared::resetOsiPointRegs(LSafepoint* safepoint)
 void
 CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Register* dynStack)
 {
-    // If we're calling a function with an out parameter type of double, make
-    // sure we have an FPU.
-    MOZ_ASSERT_IF(fun.outParam == Type_Double, gen->runtime->jitSupportsFloatingPoint());
-
 #ifdef DEBUG
     if (ins->mirRaw()) {
         MOZ_ASSERT(ins->mirRaw()->isInstruction());
