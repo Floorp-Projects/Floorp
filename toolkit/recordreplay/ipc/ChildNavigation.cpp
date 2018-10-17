@@ -1190,9 +1190,13 @@ extern "C" {
 MOZ_EXPORT ProgressCounter
 RecordReplayInterface_NewTimeWarpTarget()
 {
+  if (AreThreadEventsDisallowed()) {
+    return 0;
+  }
+
   // NewTimeWarpTarget() must be called at consistent points between recording
   // and replaying.
-  recordreplay::RecordReplayAssert("NewTimeWarpTarget");
+  RecordReplayAssert("NewTimeWarpTarget");
 
   if (!gNavigation) {
     return 0;
