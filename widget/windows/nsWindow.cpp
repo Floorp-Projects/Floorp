@@ -64,6 +64,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/Unused.h"
 
 #include "mozilla/ipc/MessageChannel.h"
 #include <algorithm>
@@ -5225,7 +5226,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case MOZ_WM_STARTA11Y:
 #if defined(ACCESSIBILITY)
-      (void*)GetAccessible();
+      Unused << GetAccessible();
       result = true;
 #else
       result = false;
