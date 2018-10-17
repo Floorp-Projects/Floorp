@@ -771,10 +771,6 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
   // finish. If it does we don't have to delay messages at all.
   GetCompositorBridgeChild()->PostponeMessagesIfAsyncPainting();
 
-  if (recordreplay::IsRecordingOrReplaying()) {
-    recordreplay::child::NotifyPaintStart();
-  }
-
   MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
   RenderTraceScope rendertrace3("Forward Transaction", "000093");
   if (!mShadowManager->SendUpdate(info)) {
@@ -787,9 +783,8 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
     mShadowManager->SendRecordPaintTimes(mPaintTiming);
   }
 
-  // Create a record/replay checkpoint after each paint.
   if (recordreplay::IsRecordingOrReplaying()) {
-    recordreplay::child::CreateCheckpoint();
+    recordreplay::child::NotifyPaintStart();
   }
 
   *aSent = true;

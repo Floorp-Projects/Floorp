@@ -69,8 +69,8 @@ VsyncChild::RecvNotify(const TimeStamp& aVsyncTimestamp)
 
   SchedulerGroup::MarkVsyncRan();
   if (mObservingVsync && mObserver) {
-    if (recordreplay::IsRecordingOrReplaying()) {
-      recordreplay::child::OnVsync();
+    if (recordreplay::IsRecordingOrReplaying() && !recordreplay::child::OnVsync()) {
+      return IPC_OK();
     }
 
     mObserver->NotifyVsync(aVsyncTimestamp);
