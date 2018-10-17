@@ -37,7 +37,8 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
 
         /* onCheckedChanged is called intermittently before the search engine table is full, so we
            must check these conditions to prevent crashes and inconsistent states. */
-        if (group.childCount != searchEngines.count() || !group.getChildAt(checkedId).isPressed) {
+        if (group.childCount != searchEngines.count() || group.getChildAt(checkedId) == null ||
+                !group.getChildAt(checkedId).isPressed) {
             return
         }
 
