@@ -182,8 +182,6 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
-- (void)processPendingRedraws;
-
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect;
 - (BOOL)isUsingMainThreadOpenGL;
@@ -1410,14 +1408,7 @@ nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
   NS_ASSERTION(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
-  if ([NSView focusView]) {
-    // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
-    // don't lose it.
-    [mView setNeedsPendingDisplayInRect:DevPixelsToCocoaPoints(aRect)];
-  }
-  else {
-    [mView setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
-  }
+  [mView setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3331,7 +3322,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   if ((self = [super initWithFrame:inFrame])) {
     mGeckoChild = inChild;
-    mPendingDisplay = NO;
     mBlockedLastMouseDown = NO;
     mExpectingWheelStop = NO;
 
@@ -3490,7 +3480,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mGLContext release];
-  [mPendingDirtyRects release];
   [mLastMouseDownEvent release];
   [mLastKeyDownEvent release];
   [mClickThroughMouseDownEvent release];
@@ -3543,56 +3532,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
       }
     }
   }
-}
-
-- (void)setNeedsPendingDisplay
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  mPendingFullDisplay = YES;
-  if (!mPendingDisplay) {
-    [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
-    mPendingDisplay = YES;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)setNeedsPendingDisplayInRect:(NSRect)invalidRect
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mPendingDirtyRects)
-    mPendingDirtyRects = [[NSMutableArray alloc] initWithCapacity:1];
-  [mPendingDirtyRects addObject:[NSValue valueWithRect:invalidRect]];
-  if (!mPendingDisplay) {
-    [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
-    mPendingDisplay = YES;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// Clears the queue of any pending invalides
-- (void)processPendingRedraws
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mPendingFullDisplay) {
-    [self setNeedsDisplay:YES];
-  }
-  else if (mPendingDirtyRects) {
-    unsigned int count = [mPendingDirtyRects count];
-    for (unsigned int i = 0; i < count; ++i) {
-      [self setNeedsDisplayInRect:[[mPendingDirtyRects objectAtIndex:i] rectValue]];
-    }
-  }
-  mPendingFullDisplay = NO;
-  mPendingDisplay = NO;
-  [mPendingDirtyRects release];
-  mPendingDirtyRects = nil;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)setNeedsDisplayInRect:(NSRect)aRect
@@ -3661,25 +3600,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mClickThroughMouseDownEvent = [aEvent retain];
   }
   return YES;
-}
-
-- (void)scrollRect:(NSRect)aRect by:(NSSize)offset
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // Update any pending dirty rects to reflect the new scroll position
-  if (mPendingDirtyRects) {
-    unsigned int count = [mPendingDirtyRects count];
-    for (unsigned int i = 0; i < count; ++i) {
-      NSRect oldRect = [[mPendingDirtyRects objectAtIndex:i] rectValue];
-      NSRect newRect = NSOffsetRect(oldRect, offset.width, offset.height);
-      [mPendingDirtyRects replaceObjectAtIndex:i
-                                    withObject:[NSValue valueWithRect:newRect]];
-    }
-  }
-  [super scrollRect:aRect by:offset];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (BOOL)mouseDownCanMoveWindow
