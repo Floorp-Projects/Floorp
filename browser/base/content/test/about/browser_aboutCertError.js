@@ -482,6 +482,32 @@ add_task(async function checkCautionClass() {
   }
 });
 
+add_task(async function checkViewCertificate() {
+  info("Loading a cert error and checking that the certificate can be shown.");
+  for (let useFrame of [false, true]) {
+    let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
+    let browser = tab.linkedBrowser;
+
+    let dialogOpened = BrowserTestUtils.domWindowOpened();
+
+    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      let viewCertificate = doc.getElementById("viewCertificate");
+      viewCertificate.click();
+    });
+
+    let win = await dialogOpened;
+    await BrowserTestUtils.waitForEvent(win, "load");
+    is(win.document.documentURI, "chrome://pippki/content/certViewer.xul",
+      "Opened the cert viewer dialog");
+    is(win.document.getElementById("commonname").value, "self-signed.example.com",
+      "Shows the correct certificate in the dialog");
+    win.close();
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+});
+
 function getCertChain(securityInfoAsString) {
   let certChain = "";
   const serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
