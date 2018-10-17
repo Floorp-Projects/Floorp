@@ -283,7 +283,7 @@ public:
 bool
 ActiveChildIsRecording()
 {
-  return gActiveChild->IsRecording();
+  return gActiveChild && gActiveChild->IsRecording();
 }
 
 ChildProcessInfo*
