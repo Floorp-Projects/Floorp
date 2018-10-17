@@ -41,6 +41,9 @@ Flex::Flex(Element* aParent,
     mLines.ElementAt(index) = line;
     index++;
   }
+
+  mMainAxisDirection = containerInfo->mMainAxisDirection;
+  mCrossAxisDirection = containerInfo->mCrossAxisDirection;
 }
 
 JSObject*
