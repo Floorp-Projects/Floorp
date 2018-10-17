@@ -110,6 +110,7 @@ def test_filterpaths(filterpaths, test):
     ([root + '/*', 'subdir1/*.*', 'subdir1/subdir3/*', 'subdir2/*'], [root]),
     (['subdir1/b.py', 'subdir1/subdir3'], ['subdir1/b.py', 'subdir1/subdir3']),
     (['subdir1/b.py', 'subdir1/b.js'], ['subdir1/b.py', 'subdir1/b.js']),
+    (['subdir1/subdir3'], ['subdir1/subdir3']),
 ])
 def test_collapse(paths, expected):
     inputs = []
