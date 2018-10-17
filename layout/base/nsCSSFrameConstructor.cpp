@@ -3832,7 +3832,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
     // If we need to create a block formatting context to wrap our
     // kids, do it now.
-    const nsStyleDisplay* maybeAbsoluteContainingBlockDisplay = display;
     nsIFrame* maybeAbsoluteContainingBlockStyleFrame = primaryFrame;
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
@@ -3882,7 +3881,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       // absolute container.
       auto outerDisplay = outerSC->StyleDisplay();
       if (outerDisplay->IsAbsPosContainingBlock(outerFrame)) {
-        maybeAbsoluteContainingBlockDisplay = outerDisplay;
         maybeAbsoluteContainingBlock = outerFrame;
         maybeAbsoluteContainingBlockStyleFrame = outerFrame;
         innerFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
@@ -3918,15 +3916,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         aState.PushAbsoluteContainingBlock(nullptr, nullptr, absoluteSaveState);
       } else if (!(bits & FCDATA_SKIP_ABSPOS_PUSH)) {
         maybeAbsoluteContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-        // This check is identical to nsStyleDisplay::IsAbsPosContainingBlock
-        // except without the assertion that the style display and frame match.
-        // When constructing scroll frames we intentionally use the style
-        // display for the outer, but make the inner the containing block.
-        if ((maybeAbsoluteContainingBlockDisplay->IsAbsolutelyPositionedStyle() ||
-             maybeAbsoluteContainingBlockDisplay->IsRelativelyPositionedStyle() ||
-             maybeAbsoluteContainingBlockDisplay->IsFixedPosContainingBlock(
-                 maybeAbsoluteContainingBlockStyleFrame)) &&
-            !nsSVGUtils::IsInSVGTextSubtree(maybeAbsoluteContainingBlockStyleFrame)) {
+        if (maybeAbsoluteContainingBlockStyleFrame->IsAbsPosContainingBlock()) {
           auto* cf = static_cast<nsContainerFrame*>(maybeAbsoluteContainingBlock);
           aState.PushAbsoluteContainingBlock(cf, maybeAbsoluteContainingBlockStyleFrame, absoluteSaveState);
         }
