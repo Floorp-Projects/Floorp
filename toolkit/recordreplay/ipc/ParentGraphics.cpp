@@ -153,9 +153,6 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
     InitGraphicsSandbox();
   }
 
-  AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, *gGraphicsSandbox);
-
   size_t width = gLastPaintWidth;
   size_t height = gLastPaintHeight;
   size_t stride = layers::ImageDataSerializer::ComputeRGBStride(gSurfaceFormat, width);
@@ -184,6 +181,9 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
     }
   }
 
+  AutoSafeJSContext cx;
+  JSAutoRealm ar(cx, *gGraphicsSandbox);
+
   JSObject* bufferObject =
     JS_NewArrayBufferWithExternalContents(cx, width * height * 4, memory);
   MOZ_RELEASE_ASSERT(bufferObject);
@@ -196,8 +196,25 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
 
   // Call into the graphics module to update the canvas it manages.
   RootedValue rval(cx);
-  if (!JS_CallFunctionName(cx, *gGraphicsSandbox, "Update", args, &rval)) {
+  if (!JS_CallFunctionName(cx, *gGraphicsSandbox, "UpdateCanvas", args, &rval)) {
     MOZ_CRASH("UpdateGraphicsInUIProcess");
+  }
+}
+
+void
+UpdateGraphicsOverlay()
+{
+  if (!gLastPaintWidth || !gLastPaintHeight) {
+    return;
+  }
+
+  AutoSafeJSContext cx;
+  JSAutoRealm ar(cx, *gGraphicsSandbox);
+
+  RootedValue rval(cx);
+  if (!JS_CallFunctionName(cx, *gGraphicsSandbox, "UpdateOverlay",
+                           JS::HandleValueArray::empty(), &rval)) {
+    MOZ_CRASH("UpdateGraphicsOverlay");
   }
 }
 

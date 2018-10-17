@@ -94,6 +94,9 @@ void SendGraphicsMemoryToChild();
 // an unhandled recording divergence.
 void UpdateGraphicsInUIProcess(const PaintMessage* aMsg);
 
+// Update the overlay shown over the tab's graphics.
+void UpdateGraphicsOverlay();
+
 // If necessary, update graphics after the active child sends a paint message
 // or reaches a checkpoint.
 void MaybeUpdateGraphicsAtPaint(const PaintMessage& aMsg);
