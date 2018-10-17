@@ -2118,12 +2118,12 @@ window._gBrowser = {
     let permitUnloadFlags = aForceDiscard ? aBrowser.dontPromptAndUnload : aBrowser.dontPromptAndDontUnload;
 
     if (!tab ||
-      tab.selected ||
-      tab.closing ||
-      this._windowIsClosing ||
-      !aBrowser.isConnected ||
-      !aBrowser.isRemoteBrowser ||
-      !aBrowser.permitUnload(permitUnloadFlags).permitUnload) {
+        tab.selected ||
+        tab.closing ||
+        this._windowIsClosing ||
+        !aBrowser.isConnected ||
+        !aBrowser.isRemoteBrowser ||
+        !aBrowser.permitUnload(permitUnloadFlags).permitUnload) {
       return;
     }
 
@@ -5481,4 +5481,3 @@ var TabContextMenu = {
     }
   },
 };
-
