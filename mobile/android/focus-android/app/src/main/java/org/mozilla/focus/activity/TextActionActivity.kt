@@ -26,7 +26,11 @@ class TextActionActivity : Activity() {
         val intent = SafeIntent(intent)
 
         val searchTextCharSequence = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
-        val searchText = searchTextCharSequence?.toString() ?: ""
+        val searchText = if (searchTextCharSequence != null) {
+            searchTextCharSequence.toString()
+        } else {
+            ""
+        }
 
         val searchUrl = UrlUtils.createSearchUrl(this, searchText)
 
@@ -34,7 +38,6 @@ class TextActionActivity : Activity() {
         searchIntent.action = Intent.ACTION_VIEW
         searchIntent.putExtra(EXTRA_TEXT_SELECTION, true)
         searchIntent.data = Uri.parse(searchUrl)
-        searchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
 
         startActivity(searchIntent)
 
