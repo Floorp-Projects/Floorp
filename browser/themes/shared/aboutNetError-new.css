@@ -64,6 +64,7 @@ button:disabled {
   display: flex;
   justify-content: end;
   padding: 5px;
+  margin-top: 2em;
 }
 
 body:not(.neterror) #certErrorAndCaptivePortalButtonContainer {
@@ -158,8 +159,12 @@ span#hostname {
   white-space: nowrap;
 }
 
+#viewCertificate {
+  margin: 0 3em;
+}
+
 #badCertTechnicalInfo {
-  margin: 3em;
+  margin: 3em 3em 1em;
   overflow: auto;
   white-space: pre-wrap;
 }

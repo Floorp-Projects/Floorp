@@ -20,6 +20,7 @@ add_task(async function() {
   const ABOUT_ROBOTS_URI = "about:robots";
   const ABOUT_ROBOTS_TITLE = "Gort! Klaatu barada nikto!";
   const NO_TITLE_URL = "data:text/plain,foo";
+  const EMPTY_TAB_TITLE = gBrowser.tabContainer.emptyTabTitle;
 
   function observeLabelChanges(tab, expectedLabels) {
     let seenLabels = [tab.label];
@@ -44,10 +45,11 @@ add_task(async function() {
         { entries: [{ url: ABOUT_ROBOTS_URI, triggeringPrincipal_base64 }] },
         { entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }] },
         { entries: [{ url: NO_TITLE_URL, triggeringPrincipal_base64 }] },
+        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
       ],
     }],
   });
-  let [tab1, tab2, tab3, tab4] = gBrowser.tabs;
+  let [tab1, tab2, tab3, tab4, tab5] = gBrowser.tabs;
   is(gBrowser.selectedTab, tab1, "first tab is selected");
 
   await browserLoadedPromise;
@@ -61,6 +63,7 @@ add_task(async function() {
   ok(tab2.hasAttribute("pending"), "second tab is pending");
   ok(tab3.hasAttribute("pending"), "third tab is pending");
   ok(tab4.hasAttribute("pending"), "fourth tab is pending");
+  is(tab5.label, EMPTY_TAB_TITLE, "fifth tab dislpays empty tab title");
 
   info("selecting the second tab");
   // The fix for bug 1364127 caused about: pages' initial tab titles to show
@@ -98,7 +101,7 @@ add_task(async function() {
   gBrowser.selectedTab = tab3;
   await TabStateFlusher.flushWindow(window);
   await promiseBrowserState(SessionStore.getBrowserState());
-  [tab1, tab2, tab3, tab4] = gBrowser.tabs;
+  [tab1, tab2, tab3, tab4, tab5] = gBrowser.tabs;
   is(tab3, gBrowser.selectedTab, "third tab is selected after restoring");
   ok(document.title.startsWith(REMOTE_TITLE), "title bar displays content title");
   ok(tab1.hasAttribute("pending"), "first tab is pending after restoring");
@@ -108,6 +111,7 @@ add_task(async function() {
   is(tab3.label, REMOTE_TITLE, "third tab displays content title in pending state");
   ok(tab4.hasAttribute("pending"), "fourth tab is pending after restoring");
   is(tab4.label, NO_TITLE_URL, "fourth tab displays URL");
+  is(tab5.label, EMPTY_TAB_TITLE, "fifth tab still displays empty tab title");
 
   info("selecting the first tab");
   finishObservingLabelChanges = observeLabelChanges(tab1, [REMOTE_TITLE]);

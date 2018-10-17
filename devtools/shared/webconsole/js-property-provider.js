@@ -32,6 +32,8 @@ const OPEN_CLOSE_BODY = {
   "(": ")",
 };
 
+const NO_AUTOCOMPLETE_PREFIXES = ["var", "const", "let", "function", "class"];
+
 function hasArrayIndex(str) {
   return /\[\d+\]$/.test(str);
 }
@@ -66,6 +68,24 @@ function analyzeInputString(str) {
 
   // Use an array in order to handle character with a length > 2 (e.g. 😎).
   const characters = Array.from(str);
+
+  const buildReturnObject = () => {
+    let isElementAccess = false;
+    if (bodyStack.length === 1 && bodyStack[0].token === "[") {
+      start = bodyStack[0].start;
+      isElementAccess = true;
+      if ([STATE_DQUOTE, STATE_QUOTE, STATE_TEMPLATE_LITERAL].includes(state)) {
+        state = STATE_NORMAL;
+      }
+    }
+
+    return {
+      state,
+      lastStatement: characters.slice(start).join(""),
+      isElementAccess,
+    };
+  };
+
   for (let i = 0; i < characters.length; i++) {
     c = characters[i];
 
@@ -78,9 +98,11 @@ function analyzeInputString(str) {
           state = STATE_QUOTE;
         } else if (c == "`") {
           state = STATE_TEMPLATE_LITERAL;
-        } else if (c == ";") {
+        } else if (";,:=<>+-*/%|&^~?!".split("").includes(c)) {
+          // If the character is an operator, we need to update the start position.
           start = i + 1;
         } else if (c == " ") {
+          const currentLastStatement = characters.slice(start, i).join("");
           const before = characters.slice(0, i);
           const after = characters.slice(i + 1);
           const trimmedBefore = Array.from(before.join("").trimRight());
@@ -90,24 +112,23 @@ function analyzeInputString(str) {
           const nextNonSpaceCharIndex = after.indexOf(nextNonSpaceChar);
           const previousNonSpaceChar = trimmedBefore[trimmedBefore.length - 1];
 
-          // If the previous meaningful char was a dot and there is no meaningful char
-          // after, we can break out of the loop.
-          if (previousNonSpaceChar === "." && !nextNonSpaceChar) {
-            break;
+          // There's only spaces after that, so we can return.
+          if (!nextNonSpaceChar) {
+            return buildReturnObject();
           }
 
-          if (nextNonSpaceChar) {
-            // If the previous char wasn't a dot, and the next one isn't a dot either,
-            // update the start pos.
-            if (previousNonSpaceChar !== "." && nextNonSpaceChar !== ".") {
-              start = i + nextNonSpaceCharIndex;
-            }
-            // Let's jump to handle the next non-space char.
-            i = i + nextNonSpaceCharIndex;
-          } else {
-            // There's only spaces after that, so we can break out of the loop.
-            break;
+          // If the previous char in't a dot, and the next one isn't a dot either,
+          // and the current computed statement is not a variable/function/class
+          // declaration, update the start position.
+          if (
+            previousNonSpaceChar !== "." && nextNonSpaceChar !== "."
+            && !NO_AUTOCOMPLETE_PREFIXES.includes(currentLastStatement)
+          ) {
+            start = i + nextNonSpaceCharIndex;
           }
+
+          // Let's jump to handle the next non-space char.
+          i = i + nextNonSpaceCharIndex;
         } else if (OPEN_BODY.includes(c)) {
           bodyStack.push({
             token: c,
@@ -166,20 +187,7 @@ function analyzeInputString(str) {
     }
   }
 
-  let isElementAccess = false;
-  if (bodyStack.length === 1 && bodyStack[0].token === "[") {
-    start = bodyStack[0].start;
-    isElementAccess = true;
-    if ([STATE_DQUOTE, STATE_QUOTE, STATE_TEMPLATE_LITERAL].includes(state)) {
-      state = STATE_NORMAL;
-    }
-  }
-
-  return {
-    state,
-    lastStatement: characters.slice(start).join(""),
-    isElementAccess,
-  };
+  return buildReturnObject();
 }
 
 /**
@@ -237,16 +245,22 @@ function JSPropertyProvider(dbgObject, anEnvironment, inputValue, cursor) {
   if (state != STATE_NORMAL) {
     return null;
   }
+
+  // Don't complete on just an empty string.
+  if (lastStatement.trim() == "") {
+    return null;
+  }
+
+  if (NO_AUTOCOMPLETE_PREFIXES.some(prefix => lastStatement.startsWith(prefix + " "))) {
+    return null;
+  }
+
   const completionPart = lastStatement;
   const lastDotIndex = completionPart.lastIndexOf(".");
   const lastOpeningBracketIndex = isElementAccess ? completionPart.lastIndexOf("[") : -1;
   const lastCompletionCharIndex = Math.max(lastDotIndex, lastOpeningBracketIndex);
   const startQuoteRegex = /^('|"|`)/;
 
-  // Don't complete on just an empty string.
-  if (completionPart.trim() == "") {
-    return null;
-  }
   // Catch literals like [1,2,3] or "foo" and return the matches from
   // their prototypes.
   // Don't run this is a worker, migrating to acorn should allow this

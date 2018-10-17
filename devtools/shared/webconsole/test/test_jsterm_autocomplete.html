@@ -85,6 +85,8 @@
         'da\`ta\`test': "",
         "da'ta'test": "",
       }));
+
+      window.varify = true;
     `;
     await state.client.evaluateJSAsync(script);
 
@@ -101,6 +103,8 @@
       doAutocompleteAfterOr,
       doInsensitiveAutocomplete,
       doElementAccessAutocomplete,
+      doAutocompleteAfterOperator,
+      dontAutocompleteAfterDeclaration,
     ];
 
     if (!isWorker) {
@@ -447,6 +451,74 @@
     info(`test autocomplete for 'window[;c'`);
     matches = (await client.autocomplete(`window[;c`)).matches;
     ok(!matches.includes("cd") && !matches.includes("clear"), "commands are not returned");
+  }
+
+  async function doAutocompleteAfterOperator(client) {
+    const inputs = [
+      "true;foob",
+      "true,foob",
+      "({key:foob",
+      "a=foob",
+      "if(a<foob",
+      "if(a>foob",
+      "1+foob",
+      "1-foob",
+      "++foob",
+      "--foob",
+      "1*foob",
+      "2**foob",
+      "1/foob",
+      "1%foob",
+      "1|foob",
+      "1&foob",
+      "1^foob",
+      "~foob",
+      "1<<foob",
+      "1>>foob",
+      "1>>>foob",
+      "false||foob",
+      "false&&foob",
+      "x=true?foob",
+      "x=false?1:foob",
+      "!foob",
+    ];
+
+    for (const input of inputs) {
+      info(`test autocomplete for "${input}"`);
+      let matches = (await client.autocomplete(input)).matches;
+      ok(matches.includes("foobarObject"), `Expected autocomplete result for ${input}"`);
+    }
+  }
+
+  async function dontAutocompleteAfterDeclaration(client) {
+    info("test autocomplete for 'var win'");
+    let matches = (await client.autocomplete("var win")).matches;
+    is(matches.length, 0, "no autocompletion on a var declaration");
+
+    info("test autocomplete for 'const win'");
+    matches = (await client.autocomplete("const win")).matches;
+    is(matches.length, 0, "no autocompletion on a const declaration");
+
+    info("test autocomplete for 'let win'");
+    matches = (await client.autocomplete("let win")).matches;
+    is(matches.length, 0, "no autocompletion on a let declaration");
+
+    info("test autocomplete for 'function win'");
+    matches = (await client.autocomplete("function win")).matches;
+    is(matches.length, 0, "no autocompletion on a function declaration");
+
+    info("test autocomplete for 'class win'");
+    matches = (await client.autocomplete("class win")).matches;
+    is(matches.length, 0, "no autocompletion on a class declaration");
+
+    info("test autocomplete for 'const win = win'");
+    matches = (await client.autocomplete("const win = win")).matches;
+    ok(matches.includes("window"), "autocompletion still happens after the `=` sign");
+
+    info("test autocomplete for 'in var'");
+    matches = (await client.autocomplete("in var")).matches;
+    ok(matches.includes("varify"),
+      "autocompletion still happens with a property name starting with 'var'");
   }
 </script>
 </body>

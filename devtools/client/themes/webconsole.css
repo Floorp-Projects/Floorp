@@ -102,6 +102,11 @@ a {
   background-color: var(--error-background-color);
 }
 
+.message.navigationMarker {
+  border-top: 1px solid var(--theme-emphasized-splitter-color);
+  color: var(--object-color);
+}
+
 .message.warn {
   color: var(--warning-color);
   background-color: var(--warning-background-color);
@@ -204,6 +209,11 @@ a {
 .message.warn > .icon {
   color: var(--console-output-icon-warning);
   background-image: var(--theme-console-alert-image);
+}
+
+.message.navigationMarker > .icon {
+  color: var(--object-color);
+  background-image: var(--theme-console-navigation-image);
 }
 
 
@@ -319,7 +329,7 @@ a {
   flex: none;
 }
 
-.message.network:not(.navigation-marker) .url {
+.message.network .url {
   flex: 1 1 auto;
   /* Make sure the URL is very small initially, let flex change width as needed. */
   width: 100px;
@@ -451,25 +461,6 @@ textarea.jsterm-input-node:focus {
 }
 
 /* Security styles */
-
-.navigation-marker {
-  color: #aaa;
-  background: linear-gradient(#aaa, #aaa) no-repeat left 50%;
-  background-size: 100% 2px;
-  margin-block-start: 6px;
-  margin-block-end: 6px;
-  font-size: 0.9em;
-}
-
-.navigation-marker .url {
-  padding-inline-end: 9px;
-  text-decoration: none;
-  background: var(--theme-body-background);
-}
-
-.theme-light .navigation-marker .url {
-  background: #fff;
-}
 
 .stacktrace {
   display: none;
@@ -723,7 +714,7 @@ a.learn-more-link.webconsole-learn-more-link {
   line-height: inherit;
 }
 
-.webconsole-output-wrapper .message.network:not(.navigation-marker) .url {
+.webconsole-output-wrapper .message.network .url {
   color: var(--theme-comment);
   font-style: inherit;
 }
