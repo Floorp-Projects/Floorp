@@ -85,10 +85,6 @@ class MozEditor extends XULFrameElement {
     return this.webNavigation.currentURI;
   }
 
-  get contentWindowAsCPOW() {
-    return this.contentWindow;
-  }
-
   get webBrowserFind() {
     return this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebBrowserFind);

@@ -406,10 +406,6 @@ window._gBrowser = {
     return this.selectedBrowser.contentWindow;
   },
 
-  get contentWindowAsCPOW() {
-    return this.selectedBrowser.contentWindowAsCPOW;
-  },
-
   get sessionHistory() {
     return this.selectedBrowser.sessionHistory;
   },
@@ -420,10 +416,6 @@ window._gBrowser = {
 
   get contentDocument() {
     return this.selectedBrowser.contentDocument;
-  },
-
-  get contentDocumentAsCPOW() {
-    return this.selectedBrowser.contentDocumentAsCPOW;
   },
 
   get contentTitle() {
