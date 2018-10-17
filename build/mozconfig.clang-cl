@@ -12,3 +12,4 @@ fi
 
 export CC=clang-cl
 export CXX=clang-cl
+export ENABLE_CLANG_PLUGIN=1

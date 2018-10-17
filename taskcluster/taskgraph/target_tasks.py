@@ -190,7 +190,7 @@ def target_tasks_ash(full_task_graph, parameters, graph_config):
         for p in ('nightly', 'haz', 'artifact', 'cov', 'add-on'):
             if p in platform:
                 return False
-        for k in ('toolchain', 'l10n', 'static-analysis'):
+        for k in ('toolchain', 'l10n'):
             if k in task.attributes['kind']:
                 return False
         # and none of this linux64-asan/debug stuff
