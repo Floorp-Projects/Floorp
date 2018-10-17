@@ -994,6 +994,10 @@ window._gBrowser = {
       this._tabAttrModified(oldTab, ["selected"]);
       this._tabAttrModified(newTab, ["selected"]);
 
+      this._startMultiSelectChange();
+      this._multiSelectChangeSelected = true;
+      this.clearMultiSelectedTabs(true);
+
       if (oldBrowser != newBrowser &&
           oldBrowser.getInPermitUnload) {
         oldBrowser.getInPermitUnload(inPermitUnload => {
@@ -4681,11 +4685,6 @@ window._gBrowser = {
 
       Services.obs.notifyObservers(tab, "AudibleAutoplayMediaOccurred");
     });
-
-    this.ownerGlobal.addEventListener("TabSelect", (event) => {
-      this._startMultiSelectChange();
-      this._multiSelectChangeSelected = true;
-    }, {passive: true});
   },
 };
 
