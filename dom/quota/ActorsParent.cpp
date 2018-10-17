@@ -1600,7 +1600,7 @@ uint32_t gChunkSizeKB = kDefaultChunkSizeKB;
 
 bool gTestingEnabled = false;
 
-class StorageDirectoryHelper
+class StorageOperationBase
   : public Runnable
 {
   mozilla::Mutex mMutex;
@@ -1618,10 +1618,10 @@ protected:
   const bool mPersistent;
 
 public:
-  StorageDirectoryHelper(nsIFile* aDirectory, bool aPersistent)
-    : Runnable("dom::quota::StorageDirectoryHelper")
-    , mMutex("StorageDirectoryHelper::mMutex")
-    , mCondVar(mMutex, "StorageDirectoryHelper::mCondVar")
+  StorageOperationBase(nsIFile* aDirectory, bool aPersistent)
+    : Runnable("dom::quota::StorageOperationBase")
+    , mMutex("StorageOperationBase::mMutex")
+    , mCondVar(mMutex, "StorageOperationBase::mCondVar")
     , mMainThreadResultCode(NS_OK)
     , mWaiting(true)
     , mDirectory(aDirectory)
@@ -1631,7 +1631,7 @@ public:
   }
 
 protected:
-  ~StorageDirectoryHelper()
+  virtual ~StorageOperationBase()
   { }
 
   nsresult
@@ -1672,7 +1672,7 @@ private:
   Run() override;
 };
 
-struct StorageDirectoryHelper::OriginProps
+struct StorageOperationBase::OriginProps
 {
   enum Type
   {
@@ -1801,20 +1801,20 @@ private:
   HandleTrailingSeparator();
 };
 
-class UpgradeOriginDirectoriesHelper
-  : public StorageDirectoryHelper
+class RepositoryOperationBase
+  : public StorageOperationBase
 {
 public:
-  UpgradeOriginDirectoriesHelper(nsIFile* aDirectory,
-                                 bool aPersistent)
-    : StorageDirectoryHelper(aDirectory, aPersistent)
+  RepositoryOperationBase(nsIFile* aDirectory,
+                          bool aPersistent)
+    : StorageOperationBase(aDirectory, aPersistent)
   { }
 
   nsresult
-  DoUpgrade();
+  ProcessRepository();
 
 protected:
-  virtual ~UpgradeOriginDirectoriesHelper()
+  virtual ~RepositoryOperationBase()
   { }
 
 private:
@@ -1823,14 +1823,14 @@ private:
 };
 
 class CreateOrUpgradeDirectoryMetadataHelper final
-  : public UpgradeOriginDirectoriesHelper
+  : public RepositoryOperationBase
 {
   nsCOMPtr<nsIFile> mPermanentStorageDir;
 
 public:
   CreateOrUpgradeDirectoryMetadataHelper(nsIFile* aDirectory,
                                          bool aPersistent)
-    : UpgradeOriginDirectoriesHelper(aDirectory, aPersistent)
+    : RepositoryOperationBase(aDirectory, aPersistent)
   { }
 
 private:
@@ -1845,12 +1845,12 @@ private:
 };
 
 class UpgradeStorageFrom0_0To1_0Helper final
-  : public UpgradeOriginDirectoriesHelper
+  : public RepositoryOperationBase
 {
 public:
   UpgradeStorageFrom0_0To1_0Helper(nsIFile* aDirectory,
                                    bool aPersistent)
-    : UpgradeOriginDirectoriesHelper(aDirectory, aPersistent)
+    : RepositoryOperationBase(aDirectory, aPersistent)
   { }
 
 private:
@@ -1862,12 +1862,12 @@ private:
 };
 
 class UpgradeStorageFrom1_0To2_0Helper final
-  : public UpgradeOriginDirectoriesHelper
+  : public RepositoryOperationBase
 {
 public:
   UpgradeStorageFrom1_0To2_0Helper(nsIFile* aDirectory,
                                    bool aPersistent)
-    : UpgradeOriginDirectoriesHelper(aDirectory, aPersistent)
+    : RepositoryOperationBase(aDirectory, aPersistent)
   { }
 
 private:
@@ -1890,12 +1890,12 @@ private:
 };
 
 class UpgradeStorageFrom2_0To2_1Helper final
-  : public UpgradeOriginDirectoriesHelper
+  : public RepositoryOperationBase
 {
 public:
   UpgradeStorageFrom2_0To2_1Helper(nsIFile* aDirectory,
                                    bool aPersistent)
-    : UpgradeOriginDirectoriesHelper(aDirectory, aPersistent)
+    : RepositoryOperationBase(aDirectory, aPersistent)
   { }
 
 private:
@@ -1910,12 +1910,12 @@ private:
 };
 
 class RestoreDirectoryMetadata2Helper final
-  : public StorageDirectoryHelper
+  : public StorageOperationBase
 {
 public:
   RestoreDirectoryMetadata2Helper(nsIFile* aDirectory,
                                   bool aPersistent)
-    : StorageDirectoryHelper(aDirectory, aPersistent)
+    : StorageOperationBase(aDirectory, aPersistent)
   { }
 
   nsresult
@@ -4484,7 +4484,7 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
     new CreateOrUpgradeDirectoryMetadataHelper(persistentStorageDir,
                                                /* aPersistent */ true);
 
-  rv = helper->DoUpgrade();
+  rv = helper->ProcessRepository();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4517,7 +4517,7 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
       new CreateOrUpgradeDirectoryMetadataHelper(temporaryStorageDir,
                                                  /* aPersistent */ false);
 
-    rv = helper->DoUpgrade();
+    rv = helper->ProcessRepository();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4631,7 +4631,7 @@ QuotaManager::UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection)
     RefPtr<UpgradeStorageFrom0_0To1_0Helper> helper =
       new UpgradeStorageFrom0_0To1_0Helper(directory, persistent);
 
-    rv = helper->DoUpgrade();
+    rv = helper->ProcessRepository();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4754,7 +4754,7 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
     RefPtr<UpgradeStorageFrom1_0To2_0Helper> helper =
       new UpgradeStorageFrom1_0To2_0Helper(directory, persistent);
 
-    rv = helper->DoUpgrade();
+    rv = helper->ProcessRepository();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4813,7 +4813,7 @@ QuotaManager::UpgradeStorageFrom2_0To2_1(mozIStorageConnection* aConnection)
     RefPtr<UpgradeStorageFrom2_0To2_1Helper> helper =
       new UpgradeStorageFrom2_0To2_1Helper(directory, persistent);
 
-    rv = helper->DoUpgrade();
+    rv = helper->ProcessRepository();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8135,11 +8135,11 @@ PersistOp::GetResponse(RequestResponse& aResponse)
 }
 
 nsresult
-StorageDirectoryHelper::GetDirectoryMetadata(nsIFile* aDirectory,
-                                             int64_t& aTimestamp,
-                                             nsACString& aGroup,
-                                             nsACString& aOrigin,
-                                             Nullable<bool>& aIsApp)
+StorageOperationBase::GetDirectoryMetadata(nsIFile* aDirectory,
+                                           int64_t& aTimestamp,
+                                           nsACString& aGroup,
+                                           nsACString& aOrigin,
+                                           Nullable<bool>& aIsApp)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -8184,12 +8184,12 @@ StorageDirectoryHelper::GetDirectoryMetadata(nsIFile* aDirectory,
 }
 
 nsresult
-StorageDirectoryHelper::GetDirectoryMetadata2(nsIFile* aDirectory,
-                                              int64_t& aTimestamp,
-                                              nsACString& aSuffix,
-                                              nsACString& aGroup,
-                                              nsACString& aOrigin,
-                                              bool& aIsApp)
+StorageOperationBase::GetDirectoryMetadata2(nsIFile* aDirectory,
+                                            int64_t& aTimestamp,
+                                            nsACString& aSuffix,
+                                            nsACString& aGroup,
+                                            nsACString& aOrigin,
+                                            bool& aIsApp)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -8259,7 +8259,7 @@ StorageDirectoryHelper::GetDirectoryMetadata2(nsIFile* aDirectory,
 }
 
 nsresult
-StorageDirectoryHelper::RemoveObsoleteOrigin(const OriginProps& aOriginProps)
+StorageOperationBase::RemoveObsoleteOrigin(const OriginProps& aOriginProps)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aOriginProps.mDirectory);
@@ -8276,7 +8276,7 @@ StorageDirectoryHelper::RemoveObsoleteOrigin(const OriginProps& aOriginProps)
 }
 
 nsresult
-StorageDirectoryHelper::ProcessOriginDirectories()
+StorageOperationBase::ProcessOriginDirectories()
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(!mOriginProps.IsEmpty());
@@ -8326,7 +8326,7 @@ StorageDirectoryHelper::ProcessOriginDirectories()
 }
 
 nsresult
-StorageDirectoryHelper::RunOnMainThread()
+StorageOperationBase::RunOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mOriginProps.IsEmpty());
@@ -8384,7 +8384,7 @@ StorageDirectoryHelper::RunOnMainThread()
 }
 
 NS_IMETHODIMP
-StorageDirectoryHelper::Run()
+StorageOperationBase::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -8403,8 +8403,7 @@ StorageDirectoryHelper::Run()
 }
 
 nsresult
-StorageDirectoryHelper::
-OriginProps::Init(nsIFile* aDirectory)
+StorageOperationBase::OriginProps::Init(nsIFile* aDirectory)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -8835,7 +8834,7 @@ OriginParser::HandleTrailingSeparator()
 }
 
 nsresult
-UpgradeOriginDirectoriesHelper::DoUpgrade()
+RepositoryOperationBase::ProcessRepository()
 {
   AssertIsOnIOThread();
 
