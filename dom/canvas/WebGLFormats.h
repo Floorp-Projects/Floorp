@@ -207,14 +207,20 @@ enum class UnsizedFormat : uint8_t {
 
 // GLES 3.0.4 p114 Table 3.4, p240
 enum class ComponentType : uint8_t {
-    None,
     Int,          // RGBA32I
-    UInt,         // RGBA32UI, STENCIL_INDEX8
+    UInt,         // RGBA32UI
     NormInt,      // RGBA8_SNORM
-    NormUInt,     // RGBA8, DEPTH_COMPONENT16
+    NormUInt,     // RGBA8
     Float,        // RGBA32F
-    Special,      // DEPTH24_STENCIL8
 };
+
+enum class TextureBaseType : uint8_t {
+    Int = uint8_t(ComponentType::Int),
+    UInt = uint8_t(ComponentType::UInt),
+    Float = uint8_t(ComponentType::Float), // Also includes NormU?Int and Depth
+};
+
+const char* ToString(TextureBaseType);
 
 enum class CompressionFamily : uint8_t {
     ASTC,
@@ -244,6 +250,7 @@ struct FormatInfo
     const GLenum sizedFormat;
     const UnsizedFormat unsizedFormat;
     const ComponentType componentType;
+    const TextureBaseType baseType;
     const bool isSRGB;
 
     const CompressedFormatInfo* const compression;

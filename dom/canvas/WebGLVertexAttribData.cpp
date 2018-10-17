@@ -44,22 +44,22 @@ CalcBytesPerVertex(GLenum type, uint8_t size)
     return bytesPerType * size;
 }
 
-static GLenum
+static webgl::AttribBaseType
 AttribPointerBaseType(bool integerFunc, GLenum type)
 {
     if (!integerFunc)
-        return LOCAL_GL_FLOAT;
+        return webgl::AttribBaseType::Float;
 
     switch (type) {
     case LOCAL_GL_BYTE:
     case LOCAL_GL_SHORT:
     case LOCAL_GL_INT:
-        return LOCAL_GL_INT;
+        return webgl::AttribBaseType::Int;
 
     case LOCAL_GL_UNSIGNED_BYTE:
     case LOCAL_GL_UNSIGNED_SHORT:
     case LOCAL_GL_UNSIGNED_INT:
-        return LOCAL_GL_UNSIGNED_INT;
+        return webgl::AttribBaseType::UInt;
 
     default:
         MOZ_CRASH();

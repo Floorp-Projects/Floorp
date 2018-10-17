@@ -47,68 +47,48 @@ public:
     ~ScopedResolveTexturesForDraw();
 };
 
-bool
-WebGLTexture::IsFeedback(WebGLContext* webgl, uint32_t texUnit,
-                         const std::vector<const WebGLFBAttachPoint*>& fbAttachments) const
+static bool
+ValidateNoSamplingFeedback(const WebGLTexture& tex, const uint32_t sampledLevels,
+                           const WebGLFramebuffer* const fb, const uint32_t texUnit)
 {
-    auto itr = fbAttachments.cbegin();
-    for (; itr != fbAttachments.cend(); ++itr) {
-        const auto& attach = *itr;
-        if (attach->Texture() == this)
-            break;
-    }
+    if (!fb)
+        return true;
 
-    if (itr == fbAttachments.cend())
-        return false;
-
-    ////
-
-    const auto minLevel = mBaseMipmapLevel;
-    uint32_t maxLevel;
-    if (!MaxEffectiveMipmapLevel(texUnit, &maxLevel)) {
-        // No valid mips. Will need fake-black.
-        return false;
-    }
-
-    ////
-
-    for (; itr != fbAttachments.cend(); ++itr) {
-        const auto& attach = *itr;
-        if (attach->Texture() != this)
+    const auto& texAttachments = fb->GetCompletenessInfo()->texAttachments;
+    for (const auto& attach : texAttachments) {
+        if (attach->Texture() != &tex)
             continue;
 
-        const auto dstLevel = attach->MipLevel();
-
-        if (minLevel <= dstLevel && dstLevel <= maxLevel) {
-            webgl->ErrorInvalidOperation("Feedback loop detected between tex target"
-                                         " 0x%04x, tex unit %u, levels %u-%u; and"
-                                         " framebuffer attachment 0x%04x, level %u.",
-                                         mTarget.get(), texUnit, minLevel,
-                                         maxLevel, attach->mAttachmentPoint, dstLevel);
-            return true;
+        const auto& srcBase = tex.BaseMipmapLevel();
+        const auto srcLast = srcBase + sampledLevels - 1;
+        const auto& dstLevel = attach->MipLevel();
+        if (MOZ_UNLIKELY( srcBase <= dstLevel && dstLevel <= srcLast )) {
+            const auto& webgl = tex.mContext;
+            const auto& texTargetStr = EnumString(tex.Target().get());
+            const auto& attachStr = EnumString(attach->mAttachmentPoint);
+            webgl->ErrorInvalidOperation("Texture level %u would be read by %s unit %u,"
+                                         " but written by framebuffer attachment %s,"
+                                         " which would be illegal feedback.",
+                                         dstLevel, texTargetStr.c_str(), texUnit,
+                                         attachStr.c_str());
+            return false;
         }
     }
-
-    return false;
+    return true;
 }
 
 ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
                                                            bool* const out_error)
     : mWebGL(webgl)
 {
-    MOZ_ASSERT(mWebGL->gl->IsCurrent());
-
-    const std::vector<const WebGLFBAttachPoint*>* attachList = nullptr;
     const auto& fb = mWebGL->mBoundDrawFramebuffer;
-    if (fb) {
-        attachList = &(fb->ResolvedCompleteData()->texDrawBuffers);
-    }
 
     MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
     const auto& uniformSamplers = mWebGL->mActiveProgramLinkInfo->uniformSamplers;
     for (const auto& uniform : uniformSamplers) {
         const auto& texList = *(uniform->mSamplerTexList);
 
+        const auto& uniformBaseType = uniform->mTexBaseType;
         for (const auto& texUnit : uniform->mSamplerValues) {
             if (texUnit >= texList.Length())
                 continue;
@@ -117,34 +97,64 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
             if (!tex)
                 continue;
 
-            if (attachList &&
-                tex->IsFeedback(mWebGL, texUnit, *attachList))
+            const auto& sampler = mWebGL->mBoundSamplers[texUnit];
+            const auto& samplingInfo = tex->GetSampleableInfo(sampler.get());
+            if (!samplingInfo) { // There was an error.
+                *out_error = true;
+                return;
+            }
+            if (!samplingInfo->IsComplete()) {
+                if (samplingInfo->incompleteReason) {
+                    const auto& targetName = GetEnumName(tex->Target().get());
+                    mWebGL->GenerateWarning("%s at unit %u is incomplete: %s",
+                                            targetName, texUnit,
+                                            samplingInfo->incompleteReason);
+                }
+                mRebindRequests.push_back({texUnit, tex});
+                continue;
+            }
+
+            // We have more validation to do if we're otherwise complete:
+            const auto& texBaseType = samplingInfo->usage->format->baseType;
+            if (texBaseType != uniformBaseType) {
+                const auto& targetName = GetEnumName(tex->Target().get());
+                const auto& srcType = ToString(texBaseType);
+                const auto& dstType = ToString(uniformBaseType);
+                mWebGL->ErrorInvalidOperation("%s at unit %u is of type %s, but"
+                                              " the shader samples as %s.",
+                                              targetName, texUnit, srcType,
+                                              dstType);
+                *out_error = true;
+                return;
+            }
+
+            if (uniform->mIsShadowSampler != samplingInfo->isDepthTexCompare) {
+                const auto& targetName = GetEnumName(tex->Target().get());
+                mWebGL->ErrorInvalidOperation("%s at unit %u is%s a depth texture"
+                                              " with TEXTURE_COMPARE_MODE, but"
+                                              " the shader sampler is%s a shadow"
+                                              " sampler.",
+                                              targetName, texUnit,
+                                              samplingInfo->isDepthTexCompare ? "" : " not",
+                                              uniform->mIsShadowSampler ? "" : " not");
+                *out_error = true;
+                return;
+            }
+
+            if (!ValidateNoSamplingFeedback(*tex, samplingInfo->levels, fb.get(),
+                                            texUnit))
             {
                 *out_error = true;
                 return;
             }
-
-            FakeBlackType fakeBlack;
-            if (!tex->ResolveForDraw(texUnit, &fakeBlack)) {
-                mWebGL->ErrorOutOfMemory("Failed to resolve textures for draw.");
-                *out_error = true;
-                return;
-            }
-
-            if (fakeBlack == FakeBlackType::None)
-                continue;
-
-            if (!mWebGL->BindFakeBlack(texUnit, tex->Target(), fakeBlack)) {
-                mWebGL->ErrorOutOfMemory("Failed to create fake black texture.");
-                *out_error = true;
-                return;
-            }
-
-            mRebindRequests.push_back({texUnit, tex});
         }
     }
 
-    *out_error = false;
+    const auto& gl = mWebGL->gl;
+    for (const auto& itr : mRebindRequests) {
+        gl->fActiveTexture(LOCAL_GL_TEXTURE0 + itr.texUnit);
+        gl->fBindTexture(itr.tex->Target().get(), 0); // Tex 0 is always incomplete.
+    }
 }
 
 ScopedResolveTexturesForDraw::~ScopedResolveTexturesForDraw()
@@ -162,71 +172,6 @@ ScopedResolveTexturesForDraw::~ScopedResolveTexturesForDraw()
     gl->fActiveTexture(LOCAL_GL_TEXTURE0 + mWebGL->mActiveTexture);
 }
 
-bool
-WebGLContext::BindFakeBlack(uint32_t texUnit, TexTarget target, FakeBlackType fakeBlack)
-{
-    MOZ_ASSERT(fakeBlack == FakeBlackType::RGBA0000 ||
-               fakeBlack == FakeBlackType::RGBA0001);
-
-    const auto fnGetSlot = [this, target, fakeBlack]() -> UniquePtr<FakeBlackTexture>*
-    {
-        switch (fakeBlack) {
-        case FakeBlackType::RGBA0000:
-            switch (target.get()) {
-            case LOCAL_GL_TEXTURE_2D      : return &mFakeBlack_2D_0000;
-            case LOCAL_GL_TEXTURE_CUBE_MAP: return &mFakeBlack_CubeMap_0000;
-            case LOCAL_GL_TEXTURE_3D      : return &mFakeBlack_3D_0000;
-            case LOCAL_GL_TEXTURE_2D_ARRAY: return &mFakeBlack_2D_Array_0000;
-            default: return nullptr;
-            }
-
-        case FakeBlackType::RGBA0001:
-            switch (target.get()) {
-            case LOCAL_GL_TEXTURE_2D      : return &mFakeBlack_2D_0001;
-            case LOCAL_GL_TEXTURE_CUBE_MAP: return &mFakeBlack_CubeMap_0001;
-            case LOCAL_GL_TEXTURE_3D      : return &mFakeBlack_3D_0001;
-            case LOCAL_GL_TEXTURE_2D_ARRAY: return &mFakeBlack_2D_Array_0001;
-            default: return nullptr;
-            }
-
-        default:
-            return nullptr;
-        }
-    };
-
-    UniquePtr<FakeBlackTexture>* slot = fnGetSlot();
-    if (!slot) {
-        MOZ_CRASH("GFX: fnGetSlot failed.");
-    }
-    UniquePtr<FakeBlackTexture>& fakeBlackTex = *slot;
-
-    if (!fakeBlackTex) {
-        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
-        if (IsWebGL2()) {
-            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, 0);
-            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, 0);
-            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, 0);
-        }
-
-        fakeBlackTex = FakeBlackTexture::Create(gl, target, fakeBlack);
-
-        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mPixelStore_UnpackAlignment);
-        if (IsWebGL2()) {
-            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, mPixelStore_UnpackSkipPixels);
-            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, mPixelStore_UnpackSkipRows);
-            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, mPixelStore_UnpackSkipImages);
-        }
-        if (!fakeBlackTex) {
-            return false;
-        }
-    }
-
-    gl->fActiveTexture(LOCAL_GL_TEXTURE0 + texUnit);
-    gl->fBindTexture(target.get(), fakeBlackTex->mGLName);
-    gl->fActiveTexture(LOCAL_GL_TEXTURE0 + mActiveTexture);
-    return true;
-}
-
 ////////////////////////////////////////
 
 bool
@@ -239,10 +184,10 @@ WebGLContext::ValidateStencilParamsForDrawCall() const
         if (!mBoundDrawFramebuffer)
             return mOptions.stencil ? 8 : 0;
 
-        if (mBoundDrawFramebuffer->StencilAttachment().IsDefined())
+        if (mBoundDrawFramebuffer->StencilAttachment().HasAttachment())
             return 8;
 
-        if (mBoundDrawFramebuffer->DepthStencilAttachment().IsDefined())
+        if (mBoundDrawFramebuffer->DepthStencilAttachment().HasAttachment())
             return 8;
 
         return 0;
@@ -837,17 +782,12 @@ WebGLContext::Draw_cleanup()
 
     // Let's check for a really common error: Viewport is larger than the actual
     // destination framebuffer.
-    uint32_t destWidth = mViewportWidth;
-    uint32_t destHeight = mViewportHeight;
-
+    uint32_t destWidth;
+    uint32_t destHeight;
     if (mBoundDrawFramebuffer) {
-        const auto& drawBuffers = mBoundDrawFramebuffer->ColorDrawBuffers();
-        for (const auto& cur : drawBuffers) {
-            if (!cur->IsDefined())
-                continue;
-            cur->Size(&destWidth, &destHeight);
-            break;
-        }
+        const auto& info = mBoundDrawFramebuffer->GetCompletenessInfo();
+        destWidth = info->width;
+        destHeight = info->height;
     } else {
         destWidth = mDefaultFB->mSize.width;
         destHeight = mDefaultFB->mSize.height;
@@ -919,20 +859,18 @@ WebGLContext::DoFakeVertexAttrib0(const uint64_t vertexCount)
     ////
 
     switch (mGenericVertexAttribTypes[0]) {
-    case LOCAL_GL_FLOAT:
+    case webgl::AttribBaseType::Bool:
+    case webgl::AttribBaseType::Float:
         gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, false, 0, 0);
         break;
 
-    case LOCAL_GL_INT:
+    case webgl::AttribBaseType::Int:
         gl->fVertexAttribIPointer(0, 4, LOCAL_GL_INT, 0, 0);
         break;
 
-    case LOCAL_GL_UNSIGNED_INT:
+    case webgl::AttribBaseType::UInt:
         gl->fVertexAttribIPointer(0, 4, LOCAL_GL_UNSIGNED_INT, 0, 0);
         break;
-
-    default:
-        MOZ_CRASH();
     }
 
     ////
@@ -1014,75 +952,6 @@ WebGLContext::UndoFakeVertexAttrib0()
     }
 
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0);
-}
-
-static GLuint
-CreateGLTexture(gl::GLContext* gl)
-{
-    MOZ_ASSERT(gl->IsCurrent());
-    GLuint ret = 0;
-    gl->fGenTextures(1, &ret);
-    return ret;
-}
-
-UniquePtr<WebGLContext::FakeBlackTexture>
-WebGLContext::FakeBlackTexture::Create(gl::GLContext* gl, TexTarget target,
-                                       FakeBlackType type)
-{
-    GLenum texFormat;
-    switch (type) {
-    case FakeBlackType::RGBA0000:
-        texFormat = LOCAL_GL_RGBA;
-        break;
-
-    case FakeBlackType::RGBA0001:
-        texFormat = LOCAL_GL_RGB;
-        break;
-
-    default:
-        MOZ_CRASH("GFX: bad type");
-    }
-
-    UniquePtr<FakeBlackTexture> result(new FakeBlackTexture(gl));
-    gl::ScopedBindTexture scopedBind(gl, result->mGLName, target.get());
-
-    gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
-    gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
-
-    const webgl::DriverUnpackInfo dui = {texFormat, texFormat, LOCAL_GL_UNSIGNED_BYTE};
-    UniqueBuffer zeros = moz_xcalloc(1, 4); // Infallible allocation.
-
-    MOZ_ASSERT(gl->IsCurrent());
-
-    if (target == LOCAL_GL_TEXTURE_CUBE_MAP) {
-        for (int i = 0; i < 6; ++i) {
-            const TexImageTarget curTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i;
-            const GLenum error = DoTexImage(gl, curTarget.get(), 0, &dui, 1, 1, 1,
-                                            zeros.get());
-            if (error) {
-                return nullptr;
-            }
-        }
-    } else {
-        const GLenum error = DoTexImage(gl, target.get(), 0, &dui, 1, 1, 1,
-                                        zeros.get());
-        if (error) {
-            return nullptr;
-        }
-    }
-
-    return result;
-}
-
-WebGLContext::FakeBlackTexture::FakeBlackTexture(gl::GLContext* gl)
-    : mGL(gl)
-    , mGLName(CreateGLTexture(gl))
-{
-}
-
-WebGLContext::FakeBlackTexture::~FakeBlackTexture()
-{
-    mGL->fDeleteTextures(1, &mGLName);
 }
 
 } // namespace mozilla
