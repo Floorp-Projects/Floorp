@@ -19,7 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'TypeError: undefined has no properties';
+  expect = `TypeError: can't access property "y" of undefined`;
   actual = 'No Error';
 
   try
@@ -32,7 +32,7 @@ function test()
   }
   reportCompare(expect, actual, summary);
 
-  expect = 'TypeError: null has no properties';
+  expect = `TypeError: can't access property "y" of null`;
   actual = 'No Error';
 
   try
@@ -45,7 +45,7 @@ function test()
   }
   reportCompare(expect, actual, summary);
 
-  expect = 'TypeError: x is undefined';
+  expect = `TypeError: x is undefined, can't access property "y" of it`;
   actual = 'No Error';
 
   try
@@ -59,7 +59,7 @@ function test()
   }
   reportCompare(expect, actual, summary);
 
-  expect = 'TypeError: x is null';
+  expect = `TypeError: x is null, can't access property "y" of it`;
   actual = 'No Error';
 
   try

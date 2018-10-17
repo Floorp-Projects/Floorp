@@ -33,7 +33,7 @@ async function doTests() {
       local_ok(false, "Callbacks should not be called.");
     });
   } catch (err) {
-    local_ok(err == "TypeError: window.u2f is undefined", "accessing window.u2f should have thrown from an insecure origin");
+    local_ok(err.toString().includes("TypeError: window.u2f is undefined"), "accessing window.u2f should have thrown from an insecure origin");
   }
 
   try {
