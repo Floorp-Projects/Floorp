@@ -41,6 +41,9 @@ void CreateCheckpoint();
 // graphics when paused.
 void SetVsyncObserver(VsyncObserver* aObserver);
 
+// Called before processing incoming vsyncs from the UI process.
+void OnVsync();
+
 // Tell the child code about any ongoing painting activity. When a paint is
 // about to happen, the main thread calls NotifyPaintStart, and when the
 // compositor thread finishes the paint it calls NotifyPaintComplete.

@@ -8,6 +8,7 @@
 
 #include "nsString.h"
 #include "ipc/ChildInternal.h"
+#include "ipc/ParentInternal.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/StaticMutex.h"
 #include "InfallibleVector.h"
@@ -225,9 +226,18 @@ DisallowUnhandledDivergeFromRecording()
 void
 EnsureNotDivergedFromRecording()
 {
+  // If we have diverged from the recording and encounter an operation we can't
+  // handle, rewind to the last checkpoint.
   AssertEventsAreNotPassedThrough();
   if (HasDivergedFromRecording()) {
     MOZ_RELEASE_ASSERT(gUnhandledDivergeAllowed);
+
+    // Crash instead of rewinding in the painting stress mode, for finding
+    // areas where middleman calls do not cover all painting logic.
+    if (parent::InRepaintStressMode()) {
+      MOZ_CRASH("Recording divergence in repaint stress mode");
+    }
+
     PrintSpew("Unhandled recording divergence, restoring checkpoint...\n");
     RestoreCheckpointAndResume(gRewindInfo->mSavedCheckpoints.back().mCheckpoint);
     Unreachable();

@@ -977,10 +977,44 @@ static bool gResumeForwardOrBackward = false;
 // Hit any breakpoints installed for forced pauses.
 static void HitForcedPauseBreakpoints(bool aRecordingBoundary);
 
+static void
+MaybeSendRepaintMessage()
+{
+  // In repaint stress mode, we want to trigger a repaint at every checkpoint,
+  // so before resuming after the child pauses at each checkpoint, send it a
+  // repaint message. There might not be a debugger open, so manually craft the
+  // same message which the debugger would send to trigger a repaint and parse
+  // the result.
+  if (InRepaintStressMode()) {
+    MaybeSwitchToReplayingChild();
+
+    const char16_t contents[] = u"{\"type\":\"repaint\"}";
+
+    js::CharBuffer request, response;
+    request.append(contents, ArrayLength(contents) - 1);
+    SendRequest(request, &response);
+
+    AutoSafeJSContext cx;
+    JS::RootedValue value(cx);
+    if (JS_ParseJSON(cx, response.begin(), response.length(), &value)) {
+      MOZ_RELEASE_ASSERT(value.isObject());
+      JS::RootedObject obj(cx, &value.toObject());
+      RootedValue width(cx), height(cx);
+      if (JS_GetProperty(cx, obj, "width", &width) && width.isNumber() && width.toNumber() &&
+          JS_GetProperty(cx, obj, "height", &height) && height.isNumber() && height.toNumber()) {
+        PaintMessage message(width.toNumber(), height.toNumber());
+        UpdateGraphicsInUIProcess(&message);
+      }
+    }
+  }
+}
+
 void
 Resume(bool aForward)
 {
   gActiveChild->WaitUntilPaused();
+
+  MaybeSendRepaintMessage();
 
   // Set the preferred direction of travel.
   gResumeForwardOrBackward = false;
