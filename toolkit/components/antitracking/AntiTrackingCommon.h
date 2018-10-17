@@ -138,6 +138,7 @@ public:
   // Check whether a top window URI is on the content blocking allow list.
   static nsresult
   IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
+                               bool aIsPrivateBrowsing,
                                ContentBlockingAllowListPurpose aPurpose,
                                bool& aIsAllowListed);
 

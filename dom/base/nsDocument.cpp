@@ -13786,8 +13786,13 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
       // Note: If this has returned true, the top-level document is guaranteed
       // to not be on the Content Blocking allow list.
       DebugOnly<bool> isOnAllowList = false;
+      // If we have a parent document, it has to be non-private since we verified
+      // earlier that our own document is non-private and a private document can
+      // never have a non-private document as its child.
+      MOZ_ASSERT_IF(parent, !nsContentUtils::IsInPrivateBrowsing(parent));
       MOZ_ASSERT_IF(NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
                                    parent->GetDocumentURI(),
+                                   false,
                                    AntiTrackingCommon::eStorageChecks,
                                    isOnAllowList)),
                     !isOnAllowList);
