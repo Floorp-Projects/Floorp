@@ -101,6 +101,13 @@ static const int32_t GraphicsMemoryMessageId = 43;
 // Fixed size of the graphics shared memory buffer.
 static const size_t GraphicsMemorySize = 4096 * 4096 * 4;
 
+// Return whether the environment variable activating repaint stress mode is
+// set. This makes various changes in both the middleman and child processes to
+// trigger a child to diverge from the recording and repaint on every vsync,
+// making sure that repainting can handle all the system interactions that
+// occur while painting the current tab.
+bool InRepaintStressMode();
+
 ///////////////////////////////////////////////////////////////////////////////
 // Child Processes
 ///////////////////////////////////////////////////////////////////////////////

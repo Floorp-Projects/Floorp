@@ -420,6 +420,18 @@ NotifyVsyncObserver()
   }
 }
 
+void
+OnVsync()
+{
+  // In the repainting stress mode, we create a new checkpoint on every vsync
+  // message received from the UI process. When we notify the parent about the
+  // new checkpoint it will trigger a repaint to make sure that all layout and
+  // painting activity can occur when diverged from the recording.
+  if (parent::InRepaintStressMode()) {
+    CreateCheckpoint();
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Painting
 ///////////////////////////////////////////////////////////////////////////////

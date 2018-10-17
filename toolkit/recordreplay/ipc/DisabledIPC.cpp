@@ -52,6 +52,12 @@ SetVsyncObserver(VsyncObserver* aObserver)
 }
 
 void
+OnVsync()
+{
+  MOZ_CRASH();
+}
+
+void
 NotifyPaintStart()
 {
   MOZ_CRASH();
