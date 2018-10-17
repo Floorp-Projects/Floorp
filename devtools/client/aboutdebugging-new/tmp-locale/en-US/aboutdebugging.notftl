@@ -13,13 +13,6 @@ about-debugging-sidebar-this-firefox =
 about-debugging-sidebar-connect =
   .name = Connect
 
-# Text displayed in the about:debugging sidebar when USB devices discovery is enabled.
-about-debugging-sidebar-usb-enabled = USB devices enabled
-
-# Text displayed in the about:debugging sidebar when USB devices discovery is disabled
-# (for instance because the mandatory ADB extension is not installed).
-about-debugging-sidebar-usb-disabled = USB devices disabled
-
 # Connection status (connected) for runtime items in the sidebar
 aboutdebugging-sidebar-runtime-connection-status-connected = Connected
 # Connection status (disconnected) for runtime items in the sidebar
