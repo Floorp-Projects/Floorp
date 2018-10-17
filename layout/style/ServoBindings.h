@@ -1090,13 +1090,10 @@ void Servo_ProcessInvalidations(
 
 bool Servo_HasPendingRestyleAncestor(RawGeckoElementBorrowed element);
 
-void Servo_GetArcStringData(
-  const RustString*,
+void Servo_CssUrlData_GetSerialization(
+  RawServoCssUrlDataBorrowed url,
   uint8_t const** chars,
   uint32_t* len);
-
-void Servo_ReleaseArcStringData(
-  const mozilla::ServoRawOffsetArc<RustString>* string);
 
 // CSS parsing utility functions.
 

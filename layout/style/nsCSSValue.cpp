@@ -818,8 +818,6 @@ css::URLValue::~URLValue()
   if (mLoadID != 0) {
     ImageLoader::DeregisterCSSImageFromAllLoaders(this);
   }
-
-  Servo_ReleaseArcStringData(&mString);
 }
 
 bool
@@ -864,7 +862,7 @@ css::URLValue::GetString() const
 {
   const uint8_t* chars;
   uint32_t len;
-  Servo_GetArcStringData(mString.mPtr, &chars, &len);
+  Servo_CssUrlData_GetSerialization(mCssUrl, &chars, &len);
   return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
 }
 
