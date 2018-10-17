@@ -52,8 +52,7 @@
           });
         });
       });
-      gBrowser.loadURI("data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>",
-                       { triggeringPrincipal: window.document.nodePrincipal });
+      gBrowser.loadURI("data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
       await promise;
       await onDocumentLoaded();
     }
