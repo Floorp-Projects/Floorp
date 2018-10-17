@@ -71,7 +71,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
 private:
   static char16_t REPLACEMENT_CHARACTER[];
-
 public:
   static const int32_t OTHER = 0;
 
@@ -288,10 +287,8 @@ private:
   int32_t mode;
   int32_t originalMode;
   bool framesetOk;
-
 protected:
   nsHtml5Tokenizer* tokenizer;
-
 private:
   bool scriptingEnabled;
   bool needToDropLF;
@@ -311,11 +308,9 @@ private:
   nsIContentHandle* formPointer;
   nsIContentHandle* headPointer;
   nsIContentHandle* deepTreeSurrogateParent;
-
 protected:
   autoJArray<char16_t, int32_t> charBuffer;
   int32_t charBufferLen;
-
 private:
   bool quirks;
   bool isSrcdocDocument;
@@ -362,17 +357,14 @@ private:
   bool isTemplateContents();
   bool isTemplateModeStackEmpty();
   bool isSpecialParentInForeign(nsHtml5StackNode* stackNode);
-
 public:
   static nsHtml5String extractCharsetFromContent(nsHtml5String attributeValue,
                                                  nsHtml5TreeBuilder* tb);
 
 private:
   void checkMetaCharset(nsHtml5HtmlAttributes* attributes);
-
 public:
   void endTag(nsHtml5ElementName* elementName);
-
 private:
   void endTagTemplateInHead();
   int32_t findLastInTableScopeOrRootTemplateTbodyTheadTfoot();
@@ -435,10 +427,8 @@ private:
   void addAttributesToHtml(nsHtml5HtmlAttributes* attributes);
   void pushHeadPointerOntoStack();
   void reconstructTheActiveFormattingElements();
-
 public:
   void notifyUnusedStackNode(int32_t idxInStackNodes);
-
 private:
   nsHtml5StackNode* getUnusedStackNode();
   nsHtml5StackNode* createStackNode(
@@ -521,7 +511,6 @@ private:
   void appendVoidInputToCurrent(nsHtml5HtmlAttributes* attributes,
                                 nsIContentHandle* form);
   void appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes);
-
 protected:
   void accumulateCharacters(const char16_t* buf, int32_t start, int32_t length);
   void requestSuspension();
@@ -579,14 +568,12 @@ protected:
                                nsHtml5String systemIdentifier);
   void elementPushed(int32_t ns, nsAtom* name, nsIContentHandle* node);
   void elementPopped(int32_t ns, nsAtom* name, nsIContentHandle* node);
-
 public:
   inline bool cdataSectionAllowed() { return isInForeign(); }
 
 private:
   bool isInForeign();
   bool isInForeignButNotHtmlOrMathTextIntegrationPoint();
-
 public:
   void setFragmentContext(nsAtom* context,
                           int32_t ns,
@@ -595,16 +582,13 @@ public:
 
 protected:
   nsIContentHandle* currentNode();
-
 public:
   bool isScriptingEnabled();
   void setScriptingEnabled(bool scriptingEnabled);
   void setIsSrcdocDocument(bool isSrcdocDocument);
   void flushCharacters();
-
 private:
   bool charBufferContainsNonWhitespace();
-
 public:
   nsAHtml5TreeBuilderState* newSnapshot();
   bool snapshotMatches(nsAHtml5TreeBuilderState* snapshot);
