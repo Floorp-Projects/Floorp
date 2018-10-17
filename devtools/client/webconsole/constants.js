@@ -134,6 +134,7 @@ const chromeRDPEnums = {
     // Undocumented in Chrome RDP, but is used for messages that should not
     // output anything (e.g. `console.time()` calls).
     NULL_MESSAGE: "nullMessage",
+    NAVIGATION_MARKER: "navigationMarker"
   },
   MESSAGE_LEVEL: {
     LOG: "log",

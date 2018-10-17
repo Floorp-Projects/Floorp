@@ -43,7 +43,6 @@ pref("extensions.getAddons.compatOverides.url", "https://services.addons.mozilla
 pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/firefox/search?q=%TERMS%&platform=%OS%&appver=%VERSION%");
 pref("extensions.webservice.discoverURL", "https://discovery.addons.mozilla.org/%LOCALE%/firefox/discovery/pane/%VERSION%/%OS%/%COMPATIBILITY_MODE%");
 pref("extensions.getAddons.link.url", "https://addons.mozilla.org/%LOCALE%/firefox/");
-pref("extensions.getAddons.themes.browseURL", "https://addons.mozilla.org/%LOCALE%/firefox/themes/?src=firefox");
 pref("extensions.getAddons.langpacks.url", "https://services.addons.mozilla.org/api/v3/addons/language-tools/?app=firefox&type=language&appversion=%VERSION%");
 
 pref("extensions.update.autoUpdateDefault", true);
@@ -952,6 +951,8 @@ pref("browser.security.newcerterrorpage.enabled", true);
 #else
 pref("browser.security.newcerterrorpage.enabled", false);
 #endif
+
+pref("security.certerrors.recordEventTelemetry", true);
 
 // Whether to start the private browsing mode at application startup
 pref("browser.privatebrowsing.autostart", false);

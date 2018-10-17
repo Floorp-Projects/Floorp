@@ -87,10 +87,17 @@ def test_roll_catch_exception(lint, linters, files, capfd):
     assert 'LintException' in err
 
 
-def test_roll_with_excluded_path(lint, linters, files):
-    lint.lintargs.update({'exclude': ['**/foobar.js']})
-
+def test_roll_with_global_excluded_path(lint, linters, files):
+    lint.exclude = ['**/foobar.js']
     lint.read(linters('string', 'regex', 'external'))
+    result = lint.roll(files)
+
+    assert len(result.issues) == 0
+    assert result.failed == set([])
+
+
+def test_roll_with_local_excluded_path(lint, linters, files):
+    lint.read(linters('excludes'))
     result = lint.roll(files)
 
     assert len(result.issues) == 0

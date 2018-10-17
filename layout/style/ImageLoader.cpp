@@ -483,8 +483,7 @@ ImageLoader::LoadImage(URLValue* aImage, nsIDocument* aLoadingDoc)
   int32_t loadFlags = nsIRequest::LOAD_NORMAL |
                       nsContentUtils::CORSModeToLoadImageFlags(aImage->CorsMode());
 
-  URLExtraData* data = aImage->mExtraData;
-
+  URLExtraData* data = aImage->ExtraData();
 
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(uri, aLoadingDoc, aLoadingDoc,

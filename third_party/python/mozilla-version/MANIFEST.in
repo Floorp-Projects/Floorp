@@ -1,0 +1,8 @@
+include LICENSE
+include README.md
+include version.txt
+include requirements*.txt
+include requirements.txt.in   # Used by setup.py
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

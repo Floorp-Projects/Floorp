@@ -37,7 +37,9 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         return sRemoteManager;
     }
 
-    private List<CodecProxy> mProxies = new LinkedList<CodecProxy>();
+    private List<CodecProxy> mCodecs = new LinkedList<CodecProxy>();
+    private List<IMediaDrmBridge> mDrmBridges = new LinkedList<IMediaDrmBridge>();
+
     private volatile IMediaManager mRemote;
 
     private final class RemoteConnection implements ServiceConnection {
@@ -133,7 +135,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
             ICodec remote = mRemote.createCodec();
             CodecProxy proxy = CodecProxy.createCodecProxy(isEncoder, format, surface, callbacks, drmStubId);
             if (proxy.init(remote)) {
-                mProxies.add(proxy);
+                mCodecs.add(proxy);
                 return proxy;
             } else {
                 return null;
@@ -153,6 +155,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         try {
             IMediaDrmBridge remoteBridge =
                 mRemote.createRemoteMediaDrmBridge(keySystem, stubId);
+            mDrmBridges.add(remoteBridge);
             return remoteBridge;
         } catch (RemoteException e) {
             Log.e(LOGTAG, "Got exception during createRemoteMediaDrmBridge().", e);
@@ -177,7 +180,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
     }
 
     private synchronized void notifyError(boolean fatal) {
-        for (CodecProxy proxy : mProxies) {
+        for (CodecProxy proxy : mCodecs) {
             proxy.reportError(fatal);
         }
     }
@@ -186,7 +189,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         if (DEBUG) Log.d(LOGTAG, "recover codec");
         boolean ok = true;
         try {
-            for (CodecProxy proxy : mProxies) {
+            for (CodecProxy proxy : mCodecs) {
                 ok &= proxy.init(mRemote.createCodec());
             }
             return ok;
@@ -202,16 +205,33 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         }
         proxy.deinit();
         synchronized (this) {
-            if (mProxies.remove(proxy) && mProxies.isEmpty()) {
-                release();
+            if (mCodecs.remove(proxy)) {
+                releaseIfNeeded();
             }
         }
     }
 
-    private void release() {
+    private void releaseIfNeeded() {
+        if (!mCodecs.isEmpty() || !mDrmBridges.isEmpty()) {
+            return;
+        }
+
         if (DEBUG) Log.d(LOGTAG, "release remote manager " + this);
         mConnection.unlink();
         Context appCtxt = GeckoAppShell.getApplicationContext();
         appCtxt.unbindService(mConnection);
+    }
+
+    public void onRemoteMediaDrmBridgeReleased(IMediaDrmBridge remote) {
+        if (!mDrmBridges.contains(remote)) {
+            Log.e(LOGTAG, "Try to release unknown remote MediaDrm bridge: " + remote);
+            return;
+        }
+
+        synchronized (this) {
+            if (mDrmBridges.remove(remote)) {
+                releaseIfNeeded();
+            }
+        }
     }
 } // RemoteManager

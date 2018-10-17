@@ -52,7 +52,7 @@ old_history_path = os.path.join(get_state_dir()[0], 'history', 'try_task_configs
 def write_task_config(try_task_config):
     config_path = os.path.join(vcs.path, 'try_task_config.json')
     with open(config_path, 'w') as fh:
-        json.dump(try_task_config, fh, indent=2, separators=(',', ':'))
+        json.dump(try_task_config, fh, indent=4, separators=(',', ': '))
         fh.write('\n')
     return config_path
 
@@ -82,7 +82,7 @@ def check_working_directory(push=True):
 
 
 def push_to_try(method, msg, labels=None, templates=None, try_task_config=None,
-                push=True, closed_tree=False):
+                push=True, closed_tree=False, files_to_change=None):
     check_working_directory(push)
 
     # Format the commit message
@@ -91,28 +91,40 @@ def push_to_try(method, msg, labels=None, templates=None, try_task_config=None,
                       (msg, closed_tree_string, method))
 
     if labels or labels == []:
-        try_task_config = {'tasks': sorted(labels)}
+        try_task_config = {
+            'version': 1,
+            'tasks': sorted(labels),
+        }
         if templates:
             try_task_config['templates'] = templates
         if push:
             write_task_config_history(msg, try_task_config)
 
-    config = None
+    config_path = None
+    changed_files = []
     if try_task_config:
-        config = write_task_config(try_task_config)
+        config_path = write_task_config(try_task_config)
+        changed_files.append(config_path)
+
+    if files_to_change:
+        for path, content in files_to_change.items():
+            path = os.path.join(vcs.path, path)
+            with open(path, 'w') as fh:
+                fh.write(content)
+            changed_files.append(path)
 
     try:
         if not push:
             print("Commit message:")
             print(commit_message)
-            if config:
+            if config_path:
                 print("Calculated try_task_config.json:")
-                with open(config) as fh:
+                with open(config_path) as fh:
                     print(fh.read())
             return
 
-        if config:
-            vcs.add_remove_files(config)
+        for path in changed_files:
+            vcs.add_remove_files(path)
 
         try:
             vcs.push_to_try(commit_message)
@@ -125,5 +137,5 @@ def push_to_try(method, msg, labels=None, templates=None, try_task_config=None,
                 raise
             sys.exit(1)
     finally:
-        if config and os.path.isfile(config):
-            os.remove(config)
+        if config_path and os.path.isfile(config_path):
+            os.remove(config_path)
