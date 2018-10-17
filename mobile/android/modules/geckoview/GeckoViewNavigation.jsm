@@ -73,25 +73,9 @@ class GeckoViewNavigation extends GeckoViewModule {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
         }
 
-        let parsedUri;
-        let triggeringPrincipal;
-        try {
-            parsedUri = Services.io.newURI(uri);
-            if (parsedUri.schemeIs("about") || parsedUri.schemeIs("data") ||
-                parsedUri.schemeIs("file") || parsedUri.schemeIs("resource")) {
-              // Only allow privileged loading for certain URIs.
-              triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-            }
-        } catch (ignored) {
-        }
-        if (!triggeringPrincipal) {
-          triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
-        }
-
-        this.browser.loadURI(parsedUri ? parsedUri.spec : uri, {
+        this.browser.loadURI(uri, {
           flags: navFlags,
           referrerURI: referrer,
-          triggeringPrincipal,
         });
         break;
       case "GeckoView:Reload":
