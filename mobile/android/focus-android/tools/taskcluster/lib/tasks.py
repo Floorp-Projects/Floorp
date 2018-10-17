@@ -5,7 +5,7 @@
 import datetime
 import json
 import os
-import taskcluster 
+import taskcluster
 
 class TaskBuilder(object):
     def __init__(self, task_id, repo_url, branch, commit, owner, source):
@@ -43,7 +43,7 @@ class TaskBuilder(object):
             "payload": {
                 "features": features,
                 "maxRunTime": 7200,
-                "image": "mozillamobile/focus-android:1.1",
+                "image": "mozillamobile/focus-android:1.2",
                 "command": [
                     "/bin/bash",
                     "--login",

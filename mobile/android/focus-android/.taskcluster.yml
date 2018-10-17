@@ -20,7 +20,7 @@ tasks:
       scopes: []
       payload:
         maxRunTime: 7200
-        image: mozillamobile/focus-android:1.1
+        image: mozillamobile/focus-android:1.2
         command:
           - /bin/bash
           - --login
@@ -73,7 +73,7 @@ tasks:
           - secrets:get:project/focus/nimbledroid
         payload:
           maxRunTime: 7200
-          image: mozillamobile/focus-android:1.1
+          image: mozillamobile/focus-android:1.2
           features:
             taskclusterProxy: true
           env:
@@ -127,7 +127,7 @@ tasks:
         - queue:route:index.project.mobile.focus.release.latest
       payload:
         maxRunTime: 7200
-        image: mozillamobile/focus-android:1.1
+        image: mozillamobile/focus-android:1.2
         features:
           taskclusterProxy: true
           chainOfTrust: true
