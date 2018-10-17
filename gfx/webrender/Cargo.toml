@@ -20,7 +20,7 @@ serialize_program = ["serde"]
 
 [dependencies]
 app_units = "0.7"
-base64 = { optional = true, version = "0.6" }
+base64 = { optional = true, version = "0.9" }
 bincode = "1.0"
 bitflags = "1.0"
 byteorder = "1.0"

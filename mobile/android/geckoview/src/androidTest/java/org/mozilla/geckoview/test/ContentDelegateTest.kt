@@ -6,6 +6,7 @@ package org.mozilla.geckoview.test
 
 import android.app.assist.AssistStructure
 import android.os.Build
+import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
@@ -55,7 +56,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 return null
             }
 
