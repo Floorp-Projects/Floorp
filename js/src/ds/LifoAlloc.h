@@ -518,6 +518,7 @@ class LifoAlloc {
   size_t oversizeThreshold_;
   size_t curSize_;
   size_t peakSize_;
+  size_t oversizeSize_;
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
   bool fallibleScope_;
 #endif
@@ -767,6 +768,7 @@ class LifoAlloc {
     while (!oversize_.empty()) {
       UniqueBumpChunk bc = oversize_.popFirst();
       decrementCurSize(bc->computedSizeOfIncludingThis());
+      oversizeSize_ -= bc->computedSizeOfIncludingThis();
     }
   }
 
