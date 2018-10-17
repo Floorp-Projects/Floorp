@@ -378,11 +378,15 @@ static const gfx::SurfaceFormat gSurfaceFormat = gfx::SurfaceFormat::R8G8B8X8;
 
 struct PaintMessage : public Message
 {
+  // Checkpoint whose state is being painted.
+  uint32_t mCheckpointId;
+
   uint32_t mWidth;
   uint32_t mHeight;
 
-  PaintMessage(uint32_t aWidth, uint32_t aHeight)
+  PaintMessage(uint32_t aCheckpointId, uint32_t aWidth, uint32_t aHeight)
     : Message(MessageType::Paint, sizeof(*this))
+    , mCheckpointId(aCheckpointId)
     , mWidth(aWidth)
     , mHeight(aHeight)
   {}

@@ -1111,6 +1111,12 @@ AfterCheckpoint(const CheckpointId& aCheckpoint)
   gNavigation->AfterCheckpoint(aCheckpoint);
 }
 
+size_t
+LastNormalCheckpoint()
+{
+  return gNavigation->LastCheckpoint().mNormal;
+}
+
 void
 DebuggerRequest(js::CharBuffer* aRequestBuffer)
 {
