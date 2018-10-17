@@ -315,6 +315,8 @@ mozJSComponentLoader*
 mozJSComponentLoader::sSelf;
 
 NS_IMPL_ISUPPORTS(mozJSComponentLoader,
+                  mozilla::ModuleLoader,
+                  xpcIJSModuleLoader,
                   nsIObserver)
 
 nsresult
@@ -1062,9 +1064,8 @@ mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
     return NS_OK;
 }
 
-void
-mozJSComponentLoader::LoadedModules(uint32_t* length,
-                                    char*** aModules)
+NS_IMETHODIMP mozJSComponentLoader::LoadedModules(uint32_t* length,
+                                                  char*** aModules)
 {
     char** modules = new char*[mImports.Count()];
     *length = mImports.Count();
@@ -1074,11 +1075,12 @@ mozJSComponentLoader::LoadedModules(uint32_t* length,
         *modules = NS_xstrdup(iter.Data()->location);
         modules++;
     }
+
+    return NS_OK;
 }
 
-void
-mozJSComponentLoader::LoadedComponents(uint32_t* length,
-                                       char*** aComponents)
+NS_IMETHODIMP mozJSComponentLoader::LoadedComponents(uint32_t* length,
+                                                     char*** aComponents)
 {
     char** comp = new char*[mModules.Count()];
     *length = mModules.Count();
@@ -1088,9 +1090,11 @@ mozJSComponentLoader::LoadedComponents(uint32_t* length,
         *comp = NS_xstrdup(iter.Data()->location);
         comp++;
     }
+
+    return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 mozJSComponentLoader::GetModuleImportStack(const nsACString& aLocation,
                                            nsACString& retval)
 {
@@ -1114,7 +1118,7 @@ mozJSComponentLoader::GetModuleImportStack(const nsACString& aLocation,
 #endif
 }
 
-nsresult
+NS_IMETHODIMP
 mozJSComponentLoader::GetComponentLoadStack(const nsACString& aLocation,
                                             nsACString& retval)
 {
