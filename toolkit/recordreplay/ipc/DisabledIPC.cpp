@@ -52,12 +52,6 @@ SetVsyncObserver(VsyncObserver* aObserver)
 }
 
 void
-NotifyVsyncObserver()
-{
-  MOZ_CRASH();
-}
-
-void
 NotifyPaintStart()
 {
   MOZ_CRASH();
@@ -65,12 +59,6 @@ NotifyPaintStart()
 
 void
 NotifyPaintComplete()
-{
-  MOZ_CRASH();
-}
-
-void
-WaitForPaintToComplete()
 {
   MOZ_CRASH();
 }

@@ -198,6 +198,7 @@ ListenForCheckpointThreadMain(void*)
   }
 }
 
+// Shared memory block for graphics data.
 void* gGraphicsShmem;
 
 void
@@ -411,7 +412,7 @@ SetVsyncObserver(VsyncObserver* aObserver)
   gVsyncObserver = aObserver;
 }
 
-void
+static void
 NotifyVsyncObserver()
 {
   if (gVsyncObserver) {
@@ -424,19 +425,30 @@ NotifyVsyncObserver()
 ///////////////////////////////////////////////////////////////////////////////
 
 // Graphics memory is only written on the compositor thread and read on the
-// main thread and by the middleman. The gPendingPaint flag is used to
+// main thread and by the middleman. The gNumPendingPaints counter is used to
 // synchronize access, so that data is not read until the paint has completed.
 static Maybe<PaintMessage> gPaintMessage;
-static bool gPendingPaint;
+static size_t gNumPendingPaints;
 
 // Target buffer for the draw target created by the child process widget.
 static void* gDrawTargetBuffer;
 static size_t gDrawTargetBufferSize;
 
+// ID of the compositor thread.
+static Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve> gCompositorThreadId;
+
 already_AddRefed<gfx::DrawTarget>
 DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
 {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+
+  // Keep track of the compositor thread ID.
+  size_t threadId = Thread::Current()->Id();
+  if (gCompositorThreadId) {
+    MOZ_RELEASE_ASSERT(threadId == gCompositorThreadId);
+  } else {
+    gCompositorThreadId = threadId;
+  }
 
   if (aSize.IsEmpty()) {
     return nullptr;
@@ -466,25 +478,34 @@ DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
   return drawTarget.forget();
 }
 
+static void
+FinishInProgressPaint(MonitorAutoLock&)
+{
+  while (gNumPendingPaints) {
+    gMonitor->Wait();
+  }
+}
+
 void
 NotifyPaintStart()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  NewCheckpoint(/* aTemporary = */ false);
-
-  gPendingPaint = true;
+  MonitorAutoLock lock(*gMonitor);
+  gNumPendingPaints++;
 }
 
-void
-WaitForPaintToComplete()
+static void
+PaintFromMainThread()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  MonitorAutoLock lock(*gMonitor);
-  while (gPendingPaint) {
-    gMonitor->Wait();
+  // If another paint started before we got here, finish it first.
+  {
+    MonitorAutoLock lock(*gMonitor);
+    FinishInProgressPaint(lock);
   }
+
   if (IsActiveChild() && gPaintMessage.isSome()) {
     memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
     gChannel->SendMessage(gPaintMessage.ref());
@@ -494,12 +515,68 @@ WaitForPaintToComplete()
 void
 NotifyPaintComplete()
 {
-  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(Thread::Current()->Id() == gCompositorThreadId);
 
+  // Notify the main thread in case it is waiting for this paint to complete.
+  {
+    MonitorAutoLock lock(*gMonitor);
+    MOZ_RELEASE_ASSERT(gNumPendingPaints);
+    if (--gNumPendingPaints == 0) {
+      gMonitor->Notify();
+    }
+  }
+
+  // Notify the middleman about the completed paint from the main thread.
+  NS_DispatchToMainThread(NewRunnableFunction("PaintFromMainThread", PaintFromMainThread));
+}
+
+void
+Repaint(size_t* aWidth, size_t* aHeight)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(HasDivergedFromRecording());
+
+  // Don't try to repaint if the first normal paint hasn't occurred yet.
+  if (!gCompositorThreadId) {
+    *aWidth = 0;
+    *aHeight = 0;
+    return;
+  }
+
+  // Create an artifical vsync to see if graphics have changed since the last
+  // paint and a new paint is needed.
+  NotifyVsyncObserver();
+
+  {
+    MonitorAutoLock lock(*gMonitor);
+
+    if (gNumPendingPaints) {
+      // Allow the compositor to diverge from the recording so it can perform
+      // the paint we just triggered, or any in flight paint that that existed
+      // at the point we are paused at.
+      Thread::GetById(gCompositorThreadId)->SetShouldDivergeFromRecording();
+
+      FinishInProgressPaint(lock);
+    }
+  }
+
+  if (gPaintMessage.isSome()) {
+    memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
+    *aWidth = gPaintMessage.ref().mWidth;
+    *aHeight = gPaintMessage.ref().mHeight;
+  } else {
+    *aWidth = 0;
+    *aHeight = 0;
+  }
+}
+
+static bool
+CompositorCanPerformMiddlemanCalls()
+{
+  // After repainting finishes the compositor is not allowed to send call
+  // requests to the middleman anymore.
   MonitorAutoLock lock(*gMonitor);
-  MOZ_RELEASE_ASSERT(gPendingPaint);
-  gPendingPaint = false;
-  gMonitor->Notify();
+  return gNumPendingPaints != 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
