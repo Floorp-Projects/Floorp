@@ -3041,12 +3041,6 @@ var BrowserOnClick = {
     let securityInfo;
 
     switch (elementId) {
-      case "viewCertificate":
-        securityInfo = getSecurityInfo(securityInfoAsString);
-        let cert = securityInfo.serverCert;
-        Services.ww.openWindow(window, "chrome://pippki/content/certViewer.xul",
-                               "_blank", "centerscreen,chrome", cert);
-        break;
       case "exceptionDialogButton":
         securityInfo = getSecurityInfo(securityInfoAsString);
         let params = { exceptionAdded: false,
