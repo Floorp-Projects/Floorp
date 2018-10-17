@@ -3433,6 +3433,15 @@
     "bug_numbers": [1470853],
     "description": "Number of DOH requests per connection"
   },
+  "DNS_TRR_SUCCESS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["Fine", "Timeout", "Bad"],
+    "description": "How often TRR (Trusted Recursive Resolver) requests are fine, time-out or error.",
+    "bug_numbers": [1497438],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+  },
   "DNS_LOOKUP_ALGORITHM": {
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
