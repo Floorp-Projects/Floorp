@@ -290,6 +290,20 @@ function setSearchLabel(type) {
   }
 }
 
+function setThemeScreenshot(addon, node) {
+  let screenshot = node.querySelector(".theme-screenshot")
+    || document.getAnonymousElementByAttribute(node, "anonid", "theme-screenshot");
+  // There's a test that doesn't have this for some reason, but it's doing weird things.
+  if (!screenshot)
+    return;
+  if (addon.type == "theme" && addon.screenshots && addon.screenshots.length > 0) {
+    screenshot.setAttribute("src", addon.screenshots[0].url);
+    screenshot.hidden = false;
+  } else {
+    screenshot.hidden = true;
+  }
+}
+
 /**
  * Obtain the main DOMWindow for the current context.
  */
@@ -2424,8 +2438,10 @@ var gListView = {
       this.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
         sortElements(elements, ["uiState", "name"], true);
-        for (let element of elements)
+        for (let element of elements) {
           this._listBox.appendChild(element);
+          setThemeScreenshot(element.mAddon, element);
+        }
       }
 
       this.filterDisabledUnsigned(showOnlyDisabledUnsigned);
@@ -2592,6 +2608,7 @@ var gDetailView = {
 
   _updateView(aAddon, aIsRemote, aScrollToPreferences) {
     setSearchLabel(aAddon.type);
+    setThemeScreenshot(aAddon, this.node);
 
     AddonManager.addManagerListener(this);
     this.clearLoading();
