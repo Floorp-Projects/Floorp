@@ -3270,6 +3270,36 @@ nsXPCComponents_Utils::CreatePersistentProperties(nsIPersistentProperties** aPer
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::LoadedModules(uint32_t* aLength,
+                                     char*** aModules)
+{
+    mozJSComponentLoader::Get()->LoadedModules(aLength, aModules);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::LoadedComponents(uint32_t* aLength,
+                                        char*** aComponents)
+{
+    mozJSComponentLoader::Get()->LoadedComponents(aLength, aComponents);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetModuleImportStack(const nsACString& aLocation,
+                                            nsACString& aRetval)
+{
+    return mozJSComponentLoader::Get()->GetModuleImportStack(aLocation, aRetval);
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetComponentLoadStack(const nsACString& aLocation,
+                                             nsACString& aRetval)
+{
+    return mozJSComponentLoader::Get()->GetComponentLoadStack(aLocation, aRetval);
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
