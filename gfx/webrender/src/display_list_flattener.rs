@@ -5,7 +5,7 @@
 
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, ClipAndScrollInfo};
 use api::{ClipId, ColorF, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{DevicePixelScale, DeviceUintRect, DisplayItemRef, ExtendMode, ExternalScrollId};
+use api::{DisplayItemRef, ExtendMode, ExternalScrollId};
 use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, RasterSpace, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint, ColorDepth};
 use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
@@ -32,7 +32,7 @@ use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
 use scene_builder::DocumentResources;
-use spatial_node::{SpatialNodeType, StickyFrameInfo};
+use spatial_node::{StickyFrameInfo};
 use std::{f32, mem};
 use std::collections::vec_deque::VecDeque;
 use tiling::{CompositeOps};
@@ -209,7 +209,6 @@ impl<'a> DisplayListFlattener<'a> {
             &root_pipeline.viewport_size,
             &root_pipeline.content_size,
         );
-        flattener.setup_viewport_offset(view.inner_rect, view.accumulated_scale_factor());
         flattener.flatten_root(root_pipeline, &root_pipeline.viewport_size);
 
         debug_assert!(flattener.sc_stack.is_empty());
@@ -1257,20 +1256,6 @@ impl<'a> DisplayListFlattener<'a> {
         index
     }
 
-    pub fn setup_viewport_offset(
-        &mut self,
-        inner_rect: DeviceUintRect,
-        device_pixel_scale: DevicePixelScale,
-    ) {
-        let viewport_offset = (inner_rect.origin.to_vector().to_f32() / device_pixel_scale).round();
-        let root_id = self.clip_scroll_tree.root_reference_frame_index();
-        let root_node = &mut self.clip_scroll_tree.spatial_nodes[root_id.0];
-        if let SpatialNodeType::ReferenceFrame(ref mut info) = root_node.node_type {
-            info.resolved_transform =
-                LayoutVector2D::new(viewport_offset.x, viewport_offset.y).into();
-        }
-    }
-
     pub fn push_root(
         &mut self,
         pipeline_id: PipelineId,
@@ -1484,7 +1469,10 @@ impl<'a> DisplayListFlattener<'a> {
                                 &info,
                                 pending_primitive.clip_and_scroll.clip_chain_id,
                                 pending_primitive.clip_and_scroll.spatial_node_index,
-                                pending_primitive.container.create_shadow(&pending_shadow.shadow),
+                                pending_primitive.container.create_shadow(
+                                    &pending_shadow.shadow,
+                                    &info.rect,
+                                ),
                             );
 
                             // Add the new primitive to the shadow picture.
@@ -1687,7 +1675,9 @@ impl<'a> DisplayListFlattener<'a> {
 
                         // Use segment relative interpolation for all
                         // instances in this primitive.
-                        let mut brush_flags = BrushFlags::SEGMENT_RELATIVE;
+                        let mut brush_flags =
+                            BrushFlags::SEGMENT_RELATIVE |
+                            BrushFlags::SEGMENT_TEXEL_RECT;
 
                         // Enable repeat modes on the segment.
                         if repeat_horizontal == RepeatMode::Repeat {
@@ -1845,7 +1835,12 @@ impl<'a> DisplayListFlattener<'a> {
                 self.add_primitive(clip_and_scroll, info, Vec::new(), prim);
             }
             BorderDetails::Normal(ref border) => {
-                self.add_normal_border(info, border, &border_item.widths, clip_and_scroll);
+                self.add_normal_border(
+                    info,
+                    border,
+                    border_item.widths,
+                    clip_and_scroll,
+                );
             }
         }
     }
