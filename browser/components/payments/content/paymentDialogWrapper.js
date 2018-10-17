@@ -19,6 +19,8 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
+                               "resource:///modules/BrowserWindowTracker.jsm");
 ChromeUtils.defineModuleGetter(this, "OSKeyStore",
                                "resource://formautofill/OSKeyStore.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
@@ -486,10 +488,7 @@ var paymentDialogWrapper = {
   },
 
   onOpenPreferences() {
-    let prefsURL = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-    prefsURL.data = "about:preferences#privacy-form-autofill";
-    Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no",
-                           prefsURL);
+    BrowserWindowTracker.getTopWindow().openPreferences("privacy-form-autofill");
   },
 
   onPaymentCancel() {
