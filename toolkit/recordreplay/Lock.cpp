@@ -6,8 +6,6 @@
 
 #include "Lock.h"
 
-#include "mozilla/StaticMutex.h"
-
 #include "ChunkAllocator.h"
 #include "InfallibleVector.h"
 #include "SpinLock.h"
@@ -69,12 +67,11 @@ static ReadWriteSpinLock gLocksLock;
 Lock::New(void* aNativeLock)
 {
   Thread* thread = Thread::Current();
-  if (!thread || thread->PassThroughEvents() || HasDivergedFromRecording()) {
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
     Destroy(aNativeLock); // Clean up any old lock, as below.
     return;
   }
-
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::CreateLock);
 
@@ -152,7 +149,11 @@ void
 Lock::Enter()
 {
   Thread* thread = Thread::Current();
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
+
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
+    return;
+  }
 
   // Include an event in each thread's record when a lock acquire begins. This
   // is not required by the replay but is used to check that lock acquire order
@@ -165,8 +166,9 @@ Lock::Enter()
   if (IsRecording()) {
     acquires->mAcquires->WriteScalar(thread->Id());
   } else {
-    // Wait until this thread is next in line to acquire the lock.
-    while (thread->Id() != acquires->mNextOwner) {
+    // Wait until this thread is next in line to acquire the lock, or until it
+    // has been instructed to diverge from the recording.
+    while (thread->Id() != acquires->mNextOwner && !thread->MaybeDivergeFromRecording()) {
       Thread::Wait();
     }
   }
@@ -175,10 +177,11 @@ Lock::Enter()
 void
 Lock::Exit()
 {
-  if (IsReplaying()) {
+  Thread* thread = Thread::Current();
+  if (IsReplaying() && !thread->HasDivergedFromRecording()) {
     // Notify the next owner before releasing the lock.
     LockAcquires* acquires = gLockAcquires.Get(mId);
-    acquires->ReadAndNotifyNextOwner(Thread::Current());
+    acquires->ReadAndNotifyNextOwner(thread);
   }
 }
 
@@ -188,9 +191,7 @@ struct AtomicLock : public detail::MutexImpl
   using detail::MutexImpl::unlock;
 };
 
-// Lock which is held during code sections that run atomically. This is a
-// PRLock instead of an OffTheBooksMutex because the latter performs atomic
-// operations during initialization.
+// Lock which is held during code sections that run atomically.
 static AtomicLock* gAtomicLock = nullptr;
 
 /* static */ void
