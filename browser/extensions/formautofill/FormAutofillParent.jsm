@@ -133,9 +133,10 @@ FormAutofillParent.prototype = {
       case "sync-pane-loaded": {
         let formAutofillPreferences = new FormAutofillPreferences();
         let document = subject.document;
-        let prefFragment = formAutofillPreferences.init(document);
-        let formAutofillGroupBox = document.getElementById("formAutofillGroupBox");
-        formAutofillGroupBox.appendChild(prefFragment);
+        let prefGroupBox = formAutofillPreferences.init(document);
+        let parentNode = document.getElementById("mainPrefPane");
+        let insertBeforeNode = document.getElementById("historyGroup");
+        parentNode.insertBefore(prefGroupBox, insertBeforeNode);
         break;
       }
 
