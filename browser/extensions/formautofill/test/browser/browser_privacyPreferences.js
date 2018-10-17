@@ -3,7 +3,7 @@
 const PAGE_PREFS = "about:preferences";
 const PAGE_PRIVACY = PAGE_PREFS + "#privacy";
 const SELECTORS = {
-  group: "#formAutofillGroupBox",
+  group: "#passwordsGroup",
   addressAutofillCheckbox: "#addressAutofill checkbox",
   creditCardAutofillCheckbox: "#creditCardAutofill checkbox",
   savedAddressesBtn: "#addressAutofill button",

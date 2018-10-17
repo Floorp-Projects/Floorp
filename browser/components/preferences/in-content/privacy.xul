@@ -369,12 +369,6 @@
   </hbox>
 </groupbox>
 
-<!-- The form autofill section is inserted in to this box
-     after the form autofill extension has initialized. -->
-<groupbox id="formAutofillGroupBox"
-          data-category="panePrivacy"
-          data-subcategory="form-autofill"></groupbox>
-
 <!-- History -->
 <groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
   <caption><label data-l10n-id="history-header"/></caption>
