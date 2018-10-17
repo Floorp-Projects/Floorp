@@ -493,6 +493,31 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
   }
 });
 
+add_task(async function checkCautionClass() {
+  info("Checking that are potentially more dangerous get a 'caution' class");
+  for (let useFrame of [false, true]) {
+    let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
+    let browser = tab.linkedBrowser;
+
+    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      is(doc.body.classList.contains("caution"), !frame, `Cert error body has ${frame ? "no" : ""} caution class`);
+    });
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+    tab = await openErrorPage(BAD_STS_CERT, useFrame);
+    browser = tab.linkedBrowser;
+
+    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      ok(!doc.body.classList.contains("caution"), "Cert error body has no caution class");
+    });
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+});
+
 function getCertChain(securityInfoAsString) {
   let certChain = "";
   const serhelper = Cc["@mozilla.org/network/serialization-helper;1"]

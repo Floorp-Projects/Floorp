@@ -22,6 +22,7 @@
   --command-pick-image: url(images/command-pick.svg);
   --command-pick-accessibility-image: url(images/command-pick-accessibility.svg);
   --command-frames-image: url(images/command-frames.svg);
+  --command-frames-active-image: url(images/command-frames.svg#filled);
   --command-rulers-image: url(images/command-rulers.svg);
   --command-measure-image: url(images/command-measure.svg);
   --command-chevron-image: url(images/command-chevron.svg);
@@ -339,34 +340,12 @@
 
 #command-button-frames::before {
   background-image: var(--command-frames-image);
+  fill: var(--theme-toolbar-photon-icon-color);
 }
 
-#command-button-frames {
-  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
-  background-repeat: no-repeat;
-
-  /* Override background-size from the command-button.
-   The drop down arrow is smaller */
-  background-size: 8px 4px !important;
-  min-width: 32px;
-}
-
-#command-button-frames::before {
-  /* The frames button has a drop-down arrow making it asymmetrical.
-   * Drop the margin on the non-arrow side to make it fit more symmetrical. */
-  margin-inline-start: 0px;
-  /* The direction of devtools-button is forced to 'ltr' for text-as-image
-   * buttons. We don't need that here (there's no text in this button) and we
-   * want the logical properties to reflect the text direction so unset it. */
-  direction: unset;
-}
-
-#command-button-frames:-moz-locale-dir(ltr) {
-  background-position: right 2px top 14px;
-}
-
-#command-button-frames:-moz-locale-dir(rtl) {
-  background-position: left 2px top 14px;
+#command-button-frames.command-button-checked::before {
+  background-image: var(--command-frames-active-image);
+  fill: var(--theme-toolbar-checked-color);
 }
 
 /* Tooltip of frames menu  */
