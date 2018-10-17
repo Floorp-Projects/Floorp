@@ -19,6 +19,7 @@ loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", tr
 loader.lazyRequireGetter(this, "Editor", "devtools/client/sourceeditor/editor");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "saveScreenshot", "devtools/shared/screenshot/save");
+loader.lazyRequireGetter(this, "Reflect", "resource://gre/modules/reflect.jsm", true);
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
@@ -1396,6 +1397,38 @@ class JSTerm extends Component {
         if (!inputAfterCursor.trimLeft().startsWith("]")) {
           completionText = completionText + "]";
         }
+      }
+    }
+
+    if (
+      this.autocompletePopup.selectedItem ||
+      (!this.autocompletePopup.isOpen && this.autocompletePopup.items.length === 1)
+    ) {
+      const isValidDotNotation = propertyName => {
+        // If the item is a command, we don't want to modify it.
+        if (propertyName.startsWith(":")
+          && propertyName.includes(this.getInputValue().trim())) {
+          return true;
+        }
+
+        let valid = true;
+        try {
+          // In order to know if the property is suited for dot notation, we use Reflect
+          // to parse an expression where we try to access the property with a dot. If it
+          // throws, this means that we need to do an element access instead.
+          Reflect.parse(`({${propertyName}: true})`);
+        } catch (e) {
+          valid = false;
+        }
+        return valid;
+      };
+
+      const selectedItem = this.autocompletePopup.selectedItem
+        || this.autocompletePopup.items[0];
+      const {label, preLabel, isElementAccess} = selectedItem;
+      if (!isElementAccess && !isValidDotNotation(label)) {
+        completionText = `["${label.replace(/"/gi, '\\"')}"]`;
+        numberOfCharsToReplaceCharsBeforeCursor = preLabel.length + 1;
       }
     }
 
