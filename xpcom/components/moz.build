@@ -26,6 +26,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'GenericFactory.h',
     'Module.h',
+    'ModuleLoader.h',
     'ModuleUtils.h',
 ]
 
@@ -46,7 +47,6 @@ LOCAL_INCLUDES += [
     '../build',
     '../ds',
     '/chrome',
-    '/js/xpconnect/loader',
     '/modules/libjar',
 ]
 

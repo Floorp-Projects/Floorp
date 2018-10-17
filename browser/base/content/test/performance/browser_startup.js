@@ -157,6 +157,7 @@ add_task(async function() {
   let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
+  let loader = Cc["@mozilla.org/moz/jsloader;1"].getService(Ci.xpcIJSModuleLoader);
   let componentStacks = new Map();
   let data = Cu.cloneInto(startupRecorder.data.code, {});
   // Keep only the file name for components, as the path is an absolute file
@@ -165,14 +166,14 @@ add_task(async function() {
     data[phase].components =
       data[phase].components.map(uri => {
         let fileName = uri.replace(/.*\//, "");
-        componentStacks.set(fileName, Cu.getComponentLoadStack(uri));
+        componentStacks.set(fileName, loader.getComponentLoadStack(uri));
         return fileName;
       }).filter(c => c != "startupRecorder.js");
   }
 
   function printStack(scriptType, name) {
     if (scriptType == "modules")
-      info(Cu.getModuleImportStack(name));
+      info(loader.getModuleImportStack(name));
     else if (scriptType == "components")
       info(componentStacks.get(name));
   }

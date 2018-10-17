@@ -668,6 +668,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
+  XPCONNECT_CATEGORIES
   { "content-policy", NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID, NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID },
   { "content-policy", NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID, NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID },
   { "content-policy", "CSPService", CSPSERVICE_CONTRACTID },

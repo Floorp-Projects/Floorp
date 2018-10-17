@@ -38,7 +38,6 @@
 #include "ManifestParser.h"
 #include "nsNetUtil.h"
 #include "mozilla/Services.h"
-#include "mozJSComponentLoader.h"
 
 #include "mozilla/GenericFactory.h"
 #include "nsSupportsPrimitives.h"
@@ -71,7 +70,24 @@ static LazyLogModule nsComponentManagerLog("nsComponentManager");
  #define SHOW_CI_ON_EXISTING_SERVICE
 #endif
 
+// Bloated registry buffer size to improve startup performance -- needs to
+// be big enough to fit the entire file into memory or it'll thrash.
+// 512K is big enough to allow for some future growth in the registry.
+#define BIG_REGISTRY_BUFLEN   (512*1024)
+
+// Common Key Names
+const char xpcomComponentsKeyName[] = "software/mozilla/XPCOM/components";
+const char xpcomKeyName[] = "software/mozilla/XPCOM";
+
+// Common Value Names
+const char fileSizeValueName[] = "FileSize";
+const char lastModValueName[] = "LastModTimeStamp";
+const char nativeComponentType[] = "application/x-mozilla-native";
+const char staticComponentType[] = "application/x-mozilla-static";
+
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
+
+#define UID_STRING_LENGTH 39
 
 nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID,
@@ -341,17 +357,17 @@ nsComponentManagerImpl::Init()
 
   nsCategoryManager::GetSingleton()->SuppressNotifications(true);
 
-  RegisterModule(&kXPCOMModule);
+  RegisterModule(&kXPCOMModule, nullptr);
 
   for (auto module : AllStaticModules()) {
     if (module) { // On local Windows builds, the list may contain null
                   // pointers from padding.
-      RegisterModule(module);
+      RegisterModule(module, nullptr);
     }
   }
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
-    RegisterModule((*sExtraStaticModules)[i]);
+    RegisterModule((*sExtraStaticModules)[i], nullptr);
   }
 
   bool loadChromeManifests = (XRE_GetProcessType() != GeckoProcessType_GPU);
@@ -505,7 +521,8 @@ AsLiteralCString(const char* aStr)
 }
 
 void
-nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule)
+nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
+                                       FileLocation* aFile)
 {
   mLock.AssertNotCurrentThreadOwns();
 
@@ -520,8 +537,19 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule)
     // category manager.
     MutexLock lock(mLock);
 
-    KnownModule* m = new KnownModule(aModule);
-    mKnownStaticModules.AppendElement(m);
+    KnownModule* m;
+    if (aFile) {
+      nsCString uri;
+      aFile->GetURIString(uri);
+      NS_ASSERTION(!mKnownModules.Get(uri),
+                   "Must not register a binary module twice.");
+
+      m = new KnownModule(aModule, *aFile);
+      mKnownModules.Put(uri, m);
+    } else {
+      m = new KnownModule(aModule);
+      mKnownStaticModules.AppendElement(m);
+    }
 
     if (aModule->mCIDs) {
       const mozilla::Module::CIDEntry* entry;
@@ -775,21 +803,30 @@ nsComponentManagerImpl::RereadChromeManifests(bool aChromeOnly)
 }
 
 bool
+nsComponentManagerImpl::KnownModule::EnsureLoader()
+{
+  if (!mLoader) {
+    nsCString extension;
+    mFile.GetURIString(extension);
+    CutExtension(extension);
+    mLoader =
+      nsComponentManagerImpl::gComponentManager->LoaderForExtension(extension);
+  }
+  return !!mLoader;
+}
+
+bool
 nsComponentManagerImpl::KnownModule::Load()
 {
   if (mFailed) {
     return false;
   }
   if (!mModule) {
-    nsCString extension;
-    mFile.GetURIString(extension);
-    CutExtension(extension);
-    if (!extension.Equals("js")) {
+    if (!EnsureLoader()) {
       return false;
     }
 
-    RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::GetOrCreate();
-    mModule = loader->LoadModule(mFile);
+    mModule = mLoader->LoadModule(mFile);
 
     if (!mModule) {
       mFailed = true;
@@ -836,6 +873,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
   // Release all cached factories
   mContractIDs.Clear();
   mFactories.Clear(); // XXX release the objects, don't just clear
+  mLoaderMap.Clear();
   mKnownModules.Clear();
   mKnownStaticModules.Clear();
 
@@ -1512,6 +1550,23 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
   return NS_OK;
 }
 
+already_AddRefed<mozilla::ModuleLoader>
+nsComponentManagerImpl::LoaderForExtension(const nsACString& aExt)
+{
+  nsCOMPtr<mozilla::ModuleLoader> loader = mLoaderMap.Get(aExt);
+  if (!loader) {
+    loader = do_GetServiceFromCategory(NS_LITERAL_CSTRING("module-loader"),
+                                       aExt);
+    if (!loader) {
+      return nullptr;
+    }
+
+    mLoaderMap.Put(aExt, loader);
+  }
+
+  return loader.forget();
+}
+
 NS_IMETHODIMP
 nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
                                         const char* aName,
@@ -1720,6 +1775,8 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
 
+  n += mLoaderMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
+
   n += mFactories.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mFactories.ConstIter(); !iter.Done(); iter.Next()) {
     n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
@@ -1746,6 +1803,7 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
+  // - mLoaderMap's keys and values
   // - mMon
   // - sModuleLocations' entries
   // - mKnownStaticModules' entries?
@@ -1890,7 +1948,8 @@ XRE_AddStaticComponent(const mozilla::Module* aComponent)
   if (nsComponentManagerImpl::gComponentManager &&
       nsComponentManagerImpl::NORMAL ==
         nsComponentManagerImpl::gComponentManager->mStatus) {
-    nsComponentManagerImpl::gComponentManager->RegisterModule(aComponent);
+    nsComponentManagerImpl::gComponentManager->RegisterModule(aComponent,
+                                                              nullptr);
   }
 
   return NS_OK;
