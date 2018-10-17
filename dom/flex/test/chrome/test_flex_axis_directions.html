@@ -1,0 +1,204 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+  f {
+    display: flex;
+    width: 400px;
+    height: 50px;
+    margin-bottom: 2px;
+  }
+
+  b {
+    background-color: gold;
+    width: 100px;
+    height: 15px;
+  }
+  b::after {
+    content: "B";
+  }
+
+  c {
+    background-color: yellow;
+    width: 100px;
+    height: 15px;
+  }
+  c::after {
+    content: "C";
+  }
+
+  d {
+    background-color: orange;
+    width: 100px;
+    height: 15px;
+  }
+  d::after {
+    content: "D";
+  }
+
+  .fdR {
+    flex-direction: row;
+    background-color: lightgrey;
+  }
+  .fdRR {
+    flex-direction: row-reverse;
+    background-color: lightgreen;
+  }
+  .fdC {
+    flex-direction: column;
+    background-color: lightblue;
+  }
+  .fdCR {
+    flex-direction: column-reverse;
+    background-color: lavender;
+  }
+
+  .wmHTB {
+    writing-mode: horizontal-tb;
+  }
+  .wmVLR {
+    writing-mode: vertical-lr;
+  }
+  .wmVRL {
+    writing-mode: vertical-rl;
+  }
+  .wmSLR {
+    writing-mode: sideways-lr;
+  }
+  .wmSRL {
+    writing-mode: sideways-rl;
+  }
+
+  .dLR {
+    direction: ltr;
+  }
+  .dRL {
+    direction: rtl;
+  }
+</style>
+
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function testContainerMatchesExpectedValues(flex, values, flexIndex) {
+  is(flex.mainAxisDirection, values.m, "Flex index " + flexIndex + " should have expected mainAxisDirection.");
+  is(flex.crossAxisDirection, values.c, "Flex index " + flexIndex + " should have expected crossAxisDirection.");
+}
+
+function runTests() {
+  const expectedValues = [
+    { m: "horizontal-lr", c: "vertical-tb" },
+    { m: "horizontal-rl", c: "vertical-tb" },
+    { m: "vertical-tb", c: "horizontal-lr" },
+    { m: "vertical-bt", c: "horizontal-lr" },
+    { m: "vertical-tb", c: "horizontal-rl" },
+    { m: "vertical-bt", c: "horizontal-rl" },
+    { m: "vertical-bt", c: "horizontal-lr" },
+    { m: "vertical-tb", c: "horizontal-lr" },
+    { m: "vertical-tb", c: "horizontal-rl" },
+    { m: "vertical-bt", c: "horizontal-rl" },
+
+    { m: "horizontal-rl", c: "vertical-tb" },
+    { m: "horizontal-lr", c: "vertical-tb" },
+    { m: "vertical-bt", c: "horizontal-lr" },
+    { m: "vertical-tb", c: "horizontal-lr" },
+    { m: "vertical-bt", c: "horizontal-rl" },
+    { m: "vertical-tb", c: "horizontal-rl" },
+    { m: "vertical-tb", c: "horizontal-lr" },
+    { m: "vertical-bt", c: "horizontal-lr" },
+    { m: "vertical-bt", c: "horizontal-rl" },
+    { m: "vertical-tb", c: "horizontal-rl" },
+
+    { m: "vertical-tb", c: "horizontal-lr" },
+    { m: "vertical-tb", c: "horizontal-rl" },
+    { m: "horizontal-lr", c: "vertical-tb" },
+    { m: "horizontal-lr", c: "vertical-bt" },
+    { m: "horizontal-rl", c: "vertical-tb" },
+    { m: "horizontal-rl", c: "vertical-bt" },
+    { m: "horizontal-lr", c: "vertical-bt" },
+    { m: "horizontal-lr", c: "vertical-tb" },
+    { m: "horizontal-rl", c: "vertical-tb" },
+    { m: "horizontal-rl", c: "vertical-bt" },
+
+    { m: "vertical-bt", c: "horizontal-lr" },
+    { m: "vertical-bt", c: "horizontal-rl" },
+    { m: "horizontal-rl", c: "vertical-tb" },
+    { m: "horizontal-rl", c: "vertical-bt" },
+    { m: "horizontal-lr", c: "vertical-tb" },
+    { m: "horizontal-lr", c: "vertical-bt" },
+    { m: "horizontal-rl", c: "vertical-bt" },
+    { m: "horizontal-rl", c: "vertical-tb" },
+    { m: "horizontal-lr", c: "vertical-tb" },
+    { m: "horizontal-lr", c: "vertical-bt" },
+  ];
+
+  const children = document.body.children;
+  is(children.length, expectedValues.length, "Document should have expected number of flex containers.");
+
+  for (let i = 0; i < children.length; ++i) {
+    const flex = children.item(i).getAsFlexContainer();
+    ok(flex, "Document child index " + i + " should be a flex container.");
+    if (flex) {
+      const values = expectedValues[i];
+      testContainerMatchesExpectedValues(flex, values, i);
+    }
+  }
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+
+<body onLoad="runTests();">
+
+<f class="fdR wmHTB dLR"><b></b><c></c><d></d></f>
+<f class="fdR wmHTB dRL"><b></b><c></c><d></d></f>
+<f class="fdR wmVLR dLR"><b></b><c></c><d></d></f>
+<f class="fdR wmVLR dRL"><b></b><c></c><d></d></f>
+<f class="fdR wmVRL dLR"><b></b><c></c><d></d></f>
+<f class="fdR wmVRL dRL"><b></b><c></c><d></d></f>
+<f class="fdR wmSLR dLR"><b></b><c></c><d></d></f>
+<f class="fdR wmSLR dRL"><b></b><c></c><d></d></f>
+<f class="fdR wmSRL dLR"><b></b><c></c><d></d></f>
+<f class="fdR wmSRL dRL"><b></b><c></c><d></d></f>
+
+<f class="fdRR wmHTB dLR"><b></b><c></c><d></d></f>
+<f class="fdRR wmHTB dRL"><b></b><c></c><d></d></f>
+<f class="fdRR wmVLR dLR"><b></b><c></c><d></d></f>
+<f class="fdRR wmVLR dRL"><b></b><c></c><d></d></f>
+<f class="fdRR wmVRL dLR"><b></b><c></c><d></d></f>
+<f class="fdRR wmVRL dRL"><b></b><c></c><d></d></f>
+<f class="fdRR wmSLR dLR"><b></b><c></c><d></d></f>
+<f class="fdRR wmSLR dRL"><b></b><c></c><d></d></f>
+<f class="fdRR wmSRL dLR"><b></b><c></c><d></d></f>
+<f class="fdRR wmSRL dRL"><b></b><c></c><d></d></f>
+
+<f class="fdC wmHTB dLR"><b></b><c></c><d></d></f>
+<f class="fdC wmHTB dRL"><b></b><c></c><d></d></f>
+<f class="fdC wmVLR dLR"><b></b><c></c><d></d></f>
+<f class="fdC wmVLR dRL"><b></b><c></c><d></d></f>
+<f class="fdC wmVRL dLR"><b></b><c></c><d></d></f>
+<f class="fdC wmVRL dRL"><b></b><c></c><d></d></f>
+<f class="fdC wmSLR dLR"><b></b><c></c><d></d></f>
+<f class="fdC wmSLR dRL"><b></b><c></c><d></d></f>
+<f class="fdC wmSRL dLR"><b></b><c></c><d></d></f>
+<f class="fdC wmSRL dRL"><b></b><c></c><d></d></f>
+
+<f class="fdCR wmHTB dLR"><b></b><c></c><d></d></f>
+<f class="fdCR wmHTB dRL"><b></b><c></c><d></d></f>
+<f class="fdCR wmVLR dLR"><b></b><c></c><d></d></f>
+<f class="fdCR wmVLR dRL"><b></b><c></c><d></d></f>
+<f class="fdCR wmVRL dLR"><b></b><c></c><d></d></f>
+<f class="fdCR wmVRL dRL"><b></b><c></c><d></d></f>
+<f class="fdCR wmSLR dLR"><b></b><c></c><d></d></f>
+<f class="fdCR wmSLR dRL"><b></b><c></c><d></d></f>
+<f class="fdCR wmSRL dLR"><b></b><c></c><d></d></f>
+<f class="fdCR wmSRL dRL"><b></b><c></c><d></d></f>
+
+</body>
+</html>
