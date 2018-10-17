@@ -403,15 +403,6 @@ PaymentRequest::IsValidCurrencyAmount(const nsAString& aItem,
                                       nsAString& aErrorMsg)
 {
   nsresult rv;
-  // currencySystem must equal urn:iso:std:iso:4217
-  if (!aAmount.mCurrencySystem.EqualsASCII("urn:iso:std:iso:4217")) {
-    aErrorMsg.AssignLiteral("The amount.currencySystem of \"");
-    aErrorMsg.Append(aItem);
-    aErrorMsg.AppendLiteral("\"(");
-    aErrorMsg.Append(aAmount.mCurrencySystem);
-    aErrorMsg.AppendLiteral(") must equal urn:iso:std:iso:4217.");
-    return NS_ERROR_RANGE_ERR;
-  }
   rv = IsValidCurrency(aItem, aAmount.mCurrency, aErrorMsg);
   if (NS_FAILED(rv)) {
     return rv;

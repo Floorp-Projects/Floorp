@@ -38,7 +38,7 @@ var rootedPointers = {};
 function processCSU(csu, body)
 {
     for (let { 'Name': [ annType, tag ] } of (body.Annotation || [])) {
-        if (annType != 'Tag')
+        if (annType != 'annotate')
             continue;
 
         if (tag == 'GC Pointer')

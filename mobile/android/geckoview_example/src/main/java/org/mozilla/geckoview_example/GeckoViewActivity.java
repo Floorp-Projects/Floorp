@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview_example;
 
+import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.BasicSelectionActionDelegate;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -631,11 +632,11 @@ public class GeckoViewActivity extends AppCompatActivity {
         }
 
         @Override
-        public GeckoResult<Boolean> onLoadRequest(final GeckoSession session, final String uri,
-                                                  final int target, final int flags) {
+        public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session, final String uri,
+                                                       final int target, final int flags) {
             Log.d(LOGTAG, "onLoadRequest=" + uri + " where=" + target +
                   " flags=" + flags);
-            return GeckoResult.fromValue(false);
+            return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
 
         @Override
