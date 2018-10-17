@@ -54,7 +54,10 @@ WebGL2Context::IsTransformFeedback(const WebGLTransformFeedback* const obj)
     if (!ValidateIsObject(obj))
         return false;
 
-    return gl->fIsTransformFeedback(obj->mGLName);
+    if (obj->IsDeleteRequested())
+        return false;
+
+    return obj->mHasBeenBound;
 }
 
 void
@@ -90,6 +93,7 @@ WebGL2Context::BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf)
 
     if (mBoundTransformFeedback) {
         mBoundTransformFeedback->AddBufferBindCounts(+1);
+        mBoundTransformFeedback->mHasBeenBound = true;
     }
 }
 
