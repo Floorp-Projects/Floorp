@@ -86,8 +86,8 @@ def chunks(locales, n):
 if __name__ == "__main__":
 	print "Task:", TASK_ID
 
-	queue = taskcluster.Queue(options={
-		'rootUrl': 'http://taskcluster/queue/v1'
+	queue = taskcluster.Queue({
+		'baseUrl': 'http://taskcluster/queue/v1'
 	})
 
 	for chunk in chunks(SCREENSHOT_LOCALES, LOCALES_PER_TASK):
