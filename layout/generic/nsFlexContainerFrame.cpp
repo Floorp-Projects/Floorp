@@ -2860,37 +2860,44 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
           uint32_t itemIndex = 0;
           for (FlexItem* item = mItems.getFirst(); item; item = item->getNext(),
                                                          ++itemIndex) {
-            // Calculate a deltaSize that represents how much the
-            // flex sizing algorithm "wants" to stretch or shrink this
-            // item during this pass through the algorithm. Later
-            // passes through the algorithm may overwrite this value.
-            // Also, this value may not reflect how much the size of
-            // the item is actually changed, since the size of the
-            // item will be clamped to min and max values later in
-            // this pass. That's intentional, since we want to report
-            // the value that the sizing algorithm tried to stretch
-            // or shrink the item.
-            nscoord deltaSize = item->GetMainSize() -
-              aLineInfo->mItems[itemIndex].mMainBaseSize;
+            if (!item->IsFrozen()) {
+              // Calculate a deltaSize that represents how much the flex sizing
+              // algorithm "wants" to stretch or shrink this item during this
+              // pass through the algorithm. Later passes through the algorithm
+              // may overwrite this, until this item is frozen. Note that this
+              // value may not reflect how much the size of the item is
+              // actually changed, since the size of the item will be clamped
+              // to min and max values later in this pass. That's intentional,
+              // since we want to report the value that the sizing algorithm
+              // tried to stretch or shrink the item.
+              nscoord deltaSize = item->GetMainSize() -
+                aLineInfo->mItems[itemIndex].mMainBaseSize;
 
-            aLineInfo->mItems[itemIndex].mMainDeltaSize = deltaSize;
-            // If any item on the line is growing, mark the aLineInfo
-            // structure; likewise if any item is shrinking. Items in
-            // a line can't be both growing and shrinking.
-            if (deltaSize > 0) {
-              MOZ_ASSERT(item->IsFrozen() || isUsingFlexGrow,
-                "Unfrozen items shouldn't grow without isUsingFlexGrow.");
-              MOZ_ASSERT(aLineInfo->mGrowthState !=
-                         ComputedFlexLineInfo::GrowthState::SHRINKING);
-              aLineInfo->mGrowthState =
-                ComputedFlexLineInfo::GrowthState::GROWING;
-            } else if (deltaSize < 0) {
-              MOZ_ASSERT(item->IsFrozen() || !isUsingFlexGrow,
-               "Unfrozen items shouldn't shrink with isUsingFlexGrow.");
-              MOZ_ASSERT(aLineInfo->mGrowthState !=
-                         ComputedFlexLineInfo::GrowthState::GROWING);
-              aLineInfo->mGrowthState =
-                ComputedFlexLineInfo::GrowthState::SHRINKING;
+              aLineInfo->mItems[itemIndex].mMainDeltaSize = deltaSize;
+              // If any (unfrozen) item on the line is growing, we mark the
+              // aLineInfo structure; likewise if any item is shrinking.
+              // (Note: a line can't contain a mix of items that are growing
+              // and shrinking. Also, the sign of any delta should match the
+              // type of flex factor we're using [grow vs shrink].)
+              if (deltaSize > 0) {
+                MOZ_ASSERT(isUsingFlexGrow,
+                           "Unfrozen items can only grow if we're "
+                           "distributing (positive) space with flex-grow");
+                MOZ_ASSERT(aLineInfo->mGrowthState !=
+                           ComputedFlexLineInfo::GrowthState::SHRINKING,
+                           "shouldn't flip flop from shrinking to growing");
+                aLineInfo->mGrowthState =
+                  ComputedFlexLineInfo::GrowthState::GROWING;
+              } else if (deltaSize < 0) {
+                MOZ_ASSERT(!isUsingFlexGrow,
+                           "Unfrozen items can only shrink if we're "
+                           "distributing (negative) space with flex-shrink");
+                MOZ_ASSERT(aLineInfo->mGrowthState !=
+                           ComputedFlexLineInfo::GrowthState::GROWING,
+                           "shouldn't flip flop from growing to shrinking");
+                aLineInfo->mGrowthState =
+                  ComputedFlexLineInfo::GrowthState::SHRINKING;
+              }
             }
           }
         }
