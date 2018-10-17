@@ -385,7 +385,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       let link = manageTextEl.querySelector("a");
       // The href is only set to be exposed to accessibility tools so users know what will open.
       // The actual opening happens from the click event listener.
-      link.href = "about:preferences#privacy-address-autofill";
+      link.href = "about:preferences#privacy-form-autofill";
     }
 
     this._renderPayButton(state);
