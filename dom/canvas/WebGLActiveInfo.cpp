@@ -78,6 +78,78 @@ ElemSizeFromType(GLenum elemType)
 
 ////////////////////
 
+static webgl::AttribBaseType
+ElemBaseType(const GLenum elemType)
+{
+    switch (elemType) {
+    case LOCAL_GL_FLOAT:
+    case LOCAL_GL_FLOAT_VEC2:
+    case LOCAL_GL_FLOAT_VEC3:
+    case LOCAL_GL_FLOAT_VEC4:
+
+    case LOCAL_GL_FLOAT_MAT2:
+    case LOCAL_GL_FLOAT_MAT2x3:
+    case LOCAL_GL_FLOAT_MAT2x4:
+
+    case LOCAL_GL_FLOAT_MAT3x2:
+    case LOCAL_GL_FLOAT_MAT3:
+    case LOCAL_GL_FLOAT_MAT3x4:
+
+    case LOCAL_GL_FLOAT_MAT4x2:
+    case LOCAL_GL_FLOAT_MAT4x3:
+    case LOCAL_GL_FLOAT_MAT4:
+        return webgl::AttribBaseType::Float;
+
+    // -
+
+    case LOCAL_GL_INT:
+    case LOCAL_GL_INT_VEC2:
+    case LOCAL_GL_INT_VEC3:
+    case LOCAL_GL_INT_VEC4:
+
+    case LOCAL_GL_SAMPLER_2D:
+    case LOCAL_GL_SAMPLER_3D:
+    case LOCAL_GL_SAMPLER_CUBE:
+    case LOCAL_GL_SAMPLER_2D_ARRAY:
+    case LOCAL_GL_SAMPLER_2D_SHADOW:
+    case LOCAL_GL_SAMPLER_CUBE_SHADOW:
+    case LOCAL_GL_SAMPLER_2D_ARRAY_SHADOW:
+
+    case LOCAL_GL_INT_SAMPLER_2D:
+    case LOCAL_GL_INT_SAMPLER_3D:
+    case LOCAL_GL_INT_SAMPLER_CUBE:
+    case LOCAL_GL_INT_SAMPLER_2D_ARRAY:
+
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_3D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_CUBE:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        return webgl::AttribBaseType::Int;
+
+    // -
+
+    case LOCAL_GL_UNSIGNED_INT:
+    case LOCAL_GL_UNSIGNED_INT_VEC2:
+    case LOCAL_GL_UNSIGNED_INT_VEC3:
+    case LOCAL_GL_UNSIGNED_INT_VEC4:
+        return webgl::AttribBaseType::UInt;
+
+    // -
+
+    case LOCAL_GL_BOOL:
+    case LOCAL_GL_BOOL_VEC2:
+    case LOCAL_GL_BOOL_VEC3:
+    case LOCAL_GL_BOOL_VEC4:
+        return webgl::AttribBaseType::Bool;
+
+    // -
+
+    default:
+        MOZ_ASSERT(false, "unexpected attrib elemType");
+        return webgl::AttribBaseType::Float; // Just pick something.
+    }
+}
+
 WebGLActiveInfo::WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType,
                                  bool isArray, const nsACString& baseUserName,
                                  const nsACString& baseMappedName)
@@ -88,6 +160,7 @@ WebGLActiveInfo::WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum el
     , mIsArray(isArray)
     , mElemSize(ElemSizeFromType(elemType))
     , mBaseMappedName(baseMappedName)
+    , mBaseType(ElemBaseType(mElemType))
 { }
 
 bool

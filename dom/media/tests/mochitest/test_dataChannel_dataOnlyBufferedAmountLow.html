@@ -1,0 +1,25 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1051685",
+    title: "Verify bufferedAmountLowThreshold works"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addInitialDataChannel(test.chain);
+    test.chain.insertAfter('PC_REMOTE_CHECK_ICE_CONNECTIONS', commandsCheckLargeXfer);
+    test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

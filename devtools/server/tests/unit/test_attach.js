@@ -14,15 +14,15 @@ function run_test() {
   const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(function([type, traits]) {
-    attachTestTab(gClient, "test-1", function(reply, tabClient) {
-      test_attach(tabClient);
+    attachTestTab(gClient, "test-1", function(reply, targetFront) {
+      test_attach(targetFront);
     });
   });
   do_test_pending();
 }
 
-function test_attach(tabClient) {
-  tabClient.attachThread({}).then(function([response, threadClient]) {
+function test_attach(targetFront) {
+  targetFront.attachThread({}).then(function([response, threadClient]) {
     Assert.equal(threadClient.state, "paused");
     threadClient.resume(cleanup);
   });

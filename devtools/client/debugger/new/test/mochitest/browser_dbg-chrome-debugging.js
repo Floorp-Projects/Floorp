@@ -29,8 +29,8 @@ function initDebuggerClient() {
 }
 
 async function attachThread(client, actor) {
-  let [response, tabClient] = await client.attachTarget(actor);
-  let [response2, threadClient] = await tabClient.attachThread(null);
+  let [response, targetFront] = await client.attachTarget(actor);
+  let [response2, threadClient] = await targetFront.attachThread(null);
   return threadClient;
 }
 

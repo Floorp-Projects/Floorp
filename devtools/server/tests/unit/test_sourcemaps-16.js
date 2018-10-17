@@ -21,7 +21,7 @@ function run_test() {
   do_test_pending();
 }
 
-const testSourcemap = async function(threadResponse, tabClient, threadClient,
+const testSourcemap = async function(threadResponse, targetFront, threadClient,
   tabResponse) {
   evalTestCode();
 
