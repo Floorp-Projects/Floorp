@@ -254,7 +254,6 @@ class WidgetRenderingContext;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
 
 - (void)scrollWheel:(NSEvent *)anEvent;
-- (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type;
 
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC;
 
@@ -525,8 +524,6 @@ public:
   void EndRemoteDrawing() override;
   void CleanupRemoteDrawing() override;
   bool InitCompositor(mozilla::layers::Compositor* aCompositor) override;
-
-  IAPZCTreeManager* APZCTM() { return mAPZC ; }
 
   virtual MOZ_MUST_USE nsresult
   StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
