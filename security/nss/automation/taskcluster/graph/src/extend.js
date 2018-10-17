@@ -152,13 +152,13 @@ export default async function main() {
   await scheduleLinux("Linux 32 (opt)", {
     platform: "linux32",
     image: LINUX_IMAGE
-  }, "-m32 --opt");
+  }, "-t ia32 --opt");
 
   await scheduleLinux("Linux 32 (debug)", {
     platform: "linux32",
     collection: "debug",
     image: LINUX_IMAGE
-  }, "-m32");
+  }, "-t ia32");
 
   await scheduleLinux("Linux 64 (opt)", {
     platform: "linux64",
@@ -248,12 +248,12 @@ export default async function main() {
 
   await scheduleWindows("Windows 2012 32 (opt)", {
     platform: "windows2012-32",
-  }, "build_gyp.sh --opt -m32");
+  }, "build_gyp.sh --opt -t ia32");
 
   await scheduleWindows("Windows 2012 32 (debug)", {
     platform: "windows2012-32",
     collection: "debug"
-  }, "build_gyp.sh -m32");
+  }, "build_gyp.sh -t ia32");
 
   await scheduleFuzzing();
   await scheduleFuzzing32();
@@ -679,7 +679,7 @@ async function scheduleFuzzing32() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz -m32"
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz -t ia32"
     ],
     artifacts: {
       public: {
@@ -706,7 +706,7 @@ async function scheduleFuzzing32() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz=tls -m32"
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz=tls -t ia32"
     ],
   }));
 
@@ -1105,7 +1105,7 @@ async function scheduleTools() {
     command: [
       "/bin/bash",
       "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh --disable-tests --emit-llvm -m32"
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh --disable-tests --emit-llvm -t ia32"
     ]
   }));
 

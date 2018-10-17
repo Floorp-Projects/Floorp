@@ -1787,9 +1787,9 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 
             if (lazy->scriptSource()->hasSourceType<Utf8Unit>()) {
                 // UTF-8 source text.
-                ScriptSource::PinnedChars<Utf8Unit> chars(cx, lazy->scriptSource(), holder,
+                ScriptSource::PinnedUnits<Utf8Unit> units(cx, lazy->scriptSource(), holder,
                                                           lazy->sourceStart(), lazyLength);
-                if (!chars.get()) {
+                if (!units.get()) {
                     return false;
                 }
 
@@ -1800,13 +1800,13 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
                 MOZ_ASSERT(lazy->scriptSource()->hasSourceType<char16_t>());
 
                 // UTF-16 source text.
-                ScriptSource::PinnedChars<char16_t> chars(cx, lazy->scriptSource(), holder,
+                ScriptSource::PinnedUnits<char16_t> units(cx, lazy->scriptSource(), holder,
                                                           lazy->sourceStart(), lazyLength);
-                if (!chars.get()) {
+                if (!units.get()) {
                     return false;
                 }
 
-                if (!frontend::CompileLazyFunction(cx, lazy, chars.get(), lazyLength)) {
+                if (!frontend::CompileLazyFunction(cx, lazy, units.get(), lazyLength)) {
                     // The frontend shouldn't fail after linking the function and the
                     // non-lazy script together.
                     MOZ_ASSERT(fun->isInterpretedLazy());
