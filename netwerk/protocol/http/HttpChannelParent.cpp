@@ -1773,6 +1773,26 @@ HttpChannelParent::RecvBytesRead(const int32_t& aCount)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+HttpChannelParent::RecvOpenOriginalCacheInputStream()
+{
+  if (mIPCClosed) {
+    return IPC_OK();
+  }
+  AutoIPCStream autoStream;
+  if (mCacheEntry) {
+    nsCOMPtr<nsIInputStream> inputStream;
+    nsresult rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
+    if (NS_SUCCEEDED(rv)) {
+      PContentParent* pcp = Manager()->Manager();
+      Unused << autoStream.Serialize(inputStream, static_cast<ContentParent*>(pcp));
+    }
+  }
+
+  Unused << SendOriginalCacheInputStreamAvailable(autoStream.TakeOptionalValue());
+  return IPC_OK();
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIProgressEventSink
 //-----------------------------------------------------------------------------
