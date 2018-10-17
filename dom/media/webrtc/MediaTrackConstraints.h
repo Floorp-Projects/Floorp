@@ -283,10 +283,6 @@ struct NormalizedConstraints : public NormalizedConstraintSet
   explicit NormalizedConstraints(const dom::MediaTrackConstraints& aOther,
                         nsTArray<MemberPtrType>* aList = nullptr);
 
-  // Merge constructor
-  explicit NormalizedConstraints(
-      const nsTArray<const NormalizedConstraints*>& aOthers);
-
   std::vector<NormalizedConstraintSet> mAdvanced;
   const char* mBadConstraint;
 };
