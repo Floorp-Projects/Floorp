@@ -49,7 +49,12 @@ public:
   bool IsTRRBlacklisted(const nsACString &host, bool privateBrowsing, bool fullhost);
 
   bool MaybeBootstrap(const nsACString &possible, nsACString &result);
-  void TRRIsOkay(bool aWorks);
+  enum TrrOkay {
+    OKAY_NORMAL = 0,
+    OKAY_TIMEOUT = 1,
+    OKAY_BAD = 2
+  };
+  void TRRIsOkay(enum TrrOkay aReason);
 
 private:
   virtual  ~TRRService();
