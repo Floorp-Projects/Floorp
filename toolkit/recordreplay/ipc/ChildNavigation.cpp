@@ -698,13 +698,15 @@ PausedPhase::MaybeDivergeFromRecording()
     return false;
   }
 
+  size_t index = mRequestIndex;
+
   if (!EnsureTemporaryCheckpoint()) {
     // One of the premature exit cases was hit in EnsureTemporaryCheckpoint.
     // Don't allow any operations that can diverge from the recording.
     return false;
   }
 
-  if (mRequests[mRequestIndex].mUnhandledDivergence) {
+  if (mRequests[index].mUnhandledDivergence) {
     // We tried to process this request before and had an unhandled divergence.
     // Disallow the request handler from doing anything that might diverge from
     // the recording.
