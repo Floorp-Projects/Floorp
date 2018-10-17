@@ -103,6 +103,10 @@ def write_test_settings_json(test_details, oskey):
     if test_details.get("alert_threshold", None) is not None:
         test_settings['raptor-options']['alert_threshold'] = float(test_details['alert_threshold'])
 
+    if test_details.get("newtab_per_cycle", None) is not None:
+        test_settings['raptor-options']['newtab_per_cycle'] = \
+            bool(test_details['newtab_per_cycle'])
+
     settings_file = os.path.join(tests_dir, test_details['name'] + '.json')
     try:
         with open(settings_file, 'w') as out_file:

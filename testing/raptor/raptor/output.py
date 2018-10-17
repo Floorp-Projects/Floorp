@@ -117,6 +117,8 @@ class Output(object):
                     subtests, vals = self.parseAssortedDomOutput(test)
                 elif 'wasm-misc' in test.measurements:
                     subtests, vals = self.parseWASMMiscOutput(test)
+                elif 'wasm-godot' in test.measurements:
+                    subtests, vals = self.parseWASMGoDotOutput(test)
                 suite['subtests'] = subtests
 
             else:
@@ -193,6 +195,45 @@ class Output(object):
         '''
         _subtests = {}
         data = test.measurements['wasm-misc']
+        for page_cycle in data:
+            for item in page_cycle[0]:
+                # for each pagecycle, build a list of subtests and append all related replicates
+                sub = item['name']
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {'unit': test.subtest_unit,
+                                      'alertThreshold': float(test.alert_threshold),
+                                      'lowerIsBetter': test.subtest_lower_is_better,
+                                      'name': sub,
+                                      'replicates': []}
+                _subtests[sub]['replicates'].append(item['time'])
+
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]['value'] = filter.median(_subtests[name]['replicates'])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]['value'], name])
+
+        return subtests, vals
+
+    def parseWASMGoDotOutput(self, test):
+        '''
+            {u'wasm-godot': [
+                {
+                  "name": "wasm-instantiate",
+                  "time": 349
+                },{
+                  "name": "engine-instantiate",
+                  "time": 1263
+                ...
+                }]}
+        '''
+        _subtests = {}
+        data = test.measurements['wasm-godot']
+        print (data)
         for page_cycle in data:
             for item in page_cycle[0]:
                 # for each pagecycle, build a list of subtests and append all related replicates
@@ -524,6 +565,14 @@ class Output(object):
         return filter.mean(results)
 
     @classmethod
+    def wasm_godot_score(cls, val_list):
+        """
+        wasm_godot_score: first-interactive mean
+        """
+        results = [i for i, j in val_list if j == 'first-interactive']
+        return filter.mean(results)
+
+    @classmethod
     def stylebench_score(cls, val_list):
         """
         stylebench_score: https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
@@ -601,6 +650,8 @@ class Output(object):
             return self.assorted_dom_score(vals)
         elif testname.startswith('raptor-wasm-misc'):
             return self.wasm_misc_score(vals)
+        elif testname.startswith('raptor-wasm-godot'):
+            return self.wasm_godot_score(vals)
         elif len(vals) > 1:
             return round(filter.geometric_mean([i for i, j in vals]), 2)
         else:
