@@ -28,7 +28,7 @@ function run_test_with_server(server, callback) {
   gClient = new DebuggerClient(server.connectPipe());
   gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-stack",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
                              test_child_skip_breakpoint();
                            });

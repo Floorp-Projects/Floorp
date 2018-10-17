@@ -17,7 +17,7 @@ function run_test() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-closures",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
                              test_object_grip();
                            });

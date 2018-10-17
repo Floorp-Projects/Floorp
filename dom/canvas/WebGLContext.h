@@ -31,12 +31,11 @@
 #include "TexUnpackBlob.h"
 
 // Local
-#include "CacheMap.h"
+#include "CacheInvalidator.h"
 #include "WebGLContextLossHandler.h"
 #include "WebGLContextUnchecked.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
-#include "WebGLTexture.h"
 
 // Generated
 #include "nsIDOMEventListener.h"
@@ -104,7 +103,10 @@ struct CachedDrawFetchLimits;
 struct FormatInfo;
 class FormatUsageAuthority;
 struct FormatUsageInfo;
+struct ImageInfo;
 struct LinkedProgramInfo;
+struct SamplingState;
+class ScopedPrepForResourceClear;
 class ShaderValidator;
 class TexUnpackBlob;
 struct UniformInfo;
@@ -306,6 +308,7 @@ class WebGLContext
     friend class WebGLMemoryTracker;
     friend class webgl::AvailabilityRunnable;
     friend struct webgl::LinkedProgramInfo;
+    friend class webgl::ScopedPrepForResourceClear;
     friend struct webgl::UniformBlockInfo;
 
     friend const webgl::CachedDrawFetchLimits*
@@ -474,8 +477,6 @@ public:
         return ActiveBoundTextureForTarget(texTarget);
     }
 
-    void InvalidateResolveCacheForTextureWithTexUnit(const GLuint);
-
     already_AddRefed<Layer>
     GetCanvasLayer(nsDisplayListBuilder* builder, Layer* oldLayer,
                    LayerManager* manager) override;
@@ -512,13 +513,6 @@ public:
     // a number that increments every time we have an event that causes
     // all context resources to be lost.
     uint32_t Generation() const { return mGeneration.value(); }
-
-    // This is similar to GLContext::ClearSafely, but tries to minimize the
-    // amount of work it does.
-    // It only clears the buffers we specify, and can reset its state without
-    // first having to query anything, as WebGL knows its state at all times.
-    void ForceClearFramebufferWithDefaultValues(GLbitfield bufferBits,
-                                                bool fakeNoAlpha) const;
 
     void RunContextLossTimer();
     void UpdateContextLossStatus();
@@ -935,17 +929,18 @@ public:
     void UseProgram(WebGLProgram* prog);
 
     bool ValidateAttribArraySetter(uint32_t count, uint32_t arrayLength);
-    bool ValidateUniformLocation(WebGLUniformLocation* loc);
-    bool ValidateUniformSetter(WebGLUniformLocation* loc, uint8_t setterSize,
-                               GLenum setterType);
-    bool ValidateUniformArraySetter(WebGLUniformLocation* loc,
-                                    uint8_t setterElemSize, GLenum setterType,
+    bool ValidateUniformLocation(const WebGLUniformLocation* loc);
+    bool ValidateUniformSetter(const WebGLUniformLocation* loc, uint8_t setterElemSize,
+                               webgl::AttribBaseType setterType);
+    bool ValidateUniformArraySetter(const WebGLUniformLocation* loc,
+                                    uint8_t setterElemSize,
+                                    webgl::AttribBaseType setterType,
                                     uint32_t setterArraySize,
                                     uint32_t* out_numElementsToUpload);
-    bool ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
+    bool ValidateUniformMatrixArraySetter(const WebGLUniformLocation* loc,
                                           uint8_t setterCols,
                                           uint8_t setterRows,
-                                          GLenum setterType,
+                                          webgl::AttribBaseType setterType,
                                           uint32_t setterArraySize,
                                           bool setterTranspose,
                                           uint32_t* out_numElementsToUpload);
@@ -1319,14 +1314,14 @@ protected:
                                        GLint border,
                                        TexImageTarget* const out_target,
                                        WebGLTexture** const out_texture,
-                                       WebGLTexture::ImageInfo** const out_imageInfo);
+                                       webgl::ImageInfo** const out_imageInfo);
     bool ValidateTexImageSelection(uint8_t funcDims,
                                    GLenum texImageTarget, GLint level, GLint xOffset,
                                    GLint yOffset, GLint zOffset, GLsizei width,
                                    GLsizei height, GLsizei depth,
                                    TexImageTarget* const out_target,
                                    WebGLTexture** const out_texture,
-                                   WebGLTexture::ImageInfo** const out_imageInfo);
+                                   webgl::ImageInfo** const out_imageInfo);
     bool ValidateUnpackInfo(bool usePBOs, GLenum format,
                             GLenum type, webgl::PackingInfo* const out);
 
@@ -1886,31 +1881,6 @@ protected:
     bool mPixelStore_RequireFastPath = false;
 
     ////////////////////////////////////
-    class FakeBlackTexture {
-    public:
-        static UniquePtr<FakeBlackTexture> Create(gl::GLContext* gl,
-                                                  TexTarget target,
-                                                  FakeBlackType type);
-        gl::GLContext* const mGL;
-        const GLuint mGLName;
-
-        ~FakeBlackTexture();
-    protected:
-        explicit FakeBlackTexture(gl::GLContext* gl);
-    };
-
-    UniquePtr<FakeBlackTexture> mFakeBlack_2D_0000;
-    UniquePtr<FakeBlackTexture> mFakeBlack_2D_0001;
-    UniquePtr<FakeBlackTexture> mFakeBlack_CubeMap_0000;
-    UniquePtr<FakeBlackTexture> mFakeBlack_CubeMap_0001;
-    UniquePtr<FakeBlackTexture> mFakeBlack_3D_0000;
-    UniquePtr<FakeBlackTexture> mFakeBlack_3D_0001;
-    UniquePtr<FakeBlackTexture> mFakeBlack_2D_Array_0000;
-    UniquePtr<FakeBlackTexture> mFakeBlack_2D_Array_0001;
-
-    bool BindFakeBlack(uint32_t texUnit, TexTarget target, FakeBlackType fakeBlack);
-
-    ////////////////////////////////////
 
 protected:
     GLuint mEmptyTFO;
@@ -1919,9 +1889,9 @@ protected:
     // Though CURRENT_VERTEX_ATTRIB is listed under "Vertex Shader State" in the spec
     // state tables, this isn't vertex shader /object/ state. This array is merely state
     // useful to vertex shaders, but is global state.
-    UniquePtr<GLenum[]> mGenericVertexAttribTypes;
+    std::vector<webgl::AttribBaseType> mGenericVertexAttribTypes;
     uint8_t mGenericVertexAttrib0Data[sizeof(float) * 4];
-    CacheMapInvalidator mGenericVertexAttribTypeInvalidator;
+    CacheInvalidator mGenericVertexAttribTypeInvalidator;
 
     GLuint mFakeVertexAttrib0BufferObject = 0;
     size_t mFakeVertexAttrib0BufferObjectSize = 0;
@@ -2049,6 +2019,8 @@ private:
 public:
     webgl::AvailabilityRunnable* EnsureAvailabilityRunnable();
 
+    // -
+
     // Friend list
     friend class ScopedCopyTexImageSource;
     friend class ScopedResolveTexturesForDraw;
@@ -2109,10 +2081,10 @@ class ScopedUnpackReset final
     friend struct gl::ScopedGLWrapper<ScopedUnpackReset>;
 
 private:
-    WebGLContext* const mWebGL;
+    const WebGLContext* const mWebGL;
 
 public:
-    explicit ScopedUnpackReset(WebGLContext* webgl);
+    explicit ScopedUnpackReset(const WebGLContext* webgl);
 
 private:
     void UnwrapImpl();
@@ -2124,10 +2096,10 @@ class ScopedFBRebinder final
     friend struct gl::ScopedGLWrapper<ScopedFBRebinder>;
 
 private:
-    WebGLContext* const mWebGL;
+    const WebGLContext* const mWebGL;
 
 public:
-    explicit ScopedFBRebinder(WebGLContext* webgl)
+    explicit ScopedFBRebinder(const WebGLContext* const webgl)
         : ScopedGLWrapper<ScopedFBRebinder>(webgl->gl)
         , mWebGL(webgl)
     { }
@@ -2171,6 +2143,17 @@ public:
     explicit ScopedDrawCallWrapper(WebGLContext& webgl);
     ~ScopedDrawCallWrapper();
 };
+
+namespace webgl {
+class ScopedPrepForResourceClear final
+{
+    const WebGLContext& webgl;
+
+public:
+    explicit ScopedPrepForResourceClear(const WebGLContext&);
+    ~ScopedPrepForResourceClear();
+};
+} // namespace webgl
 
 ////
 

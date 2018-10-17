@@ -1089,9 +1089,9 @@ function attachTarget(client, tab) {
   return client.attachTarget(tab.actor);
 }
 
-function listWorkers(tabClient) {
+function listWorkers(targetFront) {
   info("Listing workers.");
-  return tabClient.listWorkers();
+  return targetFront.listWorkers();
 }
 
 function findWorker(workers, url) {
@@ -1104,9 +1104,9 @@ function findWorker(workers, url) {
   return null;
 }
 
-function attachWorker(tabClient, worker) {
+function attachWorker(targetFront, worker) {
   info("Attaching to worker with url '" + worker.url + "'.");
-  return tabClient.attachWorker(worker.actor);
+  return targetFront.attachWorker(worker.actor);
 }
 
 function waitForWorkerListChanged(targetFront) {
@@ -1283,12 +1283,12 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 
   let tab = await addTab(TAB_URL);
   let { tabs } = await listTabs(client);
-  let [, tabClient] = await attachTarget(client, findTab(tabs, TAB_URL));
+  let [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
 
   await createWorkerInTab(tab, WORKER_URL);
 
-  let { workers } = await listWorkers(tabClient);
-  let [, workerClient] = await attachWorker(tabClient,
+  let { workers } = await listWorkers(targetFront);
+  let [, workerClient] = await attachWorker(targetFront,
                                              findWorker(workers, WORKER_URL));
 
   let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
@@ -1298,5 +1298,5 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   let debuggerPanel = toolbox.getCurrentPanel();
   let gDebugger = debuggerPanel.panelWin;
 
-  return {client, tab, tabClient, workerClient, toolbox, gDebugger};
+  return {client, tab, targetFront, workerClient, toolbox, gDebugger};
 }

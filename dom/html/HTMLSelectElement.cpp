@@ -600,6 +600,10 @@ HTMLSelectElement::Add(nsGenericHTMLElement& aElement,
 void
 HTMLSelectElement::Remove(int32_t aIndex)
 {
+  if (aIndex < 0) {
+    return;
+  }
+
   nsCOMPtr<nsINode> option = Item(static_cast<uint32_t>(aIndex));
   if (!option) {
     return;
@@ -642,14 +646,6 @@ HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv)
                                  getter_AddRefs(nodeInfo));
 
     nsCOMPtr<nsINode> node = NS_NewHTMLOptionElement(nodeInfo.forget());
-
-    RefPtr<nsTextNode> text = new nsTextNode(mNodeInfo->NodeInfoManager());
-
-    aRv = node->AppendChildTo(text, false);
-    if (aRv.Failed()) {
-      return;
-    }
-
     for (uint32_t i = curlen; i < aLength; i++) {
       nsINode::AppendChild(*node, aRv);
       if (aRv.Failed()) {

@@ -19,7 +19,7 @@ function run_test() {
   gClient.connect().then(function() {
     attachTestTabAndResume(
       gClient, "test-black-box",
-      function(response, tabClient, threadClient) {
+      function(response, targetFront, threadClient) {
         gThreadClient = threadClient;
         // XXX: We have to do an executeSoon so that the error isn't caught and
         // reported by DebuggerClient.requester (because we are using the local

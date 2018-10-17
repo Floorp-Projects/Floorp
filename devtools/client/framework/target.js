@@ -516,8 +516,8 @@ TabTarget.prototype = {
 
     // Attach the target actor
     const attachTarget = async () => {
-      const [response, tabClient] = await this._client.attachTarget(this._form.actor);
-      this.activeTab = tabClient;
+      const [response, targetFront] = await this._client.attachTarget(this._form.actor);
+      this.activeTab = targetFront;
       this.threadActor = response.threadActor;
 
       this.activeTab.on("tabNavigated", this._onTabNavigated);
@@ -857,10 +857,10 @@ function WorkerTarget(workerClient) {
  * A WorkerTarget represents a worker. Unlike TabTarget, which can represent
  * either a local or remote tab, WorkerTarget always represents a remote worker.
  * Moreover, unlike TabTarget, which is constructed with a placeholder object
- * for remote tabs (from which a TabClient can then be lazily obtained),
+ * for remote tabs (from which a TargetFront can then be lazily obtained),
  * WorkerTarget is constructed with a WorkerClient directly.
  *
- * WorkerClient is designed to mimic the interface of TabClient as closely as
+ * WorkerClient is designed to mimic the interface of TargetFront as closely as
  * possible. This allows us to debug workers as if they were ordinary tabs,
  * requiring only minimal changes to the rest of the frontend.
  */

@@ -10,7 +10,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="menulist" display="xul:menu"
+  <binding id="menulist"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content sizetopopup="pref">
       <xul:hbox class="menulist-label-box" flex="1">
@@ -332,7 +332,7 @@
     </implementation>
   </binding>
 
-  <binding id="menulist-popuponly" display="xul:menu"
+  <binding id="menulist-popuponly"
            extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content sizetopopup="pref">
       <children includes="menupopup"/>

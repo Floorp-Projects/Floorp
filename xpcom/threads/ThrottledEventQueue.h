@@ -64,8 +64,7 @@ class ThrottledEventQueue final : public nsISerialEventTarget
   ~ThrottledEventQueue() = default;
 
 public:
-  // Attempt to create a ThrottledEventQueue for the given target.  This
-  // may return nullptr if the browser is already shutting down.
+  // Create a ThrottledEventQueue for the given target.
   static already_AddRefed<ThrottledEventQueue>
   Create(nsISerialEventTarget* aBaseTarget);
 

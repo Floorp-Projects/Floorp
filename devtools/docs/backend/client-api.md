@@ -78,15 +78,15 @@ function attachToTab() {
     let tab = response.tabs[response.selected];
 
     // Attach to the tab.
-    client.attachTarget(tab.actor).then(([response, tabClient]) => {
-      if (!tabClient) {
+    client.attachTarget(tab.actor).then(([response, targetFront]) => {
+      if (!targetFront) {
         return;
       }
 
-      // Now the tabClient is ready and can be used.
+      // Now the targetFront is ready and can be used.
 
       // Attach listeners for client events.
-      tabClient.addListener("tabNavigated", onTab);
+      targetFront.addListener("tabNavigated", onTab);
     });
   });
 }
@@ -103,7 +103,7 @@ async function onTab() {
   // Detach from the previous thread.
   await client.activeThread.detach();
   // Detach from the previous tab.
-  await tabClient.activeTab.detach();
+  await targetFront.activeTab.detach();
   // Start debugging the new tab.
   start();
 }
@@ -186,8 +186,8 @@ function debugTab() {
     // Find the active tab.
     let tab = response.tabs[response.selected];
     // Attach to the tab.
-    client.attachTarget(tab.actor).then(([response, tabClient]) => {
-      if (!tabClient) {
+    client.attachTarget(tab.actor).then(([response, targetFront]) => {
+      if (!targetFront) {
         return;
       }
 

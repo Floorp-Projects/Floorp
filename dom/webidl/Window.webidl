@@ -188,6 +188,10 @@ partial interface Window {
   [Replaceable, Throws] readonly attribute double scrollY;
   [Replaceable, Throws] readonly attribute double pageYOffset;
 
+  // Aliases for screenX / screenY.
+  [Replaceable, Throws, NeedsCallerType] readonly attribute double screenLeft;
+  [Replaceable, Throws, NeedsCallerType] readonly attribute double screenTop;
+
   // client
   // These are writable because we allow chrome to write them.  And they need
   // to use 'any' as the type, because non-chrome writing them needs to act

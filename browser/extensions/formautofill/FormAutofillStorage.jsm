@@ -142,11 +142,14 @@ ChromeUtils.defineModuleGetter(this, "FormAutofillNameUtils",
                                "resource://formautofill/FormAutofillNameUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "MasterPassword",
-                               "resource://formautofill/MasterPassword.jsm");
+ChromeUtils.defineModuleGetter(this, "OSKeyStore",
+                               "resource://formautofill/OSKeyStore.jsm");
 ChromeUtils.defineModuleGetter(this, "PhoneNumber",
                                "resource://formautofill/phonenumberutils/PhoneNumber.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "cryptoSDR",
+                                   "@mozilla.org/login-manager/crypto/SDR;1",
+                                   Ci.nsILoginManagerCrypto);
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
@@ -158,7 +161,7 @@ const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 
 const STORAGE_SCHEMA_VERSION = 1;
 const ADDRESS_SCHEMA_VERSION = 1;
-const CREDIT_CARD_SCHEMA_VERSION = 1;
+const CREDIT_CARD_SCHEMA_VERSION = 2;
 
 const VALID_ADDRESS_FIELDS = [
   "given-name",
@@ -264,13 +267,14 @@ class AutofillRecords {
     this._collectionName = collectionName;
     this._schemaVersion = schemaVersion;
 
-    Promise.all(this._data.map(record => this._migrateRecord(record)))
-      .then(hasChangesArr => {
-        let dataHasChanges = hasChangesArr.find(hasChanges => hasChanges);
-        if (dataHasChanges) {
-          this._store.saveSoon();
-        }
-      });
+    this._initializePromise =
+      Promise.all(this._data.map(async (record, index) => this._migrateRecord(record, index)))
+        .then(hasChangesArr => {
+          let dataHasChanges = hasChangesArr.includes(true);
+          if (dataHasChanges) {
+            this._store.saveSoon();
+          }
+        });
   }
 
   /**
@@ -301,6 +305,14 @@ class AutofillRecords {
       throw new Error(`Got unknown record version ${
         record.version}; want ${this.version}`);
     }
+  }
+
+  /**
+   * Initialize the records in the collection, resolves when the migration completes.
+   * @returns {Promise}
+   */
+  initialize() {
+    return this._initializePromise;
   }
 
   /**
@@ -1176,7 +1188,7 @@ class AutofillRecords {
     });
   }
 
-  async _migrateRecord(record) {
+  async _migrateRecord(record, index) {
     let hasChanges = false;
 
     if (record.deleted) {
@@ -1192,10 +1204,21 @@ class AutofillRecords {
 
     if (record.version < this.version) {
       hasChanges = true;
-      record.version = this.version;
 
-      // Force to recompute fields if we upgrade the schema.
-      await this._stripComputedFields(record);
+      record = await this._computeMigratedRecord(record);
+
+      if (record.deleted) {
+        // record is deleted by _computeMigratedRecord(),
+        // go ahead and put it in the store.
+        this._data[index] = record;
+        return hasChanges;
+      }
+
+      // Compute the computed fields before putting it to store.
+      await this.computeFields(record);
+      this._data[index] = record;
+
+      return hasChanges;
     }
 
     hasChanges |= await this.computeFields(record);
@@ -1254,6 +1277,24 @@ class AutofillRecords {
       sourceSync,
       collectionName: this._collectionName,
     }}, "formautofill-storage-changed", "removeAll");
+  }
+
+  /**
+   * Strip the computed fields based on the record version.
+   * @param   {Object} record      The record to migrate
+   * @returns {Object}             Migrated record.
+   *                               Record is always cloned, with version updated,
+   *                               with computed fields stripped.
+   *                               Could be a tombstone record, if the record
+   *                               should be discorded.
+   */
+  async _computeMigratedRecord(record) {
+    if (!record.deleted) {
+      record = this._clone(record);
+      await this._stripComputedFields(record);
+      record.version = this.version;
+    }
+    return record;
   }
 
   async _stripComputedFields(record) {
@@ -1604,7 +1645,7 @@ class CreditCards extends AutofillRecords {
       if ("cc-number" in creditCard) {
         let ccNumber = creditCard["cc-number"];
         creditCard["cc-number"] = CreditCard.getLongMaskedNumber(ccNumber);
-        creditCard["cc-number-encrypted"] = await MasterPassword.encrypt(ccNumber);
+        creditCard["cc-number-encrypted"] = await OSKeyStore.encrypt(ccNumber);
       } else {
         creditCard["cc-number-encrypted"] = "";
       }
@@ -1613,9 +1654,63 @@ class CreditCards extends AutofillRecords {
     return hasNewComputedFields;
   }
 
+  async _computeMigratedRecord(creditCard) {
+    if (creditCard["cc-number-encrypted"]) {
+      switch (creditCard.version) {
+        case 1: {
+          if (!cryptoSDR.isLoggedIn) {
+            // We cannot decrypt the data, so silently remove the record for
+            // the user.
+            if (creditCard.deleted) {
+              break;
+            }
+
+            this.log.warn("Removing version 1 credit card record to migrate to new encryption:", creditCard.guid);
+
+            // Replace the record with a tombstone record here,
+            // regardless of existence of sync metadata.
+            let existingSync = this._getSyncMetaData(creditCard);
+            creditCard = {
+              guid: creditCard.guid,
+              timeLastModified: Date.now(),
+              deleted: true,
+            };
+
+            if (existingSync) {
+              creditCard._sync = existingSync;
+              existingSync.changeCounter++;
+            }
+            break;
+          }
+
+          creditCard = this._clone(creditCard);
+
+          // Decrypt the cc-number using version 1 encryption.
+          let ccNumber = cryptoSDR.decrypt(creditCard["cc-number-encrypted"]);
+          // Re-encrypt the cc-number with version 2 encryption.
+          creditCard["cc-number-encrypted"] = await OSKeyStore.encrypt(ccNumber);
+          break;
+        }
+
+        default:
+          throw new Error("Unknown credit card version to migrate: " + creditCard.version);
+      }
+    }
+    return super._computeMigratedRecord(creditCard);
+  }
+
   async _stripComputedFields(creditCard) {
     if (creditCard["cc-number-encrypted"]) {
-      creditCard["cc-number"] = await MasterPassword.decrypt(creditCard["cc-number-encrypted"]);
+      try {
+        creditCard["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
+      } catch (ex) {
+        if (ex.result == Cr.NS_ERROR_ABORT) {
+          throw ex;
+        }
+        // Quietly recover from encryption error,
+        // so existing credit card entry with undecryptable number
+        // can be updated.
+      }
     }
     await super._stripComputedFields(creditCard);
   }
@@ -1676,6 +1771,33 @@ class CreditCards extends AutofillRecords {
     }
   }
 
+  _ensureMatchingVersion(record) {
+    if (!record.version || isNaN(record.version) || record.version < 1) {
+      throw new Error(`Got invalid record version ${
+        record.version}; want ${this.version}`);
+    }
+
+    if (record.version < this.version) {
+      switch (record.version) {
+        case 1:
+          // The difference between version 1 and 2 is only about the encryption
+          // method used for the cc-number-encrypted field.
+          // As long as the record is already decrypted, it is safe to bump the
+          // version directly.
+          if (!record["cc-number-encrypted"]) {
+            record.version = this.version;
+          } else {
+            throw new Error("Unexpected record migration path.");
+          }
+          break;
+        default:
+          throw new Error("Unknown credit card version to match: " + record.version);
+      }
+    }
+
+    return super._ensureMatchingVersion(record);
+  }
+
   /**
    * Normalize the given record and return the first matched guid if storage has the same record.
    * @param {Object} targetCreditCard
@@ -1692,12 +1814,9 @@ class CreditCards extends AutofillRecords {
           return !creditCard[field];
         }
         if (field == "cc-number" && creditCard[field]) {
-          if (MasterPassword.isEnabled) {
-            // Compare the masked numbers instead when the master password is
-            // enabled because we don't want to leak the credit card number.
-            return CreditCard.getLongMaskedNumber(clonedTargetCreditCard[field]) == creditCard[field];
-          }
-          return (clonedTargetCreditCard[field] == await MasterPassword.decrypt(creditCard["cc-number-encrypted"]));
+          // Compare the masked numbers instead when decryption requires a password
+          // because we don't want to leak the credit card number.
+          return CreditCard.getLongMaskedNumber(clonedTargetCreditCard[field]) == creditCard[field];
         }
         return clonedTargetCreditCard[field] == creditCard[field];
       })).then(fieldResults => fieldResults.every(result => result));
@@ -1805,7 +1924,10 @@ FormAutofillStorage.prototype = {
         path: this._path,
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
-      this._initializePromise = this._store.load();
+      this._initializePromise = this._store.load()
+        .then(() => Promise.all([
+          this.addresses.initialize(),
+          this.creditCards.initialize()]));
     }
     return this._initializePromise;
   },
