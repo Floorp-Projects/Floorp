@@ -297,7 +297,6 @@ dictionary RTCRtpSendParameters : RTCRtpParameters {
              required DOMString transactionId;
              required sequence<RTCRtpEncodingParameters> encodings;
              RTCDegradationPreference degradationPreference = "balanced";
-             RTCPriorityType priority = "low";
 };
 
 dictionary RTCRtpReceiveParameters : RTCRtpParameters {
@@ -315,6 +314,7 @@ dictionary RTCRtpEncodingParameters : RTCRtpCodingParameters {
              octet codecPayloadType;
              RTCDtxStatus dtx;
              boolean active = true;
+             RTCPriorityType priority = "low";
              unsigned long ptime;
              unsigned long maxBitrate;
              double maxFramerate;
