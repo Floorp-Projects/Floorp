@@ -11,6 +11,8 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 
+#define USER_INTERACTION_PERM "storageAccessAPI"
+
 class nsIChannel;
 class nsIHttpChannel;
 class nsIPermission;

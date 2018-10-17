@@ -36,7 +36,6 @@
 #include "prtime.h"
 
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
-#define USER_INTERACTION_PERM "storageAccessAPI"
 
 using namespace mozilla;
 using mozilla::dom::ContentChild;
