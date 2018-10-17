@@ -571,3 +571,19 @@ def target_tasks_bouncer_check(full_task_graph, parameters, graph_config):
         # For now any task in the repo-update kind is ok
         return task.kind in ['cron-bouncer-check']
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('staging_release_builds')
+def target_tasks_staging_release(full_task_graph, parameters, graph_config):
+    """
+    Select all builds that are part of releases.
+    """
+
+    def filter(task):
+        if not task.attributes.get('shipping_product'):
+            return False
+        if task.attributes.get('shipping_phase') == 'build':
+            return True
+        return False
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
