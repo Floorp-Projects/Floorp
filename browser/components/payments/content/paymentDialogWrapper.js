@@ -216,7 +216,9 @@ var paymentDialogWrapper = {
     if (AppConstants.platform == "win") {
       this.frame.setAttribute("selectmenulist", "ContentSelectDropdown-windows");
     }
-    this.frame.loadURI("resource://payments/paymentRequest.xhtml");
+    this.frame.loadURI("resource://payments/paymentRequest.xhtml",
+                       { triggeringPrincipal:
+                           Services.scriptSecurityManager.getSystemPrincipal() });
 
     this.temporaryStore = {
       addresses: new TempCollection("addresses"),
