@@ -251,7 +251,7 @@ public:
   void OnIncomingMessage(const Message& aMsg) override {
     switch (aMsg.mType) {
     case MessageType::Paint:
-      UpdateGraphicsInUIProcess((const PaintMessage*) &aMsg);
+      MaybeUpdateGraphicsAtPaint((const PaintMessage&) aMsg);
       break;
     case MessageType::HitCheckpoint:
       RecvHitCheckpoint((const HitCheckpointMessage&) aMsg);
@@ -1002,7 +1002,7 @@ MaybeSendRepaintMessage()
       RootedValue width(cx), height(cx);
       if (JS_GetProperty(cx, obj, "width", &width) && width.isNumber() && width.toNumber() &&
           JS_GetProperty(cx, obj, "height", &height) && height.isNumber() && height.toNumber()) {
-        PaintMessage message(width.toNumber(), height.toNumber());
+        PaintMessage message(CheckpointId::Invalid, width.toNumber(), height.toNumber());
         UpdateGraphicsInUIProcess(&message);
       }
     }
@@ -1166,6 +1166,7 @@ static void
 RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
 {
   UpdateCheckpointTimes(aMsg);
+  MaybeUpdateGraphicsAtCheckpoint(aMsg.mCheckpointId);
 
   // Resume either forwards or backwards. Break the resume off into a separate
   // runnable, to avoid starving any code already on the stack and waiting for
