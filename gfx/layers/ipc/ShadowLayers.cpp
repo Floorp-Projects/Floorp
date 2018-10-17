@@ -782,13 +782,14 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
     return false;
   }
 
-  if (recordreplay::IsRecordingOrReplaying()) {
-    recordreplay::child::WaitForPaintToComplete();
-  }
-
   if (startTime) {
     mPaintTiming.sendMs() = (TimeStamp::Now() - startTime.value()).ToMilliseconds();
     mShadowManager->SendRecordPaintTimes(mPaintTiming);
+  }
+
+  // Create a record/replay checkpoint after each paint.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    recordreplay::child::CreateCheckpoint();
   }
 
   *aSent = true;
