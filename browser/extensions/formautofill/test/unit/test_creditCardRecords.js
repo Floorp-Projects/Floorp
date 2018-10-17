@@ -422,6 +422,14 @@ add_task(async function test_update() {
   Assert.equal(creditCard["cc-number"],
     CreditCard.getLongMaskedNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
 
+  // Decryption failure of existing record should not prevent it from being updated.
+  creditCard = profileStorage.creditCards._data[0];
+  creditCard["cc-number-encrypted"] = "INVALID";
+  await profileStorage.creditCards.update(profileStorage.creditCards._data[0].guid, TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD, false);
+  creditCard = profileStorage.creditCards._data[0];
+  Assert.equal(creditCard["cc-number"],
+    CreditCard.getLongMaskedNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
+
   await Assert.rejects(profileStorage.creditCards.update("INVALID_GUID", TEST_CREDIT_CARD_3),
     /No matching record\./
   );
