@@ -126,6 +126,14 @@ function runTests() {
     { mainMinSize: 120,
       mainMaxSize: 500,
       mainDeltaSize: 0 },
+    { mainBaseSize:  5, /* XXXdholbert should be 10, fixing in bug 1498281 */
+      mainMaxSize:   5,
+      mainDeltaSize: 0 },
+    { mainBaseSize: 15, /* XXXdholbert should be 10, fixing in bug 1498281 */
+      mainMinSize:  15,
+      mainDeltaSize: 0 },
+    { mainBaseSize: 50,
+      mainMaxSize: 10 },
     { mainDeltaSize: 0 },
     { /* final item is anonymous flex item */ },
   ];
@@ -173,6 +181,16 @@ function runTests() {
     <div class="yellow lastbase" style="width: 100px">one line (last)</div>
     <div class="orange offset lastbase crossMinMax">two<br/>lines and offset (last)</div>
     <div class="pink offset base mainMinMax">offset (first)</div>
+    <!-- Inflexible item that is trivially clamped to smaller max-width: -->
+    <div style="flex: 0 0 10px; max-width: 5px"></div>
+    <!-- Inflexible item that is trivially clamped to larger min-width: -->
+    <div style="flex: 0 0 10px; min-width: 15px"></div>
+    <!-- XXXdholbert should create a second container here w/ specific
+         hardcoded flex base sizes so we can predict & check mainDeltaSize
+         for this item: -->
+    <!-- Item that wants to grow but is trivially clamped to max-width
+         below base size: -->
+    <div style="flex: 1 1 50px; max-width: 10px"></div>
     <div style="display:contents">
       <div class="white">replaced</div>
     </div>
