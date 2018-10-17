@@ -15,6 +15,7 @@ let searchParams = new URLSearchParams(document.documentURI.split("?")[1]);
 
 // Set to true on init if the error code is nssBadCert.
 let gIsCertError;
+let gNewErrorPagesEnabled;
 
 function getErrorCode() {
   return searchParams.get("e");
@@ -129,9 +130,11 @@ function disallowCertOverridesIfNeeded() {
   if (cssClass == "badStsCert") {
     document.getElementById("badStsCertExplanation").removeAttribute("hidden");
 
-    let stsReturnButtonText = document.getElementById("stsReturnButtonText").textContent;
-    document.getElementById("returnButton").textContent = stsReturnButtonText;
-    document.getElementById("advancedPanelReturnButton").textContent = stsReturnButtonText;
+    if (gNewErrorPagesEnabled) {
+      let stsReturnButtonText = document.getElementById("stsReturnButtonText").textContent;
+      document.getElementById("returnButton").textContent = stsReturnButtonText;
+      document.getElementById("advancedPanelReturnButton").textContent = stsReturnButtonText;
+    }
   }
 }
 
@@ -150,6 +153,7 @@ function initPage() {
   }
 
   gIsCertError = (err == "nssBadCert");
+  gNewErrorPagesEnabled = !!document.body.dataset.newErrorPagesEnabled;
   // Only worry about captive portals if this is a cert error.
   let showCaptivePortalUI = isCaptive() && gIsCertError;
   if (showCaptivePortalUI) {
@@ -162,7 +166,7 @@ function initPage() {
     document.body.classList.add(className);
   }
 
-  if (gIsCertError && className == "badStsCert") {
+  if (gNewErrorPagesEnabled && gIsCertError && className == "badStsCert") {
     l10nErrId += "_sts";
   }
 
