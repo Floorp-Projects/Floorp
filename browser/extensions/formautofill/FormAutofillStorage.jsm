@@ -1701,7 +1701,16 @@ class CreditCards extends AutofillRecords {
 
   async _stripComputedFields(creditCard) {
     if (creditCard["cc-number-encrypted"]) {
-      creditCard["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
+      try {
+        creditCard["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
+      } catch (ex) {
+        if (ex.result == Cr.NS_ERROR_ABORT) {
+          throw ex;
+        }
+        // Quietly recover from encryption error,
+        // so existing credit card entry with undecryptable number
+        // can be updated.
+      }
     }
     await super._stripComputedFields(creditCard);
   }
