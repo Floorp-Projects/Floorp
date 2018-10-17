@@ -55,16 +55,14 @@ WebGLContext::GetStencilBits(GLint* const out_stencilBits) const
 {
     *out_stencilBits = 0;
     if (mBoundDrawFramebuffer) {
-        if (mBoundDrawFramebuffer->StencilAttachment().IsDefined() &&
-            mBoundDrawFramebuffer->DepthStencilAttachment().IsDefined())
-        {
+        if (!mBoundDrawFramebuffer->IsCheckFramebufferStatusComplete()) {
             // Error, we don't know which stencil buffer's bits to use
             ErrorInvalidFramebufferOperation("getParameter: framebuffer has two stencil buffers bound");
             return false;
         }
 
-        if (mBoundDrawFramebuffer->StencilAttachment().IsDefined() ||
-            mBoundDrawFramebuffer->DepthStencilAttachment().IsDefined())
+        if (mBoundDrawFramebuffer->StencilAttachment().HasAttachment() ||
+            mBoundDrawFramebuffer->DepthStencilAttachment().HasAttachment())
         {
             *out_stencilBits = 8;
         }
@@ -318,23 +316,32 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_DEPTH_BITS:
         case LOCAL_GL_STENCIL_BITS: {
             const auto format = [&]() -> const webgl::FormatInfo* {
-                if (mBoundDrawFramebuffer) {
-                    const auto& fb = *mBoundDrawFramebuffer;
+                const auto& fb = mBoundDrawFramebuffer;
+                if (fb) {
+                    if (!fb->IsCheckFramebufferStatusComplete())
+                        return nullptr;
+
                     const auto& attachment = [&]() -> const auto& {
                         switch (pname) {
                         case LOCAL_GL_DEPTH_BITS:
-                            return fb.AnyDepthAttachment();
+                            if (fb->DepthStencilAttachment().HasAttachment())
+                                return fb->DepthStencilAttachment();
+                            return fb->DepthAttachment();
 
                         case LOCAL_GL_STENCIL_BITS:
-                            return fb.AnyStencilAttachment();
+                            if (fb->DepthStencilAttachment().HasAttachment())
+                                return fb->DepthStencilAttachment();
+                            return fb->StencilAttachment();
 
                         default:
-                            return fb.ColorAttachment0();
+                            return fb->ColorAttachment0();
                         }
                     }();
-                    if (!attachment.HasImage())
+
+                    const auto imageInfo = attachment.GetImageInfo();
+                    if (!imageInfo)
                         return nullptr;
-                    return attachment.Format()->format;
+                    return imageInfo->mFormat->format;
                 }
 
                 auto effFormat = webgl::EffectiveFormat::RGB8;

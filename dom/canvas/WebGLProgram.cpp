@@ -87,48 +87,6 @@ AssembleName(const nsCString& baseName, bool isArray, size_t arrayIndex,
 
 ////
 
-static GLenum
-AttribBaseType(GLenum attribType)
-{
-    switch (attribType) {
-    case LOCAL_GL_FLOAT:
-    case LOCAL_GL_FLOAT_VEC2:
-    case LOCAL_GL_FLOAT_VEC3:
-    case LOCAL_GL_FLOAT_VEC4:
-
-    case LOCAL_GL_FLOAT_MAT2:
-    case LOCAL_GL_FLOAT_MAT2x3:
-    case LOCAL_GL_FLOAT_MAT2x4:
-
-    case LOCAL_GL_FLOAT_MAT3x2:
-    case LOCAL_GL_FLOAT_MAT3:
-    case LOCAL_GL_FLOAT_MAT3x4:
-
-    case LOCAL_GL_FLOAT_MAT4x2:
-    case LOCAL_GL_FLOAT_MAT4x3:
-    case LOCAL_GL_FLOAT_MAT4:
-        return LOCAL_GL_FLOAT;
-
-    case LOCAL_GL_INT:
-    case LOCAL_GL_INT_VEC2:
-    case LOCAL_GL_INT_VEC3:
-    case LOCAL_GL_INT_VEC4:
-        return LOCAL_GL_INT;
-
-    case LOCAL_GL_UNSIGNED_INT:
-    case LOCAL_GL_UNSIGNED_INT_VEC2:
-    case LOCAL_GL_UNSIGNED_INT_VEC3:
-    case LOCAL_GL_UNSIGNED_INT_VEC4:
-        return LOCAL_GL_UNSIGNED_INT;
-
-    default:
-        MOZ_ASSERT(false, "unexpected attrib elemType");
-        return 0;
-    }
-}
-
-////
-
 /*static*/ const webgl::UniformInfo::TexListT*
 webgl::UniformInfo::GetTexList(WebGLActiveInfo* activeInfo)
 {
@@ -163,9 +121,54 @@ webgl::UniformInfo::GetTexList(WebGLActiveInfo* activeInfo)
     }
 }
 
+static bool
+IsShadowSampler(const GLenum elemType)
+{
+    switch (elemType) {
+    case LOCAL_GL_SAMPLER_2D_SHADOW:
+    case LOCAL_GL_SAMPLER_CUBE_SHADOW:
+    case LOCAL_GL_SAMPLER_2D_ARRAY_SHADOW:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static webgl::TextureBaseType
+SamplerBaseType(const GLenum elemType)
+{
+    switch (elemType) {
+    case LOCAL_GL_SAMPLER_2D:
+    case LOCAL_GL_SAMPLER_3D:
+    case LOCAL_GL_SAMPLER_CUBE:
+    case LOCAL_GL_SAMPLER_2D_ARRAY:
+    case LOCAL_GL_SAMPLER_2D_SHADOW:
+    case LOCAL_GL_SAMPLER_CUBE_SHADOW:
+    case LOCAL_GL_SAMPLER_2D_ARRAY_SHADOW:
+        return webgl::TextureBaseType::Float;
+
+    case LOCAL_GL_INT_SAMPLER_2D:
+    case LOCAL_GL_INT_SAMPLER_3D:
+    case LOCAL_GL_INT_SAMPLER_CUBE:
+    case LOCAL_GL_INT_SAMPLER_2D_ARRAY:
+        return webgl::TextureBaseType::Int;
+
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_3D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_CUBE:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        return webgl::TextureBaseType::UInt;
+
+    default:
+        return webgl::TextureBaseType::Float; // Will be ignored.
+    }
+}
+
 webgl::UniformInfo::UniformInfo(WebGLActiveInfo* activeInfo)
     : mActiveInfo(activeInfo)
     , mSamplerTexList(GetTexList(activeInfo))
+    , mTexBaseType(SamplerBaseType(mActiveInfo->mElemType))
+    , mIsShadowSampler(IsShadowSampler(mActiveInfo->mElemType))
 {
     if (mSamplerTexList) {
         mSamplerValues.assign(mActiveInfo->mElemCount, 0);
@@ -263,8 +266,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
                                                                        elemType, isArray,
                                                                        userName,
                                                                        mappedName);
-        const GLenum baseType = AttribBaseType(elemType);
-        const webgl::AttribInfo attrib = {activeInfo, loc, baseType};
+        const webgl::AttribInfo attrib = {activeInfo, loc};
         info->attribs.push_back(attrib);
 
         if (loc == 0) {
@@ -462,6 +464,22 @@ webgl::LinkedProgramInfo::~LinkedProgramInfo()
     }
 }
 
+const char*
+webgl::ToString(const webgl::AttribBaseType x)
+{
+    switch (x) {
+    case webgl::AttribBaseType::Float:
+        return "FLOAT";
+    case webgl::AttribBaseType::Int:
+        return "INT";
+    case webgl::AttribBaseType::UInt:
+        return "UINT";
+    case webgl::AttribBaseType::Bool:
+        return "BOOL";
+    }
+    MOZ_CRASH("pacify gcc6 warning");
+}
+
 const webgl::CachedDrawFetchLimits*
 webgl::LinkedProgramInfo::GetDrawFetchLimits() const
 {
@@ -472,7 +490,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
     if (found)
         return found;
 
-    std::vector<const CacheMapInvalidator*> cacheDeps;
+    std::vector<const CacheInvalidator*> cacheDeps;
     cacheDeps.push_back(vao.get());
     cacheDeps.push_back(&webgl->mGenericVertexAttribTypeInvalidator);
 
@@ -504,7 +522,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
         const auto& attribData = vao->mAttribs[loc];
         hasActiveDivisor0 |= (attribData.mDivisor == 0);
 
-        GLenum attribDataBaseType;
+        webgl::AttribBaseType attribDataBaseType;
         if (attribData.mEnabled) {
             MOZ_ASSERT(attribData.mBuf);
             if (attribData.mBuf->IsBoundForTF()) {
@@ -534,14 +552,15 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
             attribDataBaseType = webgl->mGenericVertexAttribTypes[loc];
         }
 
-        if (attribDataBaseType != progAttrib.mBaseType) {
-            nsCString progType, dataType;
-            WebGLContext::EnumName(progAttrib.mBaseType, &progType);
-            WebGLContext::EnumName(attribDataBaseType, &dataType);
+        const auto& progBaseType = progAttrib.mActiveInfo->mBaseType;
+        if ((attribDataBaseType != progBaseType) &
+            (progBaseType != webgl::AttribBaseType::Bool))
+        {
+            const auto& dataType = ToString(attribDataBaseType);
+            const auto& progType = ToString(progBaseType);
             webgl->ErrorInvalidOperation("Vertex attrib %u requires data of type %s,"
                                          " but is being supplied with type %s.",
-                                         loc, progType.BeginReading(),
-                                         dataType.BeginReading());
+                                         loc, progType, dataType);
             return nullptr;
         }
     }
@@ -554,7 +573,9 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
 
     // --
 
-    return mDrawFetchCache.Insert(vao.get(), std::move(fetchLimits), std::move(cacheDeps));
+    auto entry = mDrawFetchCache.MakeEntry(vao.get(), std::move(fetchLimits));
+    entry->ResetInvalidators(std::move(cacheDeps));
+    return mDrawFetchCache.Insert(std::move(entry));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

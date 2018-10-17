@@ -24,7 +24,7 @@ void
 WebGLContext::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
 {
     const FuncScope funcScope(*this, "uniform1ui");
-    if (!ValidateUniformSetter(loc, 1, LOCAL_GL_UNSIGNED_INT))
+    if (!ValidateUniformSetter(loc, 1, webgl::AttribBaseType::UInt))
         return;
 
     gl->fUniform1ui(loc->mLoc, v0);
@@ -34,7 +34,7 @@ void
 WebGLContext::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
 {
     const FuncScope funcScope(*this, "uniform2ui");
-    if (!ValidateUniformSetter(loc, 2, LOCAL_GL_UNSIGNED_INT))
+    if (!ValidateUniformSetter(loc, 2, webgl::AttribBaseType::UInt))
         return;
 
     gl->fUniform2ui(loc->mLoc, v0, v1);
@@ -44,7 +44,7 @@ void
 WebGLContext::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2)
 {
     const FuncScope funcScope(*this, "uniform3ui");
-    if (!ValidateUniformSetter(loc, 3, LOCAL_GL_UNSIGNED_INT))
+    if (!ValidateUniformSetter(loc, 3, webgl::AttribBaseType::UInt))
         return;
 
     gl->fUniform3ui(loc->mLoc, v0, v1, v2);
@@ -55,7 +55,7 @@ WebGLContext::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint
                          GLuint v3)
 {
     const FuncScope funcScope(*this, "uniform4ui");
-    if (!ValidateUniformSetter(loc, 4, LOCAL_GL_UNSIGNED_INT))
+    if (!ValidateUniformSetter(loc, 4, webgl::AttribBaseType::UInt))
         return;
 
     gl->fUniform4ui(loc->mLoc, v0, v1, v2, v3);
