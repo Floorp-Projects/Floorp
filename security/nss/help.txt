@@ -1,14 +1,14 @@
-Usage: build.sh [-hcv] [-cc] [-j <n>] [--nspr] [--gyp|-g] [--opt|-o] [-m32]
-                [--test] [--pprof] [--scan-build[=output]] [--ct-verif]
-                [--asan] [--ubsan] [--msan] [--sancov[=edge|bb|func|...]]
-                [--disable-tests] [--fuzz[=tls|oss]] [--system-sqlite]
-                [--no-zdefs] [--with-nspr] [--system-nspr] [--enable-libpkix]
-                [--enable-fips] [--mozpkix-only]
+Usage: build.sh [-h] [-c|-cc] [-v] [-j <n>] [--gyp|-g] [--opt|-o]
+                [-t <x64|x86|...>|--target=<x64|x86|...>]
+                [--clang|--gcc|--msvc] [--scan-build[=dir]] [--disable-tests]
+                [--pprof] [--asan] [--msan] [--ubsan[=bool,shift,...]
+                [--fuzz[=tls|oss]] [--sancov[=edge|bb|func|...]]
+                [--emit-llvm] [--no-zdefs] [--test] [--ct-verif]
+                [--nspr|--with-nspr=<include>:<lib>|--system-nspr]
+                [--system-sqlite] [--enable-fips] [--enable-libpkix]
+                [--mozpkix-only]
 
 This script builds NSS with gyp and ninja.
-
-This build system is still under development.  It does not yet support all
-the features or platforms that NSS supports.
 
 NSS build tool options:
 
@@ -17,36 +17,37 @@ NSS build tool options:
     -cc              clean without building
     -v               verbose build
     -j <n>           run at most <n> concurrent jobs
-    --nspr           force a rebuild of NSPR
     --gyp|-g         force a rerun of gyp
     --opt|-o         do an opt build
-    -m32             do a 32-bit build on a 64-bit system
+    --target|-t      specify target architecture (e.g., x86, x64, aarch64)
     --clang          build with clang and clang++
     --gcc            build with gcc and g++
-    --test           ignore map files and export everything we have
+    --msvc           build with MSVC
+    --scan-build     run the build with scan-build
+                     --scan-build=<dir> sets the output path for scan-build
+    --disable-tests  don't build tests and corresponding cmdline utils
+    --pprof          build with gperftool support
+    --asan           enable address sanitizer
+    --msan           enable memory sanitizer
+    --ubsan          enable undefined behavior sanitizer
+                     --ubsan=bool,shift,... sets specific UB sanitizers
     --fuzz           build fuzzing targets (this always enables test builds)
                      --fuzz=tls to enable TLS fuzzing mode
                      --fuzz=oss to build for OSS-Fuzz
-    --pprof          build with gperftool support
-    --ct-verif       build with valgrind for ct-verif
-    --scan-build     run the build with scan-build (scan-build has to be in the path)
-                     --scan-build=/out/path sets the output path for scan-build
-    --asan           do an asan build
-    --ubsan          do an ubsan build
-                     --ubsan=bool,shift,... sets specific UB sanitizers
-    --msan           do an msan build
     --sancov         do sanitize coverage builds
                      --sancov=func sets coverage to function level for example
     --emit-llvm      emit LLVM bitcode while building
                      (requires the gold linker, use clang-3.8 for SAW)
-    --disable-tests  don't build tests and corresponding cmdline utils
-    --system-sqlite  use system sqlite
     --no-zdefs       don't set -Wl,-z,defs
-    --with-nspr      don't build NSPR but use the one at the given location, e.g.
-                     --with-nspr=/path/to/nspr/include:/path/to/nspr/lib
-    --system-nspr    use system nspr. This requires an installation of NSPR and
-                     might not work on all systems.
-    --enable-libpkix make libpkix part of the build.
-    --enable-fips    don't disable FIPS checks.
-    --mozpkix-only   build only static mozpkix and mozpkix-test libraries.
-                     Note that support for this build option is limited.
+    --test           ignore map files and export everything we have
+    --ct-verif       build with valgrind for ct-verif
+    --nspr           force a rebuild of NSPR
+    --with-nspr      use the NSPR build at the given locations
+                     --with-nspr=<include>:<lib> sets include and lib paths
+    --system-nspr    attempt to use system nspr
+                     shorthand for --with-nspr=/usr/include/nspr:
+    --system-sqlite  use system sqlite
+    --enable-fips    enable FIPS checks
+    --enable-libpkix make libpkix part of the build
+    --mozpkix-only   build only static mozpkix and mozpkix-test libraries
+                     support for this build option is limited

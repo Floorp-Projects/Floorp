@@ -5847,8 +5847,7 @@ pref("dom.moduleScripts.enabled", true);
 // callback are allowed to run before yielding the event loop.
 pref("dom.timeout.max_consecutive_callbacks_ms", 4);
 
-// Use this preference to house "Payment Request API" during development
-pref("dom.payments.request.enabled", false);
+// Payment Request API preferences
 pref("dom.payments.loglevel", "Warn");
 pref("dom.payments.defaults.saveCreditCard", false);
 pref("dom.payments.defaults.saveAddress", true);
