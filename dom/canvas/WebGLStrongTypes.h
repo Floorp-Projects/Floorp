@@ -155,6 +155,8 @@ public:
         return get() >= other.get();
     }
 
+    explicit operator bool() const { return bool(get()); }
+
     static bool IsValueLegal(GLenum value) {
         if (value > UINT16_MAX) {
             return false;
