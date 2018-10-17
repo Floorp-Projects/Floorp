@@ -210,6 +210,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
                                                                     const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
   virtual mozilla::ipc::IPCResult RecvBytesRead(const int32_t& aCount) override;
+  virtual mozilla::ipc::IPCResult RecvOpenOriginalCacheInputStream() override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.
