@@ -812,11 +812,16 @@ xul|treechildren::-moz-tree-image(selected) {
   border-radius: 4px;
   color: var(--grey-90);
   min-height: 32px;
+  -moz-box-align: center;
   padding: 4px;
 }
 
 .message-bar-description {
   line-height: 1.25;
+}
+
+.message-bar > description {
+  margin: 0;
 }
 
 /* The message-bar-button styles have extra specificity to override
