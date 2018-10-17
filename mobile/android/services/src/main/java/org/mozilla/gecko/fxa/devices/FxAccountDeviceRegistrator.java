@@ -242,6 +242,8 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
         Logger.pii(LOG_TAG, "Registered device ID: " + result.id);
         Log.i(LOG_TAG, "Setting DEVICE_REGISTRATION_VERSION to " + DEVICE_REGISTRATION_VERSION);
         fxAccount.setFxAUserData(result.id, DEVICE_REGISTRATION_VERSION, System.currentTimeMillis());
+        // Ask for a re-upload of the local client record to account for the FxA device ID change.
+        fxAccount.requestImmediateSync(new String[] { "clients" }, null, true);
       }
     });
   }
