@@ -870,7 +870,12 @@ nsHostResolver::Shutdown()
                              "Failed to shutdown GetAddrInfo");
     }
 
-    mResolverThreads->Shutdown();
+    // It is possible that there are still threads waiting on a very slow DNS
+    // query. In that case, it's better just to skip the thread shutdown,
+    // or we might trigger the shutdownhang reporter.
+    if (mActiveTaskCount == 0) {
+        mResolverThreads->Shutdown();
+    }
 }
 
 nsresult
