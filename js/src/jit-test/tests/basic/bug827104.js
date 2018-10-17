@@ -10,4 +10,4 @@ var e;
 try {
     f();
 } catch (error) {e = error;}
-assertEq(e.toString(), 'TypeError: a[i] is undefined');
+assertEq(e.toString(), `TypeError: a[i] is undefined, can't access property 0 of it`);

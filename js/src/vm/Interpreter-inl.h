@@ -569,7 +569,7 @@ GetPrimitiveElementOperation(JSContext* cx, JSOp op, JS::HandleValue receiver,
     MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
     // FIXME: Bug 1234324 We shouldn't be boxing here.
-    RootedObject boxed(cx, ToObjectFromStack(cx, receiver));
+    RootedObject boxed(cx, ToObjectFromStackForPropertyAccess(cx, receiver, key));
     if (!boxed) {
         return false;
     }

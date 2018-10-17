@@ -3492,11 +3492,60 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
     MOZ_ASSERT(!val.isObject());
 
     if (val.isNullOrUndefined()) {
-        if (reportScanStack) {
-            ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val);
+        ReportIsNullOrUndefinedForPropertyAccess(cx, val, reportScanStack);
+        return nullptr;
+    }
+
+    return PrimitiveToObject(cx, val);
+}
+
+JSObject*
+js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val, HandleId key,
+                                  bool reportScanStack)
+{
+    MOZ_ASSERT(!val.isMagic());
+    MOZ_ASSERT(!val.isObject());
+
+    if (val.isNullOrUndefined()) {
+        ReportIsNullOrUndefinedForPropertyAccess(cx, val, key, reportScanStack);
+        return nullptr;
+    }
+
+    return PrimitiveToObject(cx, val);
+}
+
+JSObject*
+js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val, HandlePropertyName key,
+                                  bool reportScanStack)
+{
+    MOZ_ASSERT(!val.isMagic());
+    MOZ_ASSERT(!val.isObject());
+
+    if (val.isNullOrUndefined()) {
+        RootedId keyId(cx, NameToId(key));
+        ReportIsNullOrUndefinedForPropertyAccess(cx, val, keyId, reportScanStack);
+        return nullptr;
+    }
+
+    return PrimitiveToObject(cx, val);
+}
+
+JSObject*
+js::ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val, HandleValue keyValue,
+                                  bool reportScanStack)
+{
+    MOZ_ASSERT(!val.isMagic());
+    MOZ_ASSERT(!val.isObject());
+
+    if (val.isNullOrUndefined()) {
+        RootedId key(cx);
+        if (keyValue.isPrimitive()) {
+            if (!ValueToId<CanGC>(cx, keyValue, &key)) {
+                return nullptr;
+            }
+            ReportIsNullOrUndefinedForPropertyAccess(cx, val, key, reportScanStack);
         } else {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                                      val.isNull() ? "null" : "undefined", "object");
+            ReportIsNullOrUndefinedForPropertyAccess(cx, val, reportScanStack);
         }
         return nullptr;
     }

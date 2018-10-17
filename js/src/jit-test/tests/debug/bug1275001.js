@@ -17,7 +17,7 @@ function check_one(expected, f, err) {
 ieval = eval
 function check(expr, expected = expr) {
     var end, err
-    for ([end, err] of[[".random_prop", " is undefined" ]]) 
+    for ([end, err] of[[".random_prop", ` is undefined, can't access property \"random_prop" of it` ]]) 
          statement = "o = {};" + expr + end;
          cases = [
             function() { return ieval("var undef;" + statement); },

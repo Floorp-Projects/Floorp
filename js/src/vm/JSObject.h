@@ -913,6 +913,41 @@ ToObjectFromStack(JSContext* cx, HandleValue vp)
     return js::ToObjectSlow(cx, vp, true);
 }
 
+JSObject*
+ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val, HandleId key,
+                              bool reportScanStack);
+JSObject*
+ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val, HandlePropertyName key,
+                              bool reportScanStack);
+JSObject*
+ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val, HandleValue keyValue,
+                              bool reportScanStack);
+
+MOZ_ALWAYS_INLINE JSObject*
+ToObjectFromStackForPropertyAccess(JSContext* cx, HandleValue vp, HandleId key)
+{
+    if (vp.isObject()) {
+        return &vp.toObject();
+    }
+    return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
+}
+MOZ_ALWAYS_INLINE JSObject*
+ToObjectFromStackForPropertyAccess(JSContext* cx, HandleValue vp, HandlePropertyName key)
+{
+    if (vp.isObject()) {
+        return &vp.toObject();
+    }
+    return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
+}
+MOZ_ALWAYS_INLINE JSObject*
+ToObjectFromStackForPropertyAccess(JSContext* cx, HandleValue vp, HandleValue key)
+{
+    if (vp.isObject()) {
+        return &vp.toObject();
+    }
+    return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
+}
+
 template<XDRMode mode>
 XDRResult
 XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj);
