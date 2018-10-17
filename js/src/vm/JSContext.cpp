@@ -1001,13 +1001,15 @@ js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v, Handl
     if (strcmp(bytes.get(), js_undefined_str) == 0 || strcmp(bytes.get(), js_null_str) == 0) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
                                  keyBytes.get(), bytes.get());
-    } else if (v.isUndefined()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL_EXPR,
-                                 bytes.get(), js_undefined_str, keyBytes.get());
     } else {
-        MOZ_ASSERT(v.isNull());
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL_EXPR,
-                                 bytes.get(), js_null_str, keyBytes.get());
+        const char* actual = v.isUndefined() ? js_undefined_str : js_null_str;
+        if (JSID_IS_INT(key)) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_ELEMENT_FAIL_EXPR,
+                                     bytes.get(), actual, keyBytes.get());
+        } else {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL_EXPR,
+                                     bytes.get(), actual, keyBytes.get());
+        }
     }
 }
 
