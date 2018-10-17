@@ -415,6 +415,7 @@ get_full_path(const NS_tchar *relpath)
  * return pointer to the location within fullpath where the relative path starts
  *        or fullpath itself if it already looks relative.
  */
+/* Unused.
 static const NS_tchar*
 get_relative_path(const NS_tchar *fullpath)
 {
@@ -436,6 +437,7 @@ get_relative_path(const NS_tchar *fullpath)
 
   return fullpath + NS_tstrlen(prefix) + 1;
 }
+*/
 
 /**
  * Gets the platform specific path and performs simple checks to the path. If
