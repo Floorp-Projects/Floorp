@@ -1087,7 +1087,10 @@ ReportIsNotDefined(JSContext* cx, HandleId id);
  * Report an attempt to access the property of a null or undefined value (v).
  */
 extern void
-ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v);
+ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v, bool reportScanStack);
+extern void
+ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v, HandleId key,
+                                         bool reportScanStack);
 
 extern void
 ReportMissingArg(JSContext* cx, js::HandleValue v, unsigned arg);
