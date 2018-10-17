@@ -166,12 +166,11 @@ MOZ_EXPORT size_t
 RecordReplayInterface_InternalRecordReplayValue(size_t aValue)
 {
   Thread* thread = Thread::Current();
-  if (thread->PassThroughEvents()) {
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
     return aValue;
   }
-  EnsureNotDivergedFromRecording();
 
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::Value);
   thread->Events().RecordOrReplayValue(&aValue);
   return aValue;
@@ -181,12 +180,11 @@ MOZ_EXPORT void
 RecordReplayInterface_InternalRecordReplayBytes(void* aData, size_t aSize)
 {
   Thread* thread = Thread::Current();
-  if (thread->PassThroughEvents()) {
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
     return;
   }
-  EnsureNotDivergedFromRecording();
 
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::Bytes);
   thread->Events().CheckInput(aSize);
   thread->Events().RecordOrReplayBytes(aData, aSize);
@@ -347,10 +345,10 @@ MOZ_EXPORT void
 RecordReplayInterface_InternalRecordReplayAssert(const char* aFormat, va_list aArgs)
 {
   Thread* thread = Thread::Current();
-  if (thread->PassThroughEvents() || thread->HasDivergedFromRecording()) {
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
     return;
   }
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
   // Add the asserted string to the recording.
   char text[1024];
@@ -364,10 +362,10 @@ MOZ_EXPORT void
 RecordReplayInterface_InternalRecordReplayAssertBytes(const void* aData, size_t aSize)
 {
   Thread* thread = Thread::Current();
-  if (thread->PassThroughEvents() || thread->HasDivergedFromRecording()) {
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
     return;
   }
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::AssertBytes);
   thread->Events().CheckInput(aData, aSize);
