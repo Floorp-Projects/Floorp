@@ -11,14 +11,14 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS.mozilla.dom += [
     'Flex.h',
-    'FlexItem.h',
-    'FlexLine.h',
+    'FlexItemValues.h',
+    'FlexLineValues.h',
 ]
 
 UNIFIED_SOURCES += [
     'Flex.cpp',
-    'FlexItem.cpp',
-    'FlexLine.cpp',
+    'FlexItemValues.cpp',
+    'FlexLineValues.cpp',
 ]
 
 LOCAL_INCLUDES += [
