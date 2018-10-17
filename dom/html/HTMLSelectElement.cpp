@@ -600,6 +600,10 @@ HTMLSelectElement::Add(nsGenericHTMLElement& aElement,
 void
 HTMLSelectElement::Remove(int32_t aIndex)
 {
+  if (aIndex < 0) {
+    return;
+  }
+
   nsCOMPtr<nsINode> option = Item(static_cast<uint32_t>(aIndex));
   if (!option) {
     return;

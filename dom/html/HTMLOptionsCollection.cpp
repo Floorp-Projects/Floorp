@@ -285,11 +285,6 @@ HTMLOptionsCollection::Remove(int32_t aIndex, ErrorResult& aError)
     aError.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
-
-  uint32_t len = mSelect->Length();
-  if (aIndex < 0 || (uint32_t)aIndex >= len)
-    aIndex = 0;
-
   mSelect->Remove(aIndex);
 }
 
