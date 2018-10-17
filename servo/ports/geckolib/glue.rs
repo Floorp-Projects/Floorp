@@ -32,6 +32,7 @@ use style::gecko::global_style_data::{GLOBAL_STYLE_DATA, GlobalStyleData, STYLE_
 use style::gecko::restyle_damage::GeckoRestyleDamage;
 use style::gecko::selector_parser::{NonTSPseudoClass, PseudoElement};
 use style::gecko::traversal::RecalcStyleOnly;
+use style::gecko::url::CssUrlData;
 use style::gecko::wrapper::{GeckoElement, GeckoNode};
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::{RawGeckoElementBorrowed, RawGeckoElementBorrowedOrNull, RawGeckoNodeBorrowed};
@@ -80,6 +81,7 @@ use style::gecko_bindings::bindings::RawServoAnimationValueBorrowedOrNull;
 use style::gecko_bindings::bindings::RawServoAnimationValueMapBorrowedMut;
 use style::gecko_bindings::bindings::RawServoAnimationValueStrong;
 use style::gecko_bindings::bindings::RawServoAnimationValueTableBorrowed;
+use style::gecko_bindings::bindings::RawServoCssUrlDataBorrowed;
 use style::gecko_bindings::bindings::RawServoDeclarationBlockBorrowedOrNull;
 use style::gecko_bindings::bindings::RawServoStyleRuleBorrowed;
 use style::gecko_bindings::bindings::RawServoStyleSet;
@@ -90,7 +92,7 @@ use style::gecko_bindings::bindings::nsTimingFunctionBorrowedMut;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{CallerType, CSSPseudoElementType, CompositeOperation};
 use style::gecko_bindings::structs::{DeclarationBlockMutationClosure, Loader, LoaderReusableStyleSheets};
-use style::gecko_bindings::structs::{RawServoStyleRule, ComputedStyleStrong, RustString};
+use style::gecko_bindings::structs::{RawServoStyleRule, ComputedStyleStrong};
 use style::gecko_bindings::structs::{SheetParsingMode, nsAtom, nsCSSPropertyID};
 use style::gecko_bindings::structs::{StyleSheet as DomStyleSheet, SheetLoadData, SheetLoadDataHolder};
 use style::gecko_bindings::structs::{nsCSSFontDesc, nsCSSCounterDesc};
@@ -5460,19 +5462,13 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_ReleaseArcStringData(string: *const RawOffsetArc<RustString>) {
-    let string = string as *const RawOffsetArc<String>;
-    // Cause RawOffsetArc::drop to run, releasing the strong reference to the string data.
-    let _ = ptr::read(string);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_GetArcStringData(
-    string: *const RustString,
+pub unsafe extern "C" fn Servo_CssUrlData_GetSerialization(
+    url: RawServoCssUrlDataBorrowed,
     utf8_chars: *mut *const u8,
     utf8_len: *mut u32,
 ) {
-    let string = &*(string as *const String);
+    let url_data = CssUrlData::as_arc(&url);
+    let string = url_data.as_str();
     *utf8_len = string.len() as u32;
     *utf8_chars = string.as_ptr();
 }

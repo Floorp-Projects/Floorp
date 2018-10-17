@@ -41,7 +41,7 @@ class nsIURI;
 class nsPresContext;
 template <class T>
 class nsPtrHashKey;
-struct RustString;
+struct RawServoCssUrlData;
 
 namespace mozilla {
 class CSSStyleSheet;
@@ -96,19 +96,17 @@ namespace css {
 struct URLValue final
 {
 public:
-  // aString and aExtraData must not be null.
-  //
-  // Construct with a base URI; this will create the actual URI lazily from
-  // aString and aExtraData.
-  URLValue(ServoRawOffsetArc<RustString> aString,
-           already_AddRefed<URLExtraData> aExtraData,
+  // aCssUrl and aExtraData must not be null.
+  URLValue(already_AddRefed<RawServoCssUrlData> aCssUrl,
+           URLExtraData* aExtraData,
            CORSMode aCORSMode)
-    : mExtraData(std::move(aExtraData))
+    : mExtraData(aExtraData)
     , mURIResolved(false)
-    , mString(aString)
+    , mCssUrl(aCssUrl)
     , mCORSMode(aCORSMode)
   {
     MOZ_ASSERT(mExtraData);
+    MOZ_ASSERT(mCssUrl);
   }
 
   // Returns true iff all fields of the two URLValue objects are equal.
@@ -171,7 +169,7 @@ private:
   // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
   mutable Maybe<bool> mIsLocalRef;
 
-  mozilla::ServoRawOffsetArc<RustString> mString;
+  RefPtr<RawServoCssUrlData> mCssUrl;
 
   const CORSMode mCORSMode;
 
