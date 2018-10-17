@@ -642,14 +642,6 @@ HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv)
                                  getter_AddRefs(nodeInfo));
 
     nsCOMPtr<nsINode> node = NS_NewHTMLOptionElement(nodeInfo.forget());
-
-    RefPtr<nsTextNode> text = new nsTextNode(mNodeInfo->NodeInfoManager());
-
-    aRv = node->AppendChildTo(text, false);
-    if (aRv.Failed()) {
-      return;
-    }
-
     for (uint32_t i = curlen; i < aLength; i++) {
       nsINode::AppendChild(*node, aRv);
       if (aRv.Failed()) {
