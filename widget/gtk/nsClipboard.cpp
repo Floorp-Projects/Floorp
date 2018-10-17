@@ -34,11 +34,15 @@
 
 #include "mozilla/Encoding.h"
 
-
 using namespace mozilla;
 
 // Idle timeout for receiving selection and property notify events (microsec)
 const int kClipboardTimeout = 500000;
+
+// We add this prefix to HTML markup, so that GetHTMLCharset can correctly
+// detect the HTML as UTF-8 encoded.
+static const char kHTMLMarkupPrefix[] =
+    R"(<meta http-equiv="content-type" content="text/html; charset=utf-8">)";
 
 // Callback when someone asks us for the data
 void
@@ -527,6 +531,31 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         return;
     }
 
+    if (selectionTarget == gdk_atom_intern(kHTMLMime, FALSE)) {
+        rv = trans->GetTransferData(kHTMLMime, getter_AddRefs(item), &len);
+        if (!item || NS_FAILED(rv)) {
+            return;
+        }
+
+        nsCOMPtr<nsISupportsString> wideString;
+        wideString = do_QueryInterface(item);
+        if (!wideString) {
+            return;
+        }
+
+        nsAutoString ucs2string;
+        wideString->GetData(ucs2string);
+
+        nsAutoCString html;
+        // Add the prefix so the encoding is correctly detected.
+        html.AppendLiteral(kHTMLMarkupPrefix);
+        AppendUTF16toUTF8(ucs2string, html);
+
+        gtk_selection_data_set(aSelectionData, selectionTarget, 8,
+                               (const guchar*)html.get(), html.Length());
+        return;
+    }
+
     // Try to match up the selection data target to something our
     // transferable provides.
     gchar *target_name = gdk_atom_name(selectionTarget);
@@ -545,31 +574,10 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
                                                 item, &primitive_data, len);
 
     if (primitive_data) {
-        // Check to see if the selection data is text/html
-        if (selectionTarget == gdk_atom_intern (kHTMLMime, FALSE)) {
-            /*
-             * "text/html" can be encoded UCS2. It is recommended that
-             * documents transmitted as UCS2 always begin with a ZERO-WIDTH
-             * NON-BREAKING SPACE character (hexadecimal FEFF, also called
-             * Byte Order Mark (BOM)). Adding BOM can help other app to
-             * detect mozilla use UCS2 encoding when copy-paste.
-             */
-            guchar *buffer = (guchar *)
-                    g_malloc((len * sizeof(guchar)) + sizeof(char16_t));
-            if (!buffer)
-                return;
-            char16_t prefix = 0xFEFF;
-            memcpy(buffer, &prefix, sizeof(prefix));
-            memcpy(buffer + sizeof(prefix), primitive_data, len);
-            g_free((guchar *)primitive_data);
-            primitive_data = (guchar *)buffer;
-            len += sizeof(prefix);
-        }
-
         gtk_selection_data_set(aSelectionData, selectionTarget,
                                8, /* 8 bits in a unit */
                                (const guchar *)primitive_data, len);
-        g_free(primitive_data);
+        free(primitive_data);
     }
 
     g_free(target_name);
@@ -656,8 +664,19 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
             outUnicodeLen = 0;
             return;
         }
+
+        auto dataSpan = MakeSpan(data, dataLength);
+        // Remove kHTMLMarkupPrefix again, it won't necessarily cause any
+        // issues, but might confuse other users.
+        const size_t prefixLen = ArrayLength(kHTMLMarkupPrefix) - 1;
+        if (dataSpan.Length() >= prefixLen &&
+            Substring(data, prefixLen).EqualsLiteral(kHTMLMarkupPrefix)) {
+          dataSpan = dataSpan.From(prefixLen);
+        }
+
         auto decoder = encoding->NewDecoder();
-        CheckedInt<size_t> needed = decoder->MaxUTF16BufferLength(dataLength);
+        CheckedInt<size_t> needed =
+            decoder->MaxUTF16BufferLength(dataSpan.Length());
         if (!needed.isValid() || needed.value() > INT32_MAX) {
           outUnicodeLen = 0;
           return;
@@ -672,17 +691,13 @@ void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
           size_t written;
           bool hadErrors;
           Tie(result, read, written, hadErrors) =
-            decoder->DecodeToUTF16(AsBytes(MakeSpan(data, dataLength)),
+            decoder->DecodeToUTF16(AsBytes(dataSpan),
                                    MakeSpan(*unicodeData, needed.value()),
                                    true);
           MOZ_ASSERT(result == kInputEmpty);
-          MOZ_ASSERT(read == size_t(dataLength));
+          MOZ_ASSERT(read == size_t(dataSpan.Length()));
           MOZ_ASSERT(written <= needed.value());
           Unused << hadErrors;
-#ifdef DEBUG_CLIPBOARD
-          if (read != dataLength)
-            printf("didn't consume all the bytes\n");
-#endif
           outUnicodeLen = written;
           // null terminate.
           (*unicodeData)[outUnicodeLen] = '\0';
@@ -706,7 +721,7 @@ void GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str)
         return;
     }
     // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
-    const nsDependentCString htmlStr(data, dataLength);
+    const nsDependentCSubstring htmlStr(data, dataLength);
     nsACString::const_iterator start, end;
     htmlStr.BeginReading(start);
     htmlStr.EndReading(end);
