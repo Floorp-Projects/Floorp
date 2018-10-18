@@ -284,7 +284,6 @@ toolbar[type="menubar"] {
 }
 %else
 toolbar[type="menubar"][autohide="true"] {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-menubar-autohide");
   overflow: hidden;
 }
 
