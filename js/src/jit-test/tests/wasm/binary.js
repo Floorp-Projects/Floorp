@@ -282,6 +282,8 @@ var reservedMisc =
       0x00: true, 0x01: true, 0x02: true, 0x03: true, 0x04: true, 0x05: true, 0x06: true, 0x07: true,
       // Bulk memory (proposed)
       0x08: true, 0x09: true, 0x0a: true, 0x0b: true, 0x0c: true, 0x0d: true, 0x0e: true,
+      // Table (proposed)
+      0x0f: true, 0x10: true, 0x11: true, 0x12: true,
       // Structure operations (experimental, internal)
       0x50: true, 0x51: true, 0x52: true, 0x53: true };
 

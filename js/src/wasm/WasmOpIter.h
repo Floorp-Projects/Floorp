@@ -191,6 +191,10 @@ enum class OpKind {
     MemOrTableDrop,
     MemFill,
     MemOrTableInit,
+    TableGet,
+    TableGrow,
+    TableSet,
+    TableSize,
     RefNull,
     StructNew,
     StructGet,
@@ -574,6 +578,10 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readMemFill(Value* start, Value* val, Value* len);
     MOZ_MUST_USE bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
                                          Value* dst, Value* src, Value* len);
+    MOZ_MUST_USE bool readTableGet(Value* index);
+    MOZ_MUST_USE bool readTableGrow(Value* delta, Value* initValue);
+    MOZ_MUST_USE bool readTableSet(Value* index, Value* value);
+    MOZ_MUST_USE bool readTableSize();
     MOZ_MUST_USE bool readStructNew(uint32_t* typeIndex, ValueVector* argValues);
     MOZ_MUST_USE bool readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* ptr);
     MOZ_MUST_USE bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* ptr, Value* val);
@@ -2069,8 +2077,8 @@ OpIter<Policy>::readMemOrTableCopy(bool isMem, Value* dst, Value* src, Value* le
     if (!readVarU32(&memOrTableFlags)) {
         return fail(isMem ? "unable to read memory flags" : "unable to read table flags");
     }
-    if (memOrTableFlags != 0) {
-        return fail(isMem ? "memory flags must be zero" : "table flags must be zero");
+    if (memOrTableFlags != uint32_t(MemoryTableFlags::Default)) {
+        return fail(isMem ? "unrecognized memory flags" : "unrecognized table flags");
     }
 
     if (!popWithType(ValType::I32, len)) {
@@ -2136,8 +2144,8 @@ OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len)
     if (!readVarU32(&memoryFlags)) {
         return fail("unable to read memory flags");
     }
-    if (memoryFlags != 0) {
-        return fail("memory flags must be zero");
+    if (memoryFlags != uint32_t(MemoryTableFlags::Default)) {
+        return fail("unrecognized memory flags");
     }
 
     if (!popWithType(ValType::I32, len)) {
@@ -2188,8 +2196,8 @@ OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     if (!readVarU32(&memOrTableFlags)) {
         return fail(isMem ? "unable to read memory flags" : "unable to read table flags");
     }
-    if (memOrTableFlags != 0) {
-        return fail(isMem ? "memory flags must be zero" : "table flags must be zero");
+    if (memOrTableFlags != uint32_t(MemoryTableFlags::Default)) {
+        return fail(isMem ? "unrecognized memory flags" : "unrecognized table flags");
     }
 
     if (!readVarU32(segIndex)) {
@@ -2211,6 +2219,132 @@ OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     }
 
     return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readTableGet(Value* index)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::TableGet);
+
+    if (!popWithType(ValType::I32, index)) {
+        return false;
+    }
+
+    uint8_t tableFlags;
+    if (!readFixedU8(&tableFlags)) {
+        return fail("unable to read table flags");
+    }
+    if (tableFlags != uint8_t(MemoryTableFlags::Default)) {
+        return fail("unrecognized table flags");
+    }
+    uint32_t tableIndex = 0;
+
+    if (tableIndex >= env_.tables.length()) {
+        return fail("table index out of range for table.get");
+    }
+    if (env_.tables[tableIndex].kind != TableKind::AnyRef) {
+        return fail("table.get only on tables of anyref");
+    }
+    if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        return fail("anyref support not enabled");
+    }
+
+    infalliblePush(ValType::AnyRef);
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readTableGrow(Value* delta, Value* initValue)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::TableGrow);
+
+    if (!popWithType(ValType::AnyRef, initValue)) {
+        return false;
+    }
+    if (!popWithType(ValType::I32, delta)) {
+        return false;
+    }
+
+    uint8_t tableFlags;
+    if (!readFixedU8(&tableFlags)) {
+        return fail("unable to read table flags");
+    }
+    if (tableFlags != uint8_t(MemoryTableFlags::Default)) {
+        return fail("unrecognized table flags");
+    }
+    uint32_t tableIndex = 0;
+
+    if (tableIndex >= env_.tables.length()) {
+        return fail("table index out of range for table.grow");
+    }
+    if (env_.tables[tableIndex].kind != TableKind::AnyRef) {
+        return fail("table.grow only on tables of anyref");
+    }
+    if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        return fail("anyref support not enabled");
+    }
+
+    infalliblePush(ValType::I32);
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readTableSet(Value* index, Value* value)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::TableSet);
+
+    if (!popWithType(ValType::AnyRef, value)) {
+        return false;
+    }
+    if (!popWithType(ValType::I32, index)) {
+        return false;
+    }
+
+    uint8_t tableFlags;
+    if (!readFixedU8(&tableFlags)) {
+        return fail("unable to read table flags");
+    }
+    if (tableFlags != uint8_t(MemoryTableFlags::Default)) {
+        return fail("unrecognized table flags");
+    }
+    uint32_t tableIndex = 0;
+
+    if (tableIndex >= env_.tables.length()) {
+        return fail("table index out of range for table.set");
+    }
+    if (env_.tables[tableIndex].kind != TableKind::AnyRef) {
+        return fail("table.set only on tables of anyref");
+    }
+    if (env_.gcTypesEnabled() == HasGcTypes::False) {
+        return fail("anyref support not enabled");
+    }
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readTableSize()
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::TableSize);
+
+    uint8_t tableFlags;
+    if (!readFixedU8(&tableFlags)) {
+        return fail("unable to read table flags");
+    }
+    if (tableFlags != uint8_t(MemoryTableFlags::Default)) {
+        return fail("unrecognized table flags");
+    }
+    uint32_t tableIndex = 0;
+
+    if (tableIndex >= env_.tables.length()) {
+        return fail("table index out of range for table.size");
+    }
+
+    return push(ValType::I32);
 }
 
 template <typename Policy>
