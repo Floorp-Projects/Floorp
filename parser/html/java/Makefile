@@ -37,13 +37,13 @@ translate:: translator \
 ; mkdir -p ../javasrc ; \
   java -jar translator.jar \
     htmlparser/src/nu/validator/htmlparser/impl \
-    .. ../../../xpcom/ds/nsGkAtomList.h
+    .. ../../../xpcom/ds/StaticAtoms.py ../../../xpcom/ds/HTMLAtoms.py
 
 translate_from_snapshot:: translator \
 ; mkdir -p ../javasrc ; \
   java -jar translator.jar \
     ../javasrc \
-    .. ../../../dom/base/nsGkAtomList.h
+    .. ../../../xpcom/ds/StaticAtoms.py ../../../xpcom/ds/HTMLAtoms.py
 
 named_characters:: translator \
 ; java -cp translator.jar \

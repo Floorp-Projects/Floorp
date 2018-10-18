@@ -63,7 +63,7 @@
 
     <popupnotification id="addon-progress-notification" hidden="true">
       <popupnotificationcontent orient="vertical">
-        <progressmeter id="addon-progress-notification-progressmeter"/>
+        <html:progress id="addon-progress-notification-progressmeter" max="100"/>
         <label id="addon-progress-notification-progresstext" crop="end"/>
       </popupnotificationcontent>
     </popupnotification>

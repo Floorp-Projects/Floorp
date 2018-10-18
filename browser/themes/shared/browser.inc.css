@@ -172,6 +172,10 @@
   background: #fff;
 }
 
+#addon-progress-notification-progressmeter {
+  margin: 2px 4px;
+}
+
 /* Contextual Feature Recommendation popup-notification */
 
 :root {
