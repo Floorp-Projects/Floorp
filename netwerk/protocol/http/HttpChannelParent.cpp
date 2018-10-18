@@ -153,7 +153,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.allowStaleCacheContent(), a.contentTypeHint(),
                        a.corsMode(), a.redirectMode(),
                        a.channelId(), a.integrityMetadata(),
-                       a.contentWindowId(), a.preferredAlternativeTypes(),
+                       a.contentWindowId(), a.preferredAlternativeType(),
                        a.topLevelOuterContentWindowId(),
                        a.launchServiceWorkerStart(),
                        a.launchServiceWorkerEnd(),
@@ -455,7 +455,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const uint64_t&            aChannelId,
                                  const nsString&            aIntegrityMetadata,
                                  const uint64_t&            aContentWindowId,
-                                 const ArrayOfStringPairs&  aPreferredAlternativeTypes,
+                                 const nsCString&           aPreferredAlternativeType,
                                  const uint64_t&            aTopLevelOuterContentWindowId,
                                  const TimeStamp&           aLaunchServiceWorkerStart,
                                  const TimeStamp&           aLaunchServiceWorkerEnd,
@@ -614,9 +614,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     do_QueryInterface(static_cast<nsIChannel*>(httpChannel.get()));
   if (cacheChannel) {
     cacheChannel->SetCacheKey(aCacheKey);
-    for (auto& pair : aPreferredAlternativeTypes) {
-      cacheChannel->PreferAlternativeDataType(mozilla::Get<0>(pair), mozilla::Get<1>(pair));
-    }
+    cacheChannel->PreferAlternativeDataType(aPreferredAlternativeType);
 
     cacheChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
 
@@ -1770,26 +1768,6 @@ HttpChannelParent::RecvBytesRead(const int32_t& aCount)
     mSuspendedForFlowControl = false;
   }
   mSendWindowSize += aCount;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-HttpChannelParent::RecvOpenOriginalCacheInputStream()
-{
-  if (mIPCClosed) {
-    return IPC_OK();
-  }
-  AutoIPCStream autoStream;
-  if (mCacheEntry) {
-    nsCOMPtr<nsIInputStream> inputStream;
-    nsresult rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
-    if (NS_SUCCEEDED(rv)) {
-      PContentParent* pcp = Manager()->Manager();
-      Unused << autoStream.Serialize(inputStream, static_cast<ContentParent*>(pcp));
-    }
-  }
-
-  Unused << SendOriginalCacheInputStreamAvailable(autoStream.TakeOptionalValue());
   return IPC_OK();
 }
 
