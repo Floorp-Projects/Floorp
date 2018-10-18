@@ -15,6 +15,7 @@
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -111,6 +112,7 @@ class WebRequestChannelEntry;
 
 class ChannelWrapper final : public DOMEventTargetHelper
                            , public SupportsWeakPtr<ChannelWrapper>
+                           , public LinkedListElement<ChannelWrapper>
                            , private detail::ChannelHolder
 {
 public:
@@ -119,6 +121,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ChannelWrapper, DOMEventTargetHelper)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CHANNELWRAPPER_IID)
+
+  void Die();
 
   static already_AddRefed<extensions::ChannelWrapper> Get(const dom::GlobalObject& global, nsIChannel* channel);
   static already_AddRefed<extensions::ChannelWrapper> GetRegisteredChannel(const dom::GlobalObject& global, uint64_t aChannelId, const WebExtensionPolicy& aAddon, nsITabParent* aTabParent);
@@ -241,13 +245,10 @@ public:
   JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
 
 protected:
-  ~ChannelWrapper() = default;
+  ~ChannelWrapper();
 
 private:
-  ChannelWrapper(nsISupports* aParent, nsIChannel* aChannel)
-    : ChannelHolder(aChannel)
-    , mParent(aParent)
-  {}
+  ChannelWrapper(nsISupports* aParent, nsIChannel* aChannel);
 
   void ClearCachedAttributes();
 
@@ -278,6 +279,27 @@ private:
   }
 
   void CheckEventListeners();
+
+  class ChannelWrapperStub final : public nsISupports
+  {
+  public:
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(ChannelWrapperStub)
+
+    explicit ChannelWrapperStub(ChannelWrapper* aChannelWrapper)
+      : mChannelWrapper(aChannelWrapper)
+    {}
+
+  private:
+    friend class ChannelWrapper;
+
+    RefPtr<ChannelWrapper> mChannelWrapper;
+
+  protected:
+    ~ChannelWrapperStub() = default;
+  };
+
+  RefPtr<ChannelWrapperStub> mStub;
 
   mutable Maybe<URLInfo> mFinalURLInfo;
   mutable Maybe<URLInfo> mDocumentURLInfo;

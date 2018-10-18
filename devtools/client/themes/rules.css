@@ -440,6 +440,11 @@
   border-radius: 0;
 }
 
+.ruleview-grid[disabled] {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .ruleview-shape-point.active,
 .ruleview-shapeswatch.active + .ruleview-shape > .ruleview-shape-point:hover {
   background-color: var(--rule-highlight-background-color);

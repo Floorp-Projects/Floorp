@@ -247,17 +247,11 @@ Assembler::MoveRaxToRegister(/*ud_type*/ int aRegister)
 {
   MOZ_RELEASE_ASSERT(aRegister == NormalizeRegister(aRegister));
 
-  uint8_t* ip = Current();
   if (aRegister <= UD_R_RDI) {
-    ip[0] = 0x48;
-    ip[1] = 0x89;
-    ip[2] = 0xC0 + aRegister - UD_R_RAX;
+    NewInstruction(0x48, 0x89, 0xC0 + aRegister - UD_R_RAX);
   } else {
-    ip[0] = 0x49;
-    ip[1] = 0x89;
-    ip[2] = 0xC0 + aRegister - UD_R_R8;
+    NewInstruction(0x49, 0x89, 0xC0 + aRegister - UD_R_R8);
   }
-  Advance(3);
 }
 
 void
@@ -265,17 +259,29 @@ Assembler::MoveRegisterToRax(/*ud_type*/ int aRegister)
 {
   MOZ_RELEASE_ASSERT(aRegister == NormalizeRegister(aRegister));
 
-  uint8_t* ip = Current();
   if (aRegister <= UD_R_RDI) {
-    ip[0] = 0x48;
-    ip[1] = 0x89;
-    ip[2] = 0xC0 + (aRegister - UD_R_RAX) * 8;
+    NewInstruction(0x48, 0x89, 0xC0 + (aRegister - UD_R_RAX) * 8);
   } else {
-    ip[0] = 0x4C;
-    ip[1] = 0x89;
-    ip[2] = 0xC0 + (aRegister - UD_R_R8) * 8;
+    NewInstruction(0x4C, 0x89, 0xC0 + (aRegister - UD_R_R8) * 8);
   }
-  Advance(3);
+}
+
+void
+Assembler::ExchangeByteRegisterWithAddressAtRbx(/*ud_type*/ int aRegister)
+{
+  MOZ_RELEASE_ASSERT(aRegister == NormalizeRegister(aRegister));
+
+  if (aRegister <= UD_R_RDI) {
+    NewInstruction(0x86, 0x03 + (aRegister - UD_R_RAX) * 8);
+  } else {
+    NewInstruction(0x44, 0x86, 0x03 + (aRegister - UD_R_R8) * 8);
+  }
+}
+
+void
+Assembler::ExchangeByteRbxWithAddressAtRax()
+{
+  NewInstruction(0x86, 0x18);
 }
 
 /* static */ /*ud_type*/ int
