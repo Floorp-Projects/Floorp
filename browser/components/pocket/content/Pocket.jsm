@@ -34,13 +34,8 @@ var Pocket = {
     Pocket._initPanelView(window);
   },
 
-  onPanelViewShowing(event) {
-    Pocket._initPanelView(event.target.ownerGlobal);
-  },
-
   _initPanelView(window) {
     let document = window.document;
-    let iframe = window.pktUI.getPanelFrame();
 
     let libraryButton = document.getElementById("library-button");
     if (libraryButton) {
@@ -59,34 +54,7 @@ var Pocket = {
       } else {
         window.pktUI.tryToSaveCurrentPage();
       }
-
-      // pocketPanelDidHide in main.js set iframe to about:blank when it was
-      // hidden, make sure we're loading the save panel.
-      if (iframe.contentDocument &&
-          iframe.contentDocument.readyState == "complete" &&
-          iframe.contentDocument.documentURI != "about:blank") {
-        window.pktUI.pocketPanelDidShow();
-      } else {
-        // iframe didn't load yet. This seems to always be the case when in
-        // the toolbar panel, but never the case for a subview.
-        // XXX this only being fired when it's a _capturing_ listener!
-        iframe.addEventListener("load", Pocket.onFrameLoaded, true);
-      }
     }, 0);
-  },
-
-  onFrameLoaded(event) {
-    let document = event.currentTarget.ownerDocument;
-    let window = document.defaultView;
-    let iframe = window.pktUI.getPanelFrame();
-
-    iframe.removeEventListener("load", Pocket.onFrameLoaded, true);
-    window.pktUI.pocketPanelDidShow();
-  },
-
-  onPanelViewHiding(event) {
-    let window = event.target.ownerGlobal;
-    window.pktUI.pocketPanelDidHide(event);
   },
 
   _urlToSave: null,
