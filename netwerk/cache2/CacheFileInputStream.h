@@ -24,6 +24,7 @@ class CacheFileInputStream : public nsIAsyncInputStream
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSITELLABLESTREAM
 
 public:
   explicit CacheFileInputStream(CacheFile *aFile, nsISupports *aEntry,

@@ -24,6 +24,8 @@ NS_INTERFACE_MAP_BEGIN(InputStreamLengthWrapper)
                                      mWeakIPCSerializableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream,
                                      mWeakSeekableInputStream || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITellableStream,
+                                     mWeakTellableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream,
                                      mWeakAsyncInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback,
@@ -63,6 +65,7 @@ InputStreamLengthWrapper::InputStreamLengthWrapper(already_AddRefed<nsIInputStre
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
+  , mWeakTellableInputStream(nullptr)
   , mWeakAsyncInputStream(nullptr)
   , mLength(aLength)
   , mConsumed(false)
@@ -78,6 +81,7 @@ InputStreamLengthWrapper::InputStreamLengthWrapper()
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
+  , mWeakTellableInputStream(nullptr)
   , mWeakAsyncInputStream(nullptr)
   , mLength(-1)
   , mConsumed(false)
@@ -110,6 +114,12 @@ InputStreamLengthWrapper::SetSourceStream(already_AddRefed<nsIInputStream> aInpu
     do_QueryInterface(mInputStream);
   if (seekableStream && SameCOMIdentity(mInputStream, seekableStream)) {
     mWeakSeekableInputStream = seekableStream;
+  }
+
+  nsCOMPtr<nsITellableStream> tellableStream =
+    do_QueryInterface(mInputStream);
+  if (tellableStream && SameCOMIdentity(mInputStream, tellableStream)) {
+    mWeakTellableInputStream = tellableStream;
   }
 
   nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
@@ -331,15 +341,6 @@ InputStreamLengthWrapper::Seek(int32_t aWhence, int64_t aOffset)
 }
 
 NS_IMETHODIMP
-InputStreamLengthWrapper::Tell(int64_t *aResult)
-{
-  NS_ENSURE_STATE(mInputStream);
-  NS_ENSURE_STATE(mWeakSeekableInputStream);
-
-  return mWeakSeekableInputStream->Tell(aResult);
-}
-
-NS_IMETHODIMP
 InputStreamLengthWrapper::SetEOF()
 {
   NS_ENSURE_STATE(mInputStream);
@@ -347,6 +348,17 @@ InputStreamLengthWrapper::SetEOF()
 
   mConsumed = true;
   return mWeakSeekableInputStream->SetEOF();
+}
+
+// nsITellableStream
+
+NS_IMETHODIMP
+InputStreamLengthWrapper::Tell(int64_t *aResult)
+{
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakTellableInputStream);
+
+  return mWeakTellableInputStream->Tell(aResult);
 }
 
 // nsIInputStreamLength
