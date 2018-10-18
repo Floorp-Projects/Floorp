@@ -293,12 +293,7 @@ class ManageAddresses extends ManageRecords {
    * @param  {object} address [optional]
    */
   openEditDialog(address) {
-    this.prefWin.gSubDialog.open(EDIT_ADDRESS_URL, null, {
-      record: address,
-      // Don't validate in preferences since it's fine for fields to be missing
-      // for autofill purposes. For PaymentRequest addresses get more validation.
-      noValidate: true,
-    });
+    this.prefWin.gSubDialog.open(EDIT_ADDRESS_URL, null, address, "novalidate");
   }
 
   getLabel(address) {
@@ -333,9 +328,7 @@ class ManageCreditCards extends ManageRecords {
         decryptedCCNumObj["cc-number"] = await MasterPassword.decrypt(creditCard["cc-number-encrypted"]);
       }
       let decryptedCreditCard = Object.assign({}, creditCard, decryptedCCNumObj);
-      this.prefWin.gSubDialog.open(EDIT_CREDIT_CARD_URL, "resizable=no", {
-        record: decryptedCreditCard,
-      });
+      this.prefWin.gSubDialog.open(EDIT_CREDIT_CARD_URL, "resizable=no", decryptedCreditCard);
     }
   }
 
