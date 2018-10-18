@@ -36,7 +36,7 @@ use batch::{BatchKind, BatchTextures, BrushBatchKind};
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
 use device::{DepthFunction, Device, FrameId, Program, UploadMethod, Texture, PBO};
-use device::{ExternalTexture, FBOId, TextureSlot};
+use device::{ExternalTexture, FBOId, TextureDrawTarget, TextureReadTarget, TextureSlot};
 use device::{ShaderError, TextureFilter,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use device::{ProgramCache, ReadPixelsFormat};
@@ -54,7 +54,7 @@ use gpu_glyph_renderer::GpuGlyphRenderer;
 use gpu_types::ScalingInstance;
 use internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use internal_types::{CacheTextureId, DebugOutput, FastHashMap, RenderedDocument, ResultMsg};
-use internal_types::{TextureUpdateList, TextureUpdateOp, TextureUpdateSource};
+use internal_types::{LayerIndex, TextureUpdateList, TextureUpdateOp, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
 use prim_store::DeferredResolve;
 use profiler::{BackendProfileCounters, FrameProfileCounters,
@@ -1337,7 +1337,11 @@ impl GpuCacheTexture {
                 device.bind_program(program);
                 device.bind_custom_vao(vao);
                 device.bind_draw_target(
-                    Some((texture, 0)),
+                    Some(TextureDrawTarget {
+                        texture,
+                        layer: 0,
+                        with_depth: false,
+                    }),
                     Some(texture.get_dimensions()),
                 );
                 device.draw_nonindexed_points(0, count as _);
@@ -2668,6 +2672,7 @@ impl Renderer {
             self.device.echo_driver_messages();
         }
 
+        stats.texture_upload_kb = self.profile_counters.texture_data_uploaded.get();
         self.backend_profile_counters.reset();
         self.profile_counters.reset();
         self.profile_counters.frame_counter.inc();
@@ -2917,7 +2922,7 @@ impl Renderer {
 
     fn handle_readback_composite(
         &mut self,
-        render_target: Option<(&Texture, i32)>,
+        render_target: Option<TextureDrawTarget>,
         framebuffer_size: DeviceUintSize,
         scissor_rect: Option<DeviceIntRect>,
         source: &RenderTask,
@@ -2950,7 +2955,11 @@ impl Renderer {
         // Called per-instance in case the layer (and therefore FBO)
         // changes. The device will skip the GL call if the requested
         // target is already bound.
-        let cache_draw_target = (cache_texture, readback_layer.0 as i32);
+        let cache_draw_target = TextureDrawTarget {
+            texture: cache_texture,
+            layer: readback_layer.0 as usize,
+            with_depth: false,
+        };
         self.device.bind_draw_target(Some(cache_draw_target), None);
 
         let mut src = DeviceIntRect::new(
@@ -2967,7 +2976,7 @@ impl Renderer {
             dest.size.height = -dest.size.height;
         }
 
-        self.device.bind_read_target(render_target);
+        self.device.bind_read_target(render_target.map(|r| r.into()));
         self.device.blit_render_target(src, dest);
 
         // Restore draw target to current pass render target + layer.
@@ -2996,22 +3005,22 @@ impl Renderer {
             let source_rect = match blit.source {
                 BlitJobSource::Texture(texture_id, layer, source_rect) => {
                     // A blit from a texture into this target.
-                    let src_texture = self.texture_resolver
+                    let texture = self.texture_resolver
                         .resolve(&texture_id)
                         .expect("BUG: invalid source texture");
-                    self.device.bind_read_target(Some((src_texture, layer)));
+                    self.device.bind_read_target(Some(TextureReadTarget { texture, layer: layer as usize }));
                     source_rect
                 }
                 BlitJobSource::RenderTask(task_id) => {
                     // A blit from the child render task into this target.
                     // TODO(gw): Support R8 format here once we start
                     //           creating mips for alpha masks.
-                    let src_texture = self.texture_resolver
+                    let texture = self.texture_resolver
                         .resolve(&TextureSource::PrevPassColor)
                         .expect("BUG: invalid source texture");
                     let source = &render_tasks[task_id];
                     let (source_rect, layer) = source.get_target_rect();
-                    self.device.bind_read_target(Some((src_texture, layer.0 as i32)));
+                    self.device.bind_read_target(Some(TextureReadTarget { texture, layer: layer.0 }));
                     source_rect
                 }
             };
@@ -3058,7 +3067,7 @@ impl Renderer {
 
     fn draw_color_target(
         &mut self,
-        render_target: Option<(&Texture, i32)>,
+        render_target: Option<TextureDrawTarget>,
         target: &ColorRenderTarget,
         framebuffer_target_rect: DeviceUintRect,
         target_size: DeviceUintSize,
@@ -3073,8 +3082,8 @@ impl Renderer {
         let _gm = self.gpu_profile.start_marker("color target");
 
         // sanity check for the depth buffer
-        if let Some((texture, _)) = render_target {
-            assert!(texture.has_depth() >= target.needs_depth());
+        if let Some(t) = render_target {
+            assert!(t.texture.supports_depth() >= target.needs_depth());
         }
 
         let framebuffer_kind = if render_target.is_none() {
@@ -3371,7 +3380,7 @@ impl Renderer {
                 dest_rect.origin.y += dest_rect.size.height;
                 dest_rect.size.height *= -1;
 
-                self.device.bind_read_target(render_target);
+                self.device.bind_read_target(render_target.map(|r| r.into()));
                 self.device.bind_external_draw_target(fbo_id);
                 self.device.blit_render_target(src_rect, dest_rect);
                 handler.unlock(output.pipeline_id);
@@ -3381,7 +3390,7 @@ impl Renderer {
 
     fn draw_alpha_target(
         &mut self,
-        render_target: (&Texture, i32),
+        render_target: TextureDrawTarget,
         target: &AlphaRenderTarget,
         target_size: DeviceUintSize,
         projection: &Transform3D<f32>,
@@ -3526,7 +3535,7 @@ impl Renderer {
     fn draw_texture_cache_target(
         &mut self,
         texture: &CacheTextureId,
-        layer: i32,
+        layer: LayerIndex,
         target: &TextureCacheRenderTarget,
         render_tasks: &RenderTaskTree,
         stats: &mut RendererStats,
@@ -3560,8 +3569,11 @@ impl Renderer {
             let texture = self.texture_resolver
                 .resolve(&texture_source)
                 .expect("BUG: invalid target texture");
-            self.device
-                .bind_draw_target(Some((texture, layer)), Some(target_size));
+            self.device.bind_draw_target(Some(TextureDrawTarget {
+                texture,
+                layer,
+                with_depth: false,
+            }), Some(target_size));
         }
 
         self.device.disable_depth();
@@ -3800,7 +3812,7 @@ impl Renderer {
         // create a new texture.
         let selector = TargetSelector {
             size: list.max_size,
-            num_layers: list.targets.len() as _,
+            num_layers: list.targets.len(),
             format: list.format,
         };
         let index = self.texture_resolver.render_target_pool
@@ -3808,7 +3820,7 @@ impl Renderer {
             .position(|texture| {
                 selector == TargetSelector {
                     size: texture.get_dimensions(),
-                    num_layers: texture.get_render_target_layer_count(),
+                    num_layers: texture.get_layer_count() as usize,
                     format: texture.get_format(),
                 }
             });
@@ -3979,7 +3991,11 @@ impl Renderer {
                         );
 
                         self.draw_alpha_target(
-                            (&alpha_tex.as_ref().unwrap().texture, target_index as i32),
+                            TextureDrawTarget {
+                                texture: &alpha_tex.as_ref().unwrap().texture,
+                                layer: target_index,
+                                with_depth: false,
+                            },
                             target,
                             alpha.max_size,
                             &projection,
@@ -4001,7 +4017,11 @@ impl Renderer {
                         );
 
                         self.draw_color_target(
-                            Some((&color_tex.as_ref().unwrap().texture, target_index as i32)),
+                            Some(TextureDrawTarget {
+                                texture: &color_tex.as_ref().unwrap().texture,
+                                layer: target_index,
+                                with_depth: target.needs_depth(),
+                            }),
                             target,
                             frame.inner_rect,
                             color.max_size,
@@ -4105,7 +4125,7 @@ impl Renderer {
         let fb_width = framebuffer_size.width as i32;
         let num_layers: i32 = self.texture_resolver.render_target_pool
             .iter()
-            .map(|texture| texture.get_render_target_layer_count() as i32)
+            .map(|texture| texture.get_layer_count() as i32)
             .sum();
 
         if num_layers * (size + spacing) > fb_width {
@@ -4119,10 +4139,9 @@ impl Renderer {
             let dimensions = texture.get_dimensions();
             let src_rect = DeviceIntRect::new(DeviceIntPoint::zero(), dimensions.to_i32());
 
-            let layer_count = texture.get_render_target_layer_count();
-            for layer_index in 0 .. layer_count {
-                self.device
-                    .bind_read_target(Some((texture, layer_index as i32)));
+            let layer_count = texture.get_layer_count() as usize;
+            for layer in 0 .. layer_count {
+                self.device.bind_read_target(Some(TextureReadTarget { texture, layer }));
                 let x = fb_width - (spacing + size) * (target_index + 1);
                 let y = spacing;
 
@@ -4167,9 +4186,9 @@ impl Renderer {
                 DeviceIntSize::new(dimensions.width as i32, dimensions.height as i32),
             );
 
-            let layer_count = texture.get_layer_count();
-            for layer_index in 0 .. layer_count {
-                self.device.bind_read_target(Some((texture, layer_index)));
+            let layer_count = texture.get_layer_count() as usize;
+            for layer in 0 .. layer_count {
+                self.device.bind_read_target(Some(TextureReadTarget { texture, layer}));
 
                 let x = fb_width - (spacing + size) * (i as i32 + 1);
 
@@ -4276,7 +4295,7 @@ impl Renderer {
         let size = texture.get_dimensions();
         let mut texels = vec![0; (size.width * size.height * 16) as usize];
         self.device.begin_frame();
-        self.device.bind_read_target(Some((texture, 0)));
+        self.device.bind_read_target(Some(TextureReadTarget { texture, layer: 0 }));
         self.device.read_pixels_into(
             DeviceUintRect::new(DeviceUintPoint::zero(), size),
             ReadPixelsFormat::Standard(ImageFormat::RGBAF32),
@@ -4360,6 +4379,9 @@ impl Renderer {
 
         // Texture cache and render target GPU memory.
         report += self.texture_resolver.report_memory();
+
+        // Textures held internally within the device layer.
+        report += self.device.report_memory();
 
         report
     }
@@ -4606,6 +4628,7 @@ pub struct RendererStats {
     pub total_draw_calls: usize,
     pub alpha_target_count: usize,
     pub color_target_count: usize,
+    pub texture_upload_kb: usize,
 }
 
 impl RendererStats {
@@ -4614,6 +4637,7 @@ impl RendererStats {
             total_draw_calls: 0,
             alpha_target_count: 0,
             color_target_count: 0,
+            texture_upload_kb: 0,
         }
     }
 }
@@ -4628,7 +4652,6 @@ struct PlainTexture {
     size: (u32, u32, i32),
     format: ImageFormat,
     filter: TextureFilter,
-    render_target: Option<RenderTargetInfo>,
 }
 
 
@@ -4738,7 +4761,6 @@ impl Renderer {
             size: (rect.size.width, rect.size.height, texture.get_layer_count()),
             format: texture.get_format(),
             filter: texture.get_filter(),
-            render_target: texture.get_render_target(),
         }
     }
 
@@ -4746,6 +4768,7 @@ impl Renderer {
     fn load_texture(
         target: TextureTarget,
         plain: &PlainTexture,
+        rt_info: Option<RenderTargetInfo>,
         root: &PathBuf,
         device: &mut Device
     ) -> (Texture, Vec<u8>)
@@ -4765,7 +4788,7 @@ impl Renderer {
             plain.size.0,
             plain.size.1,
             plain.filter,
-            plain.render_target,
+            rt_info,
             plain.size.2,
         );
         device.upload_texture_immediate(&texture, &texels);
@@ -4936,6 +4959,7 @@ impl Renderer {
                 let t = Self::load_texture(
                     TextureTarget::Array,
                     &texture,
+                    Some(RenderTargetInfo { has_depth: false }),
                     &root,
                     &mut self.device
                 );
@@ -4949,6 +4973,7 @@ impl Renderer {
             let (t, gpu_cache_data) = Self::load_texture(
                 TextureTarget::Default,
                 &renderer.gpu_cache,
+                Some(RenderTargetInfo { has_depth: false }),
                 &root,
                 &mut self.device,
             );
@@ -4993,11 +5018,11 @@ impl Renderer {
                             size: (descriptor.size.width, descriptor.size.height, layer_count),
                             format: descriptor.format,
                             filter,
-                            render_target: None,
                         };
                         let t = Self::load_texture(
                             target,
                             &plain_tex,
+                            None,
                             &root,
                             &mut self.device
                         );

@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Әйгілі тақырыптар:",
   "pocket_read_even_more": "Көбірек хикаяларды қарау",
   "pocket_more_reccommendations": "Көбірек ұсыныстар",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Ол қалай жұмыс істейді",
   "pocket_cta_button": "Pocket-ті алу",
   "pocket_cta_text": "Өзіңіз ұнатқан хикаяларды Pocket ішіне сақтап, миіңізді тамаша оқумен толықтырыңыз.",
   "highlights_empty_state": "Шолуды бастаңыз, сіз жақында шолған немесе бетбелгілерге қосқан тамаша мақалалар, видеолар немесе басқа парақтардың кейбіреулері осында көрсетіледі.",
@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Жекелік ескертуі",
   "firstrun_continue_to_login": "Жалғастыру",
   "firstrun_skip_login": "Бұл қадамды аттап кету",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Көбірек білу"
 };

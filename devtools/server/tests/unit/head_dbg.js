@@ -190,9 +190,9 @@ function waitForNewSource(threadClient, url) {
   });
 }
 
-function attachThread(tabClient, options = {}) {
+function attachThread(targetFront, options = {}) {
   dump("Attaching to thread.\n");
-  return tabClient.attachThread(options);
+  return targetFront.attachThread(options);
 }
 
 function resume(threadClient) {
@@ -355,25 +355,25 @@ function getTestTab(client, title, callback) {
 }
 
 // Attach to |client|'s tab whose title is |title|; pass |callback| the
-// response packet and a TabClient instance referring to that tab.
+// response packet and a TargetFront instance referring to that tab.
 function attachTestTab(client, title, callback) {
   getTestTab(client, title, function(tab) {
-    client.attachTarget(tab.actor).then(([response, tabClient]) => {
-      callback(response, tabClient);
+    client.attachTarget(tab.actor).then(([response, targetFront]) => {
+      callback(response, targetFront);
     });
   });
 }
 
 // Attach to |client|'s tab whose title is |title|, and then attach to
 // that tab's thread. Pass |callback| the thread attach response packet, a
-// TabClient referring to the tab, and a ThreadClient referring to the
+// TargetFront referring to the tab, and a ThreadClient referring to the
 // thread.
 function attachTestThread(client, title, callback) {
-  attachTestTab(client, title, function(tabResponse, tabClient) {
+  attachTestTab(client, title, function(tabResponse, targetFront) {
     function onAttach([response, threadClient]) {
-      callback(response, tabClient, threadClient, tabResponse);
+      callback(response, targetFront, threadClient, tabResponse);
     }
-    tabClient.attachThread({
+    targetFront.attachThread({
       useSourceMaps: true,
       autoBlackBox: true
     }).then(onAttach);
@@ -382,14 +382,14 @@ function attachTestThread(client, title, callback) {
 
 // Attach to |client|'s tab whose title is |title|, attach to the tab's
 // thread, and then resume it. Pass |callback| the thread's response to
-// the 'resume' packet, a TabClient for the tab, and a ThreadClient for the
+// the 'resume' packet, a TargetFront for the tab, and a ThreadClient for the
 // thread.
 function attachTestTabAndResume(client, title, callback = () => {}) {
   return new Promise((resolve) => {
-    attachTestThread(client, title, function(response, tabClient, threadClient) {
+    attachTestThread(client, title, function(response, targetFront, threadClient) {
       threadClient.resume(function(response) {
-        callback(response, tabClient, threadClient);
-        resolve([response, tabClient, threadClient]);
+        callback(response, targetFront, threadClient);
+        resolve([response, targetFront, threadClient]);
       });
     });
   });
@@ -862,9 +862,9 @@ async function setupTestFromUrl(url) {
 
   const { tabs } = await listTabs(debuggerClient);
   const tab = findTab(tabs, "test");
-  const [, tabClient] = await attachTarget(debuggerClient, tab);
+  const [, targetFront] = await attachTarget(debuggerClient, tab);
 
-  const [, threadClient] = await attachThread(tabClient);
+  const [, threadClient] = await attachThread(targetFront);
   await resume(threadClient);
 
   const sourceUrl = getFileUrl(url);

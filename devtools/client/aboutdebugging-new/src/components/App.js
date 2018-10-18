@@ -13,6 +13,7 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const { PAGES } = require("../constants");
+const Types = require("../types");
 
 const ConnectPage = createFactory(require("./connect/ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
@@ -21,14 +22,16 @@ const Sidebar = createFactory(require("./sidebar/Sidebar"));
 class App extends PureComponent {
   static get propTypes() {
     return {
+      adbAddonStatus: PropTypes.string,
       // The "dispatch" helper is forwarded to the App component via connect.
       // From that point, components are responsible for forwarding the dispatch
       // property to all components who need to dispatch actions.
       dispatch: PropTypes.func.isRequired,
       messageContexts: PropTypes.arrayOf(PropTypes.object).isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
-      runtimes: PropTypes.object.isRequired,
+      networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
+      usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
     };
   }
 
@@ -51,17 +54,28 @@ class App extends PureComponent {
 
   render() {
     const {
+      adbAddonStatus,
       dispatch,
       messageContexts,
-      runtimes,
+      networkRuntimes,
       selectedPage,
+      usbRuntimes,
     } = this.props;
 
     return LocalizationProvider(
       { messages: messageContexts },
       dom.div(
         { className: "app" },
-        Sidebar({ className: "app__sidebar", dispatch, runtimes, selectedPage }),
+        Sidebar(
+          {
+            adbAddonStatus,
+            className: "app__sidebar",
+            dispatch,
+            networkRuntimes,
+            selectedPage,
+            usbRuntimes,
+          }
+        ),
         dom.main(
           { className: "app__content" },
           this.getSelectedPageComponent()
@@ -73,9 +87,11 @@ class App extends PureComponent {
 
 const mapStateToProps = state => {
   return {
-    runtimes: state.runtimes,
+    adbAddonStatus: state.ui.adbAddonStatus,
     networkLocations: state.ui.networkLocations,
+    networkRuntimes: state.runtimes.networkRuntimes,
     selectedPage: state.ui.selectedPage,
+    usbRuntimes: state.runtimes.usbRuntimes,
   };
 };
 

@@ -1398,10 +1398,11 @@ impl ToMarionette for GetParameters {
 
 impl ToMarionette for JavascriptCommandParameters {
     fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = serde_json::to_value(self)?.as_object().unwrap().clone();
-        data.insert("newSandbox".to_string(), Value::Bool(false));
-        data.insert("specialPowers".to_string(), Value::Bool(false));
-        Ok(data)
+        Ok(try_opt!(
+            serde_json::to_value(self)?.as_object(),
+            ErrorStatus::UnknownError,
+            "Expected an object"
+        ).clone())
     }
 }
 

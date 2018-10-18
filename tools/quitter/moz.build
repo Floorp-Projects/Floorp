@@ -9,7 +9,6 @@ XPI_NAME = 'quitter'
 JAR_MANIFESTS += ['jar.mn']
 
 USE_EXTENSION_MANIFEST = True
-NO_JS_MANIFEST = True
 
 FINAL_TARGET_FILES += [
     'bootstrap.js',

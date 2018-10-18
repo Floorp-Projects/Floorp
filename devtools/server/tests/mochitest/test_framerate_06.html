@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Bug 1171489 - Tests if the framerate actor does not record timestamps from multiple frames. 
+Bug 1171489 - Tests if the framerate actor does not record timestamps from multiple frames.
 -->
 <head>
   <meta charset="utf-8">
@@ -15,67 +15,71 @@ Bug 1171489 - Tests if the framerate actor does not record timestamps from multi
 <script>
 "use strict";
 
-window.onload = function() {
+window.onload = async function() {
+  // inspector-helpers doesnt wait for explicit finish
   SimpleTest.waitForExplicitFinish();
-  const {FramerateFront} = require("devtools/shared/fronts/framerate");
 
+  const TICK = 1000;
   const url = document.getElementById("testContent").href;
-  attachURL(url, onTab);
+  const { target, doc } = await attachURL(url);
+  const contentWin = doc.defaultView;
 
-  function onTab(_, client, form, contentDoc) {
-    const contentWin = contentDoc.defaultView;
+  const front = target.getFront("framerate");
 
-    const front = FramerateFront(client, form);
+  await front.startRecording();
+  await waitFor(TICK);
+  const onWindowReady = waitForWindowReady();
+  contentWin.location.reload();
 
-    front.startRecording().then(() => {
-      window.setTimeout(() => {
-        // Wait for the iframe to be loaded again
-        window.addEventListener("message", function loaded(event) {
-          if (event.data === "ready") {
-            window.removeEventListener("message", loaded);
-            /* eslint-disable max-nested-callbacks */
-            window.setTimeout(() => {
-              front.stopRecording().then(ticks => {
-                onRecordingStopped(client, ticks);
-              });
-            }, 1000);
-            /* eslint-enable max-nested-callbacks */
-          }
-        });
-        contentWin.location.reload();
-      }, 1000);
-    });
-  }
+  // Wait for the iframe to be loaded again
+  await onWindowReady;
+  await waitFor(TICK);
+  const ticks = await front.stopRecording();
+  await onRecordingStopped(ticks);
 
-  function onRecordingStopped(client, ticks) {
-    const diffs = [];
-
-    info(`Got ${ticks.length} ticks.`);
-
-    for (let i = 1; i < ticks.length; i++) {
-      const prev = ticks[i - 1];
-      const curr = ticks[i];
-      diffs.push(curr - prev);
-      info(curr + " - " + (curr - prev));
-    }
-
-    // 1000 / 60 => 16.666... so we shouldn't get more than diffs of 16.66.. but
-    // when we get ticks from other frames they're usually at diffs of < 1. Sometimes
-    // ticks can still be less than 16ms even on one frame (usually following a very slow
-    // frame), so use a low number (2) to be our threshold
-    const THRESHOLD = 2;
-    ok(ticks.length >= 20,
-       "we should have atleast 20 ticks over the course of two seconds.");
-    const belowThreshold = diffs.filter(v => v <= THRESHOLD);
-    ok(belowThreshold.length <= 10,
-       "we should have very few frames less than the threshold");
-
-    client.close().then(() => {
-      DebuggerServer.destroy();
-      SimpleTest.finish();
-    });
-  }
+  await target.destroy();
+  SimpleTest.finish();
 };
+
+// Local Helpers
+function waitFor(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function waitForWindowReady() {
+  return new Promise(resolve => {
+    window.addEventListener("message", function loaded(event) {
+      if (event.data === "ready") {
+        window.removeEventListener("message", loaded);
+        resolve();
+      }
+    });
+  });
+}
+
+function onRecordingStopped(ticks) {
+  const diffs = [];
+
+  info(`Got ${ticks.length} ticks.`);
+
+  for (let i = 1; i < ticks.length; i++) {
+    const prev = ticks[i - 1];
+    const curr = ticks[i];
+    diffs.push(curr - prev);
+    info(curr + " - " + (curr - prev));
+  }
+
+  // 1000 / 60 => 16.666... so we shouldn't get more than diffs of 16.66.. but
+  // when we get ticks from other frames they're usually at diffs of < 1. Sometimes
+  // ticks can still be less than 16ms even on one frame (usually following a very slow
+  // frame), so use a low number (2) to be our threshold
+  const THRESHOLD = 2;
+  ok(ticks.length >= 20,
+     "we should have atleast 20 ticks over the course of two seconds.");
+  const belowThreshold = diffs.filter(v => v <= THRESHOLD);
+  ok(belowThreshold.length <= 10,
+     "we should have very few frames less than the threshold");
+}
 </script>
 </pre>
 <a id="testContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>

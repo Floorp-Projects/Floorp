@@ -52,19 +52,20 @@ int32_t LiveMappedBufferCount();
 // The inheritance hierarchy for the various classes relating to typed arrays
 // is as follows.
 //
-// - NativeObject
-//   - ArrayBufferObjectMaybeShared
-//     - ArrayBufferObject
-//     - SharedArrayBufferObject
-//   - DataViewObject
-//   - TypedArrayObject (declared in vm/TypedArrayObject.h)
-//     - TypedArrayObjectTemplate
-//       - Int8ArrayObject
-//       - Uint8ArrayObject
-//       - ...
+//
 // - JSObject
-//   - ArrayBufferViewObject
 //   - TypedObject (declared in builtin/TypedObject.h)
+//   - NativeObject
+//     - ArrayBufferObjectMaybeShared
+//       - ArrayBufferObject
+//       - SharedArrayBufferObject
+//     - ArrayBufferViewObject
+//       - DataViewObject
+//       - TypedArrayObject (declared in vm/TypedArrayObject.h)
+//         - TypedArrayObjectTemplate
+//           - Int8ArrayObject
+//           - Uint8ArrayObject
+//           - ...
 //
 // Note that |TypedArrayObjectTemplate| is just an implementation
 // detail that makes implementing its various subclasses easier.
@@ -325,7 +326,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     // below. Buffers usually only have one view, so this slot optimizes for
     // the common case. Avoiding entries in the InnerViewTable saves memory and
     // non-incrementalized sweep time.
-    ArrayBufferViewObject* firstView();
+    JSObject* firstView();
 
     bool addView(JSContext* cx, JSObject* view);
 
@@ -340,7 +341,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
   private:
     void changeViewContents(JSContext* cx, ArrayBufferViewObject* view,
                             uint8_t* oldDataPointer, BufferContents newContents);
-    void setFirstView(ArrayBufferViewObject* view);
+    void setFirstView(JSObject* view);
 
     uint8_t* inlineDataPointer() const;
 
@@ -452,31 +453,6 @@ typedef MutableHandle<ArrayBufferObject*> MutableHandleArrayBufferObject;
 bool CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
                       MutableHandleArrayBufferObjectMaybeShared buffer);
 
-/*
- * ArrayBufferViewObject
- *
- * Common definitions shared by all array buffer views.
- */
-
-class ArrayBufferViewObject : public NativeObject
-{
-  public:
-    static ArrayBufferObjectMaybeShared* bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*> obj);
-
-    void notifyBufferDetached(JSContext* cx, void* newData);
-
-#ifdef DEBUG
-    bool isSharedMemory();
-#endif
-
-    // By construction we only need unshared variants here.  See
-    // comments in ArrayBufferObject.cpp.
-    uint8_t* dataPointerUnshared(const JS::AutoRequireNoGC&);
-    void setDataPointerUnshared(uint8_t* data);
-
-    static void trace(JSTracer* trc, JSObject* obj);
-};
-
 bool
 ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length, uint32_t* out);
 
@@ -586,7 +562,7 @@ template<> inline bool TypeIsUnsigned<uint32_t>() { return true; }
 class InnerViewTable
 {
   public:
-    typedef Vector<ArrayBufferViewObject*, 1, SystemAllocPolicy> ViewVector;
+    typedef Vector<JSObject*, 1, SystemAllocPolicy> ViewVector;
 
     friend class ArrayBufferObject;
 
@@ -628,7 +604,7 @@ class InnerViewTable
     // Sweep an entry during GC, returning whether the entry should be removed.
     static bool sweepEntry(JSObject** pkey, ViewVector& views);
 
-    bool addView(JSContext* cx, ArrayBufferObject* obj, ArrayBufferViewObject* view);
+    bool addView(JSContext* cx, ArrayBufferObject* buffer, JSObject* view);
     ViewVector* maybeViewsUnbarriered(ArrayBufferObject* obj);
     void removeViews(ArrayBufferObject* obj);
 
@@ -668,10 +644,6 @@ class MutableWrappedPtrOperations<InnerViewTable, Wrapper>
 };
 
 } // namespace js
-
-template <>
-bool
-JSObject::is<js::ArrayBufferViewObject>() const;
 
 template <>
 bool

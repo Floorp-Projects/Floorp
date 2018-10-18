@@ -19,7 +19,7 @@ window.onload = function() {
 };
 
 let gWalker = null;
-let gClient = null;
+let gTarget = null;
 let gInspectee = null;
 
 function assertOwnership() {
@@ -32,18 +32,15 @@ function ignoreNode(node) {
     !/[^\s]/.test(node.nodeValue);
 }
 
-addTest(function setup() {
+addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
-    gInspectee = doc;
-    const {InspectorFront} = require("devtools/shared/fronts/inspector");
-    const inspector = InspectorFront(client, tab);
-    promiseDone(inspector.getWalker().then(walker => {
-      ok(walker, "getWalker() should return an actor.");
-      gClient = client;
-      gWalker = walker;
-    }).then(runNextTest));
-  });
+  const { target, doc } = await attachURL(url);
+  gInspectee = doc;
+  const inspector = target.getInspector();
+  gWalker = await inspector.getWalker();
+  ok(gWalker, "getWalker() should return an actor.");
+  gTarget = target;
+  runNextTest();
 });
 
 addTest(function testRemoveSubtree() {
@@ -94,13 +91,13 @@ addTest(function testRemoveSubtree() {
     is(newOwnershipSize, originalOwnershipSize - 51,
       "Ownership tree should be lower");
     // Now verify that some nodes have gone away
-    return checkMissing(gClient, longlistID);
+    return checkMissing(gTarget, longlistID);
   }).then(runNextTest));
 });
 
 addTest(function cleanup() {
   gWalker = null;
-  gClient = null;
+  gTarget = null;
   gInspectee = null;
   runNextTest();
 });

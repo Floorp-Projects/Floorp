@@ -79,6 +79,7 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
 
   LOG(("Alt-Svc Response Header %s\n", buf.get()));
   ParsedHeaderValueListList parsedAltSvc(buf);
+  int32_t numEntriesInHeader = parsedAltSvc.mValues.Length();
 
   for (uint32_t index = 0; index < parsedAltSvc.mValues.Length(); ++index) {
     uint32_t maxage = 86400; // default
@@ -98,6 +99,7 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
       if (!pairIndex) {
         if (currentName.EqualsLiteral("clear")) {
           clearEntry = true;
+          --numEntriesInHeader; // Only want to keep track of actual alt-svc maps, not clearing
           break;
         }
 
@@ -160,6 +162,10 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
                                             originAttributes);
     }
   }
+
+  if (numEntriesInHeader) { // Ignore headers that were just "alt-svc: clear"
+    Telemetry::Accumulate(Telemetry::HTTP_ALTSVC_ENTRIES_PER_HEADER, numEntriesInHeader);
+  }
 }
 
 AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
@@ -186,6 +192,7 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
   , mMixedScheme(false)
   , mNPNToken(npnToken)
   , mOriginAttributes(originAttributes)
+  , mSyncOnlyOnSuccess(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -267,6 +274,9 @@ void
 AltSvcMapping::Sync()
 {
   if (!mStorage) {
+    return;
+  }
+  if (mSyncOnlyOnSuccess && !mValidated) {
     return;
   }
   nsCString value;
@@ -379,6 +389,7 @@ AltSvcMapping::Serialize(nsCString &out)
 AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch, const nsCString &str)
   : mStorage(storage)
   , mStorageEpoch(epoch)
+  , mSyncOnlyOnSuccess(false)
 {
   mValidated = false;
   nsresult code;
@@ -880,15 +891,20 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
                this, map, existing.get()));
         }
       }
+      Telemetry::Accumulate(Telemetry::HTTP_ALTSVC_MAPPING_CHANGED_TARGET, false);
       return;
     }
 
-    // new alternate. remove old entry and start new validation
-    LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p overwrites %p\n",
+    if (map->GetExpiresAt() < existing->GetExpiresAt()) {
+      LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p ttl shorter than %p, ignoring",
+           this, map, existing.get()));
+      return;
+    }
+
+    // new alternate. start new validation
+    LOG(("AltSvcCache::UpdateAltServiceMapping %p map %p may overwrite %p\n",
          this, map, existing.get()));
-    existing = nullptr;
-    mStorage->Remove(map->HashKey(),
-                     map->Private() ? DataStorage_Private : DataStorage_Persistent);
+    Telemetry::Accumulate(Telemetry::HTTP_ALTSVC_MAPPING_CHANGED_TARGET, true);
   }
 
   if (existing && !existing->Validated()) {
@@ -897,9 +913,14 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
     return;
   }
 
-  // start new validation
+  // start new validation, but don't overwrite a valid existing mapping unless
+  // this completes successfully
   MOZ_ASSERT(!map->Validated());
-  map->Sync();
+  if (!existing) {
+    map->Sync();
+  } else {
+    map->SetSyncOnlyOnSuccess(true);
+  }
 
   RefPtr<nsHttpConnectionInfo> ci;
   map->GetConnectionInfo(getter_AddRefs(ci), pi, originAttributes);

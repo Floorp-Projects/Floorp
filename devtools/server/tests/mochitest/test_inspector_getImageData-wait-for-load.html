@@ -41,24 +41,16 @@ let gImg = null;
 let gNodeFront = null;
 let gWalker = null;
 
-addTest(function setup() {
+addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
-    const {InspectorFront} = require("devtools/shared/fronts/inspector");
-    const inspector = InspectorFront(client, tab);
-
-    promiseDone(inspector.getWalker().then(walker => {
-      gWalker = walker;
-      // eslint-disable-next-line max-nested-callbacks
-      return walker.querySelector(gWalker.rootNode, "img.custom").then(img => {
-        gNodeFront = img;
-        gImg = doc.querySelector("img.custom");
-
-        ok(gNodeFront, "Got the image NodeFront.");
-        ok(gImg, "Got the image Node.");
-      });
-    }).then(runNextTest));
-  });
+  const { target, doc } = await attachURL(url);
+  const inspector = target.getInspector();
+  gWalker = await inspector.getWalker();
+  gNodeFront = await gWalker.querySelector(gWalker.rootNode, "img.custom");
+  gImg = doc.querySelector("img.custom");
+  ok(gNodeFront, "Got the image NodeFront.");
+  ok(gImg, "Got the image Node.");
+  runNextTest();
 });
 
 addTest(async function testTimeout() {

@@ -5,6 +5,9 @@
 Services.scriptloader.loadSubScript(new URL("head_webNavigation.js", gTestPath).href,
                                     this);
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                    true]]});
+
 async function clickContextMenuItem({pageElementSelector, contextMenuItemLabel}) {
   const contentAreaContextMenu = await openContextMenu(pageElementSelector);
   const item = contentAreaContextMenu.getElementsByAttribute("label", contextMenuItemLabel);

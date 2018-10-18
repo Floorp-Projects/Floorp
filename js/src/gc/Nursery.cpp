@@ -74,8 +74,8 @@ struct NurseryChunk {
     char data[Nursery::NurseryChunkUsableSize];
     gc::ChunkTrailer trailer;
     static NurseryChunk* fromChunk(gc::Chunk* chunk);
-    void poisonAndInit(JSRuntime* rt);
-    void poisonAfterSweep();
+    void poisonAndInit(JSRuntime* rt, size_t extent = ChunkSize);
+    void poisonAfterSweep(size_t extent = ChunkSize);
     uintptr_t start() const { return uintptr_t(&data); }
     uintptr_t end() const { return uintptr_t(&trailer); }
     gc::Chunk* toChunk(JSRuntime* rt);
@@ -86,23 +86,25 @@ static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
 } /* namespace js */
 
 inline void
-js::NurseryChunk::poisonAndInit(JSRuntime* rt)
+js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t extent)
 {
-    MOZ_MAKE_MEM_UNDEFINED(this, ChunkSize);
+    MOZ_ASSERT(extent <= ChunkSize);
+    MOZ_MAKE_MEM_UNDEFINED(this, extent);
 
-    JS_POISON(this, JS_FRESH_NURSERY_PATTERN, ChunkSize, MemCheckKind::MakeUndefined);
+    JS_POISON(this, JS_FRESH_NURSERY_PATTERN, extent, MemCheckKind::MakeUndefined);
 
     new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
 }
 
 inline void
-js::NurseryChunk::poisonAfterSweep()
+js::NurseryChunk::poisonAfterSweep(size_t extent)
 {
+    MOZ_ASSERT(extent <= ChunkSize);
     // We can poison the same chunk more than once, so first make sure memory
     // sanitizers will let us poison it.
-    MOZ_MAKE_MEM_UNDEFINED(this, ChunkSize);
+    MOZ_MAKE_MEM_UNDEFINED(this, extent);
 
-    JS_POISON(this, JS_SWEPT_NURSERY_PATTERN, ChunkSize, MemCheckKind::MakeNoAccess);
+    JS_POISON(this, JS_SWEPT_NURSERY_PATTERN, extent, MemCheckKind::MakeNoAccess);
 }
 
 /* static */ inline js::NurseryChunk*
@@ -175,7 +177,7 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock)
     }
     /* After this point the Nursery has been enabled */
 
-    setCurrentChunk(0);
+    setCurrentChunk(0, true);
     setStartPosition();
 
     char* env = getenv("JS_GC_PROFILE_NURSERY");
@@ -231,7 +233,7 @@ js::Nursery::enable()
         }
     }
 
-    setCurrentChunk(0);
+    setCurrentChunk(0, true);
     setStartPosition();
 #ifdef JS_GC_ZEAL
     if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
@@ -302,7 +304,7 @@ void
 js::Nursery::leaveZealMode() {
     if (isEnabled()) {
         MOZ_ASSERT(isEmpty());
-        setCurrentChunk(0);
+        setCurrentChunk(0, true);
         setStartPosition();
     }
 }
@@ -1105,15 +1107,17 @@ js::Nursery::clear()
 {
 #if defined(JS_GC_ZEAL) || defined(JS_CRASH_DIAGNOSTICS)
     /* Poison the nursery contents so touching a freed object will crash. */
-    for (unsigned i = currentStartChunk_; i < allocatedChunkCount(); ++i) {
+    for (unsigned i = currentStartChunk_; i < currentChunk_; ++i) {
         chunk(i).poisonAfterSweep();
     }
+    MOZ_ASSERT(maxChunkCount() > 0);
+    chunk(currentChunk_).poisonAfterSweep(position() - chunk(currentChunk_).start());
 #endif
 
     if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
         /* Only reset the alloc point when we are close to the end. */
         if (currentChunk_ + 1 == maxChunkCount()) {
-            setCurrentChunk(0);
+            setCurrentChunk(0, true);
         } else {
             // poisonAfterSweep poisons the chunk trailer. Ensure it's
             // initialized.
@@ -1144,17 +1148,34 @@ js::Nursery::spaceToEnd(unsigned chunkCount) const
 }
 
 MOZ_ALWAYS_INLINE void
-js::Nursery::setCurrentChunk(unsigned chunkno)
+js::Nursery::setCurrentChunk(unsigned chunkno, bool fullPoison)
 {
     MOZ_ASSERT(chunkno < chunkCountLimit());
     MOZ_ASSERT(chunkno < allocatedChunkCount());
+
+    if (!fullPoison &&
+        chunkno == currentChunk_ &&
+        position_ < chunk(chunkno).end() &&
+        position_ >= chunk(chunkno).start())
+    {
+        // When we setup a new chunk the whole chunk must be poisoned with the
+        // correct value (JS_FRESH_NURSERY_PATTERN).
+        //  1. The first time it was used it was fully poisoned with the
+        //     correct value.
+        //  2. When it is swept, only the used part is poisoned with the sept
+        //     value.
+        //  3. We repoison the swept part here, with the correct value.
+        chunk(chunkno).poisonAndInit(runtime(), position_ - chunk(chunkno).start());
+    } else {
+        chunk(chunkno).poisonAndInit(runtime());
+    }
+
     currentChunk_ = chunkno;
     position_ = chunk(chunkno).start();
     currentEnd_ = chunk(chunkno).end();
     if (canAllocateStrings_) {
         currentStringEnd_ = currentEnd_;
     }
-    chunk(chunkno).poisonAndInit(runtime());
 }
 
 bool

@@ -7,6 +7,7 @@ Bug 1023018 - Tests whether or not the framerate actor can handle time ranges.
   <meta charset="utf-8">
   <title>Framerate actor test</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="framerate-helpers.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 </head>
 <body>
@@ -14,65 +15,36 @@ Bug 1023018 - Tests whether or not the framerate actor can handle time ranges.
 <script>
 "use strict";
 
-window.onload = function() {
-  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-  const {DebuggerServer} = require("devtools/server/main");
-  const Services = require("Services");
+const START_TICK = 2000;
+const STOP_TICK = 3000;
+const TOTAL_TIME = 5000;
 
-  // Always log packets when running tests.
-  Services.prefs.setBoolPref("devtools.debugger.log", true);
-  SimpleTest.registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("devtools.debugger.log");
-  });
+window.onload = async function() {
+  const target = await getTargetForSelectedTab();
+  const front = target.getFront("framerate");
 
-  SimpleTest.waitForExplicitFinish();
-
-  const {FramerateFront} = require("devtools/shared/fronts/framerate");
-  const START_TICK = 2000;
-  const STOP_TICK = 3000;
-  const TOTAL_TIME = 5000;
-
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect().then(function onConnect() {
-    client.listTabs().then(function onListTabs(response) {
-      const form = response.tabs[response.selected];
-      const front = FramerateFront(client, form);
-
-      front.startRecording().then(() => {
-        /* eslint-disable max-nested-callbacks */
-        window.setTimeout(() => {
-          front.stopRecording(START_TICK, STOP_TICK).then(rawData => {
-            onRecordingStopped(front, rawData);
-          });
-        }, TOTAL_TIME);
-        /* eslint-enable max-nested-callbacks */
-      });
-    });
-  });
-
-  function onRecordingStopped(front, rawData) {
-    ok(rawData, "There should be a recording available.");
-
-    ok(!rawData.find(e => e < START_TICK),
-      "There should be no tick before 2000ms.");
-    ok(!rawData.find(e => e > STOP_TICK),
-      "There should be no tick after 3000ms.");
-
-    for (const tick of rawData) {
-      info("Testing tick: " + tick);
-      is(typeof tick, "number", "All values should be numbers.");
-    }
-
-    client.close().then(() => {
-      DebuggerServer.destroy();
-      SimpleTest.finish();
-    });
-  }
+  await front.startRecording();
+  await waitFor(TOTAL_TIME);
+  const rawData = await front.stopRecording(START_TICK, STOP_TICK);
+  await onRecordingStopped(front, rawData);
+  await target.destroy();
+  SimpleTest.finish();
 };
+
+// Local Helper Functions
+async function onRecordingStopped(front, rawData) {
+  ok(rawData, "There should be a recording available.");
+
+  ok(!rawData.find(e => e < START_TICK),
+    "There should be no tick before 2000ms.");
+  ok(!rawData.find(e => e > STOP_TICK),
+    "There should be no tick after 3000ms.");
+
+  for (const tick of rawData) {
+    info("Testing tick: " + tick);
+    is(typeof tick, "number", "All values should be numbers.");
+  }
+}
 </script>
 </pre>
 </body>

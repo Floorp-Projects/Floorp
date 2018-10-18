@@ -100,13 +100,14 @@
     > span > p {
       color: $grey-60;
       margin-top: 0;
-      height: 130px;
+      height: 180px;
       margin-bottom: 12px;
       font-size: 15px;
       line-height: 22px;
 
       @media(max-width: 650px) {
         margin-bottom: 0;
+        height: 160px;
       }
     }
   }
@@ -123,13 +124,12 @@
     // at 850px, the button shimmies down and to the right
     @media(max-width: 850px) {
       float: right;
-      margin-top: -60px;
-      margin-right: -10px;
+      margin-top: -105px;
+      margin-inline-end: -10px;
     }
 
     @media(max-width: 650px) {
       float: none;
-      margin-top: 30px;
     }
 
     &:focus,
@@ -143,12 +143,12 @@
 
   &::before {
     content: '';
-    height: 220px;
+    height: 230px;
     width: 1px;
     position: absolute;
     background-color: $grey-30;
     margin-top: 40px;
-    margin-left: 215px;
+    margin-inline-start: 215px;
 
     // at 850px, the line goes from vertical to horizontal
     @media(max-width: 850px) {

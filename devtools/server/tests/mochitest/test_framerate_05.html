@@ -7,6 +7,7 @@ Bug 1034648 - Tests whether a framerate recording can be cancelled.
   <meta charset="utf-8">
   <title>Framerate actor test</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="framerate-helpers.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 </head>
 <body>
@@ -14,61 +15,31 @@ Bug 1034648 - Tests whether a framerate recording can be cancelled.
 <script>
 "use strict";
 
-window.onload = function() {
-  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-  const {DebuggerServer} = require("devtools/server/main");
-  const Services = require("Services");
+window.onload = async function() {
+  const target = await getTargetForSelectedTab();
+  const front = target.getFront("framerate");
+  const TICK = 1000;
 
-  // Always log packets when running tests.
-  Services.prefs.setBoolPref("devtools.debugger.log", true);
-  SimpleTest.registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("devtools.debugger.log");
-  });
+  await front.startRecording();
+  await waitFor(TICK);
 
-  SimpleTest.waitForExplicitFinish();
+  await front.cancelRecording();
+  await waitFor(TICK);
 
-  const {FramerateFront} = require("devtools/shared/fronts/framerate");
+  const rawTicks = await front.getPendingTicks();
+  ok(rawTicks,
+    "The returned pending ticks should be empty (1).");
+  is(rawTicks.length, 0,
+    "The returned pending ticks should be empty (2).");
 
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
+  const newRawData = await front.stopRecording();
+  ok(newRawData,
+    "The returned raw data should be an empty array (1).");
+  is(newRawData.length, 0,
+    "The returned raw data should be an empty array (2).");
 
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect().then(function onConnect() {
-    client.listTabs().then(function onListTabs(response) {
-      const form = response.tabs[response.selected];
-      const front = FramerateFront(client, form);
-
-      front.startRecording().then(() => {
-        /* eslint-disable max-nested-callbacks */
-        window.setTimeout(() => {
-          front.cancelRecording().then(() => {
-            window.setTimeout(() => {
-              front.getPendingTicks().then(rawTicks => {
-                ok(rawTicks,
-                  "The returned pending ticks should be empty (1).");
-                is(rawTicks.length, 0,
-                  "The returned pending ticks should be empty (2).");
-
-                front.stopRecording().then(rawData => {
-                  ok(rawData,
-                    "The returned raw data should be an empty array (1).");
-                  is(rawData.length, 0,
-                    "The returned raw data should be an empty array (2).");
-
-                  client.close().then(() => {
-                    DebuggerServer.destroy();
-                    SimpleTest.finish();
-                  });
-                });
-              });
-            }, 1000);
-          });
-        }, 1000);
-        /* eslint-enable max-nested-callbacks */
-      });
-    });
-  });
+  await target.destroy();
+  SimpleTest.finish();
 };
 </script>
 </pre>

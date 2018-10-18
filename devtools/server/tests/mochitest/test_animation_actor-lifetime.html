@@ -14,28 +14,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247243
 "use strict";
 
 window.onload = function() {
-  const {AnimationsFront} = require("devtools/shared/fronts/animation");
-  const {InspectorFront} = require("devtools/shared/fronts/inspector");
-
   SimpleTest.waitForExplicitFinish();
 
   let gWalker = null;
   let animationsFront = null;
 
-  addTest(function setup() {
+  addTest(async function setup() {
     info("Setting up inspector and animation actors.");
 
     const url = document.getElementById("animationContent").href;
-    attachURL(url, function(err, client, tab, doc) {
-      const inspector = InspectorFront(client, tab);
 
-      animationsFront = new AnimationsFront(client, tab);
-
-      promiseDone(inspector.getWalker().then(walker => {
-        ok(walker, "getWalker() should return an actor.");
-        gWalker = walker;
-      }).then(runNextTest));
-    });
+    const { target } = await attachURL(url);
+    const inspector = target.getInspector();
+    animationsFront = target.getFront("animations");
+    gWalker = await inspector.getWalker();
+    ok(gWalker, "getWalker() should return an actor.");
+    runNextTest();
   });
 
   addAsyncTest(async function testActorLifetime() {

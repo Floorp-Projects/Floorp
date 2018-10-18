@@ -396,28 +396,36 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     return NS_OK;
   }
 
-  // Clear any state that varies by location.
-  if (!(aFlags & LOCATION_CHANGE_SAME_DOCUMENT)) {
-    mOldState = 0;
-    mState = 0;
-    mTopLevelSecurityInfo = nullptr;
+  // If this is a same-document location change, we don't need to update our
+  // state or notify anyone.
+  if (aFlags & LOCATION_CHANGE_SAME_DOCUMENT) {
+    return NS_OK;
   }
 
-  // NB: aRequest may be null. It may also not be QI-able to nsIChannel.
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-  if (channel) {
-    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-            ("  we have a channel %p", channel.get()));
-    nsresult rv = UpdateStateAndSecurityInfo(channel, aLocation);
-    // Even if this failed, we still want to notify downstream so that we don't
-    // leave a stale security indicator. We set everything to "not secure" to be
-    // safe.
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+  mOldState = 0;
+  mState = 0;
+  mTopLevelSecurityInfo = nullptr;
+
+  if (aFlags & LOCATION_CHANGE_ERROR_PAGE) {
+    mState = STATE_IS_INSECURE;
+    mTopLevelSecurityInfo = nullptr;
+  } else {
+    // NB: aRequest may be null. It may also not be QI-able to nsIChannel.
+    nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+    if (channel) {
       MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-              ("  Failed to update security info. "
-               "Setting everything to 'not secure' to be safe."));
-      mState = STATE_IS_INSECURE;
-      mTopLevelSecurityInfo = nullptr;
+              ("  we have a channel %p", channel.get()));
+      nsresult rv = UpdateStateAndSecurityInfo(channel, aLocation);
+      // Even if this failed, we still want to notify downstream so that we don't
+      // leave a stale security indicator. We set everything to "not secure" to be
+      // safe.
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+                ("  Failed to update security info. "
+                 "Setting everything to 'not secure' to be safe."));
+        mState = STATE_IS_INSECURE;
+        mTopLevelSecurityInfo = nullptr;
+      }
     }
   }
 

@@ -818,8 +818,6 @@ css::URLValue::~URLValue()
   if (mLoadID != 0) {
     ImageLoader::DeregisterCSSImageFromAllLoaders(this);
   }
-
-  Servo_ReleaseArcStringData(&mString);
 }
 
 bool
@@ -828,8 +826,8 @@ css::URLValue::Equals(const URLValue& aOther) const
   MOZ_ASSERT(NS_IsMainThread());
 
   bool eq;
-  const URLExtraData* self = mExtraData;
-  const URLExtraData* other = aOther.mExtraData;
+  const URLExtraData* self = ExtraData();
+  const URLExtraData* other = aOther.ExtraData();
   return GetString() == aOther.GetString() &&
           (GetURI() == aOther.GetURI() || // handles null == null
            (mURI && aOther.mURI &&
@@ -845,7 +843,7 @@ css::URLValue::Equals(const URLValue& aOther) const
 bool
 css::URLValue::DefinitelyEqualURIs(const URLValue& aOther) const
 {
-  if (mExtraData->BaseURI() != aOther.mExtraData->BaseURI()) {
+  if (ExtraData()->BaseURI() != aOther.ExtraData()->BaseURI()) {
     return false;
   }
   return GetString() == aOther.GetString();
@@ -855,7 +853,7 @@ bool
 css::URLValue::DefinitelyEqualURIsAndPrincipal(
     const URLValue& aOther) const
 {
-  return mExtraData->Principal() == aOther.mExtraData->Principal() &&
+  return ExtraData()->Principal() == aOther.ExtraData()->Principal() &&
          DefinitelyEqualURIs(aOther);
 }
 
@@ -864,7 +862,7 @@ css::URLValue::GetString() const
 {
   const uint8_t* chars;
   uint32_t len;
-  Servo_GetArcStringData(mString.mPtr, &chars, &len);
+  Servo_CssUrlData_GetSerialization(mCssUrl, &chars, &len);
   return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
 }
 
@@ -878,22 +876,12 @@ css::URLValue::GetURI() const
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI),
               GetString(),
-              nullptr, mExtraData->BaseURI());
+              nullptr, ExtraData()->BaseURI());
     mURI = newURI.forget();
     mURIResolved = true;
   }
 
   return mURI;
-}
-
-bool
-css::URLValue::IsLocalRef() const
-{
-  if (mIsLocalRef.isNothing()) {
-    // IsLocalRefURL is O(N), use it only when IsLocalRef is called.
-    mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(GetString()));
-  }
-  return mIsLocalRef.value();
 }
 
 bool
@@ -975,7 +963,6 @@ css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // is worthwhile:
   // - mURI
   // - mString
-  // - mExtraData
 
   // Only measure it if it's unshared, to avoid double-counting.
   size_t n = 0;
@@ -1005,13 +992,7 @@ css::URLValue::LoadImage(nsIDocument* aDocument)
   }
 
   // Kick off the load in the loading document.
-  ImageLoader::LoadImage(GetURI(),
-                         mExtraData->Principal(),
-                         mExtraData->GetReferrer(),
-                         mExtraData->GetReferrerPolicy(),
-                         loadingDoc,
-                         this,
-                         mCORSMode);
+  ImageLoader::LoadImage(this, loadingDoc);
 
   // Register the image in the document that's using it.
   return aDocument->StyleImageLoader()->RegisterCSSImage(this);

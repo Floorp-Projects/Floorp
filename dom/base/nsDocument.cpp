@@ -2137,6 +2137,11 @@ nsDocument::Init()
 
   mScriptLoader = new dom::ScriptLoader(this);
 
+  // we need to create a policy here so getting the policy within
+  // ::Policy() can *always* return a non null policy
+  mFeaturePolicy = new FeaturePolicy(this);
+  mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
+
   mozilla::HoldJSObjects(this);
 
   return NS_OK;
@@ -3012,11 +3017,9 @@ nsIDocument::InitCSP(nsIChannel* aChannel)
 nsresult
 nsIDocument::InitFeaturePolicy(nsIChannel* aChannel)
 {
-  MOZ_ASSERT(!mFeaturePolicy, "we should only call init once");
+  MOZ_ASSERT(mFeaturePolicy, "we should only call init once");
 
-  // we need to create a policy here so getting the policy within
-  // ::Policy() can *always* return a non null policy
-  mFeaturePolicy = new FeaturePolicy(this);
+  mFeaturePolicy->ResetDeclaredPolicy();
 
   if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
     return NS_OK;
@@ -7299,10 +7302,10 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     nsAutoString minScaleStr;
     GetHeaderData(nsGkAtoms::viewport_minimum_scale, minScaleStr);
 
-    nsresult errorCode;
-    mScaleMinFloat = LayoutDeviceToScreenScale(minScaleStr.ToFloat(&errorCode));
+    nsresult scaleMinErrorCode;
+    mScaleMinFloat = LayoutDeviceToScreenScale(minScaleStr.ToFloat(&scaleMinErrorCode));
 
-    if (NS_FAILED(errorCode)) {
+    if (NS_FAILED(scaleMinErrorCode)) {
       mScaleMinFloat = kViewportMinScale;
     }
 
@@ -7319,6 +7322,12 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 
     if (NS_FAILED(scaleMaxErrorCode)) {
       mScaleMaxFloat = kViewportMaxScale;
+    }
+
+    // Resolve min-zoom and max-zoom values.
+    // https://drafts.csswg.org/css-device-adapt/#constraining-min-max-zoom
+    if (NS_SUCCEEDED(scaleMaxErrorCode) && NS_SUCCEEDED(scaleMinErrorCode)) {
+      mScaleMaxFloat = std::max(mScaleMinFloat, mScaleMaxFloat);
     }
 
     mScaleMaxFloat = mozilla::clamped(
@@ -13644,7 +13653,8 @@ nsIDocument::HasStorageAccess(mozilla::ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv,
+                                            Promise::ePropagateUserInteraction);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -13667,31 +13677,6 @@ nsIDocument::HasStorageAccess(mozilla::ErrorResult& aRv)
   if (topLevelDoc->NodePrincipal()->Equals(NodePrincipal())) {
     promise->MaybeResolve(true);
     return promise.forget();
-  }
-
-  if (AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions() &&
-      StaticPrefs::network_cookie_cookieBehavior() ==
-        nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    // If we need to abide by Content Blocking cookie restrictions, ensure to
-    // first do all of our storage access checks.  If storage access isn't
-    // disabled in our document, given that we're a third-party, we must either
-    // not be a tracker, or be whitelisted for some reason (e.g. a storage
-    // access permission being granted).  In that case, resolve the promise and
-    // say we have obtained storage access.
-    if (!nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
-      // Note, storage might be allowed because the top-level document is on
-      // the content blocking allowlist!  In that case, don't provide special
-      // treatment here.
-      bool isOnAllowList = false;
-      if (NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
-                         topLevelDoc->GetDocumentURI(),
-                         AntiTrackingCommon::eStorageChecks,
-                         isOnAllowList)) &&
-          !isOnAllowList) {
-        promise->MaybeResolve(true);
-        return promise.forget();
-      }
-    }
   }
 
   nsPIDOMWindowInner* inner = GetInnerWindow();
@@ -13802,8 +13787,13 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
       // Note: If this has returned true, the top-level document is guaranteed
       // to not be on the Content Blocking allow list.
       DebugOnly<bool> isOnAllowList = false;
+      // If we have a parent document, it has to be non-private since we verified
+      // earlier that our own document is non-private and a private document can
+      // never have a non-private document as its child.
+      MOZ_ASSERT_IF(parent, !nsContentUtils::IsInPrivateBrowsing(parent));
       MOZ_ASSERT_IF(NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
                                    parent->GetDocumentURI(),
+                                   false,
                                    AntiTrackingCommon::eStorageChecks,
                                    isOnAllowList)),
                     !isOnAllowList);
@@ -13831,6 +13821,7 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
                  promise->MaybeRejectWithUndefined();
                });
     } else {
+      outer->SetHasStorageAccess(true);
       promise->MaybeResolveWithUndefined();
     }
   }

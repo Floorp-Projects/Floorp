@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>meta viewport test</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
   <script src="viewport_helpers.js"></script>
@@ -13,66 +14,30 @@
   <script type="application/javascript">
     "use strict";
 
-    SimpleTest.waitForExplicitFinish();
+    add_task(async function test1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
 
-    let tests = [];
+      let info = getViewportInfo(800, 480);
+      is(info.defaultZoom, 1,     "initial zoom is set explicitly");
+      is(info.width,       800,   "width fits the initial zoom level");
+      is(info.height,      480,   "height fits the initial zoom level");
+      is(info.autoSize,    true,  "initial-scale=1 enables autoSize");
+      is(info.allowZoom,   false, "zooming is explicitly disabled");
 
-    tests.push(function test1() {
-      SpecialPowers.pushPrefEnv(scaleRatio(1.0),
-        function() {
-          let info = getViewportInfo(800, 480);
-          is(info.defaultZoom, 1,     "initial zoom is set explicitly");
-          is(info.width,       800,   "width fits the initial zoom level");
-          is(info.height,      480,   "height fits the initial zoom level");
-          is(info.autoSize,    true,  "initial-scale=1 enables autoSize");
-          is(info.allowZoom,   false, "zooming is explicitly disabled");
-
-          info = getViewportInfo(480, 800);
-          is(info.defaultZoom, 1,     "initial zoom is still set explicitly");
-          is(info.width,       480,   "width changes to match the displayWidth");
-          is(info.height,      800,   "height changes to match the displayHeight");
-
-          nextTest();
-        });
+      info = getViewportInfo(480, 800);
+      is(info.defaultZoom, 1,     "initial zoom is still set explicitly");
+      is(info.width,       480,   "width changes to match the displayWidth");
+      is(info.height,      800,   "height changes to match the displayHeight");
     });
 
-    tests.push(function test2() {
-      SpecialPowers.pushPrefEnv(scaleRatio(1.5),
-        function() {
-          let info = getViewportInfo(800, 480);
-          is(info.defaultZoom, 1.5,   "initial zoom is adjusted for device pixel ratio");
-          is(info.width,       533,   "width fits the initial zoom");
-          is(info.height,      320,   "height fits the initial zoom");
+    add_task(async function test2() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.5));
 
-          nextTest();
-        });
+      let info = getViewportInfo(800, 480);
+      is(info.defaultZoom, 1.5,   "initial zoom is adjusted for device pixel ratio");
+      is(info.width,       533,   "width fits the initial zoom");
+      is(info.height,      320,   "height fits the initial zoom");
     });
-
-    function getViewportInfo(aDisplayWidth, aDisplayHeight) {
-      let defaultZoom = {}, allowZoom = {}, minZoom = {}, maxZoom = {},
-          width = {}, height = {}, autoSize = {};
-
-      let cwu = SpecialPowers.getDOMWindowUtils(window);
-      cwu.getViewportInfo(aDisplayWidth, aDisplayHeight, defaultZoom, allowZoom,
-                          minZoom, maxZoom, width, height, autoSize);
-      return {
-        defaultZoom: defaultZoom.value,
-        minZoom: minZoom.value,
-        maxZoom: maxZoom.value,
-        width: width.value,
-        height: height.value,
-        autoSize: autoSize.value,
-        allowZoom: allowZoom.value
-      };
-    }
-
-    function nextTest() {
-      if (tests.length)
-        (tests.shift())();
-      else
-        SimpleTest.finish();
-    }
-    addEventListener("load", nextTest);
   </script>
 </body>
 </html>

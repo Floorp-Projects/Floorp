@@ -1,4 +1,4 @@
 # FxAccountsPush.js
 component {1b7db999-2ecd-4abf-bb95-a726896798ca} FxAccountsPush.js process=main
-contract @mozilla.org/fxaccounts/push;1 {1b7db999-2ecd-4abf-bb95-a726896798ca}
+contract @mozilla.org/fxaccounts/push;1 {1b7db999-2ecd-4abf-bb95-a726896798ca} process=main
 category push chrome://fxa-device-update @mozilla.org/fxaccounts/push;1

@@ -809,6 +809,19 @@ nsresult TransportLayerDtls::GetCipherSuite(uint16_t* cipherSuite) const {
   return NS_OK;
 }
 
+std::vector<uint16_t> TransportLayerDtls::GetDefaultSrtpCiphers() {
+  std::vector<uint16_t> ciphers;
+
+  ciphers.push_back(kDtlsSrtpAeadAes128Gcm);
+  // Since we don't support DTLS 1.3 or SHA384 ciphers (see bug 1312976)
+  // we don't really enough entropy to prefer this over 128 bit
+  ciphers.push_back(kDtlsSrtpAeadAes256Gcm);
+  ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_80);
+  ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_32);
+
+  return ciphers;
+}
+
 void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
   if (state <= state_) {
     MOZ_MTLOG(ML_ERROR, "Lower layer state is going backwards from ours");

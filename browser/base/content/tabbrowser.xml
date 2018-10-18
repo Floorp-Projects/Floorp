@@ -1189,7 +1189,6 @@
     <handlers>
       <handler event="TabSelect"><![CDATA[
         this._handleTabSelect();
-        gBrowser.clearMultiSelectedTabs(true);
       ]]></handler>
 
       <handler event="TabClose"><![CDATA[

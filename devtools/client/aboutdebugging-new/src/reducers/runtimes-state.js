@@ -31,6 +31,7 @@ function RuntimesState() {
     selectedRuntimeId: null,
     thisFirefoxRuntimes: [{
       id: RUNTIMES.THIS_FIREFOX,
+      name: "This Firefox",
       type: RUNTIMES.THIS_FIREFOX,
     }],
     usbRuntimes: [],
@@ -82,8 +83,10 @@ function runtimesReducer(state = RuntimesState(), action) {
       const networkRuntimes = locations.map(location => {
         const [ host, port ] = location.split(":");
         return {
-          connectionParameters: { host, port },
           id: location,
+          extra: {
+            connectionParameters: { host, port: parseInt(port, 10) },
+          },
           name: location,
           type: RUNTIMES.NETWORK,
         };
@@ -99,10 +102,12 @@ function runtimesReducer(state = RuntimesState(), action) {
       const { runtimes } = action;
       const usbRuntimes = runtimes.map(runtime => {
         return {
-          connectionParameters: { socketPath: runtime._socketPath },
           id: runtime.id,
-          model: runtime._model,
-          name: runtime.name,
+          extra: {
+            connectionParameters: { socketPath: runtime._socketPath },
+            deviceName: runtime.deviceName,
+          },
+          name: runtime.shortName,
           type: RUNTIMES.USB,
         };
       });

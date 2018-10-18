@@ -1,0 +1,187 @@
+{
+  "addonDescription": {
+    "message": "Tire clipes e capturas de ecrã da Web e guarde-as temporariamente ou permanentemente."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Tirar uma captura de ecrã"
+  },
+  "myShotsLink": {
+    "message": "Minhas capturas"
+  },
+  "screenshotInstructions": {
+    "message": "Arraste ou clique na página para selecionar uma região. Pressione ESC para cancelar."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Guardar"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Guardar visível"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Guardar página inteira"
+  },
+  "cancelScreenshot": {
+    "message": "Cancelar"
+  },
+  "downloadScreenshot": {
+    "message": "Transferir"
+  },
+  "downloadOnlyNotice": {
+    "message": "Está atualmente no modo Transferências-apenas."
+  },
+  "downloadOnlyDetails": {
+    "message": "O Firefox Screenshots muda automaticamente para o modo Transferências-apenas nestas situações:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Numa janela de navegação privada."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "As cookies de terceiros estão desativadas."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Nunca memorizar histórico” está ativado."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Está a utilizar o Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Os carregamentos foram desativados."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Ligação copiada"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "A ligação para a sua captura foi copiada para a área de transferência. Pressione $META_KEY$-V para colar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copiar"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Captura copiada"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "A sua captura foi copiada para a área de transferência. Pressione $META_KEY$-V para colar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "A imagem guardada será recortada para $PIXELS$px de altura.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Fora de serviço."
+  },
+  "requestErrorDetails": {
+    "message": "Desculpe! Não conseguimos guardar a sua captura. Por favor tente novamente mais tarde."
+  },
+  "connectionErrorTitle": {
+    "message": "Não conseguimos ligar às suas capturas de ecrã."
+  },
+  "connectionErrorDetails": {
+    "message": "Por favor, verifique a sua ligação à Internet. Se consegue ligar-se à Internet, pode existir um problema temporário com o serviço Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Não conseguimos guardar a sua captura porque existe um problema com o serviço Firefox Screenshots. Por favor tente novamente mais tarde."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Não conseguimos capturar o ecrã nesta página."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Esta não é uma página Web padrão, por isso não podemos tirar uma captura de ecrã da mesma."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Não pode tirar uma captura de uma página Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "A sua seleção é demasiado pequena"
+  },
+  "privateWindowErrorTitle": {
+    "message": "O Screenshots está desativado no modo de navegação privada"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Desculpe pela inconveniência. Estamos a trabalhar nesta funcionalidade para futuros lançamentos."
+  },
+  "genericErrorTitle": {
+    "message": "Uau! Algo correu mal com o Firefox Screenshots."
+  },
+  "genericErrorDetails": {
+    "message": "Não temos a certeza do que acabou de acontecer. Importa-se de tentar novamente ou tirar uma captura de uma página diferente?"
+  },
+  "tourBodyIntro": {
+    "message": "Tire, guarde e partilhe capturas de ecrã sem sair do Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Uma nova maneira de guardar"
+  },
+  "tourBodyPageAction": {
+    "message": "Expanda o menu de ações da página na barra de endereço sempre que quiser tirar uma captura de ecrã."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Capture exatamente o que quer"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Clique e arraste para capturar apenas uma parte de uma página. Pode também pairar para destacar a sua seleção."
+  },
+  "tourHeaderFullPage": {
+    "message": "Capture janelas ou páginas inteiras"
+  },
+  "tourBodyFullPage": {
+    "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou para capturar uma página inteira."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Como você gosta"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Guarde as suas capturas na web para partilhar mais facilmente ou transfira-as para o seu computador. Pode também clicar no botão Minhas capturas para encontrar todas as capturas que tirou."
+  },
+  "tourBodyAccounts": {
+    "message": "Inicie sessão com a sua Conta Firefox para aceder às suas capturas em todos os seus dispositivos e guardar as suas capturas favoritas para sempre."
+  },
+  "tourSkip": {
+    "message": "SALTAR"
+  },
+  "tourNext": {
+    "message": "Diapositivo seguinte"
+  },
+  "tourPrevious": {
+    "message": "Diapositivo anterior"
+  },
+  "tourDone": {
+    "message": "Feito"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Ao utilizar o Firefox Screenshots, concorda com os nossos $TERMSANDPRIVACYNOTICETERMSLINK$ e com o $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Termos"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Aviso de privacidade"
+  },
+  "libraryLabel": {
+    "message": "Capturas de ecrã"
+  }
+}

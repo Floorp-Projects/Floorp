@@ -229,7 +229,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
 
     // Optionally force a strict context without restarting the parse when we see a strict
     // directive.
-    void forceStrictIfNecessary(FunctionBox* funbox, ListNode* directives);
+    void forceStrictIfNecessary(SharedContext* sc, ListNode* directives);
 
   private: // Implement ErrorReporter
     const JS::ReadOnlyCompileOptions& options_;

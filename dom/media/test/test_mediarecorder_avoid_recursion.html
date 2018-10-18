@@ -30,8 +30,8 @@ async function startTest() {
       // no more requestData() to prevent busy main thread from starving
       // the encoding thread
       if (count == 30) {
-        info("stream.stop");
-        stream.stop();
+        info("track.stop");
+        stream.getTracks()[0].stop();
       } else if (count < 30 && mediaRecorder.state == 'recording') {
         info("requestData again");
         mediaRecorder.requestData();

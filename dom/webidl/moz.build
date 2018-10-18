@@ -172,9 +172,6 @@ with Files("KeyIdsInitData.webidl"):
 with Files("Keyframe*"):
     BUG_COMPONENT = ("Core", "DOM: Animation")
 
-with Files("LocalMediaStream.webidl"):
-    BUG_COMPONENT = ("Core", "Audio/Video")
-
 with Files("MediaDevice*"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
@@ -638,7 +635,6 @@ WEBIDL_FILES = [
     'L10nUtils.webidl',
     'LegacyQueryInterface.webidl',
     'LinkStyle.webidl',
-    'LocalMediaStream.webidl',
     'Location.webidl',
     'MediaCapabilities.webidl',
     'MediaDeviceInfo.webidl',
@@ -1093,11 +1089,6 @@ if CONFIG['MOZ_WEBSPEECH']:
         'SpeechRecognitionEvent.webidl',
         'SpeechSynthesisErrorEvent.webidl',
         'SpeechSynthesisEvent.webidl',
-    ]
-
-if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner'] or CONFIG['MOZ_SUITE']:
-    WEBIDL_FILES += [
-        'BrowserFeedWriter.webidl',
     ]
 
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:

@@ -140,7 +140,6 @@ WebConsoleFrame.prototype = {
     if (clearStorage) {
       this.webConsoleClient.clearMessagesCache();
     }
-    this.jsterm.focus();
     this.emit("messages-cleared");
   },
 
@@ -154,6 +153,16 @@ WebConsoleFrame.prototype = {
       this.consoleOutput.dispatchPrivateMessagesClear();
       this.emit("private-messages-cleared");
     }
+  },
+
+  inspectObjectActor(objectActor) {
+    this.consoleOutput.dispatchMessageAdd({
+      helperResult: {
+        type: "inspectObject",
+        object: objectActor
+      }
+    }, true);
+    return this.consoleOutput;
   },
 
   _onUpdateListeners() {

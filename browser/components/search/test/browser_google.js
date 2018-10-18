@@ -11,7 +11,7 @@ let expectedEngine = {
   name: "Google",
   alias: null,
   description: "Google Search",
-  searchForm: "https://www.google.com/search?q=&ie=utf-8&oe=utf-8",
+  searchForm: "https://www.google.com/search?",
   hidden: false,
   wrappedJSObject: {
     queryCharset: "UTF-8",
@@ -33,16 +33,6 @@ let expectedEngine = {
             "value": "{searchTerms}",
             "purpose": undefined,
           },
-          {
-            "name": "ie",
-            "value": "utf-8",
-            "purpose": undefined,
-          },
-          {
-            "name": "oe",
-            "value": "utf-8",
-            "purpose": undefined,
-          },
         ],
         mozparams: {
         },
@@ -57,6 +47,7 @@ function test() {
 
   let region = Services.prefs.getCharPref("browser.search.region");
   let code = "";
+  let keywordCode = "";
   switch (region) {
     case "US":
       code = "firefox-b-1";
@@ -69,46 +60,48 @@ function test() {
       break;
   }
 
-  let base = "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8";
-  // Keyword uses a slightly different code
-  let keywordBase = base;
   if (code) {
-    let suffix = `&client=${code}`;
-    base += suffix;
-    keywordBase += `${suffix}-ab`;
-    expectedEngine.searchForm += suffix;
+    expectedEngine.searchForm += `client=${code}&`;
+    keywordCode = `${code}-ab`;
     let urlParams = expectedEngine.wrappedJSObject._urls[1].params;
-    urlParams.push({
-      name: "client",
-      value: `${code}-ab`,
-      purpose: "keyword",
-    });
-    urlParams.push({
+    urlParams.unshift({
       name: "client",
       value: code,
       purpose: "searchbar",
     });
+    urlParams.unshift({
+      name: "client",
+      value: keywordCode,
+      purpose: "keyword",
+    });
   }
+  expectedEngine.searchForm += "q=";
 
   let url;
 
   // Test search URLs (including purposes).
   let purposes = ["", "contextmenu", "searchbar", "homepage", "newtab"];
+  let urlParams;
   for (let purpose of purposes) {
     url = engine.getSubmission("foo", null, purpose).uri.spec;
-    is(url, base, `Check ${purpose} search URL for 'foo'`);
+    urlParams = new URLSearchParams(url.split("?")[1]);
+    is(urlParams.get("client"), code, "Check ${purpose} search URL for code");
+    is(urlParams.get("q"), "foo", `Check ${purpose} search URL for 'foo'`);
   }
   url = engine.getSubmission("foo", null, "keyword").uri.spec;
-  is(url, keywordBase, "Check keyword search URL for 'foo'");
+  urlParams = new URLSearchParams(url.split("?")[1]);
+  is(urlParams.get("client"), keywordCode, "Check keyword search URL for code");
+  is(urlParams.get("q"), "foo", `Check keyword search URL for 'foo'`);
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
   is(url, "https://www.google.com/complete/search?client=firefox&q=foo", "Check search suggestion URL for 'foo'");
 
   // Check result parsing and alternate domains.
-  let alternateBase = base.replace("www.google.com", "www.google.fr");
+  let base = "https://www.google.com/search?q=foo";
   is(Services.search.parseSubmissionURL(base).terms, "foo",
      "Check result parsing");
+  let alternateBase = base.replace("www.google.com", "www.google.fr");
   is(Services.search.parseSubmissionURL(alternateBase).terms, "foo",
      "Check alternate domain");
 

@@ -89,7 +89,7 @@ pub struct ScalingInstance {
     pub src_task_address: RenderTaskAddress,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -318,6 +318,8 @@ bitflags! {
         const SEGMENT_REPEAT_X = 0x4;
         /// Repeat UVs vertically.
         const SEGMENT_REPEAT_Y = 0x8;
+        /// The extra segment data is a texel rect.
+        const SEGMENT_TEXEL_RECT = 0x10;
     }
 }
 
@@ -331,6 +333,7 @@ pub struct BrushInstance {
     pub segment_index: i32,
     pub edge_flags: EdgeAaSegmentMask,
     pub brush_flags: BrushFlags,
+    pub user_data: i32,
 }
 
 impl From<BrushInstance> for PrimitiveInstanceData {
@@ -342,7 +345,7 @@ impl From<BrushInstance> for PrimitiveInstanceData {
                 instance.segment_index |
                 ((instance.edge_flags.bits() as i32) << 16) |
                 ((instance.brush_flags.bits() as i32) << 24),
-                0,
+                instance.user_data,
             ]
         }
     }

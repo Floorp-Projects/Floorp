@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "Realizează decupaje și capturi de ecran de pe web și salvează-le temporar sau permanent."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Realizează o captură de ecran"
+  },
+  "myShotsLink": {
+    "message": "Capturile mele"
+  },
+  "screenshotInstructions": {
+    "message": "Trage sau dă clic pe pagină pentru a selecta o regiune. Apasă ESC pentru a renunța."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Salvează"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Salvează porțiunea vizibilă"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Salvează pagina completă"
+  },
+  "cancelScreenshot": {
+    "message": "Renunță"
+  },
+  "downloadScreenshot": {
+    "message": "Descarcă"
+  },
+  "downloadOnlyNotice": {
+    "message": "În prezent ești în modul numai descărcare."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots se schimbă automat în modul numai descărcare în aceste situații:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "În fereastra de navigare privată."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Atunci când cookie-urile terțe sunt dezactivate."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Atunci când este activată opțiunea „Nu memora istoricul”."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Acum folosești Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Încărcările au fost dezactivate."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Link copiat"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Linkul către captura ta a fost copiat în clipboard. Apasă $META_KEY$-V pentru lipire.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copiază"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Captură copiată"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Captura a fost copiată în clipboard. Apasă $META_KEY$-V pentru a lipi.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Imaginea salvată va fi decupată la înălțimea de $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Nefuncțional."
+  },
+  "requestErrorDetails": {
+    "message": "Ne pare rău! Nu am putut salva captura. Încearcă din nou mai târziu."
+  },
+  "connectionErrorTitle": {
+    "message": "Nu ne putem conecta la capturile tale."
+  },
+  "connectionErrorDetails": {
+    "message": "Verifică conexiunea la internet. Dacă te poți conecta la internet ar putea fi o problemă temporară cu serviciul Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nu am putut să salvăm captura ta deoarece este o problemă cu serviciul Firefox Screenshots. Încearcă din nou mai târziu."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Nu putem realiza o captură de ecran a acestei pagini."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Aceasta este o pagină web standard așa că nu putem lua o captură a acesteia."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Nu poți realiza o captură a paginii Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Selecția este prea mică"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Capturile de ecran sunt dezactivate în modul de navigare privată"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Ne pare rău pentru inconveniență. Lucrăm să introducem această funcție în versiunile viitoare."
+  },
+  "genericErrorTitle": {
+    "message": "Ups! Firefox Screenshots a întâmpinat o eroare."
+  },
+  "genericErrorDetails": {
+    "message": "Nu știm ce s-a întâmplat. Poți încerca să iei o nouă captură sau o captură de la o altă pagină?"
+  },
+  "tourBodyIntro": {
+    "message": "Preia, salvează și împărtășește capturi de ecran fără a părăsi Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "O nouă modalitate de salvare"
+  },
+  "tourBodyPageAction": {
+    "message": "Extinde meniul de acțiuni ale paginii în bara de adrese oricând vrei să faci o captură."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Capturează întocmai ceea ce vrei"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Clic și trage pentru a captura doar o porțiune a unei pagini. Poți și să poziționezi cursorul peste porțiune pentru a evidenția selecția."
+  },
+  "tourHeaderFullPage": {
+    "message": "Capturează ferestre sau pagini întregi"
+  },
+  "tourBodyFullPage": {
+    "message": "Selectează butoanele din partea dreaptă sus pentru a captura zona vizibilă din fereastră sau pentru a captura o pagină întreagă."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Pe placul tău"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Salvează capturile decupate pe web pentru a le împărtăși mai ușor, sau descarcă-le pe calculator. Mai poți face clic pe butonul My Shots (capturile mele) pentru a găsi toate capturile luate."
+  },
+  "tourHeaderAccounts": {
+    "message": "Capturi de ecran de luat cu tine"
+  },
+  "tourBodyAccounts": {
+    "message": "Autentifică-te în contul Firefox pentru accesarea capturilor de pe toate dispozitivele și salvează definitiv capturile favorite."
+  },
+  "tourSkip": {
+    "message": "OMITE"
+  },
+  "tourNext": {
+    "message": "Diapozitivul următor"
+  },
+  "tourPrevious": {
+    "message": "Diapozitivul anterior"
+  },
+  "tourDone": {
+    "message": "Terminat"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Folosind Firefox Screenshots, ești de acord cu $TERMSANDPRIVACYNOTICETERMSLINK$ și $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Termenii"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Politica de confidenţialitate"
+  },
+  "libraryLabel": {
+    "message": "Capturi de ecran"
+  }
+}

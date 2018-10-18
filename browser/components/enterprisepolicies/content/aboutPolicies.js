@@ -235,6 +235,7 @@ function generateDocumentation() {
   // existing descriptions
   let string_mapping = {
     "DisableSetDesktopBackground": "DisableSetAsDesktopBackground",
+    "Certificates": "CertificatesDescription",
   };
 
   for (let policyName in schema.properties) {

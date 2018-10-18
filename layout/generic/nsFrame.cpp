@@ -5708,7 +5708,7 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
                                          boxSizingAdjust.BSize(aWM),
                                          *blockStyleCoord);
     } else if (MOZ_UNLIKELY(isGridItem) &&
-               blockStyleCoord->GetUnit() == eStyleUnit_Auto &&
+               blockStyleCoord->IsAutoOrEnum() &&
                !IS_TRUE_OVERFLOW_CONTAINER(this)) {
       auto cbSize = aCBSize.BSize(aWM);
       if (cbSize != NS_AUTOHEIGHT) {

@@ -34,8 +34,8 @@ function test() {
 
     const tab = yield addTab(TAB1_URL);
     const { tabs } = yield listTabs(client);
-    const [, tabClient] = yield attachTarget(client, findTab(tabs, TAB1_URL));
-    yield listWorkers(tabClient);
+    const [, targetFront] = yield attachTarget(client, findTab(tabs, TAB1_URL));
+    yield listWorkers(targetFront);
 
     // If a page still has pending network requests, it will not be moved into
     // the bfcache. Consequently, we cannot use waitForWorkerListChanged here,
@@ -43,8 +43,8 @@ function test() {
     // registered. Instead, we have to wait for the promise returned by
     // createWorker in the tab to be resolved.
     yield createWorkerInTab(tab, WORKER1_URL);
-    let { workers } = yield listWorkers(tabClient);
-    let [, workerClient1] = yield attachWorker(tabClient,
+    let { workers } = yield listWorkers(targetFront);
+    let [, workerClient1] = yield attachWorker(targetFront,
                                                findWorker(workers, WORKER1_URL));
     is(workerClient1.isClosed, false, "worker in tab 1 should not be closed");
 
@@ -55,8 +55,8 @@ function test() {
     is(workerClient1.isClosed, true, "worker in tab 1 should be closed");
 
     yield createWorkerInTab(tab, WORKER2_URL);
-    ({ workers } = yield listWorkers(tabClient));
-    const [, workerClient2] = yield attachWorker(tabClient,
+    ({ workers } = yield listWorkers(targetFront));
+    const [, workerClient2] = yield attachWorker(targetFront,
                                                findWorker(workers, WORKER2_URL));
     is(workerClient2.isClosed, false, "worker in tab 2 should not be closed");
 
@@ -66,8 +66,8 @@ function test() {
     yield waitForWorkerClose(workerClient2);
     is(workerClient2.isClosed, true, "worker in tab 2 should be closed");
 
-    ({ workers } = yield listWorkers(tabClient));
-    [, workerClient1] = yield attachWorker(tabClient,
+    ({ workers } = yield listWorkers(targetFront));
+    [, workerClient1] = yield attachWorker(targetFront,
                                            findWorker(workers, WORKER1_URL));
     is(workerClient1.isClosed, false, "worker in tab 1 should not be closed");
 

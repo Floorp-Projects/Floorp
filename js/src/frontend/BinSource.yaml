@@ -38,13 +38,13 @@ cpp:
         #include "frontend/BinSource.h"
         #include "frontend/BinTokenReaderTester.h"
         #include "frontend/FullParseHandler.h"
+        #include "frontend/ParseNode.h"
         #include "frontend/Parser.h"
         #include "frontend/SharedContext.h"
 
         #include "vm/RegExpObject.h"
 
         #include "frontend/ParseContext-inl.h"
-        #include "frontend/ParseNode-inl.h"
 
         namespace js {
         namespace frontend {
@@ -271,28 +271,37 @@ AssertedMaybePositionalParameterName:
         MutableHandle<GCVector<JSAtom*>> positionalParams
     extra-args: |
         scopeKind, positionalParams
+    sum-arms:
+        AssertedRestParameterName:
+            disabled: true
+        AssertedParameterName:
+            disabled: true
 
 AssertedPositionalParameterName:
     inherits: AssertedMaybePositionalParameterName
     fields:
         name:
             after: |
-                // FIXME: The following checks should be performed inside
-                // checkPositionalParameterIndices to match the spec's order
-                // (bug 1490976).
-                if (index >= positionalParams.get().length()) {
-                    return raiseError("AssertedPositionalParameterName.length out of range");
+                // `positionalParams` vector can be shorter than the actual
+                // parameter length. Resize on demand.
+                // (see also ListOfAssertedMaybePositionalParameterName)
+                size_t prevLength = positionalParams.get().length();
+                if (index >= prevLength) {
+                    // This is implementation limit, which is not in the spec.
+                    if (index >= ARGNO_LIMIT - 1) {
+                        return raiseError("AssertedPositionalParameterName.index is too big");
+                    }
+                    size_t newLength = index + 1;
+                    BINJS_TRY(positionalParams.get().resize(newLength));
+                    for (uint32_t i = prevLength; i < newLength; i++) {
+                        positionalParams.get()[i] = nullptr;
+                    }
                 }
+
                 if (positionalParams.get()[index]) {
                     return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
                 }
                 positionalParams.get()[index] = name;
-
-AssertedRestParameterName:
-    inherits: AssertedMaybePositionalParameterName
-
-AssertedParameterName:
-    inherits: AssertedMaybePositionalParameterName
 
 AssertedBoundNamesScope:
     inherits: AssertedBlockScope
@@ -496,8 +505,9 @@ CallExpression:
 
         // Check for direct calls to `eval`.
         if (factory_.isEvalName(callee, cx_)) {
-            if (!parseContext_->varScope().lookupDeclaredNameForAdd(callee->name())
-             && !parseContext_->innermostScope()->lookupDeclaredNameForAdd(callee->name())) {
+            if (!parseContext_->varScope().lookupDeclaredNameForAdd(cx_->names().eval)
+             && !parseContext_->innermostScope()->lookupDeclaredNameForAdd(cx_->names().eval))
+            {
                 // This is a direct call to `eval`.
                 if (!parseContext_->sc()->hasDirectEval()) {
                     return raiseMissingDirectEvalInAssertedScope();
@@ -612,7 +622,12 @@ DataProperty:
             return raiseError("DataProperty key kind");
         }
 
-        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
+        ParseNode* result;
+        if (name->template is<NameNode>() && name->template as<NameNode>().atom() == cx_->names().proto) {
+            BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProto, start, expression));
+        } else {
+            BINJS_TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
+        }
 
 Directive:
     build: |
@@ -839,8 +854,7 @@ FormalParameters:
     build: |
         auto result = items;
         if (rest) {
-            BINJS_TRY_DECL(spread, factory_.newSpread(start, rest));
-            factory_.addList(result, spread);
+            return raiseError("Rest parameter is not supported in this preview release");
         }
 
 ForStatement:
@@ -909,13 +923,14 @@ ListOfAssertedMaybePositionalParameterName:
     init: |
         (void) start;
         auto result = Ok();
-        if (length >= ARGNO_LIMIT) {
-            return raiseError("Too many function parameters");
-        }
-        BINJS_TRY(positionalParams.get().resize(length));
-        for (uint32_t i = 0; i < length; i++) {
-            positionalParams.get()[i] = nullptr;
-        }
+        // This list contains also destructuring parameters, and the number of
+        // list items can be greater than the actual parameters, or more than
+        // ARGNO_LIMIT even if the number of parameters fits into ARGNO_LIMIT.
+        // Also, the number of parameters can be greater than this list's length
+        // if one of destructuring parameter is empty.
+        //
+        // We resize `positionalParams` vector on demand, to keep the vector
+        // length match to the known maximum positional parameter index + 1.
 
 ListOfAssertedDeclaredName:
     inherits: ListOfAssertedBoundName
@@ -1086,17 +1101,22 @@ ReturnStatement:
         BINJS_TRY_DECL(result, factory_.newReturnStatement(expression, tokenizer_->pos(start)));
 
 Script:
+    fields:
+        directives:
+            after: |
+                forceStrictIfNecessary(parseContext_->sc(), directives);
     build:
         MOZ_TRY(checkClosedVars(parseContext_->varScope()));
         BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
 
 ShorthandProperty:
     build: |
-        if (!factory_.isUsableAsObjectPropertyName(name)) {
-            BINJS_TRY_VAR(name, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
-        }
+        MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
+        MOZ_ASSERT(!factory_.isUsableAsObjectPropertyName(name));
+        BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(name->template as<NameNode>().name(), tokenizer_->pos(start)));
 
-        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, name, AccessorType::None));
+        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(propName, name, AccessorType::None));
+        result->setKind(ParseNodeKind::Shorthand);
 
 SwitchCase:
     type-ok:
@@ -1327,5 +1347,10 @@ WhileStatement:
         BINJS_TRY_DECL(result, factory_.newWhileStatement(start, test, body));
 
 WithStatement:
-    build:
+    fields:
+        body:
+            before: |
+                ParseContext::Statement stmt(parseContext_, StatementKind::With);
+    build: |
+        parseContext_->sc()->setBindingsAccessedDynamically();
         BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));

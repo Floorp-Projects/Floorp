@@ -27,11 +27,12 @@
     <link rel="icon" id="favicon" href="chrome://global/skin/icons/warning.svg"/>
   </head>
 
-  <body dir="&locale.dir;">
+  <body data-new-error-pages-enabled="true" dir="&locale.dir;">
     <!-- ERROR ITEM CONTAINER (removed during loading to avoid bug 39098) -->
     <div id="errorContainer">
       <div id="errorPageTitlesContainer">
         <span id="ept_nssBadCert">&certerror.pagetitle2;</span>
+        <span id="ept_nssBadCert_sts">&certerror.sts.pagetitle;</span>
         <span id="ept_captivePortal">&captivePortal.title;</span>
         <span id="ept_dnsNotFound">&dnsNotFound.pageTitle;</span>
         <span id="ept_malformedURI">&malformedURI.pageTitle;</span>
@@ -60,6 +61,7 @@
         <h1 id="et_unsafeContentType">&unsafeContentType.title;</h1>
         <h1 id="et_nssFailure2">&nssFailure2.title;</h1>
         <h1 id="et_nssBadCert">&certerror.longpagetitle2;</h1>
+        <h1 id="et_nssBadCert_sts">&certerror.sts.longpagetitle;</h1>
         <h1 id="et_cspBlocked">&cspBlocked.title;</h1>
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentErrorv2">&corruptedContentErrorv2.title;</h1>
@@ -91,6 +93,7 @@
         <div id="ed_unsafeContentType">&unsafeContentType.longDesc;</div>
         <div id="ed_nssFailure2">&nssFailure2.longDesc2;</div>
         <div id="ed_nssBadCert">&certerror.introPara2;</div>
+        <div id="ed_nssBadCert_sts">&certerror.sts.introPara;</div>
         <div id="ed_cspBlocked">&cspBlocked.longDesc;</div>
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentErrorv2">&corruptedContentErrorv2.longDesc;</div>
@@ -116,6 +119,10 @@
         <div id="es_nssBadCert_SSL_ERROR_BAD_CERT_DOMAIN">&certerror.badCertDomain.whatCanYouDoAboutIt;</div>
         <div id="es_nssBadCert_SEC_ERROR_OCSP_INVALID_SIGNING_CERT">&certerror.badCertDomain.whatCanYouDoAboutIt;</div>
       </div>
+      <!-- Stores an alternative text for when we don't want to add "Recommended" to the
+           return button. This is one of many l10n atrocities in this file and should be
+           removed when we finally switch to Fluent. -->
+      <span id="stsReturnButtonText">&returnToPreviousPage.label;</span>
     </div>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
@@ -164,7 +171,7 @@
           <div id="errorLongDesc" />
 
           <div id="learnMoreContainer">
-            <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
+            <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new" data-telemetry-id="learn_more_link">&errorReporting.learnMore;</a></p>
           </div>
         </div>
 
@@ -176,10 +183,10 @@
         </div>
 
         <div id="certErrorAndCaptivePortalButtonContainer" class="button-container">
-          <button id="returnButton" class="primary" autocomplete="off">&returnToPreviousPage1.label;</button>
+          <button id="returnButton" class="primary" autocomplete="off" data-telemetry-id="return_button_top">&returnToPreviousPage1.label;</button>
           <button id="openPortalLoginPageButton" class="primary" autocomplete="off">&openPortalLoginPage.label2;</button>
           <button id="errorTryAgain" class="primary" autocomplete="off">&retry.label;</button>
-          <button id="advancedButton" autocomplete="off">&continue2.label;</button>
+          <button id="advancedButton" data-telemetry-id="advanced_button" autocomplete="off">&continue2.label;</button>
           <button id="moreInformationButton" autocomplete="off">&moreInformation.label;</button>
         </div>
       </div>
@@ -191,26 +198,27 @@
       <div id="advancedPanelContainer">
         <div id="badCertAdvancedPanel" class="advanced-panel">
           <p id="badCertTechnicalInfo"/>
+          <a id="viewCertificate" href="javascript:void(0)">&viewCertificate.label;</a>
           <div id="advancedPanelButtonContainer" class="button-container">
-            <button id="advancedPanelReturnButton" class="primary" autocomplete="off">&returnToPreviousPage1.label;</button>
+            <button id="advancedPanelReturnButton" class="primary" autocomplete="off" data-telemetry-id="return_button_adv">&returnToPreviousPage1.label;</button>
             <button id="advancedPanelErrorTryAgain" class="primary" autocomplete="off">&retry.label;</button>
             <div class="exceptionDialogButtonContainer">
-              <button id="exceptionDialogButton">&securityOverride.exceptionButton1Label;</button>
+              <button id="exceptionDialogButton" data-telemetry-id="exception_button">&securityOverride.exceptionButton1Label;</button>
             </div>
           </div>
         </div>
 
         <div id="certificateErrorReporting">
             <p class="toggle-container-with-text">
-                <input type="checkbox" id="automaticallyReportInFuture" role="checkbox" />
+                <input type="checkbox" id="automaticallyReportInFuture" role="checkbox" data-telemetry-id="auto_report_cb"/>
                 <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic2;</label>
             </p>
         </div>
 
         <div id="certificateErrorDebugInformation">
-          <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
+          <button id="copyToClipboard" data-telemetry-id="clipboard_button_top">&certerror.copyToClipboard.label;</button>
           <div id="certificateErrorText"/>
-          <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
+          <button id="copyToClipboard" data-telemetry-id="clipboard_button_bot">&certerror.copyToClipboard.label;</button>
         </div>
       </div>
     </div>

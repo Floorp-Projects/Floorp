@@ -44,6 +44,7 @@ class UrlbarInput {
 
     this.panel = options.panel;
     this.window = this.textbox.ownerGlobal;
+    this.document = this.window.document;
     this.controller = options.controller || new UrlbarController({
       window: this.window,
     });
@@ -238,6 +239,11 @@ class UrlbarInput {
     return this.textbox.getAttribute("focused") == "true";
   }
 
+  get goButton() {
+    return this.document.getAnonymousElementByAttribute(this.textbox, "anonid",
+      "urlbar-go-button");
+  }
+
   get value() {
     return this.inputField.value;
   }
@@ -248,6 +254,11 @@ class UrlbarInput {
     this.valueIsTyped = false;
     this.inputField.value = val;
     this.formatValue();
+
+    // Dispatch ValueChange event for accessibility.
+    let event = this.document.createEvent("Events");
+    event.initEvent("ValueChange", true, true);
+    this.inputField.dispatchEvent(event);
 
     return val;
   }
@@ -519,9 +530,9 @@ class CopyCutController {
                                 urlbar.inputField.value.substring(end);
       urlbar.selectionStart = urlbar.selectionEnd = start;
 
-      let event = urlbar.window.document.createEvent("UIEvents");
+      let event = urlbar.document.createEvent("UIEvents");
       event.initUIEvent("input", true, false, this.window, 0);
-      urlbar.dispatchEvent(event);
+      urlbar.textbox.dispatchEvent(event);
 
       urlbar.window.SetPageProxyState("invalid");
     }

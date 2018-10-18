@@ -53,6 +53,15 @@
     "high": 60000,
     "n_buckets": 50
   },
+  "ABOUT_CONFIG_FEATURES_USAGE": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["pamadini@mozilla.com"],
+    "expires_in_version": "67",
+    "kind": "categorical",
+    "labels": ["Show", "Search", "RegexSearch", "SortByName", "SortByStatus", "SortByType", "SortByValue", "ModifyValue", "Copy", "CopyName", "CopyValue", "CreateNew", "Reset"],
+    "bug_numbers": [1493445],
+    "description": "Record number of times particular features on about:config are used"
+  },
   "ADDON_MANAGER_UPGRADE_UI_SHOWN": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "53",
@@ -1709,6 +1718,23 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Whether a HTTP transaction routed via Alt-Svc was scheme=http"
+  },
+  "HTTP_ALTSVC_ENTRIES_PER_HEADER": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "bug_numbers": [1499149],
+    "alert_emails": ["hurley@mozilla.com"],
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "How many alt-svc productions were seen in a single Alt-Svc header"
+  },
+  "HTTP_ALTSVC_MAPPING_CHANGED_TARGET": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "bug_numbers": [1499149],
+    "alert_emails": ["hurley@mozilla.com"],
+    "kind": "boolean",
+    "description": "Whether or not a new alt-svc mapping would change the target hostname of the existing mapping"
   },
   "HTTP_SCHEME_UPGRADE_TYPE": {
     "record_in_processes": ["main", "content"],
@@ -3390,14 +3416,14 @@
     "bug_numbers": [1460589],
     "description": "DNS: success distribution when both native and TRR were used"
   },
-  "DNS_TRR_FIRST": {
+  "DNS_TRR_FIRST2": {
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "labels": ["TRRWorked", "NativeFallback", "BothFailed"],
-    "bug_numbers": [1472659],
-    "description": "TRR-first mode distribution. 0=Worked, 1=fell back to native, 2=both failed"
+    "labels": ["TRR", "NativeAfterTRR", "Native", "BothFailed"],
+    "bug_numbers": [1497252],
+    "description": "TRR-first mode distribution. 0=Worked, 1=fell back fine after TRR fail, 2=native worked, 3=both failed"
   },
   "DNS_TRR_DISABLED": {
     "record_in_processes": ["main"],
@@ -3432,6 +3458,15 @@
     "n_buckets": 100,
     "bug_numbers": [1470853],
     "description": "Number of DOH requests per connection"
+  },
+  "DNS_TRR_SUCCESS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["Fine", "Timeout", "Bad"],
+    "description": "How often TRR (Trusted Recursive Resolver) requests are fine, time-out or error.",
+    "bug_numbers": [1497438],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
   },
   "DNS_LOOKUP_ALGORITHM": {
     "record_in_processes": ["main"],
@@ -14151,5 +14186,16 @@
     "bug_numbers": [1490074],
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
     "releaseChannelCollection": "opt-out"
+  },
+  "QM_REPOSITORIES_INITIALIZATION_TIME": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "68",
+    "bug_numbers": [1481716],
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 30,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["ttung@mozilla.com"],
+    "description": "Time (ms) for the QuotaManager to initialize repositories."
   }
 }

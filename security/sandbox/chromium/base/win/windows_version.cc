@@ -14,7 +14,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/win/registry.h"
 
-#if !defined(__MINGW32__) && !defined(__clang__) && _MSC_FULL_VER < 190024213
+#if !defined(__clang__) && _MSC_FULL_VER < 190024213
 #error VS 2015 Update 3 with Cumulative Servicing Release or higher is required
 #endif
 

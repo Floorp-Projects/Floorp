@@ -51,8 +51,8 @@
                     permissions-remove-all.label,
                     permissions-button-cancel.label,
                     permissions-button-ok.label,
-                    permissions-exceptions-tracking-protection-window.title,
-                    permissions-exceptions-tracking-protection-desc,
+                    permissions-exceptions-content-blocking-window.title,
+                    permissions-exceptions-content-blocking-desc,
                   "/>
         </hbox>
       </vbox>
@@ -368,6 +368,12 @@
     </hbox>
   </hbox>
 </groupbox>
+
+<!-- The form autofill section is inserted in to this box
+     after the form autofill extension has initialized. -->
+<groupbox id="formAutofillGroupBox"
+          data-category="panePrivacy"
+          data-subcategory="form-autofill"></groupbox>
 
 <!-- History -->
 <groupbox id="historyGroup" data-category="panePrivacy" hidden="true">

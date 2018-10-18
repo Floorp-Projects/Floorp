@@ -33,7 +33,7 @@ pref("devtools.command-button-noautohide.enabled", false);
 // Enable the Inspector
 pref("devtools.inspector.enabled", true);
 // What was the last active sidebar in the inspector
-pref("devtools.inspector.activeSidebar", "ruleview");
+pref("devtools.inspector.activeSidebar", "layoutview");
 pref("devtools.inspector.remote", false);
 
 // Enable the 3 pane mode in the inspector
@@ -58,8 +58,8 @@ pref("devtools.inspector.fonthighlighter.enabled", true);
 pref("devtools.inspector.changes.enabled", false);
 
 // Flexbox preferences
-// Enable the Flexbox highlighter and inspector panel in Nightly
-#if defined(NIGHTLY_BUILD)
+// Enable the Flexbox highlighter and inspector panel in Nightly and DevEdition
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
 pref("devtools.inspector.flexboxHighlighter.enabled", true);
 pref("devtools.flexboxinspector.enabled", true);
 #else

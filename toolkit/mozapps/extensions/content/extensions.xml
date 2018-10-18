@@ -605,6 +605,8 @@
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
 
+      <xul:image class="card-heading-image" anonid="theme-screenshot" hidden="true"/>
+
       <xul:hbox class="content-container" align="center">
         <xul:vbox class="icon-container">
           <xul:image anonid="icon" class="icon"/>
@@ -668,7 +670,7 @@
             <xul:hbox anonid="install-status" class="install-status"
                       hidden="true"/>
           </xul:hbox>
-          <xul:hbox anonid="control-container" class="control-container">
+          <xul:hbox anonid="control-container" class="control-container" flex="1">
             <xul:button anonid="preferences-btn"
                         class="addon-control preferences"
 #ifdef XP_WIN
@@ -693,6 +695,7 @@
                         oncommand="document.getBindingParent(this).uninstall();"/>
             <xul:menulist anonid="state-menulist"
                           class="addon-control state"
+                          flex="1"
                           tooltiptext="&cmd.stateMenu.tooltip;">
               <xul:menupopup>
                 <xul:menuitem anonid="ask-to-activate-menuitem"

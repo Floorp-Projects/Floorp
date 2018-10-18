@@ -16,7 +16,7 @@ function run_test() {
   client.connect().then(function() {
     attachTestTabAndResume(
       client, "test-promise-state",
-      function(response, tabClient, threadClient) {
+      function(response, targetFront, threadClient) {
         (async function() {
           const packet = await executeOnNextTickAndWaitForPause(
             () => evalCode(debuggee), client);

@@ -27,8 +27,6 @@ namespace gl {
 
 struct GLContextSymbols final
 {
-    GLContextSymbols() = delete; // Initialize with {}.
-
     void (GLAPIENTRY * fActiveTexture)(GLenum);
     void (GLAPIENTRY * fAttachShader)(GLuint, GLuint);
     void (GLAPIENTRY * fBeginQuery)(GLenum, GLuint);

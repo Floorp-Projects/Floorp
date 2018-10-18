@@ -2,6 +2,9 @@
 var test = function (isContent) {
   SimpleTest.waitForExplicitFinish();
 
+	SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+																		  true]]});
+
   let { ww } = SpecialPowers.Services;
   window.chromeWindow = ww.activeWindow;
 

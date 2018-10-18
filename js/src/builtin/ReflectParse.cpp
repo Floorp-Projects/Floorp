@@ -16,6 +16,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/Reflect.h"
+#include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
@@ -24,7 +25,6 @@
 #include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
 
-#include "frontend/ParseNode-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;

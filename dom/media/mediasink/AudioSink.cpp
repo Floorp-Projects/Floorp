@@ -76,11 +76,6 @@ AudioSink::Init(const PlaybackParams& aParams, RefPtr<GenericPromise>& aEndPromi
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  if (mAudioQueue.IsFinished()) {
-    aEndPromise = GenericPromise::CreateAndResolve(true, __func__);
-    return NS_OK;
-  }
-
   mAudioQueueListener = mAudioQueue.PushEvent().Connect(
     mOwnerThread, this, &AudioSink::OnAudioPushed);
   mAudioQueueFinishListener = mAudioQueue.FinishEvent().Connect(
@@ -136,9 +131,9 @@ AudioSink::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  mAudioQueueListener.DisconnectIfExists();
-  mAudioQueueFinishListener.DisconnectIfExists();
-  mProcessedQueueListener.DisconnectIfExists();
+  mAudioQueueListener.Disconnect();
+  mAudioQueueFinishListener.Disconnect();
+  mProcessedQueueListener.Disconnect();
 
   if (mAudioStream) {
     mAudioStream->Shutdown();

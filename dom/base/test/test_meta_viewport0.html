@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>meta viewport test</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script src="viewport_helpers.js"></script>
 </head>
@@ -12,70 +13,34 @@
   <script type="application/javascript">
     "use strict";
 
-    SimpleTest.waitForExplicitFinish();
-
-    let tests = [];
-
     function fuzzeq(a, b, msg) {
       ok(Math.abs(a - b) < 1e-6, msg);
     }
 
-    tests.push(function test1() {
-      SpecialPowers.pushPrefEnv(scaleRatio(1.0),
-        function() {
-          let info = getViewportInfo(800, 480);
-          fuzzeq(info.defaultZoom, 0.1, "initial scale is unspecified");
-          fuzzeq(info.minZoom, 0.1,     "minimum scale defaults to the absolute minimum");
-          is(info.maxZoom,     10,      "maximum scale defaults to the absolute maximum");
-          is(info.width,       980,     "width is the default width");
-          is(info.height,      588,     "height is proportional to displayHeight");
-          is(info.autoSize,    false,   "autoSize is disabled by default");
-          is(info.allowZoom,   true,    "zooming is enabled by default");
+    add_task(async function test1() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
 
-          info = getViewportInfo(490, 600);
-          is(info.width,       980,     "width is still the default width");
-          is(info.height,      1200,    "height is proportional to the new displayHeight");
+      let info = getViewportInfo(800, 480);
+      fuzzeq(info.defaultZoom, 0.1, "initial scale is unspecified");
+      fuzzeq(info.minZoom, 0.1,     "minimum scale defaults to the absolute minimum");
+      is(info.maxZoom,     10,      "maximum scale defaults to the absolute maximum");
+      is(info.width,       980,     "width is the default width");
+      is(info.height,      588,     "height is proportional to displayHeight");
+      is(info.autoSize,    false,   "autoSize is disabled by default");
+      is(info.allowZoom,   true,    "zooming is enabled by default");
 
-          nextTest();
-        });
+      info = getViewportInfo(490, 600);
+      is(info.width,       980,     "width is still the default width");
+      is(info.height,      1200,    "height is proportional to the new displayHeight");
     });
 
-    tests.push(function test2() {
-      SpecialPowers.pushPrefEnv(scaleRatio(1.5),
-        function() {
-          let info = getViewportInfo(800, 480);
-          is(info.width,       980,     "width is still the default width");
-          is(info.height,      588,     "height is still proportional to displayHeight");
+    add_task(async function test2() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.5));
 
-          nextTest();
-        });
+      let info = getViewportInfo(800, 480);
+      is(info.width,       980,     "width is still the default width");
+      is(info.height,      588,     "height is still proportional to displayHeight");
     });
-
-    function getViewportInfo(aDisplayWidth, aDisplayHeight) {
-      let defaultZoom = {}, allowZoom = {}, minZoom = {}, maxZoom = {},
-          width = {}, height = {}, autoSize = {};
-
-      let cwu = SpecialPowers.getDOMWindowUtils(window);
-      cwu.getViewportInfo(aDisplayWidth, aDisplayHeight, defaultZoom, allowZoom,
-                          minZoom, maxZoom, width, height, autoSize);
-      return {
-        defaultZoom: defaultZoom.value,
-        minZoom: minZoom.value,
-        maxZoom: maxZoom.value,
-        width: width.value,
-        height: height.value,
-        autoSize: autoSize.value,
-        allowZoom: allowZoom.value
-      };
-    }
-
-    function nextTest() {
-      if (tests.length)
-        (tests.shift())();
-      else
-        SimpleTest.finish();
-    }
-    addEventListener("load", nextTest);
   </script>
 </body>
 </html>

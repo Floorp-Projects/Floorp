@@ -1187,7 +1187,7 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
 
   FlushSceneBuilds();
   FlushFrameGeneration();
-  mApi->Readback(start, size, buffer, buffer_size);
+  mApi->Readback(start, size, Range<uint8_t>(buffer, buffer_size));
 
   return IPC_OK();
 }
@@ -1390,17 +1390,22 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvScheduleComposite()
 {
+  ScheduleGenerateFrame();
+  return IPC_OK();
+}
+
+void
+WebRenderBridgeParent::ScheduleForcedGenerateFrame()
+{
   if (mDestroyed) {
-    return IPC_OK();
+    return;
   }
 
-  // Force frame rendering during next frame generation.
   wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
   fastTxn.InvalidateRenderedFrame();
   mApi->SendTransaction(fastTxn);
 
   ScheduleGenerateFrame();
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -1600,6 +1605,17 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
   MaybeGenerateFrame(/* aForceGenerateFrame */ false);
+}
+
+TimeDuration
+WebRenderBridgeParent::GetVsyncInterval() const
+{
+  // This function should only get called in the root WRBP
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
+  if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
+    return cbp->GetVsyncInterval();
+  }
+  return TimeDuration();
 }
 
 void

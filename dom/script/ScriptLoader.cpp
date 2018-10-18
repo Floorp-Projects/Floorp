@@ -759,13 +759,13 @@ ScriptLoader::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
 
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, specifier)
 JSObject*
-HostResolveImportedModule(JSContext* aCx, JS::Handle<JSObject*> aModule,
+HostResolveImportedModule(JSContext* aCx,
+                          JS::Handle<JS::Value> aReferencingPrivate,
                           JS::Handle<JSString*> aSpecifier)
 {
   // Let referencing module script be referencingModule.[[HostDefined]].
-  JS::Value value = JS::GetModuleHostDefinedField(aModule);
-  auto script = static_cast<ModuleScript*>(value.toPrivate());
-  MOZ_ASSERT(script->ModuleRecord() == aModule);
+  auto script = static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
+  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) == aReferencingPrivate);
 
   // Let url be the result of resolving a module specifier given referencing
   // module script and specifier.
@@ -792,19 +792,12 @@ HostResolveImportedModule(JSContext* aCx, JS::Handle<JSObject*> aModule,
 }
 
 bool
-HostPopulateImportMeta(JSContext* aCx, JS::Handle<JSObject*> aModule,
+HostPopulateImportMeta(JSContext* aCx,
+                       JS::Handle<JS::Value> aReferencingPrivate,
                        JS::Handle<JSObject*> aMetaObject)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aModule);
-
-  JS::Value value = JS::GetModuleHostDefinedField(aModule);
-  if (value.isUndefined()) {
-    JS_ReportErrorASCII(aCx, "Module script not found");
-    return false;
-  }
-
-  auto script = static_cast<ModuleScript*>(value.toPrivate());
-  MOZ_DIAGNOSTIC_ASSERT(script->ModuleRecord() == aModule);
+  auto script = static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
+  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) == aReferencingPrivate);
 
   nsAutoCString url;
   MOZ_DIAGNOSTIC_ASSERT(script->BaseURL());
@@ -1116,7 +1109,7 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
       // Inform the HTTP cache that we prefer to have information coming from the
       // bytecode cache instead of the sources, if such entry is already registered.
       LOG(("ScriptLoadRequest (%p): Maybe request bytecode", aRequest));
-      cic->PreferAlternativeDataType(nsContentUtils::JSBytecodeMimeType());
+      cic->PreferAlternativeDataType(nsContentUtils::JSBytecodeMimeType(), EmptyCString());
     } else {
       // If we are explicitly loading from the sources, such as after a
       // restarted request, we might still want to save the bytecode after.
@@ -1125,7 +1118,7 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
       // does not exist, such that we can later save the bytecode with a
       // different alternative data type.
       LOG(("ScriptLoadRequest (%p): Request saving bytecode later", aRequest));
-      cic->PreferAlternativeDataType(kNullMimeType);
+      cic->PreferAlternativeDataType(kNullMimeType, EmptyCString());
     }
   }
 
@@ -2412,8 +2405,8 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
 
                 if (srcBuf) {
                   if (recordreplay::IsRecordingOrReplaying()) {
-                    recordreplay::NoteContentParse(this, options.filename(), "application/javascript",
-                                                   srcBuf->get(), srcBuf->length());
+                    recordreplay::NoteContentParse16(this, options.filename(), "application/javascript",
+                                                     srcBuf->get(), srcBuf->length());
                   }
                   rv = exec.CompileAndExec(options, *srcBuf, &script);
                 } else {

@@ -522,11 +522,7 @@ private:
   DECL_GFX_PREF(Once, "gfx.vsync.compositor.unobserve-count",  CompositorUnobserveCount, int32_t, 10);
 
   DECL_GFX_PREF(Once, "gfx.webrender.all",                     WebRenderAll, bool, false);
-#ifdef NIGHTLY_BUILD
   DECL_GFX_PREF(Once, "gfx.webrender.all.qualified",           WebRenderAllQualified, bool, true);
-#else
-  DECL_GFX_PREF(Once, "gfx.webrender.all.qualified",           WebRenderAllQualified, bool, false);
-#endif
   DECL_GFX_PREF(Live, "gfx.webrender.blob-images",             WebRenderBlobImages, bool, true);
   DECL_GFX_PREF(Live, "gfx.webrender.blob.invalidation",       WebRenderBlobInvalidation, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrender.blob.paint-flashing",     WebRenderBlobPaintFlashing, bool, false);
@@ -581,7 +577,6 @@ private:
   DECL_GFX_PREF(Live, "layers.advanced.basic-layer.enabled",          LayersAdvancedBasicLayerEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.amd-switchable-gfx.enabled",     LayersAMDSwitchableGfxEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.async-pan-zoom.enabled",         AsyncPanZoomEnabledDoNotUseDirectly, bool, true);
-  DECL_GFX_PREF(Once, "layers.async-pan-zoom.separate-event-thread", AsyncPanZoomSeparateEventThread, bool, false);
   DECL_GFX_PREF(Live, "layers.bench.enabled",                  LayersBenchEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.bufferrotation.enabled",         BufferRotationEnabled, bool, true);
   DECL_GFX_PREF(Live, "layers.child-process-shutdown",         ChildProcessShutdown, bool, true);
@@ -707,7 +702,7 @@ private:
   DECL_GFX_PREF(Once, "layout.paint_rects_separately",         LayoutPaintRectsSeparately, bool, true);
 
   // This and code dependent on it should be removed once containerless scrolling looks stable.
-  DECL_GFX_PREF(Live, "layout.scroll.root-frame-containers",   LayoutUseContainersForRootFrames, bool, true);
+  DECL_OVERRIDE_PREF(Live, "layout.scroll.root-frame-containers",   LayoutUseContainersForRootFrames, !OverrideBase_WebRender());
   // This pref is to be set by test code only.
   DECL_GFX_PREF(Live, "layout.scrollbars.always-layerize-track", AlwaysLayerizeScrollbarTrackTestOnly, bool, false);
   DECL_GFX_PREF(Live, "layout.smaller-painted-layers",         LayoutSmallerPaintedLayers, bool, false);

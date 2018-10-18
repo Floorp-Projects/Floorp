@@ -109,7 +109,7 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
             err.update({
                 'hint': err.get('fix'),
                 'level': 'error' if err['severity'] == 2 else 'warning',
-                'lineno': err.get('line'),
+                'lineno': err.get('line') or 0,
                 'path': obj['filePath'],
                 'rule': err.get('ruleId'),
             })

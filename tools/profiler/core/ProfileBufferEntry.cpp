@@ -1099,7 +1099,10 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
     }
 
     if (numFrames == 0) {
-      ERROR_AND_CONTINUE("expected one or more frame entries");
+      // It is possible to have empty stacks if native stackwalking is
+      // disabled. Skip samples with empty stacks. (See Bug 1497985).
+      // Thus, don't use ERROR_AND_CONTINUE, but just continue.
+      continue;
     }
 
     sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);

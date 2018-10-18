@@ -34,7 +34,6 @@ loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item"
 loader.lazyRequireGetter(this, "ExtensionSidebar", "devtools/client/inspector/extensions/extension-sidebar");
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
-loader.lazyRequireGetter(this, "getScreenshotFront", "devtools/shared/fronts/screenshot", true);
 loader.lazyRequireGetter(this, "saveScreenshot", "devtools/shared/screenshot/save");
 loader.lazyRequireGetter(this, "ChangesManager",
 "devtools/client/inspector/changes/ChangesManager");
@@ -877,7 +876,7 @@ Inspector.prototype = {
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
     if (this.is3PaneModeEnabled && defaultTab === "ruleview") {
-      defaultTab = "computedview";
+      defaultTab = "layoutview";
     }
 
     // Append all side panels
@@ -2334,7 +2333,7 @@ Inspector.prototype = {
       selector: this.selectionCssSelector,
       clipboard: clipboardEnabled
     };
-    const screenshotFront = getScreenshotFront(this.target);
+    const screenshotFront = this.target.getFront("screenshot");
     const screenshot = await screenshotFront.capture(args);
     await saveScreenshot(this.panelWin, args, screenshot);
   },

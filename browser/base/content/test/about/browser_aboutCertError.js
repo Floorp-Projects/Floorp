@@ -7,46 +7,10 @@
 
 const GOOD_PAGE = "https://example.com/";
 const GOOD_PAGE_2 = "https://example.org/";
-const DUMMY_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", GOOD_PAGE) + "dummy_page.html";
 const BAD_CERT = "https://expired.example.com/";
 const UNKNOWN_ISSUER = "https://self-signed.example.com ";
 const BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:443";
 const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
-
-function injectErrorPageFrame(tab, src) {
-  return ContentTask.spawn(tab.linkedBrowser, {frameSrc: src}, async function({frameSrc}) {
-    let loaded = ContentTaskUtils.waitForEvent(content.wrappedJSObject, "DOMFrameContentLoaded");
-    let iframe = content.document.createElement("iframe");
-    iframe.src = frameSrc;
-    content.document.body.appendChild(iframe);
-    await loaded;
-    // We will have race conditions when accessing the frame content after setting a src,
-    // so we can't wait for AboutNetErrorLoad. Let's wait for the certerror class to
-    // appear instead (which should happen at the same time as AboutNetErrorLoad).
-    await ContentTaskUtils.waitForCondition(() =>
-      iframe.contentDocument.body.classList.contains("certerror"));
-  });
-}
-
-async function openErrorPage(src, useFrame) {
-  let tab;
-  if (useFrame) {
-    info("Loading cert error page in an iframe");
-    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE);
-    await injectErrorPageFrame(tab, src);
-  } else {
-    let certErrorLoaded;
-    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, src);
-      let browser = gBrowser.selectedBrowser;
-      certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
-    }, false);
-    info("Loading and waiting for the cert error");
-    await certErrorLoaded;
-  }
-
-  return tab;
-}
 
 add_task(async function checkReturnToAboutHome() {
   info("Loading a bad cert page directly and making sure 'return to previous page' goes to about:home");
@@ -491,6 +455,61 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
+});
+
+add_task(async function checkCautionClass() {
+  Services.prefs.setBoolPref("browser.security.newcerterrorpage.enabled", true);
+  info("Checking that are potentially more dangerous get a 'caution' class");
+  for (let useFrame of [false, true]) {
+    let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
+    let browser = tab.linkedBrowser;
+
+    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      is(doc.body.classList.contains("caution"), !frame, `Cert error body has ${frame ? "no" : ""} caution class`);
+    });
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+    tab = await openErrorPage(BAD_STS_CERT, useFrame);
+    browser = tab.linkedBrowser;
+
+    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      ok(!doc.body.classList.contains("caution"), "Cert error body has no caution class");
+    });
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+  Services.prefs.clearUserPref("browser.security.newcerterrorpage.enabled");
+});
+
+add_task(async function checkViewCertificate() {
+  Services.prefs.setBoolPref("browser.security.newcerterrorpage.enabled", true);
+  info("Loading a cert error and checking that the certificate can be shown.");
+  for (let useFrame of [false, true]) {
+    let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
+    let browser = tab.linkedBrowser;
+
+    let dialogOpened = BrowserTestUtils.domWindowOpened();
+
+    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      let viewCertificate = doc.getElementById("viewCertificate");
+      viewCertificate.click();
+    });
+
+    let win = await dialogOpened;
+    await BrowserTestUtils.waitForEvent(win, "load");
+    is(win.document.documentURI, "chrome://pippki/content/certViewer.xul",
+      "Opened the cert viewer dialog");
+    is(win.document.getElementById("commonname").value, "self-signed.example.com",
+      "Shows the correct certificate in the dialog");
+    win.close();
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+  Services.prefs.clearUserPref("browser.security.newcerterrorpage.enabled");
 });
 
 function getCertChain(securityInfoAsString) {

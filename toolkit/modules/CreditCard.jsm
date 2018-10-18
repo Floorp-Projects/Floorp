@@ -108,9 +108,9 @@ class CreditCard {
     if (value) {
       let normalizedNumber = value.replace(/[-\s]/g, "");
       // Based on the information on wiki[1], the shortest valid length should be
-      // 9 digits (Canadian SIN).
-      // [1] https://en.wikipedia.org/wiki/Social_Insurance_Number
-      normalizedNumber = normalizedNumber.match(/^\d{9,}$/) ?
+      // 12 digits (Maestro).
+      // [1] https://en.wikipedia.org/wiki/Payment_card_number
+      normalizedNumber = normalizedNumber.match(/^\d{12,}$/) ?
         normalizedNumber : null;
       this._number = normalizedNumber;
     }
@@ -126,6 +126,8 @@ class CreditCard {
 
   // Implements the Luhn checksum algorithm as described at
   // http://wikipedia.org/wiki/Luhn_algorithm
+  // Number digit lengths vary with network, but should fall within 12-19 range. [2]
+  // More details at https://en.wikipedia.org/wiki/Payment_card_number
   isValidNumber() {
     if (!this._number) {
       return false;
@@ -135,7 +137,7 @@ class CreditCard {
     let number = this._number.replace(/[\-\s]/g, "");
 
     let len = number.length;
-    if (len != 9 && len != 15 && len != 16) {
+    if (len < 12 || len > 19) {
       return false;
     }
 

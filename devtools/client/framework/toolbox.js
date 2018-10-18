@@ -686,21 +686,6 @@ Toolbox.prototype = {
   },
 
   /**
-   * A common access point for the client-side parser service that any panel can use.
-   */
-  get parserService() {
-    if (this._parserService) {
-      return this._parserService;
-    }
-
-    this._parserService =
-      this.browserRequire("devtools/client/debugger/new/src/workers/parser/index");
-    this._parserService
-      .start("resource://devtools/client/debugger/new/dist/parser-worker.js", this.win);
-    return this._parserService;
-  },
-
-  /**
    * Clients wishing to use source maps but that want the toolbox to
    * track the source and style sheet actor mapping can use this
    * source map service.  This is a higher-level service than the one
@@ -1339,12 +1324,21 @@ Toolbox.prototype = {
    * Apply the current cache setting from devtools.cache.disabled to this
    * toolbox's tab.
    */
-  _applyCacheSettings: function() {
+  _applyCacheSettings: async function() {
     const pref = "devtools.cache.disabled";
     const cacheDisabled = Services.prefs.getBoolPref(pref);
 
     if (this.target.activeTab) {
-      this.target.activeTab.reconfigure({"cacheDisabled": cacheDisabled});
+      await this.target.activeTab.reconfigure({
+        options: {
+          "cacheDisabled": cacheDisabled
+        }
+      });
+
+      // This event is only emitted for tests in order to know when to reload
+      if (flags.testing) {
+        this.emit("cache-reconfigured");
+      }
     }
   },
 
@@ -1359,7 +1353,9 @@ Toolbox.prototype = {
 
     if (this.target.activeTab) {
       this.target.activeTab.reconfigure({
-        "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
+        options: {
+          "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
+        }
       });
     }
   },
@@ -1405,7 +1401,11 @@ Toolbox.prototype = {
       this.telemetry.toolClosed("paintflashing", this.sessionId, this);
     }
     this.isPaintFlashing = !this.isPaintFlashing;
-    return this.target.activeTab.reconfigure({"paintFlashing": this.isPaintFlashing});
+    return this.target.activeTab.reconfigure({
+      options: {
+        "paintFlashing": this.isPaintFlashing
+      }
+    });
   },
 
   /**
@@ -1443,6 +1443,11 @@ Toolbox.prototype = {
       this.frameButton.disabled = false;
       this.frameButton.description = L10N.getStr("toolbox.frames.tooltip");
     }
+
+    // Highlight the button when a child frame is selected
+    const selectedFrame = this.frameMap.get(this.selectedFrameId) || {};
+    this.frameButton.isChecked = selectedFrame.parentID != null;
+
     this.frameButton.isVisible = this._commandIsVisible(this.frameButton);
   },
 
@@ -2328,7 +2333,7 @@ Toolbox.prototype = {
   onSelectFrame: function(frameId) {
     // Send packet to the backend to select specified frame and
     // wait for 'frameUpdate' event packet to update the UI.
-    this.target.activeTab.switchToFrame(frameId);
+    this.target.activeTab.switchToFrame({ windowId: frameId });
   },
 
   /**
@@ -2394,18 +2399,6 @@ Toolbox.prototype = {
       const frames = [...this.frameMap.values()];
       const topFrames = frames.filter(frame => !frame.parentID);
       this.selectedFrameId = topFrames.length ? topFrames[0].id : null;
-    }
-
-    // Check out whether top frame is currently selected.
-    // Note that only child frame has parentID.
-    const frame = this.frameMap.get(this.selectedFrameId);
-    const topFrameSelected = frame ? !frame.parentID : false;
-    this._framesButtonChecked = false;
-
-    // If non-top level frame is selected the toolbar button is
-    // marked as 'checked' indicating that a child frame is active.
-    if (!topFrameSelected && this.selectedFrameId) {
-      this._framesButtonChecked = false;
     }
 
     // We may need to hide/show the frames button now.
@@ -2742,9 +2735,7 @@ Toolbox.prototype = {
       // when the objectActor doesn't represent an undefined or null value.
       await this.openSplitConsole();
       const panel = this.getPanel("webconsole");
-      const jsterm = panel.hud.jsterm;
-
-      jsterm.inspectObjectActor(objectActor);
+      panel.hud.ui.inspectObjectActor(objectActor);
     }
   },
 
@@ -2860,11 +2851,6 @@ Toolbox.prototype = {
     if (this._sourceMapService) {
       this._sourceMapService.stopSourceMapWorker();
       this._sourceMapService = null;
-    }
-
-    if (this._parserService) {
-      this._parserService.stop();
-      this._parserService = null;
     }
 
     if (this.webconsolePanel) {

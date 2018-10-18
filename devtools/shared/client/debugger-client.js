@@ -24,10 +24,12 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);
 loader.lazyRequireGetter(this, "AddonClient", "devtools/shared/client/addon-client");
 loader.lazyRequireGetter(this, "RootClient", "devtools/shared/client/root-client");
-loader.lazyRequireGetter(this, "TabClient", "devtools/shared/client/tab-client");
+loader.lazyRequireGetter(this, "BrowsingContextFront", "devtools/shared/fronts/targets/browsing-context", true);
+loader.lazyRequireGetter(this, "WorkerTargetFront", "devtools/shared/fronts/targets/worker", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
-loader.lazyRequireGetter(this, "WorkerClient", "devtools/shared/client/worker-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
+loader.lazyRequireGetter(this, "Pool", "devtools/shared/protocol", true);
+loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
 
 // Retrieve the major platform version, i.e. if we are on Firefox 64.0a1, it will be 64.
 const PLATFORM_MAJOR_VERSION = AppConstants.MOZ_APP_VERSION.match(/\d+/)[0];
@@ -50,7 +52,18 @@ function DebuggerClient(transport) {
   this._transport.hooks = this;
 
   // Map actor ID to client instance for each actor type.
+  // To be removed once all clients are refactored to protocol.js
   this._clients = new Map();
+
+  // Pool of fronts instanciated by this class.
+  // This is useful for actors that have already been transitioned to protocol.js
+  // Once RootClient becomes a protocol.js actor, these actors can be attached to it
+  // instead of this pool.
+  // This Pool will automatically be added to this._pools via addActorPool once the first
+  // Front will be added to it (in attachTarget, attachWorker,...).
+  // And it does not need to destroyed explicitly as all Pools are destroyed on client
+  // closing.
+  this._frontPool = new Pool(this);
 
   this._pendingRequests = new Map();
   this._activeRequests = new Map();
@@ -284,7 +297,9 @@ DebuggerClient.prototype = {
     this._eventsEnabled = false;
 
     const cleanup = () => {
-      this._transport.close();
+      if (this._transport) {
+        this._transport.close();
+      }
       this._transport = null;
     };
 
@@ -354,47 +369,26 @@ DebuggerClient.prototype = {
    * @param string targetActor
    *        The target actor ID for the tab to attach.
    */
-  attachTarget: function(targetActor) {
-    if (this._clients.has(targetActor)) {
-      const cachedTarget = this._clients.get(targetActor);
-      const cachedResponse = {
-        cacheDisabled: cachedTarget.cacheDisabled,
-        javascriptEnabled: cachedTarget.javascriptEnabled,
-        traits: cachedTarget.traits,
-      };
-      return promise.resolve([cachedResponse, cachedTarget]);
+  attachTarget: async function(targetActor) {
+    let front = this._frontPool.actor(targetActor);
+    if (!front) {
+      front = new BrowsingContextFront(this, { actor: targetActor });
+      this._frontPool.manage(front);
     }
 
-    const packet = {
-      to: targetActor,
-      type: "attach"
-    };
-    return this.request(packet).then(response => {
-      // TabClient can actually represent targets other than a tab.
-      // It is planned to be renamed while being converted to a front
-      // in bug 1485660.
-      const targetClient = new TabClient(this, response);
-      this.registerClient(targetClient);
-      return [response, targetClient];
-    });
+    const response = await front.attach();
+    return [response, front];
   },
 
-  attachWorker: function(workerTargetActor) {
-    let workerClient = this._clients.get(workerTargetActor);
-    if (workerClient !== undefined) {
-      const response = {
-        from: workerClient.actor,
-        type: "attached",
-        url: workerClient.url
-      };
-      return promise.resolve([response, workerClient]);
+  attachWorker: async function(workerTargetActor) {
+    let front = this._frontPool.actor(workerTargetActor);
+    if (!front) {
+      front = new WorkerTargetFront(this, { actor: workerTargetActor });
+      this._frontPool.manage(front);
     }
 
-    return this.request({ to: workerTargetActor, type: "attach" }).then(response => {
-      workerClient = new WorkerClient(this, response);
-      this.registerClient(workerClient);
-      return [response, workerClient];
-    });
+    const response = await front.attach();
+    return [response, front];
   },
 
   /**
@@ -1046,7 +1040,11 @@ DebuggerClient.prototype = {
     // fronts, forming a tree.  Descend through all the pools to locate all child fronts.
     while (poolsToVisit.length) {
       const pool = poolsToVisit.shift();
-      fronts.add(pool);
+      // `_pools` contains either Front's or Pool's, we only want to collect Fronts here.
+      // Front inherits from Pool which exposes `poolChildren`.
+      if (pool instanceof Front) {
+        fronts.add(pool);
+      }
       for (const child of pool.poolChildren()) {
         poolsToVisit.push(child);
       }

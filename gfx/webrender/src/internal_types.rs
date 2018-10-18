@@ -38,6 +38,19 @@ pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheTextureId(pub u64);
 
+/// Canonical type for texture layer indices.
+///
+/// WebRender is currently not very consistent about layer index types. Some
+/// places use i32 (since that's the type used in various OpenGL APIs), some
+/// places use u32 (since having it be signed is non-sensical, but the
+/// underlying graphics APIs generally operate on 32-bit integers) and some
+/// places use usize (since that's most natural in Rust).
+///
+/// Going forward, we aim to us usize throughout the codebase, since that allows
+/// operations like indexing without a cast, and convert to the required type in
+/// the device module when making calls into the platform layer.
+pub type LayerIndex = usize;
+
 /// Identifies a render pass target that is persisted until the end of the frame.
 ///
 /// By default, only the targets of the immediately-preceding pass are bound as

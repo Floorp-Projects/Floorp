@@ -444,6 +444,21 @@ services.sync:
     record_in_processes:
       - main
 
+identity.fxaccounts:
+  missed_commands_fetched:
+    bug_numbers:
+      - 1496638
+    description: >
+      The number of missed FxA commands we have recovered.
+    expires: "68"
+    kind: uint
+    keyed: false
+    notification_emails:
+      - fxa-staff@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 security:
   pkcs11_modules_loaded:
     bug_numbers:
@@ -899,6 +914,7 @@ media:
   page_count:
     bug_numbers:
       - 1476456
+      - 1499803
     description: >
       The number of times a top level document is loaded.
     expires: "68"
@@ -907,7 +923,7 @@ media:
       - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - main
       - content
@@ -915,6 +931,7 @@ media:
   page_had_media_count:
     bug_numbers:
       - 1476456
+      - 1499803
     description: >
       The number of times a document hierarchy contained at least one audible HTMLMediaElement that had play() called upon it.
     expires: "68"
@@ -923,7 +940,7 @@ media:
       - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - main
       - content
@@ -931,6 +948,7 @@ media:
   page_had_play_revoked_count:
     bug_numbers:
       - 1476456
+      - 1499803
     description: >
       The number of times a document hierarchy contained at least one muted playing HTMLMediaElement that was paused due to becoming unmuted while not being allowed to autoplay.
     expires: "68"
@@ -939,7 +957,7 @@ media:
       - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - main
       - content
@@ -947,6 +965,7 @@ media:
   autoplay_would_not_be_allowed_count:
     bug_numbers:
       - 1476456
+      - 1499803
     description: >
       The number of HTMLMediaElement autoplays on audible HTMLMediaElements which would not be allowed to play if block autoplay was enabled; we'd either prompt for permission to play or block outright depending on user preferences.
     expires: "68"
@@ -955,7 +974,7 @@ media:
       - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - main
       - content
@@ -963,6 +982,7 @@ media:
   allowed_autoplay_no_audio_track_count:
     bug_numbers:
       - 1480484
+      - 1499803
     description: >
       The number of HTMLMediaElement autoplays on HTMLMediaElements without an audio track which would be allowed to play.
     expires: "68"
@@ -971,7 +991,7 @@ media:
       - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - main
       - content
@@ -979,6 +999,7 @@ media:
   autoplay_would_be_allowed_count:
     bug_numbers:
       - 1476456
+      - 1499803
     description: >
       The number of HTMLMediaElement autoplays on audible HTMLMediaElements that would have been allowed (not blocked) by the autoplay policy if block autoplay was enabled.
     expires: "68"
@@ -987,7 +1008,7 @@ media:
       - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - main
       - content
@@ -995,6 +1016,7 @@ media:
   blocked_no_metadata:
     bug_numbers:
       - 1483703
+      - 1499803
     description: >
       The number of HTMLMediaElements which we blocked because they hadn't loaded metadata yet.
     expires: "68"
@@ -1003,7 +1025,7 @@ media:
       - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - main
       - content
@@ -1011,6 +1033,7 @@ media:
   blocked_no_metadata_endup_no_audio_track:
     bug_numbers:
       - 1483703
+      - 1499803
     description: >
       The number of HTMLMediaElements which were blocked because they hadn't loaded metadata yet, but ended up having no audio track.
     expires: "68"
@@ -1019,7 +1042,7 @@ media:
       - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     record_in_processes:
       - main
       - content
