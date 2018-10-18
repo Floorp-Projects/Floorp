@@ -24,7 +24,7 @@ BUILDER = lib.tasks.TaskBuilder(
     branch=os.environ.get('MOBILE_HEAD_BRANCH'),
     commit=HEAD_REV,
     owner="skaspari@mozilla.com",
-    source='https://github.com/mozilla-mobile/android-components/raw/{}/.taskcluster.yml'.format(HEAD_REV),
+    source='https://github.com/JohanLorenzo/android-components/raw/{}/.taskcluster.yml'.format(HEAD_REV),
     scheduler_id=os.environ.get('SCHEDULER_ID'),
 )
 
@@ -39,7 +39,7 @@ def fetch_build_task_artifacts():
     for artifact, info in artifacts_info.items():
         artifacts[artifact] = {
             'type': 'file',
-            'expires': taskcluster.stringDate(taskcluster.fromNow('1 year')),
+            'expires': taskcluster.stringDate(taskcluster.fromNow('1 week')),
             'path': info['path']
         }
 
@@ -47,14 +47,13 @@ def fetch_build_task_artifacts():
 
 
 def generate_build_task(version):
-    checkout = ("git fetch origin --tags && "
+    checkout = ("git remote add jlorenzo https://github.com/JohanLorenzo/android-components.git && "
+                "git fetch jlorenzo --tags && "
                 "git config advice.detachedHead false && "
                 "git checkout {}".format(version))
 
     assemble_task = 'assembleRelease'
-    scopes = [
-        "secrets:get:project/android-components/publish",
-    ]
+    scopes = []
     artifacts = fetch_build_task_artifacts()
 
     return taskcluster.slugId(), BUILDER.build_task(
@@ -67,7 +66,7 @@ def generate_build_task(version):
         features={
             "chainOfTrust": True
         },
-        worker_type='gecko-focus',
+        worker_type='github-worker',
         scopes=scopes,
         artifacts=artifacts,
     )
@@ -85,10 +84,7 @@ def generate_beetmover_task(build_task_id, version, artifact, info):
             "zipExtract": True
         }
     ]
-    scopes = [
-        "project:mobile:android-components:releng:beetmover:bucket:maven-production",
-        "project:mobile:android-components:releng:beetmover:action:push-to-maven"
-    ]
+    scopes = []
     return taskcluster.slugId(), BUILDER.beetmover_task(
         name="Android Components - Publish Module :{} via beetmover".format(info['name']),
         description="Publish release module {} to https://maven.mozilla.org".format(info['name']),
