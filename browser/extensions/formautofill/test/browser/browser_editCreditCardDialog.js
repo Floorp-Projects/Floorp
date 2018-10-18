@@ -138,9 +138,7 @@ add_task(async function test_editCreditCard() {
     EventUtils.synthesizeKey("VK_RIGHT", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
     win.document.querySelector("#save").click();
-  }, {
-    record: creditCards[0],
-  });
+  }, creditCards[0]);
   ok(true, "Edit credit card dialog is closed");
   creditCards = await getCreditCards();
 
@@ -170,9 +168,7 @@ add_task(async function test_editCreditCardWithMissingBillingAddress() {
     EventUtils.synthesizeKey("VK_RIGHT", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
     win.document.querySelector("#save").click();
-  }, {
-    record: creditCards[0],
-  });
+  }, creditCards[0]);
   ok(true, "Edit credit card dialog is closed");
   creditCards = await getCreditCards();
 
@@ -232,9 +228,7 @@ add_task(async function test_editCardWithInvalidNetwork() {
     EventUtils.synthesizeKey("VK_RIGHT", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
     win.document.querySelector("#save").click();
-  }, {
-    record: creditCards[0],
-  });
+  }, creditCards[0]);
   ok(true, "Edit credit card dialog is closed");
   creditCards = await getCreditCards();
 

@@ -99,9 +99,7 @@ add_task(async function test_editAddress() {
     EventUtils.synthesizeKey("VK_RIGHT", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
     win.document.querySelector("#save").click();
-  }, {
-    record: addresses[0],
-  });
+  }, addresses[0]);
   addresses = await getAddresses();
 
   is(addresses.length, 1, "only one address is in storage");
@@ -110,26 +108,6 @@ add_task(async function test_editAddress() {
 
   addresses = await getAddresses();
   is(addresses.length, 0, "Address storage is empty");
-});
-
-add_task(async function test_editSparseAddress() {
-  let record = {...TEST_ADDRESS_1};
-  info("delete some usually required properties");
-  delete record["street-address"];
-  delete record["address-level1"];
-  delete record["address-level2"];
-  await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
-    is(win.document.querySelectorAll(":-moz-ui-invalid").length, 0,
-       "Check no fields are visually invalid");
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_RIGHT", {}, win);
-    EventUtils.synthesizeKey("test", {}, win);
-    is(win.document.querySelector("#save").disabled, false,
-       "Save button should be enabled after an edit");
-    win.document.querySelector("#cancel").click();
-  }, {
-    record,
-  });
 });
 
 add_task(async function test_saveAddressCA() {
