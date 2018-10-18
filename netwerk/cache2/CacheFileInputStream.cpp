@@ -38,6 +38,7 @@ NS_INTERFACE_MAP_BEGIN(CacheFileInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncInputStream)
   NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY(nsITellableStream)
   NS_INTERFACE_MAP_ENTRY(mozilla::net::CacheFileChunkListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
@@ -389,6 +390,14 @@ CacheFileInputStream::Seek(int32_t whence, int64_t offset)
 }
 
 NS_IMETHODIMP
+CacheFileInputStream::SetEOF()
+{
+  MOZ_ASSERT(false, "Don't call SetEOF on cache input stream");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsITellableStream
+NS_IMETHODIMP
 CacheFileInputStream::Tell(int64_t *_retval)
 {
   CacheFileAutoLock lock(mFile);
@@ -406,13 +415,6 @@ CacheFileInputStream::Tell(int64_t *_retval)
 
   LOG(("CacheFileInputStream::Tell() [this=%p, retval=%" PRId64 "]", this, *_retval));
   return NS_OK;
-}
-
-NS_IMETHODIMP
-CacheFileInputStream::SetEOF()
-{
-  MOZ_ASSERT(false, "Don't call SetEOF on cache input stream");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // CacheFileChunkListener

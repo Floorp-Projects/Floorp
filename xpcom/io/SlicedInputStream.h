@@ -36,6 +36,7 @@ public:
   NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSITELLABLESTREAM
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIINPUTSTREAMLENGTH
   NS_DECL_NSIASYNCINPUTSTREAMLENGTH
@@ -73,6 +74,7 @@ private:
   nsICloneableInputStream* mWeakCloneableInputStream;
   nsIIPCSerializableInputStream* mWeakIPCSerializableInputStream;
   nsISeekableStream* mWeakSeekableInputStream;
+  nsITellableStream* mWeakTellableInputStream;
   nsIAsyncInputStream* mWeakAsyncInputStream;
   nsIInputStreamLength* mWeakInputStreamLength;
   nsIAsyncInputStreamLength* mWeakAsyncInputStreamLength;

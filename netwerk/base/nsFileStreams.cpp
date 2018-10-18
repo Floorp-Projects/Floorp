@@ -61,6 +61,7 @@ nsFileStreamBase::~nsFileStreamBase()
 
 NS_IMPL_ISUPPORTS(nsFileStreamBase,
                   nsISeekableStream,
+                  nsITellableStream,
                   nsIFileMetadata)
 
 NS_IMETHODIMP
@@ -442,6 +443,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsFileInputStream,
                             nsIInputStream,
                             nsIFileInputStream,
                             nsISeekableStream,
+                            nsITellableStream,
                             nsILineInputStream)
 
 nsresult
