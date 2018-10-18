@@ -31,7 +31,7 @@ public:
 
   virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset);
 
-  mozilla::java::GeckoBundle::LocalRef ToBundle(bool aMinimal = false);
+  mozilla::java::GeckoBundle::LocalRef ToBundle();
 
   int32_t AndroidClass()
   {
