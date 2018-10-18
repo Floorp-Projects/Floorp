@@ -126,7 +126,6 @@ var TrackingProtection = {
 };
 
 var ThirdPartyCookies = {
-  reportBreakageLabel: "cookierestrictions",
   telemetryIdentifier: "cr",
   PREF_ENABLED: "network.cookie.cookieBehavior",
   PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.rejecttrackers.reportBreakage.enabled",
@@ -142,6 +141,24 @@ var ThirdPartyCookies = {
     delete this.categoryItem;
     return this.categoryItem =
       document.getElementById("identity-popup-content-blocking-category-3rdpartycookies");
+  },
+
+  get reportBreakageLabel() {
+    switch (this.behaviorPref) {
+    case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+      return "nocookiesblocked";
+    case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+      return "allthirdpartycookiesblocked";
+    case Ci.nsICookieService.BEHAVIOR_REJECT:
+      return "allcookiesblocked";
+    case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+      return "cookiesfromunvisitedsitesblocked";
+    default:
+      Cu.reportError(`Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`);
+      // fall through
+    case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+      return "cookierestrictions";
+    }
   },
 
   init() {
