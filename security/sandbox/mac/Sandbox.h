@@ -78,6 +78,9 @@ namespace mozilla {
 bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage);
 bool EarlyStartMacSandboxIfEnabled(int aArgc, char** aArgv,
                                    std::string &aErrorMessage);
+#ifdef DEBUG
+void AssertMacSandboxEnabled();
+#endif /* DEBUG */
 
 } // namespace mozilla
 
