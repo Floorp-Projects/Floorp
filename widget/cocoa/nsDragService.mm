@@ -582,7 +582,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
         continue;
 
       for (uint32_t j = 0; j < flavors.Length(); j++) {
-        if (dataFlavor.Equals(flavors[i])) {
+        if (dataFlavor.Equals(flavors[j])) {
           *_retval = true;
           return NS_OK;
         }

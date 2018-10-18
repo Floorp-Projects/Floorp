@@ -1,20 +1,20 @@
 "use strict";
 
-add_task(async function test_fill_creditCard_but_cancel_login() {
-  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    todo(OSKeyStoreTestUtils.canTestOSKeyStoreLogin(), "Cannot test OS key store login on official builds.");
-    return;
-  }
-
+add_task(async function test_fill_creditCard_with_mp_enabled_but_canceled() {
   await saveCreditCard(TEST_CREDIT_CARD_2);
 
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false); // cancel
+  LoginTestUtils.masterPassword.enable();
+  registerCleanupFunction(() => {
+    LoginTestUtils.masterPassword.disable();
+  });
+
+  let masterPasswordDialogShown = waitForMasterPasswordDialog(false); // cancel
   await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
     async function(browser) {
       await openPopupOn(browser, "#cc-name");
       const ccItem = getDisplayedPopupItems(browser)[0];
       await EventUtils.synthesizeMouseAtCenter(ccItem, {});
-      await Promise.all([osKeyStoreLoginShown, expectPopupClose(browser)]);
+      await Promise.all([masterPasswordDialogShown, expectPopupClose(browser)]);
 
       await ContentTask.spawn(browser, {}, async function() {
         is(content.document.querySelector("#cc-name").value, "", "Check name");
