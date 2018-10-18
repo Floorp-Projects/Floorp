@@ -123,6 +123,7 @@ class EditAddress extends EditAutofillForm {
    * @param {string[]} config.DEFAULT_REGION
    * @param {function} config.getFormFormat Function to return form layout info for a given country.
    * @param {string[]} config.supportedCountries
+   * @param {boolean} [config.noValidate=undefined] Whether to validate the form
    */
   constructor(elements, record, config) {
     super(elements);
@@ -140,9 +141,7 @@ class EditAddress extends EditAutofillForm {
     this.loadRecord(record);
     this.attachEventListeners();
 
-    if (config.novalidate) {
-      this.form.setAttribute("novalidate", "true");
-    }
+    this._elements.form.noValidate = !!config.noValidate;
   }
 
   loadRecord(record) {
