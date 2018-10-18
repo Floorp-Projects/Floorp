@@ -920,14 +920,10 @@ HttpBaseChannel::EnsureUploadStreamIsCloneable(nsIRunnable* aCallback)
     return NS_OK;
   }
 
-  // Some nsSeekableStreams do not implement ::Seek() (see nsPipeInputStream).
-  // In this case, we must clone the uploadStream into a memory stream in order
-  // to have it seekable.  If the CloneUploadStream() will succeed, then
-  // synchronously invoke the callback to indicate we're already cloneable.
+  // Upload nsIInputStream must be cloneable and seekable in order to be
+  // processed by devtools network inspector.
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
-  if (seekable &&
-      NS_SUCCEEDED(seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0)) &&
-      NS_InputStreamIsCloneable(mUploadStream)) {
+  if (seekable && NS_InputStreamIsCloneable(mUploadStream)) {
     aCallback->Run();
     return NS_OK;
   }

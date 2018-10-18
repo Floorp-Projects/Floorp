@@ -63,7 +63,7 @@ nsBufferedStream::~nsBufferedStream()
     Close();
 }
 
-NS_IMPL_ISUPPORTS(nsBufferedStream, nsISeekableStream)
+NS_IMPL_ISUPPORTS(nsBufferedStream, nsITellableStream, nsISeekableStream)
 
 nsresult
 nsBufferedStream::Init(nsISupports* stream, uint32_t bufferSize)
@@ -305,6 +305,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsBufferedInputStream,
                             nsIInputStream,
                             nsIBufferedInputStream,
                             nsISeekableStream,
+                            nsITellableStream,
                             nsIStreamBufferAccess)
 
 nsBufferedInputStream::nsBufferedInputStream()
