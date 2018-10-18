@@ -19,7 +19,7 @@ import android.widget.TextView
 import mozilla.components.support.utils.DrawableUtils
 import java.text.NumberFormat
 
-class TabCounter @JvmOverloads constructor(
+open class TabCounter @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0
