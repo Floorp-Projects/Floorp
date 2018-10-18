@@ -28,7 +28,6 @@ BUILD_KINDS = set([
     'hazard',
     'l10n',
     'valgrind',
-    'static-analysis',
     'spidermonkey',
 ])
 

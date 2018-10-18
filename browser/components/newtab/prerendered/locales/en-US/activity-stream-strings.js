@@ -107,6 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
   "firstrun_skip_login": "Skip this step",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Learn More",
   "prefs_restore_defaults_button": "Restore Defaults",
   "prefs_topstories_description": "High-quality content you might otherwise miss",

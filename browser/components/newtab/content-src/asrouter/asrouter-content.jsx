@@ -6,6 +6,7 @@ import {LocalizationProvider} from "fluent-react";
 import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage";
 import React from "react";
 import ReactDOM from "react-dom";
+import {SendToDeviceSnippet} from "./templates/SendToDeviceSnippet/SendToDeviceSnippet";
 import {SimpleSnippet} from "./templates/SimpleSnippet/SimpleSnippet";
 import {SubmitFormSnippet} from "./templates/SubmitFormSnippet/SubmitFormSnippet";
 
@@ -14,6 +15,7 @@ const SnippetComponents = {
   simple_snippet: SimpleSnippet,
   newsletter_snippet: props => <SubmitFormSnippet {...props} form_method="POST" />,
   fxa_signup_snippet: props => <SubmitFormSnippet {...props} form_method="GET" />,
+  send_to_device_snippet: SendToDeviceSnippet,
 };
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
@@ -129,7 +131,7 @@ export class ASRouterUISurface extends React.PureComponent {
     if (action.type) {
       ASRouterUtils.executeAction(action);
     }
-    if (!this.state.message.content.do_not_autoblock) {
+    if (!this.state.message.content.do_not_autoblock && !event.target.dataset.do_not_autoblock) {
       ASRouterUtils.blockById(this.state.message.id);
     }
     if (this.state.message.provider !== "preview") {

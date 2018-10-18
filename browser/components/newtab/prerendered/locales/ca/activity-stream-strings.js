@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Temes populars:",
   "pocket_read_even_more": "Mostra més articles",
   "pocket_more_reccommendations": "Més recomanacions",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Com funciona",
   "pocket_cta_button": "Obtén el Pocket",
   "pocket_cta_text": "Deseu els vostres articles preferits al Pocket i gaudiu d'altres recomanacions fascinants.",
   "highlights_empty_state": "Comenceu a navegar i aquí us mostrarem els millors articles, vídeos i altres pàgines que hàgiu visitat o afegit a les adreces d'interès recentment.",
@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Avís de privadesa",
   "firstrun_continue_to_login": "Continua",
   "firstrun_skip_login": "Omet aquest pas",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Més informació"
 };

@@ -94,8 +94,8 @@ static bool
 IsUpdateBeingStaged(int argc, LPWSTR *argv)
 {
   // PID will be set to -1 if we're supposed to stage an update.
-  return argc == 4 && !wcscmp(argv[3], L"-1") ||
-         argc == 5 && !wcscmp(argv[4], L"-1");
+  return (argc == 4 && !wcscmp(argv[3], L"-1")) ||
+         (argc == 5 && !wcscmp(argv[4], L"-1"));
 }
 
 /**
@@ -128,8 +128,8 @@ IsDigits(WCHAR *str)
 static bool
 IsOldCommandline(int argc, LPWSTR *argv)
 {
-  return argc == 4 && !wcscmp(argv[3], L"-1") ||
-         argc >= 4 && (wcsstr(argv[3], L"/replace") || IsDigits(argv[3]));
+  return (argc == 4 && !wcscmp(argv[3], L"-1")) ||
+         (argc >= 4 && (wcsstr(argv[3], L"/replace") || IsDigits(argv[3])));
 }
 
 /**
