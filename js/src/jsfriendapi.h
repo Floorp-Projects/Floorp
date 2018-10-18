@@ -1007,8 +1007,25 @@ GetPropertyKeys(JSContext* cx, JS::HandleObject obj, unsigned flags, JS::AutoIdV
 JS_FRIEND_API(bool)
 AppendUnique(JSContext* cx, JS::AutoIdVector& base, JS::AutoIdVector& others);
 
+/**
+ * Determine whether the given string is an array index in the sense of <https://tc39.github.io/ecma262/#array-index>.
+ *
+ * If it isn't, returns false.
+ *
+ * If it is, returns true and outputs the index in *indexp.
+ */
 JS_FRIEND_API(bool)
 StringIsArrayIndex(JSLinearString* str, uint32_t* indexp);
+
+/**
+ * Overloads of StringIsArrayIndex taking (char*,length) pairs.  These
+ * behave the same as the JSLinearString version.
+ */
+JS_FRIEND_API(bool)
+StringIsArrayIndex(const char* str, uint32_t length, uint32_t* indexp);
+
+JS_FRIEND_API(bool)
+StringIsArrayIndex(const char16_t* str, uint32_t length, uint32_t* indexp);
 
 JS_FRIEND_API(void)
 SetPreserveWrapperCallback(JSContext* cx, PreserveWrapperCallback callback);
