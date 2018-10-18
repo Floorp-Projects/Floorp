@@ -105,7 +105,10 @@
             <hbox id="identity-popup-content-blocking-category-3rdpartycookies"
                   class="identity-popup-content-blocking-category" align="center" role="group">
               <image class="identity-popup-content-blocking-category-icon thirdpartycookies-icon"/>
-              <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.3rdPartyCookies.label;</label>
+              <label flex="1" id="identity-popup-content-blocking-category-label-default"
+                     class="identity-popup-content-blocking-category-label">&contentBlocking.3rdPartyCookies.label;</label>
+              <label flex="1" id="identity-popup-content-blocking-category-label-trackers"
+                     hidden="true" class="identity-popup-content-blocking-category-label">&contentBlocking.3rdPartyCookies.trackers.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.3rdPartyCookies.blocking.label;</label>
               <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
                      id="identity-popup-3rdpartycookies-add-blocking"

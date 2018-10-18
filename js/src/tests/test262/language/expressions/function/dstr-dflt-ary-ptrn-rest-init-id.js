@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/func-expr-dflt.template
 /*---
-description: Reset element (identifier) does not support initializer (function expression (default parameter))
+description: Rest element (identifier) does not support initializer (function expression (default parameter))
 esid: sec-function-definitions-runtime-semantics-evaluation
 es6id: 14.1.20
 features: [destructuring-binding, default-parameters]

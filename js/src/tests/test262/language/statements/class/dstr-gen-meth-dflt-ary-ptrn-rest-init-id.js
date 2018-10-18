@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/cls-decl-gen-meth-dflt.template
 /*---
-description: Reset element (identifier) does not support initializer (class expression method (default parameters))
+description: Rest element (identifier) does not support initializer (class expression method (default parameters))
 esid: sec-class-definitions-runtime-semantics-evaluation
 es6id: 14.5.16
 features: [generators, destructuring-binding, default-parameters]

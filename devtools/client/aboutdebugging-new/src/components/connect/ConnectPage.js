@@ -11,6 +11,14 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const {
+  USB_STATES,
+} = require("../../constants");
+
+const Actions = require("../../actions/index");
+
+loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
+
 const ConnectSection = createFactory(require("./ConnectSection"));
 const ConnectSteps = createFactory(require("./ConnectSteps"));
 const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
@@ -23,6 +31,7 @@ const GLOBE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-globe-icon.
 class ConnectPage extends PureComponent {
   static get propTypes() {
     return {
+      adbAddonStatus: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
       // Provided by wrapping the component with FluentReact.withLocalization.
       getString: PropTypes.func.isRequired,
@@ -54,8 +63,59 @@ class ConnectPage extends PureComponent {
     );
   }
 
+  onToggleUSBClick() {
+    const { adbAddonStatus } = this.props;
+    const isAddonInstalled = adbAddonStatus === ADB_ADDON_STATES.INSTALLED;
+    if (isAddonInstalled) {
+      this.props.dispatch(Actions.uninstallAdbAddon());
+    } else {
+      this.props.dispatch(Actions.installAdbAddon());
+    }
+  }
+
+  getUsbStatus() {
+    switch (this.props.adbAddonStatus) {
+      case ADB_ADDON_STATES.INSTALLED:
+        return USB_STATES.ENABLED_USB;
+      case ADB_ADDON_STATES.UNINSTALLED:
+        return USB_STATES.DISABLED_USB;
+      default:
+        return USB_STATES.UPDATING_USB;
+    }
+  }
+
+  renderUsbToggleButton() {
+    const usbStatus = this.getUsbStatus();
+
+    const localizedStates = {
+      [USB_STATES.ENABLED_USB]: "about-debugging-connect-usb-disable-button",
+      [USB_STATES.DISABLED_USB]: "about-debugging-connect-usb-enable-button",
+      [USB_STATES.UPDATING_USB]: "about-debugging-connect-usb-updating-button",
+    };
+    const localizedState = localizedStates[usbStatus];
+
+    // Disable the button while the USB status is updating.
+    const disabled = usbStatus === USB_STATES.UPDATING_USB;
+
+    return Localized(
+      {
+        id: localizedState
+      },
+      dom.button(
+        {
+          className: "std-button connect-page__usb__toggle-button " +
+                     "js-connect-usb-toggle-button",
+          disabled,
+          onClick: () => this.onToggleUSBClick(),
+        },
+        localizedState
+      )
+    );
+  }
+
   renderUsb() {
-    const { getString } = this.props;
+    const { adbAddonStatus, getString } = this.props;
+    const isAddonInstalled = adbAddonStatus === ADB_ADDON_STATES.INSTALLED;
     return Localized(
       {
         id: "about-debugging-connect-usb",
@@ -66,13 +126,28 @@ class ConnectPage extends PureComponent {
           icon: USB_ICON_SRC,
           title: "Via USB",
         },
-        ConnectSteps({
-          steps: [
-            getString("about-debugging-connect-usb-step-enable-dev-menu"),
-            getString("about-debugging-connect-usb-step-enable-debug"),
-            getString("about-debugging-connect-usb-step-plug-device"),
-          ]
-        })
+        (isAddonInstalled ?
+          ConnectSteps({
+            steps: [
+              getString("about-debugging-connect-usb-step-enable-dev-menu"),
+              getString("about-debugging-connect-usb-step-enable-debug"),
+              getString("about-debugging-connect-usb-step-plug-device"),
+            ]
+          }) :
+          Localized(
+            {
+              id: "about-debugging-connect-usb-disabled",
+            },
+            dom.aside(
+              {
+                className: "js-connect-usb-disabled-message"
+              },
+              "Enabling this will download and add the required Android USB debugging " +
+              "components to Firefox."
+            )
+          )
+        ),
+        this.renderUsbToggleButton()
       )
     );
   }

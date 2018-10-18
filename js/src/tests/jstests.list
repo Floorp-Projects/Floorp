@@ -398,7 +398,9 @@ skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all-on-loc
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1346081
 skip script test262/intl402/NumberFormat/prototype/format/format-fraction-digits.js
+skip script test262/intl402/NumberFormat/prototype/format/format-fraction-digits-precision.js
 skip script test262/intl402/NumberFormat/prototype/format/format-significant-digits.js
+skip script test262/intl402/NumberFormat/prototype/format/format-significant-digits-precision.js
 
 # Hoisted block-level function named "arguments" not initialized with undefined per B.3.3.1
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1339123
@@ -407,6 +409,12 @@ skip script test262/annexB/language/function-code/block-decl-func-skip-arguments
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1407587
 skip script test262/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
 skip script test262/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1495072
+skip script test262/language/expressions/await/await-monkey-patched-promise.js
+skip script test262/language/expressions/await/async-await-interleaved.js
+skip script test262/language/expressions/await/for-await-of-interleaved.js
+skip script test262/language/expressions/await/async-generator-interleaved.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
 skip script test262/annexB/built-ins/Function/createdynfn-html-close-comment-params.js
@@ -449,6 +457,11 @@ skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-shor
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1483548
 skip script test262/intl402/RelativeTimeFormat/prototype/format/value-non-finite.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1499933
+skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/order.js
+skip script test262/intl402/PluralRules/prototype/resolvedOptions/order.js
+skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
 
 
 ###########################################################

@@ -119,7 +119,6 @@ ContentProcessTargetActor.prototype = {
       promisesActor: this._promisesActor.actorID,
 
       traits: {
-        highlightable: false,
         networkMonitor: false,
       },
     };

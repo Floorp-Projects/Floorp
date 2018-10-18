@@ -11,6 +11,7 @@
 
 #include "nsContainerFrame.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/FlexBinding.h"
 
 class nsStyleCoord;
 
@@ -72,6 +73,8 @@ struct ComputedFlexLineInfo
 struct ComputedFlexContainerInfo
 {
   nsTArray<ComputedFlexLineInfo> mLines;
+  mozilla::dom::FlexPhysicalDirection mMainAxisDirection;
+  mozilla::dom::FlexPhysicalDirection mCrossAxisDirection;
 };
 
 /**

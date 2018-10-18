@@ -1491,7 +1491,7 @@
 
     <handlers>
       <handler event="click" button="0"><![CDATA[
-        if (!["button", "checkbox"].includes(event.originalTarget.localName) &&
+        if (!["button", "checkbox", "menulist", "menuitem"].includes(event.originalTarget.localName) &&
             !event.originalTarget.classList.contains("text-link")) {
           this.showInDetailView();
         }

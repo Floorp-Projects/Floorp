@@ -1,0 +1,36 @@
+// |reftest| skip -- class-fields-private is not supported
+// This file was procedurally generated from the following sources:
+// - src/class-elements/grammar-privatename-no-initializer-with-method.case
+// - src/class-elements/syntax/valid/cls-expr-elements-valid-syntax.template
+/*---
+description: SyntaxError (class expression)
+esid: prod-ClassElement
+features: [class-fields-private, class]
+flags: [generated]
+info: |
+    
+    ClassElement :
+      MethodDefinition
+      static MethodDefinition
+      FieldDefinition ;
+      ;
+
+    FieldDefinition :
+      ClassElementName Initializer _opt
+
+    ClassElementName :
+      PropertyName
+      PrivateName
+
+    PrivateName ::
+      # IdentifierName
+
+---*/
+
+
+var C = class {
+  #x
+  m() {}
+};
+
+reportCompare(0, 0);
