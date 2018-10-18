@@ -349,6 +349,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSITELLABLESTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSICLONEABLEINPUTSTREAM
 
@@ -384,6 +385,7 @@ private:
 NS_IMPL_ISUPPORTS(nsStorageInputStream,
                   nsIInputStream,
                   nsISeekableStream,
+                  nsITellableStream,
                   nsIIPCSerializableInputStream,
                   nsICloneableInputStream)
 

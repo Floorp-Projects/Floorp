@@ -528,10 +528,7 @@ nsXULElement::HasMenu()
 void
 nsXULElement::OpenMenu(bool aOpenFlag)
 {
-  nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
-  if (doc) {
-    doc->FlushPendingNotifications(FlushType::Frames);
-  }
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
@@ -539,13 +536,10 @@ nsXULElement::OpenMenu(bool aOpenFlag)
       // Nothing will happen if this element isn't a menu.
       pm->ShowMenu(this, false, false);
     }
-    else {
-      nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame());
-      if (menu) {
-        nsMenuPopupFrame* popupFrame = menu->GetPopup();
-        if (popupFrame) {
-          pm->HidePopup(popupFrame->GetContent(), false, true, false, false);
-        }
+    else if (menu) {
+      nsMenuPopupFrame* popupFrame = menu->GetPopup();
+      if (popupFrame) {
+        pm->HidePopup(popupFrame->GetContent(), false, true, false, false);
       }
     }
   }
