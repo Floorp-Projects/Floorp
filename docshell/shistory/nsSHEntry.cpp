@@ -9,8 +9,8 @@
 #include <algorithm>
 
 #include "nsDocShellEditorData.h"
+#include "nsDocShellLoadTypes.h"
 #include "nsIContentViewer.h"
-#include "nsDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInputStream.h"
 #include "nsILayoutHistoryState.h"

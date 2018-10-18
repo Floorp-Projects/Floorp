@@ -9,7 +9,7 @@
 #include "ClientState.h"
 #include "mozilla/Unused.h"
 #include "nsIDocShell.h"
-#include "nsDocShellLoadInfo.h"
+#include "nsDocShellLoadState.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
@@ -236,13 +236,16 @@ ClientNavigateOpChild::DoNavigate(const ClientNavigateOpConstructorArgs& aArgs)
     return ref.forget();
   }
 
-  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
 
-  loadInfo->SetTriggeringPrincipal(principal);
-  loadInfo->SetReferrerPolicy(doc->GetReferrerPolicy());
-  loadInfo->SetLoadType(LOAD_STOP_CONTENT);
-  loadInfo->SetSourceDocShell(docShell);
-  rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, true);
+  loadState->SetTriggeringPrincipal(principal);
+  loadState->SetReferrerPolicy(doc->GetReferrerPolicy());
+  loadState->SetLoadType(LOAD_STOP_CONTENT);
+  loadState->SetSourceDocShell(docShell);
+  loadState->SetURI(url);
+  loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
+  loadState->SetFirstParty(true);
+  rv = docShell->LoadURI(loadState);
   if (NS_FAILED(rv)) {
     ref = ClientOpPromise::CreateAndReject(rv, __func__);
     return ref.forget();
