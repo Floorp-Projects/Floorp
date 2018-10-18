@@ -55,6 +55,7 @@ const SUMMARY_METHOD = L10N.getStr("netmonitor.summary.method");
 const SUMMARY_URL = L10N.getStr("netmonitor.summary.url");
 const SUMMARY_STATUS = L10N.getStr("netmonitor.summary.status");
 const SUMMARY_VERSION = L10N.getStr("netmonitor.summary.version");
+const SUMMARY_STATUS_LEARN_MORE = L10N.getStr("netmonitor.summary.learnMore");
 
 /**
  * Headers panel component
@@ -232,6 +233,7 @@ class HeadersPanel extends Component {
           }),
           statusCodeDocURL ? MDNLink({
             url: statusCodeDocURL,
+            title: SUMMARY_STATUS_LEARN_MORE,
           }) : span({
             className: "headers-summary learn-more-link",
           }),
