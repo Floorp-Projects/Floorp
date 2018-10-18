@@ -113,9 +113,6 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   form: function() {
     return {
       actor: this.actorID,
-      traits: {
-        autoHideOnDestroy: true
-      }
     };
   },
 

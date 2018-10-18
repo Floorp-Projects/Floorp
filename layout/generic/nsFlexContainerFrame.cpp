@@ -303,6 +303,8 @@ public:
 
   // Accessors:
   // XXXdholbert [BEGIN DEPRECATED]
+  // These should not be used in layout, but they are useful for devtools API
+  // which reports physical axis direction.
   AxisOrientationType GetMainAxis() const  { return mMainAxis;  }
   AxisOrientationType GetCrossAxis() const { return mCrossAxis; }
   // XXXdholbert [END DEPRECATED]
@@ -4669,6 +4671,21 @@ nsFlexContainerFrame::IsUsedFlexBasisContent(const nsStyleCoord* aFlexBasis,
      aMainSize->GetUnit() == eStyleUnit_Auto);
 }
 
+static mozilla::dom::FlexPhysicalDirection
+ConvertAxisOrientationTypeToAPIEnum(AxisOrientationType aAxisOrientation)
+{
+  switch (aAxisOrientation) {
+    case eAxis_LR:
+      return mozilla::dom::FlexPhysicalDirection::Horizontal_lr;
+    case eAxis_RL:
+      return mozilla::dom::FlexPhysicalDirection::Horizontal_rl;
+    case eAxis_TB:
+      return mozilla::dom::FlexPhysicalDirection::Vertical_tb;
+    default:
+      return mozilla::dom::FlexPhysicalDirection::Vertical_bt;
+  }
+}
+
 void
 nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    ReflowOutput&     aDesiredSize,
@@ -4722,6 +4739,19 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       MOZ_ASSERT(containerInfo->mLines.IsEmpty(),
                  "Shouldn't have lines yet.");
     }
+
+    // Set the axis physical directions.
+    AxisOrientationType mainAxis = aAxisTracker.GetMainAxis();
+    AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
+    if (aAxisTracker.AreAxesInternallyReversed()) {
+      mainAxis = GetReverseAxis(mainAxis);
+      crossAxis = GetReverseAxis(crossAxis);
+    }
+
+    containerInfo->mMainAxisDirection =
+      ConvertAxisOrientationTypeToAPIEnum(mainAxis);
+    containerInfo->mCrossAxisDirection =
+      ConvertAxisOrientationTypeToAPIEnum(crossAxis);
 
     for (const FlexLine* line = lines.getFirst(); line;
          line = line->getNext()) {

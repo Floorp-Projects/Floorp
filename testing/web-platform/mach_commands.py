@@ -125,6 +125,12 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         from tools.wpt import run
 
+        # Add additional kwargs consumed by the run frontend. Currently we don't
+        # have a way to set these through mach
+        kwargs["channel"] = None
+        kwargs["prompt"] = True
+        kwargs["install_browser"] = False
+
         try:
             kwargs = run.setup_wptrunner(run.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root),
                                          **kwargs)

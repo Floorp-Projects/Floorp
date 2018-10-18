@@ -16,6 +16,11 @@ on-screen instructions:
 
 	% ./mach bootstrap
 
+When you're getting asked to choose the version of Firefox you want to build,
+you may want to consider choosing "Firefox for Desktop Artifact Mode".  This
+significantly reduces the time it takes to build Firefox on your machine
+(from 30+ minutes to just 1-2 minutes) if you have a fast internet connection.
+
 To perform a regular build, simply do:
 
 	% ./mach build
@@ -39,7 +44,7 @@ If you compile Firefox frequently you will also want to enable
 	mk_add_options 'export CCACHE_CPP2=yes'
 	ac_add_options --with-ccache
 
-[mozilla-unified]: https://hg.mozilla.org/mozilla-unified/
+[mozilla-unified]: https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmozilla/unifiedrepo.html
 [artifact builds]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds
 [ccache]: https://ccache.samba.org/
 [sccache]: https://github.com/mozilla/sccache

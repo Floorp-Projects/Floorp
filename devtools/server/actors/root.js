@@ -116,9 +116,6 @@ RootActor.prototype = {
 
   traits: {
     sources: true,
-    // Whether the server-side highlighter actor exists and can be used to
-    // remotely highlight nodes (see server/actors/highlighters.js)
-    highlightable: true,
     networkMonitor: true,
     // Whether the storage inspector actor to inspect cookies, etc.
     storageInspector: true,

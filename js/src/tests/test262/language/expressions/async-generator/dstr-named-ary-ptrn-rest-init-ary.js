@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-ary.case
 // - src/dstr-binding/default/async-gen-func-named-expr.template
 /*---
-description: Reset element (nested array pattern) does not support initializer (async generator named function expression)
+description: Rest element (nested array pattern) does not support initializer (async generator named function expression)
 esid: sec-asyncgenerator-definitions-evaluation
 features: [async-iteration]
 flags: [generated, async]

@@ -113,11 +113,18 @@ function cleanupDir(dir) {
   });
 }
 
-// Run a test with the specified preferences and then clear them
+// Run a test with the specified preferences and then restores their initial values
 // right after the test function run (whether it passes or fails).
 async function runWithPrefs(prefsToSet, testFn) {
-  try {
-    for (let [pref, value] of prefsToSet) {
+  const setPrefs = (prefs) => {
+    for (let [pref, value] of prefs) {
+      if (value === undefined) {
+        // Clear any pref that didn't have a user value.
+        info(`Clearing pref "${pref}"`);
+        Services.prefs.clearUserPref(pref);
+        continue;
+      }
+
       info(`Setting pref "${pref}": ${value}`);
       switch (typeof(value)) {
         case "boolean":
@@ -133,12 +140,39 @@ async function runWithPrefs(prefsToSet, testFn) {
           throw new Error("runWithPrefs doesn't support this pref type yet");
       }
     }
+  };
+
+  const getPrefs = (prefs) => {
+    return prefs.map(([pref, value]) => {
+      info(`Getting initial pref value for "${pref}"`);
+      if (!Services.prefs.prefHasUserValue(pref)) {
+        // Check if the pref doesn't have a user value.
+        return [pref, undefined];
+      }
+      switch (typeof value) {
+        case "boolean":
+          return [pref, Services.prefs.getBoolPref(pref)];
+        case "number":
+          return [pref, Services.prefs.getIntPref(pref)];
+        case "string":
+          return [pref, Services.prefs.getStringPref(pref)];
+        default:
+          throw new Error("runWithPrefs doesn't support this pref type yet");
+      }
+    });
+  };
+
+  let initialPrefsValues = [];
+
+  try {
+    initialPrefsValues = getPrefs(prefsToSet);
+
+    setPrefs(prefsToSet);
+
     await testFn();
   } finally {
-    for (let [prefName] of prefsToSet) {
-      info(`Clearing pref "${prefName}"`);
-      Services.prefs.clearUserPref(prefName);
-    }
+    info("Restoring initial preferences values on exit");
+    setPrefs(initialPrefsValues);
   }
 }
 
