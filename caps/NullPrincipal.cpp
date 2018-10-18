@@ -38,19 +38,24 @@ NS_IMPL_CI_INTERFACE_GETTER(NullPrincipal,
 /* static */ already_AddRefed<NullPrincipal>
 NullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 {
-  RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
-  nsresult rv = nullPrin->Init(Cast(aInheritFrom)->OriginAttributesRef());
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-  return nullPrin.forget();
+  MOZ_ASSERT(aInheritFrom);
+  return CreateWithInheritedAttributes(Cast(aInheritFrom)->OriginAttributesRef(), false);
 }
 
 /* static */ already_AddRefed<NullPrincipal>
 NullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell, bool aIsFirstParty)
 {
-  OriginAttributes attrs = nsDocShell::Cast(aDocShell)->GetOriginAttributes();
+  MOZ_ASSERT(aDocShell);
 
+  OriginAttributes attrs = nsDocShell::Cast(aDocShell)->GetOriginAttributes();
+  return CreateWithInheritedAttributes(attrs, aIsFirstParty);
+}
+
+/* static */ already_AddRefed<NullPrincipal>
+NullPrincipal::CreateWithInheritedAttributes(const OriginAttributes& aOriginAttributes, bool aIsFirstParty)
+{
   RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
-  nsresult rv = nullPrin->Init(attrs, aIsFirstParty);
+  nsresult rv = nullPrin->Init(aOriginAttributes, aIsFirstParty);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   return nullPrin.forget();
 }
