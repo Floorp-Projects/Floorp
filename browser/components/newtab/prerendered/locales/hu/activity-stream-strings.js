@@ -89,7 +89,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_collapse_section": "Szakasz összecsukása",
   "section_menu_action_expand_section": "Szakasz lenyitása",
   "section_menu_action_manage_section": "Szakasz kezelése",
-  "section_menu_action_manage_webext": "Kiterjesztés kezelése",
+  "section_menu_action_manage_webext": "Kiegészítő kezelése",
   "section_menu_action_add_topsite": "Hozzáadás a népszerű oldalakhoz",
   "section_menu_action_add_search_engine": "Keresőszolgáltatás hozzáadása",
   "section_menu_action_move_up": "Mozgatás felfelé",
@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Adatvédelmi nyilatkozatot",
   "firstrun_continue_to_login": "Folytatás",
   "firstrun_skip_login": "Lépés kihagyása",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "További tudnivalók"
 };

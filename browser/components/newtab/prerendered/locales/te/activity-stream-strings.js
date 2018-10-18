@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "అంతరంగికత గమనిక",
   "firstrun_continue_to_login": "కొనసాగు",
   "firstrun_skip_login": "ఈ అంచెను దాటవేయి",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "ఇంకా తెలుసుకోండి"
 };

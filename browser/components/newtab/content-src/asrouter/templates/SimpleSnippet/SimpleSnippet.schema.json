@@ -43,6 +43,12 @@
       "type": "string",
       "description": "The type of action the button should trigger."
     },
+    "button_url": {
+      "allOf": [
+        {"$ref": "#/definitions/link_url"},
+        {"description": "A url, button_label links to this"}
+      ]
+    },
     "button_action_args": {
       "type": "string",
       "description": "Additional parameters for button action, example which specific menu the button should open"
@@ -95,7 +101,8 @@
   "additionalProperties": false,
   "required": ["text"],
   "dependencies": {
-    "button_label": ["button_action"],
+    "button_action": ["button_label"],
+    "button_url": ["button_label"],
     "button_color": ["button_label"],
     "button_background_color": ["button_label"]
   }
