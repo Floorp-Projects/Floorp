@@ -8,33 +8,25 @@ DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
 DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org'] += [
-  'bootstrap.js'
+  'aboutConfigPrefs.js',
+  'aboutConfigPrefs.json',
+  'injections.js',
+  'manifest.json',
+  'ua_overrides.js'
 ]
 
-FINAL_TARGET_FILES.features['webcompat@mozilla.org']['webextension'] += [
-  'webextension/background.js',
-  'webextension/manifest.json'
+FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
+  'injections/css/bug0000000-dummy-css-injection.css'
 ]
 
-FINAL_TARGET_FILES.features['webcompat@mozilla.org']['webextension']['injections']['css'] += [
-  'webextension/injections/css/bug0000000-dummy-css-injection.css'
+FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
+  'injections/js/bug0000000-dummy-js-injection.js',
+  'injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js',
+  'injections/js/bug1457335-histography.io-ua-change.js',
+  'injections/js/bug1472075-bankofamerica.com-ua-change.js',
+  'injections/js/bug1472081-election.gov.np-window.sidebar-shim.js',
+  'injections/js/bug1482066-portalminasnet.com-window.sidebar-shim.js'
 ]
-
-FINAL_TARGET_FILES.features['webcompat@mozilla.org']['webextension']['injections']['js'] += [
-  'webextension/injections/js/bug0000000-dummy-js-injection.js',
-  'webextension/injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js',
-  'webextension/injections/js/bug1457335-histography.io-ua-change.js',
-  'webextension/injections/js/bug1472075-bankofamerica.com-ua-change.js',
-  'webextension/injections/js/bug1472081-election.gov.np-window.sidebar-shim.js',
-  'webextension/injections/js/bug1482066-portalminasnet.com-window.sidebar-shim.js'
-]
-
-FINAL_TARGET_PP_FILES.features['webcompat@mozilla.org'] += [
-  'install.rdf.in'
-]
-
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-JAR_MANIFESTS += ['jar.mn']
 
 with Files('**'):
   BUG_COMPONENT = ('Web Compatibility Tools', 'Go Faster')

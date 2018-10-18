@@ -6,11 +6,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>about:performance</title>
+    <title data-l10n-id="about-performance-title"/>
     <link rel="icon" type="image/png" id="favicon"
           href="chrome://branding/content/icon32.png"/>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css"
           type="text/css"/>
+    <link rel="localization" href="toolkit/about/aboutPerformance.ftl"/>
     <script type="text/javascript" src="chrome://global/content/aboutPerformance.js"></script>
     <style>
       @import url("chrome://global/skin/in-content/common.css");
@@ -135,7 +136,51 @@
         width: 100%;
       }
       #dispatch-table td:nth-child(2) {
-        width: 10em;
+        width: 8em;
+      }
+      #dispatch-table td:nth-child(3) {
+        width: 12em;
+      }
+      #dispatch-table td:nth-child(4) {
+        width: 20px;
+      }
+
+      /* Show action icons on selected or hovered rows */
+      tr:-moz-any([selected], :hover) > td > .action-icon {
+        padding: 1px 10px;
+        -moz-context-properties: fill, fill-opacity;
+        fill-opacity: 0;
+        background-repeat: no-repeat;
+        background-position: center;
+        fill: currentColor;
+      }
+      .addon-icon {
+        background-image: url("chrome://global/skin/icons/shortcut.svg");
+        background-size: 16px;
+      }
+      .close-icon {
+        background-image: url("chrome://global/skin/icons/close.svg");
+        background-size: 24px;
+      }
+      .action-icon {
+        position: relative;
+      }
+      /* action icon background */
+      .action-icon::before {
+        background-color: currentColor;
+        opacity: 0;
+        height: 200%;
+        position: absolute;
+        top: -50%;
+        left: -3px;
+        padding-left: 13px;
+        padding-right: 13px;
+      }
+      .action-icon:hover::before {
+        opacity: 0.1;
+      }
+      .action-icon:hover:active::before {
+        opacity: 0.2;
       }
 
       #dispatch-table > tbody {
@@ -157,11 +202,11 @@
         min-height: 2em;
         color: var(--in-content-text-color);
         max-width: 70vw;
-        text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
       }
       #dispatch-tbody > tr > td:first-child {
+        text-overflow: ellipsis;
         padding-inline-start: 32px;
         background-repeat: no-repeat;
         background-size: 16px 16px;
@@ -188,13 +233,13 @@
         padding-inline-start: 88px;
         background-position: 62px;
       }
-      #dispatch-tbody > tr > td.tracking {
-        background-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+      #dispatch-tbody > tr > td.tracker {
+        background-image: url("chrome://browser/skin/controlcenter/trackers.svg");
         -moz-context-properties: fill;
         fill: rgb(224, 41, 29);
       }
       #dispatch-tbody > tr > td.worker {
-        background-image: url(chrome://devtools/skin/images/debugging-workers.svg);
+        background-image: url("chrome://devtools/skin/images/debugging-workers.svg");
         -moz-context-properties: fill;
         fill: #808080;
       }
@@ -238,8 +283,10 @@
       <table id="dispatch-table">
         <thead id="dispatch-thead">
           <tr>
-            <td>Name</td>
-            <td>Energy Impact</td>
+            <td data-l10n-id="column-name"/>
+            <td data-l10n-id="column-type"/>
+            <td data-l10n-id="column-energy-impact"/>
+            <td></td><!-- actions -->
           </tr>
         </thead>
         <tbody id="dispatch-tbody"></tbody>
