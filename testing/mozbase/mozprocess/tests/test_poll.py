@@ -4,7 +4,9 @@ from __future__ import absolute_import
 
 import os
 import signal
+import sys
 import time
+import unittest
 
 import mozinfo
 import mozunit
@@ -103,6 +105,7 @@ class ProcTestPoll(proctest.ProcTest):
 
         self.determine_status(p)
 
+    @unittest.skipIf(sys.platform.startswith("win"), "Bug 1493796")
     def test_poll_after_external_kill(self):
         """Process is killed externally, and poll() is called."""
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
