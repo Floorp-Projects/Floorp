@@ -28,7 +28,7 @@ static FeatureMap sSupportedFeatures[] = {
   { "fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eAll },
   { "geolocation", FeaturePolicyUtils::FeaturePolicyValue::eAll },
   { "microphone", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
-  { "midi", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "midi", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
   { "payment", FeaturePolicyUtils::FeaturePolicyValue::eAll },
   // TODO: not supported yet!!!
   { "speaker", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
