@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDocShellLoadInfo_h__
-#define nsDocShellLoadInfo_h__
+#ifndef nsDocShellLoadState_h__
+#define nsDocShellLoadState_h__
 
 // Helper Classes
 #include "nsCOMPtr.h"
@@ -17,21 +17,28 @@ class nsIInputStream;
 class nsISHEntry;
 class nsIURI;
 class nsIDocShell;
+class OriginAttibutes;
 
 /**
- * nsDocShellLoadInfo contains setup information used in a nsIDocShell::loadURI
+ * nsDocShellLoadState contains setup information used in a nsIDocShell::loadURI
  * call.
  */
-class nsDocShellLoadInfo
+class nsDocShellLoadState final
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadInfo);
+  NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadState);
 
-  nsDocShellLoadInfo();
+  nsDocShellLoadState();
+
+  // Getters and Setters
 
   nsIURI* Referrer() const;
 
   void SetReferrer(nsIURI* aReferrer);
+
+  nsIURI* URI() const;
+
+  void SetURI(nsIURI* aURI);
 
   nsIURI* OriginalURI() const;
 
@@ -48,6 +55,10 @@ public:
   bool KeepResultPrincipalURIIfSet() const;
 
   void SetKeepResultPrincipalURIIfSet(bool aKeep);
+
+  nsIPrincipal* PrincipalToInherit() const;
+
+  void SetPrincipalToInherit(nsIPrincipal* aPrincipalToInherit);
 
   bool LoadReplace() const;
 
@@ -81,7 +92,7 @@ public:
 
   void SetSHEntry(nsISHEntry* aSHEntry);
 
-  void GetTarget(nsAString& aTarget) const;
+  const nsString& Target() const;
 
   void SetTarget(const nsAString& aTarget);
 
@@ -103,7 +114,7 @@ public:
 
   bool IsSrcdocLoad() const;
 
-  void GetSrcdocData(nsAString& aSrcdocData) const;
+  const nsString& SrcdocData() const;
 
   void SetSrcdocData(const nsAString& aSrcdocData);
 
@@ -123,12 +134,53 @@ public:
   void
   SetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>> const& aRPURI);
 
+  uint32_t LoadFlags() const;
+
+  void SetLoadFlags(uint32_t aFlags);
+
+  bool FirstParty() const;
+
+  void SetFirstParty(bool aFirstParty);
+
+  const nsCString& TypeHint() const;
+
+  void SetTypeHint(const nsCString& aTypeHint);
+
+  const nsString& FileName() const;
+
+  void SetFileName(const nsAString& aFileName);
+
+  uint32_t DocShellInternalLoadFlags() const;
+
+  void SetDocShellInternalLoadFlags(uint32_t aFlags);
+
+  // Give the type of DocShell we're loading into (chrome/content/etc) and
+  // origin attributes for the URI we're loading, figure out if we should
+  // inherit our principal from the document the load was requested from, or
+  // else if the principal should be set up later in the process (after loads).
+  // See comments in function for more info on principal selection algorithm
+  nsresult SetupInheritingPrincipal(uint32_t aItemType, const mozilla::OriginAttributes& aOriginAttributes);
+
+  // If no triggering principal exists at the moment, create one using referrer
+  // information and origin attributes.
+  nsresult SetupTriggeringPrincipal(const mozilla::OriginAttributes& aOriginAttributes);
+
+  // When loading a document through nsDocShell::LoadURI(), a special set of
+  // flags needs to be set based on other values in nsDocShellLoadState. This
+  // function calculates those flags, before the LoadState is passed to
+  // nsDocShell::InternalLoad.
+  void CalculateDocShellInternalLoadFlags();
 protected:
-  virtual ~nsDocShellLoadInfo();
+  // Destructor can't be defaulted or inlined, as header doesn't have all type
+  // includes it needs to do so.
+  ~nsDocShellLoadState();
 
 protected:
   // This is the referrer for the load.
   nsCOMPtr<nsIURI> mReferrer;
+
+  // The URI we are navigating to. Will not be null once set.
+  nsCOMPtr<nsIURI> mURI;
 
   // The originalURI to be passed to nsIDocShell.internalLoad. May be null.
   nsCOMPtr<nsIURI> mOriginalURI;
@@ -161,6 +213,12 @@ protected:
   // as trying to use a systemprincipal as the triggeringPrincipal
   // for a content docshell the load fails.
   bool mPrincipalIsExplicit;
+
+  // Principal we're inheriting. If null, this means the principal should be
+  // inherited from the current document. If set to NullPrincipal, the channel
+  // will fill in principal information later in the load. See internal function
+  // comments for more info.
+  nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
 
   // If this attribute is true, then a top-level navigation
   // to a data URI will be allowed.
@@ -209,6 +267,27 @@ protected:
   // Used for srcdoc loads to give view-source knowledge of the load's base URI
   // as this information isn't embedded in the load's URI.
   nsCOMPtr<nsIURI> mBaseURI;
+
+  // Set of Load Flags, taken from nsDocShellLoadTypes.h
+  uint32_t mLoadFlags;
+
+  // Is this a First Party Load?
+  bool mFirstParty;
+
+  // A hint as to the content-type of the resulting data. If no hint, IsVoid()
+  // should return true.
+  nsCString mTypeHint;
+
+  // Non-void when the link should be downloaded as the given filename.
+  // mFileName being non-void but empty means that no filename hint was
+  // specified, but link should still trigger a download. If not a download,
+  // mFileName.IsVoid() should return true.
+  nsString mFileName;
+
+  // LoadFlags calculated in nsDocShell::LoadURI and passed to
+  // nsDocShell::InternalLoad, taken from the INTERNAL_LOAD consts in
+  // nsIDocShell.idl
+  uint32_t mDocShellInternalLoadFlags;
 };
 
-#endif /* nsDocShellLoadInfo_h__ */
+#endif /* nsDocShellLoadState_h__ */
