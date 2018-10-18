@@ -45,7 +45,6 @@ py2:
         - testing/tools
         - testing/tps
         - testing/web-platform
-        - third_party
         - toolkit
         - tools/docs
         - tools/jprof/split-profile.py
