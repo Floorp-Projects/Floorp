@@ -2680,13 +2680,11 @@ Toolbox.prototype = {
         this._selection = new Selection(this._walker);
         this._selection.on("new-node-front", this._onNewSelectedNodeFront);
 
-        if (this.highlighterUtils.isRemoteHighlightable()) {
-          this.walker.on("highlighter-ready", this._highlighterReady);
-          this.walker.on("highlighter-hide", this._highlighterHidden);
+        this.walker.on("highlighter-ready", this._highlighterReady);
+        this.walker.on("highlighter-hide", this._highlighterHidden);
 
-          const autohide = !flags.testing;
-          this._highlighter = await this._inspector.getHighlighter(autohide);
-        }
+        const autohide = !flags.testing;
+        this._highlighter = await this._inspector.getHighlighter(autohide);
         if (!("_supportsFrameHighlight" in this)) {
           // Only works with FF58+ targets
           this._supportsFrameHighlight =
