@@ -118,14 +118,14 @@ function attachWorker(targetFront, worker) {
   return targetFront.attachWorker(worker.actor);
 }
 
-function attachThread(workerClient, options) {
+function attachThread(workerTargetFront, options) {
   info("Attaching to thread.");
-  return workerClient.attachThread(options);
+  return workerTargetFront.attachThread(options);
 }
 
-async function waitForWorkerClose(workerClient) {
+async function waitForWorkerClose(workerTargetFront) {
   info("Waiting for worker to close.");
-  await workerClient.once("close");
+  await workerTargetFront.once("close");
   info("Worker did close.");
 }
 
@@ -164,10 +164,10 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   await createWorkerInTab(tab, WORKER_URL);
 
   const { workers } = await listWorkers(targetFront);
-  const [, workerClient] = await attachWorker(targetFront,
+  const [, workerTargetFront] = await attachWorker(targetFront,
                                              findWorker(workers, WORKER_URL));
 
-  const toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
+  const toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
                                             "jsdebugger",
                                             Toolbox.HostType.WINDOW);
 
@@ -177,7 +177,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 
   const context = createDebuggerContext(toolbox);
 
-  return { ...context, client, tab, targetFront, workerClient, toolbox, gDebugger};
+  return { ...context, client, tab, targetFront, workerTargetFront, toolbox, gDebugger};
 }
 
 // Override addTab/removeTab as defined by shared-head, since these have
