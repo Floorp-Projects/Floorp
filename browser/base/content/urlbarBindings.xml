@@ -2761,9 +2761,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="aMaxProgress"/>
         <body><![CDATA[
           if (aMaxProgress == -1) {
-            this.progressmeter.setAttribute("mode", "undetermined");
+            this.progressmeter.removeAttribute("value");
           } else {
-            this.progressmeter.setAttribute("mode", "determined");
             this.progressmeter.setAttribute("value", (aProgress * 100) / aMaxProgress);
           }
 
@@ -2833,7 +2832,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           if (downloadingCount == 0) {
             this.destroy();
-            this.progressmeter.setAttribute("mode", "undetermined");
+            this.progressmeter.removeAttribute("value");
             let status = gNavigatorBundle.getString("addonDownloadVerifying");
             this.progresstext.setAttribute("value", status);
             this.progresstext.setAttribute("tooltiptext", status);
