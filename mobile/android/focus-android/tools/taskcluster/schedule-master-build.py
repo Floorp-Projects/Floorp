@@ -48,6 +48,15 @@ def generate_code_quality_task(buildTaskId):
 		dependencies = [ buildTaskId ])
 
 
+def generate_compare_locales_task():
+	return taskcluster.slugId(), generate_task(
+		name = "(Focus for Android) String validation",
+		description = "Check Focus/Klar for Android for errors in en-US and l10n.",
+		command = ('pip install compare-locales>=4.0.1,<5.0'
+				   ' && compare-locales --validate l10n.toml .'
+				   ' && compare-locales l10n.toml .'))
+
+
 def generate_webview_X86_ui_test_task(dependencies):
 		return taskcluster.slugId(), generate_task(
 			name = "(Focus for Android) UI tests - Webview X86",
@@ -188,6 +197,9 @@ if __name__ == "__main__":
 
 	codeQualityTaskId, codeQualityTask = generate_code_quality_task(buildTaskId)
 	schedule_task(queue, codeQualityTaskId, codeQualityTask)
+
+	clTaskId, clTask = generate_compare_locales_task()
+	schedule_task(queue, clTaskId, clTask)
 
 	uiWebviewARMTestTaskId, uiWebviewARMTestTask = generate_webview_ARM_ui_test_task([unitTestTaskId, codeQualityTaskId])
 	schedule_task(queue, uiWebviewARMTestTaskId, uiWebviewARMTestTask)
