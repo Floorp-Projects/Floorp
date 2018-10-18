@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/async-gen-func-named-expr.template
 /*---
-description: Reset element (identifier) does not support initializer (async generator named function expression)
+description: Rest element (identifier) does not support initializer (async generator named function expression)
 esid: sec-asyncgenerator-definitions-evaluation
 features: [async-iteration]
 flags: [generated, async]
