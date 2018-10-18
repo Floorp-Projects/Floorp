@@ -849,12 +849,8 @@ PendingLookup::LookupNext()
   // Look up all of the URLs that could allow or block this download.
   // Blocklist first.
 
-  // If any of mAnylistSpecs or mBlocklistSpecs matched the blocklist,
-  // go ahead and block.
-  if (mBlocklistCount > 0) {
-    return OnComplete(true, NS_OK,
-                      nsIApplicationReputationService::VERDICT_DANGEROUS);
-  }
+  // If a url is in blocklist we should call PendingLookup::OnComplete directly.
+  MOZ_ASSERT(mBlocklistCount == 0);
 
   int index = mAnylistSpecs.Length() - 1;
   nsCString spec;
