@@ -2626,6 +2626,19 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 {
   MOZ_LOG(gFlexContainerLog, LogLevel::Debug, ("ResolveFlexibleLengths\n"));
 
+  // Before we start resolving sizes: if we have an aLineInfo structure to fill
+  // out, we inform it of each item's base size, and we initialize the "delta"
+  // for each item to 0. (And if the flex algorithm wants to grow or shrink the
+  // item, we'll update this delta further down.)
+  if (aLineInfo) {
+    uint32_t itemIndex = 0;
+    for (FlexItem* item = mItems.getFirst(); item; item = item->getNext(),
+                                                   ++itemIndex) {
+      aLineInfo->mItems[itemIndex].mMainBaseSize = item->GetFlexBaseSize();
+      aLineInfo->mItems[itemIndex].mMainDeltaSize = 0;
+    }
+  }
+
   // Determine whether we're going to be growing or shrinking items.
   const bool isUsingFlexGrow =
     (mTotalOuterHypotheticalMainSize < aFlexContainerMainSize);
@@ -2669,21 +2682,6 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
         item->SetMainSize(item->GetFlexBaseSize());
       }
       availableFreeSpace -= item->GetMainSize();
-    }
-
-    // If we have an aLineInfo structure to fill out, and this is the
-    // first time through the loop, capture these sizes as mainBaseSizes.
-    // We only care about the first iteration, because additional
-    // iterations will only reset item base sizes to these values.
-    // We also set a 0 mainDeltaSize. This will be modified later if
-    // the item is stretched or shrunk.
-    if (aLineInfo && (iterationCounter == 0)) {
-      uint32_t itemIndex = 0;
-      for (FlexItem* item = mItems.getFirst(); item; item = item->getNext(),
-                                                     ++itemIndex) {
-        aLineInfo->mItems[itemIndex].mMainBaseSize = item->GetMainSize();
-        aLineInfo->mItems[itemIndex].mMainDeltaSize = 0;
-      }
     }
 
     MOZ_LOG(gFlexContainerLog, LogLevel::Debug,

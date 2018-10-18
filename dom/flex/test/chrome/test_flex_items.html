@@ -9,8 +9,12 @@
     display: flex;
     background-color: grey;
     font: 14px sans-serif;
-    width: 800px;
     height: 50px;
+  }
+  .huge {
+    /* This just needs to be large enough so that no shrinking is required
+       inside the flex container that uses this class. */
+    width: 1600px;
   }
 
   .base        { align-self: baseline; }
@@ -23,6 +27,7 @@
   .yellow      { background: yellow; }
   .orange      { background: orange; }
   .pink        { background: pink;   }
+  .tan         { background: tan;    }
   .white       { background: white;  }
 
   .crossMinMax { min-height: 40px;
@@ -32,6 +37,11 @@
                  max-width: 500px; }
 
   .flexGrow    { flex-grow: 1; }
+  .spacer150   { width: 150px;
+                 box-sizing: border-box;
+                 height: 10px;
+                 border: 1px solid teal; }
+
 </style>
 
 <script>
@@ -118,7 +128,7 @@ function runTests() {
 
   let expectedValues = [
     { crossMinSize: 0 },
-    { mainBaseSize: lbElemBoundingRect.width,
+    { mainBaseSize: 100,
       mainDeltaSize: 0 },
     { crossMinSize: 40,
       crossMaxSize: 120,
@@ -126,10 +136,14 @@ function runTests() {
     { mainMinSize: 120,
       mainMaxSize: 500,
       mainDeltaSize: 0 },
-    { mainBaseSize:  5, /* XXXdholbert should be 10, fixing in bug 1498281 */
+    { mainMinSize: 120,
+      mainMaxSize: 500,
+      mainBaseSize: 150,
+      mainDeltaSize: 0 },
+    { mainBaseSize:  10,
       mainMaxSize:   5,
       mainDeltaSize: 0 },
-    { mainBaseSize: 15, /* XXXdholbert should be 10, fixing in bug 1498281 */
+    { mainBaseSize: 10,
       mainMinSize:  15,
       mainDeltaSize: 0 },
     { mainBaseSize: 50,
@@ -176,11 +190,16 @@ function runTests() {
 </head>
 
 <body onLoad="runTests();">
-  <div id="wrapper" class="container">
+  <div id="wrapper" class="container huge">
     <div class="lime base flexGrow">one line (first)</div>
     <div class="yellow lastbase" style="width: 100px">one line (last)</div>
     <div class="orange offset lastbase crossMinMax">two<br/>lines and offset (last)</div>
     <div class="pink offset base mainMinMax">offset (first)</div>
+    <!-- Inflexible item w/ content-derived flex base size, which has min/max
+         but doesn't violate them: -->
+    <div class="tan mainMinMax">
+      <div class="spacer150"></div>
+    </div>
     <!-- Inflexible item that is trivially clamped to smaller max-width: -->
     <div style="flex: 0 0 10px; max-width: 5px"></div>
     <!-- Inflexible item that is trivially clamped to larger min-width: -->
