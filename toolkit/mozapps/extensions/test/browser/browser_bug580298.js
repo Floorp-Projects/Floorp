@@ -43,15 +43,14 @@ function get_node(parent, anonid) {
 
 function open_details(aList, aItem, aCallback) {
   aList.ensureElementIsVisible(aItem);
-  EventUtils.synthesizeMouseAtCenter(aItem, { clickCount: 1 }, gManagerWindow);
-  EventUtils.synthesizeMouseAtCenter(aItem, { clickCount: 2 }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(aItem, {}, gManagerWindow);
   return new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
 }
 
 var check_addon_has_version = async function(aList, aName, aVersion) {
   for (let i = 0; i < aList.itemCount; i++) {
     let item = aList.getItemAtIndex(i);
-    if (get_node(item, "name").value === aName) {
+    if (get_node(item, "name").textContent === aName) {
       ok(true, "Item with correct name found");
       let { version } = await get_tooltip_info(item);
       is(version, aVersion, "Item has correct version");
