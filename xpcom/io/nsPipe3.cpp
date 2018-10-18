@@ -12,7 +12,7 @@
 #include "nsICloneableInputStream.h"
 #include "nsIPipe.h"
 #include "nsIEventTarget.h"
-#include "nsISeekableStream.h"
+#include "nsITellableStream.h"
 #include "mozilla/RefPtr.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
@@ -142,7 +142,7 @@ struct nsPipeReadState
 // an input end of a pipe (maintained as a list of refs within the pipe)
 class nsPipeInputStream final
   : public nsIAsyncInputStream
-  , public nsISeekableStream
+  , public nsITellableStream
   , public nsISearchableInputStream
   , public nsICloneableInputStream
   , public nsIClassInfo
@@ -155,7 +155,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS_WITH_RECORDING(recordreplay::Behavior::Preserve)
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
-  NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSITELLABLESTREAM
   NS_DECL_NSISEARCHABLEINPUTSTREAM
   NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSICLASSINFO
@@ -1250,7 +1250,7 @@ NS_IMPL_RELEASE(nsPipeInputStream);
 NS_INTERFACE_TABLE_HEAD(nsPipeInputStream)
   NS_INTERFACE_TABLE_BEGIN
     NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsIAsyncInputStream)
-    NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsISeekableStream)
+    NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsITellableStream)
     NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsISearchableInputStream)
     NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsICloneableInputStream)
     NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsIBufferedInputStream)
@@ -1265,7 +1265,7 @@ NS_INTERFACE_TABLE_TAIL
 NS_IMPL_CI_INTERFACE_GETTER(nsPipeInputStream,
                             nsIInputStream,
                             nsIAsyncInputStream,
-                            nsISeekableStream,
+                            nsITellableStream,
                             nsISearchableInputStream,
                             nsICloneableInputStream,
                             nsIBufferedInputStream)
@@ -1526,12 +1526,6 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 }
 
 NS_IMETHODIMP
-nsPipeInputStream::Seek(int32_t aWhence, int64_t aOffset)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsPipeInputStream::Tell(int64_t* aOffset)
 {
   ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
@@ -1543,13 +1537,6 @@ nsPipeInputStream::Tell(int64_t* aOffset)
 
   *aOffset = mLogicalOffset;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPipeInputStream::SetEOF()
-{
-  MOZ_ASSERT_UNREACHABLE("nsPipeInputStream::SetEOF");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static bool strings_equal(bool aIgnoreCase,
