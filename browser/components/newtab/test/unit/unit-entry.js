@@ -69,6 +69,7 @@ const TEST_GLOBAL = {
       markPageAsTyped() {},
       removeObserver() {},
     },
+    "@mozilla.org/updates/update-checker;1": {createInstance() {}},
   },
   Ci: {
     nsIHttpChannel: {REFERRER_POLICY_UNSAFE_URL: 5},

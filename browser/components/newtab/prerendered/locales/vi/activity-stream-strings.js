@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Thông báo bảo mật",
   "firstrun_continue_to_login": "Tiếp tục",
   "firstrun_skip_login": "Bỏ qua bước này",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Tìm hiểu thêm"
 };

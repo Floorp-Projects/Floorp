@@ -107,6 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "uwagi dotyczące prywatności",
   "firstrun_continue_to_login": "Kontynuuj",
   "firstrun_skip_login": "Pomiń",
+  "context_menu_title": "Open menu",
   "prefs_restore_defaults_button": "Przywróć domyślne",
   "settings_pane_header": "Ustawienia nowej karty",
   "settings_pane_body2": "Wybierz, co wyświetlać na tej stronie",
