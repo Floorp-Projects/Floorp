@@ -21,7 +21,7 @@ class TaskBuilder(object):
                    artifacts={}, scopes=[], routes=[], features={},
                    worker_type='github-worker'):
         created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 week')
+        expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
         features = features.copy()
@@ -69,11 +69,11 @@ class TaskBuilder(object):
     def beetmover_task(self, name, description, version, artifact_id,
                        dependencies=[], upstreamArtifacts=[], scopes=[]):
         created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 week')
+        expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
         return {
-            "workerType": "null-worker",
+            "workerType": "mobile-beetmover-v1",
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
@@ -96,7 +96,7 @@ class TaskBuilder(object):
                 "version": version,
                 "artifact_id": artifact_id
             },
-            "provisionerId": "null-provisioner",
+            "provisionerId": "scriptworker-prov-v1",
             "metadata": {
                 "name": name,
                 "description": description,
