@@ -11,9 +11,8 @@
     font: 14px sans-serif;
     height: 50px;
   }
-  .huge {
-    /* This just needs to be large enough so that no shrinking is required
-       inside the flex container that uses this class. */
+  #flex-sanity {
+    /* This just needs to be large enough so that no shrinking is required. */
     width: 1600px;
   }
 
@@ -56,10 +55,6 @@ function testItemMatchesExpectedValues(item, values, index) {
     is(item.node, values.node, "Item index " + index + " has expected node.");
   }
 
-  if (typeof(values.node_todo) != "undefined") {
-    todo_is(item.node, values.node_todo, "Item index " + index + " has expected node.");
-  }
-
   if (typeof(values.mainBaseSize) != "undefined") {
     is(item.mainBaseSize, values.mainBaseSize, "Item index " + index + " has expected mainBaseSize.");
   }
@@ -95,8 +90,8 @@ function testItemMatchesExpectedValues(item, values, index) {
   }
 }
 
-function runTests() {
-  let container = document.getElementById("wrapper");
+function testFlexSanity() {
+  let container = document.getElementById("flex-sanity");
   let flex = container.getAsFlexContainer();
   let lines = flex.getLines();
   is(lines.length, 1, "Container should have expected number of lines.");
@@ -183,14 +178,23 @@ function runTests() {
   // actual size minus the base size.
   isfuzzy(items[0].mainDeltaSize, firstRect.width - items[0].mainBaseSize, 1e-4,
           "flex-grow item should have expected mainDeltaSize.");
+}
 
+function runTests() {
+  testFlexSanity();
   SimpleTest.finish();
 }
 </script>
 </head>
 
 <body onLoad="runTests();">
-  <div id="wrapper" class="container huge">
+  <!-- First flex container to be tested: "flex-sanity".
+       We test a few general things, e.g.:
+       - accuracy of reported baselines.
+       - accuracy of reported flex base size, min/max sizes, & trivial deltas.
+       - flex items formation for display:contents subtrees & text nodes.
+   -->
+  <div id="flex-sanity" class="container">
     <div class="lime base flexGrow">one line (first)</div>
     <div class="yellow lastbase" style="width: 100px">one line (last)</div>
     <div class="orange offset lastbase crossMinMax">two<br/>lines and offset (last)</div>
@@ -213,7 +217,7 @@ function runTests() {
     <div style="display:contents">
       <div class="white">replaced</div>
     </div>
-    anonymous text node
+    anon item for text
   </div>
 </body>
 </html>
