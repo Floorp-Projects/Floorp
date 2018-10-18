@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["CreditCard"];
 
-ChromeUtils.defineModuleGetter(this, "OSKeyStore",
-                               "resource://formautofill/OSKeyStore.jsm");
+ChromeUtils.defineModuleGetter(this, "MasterPassword",
+                               "resource://formautofill/MasterPassword.jsm");
 
 // The list of known and supported credit card network ids ("types")
 // This list mirrors the networks from dom/payments/BasicCardPayment.cpp
@@ -208,13 +208,7 @@ class CreditCard {
 
     if (showNumbers) {
       if (this._encryptedNumber) {
-        try {
-          label = await OSKeyStore.decrypt(this._encryptedNumber);
-        } catch (ex) {
-          // Quietly recover from decryption error.
-          label = this._number;
-          Cu.reportError(ex);
-        }
+        label = await MasterPassword.decrypt(this._encryptedNumber);
       } else {
         label = this._number;
       }

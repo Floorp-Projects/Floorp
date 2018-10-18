@@ -4,19 +4,16 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
-
 let FormAutofillStorage;
-let OSKeyStore;
+
 add_task(async function setup() {
   ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {}));
-  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm", {}));
 });
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
 const ADDRESS_SCHEMA_VERSION = 1;
-const CREDIT_CARD_SCHEMA_VERSION = 2;
+const CREDIT_CARD_SCHEMA_VERSION = 1;
 
 const ADDRESS_TESTCASES = [
   {
@@ -249,12 +246,11 @@ add_task(async function test_migrateAddressRecords() {
   let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
-  for (let testcase of ADDRESS_TESTCASES) {
+  await Promise.all(ADDRESS_TESTCASES.map(async testcase => {
     info(testcase.description);
-    profileStorage._store.data.addresses = [testcase.record];
-    await profileStorage.addresses._migrateRecord(testcase.record, 0);
-    do_check_record_matches(testcase.expectedResult, profileStorage.addresses._data[0]);
-  }
+    await profileStorage.addresses._migrateRecord(testcase.record);
+    do_check_record_matches(testcase.expectedResult, testcase.record);
+  }));
 });
 
 add_task(async function test_migrateCreditCardRecords() {
@@ -263,79 +259,9 @@ add_task(async function test_migrateCreditCardRecords() {
   let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
-  for (let testcase of CREDIT_CARD_TESTCASES) {
+  await Promise.all(CREDIT_CARD_TESTCASES.map(async testcase => {
     info(testcase.description);
-    profileStorage._store.data.creditCards = [testcase.record];
-    await profileStorage.creditCards._migrateRecord(testcase.record, 0);
-    do_check_record_matches(testcase.expectedResult, profileStorage.creditCards._data[0]);
-  }
+    await profileStorage.creditCards._migrateRecord(testcase.record);
+    do_check_record_matches(testcase.expectedResult, testcase.record);
+  }));
 });
-
-add_task(async function test_migrateEncryptedCreditCardNumber() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-
-  let profileStorage = new FormAutofillStorage(path);
-  await profileStorage.initialize();
-
-  const ccNumber = "4111111111111111";
-  let cryptoSDR = Cc["@mozilla.org/login-manager/crypto/SDR;1"]
-    .createInstance(Ci.nsILoginManagerCrypto);
-
-  info("Encrypted credit card should be migrated from v1 to v2");
-
-  let record = {
-    guid: "test-guid",
-    version: 1,
-    "cc-name": "Timothy",
-    "cc-number-encrypted": cryptoSDR.encrypt(ccNumber),
-  };
-
-  let expectedRecord = {
-    guid: "test-guid",
-    version: CREDIT_CARD_SCHEMA_VERSION,
-    "cc-name": "Timothy",
-    "cc-given-name": "Timothy",
-  };
-  profileStorage._store.data.creditCards = [record];
-  await profileStorage.creditCards._migrateRecord(record, 0);
-  record = profileStorage.creditCards._data[0];
-
-  Assert.equal(expectedRecord.guid, record.guid);
-  Assert.equal(expectedRecord.version, record.version);
-  Assert.equal(expectedRecord["cc-name"], record["cc-name"]);
-  Assert.equal(expectedRecord["cc-given-name"], record["cc-given-name"]);
-
-  // Ciphertext of OS Key Store is not stable, must compare decrypted text here.
-  Assert.equal(ccNumber, await OSKeyStore.decrypt(record["cc-number-encrypted"]));
-});
-
-add_task(async function test_migrateEncryptedCreditCardNumberWithMP() {
-  LoginTestUtils.masterPassword.enable();
-
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-
-  let profileStorage = new FormAutofillStorage(path);
-  await profileStorage.initialize();
-
-  info("Encrypted credit card should be migrated a tombstone if MP is enabled");
-
-  let record = {
-    guid: "test-guid",
-    version: 1,
-    "cc-name": "Timothy",
-    "cc-number-encrypted": "(encrypted to be discarded)",
-  };
-
-  profileStorage._store.data.creditCards = [record];
-  await profileStorage.creditCards._migrateRecord(record, 0);
-  record = profileStorage.creditCards._data[0];
-
-  Assert.equal(record.guid, "test-guid");
-  Assert.equal(record.deleted, true);
-  Assert.equal(typeof record.version, "undefined");
-  Assert.equal(typeof record["cc-name"], "undefined");
-  Assert.equal(typeof record["cc-number-encrypted"], "undefined");
-
-  LoginTestUtils.masterPassword.disable();
-});
-

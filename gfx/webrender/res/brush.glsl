@@ -22,6 +22,7 @@ void brush_vs(
 #define BRUSH_FLAG_SEGMENT_RELATIVE             2
 #define BRUSH_FLAG_SEGMENT_REPEAT_X             4
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y             8
+#define BRUSH_FLAG_TEXEL_RECT                  16
 
 void main(void) {
     // Load the brush instance from vertex attributes.

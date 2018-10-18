@@ -876,7 +876,7 @@ Inspector.prototype = {
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
     if (this.is3PaneModeEnabled && defaultTab === "ruleview") {
-      defaultTab = "computedview";
+      defaultTab = "layoutview";
     }
 
     // Append all side panels

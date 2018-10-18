@@ -53,6 +53,15 @@
     "high": 60000,
     "n_buckets": 50
   },
+  "ABOUT_CONFIG_FEATURES_USAGE": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["pamadini@mozilla.com"],
+    "expires_in_version": "67",
+    "kind": "categorical",
+    "labels": ["Show", "Search", "RegexSearch", "SortByName", "SortByStatus", "SortByType", "SortByValue", "ModifyValue", "Copy", "CopyName", "CopyValue", "CreateNew", "Reset"],
+    "bug_numbers": [1493445],
+    "description": "Record number of times particular features on about:config are used"
+  },
   "ADDON_MANAGER_UPGRADE_UI_SHOWN": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "53",
