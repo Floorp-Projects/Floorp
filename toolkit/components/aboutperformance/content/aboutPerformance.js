@@ -614,6 +614,7 @@ var State = {
       let prev = previous[id];
       let host = tab.host;
 
+      let type = "tab";
       let name = `${host} (${id})`;
       let image = "chrome://mozapps/skin/places/defaultFavicon.svg";
       let found = tabFinder.get(parseInt(id));
@@ -622,17 +623,22 @@ var State = {
           name = found.tab.getAttribute("label");
           image = found.tab.getAttribute("image");
         } else {
-          name = "Preloaded: " + found.tab.linkedBrowser.contentTitle;
+          name = {id: "preloaded-tab",
+                  title: found.tab.linkedBrowser.contentTitle};
+          type = "other";
         }
       } else if (id == 1) {
         name = BRAND_NAME;
         image = "chrome://branding/content/icon32.png";
+        type = "browser";
       } else if (/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(host)) {
         let addon = WebExtensionPolicy.getByHostname(host);
         name = `${addon.name} (${addon.id})`;
         image = "chrome://mozapps/skin/extensions/extensionGeneric-16.svg";
+        type = "addon";
       } else if (id == 0 && !tab.isWorker) {
-        name = "Ghost windows";
+        name = {id: "ghost-windows"};
+        type = "other";
       }
 
       // Create a map of all the child items from the previous time we read the
@@ -691,7 +697,7 @@ var State = {
         durationSinceStartOfBuffer =
           duration - oldest.duration - (oldest.durationFromFormerChildren || 0);
       }
-      return ({id, name, image,
+      return ({id, name, image, type,
                totalDispatches: dispatches, totalDuration: duration,
                durationSincePrevious, dispatchesSincePrevious,
                durationSinceStartOfBuffer, dispatchesSinceStartOfBuffer,
@@ -1000,25 +1006,62 @@ var View = {
     row.parentNode.insertBefore(this._fragment, row.nextSibling);
     this._fragment = document.createDocumentFragment();
   },
-  appendRow(name, value, tooltip, classes, image = "") {
+  appendRow(name, energyImpact, tooltip, type, image = "") {
     let row = document.createElement("tr");
 
     let elt = document.createElement("td");
-    elt.textContent = name;
+    if (typeof name == "string") {
+      elt.textContent = name;
+    } else if (name.title) {
+      document.l10n.setAttributes(elt, name.id, {title: name.title});
+    } else {
+      document.l10n.setAttributes(elt, name.id);
+    }
     if (image)
       elt.style.backgroundImage = `url('${image}')`;
-    if (classes)
-      elt.classList.add(...classes);
-    if (!classes || !classes.includes("indent"))
+
+    if (["subframe", "tracker", "worker"].includes(type))
+      elt.classList.add("indent");
+    else
       elt.classList.add("root");
+    if (["tracker", "worker"].includes(type))
+      elt.classList.add(type);
     row.appendChild(elt);
 
     elt = document.createElement("td");
-    elt.textContent = value;
+    document.l10n.setAttributes(elt, "type-" + type);
+    row.appendChild(elt);
+
+    elt = document.createElement("td");
+    if (!energyImpact)
+      elt.textContent = "–";
+    else {
+      let impact = "high";
+      if (energyImpact < 1)
+        impact = "low";
+      else if (energyImpact < 25)
+        impact = "medium";
+      document.l10n.setAttributes(elt, "energy-impact-" + impact,
+                                  {value: energyImpact});
+    }
     row.appendChild(elt);
 
     if (tooltip)
-      row.title = tooltip;
+      document.l10n.setAttributes(row, "item", tooltip);
+
+    elt = document.createElement("td");
+    if (type == "tab") {
+      let img = document.createElement("img");
+      img.className = "action-icon close-icon";
+      document.l10n.setAttributes(img, "close-tab");
+      elt.appendChild(img);
+    } else if (type == "addon") {
+      let img = document.createElement("img");
+      img.className = "action-icon addon-icon";
+      document.l10n.setAttributes(img, "show-addon");
+      elt.appendChild(img);
+    }
+    row.appendChild(elt);
 
     this._fragment.appendChild(row);
     return row;
@@ -1046,6 +1089,29 @@ var Control = {
           while (row.nextSibling.firstChild.classList.contains("indent"))
             row.nextSibling.remove();
         }
+        return;
+      }
+
+      // Handle closing a tab.
+      if (target.classList.contains("close-icon")) {
+        let row = target.parentNode.parentNode;
+        let id = parseInt(row.windowId);
+        let found = tabFinder.get(id);
+        if (!found || !found.tabbrowser)
+          return;
+        let {tabbrowser, tab} = found;
+        tabbrowser.removeTab(tab);
+        while (row.nextSibling.firstChild.classList.contains("indent"))
+          row.nextSibling.remove();
+        row.remove();
+        return;
+      }
+
+      if (target.classList.contains("addon-icon")) {
+        let row = target.parentNode.parentNode;
+        let id = row.windowId;
+        let parentWin = window.docShell.rootTreeItem.domWindow;
+        parentWin.BrowserOpenAddonsMgr("addons://detail/" + encodeURIComponent(id));
         return;
       }
 
@@ -1110,14 +1176,16 @@ var Control = {
       this._openItems = new Set();
 
       let counters = this._sortCounters(State.getCounters());
-      for (let {id, name, image, totalDispatches, dispatchesSincePrevious,
+      for (let {id, name, image, type, totalDispatches, dispatchesSincePrevious,
                 totalDuration, durationSincePrevious, children} of counters) {
         let row =
           View.appendRow(name,
-                         this._formatEnergyImpact(dispatchesSincePrevious, durationSincePrevious),
-                         this._formatTooltip(totalDispatches, totalDuration,
-                                             dispatchesSincePrevious, durationSincePrevious),
-                         null, image);
+                         this._computeEnergyImpact(dispatchesSincePrevious,
+                                                   durationSincePrevious),
+                         {totalDispatches, totalDuration: Math.ceil(totalDuration / 1000),
+                          dispatchesSincePrevious,
+                          durationSincePrevious: Math.ceil(durationSincePrevious / 1000)},
+                         type, image);
         row.windowId = id;
         if (id == selectedId) {
           row.setAttribute("selected", "true");
@@ -1127,6 +1195,7 @@ var Control = {
         if (!children.length)
           continue;
 
+        // Show the twisty image.
         let elt = row.firstChild;
         let img = document.createElement("img");
         img.className = "twisty";
@@ -1135,6 +1204,18 @@ var Control = {
           img.classList.add("open");
           this._openItems.add(id);
         }
+
+        // If there's an l10n id on our <td> node, any image we add will be
+        // removed during localization, so move the l10n id to a <span>
+        let l10nAttrs = document.l10n.getAttributes(elt);
+        if (l10nAttrs.id) {
+          let span = document.createElement("span");
+          document.l10n.setAttributes(span, l10nAttrs.id, l10nAttrs.args);
+          elt.removeAttribute("data-l10n-id");
+          elt.removeAttribute("data-l10n-args");
+          elt.insertBefore(span, elt.firstChild);
+        }
+
         elt.insertBefore(img, elt.firstChild);
 
         row._children = children;
@@ -1155,18 +1236,19 @@ var Control = {
     children.sort((a, b) => b.dispatchesSincePrevious - a.dispatchesSincePrevious);
     for (let row of children) {
       let host = row.host.replace(/^blob:https?:\/\//, "");
-      let classes = ["indent"];
+      let type = "subframe";
       if (State.isTracker(host))
-        classes.push("tracking");
+        type = "tracker";
       if (row.isWorker)
-        classes.push("worker");
+        type = "worker";
       View.appendRow(row.host,
-                     this._formatEnergyImpact(row.dispatchesSincePrevious,
-                                              row.durationSincePrevious),
-                     this._formatTooltip(row.dispatchCount, row.duration,
-                                         row.dispatchesSincePrevious,
-                                         row.durationSincePrevious),
-                     classes);
+                     this._computeEnergyImpact(row.dispatchesSincePrevious,
+                                               row.durationSincePrevious),
+                     {totalDispatches: row.dispatchCount,
+                      totalDuration: Math.ceil(row.duration / 1000),
+                      dispatchesSincePrevious: row.dispatchesSincePrevious,
+                      durationSincePrevious: Math.ceil(row.durationSincePrevious / 1000)},
+                     type);
     }
   },
   _computeEnergyImpact(dispatches, duration) {
@@ -1178,39 +1260,18 @@ var Control = {
     // Dividing the result by the sampling interval and by 10 gives a number that
     // looks like a familiar percentage to users, as fullying using one core will
     // result in a number close to 100.
-    return Math.max(duration || 0, dispatches * 1000) / UPDATE_INTERVAL_MS / 10;
-  },
-  _formatTooltip(totalDispatches, totalDuration,
-                 dispatchesSincePrevious, durationSincePrevious) {
-    function dispatchesAndDuration(dispatches, duration) {
-      let result = dispatches;
-      if (duration) {
-        duration /= 1000;
-        duration = Math.round(duration);
-        if (duration)
-          result += duration >= 1000 ? ` (${duration / 1000}s)` : ` (${duration}ms)`;
-        else
-          result += " (< 1ms)";
-      }
-      return result;
-    }
-
-    return `${dispatchesAndDuration(totalDispatches, totalDuration)} dispatches since load\n` +
-      `${dispatchesAndDuration(dispatchesSincePrevious, durationSincePrevious)} in the last seconds`;
-  },
-  _formatEnergyImpact(dispatches, duration) {
-    let energyImpact = this._computeEnergyImpact(dispatches, duration);
-    if (!energyImpact)
-      return "None";
-    energyImpact = Math.ceil(energyImpact * 100) / 100;
-    if (energyImpact < 1)
-      return `Low (${energyImpact})`;
-    if (energyImpact < 25)
-      return `Medium (${energyImpact})`;
-    return `High (${energyImpact})`;
+    let energyImpact =
+      Math.max(duration || 0, dispatches * 1000) / UPDATE_INTERVAL_MS / 10;
+    // Keep only 2 digits after the decimal point.
+    return Math.ceil(energyImpact * 100) / 100;
   },
   _sortCounters(counters) {
     return counters.sort((a, b) => {
+      // Force 'Recently Closed Tabs' to be always at the bottom, because it'll
+      // never be actionable.
+      if (a.name.id && a.name.id == "ghost-windows")
+        return 1;
+
       // Note: _computeEnergyImpact uses UPDATE_INTERVAL_MS which doesn't match
       // the time between the most recent sample and the start of the buffer,
       // BUFFER_DURATION_MS would be better, but the values is never displayed
@@ -1221,7 +1282,9 @@ var Control = {
                                           b.durationSinceStartOfBuffer);
       if (aEI != bEI)
         return bEI - aEI;
-      return a.name.localeCompare(b.name);
+
+      // a.name is sometimes an object, so we can't use a.name.localeCompare.
+      return String.prototype.localeCompare.call(a.name, b.name);
     });
   },
   _setOptions(options) {

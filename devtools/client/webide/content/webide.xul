@@ -124,7 +124,7 @@
         <toolbarbutton id="action-button-debug" class="action-button" command="cmd_toggleToolbox" tooltiptext="&projectMenu_debug_label;"/>
         <hbox id="action-busy" align="center">
           <html:img id="action-busy-undetermined" src="chrome://webide/skin/throbber.svg"/>
-          <progressmeter id="action-busy-determined"/>
+          <html:progress id="action-busy-determined"/>
         </hbox>
       </hbox>
 
