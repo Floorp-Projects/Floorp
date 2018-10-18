@@ -7868,11 +7868,16 @@ nsContentUtils::CalculateBufferSizeForImage(const uint32_t& aStride,
 {
   CheckedInt32 requiredBytes =
     CheckedInt32(aStride) * CheckedInt32(aImageSize.height);
-  if (!requiredBytes.isValid()) {
+
+  CheckedInt32 usedBytes = requiredBytes - aStride +
+    (CheckedInt32(aImageSize.width) * BytesPerPixel(aFormat));
+  if (!usedBytes.isValid()) {
     return NS_ERROR_FAILURE;
   }
+
+  MOZ_ASSERT(requiredBytes.isValid(), "usedBytes valid but not required?");
   *aMaxBufferSize = requiredBytes.value();
-  *aUsedBufferSize = *aMaxBufferSize - aStride + (aImageSize.width * BytesPerPixel(aFormat));
+  *aUsedBufferSize = usedBytes.value();
   return NS_OK;
 }
 
