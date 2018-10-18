@@ -2165,6 +2165,11 @@ ContentParent::AppendSandboxParams(std::vector<std::string> &aArgs)
     aArgs.push_back("-sbAllowAudio");
   }
 
+  // Windowserver access
+  if (!Preferences::GetBool("security.sandbox.content.mac.disconnect-windowserver")) {
+    aArgs.push_back("-sbAllowWindowServer");
+  }
+
   // .app path (normalized)
   nsAutoCString appPath;
   if (!nsMacUtilsImpl::GetAppPath(appPath)) {
