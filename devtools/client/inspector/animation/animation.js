@@ -325,7 +325,12 @@ class AnimationInspector {
     // sice the scrubber position is related the currentTime.
     // Also, don't update the state of removed animations since React components
     // may refer to the same instance still.
-    animations = await this.updateAnimations(animations);
+    try {
+      animations = await this.updateAnimations(animations);
+    } catch (_) {
+      console.error(`Updating Animations failed`);
+      return;
+    }
 
     this.updateState(animations.concat(addedAnimations));
   }
