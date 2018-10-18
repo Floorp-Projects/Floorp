@@ -13,8 +13,8 @@ import java.io.FileNotFoundException
 import java.io.IOException
 
 class MobileMetricsPingStorage(
-        private val context: Context,
-        private val file: File = File("${context.cacheDir}/$STORAGE_FOLDER/$FILE_NAME")
+    private val context: Context,
+    private val file: File = File("${context.cacheDir}/$STORAGE_FOLDER/$FILE_NAME")
 ) {
     private val atomicFile = AtomicFile(file)
 
@@ -44,12 +44,8 @@ class MobileMetricsPingStorage(
         }
     }
 
-    suspend fun remove() {
-
-    }
-
     companion object {
-        val STORAGE_FOLDER = "mobile-metrics"
-        val FILE_NAME = "metrics.json"
+        const val STORAGE_FOLDER = "mobile-metrics"
+        const val FILE_NAME = "metrics.json"
     }
 }
