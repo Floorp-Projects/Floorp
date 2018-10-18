@@ -439,5 +439,7 @@ nsDisplayRemote::GetRemoteLayersId() const
 mozilla::layout::RenderFrameParent*
 nsDisplayRemote::GetRenderFrameParent() const
 {
-  return static_cast<nsSubDocumentFrame*>(Frame())->GetRenderFrameParent();
+  return mFrame
+    ? static_cast<nsSubDocumentFrame*>(mFrame)->GetRenderFrameParent()
+    : nullptr;
 }
