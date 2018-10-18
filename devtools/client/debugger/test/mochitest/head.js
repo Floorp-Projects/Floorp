@@ -1114,14 +1114,14 @@ function waitForWorkerListChanged(targetFront) {
   return targetFront.once("workerListChanged");
 }
 
-function attachThread(workerClient, options) {
+function attachThread(workerTargetFront, options) {
   info("Attaching to thread.");
-  return workerClient.attachThread(options);
+  return workerTargetFront.attachThread(options);
 }
 
-async function waitForWorkerClose(workerClient) {
+async function waitForWorkerClose(workerTargetFront) {
   info("Waiting for worker to close.");
-  await workerClient.once("close");
+  await workerTargetFront.once("close");
   info("Worker did close.");
 }
 
@@ -1288,15 +1288,15 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   await createWorkerInTab(tab, WORKER_URL);
 
   let { workers } = await listWorkers(targetFront);
-  let [, workerClient] = await attachWorker(targetFront,
+  let [, workerTargetFront] = await attachWorker(targetFront,
                                              findWorker(workers, WORKER_URL));
 
-  let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
+  let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
                                             "jsdebugger",
                                             Toolbox.HostType.WINDOW);
 
   let debuggerPanel = toolbox.getCurrentPanel();
   let gDebugger = debuggerPanel.panelWin;
 
-  return {client, tab, targetFront, workerClient, toolbox, gDebugger};
+  return {client, tab, targetFront, workerTargetFront, toolbox, gDebugger};
 }
