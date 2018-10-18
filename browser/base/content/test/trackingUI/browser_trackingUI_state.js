@@ -177,6 +177,18 @@ function testTrackingPage(window) {
     is(hidden(category + " > .identity-popup-content-blocking-category-state-label"), !blockedByTP,
       "Category item is" + (blockedByTP ? "" : " not") + " set to blocked");
   }
+
+  if (Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER) {
+    ok(hidden("#identity-popup-content-blocking-category-label-default"),
+      "Not showing default cookie restrictions label.");
+    ok(!hidden("#identity-popup-content-blocking-category-label-trackers"),
+      "Showing trackers cookie restrictions label.");
+  } else {
+    ok(hidden("#identity-popup-content-blocking-category-label-trackers"),
+      "Not showing trackers cookie restrictions label.");
+    ok(!hidden("#identity-popup-content-blocking-category-label-default"),
+      "Showing default cookie restrictions label.");
+  }
 }
 
 function testTrackingPageUnblocked(blockedByTP, window) {

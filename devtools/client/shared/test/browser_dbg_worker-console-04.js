@@ -27,7 +27,7 @@ const TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
 const WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function testPausedByConsole() {
-  const {client, tab, workerClient, toolbox} =
+  const {client, tab, workerTargetFront, toolbox} =
     await initWorkerDebugger(TAB_URL, WORKER_URL);
 
   info("Check Date objects can be used in the console");
@@ -42,8 +42,8 @@ add_task(async function testPausedByConsole() {
       "Text for message appeared correct");
 
   terminateWorkerInTab(tab, WORKER_URL);
-  await waitForWorkerClose(workerClient);
-  await gDevTools.closeToolbox(TargetFactory.forWorker(workerClient));
+  await waitForWorkerClose(workerTargetFront);
+  await gDevTools.closeToolbox(TargetFactory.forWorker(workerTargetFront));
   await close(client);
   await removeTab(tab);
 });

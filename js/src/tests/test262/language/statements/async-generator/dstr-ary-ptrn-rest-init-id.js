@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/async-gen-func-decl.template
 /*---
-description: Reset element (identifier) does not support initializer (async generator function declaration)
+description: Rest element (identifier) does not support initializer (async generator function declaration)
 esid: sec-asyncgenerator-definitions-instantiatefunctionobject
 features: [async-iteration]
 flags: [generated, async]
