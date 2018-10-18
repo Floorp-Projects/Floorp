@@ -1,7 +1,7 @@
 // |reftest| skip error:SyntaxError -- class-fields-public,class-fields-private is not supported
 // This file was procedurally generated from the following sources:
-// - src/class-fields/init-err-contains-arguments.case
-// - src/class-fields/initializer-error/cls-decl-fields-private-name.template
+// - src/class-elements/init-err-contains-arguments.case
+// - src/class-elements/initializer-error/cls-decl-fields-private-name.template
 /*---
 description: Syntax error if `arguments` used in class field (ClassElementName PrivateName)
 esid: sec-class-definitions-static-semantics-early-errors

@@ -5,7 +5,7 @@
 /*---
 description: RestParameter does not support an initializer (async function nameless expression)
 esid: sec-async-function-definitions
-features: [default-parameters]
+features: [default-parameters, async-functions]
 flags: [generated]
 negative:
   phase: parse
@@ -15,6 +15,7 @@ info: |
 
     AsyncFunctionExpression :
       async function ( FormalParameters ) { AsyncFunctionBody }
+
 
     14.1 Function Definitions
 

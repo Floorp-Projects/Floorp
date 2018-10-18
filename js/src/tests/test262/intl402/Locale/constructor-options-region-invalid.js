@@ -50,10 +50,10 @@ const invalidRegionOptions = [
 
   7,
 ];
-for (const invalidRegionOption of invalidRegionOptions) {
+for (const region of invalidRegionOptions) {
   assert.throws(RangeError, function() {
-    new Intl.Locale("en", {region: invalidRegionOption});
-  }, `${invalidRegionOption} is an invalid region option value`);
+    new Intl.Locale("en", {region});
+  }, `new Intl.Locale("en", {region: "${region}"}) throws RangeError`);
 }
 
 reportCompare(0, 0);

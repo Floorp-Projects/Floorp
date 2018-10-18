@@ -7,13 +7,6 @@ description: >
 ---*/
 
 /**
- * The amount of slack allowed for testing time-related Atomics methods (i.e. wait and notify).
- * The absolute value of the difference of the observed time and the expected time must
- * be epsilon-close.
- */
-$262.agent.MAX_TIME_EPSILON = 100;
-
-/**
  * @return {String} A report sent from an agent.
  */
 {

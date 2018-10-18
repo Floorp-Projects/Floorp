@@ -36,16 +36,13 @@ $262.agent.start(`
     const i32a = new Int32Array(sab);
     Atomics.add(i32a, ${RUNNING}, 1);
 
-    const before = $262.agent.monotonicNow();
     const status1 = Atomics.wait(i32a, 0, 0, false);
     const status2 = Atomics.wait(i32a, 0, 0, valueOf);
     const status3 = Atomics.wait(i32a, 0, 0, toPrimitive);
-    const duration = $262.agent.monotonicNow() - before;
 
     $262.agent.report(status1);
     $262.agent.report(status2);
     $262.agent.report(status3);
-    $262.agent.report(duration);
     $262.agent.leaving();
   });
 `);
@@ -75,12 +72,6 @@ assert.sameValue(
   'timed-out',
   '$262.agent.getReport() returns "timed-out"'
 );
-
-const lapse = $262.agent.getReport();
-
-assert(lapse >= 0, 'The result of `(lapse >= 0)` is true (timeout should be a min of 0ms)');
-
-assert(lapse <= $262.agent.MAX_TIME_EPSILON, 'The result of `(lapse <= $262.agent.MAX_TIME_EPSILON)` is true');
 
 assert.sameValue(Atomics.notify(i32a, 0), 0, 'Atomics.notify(i32a, 0) returns 0');
 
