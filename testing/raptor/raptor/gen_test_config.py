@@ -21,7 +21,7 @@ function getTestConfig() {
     return {"browser": "%s",
             "cs_port": "%d",
             "test_name": "%s",
-            "test_settings_url": "http://localhost:%d/%s.json",
+            "test_settings_url": "http://127.0.0.1:%d/%s.json",
             "benchmark_port": "%d"};
 }
 
