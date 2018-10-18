@@ -69,6 +69,18 @@ describe("SimpleSnippet", () => {
     assert.calledOnce(wrapper.props().onAction);
     assert.calledWithExactly(wrapper.props().onAction, {type: "OPEN_APPLICATIONS_MENU", data: {args: "appMenu"}});
   });
+  it("should send an OPEN_URL action when button_url is defined and button is clicked", () => {
+    const wrapper = mountAndCheckProps({
+      button_label: "Button",
+      button_url: "https://mozilla.org",
+    });
+
+    const button = wrapper.find("button.ASRouterButton");
+    button.simulate("click");
+
+    assert.calledOnce(wrapper.props().onAction);
+    assert.calledWithExactly(wrapper.props().onAction, {type: "OPEN_URL", data: {args: "https://mozilla.org"}});
+  });
   it("should call props.onBlock and sendUserActionTelemetry when CTA button is clicked", () => {
     const wrapper = mountAndCheckProps({text: "bar"});
 

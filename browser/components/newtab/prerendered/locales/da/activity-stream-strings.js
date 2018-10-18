@@ -107,6 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "privatlivspolitik",
   "firstrun_continue_to_login": "Fortsæt",
   "firstrun_skip_login": "Spring dette trin over",
+  "context_menu_title": "Open menu",
   "prefs_restore_defaults_button": "Gendan standarder",
   "settings_pane_header": "Indstillinger for Nyt faneblad",
   "settings_pane_body2": "Vælg, hvad du vil se på denne side.",

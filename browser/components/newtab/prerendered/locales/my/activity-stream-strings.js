@@ -107,6 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
   "firstrun_skip_login": "Skip this step",
+  "context_menu_title": "Open menu",
   "default_label_loading": "ရယူနေသှ်…",
   "header_stories": "အကြည့်အများဆုံးသတင်းများ",
   "header_visit_again": "ထပ်မံလည်ပတ်ရန်",

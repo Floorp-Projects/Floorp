@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "சேவையின் விதிமுறைகள்",
   "firstrun_privacy_notice": "தனியுரிமை அறிவிப்பு",
   "firstrun_continue_to_login": "தொடர்க",
-  "firstrun_skip_login": "இந்த படிநிலையைத் தவிர்"
+  "firstrun_skip_login": "இந்த படிநிலையைத் தவிர்",
+  "context_menu_title": "Open menu"
 };
