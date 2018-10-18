@@ -334,6 +334,11 @@ class L10nBumper(VCSScript):
         else:
             self.fatal("Didn't complete successfully (hit max_retries)")
 
+        # touch status file for nagios
+        dirs = self.query_abs_dirs()
+        status_path = os.path.join(dirs['base_work_dir'], self.config['status_path'])
+        self._touch_file(status_path)
+
 
 # __main__ {{{1
 if __name__ == '__main__':
