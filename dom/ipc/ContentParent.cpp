@@ -1592,7 +1592,7 @@ ContentParent::MarkAsDead()
 void
 ContentParent::OnChannelError()
 {
-  RefPtr<ContentParent> content(this);
+  RefPtr<ContentParent> kungFuDeathGrip(this);
   PContentParent::OnChannelError();
 }
 
@@ -1738,14 +1738,14 @@ struct DelayedDeleteContentParentTask : public Runnable
 {
   explicit DelayedDeleteContentParentTask(ContentParent* aObj)
     : Runnable("dom::DelayedDeleteContentParentTask")
-    , mObj(aObj)
+    , mKungFuDeathGrip(aObj)
   {
   }
 
   // No-op
   NS_IMETHOD Run() override { return NS_OK; }
 
-  RefPtr<ContentParent> mObj;
+  RefPtr<ContentParent> mKungFuDeathGrip;
 };
 
 } // namespace

@@ -316,7 +316,7 @@ add_task(async function test_add() {
   do_check_credit_card_matches(creditCards[1], TEST_CREDIT_CARD_2);
 
   Assert.notEqual(creditCards[0].guid, undefined);
-  Assert.equal(creditCards[0].version, 2);
+  Assert.equal(creditCards[0].version, 1);
   Assert.notEqual(creditCards[0].timeCreated, undefined);
   Assert.equal(creditCards[0].timeLastModified, creditCards[0].timeCreated);
   Assert.equal(creditCards[0].timeLastUsed, 0);
@@ -419,14 +419,6 @@ add_task(async function test_update() {
     CreditCard.getLongMaskedNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
   await profileStorage.creditCards.update(profileStorage.creditCards._data[1].guid, TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD, true);
   creditCard = profileStorage.creditCards._data[1];
-  Assert.equal(creditCard["cc-number"],
-    CreditCard.getLongMaskedNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
-
-  // Decryption failure of existing record should not prevent it from being updated.
-  creditCard = profileStorage.creditCards._data[0];
-  creditCard["cc-number-encrypted"] = "INVALID";
-  await profileStorage.creditCards.update(profileStorage.creditCards._data[0].guid, TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD, false);
-  creditCard = profileStorage.creditCards._data[0];
   Assert.equal(creditCard["cc-number"],
     CreditCard.getLongMaskedNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
 
@@ -663,12 +655,18 @@ add_task(async function test_getDuplicateGuid() {
   // This number differs from TEST_CREDIT_CARD_3 by swapping the order of the
   // 09 and 90 adjacent digits, which is still a valid credit card number.
   record["cc-number"] = "358999378390" + last4Digits;
+  Assert.equal(await profileStorage.creditCards.getDuplicateGuid(record), null);
 
-  // We treat numbers with the same last 4 digits as a duplicate.
+  // ... However, we treat numbers with the same last 4 digits as a duplicate if
+  // the master password is enabled.
+  let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(Ci.nsIPK11TokenDB);
+  let token = tokendb.getInternalKeyToken();
+  token.reset();
+  token.initPassword("password");
   Assert.equal(await profileStorage.creditCards.getDuplicateGuid(record), guid);
 
-  // Even though the last 4 digits are the same, an invalid credit card number
-  // should never be treated as a duplicate.
+  // ... Even though the master password is enabled and the last 4 digits are the
+  // same, an invalid credit card number should never be treated as a duplicate.
   record["cc-number"] = "************" + last4Digits;
   Assert.equal(await profileStorage.creditCards.getDuplicateGuid(record), null);
 });

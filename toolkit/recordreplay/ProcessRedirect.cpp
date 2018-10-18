@@ -536,6 +536,35 @@ CopySpecialInstruction(uint8_t* aIp, ud_t* aUd, size_t aNbytes, Assembler& aAsse
     }
   }
 
+  if (mnemonic == UD_Ixchg) {
+    const ud_operand* dst = ud_insn_opr(aUd, 0);
+    const ud_operand* src = ud_insn_opr(aUd, 1);
+    if (src->type == UD_OP_REG && src->size == 8 &&
+        dst->type == UD_OP_MEM && dst->base == UD_R_RIP && !dst->index && dst->offset == 32) {
+      // xchgb reg, $offset32(%rip)
+      int reg = Assembler::NormalizeRegister(src->base);
+      if (!reg) {
+        return false;
+      }
+      uint8_t* addr = aIp + aNbytes + dst->lval.sdword;
+      if (reg == UD_R_RBX) {
+        aAssembler.PushRax();
+        aAssembler.MoveImmediateToRax(addr);
+        aAssembler.ExchangeByteRbxWithAddressAtRax();
+        aAssembler.PopRax();
+      } else {
+        aAssembler.PushRbx();
+        aAssembler.PushRax();
+        aAssembler.MoveImmediateToRax(addr);
+        aAssembler.MoveRaxToRegister(UD_R_RBX);
+        aAssembler.PopRax();
+        aAssembler.ExchangeByteRegisterWithAddressAtRbx(reg);
+        aAssembler.PopRbx();
+      }
+      return true;
+    }
+  }
+
   return false;
 }
 

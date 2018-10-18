@@ -1126,11 +1126,13 @@ def check_have_64_bit(have_64_bit, compiler_have_64_bit):
                         'about the target bitness.')
 
 
-@depends(c_compiler)
-def default_debug_flags(compiler_info):
+@depends(c_compiler, target)
+def default_debug_flags(compiler_info, target):
     # Debug info is ON by default.
     if compiler_info.type in ('msvc', 'clang-cl'):
         return '-Zi'
+    elif target.kernel == 'WINNT' and compiler_info.type == 'clang':
+        return '-g -gcodeview'
     return '-g'
 
 
@@ -1992,10 +1994,15 @@ add_old_configure_assignment('LIBFUZZER_FLAGS', libfuzzer_flags.use_flags)
 @depends(target, c_compiler)
 def make_shared_library(target, compiler):
     if target.os == 'WINNT':
-        if compiler.type in ('gcc', 'clang'):
+        if compiler.type == 'gcc':
             return namespace(
                 mkshlib=['$(CXX)', '$(DSO_LDOPTS)', '-o', '$@'],
                 mkcshlib=['$(CC)', '$(DSO_LDOPTS)', '-o', '$@'],
+            )
+        elif compiler.type == 'clang':
+            return namespace(
+                mkshlib=['$(CXX)', '$(DSO_LDOPTS)', '-Wl,-pdb,$(LINK_PDBFILE)', '-o', '$@'],
+                mkcshlib=['$(CC)', '$(DSO_LDOPTS)', '-Wl,-pdb,$(LINK_PDBFILE)', '-o', '$@'],
             )
         else:
             linker = [

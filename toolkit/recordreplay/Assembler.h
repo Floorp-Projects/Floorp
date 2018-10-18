@@ -88,6 +88,12 @@ public:
   // movq register, %rax
   void MoveRegisterToRax(/*ud_type*/ int aRegister);
 
+  // xchgb register, 0(%rbx)
+  void ExchangeByteRegisterWithAddressAtRbx(/*ud_type*/ int aRegister);
+
+  // xchgb $bl, 0(%rax)
+  void ExchangeByteRbxWithAddressAtRax();
+
   // Normalize a Udis86 register to its 8 byte version, returning UD_NONE/zero
   // for unexpected registers.
   static /*ud_type*/ int NormalizeRegister(/*ud_type*/ int aRegister);

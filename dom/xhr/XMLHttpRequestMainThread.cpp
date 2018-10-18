@@ -3142,13 +3142,13 @@ XMLHttpRequestMainThread::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
   }
 }
 
-void
-XMLHttpRequestMainThread::SetTimerEventTarget(nsITimer* aTimer)
+nsIEventTarget*
+XMLHttpRequestMainThread::GetTimerEventTarget()
 {
   if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
-    nsCOMPtr<nsIEventTarget> target = global->EventTargetFor(TaskCategory::Other);
-    aTimer->SetTarget(target);
+    return global->EventTargetFor(TaskCategory::Other);
   }
+  return nullptr;
 }
 
 nsresult
@@ -3183,8 +3183,7 @@ XMLHttpRequestMainThread::StartTimeoutTimer()
   }
 
   if (!mTimeoutTimer) {
-    mTimeoutTimer = NS_NewTimer();
-    SetTimerEventTarget(mTimeoutTimer);
+    mTimeoutTimer = NS_NewTimer(GetTimerEventTarget());
   }
   uint32_t elapsed =
     (uint32_t)((PR_Now() - mRequestSentTime) / PR_USEC_PER_MSEC);
@@ -3601,8 +3600,7 @@ void
 XMLHttpRequestMainThread::StartProgressEventTimer()
 {
   if (!mProgressNotifier) {
-    mProgressNotifier = NS_NewTimer();
-    SetTimerEventTarget(mProgressNotifier);
+    mProgressNotifier = NS_NewTimer(GetTimerEventTarget());
   }
   if (mProgressNotifier) {
     mProgressTimerIsActive = true;
@@ -3628,8 +3626,7 @@ XMLHttpRequestMainThread::MaybeStartSyncTimeoutTimer()
     return eErrorOrExpired;
   }
 
-  mSyncTimeoutTimer = NS_NewTimer();
-  SetTimerEventTarget(mSyncTimeoutTimer);
+  mSyncTimeoutTimer = NS_NewTimer(GetTimerEventTarget());
   if (!mSyncTimeoutTimer) {
     return eErrorOrExpired;
   }

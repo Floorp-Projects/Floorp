@@ -56,21 +56,17 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
   nsresult rv = NS_OK;
 
   if (!mTimer) {
-    mTimer = NS_NewTimer();
+    mTimer = NS_NewTimer(mOwner->EventTarget());
     NS_ENSURE_TRUE(mTimer, NS_ERROR_OUT_OF_MEMORY);
 
     uint32_t earlyMicros = 0;
     MOZ_ALWAYS_SUCCEEDS(mTimer->GetAllowedEarlyFiringMicroseconds(&earlyMicros));
     mAllowedEarlyFiringTime = TimeDuration::FromMicroseconds(earlyMicros);
+  } else {
+    // Always call Cancel() in case we are re-using a timer.
+    rv = mTimer->Cancel();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // Always call Cancel() in case we are re-using a timer.  Otherwise
-  // the subsequent SetTarget() may fail.
-  rv = mTimer->Cancel();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mTimer->SetTarget(mOwner->EventTarget());
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Calculate the delay based on the deadline and current time.  If we have
   // a minimum delay set then clamp to that value.

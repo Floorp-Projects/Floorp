@@ -33,6 +33,8 @@ var gSortFunction = null;
 var gSortDirection = 1; // 1 is ascending; -1 is descending
 var gFilter = null;
 
+let gCategoriesRecordedOnce = new Set();
+
 var view = {
   get rowCount() { return gPrefView.length; },
   getCellText(index, col) {
@@ -74,6 +76,7 @@ var view = {
   toggleOpenState(index) {},
   cycleHeader(col) {
     var index = this.selection.currentIndex;
+    recordTelemetryOnce(gCategoryLabelForSortColumn[col.id]);
     if (col.id == gSortedColumn) {
       gSortDirection = -gSortDirection;
       gPrefArray.reverse();
@@ -331,6 +334,7 @@ async function onConfigLoad() {
 
 // Unhide the warning message
 function ShowPrefs() {
+  recordTelemetryOnce("Show");
   gPrefBranch.getChildList("").forEach(fetchPref);
 
   var descending = document.getElementsByAttribute("sortDirection", "descending");
@@ -390,6 +394,7 @@ function FilterPrefs() {
   var substring = document.getElementById("textbox").value;
   // Check for "/regex/[i]"
   if (substring.charAt(0) == "/") {
+    recordTelemetryOnce("RegexSearch");
     var r = substring.match(/^\/(.*)\/(i?)$/);
     try {
       gFilter = RegExp(r[1], r[2]);
@@ -397,6 +402,7 @@ function FilterPrefs() {
       return; // Do nothing on incomplete or bad RegExp
     }
   } else if (substring) {
+    recordTelemetryOnce("Search");
     gFilter = RegExp(substring.replace(/([^* \w])/g, "\\$1")
                               .replace(/^\*+/, "").replace(/\*+/g, ".*"), "i");
   } else {
@@ -454,6 +460,13 @@ const gSortFunctions =
   valueCol: valueColSortFunction,
 };
 
+const gCategoryLabelForSortColumn = {
+  prefCol: "SortByName",
+  lockCol: "SortByStatus",
+  typeCol: "SortByType",
+  valueCol: "SortByValue",
+};
+
 const configController = {
   supportsCommand: function supportsCommand(command) {
     return command == "cmd_copy";
@@ -509,29 +522,35 @@ function updateContextMenu() {
 }
 
 function copyPref() {
+  recordTelemetryOnce("Copy");
   var pref = gPrefView[view.selection.currentIndex];
   gClipboardHelper.copyString(pref.prefCol + ";" + pref.valueCol);
 }
 
 function copyName() {
+  recordTelemetryOnce("CopyName");
   gClipboardHelper.copyString(gPrefView[view.selection.currentIndex].prefCol);
 }
 
 function copyValue() {
+  recordTelemetryOnce("CopyValue");
   gClipboardHelper.copyString(gPrefView[view.selection.currentIndex].valueCol);
 }
 
 function ModifySelected() {
+  recordTelemetryOnce("ModifyValue");
   if (view.selection.currentIndex >= 0)
     ModifyPref(gPrefView[view.selection.currentIndex]);
 }
 
 function ResetSelected() {
+  recordTelemetryOnce("Reset");
   var entry = gPrefView[view.selection.currentIndex];
   gPrefBranch.clearUserPref(entry.prefCol);
 }
 
 async function NewPref(type) {
+  recordTelemetryOnce("CreateNew");
   var result = { value: "" };
   var dummy = { value: 0 };
 
@@ -608,4 +627,14 @@ async function ModifyPref(entry) {
 
   Services.prefs.savePrefFile(null);
   return true;
+}
+
+function recordTelemetryOnce(categoryLabel) {
+  if (!gCategoriesRecordedOnce.has(categoryLabel)) {
+    // Don't raise an exception if Telemetry is not available.
+    try {
+      Services.telemetry.getHistogramById("ABOUT_CONFIG_FEATURES_USAGE").add(categoryLabel);
+    } catch (ex) {}
+    gCategoriesRecordedOnce.add(categoryLabel);
+  }
 }

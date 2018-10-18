@@ -16,6 +16,7 @@
 #include "nsITransportSecurityInfo.h"
 
 #include "mozilla/AddonManagerWebAPI.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
@@ -32,6 +33,7 @@
 #include "nsIProxiedChannel.h"
 #include "nsIProxyInfo.h"
 #include "nsITraceableChannel.h"
+#include "nsIWritablePropertyBag.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -46,11 +48,80 @@ namespace extensions {
 #define CHANNELWRAPPER_PROP_KEY NS_LITERAL_STRING("ChannelWrapper::CachedInstance")
 
 /*****************************************************************************
+ * Lifetimes
+ *****************************************************************************/
+
+namespace {
+class ChannelListHolder : public LinkedList<ChannelWrapper>
+{
+public:
+  ChannelListHolder()
+    : LinkedList<ChannelWrapper>()
+  {}
+
+  ~ChannelListHolder();
+};
+
+} // anonymous namespace
+
+ChannelListHolder::~ChannelListHolder()
+{
+  while (ChannelWrapper* wrapper = popFirst()) {
+    wrapper->Die();
+  }
+}
+
+
+static LinkedList<ChannelWrapper>&
+ChannelList()
+{
+  static UniquePtr<ChannelListHolder> sChannelList;
+  if (!sChannelList) {
+    sChannelList.reset(new ChannelListHolder());
+    ClearOnShutdown(&sChannelList, ShutdownPhase::Shutdown);
+  }
+  return *sChannelList;
+}
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ChannelWrapper::ChannelWrapperStub)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ChannelWrapper::ChannelWrapperStub)
+
+NS_IMPL_CYCLE_COLLECTION(ChannelWrapper::ChannelWrapperStub, mChannelWrapper)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChannelWrapper::ChannelWrapperStub)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(ChannelWrapper, mChannelWrapper)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+/*****************************************************************************
  * Initialization
  *****************************************************************************/
 
-/* static */
+ChannelWrapper::ChannelWrapper(nsISupports* aParent, nsIChannel* aChannel)
+  : ChannelHolder(aChannel)
+  , mParent(aParent)
+{
+  mStub = new ChannelWrapperStub(this);
 
+  ChannelList().insertBack(this);
+}
+
+ChannelWrapper::~ChannelWrapper()
+{
+  if (LinkedListElement<ChannelWrapper>::isInList()) {
+    LinkedListElement<ChannelWrapper>::remove();
+  }
+}
+
+void
+ChannelWrapper::Die()
+{
+  if (mStub) {
+    mStub->mChannelWrapper = nullptr;
+  }
+}
+
+/* static */
 already_AddRefed<ChannelWrapper>
 ChannelWrapper::Get(const GlobalObject& global, nsIChannel* channel)
 {
@@ -72,7 +143,7 @@ ChannelWrapper::Get(const GlobalObject& global, nsIChannel* channel)
     wrapper = new ChannelWrapper(global.GetAsSupports(), channel);
     if (props) {
       Unused << props->SetPropertyAsInterface(CHANNELWRAPPER_PROP_KEY,
-                                              wrapper);
+                                              wrapper->mStub);
     }
   }
 
@@ -1055,10 +1126,12 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ChannelWrapper, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStub)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ChannelWrapper, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStub)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ChannelWrapper, DOMEventTargetHelper)

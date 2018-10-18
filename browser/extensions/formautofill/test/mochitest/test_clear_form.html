@@ -103,16 +103,9 @@ add_task(async function clear_modified_form() {
 });
 
 add_task(async function clear_distinct_section() {
-  if (!(await canTestOSKeyStoreLogin())) {
-    todo(false, "Cannot test OS key store login on official builds.");
-    return;
-  }
-
   document.getElementById("form1").reset();
   await triggerPopupAndHoverItem("#cc-name", 0);
-  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
   await triggerAutofillAndCheckProfile(MOCK_CC_STORAGE[0]);
-  await osKeyStoreLoginShown;
 
   await triggerPopupAndHoverItem("#organization", 0);
   await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
