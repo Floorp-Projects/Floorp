@@ -563,7 +563,6 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow *aWindow)
   : mWindow(aWindow)
   , mWaylandDisplay(WaylandDisplayGet(aWindow->GetWaylandDisplay()))
   , mWaylandBuffer(nullptr)
-  , mBackupBuffer(nullptr)
   , mFrameCallback(nullptr)
   , mLastCommittedSurface(nullptr)
   , mDisplayThreadMessageLoop(MessageLoop::current())
@@ -574,6 +573,8 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow *aWindow)
   , mIsMainThread(NS_IsMainThread())
   , mNeedScaleFactorUpdate(true)
 {
+  for (int i = 0; i < BACK_BUFFER_NUM; i++)
+    mBackupBuffer[i] = nullptr;
 }
 
 WindowSurfaceWayland::~WindowSurfaceWayland()
@@ -594,7 +595,12 @@ WindowSurfaceWayland::~WindowSurfaceWayland()
   }
 
   delete mWaylandBuffer;
-  delete mBackupBuffer;
+
+  for (int i = 0; i < BACK_BUFFER_NUM; i++) {
+    if (mBackupBuffer[i]) {
+      delete mBackupBuffer[i];
+    }
+  }
 
   if (!mIsMainThread) {
     // We can be destroyed from main thread even though we was created/used
@@ -614,7 +620,6 @@ WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth, int aHeight)
 {
   if (!mWaylandBuffer) {
     mWaylandBuffer = new WindowBackBuffer(mWaylandDisplay, aWidth, aHeight);
-    mBackupBuffer = new WindowBackBuffer(mWaylandDisplay, aWidth, aHeight);
     return mWaylandBuffer;
   }
 
@@ -628,24 +633,38 @@ WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth, int aHeight)
     return mWaylandBuffer;
   }
 
-  // Front buffer is used by compositor, draw to back buffer
-  if (mBackupBuffer->IsAttached()) {
+  MOZ_ASSERT(!mPendingCommit,
+             "Uncommitted buffer switch, screen artifacts ahead.");
+
+  // Front buffer is used by compositor, select a back buffer
+  int availableBuffer;
+  for (availableBuffer = 0; availableBuffer < BACK_BUFFER_NUM;
+       availableBuffer++) {
+    if (!mBackupBuffer[availableBuffer]) {
+      mBackupBuffer[availableBuffer] =
+          new WindowBackBuffer(mWaylandDisplay, aWidth, aHeight);
+      break;
+    }
+
+    if (!mBackupBuffer[availableBuffer]->IsAttached()) {
+      break;
+    }
+  }
+
+  if (MOZ_UNLIKELY(availableBuffer == BACK_BUFFER_NUM)) {
     NS_WARNING("No drawing buffer available");
     return nullptr;
   }
 
-  MOZ_ASSERT(!mPendingCommit,
-             "Uncommitted buffer switch, screen artifacts ahead.");
+  WindowBackBuffer *lastWaylandBuffer = mWaylandBuffer;
+  mWaylandBuffer = mBackupBuffer[availableBuffer];
+  mBackupBuffer[availableBuffer] = lastWaylandBuffer;
 
-  WindowBackBuffer *tmp = mWaylandBuffer;
-  mWaylandBuffer = mBackupBuffer;
-  mBackupBuffer = tmp;
-
-  if (mBackupBuffer->IsMatchingSize(aWidth, aHeight)) {
+  if (lastWaylandBuffer->IsMatchingSize(aWidth, aHeight)) {
     // Former front buffer has the same size as a requested one.
     // Gecko may expect a content already drawn on screen so copy
     // existing data to the new buffer.
-    mWaylandBuffer->SetImageDataFromBuffer(mBackupBuffer);
+    mWaylandBuffer->SetImageDataFromBuffer(lastWaylandBuffer);
     // When buffer switches we need to damage whole screen
     // (https://bugzilla.redhat.com/show_bug.cgi?id=1418260)
     mWaylandBufferFullScreenDamage = true;
