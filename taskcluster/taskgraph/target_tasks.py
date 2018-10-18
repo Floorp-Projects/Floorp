@@ -332,6 +332,12 @@ def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
             if 'secondary' in task.kind:
                 return False
 
+        # FIXME: Bug 1499440 - temp hack to filter out the mark-as-started task
+        # until Ship-itv2 is rolled-out for release/esr60 branches as well
+        if ('release-mark-as-started' in task.kind
+                and parameters['project'] != 'mozilla-beta'):
+            return False
+
         if task.attributes.get('shipping_phase') == 'promote':
             return True
 
@@ -401,6 +407,11 @@ def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
         attr = task.attributes.get
         # Don't ship single locale fennec anymore - Bug 1408083
         if attr("locale") or attr("chunk_locales"):
+            return False
+        # FIXME: Bug 1499440 - temp hack to filter out the mark-as-started task
+        # until Ship-itv2 is rolled-out for release/esr60 branches as well
+        if ('release-mark-as-started' in task.kind
+                and parameters['project'] != 'mozilla-beta'):
             return False
         if task.label in filtered_for_project:
             if task.kind not in ('balrog', 'push-apk'):
