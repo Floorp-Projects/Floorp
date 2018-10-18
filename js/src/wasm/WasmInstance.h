@@ -190,6 +190,10 @@ class Instance
                            uint32_t srcOffset, uint32_t len, uint32_t segIndex);
     static int32_t tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len);
     static int32_t tableDrop(Instance* instance, uint32_t segIndex);
+    static void* tableGet(Instance* instance, uint32_t index);
+    static uint32_t tableGrow(Instance* instance, uint32_t delta, void* initValue);
+    static int32_t tableSet(Instance* instance, uint32_t index, void* value);
+    static uint32_t tableSize(Instance* instance);
     static int32_t tableInit(Instance* instance, uint32_t dstOffset,
                              uint32_t srcOffset, uint32_t len, uint32_t segIndex);
     static void postBarrier(Instance* instance, gc::Cell** location);

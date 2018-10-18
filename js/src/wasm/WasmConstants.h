@@ -400,6 +400,12 @@ enum class MiscOp
     TableDrop                            = 0x0d,
     TableCopy                            = 0x0e,
 
+    // Generalized tables (reftypes proposal).  Note, these are unofficial.
+    TableGrow                            = 0x0f,
+    TableGet                             = 0x10,
+    TableSet                             = 0x11,
+    TableSize                            = 0x12,
+
     // Structure operations.  Note, these are unofficial.
     StructNew                            = 0x50,
     StructGet                            = 0x51,

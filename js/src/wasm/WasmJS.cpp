@@ -2283,7 +2283,8 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         return false;
     }
 
-    if (table.kind() == TableKind::AnyFunction) {
+    switch (table.kind()) {
+      case TableKind::AnyFunction: {
         RootedFunction value(cx);
         if (!IsExportedFunction(args[1], &value) && !args[1].isNull()) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
@@ -2309,15 +2310,23 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         } else {
             table.setNull(index);
         }
-    } else if (table.kind() == TableKind::AnyRef) {
-        RootedObject value(cx, ToObject(cx, args[1]));
-        if (value) {
-            table.setAnyRef(index, value);
-        } else {
+        break;
+      }
+      case TableKind::AnyRef: {
+        if (args[1].isNull()) {
             table.setNull(index);
+        } else {
+            RootedObject value(cx, ToObject(cx, args[1]));
+            if (!value) {
+                return false;
+            }
+            table.setAnyRef(index, value);
         }
-    } else {
+        break;
+      }
+      default: {
         MOZ_CRASH("Unexpected table kind");
+      }
     }
 
     args.rval().setUndefined();

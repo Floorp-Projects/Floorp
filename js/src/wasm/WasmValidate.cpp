@@ -931,6 +931,16 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
                                               &unusedSegIndex, &nothing, &nothing, &nothing));
               }
 #endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+              case uint16_t(MiscOp::TableGet):
+                CHECK(iter.readTableGet(&nothing));
+              case uint16_t(MiscOp::TableGrow):
+                CHECK(iter.readTableGrow(&nothing, &nothing));
+              case uint16_t(MiscOp::TableSet):
+                CHECK(iter.readTableSet(&nothing, &nothing));
+              case uint16_t(MiscOp::TableSize):
+                CHECK(iter.readTableSize());
+#endif
 #ifdef ENABLE_WASM_GC
               case uint16_t(MiscOp::StructNew): {
                 if (env.gcTypesEnabled() == HasGcTypes::False) {
@@ -1429,10 +1439,14 @@ DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env)
     // For documentation of what's in the various versions, see
     // https://github.com/lars-t-hansen/moz-gc-experiments
     //
-    // When we evolve the engine to handle v2, we will continue to recognize v1
-    // here if v2 is fully backwards compatible with v1.
+    // Version 1 is complete.
+    // Version 2 is in progress, currently backward compatible with version 1.
 
-    if (version != 1) {
+    switch (version) {
+      case 1:
+      case 2:
+        break;
+      default:
         return d.fail("unsupported version of the gc feature");
     }
 

@@ -496,6 +496,12 @@ enum class AstExprKind
     MemFill,
     MemOrTableInit,
 #endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+    TableGet,
+    TableGrow,
+    TableSet,
+    TableSize,
+#endif
 #ifdef ENABLE_WASM_GC
     StructNew,
     StructGet,
@@ -1056,6 +1062,65 @@ class AstMemOrTableInit : public AstExpr
     AstExpr& len()      const { return *len_; }
 };
 #endif
+
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+class AstTableGet : public AstExpr
+{
+    AstExpr* index_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::TableGet;
+    explicit AstTableGet(AstExpr* index)
+      : AstExpr(Kind, ExprType::AnyRef),
+        index_(index)
+    {}
+
+    AstExpr& index() const { return *index_; }
+};
+
+class AstTableGrow : public AstExpr
+{
+    AstExpr* delta_;
+    AstExpr* initValue_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::TableGrow;
+    AstTableGrow(AstExpr* delta, AstExpr* initValue)
+      : AstExpr(Kind, ExprType::I32),
+        delta_(delta),
+        initValue_(initValue)
+    {}
+
+    AstExpr& delta() const { return *delta_; }
+    AstExpr& initValue() const { return *initValue_; }
+};
+
+class AstTableSet : public AstExpr
+{
+    AstExpr* index_;
+    AstExpr* value_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::TableSet;
+    AstTableSet(AstExpr* index, AstExpr* value)
+      : AstExpr(Kind, ExprType::Void),
+        index_(index),
+        value_(value)
+    {}
+
+    AstExpr& index() const { return *index_; }
+    AstExpr& value() const { return *value_; }
+};
+
+class AstTableSize : public AstExpr
+{
+  public:
+    static const AstExprKind Kind = AstExprKind::TableSize;
+    AstTableSize()
+      : AstExpr(Kind, ExprType::I32)
+    {}
+};
+#endif // ENABLE_WASM_GENERALIZED_TABLES
 
 #ifdef ENABLE_WASM_GC
 class AstStructNew : public AstExpr

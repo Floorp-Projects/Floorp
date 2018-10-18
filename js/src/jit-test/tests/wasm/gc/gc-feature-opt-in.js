@@ -18,7 +18,11 @@ assertErrorMessage(() => new WebAssembly.Module(bad_order),
                    WebAssembly.CompileError,
                    /expected custom section/);
 
-// Version numbers.  Version 1 is good, version 2 is bad.
+// Version numbers.  Version 1 and 2 are good, version 3 is bad.
+
+new WebAssembly.Module(wasmTextToBinary(
+    `(module
+      (gc_feature_opt_in 1))`));
 
 new WebAssembly.Module(wasmTextToBinary(
     `(module
@@ -26,7 +30,7 @@ new WebAssembly.Module(wasmTextToBinary(
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
-      (gc_feature_opt_in 2))`)),
+      (gc_feature_opt_in 3))`)),
                    WebAssembly.CompileError,
                    /unsupported version of the gc feature/);
 
