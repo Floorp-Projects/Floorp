@@ -554,6 +554,51 @@ const waitForRendering = async function(animationInspector) {
   ]);
 };
 
+// Wait until an action of `type` is dispatched. If it's part of an
+// async operation, wait until the `status` field is "done" or "error"
+function _afterDispatchDone(store, type) {
+  return new Promise(resolve => {
+    store.dispatch({
+      // Normally we would use `services.WAIT_UNTIL`, but use the
+      // internal name here so tests aren't forced to always pass it
+      // in
+      type: "@@service/waitUntil",
+      predicate: action => {
+        if (action.type === type) {
+          return true;
+        }
+        return false;
+      },
+      run: (dispatch, getState, action) => {
+        resolve(action);
+      }
+    });
+  });
+}
+
+/**
+ * Wait for a specific action type to be dispatch.
+ * If an async action, will wait for it to be done.
+ * This is a custom waitForDispatch, and rather than having a number to wait on
+ * the function has a callback, that returns a number. This allows us to wait for
+ * an unknown number of dispatches.
+ *
+ * @memberof mochitest/waits
+ * @param {Object} inspector
+ * @param {String} type
+ * @param {Function} repeat
+ * @return {Promise}
+ * @static
+ */
+async function waitForDispatch(inspector, type, repeat) {
+  let count = 0;
+
+  while (count < repeat()) {
+    await _afterDispatchDone(inspector.store, type);
+    count++;
+  }
+}
+
 /**
  * Wait for rendering of animation keyframes.
  *
