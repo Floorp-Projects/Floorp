@@ -295,10 +295,13 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    *         The node to start iterating at.
    * @param  {String} type
    *         Can be "grid" or "flex", the display type we are searching for.
+   * @param  {Boolean|null} onlyLookAtCurrentNode
+   *         Whether or not to consider only the current node's display (ie, don't walk
+   *         up the tree).
    * @return {GridActor|FlexboxActor|null} The GridActor or FlexboxActor of the
    * grid/flex container of the give node. Otherwise, returns null.
    */
-  getCurrentDisplay(node, type) {
+  getCurrentDisplay(node, type, onlyLookAtCurrentNode) {
     if (isNodeDead(node)) {
       return null;
     }
@@ -316,9 +319,12 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
       return null;
     }
 
-    if (type == "flex" &&
-        (displayType == "inline-flex" || displayType == "flex")) {
-      return new FlexboxActor(this, currentNode);
+    if (type == "flex") {
+      if (displayType == "inline-flex" || displayType == "flex") {
+        return new FlexboxActor(this, currentNode);
+      } else if (onlyLookAtCurrentNode) {
+        return null;
+      }
     } else if (type == "grid" &&
                (displayType == "inline-grid" || displayType == "grid")) {
       return new GridActor(this, currentNode);
@@ -383,7 +389,7 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
       node = node.rawNode.parentNode;
     }
 
-    return this.getCurrentDisplay(node, "flex");
+    return this.getCurrentDisplay(node, "flex", onlyLookAtParents);
   },
 
   /**

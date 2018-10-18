@@ -31,6 +31,7 @@ function RuntimesState() {
     selectedRuntimeId: null,
     thisFirefoxRuntimes: [{
       id: RUNTIMES.THIS_FIREFOX,
+      name: "This Firefox",
       type: RUNTIMES.THIS_FIREFOX,
     }],
     usbRuntimes: [],
@@ -84,7 +85,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         return {
           id: location,
           extra: {
-            connectionParameters: { host, port },
+            connectionParameters: { host, port: parseInt(port, 10) },
           },
           name: location,
           type: RUNTIMES.NETWORK,

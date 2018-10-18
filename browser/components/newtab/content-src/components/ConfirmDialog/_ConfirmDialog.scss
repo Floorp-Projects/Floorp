@@ -1,9 +1,10 @@
 .confirmation-dialog {
   .modal {
     box-shadow: 0 2px 2px 0 $black-10;
-    left: 50%;
-    margin-left: -200px;
+    left: 0;
+    margin: auto;
     position: fixed;
+    right: 0;
     top: 20%;
     width: 400px;
   }

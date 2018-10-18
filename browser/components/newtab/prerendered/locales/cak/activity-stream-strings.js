@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Ichinan Na'oj",
   "firstrun_continue_to_login": "Titikïr chik el",
   "firstrun_skip_login": "Tixakalüx re jun ruxak re'",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Tetamäx Ch'aqa' Chik"
 };

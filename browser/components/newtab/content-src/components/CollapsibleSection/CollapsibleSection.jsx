@@ -162,6 +162,7 @@ export class _CollapsibleSection extends React.PureComponent {
           <div>
             <button
               className="context-menu-button icon"
+              title={this.props.intl.formatMessage({id: "context_menu_title"})}
               onClick={this.onMenuButtonClick}
               onMouseEnter={this.onMenuButtonMouseEnter}
               onMouseLeave={this.onMenuButtonMouseLeave}>

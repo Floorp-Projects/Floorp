@@ -1304,11 +1304,6 @@ WebGLTexture::TexSubImage(TexImageTarget target, GLint level,
     auto dstUsage = imageInfo->mFormat;
     auto dstFormat = dstUsage->format;
 
-    if (dstFormat->compression) {
-        mContext->ErrorInvalidEnum("Specified TexImage must not be compressed.");
-        return;
-    }
-
     if (!mContext->IsWebGL2() && dstFormat->d) {
         mContext->ErrorInvalidOperation("Function may not be called on a texture of"
                                         " format %s.",
@@ -1422,17 +1417,11 @@ WebGLTexture::CompressedTexImage(TexImageTarget target, GLint level,
     MOZ_ASSERT(imageInfo);
 
     auto usage = mContext->mFormatUsage->GetSizedTexUsage(internalFormat);
-    if (!usage) {
-        mContext->ErrorInvalidEnum("Invalid internalFormat: 0x%04x",
-                                   internalFormat);
+    if (!usage || !usage->format->compression) {
+        mContext->ErrorInvalidEnumArg("internalFormat", internalFormat);
         return;
     }
-
     auto format = usage->format;
-    if (!format->compression) {
-        mContext->ErrorInvalidEnum("Specified internalFormat must be compressed.");
-        return;
-    }
 
     if (!ValidateTargetForFormat(mContext, target, format))
         return;
@@ -1540,11 +1529,10 @@ WebGLTexture::CompressedTexSubImage(TexImageTarget target,
     // Get source info
 
     auto srcUsage = mContext->mFormatUsage->GetSizedTexUsage(sizedUnpackFormat);
-    if (!srcUsage->format->compression) {
-        mContext->ErrorInvalidEnum("Specified format must be compressed.");
+    if (!srcUsage || !srcUsage->format->compression) {
+        mContext->ErrorInvalidEnumArg("sizedUnpackFormat", sizedUnpackFormat);
         return;
     }
-
     if (srcUsage != dstUsage) {
         mContext->ErrorInvalidOperation("`format` must match the format of the"
                                         " existing texture image.");
