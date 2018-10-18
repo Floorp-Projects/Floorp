@@ -13,12 +13,20 @@ job-defaults:
    worker-type:
       by-project:
          mozilla-beta: scriptworker-prov-v1/shipit-v1
+         mozilla-release: scriptworker-prov-v1/shipit-v1
+         mozilla-esr60: scriptworker-prov-v1/shipit-v1
          default: scriptworker-prov-v1/shipit-dev
    worker:
       implementation: shipit-started
    scopes:
       by-project:
          mozilla-beta:
+            - project:releng:ship-it:server:production
+            - project:releng:ship-it:action:mark-as-started
+         mozilla-release:
+            - project:releng:ship-it:server:production
+            - project:releng:ship-it:action:mark-as-started
+         mozilla-esr60:
             - project:releng:ship-it:server:production
             - project:releng:ship-it:action:mark-as-started
          default:
