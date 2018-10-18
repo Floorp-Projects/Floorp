@@ -30,7 +30,6 @@ INSTALL_DIR=$TOOLCHAIN_DIR/build/stage3/clang
 CROSS_PREFIX_DIR=$INSTALL_DIR/$machine-w64-mingw32
 SRC_DIR=$TOOLCHAIN_DIR/src
 
-CLANG_VERSION=7.0.0
 make_flags="-j$(nproc)"
 
 mingw_version=cfd85ebed773810429bf2164c3a985895b7dbfe3
@@ -137,6 +136,7 @@ build_mingw() {
 }
 
 build_compiler_rt() {
+  CLANG_VERSION=$(basename $(dirname $(dirname $(dirname $($CC --print-libgcc-file-name -rtlib=compiler-rt)))))
   mkdir compiler-rt
   pushd compiler-rt
   cmake \
@@ -292,7 +292,7 @@ set +x
 
 cd build/build-clang
 # |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-7-mingw.json --skip-tar
+../../mach python ./build-clang.py -c clang-trunk-mingw.json --skip-tar
 
 set -x
 
