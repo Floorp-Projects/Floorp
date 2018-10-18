@@ -866,6 +866,16 @@ var gViewController = {
     this.currentViewObj.node.setAttribute("loading", "true");
     this.currentViewObj.node.focus();
 
+    let headingName = document.getElementById("heading-name");
+    try {
+      headingName.textContent = gStrings.ext.GetStringFromName(`listHeading.${view.param}`);
+      setSearchLabel(view.param);
+    } catch (e) {
+      // In tests we sometimes render this view with a type we don't support, that's fine.
+      headingName.textContent = "";
+    }
+
+
     if (aViewId == aPreviousView)
       this.currentViewObj.refresh(view.param, ++this.currentViewRequest, aState);
     else
@@ -2398,14 +2408,6 @@ var gListView = {
     this._type = aType;
     this.node.setAttribute("type", aType);
     this.showEmptyNotice(false);
-
-    try {
-      document.getElementById("list-view-heading-name")
-        .textContent = gStrings.ext.GetStringFromName(`listHeading.${aType}`);
-      setSearchLabel(aType);
-    } catch (e) {
-      // In tests we sometimes render this view with a type we don't support, that's fine.
-    }
 
     this._listBox.textContent = "";
 
