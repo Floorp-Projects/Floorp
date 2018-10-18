@@ -26,6 +26,7 @@ class CacheFileOutputStream : public nsIAsyncOutputStream
   NS_DECL_NSIOUTPUTSTREAM
   NS_DECL_NSIASYNCOUTPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSITELLABLESTREAM
 
 public:
   CacheFileOutputStream(CacheFile *aFile,

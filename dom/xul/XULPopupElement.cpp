@@ -33,19 +33,6 @@ XULPopupElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return XULPopupElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsIFrame*
-XULPopupElement::GetFrame(bool aFlushLayout)
-{
-  nsCOMPtr<nsIContent> kungFuDeathGrip = this; // keep a reference
-
-  nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
-  if (doc) {
-    doc->FlushPendingNotifications(aFlushLayout ? FlushType::Layout : FlushType::Frames);
-  }
-
-  return GetPrimaryFrame();
-}
-
 void
 XULPopupElement::OpenPopup(Element* aAnchorElement,
                            const StringOrOpenPopupOptions& aOptions,
@@ -243,7 +230,7 @@ XULPopupElement::GetOuterScreenRect()
   RefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
 
   // Return an empty rectangle if the popup is not open.
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
   if (!menuPopupFrame || !menuPopupFrame->IsOpen()) {
     return rect.forget();
   }
@@ -267,7 +254,7 @@ XULPopupElement::GetAlignmentPosition(nsString& positionStr)
   positionStr.Truncate();
 
   // This needs to flush layout.
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(true));
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame(FlushType::Layout));
   if (!menuPopupFrame)
     return;
 
@@ -315,7 +302,7 @@ XULPopupElement::GetAlignmentPosition(nsString& positionStr)
 int32_t
 XULPopupElement::AlignmentOffset()
 {
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
   if (!menuPopupFrame)
     return 0;
 
@@ -331,7 +318,7 @@ XULPopupElement::AlignmentOffset()
 void
 XULPopupElement::SetConstraintRect(dom::DOMRectReadOnly& aRect)
 {
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
   if (menuPopupFrame) {
     menuPopupFrame->SetOverrideConstraintRect(
       LayoutDeviceIntRect::Truncate(aRect.Left(), aRect.Top(), aRect.Width(), aRect.Height()));

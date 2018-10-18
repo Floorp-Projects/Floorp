@@ -33,6 +33,7 @@ XPIDL_SOURCES += [
     'nsIStorageStream.idl',
     'nsIStreamBufferAccess.idl',
     'nsIStringStream.idl',
+    'nsITellableStream.idl',
     'nsIUnicharInputStream.idl',
     'nsIUnicharLineInputStream.idl',
     'nsIUnicharOutputStream.idl',
