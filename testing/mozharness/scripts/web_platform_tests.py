@@ -230,7 +230,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd += ["--device-serial=%s" % self.device_serial]
             cmd += ["--package-name=%s" % self.query_package_name()]
 
-        if not sys.platform.startswith("linux"):
+        if sys.platform == "darwin":
             cmd += ["--exclude=css"]
 
         if mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1":

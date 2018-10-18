@@ -235,19 +235,15 @@ private:
   static staticJArray<char16_t, int32_t> NOEMBED_ARR;
   static staticJArray<char16_t, int32_t> NOSCRIPT_ARR;
   static staticJArray<char16_t, int32_t> NOFRAMES_ARR;
-
 protected:
   nsHtml5TreeBuilder* tokenHandler;
   nsHtml5StreamParser* encodingDeclarationHandler;
   bool lastCR;
   int32_t stateSave;
-
 private:
   int32_t returnStateSave;
-
 protected:
   int32_t index;
-
 private:
   bool forceQuirks;
   char16_t additional;
@@ -257,16 +253,12 @@ private:
   int32_t hi;
   int32_t candidate;
   int32_t charRefBufMark;
-
 protected:
   int32_t value;
-
 private:
   bool seenDigits;
-
 protected:
   int32_t cstart;
-
 private:
   nsHtml5String publicId;
   nsHtml5String systemId;
@@ -276,24 +268,18 @@ private:
   int32_t charRefBufLen;
   autoJArray<char16_t, int32_t> bmpChar;
   autoJArray<char16_t, int32_t> astralChar;
-
 protected:
   nsHtml5ElementName* endTagExpectation;
-
 private:
   jArray<char16_t, int32_t> endTagExpectationAsArray;
-
 protected:
   bool endTag;
-
 private:
   bool containsHyphen;
   nsHtml5ElementName* tagName;
   nsHtml5ElementName* nonInternedTagName;
-
 protected:
   nsHtml5AttributeName* attributeName;
-
 private:
   nsHtml5AttributeName* nonInternedAttributeName;
   nsAtom* doctypeName;
@@ -302,16 +288,13 @@ private:
   nsHtml5HtmlAttributes* attributes;
   bool newAttributesEachTime;
   bool shouldSuspend;
-
 protected:
   bool confident;
-
 private:
   int32_t line;
   int32_t attributeLine;
   nsHtml5AtomTable* interner;
   bool viewingXmlSource;
-
 public:
   nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, bool viewingXmlSource);
   void setInterner(nsHtml5AtomTable* interner);
@@ -324,13 +307,11 @@ public:
 
 private:
   void endTagExpectationToArray();
-
 public:
   void setLineNumber(int32_t line);
   inline int32_t getLineNumber() { return line; }
 
   nsHtml5HtmlAttributes* emptyAttributes();
-
 private:
   inline void appendCharRefBuf(char16_t c)
   {
@@ -369,7 +350,6 @@ private:
 
 protected:
   nsHtml5String strBufToString();
-
 private:
   void strBufToDoctypeName();
   void emitStrBuf();
@@ -389,21 +369,17 @@ private:
   }
 
   void emitComment(int32_t provisionalHyphens, int32_t pos);
-
 protected:
   void flushChars(char16_t* buf, int32_t pos);
-
 private:
   void strBufToElementNameString();
   int32_t emitCurrentTagToken(bool selfClosing, int32_t pos);
   void attributeNameComplete();
   void addAttributeWithoutValue();
   void addAttributeWithValue();
-
 public:
   void start();
   bool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
-
 private:
   template<class P>
   int32_t stateLoop(int32_t state,
@@ -455,23 +431,18 @@ private:
   void bogusDoctype();
   void bogusDoctypeWithoutQuirks();
   void handleNcrValue(int32_t returnState);
-
 public:
   void eof();
-
 private:
   void emitDoctypeToken(int32_t pos);
-
 protected:
   inline char16_t checkChar(char16_t* buf, int32_t pos) { return buf[pos]; }
 
 public:
   bool internalEncodingDeclaration(nsHtml5String internalCharset);
-
 private:
   void emitOrAppendTwo(const char16_t* val, int32_t returnState);
   void emitOrAppendOne(const char16_t* val, int32_t returnState);
-
 public:
   void end();
   void requestSuspension();

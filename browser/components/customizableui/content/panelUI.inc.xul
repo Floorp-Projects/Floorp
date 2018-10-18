@@ -633,6 +633,10 @@
 
     <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">
       <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-taskmanager-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&taskManagerCmd.label;"
+                       oncommand="switchToTabHavingURI('about:performance', true)"/>
         <toolbarbutton id="appMenu-characterencoding-button"
                        class="subviewbutton subviewbutton-nav"
                        label="&charsetMenu2.label;"
