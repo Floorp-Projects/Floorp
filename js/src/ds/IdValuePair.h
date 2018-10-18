@@ -37,7 +37,7 @@ struct IdValuePair
     }
 };
 
-using IdValueVector = JS::GCVector<IdValuePair>;
+using IdValueVector = JS::GCVector<IdValuePair, 8>;
 
 } /* namespace js */
 
