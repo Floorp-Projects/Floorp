@@ -103,7 +103,8 @@ class ConnectPage extends PureComponent {
       },
       dom.button(
         {
-          className: "std-button connect-page__usb__toggle-button",
+          className: "std-button connect-page__usb__toggle-button " +
+                     "js-connect-usb-toggle-button",
           disabled,
           onClick: () => this.onToggleUSBClick(),
         },
@@ -138,7 +139,9 @@ class ConnectPage extends PureComponent {
               id: "about-debugging-connect-usb-disabled",
             },
             dom.aside(
-              {},
+              {
+                className: "js-connect-usb-disabled-message"
+              },
               "Enabling this will download and add the required Android USB debugging " +
               "components to Firefox."
             )
