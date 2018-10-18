@@ -1801,56 +1801,74 @@ private:
   HandleTrailingSeparator();
 };
 
-class CreateOrUpgradeDirectoryMetadataHelper final
+class UpgradeOriginDirectoriesHelper
   : public StorageDirectoryHelper
+{
+public:
+  UpgradeOriginDirectoriesHelper(nsIFile* aDirectory,
+                                 bool aPersistent)
+    : StorageDirectoryHelper(aDirectory, aPersistent)
+  { }
+
+  nsresult
+  DoUpgrade();
+
+protected:
+  virtual ~UpgradeOriginDirectoriesHelper()
+  { }
+
+private:
+  virtual nsresult
+  PrepareOriginDirectory(OriginProps& aOriginProps, bool* aRemoved) = 0;
+};
+
+class CreateOrUpgradeDirectoryMetadataHelper final
+  : public UpgradeOriginDirectoriesHelper
 {
   nsCOMPtr<nsIFile> mPermanentStorageDir;
 
 public:
   CreateOrUpgradeDirectoryMetadataHelper(nsIFile* aDirectory,
                                          bool aPersistent)
-    : StorageDirectoryHelper(aDirectory, aPersistent)
+    : UpgradeOriginDirectoriesHelper(aDirectory, aPersistent)
   { }
-
-  nsresult
-  CreateOrUpgradeMetadataFiles();
 
 private:
   nsresult
   MaybeUpgradeOriginDirectory(nsIFile* aDirectory);
 
   nsresult
+  PrepareOriginDirectory(OriginProps& aOriginProps, bool* aRemoved) override;
+
+  nsresult
   ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
 class UpgradeStorageFrom0_0To1_0Helper final
-  : public StorageDirectoryHelper
+  : public UpgradeOriginDirectoriesHelper
 {
 public:
   UpgradeStorageFrom0_0To1_0Helper(nsIFile* aDirectory,
                                    bool aPersistent)
-    : StorageDirectoryHelper(aDirectory, aPersistent)
+    : UpgradeOriginDirectoriesHelper(aDirectory, aPersistent)
   { }
 
-  nsresult
-  DoUpgrade();
-
 private:
+  nsresult
+  PrepareOriginDirectory(OriginProps& aOriginProps, bool* aRemoved) override;
+
   nsresult
   ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
 class UpgradeStorageFrom1_0To2_0Helper final
-  : public StorageDirectoryHelper
+  : public UpgradeOriginDirectoriesHelper
 {
 public:
   UpgradeStorageFrom1_0To2_0Helper(nsIFile* aDirectory,
                                    bool aPersistent)
-    : StorageDirectoryHelper(aDirectory, aPersistent)
+    : UpgradeOriginDirectoriesHelper(aDirectory, aPersistent)
   { }
-
-  nsresult
-  DoUpgrade();
 
 private:
   nsresult
@@ -1865,27 +1883,27 @@ private:
                                      bool* aStripped);
 
   nsresult
+  PrepareOriginDirectory(OriginProps& aOriginProps, bool* aRemoved) override;
+
+  nsresult
   ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
-// XXXtt: The following class is duplicated from
-// UpgradeStorageFrom1_0To2_0Helper and it should be extracted out in
-// bug 1395102.
 class UpgradeStorageFrom2_0To2_1Helper final
-  : public StorageDirectoryHelper
+  : public UpgradeOriginDirectoriesHelper
 {
 public:
   UpgradeStorageFrom2_0To2_1Helper(nsIFile* aDirectory,
                                    bool aPersistent)
-    : StorageDirectoryHelper(aDirectory, aPersistent)
+    : UpgradeOriginDirectoriesHelper(aDirectory, aPersistent)
   { }
-
-  nsresult
-  DoUpgrade();
 
 private:
   nsresult
   MaybeUpgradeClients(const OriginProps& aOriginProps);
+
+  nsresult
+  PrepareOriginDirectory(OriginProps& aOriginProps, bool* aRemoved) override;
 
   nsresult
   ProcessOriginDirectory(const OriginProps& aOriginProps) override;
@@ -4466,7 +4484,7 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
     new CreateOrUpgradeDirectoryMetadataHelper(persistentStorageDir,
                                                /* aPersistent */ true);
 
-  rv = helper->CreateOrUpgradeMetadataFiles();
+  rv = helper->DoUpgrade();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4499,7 +4517,7 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
       new CreateOrUpgradeDirectoryMetadataHelper(temporaryStorageDir,
                                                  /* aPersistent */ false);
 
-    rv = helper->CreateOrUpgradeMetadataFiles();
+    rv = helper->DoUpgrade();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4597,6 +4615,16 @@ QuotaManager::UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection)
                          getter_AddRefs(directory));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    bool exists;
+    rv = directory->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!exists) {
+      continue;
     }
 
     bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
@@ -5735,6 +5763,8 @@ QuotaManager::GetInfoForChrome(nsACString* aSuffix,
 bool
 QuotaManager::IsOriginInternal(const nsACString& aOrigin)
 {
+  MOZ_ASSERT(!aOrigin.IsEmpty());
+
   // The first prompt is not required for these origins.
   if (aOrigin.EqualsLiteral(kChromeOrigin) ||
       StringBeginsWith(aOrigin, nsDependentCString(kAboutHomeOriginPrefix)) ||
@@ -8386,10 +8416,22 @@ OriginProps::Init(nsIFile* aDirectory)
   }
 
   if (leafName.EqualsLiteral(kChromeOrigin)) {
+    // XXX We can remove this special handling once origin parser supports it
+    //     directly.
     mDirectory = aDirectory;
     mLeafName = leafName;
     mSpec = kChromeOrigin;
     mType = eChrome;
+  } else if (leafName.EqualsLiteral("moz-safe-about+++home")) {
+    // XXX We can remove this special handling once origin parser supports it
+    //     directly.
+
+    // This directory was accidentally created by a buggy nightly and can be
+    // safely removed.
+
+    mDirectory = aDirectory;
+    mLeafName = leafName;
+    mType = eObsolete;
   } else {
     nsCString spec;
     OriginAttributes attrs;
@@ -8793,33 +8835,29 @@ OriginParser::HandleTrailingSeparator()
 }
 
 nsresult
-CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
+UpgradeOriginDirectoriesHelper::DoUpgrade()
 {
   AssertIsOnIOThread();
 
-  bool exists;
-  nsresult rv = mDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!exists) {
-    return NS_OK;
-  }
+  DebugOnly<bool> exists;
+  MOZ_ASSERT(NS_SUCCEEDED(mDirectory->Exists(&exists)));
+  MOZ_ASSERT(exists);
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
-  rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  nsCOMPtr<nsIFile> originDir;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) &&
-         originDir) {
-    nsString leafName;
-    rv = originDir->GetLeafName(leafName);
+  while (true) {
+    nsCOMPtr<nsIFile> originDir;
+    rv = entries->GetNextFile(getter_AddRefs(originDir));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (!originDir) {
+      break;
     }
 
     bool isDirectory;
@@ -8828,33 +8866,18 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
       return rv;
     }
 
-    if (isDirectory) {
-      if (leafName.EqualsLiteral("moz-safe-about+++home")) {
-        // This directory was accidentally created by a buggy nightly and can
-        // be safely removed.
-
-        QM_WARNING("Deleting accidental moz-safe-about+++home directory!");
-
-        rv = originDir->Remove(/* aRecursive */ true);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        continue;
+    if (!isDirectory) {
+      nsString leafName;
+      rv = originDir->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-    } else {
+
       // Unknown files during upgrade are allowed. Just warn if we find them.
       if (!IsOSMetadata(leafName)) {
         UNKNOWN_FILE_WARNING(leafName);
       }
       continue;
-    }
-
-    if (mPersistent) {
-      rv = MaybeUpgradeOriginDirectory(originDir);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
     }
 
     OriginProps originProps;
@@ -8863,26 +8886,15 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
       return rv;
     }
 
-    if (!mPersistent) {
-      int64_t timestamp;
-      nsCString group;
-      nsCString origin;
-      Nullable<bool> isApp;
-      rv = GetDirectoryMetadata(originDir,
-                                timestamp,
-                                group,
-                                origin,
-                                isApp);
-      if (NS_FAILED(rv)) {
-        originProps.mTimestamp = GetLastModifiedTime(originDir, mPersistent);
-        originProps.mNeedsRestore = true;
-      } else if (!isApp.IsNull()) {
-        originProps.mIgnore = true;
+    if (originProps.mType != OriginProps::eObsolete) {
+      bool removed;
+      rv = PrepareOriginDirectory(originProps, &removed);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-    }
-    else {
-      bool persistent = QuotaManager::IsOriginInternal(originProps.mSpec);
-      originProps.mTimestamp = GetLastModifiedTime(originDir, persistent);
+      if (removed) {
+        continue;
+      }
     }
 
     mOriginProps.AppendElement(std::move(originProps));
@@ -8998,6 +9010,49 @@ CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
 }
 
 nsresult
+CreateOrUpgradeDirectoryMetadataHelper::PrepareOriginDirectory(
+                                                      OriginProps& aOriginProps,
+                                                      bool* aRemoved)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+  MOZ_ASSERT(aRemoved);
+
+  nsresult rv;
+
+  if (mPersistent) {
+    rv = MaybeUpgradeOriginDirectory(aOriginProps.mDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool persistent = QuotaManager::IsOriginInternal(aOriginProps.mSpec);
+    aOriginProps.mTimestamp =
+      GetLastModifiedTime(aOriginProps.mDirectory, persistent);
+  } else {
+    int64_t timestamp;
+    nsCString group;
+    nsCString origin;
+    Nullable<bool> isApp;
+    rv = GetDirectoryMetadata(aOriginProps.mDirectory,
+                              timestamp,
+                              group,
+                              origin,
+                              isApp);
+    if (NS_FAILED(rv)) {
+      aOriginProps.mTimestamp =
+        GetLastModifiedTime(aOriginProps.mDirectory, mPersistent);
+      aOriginProps.mNeedsRestore = true;
+    } else if (!isApp.IsNull()) {
+      aOriginProps.mIgnore = true;
+    }
+  }
+
+  *aRemoved = false;
+  return NS_OK;
+}
+
+nsresult
 CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
                                                 const OriginProps& aOriginProps)
 {
@@ -9107,83 +9162,32 @@ CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
 }
 
 nsresult
-UpgradeStorageFrom0_0To1_0Helper::DoUpgrade()
+UpgradeStorageFrom0_0To1_0Helper::PrepareOriginDirectory(
+                                                      OriginProps& aOriginProps,
+                                                      bool* aRemoved)
 {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+  MOZ_ASSERT(aRemoved);
 
-  bool exists;
-  nsresult rv = mDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  int64_t timestamp;
+  nsCString group;
+  nsCString origin;
+  Nullable<bool> isApp;
+  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory,
+                                     timestamp,
+                                     group,
+                                     origin,
+                                     isApp);
+  if (NS_FAILED(rv) || isApp.IsNull()) {
+    aOriginProps.mTimestamp =
+      GetLastModifiedTime(aOriginProps.mDirectory, mPersistent);
+    aOriginProps.mNeedsRestore = true;
+  } else {
+    aOriginProps.mTimestamp = timestamp;
   }
 
-  if (!exists) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> originDir;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) &&
-         originDir) {
-    bool isDirectory;
-    rv = originDir->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!isDirectory) {
-      nsString leafName;
-      rv = originDir->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      // Unknown files during upgrade are allowed. Just warn if we find them.
-      if (!IsOSMetadata(leafName)) {
-        UNKNOWN_FILE_WARNING(leafName);
-      }
-      continue;
-    }
-
-    OriginProps originProps;
-    rv = originProps.Init(originDir);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    int64_t timestamp;
-    nsCString group;
-    nsCString origin;
-    Nullable<bool> isApp;
-    nsresult rv = GetDirectoryMetadata(originDir,
-                                       timestamp,
-                                       group,
-                                       origin,
-                                       isApp);
-    if (NS_FAILED(rv) || isApp.IsNull()) {
-      originProps.mTimestamp = GetLastModifiedTime(originDir, mPersistent);
-      originProps.mNeedsRestore = true;
-    } else {
-      originProps.mTimestamp = timestamp;
-    }
-
-    mOriginProps.AppendElement(std::move(originProps));
-  }
-
-  if (mOriginProps.IsEmpty()) {
-    return NS_OK;
-  }
-
-  rv = ProcessOriginDirectories();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  *aRemoved = false;
   return NS_OK;
 }
 
@@ -9232,108 +9236,6 @@ UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
-{
-  AssertIsOnIOThread();
-
-  DebugOnly<bool> exists;
-  MOZ_ASSERT(NS_SUCCEEDED(mDirectory->Exists(&exists)));
-  MOZ_ASSERT(exists);
-
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> originDir;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) && originDir) {
-    bool isDirectory;
-    rv = originDir->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!isDirectory) {
-      nsString leafName;
-      rv = originDir->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      // Unknown files during upgrade are allowed. Just warn if we find them.
-      if (!IsOSMetadata(leafName)) {
-        UNKNOWN_FILE_WARNING(leafName);
-      }
-      continue;
-    }
-
-    OriginProps originProps;
-    rv = originProps.Init(originDir);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = MaybeUpgradeClients(originProps);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool removed;
-    rv = MaybeRemoveAppsData(originProps, &removed);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (removed) {
-      continue;
-    }
-
-    int64_t timestamp;
-    nsCString group;
-    nsCString origin;
-    Nullable<bool> isApp;
-    nsresult rv = GetDirectoryMetadata(originDir,
-                                       timestamp,
-                                       group,
-                                       origin,
-                                       isApp);
-    if (NS_FAILED(rv) || isApp.IsNull()) {
-      originProps.mNeedsRestore = true;
-    }
-
-    nsCString suffix;
-    rv = GetDirectoryMetadata2(originDir,
-                               timestamp,
-                               suffix,
-                               group,
-                               origin,
-                               isApp.SetValue());
-    if (NS_FAILED(rv)) {
-      originProps.mTimestamp = GetLastModifiedTime(originDir, mPersistent);
-      originProps.mNeedsRestore2 = true;
-    } else {
-      originProps.mTimestamp = timestamp;
-    }
-
-    mOriginProps.AppendElement(std::move(originProps));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (mOriginProps.IsEmpty()) {
-    return NS_OK;
-  }
-
-  rv = ProcessOriginDirectories();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   return NS_OK;
@@ -9515,6 +9417,62 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeStripObsoleteOriginAttributes(
 }
 
 nsresult
+UpgradeStorageFrom1_0To2_0Helper::PrepareOriginDirectory(
+                                                      OriginProps& aOriginProps,
+                                                      bool* aRemoved)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+  MOZ_ASSERT(aRemoved);
+
+  nsresult rv = MaybeUpgradeClients(aOriginProps);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool removed;
+  rv = MaybeRemoveAppsData(aOriginProps, &removed);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (removed) {
+    *aRemoved = true;
+    return NS_OK;
+  }
+
+  int64_t timestamp;
+  nsCString group;
+  nsCString origin;
+  Nullable<bool> isApp;
+  rv = GetDirectoryMetadata(aOriginProps.mDirectory,
+                            timestamp,
+                            group,
+                            origin,
+                            isApp);
+  if (NS_FAILED(rv) || isApp.IsNull()) {
+    aOriginProps.mNeedsRestore = true;
+  }
+
+  nsCString suffix;
+  rv = GetDirectoryMetadata2(aOriginProps.mDirectory,
+                             timestamp,
+                             suffix,
+                             group,
+                             origin,
+                             isApp.SetValue());
+  if (NS_FAILED(rv)) {
+    aOriginProps.mTimestamp =
+      GetLastModifiedTime(aOriginProps.mDirectory, mPersistent);
+    aOriginProps.mNeedsRestore2 = true;
+  } else {
+    aOriginProps.mTimestamp = timestamp;
+  }
+
+  *aRemoved = false;
+  return NS_OK;
+}
+
+nsresult
 UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
                                                 const OriginProps& aOriginProps)
 {
@@ -9550,100 +9508,6 @@ UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-UpgradeStorageFrom2_0To2_1Helper::DoUpgrade()
-{
-  AssertIsOnIOThread();
-
-  DebugOnly<bool> exists;
-  MOZ_ASSERT(NS_SUCCEEDED(mDirectory->Exists(&exists)));
-  MOZ_ASSERT(exists);
-
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> originDir;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) && originDir) {
-    bool isDirectory;
-    rv = originDir->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!isDirectory) {
-      nsString leafName;
-      rv = originDir->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      // Unknown files during upgrade are allowed. Just warn if we find them.
-      if (!IsOSMetadata(leafName)) {
-        UNKNOWN_FILE_WARNING(leafName);
-      }
-      continue;
-    }
-
-    OriginProps originProps;
-    rv = originProps.Init(originDir);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // Only update DOM Cache directory for adding padding file.
-    rv = MaybeUpgradeClients(originProps);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    int64_t timestamp;
-    nsCString group;
-    nsCString origin;
-    Nullable<bool> isApp;
-    nsresult rv = GetDirectoryMetadata(originDir,
-                                       timestamp,
-                                       group,
-                                       origin,
-                                       isApp);
-    if (NS_FAILED(rv) || isApp.IsNull()) {
-      originProps.mNeedsRestore = true;
-    }
-
-    nsCString suffix;
-    rv = GetDirectoryMetadata2(originDir,
-                               timestamp,
-                               suffix,
-                               group,
-                               origin,
-                               isApp.SetValue());
-    if (NS_FAILED(rv)) {
-      originProps.mTimestamp = GetLastModifiedTime(originDir, mPersistent);
-      originProps.mNeedsRestore2 = true;
-    } else {
-      originProps.mTimestamp = timestamp;
-    }
-
-    mOriginProps.AppendElement(std::move(originProps));
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (mOriginProps.IsEmpty()) {
-    return NS_OK;
-  }
-
-  rv = ProcessOriginDirectories();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   return NS_OK;
@@ -9708,6 +9572,52 @@ UpgradeStorageFrom2_0To2_1Helper::MaybeUpgradeClients(
     return rv;
   }
 
+  return NS_OK;
+}
+
+nsresult
+UpgradeStorageFrom2_0To2_1Helper::PrepareOriginDirectory(
+                                                      OriginProps& aOriginProps,
+                                                      bool* aRemoved)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+  MOZ_ASSERT(aRemoved);
+
+  nsresult rv = MaybeUpgradeClients(aOriginProps);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  int64_t timestamp;
+  nsCString group;
+  nsCString origin;
+  Nullable<bool> isApp;
+  rv = GetDirectoryMetadata(aOriginProps.mDirectory,
+                            timestamp,
+                            group,
+                            origin,
+                            isApp);
+  if (NS_FAILED(rv) || isApp.IsNull()) {
+    aOriginProps.mNeedsRestore = true;
+  }
+
+  nsCString suffix;
+  rv = GetDirectoryMetadata2(aOriginProps.mDirectory,
+                             timestamp,
+                             suffix,
+                             group,
+                             origin,
+                             isApp.SetValue());
+  if (NS_FAILED(rv)) {
+    aOriginProps.mTimestamp =
+      GetLastModifiedTime(aOriginProps.mDirectory, mPersistent);
+    aOriginProps.mNeedsRestore2 = true;
+  } else {
+    aOriginProps.mTimestamp = timestamp;
+  }
+
+  *aRemoved = false;
   return NS_OK;
 }
 
