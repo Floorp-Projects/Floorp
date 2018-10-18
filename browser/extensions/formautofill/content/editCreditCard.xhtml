@@ -78,7 +78,11 @@
       isCCNumber,
       getCreditCardNetworks,
     } = FormAutofillUtils;
-    let record = window.arguments && window.arguments[0];
+    let args = window.arguments || [];
+    let {
+      record,
+    } = args[0] || {};
+
     let addresses = {};
     for (let address of formAutofillStorage.addresses.getAll()) {
       addresses[address.guid] = address;
