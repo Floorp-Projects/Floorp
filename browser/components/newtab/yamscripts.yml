@@ -14,7 +14,7 @@ scripts:
 
 # bundle: Build all assets for activity stream
   bundle:
-    locales: pontoon-to-json --src locales --dest data
+    locales: pontoon-to-json --src $npm_package_config_locales_dir --dest data
     webpack: webpack --config webpack.system-addon.config.js
     css: node-sass --source-map true --source-map-contents content-src/styles -o css
     html: rimraf prerendered && webpack --config webpack.prerender.config.js && node ./bin/render-activity-stream-html.js
@@ -24,7 +24,7 @@ scripts:
     pre: rimraf $npm_package_config_mc_dir/browser/components/newtab/
     bundle: => bundle
     copy: rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/components/newtab/
-    stringsExport: cp locales/en-US/strings.properties $npm_package_config_mc_dir/browser/locales/en-US/chrome/browser/activity-stream/newtab.properties
+    stringsExport: cp $npm_package_config_locales_dir/$npm_package_config_default_locale/strings.properties $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/chrome/browser/activity-stream/newtab.properties
     copyPingCentre: cpx "ping-centre/PingCentre.jsm" $npm_package_config_mc_dir/browser/modules
 
 # startmc: Start developing the bootstrapped add-on

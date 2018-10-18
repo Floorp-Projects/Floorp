@@ -150,16 +150,8 @@ add_task(async function check_search_result_for_pref_off() {
   await SpecialPowers.popPrefEnv();
 });
 
-let canTest;
-
 // Autofill the credit card from dropdown menu.
 add_task(async function check_fields_after_form_autofill() {
-  canTest = await canTestOSKeyStoreLogin();
-  if (!canTest) {
-    todo(canTest, "Cannot test OS key store login on official builds.");
-    return;
-  }
-
   await setInput("#cc-exp-year", 202);
 
   synthesizeKey("KEY_ArrowDown");
@@ -170,18 +162,11 @@ add_task(async function check_fields_after_form_autofill() {
   })));
 
   synthesizeKey("KEY_ArrowDown");
-  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
-  await new Promise(resolve => SimpleTest.executeSoon(resolve));
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
-  await osKeyStoreLoginShown;
 });
 
 // Fallback to history search after autofill address.
 add_task(async function check_fallback_after_form_autofill() {
-  if (!canTest) {
-    return;
-  }
-
   await setInput("#cc-name", "", true);
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
@@ -190,10 +175,6 @@ add_task(async function check_fallback_after_form_autofill() {
 
 // Resume form autofill once all the autofilled fileds are changed.
 add_task(async function check_form_autofill_resume() {
-  if (!canTest) {
-    return;
-  }
-
   document.querySelector("#cc-name").blur();
   document.querySelector("#form1").reset();
 

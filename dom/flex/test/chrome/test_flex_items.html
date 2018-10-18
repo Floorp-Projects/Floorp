@@ -32,8 +32,6 @@
                  max-width: 500px; }
 
   .flexGrow    { flex-grow: 1; }
-
-  #second	     { width: 100px; }
 </style>
 
 <script>
@@ -87,75 +85,82 @@ function testItemMatchesExpectedValues(item, values, index) {
   }
 }
 
-function nearlyEqual(a, b) {
-  const ep = 1e-4;
-  let diff = a - b;
-  return (diff < ep && diff > -ep);
-}
-
 function runTests() {
   let container = document.getElementById("wrapper");
   let flex = container.getAsFlexContainer();
   let lines = flex.getLines();
-  is(lines.length, 1, "Container has expected number of lines.");
+  is(lines.length, 1, "Container should have expected number of lines.");
 
   let line = lines[0];
   let containerHeight = container.getBoundingClientRect().height;
-  is(line.crossSize, containerHeight, "Line crossSize equals the height of the container.");
+  is(line.crossSize, containerHeight,
+     "Line crossSize should equal the height of the container.");
 
-  let first = document.getElementById("first");
-  let second = document.getElementById("second");
-  let third = document.getElementById("third");
-  let fourth = document.getElementById("fourth");
-  let fifth = document.getElementById("fifth");
-  let sixth = container.lastChild;
-  is(sixth.nodeType, TEXT_NODE, "Sixth child should be an anonymous text node.");
-
-  // We can't compare baselines precisely, so we'll just confirm that they appear
-  // somewhere within the elements that determine them.
-  let firstRect = first.getBoundingClientRect();
+  // We can't compare baselines precisely, so we'll just confirm that they
+  // appear somewhere within the elements that determine them.
+  // (This assumes the first rect is baseline-aligned.)
+  let firstRect = container.firstElementChild.getBoundingClientRect();
   ok(line.firstBaselineOffset > firstRect.top &&
      line.firstBaselineOffset < firstRect.bottom,
-     "Line firstBaselineOffset lands somewhere within the element that determines it.");
+     "Line firstBaselineOffset should land somewhere within the element " +
+     "that determines it.");
 
-  // For last baseline, it's measured from the bottom, so we have to compare against
-  // the element bounds subtracted from the container height.
-  let secondRect = second.getBoundingClientRect();
-  ok(line.lastBaselineOffset > containerHeight - secondRect.bottom &&
-     line.lastBaselineOffset < containerHeight - secondRect.top,
-     "Line lastBaselineOffset lands somewhere within the element that determines it.");
-
-  let items = line.getItems();
-  is(items.length, 6, "Line has expected number of items.");
+  // For last baseline, it's measured from the bottom, so we have to compare
+  // against the element bounds subtracted from the container height.
+  // We use the first node which uses last-baseline ("lb") alignment to
+  // provide the rect:
+  let lbElem = document.querySelector(".lastbase");
+  let lbElemBoundingRect = lbElem.getBoundingClientRect();
+  ok(line.lastBaselineOffset > containerHeight - lbElemBoundingRect.bottom &&
+     line.lastBaselineOffset < containerHeight - lbElemBoundingRect.top,
+     "Line lastBaselineOffset should land somewhere within the element" +
+     "that determines it.");
 
   let expectedValues = [
-    { node: first,
-      crossMinSize: 0 },
-    { node: second,
-      mainBaseSize: secondRect.width,
+    { crossMinSize: 0 },
+    { mainBaseSize: lbElemBoundingRect.width,
       mainDeltaSize: 0 },
-    { node: third,
-      crossMinSize: 40,
+    { crossMinSize: 40,
       crossMaxSize: 120,
       mainDeltaSize: 0 },
-    { node: fourth,
-      mainMinSize: 120,
+    { mainMinSize: 120,
       mainMaxSize: 500,
       mainDeltaSize: 0 },
-    { node: fifth,
-      mainDeltaSize: 0 },
-    { node: sixth },
+    { mainDeltaSize: 0 },
+    { /* final item is anonymous flex item */ },
   ];
+
+  let items = line.getItems();
+  is(items.length, expectedValues.length,
+     "Line should have expected number of items.");
+  is(items.length, container.children.length + 1,
+     "Line should have as many items as the flex container has child elems, " +
+     "plus 1 for anonymous flex item");
 
   for (let i = 0; i < items.length; ++i) {
     let item = items[i];
     let values = expectedValues[i];
+    // set the expected node to the node we're currently iterating over,
+    // except for:
+    // - the display:contents element (whose item is its first child)
+    // - the final item (which is an anonymous flex item around text)
+    if (i < container.children.length) {
+      let curElem = container.children[i];
+      values.node = (curElem.style.display == "contents"
+                     ? curElem.firstElementChild
+                     : curElem);
+    } else {
+      is(container.lastChild.nodeType, TEXT_NODE,
+         "container's last child should be a text node");
+      values.node = container.lastChild;
+    }
     testItemMatchesExpectedValues(item, values, i);
   }
 
-  // Check that the delta size of the first item is nearly equal to the actual size minus the base size.
-  ok(nearlyEqual(items[0].mainDeltaSize, firstRect.width - items[0].mainBaseSize),
-     "flex-grow item has expected mainDeltaSize.");
+  // Check that the delta size of the first item is (roughly) equal to the
+  // actual size minus the base size.
+  isfuzzy(items[0].mainDeltaSize, firstRect.width - items[0].mainBaseSize, 1e-4,
+          "flex-grow item should have expected mainDeltaSize.");
 
   SimpleTest.finish();
 }
@@ -164,12 +169,12 @@ function runTests() {
 
 <body onLoad="runTests();">
   <div id="wrapper" class="container">
-    <div id="first" class="lime base flexGrow">one line (first)</div>
-    <div id="second" class="yellow lastbase">one line (last)</div>
-    <div id="third" class="orange offset lastbase crossMinMax">two<br/>lines and offset (last)</div>
-    <div id="fourth" class="pink offset base mainMinMax">offset (first)</div>
+    <div class="lime base flexGrow">one line (first)</div>
+    <div class="yellow lastbase" style="width: 100px">one line (last)</div>
+    <div class="orange offset lastbase crossMinMax">two<br/>lines and offset (last)</div>
+    <div class="pink offset base mainMinMax">offset (first)</div>
     <div style="display:contents">
-      <div id="fifth" class="white">replaced</div>
+      <div class="white">replaced</div>
     </div>
     anonymous text node
   </div>

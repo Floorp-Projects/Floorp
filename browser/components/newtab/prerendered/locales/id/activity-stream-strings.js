@@ -75,9 +75,9 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Topik Populer:",
   "pocket_read_even_more": "Lihat Cerita Lainnya",
   "pocket_more_reccommendations": "Rekomendasi Lainnya",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Panduan",
   "pocket_cta_button": "Dapatkan Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_cta_text": "Simpan cerita yang anda sukai di Pocket, dan dapatkan bacaan menarik untuk Anda.",
   "highlights_empty_state": "Mulai menjelajah, dan kami akan menampilkan beberapa artikel bagus, video, dan halaman lain yang baru saja Anda kunjungi atau termarkah di sini.",
   "topstories_empty_state": "Maaf Anda tercegat. Periksa lagi nanti untuk lebih banyak cerita terbaik dari {provider}. Tidak mau menunggu? Pilih topik populer untuk menemukan lebih banyak cerita hebat dari seluruh web.",
   "manual_migration_explanation2": "Coba Firefox dengan markah, riwayat, dan sandi dari peramban lain.",
@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Pernyataan Privasi",
   "firstrun_continue_to_login": "Lanjutkan",
   "firstrun_skip_login": "Lewati langkah ini",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Pelajari Lebih Lanjut"
 };

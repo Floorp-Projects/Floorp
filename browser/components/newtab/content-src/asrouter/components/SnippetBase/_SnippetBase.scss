@@ -15,6 +15,10 @@
   a {
     cursor: pointer;
     color: var(--newtab-link-primary-color);
+
+    [lwt-newtab-brighttext] & {
+      font-weight: bold;
+    }
   }
 
   .innerWrapper {

@@ -13653,7 +13653,8 @@ nsIDocument::HasStorageAccess(mozilla::ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv,
+                                            Promise::ePropagateUserInteraction);
   if (aRv.Failed()) {
     return nullptr;
   }

@@ -99,7 +99,7 @@ async function initProfileStorage(fileName, records, collectionName = "addresses
       subject.wrappedJSObject.collectionName == collectionName
   );
   for (let record of records) {
-    Assert.ok(await profileStorage[collectionName].add(record));
+    Assert.ok(profileStorage[collectionName].add(record));
     await onChanged;
   }
   await profileStorage._saveImmediately();
@@ -222,14 +222,4 @@ add_task(async function head_initialize() {
   });
 
   await loadExtension();
-});
-
-let OSKeyStoreTestUtils;
-add_task(async function os_key_store_setup() {
-  ({OSKeyStoreTestUtils} =
-    ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", {}));
-  OSKeyStoreTestUtils.setup();
-  registerCleanupFunction(async function cleanup() {
-    await OSKeyStoreTestUtils.cleanup();
-  });
 });

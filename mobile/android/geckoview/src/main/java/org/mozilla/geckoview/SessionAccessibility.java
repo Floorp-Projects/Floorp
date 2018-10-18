@@ -20,6 +20,7 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
@@ -58,6 +59,50 @@ public class SessionAccessibility {
     @WrapForJNI static final int FLAG_VISIBLE_TO_USER = 1 << 15;
     @WrapForJNI static final int FLAG_SELECTABLE = 1 << 16;
 
+    @WrapForJNI static final int CLASSNAME_VIEW = 0;
+    @WrapForJNI static final int CLASSNAME_BUTTON = 1;
+    @WrapForJNI static final int CLASSNAME_CHECKBOX = 2;
+    @WrapForJNI static final int CLASSNAME_DIALOG = 3;
+    @WrapForJNI static final int CLASSNAME_EDITTEXT = 4;
+    @WrapForJNI static final int CLASSNAME_GRIDVIEW = 5;
+    @WrapForJNI static final int CLASSNAME_IMAGE = 6;
+    @WrapForJNI static final int CLASSNAME_LISTVIEW = 7;
+    @WrapForJNI static final int CLASSNAME_MENUITEM = 8;
+    @WrapForJNI static final int CLASSNAME_PROGRESSBAR = 9;
+    @WrapForJNI static final int CLASSNAME_RADIOBUTTON = 10;
+    @WrapForJNI static final int CLASSNAME_SEEKBAR = 11;
+    @WrapForJNI static final int CLASSNAME_SPINNER = 12;
+    @WrapForJNI static final int CLASSNAME_TABWIDGET = 13;
+    @WrapForJNI static final int CLASSNAME_TOGGLEBUTTON = 14;
+    @WrapForJNI static final int CLASSNAME_WEBVIEW = 15;
+
+    private static final String[] CLASSNAMES = {
+            "android.view.View",
+            "android.widget.Button",
+            "android.widget.CheckBox",
+            "android.app.Dialog",
+            "android.widget.EditText",
+            "android.widget.GridView",
+            "android.widget.Image",
+            "android.widget.ListView",
+            "android.view.MenuItem",
+            "android.widget.ProgressBar",
+            "android.widget.RadioButton",
+            "android.widget.SeekBar",
+            "android.widget.Spinner",
+            "android.widget.TabWidget",
+            "android.widget.ToggleButton",
+            "android.webkit.WebView"
+    };
+
+    static private String getClassName(final int index) {
+        if (index < CLASSNAMES.length) {
+            return CLASSNAMES[index];
+        }
+
+        Log.e(LOGTAG, "Index " + index + " our of CLASSNAME bounds.");
+        return "android.view.View"; // Fallback class is View
+    }
 
     /* package */ final class NodeProvider extends AccessibilityNodeProvider {
         @Override
@@ -212,7 +257,7 @@ public class SessionAccessibility {
 
             // The basics
             node.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
-            node.setClassName(nodeInfo.getString("className", "android.view.View"));
+            node.setClassName(getClassName(nodeInfo.getInt("className")));
             node.setText(nodeInfo.getString("text", ""));
 
             // Add actions
@@ -573,7 +618,7 @@ public class SessionAccessibility {
 
         if (sourceInfo != null) {
             final int flags = sourceInfo.getInt("flags");
-            event.setClassName(sourceInfo.getString("className", "android.view.View"));
+            event.setClassName(getClassName(sourceInfo.getInt("className")));
             event.setChecked((flags & FLAG_CHECKED) != 0);
             event.getText().add(sourceInfo.getString("text", ""));
         }

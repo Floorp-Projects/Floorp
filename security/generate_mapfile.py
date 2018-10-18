@@ -22,7 +22,8 @@ import buildconfig
 
 def main(output, input):
     is_darwin = buildconfig.substs['OS_ARCH'] == 'Darwin'
-    is_mingw = "WINNT" == buildconfig.substs['OS_ARCH'] and buildconfig.substs['GCC_USE_GNU_LD']
+    is_mingw = "WINNT" == buildconfig.substs['OS_ARCH'] and \
+        buildconfig.substs.get('GCC_USE_GNU_LD')
 
     with open(input, 'rb') as f:
         for line in f:

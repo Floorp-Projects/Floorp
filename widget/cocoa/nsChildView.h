@@ -147,11 +147,6 @@ class WidgetRenderingContext;
   // when acceptsFirstMouse: is called, we store the event here (strong)
   NSEvent* mClickThroughMouseDownEvent;
 
-  // rects that were invalidated during a draw, so have pending drawing
-  NSMutableArray* mPendingDirtyRects;
-  BOOL mPendingFullDisplay;
-  BOOL mPendingDisplay;
-
   // WheelStart/Stop events should always come in pairs. This BOOL records the
   // last received event so that, when we receive one of the events, we make sure
   // to send its pair event first, in case we didn't yet for any reason.
@@ -192,8 +187,6 @@ class WidgetRenderingContext;
   } mGestureState;
   float mCumulativeMagnification;
   float mCumulativeRotation;
-
-  BOOL mWaitingForPaint;
 
 #ifdef __LP64__
   // Support for fluid swipe tracking.
@@ -259,7 +252,6 @@ class WidgetRenderingContext;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
 
 - (void)scrollWheel:(NSEvent *)anEvent;
-- (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type;
 
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC;
 
@@ -530,8 +522,6 @@ public:
   void EndRemoteDrawing() override;
   void CleanupRemoteDrawing() override;
   bool InitCompositor(mozilla::layers::Compositor* aCompositor) override;
-
-  IAPZCTreeManager* APZCTM() { return mAPZC ; }
 
   virtual MOZ_MUST_USE nsresult
   StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
