@@ -70,7 +70,7 @@ HarAutomation.prototype = {
     }
 
     this.debuggerClient = client;
-    this.tabClient = this.toolbox.target.activeTab;
+    this.targetFront = this.toolbox.target.activeTab;
     this.webConsoleClient = this.toolbox.target.activeConsole;
 
     this.tabWatcher = new TabWatcher(this.toolbox, this);

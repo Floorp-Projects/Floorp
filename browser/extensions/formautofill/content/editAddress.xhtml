@@ -90,8 +90,11 @@
     let {
       getFormFormat,
     } = FormAutofillUtils;
-    let record = window.arguments && window.arguments[0];
-    let novalidate = window.arguments && window.arguments[1] == "novalidate";
+    let args = window.arguments || [];
+    let {
+      record,
+      noValidate,
+    } = args[0] || {};
 
     /* import-globals-from autofillEditForms.js */
     var fieldContainer = new EditAddress({
@@ -100,7 +103,7 @@
       DEFAULT_REGION,
       getFormFormat: getFormFormat.bind(FormAutofillUtils),
       countries,
-      novalidate,
+      noValidate,
     });
 
     /* import-globals-from editDialog.js */

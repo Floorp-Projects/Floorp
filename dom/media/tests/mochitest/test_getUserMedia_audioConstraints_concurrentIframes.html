@@ -134,7 +134,7 @@ runTest(async function() {
 
     for (let testCase of testCases) {
       let testAudio = createMediaElement("audio", `testAudio.${testCase.id}`);
-      let playback = new LocalMediaStreamPlayback(testAudio, testCase.gumStream);
+      let playback = new MediaStreamPlayback(testAudio, testCase.gumStream);
       await playback.playMediaWithoutStoppingTracks(false);
     }
 

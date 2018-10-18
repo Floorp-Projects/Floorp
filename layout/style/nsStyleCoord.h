@@ -149,6 +149,16 @@ public:
     return mUnit;
   }
 
+  // This is especially useful to check if it is the property's initial value
+  // or keyword for sizing properties.
+  bool IsAutoOrEnum() const {
+    // The initial value of width/height and min-width/min-height is `auto`.
+    // The initial value of max-width/max-height is `none`.
+    return mUnit == eStyleUnit_Auto ||
+           mUnit == eStyleUnit_None ||
+           mUnit == eStyleUnit_Enumerated;
+  }
+
   bool IsAngleValue() const {
     return eStyleUnit_Degree == mUnit;
   }

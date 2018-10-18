@@ -157,8 +157,6 @@ bool gUserCancelledDrag = false;
 
 uint32_t nsChildView::sLastInputEventCount = 0;
 
-static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
-
 static bool sIsTabletPointerActivated = false;
 
 static uint32_t sUniqueKeyEventId = 0;
@@ -182,14 +180,8 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
-- (void)processPendingRedraws;
-
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect;
-- (BOOL)isUsingMainThreadOpenGL;
 - (BOOL)isUsingOpenGL;
-- (void)drawUsingOpenGL;
-- (void)drawUsingOpenGLCallback;
 
 - (BOOL)hasRoundedBottomCorners;
 - (CGFloat)cornerRadius;
@@ -213,7 +205,6 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 
 - (LayoutDeviceIntPoint)convertWindowCoordinates:(NSPoint)aPoint;
 - (LayoutDeviceIntPoint)convertWindowCoordinatesRoundDown:(NSPoint)aPoint;
-- (IAPZCTreeManager*)apzctm;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
 - (void)updateWindowDraggableState;
@@ -221,17 +212,6 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 - (bool)beginOrEndGestureForEventPhase:(NSEvent*)aEvent;
 
 - (bool)shouldConsiderStartingSwipeFromEvent:(NSEvent*)aEvent;
-
-@end
-
-@interface EventThreadRunner : NSObject
-{
-  NSThread* mThread;
-}
-- (id)init;
-
-+ (void)start;
-+ (void)stop;
 
 @end
 
@@ -400,13 +380,6 @@ nsChildView::~nsChildView()
     "nsChildView object destroyed without calling Destroy()");
 
   DestroyCompositor();
-
-  if (mAPZC && gfxPrefs::AsyncPanZoomSeparateEventThread()) {
-    gNumberOfWidgetsNeedingEventThread--;
-    if (gNumberOfWidgetsNeedingEventThread == 0) {
-      [EventThreadRunner stop];
-    }
-  }
 
   // An nsChildView object that was in use can be destroyed without Destroy()
   // ever being called on it.  So we also need to do a quick, safe cleanup
@@ -1410,14 +1383,7 @@ nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
   NS_ASSERTION(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
-  if ([NSView focusView]) {
-    // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
-    // don't lose it.
-    [mView setNeedsPendingDisplayInRect:DevPixelsToCocoaPoints(aRect)];
-  }
-  else {
-    [mView setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
-  }
+  [mView setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1988,25 +1954,12 @@ void
 nsChildView::ConfigureAPZCTreeManager()
 {
   nsBaseWidget::ConfigureAPZCTreeManager();
-
-  if (gfxPrefs::AsyncPanZoomSeparateEventThread()) {
-    if (gNumberOfWidgetsNeedingEventThread == 0) {
-      [EventThreadRunner start];
-    }
-    gNumberOfWidgetsNeedingEventThread++;
-  }
 }
 
 void
 nsChildView::ConfigureAPZControllerThread()
 {
-  if (gfxPrefs::AsyncPanZoomSeparateEventThread()) {
-    // The EventThreadRunner is the controller thread, but it doesn't
-    // have a MessageLoop.
-    APZThreadUtils::SetControllerThread(nullptr);
-  } else {
-    nsBaseWidget::ConfigureAPZControllerThread();
-  }
+  nsBaseWidget::ConfigureAPZControllerThread();
 }
 
 LayoutDeviceIntRect
@@ -3331,7 +3284,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   if ((self = [super initWithFrame:inFrame])) {
     mGeckoChild = inChild;
-    mPendingDisplay = NO;
     mBlockedLastMouseDown = NO;
     mExpectingWheelStop = NO;
 
@@ -3490,7 +3442,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mGLContext release];
-  [mPendingDirtyRects release];
   [mLastMouseDownEvent release];
   [mLastKeyDownEvent release];
   [mClickThroughMouseDownEvent release];
@@ -3545,82 +3496,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 }
 
-- (void)setNeedsPendingDisplay
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  mPendingFullDisplay = YES;
-  if (!mPendingDisplay) {
-    [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
-    mPendingDisplay = YES;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)setNeedsPendingDisplayInRect:(NSRect)invalidRect
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mPendingDirtyRects)
-    mPendingDirtyRects = [[NSMutableArray alloc] initWithCapacity:1];
-  [mPendingDirtyRects addObject:[NSValue valueWithRect:invalidRect]];
-  if (!mPendingDisplay) {
-    [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
-    mPendingDisplay = YES;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// Clears the queue of any pending invalides
-- (void)processPendingRedraws
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mPendingFullDisplay) {
-    [self setNeedsDisplay:YES];
-  }
-  else if (mPendingDirtyRects) {
-    unsigned int count = [mPendingDirtyRects count];
-    for (unsigned int i = 0; i < count; ++i) {
-      [self setNeedsDisplayInRect:[[mPendingDirtyRects objectAtIndex:i] rectValue]];
-    }
-  }
-  mPendingFullDisplay = NO;
-  mPendingDisplay = NO;
-  [mPendingDirtyRects release];
-  mPendingDirtyRects = nil;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)setNeedsDisplayInRect:(NSRect)aRect
-{
-  if (![self isUsingOpenGL]) {
-    [super setNeedsDisplayInRect:aRect];
-    return;
-  }
-
-  if ([[self window] isVisible] && [self isUsingMainThreadOpenGL]) {
-    // Draw without calling drawRect. This prevent us from
-    // needing to access the normal window buffer surface unnecessarily, so we
-    // waste less time synchronizing the two surfaces. (These synchronizations
-    // show up in a profiler as CGSDeviceLock / _CGSLockWindow /
-    // _CGSSynchronizeWindowBackingStore.) It also means that Cocoa doesn't
-    // have any potentially expensive invalid rect management for us.
-    if (!mWaitingForPaint) {
-      mWaitingForPaint = YES;
-      // Use NSRunLoopCommonModes instead of the default NSDefaultRunLoopMode
-      // so that the timer also fires while a native menu is open.
-      [self performSelector:@selector(drawUsingOpenGLCallback)
-                 withObject:nil
-                 afterDelay:0
-                    inModes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
-    }
-  }
-}
-
 - (NSString*)description
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -3661,25 +3536,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mClickThroughMouseDownEvent = [aEvent retain];
   }
   return YES;
-}
-
-- (void)scrollRect:(NSRect)aRect by:(NSSize)offset
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // Update any pending dirty rects to reflect the new scroll position
-  if (mPendingDirtyRects) {
-    unsigned int count = [mPendingDirtyRects count];
-    for (unsigned int i = 0; i < count; ++i) {
-      NSRect oldRect = [[mPendingDirtyRects objectAtIndex:i] rectValue];
-      NSRect newRect = NSOffsetRect(oldRect, offset.width, offset.height);
-      [mPendingDirtyRects replaceObjectAtIndex:i
-                                    withObject:[NSValue valueWithRect:newRect]];
-    }
-  }
-  [super scrollRect:aRect by:offset];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (BOOL)mouseDownCanMoveWindow
@@ -3782,34 +3638,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
 {
-  CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  [self drawRect:aRect inContext:cgContext];
-}
-
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
-{
   if (!mGeckoChild || !mGeckoChild->IsVisible())
     return;
-
-#ifdef DEBUG_UPDATE
-  LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
-
-  fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
-           self, mGeckoChild,
-           aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height, aContext,
-           geckoBounds.x, geckoBounds.y, geckoBounds.width, geckoBounds.height);
-
-  CGAffineTransform xform = CGContextGetCTM(aContext);
-  fprintf (stderr, "  xform in: [%f %f %f %f %f %f]\n", xform.a, xform.b, xform.c, xform.d, xform.tx, xform.ty);
-#endif
+  CGContextRef cgContext =
+    (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
   if ([self isUsingOpenGL]) {
-    // For Gecko-initiated repaints in OpenGL mode, drawUsingOpenGL is
-    // directly called from a delayed perform callback - without going through
-    // drawRect.
-    // Paints that come through here are triggered by something that Cocoa
-    // controls, for example by window resizing or window focus changes.
-
     // Since this view is usually declared as opaque, the window's pixel
     // buffer may now contain garbage which we need to prevent from reaching
     // the screen. The only place where garbage can show is in the window
@@ -3819,8 +3653,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mGeckoChild->ClearVibrantAreas();
     [self clearCorners];
 
-    // Do GL composition and return.
-    [self drawUsingOpenGL];
+    // Force a sync OMTC composite into the OpenGL context and return.
+    LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
+    LayoutDeviceIntRegion region(geckoBounds);
+    mGeckoChild->PaintWindow(region);
     return;
   }
 
@@ -3831,53 +3667,31 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // multiple dev pixels. But Gecko expects its supplied context to be scaled
   // to device pixels, so we need to reverse the scaling.
   double scale = mGeckoChild->BackingScaleFactor();
-  CGContextSaveGState(aContext);
-  CGContextScaleCTM(aContext, 1.0 / scale, 1.0 / scale);
+  CGContextSaveGState(cgContext);
+  CGContextScaleCTM(cgContext, 1.0 / scale, 1.0 / scale);
 
   NSSize viewSize = [self bounds].size;
   gfx::IntSize backingSize = gfx::IntSize::Truncate(viewSize.width * scale, viewSize.height * scale);
   LayoutDeviceIntRegion region = [self nativeDirtyRegionWithBoundingRect:aRect];
 
-  bool painted = mGeckoChild->PaintWindowInContext(aContext, region, backingSize);
+  bool painted =
+    mGeckoChild->PaintWindowInContext(cgContext, region, backingSize);
 
   // Undo the scale transform so that from now on the context is in
   // CocoaPoints again.
-  CGContextRestoreGState(aContext);
+  CGContextRestoreGState(cgContext);
 
   if (!painted && [self isOpaque]) {
     // Gecko refused to draw, but we've claimed to be opaque, so we have to
     // draw something--fill with white.
-    CGContextSetRGBFillColor(aContext, 1, 1, 1, 1);
-    CGContextFillRect(aContext, NSRectToCGRect(aRect));
+    CGContextSetRGBFillColor(cgContext, 1, 1, 1, 1);
+    CGContextFillRect(cgContext, NSRectToCGRect(aRect));
   }
 
   if ([self isCoveringTitlebar]) {
     [self drawTitleString];
-    [self maskTopCornersInContext:aContext];
+    [self maskTopCornersInContext:cgContext];
   }
-
-#ifdef DEBUG_UPDATE
-  fprintf (stderr, "---- update done ----\n");
-
-#if 0
-  CGContextSetRGBStrokeColor (aContext,
-                            ((((unsigned long)self) & 0xff)) / 255.0,
-                            ((((unsigned long)self) & 0xff00) >> 8) / 255.0,
-                            ((((unsigned long)self) & 0xff0000) >> 16) / 255.0,
-                            0.5);
-#endif
-  CGContextSetRGBStrokeColor(aContext, 1, 0, 0, 0.8);
-  CGContextSetLineWidth(aContext, 4.0);
-  CGContextStrokeRect(aContext, NSRectToCGRect(aRect));
-#endif
-}
-
-- (BOOL)isUsingMainThreadOpenGL
-{
-  if (!mGeckoChild || ![self window])
-    return NO;
-
-  return mGeckoChild->GetLayerManager(nullptr)->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_OPENGL;
 }
 
 - (BOOL)isUsingOpenGL
@@ -3885,31 +3699,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild || ![self window])
     return NO;
 
-  return mGLContext || mUsingOMTCompositor || [self isUsingMainThreadOpenGL];
-}
-
-- (void)drawUsingOpenGL
-{
-  AUTO_PROFILER_LABEL("ChildView::drawUsingOpenGL", OTHER);
-
-  if (![self isUsingOpenGL] || !mGeckoChild->IsVisible())
-    return;
-
-  mWaitingForPaint = NO;
-
-  LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
-  LayoutDeviceIntRegion region(geckoBounds);
-
-  mGeckoChild->PaintWindow(region);
-}
-
-// Called asynchronously after setNeedsDisplay in order to avoid entering the
-// normal drawing machinery.
-- (void)drawUsingOpenGLCallback
-{
-  if (mWaitingForPaint) {
-    [self drawUsingOpenGL];
-  }
+  return mGLContext || mUsingOMTCompositor;
 }
 
 - (BOOL)hasRoundedBottomCorners
@@ -5042,12 +4832,6 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (gfxPrefs::AsyncPanZoomSeparateEventThread() && [self apzctm]) {
-    // Disable main-thread scrolling completely when using APZ with the
-    // separate event thread. This is bug 1013412.
-    return;
-  }
-
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   ChildViewMouseTracker::MouseScrolled(theEvent);
@@ -5185,105 +4969,6 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type
-{
-  IAPZCTreeManager* apzctm = [self apzctm];
-  if (!apzctm) {
-    return;
-  }
-
-  CGPoint loc = CGEventGetLocation(cgEvent);
-  loc.y = nsCocoaUtils::FlippedScreenY(loc.y);
-  NSPoint locationInWindow =
-    nsCocoaUtils::ConvertPointFromScreen([self window], NSPointFromCGPoint(loc));
-  ScreenIntPoint location = ViewAs<ScreenPixel>(
-    [self convertWindowCoordinates:locationInWindow],
-    PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
-
-  static NSTimeInterval sStartTime = [NSDate timeIntervalSinceReferenceDate];
-  static TimeStamp sStartTimeStamp = TimeStamp::Now();
-
-  if (type == kCGEventScrollWheel) {
-    NSEvent* event = [NSEvent eventWithCGEvent:cgEvent];
-    NSEventPhase phase = nsCocoaUtils::EventPhase(event);
-    NSEventPhase momentumPhase = nsCocoaUtils::EventMomentumPhase(event);
-    CGFloat pixelDeltaX = 0, pixelDeltaY = 0;
-    nsCocoaUtils::GetScrollingDeltas(event, &pixelDeltaX, &pixelDeltaY);
-    uint32_t eventTime = ([event timestamp] - sStartTime) * 1000;
-    TimeStamp eventTimeStamp = sStartTimeStamp +
-      TimeDuration::FromSeconds([event timestamp] - sStartTime);
-    NSPoint locationInWindowMoved = NSMakePoint(
-      locationInWindow.x + pixelDeltaX,
-      locationInWindow.y - pixelDeltaY);
-    ScreenIntPoint locationMoved = ViewAs<ScreenPixel>(
-      [self convertWindowCoordinates:locationInWindowMoved],
-      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
-    ScreenPoint delta = ScreenPoint(locationMoved - location);
-    ScrollableLayerGuid guid;
-
-    // MayBegin and Cancelled are dispatched when the fingers start or stop
-    // touching the touchpad before any scrolling has occurred. These events
-    // can be used to control scrollbar visibility or interrupt scroll
-    // animations. They are only dispatched on 10.8 or later, and only by
-    // relatively modern devices.
-    if (phase == NSEventPhaseMayBegin) {
-      PanGestureInput panInput(PanGestureInput::PANGESTURE_MAYSTART, eventTime,
-                               eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->InputBridge()->ReceiveInputEvent(panInput, &guid, nullptr);
-      return;
-    }
-    if (phase == NSEventPhaseCancelled) {
-      PanGestureInput panInput(PanGestureInput::PANGESTURE_CANCELLED, eventTime,
-                               eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->InputBridge()->ReceiveInputEvent(panInput, &guid, nullptr);
-      return;
-    }
-
-    // Legacy scroll events are dispatched by devices that do not have a
-    // concept of a scroll gesture, for example by USB mice with
-    // traditional mouse wheels.
-    // For these kinds of scrolls, we want to surround every single scroll
-    // event with a PANGESTURE_START and a PANGESTURE_END event. The APZC
-    // needs to know that the real scroll gesture can end abruptly after any
-    // one of these events.
-    bool isLegacyScroll = (phase == NSEventPhaseNone &&
-      momentumPhase == NSEventPhaseNone && delta != ScreenPoint(0, 0));
-
-    if (phase == NSEventPhaseBegan || isLegacyScroll) {
-      PanGestureInput panInput(PanGestureInput::PANGESTURE_START, eventTime,
-                               eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->InputBridge()->ReceiveInputEvent(panInput, &guid, nullptr);
-    }
-    if (momentumPhase == NSEventPhaseNone && delta != ScreenPoint(0, 0)) {
-      PanGestureInput panInput(PanGestureInput::PANGESTURE_PAN, eventTime,
-                               eventTimeStamp, location, delta, 0);
-      apzctm->InputBridge()->ReceiveInputEvent(panInput, &guid, nullptr);
-    }
-    if (phase == NSEventPhaseEnded || isLegacyScroll) {
-      PanGestureInput panInput(PanGestureInput::PANGESTURE_END, eventTime,
-                               eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->InputBridge()->ReceiveInputEvent(panInput, &guid, nullptr);
-    }
-
-    // Any device that can dispatch momentum events supports all three momentum phases.
-    if (momentumPhase == NSEventPhaseBegan) {
-      PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMSTART, eventTime,
-                               eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->InputBridge()->ReceiveInputEvent(panInput, &guid, nullptr);
-    }
-    if (momentumPhase == NSEventPhaseChanged && delta != ScreenPoint(0, 0)) {
-      PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMPAN, eventTime,
-                               eventTimeStamp, location, delta, 0);
-      apzctm->InputBridge()->ReceiveInputEvent(panInput, &guid, nullptr);
-    }
-    if (momentumPhase == NSEventPhaseEnded) {
-      PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMEND, eventTime,
-                               eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->InputBridge()->ReceiveInputEvent(panInput, &guid, nullptr);
-    }
-  }
 }
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
@@ -6169,11 +5854,6 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 
   NSPoint localPoint = [self convertPoint:aPoint fromView:nil];
   return mGeckoChild->CocoaPointsToDevPixelsRoundDown(localPoint);
-}
-
-- (IAPZCTreeManager*)apzctm
-{
-  return mGeckoChild ? mGeckoChild->APZCTM() : nullptr;
 }
 
 // This is a utility function used by NSView drag event methods
@@ -7134,105 +6814,6 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent,
 }
 
 #pragma mark -
-
-@interface EventThreadRunner(Private)
-- (void)runEventThread;
-- (void)shutdownAndReleaseCalledOnEventThread;
-- (void)shutdownAndReleaseCalledOnAnyThread;
-- (void)handleEvent:(CGEventRef)cgEvent type:(CGEventType)type;
-@end
-
-static EventThreadRunner* sEventThreadRunner = nil;
-
-@implementation EventThreadRunner
-
-+ (void)start
-{
-  sEventThreadRunner = [[EventThreadRunner alloc] init];
-}
-
-+ (void)stop
-{
-  if (sEventThreadRunner) {
-    [sEventThreadRunner shutdownAndReleaseCalledOnAnyThread];
-    sEventThreadRunner = nil;
-  }
-}
-
-- (id)init
-{
-  if ((self = [super init])) {
-    mThread = nil;
-    [NSThread detachNewThreadSelector:@selector(runEventThread)
-                             toTarget:self
-                           withObject:nil];
-  }
-  return self;
-}
-
-static CGEventRef
-HandleEvent(CGEventTapProxy aProxy, CGEventType aType,
-            CGEventRef aEvent, void* aClosure)
-{
-  [(EventThreadRunner*)aClosure handleEvent:aEvent type:aType];
-  return aEvent;
-}
-
-- (void)runEventThread
-{
-  PROFILER_REGISTER_THREAD("APZC Event Thread");
-  NS_SetCurrentThreadName("APZC Event Thread");
-
-  mThread = [NSThread currentThread];
-  ProcessSerialNumber currentProcess;
-  GetCurrentProcess(&currentProcess);
-  CFMachPortRef eventPort =
-    CGEventTapCreateForPSN(&currentProcess,
-                           kCGHeadInsertEventTap,
-                           kCGEventTapOptionListenOnly,
-                           CGEventMaskBit(kCGEventScrollWheel),
-                           HandleEvent,
-                           self);
-  CFRunLoopSourceRef eventPortSource =
-    CFMachPortCreateRunLoopSource(kCFAllocatorSystemDefault, eventPort, 0);
-  CFRunLoopAddSource(CFRunLoopGetCurrent(), eventPortSource, kCFRunLoopCommonModes);
-  CFRunLoopRun();
-  CFRunLoopRemoveSource(CFRunLoopGetCurrent(), eventPortSource, kCFRunLoopCommonModes);
-  CFRelease(eventPortSource);
-  CFRelease(eventPort);
-  [self release];
-}
-
-- (void)shutdownAndReleaseCalledOnEventThread
-{
-  CFRunLoopStop(CFRunLoopGetCurrent());
-}
-
-- (void)shutdownAndReleaseCalledOnAnyThread
-{
-  [self performSelector:@selector(shutdownAndReleaseCalledOnEventThread) onThread:mThread withObject:nil waitUntilDone:NO];
-}
-
-static const CGEventField kCGWindowNumberField = (const CGEventField) 51;
-
-// Called on scroll thread
-- (void)handleEvent:(CGEventRef)cgEvent type:(CGEventType)type
-{
-  if (type != kCGEventScrollWheel) {
-    return;
-  }
-
-  int windowNumber = CGEventGetIntegerValueField(cgEvent, kCGWindowNumberField);
-  NSWindow* window = [NSApp windowWithWindowNumber:windowNumber];
-  if (!window || ![window isKindOfClass:[BaseWindow class]]) {
-    return;
-  }
-
-  ChildView* childView = [(BaseWindow*)window mainChildView];
-  [childView handleAsyncScrollEvent:cgEvent ofType:type];
-}
-
-@end
 
 @interface NSView (MethodSwizzling)
 - (BOOL)nsChildView_NSView_mouseDownCanMoveWindow;

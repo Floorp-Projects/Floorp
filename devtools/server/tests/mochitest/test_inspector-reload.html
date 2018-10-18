@@ -21,21 +21,17 @@ window.onload = function() {
 let gInspectee = null;
 let gWalker = null;
 
-addTest(function setup() {
+addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
-    gInspectee = doc;
-    const {InspectorFront} = require("devtools/shared/fronts/inspector");
-    const inspector = InspectorFront(client, tab);
-    promiseDone(inspector.getWalker().then(walker => {
-      ok(walker, "getWalker() should return an actor.");
-      gWalker = walker;
-      return inspector.getWalker();
-    }).then(walker => {
-      dump(walker.actorID + "\n");
-      ok(walker === gWalker, "getWalker() twice should return the same walker.");
-    }).then(runNextTest));
-  });
+  const { target, doc } = await attachURL(url);
+  const inspector = target.getInspector();
+  gInspectee = doc;
+  const walker = await inspector.getWalker();
+  ok(walker, "getWalker() should return an actor.");
+  dump(walker.actorID + "\n");
+  gWalker = await inspector.getWalker();
+  ok(walker === gWalker, "getWalker() twice should return the same walker.");
+  runNextTest();
 });
 
 addTest(function testReload() {

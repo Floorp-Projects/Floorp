@@ -7,6 +7,7 @@
 #define WEBGL_VERTEX_ATTRIB_DATA_H_
 
 #include "GLDefs.h"
+#include "WebGLFormats.h"
 #include "WebGLObjectModel.h"
 
 namespace mozilla {
@@ -25,7 +26,7 @@ public:
     WebGLRefPtr<WebGLBuffer> mBuf;
 private:
     GLenum mType;
-    GLenum mBaseType;
+    webgl::AttribBaseType mBaseType = webgl::AttribBaseType::Float;
     uint8_t mSize; // num of mType vals per vert
     uint8_t mBytesPerVertex;
     bool mNormalized;
@@ -55,7 +56,6 @@ public:
         , mEnabled(false)
         , mIntegerFunc(false)
         , mType(0)
-        , mBaseType(0)
         , mSize(0)
         , mBytesPerVertex(0)
         , mNormalized(false)

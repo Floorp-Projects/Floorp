@@ -20,7 +20,7 @@ function run_test() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
                              test_source_content();
                            });

@@ -173,7 +173,7 @@ protected:
               const uint64_t&            aChannelId,
               const nsString&            aIntegrityMetadata,
               const uint64_t&            aContentWindowId,
-              const nsCString&           aPreferredAlternativeType,
+              const ArrayOfStringPairs&  aPreferredAlternativeTypes,
               const uint64_t&            aTopLevelOuterContentWindowId,
               const TimeStamp&           aLaunchServiceWorkerStart,
               const TimeStamp&           aLaunchServiceWorkerEnd,
@@ -210,6 +210,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
                                                                     const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
   virtual mozilla::ipc::IPCResult RecvBytesRead(const int32_t& aCount) override;
+  virtual mozilla::ipc::IPCResult RecvOpenOriginalCacheInputStream() override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.

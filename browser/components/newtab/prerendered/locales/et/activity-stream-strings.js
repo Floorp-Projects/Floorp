@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "privaatsusreeglitega",
   "firstrun_continue_to_login": "Jätka",
   "firstrun_skip_login": "Jäta see samm vahele",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Rohkem teavet"
 };

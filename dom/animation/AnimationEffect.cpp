@@ -36,9 +36,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationEffect)
 NS_INTERFACE_MAP_END
 
 AnimationEffect::AnimationEffect(nsIDocument* aDocument,
-                                 const TimingParams& aTiming)
+                                 TimingParams&& aTiming)
   : mDocument(aDocument)
-  , mTiming(aTiming)
+  , mTiming(std::move(aTiming))
 {
 }
 

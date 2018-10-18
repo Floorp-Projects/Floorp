@@ -274,12 +274,14 @@ print RCFILE qq{
 
 my $versionlevel=0;
 my $insideversion=0;
+my $has_manifest=0;
 if (open(RCINCLUDE, "<$rcinclude")) 
 {
 	print RCFILE "// From included resource $rcinclude\n";
 #	my $mstring="";
 	while (<RCINCLUDE>) 
 	{
+		$has_manifest = 1 if /^1 (24|RT_MANIFEST) "$binary.manifest"/;
 		$_ =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g;
 		print RCFILE $_;
 #		my $instr=$_;
@@ -329,6 +331,10 @@ if (open(RCINCLUDE, "<$rcinclude"))
 }
 
 my $fileflags = join(' | ', @fileflags);
+
+print RCFILE qq{
+1 RT_MANIFEST "$binary.manifest"
+} if !$has_manifest && $binary =~ /\.exe$/ && -e "$objdir/$binary.manifest";
 
 print RCFILE qq{
 

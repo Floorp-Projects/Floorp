@@ -144,7 +144,7 @@ function toggleCache(target, disabled) {
   // Disable the cache for any toolbox that it is opened from this point on.
   Services.prefs.setBoolPref("devtools.cache.disabled", disabled);
 
-  return target.activeTab.reconfigure(options).then(() => navigationFinished);
+  return target.activeTab.reconfigure({ options }).then(() => navigationFinished);
 }
 
 /**

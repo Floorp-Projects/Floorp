@@ -713,8 +713,13 @@ class ADBDevice(ADBCommand):
                 return
             device = devices[0]
 
+        # Allow : in device serial if it matches a tcpip device serial.
+        re_device_serial_tcpip = re.compile(r'[^:]+:[0-9]+$')
+
         def is_valid_serial(serial):
-            return ":" not in serial or serial.startswith("usb:")
+            return serial.startswith("usb:") or \
+                re_device_serial_tcpip.match(serial) is not None or \
+                ":" not in serial
 
         if isinstance(device, (str, unicode)):
             # Treat this as a device serial
@@ -764,18 +769,19 @@ class ADBDevice(ADBCommand):
         """Utility function to return escaped and quoted version of command
         line.
         """
+        re_quotable_chars = re.compile(r"[ ()\"&'\]]")
+
+        def is_quoted(s, delim):
+            if not s:
+                return False
+            return s[0] == delim and s[-1] == delim
+
         quoted_cmd = []
 
         for arg in cmd:
-            arg.replace('&', r'\&')
-
-            needs_quoting = False
-            for char in [' ', '(', ')', '"', '&']:
-                if arg.find(char) >= 0:
-                    needs_quoting = True
-                    break
-            if needs_quoting:
-                arg = "'%s'" % arg
+            if not is_quoted(arg, "'") and not is_quoted(arg, '"') and \
+               re_quotable_chars.search(arg):
+                arg = '"%s"' % arg.replace(r'"', r'\"')
 
             quoted_cmd.append(arg)
 

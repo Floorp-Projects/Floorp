@@ -33,7 +33,6 @@ loader.lazyGetter(this, "reloadAndStopRecordingTab", () => require("devtools/cli
 loader.lazyRequireGetter(this, "AccessibilityStartup", "devtools/client/accessibility/accessibility-startup", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-loader.lazyRequireGetter(this, "getScreenshotFront", "resource://devtools/shared/fronts/screenshot", true);
 
 const {MultiLocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new MultiLocalizationHelper(
@@ -591,7 +590,7 @@ exports.ToolboxButtons = [
       if (clipboardEnabled) {
         args.clipboard = true;
       }
-      const screenshotFront = getScreenshotFront(toolbox.target);
+      const screenshotFront = toolbox.target.getFront("screenshot");
       await screenshotFront.captureAndSave(toolbox.win, args);
     }
   },

@@ -20,8 +20,8 @@ function run_test() {
   do_test_pending();
 }
 
-function test_attach(response, tabClient) {
-  tabClient.attachThread({}).then(function([response, threadClient]) {
+function test_attach(response, targetFront) {
+  targetFront.attachThread({}).then(function([response, threadClient]) {
     Assert.equal(threadClient.paused, true);
     threadClient.resume(function() {
       test_interrupt(threadClient);

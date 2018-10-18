@@ -92,6 +92,7 @@ public:
   void SetExpiresAt(int32_t val);
   void SetExpired();
   void Sync();
+  void SetSyncOnlyOnSuccess(bool aSOOS) { mSyncOnlyOnSuccess = aSOOS; }
 
   static void MakeHashKey(nsCString &outKey,
                           const nsACString &originScheme,
@@ -128,6 +129,8 @@ private:
   nsCString mNPNToken;
 
   OriginAttributes mOriginAttributes;
+
+  bool mSyncOnlyOnSuccess;
 };
 
 class AltSvcOverride : public nsIInterfaceRequestor

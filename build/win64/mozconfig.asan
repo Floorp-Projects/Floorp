@@ -7,6 +7,7 @@ if [ -d "$topsrcdir/clang" ]; then
     mk_export_correct_style LIB
     export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
 
+    export MOZ_COPY_PDBS=1
     export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer.exe"
     export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
 fi

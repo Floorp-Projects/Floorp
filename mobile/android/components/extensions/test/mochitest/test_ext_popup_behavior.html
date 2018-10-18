@@ -174,6 +174,51 @@ add_task(async function test_popup_behavior() {
   await extension.unload();
 });
 
+add_task(async function test_popup_incognito() {
+  const chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  const BrowserApp = chromeWin.BrowserApp;
+  const extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.tabs.onCreated.addListener(async (tab) => {
+        browser.test.sendMessage("page-loaded", tab);
+      });
+    },
+    manifest: {
+      "name": "BrowserAction Extension",
+      "browser_action": {
+        "default_popup": "popup.html",
+      },
+    },
+    files: {
+      "popup.html": "<h1>Extension Popup</h1>",
+    },
+  });
+
+  await extension.startup();
+  const uuid = `{${extension.uuid}}`;
+  ok(BrowserActions.isShown(uuid), "Browser action should be shown");
+
+  for (let isPrivate of [false, true]) {
+    // Open tab with provided privateness
+    let nativeTab = BrowserApp.addTab("http://example.com/#normal", {
+      isPrivate,
+      selected: true,
+    });
+    let tab = await extension.awaitMessage("page-loaded");
+    is(tab.incognito, isPrivate, "Tab should have expected privateness");
+
+    // Open browserAction popup in that tab
+    BrowserActions.synthesizeClick(uuid);
+    let popup = await extension.awaitMessage("page-loaded");
+    is(popup.incognito, isPrivate, "Popup should have same privateness as tab");
+
+    // Close popup and tab
+    await closeTabAndWaitTabClosed({BrowserApp, tab: BrowserApp.selectedTab});
+    await closeTabAndWaitTabClosed({BrowserApp, tab: nativeTab});
+  }
+
+  await extension.unload();
+});
 </script>
 
 </body>

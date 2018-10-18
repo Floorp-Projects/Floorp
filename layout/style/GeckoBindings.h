@@ -61,16 +61,6 @@ const bool GECKO_IS_NIGHTLY = false;
   void Gecko_Release##name_##ArbitraryThread(class_* aPtr)                    \
   { NS_RELEASE(aPtr); }
 
-class ServoBundledURI
-{
-public:
-  // NOTE(emilio): Not calling IntoCssUrl will cause to leak the
-  // string, so don't do that :)
-  already_AddRefed<mozilla::css::URLValue> IntoCssUrl(mozilla::CORSMode);
-  mozilla::ServoRawOffsetArc<RustString> mURLString;
-  mozilla::URLExtraData* mExtraData;
-};
-
 extern "C" {
 
 // Debugging stuff.
@@ -139,12 +129,12 @@ mozilla::StyleSheet* Gecko_LoadStyleSheet(
   mozilla::StyleSheet* parent,
   mozilla::css::SheetLoadData* parent_load_data,
   mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
-  ServoBundledURI url,
+  RawServoCssUrlDataStrong url,
   RawServoMediaListStrong media_list);
 
 void Gecko_LoadStyleSheetAsync(
   mozilla::css::SheetLoadDataHolder* parent_data,
-  ServoBundledURI url,
+  RawServoCssUrlDataStrong url,
   RawServoMediaListStrong media_list,
   RawServoImportRuleStrong import_rule);
 
@@ -651,7 +641,7 @@ void Gecko_nsStyleSVG_CopyContextProperties(
   const nsStyleSVG* src);
 
 mozilla::css::URLValue* Gecko_URLValue_Create(
-  ServoBundledURI uri,
+  RawServoCssUrlDataStrong url,
   mozilla::CORSMode aCORSMode);
 
 size_t Gecko_URLValue_SizeOfIncludingThis(mozilla::css::URLValue* url);

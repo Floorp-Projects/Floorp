@@ -597,6 +597,10 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
   color: GrayText;
 }
 
+#pageAction-panel-shareURL {
+  list-style-image: url("chrome://browser/skin/share.svg");
+}
+
 %include ../shared/urlbarSearchSuggestionsNotification.inc.css
 
 #search-container {
@@ -882,11 +886,6 @@ notification[value="translation"] {
 }
 
 /* Bookmarks roots menu-items */
-#subscribeToPageMenuitem:not([disabled]),
-#subscribeToPageMenupopup {
-  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
-}
-
 #bookmarksToolbarFolderMenu,
 #BMB_bookmarksToolbar,
 #panelMenu_bookmarksToolbar {

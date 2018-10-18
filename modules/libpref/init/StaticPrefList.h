@@ -223,7 +223,7 @@ VARCACHE_PREF(
 PREF("dom.serviceWorkers.parent_intercept", bool, false)
 
 // Enable PaymentRequest API
-#ifdef NIGHTLY_BUILD
+#if defined(NIGHTLY_BUILD) && (defined(XP_WIN) || defined(XP_MACOSX))
 # define PREF_VALUE  true
 #else
 # define PREF_VALUE  false
@@ -423,10 +423,11 @@ VARCACHE_PREF(
 )
 
 // Enable content type normalization of XHR uploads via MIME Sniffing standard
+// Disabled for now in bz1499136
 VARCACHE_PREF(
   "dom.xhr.standard_content_type_normalization",
    dom_xhr_standard_content_type_normalization,
-  RelaxedAtomicBool, true
+  RelaxedAtomicBool, false
 )
 
 //---------------------------------------------------------------------------
@@ -711,6 +712,18 @@ VARCACHE_PREF(
    layout_css_moz_document_content_enabled,
   bool, false
 )
+
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "layout.css.supports-selector.enabled",
+   layout_css_supports_selector_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
 
 // Pref to control whether @-moz-document url-prefix() is parsed in content
 // pages. Only effective when layout.css.moz-document.content.enabled is false.
@@ -1745,11 +1758,17 @@ VARCACHE_PREF(
 // Feature-Policy prefs
 //---------------------------------------------------------------------------
 
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   "dom.security.featurePolicy.enabled",
    dom_security_featurePolicy_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 //---------------------------------------------------------------------------
 // End of prefs

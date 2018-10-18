@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Condicions d'uso",
   "firstrun_privacy_notice": "Nota sobre privacidat",
   "firstrun_continue_to_login": "Continar",
-  "firstrun_skip_login": "Blinca-te este paso"
+  "firstrun_skip_login": "Blinca-te este paso",
+  "context_menu_title": "Open menu"
 };

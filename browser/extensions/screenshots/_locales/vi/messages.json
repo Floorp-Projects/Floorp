@@ -1,0 +1,179 @@
+{
+  "addonDescription": {
+    "message": "Chụp ảnh và chụp màn hình từ Web và lưu chúng tạm thời hoặc vĩnh viễn."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Chụp ảnh màn hình"
+  },
+  "myShotsLink": {
+    "message": "Các ảnh chụp của tôi"
+  },
+  "screenshotInstructions": {
+    "message": "Kéo hoặc nhấp vào trang để chọn một khu vực. Nhấn ESC để hủy bỏ."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Lưu lại"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Lưu phần nhìn thấy"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Lưu toàn trang"
+  },
+  "cancelScreenshot": {
+    "message": "Hủy bỏ"
+  },
+  "downloadScreenshot": {
+    "message": "Tải xuống"
+  },
+  "downloadOnlyNotice": {
+    "message": "Bạn hiện đang ở chế độ chỉ tải về."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots sẽ tự động chuyển sang chế độ chỉ tải về trong các tình huống:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Trong một cửa sổ duyệt web riêng tư."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Cookies của bên thứ ba đã bị vô hiệu hóa."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Không bao giờ ghi nhớ lược sử” đã được kích hoạt."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Bạn đang sử dụng Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Tải lên đã bị vô hiệu hóa."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Đã sao chép liên kết"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Liên kết ảnh chụp màn hình của bạn đã được sao chép vào clipboard. Nhấn $META_KEY$-V để dán.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Sao chép"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Ảnh chụp màn hình đã được sao chép"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Ảnh chụp màn hình của bạn đã được sao chép vào clipboard. Nhấn $META_KEY$-V để dán.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Không sử dụng được."
+  },
+  "requestErrorDetails": {
+    "message": "Xin lỗi! Chúng tôi không thể sao lưu ảnh chụp của bạn. Vui lòng thử lại sau."
+  },
+  "connectionErrorTitle": {
+    "message": "Chúng tôi không thể kết nối với ảnh chụp màn hình của bạn."
+  },
+  "connectionErrorDetails": {
+    "message": "Vui lòng kiểm tra kết nối Internet của bạn. Nếu bạn có thể kết nối với Internet, đó có thể là sự cố tạm thời với dịch vụ Ảnh chụp màn hình của Firefox."
+  },
+  "loginErrorDetails": {
+    "message": "Chúng tôi không thể lưu hình của bạn vì có sự cố với dịch vụ Ảnh chụp màn hình của Firefox. Vui lòng thử lại sau."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Chúng tôi không thể chụp màn hình trang này."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Đây không phải là trang Web bình thường, bạn không thể chụp ảnh màn hình nó."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Bạn không thể chụp một trang của Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Vùng chọn của bạn quá nhỏ"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Ảnh chụp màn hình đã bị vô hiệu hóa ở chế độ duyệt Web riêng tư"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Xin lỗi vì sự bất tiện này. Chúng tôi đang làm việc trên các tính năng này cho bản phát hành trong tương lai."
+  },
+  "genericErrorTitle": {
+    "message": "Whoa! Firefox Screenshots đã bị hoãn."
+  },
+  "genericErrorDetails": {
+    "message": "Chúng tôi không chắc những gì vừa xảy ra. Thử lại hoặc chụp một trang khác?"
+  },
+  "tourBodyIntro": {
+    "message": "Tạo, lưu và chia sẻ ảnh chụp màn hình mà không rời khỏi Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Một cách mới để lưu"
+  },
+  "tourBodyPageAction": {
+    "message": "Mở rộng trình đơn tác vụ trên trang trong thanh địa chỉ bất kỳ lúc nào bạn muốn chụp ảnh màn hình."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Chỉ chụp những gì bạn muốn"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Nhấp và kéo để chụp một phần của một trang. Bạn cũng có thể di chuột để làm nổi bật lựa chọn của bạn."
+  },
+  "tourHeaderFullPage": {
+    "message": "Chụp Windows hoặc Toàn bộ trang"
+  },
+  "tourBodyFullPage": {
+    "message": "Chọn các nút ở phía trên bên phải để chụp khu vực nhìn thấy được trong cửa sổ hoặc để chụp toàn bộ trang."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Như bạn thích"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Lưu ảnh đã cắt của bạn lên web để chia sẻ dễ dàng hơn hoặc tải chúng xuống máy tính của bạn. Bạn cũng có thể nhấp vào nút Ảnh chụp của tôi để tìm tất cả ảnh bạn đã chụp."
+  },
+  "tourBodyAccounts": {
+    "message": "Đăng nhập bằng tài khoản Firefox của bạn để truy cập các bức ảnh trên tất cả các thiết bị và lưu bức ảnh yêu thích của bạn mãi mãi."
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "Slide tiếp theo"
+  },
+  "tourPrevious": {
+    "message": "Slide trước đó"
+  },
+  "tourDone": {
+    "message": "Xong"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Bằng cách sử dụng Firefox Screenshots, bạn đồng ý với $TERMSANDPRIVACYNOTICETERMSLINK$ và $TERMSANDPRIVACYNOTICEPRIVACYLINK$ của chúng tôi.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Điều khoản"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Chính sách riêng tư"
+  },
+  "libraryLabel": {
+    "message": "Các ảnh chụp màn hình"
+  }
+}

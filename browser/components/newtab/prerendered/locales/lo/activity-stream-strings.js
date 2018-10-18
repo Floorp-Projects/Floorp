@@ -13,8 +13,8 @@ window.gActivityStreamStrings = {
   "type_label_downloaded": "ດາວໂຫຼດແລ້ວ",
   "menu_action_bookmark": "ບຸກມາກ",
   "menu_action_remove_bookmark": "ລຶບບຸກມາກອອກ",
-  "menu_action_open_new_window": "ເປີດລີ້ງໃນຫນ້າຕ່າງໃຫມ່",
-  "menu_action_open_private_window": "ເປີດໃນຫນ້າຕ່າງສ່ວນຕົວໃຫມ່",
+  "menu_action_open_new_window": "ເປີດລີ້ງໃນວິນໂດໃຫມ່",
+  "menu_action_open_private_window": "ເປີດໃນວິນໂດສ່ວນຕົວໃຫມ່",
   "menu_action_dismiss": "ຍົກເລີກ",
   "menu_action_delete": "ລຶບອອກຈາກປະຫວັດການນຳໃຊ້",
   "menu_action_pin": "ປັກໝຸດ",
@@ -84,7 +84,7 @@ window.gActivityStreamStrings = {
   "manual_migration_cancel_button": "ບໍ່, ຂອບໃຈ",
   "manual_migration_import_button": "ນຳເຂົ້າຕອນນີ້",
   "error_fallback_default_info": "ໂອ້ຍ, ມີບາງສິ່ງບາງຢ່າງຜິດພາດໃນການໂຫລດເນື້ອຫານີ້.",
-  "error_fallback_default_refresh_suggestion": "ຣີເຟຣຊຫນ້າເພື່ອລອງອີກຄັ້ງ.",
+  "error_fallback_default_refresh_suggestion": "ຟື້ນຟູໜ້າເພື່ອລອງອີກຄັ້ງ.",
   "section_menu_action_remove_section": "ລຶບສ່ວນ",
   "section_menu_action_collapse_section": "ຍຸບສ່ວນ",
   "section_menu_action_expand_section": "ຂະຫຍາຍສ່ວນ",
@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ",
   "firstrun_continue_to_login": "ສືບຕໍ່",
   "firstrun_skip_login": "ຂ້າມຂັ້ນຕອນນີ້",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "ຮຽນຮູ້ເພີມຕື່ມ"
 };

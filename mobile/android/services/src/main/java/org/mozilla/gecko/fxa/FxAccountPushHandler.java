@@ -3,7 +3,6 @@ package org.mozilla.gecko.fxa;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -19,6 +18,7 @@ public class FxAccountPushHandler {
 
     private static final String COMMAND_DEVICE_DISCONNECTED = "fxaccounts:device_disconnected";
     private static final String COMMAND_PROFILE_UPDATED = "fxaccounts:profile_updated";
+    private static final String COMMAND_PASSWORD_CHANGED = "fxaccounts:password_changed";
     private static final String COMMAND_COLLECTION_CHANGED = "sync:collection_changed";
 
     private static final String CLIENTS_COLLECTION = "clients";
@@ -56,6 +56,9 @@ public class FxAccountPushHandler {
                     break;
                 case COMMAND_PROFILE_UPDATED:
                     handleProfileUpdated(context);
+                    break;
+                case COMMAND_PASSWORD_CHANGED:
+                    handlePasswordChanged(context);
                     break;
                 default:
                     Log.d(LOG_TAG, "No handler defined for FxA Push command " + command);
@@ -120,5 +123,15 @@ public class FxAccountPushHandler {
             return;
         }
         AccountManager.get(context).removeAccount(account, null, null);
+    }
+
+    private static void handlePasswordChanged(Context context) {
+        final Account account = FirefoxAccounts.getFirefoxAccount(context);
+        if (account == null) {
+            Log.e(LOG_TAG, "The account does not exist anymore");
+            return;
+        }
+        final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+        FirefoxAccountsUtils.separateAccountAndShowNotification(context, fxAccount);
     }
 }

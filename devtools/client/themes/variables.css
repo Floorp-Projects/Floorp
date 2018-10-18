@@ -218,6 +218,7 @@
   --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
   --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
   --theme-console-alert-image: url(chrome://devtools/skin/images/webconsole/alert.svg);
+  --theme-console-navigation-image: url(chrome://devtools/skin/images/webconsole/globe.svg);
   --theme-console-info-image: url(chrome://devtools/skin/images/webconsole/info.svg);
   --theme-console-input-image: url(chrome://devtools/skin/images/webconsole/input.svg);
   --theme-console-return-image: url(chrome://devtools/skin/images/webconsole/return.svg);

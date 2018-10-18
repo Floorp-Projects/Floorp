@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  ADB_ADDON_STATUS_UPDATED,
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
@@ -60,6 +61,10 @@ function removeNetworkLocation(location) {
   };
 }
 
+function updateAdbAddonStatus(adbAddonStatus) {
+  return { type: ADB_ADDON_STATUS_UPDATED, adbAddonStatus };
+}
+
 function updateNetworkLocations(locations) {
   return { type: NETWORK_LOCATIONS_UPDATED, locations };
 }
@@ -68,6 +73,7 @@ module.exports = {
   addNetworkLocation,
   removeNetworkLocation,
   selectPage,
+  updateAdbAddonStatus,
   updateDebugTargetCollapsibility,
   updateNetworkLocations,
 };

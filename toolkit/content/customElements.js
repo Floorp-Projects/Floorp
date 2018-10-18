@@ -34,7 +34,7 @@ window.addEventListener("DOMContentLoaded", () => {
 const gXULDOMParser = new DOMParser();
 gXULDOMParser.forceEnableXULXBL();
 
-class MozXULElement extends XULElement {
+const MozElementMixin = Base => class MozElement extends Base {
   /**
    * Sometimes an element may not want to run connectedCallback logic during
    * parse. This could be because we don't want to initialize the element before
@@ -179,7 +179,9 @@ class MozXULElement extends XULElement {
       return null;
     };
   }
-}
+};
+
+const MozXULElement = MozElementMixin(XULElement);
 
 /**
  * Given an object, add a proxy that reflects interface implementations
@@ -235,6 +237,7 @@ class MozBaseControl extends MozXULElement {
 MozXULElement.implementCustomInterface(MozBaseControl, [Ci.nsIDOMXULControlElement]);
 
 // Attach the base class to the window so other scripts can use it:
+window.MozElementMixin = MozElementMixin;
 window.MozXULElement = MozXULElement;
 window.MozBaseControl = MozBaseControl;
 

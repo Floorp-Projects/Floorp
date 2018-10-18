@@ -106,11 +106,11 @@ DoNotifyWebRenderContextPurge(layers::CompositorBridgeParent* aBridge)
 }
 
 bool
-RendererOGL::UpdateAndRender(bool aReadback)
+RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize, const Maybe<Range<uint8_t>>& aReadbackBuffer)
 {
   uint32_t flags = gfx::gfxVars::WebRenderDebugFlags();
   // Disable debug flags during readback
-  if (aReadback) {
+  if (aReadbackBuffer.isSome()) {
     flags = 0;
   }
 
@@ -145,6 +145,14 @@ RendererOGL::UpdateAndRender(bool aReadback)
 
   if (!wr_renderer_render(mRenderer, size.width, size.height)) {
     NotifyWebRenderError(WebRenderError::RENDER);
+  }
+
+  if (aReadbackBuffer.isSome()) {
+    MOZ_ASSERT(aReadbackSize.isSome());
+    wr_renderer_readback(mRenderer,
+                         aReadbackSize.ref().width, aReadbackSize.ref().height,
+                         &aReadbackBuffer.ref()[0],
+                         aReadbackBuffer.ref().length());
   }
 
   mCompositor->EndFrame();

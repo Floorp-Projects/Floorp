@@ -41,7 +41,7 @@ class nsIURI;
 class nsPresContext;
 template <class T>
 class nsPtrHashKey;
-struct RustString;
+struct RawServoCssUrlData;
 
 namespace mozilla {
 class CSSStyleSheet;
@@ -90,25 +90,28 @@ class CSSStyleSheet;
     }                                                                          \
   }
 
+// Forward declaration copied here since ServoBindings.h #includes nsCSSValue.h.
+extern "C" {
+  RawGeckoURLExtraDataBorrowedMut Servo_CssUrlData_GetExtraData(
+    RawServoCssUrlDataBorrowed url);
+
+  bool Servo_CssUrlData_IsLocalRef(RawServoCssUrlDataBorrowed url);
+}
+
 namespace mozilla {
 namespace css {
 
 struct URLValue final
 {
 public:
-  // aString and aExtraData must not be null.
-  //
-  // Construct with a base URI; this will create the actual URI lazily from
-  // aString and aExtraData.
-  URLValue(ServoRawOffsetArc<RustString> aString,
-           already_AddRefed<URLExtraData> aExtraData,
+  // aCssUrl must not be null.
+  URLValue(already_AddRefed<RawServoCssUrlData> aCssUrl,
            CORSMode aCORSMode)
-    : mExtraData(std::move(aExtraData))
-    , mURIResolved(false)
-    , mString(aString)
+    : mURIResolved(false)
+    , mCssUrl(aCssUrl)
     , mCORSMode(aCORSMode)
   {
-    MOZ_ASSERT(mExtraData);
+    MOZ_ASSERT(mCssUrl);
   }
 
   // Returns true iff all fields of the two URLValue objects are equal.
@@ -118,7 +121,7 @@ public:
   bool Equals(const URLValue& aOther) const;
 
   // Returns true iff we know for sure, by comparing the mBaseURI pointer,
-  // the specified url() value mString, and the mIsLocalRef, that these
+  // the specified url() value mString, and IsLocalRef(), that these
   // two URLValue objects represent the same computed url() value.
   //
   // Doesn't look at mReferrer or mOriginPrincipal.
@@ -132,18 +135,21 @@ public:
 
   nsIURI* GetURI() const;
 
-  bool IsLocalRef() const;
+  bool IsLocalRef() const
+  {
+    return Servo_CssUrlData_IsLocalRef(mCssUrl);
+  }
 
   bool HasRef() const;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValue)
 
-  // When matching a url with mIsLocalRef set, resolve it against aURI;
-  // Otherwise, ignore aURL and return mURL directly.
+  // When matching a local ref URL, resolve it against aURI;
+  // Otherwise, ignore aURL and return mURI directly.
   already_AddRefed<nsIURI> ResolveLocalRef(nsIURI* aURI) const;
   already_AddRefed<nsIURI> ResolveLocalRef(nsIContent* aContent) const;
 
-  // Serializes mURI as a computed URI value, taking into account mIsLocalRef
+  // Serializes mURI as a computed URI value, taking into account IsLocalRef()
   // and serializing just the fragment if true.
   void GetSourceString(nsString& aRef) const;
 
@@ -155,21 +161,21 @@ public:
 
   uint64_t LoadID() const { return mLoadID; }
 
+  CORSMode CorsMode() const { return mCORSMode; }
+
+  URLExtraData* ExtraData() const
+  {
+    return Servo_CssUrlData_GetExtraData(mCssUrl);
+  }
+
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
   // invalid, even once resolved.
   mutable nsCOMPtr<nsIURI> mURI;
 
-public:
-  RefPtr<URLExtraData> mExtraData;
-
-private:
   mutable bool mURIResolved;
 
-  // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
-  mutable Maybe<bool> mIsLocalRef;
-
-  mozilla::ServoRawOffsetArc<RustString> mString;
+  RefPtr<RawServoCssUrlData> mCssUrl;
 
   const CORSMode mCORSMode;
 

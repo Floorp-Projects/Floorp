@@ -1,16 +1,14 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=1122253
--->
 <head>
-  <title>Test for Bug 1122253</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <title>Test for keywords on box sizing properties</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="property_database.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1122253">Mozilla Bug 1122253</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1496558">Mozilla Bug 1496558</a>
 
 <style>
 #outer {
@@ -49,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1122253
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Bug 1122253 **/
+/** Test for Bug 1122253 and Bug 1496558 **/
 
 // Test that the -moz-available, -moz-min-content, -moz-max-content, and
 // -moz-fit-content keywords are usable only on width, when the writing
@@ -117,18 +115,18 @@ var gTests = [
   { orientation: "vertical", prerequisites: "block-size: 30px; ", property: "block-size", specified_value: "-moz-min-content", computed_value: "30px", },
   { orientation: "vertical", prerequisites: "block-size: 30px; ", property: "block-size", specified_value: "-moz-max-content", computed_value: "30px", },
   { orientation: "vertical", prerequisites: "block-size: 30px; ", property: "block-size", specified_value: "-moz-fit-content", computed_value: "30px", },
-  { orientation: "vertical", prerequisites: "min-width: 30px; ", property: "min-width", specified_value: "-moz-available", computed_value: "0px", },
-  { orientation: "vertical", prerequisites: "min-width: 30px; ", property: "min-width", specified_value: "-moz-min-content", computed_value: "0px", },
-  { orientation: "vertical", prerequisites: "min-width: 30px; ", property: "min-width", specified_value: "-moz-max-content", computed_value: "0px", },
-  { orientation: "vertical", prerequisites: "min-width: 30px; ", property: "min-width", specified_value: "-moz-fit-content", computed_value: "0px", },
+  { orientation: "vertical", prerequisites: "min-width: 30px; ", property: "min-width", specified_value: "-moz-available", computed_value: "-moz-available", },
+  { orientation: "vertical", prerequisites: "min-width: 30px; ", property: "min-width", specified_value: "-moz-min-content", computed_value: "-moz-min-content", },
+  { orientation: "vertical", prerequisites: "min-width: 30px; ", property: "min-width", specified_value: "-moz-max-content", computed_value: "-moz-max-content", },
+  { orientation: "vertical", prerequisites: "min-width: 30px; ", property: "min-width", specified_value: "-moz-fit-content", computed_value: "-moz-fit-content", },
   { orientation: "vertical", prerequisites: "min-block-size: 30px; ", property: "min-block-size", specified_value: "-moz-available", computed_value: "30px", },
   { orientation: "vertical", prerequisites: "min-block-size: 30px; ", property: "min-block-size", specified_value: "-moz-min-content", computed_value: "30px", },
   { orientation: "vertical", prerequisites: "min-block-size: 30px; ", property: "min-block-size", specified_value: "-moz-max-content", computed_value: "30px", },
   { orientation: "vertical", prerequisites: "min-block-size: 30px; ", property: "min-block-size", specified_value: "-moz-fit-content", computed_value: "30px", },
-  { orientation: "vertical", prerequisites: "max-width: 30px; ", property: "max-width", specified_value: "-moz-available", computed_value: "none", },
-  { orientation: "vertical", prerequisites: "max-width: 30px; ", property: "max-width", specified_value: "-moz-min-content", computed_value: "none", },
-  { orientation: "vertical", prerequisites: "max-width: 30px; ", property: "max-width", specified_value: "-moz-max-content", computed_value: "none", },
-  { orientation: "vertical", prerequisites: "max-width: 30px; ", property: "max-width", specified_value: "-moz-fit-content", computed_value: "none", },
+  { orientation: "vertical", prerequisites: "max-width: 30px; ", property: "max-width", specified_value: "-moz-available", computed_value: "-moz-available", },
+  { orientation: "vertical", prerequisites: "max-width: 30px; ", property: "max-width", specified_value: "-moz-min-content", computed_value: "-moz-min-content", },
+  { orientation: "vertical", prerequisites: "max-width: 30px; ", property: "max-width", specified_value: "-moz-max-content", computed_value: "-moz-max-content", },
+  { orientation: "vertical", prerequisites: "max-width: 30px; ", property: "max-width", specified_value: "-moz-fit-content", computed_value: "-moz-fit-content", },
   { orientation: "vertical", prerequisites: "max-block-size: 30px; ", property: "max-block-size", specified_value: "-moz-available", computed_value: "30px", },
   { orientation: "vertical", prerequisites: "max-block-size: 30px; ", property: "max-block-size", specified_value: "-moz-min-content", computed_value: "30px", },
   { orientation: "vertical", prerequisites: "max-block-size: 30px; ", property: "max-block-size", specified_value: "-moz-max-content", computed_value: "30px", },
@@ -141,18 +139,18 @@ var gTests = [
   { orientation: "horizontal", prerequisites: "block-size: 30px; ", property: "block-size", specified_value: "-moz-min-content", computed_value: "30px", },
   { orientation: "horizontal", prerequisites: "block-size: 30px; ", property: "block-size", specified_value: "-moz-max-content", computed_value: "30px", },
   { orientation: "horizontal", prerequisites: "block-size: 30px; ", property: "block-size", specified_value: "-moz-fit-content", computed_value: "30px", },
-  { orientation: "horizontal", prerequisites: "min-height: 30px; ", property: "min-height", specified_value: "-moz-available", computed_value: "0px", },
-  { orientation: "horizontal", prerequisites: "min-height: 30px; ", property: "min-height", specified_value: "-moz-min-content", computed_value: "0px", },
-  { orientation: "horizontal", prerequisites: "min-height: 30px; ", property: "min-height", specified_value: "-moz-max-content", computed_value: "0px", },
-  { orientation: "horizontal", prerequisites: "min-height: 30px; ", property: "min-height", specified_value: "-moz-fit-content", computed_value: "0px", },
+  { orientation: "horizontal", prerequisites: "min-height: 30px; ", property: "min-height", specified_value: "-moz-available", computed_value: "-moz-available", },
+  { orientation: "horizontal", prerequisites: "min-height: 30px; ", property: "min-height", specified_value: "-moz-min-content", computed_value: "-moz-min-content", },
+  { orientation: "horizontal", prerequisites: "min-height: 30px; ", property: "min-height", specified_value: "-moz-max-content", computed_value: "-moz-max-content", },
+  { orientation: "horizontal", prerequisites: "min-height: 30px; ", property: "min-height", specified_value: "-moz-fit-content", computed_value: "-moz-fit-content", },
   { orientation: "horizontal", prerequisites: "min-block-size: 30px; ", property: "min-block-size", specified_value: "-moz-available", computed_value: "30px", },
   { orientation: "horizontal", prerequisites: "min-block-size: 30px; ", property: "min-block-size", specified_value: "-moz-min-content", computed_value: "30px", },
   { orientation: "horizontal", prerequisites: "min-block-size: 30px; ", property: "min-block-size", specified_value: "-moz-max-content", computed_value: "30px", },
   { orientation: "horizontal", prerequisites: "min-block-size: 30px; ", property: "min-block-size", specified_value: "-moz-fit-content", computed_value: "30px", },
-  { orientation: "horizontal", prerequisites: "max-height: 30px; ", property: "max-height", specified_value: "-moz-available", computed_value: "none", },
-  { orientation: "horizontal", prerequisites: "max-height: 30px; ", property: "max-height", specified_value: "-moz-min-content", computed_value: "none", },
-  { orientation: "horizontal", prerequisites: "max-height: 30px; ", property: "max-height", specified_value: "-moz-max-content", computed_value: "none", },
-  { orientation: "horizontal", prerequisites: "max-height: 30px; ", property: "max-height", specified_value: "-moz-fit-content", computed_value: "none", },
+  { orientation: "horizontal", prerequisites: "max-height: 30px; ", property: "max-height", specified_value: "-moz-available", computed_value: "-moz-available", },
+  { orientation: "horizontal", prerequisites: "max-height: 30px; ", property: "max-height", specified_value: "-moz-min-content", computed_value: "-moz-min-content", },
+  { orientation: "horizontal", prerequisites: "max-height: 30px; ", property: "max-height", specified_value: "-moz-max-content", computed_value: "-moz-max-content", },
+  { orientation: "horizontal", prerequisites: "max-height: 30px; ", property: "max-height", specified_value: "-moz-fit-content", computed_value: "-moz-fit-content", },
   { orientation: "horizontal", prerequisites: "max-block-size: 30px; ", property: "max-block-size", specified_value: "-moz-available", computed_value: "30px", },
   { orientation: "horizontal", prerequisites: "max-block-size: 30px; ", property: "max-block-size", specified_value: "-moz-min-content", computed_value: "30px", },
   { orientation: "horizontal", prerequisites: "max-block-size: 30px; ", property: "max-block-size", specified_value: "-moz-max-content", computed_value: "30px", },

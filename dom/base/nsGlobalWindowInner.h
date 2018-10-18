@@ -816,6 +816,19 @@ public:
   {
     return GetScrollY(aError);
   }
+
+  int32_t GetScreenLeft(mozilla::dom::CallerType aCallerType,
+                        mozilla::ErrorResult& aError)
+  {
+    return GetScreenX(aCallerType, aError);
+  }
+
+  int32_t GetScreenTop(mozilla::dom::CallerType aCallerType,
+                       mozilla::ErrorResult& aError)
+  {
+    return GetScreenY(aCallerType, aError);
+  }
+
   void GetScreenX(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
                   mozilla::dom::CallerType aCallerType,
                   mozilla::ErrorResult& aError);

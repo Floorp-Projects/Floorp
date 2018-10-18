@@ -1524,12 +1524,6 @@ public:
     return std::max(0, result - aContentEdgeToBoxSizingBoxEdge);
   }
 
-  // XXX to be removed
-  static bool IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
-  {
-    return IsAutoBSize(aCoord, aCBHeight);
-  }
-
   static bool IsAutoBSize(const nsStyleCoord &aCoord, nscoord aCBBSize)
   {
     nsStyleUnit unit = aCoord.GetUnit();

@@ -4,12 +4,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 "use strict";
 
-// In which we connect to a domain (as faked by a server running locally)
-// and start up an OCSP responder (also basically faked) that gives a
-// response with a bad signature. With security.OCSP.require set to true,
-// this should fail (but it also shouldn't cause assertion failures).
+// In which we connect to a domain (as faked by a server running locally) and
+// start up an OCSP responder (also basically faked) that gives a response with
+// a bad signature (and later, an empty response). With security.OCSP.require
+// set to true, these connections should fail (but they also shouldn't cause
+// assertion failures).
 
 var gOCSPRequestCount = 0;
+var gOCSPResponse;
 
 function run_test() {
   do_get_profile();
@@ -22,13 +24,14 @@ function run_test() {
 
   let args = [["bad-signature", "default-ee", "unused", 0]];
   let ocspResponses = generateOCSPResponses(args, "ocsp_certs");
-  let ocspResponseBadSignature = ocspResponses[0];
+  // Start by replying with a response with a bad signature.
+  gOCSPResponse = ocspResponses[0];
 
   let ocspResponder = new HttpServer();
   ocspResponder.registerPrefixHandler("/", function (request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.setHeader("Content-Type", "application/ocsp-response");
-    response.write(ocspResponseBadSignature);
+    response.write(gOCSPResponse);
     gOCSPRequestCount++;
   });
   ocspResponder.start(8888);
@@ -49,6 +52,12 @@ function add_tests() {
     equal(gOCSPRequestCount, 1,
           "OCSP request count should be 1 due to OCSP response caching");
     gOCSPRequestCount = 0;
+    // Now set the OCSP responder to reply with 200 OK but empty content.
+    gOCSPResponse = "";
+    clearOCSPCache();
     run_next_test();
   });
+
+  add_connection_test("ocsp-stapling-none.example.com",
+                      SEC_ERROR_OCSP_MALFORMED_RESPONSE);
 }

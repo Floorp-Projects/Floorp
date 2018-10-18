@@ -535,13 +535,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void SetupSrtp() {
-    // this mimics the setup we do elsewhere
-    std::vector<uint16_t> srtp_ciphers;
-    srtp_ciphers.push_back(kDtlsSrtpAeadAes256Gcm);
-    srtp_ciphers.push_back(kDtlsSrtpAeadAes128Gcm);
-    srtp_ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_80);
-    srtp_ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_32);
-
+    std::vector<uint16_t> srtp_ciphers = TransportLayerDtls::GetDefaultSrtpCiphers();
     SetSrtpCiphers(srtp_ciphers);
  }
 
@@ -980,7 +974,6 @@ class TransportTest : public MtransportTest {
   nsCOMPtr<nsIEventTarget> target_;
 };
 
-
 TEST_F(TransportTest, TestNoDtlsVerificationSettings) {
   ConnectSocketExpectFail();
 }
@@ -1015,8 +1008,8 @@ TEST_F(TransportTest, TestConnectSrtp) {
 
   ASSERT_EQ(TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
 
-  // SRTP is on
-  ASSERT_EQ(kDtlsSrtpAeadAes256Gcm, p1_->srtpCipher());
+  // SRTP is on with default value
+  ASSERT_EQ(kDtlsSrtpAeadAes128Gcm, p1_->srtpCipher());
 }
 
 
@@ -1408,20 +1401,29 @@ TEST_F(TransportTest, OnlyClientSendsSrtpXtn) {
                            TransportLayer::TS_ERROR);
 }
 
-TEST_F(TransportTest, TestSrtpFallback) {
-  std::vector<uint16_t> setA;
-  setA.push_back(kDtlsSrtpAeadAes256Gcm);
-  setA.push_back(kDtlsSrtpAes128CmHmacSha1_80);
-  std::vector<uint16_t> setB;
-  setB.push_back(kDtlsSrtpAes128CmHmacSha1_80);
+class TransportSrtpParameterTest : public TransportTest,
+                                   public ::testing::WithParamInterface<uint16_t> {
+};
 
-  p1_->SetSrtpCiphers(setA);
+INSTANTIATE_TEST_CASE_P(SrtpParamInit,
+                        TransportSrtpParameterTest,
+                        ::testing::ValuesIn(TransportLayerDtls::GetDefaultSrtpCiphers()));
+
+TEST_P(TransportSrtpParameterTest, TestSrtpCiphersMismatchCombinations) {
+  uint16_t cipher = GetParam();
+  std::cerr << "Checking cipher: " << cipher << std::endl;
+
+  p1_->SetupSrtp();
+
+  std::vector<uint16_t> setB;
+  setB.push_back(cipher);
+
   p2_->SetSrtpCiphers(setB);
   SetDtlsPeer();
   ConnectSocket();
 
-  ASSERT_EQ(kDtlsSrtpAes128CmHmacSha1_80, p1_->srtpCipher());
-  ASSERT_EQ(kDtlsSrtpAes128CmHmacSha1_80, p1_->srtpCipher());
+  ASSERT_EQ(cipher, p1_->srtpCipher());
+  ASSERT_EQ(cipher, p2_->srtpCipher());
 }
 
 // NSS doesn't support DHE suites on the server end.

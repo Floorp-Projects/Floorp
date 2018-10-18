@@ -53,7 +53,7 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
 
   if ((key_len > SRTP_MAX_KEY_LENGTH) ||
       (key_len < SRTP_MIN_KEY_LENGTH)) {
-    MOZ_MTLOG(ML_ERROR, "Invalid SRTP key length");
+    MOZ_ASSERT(false, "Invalid SRTP key length");
     return nullptr;
   }
 

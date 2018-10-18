@@ -8,6 +8,7 @@
 
 #include "permissionsService.h"
 #include <algorithm>
+#include <string>
 #include <winternl.h>
 
 namespace mozilla {

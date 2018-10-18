@@ -9,6 +9,7 @@
 <!DOCTYPE window SYSTEM "chrome://global/locale/printProgress.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         buttons="cancel"
         title="&printWindow.title;"
         style="width: 36em;"
@@ -47,10 +48,13 @@
         </row>
         <row class="thin-separator">             
           <hbox pack="end">
-            <label id="dialog.progressLabel" control="dialog.progress" value="&progress;"/>
+            <html:label id="dialog.progressLabel" for="dialog.progress"
+                        style="margin-right: 1em;">&progress;</html:label>
           </hbox>
-            <label id="dialog.tempLabel" value="&preparing;"/>
-            <progressmeter id="dialog.progress" mode="normal" value="0"/>
+          <label id="dialog.tempLabel" value="&preparing;"/>
+          <vbox pack="center" id="dialog.progressBox">
+            <html:progress id="dialog.progress" value="0" max="100"></html:progress>
+          </vbox>
           <hbox pack="end" style="min-width: 2.5em;">
             <label id="dialog.progressText"/>
           </hbox>

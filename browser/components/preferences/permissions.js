@@ -7,8 +7,8 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const permissionExceptionsL10n = {
   "trackingprotection": {
-    window: "permissions-exceptions-tracking-protection-window",
-    description: "permissions-exceptions-tracking-protection-desc",
+    window: "permissions-exceptions-content-blocking-window",
+    description: "permissions-exceptions-content-blocking-desc",
   },
   "cookie": {
     window: "permissions-exceptions-cookie-window",

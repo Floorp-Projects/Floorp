@@ -1,0 +1,52 @@
+{
+  "contextMenuLabel": {
+    "message": "තිර දර්ශනයක් ලබා ගන්න"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "සුරකින්න"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "පෙනෙන දෑ සුරකින්න"
+  },
+  "saveScreenshotFullPage": {
+    "message": "මුළු පිටුවම සුරකින්න"
+  },
+  "cancelScreenshot": {
+    "message": "අවලංගු කරන්න"
+  },
+  "downloadScreenshot": {
+    "message": "බාගත කිරීම"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "සබැඳියාව පිටපත් විය"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "ඔබගේ දසුන සඳහා සබැඳියාව පසුරු පුවරුව වෙත පිටපත් විය. ඇලවීම සඳහා $META_KEY$-V ඔබන්න.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "ක්‍රියාත්මක කල නොහැක."
+  },
+  "requestErrorDetails": {
+    "message": "සමාවන්න! අපට ඔබගේ දසුන සුරැකීමට නොහැකි විය. කරුණාකර පසුව නැවත උත්සාහ කරන්න."
+  },
+  "connectionErrorTitle": {
+    "message": "අපට ඔබගේ තිරදසුන් හා සම්බන්ද විය නොහැක."
+  },
+  "connectionErrorDetails": {
+    "message": "කරුණාකර ඔබේ අන්තර්ජාල සබදතාව පරීක්ෂා කරන්න. ඔබට අන්තර්ජාලය හා සබද විය හැකි නම්, Firefox තිරදසුන් සේවයේ තාවකාළික ගැටළුවක් විය හැක."
+  },
+  "loginErrorDetails": {
+    "message": "Firefox තිරදසුන් සේවයේ ගැටළුවක් නිසා අපට ඔබේ දසුන සුරැකීමට නොහැකි විය. කරුණාකර පසුව උත්සාහ කරන්න."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "අපට මෙම පිටුවේ තිරදසුන් ලබා ගැනීමට නොහැකි."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "මෙය සම්මත වෙබ් පිටුවක් නොවේ, එම නිසා මෙහි තිරදසුන් ලබා ගැනීමට ඔබට නොහැකිය."
+  }
+}

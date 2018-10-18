@@ -481,7 +481,7 @@ public:
     return mOptions;
   }
 
-  TimeDuration GetVsyncInterval() const {
+  TimeDuration GetVsyncInterval() const override {
     // the variable is called "rate" but really it's an interval
     return mVsyncRate;
   }

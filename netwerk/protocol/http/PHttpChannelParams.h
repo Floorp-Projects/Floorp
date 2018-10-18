@@ -14,6 +14,7 @@
 #include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
 #include "nsHttpResponseHead.h"
+#include "mozilla/Tuple.h"
 
 #include "nsIClassInfo.h"
 
@@ -36,10 +37,36 @@ struct RequestHeaderTuple {
 
 typedef nsTArray<RequestHeaderTuple> RequestHeaderTuples;
 
+typedef nsTArray<Tuple<nsCString, nsCString>> ArrayOfStringPairs;
+
 } // namespace net
 } // namespace mozilla
 
 namespace IPC {
+
+template<>
+struct ParamTraits<mozilla::Tuple<nsCString, nsCString>>
+{
+  typedef mozilla::Tuple<nsCString, nsCString> paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, mozilla::Get<0>(aParam));
+    WriteParam(aMsg, mozilla::Get<1>(aParam));
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    nsCString first;
+    nsCString second;
+    if (!ReadParam(aMsg, aIter, &first) ||
+        !ReadParam(aMsg, aIter, &second))
+      return false;
+
+    *aResult = mozilla::MakeTuple(first, second);
+    return true;
+  }
+};
 
 template<>
 struct ParamTraits<mozilla::net::RequestHeaderTuple>

@@ -140,6 +140,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
   Optional<Nullable<fetch::ResponseBodyInit>> body;
   ResponseInit init;
   init.mStatus = aStatus;
+  init.mStatusText.AssignASCII("");
   RefPtr<Response> r = Response::Constructor(aGlobal, body, init, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

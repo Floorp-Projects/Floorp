@@ -825,8 +825,8 @@ public:
   void RemoveAllDirectListenersImpl() override;
 
   /**
-   * End all tracks and Finish() this stream.  Used to voluntarily revoke access
-   * to a LocalMediaStream.
+   * End all tracks and Finish() this stream. Used to voluntarily revoke access
+   * to a MediaStream.
    */
   void EndAllTrackAndFinish();
 

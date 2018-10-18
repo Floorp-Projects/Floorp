@@ -38,6 +38,22 @@
   --monospace-font-family: monospace;
 }
 
+/**
+ * Customize the dark theme's scrollbar colors to avoid excessive contrast.
+ */
+:root.theme-dark {
+  scrollbar-color: var(--theme-body-color-inactive) var(--theme-splitter-color);
+}
+
+/**
+ * Customize scrollbar colors on Linux + light theme, to avoid visual conflicts
+ * between the light theme and the selected GTK theme (see bug 1471163).
+ * This removes GTK scrollbars and uses a fallback design (see bug 1464723).
+ */
+:root[platform="linux"].theme-light {
+  scrollbar-color: var(--theme-body-color-inactive) var(--grey-20);
+}
+
 .devtools-monospace {
   font-family: var(--monospace-font-family);
   font-size: var(--theme-code-font-size);
@@ -430,6 +446,16 @@ checkbox:-moz-focusring {
   border-color: var(--theme-splitter-color);
   font: message-box;
   font-size: var(--theme-body-font-size);
+  background-color: white;
+  color: var(--grey-90);
+}
+
+.theme-dark .devtools-textinput,
+.theme-dark .devtools-searchinput,
+.theme-dark .devtools-filterinput {
+  /* in between grey-85 and grey-90 */
+  background-color: #141416;
+  color: var(--grey-20);
 }
 
 :root[platform="mac"] .devtools-textinput,
@@ -489,12 +515,13 @@ checkbox:-moz-focusring {
 }
 
 .devtools-plaininput {
+  color: var(--grey-90);
   border-color: transparent;
   background-color: transparent;
 }
 
 .theme-dark .devtools-plaininput {
-  color: var(--theme-highlight-gray);
+  color: var(--grey-20);
 }
 
 /* Searchbox is a div container element for a search input element */
@@ -586,7 +613,7 @@ checkbox:-moz-focusring {
 
 .devtools-searchinput-clear {
   position: absolute;
-  top: 3.5px;
+  top: calc(50% - 8px);
   inset-inline-end: 7px;
   padding: 0;
   border: 0;
@@ -595,11 +622,6 @@ checkbox:-moz-focusring {
   background-position: 0 0;
   background-repeat: no-repeat;
   background-color: transparent;
-}
-
-.devtools-searchinput-clear:dir(rtl) {
-  right: unset;
-  left: 7px;
 }
 
 .theme-dark .devtools-searchinput-clear {

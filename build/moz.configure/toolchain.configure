@@ -1126,27 +1126,13 @@ def check_have_64_bit(have_64_bit, compiler_have_64_bit):
                         'about the target bitness.')
 
 
-js_option(env='BINDGEN_CFLAGS',
-          nargs=1,
-          default=bindgen_cflags_defaults,
-          help='Options bindgen should pass to the C/C++ parser')
-
-
-@depends('BINDGEN_CFLAGS')
-@checking('bindgen cflags', lambda s: s if s else 'no')
-def bindgen_cflags(value):
-    if value and len(value):
-        return value[0].split()
-
-
-add_old_configure_assignment('_BINDGEN_CFLAGS', bindgen_cflags)
-
-
-@depends(c_compiler)
-def default_debug_flags(compiler_info):
+@depends(c_compiler, target)
+def default_debug_flags(compiler_info, target):
     # Debug info is ON by default.
     if compiler_info.type in ('msvc', 'clang-cl'):
         return '-Zi'
+    elif target.kernel == 'WINNT' and compiler_info.type == 'clang':
+        return '-g -gcodeview'
     return '-g'
 
 
@@ -1818,6 +1804,21 @@ set_config('LD_IS_BFD', depends(select_linker.KIND)
 add_old_configure_assignment('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
 
 
+# There's a wrinkle with MinGW: linker configuration is not enabled, so
+# `select_linker` is never invoked.  Hard-code around it.
+@depends(select_linker, target, c_compiler)
+def gcc_use_gnu_ld(select_linker, target, c_compiler):
+    if select_linker is not None:
+        return select_linker.KIND in ('bfd', 'gold', 'lld')
+    if target.kernel == 'WINNT' and c_compiler.type == 'clang':
+        return True
+    return None
+
+
+# GCC_USE_GNU_LD=1 means the linker is command line compatible with GNU ld.
+set_config('GCC_USE_GNU_LD', gcc_use_gnu_ld)
+add_old_configure_assignment('GCC_USE_GNU_LD', gcc_use_gnu_ld)
+
 # Assembler detection
 # ==============================================================
 
@@ -1993,10 +1994,15 @@ add_old_configure_assignment('LIBFUZZER_FLAGS', libfuzzer_flags.use_flags)
 @depends(target, c_compiler)
 def make_shared_library(target, compiler):
     if target.os == 'WINNT':
-        if compiler.type in ('gcc', 'clang'):
+        if compiler.type == 'gcc':
             return namespace(
                 mkshlib=['$(CXX)', '$(DSO_LDOPTS)', '-o', '$@'],
                 mkcshlib=['$(CC)', '$(DSO_LDOPTS)', '-o', '$@'],
+            )
+        elif compiler.type == 'clang':
+            return namespace(
+                mkshlib=['$(CXX)', '$(DSO_LDOPTS)', '-Wl,-pdb,$(LINK_PDBFILE)', '-o', '$@'],
+                mkcshlib=['$(CC)', '$(DSO_LDOPTS)', '-Wl,-pdb,$(LINK_PDBFILE)', '-o', '$@'],
             )
         else:
             linker = [

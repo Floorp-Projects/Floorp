@@ -27,7 +27,6 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
     default_log_type = "mach"
 
     def kwargs_common(self, kwargs):
-        from mozrunner.devices.android_device import verify_android_device, grant_runtime_permissions
         build_path = os.path.join(self.topobjdir, 'build')
         here = os.path.split(__file__)[0]
         tests_src_path = os.path.join(here, "tests")
@@ -35,6 +34,8 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             sys.path.append(build_path)
 
         if kwargs["product"] == "fennec":
+            # Note that this import may fail in non-fennec trees
+            from mozrunner.devices.android_device import verify_android_device, grant_runtime_permissions
             verify_android_device(self, install=True, verbose=False, xre=True)
 
             # package_name may be non-fennec in the future

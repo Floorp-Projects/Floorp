@@ -23,14 +23,7 @@ describe("ManualMigration", () => {
       MIGRATION_ENTRYPOINT_NEWTAB: "MIGRATION_ENTRYPOINT_NEWTAB",
     };
 
-    fakeProfileAge = function() {};
-    fakeProfileAge.prototype = {
-      get created() {
-        return new Promise(resolve => {
-          resolve(Date.now());
-        });
-      },
-    };
+    fakeProfileAge = () => Promise.resolve({created: Promise.resolve(fakeProfileAge.created || Date.now())});
 
     sandbox = sinon.sandbox.create();
     globals = new GlobalOverrider();
@@ -187,13 +180,7 @@ describe("ManualMigration", () => {
       it("should return true if profile age > 3", async () => {
         let today = new Date();
         let someDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 4);
-        fakeProfileAge.prototype = {
-          get created() {
-            return new Promise(resolve => {
-              resolve(someDaysAgo.valueOf());
-            });
-          },
-        };
+        fakeProfileAge.created = someDaysAgo.valueOf();
         prefs.migrationLastShownDate = someDaysAgo.valueOf() / 1000;
         prefs.migrationRemainingDays = 2;
 
@@ -203,13 +190,7 @@ describe("ManualMigration", () => {
       it("should return early and not check prefs if profile age > 3", async () => {
         let today = new Date();
         let someDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 4);
-        fakeProfileAge.prototype = {
-          get created() {
-            return new Promise(resolve => {
-              resolve(someDaysAgo.valueOf());
-            });
-          },
-        };
+        fakeProfileAge.created = someDaysAgo.valueOf();
 
         const result = await instance.isMigrationMessageExpired();
 

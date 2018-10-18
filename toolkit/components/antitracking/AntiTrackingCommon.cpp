@@ -11,6 +11,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Pair.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
@@ -36,7 +37,6 @@
 #include "prtime.h"
 
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
-#define USER_INTERACTION_PERM "storageAccessAPI"
 
 using namespace mozilla;
 using mozilla::dom::ContentChild;
@@ -153,11 +153,11 @@ CookiesBehavior(nsIPrincipal* aPrincipal)
 }
 
 bool
-CheckContentBlockingAllowList(nsIURI* aTopWinURI)
+CheckContentBlockingAllowList(nsIURI* aTopWinURI, bool aIsPrivateBrowsing)
 {
   bool isAllowed = false;
   nsresult rv =
-    AntiTrackingCommon::IsOnContentBlockingAllowList(aTopWinURI,
+    AntiTrackingCommon::IsOnContentBlockingAllowList(aTopWinURI, aIsPrivateBrowsing,
                                                      AntiTrackingCommon::eStorageChecks,
                                                      isAllowed);
   if (NS_SUCCEEDED(rv) && isAllowed) {
@@ -178,7 +178,9 @@ CheckContentBlockingAllowList(nsPIDOMWindowInner* aWindow)
   nsPIDOMWindowOuter* top = aWindow->GetScriptableTop();
   if (top) {
     nsIURI* topWinURI = top->GetDocumentURI();
-    return CheckContentBlockingAllowList(topWinURI);
+    nsIDocument* doc = top->GetExtantDoc();
+    bool isPrivateBrowsing = doc ? nsContentUtils::IsInPrivateBrowsing(doc) : false;
+    return CheckContentBlockingAllowList(topWinURI, isPrivateBrowsing);
   }
 
   LOG(("Could not check the content blocking allow list because the top "
@@ -194,7 +196,8 @@ CheckContentBlockingAllowList(nsIHttpChannel* aChannel)
     nsCOMPtr<nsIURI> topWinURI;
     nsresult rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
     if (NS_SUCCEEDED(rv)) {
-      return CheckContentBlockingAllowList(topWinURI);
+      return CheckContentBlockingAllowList(topWinURI,
+                                           NS_UsePrivateBrowsing(aChannel));
     }
   }
 
@@ -562,6 +565,42 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
   aResolver(NS_SUCCEEDED(rv));
 
   LOG(("Result: %s", NS_SUCCEEDED(rv) ? "success" : "failure"));
+}
+
+// static
+bool
+AntiTrackingCommon::IsStorageAccessPermission(nsIPermission* aPermission,
+                                              nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(aPermission);
+  MOZ_ASSERT(aPrincipal);
+
+  nsAutoCString origin;
+  nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  // The permission key may belong either to a tracking origin on the same
+  // origin as the granted origin, or on another origin as the granted origin
+  // (for example when a tracker in a third-party context uses window.open to
+  // open another origin where that second origin would be the granted origin.)
+  // But even in the second case, the type of the permission would still be
+  // formed by concatenating the granted origin to the end of the type name
+  // (see CreatePermissionKey).  Therefore, we pass in the same argument to
+  // both tracking origin and granted origin here in order to compute the
+  // shorter permission key and will then do a prefix match on the type of the
+  // input permission to see if it is a storage access permission or not.
+  nsAutoCString permissionKey;
+  CreatePermissionKey(origin, origin, permissionKey);
+
+  nsAutoCString type;
+  rv = aPermission->GetType(type);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return StringBeginsWith(type, permissionKey);
 }
 
 bool
@@ -1050,6 +1089,7 @@ AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner*
 
 nsresult
 AntiTrackingCommon::IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
+  bool aIsPrivateBrowsing,
   AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose,
   bool& aIsAllowListed)
 {
@@ -1098,19 +1138,23 @@ AntiTrackingCommon::IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check both the normal mode and private browsing mode user override permissions.
-  const char* types[] = {
-    "trackingprotection",
-    "trackingprotection-pb"
+  Pair<const char*, bool> types[] = {
+    {"trackingprotection", false},
+    {"trackingprotection-pb", true}
   };
 
   for (size_t i = 0; i < ArrayLength(types); ++i) {
+    if (aIsPrivateBrowsing != types[i].second()) {
+      continue;
+    }
+
     uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
-    rv = permMgr->TestPermission(topWinURI, types[i], &permissions);
+    rv = permMgr->TestPermission(topWinURI, types[i].first(), &permissions);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (permissions == nsIPermissionManager::ALLOW_ACTION) {
       aIsAllowListed = true;
-      LOG_SPEC(("Found user override type %s for %s", types[i], _spec),
+      LOG_SPEC(("Found user override type %s for %s", types[i].first(), _spec),
                topWinURI);
       // Stop checking the next permisson type if we decided to override.
       break;

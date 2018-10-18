@@ -8,7 +8,6 @@
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/DeferredTask.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
@@ -17,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
+  MemoryTelemetry: "resource://gre/modules/MemoryTelemetry.jsm",
   UITelemetry: "resource://gre/modules/UITelemetry.jsm",
   GCTelemetry: "resource://gre/modules/GCTelemetry.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
@@ -48,19 +48,10 @@ const MIN_SUBSESSION_LENGTH_MS = Services.prefs.getIntPref("toolkit.telemetry.mi
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetrySession" + (Utils.isContentProcess ? "#content::" : "::");
 
-const MESSAGE_TELEMETRY_USS = "Telemetry:USS";
-const MESSAGE_TELEMETRY_GET_CHILD_USS = "Telemetry:GetChildUSS";
-
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
 const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false);
 
-// Do not gather data more than once a minute (ms)
-const TELEMETRY_INTERVAL = 60 * 1000;
-// Delay before intializing telemetry (ms)
-const TELEMETRY_DELAY = Services.prefs.getIntPref("toolkit.telemetry.initDelay", 60) * 1000;
-// Delay before initializing telemetry if we're testing (ms)
-const TELEMETRY_TEST_DELAY = 1;
 // Execute a scheduler tick every 5 minutes.
 const SCHEDULER_TICK_INTERVAL_MS = Services.prefs.getIntPref("toolkit.telemetry.scheduler.tickInterval", 5 * 60) * 1000;
 // When user is idle, execute a scheduler tick every 60 minutes.
@@ -82,15 +73,8 @@ const IDLE_TIMEOUT_SECONDS = Services.prefs.getIntPref("toolkit.telemetry.idleTi
 // in case of aborted sessions (currently 5 minutes).
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
-const TOPIC_CYCLE_COLLECTOR_BEGIN = "cycle-collector-begin";
-
-// How long to wait in millis for all the child memory reports to come in
-const TOTAL_MEMORY_COLLECTOR_TIMEOUT = 200;
-
 // Control whether Telemetry data should be encrypted with Prio.
 const PRIO_ENABLED_PREF = "prio.enabled";
-
-var gLastMemoryPoll = null;
 
 var gWasDebuggerAttached = false;
 
@@ -124,6 +108,7 @@ var Policy = {
   generateSubsessionUUID: () => generateUUID(),
   setSchedulerTickTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
   clearSchedulerTickTimeout: id => clearTimeout(id),
+  prioEncode: (batchID, prioParams) => PrioEncoder.encode(batchID, prioParams),
 };
 
 /**
@@ -605,12 +590,6 @@ var TelemetrySession = Object.freeze({
     return Impl.shutdownChromeProcess();
   },
   /**
-   * Sets up components used in the content process.
-   */
-  setupContent(testing = false) {
-    return Impl.setupContentProcess(testing);
-  },
-  /**
    * Used only for testing purposes.
    */
   testUninstall() {
@@ -662,7 +641,6 @@ var TelemetrySession = Object.freeze({
 var Impl = {
   _initialized: false,
   _logger: null,
-  _prevValues: {},
   _slowSQLStartup: {},
   // The activity state for the user. If false, don't count the next
   // active tick. Otherwise, increment the active ticks as usual.
@@ -696,16 +674,8 @@ var Impl = {
   _sessionActiveTicks: 0,
   // A task performing delayed initialization of the chrome process
   _delayedInitTask: null,
-  // Need a timeout in case children are tardy in giving back their memory reports.
-  _totalMemoryTimeout: undefined,
   _testing: false,
   // An accumulator of total memory across all processes. Only valid once the final child reports.
-  _totalMemory: null,
-  // A Set of outstanding USS report ids
-  _childrenToHearFrom: null,
-  // monotonically-increasing id for USS reports
-  _nextTotalMemoryId: 1,
-  _USSFromChildProcesses: null,
   _lastEnvironmentChangeDate: 0,
   // We save whether the "new-profile" ping was sent yet, to
   // survive profile refresh and migrations.
@@ -930,164 +900,6 @@ var Impl = {
   },
 
   /**
-   * Pull values from about:memory into corresponding histograms
-   */
-  gatherMemory: function gatherMemory() {
-    let mgr;
-    try {
-      mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
-            getService(Ci.nsIMemoryReporterManager);
-    } catch (e) {
-      // OK to skip memory reporters in xpcshell
-      return;
-    }
-
-    let histogram = Telemetry.getHistogramById("TELEMETRY_MEMORY_REPORTER_MS");
-    let startTime = new Date();
-
-    // Get memory measurements from distinguished amount attributes.  We used
-    // to measure "explicit" too, but it could cause hangs, and the data was
-    // always really noisy anyway.  See bug 859657.
-    //
-    // test_TelemetryController.js relies on some of these histograms being
-    // here.  If you remove any of the following histograms from here, you'll
-    // have to modify test_TelemetryController.js:
-    //
-    //   * MEMORY_JS_GC_HEAP, and
-    //   * MEMORY_JS_COMPARTMENTS_SYSTEM.
-    //
-    // The distinguished amount attribute names don't match the telemetry id
-    // names in some cases due to a combination of (a) historical reasons, and
-    // (b) the fact that we can't change telemetry id names without breaking
-    // data continuity.
-    //
-    let boundHandleMemoryReport = this.handleMemoryReport.bind(this);
-    let h = (id, units, amountName) => {
-      try {
-        // If mgr[amountName] throws an exception, just move on -- some amounts
-        // aren't available on all platforms.  But if the attribute simply
-        // isn't present, that indicates the distinguished amounts have changed
-        // and this file hasn't been updated appropriately.
-        let amount = mgr[amountName];
-        if (amount === undefined) {
-          this._log.error("gatherMemory - telemetry accessed an unknown distinguished amount");
-        }
-        boundHandleMemoryReport(id, units, amount);
-      } catch (e) {
-      }
-    };
-    let b = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_BYTES, n);
-    let c = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT, n);
-    let cc = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE, n);
-    let p = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_PERCENTAGE, n);
-
-    // GHOST_WINDOWS is opt-out as of Firefox 55
-    c("GHOST_WINDOWS", "ghostWindows");
-
-    if (!Telemetry.canRecordExtended) {
-      return;
-    }
-
-    b("MEMORY_VSIZE", "vsize");
-    if (!Services.appinfo.is64Bit || AppConstants.platform !== "win") {
-      b("MEMORY_VSIZE_MAX_CONTIGUOUS", "vsizeMaxContiguous");
-    }
-    b("MEMORY_RESIDENT_FAST", "residentFast");
-    b("MEMORY_UNIQUE", "residentUnique");
-    p("MEMORY_HEAP_OVERHEAD_FRACTION", "heapOverheadFraction");
-    b("MEMORY_JS_GC_HEAP", "JSMainRuntimeGCHeap");
-    c("MEMORY_JS_COMPARTMENTS_SYSTEM", "JSMainRuntimeRealmsSystem");
-    c("MEMORY_JS_COMPARTMENTS_USER", "JSMainRuntimeRealmsUser");
-    b("MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED", "imagesContentUsedUncompressed");
-    b("MEMORY_STORAGE_SQLITE", "storageSQLite");
-    cc("LOW_MEMORY_EVENTS_VIRTUAL", "lowMemoryEventsVirtual");
-    cc("LOW_MEMORY_EVENTS_COMMIT_SPACE", "lowMemoryEventsCommitSpace");
-    cc("LOW_MEMORY_EVENTS_PHYSICAL", "lowMemoryEventsPhysical");
-    cc("PAGE_FAULTS_HARD", "pageFaultsHard");
-
-    try {
-      mgr.getHeapAllocatedAsync(heapAllocated => {
-        boundHandleMemoryReport("MEMORY_HEAP_ALLOCATED",
-                                Ci.nsIMemoryReporter.UNITS_BYTES,
-                                heapAllocated);
-      });
-    } catch (e) {
-    }
-
-    if (!Utils.isContentProcess && !this._totalMemoryTimeout) {
-      // Only the chrome process should gather total memory
-      // total = parent RSS + sum(child USS)
-      this._totalMemory = mgr.residentFast;
-      if (Services.ppmm.childCount > 1) {
-        // Do not report If we time out waiting for the children to call
-        this._totalMemoryTimeout = setTimeout(
-          () => {
-            this._totalMemoryTimeout = undefined;
-            this._childrenToHearFrom.clear();
-          },
-          TOTAL_MEMORY_COLLECTOR_TIMEOUT);
-        this._USSFromChildProcesses = [];
-        this._childrenToHearFrom = new Set();
-        for (let i = 1; i < Services.ppmm.childCount; i++) {
-          let child = Services.ppmm.getChildAt(i);
-          try {
-            child.sendAsyncMessage(MESSAGE_TELEMETRY_GET_CHILD_USS, {id: this._nextTotalMemoryId});
-            this._childrenToHearFrom.add(this._nextTotalMemoryId);
-            this._nextTotalMemoryId++;
-          } catch (ex) {
-            // If a content process has just crashed, then attempting to send it
-            // an async message will throw an exception.
-            Cu.reportError(ex);
-          }
-        }
-      } else {
-        boundHandleMemoryReport(
-          "MEMORY_TOTAL",
-          Ci.nsIMemoryReporter.UNITS_BYTES,
-          this._totalMemory);
-      }
-    }
-
-    histogram.add(new Date() - startTime);
-  },
-
-  handleMemoryReport(id, units, amount, key) {
-    let val;
-    if (units == Ci.nsIMemoryReporter.UNITS_BYTES) {
-      val = Math.floor(amount / 1024);
-    } else if (units == Ci.nsIMemoryReporter.UNITS_PERCENTAGE) {
-      // UNITS_PERCENTAGE amounts are 100x greater than their raw value.
-      val = Math.floor(amount / 100);
-    } else if (units == Ci.nsIMemoryReporter.UNITS_COUNT) {
-      val = amount;
-    } else if (units == Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE) {
-      // If the reporter gives us a cumulative count, we'll report the
-      // difference in its value between now and our previous ping.
-
-      if (!(id in this._prevValues)) {
-        // If this is the first time we're reading this reporter, store its
-        // current value but don't report it in the telemetry ping, so we
-        // ignore the effect startup had on the reporter.
-        this._prevValues[id] = amount;
-        return;
-      }
-
-      val = amount - this._prevValues[id];
-      this._prevValues[id] = amount;
-    } else {
-      this._log.error("handleMemoryReport - Can't handle memory reporter with units " + units);
-      return;
-    }
-
-    if (key) {
-      Telemetry.getKeyedHistogramById(id).add(key, val);
-      return;
-    }
-
-    Telemetry.getHistogramById(id).add(val);
-  },
-
-  /**
    * Get the current session's payload using the provided
    * simpleMeasurements and info, which are typically obtained by a call
    * to |this.getSimpleMeasurements| and |this.getMetadata|,
@@ -1172,7 +984,7 @@ var Impl = {
 
     // Collect Prio-encoded measurements.
     if (Services.prefs.getBoolPref(PRIO_ENABLED_PREF, false)) {
-      payloadObj.prio = protect(() => this._prioEncode());
+      payloadObj.prio = protect(() => this._prioEncode(payloadObj));
     }
 
     // Add extended set measurements for chrome process.
@@ -1265,7 +1077,7 @@ var Impl = {
   send: function send(reason) {
     this._log.trace("send - Reason " + reason);
     // populate histograms one last time
-    this.gatherMemory();
+    MemoryTelemetry.gatherMemory();
 
     const isSubsession = !this._isClassicReason(reason);
     let payload = this.getSessionPayload(reason, isSubsession);
@@ -1291,16 +1103,6 @@ var Impl = {
     this.addObserver("user-interaction-active");
     this.addObserver("user-interaction-inactive");
   },
-
-  attachObservers: function attachObservers() {
-    if (!this._initialized)
-      return;
-    this.addObserver("idle-daily");
-    if (Telemetry.canRecordExtended) {
-      this.addObserver(TOPIC_CYCLE_COLLECTOR_BEGIN);
-    }
-  },
-
 
   /**
    * Lightweight init function, called as soon as Firefox starts.
@@ -1342,8 +1144,6 @@ var Impl = {
     }
 
     this.attachEarlyObservers();
-
-    Services.ppmm.addMessageListener(MESSAGE_TELEMETRY_USS, this);
   },
 
   /**
@@ -1363,12 +1163,8 @@ var Impl = {
         // the initialization.
         await TelemetryStorage.saveSessionData(this._getSessionDataObject());
 
-        this.attachObservers();
-        this.gatherMemory();
-
-        if (Telemetry.canRecordExtended) {
-          GCTelemetry.init();
-        }
+        this.addObserver("idle-daily");
+        MemoryTelemetry.gatherMemory();
 
         Telemetry.asyncFetchTelemetryData(function() {});
 
@@ -1404,46 +1200,6 @@ var Impl = {
     return this._delayedInitTask;
   },
 
-  getOpenTabsCount: function getOpenTabsCount() {
-    let tabCount = 0;
-
-    for (let win of Services.wm.getEnumerator("navigator:browser")) {
-      tabCount += win.gBrowser.tabs.length;
-    }
-
-    return tabCount;
-  },
-
-  /**
-   * Initializes telemetry for a content process.
-   */
-  setupContentProcess: function setupContentProcess(testing) {
-    this._log.trace("setupContentProcess");
-    this._testing = testing;
-
-    if (!Telemetry.canRecordBase) {
-      this._log.trace("setupContentProcess - base recording is disabled, not initializing");
-      return;
-    }
-
-    this.addObserver("content-child-shutdown");
-    Services.cpmm.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
-
-    let delayedTask = new DeferredTask(() => {
-      this._initialized = true;
-
-      this.attachObservers();
-      this.gatherMemory();
-
-      if (Telemetry.canRecordExtended) {
-        GCTelemetry.init();
-      }
-    }, testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY,
-    testing ? 0 : undefined);
-
-    delayedTask.arm();
-  },
-
   getFlashVersion: function getFlashVersion() {
     let host = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     let tags = host.getPluginTags();
@@ -1456,94 +1212,12 @@ var Impl = {
     return null;
   },
 
-  receiveMessage: function receiveMessage(message) {
-    this._log.trace("receiveMessage - Message name " + message.name);
-    switch (message.name) {
-    case MESSAGE_TELEMETRY_USS:
-    {
-      // In parent process, receive the USS report from the child
-      if (this._totalMemoryTimeout && this._childrenToHearFrom.delete(message.data.id)) {
-        let uss = message.data.bytes;
-        this._totalMemory += uss;
-        this._USSFromChildProcesses.push(uss);
-        if (this._childrenToHearFrom.size == 0) {
-          clearTimeout(this._totalMemoryTimeout);
-          this._totalMemoryTimeout = undefined;
-          this.handleMemoryReport(
-            "MEMORY_TOTAL",
-            Ci.nsIMemoryReporter.UNITS_BYTES,
-            this._totalMemory);
-
-          let length = this._USSFromChildProcesses.length;
-          if (length > 1) {
-            // Mean of the USS of all the content processes.
-            let mean = this._USSFromChildProcesses.reduce((a, b) => a + b, 0) / length;
-            // Absolute error of USS for each content process, normalized by the mean (*100 to get it in percentage).
-            // 20% means for a content process that it is using 20% more or 20% less than the mean.
-            let diffs = this._USSFromChildProcesses.map(value => Math.floor(Math.abs(value - mean) * 100 / mean));
-            let tabsCount = this.getOpenTabsCount();
-            let key;
-            if (tabsCount < 11) {
-              key = "0 - 10 tabs";
-            } else if (tabsCount < 501) {
-              key = "11 - 500 tabs";
-            } else {
-              key = "more tabs";
-            }
-
-            diffs.forEach(value => {
-              this.handleMemoryReport(
-              "MEMORY_DISTRIBUTION_AMONG_CONTENT",
-              Ci.nsIMemoryReporter.UNITS_COUNT,
-              value,
-              key);
-            });
-
-            // This notification is for testing only.
-            Services.obs.notifyObservers(null, "gather-memory-telemetry-finished");
-          }
-          this._USSFromChildProcesses = undefined;
-        }
-      } else {
-        this._log.trace("Child USS report was missed");
-      }
-      break;
-    }
-    case MESSAGE_TELEMETRY_GET_CHILD_USS:
-    {
-      // In child process, send the requested USS report
-      this.sendContentProcessUSS(message.data.id);
-      break;
-    }
-    default:
-      throw new Error("Telemetry.receiveMessage: bad message name");
-    }
-  },
-
-  sendContentProcessUSS: function sendContentProcessUSS(aMessageId) {
-    this._log.trace("sendContentProcessUSS");
-
-    let mgr;
-    try {
-      mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
-            getService(Ci.nsIMemoryReporterManager);
-    } catch (e) {
-      // OK to skip memory reporters in xpcshell
-      return;
-    }
-
-    Services.cpmm.sendAsyncMessage(
-      MESSAGE_TELEMETRY_USS,
-      {bytes: mgr.residentUnique, id: aMessageId}
-    );
-  },
-
-   /**
-    * On Desktop: Save the "shutdown" ping to disk.
-    * On Android: Save the "saved-session" ping to disk.
-    * This needs to be called after TelemetrySend shuts down otherwise pings
-    * would be sent instead of getting persisted to disk.
-    */
+  /**
+   * On Desktop: Save the "shutdown" ping to disk.
+   * On Android: Save the "saved-session" ping to disk.
+   * This needs to be called after TelemetrySend shuts down otherwise pings
+   * would be sent instead of getting persisted to disk.
+   */
   saveShutdownPings() {
     this._log.trace("saveShutdownPings");
 
@@ -1626,8 +1300,6 @@ var Impl = {
         this._log.warn("uninstall - Failed to remove " + topic, e);
       }
     }
-
-    GCTelemetry.shutdown();
   },
 
   getPayload: function getPayload(reason, clearSubsession) {
@@ -1638,7 +1310,7 @@ var Impl = {
     if (Object.keys(this._slowSQLStartup).length == 0) {
       this._slowSQLStartup = Telemetry.slowSQL;
     }
-    this.gatherMemory();
+    MemoryTelemetry.gatherMemory();
     return this.getSessionPayload(reason, clearSubsession);
   },
 
@@ -1679,31 +1351,9 @@ var Impl = {
    * This observer drives telemetry.
    */
   observe(aSubject, aTopic, aData) {
-    // Prevent the cycle collector begin topic from cluttering the log.
-    if (aTopic != TOPIC_CYCLE_COLLECTOR_BEGIN) {
-      this._log.trace("observe - " + aTopic + " notified.");
-    }
+    this._log.trace("observe - " + aTopic + " notified.");
 
     switch (aTopic) {
-    case "content-child-shutdown":
-      // content-child-shutdown is only registered for content processes.
-      this.uninstall();
-      Telemetry.flushBatchedChildTelemetry();
-      break;
-    case TOPIC_CYCLE_COLLECTOR_BEGIN:
-      let now = new Date();
-      if (!gLastMemoryPoll
-          || (TELEMETRY_INTERVAL <= now - gLastMemoryPoll)) {
-        gLastMemoryPoll = now;
-
-        this._log.trace("Dispatching idle gatherMemory task");
-        Services.tm.idleDispatchToMainThread(() => {
-          this._log.trace("Running idle gatherMemory task");
-          this.gatherMemory();
-          return true;
-        });
-      }
-      break;
     case "xul-window-visible":
       this.removeObserver("xul-window-visible");
       var counters = processInfo.getCounters();
@@ -1958,10 +1608,12 @@ var Impl = {
   /**
    * Encodes data for experimental Prio pilot project.
    *
+   * @param {Object} measurements - measurements taken until now. Histograms will have been cleared if
+   *                 this is a subsession, so use this to get the correct values.
    * @return {Object} An object containing Prio-encoded data.
    */
-  _prioEncode() {
-    // First, map the Telemetry histogram names to the params PrioEncoder.encode() expects.
+  _prioEncode(payloadObj) {
+    // First, map the Telemetry histogram names to the params PrioEncoder expects.
     const prioEncodedHistograms = {
       "BROWSER_IS_USER_DEFAULT": "browserIsUserDefault",
       "NEWTAB_PAGE_ENABLED": "newTabPageEnabled",
@@ -1972,9 +1624,12 @@ var Impl = {
     let prioParams = {};
     for (const [histogramName, prioName] of Object.entries(prioEncodedHistograms)) {
       try {
-        const histogram = Telemetry.getHistogramById(histogramName);
-        const firstCount = Boolean(histogram.snapshot().sum);
-        prioParams[prioName] = firstCount;
+        if (histogramName in payloadObj.histograms) {
+          const histogram = payloadObj.histograms[histogramName];
+          prioParams[prioName] = Boolean(histogram.sum);
+        } else {
+          prioParams[prioName] = false;
+        }
 
       } catch (ex) {
         this._log.error(ex);
@@ -1987,7 +1642,7 @@ var Impl = {
     let prioEncodedData;
 
     try {
-      prioEncodedData = PrioEncoder.encode(batchID, prioParams);
+      prioEncodedData = Policy.prioEncode(batchID, prioParams);
     } catch (ex) {
       this._log.error(ex);
     }

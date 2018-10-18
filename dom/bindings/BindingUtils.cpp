@@ -4216,9 +4216,25 @@ GetPerInterfaceObjectHandle(JSContext* aCx,
   MOZ_ASSERT(JS::ObjectIsNotGray(entrySlot));
 
   if (!entrySlot) {
-    if (aSlotId == prototypes::id::HTMLDocument ||
-        aSlotId == prototypes::id::Document) {
-      MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create the per-interface object");
+    switch (aSlotId) {
+      case prototypes::id::HTMLDocument: {
+         MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create HTMLDocument.prototype");
+         break;
+      }
+      case prototypes::id::Document: {
+        MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create Document.prototype");
+        break;
+      }
+      case prototypes::id::Node: {
+        MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create Node.prototype");
+        break;
+      }
+      case prototypes::id::EventTarget: {
+        MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create EventTarget.prototype");
+        break;
+      }
+      default:
+      break;
     }
   }
 

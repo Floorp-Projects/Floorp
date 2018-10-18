@@ -174,7 +174,7 @@ def run(paths, linters, fmt, outgoing, workdir, edit,
     result = lint.roll(paths, outgoing=outgoing, workdir=workdir)
 
     if edit and result.issues:
-        edit_issues(result.issues)
+        edit_issues(result)
         result = lint.roll(result.issues.keys())
 
     formatter = formatters.get(fmt)

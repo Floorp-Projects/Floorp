@@ -426,16 +426,23 @@
 }
 
 .ruleview-flex {
-  background: url("chrome://devtools/skin/images/command-frames.svg");
-  -moz-context-properties: fill;
-  fill: var(--rule-flex-toggle-color);
+  background-image: url("chrome://devtools/skin/images/flexbox-swatch.svg");
+  background-size: 13px 11px;
+  -moz-context-properties: stroke;
+  stroke: var(--rule-flex-toggle-color);
+  width: 13px;
+  height: 11px;
   border-radius: 0;
-  background-size: 1em;
 }
 
 .ruleview-grid {
   background: url("chrome://devtools/skin/images/grid.svg");
   border-radius: 0;
+}
+
+.ruleview-grid[disabled] {
+  cursor: default;
+  opacity: 0.5;
 }
 
 .ruleview-shape-point.active,

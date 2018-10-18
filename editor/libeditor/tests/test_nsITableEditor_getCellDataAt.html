@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for nsITableEditor.getCellDataAt()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable>out of table<table><tr><td>default content</td></tr></table></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  let cellElementWrapper;
+  let startRowIndexWrapper, startColumnIndexWrapper;
+  let rowspanWrapper, colspanWrapper;
+  let effectiveRowspanWrapper, effectiveColspanWrapper;
+  let isSelectedWrapper;
+
+  function reset() {
+    cellElementWrapper = {};
+    startRowIndexWrapper = {};
+    startColumnIndexWrapper = {};
+    rowspanWrapper = {};
+    colspanWrapper = {};
+    effectiveRowspanWrapper = {};
+    effectiveColspanWrapper = {};
+    isSelectedWrapper = {};
+  }
+
+  editor.focus();
+  selection.collapse(editor.firstChild, 0);
+  try {
+    getTableEditor().getCellDataAt(null, 0, 0,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    ok(false, "getTableEditor().getCellDataAt(null, 0, 0) should throw exception when selection is outside of any <table>s");
+  } catch (e) {
+    ok(true, "getTableEditor().getCellDataAt(null, 0, 0) should throw exception when selection is outside of any <table>s");
+  }
+
+  selection.removeAllRanges();
+  try {
+    getTableEditor().getCellDataAt(null, 0, 0,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    ok(false, "getTableEditor().getCellDataAt(null, 0, 0) should throw exception when selection has no ranges");
+  } catch (e) {
+    ok(true, "getTableEditor().getCellDataAt(null, 0, 0) should throw exception when selection has no ranges");
+  }
+
+  // Collapse in text node in the cell element.
+  selection.collapse(editor.firstChild.nextSibling.firstChild.firstChild.firstChild.firstChild, 0);
+  reset();
+  getTableEditor().getCellDataAt(null, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.nextSibling.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return the <td> element when selection is in it");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 0 for startRowIndex when selection is in the cell");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 0 for startColumnIndex when selection is in the cell");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for rowspan when selection is in the cell");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for colspan when selection is in the cell");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveRowspan when selection is in the cell");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveColspan when selection is in the cell");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return false for isSelected when selection is in the cell");
+
+  // Select the cell
+  selection.setBaseAndExtent(editor.firstChild.nextSibling.firstChild.firstChild, 0,
+                             editor.firstChild.nextSibling.firstChild.firstChild, 1);
+  reset();
+  getTableEditor().getCellDataAt(null, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.nextSibling.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return the <td> element when it's selected");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 0 for startRowIndex when the cell is selected");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 0 for startColumnIndex when the cell is selected");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for rowspan when the cell is selected");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for colspan when the cell is selected");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveRowspan when the cell is selected");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveColspan when the cell is selected");
+  is(isSelectedWrapper.value, true,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return true for isSelected when the cell is selected");
+
+  // Select the <tr>
+  selection.setBaseAndExtent(editor.firstChild.nextSibling.firstChild, 0,
+                             editor.firstChild.nextSibling.firstChild, 1);
+  reset();
+  getTableEditor().getCellDataAt(null, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.nextSibling.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return the <td> element when the <tr> is selected");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 0 for startRowIndex when the <tr> is selected");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 0 for startColumnIndex when the <tr> is selected");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for rowspan when the <tr> is selected");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for colspan when the <tr> is selected");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveRowspan when the <tr> is selected");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveColspan when the <tr> is selected");
+  is(isSelectedWrapper.value, true,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return true for isSelected when the <tr> is selected");
+
+  // Select the <table>
+  selection.setBaseAndExtent(editor, 1, editor, 2);
+  reset();
+  getTableEditor().getCellDataAt(null, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.nextSibling.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return the <td> element when the <table> is selected");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 0 for startRowIndex when the <table> is selected");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 0 for startColumnIndex when the <table> is selected");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for rowspan when the <table> is selected");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for colspan when the <table> is selected");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveRowspan when the <table> is selected");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return 1 for effectiveColspan when the <table> is selected");
+  is(isSelectedWrapper.value, true,
+     "getTableEditor().getCellDataAt(null, 0, 0) should return true for isSelected when the <table> is selected");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                       "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startRowIndex");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startColumnIndex");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for rowspan");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for colspan");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveRowspan");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveColspan");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 0, 1,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild.nextSibling,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return the second <td> element");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 0 for startRowIndex");
+  is(startColumnIndexWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for startColumnIndex");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for rowspan");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for colspan");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveRowspan");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveColspan");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return false for isSelected");
+
+  try {
+    getTableEditor().getCellDataAt(editor.firstChild, 0, 2,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    ok(false, "getTableEditor().getCellDataAt(<table>, 0, 2) should throw exception since column index is out of bounds");
+  } catch (e) {
+    ok(true, "getTableEditor().getCellDataAt(<table>, 0, 2) should throw exception since column index is out of bounds");
+  }
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 1, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return the first <td> element in the second row");
+  is(startRowIndexWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for startRowIndex");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for startColumnIndex");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for rowspan");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for colspan");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveRowspan");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveColspan");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return false for isSelected");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 2, 1,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.firstChild.nextSibling,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return the second <td> element in the last row");
+  is(startRowIndexWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for startRowIndex");
+  is(startColumnIndexWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for startColumnIndex");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for rowspan");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for colspan");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for effectiveRowspan");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return 1 for effectiveColspan");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 2, 1) should return false for isSelected");
+
+  try {
+    getTableEditor().getCellDataAt(editor.firstChild, 2, 2,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    ok(false, "getTableEditor().getCellDataAt(<table>, 2, 2) should throw exception since column index is out of bounds");
+  } catch (e) {
+    ok(true, "getTableEditor().getCellDataAt(<table>, 2, 2) should throw exception since column index is out of bounds");
+  }
+
+  try {
+    getTableEditor().getCellDataAt(editor.firstChild, 3, 0,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    ok(false, "getTableEditor().getCellDataAt(<table>, 3, 0) should throw exception since row index is out of bounds");
+  } catch (e) {
+    ok(true, "getTableEditor().getCellDataAt(<table>, 3, 0) should throw exception since row index is out of bounds");
+  }
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td rowspan="3">cell1-1</td><td>cell1-2</td><td>cell1-3</td><td>cell1-4</td></tr>' +
+                       "<tr><td>cell2-2</td></tr>" +
+                       "<tr><td>cell3-2</td><td>cell3-3</td></tr>" +
+                       '<tr><td colspan="3">cell4-1</td><td>cell4-4</td></tr>' +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element whose rowspan is 3");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startRowIndex (the cell's rowspan is 3)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startColumnIndex (the cell's rowspan is 3)");
+  is(rowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for rowspan (the cell's rowspan is 3)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for colspan (the cell's rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for effectiveRowspan (the cell's rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveColspan (the cell's rowspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected (the cell's rowspan is 3)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 1, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return the first <td> element whose rowspan is 3");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for startRowIndex (the cell's rowspan is 3)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for startColumnIndex (the cell's rowspan is 3)");
+  is(rowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 3 for rowspan (the cell's rowspan is 3)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for colspan (the cell's rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 2 for effectiveRowspan (the cell's rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveColspan (the cell's rowspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return false for isSelected (the cell's rowspan is 3)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 2, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return the first <td> element whose rowspan is 3");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 0 for startRowIndex (the cell's rowspan is 3)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 0 for startColumnIndex (the cell's rowspan is 3)");
+  is(rowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 3 for rowspan (the cell's rowspan is 3)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 1 for colspan (the cell's rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 1 for effectiveRowspan (the cell's rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return 1 for effectiveColspan (the cell's rowspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 2, 0) should return false for isSelected (the cell's rowspan is 3)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 3, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return the first <td> element in the last row whose colspan is 3");
+  is(startRowIndexWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 3 for startRowIndex (the cell's colspan is 3)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 0 for startColumnIndex (the cell's colspan is 3)");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 1 for rowspan (the cell's colspan is 3)");
+  is(colspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 3 for colspan (the cell's colspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 1 for effectiveRowspan (the cell's colspan is 3)");
+  is(effectiveColspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return 3 for effectiveColspan (the cell's colspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 3, 0) should return false for isSelected (the cell's colspan is 3)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 3, 1,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return the first <td> element in the last row whose colspan is 3");
+  is(startRowIndexWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 3 for startRowIndex (the cell's colspan is 3)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 0 for startColumnIndex (the cell's colspan is 3)");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 1 for rowspan (the cell's colspan is 3)");
+  is(colspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 3 for colspan (the cell's colspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 1 for effectiveRowspan (the cell's colspan is 3)");
+  is(effectiveColspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return 2 for effectiveColspan (the cell's colspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 3, 1) should return false for isSelected (the cell's colspan is 3)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 3, 2,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return the first <td> element in the last row whose colspan is 3");
+  is(startRowIndexWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 3 for startRowIndex (the cell's colspan is 3)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 0 for startColumnIndex (the cell's colspan is 3)");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 1 for rowspan (the cell's colspan is 3)");
+  is(colspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 3 for colspan (the cell's colspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 1 for effectiveRowspan (the cell's colspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return 1 for effectiveColspan (the cell's colspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 3, 2) should return false for isSelected (the cell's colspan is 3)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 3, 3,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild.nextSibling,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return the second <td> element in the last row");
+  is(startRowIndexWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 3 for startRowIndex (right cell of the cell whose colspan is 3)");
+  is(startColumnIndexWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 3 for startColumnIndex (right cell of the cell whose colspan is 3)");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for rowspan (right cell of the cell whose colspan is 3)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for colspan (right cell of the cell whose colspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for effectiveRowspan (right cell of the cell whose colspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return 1 for effectiveColspan (right cell of the cell whose colspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 3, 3) should return false for isSelected (right cell of the cell whose colspan is 3)");
+
+  try {
+    getTableEditor().getCellDataAt(editor.firstChild, 3, 4,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    ok(false, "getTableEditor().getCellDataAt(<table>, 3, 4) should throw exception since column index is out of bounds");
+  } catch (e) {
+    ok(true, "getTableEditor().getCellDataAt(<table>, 3, 4) should throw exception since column index is out of bounds");
+  }
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 0, 1,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild.nextSibling,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return the second <td> element in the first row");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 0 for startRowIndex (right cell of the cell whose rowspan is 3)");
+  is(startColumnIndexWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for startColumnIndex (right cell of the cell whose rowspan is 3)");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for rowspan (right cell of the cell whose rowspan is 3)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for colspan (right cell of the cell whose rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveRowspan (right cell of the cell whose rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveColspan (right cell of the cell whose rowspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return false for isSelected (right cell of the cell whose rowspan is 3)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 1, 1,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.nextSibling.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return the first <td> element in the second row");
+  is(startRowIndexWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for startRowIndex (right cell of the cell whose rowspan is 3)");
+  is(startColumnIndexWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for startColumnIndex (right cell of the cell whose rowspan is 3)");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for rowspan (right cell of the cell whose rowspan is 3)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for colspan (right cell of the cell whose rowspan is 3)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for effectiveRowspan (right cell of the cell whose rowspan is 3)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return 1 for effectiveColspan (right cell of the cell whose rowspan is 3)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 1, 1) should return false for isSelected (right cell of the cell whose rowspan is 3)");
+
+  try {
+    getTableEditor().getCellDataAt(editor.firstChild, 1, 2,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    ok(false, "getTableEditor().getCellDataAt(<table>, 1, 2) should throw exception since there is no cell due to non-rectangular table");
+  } catch (e) {
+    ok(true, "getTableEditor().getCellDataAt(<table>, 1, 2) should throw exception since there is no cell due to non-rectangular table");
+  }
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td rowspan="3" colspan="2">cell1-1</td></tr>' +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element whose rowspan is 3 and colspan is 2");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startRowIndex (the cell's rowspan is 3 and colspan is 2)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startColumnIndex (the cell's rowspan is 3 and colspan is 2)");
+  is(rowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for rowspan (the cell's rowspan is 3 and colspan is 2)");
+  is(colspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 2 for colspan (the cell's rowspan is 3 and colspan is 2)");
+  // XXX Not sure whether expected behavior or not.
+  todo_is(effectiveRowspanWrapper.value, 3,
+          "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for effectiveRowspan (the cell's rowspan is 3 and colspan is 2)");
+  is(effectiveColspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 2 for effectiveColspan (the cell's rowspan is 3 and colspan is 2)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected (the cell's rowspan is 3 and colspan is 2)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 0, 1,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return the first <td> element whose rowspan is 3 and colspan is 2");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 0 for startRowIndex (the cell's rowspan is 3 and colspan is 2)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 0 for startColumnIndex (the cell's rowspan is 3 and colspan is 2)");
+  is(rowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 3 for rowspan (the cell's rowspan is 3 and colspan is 2)");
+  is(colspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 2 for colspan (the cell's rowspan is 3 and colspan is 2)");
+  // XXX Not sure whether expected behavior or not.
+  todo_is(effectiveRowspanWrapper.value, 3,
+          "getTableEditor().getCellDataAt(<table>, 0, 1) should return 3 for effectiveRowspan (the cell's rowspan is 3 and colspan is 2)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return 1 for effectiveColspan (the cell's rowspan is 3 and colspan is 2)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 0, 1) should return false for isSelected (the cell's rowspan is 3 and colspan is 2)");
+
+  try {
+    getTableEditor().getCellDataAt(editor.firstChild, 1, 0,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+       "getTableEditor().getCellDataAt(<table>, 1, 0) should return the first <td> element whose rowspan is 3 and colspan is 2");
+    is(startRowIndexWrapper.value, 0,
+       "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for startRowIndex (the cell's rowspan is 3 and colspan is 2)");
+    is(startColumnIndexWrapper.value, 0,
+       "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for startColumnIndex (the cell's rowspan is 3 and colspan is 2)");
+    is(rowspanWrapper.value, 3,
+       "getTableEditor().getCellDataAt(<table>, 1, 0) should return 3 for rowspan (the cell's rowspan is 3 and colspan is 2)");
+    is(colspanWrapper.value, 2,
+       "getTableEditor().getCellDataAt(<table>, 1, 0) should return 2 for colspan (the cell's rowspan is 3 and colspan is 2)");
+    // XXX Not sure whether expected behavior or not.
+    todo_is(effectiveRowspanWrapper.value, 2,
+            "getTableEditor().getCellDataAt(<table>, 1, 0) should return 2 for effectiveRowspan (the cell's rowspan is 3 and colspan is 2)");
+    is(effectiveColspanWrapper.value, 1,
+       "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveColspan (the cell's rowspan is 3 and colspan is 2)");
+    is(isSelectedWrapper.value, false,
+       "getTableEditor().getCellDataAt(<table>, 1, 0) should return false for isSelected (the cell's rowspan is 3 and colspan is 2)");
+  } catch (e) {
+    todo(false, "getTableEditor().getCellDataAt(<table>, 1, 0) shouldn't throw exception since rowspan expands the table");
+  }
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td rowspan="0">cell1-1</td><td>cell1-2</td></tr>' +
+                       "<tr><td>cell2-2</td></tr>" +
+                       "<tr><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element whose rowspan is 0");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startRowIndex (the cell's rowspan is 0)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startColumnIndex (the cell's rowspan is 0)");
+  is(rowspanWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for rowspan (the cell's rowspan is 0)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for colspan (the cell's rowspan is 0)");
+  is(effectiveRowspanWrapper.value, 3,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for effectiveRowspan (the cell's rowspan is 0)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveColspan (the cell's rowspan is 0)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected (the cell's rowspan is 0)");
+
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 1, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return the first <td> element whose rowspan is 0");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for startRowIndex (the cell's rowspan is 0)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for startColumnIndex (the cell's rowspan is 0)");
+  is(rowspanWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 0 for rowspan (the cell's rowspan is 0)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for colspan (the cell's rowspan is 0)");
+  is(effectiveRowspanWrapper.value, 2,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 3 for effectiveRowspan (the cell's rowspan is 0)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return 1 for effectiveColspan (the cell's rowspan is 0)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 1, 0) should return false for isSelected (the cell's rowspan is 0)");
+
+  // FYI: colspan must be 1 - 1000, 0 is invalid.
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td colspan="0">cell1-1</td></tr>' +
+                       "<tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  reset();
+  getTableEditor().getCellDataAt(editor.firstChild, 0, 0,
+                                 cellElementWrapper,
+                                 startRowIndexWrapper, startColumnIndexWrapper,
+                                 rowspanWrapper, colspanWrapper,
+                                 effectiveRowspanWrapper, effectiveColspanWrapper,
+                                 isSelectedWrapper);
+  is(cellElementWrapper.value, editor.firstChild.firstChild.firstChild.firstChild,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return the first <td> element whose colspan is 0");
+  is(startRowIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startRowIndex (the cell's colspan is 0)");
+  is(startColumnIndexWrapper.value, 0,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 0 for startColumnIndex (the cell's colspan is 0)");
+  is(rowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for rowspan (the cell's colspan is 0)");
+  is(colspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for colspan (the cell's colspan is 0)");
+  is(effectiveRowspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 3 for effectiveRowspan (the cell's colspan is 0)");
+  is(effectiveColspanWrapper.value, 1,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return 1 for effectiveColspan (the cell's colspan is 0)");
+  is(isSelectedWrapper.value, false,
+     "getTableEditor().getCellDataAt(<table>, 0, 0) should return false for isSelected (the cell's colspan is 0)");
+
+  try {
+    getTableEditor().getCellDataAt(editor.firstChild, 0, 1,
+                                   cellElementWrapper,
+                                   startRowIndexWrapper, startColumnIndexWrapper,
+                                   rowspanWrapper, colspanWrapper,
+                                   effectiveRowspanWrapper, effectiveColspanWrapper,
+                                   isSelectedWrapper);
+    ok(false, "getTableEditor().getCellDataAt(<table>, 0, 1) should throw exception since there is no cell due to right side of a cell whose colspan is 0");
+  } catch (e) {
+    ok(true, "getTableEditor().getCellDataAt(<table>, 0, 1) should throw exception since there is no cell due to right side of a cell whose colspan is 0");
+  }
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(SpecialPowers.Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>

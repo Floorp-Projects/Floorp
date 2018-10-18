@@ -19,7 +19,7 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    const { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
     const measurement = await memory.measure();
     ok(measurement.total > 0, "total memory is valid");
     ok(measurement.domSize > 0, "domSize is valid");
@@ -30,7 +30,7 @@ window.onload = function() {
     ok(measurement.otherSize > 0, "otherSize is valid");
     ok(measurement.jsMilliseconds, "jsMilliseconds is valid");
     ok(measurement.nonJSMilliseconds, "nonJSMilliseconds is valid");
-    destroyServerAndFinish(client);
+    await destroyServerAndFinish(target);
   })();
 };
 </script>

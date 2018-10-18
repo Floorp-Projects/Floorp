@@ -16,8 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1262439
 "use strict";
 
 window.onload = function() {
-  const {InspectorFront} = require("devtools/shared/fronts/inspector");
-
   SimpleTest.waitForExplicitFinish();
 
   let win = null;
@@ -27,15 +25,9 @@ window.onload = function() {
     info("Setting up inspector actor");
 
     const url = document.getElementById("inspectorContent").href;
-
-    await new Promise(resolve => {
-      attachURL(url, function(err, client, tab, doc) {
-        win = doc.defaultView;
-        inspector = InspectorFront(client, tab);
-        resolve();
-      });
-    });
-
+    const { target, doc } = await attachURL(url);
+    inspector = target.getInspector();
+    win = doc.defaultView;
     runNextTest();
   });
 

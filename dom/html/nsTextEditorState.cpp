@@ -341,6 +341,7 @@ public:
   NS_IMETHOD WordExtendForDelete(bool aForward) override;
   NS_IMETHOD LineMove(bool aForward, bool aExtend) override;
   NS_IMETHOD IntraLineMove(bool aForward, bool aExtend) override;
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD PageMove(bool aForward, bool aExtend) override;
   NS_IMETHOD CompleteScroll(bool aForward) override;
   NS_IMETHOD CompleteMove(bool aForward, bool aExtend) override;
@@ -677,10 +678,10 @@ nsTextInputSelectionImpl::PageMove(bool aForward, bool aExtend)
 {
   // expected behavior for PageMove is to scroll AND move the caret
   // and to remain relative position of the caret in view. see Bug 4302.
-  if (mScrollFrame)
-  {
+  if (mScrollFrame) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-    frameSelection->CommonPageMove(aForward, aExtend, mScrollFrame);
+    nsIFrame* scrollFrame = do_QueryFrame(mScrollFrame);
+    frameSelection->CommonPageMove(aForward, aExtend, scrollFrame);
   }
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.

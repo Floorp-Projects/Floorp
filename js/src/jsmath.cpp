@@ -543,7 +543,7 @@ js::minmax_impl(JSContext* cx, bool max, HandleValue a, HandleValue b, MutableHa
 double
 js::powi(double x, int32_t y)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
     uint32_t n = Abs(y);
     double m = x;
     double p = 1;
@@ -572,7 +572,7 @@ js::powi(double x, int32_t y)
 double
 js::ecmaPow(double x, double y)
 {
-    AutoUnsafeCallWithABI unsafe;
+    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
 
     /*
      * Use powi if the exponent is an integer-valued double. We don't have to

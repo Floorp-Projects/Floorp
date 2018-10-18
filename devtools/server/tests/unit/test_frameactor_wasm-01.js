@@ -24,7 +24,7 @@ function run_test() {
   gClient.connect().then(function() {
     attachTestTabAndResume(
       gClient, "test-stack",
-      function(response, tabClient, threadClient) {
+      function(response, targetFront, threadClient) {
         gThreadClient = threadClient;
         gThreadClient.reconfigure({
           observeAsmJS: true,

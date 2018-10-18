@@ -1,0 +1,184 @@
+{
+  "addonDescription": {
+    "message": "Прави клипове и снимки на уебстраница и ги запазва временно или за постоянно."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Снимка на екрана"
+  },
+  "myShotsLink": {
+    "message": "Моите снимки"
+  },
+  "screenshotInstructions": {
+    "message": "За да изберете участък влачете или щракнете с мишката в страницата. Натиснете ESC за отказ."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Запазване"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Запазване на видимата област"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Запазване на цялата страница"
+  },
+  "cancelScreenshot": {
+    "message": "Отказ"
+  },
+  "downloadScreenshot": {
+    "message": "Изтегляне"
+  },
+  "downloadOnlyNotice": {
+    "message": "В момента сте в режим на изтегляне."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots автоматично преминава в режим на изтегляне в следните ситуации"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "в поверителен прозорец"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Бисквитките от трети страни са забранени"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "настройката „Не помни история“ е включена"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Използвате Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Качването на снимки е изключено."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Препратката е копирана"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Препратка към снимката е копирана в системния буфер. За да я поставите натиснете $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Копиране"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Снимката е копирана"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Снимката е копирана в системния буфер. За да я поставите натиснете $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Запазеното изображение ще бъде отрязано до височина $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Повреда."
+  },
+  "requestErrorDetails": {
+    "message": "Съжаляваме! Снимката не е запазена. Опитайте по-късно."
+  },
+  "connectionErrorTitle": {
+    "message": "Няма връзка с вашите снимки."
+  },
+  "connectionErrorDetails": {
+    "message": "Моля, проверете своята връзка към интернет. Ако имате връзка с Мрежата, в такъв случай може да има временен проблем с услугата на Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Снимката не може да бъде запазена, защото има проблем с услугата на Firefox Screenshots. Опитайте по-късно."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Снимка на тази страница не може да бъде направена."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Това не е обикновена уебстраница и за това снимка не може да ѝ бъде направена."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Не може да правите снимки на страницата на Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Избраната област е твърде малка"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Снимането е изключено в поверителен режим"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Съжаляваме за неудобството. Очаквайте тази възможност в бъдещите версии."
+  },
+  "genericErrorTitle": {
+    "message": "Леле! Нещо се обърка с Firefox Screenshots."
+  },
+  "genericErrorDetails": {
+    "message": "Не сме сигурни какво точно се случи. Може да опитате отново, както и да снимате друга страница."
+  },
+  "tourBodyIntro": {
+    "message": "Създавайте, запазвайте и споделяйте снимки на екрана без да напускате Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Нов начин за запазване"
+  },
+  "tourBodyPageAction": {
+    "message": "Отворете менюто за действия със страницата, което се намира в адресната лента, когато желаете да направите снимка на екрана."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Уловете само нужното"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Щракнете с мишката или влачете, за да уловите части от страницата. А когато посочите елементи от страницата – те се осветяват."
+  },
+  "tourHeaderFullPage": {
+    "message": "Улавяйте прозорци и цели страници"
+  },
+  "tourBodyFullPage": {
+    "message": "Използвайте бутоните в горния десен ъгъл, за да уловите само видимата част или цялата страница."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Както ви харесва"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Запазвайте снимките на страници от Мрежата, за да ги споделяте по-лесно или ги изтегляйте на компютъра си. А бутонът „Моите снимки“ ще ви покаже всички направени от вас снимки."
+  },
+  "tourSkip": {
+    "message": "Пропускане"
+  },
+  "tourNext": {
+    "message": "Напред"
+  },
+  "tourPrevious": {
+    "message": "Назад"
+  },
+  "tourDone": {
+    "message": "Готово"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Използвайки Firefox Screenshots вие се съгласявате с $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Условията"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Политиката на поверителност"
+  },
+  "libraryLabel": {
+    "message": "Снимки"
+  }
+}

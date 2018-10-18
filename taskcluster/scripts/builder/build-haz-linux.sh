@@ -27,7 +27,7 @@ while [[ $# -gt 0 ]]; do
     fi
 done
 
-SCRIPT_FLAGS="$@"
+SCRIPT_FLAGS=$*
 
 # Ensure all the scripts in this dir are on the path....
 DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -36,14 +36,14 @@ PATH=$DIRNAME:$PATH
 # Use GECKO_BASE_REPOSITORY as a signal for whether we are running in automation.
 export AUTOMATION=${GECKO_BASE_REPOSITORY:+1}
 
-: ${GECKO_DIR:=$WORKSPACE/gecko}
-: ${TOOLTOOL_CACHE:=$WORKSPACE/tt-cache}
+: "${GECKO_DIR:="$DIRNAME"/../../..}"
+: "${TOOLTOOL_CACHE:=$WORKSPACE/tt-cache}"
 
-if ! [ -d $GECKO_DIR ]; then
+if ! [ -d "$GECKO_DIR" ]; then
     echo "GECKO_DIR must be set to a directory containing a gecko source checkout" >&2
     exit 1
 fi
-GECKO_DIR=$( cd "$GECKO_DIR" && pwd )
+GECKO_DIR="$( cd "$GECKO_DIR" && pwd )"
 
 # Directory to populate with tooltool-installed tools
 export TOOLTOOL_DIR="$WORKSPACE"
@@ -52,9 +52,13 @@ export TOOLTOOL_DIR="$WORKSPACE"
 export MOZ_OBJDIR="$WORKSPACE/obj-analyzed"
 mkdir -p "$MOZ_OBJDIR"
 
-if [ -n "$DO_TOOLTOOL" ]; then
-  ( cd $TOOLTOOL_DIR; $GECKO_DIR/mach artifact toolchain -v${TOOLTOOL_MANIFEST:+ --tooltool-url https://tooltool.mozilla-releng.net/ --tooltool-manifest $GECKO_DIR/$TOOLTOOL_MANIFEST} --cache-dir $TOOLTOOL_CACHE${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}} )
-fi
+if [ -n "$DO_TOOLTOOL" ]; then (
+    cd "$TOOLTOOL_DIR"
+    "$GECKO_DIR"/mach artifact toolchain -v\
+                ${TOOLTOOL_MANIFEST:+ --tooltool-url https://tooltool.mozilla-releng.net/ \
+                                      --tooltool-manifest "$GECKO_DIR/$TOOLTOOL_MANIFEST"} \
+                --cache-dir "$TOOLTOOL_CACHE"${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}}
+) fi
 
 export NO_MERCURIAL_SETUP_CHECK=1
 
@@ -64,14 +68,15 @@ if [[ "$PROJECT" = "browser" ]]; then (
     # Mozbuild config:
     export MOZBUILD_STATE_PATH=$WORKSPACE/mozbuild/
     # Create .mozbuild so mach doesn't complain about this
-    mkdir -p $MOZBUILD_STATE_PATH
+    mkdir -p "$MOZBUILD_STATE_PATH"
 ) fi
 . hazard-analysis.sh
 
 build_js_shell
+analysis_self_test
 
 # Artifacts folder is outside of the cache.
-mkdir -p $HOME/artifacts/ || true
+mkdir -p "$HOME"/artifacts/ || true
 
 function onexit () {
     grab_artifacts "$WORKSPACE/analysis" "$HOME/artifacts"

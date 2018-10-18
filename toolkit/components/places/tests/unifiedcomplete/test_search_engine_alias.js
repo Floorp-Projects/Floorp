@@ -18,7 +18,6 @@ add_task(async function() {
       searchParam: "enable-actions",
       matches: [ makeSearchMatch(alias, { engineName: `Aliased${alias.toUpperCase()}MozSearch`,
                                           searchQuery: "", alias, heuristic: true }),
-        { uri: histURI, title: "History entry" },
       ],
     });
 
@@ -27,7 +26,6 @@ add_task(async function() {
       searchParam: "enable-actions",
       matches: [ makeSearchMatch(`${alias} `, { engineName: `Aliased${alias.toUpperCase()}MozSearch`,
                                                 searchQuery: "", alias, heuristic: true }),
-        { uri: histURI, title: "History entry" },
       ],
     });
 

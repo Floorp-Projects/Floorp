@@ -514,7 +514,7 @@ protected:
 
   nsresult OnRedirectVerifyCallback(nsresult result);
 
-  void SetTimerEventTarget(nsITimer* aTimer);
+  nsIEventTarget* GetTimerEventTarget();
 
   nsresult DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable);
 

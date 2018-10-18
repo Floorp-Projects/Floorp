@@ -53,7 +53,8 @@ public:
                          webgl::UniformInfo* info, GLuint loc, size_t arrayIndex);
 
     bool ValidateForProgram(const WebGLProgram* prog) const;
-    bool ValidateSizeAndType(uint8_t setterElemSize, GLenum setterType) const;
+    bool ValidateSizeAndType(uint8_t setterElemSize,
+                             webgl::AttribBaseType setterType) const;
     bool ValidateArrayLength(uint8_t setterElemSize, size_t setterArraySize) const;
 
     JS::Value GetUniform(JSContext* js) const;

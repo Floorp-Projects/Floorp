@@ -235,7 +235,7 @@ OSKeyStore::GetIsNSSKeyStore(bool* aNSSKeyStore)
 // Async interfaces that return promises because the key store implementation
 // might block, e.g. asking for a password.
 
-static nsresult
+nsresult
 GetPromise(JSContext* aCx, /* out */ RefPtr<Promise>& aPromise)
 {
   nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);

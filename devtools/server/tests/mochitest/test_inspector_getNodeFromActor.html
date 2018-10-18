@@ -20,16 +20,13 @@ window.onload = function() {
 
 let gWalker;
 
-addTest(function() {
+addTest(async function() {
   const url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
-    const {InspectorFront} = require("devtools/shared/fronts/inspector");
-    const inspector = InspectorFront(client, tab);
-
-    promiseDone(inspector.getWalker().then(walker => {
-      gWalker = walker;
-    }).then(runNextTest));
-  });
+  const { target } = await attachURL(url);
+  const inspector = target.getInspector();
+  gWalker = await inspector.getWalker();
+  ok(gWalker, "getWalker() should return an actor.");
+  runNextTest();
 });
 
 addTest(function() {

@@ -831,6 +831,15 @@ Search.prototype = {
       await this._sleep(UrlbarPrefs.get("delay"));
       if (!this.pending)
         return;
+
+      // If the heuristic result is a search engine result with an alias and an
+      // empty query, then we're done.  We want to show only that single result
+      // as a clear hint that the user can continue typing to search.
+      if (this._searchEngineAliasHasEmptyQuery) {
+        this._cleanUpNonCurrentMatches(null, false);
+        this._autocompleteSearch.finishSearch(true);
+        return;
+      }
     }
 
     // Only add extension suggestions if the first token is a registered keyword
@@ -1361,6 +1370,7 @@ Search.prototype = {
     let query = this._trimmedOriginalSearchString.substr(alias.length + 1);
 
     this._addSearchEngineMatch(match, query);
+    this._searchEngineAliasHasEmptyQuery = !query;
     if (!this._keywordSubstitute) {
       this._keywordSubstitute = match.resultDomain;
     }
@@ -1785,7 +1795,8 @@ Search.prototype = {
    * Removes matches from a previous search, that are no more returned by the
    * current search
    * @param type
-   *        The UrlbarUtils.MATCH_GROUP to clean up.
+   *        The UrlbarUtils.MATCH_GROUP to clean up.  Pass null (or another
+   *        falsey value) to clean up all groups.
    * @param [optional] notify
    *        Whether to notify a result change.
    */
@@ -1799,14 +1810,14 @@ Search.prototype = {
       // No match arrived yet, so any match of the given type should be removed
       // from the top.
       while (this._previousSearchMatchTypes.length &&
-             this._previousSearchMatchTypes[0] == type) {
+             (!type || this._previousSearchMatchTypes[0] == type)) {
         this._previousSearchMatchTypes.shift();
         this._result.removeMatchAt(0);
         changed = true;
       }
     } else {
       for (let bucket of this._buckets) {
-        if (bucket.type != type) {
+        if (type && bucket.type != type) {
           index += bucket.count;
           continue;
         }

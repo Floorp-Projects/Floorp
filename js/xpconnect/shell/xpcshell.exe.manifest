@@ -12,6 +12,16 @@
         type="win32"
 />
 <description>XPConnect Shell</description>
+<dependency>
+        <dependentAssembly>
+                <assemblyIdentity
+                        type="win32"
+                        name="mozglue"
+                        version="1.0.0.0"
+                        language="*"
+                />
+        </dependentAssembly>
+</dependency>
 <ms_asmv3:trustInfo xmlns:ms_asmv3="urn:schemas-microsoft-com:asm.v3">
   <ms_asmv3:security>
     <ms_asmv3:requestedPrivileges>

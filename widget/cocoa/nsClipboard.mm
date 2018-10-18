@@ -427,7 +427,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
     nsresult rv = mTransferable->FlavorsTransferableCanImport(flavors);
     if (NS_SUCCEEDED(rv)) {
       for (uint32_t j = 0; j < flavors.Length(); j++) {
-        nsCString transferableFlavorStr = flavors[j];
+        const nsCString& transferableFlavorStr = flavors[j];
 
         for (uint32_t k = 0; k < aLength; k++) {
           if (transferableFlavorStr.Equals(aFlavorList[k])) {

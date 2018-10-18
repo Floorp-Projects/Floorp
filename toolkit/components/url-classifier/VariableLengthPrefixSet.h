@@ -62,6 +62,7 @@ private:
   const RefPtr<nsUrlClassifierPrefixSet> mFixedPrefixSet;
   mozilla::safebrowsing::PrefixStringMap mVLPrefixSet;
 
+  nsCString mName;
   nsCString mMemoryReportPath;
 };
 

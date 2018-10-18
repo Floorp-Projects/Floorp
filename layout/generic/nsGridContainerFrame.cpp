@@ -612,21 +612,35 @@ struct nsGridContainerFrame::GridItemInfo
                               LogicalAxis aContainerAxis,
                               nscoord aPercentageBasis) const
   {
+    const bool isInlineAxis = aContainerAxis == eLogicalAxisInline;
     const auto* pos = mFrame->IsTableWrapperFrame() ?
       mFrame->PrincipalChildList().FirstChild()->StylePosition() :
       mFrame->StylePosition();
-    const auto& size = aContainerAxis == eLogicalAxisInline ?
+    const auto& size = isInlineAxis ?
       pos->ISize(aContainerWM) : pos->BSize(aContainerWM);
+    // max-content and min-content should behave as initial value in block axis.
+    // FIXME: Bug 567039: moz-fit-content and -moz-available are not supported
+    // for block size dimension on sizing properties (e.g. height), so we
+    // treat it as `auto`.
+    bool isAuto = size.GetUnit() == eStyleUnit_Auto ||
+      (isInlineAxis == aContainerWM.IsOrthogonalTo(mFrame->GetWritingMode()) &&
+       size.GetUnit() == eStyleUnit_Enumerated);
     // NOTE: if we have a definite size then our automatic minimum size
     // can't affect our size.  Excluding these simplifies applying
     // the clamping in the right cases later.
-    if (size.GetUnit() != eStyleUnit_Auto &&
-        !::IsPercentOfIndefiniteSize(size, aPercentageBasis)) {
+    if (!isAuto && !::IsPercentOfIndefiniteSize(size, aPercentageBasis)) {
       return false;
     }
-    const auto& minSize = aContainerAxis == eLogicalAxisInline ?
+    const auto& minSize = isInlineAxis ?
       pos->MinISize(aContainerWM) : pos->MinBSize(aContainerWM);
-    return minSize.GetUnit() == eStyleUnit_Auto &&
+    // max-content and min-content should behave as initial value in block axis.
+    // FIXME: Bug 567039: moz-fit-content and -moz-available are not supported
+    // for block size dimension on sizing properties (e.g. height), so we
+    // treat it as `auto`.
+    isAuto = minSize.GetUnit() == eStyleUnit_Auto ||
+      (isInlineAxis == aContainerWM.IsOrthogonalTo(mFrame->GetWritingMode()) &&
+       minSize.GetUnit() == eStyleUnit_Enumerated);
+    return isAuto &&
            mFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
   }
 
@@ -3768,8 +3782,18 @@ MinSize(const GridItemInfo&    aGridItem,
   nsIFrame* child = aGridItem.mFrame;
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   const nsStylePosition* stylePos = child->StylePosition();
-  const nsStyleCoord& sizeStyle =
+  nsStyleCoord sizeStyle =
     axis == eAxisHorizontal ? stylePos->mWidth : stylePos->mHeight;
+
+  auto ourInlineAxis = child->GetWritingMode().PhysicalAxis(eLogicalAxisInline);
+  // max-content and min-content should behave as initial value in block axis.
+  // FIXME: Bug 567039: moz-fit-content and -moz-available are not supported
+  // for block size dimension on sizing properties (e.g. height), so we
+  // treat it as `auto`.
+  if (axis != ourInlineAxis && sizeStyle.GetUnit() == eStyleUnit_Enumerated) {
+    sizeStyle.SetAutoValue();
+  }
+
   if (sizeStyle.GetUnit() != eStyleUnit_Auto && !sizeStyle.HasPercent()) {
     nscoord s =
       MinContentContribution(aGridItem, aState, aRC, aCBWM, aAxis, aCache);
@@ -3798,7 +3822,13 @@ MinSize(const GridItemInfo&    aGridItem,
                                               *aCache->mPercentageBasis);
   const nsStyleCoord& style = axis == eAxisHorizontal ? stylePos->mMinWidth
                                                       : stylePos->mMinHeight;
-  auto unit = style.GetUnit();
+  // max-content and min-content should behave as initial value in block axis.
+  // FIXME: Bug 567039: moz-fit-content and -moz-available are not supported
+  // for block size dimension on sizing properties (e.g. height), so we
+  // treat it as `auto`.
+  auto unit = axis != ourInlineAxis && style.GetUnit() == eStyleUnit_Enumerated
+    ? eStyleUnit_Auto
+    : style.GetUnit();
   if (unit == eStyleUnit_Enumerated ||
       (unit == eStyleUnit_Auto &&
        child->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)) {
@@ -5129,7 +5159,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   if (isConstrainedBSize && !wm.IsOrthogonalTo(childWM)) {
     bool stretch = false;
     if (!childRI.mStyleMargin->HasBlockAxisAuto(childWM) &&
-        childRI.mStylePosition->BSize(childWM).GetUnit() == eStyleUnit_Auto) {
+        childRI.mStylePosition->BSize(childWM).IsAutoOrEnum()) {
       auto blockAxisAlignment =
         childRI.mStylePosition->UsedAlignSelf(Style());
       if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||

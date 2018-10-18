@@ -159,7 +159,7 @@
           return;
         }
 
-        window.openPreferences("panePrivacy", {origin: "autofillFooter"});
+        window.openPreferences("privacy-form-autofill", {origin: "autofillFooter"});
       ]]></handler>
     </handlers>
 

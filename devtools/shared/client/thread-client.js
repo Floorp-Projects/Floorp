@@ -25,7 +25,7 @@ const noop = () => {};
  * is a front to the thread actor created in the server side, hiding the
  * protocol details in a traditional JavaScript API.
  *
- * @param client DebuggerClient|TabClient
+ * @param client DebuggerClient, WorkerClient or BrowsingContextFront
  *        The parent of the thread (tab for target-scoped debuggers,
  *        DebuggerClient for chrome debuggers).
  * @param actor string
@@ -697,6 +697,30 @@ ThreadClient.prototype = {
   getLastPausePacket: function() {
     return this._lastPausePacket;
   },
+
+  /**
+   * Requests to set XHR breakpoint
+   * @param string path
+   *        pause when url contains `path`
+   * @param string method
+   *        pause when method of request is `method`
+   */
+  setXHRBreakpoint: DebuggerClient.requester({
+    type: "setXHRBreakpoint",
+    path: arg(0),
+    method: arg(1)
+  }),
+
+  /**
+   * Request to remove XHR breakpoint
+   * @param string path
+   * @param string method
+   */
+  removeXHRBreakpoint: DebuggerClient.requester({
+    type: "removeXHRBreakpoint",
+    path: arg(0),
+    method: arg(1)
+  }),
 
   /**
    * Return an EnvironmentClient instance for the given environment actor form.

@@ -75,10 +75,6 @@ class MozProgressmeter extends MozXULElement {
     this._initUI();
   }
 
-  disconnectedCallback() {
-    this.runAnimation = false;
-  }
-
   static get observedAttributes() {
     return [ "mode" ];
   }
@@ -94,60 +90,13 @@ class MozProgressmeter extends MozXULElement {
   }
 
   _initUI() {
-    let isUndetermined = this.isUndetermined();
-    let content = isUndetermined ?
-      `
-        <stack class="progress-remainder" flex="1" style="overflow: -moz-hidden-unscrollable;">
-          <spacer class="progress-bar" top="0" style="margin-right: -1000px;"/>
-        </stack>
-      ` :
-      `
-        <spacer class="progress-bar"/>
-        <spacer class="progress-remainder"/>
-      `;
-
-    this._stack = null;
-    this._spacer = null;
-    this._runAnimation = isUndetermined;
+    let content = `
+      <spacer class="progress-bar"/>
+      <spacer class="progress-remainder"/>
+    `;
 
     this.textContent = "";
     this.appendChild(MozXULElement.parseXULToFragment(content));
-
-    if (!isUndetermined) {
-      return;
-    }
-
-    this._stack = this.querySelector(".progress-remainder");
-    this._spacer = this.querySelector(".progress-bar");
-    this._isLTR = document.defaultView.getComputedStyle(this).direction == "ltr";
-    this._startTime = window.performance.now();
-
-    let nextStep = (t) => {
-      if (!this._runAnimation) {
-        return;
-      }
-
-      let width = this._stack.boxObject.width;
-      if (width) {
-        let elapsedTime = t - this._startTime;
-
-        // Width of chunk is 1/5 (determined by the ratio 2000:400) of the
-        // total width of the progress bar. The left edge of the chunk
-        // starts at -1 and moves all the way to 4. It covers the distance
-        // in 2 seconds.
-        let position = this._isLTR ? ((elapsedTime % 2000) / 400) - 1 :
-                                     ((elapsedTime % 2000) / -400) + 4;
-
-        width = width >> 2;
-        this._spacer.height = this._stack.boxObject.height;
-        this._spacer.width = width;
-        this._spacer.left = width * position;
-      }
-
-      window.requestAnimationFrame(nextStep);
-    };
-
-    window.requestAnimationFrame(nextStep);
   }
 }
 

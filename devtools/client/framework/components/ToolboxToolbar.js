@@ -232,6 +232,7 @@ class ToolboxToolbar extends Component {
   renderFrameButton(command) {
     const {
       id,
+      isChecked,
       disabled,
       description
     } = command;
@@ -244,7 +245,9 @@ class ToolboxToolbar extends Component {
         disabled,
         menuId: id + "-panel",
         doc: toolbox.doc,
-        className: "command-button devtools-button ",
+        className: `devtools-button command-button ${
+          isChecked ? "command-button-checked " : ""
+        }`,
         ref: "frameMenuButton",
         title: description,
         onCloseButton: toolbox.highlighterUtils.unhighlight,

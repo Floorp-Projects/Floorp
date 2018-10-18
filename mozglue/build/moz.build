@@ -35,6 +35,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DELAYLOAD_DLLS += [
         'user32.dll',
     ]
+    RCINCLUDE = 'mozglue.rc'
 
     if CONFIG['MOZ_PGO'] and CONFIG['CC_TYPE'] == 'clang-cl':
         SOURCES += ['cygprofile.cpp']

@@ -14,9 +14,10 @@
 @import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/DebugTargetPane.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/ExtensionDetail.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/WorkerDetail.css";
-@import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/DeviceSidebarItemAction.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/Sidebar.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarFixedItem.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarItem.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarRuntimeItem.css";
 
 :root {
   /* Import css variables from common.css */

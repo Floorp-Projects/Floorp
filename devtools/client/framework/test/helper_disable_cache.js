@@ -85,11 +85,12 @@ async function setDisableCacheCheckboxChecked(tabX, state) {
 
   if (cbx.checked !== state) {
     info("Setting disable cache checkbox to " + state + " for " + tabX.title);
+    const onReconfigured = tabX.toolbox.once("cache-reconfigured");
     cbx.click();
 
-    // We need to wait for all checkboxes to be updated and the docshells to
-    // apply the new cache settings.
-    await waitForTick();
+    // We have to wait for the reconfigure request to be finished before reloading
+    // the page.
+    await onReconfigured;
   }
 }
 

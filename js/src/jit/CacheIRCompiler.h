@@ -32,6 +32,7 @@ namespace jit {
     _(GuardType)                          \
     _(GuardClass)                         \
     _(GuardGroupHasUnanalyzedNewScript)   \
+    _(GuardIsExtensible)                  \
     _(GuardIsNativeFunction)              \
     _(GuardFunctionPrototype)             \
     _(GuardIsNativeObject)                \
@@ -46,6 +47,10 @@ namespace jit {
     _(GuardAndGetNumberFromString)        \
     _(GuardAndGetIndexFromString)         \
     _(GuardIndexIsNonNegative)            \
+    _(GuardIndexGreaterThanDenseCapacity) \
+    _(GuardIndexGreaterThanArrayLength)   \
+    _(GuardIndexIsValidUpdateOrAdd)       \
+    _(GuardIndexGreaterThanDenseInitLength) \
     _(GuardTagNotEqual)                   \
     _(GuardXrayExpandoShapeAndDefaultProto)\
     _(GuardNoAllocationMetadataBuilder)   \

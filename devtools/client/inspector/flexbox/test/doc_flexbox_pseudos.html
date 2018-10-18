@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+.container {
+  width: 300px;
+  height: 150px;
+  margin: 10px;
+  display: flex;
+}
+
+.container::before,
+.container::after {
+  color: #f06;
+  border: 1px solid #f06;
+  background: gold;
+  padding: 1em;
+}
+
+.container::before {
+  content: "::before pseudo-element item";
+}
+
+.container::after {
+  content: "::after pseudo-element item";
+}
+</style>
+<div class="container"></div>

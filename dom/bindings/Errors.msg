@@ -116,3 +116,4 @@ MSG_DEF(MSG_INVALID_PANNERNODE_REFDISTANCE_ERROR, 0, JSEXN_RANGEERR, "The refDis
 MSG_DEF(MSG_INVALID_PANNERNODE_MAXDISTANCE_ERROR, 0, JSEXN_RANGEERR, "The maxDistance value passed to PannerNode must be positive.")
 MSG_DEF(MSG_INVALID_PANNERNODE_ROLLOFF_ERROR, 0, JSEXN_RANGEERR, "The rolloffFactor value passed to PannerNode must not be negative.")
 MSG_DEF(MSG_NOT_ARRAY_NOR_UNDEFINED, 1, JSEXN_TYPEERR, "{0} is neither an array nor undefined.")
+MSG_DEF(MSG_URL_NOT_LOADABLE, 1, JSEXN_TYPEERR, "Access to '{0}' from script denied.")

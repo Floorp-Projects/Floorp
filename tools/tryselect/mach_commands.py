@@ -234,3 +234,13 @@ class TrySelect(MachCommandBase):
 
         at = AutoTry(self.topsrcdir, self._mach_context)
         return at.run(**kwargs)
+
+    @SubCommand('try',
+                'release',
+                description='Push the current tree to try, configured for a staging release.',
+                parser=get_parser('release'))
+    def try_release(self, **kwargs):
+        """Push the current tree to try, configured for a staging release.
+        """
+        from tryselect.selectors.release import run_try_release
+        return run_try_release(**kwargs)

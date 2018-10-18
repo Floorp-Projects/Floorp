@@ -831,7 +831,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
   target.emplace(aElement, aPseudoType);
   KeyframeEffectParams effectOptions;
   RefPtr<ElementPropertyTransition> pt =
-    new ElementPropertyTransition(aElement->OwnerDoc(), target, timing,
+    new ElementPropertyTransition(aElement->OwnerDoc(), target, std::move(timing),
                                   startForReversingTest, reversePortion,
                                   effectOptions);
 

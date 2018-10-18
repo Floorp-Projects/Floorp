@@ -93,10 +93,10 @@ this.ManualMigration = class ManualMigration {
     this.store.dispatch({type: at.MIGRATION_COMPLETED});
   }
 
-  onAction(action) {
+  async onAction(action) {
     switch (action.type) {
       case at.PREFS_INITIAL_VALUES:
-        this.expireIfNecessary(action.data.migrationExpired);
+        await this.expireIfNecessary(action.data.migrationExpired);
         break;
       case at.MIGRATION_START:
         MigrationUtils.showMigrationWizard(action._target.browser.ownerGlobal, [MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB]);

@@ -3731,14 +3731,11 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     /* FIXME: test zero, and test calc clamping */
-    initial_values: [ " auto",
-      // these four keywords compute to the initial value when the
-      // writing mode is horizontal, and that's the context we're testing in
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
-    ],
+    initial_values: [ " auto" ],
     /* computed value tests for height test more with display:block */
     prerequisites: { "display": "block" },
     other_values: [ "15px", "3em", "15%",
+      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
       "calc(2px)",
       "calc(50%)",
       "calc(3*25px)",
@@ -3989,12 +3986,9 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     prerequisites: { "display": "block" },
-    initial_values: [ "none",
-      // these four keywords compute to the initial value when the
-      // writing mode is horizontal, and that's the context we're testing in
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
-    ],
+    initial_values: [ "none" ],
     other_values: [ "30px", "50%", "0",
+      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
       "calc(2px)",
       "calc(-2px)",
       "calc(0px)",
@@ -4033,12 +4027,9 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     prerequisites: { "display": "block" },
-    initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)",
-      // these four keywords compute to the initial value when the
-      // writing mode is horizontal, and that's the context we're testing in
-      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
-    ],
+    initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)" ],
     other_values: [ "30px", "50%",
+      "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
       "calc(-1%)",
       "calc(2px)",
       "calc(50%)",

@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Laabi Carwol",
   "firstrun_privacy_notice": "Tintinol Suturo",
   "firstrun_continue_to_login": "Jokku",
-  "firstrun_skip_login": "Diw ngal daawal"
+  "firstrun_skip_login": "Diw ngal daawal",
+  "context_menu_title": "Open menu"
 };

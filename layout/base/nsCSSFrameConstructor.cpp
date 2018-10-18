@@ -2426,7 +2426,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
     RefPtr<nsXBLBinding> binding;
     rv = xblService->LoadBindings(aDocElement, display->mBinding->GetURI(),
-                                  display->mBinding->mExtraData->Principal(),
+                                  display->mBinding->ExtraData()->Principal(),
                                   getter_AddRefs(binding), &resolveStyle);
     if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED) {
       // Binding will load asynchronously.
@@ -3832,7 +3832,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
     // If we need to create a block formatting context to wrap our
     // kids, do it now.
-    const nsStyleDisplay* maybeAbsoluteContainingBlockDisplay = display;
     nsIFrame* maybeAbsoluteContainingBlockStyleFrame = primaryFrame;
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
@@ -3882,7 +3881,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       // absolute container.
       auto outerDisplay = outerSC->StyleDisplay();
       if (outerDisplay->IsAbsPosContainingBlock(outerFrame)) {
-        maybeAbsoluteContainingBlockDisplay = outerDisplay;
         maybeAbsoluteContainingBlock = outerFrame;
         maybeAbsoluteContainingBlockStyleFrame = outerFrame;
         innerFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
@@ -3918,18 +3916,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         aState.PushAbsoluteContainingBlock(nullptr, nullptr, absoluteSaveState);
       } else if (!(bits & FCDATA_SKIP_ABSPOS_PUSH)) {
         maybeAbsoluteContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-        // This check is identical to nsStyleDisplay::IsAbsPosContainingBlock
-        // except without the assertion that the style display and frame match.
-        // When constructing scroll frames we intentionally use the style
-        // display for the outer, but make the inner the containing block.
-        if ((maybeAbsoluteContainingBlockDisplay->IsAbsolutelyPositionedStyle() ||
-             maybeAbsoluteContainingBlockDisplay->IsRelativelyPositionedStyle() ||
-             maybeAbsoluteContainingBlockDisplay->IsFixedPosContainingBlock(
-                 maybeAbsoluteContainingBlockStyleFrame)) &&
-            !nsSVGUtils::IsInSVGTextSubtree(maybeAbsoluteContainingBlockStyleFrame)) {
-          nsContainerFrame* cf = static_cast<nsContainerFrame*>(
-              maybeAbsoluteContainingBlock);
-          aState.PushAbsoluteContainingBlock(cf, cf, absoluteSaveState);
+        if (maybeAbsoluteContainingBlockStyleFrame->IsAbsPosContainingBlock()) {
+          auto* cf = static_cast<nsContainerFrame*>(maybeAbsoluteContainingBlock);
+          aState.PushAbsoluteContainingBlock(cf, maybeAbsoluteContainingBlockStyleFrame, absoluteSaveState);
         }
       }
 
@@ -4181,6 +4170,7 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
     SIMPLE_TAG_CHAIN(description, nsCSSFrameConstructor::FindXULDescriptionData),
     SIMPLE_XUL_CREATE(menu, NS_NewMenuFrame),
     SIMPLE_XUL_CREATE(menubutton, NS_NewMenuFrame),
+    SIMPLE_XUL_CREATE(menulist, NS_NewMenuFrame),
     SIMPLE_XUL_CREATE(menuitem, NS_NewMenuItemFrame),
 #ifdef XP_MACOSX
     SIMPLE_TAG_CHAIN(menubar, nsCSSFrameConstructor::FindXULMenubarData),
@@ -5579,7 +5569,7 @@ nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
   bool resolveStyle;
   nsresult rv = xblService->LoadBindings(aContent.AsElement(),
                                          binding->GetURI(),
-                                         binding->mExtraData->Principal(),
+                                         binding->ExtraData()->Principal(),
                                          getter_AddRefs(newPendingBinding->mBinding),
                                          &resolveStyle);
   if (NS_FAILED(rv)) {

@@ -21,8 +21,6 @@ function start() {
   // Start the client.
   client = new DebuggerClient(transport);
 
-  // Attach listeners for client events.
-  client.addListener("tabNavigated", onTab);
   client.connect((type, traits) => {
     // Now the client is conected to the server.
     debugTab();
@@ -50,9 +48,6 @@ async function startClient() {
 
   // Start the client.
   client = new DebuggerClient(transport);
-
-  // Attach listeners for client events.
-  client.addListener("tabNavigated", onTab);
 
   client.connect((type, traits) => {
     // Now the client is conected to the server.
@@ -83,12 +78,15 @@ function attachToTab() {
     let tab = response.tabs[response.selected];
 
     // Attach to the tab.
-    client.attachTarget(tab.actor).then(([response, tabClient]) => {
-      if (!tabClient) {
+    client.attachTarget(tab.actor).then(([response, targetFront]) => {
+      if (!targetFront) {
         return;
       }
 
-      // Now the tabClient is ready and can be used.
+      // Now the targetFront is ready and can be used.
+
+      // Attach listeners for client events.
+      targetFront.addListener("tabNavigated", onTab);
     });
   });
 }
@@ -105,7 +103,7 @@ async function onTab() {
   // Detach from the previous thread.
   await client.activeThread.detach();
   // Detach from the previous tab.
-  await client.activeTab.detach();
+  await targetFront.activeTab.detach();
   // Start debugging the new tab.
   start();
 }
@@ -169,8 +167,6 @@ function startDebugger() {
 
   // Start the client.
   client = new DebuggerClient(transport);
-  // Attach listeners for client events.
-  client.addListener("tabNavigated", onTab);
   client.connect((type, traits) => {
     // Now the client is conected to the server.
     debugTab();
@@ -190,8 +186,8 @@ function debugTab() {
     // Find the active tab.
     let tab = response.tabs[response.selected];
     // Attach to the tab.
-    client.attachTarget(tab.actor).then(([response, tabClient]) => {
-      if (!tabClient) {
+    client.attachTarget(tab.actor).then(([response, targetFront]) => {
+      if (!targetFront) {
         return;
       }
 

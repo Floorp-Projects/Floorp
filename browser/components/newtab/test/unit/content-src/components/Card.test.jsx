@@ -21,6 +21,7 @@ let DEFAULT_PROPS = {
     image: "http://www.foo.com/img.png",
     guid: 1,
   },
+  intl: {formatMessage: x => x},
   eventSource: "TOP_STORIES",
   shouldSendImpressionStats: true,
   contextMenuOptions: ["Separator"],

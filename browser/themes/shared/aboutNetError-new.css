@@ -9,11 +9,14 @@
 }
 
 body.certerror {
+  width: 100%;
+  justify-content: normal;
+}
+
+body.caution {
   border-style: solid;
   border-color: #ffe900;
   border-width: 16px;
-  width: 100%;
-  justify-content: normal;
 }
 
 body.captiveportal .title {
@@ -61,6 +64,7 @@ button:disabled {
   display: flex;
   justify-content: end;
   padding: 5px;
+  margin-top: 2em;
 }
 
 body:not(.neterror) #certErrorAndCaptivePortalButtonContainer {
@@ -95,7 +99,7 @@ body:not(.clockSkewError) #advancedPanelErrorTryAgain {
   display: none;
 }
 
-body:not(.clockSkewError) #moreInformationButton {
+body:not(:-moz-any(.clockSkewError,.badStsCert)) #moreInformationButton {
   display: none;
 }
 
@@ -103,7 +107,7 @@ body:not(.clockSkewError) #moreInformationButton {
   margin-inline-start: 0;
 }
 
-body:not(.neterror):not(.clockSkewError) #advancedButton {
+body:not(:-moz-any(.clockSkewError,.badStsCert,.neterror)) #advancedButton {
   display: block;
 }
 
@@ -155,8 +159,12 @@ span#hostname {
   white-space: nowrap;
 }
 
+#viewCertificate {
+  margin: 0 3em;
+}
+
 #badCertTechnicalInfo {
-  margin: 3em;
+  margin: 3em 3em 1em;
   overflow: auto;
   white-space: pre-wrap;
 }

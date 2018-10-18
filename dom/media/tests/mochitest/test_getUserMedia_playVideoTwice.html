@@ -13,7 +13,7 @@
   runTest(function () {
     return getUserMedia({video: true}).then(stream => {
       var testVideo = createMediaElement('video', 'testVideo');
-      var streamPlayback = new LocalMediaStreamPlayback(testVideo, stream);
+      var streamPlayback = new MediaStreamPlayback(testVideo, stream);
 
       return streamPlayback.playMediaWithoutStoppingTracks(false)
         .then(() => streamPlayback.playMedia(true));

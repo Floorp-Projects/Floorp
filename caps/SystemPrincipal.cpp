@@ -102,7 +102,7 @@ SystemPrincipal::EnsurePreloadCSP(nsIDocument* aDocument,
                                   nsIContentSecurityPolicy** aPreloadCSP)
 {
   // CSP on a system principal makes no sense
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

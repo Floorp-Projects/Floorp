@@ -17,7 +17,7 @@ rules:
   mixins-before-declarations: [2, {exclude: [breakpoint, mq]}]
   nesting-depth: [2, {max-depth: 4}]
   no-debug: 1
-  no-disallowed-properties: [1, {properties: [text-transform]}]
+  no-disallowed-properties: [1, {properties: [margin-left, margin-right, text-transform]}]
   no-duplicate-properties: 2
   no-misspelled-properties: [2, {extra-properties: [-moz-context-properties]}]
   no-url-domains: 0

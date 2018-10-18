@@ -32,14 +32,14 @@
 
   function stopMedia() {
     if (video_status) {
-      video.srcObject.stop();
+      video.srcObject.getTracks().forEach(t => t.stop());
       video.srcObject = null;
       content.removeChild(video);
       capturing = false;
       video_status = false;
     }
     if (audio_status) {
-      audio.srcObject.stop();
+      audio.srcObject.getTracks().forEach(t => t.stop());
       audio.srcObject = null;
       content.removeChild(audio);
       audio_status = false;
@@ -69,8 +69,8 @@
           document.title += "video";
         }
         document.title += " gumtest";
-        audio.srcObject.stop();
-        video.srcObject.stop();
+        audio.srcObject.getTracks().forEach(t => t.stop());
+        video.srcObject.getTracks().forEach(t => t.stop());
       }, function(err) {
         document.title = "failed gumtest";
         stopMedia();

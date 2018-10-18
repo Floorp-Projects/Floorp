@@ -1102,10 +1102,11 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName
           const URLValue* url = component.url._0;
           nsIURI* uri = url->GetURI();
           face->mURI = uri ? new gfxFontSrcURI(uri) : nullptr;
-          face->mReferrer = url->mExtraData->GetReferrer();
-          face->mReferrerPolicy = url->mExtraData->GetReferrerPolicy();
+          URLExtraData* extraData = url->ExtraData();
+          face->mReferrer = extraData->GetReferrer();
+          face->mReferrerPolicy = extraData->GetReferrerPolicy();
           face->mOriginPrincipal =
-            new gfxFontSrcPrincipal(url->mExtraData->Principal());
+            new gfxFontSrcPrincipal(extraData->Principal());
 
           // agent and user stylesheets are treated slightly differently,
           // the same-site origin check and access control headers are

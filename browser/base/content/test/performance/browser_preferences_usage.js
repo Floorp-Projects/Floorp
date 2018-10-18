@@ -92,20 +92,15 @@ add_task(async function startup() {
     },
     "layout.css.dpi": {
       min: 45,
-      max: 75,
+      max: 81,
     },
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
     },
     "extensions.getAddons.cache.enabled": {
-      min: 6,
+      min: 4,
       max: 55,
     },
-
-    // Disabling screenshots in the default test profile triggers some
-    // work in the chrome registry that reads this pref.  This can be removed
-    // when bootstrapped extensions are gone, or even when screenshots
-    // moves away from bootstrap (bug 1422437)
     "chrome.override_package.global": {
       min: 0,
       max: 50,

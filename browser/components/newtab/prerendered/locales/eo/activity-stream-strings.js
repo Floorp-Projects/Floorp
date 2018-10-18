@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "rimarkon pri privateco",
   "firstrun_continue_to_login": "Daŭrigi",
   "firstrun_skip_login": "Pretersalti tiun ĉi paŝon",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Pli da informo"
 };

@@ -18,6 +18,8 @@
 
 let worker;
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+																		true]]});
 let test = function test() {
   SimpleTest.info("test_osfile_comms.xul: Starting test");
   ChromeUtils.import("resource://gre/modules/ctypes.jsm");

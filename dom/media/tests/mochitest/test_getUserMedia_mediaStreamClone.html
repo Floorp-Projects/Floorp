@@ -69,7 +69,6 @@ runTest(async () => {
 
     // Not part of streamClone. Does not get stopped by the playback test.
     otherTrack.stop();
-    otherStream.stop();
 
     let test = createMediaElement('video', 'testClonePlayback');
     let playback = new MediaStreamPlayback(test, streamClone);

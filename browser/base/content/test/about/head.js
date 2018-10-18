@@ -1,5 +1,42 @@
 /* eslint-env mozilla/frame-script */
 
+function injectErrorPageFrame(tab, src) {
+  return ContentTask.spawn(tab.linkedBrowser, {frameSrc: src}, async function({frameSrc}) {
+    let loaded = ContentTaskUtils.waitForEvent(content.wrappedJSObject, "DOMFrameContentLoaded");
+    let iframe = content.document.createElement("iframe");
+    iframe.src = frameSrc;
+    content.document.body.appendChild(iframe);
+    await loaded;
+    // We will have race conditions when accessing the frame content after setting a src,
+    // so we can't wait for AboutNetErrorLoad. Let's wait for the certerror class to
+    // appear instead (which should happen at the same time as AboutNetErrorLoad).
+    await ContentTaskUtils.waitForCondition(() =>
+      iframe.contentDocument.body.classList.contains("certerror"));
+  });
+}
+
+async function openErrorPage(src, useFrame) {
+  let dummyPage = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "dummy_page.html";
+
+  let tab;
+  if (useFrame) {
+    info("Loading cert error page in an iframe");
+    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, dummyPage);
+    await injectErrorPageFrame(tab, src);
+  } else {
+    let certErrorLoaded;
+    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, src);
+      let browser = gBrowser.selectedBrowser;
+      certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+    }, false);
+    info("Loading and waiting for the cert error");
+    await certErrorLoaded;
+  }
+
+  return tab;
+}
+
 function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
   retryTimes = typeof retryTimes !== "undefined" ? retryTimes : 30;
   var tries = 0;

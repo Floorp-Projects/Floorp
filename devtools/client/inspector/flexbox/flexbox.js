@@ -338,7 +338,7 @@ class FlexboxInspector {
     const { flexbox } = this.store.getState();
 
     if (flexbox.highlighted) {
-      this.highlighters.showFlexboxHighlighter(flexbox.nodeFront);
+      this.highlighters.showFlexboxHighlighter(flexbox.flexContainer.nodeFront);
     }
 
     const currentUrl = this.inspector.target.url;

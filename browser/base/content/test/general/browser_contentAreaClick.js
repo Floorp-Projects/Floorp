@@ -37,8 +37,7 @@ var gTests = [
     preventDefault: true,
   },
 
-  // The next test was once handling feedService.forcePreview().  Now it should
-  // just be like Alt click.
+  // The next test should just be like Alt click.
   {
     desc: "Shift+Alt left click",
     setup() {

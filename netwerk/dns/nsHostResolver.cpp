@@ -515,10 +515,17 @@ AddrHostRecord::ResolveComplete()
             // TRR is disabled on request, which is a next-level back-off method.
             Telemetry::Accumulate(Telemetry::DNS_TRR_DISABLED, mNativeSuccess);
         } else {
-            AccumulateCategorical(mTRRSuccess?
-                                  Telemetry::LABELS_DNS_TRR_FIRST::TRRWorked :
-                                  ((mNativeSuccess ? Telemetry::LABELS_DNS_TRR_FIRST::NativeFallback :
-                                    Telemetry::LABELS_DNS_TRR_FIRST::BothFailed)));
+            if (mTRRSuccess) {
+                AccumulateCategorical(Telemetry::LABELS_DNS_TRR_FIRST2::TRR);
+            } else if(mNativeSuccess) {
+                if (mTRRUsed) {
+                    AccumulateCategorical(Telemetry::LABELS_DNS_TRR_FIRST2::NativeAfterTRR);
+                } else {
+                    AccumulateCategorical(Telemetry::LABELS_DNS_TRR_FIRST2::Native);
+                }
+            } else {
+                AccumulateCategorical(Telemetry::LABELS_DNS_TRR_FIRST2::BothFailed);
+            }
         }
     }
 

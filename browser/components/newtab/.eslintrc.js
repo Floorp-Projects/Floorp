@@ -189,7 +189,7 @@ module.exports = {
     "no-void": 2,
     "no-warning-comments": 0, // TODO: Change to `1`?
     "nonblock-statement-body-position": 2,
-    "object-curly-newline": [2, {"multiline": true}],
+    "object-curly-newline": [2, {"multiline": true, "consistent": true}],
     "object-curly-spacing": [2, "never"],
     "object-property-newline": [2, {"allowMultiplePropertiesPerLine": true}],
     "one-var": [2, "never"],

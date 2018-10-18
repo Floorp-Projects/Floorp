@@ -116,7 +116,7 @@ public:
                                                uint32_t size,
                                                ErrorResult& rv);
 
-  // Creates the `$TEMP_DIR/XXXXXX-XXX.fxsnapshot.gz` core dump file that heap
+  // Creates the `$TEMP_DIR/XXXXXX-XXX.fxsnapshot` core dump file that heap
   // snapshots are serialized into.
   static already_AddRefed<nsIFile> CreateUniqueCoreDumpFile(ErrorResult& rv,
                                                             const TimeStamp& now,

@@ -42,8 +42,7 @@ class MOZ_RAII AutoEmittingRunOnceLambda
 //     CallOrNewEmitter cone(this, JSOP_CALL,
 //                           CallOrNewEmitter::ArgumentsKind::Other,
 //                           ValueUsage::WantValue);
-//     cone.emitNameCallee();
-//     emit(print);
+//     cone.emitNameCallee(print);
 //     cone.emitThis();
 //     cone.prepareForNonSpreadArguments();
 //     emit(arg);
@@ -108,11 +107,11 @@ class MOZ_RAII AutoEmittingRunOnceLambda
 //     CallOrNewEmitter cone(this, JSOP_SPREADCALL,
 //                           CallOrNewEmitter::ArgumentsKind::Other,
 //                           ValueUsage::WantValue);
-//     cone.emitNameCallee();
-//     emit(print);
+//     cone.emitNameCallee(print);
 //     cone.emitThis();
-//     if (cone.wantSpreadOperand())
+//     if (cone.wantSpreadOperand()) {
 //       emit(arg)
+//     }
 //     cone.emitSpreadArgumentsTest();
 //     emit([...arg]);
 //     cone.emitEnd(1, Some(offset_of_callee));
@@ -122,11 +121,11 @@ class MOZ_RAII AutoEmittingRunOnceLambda
 //     CallOrNewEmitter cone(this, JSOP_SPREADCALL,
 //                           CallOrNewEmitter::ArgumentsKind::SingleSpreadRest,
 //                           ValueUsage::WantValue);
-//     cone.emitNameCallee();
-//     emit(print);
+//     cone.emitNameCallee(print);
 //     cone.emitThis();
-//     if (cone.wantSpreadOperand())
+//     if (cone.wantSpreadOperand()) {
 //       emit(arg)
+//     }
 //     cone.emitSpreadArgumentsTest();
 //     emit([...arg]);
 //     cone.emitEnd(1, Some(offset_of_callee));
@@ -135,8 +134,7 @@ class MOZ_RAII AutoEmittingRunOnceLambda
 //     CallOrNewEmitter cone(this, JSOP_NEW,
 //                           CallOrNewEmitter::ArgumentsKind::Other,
 //                           ValueUsage::WantValue);
-//     cone.emitNameCallee();
-//     emit(f);
+//     cone.emitNameCallee(f);
 //     cone.emitThis();
 //     cone.prepareForNonSpreadArguments();
 //     emit(arg);

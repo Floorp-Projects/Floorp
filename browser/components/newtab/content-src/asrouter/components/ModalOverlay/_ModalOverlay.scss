@@ -21,9 +21,9 @@
 
 .modalOverlayInner {
   width: 960px;
-  height: 510px;
+  height: 570px;
   position: fixed;
-  top: calc(50% - 255px); // halfway down minus half the height of the modal
+  top: calc(50% - 285px); // halfway down minus half the height of the modal
   left: calc(50% - 480px); // halfway across minus half the width of the modal
   background: $white;
   box-shadow: 0 1px 15px 0 $black-30;
@@ -95,9 +95,9 @@
 
     .modalButton {
       margin-top: 20px;
-      width: 150px;
+      min-width: 150px;
       height: 30px;
-      padding: 4px 0 6px;
+      padding: 4px 30px 6px;
       font-size: 15px;
 
       &:focus,

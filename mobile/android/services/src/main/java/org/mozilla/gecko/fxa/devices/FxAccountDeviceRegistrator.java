@@ -221,16 +221,15 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
 
         if (error.httpStatusCode == 400) {
           if (error.apiErrorNumber == FxAccountRemoteError.UNKNOWN_DEVICE) {
-            recoverFromUnknownDevice(fxAccount);
+            recoverFromUnknownDevice(context, fxAccount, device);
           } else if (error.apiErrorNumber == FxAccountRemoteError.DEVICE_SESSION_CONFLICT) {
             // This can happen if a device was already registered using our session token, and we
             // tried to create a new one (no id field).
             recoverFromDeviceSessionConflict(error, fxAccountClient, sessionToken, fxAccount, device,
                     context, allowRecursion);
           }
-        } else
-        if (error.httpStatusCode == 401
-                && error.apiErrorNumber == FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN) {
+        } else if (error.httpStatusCode == 401
+                   && error.apiErrorNumber == FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN) {
           handleTokenError(error, fxAccountClient, fxAccount);
         } else {
           logErrorAndResetDeviceRegistrationVersionAndTimestamp(error, fxAccount);
@@ -243,6 +242,8 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
         Logger.pii(LOG_TAG, "Registered device ID: " + result.id);
         Log.i(LOG_TAG, "Setting DEVICE_REGISTRATION_VERSION to " + DEVICE_REGISTRATION_VERSION);
         fxAccount.setFxAUserData(result.id, DEVICE_REGISTRATION_VERSION, System.currentTimeMillis());
+        // Ask for a re-upload of the local client record to account for the FxA device ID change.
+        fxAccount.requestImmediateSync(new String[] { "clients" }, null, true);
       }
     });
   }
@@ -330,9 +331,15 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     });
   }
 
-  private static void recoverFromUnknownDevice(final AndroidFxAccount fxAccount) {
+  private static void recoverFromUnknownDevice(final Context context, final AndroidFxAccount fxAccount, final FxAccountDevice device) {
     Log.i(LOG_TAG, "unknown device id, clearing the cached device id");
     fxAccount.setDeviceId(null);
+    // Same device but without a device ID.
+    final FxAccountDevice newDevice = new FxAccountDevice(device.name, null, device.type,
+            null, null,
+            device.pushCallback, device.pushPublicKey,
+            device.pushAuthKey, null);
+    doFxaRegistration(context, fxAccount, newDevice, true);
   }
 
   /**

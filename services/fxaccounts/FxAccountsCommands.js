@@ -87,6 +87,7 @@ class FxAccountsCommands {
       });
       if (missedMessages.length) {
         log.info(`Handling ${missedMessages.length} missed messages`);
+        Services.telemetry.scalarAdd("identity.fxaccounts.missed_commands_fetched", missedMessages.length);
         await this._handleCommands(missedMessages);
       }
     });

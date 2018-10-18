@@ -500,7 +500,6 @@ const listeners = {
     "AsyncPrefs:ResetPref": ["AsyncPrefs"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
 
-    "FeedConverter:addLiveBookmark": ["Feeds"],
     "webrtc:UpdateGlobalIndicators": ["webrtcUI"],
     "webrtc:UpdatingIndicators": ["webrtcUI"],
   },
@@ -1454,7 +1453,7 @@ BrowserGlue.prototype = {
   _monitorWebcompatReporterPref() {
     const PREF = "extensions.webcompat-reporter.enabled";
     const ID = "webcompat-reporter@mozilla.org";
-    async function checkPref() {
+    Services.prefs.addObserver(PREF, async () => {
       let addon = await AddonManager.getAddonByID(ID);
       let enabled = Services.prefs.getBoolPref(PREF, false);
       if (enabled && !addon.isActive) {
@@ -1462,9 +1461,7 @@ BrowserGlue.prototype = {
       } else if (!enabled && addon.isActive) {
         await addon.disable({allowSystemAddons: true});
       }
-    }
-    Services.prefs.addObserver(PREF, checkPref);
-    checkPref();
+    });
   },
 
   // All initial windows have opened.
@@ -1551,6 +1548,13 @@ BrowserGlue.prototype = {
   _scheduleStartupIdleTasks() {
     Services.tm.idleDispatchToMainThread(() => {
       ContextualIdentityService.load();
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      let enableCertErrorUITelemetry =
+        Services.prefs.getBoolPref("security.certerrors.recordEventTelemetry", false);
+      Services.telemetry.setEventRecordingEnabled("security.ui.certerror",
+        enableCertErrorUITelemetry);
     });
 
     // Load the Login Manager data from disk off the main thread, some time
@@ -2183,7 +2187,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 75;
+    const UI_VERSION = 76;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2307,16 +2311,8 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 54) {
-      // Clear old onboarding prefs from profile (bug 1462415)
-      let onboardingPrefs = Services.prefs.getBranch("browser.onboarding.");
-      if (onboardingPrefs) {
-        let onboardingPrefsArray = onboardingPrefs.getChildList("");
-        for (let item of onboardingPrefsArray) {
-          Services.prefs.clearUserPref("browser.onboarding." + item);
-        }
-      }
-    }
+    // currentUIVersion < 49 and < 54 were originally used for onboarding prefs and
+    // have since then been removed and cleared in currentUIVersion < 76
 
     if (currentUIVersion < 55) {
       Services.prefs.clearUserPref("browser.customizemode.tip0.shown");
@@ -2539,6 +2535,17 @@ BrowserGlue.prototype = {
       // 5 times. We set this early, and here, to avoid running the migration on
       // new profile (or, indeed, ever creating the pref there).
       Services.prefs.setIntPref("browser.livebookmarks.migrationAttemptsLeft", 5);
+    }
+
+    if (currentUIVersion < 76) {
+      // Clear old onboarding prefs from profile (bug 1462415)
+      let onboardingPrefs = Services.prefs.getBranch("browser.onboarding.");
+      if (onboardingPrefs) {
+        let onboardingPrefsArray = onboardingPrefs.getChildList("");
+        for (let item of onboardingPrefsArray) {
+          Services.prefs.clearUserPref("browser.onboarding." + item);
+        }
+      }
     }
 
     // Update the migration version.

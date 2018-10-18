@@ -577,8 +577,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
                         "Reset profile path should be present")
         self.assertTrue(os.path.isdir(self.desktop_backup_path),
                         "Backup profile path should be present")
-        self.assertTrue(self.profileNameToRemove in self.reset_profile_path,
-                        "Reset profile path should contain profile name to remove")
+        self.assertIn(self.profileNameToRemove, self.reset_profile_path)
 
     def testReset(self):
         self.checkProfile()

@@ -2988,6 +2988,12 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
   // Our parent has changed. Recompute scriptability.
   RecomputeCanExecuteScripts();
 
+  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
+  if (window) {
+    auto* win = nsGlobalWindowOuter::Cast(window);
+    win->ParentWindowChanged();
+  }
+
   NS_ASSERTION(mInheritPrivateBrowsingId || wasPrivate == UsePrivateBrowsing(),
                "Private browsing state changed while inheritance was disabled");
 
@@ -4539,15 +4545,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         cssClass.AssignLiteral("badStsCert");
       }
 
-      uint32_t bucketId;
-      if (isStsHost) {
-        // measuring STS separately allows us to measure click through
-        // rates easily
-        bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP_STS;
-      } else {
-        bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP;
-      }
-
       // See if an alternate cert error page is registered
       nsAutoCString alternateErrorPage;
       nsresult rv =
@@ -4555,10 +4552,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
                                 alternateErrorPage);
       if (NS_SUCCEEDED(rv)) {
         errorPage.Assign(alternateErrorPage);
-      }
-
-      if (!IsFrame() && errorPage.EqualsIgnoreCase("certerror")) {
-        Telemetry::Accumulate(mozilla::Telemetry::SECURITY_UI, bucketId);
       }
     } else {
       error = "nssFailure2";

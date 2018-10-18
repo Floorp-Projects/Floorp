@@ -69,6 +69,9 @@ public:
 
   NS_IMETHOD Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData) override;
 
+  // Override for nsIImageLoadingContent.
+  NS_IMETHOD_(void) FrameCreated(nsIFrame* aFrame) override;
+
   void MaybeLoadSVGImage();
 
   // WebIDL
@@ -92,6 +95,7 @@ protected:
   static StringInfo sStringInfo[3];
 
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
+  uint16_t mImageAnimationMode;
 };
 
 } // namespace dom

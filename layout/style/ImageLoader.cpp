@@ -452,16 +452,10 @@ ImageLoader::ClearFrames(nsPresContext* aPresContext)
 }
 
 /* static */ void
-ImageLoader::LoadImage(nsIURI* aURI,
-                       nsIPrincipal* aOriginPrincipal,
-                       nsIURI* aReferrer,
-                       mozilla::net::ReferrerPolicy aPolicy,
-                       nsIDocument* aDocument,
-                       URLValue* aImage,
-                       CORSMode aCorsMode)
+ImageLoader::LoadImage(URLValue* aImage, nsIDocument* aLoadingDoc)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aDocument);
+  MOZ_ASSERT(aLoadingDoc);
   MOZ_ASSERT(aImage);
   MOZ_ASSERT(aImage->LoadID() != 0);
 
@@ -481,18 +475,23 @@ ImageLoader::LoadImage(nsIURI* aURI,
     entry = lookup.OrInsert([]() { return new ImageTableEntry(); });
   }
 
-  if (!aURI) {
+  nsIURI* uri = aImage->GetURI();
+  if (!uri) {
     return;
   }
 
   int32_t loadFlags = nsIRequest::LOAD_NORMAL |
-                      nsContentUtils::CORSModeToLoadImageFlags(aCorsMode);
+                      nsContentUtils::CORSModeToLoadImageFlags(aImage->CorsMode());
+
+  URLExtraData* data = aImage->ExtraData();
 
   RefPtr<imgRequestProxy> request;
-  nsresult rv = nsContentUtils::LoadImage(aURI, aDocument, aDocument,
-                                          aOriginPrincipal, 0, aReferrer,
-                                          aPolicy,
-                                          nullptr, loadFlags,
+  nsresult rv = nsContentUtils::LoadImage(uri, aLoadingDoc, aLoadingDoc,
+                                          data->Principal(), 0,
+                                          data->GetReferrer(),
+                                          data->GetReferrerPolicy(),
+                                          nullptr,
+                                          loadFlags,
                                           NS_LITERAL_STRING("css"),
                                           getter_AddRefs(request));
 

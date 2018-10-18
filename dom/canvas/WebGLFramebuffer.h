@@ -35,20 +35,21 @@ class WebGLFBAttachPoint final
 {
     friend class WebGLFramebuffer;
 public:
-    WebGLFramebuffer* const mFB;
-    const GLenum mAttachmentPoint;
+    const GLenum mAttachmentPoint = 0;
+    const bool mDeferAttachment = false;
 
 private:
     WebGLRefPtr<WebGLTexture> mTexturePtr;
     WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
-    TexImageTarget mTexImageTarget;
-    GLint mTexImageLayer;
-    uint32_t mTexImageLevel;
+    TexImageTarget mTexImageTarget = 0;
+    GLint mTexImageLayer = 0;
+    uint32_t mTexImageLevel = 0;
 
     ////
 
-    WebGLFBAttachPoint();
-    WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPoint);
+    WebGLFBAttachPoint() = default;
+    WebGLFBAttachPoint(const WebGLContext* webgl, GLenum attachmentPoint);
+
     explicit WebGLFBAttachPoint(WebGLFBAttachPoint&) = default; // Make this private.
 
 public:
@@ -56,22 +57,18 @@ public:
 
     ////
 
-    void Unlink();
+    void Unlink() {
+        Clear();
+    }
 
-    bool IsDefined() const;
+    bool HasAttachment() const { return bool(mTexturePtr) | bool(mRenderbufferPtr); }
     bool IsDeleteRequested() const;
-
-    const webgl::FormatUsageInfo* Format() const;
-    uint32_t Samples() const;
-
-    bool HasAlpha() const;
-    bool IsReadableFloat() const;
 
     void Clear();
 
-    void SetTexImage(WebGLTexture* tex, TexImageTarget target,
+    void SetTexImage(gl::GLContext* gl, WebGLTexture* tex, TexImageTarget target,
                      GLint level, GLint layer = 0);
-    void SetRenderbuffer(WebGLRenderbuffer* rb);
+    void SetRenderbuffer(gl::GLContext* gl, WebGLRenderbuffer* rb);
 
     WebGLTexture* Texture() const { return mTexturePtr; }
     WebGLRenderbuffer* Renderbuffer() const { return mRenderbufferPtr; }
@@ -87,31 +84,25 @@ public:
     }
     void AttachmentName(nsCString* out) const;
 
-    bool HasUninitializedImageData() const;
-    void SetImageDataStatus(WebGLImageDataStatus x) const;
+    const webgl::ImageInfo* GetImageInfo() const;
 
-    void Size(uint32_t* const out_width, uint32_t* const out_height) const;
-
-    bool HasImage() const;
     bool IsComplete(WebGLContext* webgl, nsCString* const out_info) const;
 
-    void Resolve(gl::GLContext* gl) const;
+    void DoAttachment(gl::GLContext* gl) const;
 
     JS::Value GetParameter(WebGLContext* webgl, JSContext* cx,
                            GLenum target, GLenum attachment, GLenum pname,
                            ErrorResult* const out_error) const;
 
-    void OnBackingStoreRespecified() const;
-
     bool IsEquivalentForFeedback(const WebGLFBAttachPoint& other) const {
-        if (!IsDefined() || !other.IsDefined())
+        if (!HasAttachment() | !other.HasAttachment())
             return false;
 
-#define _(X) X == other.X
-        return ( _(mRenderbufferPtr) &&
-                 _(mTexturePtr) &&
-                 _(mTexImageTarget.get()) &&
-                 _(mTexImageLevel) &&
+#define _(X) (X == other.X)
+        return ( _(mRenderbufferPtr) &
+                 _(mTexturePtr) &
+                 _(mTexImageTarget.get()) &
+                 _(mTexImageLevel) &
                  _(mTexImageLayer) );
 #undef _
     }
@@ -126,7 +117,7 @@ public:
         { }
 
         bool operator<(const Ordered& other) const {
-            MOZ_ASSERT(mRef.IsDefined() && other.mRef.IsDefined());
+            MOZ_ASSERT(mRef.HasAttachment() && other.mRef.HasAttachment());
 
 #define ORDER_BY(X) if (X != other.X) return X < other.X;
 
@@ -147,6 +138,7 @@ class WebGLFramebuffer final
     , public WebGLRefCountedObject<WebGLFramebuffer>
     , public LinkedListElement<WebGLFramebuffer>
     , public SupportsWeakPtr<WebGLFramebuffer>
+    , public CacheInvalidator
 {
     friend class WebGLContext;
 
@@ -156,7 +148,7 @@ public:
     const GLuint mGLName;
 
 private:
-    uint64_t mNumFBStatusInvals;
+    mutable uint64_t mNumFBStatusInvals = 0;
 
 protected:
 #ifdef ANDROID
@@ -165,7 +157,7 @@ protected:
     // This shows up on Android 2.3 emulator.
     //
     // So we track the `is a Framebuffer` state ourselves.
-    bool mIsFB;
+    bool mIsFB = false;
 #endif
 
     ////
@@ -182,21 +174,27 @@ protected:
 
     ////
 
+    std::vector<WebGLFBAttachPoint*> mAttachments; // Non-null.
+
     std::vector<const WebGLFBAttachPoint*> mColorDrawBuffers; // Non-null
     const WebGLFBAttachPoint* mColorReadBuffer; // Null if NONE
 
     ////
 
-    struct ResolvedData {
+    struct CompletenessInfo final {
+        const WebGLFramebuffer& fb;
+
+        uint32_t width = 0;
+        uint32_t height = 0;
+
         // IsFeedback
-        std::vector<const WebGLFBAttachPoint*> texDrawBuffers; // Non-null
-        std::set<WebGLFBAttachPoint::Ordered> drawSet;
-        std::set<WebGLFBAttachPoint::Ordered> readSet;
+        std::vector<const WebGLFBAttachPoint*> texAttachments; // Non-null
 
-        explicit ResolvedData(const WebGLFramebuffer& parent);
+        ~CompletenessInfo();
     };
+    friend struct CompletenessInfo;
 
-    mutable UniquePtr<const ResolvedData> mResolvedCompleteData;
+    mutable CacheMaybe<const CompletenessInfo> mCompletenessInfo;
 
     ////
 
@@ -212,6 +210,7 @@ public:
 private:
     ~WebGLFramebuffer() {
         DeleteOnce();
+        InvalidateCaches();
     }
 
 public:
@@ -229,10 +228,10 @@ public:
 protected:
     Maybe<WebGLFBAttachPoint*> GetAttachPoint(GLenum attachment); // Fallible
     Maybe<WebGLFBAttachPoint*> GetColorAttachPoint(GLenum attachment); // Fallible
-    void ResolveAttachments() const;
+    void DoDeferredAttachments() const;
     void RefreshDrawBuffers() const;
     void RefreshReadBuffer() const;
-    bool ResolveAttachmentData() const;
+    void ResolveAttachmentData() const;
 
 public:
     void DetachTexture(const WebGLTexture* tex);
@@ -252,9 +251,9 @@ public:
     GETTER(DepthAttachment)
     GETTER(StencilAttachment)
     GETTER(DepthStencilAttachment)
+    GETTER(Attachments)
     GETTER(ColorDrawBuffers)
     GETTER(ColorReadBuffer)
-    GETTER(ResolvedCompleteData)
 
 #undef GETTER
 
@@ -262,24 +261,10 @@ public:
         return mColorAttachments[0];
     }
 
-    const auto& AnyDepthAttachment() const {
-        if (mDepthStencilAttachment.IsDefined())
-            return mDepthStencilAttachment;
-        return mDepthAttachment;
-    }
-
-    const auto& AnyStencilAttachment() const {
-        if (mDepthStencilAttachment.IsDefined())
-            return mDepthStencilAttachment;
-        return mStencilAttachment;
-    }
-
     ////////////////
     // Invalidation
 
-    bool IsResolvedComplete() const { return bool(mResolvedCompleteData); }
-    void InvalidateFramebufferStatus();
-    void RefreshResolvedData();
+    const auto* GetCompletenessInfo() const { return mCompletenessInfo.get(); }
 
     ////////////////
     // WebGL funcs

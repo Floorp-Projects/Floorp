@@ -196,17 +196,13 @@ JS::Result<Ok> parseInterfaceAssertedBoundName(const size_t start, const BinKind
 JS::Result<Ok> parseInterfaceAssertedBoundNamesScope(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<Ok> parseInterfaceAssertedDeclaredName(const size_t start, const BinKind kind, const BinFields& fields,
     AssertedScopeKind scopeKind);
-JS::Result<Ok> parseInterfaceAssertedParameterName(const size_t start, const BinKind kind, const BinFields& fields,
-    AssertedScopeKind scopeKind,
-    MutableHandle<GCVector<JSAtom*>> positionalParams);
+JS::Result<ParseNode*> parseInterfaceAssertedParameterName(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<Ok> parseInterfaceAssertedParameterScope(const size_t start, const BinKind kind, const BinFields& fields,
     MutableHandle<GCVector<JSAtom*>> positionalParams);
 JS::Result<Ok> parseInterfaceAssertedPositionalParameterName(const size_t start, const BinKind kind, const BinFields& fields,
     AssertedScopeKind scopeKind,
     MutableHandle<GCVector<JSAtom*>> positionalParams);
-JS::Result<Ok> parseInterfaceAssertedRestParameterName(const size_t start, const BinKind kind, const BinFields& fields,
-    AssertedScopeKind scopeKind,
-    MutableHandle<GCVector<JSAtom*>> positionalParams);
+JS::Result<ParseNode*> parseInterfaceAssertedRestParameterName(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<Ok> parseInterfaceAssertedScriptGlobalScope(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<Ok> parseInterfaceAssertedVarScope(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceAssignmentExpression(const size_t start, const BinKind kind, const BinFields& fields);

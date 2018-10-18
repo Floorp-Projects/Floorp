@@ -35,6 +35,7 @@
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
+#include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
 #include "vm/BytecodeUtil.h"
@@ -47,7 +48,6 @@
 #include "wasm/AsmJS.h"
 
 #include "frontend/ParseContext-inl.h"
-#include "frontend/ParseNode-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 
 using namespace js;
@@ -699,29 +699,29 @@ FunctionBox::finish()
     function()->lazyScript()->setEnclosingScope(enclosingScope_);
 }
 
-template <class ParseHandler, typename CharT>
-inline typename GeneralParser<ParseHandler, CharT>::FinalParser*
-GeneralParser<ParseHandler, CharT>::asFinalParser()
+template <class ParseHandler, typename Unit>
+inline typename GeneralParser<ParseHandler, Unit>::FinalParser*
+GeneralParser<ParseHandler, Unit>::asFinalParser()
 {
-    static_assert(mozilla::IsBaseOf<GeneralParser<ParseHandler, CharT>, FinalParser>::value,
+    static_assert(mozilla::IsBaseOf<GeneralParser<ParseHandler, Unit>, FinalParser>::value,
                   "inheritance relationship required by the static_cast<> below");
 
     return static_cast<FinalParser*>(this);
 }
 
-template <class ParseHandler, typename CharT>
-inline const typename GeneralParser<ParseHandler, CharT>::FinalParser*
-GeneralParser<ParseHandler, CharT>::asFinalParser() const
+template <class ParseHandler, typename Unit>
+inline const typename GeneralParser<ParseHandler, Unit>::FinalParser*
+GeneralParser<ParseHandler, Unit>::asFinalParser() const
 {
-    static_assert(mozilla::IsBaseOf<GeneralParser<ParseHandler, CharT>, FinalParser>::value,
+    static_assert(mozilla::IsBaseOf<GeneralParser<ParseHandler, Unit>, FinalParser>::value,
                   "inheritance relationship required by the static_cast<> below");
 
     return static_cast<const FinalParser*>(this);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::error(unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::error(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -734,10 +734,10 @@ GeneralParser<ParseHandler, CharT>::error(unsigned errorNumber, ...)
     va_end(args);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::errorWithNotes(UniquePtr<JSErrorNotes> notes,
-                                                   unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::errorWithNotes(UniquePtr<JSErrorNotes> notes,
+                                                  unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -751,9 +751,9 @@ GeneralParser<ParseHandler, CharT>::errorWithNotes(UniquePtr<JSErrorNotes> notes
     va_end(args);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::errorAt(uint32_t offset, unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::errorAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -766,10 +766,10 @@ GeneralParser<ParseHandler, CharT>::errorAt(uint32_t offset, unsigned errorNumbe
     va_end(args);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::errorWithNotesAt(UniquePtr<JSErrorNotes> notes,
-                                                     uint32_t offset, unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::errorWithNotesAt(UniquePtr<JSErrorNotes> notes,
+                                                    uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -783,9 +783,9 @@ GeneralParser<ParseHandler, CharT>::errorWithNotesAt(UniquePtr<JSErrorNotes> not
     va_end(args);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::warning(unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::warning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -799,9 +799,9 @@ GeneralParser<ParseHandler, CharT>::warning(unsigned errorNumber, ...)
     return result;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::warningAt(uint32_t offset, unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::warningAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -817,9 +817,9 @@ GeneralParser<ParseHandler, CharT>::warningAt(uint32_t offset, unsigned errorNum
     return result;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::extraWarning(unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::extraWarning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -831,9 +831,9 @@ GeneralParser<ParseHandler, CharT>::extraWarning(unsigned errorNumber, ...)
     return result;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::extraWarningAt(uint32_t offset, unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::extraWarningAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -845,9 +845,9 @@ GeneralParser<ParseHandler, CharT>::extraWarningAt(uint32_t offset, unsigned err
     return result;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::strictModeError(unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::strictModeError(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -860,9 +860,9 @@ GeneralParser<ParseHandler, CharT>::strictModeError(unsigned errorNumber, ...)
     return res;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
+GeneralParser<ParseHandler, Unit>::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -974,31 +974,31 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(JSContext* cx, LifoAlloc& alloc
 
 }
 
-template <class ParseHandler, typename CharT>
-GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& alloc,
-                                                  const ReadOnlyCompileOptions& options,
-                                                  const CharT* chars, size_t length,
-                                                  bool foldConstants,
-                                                  UsedNameTracker& usedNames,
-                                                  SyntaxParser* syntaxParser,
-                                                  LazyScript* lazyOuterFunction,
-                                                  ScriptSourceObject* sourceObject,
-                                                  ParseGoal parseGoal)
+template <class ParseHandler, typename Unit>
+GeneralParser<ParseHandler, Unit>::GeneralParser(JSContext* cx, LifoAlloc& alloc,
+                                                 const ReadOnlyCompileOptions& options,
+                                                 const Unit* units, size_t length,
+                                                 bool foldConstants,
+                                                 UsedNameTracker& usedNames,
+                                                 SyntaxParser* syntaxParser,
+                                                 LazyScript* lazyOuterFunction,
+                                                 ScriptSourceObject* sourceObject,
+                                                 ParseGoal parseGoal)
   : Base(cx, alloc, options, foldConstants, usedNames, syntaxParser, lazyOuterFunction,
          sourceObject, parseGoal),
-    tokenStream(cx, options, chars, length)
+    tokenStream(cx, options, units, length)
 {}
 
-template <typename CharT>
+template <typename Unit>
 void
-Parser<SyntaxParseHandler, CharT>::setAwaitHandling(AwaitHandling awaitHandling)
+Parser<SyntaxParseHandler, Unit>::setAwaitHandling(AwaitHandling awaitHandling)
 {
     this->awaitHandling_ = awaitHandling;
 }
 
-template <typename CharT>
+template <typename Unit>
 void
-Parser<FullParseHandler, CharT>::setAwaitHandling(AwaitHandling awaitHandling)
+Parser<FullParseHandler, Unit>::setAwaitHandling(AwaitHandling awaitHandling)
 {
     this->awaitHandling_ = awaitHandling;
     if (SyntaxParser* syntaxParser = getSyntaxParser()) {
@@ -1006,23 +1006,23 @@ Parser<FullParseHandler, CharT>::setAwaitHandling(AwaitHandling awaitHandling)
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 inline void
-GeneralParser<ParseHandler, CharT>::setAwaitHandling(AwaitHandling awaitHandling)
+GeneralParser<ParseHandler, Unit>::setAwaitHandling(AwaitHandling awaitHandling)
 {
     asFinalParser()->setAwaitHandling(awaitHandling);
 }
 
-template <typename CharT>
+template <typename Unit>
 void
-Parser<SyntaxParseHandler, CharT>::setInParametersOfAsyncFunction(bool inParameters)
+Parser<SyntaxParseHandler, Unit>::setInParametersOfAsyncFunction(bool inParameters)
 {
     this->inParametersOfAsyncFunction_ = inParameters;
 }
 
-template <typename CharT>
+template <typename Unit>
 void
-Parser<FullParseHandler, CharT>::setInParametersOfAsyncFunction(bool inParameters)
+Parser<FullParseHandler, Unit>::setInParametersOfAsyncFunction(bool inParameters)
 {
     this->inParametersOfAsyncFunction_ = inParameters;
     if (SyntaxParser* syntaxParser = getSyntaxParser()) {
@@ -1030,9 +1030,9 @@ Parser<FullParseHandler, CharT>::setInParametersOfAsyncFunction(bool inParameter
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 inline void
-GeneralParser<ParseHandler, CharT>::setInParametersOfAsyncFunction(bool inParameters)
+GeneralParser<ParseHandler, Unit>::setInParametersOfAsyncFunction(bool inParameters)
 {
     asFinalParser()->setInParametersOfAsyncFunction(inParameters);
 }
@@ -1164,9 +1164,9 @@ ParserBase::setSourceMapInfo()
 /*
  * Parse a top-level JS script.
  */
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::parse()
+GeneralParser<ParseHandler, Unit>::parse()
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -1247,10 +1247,10 @@ ParserBase::hasValidSimpleStrictParameterNames()
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::reportMissingClosing(unsigned errorNumber, unsigned noteNumber,
-                                                         uint32_t openedPos)
+GeneralParser<ParseHandler, Unit>::reportMissingClosing(unsigned errorNumber, unsigned noteNumber,
+                                                        uint32_t openedPos)
 {
     auto notes = MakeUnique<JSErrorNotes>();
     if (!notes) {
@@ -1278,11 +1278,11 @@ GeneralParser<ParseHandler, CharT>::reportMissingClosing(unsigned errorNumber, u
     errorWithNotes(std::move(notes), errorNumber);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::reportRedeclaration(HandlePropertyName name,
-                                                        DeclarationKind prevKind,
-                                                        TokenPos pos, uint32_t prevPos)
+GeneralParser<ParseHandler, Unit>::reportRedeclaration(HandlePropertyName name,
+                                                       DeclarationKind prevKind,
+                                                       TokenPos pos, uint32_t prevPos)
 {
     UniqueChars bytes = AtomToPrintableString(context, name);
     if (!bytes) {
@@ -1331,13 +1331,13 @@ GeneralParser<ParseHandler, CharT>::reportRedeclaration(HandlePropertyName name,
 // (ECMA-262 requires us to support duplicate parameter names, but, for newer
 // features, we consider the code to have "opted in" to higher standards and
 // forbid duplicates.)
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::notePositionalFormalParameter(CodeNodeType funNode,
-                                                                  HandlePropertyName name,
-                                                                  uint32_t beginPos,
-                                                                  bool disallowDuplicateParams,
-                                                                  bool* duplicatedParam)
+GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(CodeNodeType funNode,
+                                                                 HandlePropertyName name,
+                                                                 uint32_t beginPos,
+                                                                 bool disallowDuplicateParams,
+                                                                 bool* duplicatedParam)
 {
     if (AddDeclaredNamePtr p = pc->functionScope().lookupDeclaredNameForAdd(name)) {
         if (disallowDuplicateParams) {
@@ -1397,7 +1397,7 @@ PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(CodeNo
     return true;
 }
 
-static bool
+bool
 DeclarationKindIsVar(DeclarationKind kind)
 {
     return kind == DeclarationKind::Var ||
@@ -1633,11 +1633,11 @@ ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(FunctionBox* funbox
     return !redeclaredKind;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
-                                                                               DeclarationKind kind,
-                                                                               TokenPos pos)
+GeneralParser<ParseHandler, Unit>::checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
+                                                                              DeclarationKind kind,
+                                                                              TokenPos pos)
 {
     MOZ_ASSERT(DeclarationKindIsLexical(kind));
 
@@ -1657,10 +1657,10 @@ GeneralParser<ParseHandler, CharT>::checkLexicalDeclarationDirectlyWithinBlock(P
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::noteDeclaredName(HandlePropertyName name, DeclarationKind kind,
-                                                     TokenPos pos)
+GeneralParser<ParseHandler, Unit>::noteDeclaredName(HandlePropertyName name, DeclarationKind kind,
+                                                    TokenPos pos)
 {
     // The asm.js validator does all its own symbol-table management so, as an
     // optimization, avoid doing any work here.
@@ -1912,9 +1912,9 @@ PerHandlerParser<ParseHandler>::propagateFreeNamesAndMarkClosedOverBindings(Pars
     return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkStatementsEOF()
+Parser<FullParseHandler, Unit>::checkStatementsEOF()
 {
     // This is designed to be paired with parsing a statement list at the top
     // level.
@@ -2377,9 +2377,9 @@ PerHandlerParser<FullParseHandler>::finishLexicalScope(ParseContext::Scope& scop
     return handler.newLexicalScope(*bindings, body);
 }
 
-template <typename CharT>
+template <typename Unit>
 LexicalScopeNode*
-Parser<FullParseHandler, CharT>::evalBody(EvalSharedContext* evalsc)
+Parser<FullParseHandler, Unit>::evalBody(EvalSharedContext* evalsc)
 {
     SourceParseContext evalpc(this, evalsc, /* newDirectives = */ nullptr);
     if (!evalpc.init()) {
@@ -2463,9 +2463,9 @@ Parser<FullParseHandler, CharT>::evalBody(EvalSharedContext* evalsc)
     return body;
 }
 
-template <typename CharT>
+template <typename Unit>
 ListNode*
-Parser<FullParseHandler, CharT>::globalBody(GlobalSharedContext* globalsc)
+Parser<FullParseHandler, Unit>::globalBody(GlobalSharedContext* globalsc)
 {
     SourceParseContext globalpc(this, globalsc, /* newDirectives = */ nullptr);
     if (!globalpc.init()) {
@@ -2512,9 +2512,9 @@ Parser<FullParseHandler, CharT>::globalBody(GlobalSharedContext* globalsc)
     return body;
 }
 
-template <typename CharT>
+template <typename Unit>
 CodeNode*
-Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
+Parser<FullParseHandler, Unit>::moduleBody(ModuleSharedContext* modulesc)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -2533,7 +2533,7 @@ Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
         return null();
     }
 
-    AutoAwaitIsKeyword<FullParseHandler, CharT> awaitIsKeyword(this, AwaitIsModuleKeyword);
+    AutoAwaitIsKeyword<FullParseHandler, Unit> awaitIsKeyword(this, AwaitIsModuleKeyword);
     ListNode* stmtList = statementList(YieldIsName);
     if (!stmtList) {
         return null();
@@ -2597,9 +2597,9 @@ Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
     return moduleNode;
 }
 
-template <typename CharT>
+template <typename Unit>
 SyntaxParseHandler::CodeNodeType
-Parser<SyntaxParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
+Parser<SyntaxParseHandler, Unit>::moduleBody(ModuleSharedContext* modulesc)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return SyntaxParseHandler::NodeFailure;
@@ -2840,15 +2840,14 @@ GetAwaitHandling(FunctionAsyncKind asyncKind)
     return AwaitIsKeyword;
 }
 
-template <typename CharT>
+template <typename Unit>
 CodeNode*
-Parser<FullParseHandler, CharT>::standaloneFunction(HandleFunction fun,
-                                                    HandleScope enclosingScope,
-                                                    const Maybe<uint32_t>& parameterListEnd,
-                                                    GeneratorKind generatorKind,
-                                                    FunctionAsyncKind asyncKind,
-                                                    Directives inheritedDirectives,
-                                                    Directives* newDirectives)
+Parser<FullParseHandler, Unit>::standaloneFunction(HandleFunction fun, HandleScope enclosingScope,
+                                                   const Maybe<uint32_t>& parameterListEnd,
+                                                   GeneratorKind generatorKind,
+                                                   FunctionAsyncKind asyncKind,
+                                                   Directives inheritedDirectives,
+                                                   Directives* newDirectives)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -2909,7 +2908,7 @@ Parser<FullParseHandler, CharT>::standaloneFunction(HandleFunction fun,
 
     YieldHandling yieldHandling = GetYieldHandling(generatorKind);
     AwaitHandling awaitHandling = GetAwaitHandling(asyncKind);
-    AutoAwaitIsKeyword<FullParseHandler, CharT> awaitIsKeyword(this, awaitHandling);
+    AutoAwaitIsKeyword<FullParseHandler, Unit> awaitIsKeyword(this, awaitHandling);
     if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
                                          FunctionSyntaxKind::Statement,
                                          parameterListEnd, /* isStandaloneFunction = */ true))
@@ -3019,11 +3018,10 @@ PerHandlerParser<ParseHandler>::declareFunctionArgumentsObject()
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::LexicalScopeNodeType
-GeneralParser<ParseHandler, CharT>::functionBody(InHandling inHandling,
-                                                 YieldHandling yieldHandling,
-                                                 FunctionSyntaxKind kind, FunctionBodyType type)
+GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling, YieldHandling yieldHandling,
+                                                FunctionSyntaxKind kind, FunctionBodyType type)
 {
     MOZ_ASSERT(pc->isFunctionBox());
 
@@ -3202,9 +3200,9 @@ ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
                             options().selfHostingMode, pc->isFunctionBox());
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::matchOrInsertSemicolon()
+GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon()
 {
     TokenKind tt = TokenKind::Eof;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand)) {
@@ -3296,11 +3294,10 @@ ParserBase::prefixAccessorName(PropertyType propType, HandleAtom propAtom)
     return AtomizeString(context, str);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandling,
-                                                      FunctionSyntaxKind kind,
-                                                      CodeNodeType funNode)
+GeneralParser<ParseHandler, Unit>::functionArguments(YieldHandling yieldHandling,
+                                                     FunctionSyntaxKind kind, CodeNodeType funNode)
 {
     FunctionBox* funbox = pc->functionBox();
 
@@ -3608,10 +3605,10 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
     return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool
-Parser<FullParseHandler, CharT>::skipLazyInnerFunction(CodeNode* funNode, uint32_t toStringStart,
-                                                       FunctionSyntaxKind kind, bool tryAnnexB)
+Parser<FullParseHandler, Unit>::skipLazyInnerFunction(CodeNode* funNode, uint32_t toStringStart,
+                                                      FunctionSyntaxKind kind, bool tryAnnexB)
 {
     // When a lazily-parsed function is called, we only fully parse (and emit)
     // that function, not any of its nested children. The initial syntax-only
@@ -3645,31 +3642,29 @@ Parser<FullParseHandler, CharT>::skipLazyInnerFunction(CodeNode* funNode, uint32
     return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool
-Parser<SyntaxParseHandler, CharT>::skipLazyInnerFunction(CodeNodeType funNode,
-                                                         uint32_t toStringStart,
-                                                         FunctionSyntaxKind kind,
-                                                         bool tryAnnexB)
+Parser<SyntaxParseHandler, Unit>::skipLazyInnerFunction(CodeNodeType funNode,
+                                                        uint32_t toStringStart,
+                                                        FunctionSyntaxKind kind, bool tryAnnexB)
 {
     MOZ_CRASH("Cannot skip lazy inner functions when syntax parsing");
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::skipLazyInnerFunction(CodeNodeType funNode,
-                                                          uint32_t toStringStart,
-                                                          FunctionSyntaxKind kind,
-                                                          bool tryAnnexB)
+GeneralParser<ParseHandler, Unit>::skipLazyInnerFunction(CodeNodeType funNode,
+                                                         uint32_t toStringStart,
+                                                         FunctionSyntaxKind kind, bool tryAnnexB)
 {
     return asFinalParser()->skipLazyInnerFunction(funNode, toStringStart, kind, tryAnnexB);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::addExprAndGetNextTemplStrToken(YieldHandling yieldHandling,
-                                                                   ListNodeType nodeList,
-                                                                   TokenKind* ttp)
+GeneralParser<ParseHandler, Unit>::addExprAndGetNextTemplStrToken(YieldHandling yieldHandling,
+                                                                  ListNodeType nodeList,
+                                                                  TokenKind* ttp)
 {
     Node pn = expr(InAllowed, yieldHandling, TripledotProhibited);
     if (!pn) {
@@ -3689,11 +3684,10 @@ GeneralParser<ParseHandler, CharT>::addExprAndGetNextTemplStrToken(YieldHandling
     return tokenStream.getToken(ttp, TokenStream::TemplateTail);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling,
-                                                   ListNodeType tagArgsList,
-                                                   TokenKind tt)
+GeneralParser<ParseHandler, Unit>::taggedTemplate(YieldHandling yieldHandling,
+                                                  ListNodeType tagArgsList, TokenKind tt)
 {
     CallSiteNodeType callSiteObjNode = handler.newCallSiteObject(pos().begin);
     if (!callSiteObjNode) {
@@ -3717,9 +3711,9 @@ GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling,
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::templateLiteral(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::templateLiteral(YieldHandling yieldHandling)
 {
     NameNodeType literal = noSubstitutionUntaggedTemplate();
     if (!literal) {
@@ -3747,15 +3741,15 @@ GeneralParser<ParseHandler, CharT>::templateLiteral(YieldHandling yieldHandling)
     return nodeList;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::CodeNodeType
-GeneralParser<ParseHandler, CharT>::functionDefinition(CodeNodeType funNode, uint32_t toStringStart,
-                                                       InHandling inHandling,
-                                                       YieldHandling yieldHandling,
-                                                       HandleAtom funName, FunctionSyntaxKind kind,
-                                                       GeneratorKind generatorKind,
-                                                       FunctionAsyncKind asyncKind,
-                                                       bool tryAnnexB /* = false */)
+GeneralParser<ParseHandler, Unit>::functionDefinition(CodeNodeType funNode, uint32_t toStringStart,
+                                                      InHandling inHandling,
+                                                      YieldHandling yieldHandling,
+                                                      HandleAtom funName, FunctionSyntaxKind kind,
+                                                      GeneratorKind generatorKind,
+                                                      FunctionAsyncKind asyncKind,
+                                                      bool tryAnnexB /* = false */)
 {
     MOZ_ASSERT_IF(kind == FunctionSyntaxKind::Statement, funName);
 
@@ -3825,19 +3819,18 @@ GeneralParser<ParseHandler, CharT>::functionDefinition(CodeNodeType funNode, uin
     return funNode;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool
-Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(CodeNode** funNode,
-                                                             HandleFunction fun,
-                                                             uint32_t toStringStart,
-                                                             InHandling inHandling,
-                                                             YieldHandling yieldHandling,
-                                                             FunctionSyntaxKind kind,
-                                                             GeneratorKind generatorKind,
-                                                             FunctionAsyncKind asyncKind,
-                                                             bool tryAnnexB,
-                                                             Directives inheritedDirectives,
-                                                             Directives* newDirectives)
+Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(CodeNode** funNode, HandleFunction fun,
+                                                            uint32_t toStringStart,
+                                                            InHandling inHandling,
+                                                            YieldHandling yieldHandling,
+                                                            FunctionSyntaxKind kind,
+                                                            GeneratorKind generatorKind,
+                                                            FunctionAsyncKind asyncKind,
+                                                            bool tryAnnexB,
+                                                            Directives inheritedDirectives,
+                                                            Directives* newDirectives)
 {
     // Try a syntax parse for this inner function.
     do {
@@ -3924,18 +3917,19 @@ Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(CodeNode** funNode,
     return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool
-Parser<SyntaxParseHandler, CharT>::trySyntaxParseInnerFunction(CodeNodeType* funNode, HandleFunction fun,
-                                                               uint32_t toStringStart,
-                                                               InHandling inHandling,
-                                                               YieldHandling yieldHandling,
-                                                               FunctionSyntaxKind kind,
-                                                               GeneratorKind generatorKind,
-                                                               FunctionAsyncKind asyncKind,
-                                                               bool tryAnnexB,
-                                                               Directives inheritedDirectives,
-                                                               Directives* newDirectives)
+Parser<SyntaxParseHandler, Unit>::trySyntaxParseInnerFunction(CodeNodeType* funNode,
+                                                              HandleFunction fun,
+                                                              uint32_t toStringStart,
+                                                              InHandling inHandling,
+                                                              YieldHandling yieldHandling,
+                                                              FunctionSyntaxKind kind,
+                                                              GeneratorKind generatorKind,
+                                                              FunctionAsyncKind asyncKind,
+                                                              bool tryAnnexB,
+                                                              Directives inheritedDirectives,
+                                                              Directives* newDirectives)
 {
     // This is already a syntax parser, so just parse the inner function.
     CodeNodeType innerFunc =
@@ -3950,18 +3944,19 @@ Parser<SyntaxParseHandler, CharT>::trySyntaxParseInnerFunction(CodeNodeType* fun
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::trySyntaxParseInnerFunction(CodeNodeType* funNode, HandleFunction fun,
-                                                                uint32_t toStringStart,
-                                                                InHandling inHandling,
-                                                                YieldHandling yieldHandling,
-                                                                FunctionSyntaxKind kind,
-                                                                GeneratorKind generatorKind,
-                                                                FunctionAsyncKind asyncKind,
-                                                                bool tryAnnexB,
-                                                                Directives inheritedDirectives,
-                                                                Directives* newDirectives)
+GeneralParser<ParseHandler, Unit>::trySyntaxParseInnerFunction(CodeNodeType* funNode,
+                                                               HandleFunction fun,
+                                                               uint32_t toStringStart,
+                                                               InHandling inHandling,
+                                                               YieldHandling yieldHandling,
+                                                               FunctionSyntaxKind kind,
+                                                               GeneratorKind generatorKind,
+                                                               FunctionAsyncKind asyncKind,
+                                                               bool tryAnnexB,
+                                                               Directives inheritedDirectives,
+                                                               Directives* newDirectives)
 {
     return asFinalParser()->trySyntaxParseInnerFunction(funNode, fun, toStringStart, inHandling,
                                                         yieldHandling, kind, generatorKind,
@@ -3969,15 +3964,15 @@ GeneralParser<ParseHandler, CharT>::trySyntaxParseInnerFunction(CodeNodeType* fu
                                                         newDirectives);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::CodeNodeType
-GeneralParser<ParseHandler, CharT>::innerFunctionForFunctionBox(CodeNodeType funNode,
-                                                                ParseContext* outerpc,
-                                                                FunctionBox* funbox,
-                                                                InHandling inHandling,
-                                                                YieldHandling yieldHandling,
-                                                                FunctionSyntaxKind kind,
-                                                                Directives* newDirectives)
+GeneralParser<ParseHandler, Unit>::innerFunctionForFunctionBox(CodeNodeType funNode,
+                                                               ParseContext* outerpc,
+                                                               FunctionBox* funbox,
+                                                               InHandling inHandling,
+                                                               YieldHandling yieldHandling,
+                                                               FunctionSyntaxKind kind,
+                                                               Directives* newDirectives)
 {
     // Note that it is possible for outerpc != this->pc, as we may be
     // attempting to syntax parse an inner function from an outer full
@@ -4001,17 +3996,17 @@ GeneralParser<ParseHandler, CharT>::innerFunctionForFunctionBox(CodeNodeType fun
     return funNode;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::CodeNodeType
-GeneralParser<ParseHandler, CharT>::innerFunction(CodeNodeType funNode, ParseContext* outerpc,
-                                                  HandleFunction fun, uint32_t toStringStart,
-                                                  InHandling inHandling,
-                                                  YieldHandling yieldHandling,
-                                                  FunctionSyntaxKind kind,
-                                                  GeneratorKind generatorKind,
-                                                  FunctionAsyncKind asyncKind, bool tryAnnexB,
-                                                  Directives inheritedDirectives,
-                                                  Directives* newDirectives)
+GeneralParser<ParseHandler, Unit>::innerFunction(CodeNodeType funNode, ParseContext* outerpc,
+                                                 HandleFunction fun, uint32_t toStringStart,
+                                                 InHandling inHandling,
+                                                 YieldHandling yieldHandling,
+                                                 FunctionSyntaxKind kind,
+                                                 GeneratorKind generatorKind,
+                                                 FunctionAsyncKind asyncKind, bool tryAnnexB,
+                                                 Directives inheritedDirectives,
+                                                 Directives* newDirectives)
 {
     // Note that it is possible for outerpc != this->pc, as we may be
     // attempting to syntax parse an inner function from an outer full
@@ -4042,9 +4037,9 @@ GeneralParser<ParseHandler, CharT>::innerFunction(CodeNodeType funNode, ParseCon
     return innerFunc;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::appendToCallSiteObj(CallSiteNodeType callSiteObj)
+GeneralParser<ParseHandler, Unit>::appendToCallSiteObj(CallSiteNodeType callSiteObj)
 {
     Node cookedNode = noSubstitutionTaggedTemplate();
     if (!cookedNode) {
@@ -4064,11 +4059,11 @@ GeneralParser<ParseHandler, CharT>::appendToCallSiteObj(CallSiteNodeType callSit
     return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 CodeNode*
-Parser<FullParseHandler, CharT>::standaloneLazyFunction(HandleFunction fun, uint32_t toStringStart,
-                                                        bool strict, GeneratorKind generatorKind,
-                                                        FunctionAsyncKind asyncKind)
+Parser<FullParseHandler, Unit>::standaloneLazyFunction(HandleFunction fun, uint32_t toStringStart,
+                                                       bool strict, GeneratorKind generatorKind,
+                                                       FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -4131,14 +4126,14 @@ Parser<FullParseHandler, CharT>::standaloneLazyFunction(HandleFunction fun, uint
     return funNode;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling inHandling,
-                                                                    YieldHandling yieldHandling,
-                                                                    CodeNodeType* funNode,
-                                                                    FunctionSyntaxKind kind,
-                                                                    const Maybe<uint32_t>& parameterListEnd /* = Nothing() */,
-                                                                    bool isStandaloneFunction /* = false */)
+GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(InHandling inHandling,
+                                                                   YieldHandling yieldHandling,
+                                                                   CodeNodeType* funNode,
+                                                                   FunctionSyntaxKind kind,
+                                                                   const Maybe<uint32_t>& parameterListEnd /* = Nothing() */,
+                                                                   bool isStandaloneFunction /* = false */)
 {
     // Given a properly initialized parse context, try to parse an actual
     // function without concern for conversion to strict mode, use of lazy
@@ -4154,8 +4149,8 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
             (funbox->isAsync() || (kind == FunctionSyntaxKind::Arrow && awaitIsKeyword()))
             ? AwaitIsKeyword
             : AwaitIsName;
-        AutoAwaitIsKeyword<ParseHandler, CharT> awaitIsKeyword(this, awaitHandling);
-        AutoInParametersOfAsyncFunction<ParseHandler, CharT> inParameters(this, funbox->isAsync());
+        AutoAwaitIsKeyword<ParseHandler, Unit> awaitIsKeyword(this, awaitHandling);
+        AutoInParametersOfAsyncFunction<ParseHandler, Unit> inParameters(this, funbox->isAsync());
         if (!functionArguments(yieldHandling, kind, *funNode)) {
             return false;
         }
@@ -4220,8 +4215,8 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
     bool inheritedStrict = pc->sc()->strict();
     LexicalScopeNodeType body;
     {
-        AutoAwaitIsKeyword<ParseHandler, CharT> awaitIsKeyword(this, bodyAwaitHandling);
-        AutoInParametersOfAsyncFunction<ParseHandler, CharT> inParameters(this, false);
+        AutoAwaitIsKeyword<ParseHandler, Unit> awaitIsKeyword(this, bodyAwaitHandling);
+        AutoInParametersOfAsyncFunction<ParseHandler, Unit> inParameters(this, false);
         body = functionBody(inHandling, bodyYieldHandling, kind, bodyType);
         if (!body) {
             return false;
@@ -4291,12 +4286,12 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::CodeNodeType
-GeneralParser<ParseHandler, CharT>::functionStmt(uint32_t toStringStart,
-                                                 YieldHandling yieldHandling,
-                                                 DefaultHandling defaultHandling,
-                                                 FunctionAsyncKind asyncKind)
+GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
+                                                YieldHandling yieldHandling,
+                                                DefaultHandling defaultHandling,
+                                                FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Function));
 
@@ -4388,15 +4383,14 @@ GeneralParser<ParseHandler, CharT>::functionStmt(uint32_t toStringStart,
                               FunctionSyntaxKind::Statement, generatorKind, asyncKind, tryAnnexB);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::CodeNodeType
-GeneralParser<ParseHandler, CharT>::functionExpr(uint32_t toStringStart,
-                                                 InvokedPrediction invoked,
-                                                 FunctionAsyncKind asyncKind)
+GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart, InvokedPrediction invoked,
+                                                FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Function));
 
-    AutoAwaitIsKeyword<ParseHandler, CharT> awaitIsKeyword(this, GetAwaitHandling(asyncKind));
+    AutoAwaitIsKeyword<ParseHandler, Unit> awaitIsKeyword(this, GetAwaitHandling(asyncKind));
     GeneratorKind generatorKind = GeneratorKind::NotGenerator;
     TokenKind tt;
     if (!tokenStream.getToken(&tt)) {
@@ -4453,9 +4447,9 @@ IsEscapeFreeStringLiteral(const TokenPos& pos, JSAtom* str)
     return pos.begin + str->length() + 2 == pos.end;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool
-Parser<SyntaxParseHandler, CharT>::asmJS(ListNodeType list)
+Parser<SyntaxParseHandler, Unit>::asmJS(ListNodeType list)
 {
     // While asm.js could technically be validated and compiled during syntax
     // parsing, we have no guarantee that some later JS wouldn't abort the
@@ -4525,9 +4519,9 @@ Parser<FullParseHandler, Utf8Unit>::asmJS(ListNodeType list)
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::asmJS(ListNodeType list)
+GeneralParser<ParseHandler, Unit>::asmJS(ListNodeType list)
 {
     return asFinalParser()->asmJS(list);
 }
@@ -4551,10 +4545,10 @@ GeneralParser<ParseHandler, CharT>::asmJS(ListNodeType list)
  * future (because of the hex escape), the Directive Prologue extends through it
  * to the "use strict" statement, which is indeed a directive.
  */
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::maybeParseDirective(ListNodeType list, Node possibleDirective,
-                                                        bool* cont)
+GeneralParser<ParseHandler, Unit>::maybeParseDirective(ListNodeType list, Node possibleDirective,
+                                                       bool* cont)
 {
     TokenPos directivePos;
     JSAtom* directive = handler.isStringExprStatement(possibleDirective, &directivePos);
@@ -4617,9 +4611,9 @@ GeneralParser<ParseHandler, CharT>::maybeParseDirective(ListNodeType list, Node 
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::statementList(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling)
 {
     if (!CheckRecursionLimit(context)) {
         return null();
@@ -4691,9 +4685,9 @@ GeneralParser<ParseHandler, CharT>::statementList(YieldHandling yieldHandling)
     return stmtList;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::condition(InHandling inHandling, YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::condition(InHandling inHandling, YieldHandling yieldHandling)
 {
     MUST_MATCH_TOKEN(TokenKind::LeftParen, JSMSG_PAREN_BEFORE_COND);
 
@@ -4713,10 +4707,10 @@ GeneralParser<ParseHandler, CharT>::condition(InHandling inHandling, YieldHandli
     return pn;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::matchLabel(YieldHandling yieldHandling,
-                                               MutableHandle<PropertyName*> label)
+GeneralParser<ParseHandler, Unit>::matchLabel(YieldHandling yieldHandling,
+                                              MutableHandle<PropertyName*> label)
 {
     TokenKind tt = TokenKind::Eof;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand)) {
@@ -4736,14 +4730,14 @@ GeneralParser<ParseHandler, CharT>::matchLabel(YieldHandling yieldHandling,
     return true;
 }
 
-template <class ParseHandler, typename CharT>
-GeneralParser<ParseHandler, CharT>::PossibleError::PossibleError(GeneralParser<ParseHandler, CharT>& parser)
+template <class ParseHandler, typename Unit>
+GeneralParser<ParseHandler, Unit>::PossibleError::PossibleError(GeneralParser<ParseHandler, Unit>& parser)
   : parser_(parser)
 {}
 
-template <class ParseHandler, typename CharT>
-typename GeneralParser<ParseHandler, CharT>::PossibleError::Error&
-GeneralParser<ParseHandler, CharT>::PossibleError::error(ErrorKind kind)
+template <class ParseHandler, typename Unit>
+typename GeneralParser<ParseHandler, Unit>::PossibleError::Error&
+GeneralParser<ParseHandler, Unit>::PossibleError::error(ErrorKind kind)
 {
     if (kind == ErrorKind::Expression) {
         return exprError_;
@@ -4755,31 +4749,31 @@ GeneralParser<ParseHandler, CharT>::PossibleError::error(ErrorKind kind)
     return destructuringWarning_;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::PossibleError::setResolved(ErrorKind kind)
+GeneralParser<ParseHandler, Unit>::PossibleError::setResolved(ErrorKind kind)
 {
     error(kind).state_ = ErrorState::None;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::PossibleError::hasError(ErrorKind kind)
+GeneralParser<ParseHandler, Unit>::PossibleError::hasError(ErrorKind kind)
 {
     return error(kind).state_ == ErrorState::Pending;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::PossibleError::hasPendingDestructuringError()
+GeneralParser<ParseHandler, Unit>::PossibleError::hasPendingDestructuringError()
 {
     return hasError(ErrorKind::Destructuring);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::PossibleError::setPending(ErrorKind kind, const TokenPos& pos,
-                                                              unsigned errorNumber)
+GeneralParser<ParseHandler, Unit>::PossibleError::setPending(ErrorKind kind, const TokenPos& pos,
+                                                             unsigned errorNumber)
 {
     // Don't overwrite a previously recorded error.
     if (hasError(kind)) {
@@ -4794,33 +4788,33 @@ GeneralParser<ParseHandler, CharT>::PossibleError::setPending(ErrorKind kind, co
     err.state_ = ErrorState::Pending;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::PossibleError::setPendingDestructuringErrorAt(const TokenPos& pos,
-                                                                                  unsigned errorNumber)
+GeneralParser<ParseHandler, Unit>::PossibleError::setPendingDestructuringErrorAt(const TokenPos& pos,
+                                                                                 unsigned errorNumber)
 {
     setPending(ErrorKind::Destructuring, pos, errorNumber);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::PossibleError::setPendingDestructuringWarningAt(const TokenPos& pos,
-                                                                                    unsigned errorNumber)
+GeneralParser<ParseHandler, Unit>::PossibleError::setPendingDestructuringWarningAt(const TokenPos& pos,
+                                                                                   unsigned errorNumber)
 {
     setPending(ErrorKind::DestructuringWarning, pos, errorNumber);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::PossibleError::setPendingExpressionErrorAt(const TokenPos& pos,
-                                                                               unsigned errorNumber)
+GeneralParser<ParseHandler, Unit>::PossibleError::setPendingExpressionErrorAt(const TokenPos& pos,
+                                                                              unsigned errorNumber)
 {
     setPending(ErrorKind::Expression, pos, errorNumber);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::PossibleError::checkForError(ErrorKind kind)
+GeneralParser<ParseHandler, Unit>::PossibleError::checkForError(ErrorKind kind)
 {
     if (!hasError(kind)) {
         return true;
@@ -4831,9 +4825,9 @@ GeneralParser<ParseHandler, CharT>::PossibleError::checkForError(ErrorKind kind)
     return false;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::PossibleError::checkForWarning(ErrorKind kind)
+GeneralParser<ParseHandler, Unit>::PossibleError::checkForWarning(ErrorKind kind)
 {
     if (!hasError(kind)) {
         return true;
@@ -4843,9 +4837,9 @@ GeneralParser<ParseHandler, CharT>::PossibleError::checkForWarning(ErrorKind kin
     return parser_.extraWarningAt(err.offset_, err.errorNumber_);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::PossibleError::checkForDestructuringErrorOrWarning()
+GeneralParser<ParseHandler, Unit>::PossibleError::checkForDestructuringErrorOrWarning()
 {
     // Clear pending expression error, because we're definitely not in an
     // expression context.
@@ -4856,9 +4850,9 @@ GeneralParser<ParseHandler, CharT>::PossibleError::checkForDestructuringErrorOrW
            checkForWarning(ErrorKind::DestructuringWarning);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::PossibleError::checkForExpressionError()
+GeneralParser<ParseHandler, Unit>::PossibleError::checkForExpressionError()
 {
     // Clear pending destructuring error or warning, because we're definitely
     // not in a destructuring context.
@@ -4869,10 +4863,10 @@ GeneralParser<ParseHandler, CharT>::PossibleError::checkForExpressionError()
     return checkForError(ErrorKind::Expression);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::PossibleError::transferErrorTo(ErrorKind kind,
-                                                                   PossibleError* other)
+GeneralParser<ParseHandler, Unit>::PossibleError::transferErrorTo(ErrorKind kind,
+                                                                  PossibleError* other)
 {
     if (hasError(kind) && !other->hasError(kind)) {
         Error& err = error(kind);
@@ -4883,9 +4877,9 @@ GeneralParser<ParseHandler, CharT>::PossibleError::transferErrorTo(ErrorKind kin
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::PossibleError::transferErrorsTo(PossibleError* other)
+GeneralParser<ParseHandler, Unit>::PossibleError::transferErrorsTo(PossibleError* other)
 {
     MOZ_ASSERT(other);
     MOZ_ASSERT(this != other);
@@ -4896,10 +4890,10 @@ GeneralParser<ParseHandler, CharT>::PossibleError::transferErrorsTo(PossibleErro
     transferErrorTo(ErrorKind::Expression, other);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::bindingInitializer(Node lhs, DeclarationKind kind,
-                                                       YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::bindingInitializer(Node lhs, DeclarationKind kind,
+                                                      YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assign));
 
@@ -4928,10 +4922,10 @@ GeneralParser<ParseHandler, CharT>::bindingInitializer(Node lhs, DeclarationKind
     return assign;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::NameNodeType
-GeneralParser<ParseHandler, CharT>::bindingIdentifier(DeclarationKind kind,
-                                                      YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::bindingIdentifier(DeclarationKind kind,
+                                                     YieldHandling yieldHandling)
 {
     RootedPropertyName name(context, bindingIdentifier(yieldHandling));
     if (!name) {
@@ -4946,11 +4940,11 @@ GeneralParser<ParseHandler, CharT>::bindingIdentifier(DeclarationKind kind,
     return binding;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::bindingIdentifierOrPattern(DeclarationKind kind,
-                                                               YieldHandling yieldHandling,
-                                                               TokenKind tt)
+GeneralParser<ParseHandler, Unit>::bindingIdentifierOrPattern(DeclarationKind kind,
+                                                              YieldHandling yieldHandling,
+                                                              TokenKind tt)
 {
     if (tt == TokenKind::LeftBracket) {
         return arrayBindingPattern(kind, yieldHandling);
@@ -4968,10 +4962,10 @@ GeneralParser<ParseHandler, CharT>::bindingIdentifierOrPattern(DeclarationKind k
     return bindingIdentifier(kind, yieldHandling);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
-                                                         YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::objectBindingPattern(DeclarationKind kind,
+                                                        YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
 
@@ -5115,10 +5109,10 @@ GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
     return literal;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind,
-                                                        YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::arrayBindingPattern(DeclarationKind kind,
+                                                       YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
@@ -5216,11 +5210,11 @@ GeneralParser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind,
     return literal;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::destructuringDeclaration(DeclarationKind kind,
-                                                             YieldHandling yieldHandling,
-                                                             TokenKind tt)
+GeneralParser<ParseHandler, Unit>::destructuringDeclaration(DeclarationKind kind,
+                                                            YieldHandling yieldHandling,
+                                                            TokenKind tt)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
     MOZ_ASSERT(tt == TokenKind::LeftBracket || tt == TokenKind::LeftCurly);
@@ -5230,11 +5224,11 @@ GeneralParser<ParseHandler, CharT>::destructuringDeclaration(DeclarationKind kin
            : objectBindingPattern(kind, yieldHandling);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::destructuringDeclarationWithoutYieldOrAwait(DeclarationKind kind,
-                                                                                YieldHandling yieldHandling,
-                                                                                TokenKind tt)
+GeneralParser<ParseHandler, Unit>::destructuringDeclarationWithoutYieldOrAwait(DeclarationKind kind,
+                                                                               YieldHandling yieldHandling,
+                                                                               TokenKind tt)
 {
     uint32_t startYieldOffset = pc->lastYieldOffset;
     uint32_t startAwaitOffset = pc->lastAwaitOffset;
@@ -5252,10 +5246,10 @@ GeneralParser<ParseHandler, CharT>::destructuringDeclarationWithoutYieldOrAwait(
     return res;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::LexicalScopeNodeType
-GeneralParser<ParseHandler, CharT>::blockStatement(YieldHandling yieldHandling,
-                                                   unsigned errorNumber)
+GeneralParser<ParseHandler, Unit>::blockStatement(YieldHandling yieldHandling,
+                                                  unsigned errorNumber)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
     uint32_t openedPos = pos().begin;
@@ -5278,10 +5272,10 @@ GeneralParser<ParseHandler, CharT>::blockStatement(YieldHandling yieldHandling,
     return finishLexicalScope(scope, list);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::expressionAfterForInOrOf(ParseNodeKind forHeadKind,
-                                                             YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::expressionAfterForInOrOf(ParseNodeKind forHeadKind,
+                                                            YieldHandling yieldHandling)
 {
     MOZ_ASSERT(forHeadKind == ParseNodeKind::ForIn || forHeadKind == ParseNodeKind::ForOf);
     Node pn = forHeadKind == ParseNodeKind::ForOf
@@ -5290,13 +5284,13 @@ GeneralParser<ParseHandler, CharT>::expressionAfterForInOrOf(ParseNodeKind forHe
     return pn;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::declarationPattern(DeclarationKind declKind, TokenKind tt,
-                                                       bool initialDeclaration,
-                                                       YieldHandling yieldHandling,
-                                                       ParseNodeKind* forHeadKind,
-                                                       Node* forInOrOfExpression)
+GeneralParser<ParseHandler, Unit>::declarationPattern(DeclarationKind declKind, TokenKind tt,
+                                                      bool initialDeclaration,
+                                                      YieldHandling yieldHandling,
+                                                      ParseNodeKind* forHeadKind,
+                                                      Node* forInOrOfExpression)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket) ||
                anyChars.isCurrentTokenType(TokenKind::LeftCurly));
@@ -5346,14 +5340,14 @@ GeneralParser<ParseHandler, CharT>::declarationPattern(DeclarationKind declKind,
     return handler.newAssignment(ParseNodeKind::Assign, pattern, init);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::initializerInNameDeclaration(NameNodeType binding,
-                                                                 DeclarationKind declKind,
-                                                                 bool initialDeclaration,
-                                                                 YieldHandling yieldHandling,
-                                                                 ParseNodeKind* forHeadKind,
-                                                                 Node* forInOrOfExpression)
+GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(NameNodeType binding,
+                                                                DeclarationKind declKind,
+                                                                bool initialDeclaration,
+                                                                YieldHandling yieldHandling,
+                                                                ParseNodeKind* forHeadKind,
+                                                                Node* forInOrOfExpression)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assign));
 
@@ -5410,13 +5404,13 @@ GeneralParser<ParseHandler, CharT>::initializerInNameDeclaration(NameNodeType bi
     return handler.finishInitializerAssignment(binding, initializer);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::NameNodeType
-GeneralParser<ParseHandler, CharT>::declarationName(DeclarationKind declKind, TokenKind tt,
-                                                    bool initialDeclaration,
-                                                    YieldHandling yieldHandling,
-                                                    ParseNodeKind* forHeadKind,
-                                                    Node* forInOrOfExpression)
+GeneralParser<ParseHandler, Unit>::declarationName(DeclarationKind declKind, TokenKind tt,
+                                                   bool initialDeclaration,
+                                                   YieldHandling yieldHandling,
+                                                   ParseNodeKind* forHeadKind,
+                                                   Node* forInOrOfExpression)
 {
     // Anything other than possible identifier is an error.
     if (!TokenKindIsPossibleIdentifier(tt)) {
@@ -5499,12 +5493,12 @@ GeneralParser<ParseHandler, CharT>::declarationName(DeclarationKind declKind, To
     return binding;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
-                                                    ParseNodeKind kind,
-                                                    ParseNodeKind* forHeadKind /* = nullptr */,
-                                                    Node* forInOrOfExpression /* = nullptr */)
+GeneralParser<ParseHandler, Unit>::declarationList(YieldHandling yieldHandling,
+                                                   ParseNodeKind kind,
+                                                   ParseNodeKind* forHeadKind /* = nullptr */,
+                                                   Node* forInOrOfExpression /* = nullptr */)
 {
     MOZ_ASSERT(kind == ParseNodeKind::Var ||
                kind == ParseNodeKind::Let ||
@@ -5568,10 +5562,10 @@ GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
     return decl;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::lexicalDeclaration(YieldHandling yieldHandling,
-                                                       DeclarationKind kind)
+GeneralParser<ParseHandler, Unit>::lexicalDeclaration(YieldHandling yieldHandling,
+                                                      DeclarationKind kind)
 {
     MOZ_ASSERT(kind == DeclarationKind::Const || kind == DeclarationKind::Let);
 
@@ -5597,10 +5591,10 @@ GeneralParser<ParseHandler, CharT>::lexicalDeclaration(YieldHandling yieldHandli
     return decl;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool
-Parser<FullParseHandler, CharT>::namedImportsOrNamespaceImport(TokenKind tt,
-                                                               ListNodeType importSpecSet)
+Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(TokenKind tt,
+                                                              ListNodeType importSpecSet)
 {
     if (tt == TokenKind::LeftCurly) {
         while (true) {
@@ -5731,9 +5725,9 @@ Parser<FullParseHandler, CharT>::namedImportsOrNamespaceImport(TokenKind tt,
     return true;
 }
 
-template<typename CharT>
+template<typename Unit>
 BinaryNode*
-Parser<FullParseHandler, CharT>::importDeclaration()
+Parser<FullParseHandler, Unit>::importDeclaration()
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
@@ -5840,24 +5834,24 @@ Parser<FullParseHandler, CharT>::importDeclaration()
     return node;
 }
 
-template<typename CharT>
+template<typename Unit>
 inline SyntaxParseHandler::BinaryNodeType
-Parser<SyntaxParseHandler, CharT>::importDeclaration()
+Parser<SyntaxParseHandler, Unit>::importDeclaration()
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return SyntaxParseHandler::NodeFailure;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 inline typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::importDeclaration()
+GeneralParser<ParseHandler, Unit>::importDeclaration()
 {
     return asFinalParser()->importDeclaration();
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 inline typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::importDeclarationOrImportExpr(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::importDeclarationOrImportExpr(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
@@ -5873,9 +5867,9 @@ GeneralParser<ParseHandler, CharT>::importDeclarationOrImportExpr(YieldHandling 
     return importDeclaration();
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkExportedName(JSAtom* exportName)
+Parser<FullParseHandler, Unit>::checkExportedName(JSAtom* exportName)
 {
     if (!pc->sc()->asModuleContext()->builder.hasExportedName(exportName)) {
         return true;
@@ -5890,24 +5884,24 @@ Parser<FullParseHandler, CharT>::checkExportedName(JSAtom* exportName)
     return false;
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedName(JSAtom* exportName)
+Parser<SyntaxParseHandler, Unit>::checkExportedName(JSAtom* exportName)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedName(JSAtom* exportName)
+GeneralParser<ParseHandler, Unit>::checkExportedName(JSAtom* exportName)
 {
     return asFinalParser()->checkExportedName(exportName);
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNamesForArrayBinding(ListNode* array)
+Parser<FullParseHandler, Unit>::checkExportedNamesForArrayBinding(ListNode* array)
 {
     MOZ_ASSERT(array->isKind(ParseNodeKind::Array));
 
@@ -5933,24 +5927,24 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForArrayBinding(ListNode* arr
     return true;
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNamesForArrayBinding(ListNodeType array)
+Parser<SyntaxParseHandler, Unit>::checkExportedNamesForArrayBinding(ListNodeType array)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNamesForArrayBinding(ListNodeType array)
+GeneralParser<ParseHandler, Unit>::checkExportedNamesForArrayBinding(ListNodeType array)
 {
     return asFinalParser()->checkExportedNamesForArrayBinding(array);
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNamesForObjectBinding(ListNode* obj)
+Parser<FullParseHandler, Unit>::checkExportedNamesForObjectBinding(ListNode* obj)
 {
     MOZ_ASSERT(obj->isKind(ParseNodeKind::Object));
 
@@ -5983,24 +5977,24 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForObjectBinding(ListNode* ob
     return true;
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNamesForObjectBinding(ListNodeType obj)
+Parser<SyntaxParseHandler, Unit>::checkExportedNamesForObjectBinding(ListNodeType obj)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNamesForObjectBinding(ListNodeType obj)
+GeneralParser<ParseHandler, Unit>::checkExportedNamesForObjectBinding(ListNodeType obj)
 {
     return asFinalParser()->checkExportedNamesForObjectBinding(obj);
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNamesForDeclaration(ParseNode* node)
+Parser<FullParseHandler, Unit>::checkExportedNamesForDeclaration(ParseNode* node)
 {
     if (node->isKind(ParseNodeKind::Name)) {
         if (!checkExportedName(node->as<NameNode>().atom())) {
@@ -6020,24 +6014,24 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForDeclaration(ParseNode* nod
     return true;
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNamesForDeclaration(Node node)
+Parser<SyntaxParseHandler, Unit>::checkExportedNamesForDeclaration(Node node)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNamesForDeclaration(Node node)
+GeneralParser<ParseHandler, Unit>::checkExportedNamesForDeclaration(Node node)
 {
     return asFinalParser()->checkExportedNamesForDeclaration(node);
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNamesForDeclarationList(ListNode* node)
+Parser<FullParseHandler, Unit>::checkExportedNamesForDeclarationList(ListNode* node)
 {
     for (ParseNode* binding : node->contents()) {
         if (binding->isKind(ParseNodeKind::Assign)) {
@@ -6054,84 +6048,84 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForDeclarationList(ListNode* 
     return true;
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNamesForDeclarationList(ListNodeType node)
+Parser<SyntaxParseHandler, Unit>::checkExportedNamesForDeclarationList(ListNodeType node)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNamesForDeclarationList(ListNodeType node)
+GeneralParser<ParseHandler, Unit>::checkExportedNamesForDeclarationList(ListNodeType node)
 {
     return asFinalParser()->checkExportedNamesForDeclarationList(node);
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<FullParseHandler, CharT>::checkExportedNameForClause(NameNode* nameNode)
+Parser<FullParseHandler, Unit>::checkExportedNameForClause(NameNode* nameNode)
 {
     return checkExportedName(nameNode->atom());
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNameForClause(NameNodeType nameNode)
+Parser<SyntaxParseHandler, Unit>::checkExportedNameForClause(NameNodeType nameNode)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNameForClause(NameNodeType nameNode)
+GeneralParser<ParseHandler, Unit>::checkExportedNameForClause(NameNodeType nameNode)
 {
     return asFinalParser()->checkExportedNameForClause(nameNode);
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNameForFunction(CodeNode* funNode)
+Parser<FullParseHandler, Unit>::checkExportedNameForFunction(CodeNode* funNode)
 {
     return checkExportedName(funNode->funbox()->function()->explicitName());
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNameForFunction(CodeNodeType funNode)
+Parser<SyntaxParseHandler, Unit>::checkExportedNameForFunction(CodeNodeType funNode)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNameForFunction(CodeNodeType funNode)
+GeneralParser<ParseHandler, Unit>::checkExportedNameForFunction(CodeNodeType funNode)
 {
     return asFinalParser()->checkExportedNameForFunction(funNode);
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNameForClass(ClassNode* classNode)
+Parser<FullParseHandler, Unit>::checkExportedNameForClass(ClassNode* classNode)
 {
     MOZ_ASSERT(classNode->names());
     return checkExportedName(classNode->names()->innerBinding()->atom());
 }
 
-template<typename CharT>
+template<typename Unit>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNameForClass(ClassNodeType classNode)
+Parser<SyntaxParseHandler, Unit>::checkExportedNameForClass(ClassNodeType classNode)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNameForClass(ClassNodeType classNode)
+GeneralParser<ParseHandler, Unit>::checkExportedNameForClass(ClassNodeType classNode)
 {
     return asFinalParser()->checkExportedNameForClass(classNode);
 }
@@ -6166,9 +6160,9 @@ PerHandlerParser<SyntaxParseHandler>::processExportFrom(BinaryNodeType node)
     return false;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::exportFrom(uint32_t begin, Node specList)
+GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6203,9 +6197,9 @@ GeneralParser<ParseHandler, CharT>::exportFrom(uint32_t begin, Node specList)
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::exportBatch(uint32_t begin)
+GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6232,9 +6226,9 @@ GeneralParser<ParseHandler, CharT>::exportBatch(uint32_t begin)
     return exportFrom(begin, kid);
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<FullParseHandler, CharT>::checkLocalExportNames(ListNode* node)
+Parser<FullParseHandler, Unit>::checkLocalExportNames(ListNode* node)
 {
     // ES 2017 draft 15.2.3.1.
     for (ParseNode* next : node->contents()) {
@@ -6250,24 +6244,24 @@ Parser<FullParseHandler, CharT>::checkLocalExportNames(ListNode* node)
     return true;
 }
 
-template<typename CharT>
+template<typename Unit>
 bool
-Parser<SyntaxParseHandler, CharT>::checkLocalExportNames(ListNodeType node)
+Parser<SyntaxParseHandler, Unit>::checkLocalExportNames(ListNodeType node)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
 }
 
-template<class ParseHandler, typename CharT>
+template<class ParseHandler, typename Unit>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkLocalExportNames(ListNodeType node)
+GeneralParser<ParseHandler, Unit>::checkLocalExportNames(ListNodeType node)
 {
     return asFinalParser()->checkLocalExportNames(node);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
+GeneralParser<ParseHandler, Unit>::exportClause(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6383,9 +6377,9 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
+GeneralParser<ParseHandler, Unit>::exportVariableStatement(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6416,11 +6410,11 @@ GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::exportFunctionDeclaration(uint32_t begin,
-                                                              uint32_t toStringStart,
-                                                              FunctionAsyncKind asyncKind /* = SyncFunction */)
+GeneralParser<ParseHandler, Unit>::exportFunctionDeclaration(uint32_t begin,
+                                                             uint32_t toStringStart,
+                                                             FunctionAsyncKind asyncKind /* = SyncFunction */)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6449,9 +6443,9 @@ GeneralParser<ParseHandler, CharT>::exportFunctionDeclaration(uint32_t begin,
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::exportClassDeclaration(uint32_t begin)
+GeneralParser<ParseHandler, Unit>::exportClassDeclaration(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6480,9 +6474,9 @@ GeneralParser<ParseHandler, CharT>::exportClassDeclaration(uint32_t begin)
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::exportLexicalDeclaration(uint32_t begin, DeclarationKind kind)
+GeneralParser<ParseHandler, Unit>::exportLexicalDeclaration(uint32_t begin, DeclarationKind kind)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6512,11 +6506,11 @@ GeneralParser<ParseHandler, CharT>::exportLexicalDeclaration(uint32_t begin, Dec
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::exportDefaultFunctionDeclaration(uint32_t begin,
-                                                                     uint32_t toStringStart,
-                                                                     FunctionAsyncKind asyncKind /* = SyncFunction */)
+GeneralParser<ParseHandler, Unit>::exportDefaultFunctionDeclaration(uint32_t begin,
+                                                                    uint32_t toStringStart,
+                                                                    FunctionAsyncKind asyncKind /* = SyncFunction */)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6542,9 +6536,9 @@ GeneralParser<ParseHandler, CharT>::exportDefaultFunctionDeclaration(uint32_t be
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::exportDefaultClassDeclaration(uint32_t begin)
+GeneralParser<ParseHandler, Unit>::exportDefaultClassDeclaration(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6570,9 +6564,9 @@ GeneralParser<ParseHandler, CharT>::exportDefaultClassDeclaration(uint32_t begin
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::exportDefaultAssignExpr(uint32_t begin)
+GeneralParser<ParseHandler, Unit>::exportDefaultAssignExpr(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6609,9 +6603,9 @@ GeneralParser<ParseHandler, CharT>::exportDefaultAssignExpr(uint32_t begin)
     return node;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::exportDefault(uint32_t begin)
+GeneralParser<ParseHandler, Unit>::exportDefault(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6658,9 +6652,9 @@ GeneralParser<ParseHandler, CharT>::exportDefault(uint32_t begin)
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::exportDeclaration()
+GeneralParser<ParseHandler, Unit>::exportDeclaration()
 {
     if (!abortIfSyntaxParser()) {
         return null();
@@ -6727,10 +6721,10 @@ GeneralParser<ParseHandler, CharT>::exportDeclaration()
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::expressionStatement(YieldHandling yieldHandling,
-                                                        InvokedPrediction invoked)
+GeneralParser<ParseHandler, Unit>::expressionStatement(YieldHandling yieldHandling,
+                                                       InvokedPrediction invoked)
 {
     anyChars.ungetToken();
     Node pnexpr = expr(InAllowed, yieldHandling, TripledotProhibited,
@@ -6744,9 +6738,9 @@ GeneralParser<ParseHandler, CharT>::expressionStatement(YieldHandling yieldHandl
     return handler.newExprStatement(pnexpr, pos().end);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::consequentOrAlternative(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::consequentOrAlternative(YieldHandling yieldHandling)
 {
     TokenKind next;
     if (!tokenStream.peekToken(&next, TokenStream::Operand)) {
@@ -6803,9 +6797,9 @@ GeneralParser<ParseHandler, CharT>::consequentOrAlternative(YieldHandling yieldH
     return statement(yieldHandling);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::TernaryNodeType
-GeneralParser<ParseHandler, CharT>::ifStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling)
 {
     Vector<Node, 4> condList(context), thenList(context);
     Vector<uint32_t, 4> posList(context);
@@ -6874,9 +6868,9 @@ GeneralParser<ParseHandler, CharT>::ifStatement(YieldHandling yieldHandling)
     return ifNode;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::doWhileStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::doWhileStatement(YieldHandling yieldHandling)
 {
     uint32_t begin = pos().begin;
     ParseContext::Statement stmt(pc, StatementKind::DoLoop);
@@ -6903,9 +6897,9 @@ GeneralParser<ParseHandler, CharT>::doWhileStatement(YieldHandling yieldHandling
     return handler.newDoWhileStatement(body, cond, TokenPos(begin, pos().end));
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::whileStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::whileStatement(YieldHandling yieldHandling)
 {
     uint32_t begin = pos().begin;
     ParseContext::Statement stmt(pc, StatementKind::WhileLoop);
@@ -6920,9 +6914,9 @@ GeneralParser<ParseHandler, CharT>::whileStatement(YieldHandling yieldHandling)
     return handler.newWhileStatement(begin, cond, body);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::matchInOrOf(bool* isForInp, bool* isForOfp)
+GeneralParser<ParseHandler, Unit>::matchInOrOf(bool* isForInp, bool* isForOfp)
 {
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
@@ -6939,12 +6933,12 @@ GeneralParser<ParseHandler, CharT>::matchInOrOf(bool* isForInp, bool* isForOfp)
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
-                                                 ParseNodeKind* forHeadKind, Node* forInitialPart,
-                                                 Maybe<ParseContext::Scope>& forLoopLexicalScope,
-                                                 Node* forInOrOfExpression)
+GeneralParser<ParseHandler, Unit>::forHeadStart(YieldHandling yieldHandling,
+                                                ParseNodeKind* forHeadKind, Node* forInitialPart,
+                                                Maybe<ParseContext::Scope>& forLoopLexicalScope,
+                                                Node* forInOrOfExpression)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftParen));
 
@@ -7105,9 +7099,9 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
     return *forInOrOfExpression != null();
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::forStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::For));
 
@@ -7274,9 +7268,9 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
     return forLoop;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::SwitchStatementType
-GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::switchStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Switch));
     uint32_t begin = pos().begin;
@@ -7395,9 +7389,9 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
     return handler.newSwitchStatement(begin, discriminant, lexicalForCaseList, seenDefault);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ContinueStatementType
-GeneralParser<ParseHandler, CharT>::continueStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::continueStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Continue));
     uint32_t begin = pos().begin;
@@ -7427,9 +7421,9 @@ GeneralParser<ParseHandler, CharT>::continueStatement(YieldHandling yieldHandlin
     return handler.newContinueStatement(label, TokenPos(begin, pos().end));
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BreakStatementType
-GeneralParser<ParseHandler, CharT>::breakStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::breakStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Break));
     uint32_t begin = pos().begin;
@@ -7469,9 +7463,9 @@ GeneralParser<ParseHandler, CharT>::breakStatement(YieldHandling yieldHandling)
     return handler.newBreakStatement(label, TokenPos(begin, pos().end));
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::returnStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::returnStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Return));
     uint32_t begin = pos().begin;
@@ -7509,9 +7503,9 @@ GeneralParser<ParseHandler, CharT>::returnStatement(YieldHandling yieldHandling)
     return handler.newReturnStatement(exprNode, TokenPos(begin, pos().end));
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
+GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Yield));
     uint32_t begin = pos().begin;
@@ -7563,9 +7557,9 @@ GeneralParser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
     return handler.newYieldExpression(begin, exprNode);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::withStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::withStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::With));
     uint32_t begin = pos().begin;
@@ -7604,9 +7598,9 @@ GeneralParser<ParseHandler, CharT>::withStatement(YieldHandling yieldHandling)
     return handler.newWithStatement(begin, objectExpr, innerBlock);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::labeledItem(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::labeledItem(YieldHandling yieldHandling)
 {
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
@@ -7641,9 +7635,9 @@ GeneralParser<ParseHandler, CharT>::labeledItem(YieldHandling yieldHandling)
     return statement(yieldHandling);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::LabeledStatementType
-GeneralParser<ParseHandler, CharT>::labeledStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::labeledStatement(YieldHandling yieldHandling)
 {
     RootedPropertyName label(context, labelIdentifier(yieldHandling));
     if (!label) {
@@ -7673,9 +7667,9 @@ GeneralParser<ParseHandler, CharT>::labeledStatement(YieldHandling yieldHandling
     return handler.newLabeledStatement(label, pn, begin);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::throwStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::throwStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Throw));
     uint32_t begin = pos().begin;
@@ -7706,9 +7700,9 @@ GeneralParser<ParseHandler, CharT>::throwStatement(YieldHandling yieldHandling)
     return handler.newThrowStatement(throwExpr, TokenPos(begin, pos().end));
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::TernaryNodeType
-GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Try));
     uint32_t begin = pos().begin;
@@ -7880,10 +7874,10 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
     return handler.newTryStatement(begin, innerBlock, catchScope, finallyBlock);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::LexicalScopeNodeType
-GeneralParser<ParseHandler, CharT>::catchBlockStatement(YieldHandling yieldHandling,
-                                                        ParseContext::Scope& catchParamScope)
+GeneralParser<ParseHandler, Unit>::catchBlockStatement(YieldHandling yieldHandling,
+                                                       ParseContext::Scope& catchParamScope)
 {
     uint32_t openedPos = pos().begin;
 
@@ -7919,9 +7913,9 @@ GeneralParser<ParseHandler, CharT>::catchBlockStatement(YieldHandling yieldHandl
     return finishLexicalScope(scope, list);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::DebuggerStatementType
-GeneralParser<ParseHandler, CharT>::debuggerStatement()
+GeneralParser<ParseHandler, Unit>::debuggerStatement()
 {
     TokenPos p;
     p.begin = pos().begin;
@@ -7957,11 +7951,11 @@ ToAccessorType(PropertyType propType)
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ClassNodeType
-GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
-                                                    ClassContext classContext,
-                                                    DefaultHandling defaultHandling)
+GeneralParser<ParseHandler, Unit>::classDefinition(YieldHandling yieldHandling,
+                                                   ClassContext classContext,
+                                                   DefaultHandling defaultHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
 
@@ -8231,9 +8225,9 @@ ParserBase::nextTokenContinuesLetDeclaration(TokenKind next)
     return TokenKindIsPossibleIdentifier(next);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::variableStatement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::variableStatement(YieldHandling yieldHandling)
 {
     ListNodeType vars = declarationList(yieldHandling, ParseNodeKind::Var);
     if (!vars) {
@@ -8245,9 +8239,9 @@ GeneralParser<ParseHandler, CharT>::variableStatement(YieldHandling yieldHandlin
     return vars;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::statement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -8473,10 +8467,10 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandling,
-                                                      bool canHaveDirectives /* = false */)
+GeneralParser<ParseHandler, Unit>::statementListItem(YieldHandling yieldHandling,
+                                                     bool canHaveDirectives /* = false */)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -8679,12 +8673,12 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yieldHandling,
-                                         TripledotHandling tripledotHandling,
-                                         PossibleError* possibleError /* = nullptr */,
-                                         InvokedPrediction invoked /* = PredictUninvoked */)
+GeneralParser<ParseHandler, Unit>::expr(InHandling inHandling, YieldHandling yieldHandling,
+                                        TripledotHandling tripledotHandling,
+                                        PossibleError* possibleError /* = nullptr */,
+                                        InvokedPrediction invoked /* = PredictUninvoked */)
 {
     Node pn = assignExpr(inHandling, yieldHandling, tripledotHandling,
                          possibleError, invoked);
@@ -8816,12 +8810,12 @@ Precedence(ParseNodeKind pnk)
     return PrecedenceTable[size_t(pnk) - size_t(ParseNodeKind::BinOpFirst)];
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling yieldHandling,
-                                           TripledotHandling tripledotHandling,
-                                           PossibleError* possibleError,
-                                           InvokedPrediction invoked /* = PredictUninvoked */)
+GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling, YieldHandling yieldHandling,
+                                          TripledotHandling tripledotHandling,
+                                          PossibleError* possibleError,
+                                          InvokedPrediction invoked /* = PredictUninvoked */)
 {
     // Shift-reduce parser for the binary operator part of the JS expression
     // syntax.
@@ -8902,12 +8896,12 @@ GeneralParser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling 
     return pn;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandling yieldHandling,
-                                             TripledotHandling tripledotHandling,
-                                             PossibleError* possibleError,
-                                             InvokedPrediction invoked /* = PredictUninvoked */)
+GeneralParser<ParseHandler, Unit>::condExpr(InHandling inHandling, YieldHandling yieldHandling,
+                                            TripledotHandling tripledotHandling,
+                                            PossibleError* possibleError,
+                                            InvokedPrediction invoked /* = PredictUninvoked */)
 {
     Node condition = orExpr(inHandling, yieldHandling, tripledotHandling, possibleError, invoked);
     if (!condition) {
@@ -8937,12 +8931,12 @@ GeneralParser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandlin
     return handler.newConditional(condition, thenExpr, elseExpr);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yieldHandling,
-                                               TripledotHandling tripledotHandling,
-                                               PossibleError* possibleError /* = nullptr */,
-                                               InvokedPrediction invoked /* = PredictUninvoked */)
+GeneralParser<ParseHandler, Unit>::assignExpr(InHandling inHandling, YieldHandling yieldHandling,
+                                              TripledotHandling tripledotHandling,
+                                              PossibleError* possibleError /* = nullptr */,
+                                              InvokedPrediction invoked /* = PredictUninvoked */)
 {
     if (!CheckRecursionLimit(context)) {
         return null();
@@ -9233,9 +9227,9 @@ PerHandlerParser<ParseHandler>::nameIsArgumentsOrEval(Node node)
     return nullptr;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::checkIncDecOperand(Node operand, uint32_t operandOffset)
+GeneralParser<ParseHandler, Unit>::checkIncDecOperand(Node operand, uint32_t operandOffset)
 {
     if (handler.isName(operand)) {
         if (const char* chars = nameIsArgumentsOrEval(operand)) {
@@ -9263,9 +9257,9 @@ GeneralParser<ParseHandler, CharT>::checkIncDecOperand(Node operand, uint32_t op
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind,
+GeneralParser<ParseHandler, Unit>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind,
                                                 uint32_t begin)
 {
     Node kid = unaryExpr(yieldHandling, TripledotProhibited);
@@ -9275,12 +9269,12 @@ GeneralParser<ParseHandler, CharT>::unaryOpExpr(YieldHandling yieldHandling, Par
     return handler.newUnary(kind, begin, kid);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
-                                              TripledotHandling tripledotHandling,
-                                              PossibleError* possibleError /* = nullptr */,
-                                              InvokedPrediction invoked /* = PredictUninvoked */)
+GeneralParser<ParseHandler, Unit>::unaryExpr(YieldHandling yieldHandling,
+                                             TripledotHandling tripledotHandling,
+                                             PossibleError* possibleError /* = nullptr */,
+                                             InvokedPrediction invoked /* = PredictUninvoked */)
 {
     if (!CheckRecursionLimit(context)) {
         return null();
@@ -9414,9 +9408,9 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
 }
 
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::assignExprWithoutYieldOrAwait(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::assignExprWithoutYieldOrAwait(YieldHandling yieldHandling)
 {
     uint32_t startYieldOffset = pc->lastYieldOffset;
     uint32_t startAwaitOffset = pc->lastAwaitOffset;
@@ -9434,10 +9428,10 @@ GeneralParser<ParseHandler, CharT>::assignExprWithoutYieldOrAwait(YieldHandling 
     return res;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, bool* isSpread,
-                                                 PossibleError* possibleError /* = nullptr */)
+GeneralParser<ParseHandler, Unit>::argumentList(YieldHandling yieldHandling, bool* isSpread,
+                                                PossibleError* possibleError /* = nullptr */)
 {
     ListNodeType argsList = handler.newArguments(pos());
     if (!argsList) {
@@ -9512,13 +9506,13 @@ ParserBase::checkAndMarkSuperScope()
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
-                                               TripledotHandling tripledotHandling,
-                                               TokenKind tt, bool allowCallSyntax /* = true */,
-                                               PossibleError* possibleError /* = nullptr */,
-                                               InvokedPrediction invoked /* = PredictUninvoked */)
+GeneralParser<ParseHandler, Unit>::memberExpr(YieldHandling yieldHandling,
+                                              TripledotHandling tripledotHandling,
+                                              TokenKind tt, bool allowCallSyntax /* = true */,
+                                              PossibleError* possibleError /* = nullptr */,
+                                              InvokedPrediction invoked /* = PredictUninvoked */)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
 
@@ -9808,12 +9802,12 @@ PerHandlerParser<ParseHandler>::newName(PropertyName* name, TokenPos pos)
     return handler.newName(name, pos, context);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::checkLabelOrIdentifierReference(PropertyName* ident,
-                                                                    uint32_t offset,
-                                                                    YieldHandling yieldHandling,
-                                                                    TokenKind hint /* = TokenKind::Limit */)
+GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(PropertyName* ident,
+                                                                   uint32_t offset,
+                                                                   YieldHandling yieldHandling,
+                                                                   TokenKind hint /* = TokenKind::Limit */)
 {
     TokenKind tt;
     if (hint == TokenKind::Limit) {
@@ -9882,11 +9876,11 @@ GeneralParser<ParseHandler, CharT>::checkLabelOrIdentifierReference(PropertyName
     return false;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::checkBindingIdentifier(PropertyName* ident, uint32_t offset,
-                                                           YieldHandling yieldHandling,
-                                                           TokenKind hint /* = TokenKind::Limit */)
+GeneralParser<ParseHandler, Unit>::checkBindingIdentifier(PropertyName* ident, uint32_t offset,
+                                                          YieldHandling yieldHandling,
+                                                          TokenKind hint /* = TokenKind::Limit */)
 {
     if (pc->sc()->needStrictChecks()) {
         if (ident == context->names().arguments) {
@@ -9907,9 +9901,9 @@ GeneralParser<ParseHandler, CharT>::checkBindingIdentifier(PropertyName* ident, 
     return checkLabelOrIdentifierReference(ident, offset, yieldHandling, hint);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 PropertyName*
-GeneralParser<ParseHandler, CharT>::labelOrIdentifierReference(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::labelOrIdentifierReference(YieldHandling yieldHandling)
 {
     // ES 2017 draft 12.1.1.
     //   StringValue of IdentifierName normalizes any Unicode escape sequences
@@ -9930,9 +9924,9 @@ GeneralParser<ParseHandler, CharT>::labelOrIdentifierReference(YieldHandling yie
     return ident;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 PropertyName*
-GeneralParser<ParseHandler, CharT>::bindingIdentifier(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::bindingIdentifier(YieldHandling yieldHandling)
 {
     TokenKind hint = !anyChars.currentNameHasEscapes()
                      ? anyChars.currentToken().type
@@ -9979,9 +9973,9 @@ PerHandlerParser<ParseHandler>::noSubstitutionTaggedTemplate()
     return handler.newTemplateStringLiteral(anyChars.currentToken().atom(), pos());
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::NameNodeType
-GeneralParser<ParseHandler, CharT>::noSubstitutionUntaggedTemplate()
+GeneralParser<ParseHandler, Unit>::noSubstitutionUntaggedTemplate()
 {
     if (!tokenStream.checkForInvalidTemplateEscapeError()) {
         return null();
@@ -9990,9 +9984,9 @@ GeneralParser<ParseHandler, CharT>::noSubstitutionUntaggedTemplate()
     return handler.newTemplateStringLiteral(anyChars.currentToken().atom(), pos());
 }
 
-template <typename CharT>
+template <typename Unit>
 RegExpLiteral*
-Parser<FullParseHandler, CharT>::newRegExp()
+Parser<FullParseHandler, Unit>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
 
@@ -10010,9 +10004,9 @@ Parser<FullParseHandler, CharT>::newRegExp()
     return handler.newRegExp(reobj, pos(), *this);
 }
 
-template <typename CharT>
+template <typename Unit>
 SyntaxParseHandler::RegExpLiteralType
-Parser<SyntaxParseHandler, CharT>::newRegExp()
+Parser<SyntaxParseHandler, Unit>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
 
@@ -10028,21 +10022,21 @@ Parser<SyntaxParseHandler, CharT>::newRegExp()
     return handler.newRegExp(SyntaxParseHandler::NodeGeneric, pos(), *this);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::RegExpLiteralType
-GeneralParser<ParseHandler, CharT>::newRegExp()
+GeneralParser<ParseHandler, Unit>::newRegExp()
 {
     return asFinalParser()->newRegExp();
 }
 
 // |exprPossibleError| is the PossibleError state within |expr|,
 // |possibleError| is the surrounding PossibleError state.
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::checkDestructuringAssignmentTarget(Node expr, TokenPos exprPos,
-                                                                       PossibleError* exprPossibleError,
-                                                                       PossibleError* possibleError,
-                                                                       TargetBehavior behavior)
+GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentTarget(Node expr, TokenPos exprPos,
+                                                                      PossibleError* exprPossibleError,
+                                                                      PossibleError* possibleError,
+                                                                      TargetBehavior behavior)
 {
     // Report any pending expression error if we're definitely not in a
     // destructuring context or the possible destructuring target is a
@@ -10089,11 +10083,11 @@ GeneralParser<ParseHandler, CharT>::checkDestructuringAssignmentTarget(Node expr
     return true;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 void
-GeneralParser<ParseHandler, CharT>::checkDestructuringAssignmentName(NameNodeType name,
-                                                                     TokenPos namePos,
-                                                                     PossibleError* possibleError)
+GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentName(NameNodeType name,
+                                                                    TokenPos namePos,
+                                                                    PossibleError* possibleError)
 {
 #ifdef DEBUG
     // GCC 8.0.1 crashes if this is a one-liner.
@@ -10131,11 +10125,11 @@ GeneralParser<ParseHandler, CharT>::checkDestructuringAssignmentName(NameNodeTyp
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::checkDestructuringAssignmentElement(Node expr, TokenPos exprPos,
-                                                                        PossibleError* exprPossibleError,
-                                                                        PossibleError* possibleError)
+GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentElement(Node expr, TokenPos exprPos,
+                                                                       PossibleError* exprPossibleError,
+                                                                       PossibleError* possibleError)
 {
     // ES2018 draft rev 0719f44aab93215ed9a626b2f45bd34f36916834
     // 12.15.5 Destructuring Assignment
@@ -10160,10 +10154,10 @@ GeneralParser<ParseHandler, CharT>::checkDestructuringAssignmentElement(Node exp
     return checkDestructuringAssignmentTarget(expr, exprPos, exprPossibleError, possibleError);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling,
-                                                     PossibleError* possibleError)
+GeneralParser<ParseHandler, Unit>::arrayInitializer(YieldHandling yieldHandling,
+                                                    PossibleError* possibleError)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
@@ -10278,13 +10272,13 @@ GeneralParser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling
     return literal;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
-                                                 const Maybe<DeclarationKind>& maybeDecl,
-                                                 ListNodeType propList,
-                                                 PropertyType* propType,
-                                                 MutableHandleAtom propAtom)
+GeneralParser<ParseHandler, Unit>::propertyName(YieldHandling yieldHandling,
+                                                const Maybe<DeclarationKind>& maybeDecl,
+                                                ListNodeType propList,
+                                                PropertyType* propType,
+                                                MutableHandleAtom propAtom)
 {
     TokenKind ltok;
     if (!tokenStream.getToken(&ltok)) {
@@ -10490,11 +10484,11 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
     return null();
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::UnaryNodeType
-GeneralParser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHandling,
-                                                         const Maybe<DeclarationKind>& maybeDecl,
-                                                         ListNodeType literal)
+GeneralParser<ParseHandler, Unit>::computedPropertyName(YieldHandling yieldHandling,
+                                                        const Maybe<DeclarationKind>& maybeDecl,
+                                                        ListNodeType literal)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
@@ -10517,10 +10511,10 @@ GeneralParser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHand
     return handler.newComputedName(assignNode, begin, pos().end);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
-GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
-                                                  PossibleError* possibleError)
+GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
+                                                 PossibleError* possibleError)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
 
@@ -10771,10 +10765,10 @@ GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
     return literal;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::CodeNodeType
-GeneralParser<ParseHandler, CharT>::methodDefinition(uint32_t toStringStart, PropertyType propType,
-                                                     HandleAtom funName)
+GeneralParser<ParseHandler, Unit>::methodDefinition(uint32_t toStringStart, PropertyType propType,
+                                                    HandleAtom funName)
 {
     FunctionSyntaxKind kind;
     switch (propType) {
@@ -10826,9 +10820,9 @@ GeneralParser<ParseHandler, CharT>::methodDefinition(uint32_t toStringStart, Pro
                               generatorKind, asyncKind);
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 bool
-GeneralParser<ParseHandler, CharT>::tryNewTarget(BinaryNodeType* newTarget)
+GeneralParser<ParseHandler, Unit>::tryNewTarget(BinaryNodeType* newTarget)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::New));
 
@@ -10875,9 +10869,9 @@ GeneralParser<ParseHandler, CharT>::tryNewTarget(BinaryNodeType* newTarget)
     return !!*newTarget;
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, CharT>::importExpr(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
@@ -10930,12 +10924,12 @@ GeneralParser<ParseHandler, CharT>::importExpr(YieldHandling yieldHandling)
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
-                                                TripledotHandling tripledotHandling,
-                                                TokenKind tt, PossibleError* possibleError,
-                                                InvokedPrediction invoked /* = PredictUninvoked */)
+GeneralParser<ParseHandler, Unit>::primaryExpr(YieldHandling yieldHandling,
+                                               TripledotHandling tripledotHandling,
+                                               TokenKind tt, PossibleError* possibleError,
+                                               InvokedPrediction invoked /* = PredictUninvoked */)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
     if (!CheckRecursionLimit(context)) {
@@ -11113,12 +11107,12 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
     }
 }
 
-template <class ParseHandler, typename CharT>
+template <class ParseHandler, typename Unit>
 typename ParseHandler::Node
-GeneralParser<ParseHandler, CharT>::exprInParens(InHandling inHandling,
-                                                 YieldHandling yieldHandling,
-                                                 TripledotHandling tripledotHandling,
-                                                 PossibleError* possibleError /* = nullptr */)
+GeneralParser<ParseHandler, Unit>::exprInParens(InHandling inHandling,
+                                                YieldHandling yieldHandling,
+                                                TripledotHandling tripledotHandling,
+                                                PossibleError* possibleError /* = nullptr */)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftParen));
     return expr(inHandling, yieldHandling, tripledotHandling, possibleError, PredictInvoked);

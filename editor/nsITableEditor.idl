@@ -285,37 +285,57 @@ interface nsITableEditor : nsISupports
   Element getCellAt(in Element aTableElement,
                     in long aRowIndex, in long aColumnIndex);
 
-  /** Get a cell at cellmap grid coordinates and associated data
-    * A cell that spans across multiple cellmap locations will
-    *   be returned multiple times, once for each location it occupies
-    * Examine the returned aStartRowIndex and aStartColIndex to see
-    *   if it is in the same layout column or layout row:
-    *   A "layout row" is all cells sharing the same top edge
-    *   A "layout column" is all cells sharing the same left edge
-    *   This is important to determine what to do when inserting or deleting a column or row
-    *
-    *  @param aTable                   A table in the document
-    *  @param aRowIndex, aColIndex     The 0-based cellmap indexes
-    * returns values:
-    *  @param aCell                    The cell at this cellmap location
-    *  @param aStartRowIndex           The row index where cell starts
-    *  @param aStartColIndex           The col index where cell starts
-    *  @param aRowSpan                 May be 0 (to span down entire table) or number of cells spanned
-    *  @param aColSpan                 May be 0 (to span across entire table) or number of cells spanned
-    *  @param aActualRowSpan           The actual number of cellmap locations (rows) spanned by the cell
-    *  @param aActualColSpan           The actual number of cellmap locations (columns) spanned by the cell
-    *  @param aIsSelected
-    *  @param
-    *
-    * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *  passes NS_SUCCEEDED macro)
-    */
-  void getCellDataAt(in Element aTable,
-                     in long  aRowIndex, in long  aColIndex,
-                     out Element aCell,
-                     out long  aStartRowIndex, out long  aStartColIndex,
-                     out long  aRowSpan, out long  aColSpan,
-                     out long  aActualRowSpan, out long  aActualColSpan,
+  /**
+   * Get cell element and its various information from <table> element and
+   * indexes in it.  If aTableElement is null, this looks for an ancestor
+   * <table> element of anchor of Selection.  If there is no <table> element
+   * at that point, this throws exception.  Note that this requires layout
+   * information.  So, you need to flush the layout after changing the DOM
+   * tree.
+   * If there is no cell element at the indexes, this throws exception.
+   * XXX Perhaps, this is wrong behavior, this should return null without
+   *     exception since the caller cannot distinguish whether the exception
+   *     is caused by "not found" or other unexpected situation.
+   *
+   * @param aTableElement       A <table> element.  If this is null, this
+   *                            uses ancestor of anchor of Selection.
+   * @param aRowIndex           Row index in aTableElement.  Starting from 0.
+   * @param aColumnIndex        Column index in aTableElement.  Starting from
+   *                            0.
+   * @param aCellElement        [OUT] The cell element at the indexes.
+   * @param aStartRowIndex      [OUT] First row index which contains
+   *                            aCellElement.  E.g., if the cell's rowspan is
+   *                            not 1, this returns its first row index.
+   *                            I.e., this can be smaller than aRowIndex.
+   * @param aStartColumnIndex   [OUT] First column index which contains the
+   *                            aCellElement.  E.g., if the cell's colspan is
+   *                            larger than 1, this returns its first column
+   *                            index.  I.e., this can be smaller than
+   *                            aColumIndex.
+   * @param aRowSpan            [OUT] rowspan attribute value in most cases.
+   *                            If the specified value is invalid, this
+   *                            returns 1.  Only when the document is written
+   *                            in HTML5 or later, this can be 0.
+   * @param aColSpan            [OUT] colspan attribute value in most cases.
+   *                            If the specified value is invalid, this
+   *                            returns 1.
+   * @param aEffectiveRowSpan   [OUT] Effective rowspan value at aRowIndex.
+   *                            This is same as:
+   *                              aRowSpan - (aRowIndex - aStartRowIndex)
+   * @param aEffectiveColSpan   [OUT] Effective colspan value at aColumnIndex.
+   *                            This is same as:
+   *                              aColSpan - (aColumnIndex - aStartColumnIndex)
+   * @param aIsSelected         [OUT] Returns true if aCellElement or its
+   *                            <tr> or <table> element is selected.
+   *                            Otherwise, e.g., aCellElement just contains
+   *                            selection range, returns false.
+   */
+  void getCellDataAt(in Element aTableElement,
+                     in long aRowIndex, in long aColumnIndex,
+                     out Element aCellElement,
+                     out long aStartRowIndex, out long aStartColumnIndex,
+                     out long aRowSpan, out long aColSpan,
+                     out long aEffectiveRowSpan, out long aEffectiveColSpan,
                      out boolean aIsSelected);
 
   /**

@@ -61,6 +61,9 @@ add_task(async function test_opened_page() {
     const details = JSON.parse(detailsParam);
     ok(typeof details == "object", "Details param is a stringified JSON object.");
     ok(Array.isArray(details.consoleLog), "Details has a consoleLog array.");
+    ok(details.consoleLog[0].match(/console\.log\(null\)[\s\S]*test.html:\d+:\d+/m), "Can handle degenerate console logs");
+    ok(details.consoleLog[1].match(/console\.error\(colored message\)[\s\S]*test.html:\d+:\d+/m), "Can handle fancy console logs");
+    ok(details.consoleLog[2].match(/document\.access is undefined[\s\S]*test.html:\d+:\d+/m), "Script errors are logged");
     ok(typeof details.buildID == "string", "Details has a buildID string.");
     ok(typeof details.channel == "string", "Details has a channel string.");
     ok(typeof details.hasTouchScreen == "boolean", "Details has a hasTouchScreen flag.");

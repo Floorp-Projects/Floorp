@@ -1037,7 +1037,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'RCINCLUDE',
             'WIN32_EXE_LDFLAGS',
             'USE_EXTENSION_MANIFEST',
-            'NO_JS_MANIFEST',
             'HAS_MISC_RULE',
         ]
         for v in varlist:
@@ -1299,16 +1298,6 @@ class TreeMetadataEmitter(LoggingMixin):
                     'XPI_NAME.', context)
 
             yield cls(context, all_files)
-
-        # Check for manifest declarations in EXTRA_{PP_,}COMPONENTS.
-        if any(e.endswith('.js') for e in components) and \
-                not any(e.endswith('.manifest') for e in components) and \
-                not context.get('NO_JS_MANIFEST', False):
-            raise SandboxValidationError('A .js component was specified in EXTRA_COMPONENTS '
-                                         'or EXTRA_PP_COMPONENTS without a matching '
-                                         '.manifest file.  See '
-                                         'https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_2.0 .',
-                                         context);
 
         for c in components:
             if c.endswith('.manifest'):

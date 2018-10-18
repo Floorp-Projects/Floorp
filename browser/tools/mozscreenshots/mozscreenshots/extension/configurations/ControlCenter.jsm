@@ -26,7 +26,11 @@ const MIXED_PASSIVE_CONTENT_URL = `https://example.com/${RESOURCE_PATH}/mixed_pa
 const TRACKING_PAGE = `http://tracking.example.org/${RESOURCE_PATH}/tracking.html`;
 
 var ControlCenter = {
-  init(libDir) { },
+  init(libDir) {
+    // Disable the FTU tours.
+    Services.prefs.setIntPref("privacy.trackingprotection.introCount", 20);
+    Services.prefs.setIntPref("browser.contentblocking.introCount", 20);
+  },
 
   configurations: {
     about: {
@@ -218,7 +222,6 @@ var ControlCenter = {
       selectors: ["#identity-popup"],
       async applyConfig() {
         Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
-        Services.prefs.setIntPref("privacy.trackingprotection.introCount", 20);
         await UrlClassifierTestUtils.addTestTrackers();
 
         await loadPage(TRACKING_PAGE);
@@ -232,7 +235,6 @@ var ControlCenter = {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;
         Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
-        Services.prefs.setIntPref("privacy.trackingprotection.introCount", 20);
         await UrlClassifierTestUtils.addTestTrackers();
 
         await loadPage(TRACKING_PAGE);

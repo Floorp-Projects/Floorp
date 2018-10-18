@@ -6,7 +6,8 @@ function pageScript() {
   }, true);
 }
 
-SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", true]]});
+SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", true],
+																	 ["security.allow_eval_with_system_principal", true]]});
 
 const FRAME_URL =
   "data:text/html," + encodeURIComponent("<body>Just a frame</body>");

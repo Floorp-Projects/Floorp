@@ -239,7 +239,7 @@ let FormAutofillDoorhanger = {
     let privacyLinkElement = chromeDoc.createXULElement("label");
     privacyLinkElement.className = "text-link";
     privacyLinkElement.setAttribute("useoriginprincipal", true);
-    privacyLinkElement.setAttribute("href", link || "about:preferences#privacy");
+    privacyLinkElement.setAttribute("href", link || "about:preferences#privacy-form-autofill");
     privacyLinkElement.setAttribute("value", message);
     content.appendChild(privacyLinkElement);
   },

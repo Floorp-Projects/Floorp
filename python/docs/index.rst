@@ -38,24 +38,13 @@ full list of dependencies. The requirements file is then used with ``pip`` to
 download and extract the source distributions of all packages into the
 ``third_party/python`` directory.
 
-If you're familiar with ``Pipfile`` you can also directly modify this in the in
-the top source directory and then run ``mach vendor python`` for your changes
-to take effect. This allows advanced options such as specifying alternative
-package indexes (see below), and
-`PEP 508 specifiers <https://www.python.org/dev/peps/pep-0508/>`_.
-
-Note that the `specification <https://github.com/pypa/pipfile>`_ for
-``Pipfile`` and ``Pipfile.lock`` is still in active development. More
-information can be found in the
-`Pipenv documentation <https://docs.pipenv.org/>`_, which is the reference
-implementation we're using.
+Alternatively, you can also modify the direct dependencies in
+``third_party/python/requirements.in`` and then run ``mach vendor python`` for your
+changes to take effect.
 
 What if the package isn't on PyPI?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If the package is available on another Python package index, then you can add
-these details to ``Pipfile`` by
-`specifying package indexes <https://docs.pipenv.org/advanced/#specifying-package-indexes>`_.
 If the package isn't available on any Python package index, then you can
 manually copy the source distribution into the ``third_party/python`` directory.
 

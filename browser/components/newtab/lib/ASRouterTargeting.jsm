@@ -60,6 +60,48 @@ function CachedTargetingGetter(property, options = null, updateInterval = FRECEN
   };
 }
 
+function CheckBrowserNeedsUpdate(updateInterval = FRECENT_SITES_UPDATE_INTERVAL) {
+  const UpdateChecker = Cc["@mozilla.org/updates/update-checker;1"].createInstance(Ci.nsIUpdateChecker);
+  const checker = {
+    _lastUpdated: 0,
+    _value: null,
+    // For testing. Avoid update check network call.
+    setUp(value) {
+      this._lastUpdated = Date.now();
+      this._value = value;
+    },
+    expire() {
+      this._lastUpdated = 0;
+      this._value = null;
+    },
+    get() {
+      return new Promise((resolve, reject) => {
+        const now = Date.now();
+        const updateServiceListener = {
+          onCheckComplete(request, updates, updateCount) {
+            checker._value = updateCount > 0;
+            resolve(checker._value);
+          },
+          onError(request, update) {
+            reject(request);
+          },
+
+          QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
+        };
+
+        if (now - this._lastUpdated >= updateInterval) {
+          UpdateChecker.checkForUpdates(updateServiceListener, true);
+          this._lastUpdated = now;
+        } else {
+          resolve(this._value);
+        }
+      });
+    },
+  };
+
+  return checker;
+}
+
 const QueryCache = {
   expireAll() {
     Object.keys(this.queries).forEach(query => {
@@ -78,6 +120,7 @@ const QueryCache = {
       }
     ),
     TotalBookmarksCount: new CachedTargetingGetter("getTotalBookmarksCount"),
+    CheckBrowserNeedsUpdate: new CheckBrowserNeedsUpdate(),
   },
 };
 
@@ -217,6 +260,9 @@ const TargetingGetters = {
   },
   get region() {
     return Services.prefs.getStringPref(SEARCH_REGION_PREF, "");
+  },
+  get needsUpdate() {
+    return QueryCache.queries.CheckBrowserNeedsUpdate.get();
   },
 };
 

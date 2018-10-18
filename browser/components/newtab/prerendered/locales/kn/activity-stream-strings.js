@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "ಸೇವೆಯ ನಿಯಮಗಳು",
   "firstrun_privacy_notice": "ಗೌಪ್ಯತಾ ಸೂಚನೆ",
   "firstrun_continue_to_login": "ಮುಂದುವರೆ",
-  "firstrun_skip_login": "ಈ ಹಂತವನ್ನು ಹಾರಿಸಿ"
+  "firstrun_skip_login": "ಈ ಹಂತವನ್ನು ಹಾರಿಸಿ",
+  "context_menu_title": "Open menu"
 };

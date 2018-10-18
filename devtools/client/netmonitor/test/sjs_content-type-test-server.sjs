@@ -266,6 +266,14 @@ function handleRequest(request, response) {
         response.finish();
         break;
       }
+      case "hls-m3u8-alt-mime-type": {
+        response.setStatusLine(request.httpVersion, status, "OK");
+        response.setHeader("Content-Type", "application/vnd.apple.mpegurl", false);
+        setCacheHeaders();
+        response.write("#EXTM3U\n");
+        response.finish();
+        break;
+      }
       case "mpeg-dash": {
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "video/vnd.mpeg.dash.mpd", false);

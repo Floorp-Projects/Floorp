@@ -95,6 +95,12 @@
       "properties": {
         "ImportEnterpriseRoots": {
           "type": "boolean"
+        },
+        "Install": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -348,9 +354,12 @@
           "items": {
             "type": "URL"
           }
+        },
+        "StartPage": {
+          "type": "string",
+          "enum": ["none", "homepage", "previous-session"]
         }
-      },
-      "required": ["URL"]
+      }
     },
 
     "InstallAddonsPermission": {

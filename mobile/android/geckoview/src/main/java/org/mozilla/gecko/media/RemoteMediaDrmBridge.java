@@ -139,6 +139,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
         } catch (Exception e) {
             Log.e(LOGTAG, "Got exception while releasing RemoteDrmBridge.", e);
         }
+        RemoteManager.getInstance().onRemoteMediaDrmBridgeReleased(mRemote);
         mRemote = null;
         mCallbacksFwd = null;
     }

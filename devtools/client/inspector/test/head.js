@@ -48,7 +48,7 @@ var navigateTo = async function(inspector, url) {
 
   info("Navigating to: " + url);
   const activeTab = inspector.toolbox.target.activeTab;
-  await activeTab.navigateTo(url);
+  await activeTab.navigateTo({ url });
 
   info("Waiting for markup view to load after navigation.");
   await markuploaded;
@@ -885,4 +885,22 @@ async function expandContainerByClick(inspector, container) {
     inspector.markup.doc.defaultView);
   await onChildren;
   await onUpdated;
+}
+
+/**
+ * Simulate a color change in a given color picker tooltip.
+ *
+ * @param  {Spectrum} colorPicker
+ *         The color picker widget.
+ * @param  {Array} newRgba
+ *         Array of the new rgba values to be set in the color widget.
+ */
+async function simulateColorPickerChange(colorPicker, newRgba) {
+  info("Getting the spectrum colorpicker object");
+  const spectrum = await colorPicker.spectrum;
+  info("Setting the new color");
+  spectrum.rgb = newRgba;
+  info("Applying the change");
+  spectrum.updateUI();
+  spectrum.onChange();
 }

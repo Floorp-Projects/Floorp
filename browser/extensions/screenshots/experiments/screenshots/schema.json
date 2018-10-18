@@ -1,0 +1,36 @@
+[
+  {
+    "namespace": "experiments.screenshots",
+    "description": "Firefox Screenshots internal API",
+    "functions": [
+      {
+        "name": "getUpdateChannel",
+        "type": "function",
+        "description": "Returns the Firefox channel (AppConstants.MOZ_UPDATE_CHANNEL)",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "isHistoryEnabled",
+        "type": "function",
+        "description": "Returns the value of the 'places.history.enabled' preference",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "isUploadDisabled",
+        "type": "function",
+        "description": "Returns the value of the 'extensions.screenshots.upload-disabled' preference",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "initLibraryButton",
+        "type": "function",
+        "description": "Initializes the Photon-based Library menu item for Screenshots",
+        "parameters": [],
+        "async": true
+      }
+    ]
+  }
+]

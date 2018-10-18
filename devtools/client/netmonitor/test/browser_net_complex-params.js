@@ -19,7 +19,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   // Execute requests.
-  await performRequests(monitor, tab, 10);
+  await performRequests(monitor, tab, 12);
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -83,6 +83,23 @@ add_task(async function() {
   await wait;
   testParamsTabGetWithArgs(new Map([
     ["species", "in=(52,60)"],
+  ]));
+
+  wait = waitForDOM(document, "#params-panel .tree-section", 1);
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[10]);
+  await wait;
+  testParamsTabGetWithArgs(new Map([
+    ["a", ["", "b"]],
+  ]));
+
+  wait = waitForDOM(document, "#params-panel .tree-section", 1);
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[11]);
+  await wait;
+  testParamsTabGetWithArgs(new Map([
+    ["a", ["b", "c"]],
+    ["d", "1"]
   ]));
 
   await teardown(monitor);
@@ -198,15 +215,22 @@ add_task(async function() {
   }
 
   /**
-   * @param {Map} expectedParams A map of expected parameter keys and values
-   * as Strings.
+   * @param {Map} expectedParams A map of expected parameter keys, and values
+   * as Strings or an array of Strings if the parameter key has multiple
+   * values
    */
   function testParamsTabGetWithArgs(expectedParams) {
     const tabpanel = document.querySelector("#params-panel");
 
+    let numParamRows = 0;
+    expectedParams.forEach((v, k, m) => {
+      numParamRows += (typeof v === "object" ? v.length + 1 : 1);
+    });
+
     is(tabpanel.querySelectorAll(".tree-section").length, 1,
       "Check the number of param tree sections displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length, 1,
+    is(tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length,
+      numParamRows,
       "Check the number of param rows displayed in this tabpanel.");
     ok(!tabpanel.querySelector(".empty-notice"),
       "The empty notice should not be displayed in this tabpanel.");
@@ -229,10 +253,28 @@ add_task(async function() {
     const labelsIter = labels.values();
     const valuesIter = values.values();
     for (const [expKey, expValue] of expectedParams) {
-      const label = labelsIter.next().value;
-      const value = valuesIter.next().value;
-      is(label.textContent, expKey, "Check that parameter name matches.");
-      is(value.textContent, expValue, "Check that parameter value matches.");
+      let label = labelsIter.next().value;
+      let value = valuesIter.next().value;
+
+      if (typeof expValue === "object") {
+        // multiple values for one parameter
+        is(label.textContent, expKey, "Check that parameter name matches.");
+        is(value.textContent, "[\u2026]", // horizontal ellipsis
+          "Check that parameter value indicates multiple.");
+
+        for (let i = 0; i < expValue.length; i++) {
+          label = labelsIter.next().value;
+          value = valuesIter.next().value;
+          is(label.textContent, i + "",
+            "Check that multi-value parameter index matches.");
+          is(value.textContent, expValue[i],
+            "Check that multi-value parameter value matches.");
+          is(label.dataset.level, 2, "Check that parameter is nested.");
+        }
+      } else {
+        is(label.textContent, expKey, "Check that parameter name matches.");
+        is(value.textContent, expValue, "Check that parameter value matches.");
+      }
     }
   }
 });

@@ -197,7 +197,7 @@ ReadMultipleFiles(gpointer filename, gpointer array)
 }
 
 void
-nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
+nsFilePicker::ReadValuesFromFileChooser(void *file_chooser)
 {
   mFiles.Clear();
 
@@ -389,19 +389,10 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
   if (!mOkButtonLabel.IsEmpty()) {
     accept_button = buttonLabel.get();
   } else {
-    accept_button = (action == GTK_FILE_CHOOSER_ACTION_SAVE) ?
-                    GTK_STOCK_SAVE : GTK_STOCK_OPEN;
+    accept_button = nullptr;
   }
 
-  GtkWidget *file_chooser =
-      gtk_file_chooser_dialog_new(title.get(), parent_widget, action,
-                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                  accept_button, GTK_RESPONSE_ACCEPT,
-                                  nullptr);
-  gtk_dialog_set_alternative_button_order(GTK_DIALOG(file_chooser),
-                                          GTK_RESPONSE_ACCEPT,
-                                          GTK_RESPONSE_CANCEL,
-                                          -1);
+  void *file_chooser = GtkFileChooserNew(title.get(), parent_widget, action, accept_button);
 
   // If we have --enable-proxy-bypass-protection, then don't allow
   // remote URLs to be used.
@@ -417,11 +408,7 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
     g_signal_connect(file_chooser, "update-preview", G_CALLBACK(UpdateFilePreviewWidget), img_preview);
   }
 
-  GtkWindow *window = GTK_WINDOW(file_chooser);
-  gtk_window_set_modal(window, TRUE);
-  if (parent_widget) {
-    gtk_window_set_destroy_with_parent(window, TRUE);
-  }
+  GtkFileChooserSetModal(file_chooser, parent_widget, TRUE);
 
   NS_ConvertUTF16toUTF8 defaultName(mDefault);
   switch (mMode) {
@@ -459,18 +446,21 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
       // Otherwise, if our dialog gets destroyed, we'll lose the dialog's
       // delegate by the time this gets processed in the event loop.
       // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1166741
-      GtkDialog *dialog = GTK_DIALOG(file_chooser);
-      GtkContainer *area = GTK_CONTAINER(gtk_dialog_get_content_area(dialog));
-      gtk_container_forall(area, [](GtkWidget *widget,
-                                    gpointer data) {
-          if (GTK_IS_FILE_CHOOSER_WIDGET(widget)) {
-            auto result = static_cast<GtkFileChooserWidget**>(data);
-            *result = GTK_FILE_CHOOSER_WIDGET(widget);
-          }
-      }, &mFileChooserDelegate);
+      if (GTK_IS_DIALOG(file_chooser)) {
+        GtkDialog *dialog = GTK_DIALOG(file_chooser);
+        GtkContainer *area = GTK_CONTAINER(gtk_dialog_get_content_area(dialog));
+        gtk_container_forall(area, [](GtkWidget *widget,
+                                      gpointer data) {
+            if (GTK_IS_FILE_CHOOSER_WIDGET(widget)) {
+              auto result = static_cast<GtkFileChooserWidget**>(data);
+              *result = GTK_FILE_CHOOSER_WIDGET(widget);
+            }
+        }, &mFileChooserDelegate);
 
-      if (mFileChooserDelegate)
-        g_object_ref(mFileChooserDelegate);
+        if (mFileChooserDelegate != nullptr) {
+          g_object_ref(mFileChooserDelegate);
+        }
+      }
 #endif
 
       gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_chooser),
@@ -478,7 +468,9 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
     }
   }
 
-  gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
+  if (GTK_IS_DIALOG(file_chooser)) {
+    gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
+  }
 
   int32_t count = mFilters.Length();
   for (int32_t i = 0; i < count; ++i) {
@@ -522,14 +514,13 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
   mCallback = aCallback;
   NS_ADDREF_THIS();
   g_signal_connect(file_chooser, "response", G_CALLBACK(OnResponse), this);
-  g_signal_connect(file_chooser, "destroy", G_CALLBACK(OnDestroy), this);
-  gtk_widget_show(file_chooser);
+  GtkFileChooserShow(file_chooser);
 
   return NS_OK;
 }
 
 /* static */ void
-nsFilePicker::OnResponse(GtkWidget* file_chooser, gint response_id,
+nsFilePicker::OnResponse(void* file_chooser, gint response_id,
                          gpointer user_data)
 {
   static_cast<nsFilePicker*>(user_data)->
@@ -544,7 +535,7 @@ nsFilePicker::OnDestroy(GtkWidget* file_chooser, gpointer user_data)
 }
 
 void
-nsFilePicker::Done(GtkWidget* file_chooser, gint response)
+nsFilePicker::Done(void* file_chooser, gint response)
 {
   mRunning = false;
 
@@ -588,7 +579,7 @@ nsFilePicker::Done(GtkWidget* file_chooser, gint response)
   // requests that any remaining references be released, but the reference
   // count will not be decremented again if GtkWindow's reference has already
   // been released.
-  gtk_widget_destroy(file_chooser);
+  GtkFileChooserDestroy(file_chooser);
 
 #ifdef MOZ_WIDGET_GTK
       if (mFileChooserDelegate) {
@@ -612,4 +603,74 @@ nsFilePicker::Done(GtkWidget* file_chooser, gint response)
     mResult = result;
   }
   NS_RELEASE_THIS();
+}
+
+// All below functions available as of GTK 3.20+
+
+void *
+nsFilePicker::GtkFileChooserNew(
+        const gchar *title, GtkWindow *parent,
+        GtkFileChooserAction action,
+        const gchar *accept_label)
+{
+  static auto sGtkFileChooserNativeNewPtr = (void * (*)(
+        const gchar *, GtkWindow *,
+        GtkFileChooserAction,
+        const gchar *, const gchar *))
+      dlsym(RTLD_DEFAULT, "gtk_file_chooser_native_new");
+  if (sGtkFileChooserNativeNewPtr != nullptr) {
+    return (*sGtkFileChooserNativeNewPtr)(title, parent, action, accept_label, nullptr);
+  }
+  if (accept_label == nullptr) {
+    accept_label = (action == GTK_FILE_CHOOSER_ACTION_SAVE) 
+        ? GTK_STOCK_SAVE : GTK_STOCK_OPEN;
+  }
+  GtkWidget *file_chooser = gtk_file_chooser_dialog_new(title, parent, action,
+      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+      accept_label, GTK_RESPONSE_ACCEPT, nullptr);
+  gtk_dialog_set_alternative_button_order(GTK_DIALOG(file_chooser),
+          GTK_RESPONSE_ACCEPT, GTK_RESPONSE_CANCEL, -1);
+  return file_chooser;
+}
+
+void
+nsFilePicker::GtkFileChooserShow(void *file_chooser)
+{
+  static auto sGtkNativeDialogShowPtr = (void (*)(void *))
+      dlsym(RTLD_DEFAULT, "gtk_native_dialog_show");
+  if (sGtkNativeDialogShowPtr != nullptr) {
+    (*sGtkNativeDialogShowPtr)(file_chooser);
+  } else {
+    g_signal_connect(file_chooser, "destroy", G_CALLBACK(OnDestroy), this);
+    gtk_widget_show(GTK_WIDGET(file_chooser));
+  }
+}
+
+void
+nsFilePicker::GtkFileChooserDestroy(void *file_chooser)
+{
+  static auto sGtkNativeDialogDestroyPtr = (void (*)(void *))
+    dlsym(RTLD_DEFAULT, "gtk_native_dialog_destroy");
+  if (sGtkNativeDialogDestroyPtr != nullptr) {
+    (*sGtkNativeDialogDestroyPtr)(file_chooser);
+  } else {
+    gtk_widget_destroy(GTK_WIDGET(file_chooser));
+  }
+}
+
+void
+nsFilePicker::GtkFileChooserSetModal(void *file_chooser,
+        GtkWindow *parent_widget, gboolean modal)
+{
+  static auto sGtkNativeDialogSetModalPtr = (void (*)(void *, gboolean))
+    dlsym(RTLD_DEFAULT, "gtk_native_dialog_set_modal");
+  if (sGtkNativeDialogSetModalPtr != nullptr) {
+    (*sGtkNativeDialogSetModalPtr)(file_chooser, modal);
+  } else {
+    GtkWindow *window = GTK_WINDOW(file_chooser);
+    gtk_window_set_modal(window, modal);
+    if (parent_widget != nullptr) {
+      gtk_window_set_destroy_with_parent(window, modal);
+    }
+  }
 }

@@ -524,6 +524,7 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
     }
 
     rv = AntiTrackingCommon::IsOnContentBlockingAllowList(topWinURI,
+                                                          NS_UsePrivateBrowsing(aChannel),
                                                           aAnnotationsOnly ?
                                                             AntiTrackingCommon::eTrackingAnnotations :
                                                             AntiTrackingCommon::eTrackingProtection,

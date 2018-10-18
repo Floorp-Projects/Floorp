@@ -22,10 +22,12 @@ var BrowserWindows = {
    * @return nothing
    */
   Add(aPrivate, fn) {
-    let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    let win = mainWindow.OpenBrowserWindow({private: aPrivate});
-    win.addEventListener("load", function() {
-      fn.call(win);
-    }, {once: true});
+    return new Promise(resolve => {
+      let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
+      let win = mainWindow.OpenBrowserWindow({private: aPrivate});
+      win.addEventListener("load", function() {
+        resolve(win);
+      }, {once: true});
+    });
   },
 };

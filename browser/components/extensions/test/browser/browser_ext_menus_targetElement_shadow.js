@@ -7,7 +7,11 @@ const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/
 
 add_task(async function menuInShadowDOM() {
   Services.prefs.setBoolPref("dom.webcomponents.shadowdom.enabled", true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref("dom.webcomponents.shadowdom.enabled"));
+  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("dom.webcomponents.shadowdom.enabled");
+    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+  });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
   gBrowser.selectedTab = tab;

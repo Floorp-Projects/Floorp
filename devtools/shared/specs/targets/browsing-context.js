@@ -127,10 +127,17 @@ const browsingContextTargetSpecPrototype = {
       destroyAll: Option(0, "nullable:boolean")
     },
     tabDetached: {
-      type: "tabDetached"
+      type: "tabDetached",
+      // This is to make browser_dbg_navigation.js to work as it expect to
+      // see a packet object when listening for tabDetached
+      from: Option(0, "string"),
     },
     workerListChanged: {
       type: "workerListChanged"
+    },
+    newSource: {
+      type: "newSource",
+      source: Option(0, "json")
     }
   }
 };

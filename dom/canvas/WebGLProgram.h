@@ -17,7 +17,7 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 
-#include "CacheMap.h"
+#include "CacheInvalidator.h"
 #include "WebGLContext.h"
 #include "WebGLObjectModel.h"
 
@@ -36,11 +36,12 @@ template<typename> class Sequence;
 
 namespace webgl {
 
+enum class TextureBaseType : uint8_t;
+
 struct AttribInfo final
 {
     const RefPtr<WebGLActiveInfo> mActiveInfo;
     const GLint mLoc; // -1 for active built-ins
-    const GLenum mBaseType;
 };
 
 struct UniformInfo final
@@ -49,6 +50,9 @@ struct UniformInfo final
 
     const RefPtr<WebGLActiveInfo> mActiveInfo;
     const TexListT* const mSamplerTexList;
+    const webgl::TextureBaseType mTexBaseType;
+    const bool mIsShadowSampler;
+
     std::vector<uint32_t> mSamplerValues;
 
 protected:
@@ -84,6 +88,7 @@ struct CachedDrawFetchLimits final {
 struct LinkedProgramInfo final
     : public RefCounted<LinkedProgramInfo>
     , public SupportsWeakPtr<LinkedProgramInfo>
+    , public CacheInvalidator
 {
     friend class mozilla::WebGLProgram;
 
@@ -114,8 +119,8 @@ struct LinkedProgramInfo final
 
     //////
 
-    mutable CacheMap<const WebGLVertexArray*,
-                     CachedDrawFetchLimits> mDrawFetchCache;
+    mutable CacheWeakMap<const WebGLVertexArray*,
+                         CachedDrawFetchLimits> mDrawFetchCache;
 
     const CachedDrawFetchLimits* GetDrawFetchLimits() const;
 

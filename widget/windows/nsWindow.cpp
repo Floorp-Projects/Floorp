@@ -6,7 +6,7 @@
 
 /*
  * nsWindow - Native window management and event handling.
- * 
+ *
  * nsWindow is organized into a set of major blocks and
  * block subsections. The layout is as follows:
  *
@@ -228,7 +228,7 @@ using namespace mozilla::plugins;
  **
  ** BLOCK: Variables
  **
- ** nsWindow Class static initializations and global variables. 
+ ** nsWindow Class static initializations and global variables.
  **
  **************************************************************
  **************************************************************/
@@ -865,7 +865,7 @@ nsWindow::Create(nsIWidget* aParent,
   mDefaultScale = -1.0;
 
   if (mIsRTL) {
-    DWORD dwAttribute = TRUE;    
+    DWORD dwAttribute = TRUE;
     DwmSetWindowAttribute(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
   }
 
@@ -1002,7 +1002,7 @@ void nsWindow::Destroy()
   // function first destroys child or owned windows, and then it destroys the parent or owner
   // window.
   VERIFY(::DestroyWindow(mWnd));
-  
+
   // Our windows can be subclassed which may prevent us receiving WM_DESTROY. If OnDestroy()
   // didn't get called, call it now.
   if (false == mOnDestroyCalled) {
@@ -1391,7 +1391,7 @@ nsWindow::GetParentWindowBase(bool aIncludeOwner)
 
   return static_cast<nsWindowBase*>(widget);
 }
- 
+
 BOOL CALLBACK
 nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam)
 {
@@ -1718,7 +1718,7 @@ void nsWindow::SetThemeRegion()
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     HRGN hRgn = nullptr;
     RECT rect = {0,0,mBounds.Width(),mBounds.Height()};
-    
+
     HDC dc = ::GetDC(mWnd);
     GetThemeBackgroundRegion(nsUXThemeData::GetTheme(eUXTooltip), dc, TTP_STANDARD, TS_NORMAL, &rect, &hRgn);
     if (hRgn) {
@@ -2501,13 +2501,13 @@ GetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
     NS_ASSERTION(FALSE, "Something is horribly wrong in GetWindowInfoHook!");
     return FALSE;
   }
-  int windowStatus = 
+  int windowStatus =
     reinterpret_cast<LONG_PTR>(GetPropW(hWnd, kManageWindowInfoProperty));
   // No property set, return the default data.
   if (!windowStatus)
     return sGetWindowInfoPtrStub(hWnd, pwi);
   // Call GetWindowInfo and update dwWindowStatus with our
-  // internally tracked value. 
+  // internally tracked value.
   BOOL result = sGetWindowInfoPtrStub(hWnd, pwi);
   if (result && pwi)
     pwi->dwWindowStatus = (windowStatus == 1 ? 0 : WS_ACTIVECAPTION);
@@ -2776,7 +2776,7 @@ nsWindow::InvalidateNonClientRegion()
   // | |      app content      | | } area we don't want to invalidate
   // | +-----------------------+ | }
   // | |   app client chrome   | | }
-  // | +-----------------------+ | 
+  // | +-----------------------+ |
   // +---------------------------+ <
   //  ^                         ^    windows non-client chrome
   // client area = app *
@@ -2994,7 +2994,7 @@ nsWindow::SetCursor(nsCursor aCursor)
   if (nullptr != newCursor) {
     mCursor = aCursor;
     HCURSOR oldCursor = ::SetCursor(newCursor);
-    
+
     if (sHCursor == oldCursor) {
       NS_IF_RELEASE(sCursorImgContainer);
       if (sHCursor != nullptr)
@@ -3721,7 +3721,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
   else {
     NS_LossyConvertUTF16toASCII cPath(iconPath);
     MOZ_LOG(gWindowsLog, LogLevel::Info,
-           ("\nIcon load error; icon=%s, rc=0x%08X\n\n", 
+           ("\nIcon load error; icon=%s, rc=0x%08X\n\n",
             cPath.get(), ::GetLastError()));
   }
 #endif
@@ -3735,7 +3735,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
   else {
     NS_LossyConvertUTF16toASCII cPath(iconPath);
     MOZ_LOG(gWindowsLog, LogLevel::Info,
-           ("\nSmall icon load error; icon=%s, rc=0x%08X\n\n", 
+           ("\nSmall icon load error; icon=%s, rc=0x%08X\n\n",
             cPath.get(), ::GetLastError()));
   }
 #endif
@@ -3881,7 +3881,7 @@ nsWindow::GetAttention(int32_t aCycleCount)
   HWND fgWnd = ::GetForegroundWindow();
   // Don't flash if the flash count is 0 or if the foreground window is our
   // window handle or that of our owned-most window.
-  if (aCycleCount == 0 || 
+  if (aCycleCount == 0 ||
       flashWnd == fgWnd ||
       flashWnd == WinUtils::GetTopLevelHWND(fgWnd, false, false)) {
     return NS_OK;
@@ -4139,7 +4139,7 @@ nsWindow::SetWindowClass(const nsAString& xulWinType)
  **
  ** BLOCK: Moz Events
  **
- ** Moz GUI event management. 
+ ** Moz GUI event management.
  **
  **************************************************************
  **************************************************************/
@@ -4668,7 +4668,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
           if ((nullptr != sCurrentWindow) && (!sCurrentWindow->mInDtor)) {
             LPARAM pos = sCurrentWindow->lParamToClient(lParamToScreen(lParam));
             sCurrentWindow->DispatchMouseEvent(eMouseExitFromWidget,
-                                               wParam, pos, false, 
+                                               wParam, pos, false,
                                                WidgetMouseEvent::eLeftButton,
                                                aInputSource, aPointerInfo);
           }
@@ -5266,7 +5266,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_THEMECHANGED:
     {
-      // Update non-client margin offsets 
+      // Update non-client margin offsets
       UpdateNonClientMargins();
       nsUXThemeData::UpdateNativeThemeInfo();
 
@@ -5971,7 +5971,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       DispatchMouseEvent(eMouseDoubleClick, 0, lParamToClient(lParam),
                          false, WidgetMouseEvent::eLeftButton,
                          MOUSE_INPUT_SOURCE());
-      result = 
+      result =
         DispatchMouseEvent(eMouseUp, 0, lParamToClient(lParam),
                            false, WidgetMouseEvent::eLeftButton,
                            MOUSE_INPUT_SOURCE());
@@ -6393,7 +6393,7 @@ BOOL CALLBACK nsWindow::BroadcastMsg(HWND aTopWindow, LPARAM aMsg)
  *
  * SECTION: Event processing helpers
  *
- * Special processing for certain event types and 
+ * Special processing for certain event types and
  * synthesized events.
  *
  **************************************************************/
@@ -6752,15 +6752,15 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
 #ifdef WINSTATE_DEBUG_OUTPUT
     switch (mSizeMode) {
       case nsSizeMode_Normal:
-          MOZ_LOG(gWindowsLog, LogLevel::Info, 
+          MOZ_LOG(gWindowsLog, LogLevel::Info,
                  ("*** mSizeMode: nsSizeMode_Normal\n"));
         break;
       case nsSizeMode_Minimized:
-        MOZ_LOG(gWindowsLog, LogLevel::Info, 
+        MOZ_LOG(gWindowsLog, LogLevel::Info,
                ("*** mSizeMode: nsSizeMode_Minimized\n"));
         break;
       case nsSizeMode_Maximized:
-          MOZ_LOG(gWindowsLog, LogLevel::Info, 
+          MOZ_LOG(gWindowsLog, LogLevel::Info,
                  ("*** mSizeMode: nsSizeMode_Maximized\n"));
         break;
       default:
@@ -6772,7 +6772,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     if (mWidgetListener && mSizeMode != previousSizeMode)
       mWidgetListener->SizeModeChanged(mSizeMode);
 
-    // If window was restored, window activation was bypassed during the 
+    // If window was restored, window activation was bypassed during the
     // SetSizeMode call originating from OnWindowPosChanging to avoid saving
     // pre-restore attributes. Force activation now to get correct attributes.
     if (mLastSizeMode != nsSizeMode_Normal && mSizeMode == nsSizeMode_Normal)
@@ -6841,8 +6841,8 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     mLastSize.height = newHeight;
 
 #ifdef WINSTATE_DEBUG_OUTPUT
-    MOZ_LOG(gWindowsLog, LogLevel::Info, 
-           ("*** Resize window: %d x %d x %d x %d\n", wp->x, wp->y, 
+    MOZ_LOG(gWindowsLog, LogLevel::Info,
+           ("*** Resize window: %d x %d x %d x %d\n", wp->x, wp->y,
             newWidth, newHeight));
 #endif
 
@@ -6882,7 +6882,7 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
   // Update non-client margins if the frame size is changing, and let the
   // browser know we are changing size modes, so alternative css can kick in.
   // If we're going into fullscreen mode, ignore this, since it'll reset
-  // margins to normal mode. 
+  // margins to normal mode.
   if ((info->flags & SWP_FRAMECHANGED && !(info->flags & SWP_NOSIZE)) &&
       mSizeMode != nsSizeMode_Fullscreen) {
     WINDOWPLACEMENT pl;
@@ -7114,7 +7114,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   if ( !mGesture.ProcessGestureMessage(mWnd, wParam, lParam, event) ) {
     return false; // fall through to DefWndProc
   }
-  
+
   // Polish up and send off the new event
   ModifierKeyState modifierKeyState;
   modifierKeyState.InitInputEvent(event);
@@ -7256,7 +7256,7 @@ void nsWindow::OnDestroy()
 
   // Make sure we don't get destroyed in the process of tearing down.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-  
+
   // Dispatch the destroy notification.
   if (!mInDtor)
     NotifyWindowDestroyed();
@@ -7282,7 +7282,7 @@ void nsWindow::OnDestroy()
 
   // Release references to children, device context, toolkit, and app shell.
   nsBaseWidget::OnDestroy();
-  
+
   // Clear our native parent handle.
   // XXX Windows will take care of this in the proper order, and SetParent(nullptr)'s
   // remove child on the parent already took place in nsBaseWidget's Destroy call above.
@@ -7683,14 +7683,14 @@ LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM l
     if (code != gLastMsgCode) {
       if (gMSGFEvents[inx].mId == code) {
 #ifdef DEBUG
-        MOZ_LOG(gWindowsLog, LogLevel::Info, 
-               ("MozSpecialMessageProc - code: 0x%X  - %s  hw: %p\n", 
+        MOZ_LOG(gWindowsLog, LogLevel::Info,
+               ("MozSpecialMessageProc - code: 0x%X  - %s  hw: %p\n",
                 code, gMSGFEvents[inx].mStr, pMsg->hwnd));
 #endif
       } else {
 #ifdef DEBUG
-        MOZ_LOG(gWindowsLog, LogLevel::Info, 
-               ("MozSpecialMessageProc - code: 0x%X  - %d  hw: %p\n", 
+        MOZ_LOG(gWindowsLog, LogLevel::Info,
+               ("MozSpecialMessageProc - code: 0x%X  - %d  hw: %p\n",
                 code, gMSGFEvents[inx].mId, pMsg->hwnd));
 #endif
       }
@@ -7775,7 +7775,7 @@ void nsWindow::RegisterSpecialDropdownHooks()
                                       nullptr, GetCurrentThreadId());
 #ifdef POPUP_ROLLUP_DEBUG_OUTPUT
     if (!sMsgFilterHook) {
-      MOZ_LOG(gWindowsLog, LogLevel::Info, 
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
              ("***** SetWindowsHookEx is NOT installed for WH_MSGFILTER!\n"));
     }
 #endif
@@ -7788,7 +7788,7 @@ void nsWindow::RegisterSpecialDropdownHooks()
                                       nullptr, GetCurrentThreadId());
 #ifdef POPUP_ROLLUP_DEBUG_OUTPUT
     if (!sCallProcHook) {
-      MOZ_LOG(gWindowsLog, LogLevel::Info, 
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
              ("***** SetWindowsHookEx is NOT installed for WH_CALLWNDPROC!\n"));
     }
 #endif
@@ -7801,7 +7801,7 @@ void nsWindow::RegisterSpecialDropdownHooks()
                                        nullptr, GetCurrentThreadId());
 #ifdef POPUP_ROLLUP_DEBUG_OUTPUT
     if (!sCallMouseHook) {
-      MOZ_LOG(gWindowsLog, LogLevel::Info, 
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
              ("***** SetWindowsHookEx is NOT installed for WH_MOUSE!\n"));
     }
 #endif
@@ -7869,7 +7869,7 @@ BOOL CALLBACK nsWindow::ClearResourcesCallback(HWND aWnd, LPARAM aMsg)
     nsWindow *window = WinUtils::GetNSWindowPtr(aWnd);
     if (window) {
         window->ClearCachedResources();
-    }  
+    }
     return TRUE;
 }
 

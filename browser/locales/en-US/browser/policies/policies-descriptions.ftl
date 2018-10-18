@@ -23,7 +23,7 @@ policy-BlockAboutSupport = Block access to the about:support page.
 
 policy-Bookmarks = Create bookmarks in the Bookmarks toolbar, Bookmarks menu, or a specified folder inside them.
 
-policy-Certificates = Whether or not to use built-in certificates. This policy is Windows only at this time.
+policy-CertificatesDescription = Add certificates or use built-in certificates.
 
 policy-Cookies = Allow or deny websites to set cookies.
 

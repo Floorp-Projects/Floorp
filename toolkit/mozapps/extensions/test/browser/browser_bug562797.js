@@ -74,6 +74,7 @@ function test() {
 
   SpecialPowers.pushPrefEnv({"set": [
       ["dom.ipc.processCount", 1],
+      ["security.allow_eval_with_system_principal", true],
     ]}, () => {
     var gProvider = new MockProvider();
     gProvider.createAddons([{

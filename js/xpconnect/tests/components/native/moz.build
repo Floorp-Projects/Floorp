@@ -8,10 +8,6 @@ EXPORTS += [
     'xpctest_private.h',
 ]
 
-EXTRA_COMPONENTS += [
-    'xpctest.manifest',
-]
-
 UNIFIED_SOURCES += [
     'xpctest_attributes.cpp',
     'xpctest_module.cpp',

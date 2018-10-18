@@ -21,33 +21,6 @@ class GLContext; // This is going to be needed a lot.
 } // namespace gl
 
 /*
- * WebGLTextureFakeBlackStatus is an enum to track what needs to use a dummy 1x1 black
- * texture, which we refer to as a 'fake black' texture.
- *
- * There are two things that can cause us to use such 'fake black' textures:
- *
- *   (1) OpenGL ES rules on sampling incomplete textures specify that they
- *       must be sampled as RGBA(0, 0, 0, 1) (opaque black). We have to implement these rules
- *       ourselves, if only because we do not always run on OpenGL ES, and also
- *       because this is dangerously close to the kind of case where we don't
- *       want to trust the driver with corner cases of texture memory accesses.
- *
- *   (2) OpenGL has cases where a renderbuffer, or a texture image, can contain
- *       uninitialized image data. See below the comment about WebGLImageDataStatus.
- *       WebGL must never have access to uninitialized image data. The WebGL 1 spec,
- *       section 4.1 'Resource Restrictions', specifies that in any such case, the
- *       uninitialized image data must be exposed to WebGL as if it were filled
- *       with zero bytes, which means it's either opaque or transparent black
- *       depending on whether the image format has alpha.
- */
-
-enum class FakeBlackType : uint8_t {
-    None,
-    RGBA0001, // Incomplete textures and uninitialized no-alpha color textures.
-    RGBA0000, // Uninitialized with-alpha color textures.
-};
-
-/*
  * Implementing WebGL (or OpenGL ES 2.0) on top of desktop OpenGL requires
  * emulating the vertex attrib 0 array when it's not enabled. Indeed,
  * OpenGL ES 2.0 allows drawing without vertex attrib 0 array enabled, but
@@ -57,22 +30,6 @@ enum class WebGLVertexAttrib0Status : uint8_t {
     Default, // default status - no emulation needed
     EmulatedUninitializedArray, // need an artificial attrib 0 array, but contents may be left uninitialized
     EmulatedInitializedArray // need an artificial attrib 0 array, and contents must be initialized
-};
-
-/*
- * Enum to track the status of image data (renderbuffer or texture image) presence
- * and initialization.
- *
- * - NoImageData is the initial state before any image data is allocated.
- * - InitializedImageData is the state after image data is allocated and initialized.
- * - UninitializedImageData is an intermediate state where data is allocated but not
- *   initialized. It is the state that renderbuffers are in after a renderbufferStorage call,
- *   and it is the state that texture images are in after a texImage2D call with null data.
- */
-enum class WebGLImageDataStatus : uint8_t {
-    NoImageData,
-    UninitializedImageData,
-    InitializedImageData
 };
 
 /*
@@ -218,6 +175,29 @@ public:
     UniqueBuffer(const UniqueBuffer& other) = delete; // construct using std::move()!
     void operator =(const UniqueBuffer& other) = delete; // assign using std::move()!
 };
+
+namespace webgl {
+struct FormatUsageInfo;
+
+struct SampleableInfo final
+{
+    const char* incompleteReason = nullptr;
+    uint32_t levels = 0;
+    const webgl::FormatUsageInfo* usage = nullptr;
+    bool isDepthTexCompare = false;
+
+    bool IsComplete() const { return bool(levels); }
+};
+
+enum class AttribBaseType : uint8_t {
+    Int,
+    UInt,
+    Float, // Also includes NormU?Int
+    Bool, // Can convert from anything.
+};
+const char* ToString(AttribBaseType);
+
+} // namespace webgl
 
 } // namespace mozilla
 

@@ -18,6 +18,10 @@ let gWhitelist = [{
     type: "single-quote",
   }, {
     file: "netError.dtd",
+    key: "certerror.sts.introPara",
+    type: "single-quote",
+  }, {
+    file: "netError.dtd",
     key: "certerror.expiredCert.whatCanYouDoAboutIt2",
     type: "single-quote",
   }, {

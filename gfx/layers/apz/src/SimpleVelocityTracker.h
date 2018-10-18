@@ -27,7 +27,7 @@ public:
   float HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
                                      uint32_t aEndTimestampMs,
                                      ParentLayerCoord aDelta) override;
-  float ComputeVelocity(uint32_t aTimestampMs) override;
+  Maybe<float> ComputeVelocity(uint32_t aTimestampMs) override;
   void Clear() override;
 private:
   void AddVelocityToQueue(uint32_t aTimestampMs, float aVelocity);

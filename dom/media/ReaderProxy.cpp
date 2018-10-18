@@ -62,9 +62,8 @@ ReaderProxy::OnAudioDataRequestCompleted(RefPtr<AudioData> aAudio)
   int64_t offset =
     StartTime().ToMicroseconds() - mLoopingOffset.ToMicroseconds();
   aAudio->AdjustForStartTime(offset);
-  if (aAudio->mTime.IsValid() && aAudio->GetEndTime().IsValid() &&
-      CorrectTimeOfAudioDataIfNeeded(aAudio)) {
-    UpdateLastAudioEndTime(aAudio);
+  if (aAudio->mTime.IsValid()) {
+    mLastAudioEndTime = aAudio->mTime;
     return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
   }
   return AudioDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
@@ -113,28 +112,6 @@ ReaderProxy::OnAudioDataRequestFailed(const MediaResult& aError)
            [](const MediaResult& aError) {
              return AudioDataPromise::CreateAndReject(aError, __func__);
            });
-}
-
-bool
-ReaderProxy::CorrectTimeOfAudioDataIfNeeded(const RefPtr<AudioData>& aAudio)
-{
-  MOZ_ASSERT(aAudio->mTime.IsValid() && mLastAudioEndTime.IsValid());
-  // The start time of the current audio data should be greater than the end
-  // time of the previous audio data.
-  if (aAudio->mTime < mLastAudioEndTime) {
-    aAudio->mTime = mLastAudioEndTime;
-  }
-  return aAudio->GetEndTime().IsValid();
-}
-
-void
-ReaderProxy::UpdateLastAudioEndTime(const AudioData* aAudio)
-{
-  MOZ_ASSERT(aAudio);
-  MOZ_ASSERT(aAudio->GetEndTime().IsValid() && mLastAudioEndTime.IsValid());
-  // Make sure the end time of the audio data are non-decreasing.
-  MOZ_ASSERT(aAudio->GetEndTime() >= mLastAudioEndTime);
-  mLastAudioEndTime = aAudio->GetEndTime();
 }
 
 RefPtr<ReaderProxy::AudioDataPromise>

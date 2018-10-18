@@ -20,5 +20,9 @@ interface nsIWindowsUIUtils : nsISupports
    * Update the tablet mode state
    */
   void updateTabletModeState();
-};
 
+  /**
+   * Share URL
+   */
+  void shareUrl(in AString shareTitle, in AString urlToShare);
+};

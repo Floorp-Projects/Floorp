@@ -18,6 +18,7 @@ class WebGLSampler final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLSampler>
     , public LinkedListElement<WebGLSampler>
+    , public CacheInvalidator
 {
     friend class WebGLContext2;
     friend class WebGLTexture;

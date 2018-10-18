@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function
 
 import os
-from copy import deepcopy
 from fnmatch import fnmatch
 
 import mozunit
@@ -17,45 +16,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 root = os.path.join(here, 'filter')
 
 
-@pytest.fixture
-def filterpaths():
-    lintargs = {
-        'root': root,
-        'use_filters': True,
-    }
-    os.chdir(lintargs['root'])
-
-    def inner(paths, include, exclude, extensions=None, **kwargs):
-        linter = {
-            'include': include,
-            'exclude': exclude,
-            'extensions': extensions,
-        }
-        largs = deepcopy(lintargs)
-        largs.update(kwargs)
-        return pathutils.filterpaths(paths, linter, **largs)
-
-    return inner
-
-
 def assert_paths(a, b):
     def normalize(p):
         if not os.path.isabs(p):
             p = os.path.join(root, p)
         return os.path.normpath(p)
     assert set(map(normalize, a)) == set(map(normalize, b))
-
-
-def test_no_filter(filterpaths):
-    args = {
-        'paths': ['a.py', 'subdir1/b.py'],
-        'include': ['.'],
-        'exclude': ['**/*.py'],
-        'use_filters': False,
-    }
-
-    paths = filterpaths(**args)
-    assert_paths(paths, args['paths'])
 
 
 TEST_CASES = (
@@ -77,6 +43,7 @@ TEST_CASES = (
         'exclude': ['**/c.py', 'subdir1/subdir3'],
         'extensions': ['py'],
         'expected': ['.'],
+        'expected_exclude': ['subdir2/c.py', 'subdir1/subdir3'],
     },
     {
         'paths': ['a.py', 'a.js', 'subdir1/b.py', 'subdir2/c.py', 'subdir1/subdir3/d.py'],
@@ -92,15 +59,25 @@ TEST_CASES = (
         'extensions': ['py'],
         'expected': ['a.py', 'subdir2'],
     },
+    {
+        'paths': ['subdir1'],
+        'include': ['.'],
+        'exclude': ['subdir1/subdir3'],
+        'extensions': ['py'],
+        'expected': ['subdir1'],
+        'expected_exclude': ['subdir1/subdir3'],
+    },
 )
 
 
 @pytest.mark.parametrize('test', TEST_CASES)
-def test_filterpaths(filterpaths, test):
+def test_filterpaths(test):
     expected = test.pop('expected')
+    expected_exclude = test.pop('expected_exclude', [])
 
-    paths = filterpaths(**test)
+    paths, exclude = pathutils.filterpaths(root, **test)
     assert_paths(paths, expected)
+    assert_paths(exclude, expected_exclude)
 
 
 @pytest.mark.parametrize('paths,expected', [
@@ -110,8 +87,11 @@ def test_filterpaths(filterpaths, test):
     ([root + '/*', 'subdir1/*.*', 'subdir1/subdir3/*', 'subdir2/*'], [root]),
     (['subdir1/b.py', 'subdir1/subdir3'], ['subdir1/b.py', 'subdir1/subdir3']),
     (['subdir1/b.py', 'subdir1/b.js'], ['subdir1/b.py', 'subdir1/b.js']),
+    (['subdir1/subdir3'], ['subdir1/subdir3']),
 ])
 def test_collapse(paths, expected):
+    os.chdir(root)
+
     inputs = []
     for path in paths:
         base, name = os.path.split(path)

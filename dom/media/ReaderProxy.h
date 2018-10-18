@@ -100,12 +100,6 @@ private:
   RefPtr<ReaderProxy::AudioDataPromise> OnAudioDataRequestFailed(
     const MediaResult& aError);
 
-  // Make sure the timestamp of the audio data increase monotonically by
-  // adjusting it according to mLastAudioEndTime. Returns true if the
-  // endtime is valid after correction and false otherwise.
-  bool CorrectTimeOfAudioDataIfNeeded(const RefPtr<AudioData>& aAudio);
-  void UpdateLastAudioEndTime(const AudioData* aAudio);
-
   const RefPtr<AbstractThread> mOwnerThread;
   const RefPtr<MediaFormatReader> mReader;
 

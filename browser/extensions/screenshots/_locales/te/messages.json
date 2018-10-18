@@ -1,0 +1,175 @@
+{
+  "addonDescription": {
+    "message": "జాలం నుండి కత్తిరింపులను తెరపట్లను తీసుకొని, వాటిని తాత్కాలికంగా లేదా శాశ్వతంగా భద్రపరచకోండి."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "ఒక తెరపట్టు తీసుకోండి"
+  },
+  "myShotsLink": {
+    "message": "నా తెరపట్లు"
+  },
+  "screenshotInstructions": {
+    "message": "ఒక ప్రాంతాన్ని ఎంచుకోవడానికి పేజీని లాగండి లేదా నొక్కండి. రద్దు చేయడానికి ESC నొక్కండి."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "భద్రపరచు"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "కనిపించే దానిని బద్రపరచండి"
+  },
+  "saveScreenshotFullPage": {
+    "message": "పూర్తి పేజీని భద్రపరచు"
+  },
+  "cancelScreenshot": {
+    "message": "రద్దుచేయి"
+  },
+  "downloadScreenshot": {
+    "message": "దింపుకోండి"
+  },
+  "downloadOnlyNotice": {
+    "message": "మీరు ప్రస్తుతం దింపుకోలు-మాత్రమే రీతిలో ఉన్నారు."
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "అంతరంగిక విహారణ కిటికీలో."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "మూడవ-పక్ష కుకీలు అచేతనమయ్యాయి."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“చరిత్రని ఎప్పటికి గుర్తుపెట్టుకోకు” చేతనమైవుంది."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "మీరు Firefox ESR ఉపయోగిస్తున్నారు."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "ఎక్కింపులు అచేతమై ఉన్నాయి."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "లంకె కాపీ అయింది"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "మీ తెరపట్టుకి లంకె క్లిప్‌బోర్డుకి కాపీ అయింది. అతికించడానికి $META_KEY$-V నొక్కండి.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "కాపీచెయ్యి"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "పట్టు కాపీఅయ్యింది"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "మీ షాట్ క్లిప్‌బోర్డుకి కాపీ చేయబడింది. అతికించడానికి $META_KEY$-V ని నొక్కండి.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "భద్రపరచిన బొమ్మ $PIXELS$px ఎత్తుకి కత్తిరించబడుతుంది.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "పని చేయడంలేదు."
+  },
+  "requestErrorDetails": {
+    "message": "క్షమిచండి! మీ తెరను భద్రపరచలేకపోయాం. దయచేసి కాసేపాగి మళ్ళీ ప్రయత్నించండి."
+  },
+  "connectionErrorTitle": {
+    "message": "మీ తెరపట్లకు అనుసంధానించలేకున్నాం."
+  },
+  "connectionErrorDetails": {
+    "message": "దయచేసి మీ అంతర్జాల అనుసంధానాన్ని సరిచూసుకోండి. మీరు జాలానికి అనుసంధానం కాగలుగుతూంటే, Firefox Screenshots సేవలోనే తాత్కాలిక సమస్య ఉండవచ్చు."
+  },
+  "loginErrorDetails": {
+    "message": "Firefox Screenshots సేవలో ఏదో సమస్య ఉన్నందున మేము మీ తెరపట్టును భద్రపరచలేక పోయాము. దయచేసి కాసేపాగి ప్రయత్నించండి."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "మేము ఈ పేజీని స్క్రీన్షాట్ చేయలేము."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "ఇది ప్రామాణిక వెబ్ పేజీ కాదు, కాబట్టి దాని తెరపట్టు మీరు తీసుకోలేరు."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "మీరు Firefox స్క్రీన్షాట్స్ పేజీ యొక్క షాట్ ను తీసుకోలేరు!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "మీ ఎంపిక చాలా చిన్నదిగా ఉంది"
+  },
+  "privateWindowErrorTitle": {
+    "message": "అంతరంగిత విహరణ రీతిలో తెరపట్లు అచేతనమవుతాయి"
+  },
+  "privateWindowErrorDetails": {
+    "message": "అసౌకర్యానికి చింతిస్తున్నాము. మేము భవిష్యత్ విడుదలలో ఈ సౌలభ్యంపై పని చేస్తాము."
+  },
+  "genericErrorTitle": {
+    "message": "అయ్యో! Firefox Screenshots గల్లంతయ్యింది."
+  },
+  "genericErrorDetails": {
+    "message": "ఏమి జరిగిందో మాకు ఖచ్చితంగా తెలియలేదు. మళ్లీ ప్రయత్నించాలనుకుంటున్నారా లేదా మరొక పేజీ తెరపట్టు తీసుకోవాలనుకుంటున్నారా?"
+  },
+  "tourBodyIntro": {
+    "message": "Firefoxను వదలకుండానే తెరపట్లు తీసుకోండి, భద్రపరచుకోండి, పంచుకోండి."
+  },
+  "tourHeaderPageAction": {
+    "message": "భద్రపరచుకోడానికి కొత్త మార్గం"
+  },
+  "tourBodyPageAction": {
+    "message": "తెరపట్లను తీసుకోవాలనుకున్నప్పుడు చిరునామా పట్టీలో వున్న పేజీ చర్యల మెనూని విస్తరించండి."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "మీకు ఏం కావాలో దాన్ని మాత్రమే బంధించండి"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "పేజీలోని కొంత భాగాన్నే తీసుకోడానికి నొక్కి లాగండి. పేజీలోని భాగాలను ఎంపిక చేసుకోడానికి వాటిపైకి వెళ్ళండి."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "మీకు నచ్చినట్టుగా"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "తెలిగ్గా పంచుకోడానికి మీ కత్తిరింపులను జాలంలో భద్రపరచుకోండి, లేదా మీ కంప్యూటర్లోనికి దించుకోండి. మీరు తీసుకున్న తెరపట్లన్నిటినీ చూడటానికి నా షాట్లు అనే బొత్తాన్ని కూడా నొక్కవచ్చు."
+  },
+  "tourSkip": {
+    "message": "దాటవేయి"
+  },
+  "tourNext": {
+    "message": "తర్వాతి ఫలకం"
+  },
+  "tourPrevious": {
+    "message": "మునుపటి ఫలకం"
+  },
+  "tourDone": {
+    "message": "పూర్తయింది"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox Screenshots వాడుకోవడం ద్వారా, మా $TERMSANDPRIVACYNOTICETERMSLINK$, $TERMSANDPRIVACYNOTICEPRIVACYLINK$ లకు మీరు అంగీకరిస్తున్నారు.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "నియమాలు"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "గోప్యతా నోటీసు"
+  },
+  "libraryLabel": {
+    "message": "తెరపట్లు"
+  }
+}

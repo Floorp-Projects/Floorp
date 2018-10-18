@@ -319,7 +319,7 @@ imply_option('--with-toolchain-prefix', android_toolchain_prefix,
 @depends(extra_toolchain_flags, android_toolchain,
          android_toolchain_prefix_base, '--help')
 @imports(_from='os.path', _import='isdir')
-def bindgen_cflags_defaults(toolchain_flags, toolchain, toolchain_prefix, _):
+def bindgen_cflags_android(toolchain_flags, toolchain, toolchain_prefix, _):
     if not toolchain_flags:
         return
 
@@ -329,10 +329,10 @@ def bindgen_cflags_defaults(toolchain_flags, toolchain, toolchain_prefix, _):
         gcc_include = os.path.join(
             toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
 
-    cflags_format = "%s -I%s -I%s"
-    return cflags_format % (' '.join(toolchain_flags),
-                            os.path.join(gcc_include, 'include'),
-                            os.path.join(gcc_include, 'include-fixed'))
+    return toolchain_flags + [
+        '-I%s' % os.path.join(gcc_include, 'include'),
+        '-I%s' % os.path.join(gcc_include, 'include-fixed'),
+    ]
 
 
 @depends(host, ndk)

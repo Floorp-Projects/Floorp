@@ -71,7 +71,7 @@ def generate_symbols_file(output, *args):
         assert ext == '.def'
         output.write('LIBRARY %s\nEXPORTS\n  %s\n'
                      % (libname, '\n  '.join(symbols)))
-    elif buildconfig.substs['GCC_USE_GNU_LD']:
+    elif buildconfig.substs.get('GCC_USE_GNU_LD'):
         # A linker version script is generated for GNU LD that looks like the
         # following:
         # liblibrary.so {

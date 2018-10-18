@@ -35,12 +35,10 @@ describe("SnippetsFeed", () => {
     clock = sinon.useFakeTimers();
     sandbox = sinon.sandbox.create();
     overrider.set({
-      ProfileAge: class ProfileAge {
-        constructor() {
-          this.created = Promise.resolve(0);
-          this.reset = Promise.resolve(WEEK_IN_MS);
-        }
-      },
+      ProfileAge: () => Promise.resolve({
+        created: Promise.resolve(0),
+        reset: Promise.resolve(WEEK_IN_MS),
+      }),
       FxAccounts: {config: {promiseSignUpURI: sandbox.stub().returns(Promise.resolve(signUpUrl))}},
       NewTabUtils: {activityStreamProvider: {getTotalBookmarksCount: () => Promise.resolve(42)}},
     });

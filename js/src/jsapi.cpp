@@ -4152,15 +4152,27 @@ JS::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(void)
-JS::SetModuleHostDefinedField(JSObject* module, const JS::Value& value)
+JS::SetModulePrivate(JSObject* module, const JS::Value& value)
 {
-    module->as<ModuleObject>().setHostDefinedField(value);
+    module->as<ModuleObject>().scriptSourceObject()->setPrivate(value);
 }
 
 JS_PUBLIC_API(JS::Value)
-JS::GetModuleHostDefinedField(JSObject* module)
+JS::GetModulePrivate(JSObject* module)
 {
-    return module->as<ModuleObject>().hostDefinedField();
+    return module->as<ModuleObject>().scriptSourceObject()->getPrivate();
+}
+
+JS_PUBLIC_API(void)
+JS::SetScriptPrivate(JSScript* script, const JS::Value& value)
+{
+    script->scriptSourceUnwrap().setPrivate(value);
+}
+
+JS_PUBLIC_API(JS::Value)
+JS::GetScriptPrivate(JSScript* script)
+{
+    return script->scriptSourceUnwrap().getPrivate();
 }
 
 JS_PUBLIC_API(bool)

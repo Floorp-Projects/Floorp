@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "জনপ্রিয় বিষয়:",
   "pocket_read_even_more": "আরও গল্প দেখুন",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "কিভাবে এটা কাজ করে",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ব্রাউজি করা শুরু করুন, এবং কিছু গুরুত্বপূর্ণ নিবন্ধ, ভিডিও, এবং আপনি সম্প্রতি পরিদর্শন বা বুকমার্ক করেছেন এমন কিছু পৃষ্ঠা আমরা এখানে প্রদর্শন করব।",
@@ -107,6 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "গোপনীয়তা নীতি",
   "firstrun_continue_to_login": "চালিয়ে যান",
   "firstrun_skip_login": "এই ধাপটি বাদ দিন",
+  "context_menu_title": "Open menu",
   "default_label_loading": "লোড করা হচ্ছে…",
   "type_label_synced": "অন্য ডিভাইস থেকে সিঙ্ক করা হয়েছে",
   "type_label_open": "খুলুন",
@@ -134,5 +135,6 @@ window.gActivityStreamStrings = {
   "edit_topsites_done_button": "হয়েছে",
   "edit_topsites_pin_button": "সাইটটি পিন করুন",
   "edit_topsites_dismiss_button": "সাইটটি মুছে দিন",
-  "edit_topsites_add_button": "যুক্ত করুন"
+  "edit_topsites_add_button": "যুক্ত করুন",
+  "pocket_learn_more": "আরও জানুন"
 };

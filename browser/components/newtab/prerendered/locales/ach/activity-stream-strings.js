@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Ngec me mung",
   "firstrun_continue_to_login": "Mede",
   "firstrun_skip_login": "Kal citep man",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Nong ngec mapol"
 };

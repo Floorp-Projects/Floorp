@@ -46,9 +46,9 @@ ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValue* aURL)
     return nullptr;
   }
 
-  return do_AddRef(new URLAndReferrerInfo(uri,
-                                          aURL->mExtraData->GetReferrer(),
-                                          aURL->mExtraData->GetReferrerPolicy()));
+  RefPtr<URLAndReferrerInfo> info =
+    new URLAndReferrerInfo(uri, aURL->ExtraData());
+  return info.forget();
 }
 
 
@@ -665,8 +665,7 @@ SVGFilterObserverList::SVGFilterObserverList(const nsTArray<nsStyleFilter>& aFil
       if (resolvedURI) {
         filterURL = new URLAndReferrerInfo(
           resolvedURI,
-          aFilters[i].GetURL()->mExtraData->GetReferrer(),
-          aFilters[i].GetURL()->mExtraData->GetReferrerPolicy());
+          aFilters[i].GetURL()->ExtraData());
       }
     }
 

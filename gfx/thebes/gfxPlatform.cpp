@@ -737,6 +737,7 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       helper.ReportTexture(aReport.vertex_data_textures, "vertex-data");
       helper.ReportTexture(aReport.render_target_textures, "render-targets");
       helper.ReportTexture(aReport.texture_cache_textures, "texture-cache");
+      helper.ReportTexture(aReport.depth_target_textures, "depth-targets");
 
       FinishAsyncMemoryReport();
     },

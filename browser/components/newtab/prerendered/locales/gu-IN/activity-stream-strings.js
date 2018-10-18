@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "ખાનગી સૂચના",
   "firstrun_continue_to_login": "ચાલુ રાખો",
   "firstrun_skip_login": "આ પગલું છોડી દો",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "વધુ શીખો"
 };

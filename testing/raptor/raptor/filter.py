@@ -231,6 +231,20 @@ def ignore_min(series):
 
 @register_filter
 @define_filter
+def ignore_negative(series):
+    """
+    ignore data points that have a negative value
+    caution: if all data values are < 0, this will return an empty list
+    """
+    if len(series) <= 1:
+        # don't modify short series
+        return series
+    series = series[:]  # do not mutate the original series
+    return list(filter(lambda x: x >= 0, series))
+
+
+@register_filter
+@define_filter
 def v8_subtest(series, name):
     """
        v8 benchmark score - modified for no sub benchmarks.

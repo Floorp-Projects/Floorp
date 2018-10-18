@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Suositut aiheet:",
   "pocket_read_even_more": "Katso lisää juttuja",
   "pocket_more_reccommendations": "Lisää suosituksia",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Kuinka se toimii",
   "pocket_cta_button": "Hanki Pocket",
   "pocket_cta_text": "Tallenna tykkäämäsi tekstit Pocketiin ja ravitse mieltäsi kiinnostavilla teksteillä.",
   "highlights_empty_state": "Ala selata, niin tässä alkaa näkyä hyviä juttuja, videoita ja muita sivuja, joilla olet käynyt hiljattain tai jotka olet lisännyt kirjanmerkkeihin.",
@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "tietosuojakäytännön",
   "firstrun_continue_to_login": "Jatka",
   "firstrun_skip_login": "Ohita tämä vaihe",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Lue lisää"
 };

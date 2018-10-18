@@ -529,7 +529,7 @@ BuildAnimation(nsPresContext* aPresContext,
   target.emplace(aTarget.mElement, aTarget.mPseudoType);
   KeyframeEffectParams effectOptions;
   RefPtr<KeyframeEffect> effect =
-    new KeyframeEffect(aPresContext->Document(), target, timing, effectOptions);
+    new KeyframeEffect(aPresContext->Document(), target, std::move(timing), effectOptions);
 
   aBuilder.SetKeyframes(*effect, std::move(keyframes));
 

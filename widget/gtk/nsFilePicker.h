@@ -48,12 +48,12 @@ protected:
   virtual ~nsFilePicker();
 
   nsresult Show(int16_t *aReturn) override;
-  void ReadValuesFromFileChooser(GtkWidget *file_chooser);
+  void ReadValuesFromFileChooser(void *file_chooser);
 
-  static void OnResponse(GtkWidget* dialog, gint response_id,
+  static void OnResponse(void* file_chooser, gint response_id,
                          gpointer user_data);
-  static void OnDestroy(GtkWidget* dialog, gpointer user_data);
-  void Done(GtkWidget* dialog, gint response_id);
+  static void OnDestroy(GtkWidget* file_chooser, gpointer user_data);
+  void Done(void* file_chooser, gint response_id);
 
   nsCOMPtr<nsIWidget>    mParentWidget;
   nsCOMPtr<nsIFilePickerShownCallback> mCallback;
@@ -73,6 +73,15 @@ protected:
 
 private:
   static nsIFile *mPrevDisplayDirectory;
+
+  void *GtkFileChooserNew(
+          const gchar *title, GtkWindow *parent,
+          GtkFileChooserAction action,
+          const gchar *accept_label);
+  void GtkFileChooserShow(void *file_chooser);
+  void GtkFileChooserDestroy(void *file_chooser);
+  void GtkFileChooserSetModal(void *file_chooser, GtkWindow* parent_widget,
+          gboolean modal);
 
 #ifdef MOZ_WIDGET_GTK
   GtkFileChooserWidget *mFileChooserDelegate;

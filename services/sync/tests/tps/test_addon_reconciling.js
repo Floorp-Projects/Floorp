@@ -12,7 +12,7 @@ var phases = {
   "phase03": "profile1",
   "phase04": "profile2",
   "phase05": "profile1",
-  "phase06": "profile2",
+  "phase06": "profile2"
 };
 
 const id = "restartless-xpi@tests.mozilla.org";

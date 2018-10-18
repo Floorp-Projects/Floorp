@@ -91,7 +91,17 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
     /* eslint-disable no-undef */
 
     let jsterm;
-    let popupFramePromise;
+    const popupFramePromise = new Promise(resolve => {
+      const listener = data => {
+        if (data.frames.some(({url}) => url && url.endsWith("popup.html"))) {
+          toolbox.target.off("frame-update", listener);
+          resolve();
+        }
+      };
+      toolbox.target.on("frame-update", listener);
+    });
+
+    const waitForFrameListUpdate = toolbox.target.once("frame-update");
 
     toolbox.selectTool("webconsole")
       .then(async (console) => {
@@ -110,18 +120,6 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
         dump(`Clicking the menu button\n`);
         await clickNoAutoHideMenu();
         dump(`Clicked the menu button\n`);
-
-        popupFramePromise = new Promise(resolve => {
-          const listener = data => {
-            if (data.frames.some(({url}) => url && url.endsWith("popup.html"))) {
-              toolbox.target.off("frame-update", listener);
-              resolve();
-            }
-          };
-          toolbox.target.on("frame-update", listener);
-        });
-
-        const waitForFrameListUpdate = toolbox.target.once("frame-update");
 
         jsterm = console.hud.jsterm;
         jsterm.execute("myWebExtensionShowPopup()");

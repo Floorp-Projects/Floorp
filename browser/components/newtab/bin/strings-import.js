@@ -7,7 +7,7 @@ const fetch = require("node-fetch");
 /* globals cd, ls, mkdir, rm, ShellString */
 require("shelljs/global");
 
-const {CENTRAL_LOCALES, DEFAULT_LOCALE} = require("./locales");
+const {CENTRAL_LOCALES, DEFAULT_LOCALE, LOCALES_SOURCE_DIRECTORY} = require("./locales");
 const L10N_CENTRAL = "https://hg.mozilla.org/l10n-central";
 const PROPERTIES_PATH = "raw-file/default/browser/chrome/browser/activity-stream/newtab.properties";
 const STRINGS_FILE = "strings.properties";
@@ -74,9 +74,9 @@ async function saveProperties(locale) {
 
 // Replace and update each locale's strings
 async function updateLocales() {
-  console.log("Switching to and deleting existing l10n tree under: locales");
+  console.log(`Switching to and deleting existing l10n tree under: ${LOCALES_SOURCE_DIRECTORY}`);
 
-  cd("locales");
+  cd(LOCALES_SOURCE_DIRECTORY);
   ls().forEach(dir => {
     // Keep the default/source locale as it might have newer strings
     if (dir !== DEFAULT_LOCALE) {

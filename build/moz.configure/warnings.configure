@@ -87,8 +87,10 @@ check_and_add_gcc_warning('-Werror=non-literal-null-conversion',
 # catches string literals used in boolean expressions
 check_and_add_gcc_warning('-Wstring-conversion')
 
-# catches overlapping range comparisons that are always true or false
+# catches comparisons that are always true or false
 check_and_add_gcc_warning('-Wtautological-overlap-compare')
+check_and_add_gcc_warning('-Wtautological-unsigned-enum-zero-compare')
+check_and_add_gcc_warning('-Wtautological-unsigned-zero-compare')
 
 # we inline 'new' and 'delete' in mozalloc
 check_and_add_gcc_warning('-Wno-inline-new-delete', cxx_compiler)

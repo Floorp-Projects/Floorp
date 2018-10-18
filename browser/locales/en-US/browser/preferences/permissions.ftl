@@ -63,10 +63,10 @@ permissions-invalid-uri-label = Please enter a valid hostname
 
 ## Exceptions - Tracking Protection
 
-permissions-exceptions-tracking-protection-window =
-    .title = Exceptions - Tracking Protection
+permissions-exceptions-content-blocking-window =
+    .title = Exceptions - Content Blocking
     .style = { permissions-window.style }
-permissions-exceptions-tracking-protection-desc = You have disabled Tracking Protection on these websites.
+permissions-exceptions-content-blocking-desc = You have disabled content blocking on these websites.
 
 ## Exceptions - Cookies
 

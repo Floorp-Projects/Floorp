@@ -12,16 +12,6 @@ const TELEMETRY_DATA = [
     timestamp: null,
     category: "devtools.main",
     method: "tool_timer",
-    object: "computedview",
-    value: null,
-    extra: {
-      time_open: ""
-    }
-  },
-  {
-    timestamp: null,
-    category: "devtools.main",
-    method: "tool_timer",
     object: "layoutview",
     value: null,
     extra: {
@@ -32,7 +22,17 @@ const TELEMETRY_DATA = [
     timestamp: null,
     category: "devtools.main",
     method: "tool_timer",
-    object: "ruleview",
+    object: "fontinspector",
+    value: null,
+    extra: {
+      time_open: ""
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "tool_timer",
+    object: "computedview",
     value: null,
     extra: {
       time_open: ""
@@ -50,17 +50,17 @@ add_task(async function() {
 
   let { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
+  info("Selecting font inspector.");
+  inspector.sidebar.select("fontinspector");
+
+  is(inspector.sidebar.getCurrentTabID(), "fontinspector",
+    "Font Inspector is selected");
+
   info("Selecting computed view.");
   inspector.sidebar.select("computedview");
 
   is(inspector.sidebar.getCurrentTabID(), "computedview",
     "Computed View is selected");
-
-  info("Selecting layout view.");
-  inspector.sidebar.select("layoutview");
-
-  is(inspector.sidebar.getCurrentTabID(), "layoutview",
-    "Layout View is selected");
 
   info("Closing inspector.");
   await toolbox.destroy();
@@ -73,8 +73,8 @@ add_task(async function() {
     await inspector.sidebar.once("select");
   }
 
-  is(inspector.sidebar.getCurrentTabID(), "layoutview",
-     "Layout view is selected by default.");
+  is(inspector.sidebar.getCurrentTabID(), "computedview",
+     "Computed view is selected by default.");
 
   checkTelemetryResults();
 });

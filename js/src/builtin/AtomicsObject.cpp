@@ -206,7 +206,7 @@ js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp)
 
     bool badType = false;
     int32_t result = CompareExchange(view->type(), oldCandidate, newCandidate,
-                                     view->viewDataShared(), offset, &badType);
+                                     view->dataPointerShared(), offset, &badType);
 
     if (badType) {
         return ReportBadArrayType(cx);
@@ -237,7 +237,7 @@ js::atomics_load(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    SharedMem<void*> viewData = view->viewDataShared();
+    SharedMem<void*> viewData = view->dataPointerShared();
     switch (view->type()) {
       case Scalar::Uint8: {
         uint8_t v = jit::AtomicOperations::loadSeqCst(viewData.cast<uint8_t*>() + offset);
@@ -357,7 +357,7 @@ ExchangeOrStore(JSContext* cx, unsigned argc, Value* vp)
 
     bool badType = false;
     int32_t result = ExchangeOrStore<op>(view->type(), JS::ToInt32(integerValue),
-                                         view->viewDataShared(), offset, &badType);
+                                         view->dataPointerShared(), offset, &badType);
 
     if (badType) {
         return ReportBadArrayType(cx);
@@ -403,7 +403,7 @@ AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv
         return false;
     }
 
-    SharedMem<void*> viewData = view->viewDataShared();
+    SharedMem<void*> viewData = view->dataPointerShared();
     switch (view->type()) {
       case Scalar::Int8: {
         int8_t v = (int8_t)numberValue;
@@ -700,7 +700,7 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
     // The computation will not overflow because range checks have been
     // performed.
     uint32_t byteOffset = offset * sizeof(int32_t) +
-                          (view->viewDataShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
+                          (view->dataPointerShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
                            sab->dataPointerShared().unwrap(/* arithmetic */));
 
     switch (atomics_wait_impl(cx, sab->rawBufferObject(), byteOffset, value, timeout)) {
@@ -794,7 +794,7 @@ js::atomics_notify(JSContext* cx, unsigned argc, Value* vp)
     // The computation will not overflow because range checks have been
     // performed.
     uint32_t byteOffset = offset * sizeof(int32_t) +
-                          (view->viewDataShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
+                          (view->dataPointerShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
                            sab->dataPointerShared().unwrap(/* arithmetic */));
 
     r.setNumber(double(atomics_notify_impl(sab->rawBufferObject(), byteOffset, count)));

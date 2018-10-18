@@ -595,3 +595,97 @@ add_task(async function test_userScripts_pref_disabled() {
   await runWithPrefs([["extensions.webextensions.userScripts.enabled", false]],
                      run_userScript_on_pref_disabled_test);
 });
+
+add_task(async function test_scriptMetaData() {
+  function getTestCases(isUserScriptsRegister) {
+    return [
+      // When scriptMetadata is not set (or undefined), it is treated as if it were null.
+      // In the API script, the metadata is then expected to be null.
+      isUserScriptsRegister ? undefined : null,
+
+      // Falsey
+      null,
+      "",
+      false,
+      0,
+
+      // Truthy
+      true,
+      1,
+      "non-empty string",
+
+      // Objects
+      ["some array with value"],
+      {"some object": "with value"},
+    ];
+  }
+
+  async function background(pageUrl) {
+    for (let scriptMetadata of getTestCases(true)) {
+      await browser.userScripts.register({
+        js: [{file: "userscript.js"}],
+        runAt: "document_end",
+        allFrames: true,
+        matches: ["http://localhost/*/file_sample.html"],
+        scriptMetadata,
+      });
+    }
+
+    let f = document.createElement("iframe");
+    f.src = pageUrl;
+    document.body.append(f);
+    browser.test.sendMessage("background-page:done");
+  }
+
+  function apiScript() {
+    let testCases = getTestCases(false);
+    let i = 0;
+    let j = 0;
+    let metadataOnFirstCall = [];
+    browser.userScripts.setScriptAPIs({
+      checkMetadata(params, metadata, scriptGlobal) {
+        // We save the reference to the received metadata object, so that
+        // checkMetadataAgain can verify that the same object is received.
+        metadataOnFirstCall[i] = metadata;
+
+        let expectation = testCases[i];
+        if (typeof expectation === "object" && expectation !== null) {
+          // Non-primitive values cannot be compared with assertEq,
+          // so serialize both and just verify that they are equal.
+          expectation = JSON.stringify(expectation);
+          metadata = JSON.stringify(metadata);
+        }
+        browser.test.assertEq(expectation, metadata, `Expected metadata at call ${i}`);
+        ++i;
+      },
+      checkMetadataAgain(params, metadata, scriptGlobal) {
+        browser.test.assertEq(metadataOnFirstCall[j], metadata, `Expected same metadata at call ${j}`);
+
+        if (++j === testCases.length) {
+          browser.test.sendMessage("apiscript:done");
+        }
+      },
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `${getTestCases};(${background})("${BASE_URL}/file_sample.html")`,
+    manifest: {
+      permissions: ["http://*/*/file_sample.html"],
+      user_scripts: {
+        api_script: "apiscript.js",
+      },
+    },
+    files: {
+      "apiscript.js": `${getTestCases};(${apiScript})()`,
+      "userscript.js": "checkMetadata();checkMetadataAgain();",
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("background-page:done");
+  await extension.awaitMessage("apiscript:done");
+
+  await extension.unload();
+});
