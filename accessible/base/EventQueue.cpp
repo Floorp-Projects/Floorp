@@ -111,7 +111,8 @@ EventQueue::CoalesceEvents()
           return;
         }
       }
-    } break; // case eCoalesceOfSameType
+      break; // case eCoalesceOfSameType
+    }
 
     case AccEvent::eCoalesceSelectionChange:
     {
@@ -129,8 +130,8 @@ EventQueue::CoalesceEvents()
           }
         }
       }
-
-    } break; // eCoalesceSelectionChange
+      break; // eCoalesceSelectionChange
+    }
 
     case AccEvent::eCoalesceStateChange:
     {
@@ -172,7 +173,8 @@ EventQueue::CoalesceEvents()
         }
 
       }
-    } break; // eCoalesceTextSelChange
+      break; // eCoalesceTextSelChange
+    }
 
     case AccEvent::eRemoveDupes:
     {
@@ -187,7 +189,8 @@ EventQueue::CoalesceEvents()
           return;
         }
       }
-    } break; // case eRemoveDupes
+      break; // case eRemoveDupes
+    }
 
     default:
       break; // case eAllowDupes, eDoNotEmit
