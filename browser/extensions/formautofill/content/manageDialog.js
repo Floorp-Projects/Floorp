@@ -19,8 +19,8 @@ ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
                                "resource://formautofill/FormAutofillStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OSKeyStore",
-                               "resource://formautofill/OSKeyStore.jsm");
+ChromeUtils.defineModuleGetter(this, "MasterPassword",
+                               "resource://formautofill/MasterPassword.jsm");
 
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, "manageAddresses");
@@ -313,7 +313,11 @@ class ManageCreditCards extends ManageRecords {
     elements.add.setAttribute("searchkeywords", FormAutofillUtils.EDIT_CREDITCARD_KEYWORDS
                                                   .map(key => FormAutofillUtils.stringBundle.GetStringFromName(key))
                                                   .join("\n"));
+    this._hasMasterPassword = MasterPassword.isEnabled;
     this._isDecrypted = false;
+    if (this._hasMasterPassword) {
+      elements.showHideCreditCards.setAttribute("hidden", true);
+    }
   }
 
   /**
@@ -322,24 +326,12 @@ class ManageCreditCards extends ManageRecords {
    * @param  {object} creditCard [optional]
    */
   async openEditDialog(creditCard) {
-    // Ask for reauth if user is trying to edit an existing credit card.
-    if (!creditCard || await OSKeyStore.ensureLoggedIn(true)) {
+    // If master password is set, ask for password if user is trying to edit an
+    // existing credit card.
+    if (!creditCard || !this._hasMasterPassword || await MasterPassword.ensureLoggedIn(true)) {
       let decryptedCCNumObj = {};
       if (creditCard) {
-        try {
-          decryptedCCNumObj["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
-        } catch (ex) {
-          if (ex.result == Cr.NS_ERROR_ABORT) {
-            // User shouldn't be ask to reauth here, but it could happen.
-            // Return here and skip opening the dialog.
-            return;
-          }
-          // We've got ourselves a real error.
-          // Recover from encryption error so the user gets a chance to re-enter
-          // unencrypted credit card number.
-          decryptedCCNumObj["cc-number"] = "";
-          Cu.reportError(ex);
-        }
+        decryptedCCNumObj["cc-number"] = await MasterPassword.decrypt(creditCard["cc-number-encrypted"]);
       }
       let decryptedCreditCard = Object.assign({}, creditCard, decryptedCCNumObj);
       this.prefWin.gSubDialog.open(EDIT_CREDIT_CARD_URL, "resizable=no", {
@@ -365,6 +357,12 @@ class ManageCreditCards extends ManageRecords {
       network: creditCard["cc-type"],
     });
     return cardObj.getLabel({showNumbers: showCreditCards});
+  }
+
+  async toggleShowHideCards(options) {
+    this._isDecrypted = !this._isDecrypted;
+    this.updateShowHideButtonState();
+    await this.updateLabels(options, this._isDecrypted);
   }
 
   async updateLabels(options, isDecrypted) {
@@ -394,10 +392,25 @@ class ManageCreditCards extends ManageRecords {
   }
 
   updateButtonsStates(selectedCount) {
+    this.updateShowHideButtonState();
     super.updateButtonsStates(selectedCount);
   }
 
+  updateShowHideButtonState() {
+    if (this._elements.records.length) {
+      this._elements.showHideCreditCards.removeAttribute("disabled");
+    } else {
+      this._elements.showHideCreditCards.setAttribute("disabled", true);
+    }
+    this._elements.showHideCreditCards.textContent =
+      this._isDecrypted ? FormAutofillUtils.stringBundle.GetStringFromName("hideCreditCardsBtnLabel") :
+                          FormAutofillUtils.stringBundle.GetStringFromName("showCreditCardsBtnLabel");
+  }
+
   handleClick(event) {
+    if (event.target == this._elements.showHideCreditCards) {
+      this.toggleShowHideCards(this._elements.records.options);
+    }
     super.handleClick(event);
   }
 }

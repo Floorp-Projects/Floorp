@@ -32,8 +32,6 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'skin/windows/editDialog.css',
     ]
 
-TESTING_JS_MODULES += ['test/fixtures/OSKeyStoreTestUtils.jsm']
-
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

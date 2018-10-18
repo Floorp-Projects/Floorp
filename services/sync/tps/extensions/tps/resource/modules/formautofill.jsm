@@ -14,8 +14,8 @@ ChromeUtils.import("resource://tps/logger.jsm");
 ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
                                "resource://formautofill/FormAutofillStorage.jsm");
 
-ChromeUtils.defineModuleGetter(this, "OSKeyStore",
-                               "resource://formautofill/OSKeyStore.jsm");
+ChromeUtils.defineModuleGetter(this, "MasterPassword",
+                               "resource://formautofill/MasterPassword.jsm");
 
 class FormAutofillBase {
   constructor(props, subStorageName, fields) {
@@ -111,7 +111,7 @@ class CreditCard extends FormAutofillBase {
   async Find() {
     const storage = await this.getStorage();
     await Promise.all(storage._data.map(
-      async entry => entry["cc-number"] = await OSKeyStore.decrypt(entry["cc-number-encrypted"])));
+      async entry => entry["cc-number"] = await MasterPassword.decrypt(entry["cc-number-encrypted"])));
     return storage._data.find(entry => {
       return this._fields.every(field => entry[field] === this.props[field]);
     });
