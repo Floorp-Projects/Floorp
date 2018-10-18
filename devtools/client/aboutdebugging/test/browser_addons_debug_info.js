@@ -39,15 +39,27 @@ add_task(async function testWebExtension() {
   const { tab, document } = await openAboutDebugging("addons");
 
   await waitForInitialAddonList(document);
+
+  const addonFile = ExtensionTestCommon.generateXPI({
+    manifest: {
+      name: addonName,
+      applications: {
+        gecko: {id: addonId},
+      },
+    },
+  });
+  registerCleanupFunction(() => addonFile.remove(false));
+
   await installAddon({
     document,
-    path: "addons/test-devtools-webextension-nobg/manifest.json",
+    file: addonFile,
     name: addonName,
     isWebExtension: true
   });
 
   const container = document.querySelector(`[data-addon-id="${addonId}"]`);
-  testFilePath(container, "/test/addons/test-devtools-webextension-nobg/");
+
+  testFilePath(container, addonFile.leafName);
 
   const extensionID = container.querySelector(".extension-id span");
   ok(extensionID.textContent === "test-devtools-webextension-nobg@mozilla.org");
@@ -68,9 +80,17 @@ add_task(async function testTemporaryWebExtension() {
   const { tab, document } = await openAboutDebugging("addons");
 
   await waitForInitialAddonList(document);
+
+  const addonFile = ExtensionTestCommon.generateXPI({
+    manifest: {
+      name: addonName,
+    },
+  });
+  registerCleanupFunction(() => addonFile.remove(false));
+
   await installAddon({
     document,
-    path: "addons/test-devtools-webextension-noid/manifest.json",
+    file: addonFile,
     name: addonName,
     isWebExtension: true
   });
@@ -98,9 +118,22 @@ add_task(async function testUnknownManifestProperty() {
   const { tab, document } = await openAboutDebugging("addons");
 
   await waitForInitialAddonList(document);
+
+  const addonFile = ExtensionTestCommon.generateXPI({
+    manifest: {
+      name: addonName,
+      applications: {
+        gecko: {id: addonId},
+      },
+      wrong_manifest_property_name: {
+      }
+    },
+  });
+  registerCleanupFunction(() => addonFile.remove(false));
+
   await installAddon({
     document,
-    path: "addons/test-devtools-webextension-unknown-prop/manifest.json",
+    file: addonFile,
     name: addonName,
     isWebExtension: true
   });
@@ -113,7 +146,7 @@ add_task(async function testUnknownManifestProperty() {
 
   const messages = container.querySelectorAll(".addon-target-message");
   ok(messages.length === 1, "there is one message");
-  ok(messages[0].textContent.match(/Error processing browser_actions/),
+  ok(messages[0].textContent.match(/Error processing wrong_manifest_property_name/),
      "the message is helpful");
   ok(messages[0].classList.contains("addon-target-warning-message"),
      "the message is a warning");
