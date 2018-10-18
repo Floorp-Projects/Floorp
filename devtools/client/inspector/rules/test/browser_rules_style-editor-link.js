@@ -10,8 +10,7 @@ const STYLESHEET_DATA_URL_CONTENTS = ["#first {",
                                       "color: blue",
                                       "}"].join("\n");
 const STYLESHEET_DATA_URL =
-      `data:text/css,${encodeURIComponent(STYLESHEET_DATA_URL_CONTENTS)}`;
-const STYLESHEET_DECODED_DATA_URL = `data:text/css,${STYLESHEET_DATA_URL_CONTENTS}`;
+  `data:text/css,${encodeURIComponent(STYLESHEET_DATA_URL_CONTENTS)}`;
 
 const EXTERNAL_STYLESHEET_FILE_NAME = "doc_style_editor_link.css";
 const EXTERNAL_STYLESHEET_URL = URL_ROOT + EXTERNAL_STYLESHEET_FILE_NAME;
@@ -55,27 +54,12 @@ add_task(async function() {
   const {toolbox, inspector, view, testActor} = await openRuleView();
   await selectNode("div", inspector);
 
-  await testInlineStyle(view);
+  testRuleViewLinkLabel(view);
   await testFirstInlineStyleSheet(view, toolbox, testActor);
   await testSecondInlineStyleSheet(view, toolbox, testActor);
   await testExternalStyleSheet(view, toolbox, testActor);
   await testDisabledStyleEditor(view, toolbox);
 });
-
-async function testInlineStyle(view) {
-  info("Testing inline style");
-
-  const onTab = waitForTab();
-  info("Clicking on the first link in the rule-view");
-  clickLinkByIndex(view, 0);
-
-  const tab = await onTab;
-
-  const tabURI = tab.linkedBrowser.documentURI.spec;
-  ok(tabURI.startsWith("view-source:"), "View source tab is open");
-  info("Closing tab");
-  gBrowser.removeTab(tab);
-}
 
 async function testFirstInlineStyleSheet(view, toolbox, testActor) {
   info("Testing inline stylesheet");
@@ -103,7 +87,6 @@ async function testSecondInlineStyleSheet(view, toolbox, testActor) {
   await toolbox.selectTool("inspector");
 
   info("Clicking on second inline stylesheet link");
-  testRuleViewLinkLabel(view);
   clickLinkByIndex(view, 3);
   const editor = await onSelected;
 
@@ -123,7 +106,6 @@ async function testExternalStyleSheet(view, toolbox, testActor) {
   await toolbox.selectTool("inspector");
 
   info("Clicking on an external stylesheet link");
-  testRuleViewLinkLabel(view);
   clickLinkByIndex(view, 1);
   const editor = await onSelected;
 
@@ -140,8 +122,8 @@ async function validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
   const href = editor.styleSheet.href || editor.styleSheet.nodeHref;
 
   const expectedHref = await testActor.eval(
-    `content.document.styleSheets[${expectedSheetIndex}].href ||
-     content.document.location.href`);
+    `document.styleSheets[${expectedSheetIndex}].href ||
+     document.location.href`);
 
   is(href, expectedHref, "loaded stylesheet href matches document stylesheet");
 }
@@ -183,9 +165,9 @@ function testRuleViewLinkLabel(view) {
   let value = labelElem.textContent;
   let tooltipText = labelElem.getAttribute("title");
 
-  is(value, `${STYLESHEET_DATA_URL_CONTENTS}:1`,
+  is(value, encodeURIComponent(STYLESHEET_DATA_URL_CONTENTS) + ":1",
     "Rule view data URL stylesheet display value matches contents");
-  is(tooltipText, `${STYLESHEET_DECODED_DATA_URL}:1`,
+  is(tooltipText, STYLESHEET_DATA_URL + ":1",
     "Rule view data URL stylesheet tooltip text matches the full URI path");
 
   info("Checking the external link label");
