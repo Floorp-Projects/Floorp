@@ -1786,19 +1786,15 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
    *        The root of the tree this sub-tree belongs to.
    * @param aT
    *        The tree.
-   * @param aTreelineText1
-   *        The first part of the treeline for this entry and this entry's
-   *        children.
-   * @param aTreelineText2a
-   *        The second part of the treeline for this entry.
-   * @param aTreelineText2b
-   *        The second part of the treeline for this entry's children.
+   * @param aTlThis
+   *        The treeline for this entry.
+   * @param aTlKids
+   *        The treeline for this entry's children.
    * @param aParentStringLength
    *        The length of the formatted byte count of the top node in the tree.
    */
   function appendTreeElements2(aP, aProcess, aUnsafeNames, aRoot, aT,
-                               aTreelineText1, aTreelineText2a,
-                               aTreelineText2b, aParentStringLength) {
+                               aTlThis, aTlKids, aParentStringLength) {
     function appendN(aS, aC, aN) {
       for (let i = 0; i < aN; i++) {
         aS += aC;
@@ -1808,14 +1804,13 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
 
     // The tree line.  Indent more if this entry is narrower than its parent.
     let valueText = aT.toString();
-    let extraTreelineLength =
+    let extraTlLength =
       Math.max(aParentStringLength - valueText.length, 0);
-    if (extraTreelineLength > 0) {
-      aTreelineText2a = appendN(aTreelineText2a, "─", extraTreelineLength);
-      aTreelineText2b = appendN(aTreelineText2b, " ", extraTreelineLength);
+    if (extraTlLength > 0) {
+      aTlThis = appendN(aTlThis, "─", extraTlLength);
+      aTlKids = appendN(aTlKids, " ", extraTlLength);
     }
-    let treelineText = aTreelineText1 + aTreelineText2a;
-    appendElementWithText(aP, "span", "treeline", treelineText);
+    appendElementWithText(aP, "span", "treeline", aTlThis);
 
     // Detect and record invalid values.  But not if gIsDiff is true, because
     // we expect negative values in that case.
@@ -1889,20 +1884,22 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       // The 'kids' class is just used for sanity checking in toggle().
       d = appendElement(aP, "span", showSubtrees ? "kids" : "kids hidden");
 
-      let kidTreelineText1 = aTreelineText1 + aTreelineText2b;
+      let tlThisForMost, tlKidsForMost;
+      if (aT._kids.length > 1) {
+        tlThisForMost = aTlKids + "├──";
+        tlKidsForMost = aTlKids + "│  ";
+      }
+      let tlThisForLast = aTlKids + "└──";
+      let tlKidsForLast = aTlKids + "   ";
+
       for (let i = 0; i < aT._kids.length; i++) {
-        let kidTreelineText2a, kidTreelineText2b;
-        if (i < aT._kids.length - 1) {
-          kidTreelineText2a = "├──";
-          kidTreelineText2b = "│  ";
-        } else {
-          kidTreelineText2a = "└──";
-          kidTreelineText2b = "   ";
-        }
-        aUnsafeNames.push(aT._kids[i]._unsafeName);
-        appendTreeElements2(d, aProcess, aUnsafeNames, aRoot, aT._kids[i],
-                            kidTreelineText1, kidTreelineText2a,
-                            kidTreelineText2b, valueText.length);
+        let kid = aT._kids[i];
+        let isLast = i == aT._kids.length - 1;
+        aUnsafeNames.push(kid._unsafeName);
+        appendTreeElements2(d, aProcess, aUnsafeNames, aRoot, kid,
+                            !isLast ? tlThisForMost : tlThisForLast,
+                            !isLast ? tlKidsForMost : tlKidsForLast,
+                            valueText.length);
         aUnsafeNames.pop();
       }
     }
@@ -1910,7 +1907,7 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
 
   let rootStringLength = aRoot.toString().length;
   appendTreeElements2(aP, aProcess, [aRoot._unsafeName], aRoot, aRoot,
-                      aPadText, "", "", rootStringLength);
+                      aPadText, aPadText, rootStringLength);
 }
 
 // ---------------------------------------------------------------------------
