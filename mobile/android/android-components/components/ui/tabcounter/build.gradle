@@ -31,10 +31,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "tabcounter"
+archivesBaseName = "ui-tabcounter"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'tabcounter',
+        'ui-tabcounter',
         'A tab counter for browsers.')

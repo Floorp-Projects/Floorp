@@ -50,8 +50,6 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
         }
     }
 
-    apply plugin: 'com.jfrog.bintray'
-
     version = Config.componentsVersion
 
     task sourcesJar(type: Jar) {
@@ -78,23 +76,6 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
     if (project.rootProject.file('local.properties').canRead()) {
         localProperties = new Properties()
         localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
-    }
-
-    bintray {
-        user = localProperties != null ? localProperties.getProperty("bintray.user") : ""
-        key = localProperties != null ? localProperties.getProperty("bintray.apikey") : ""
-
-        configurations = ['archives']
-        pkg {
-            repo = libRepoName
-            name = artifactIdArg
-            desc = descriptionArg
-            websiteUrl = libUrl
-            vcsUrl = libVcsUrl
-            licenses = [libLicense]
-            publish = true
-            publicDownloadNumbers = true
-        }
     }
 
     apply plugin: 'maven'

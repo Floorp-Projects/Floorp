@@ -42,10 +42,10 @@ dependencies {
     testImplementation project(':support-test')
 }
 
-archivesBaseName = "engine-gecko-beta"
+archivesBaseName = "browser-engine-gecko-beta"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'engine-gecko-beta',
+        'browser-engine-gecko-beta',
         'Engine implementation based on GeckoView (Beta channel).')

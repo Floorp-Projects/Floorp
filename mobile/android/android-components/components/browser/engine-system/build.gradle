@@ -41,10 +41,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "engine-system"
+archivesBaseName = "browser-engine-system"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'engine-system',
+        'browser-engine-system',
         'Engine implementation based on the system\'s WebView.')

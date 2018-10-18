@@ -29,10 +29,10 @@ dependencies {
     // None
 }
 
-archivesBaseName = "icons"
+archivesBaseName = "ui-icons"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
-        'org.mozilla.photon',
-        'icons',
+        'org.mozilla.components',
+        'ui-icons',
         'A collection of often used browser icons.')

@@ -31,10 +31,10 @@ dependencies {
     testImplementation Deps.testing_robolectric
 }
 
-archivesBaseName = "abstract-toolbar"
+archivesBaseName = "concept-toolbar"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'abstract-toolbar',
+        'concept-toolbar',
         'An abstract definition of a toolbar component.')

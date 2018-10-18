@@ -25,7 +25,6 @@ buildscript {
         classpath Deps.tools_dokka
 
         // Publish.
-        classpath Deps.tools_bintray
         classpath Deps.tools_mavengradle
     }
 }

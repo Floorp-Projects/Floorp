@@ -39,10 +39,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "toolbar"
+archivesBaseName = "browser-toolbar"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'toolbar',
+        'browser-toolbar',
         'A customizable toolbar for browsers.')

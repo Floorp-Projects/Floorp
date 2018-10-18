@@ -33,10 +33,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "ktx"
+archivesBaseName = "support-ktx"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'ktx',
+        'support-ktx',
         'A set of Kotlin extensions.')

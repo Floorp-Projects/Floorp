@@ -43,10 +43,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "errorpages"
+archivesBaseName = "browser-errorpages"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'errorpages',
+        'browser-errorpages',
         'Responsive browser error pages for Android apps.')

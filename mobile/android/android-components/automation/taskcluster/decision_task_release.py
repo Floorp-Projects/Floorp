@@ -50,8 +50,6 @@ def generate_build_task(version):
     checkout = ("git fetch origin --tags && "
                 "git config advice.detachedHead false && "
                 "git checkout {}".format(version))
-    bintray_publishing = (" && python automation/taskcluster/release/fetch-bintray-api-key.py"
-                          " && ./gradlew bintrayUpload --debug")
 
     assemble_task = 'assembleRelease'
     scopes = [
@@ -65,54 +63,13 @@ def generate_build_task(version):
         command=(checkout +
                  ' && ./gradlew --no-daemon clean test detektCheck ktlint '
                  + assemble_task +
-                 ' docs uploadArchives zipMavenArtifacts' +
-                 bintray_publishing),
+                 ' docs uploadArchives zipMavenArtifacts'),
         features={
             "chainOfTrust": True
         },
         worker_type='gecko-focus',
         scopes=scopes,
         artifacts=artifacts,
-    )
-
-
-def generate_massager_task(build_task_id, massager_task_id,
-                           artifacts_info, version):
-    command = ("git fetch origin --tags && "
-               "git config advice.detachedHead false && "
-               "git checkout {} && "
-               "apt-get install -y python3-pip && "
-               "pip3 install scriptworker && "
-               "python3 automation/taskcluster/release/convert_group_and_artifact_ids.py {}".format(version, massager_task_id))
-    scopes = []
-    upstreamZip = []
-    for artifact, info in artifacts_info.items():
-        new_artifact_id = None if info['name'] == info['old_artifact_id'] else info['name']
-        new_group_id = info['new_group_id'] if new_artifact_id else None
-        upstreamZip.append({
-                "path": artifact,
-                "taskId": build_task_id,
-                "newGroupId": new_group_id,
-                "newArtifactId": new_artifact_id,
-        })
-
-    return BUILDER.massager_task(
-        name="Android Components - Massager",
-        description="Task to massage the group/artifact ids",
-        dependencies=[build_task_id],
-        command=command,
-        scopes=scopes,
-        features={
-            "chainOfTrust": True
-        },
-        artifacts={
-            "public/build": {
-                "expires": taskcluster.stringDate(taskcluster.fromNow('1 year')),
-                "path": "/build/android-components/work_dir/public/build",
-                "type": "directory"
-            }
-        },
-        upstreamZip=upstreamZip,
     )
 
 
@@ -165,26 +122,9 @@ def release(version):
     task_graph[build_task_id]["task"] = queue.task(build_task_id)
 
     artifacts_info = load_artifacts_manifest()
-    # XXX: temporary hack: along with the release pipeline rewrite changes for
-    # https://github.com/mozilla-mobile/android-components/issues/368 have also
-    # been taken into consideration. But changing the `artifact_id` solely here
-    # will break Cot on beetmover tasks as the build task still generates them
-    # with the `artifact_id` that's baked within the `build.gradle` of each of
-    # the components. Therefore we inject a temporary task in between Build
-    # task and beetmover tasks that's to massage the ids according to the new
-    # ones. That means, downloading the zip archives from the Build task,
-    # extracting, renaming files and re-zipping things back to feed Beetmover
-    # job.
-    massager_task_id = taskcluster.slugId()
-    massager_task = generate_massager_task(build_task_id, massager_task_id,
-                                           artifacts_info, version)
-    lib.tasks.schedule_task(queue, massager_task_id, massager_task)
-
-    task_graph[massager_task_id] = {}
-    task_graph[massager_task_id]["task"] = queue.task(massager_task_id)
 
     for artifact, info in artifacts_info.items():
-        beetmover_task_id, beetmover_task = generate_beetmover_task(massager_task_id, version, artifact, info)
+        beetmover_task_id, beetmover_task = generate_beetmover_task(build_task_id, version, artifact, info)
         lib.tasks.schedule_task(queue, beetmover_task_id, beetmover_task)
 
         task_graph[beetmover_task_id] = {}

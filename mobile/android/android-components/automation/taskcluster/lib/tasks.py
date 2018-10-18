@@ -65,48 +65,6 @@ class TaskBuilder(object):
             }
         }
 
-    def massager_task(self, name, description, command, dependencies=[], scopes=[],
-                      features={}, artifacts={}, upstreamZip=[]):
-        created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 year')
-        deadline = taskcluster.fromNow('1 day')
-
-        return {
-            "workerType": "gecko-focus",
-            "taskGroupId": self.task_id,
-            "schedulerId": self.scheduler_id,
-            "expires": taskcluster.stringDate(expires),
-            "retries": 5,
-            "created": taskcluster.stringDate(created),
-            "tags": {},
-            "priority": "lowest",
-            "schedulerId": "taskcluster-github",
-            "deadline": taskcluster.stringDate(deadline),
-            "dependencies": [self.task_id] + dependencies,
-            "routes": [],
-            "scopes": scopes,
-            "requires": "all-completed",
-            "payload": {
-                "maxRunTime": 3600,
-                "features": features,
-                "image": "mozillamobile/android-components:1.5",
-                "command": [
-                    "/bin/bash",
-                    "--login",
-                    "-cx",
-                    command,
-                ],
-                "artifacts": artifacts,
-                "upstreamZip": upstreamZip
-            },
-            "provisionerId": "aws-provisioner-v1",
-            "metadata": {
-                "name": name,
-                "description": description,
-                "owner": self.owner,
-                "source": self.source
-            }
-        }
 
     def beetmover_task(self, name, description, version, artifact_id,
                        dependencies=[], upstreamArtifacts=[], scopes=[]):

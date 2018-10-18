@@ -18,7 +18,6 @@ private object Versions {
 
     const val dokka = "0.9.16"
     const val android_gradle_plugin = "3.1.4"
-    const val bintray_gradle_plugin = "1.7.3"
     const val maven_gradle_plugin = "2.1"
     const val lint = "26.1.3"
 
@@ -55,7 +54,6 @@ object Deps {
     const val tools_dokka = "org.jetbrains.dokka:dokka-android-gradle-plugin:${Versions.dokka}"
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
-    const val tools_bintray = "com.jfrog.bintray.gradle:gradle-bintray-plugin:${Versions.bintray_gradle_plugin}"
     const val tools_mavengradle = "com.github.dcendents:android-maven-gradle-plugin:${Versions.maven_gradle_plugin}"
 
     const val tools_lint = "com.android.tools.lint:lint:${Versions.lint}"

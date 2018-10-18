@@ -60,10 +60,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "fxa"
+archivesBaseName = "service-firefox-accounts"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'fxa',
+        'service-firefox-accounts',
         'A library for integrating with Firefox Accounts.')

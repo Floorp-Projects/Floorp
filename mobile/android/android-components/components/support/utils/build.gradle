@@ -40,10 +40,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "utils"
+archivesBaseName = "support-utils"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'utils',
+        'support-utils',
         'A collection of generic helper classes.')

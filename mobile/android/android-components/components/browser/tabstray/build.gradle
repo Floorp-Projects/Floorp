@@ -45,10 +45,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "tabstray"
+archivesBaseName = "browser-tabstray"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'tabstray',
+        'browser-tabstray',
         'A tabs tray component for browsers.')

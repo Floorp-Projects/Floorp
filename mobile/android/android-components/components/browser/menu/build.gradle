@@ -12,7 +12,7 @@ android {
         minSdkVersion Config.minSdkVersion
         targetSdkVersion Config.targetSdkVersion
     }
-    
+
     buildTypes {
         release {
             minifyEnabled false
@@ -35,10 +35,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "menu"
+archivesBaseName = "browser-menu"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'menu',
+        'browser-menu',
         'A customizable menu for browsers.')

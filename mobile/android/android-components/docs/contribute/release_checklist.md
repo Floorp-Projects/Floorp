@@ -20,9 +20,7 @@ permalink: /contributing/release-checklist
   - Tag: v2.0 (_v_ prefix!)
   - Release 2.0
 - Wait for taskcluster to complete successfully
-- Check that new versions are on jcenter:
-  - [Components on jcenter](http://jcenter.bintray.com/org/mozilla/components/)
-- Request new packages to be linked to jcenter (if there are any new ones)
+- Check that new versions are on [maven.mozilla.org](https://maven.mozilla.org/?prefix=maven2/org/mozilla/components/):
 
 ## After the release
 

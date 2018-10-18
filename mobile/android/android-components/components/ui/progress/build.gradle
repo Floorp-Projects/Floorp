@@ -33,10 +33,10 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "progress"
+archivesBaseName = "ui-progress"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
-        'org.mozilla.photon',
-        'progress',
+        'org.mozilla.components',
+        'ui-progress',
         'An animated progress bar following the Photon Design System.')

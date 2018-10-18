@@ -24,10 +24,10 @@ dependencies {
     // None
 }
 
-archivesBaseName = "fonts"
+archivesBaseName = "ui-fonts"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
-        'org.mozilla.photon',
-        'fonts',
+        'org.mozilla.components',
+        'ui-fonts',
         'Convenience accessor for fonts used by Mozilla.')
