@@ -60,7 +60,7 @@ class AboutDebuggingApp extends Component {
     super(props);
 
     this.state = {
-      selectedPanelId: defaultPanelId
+      selectedPanelId: window.location.hash.substr(1) || defaultPanelId
     };
 
     this.onHashChange = this.onHashChange.bind(this);
@@ -69,7 +69,6 @@ class AboutDebuggingApp extends Component {
 
   componentDidMount() {
     window.addEventListener("hashchange", this.onHashChange);
-    this.onHashChange();
 
     // aboutdebugging is not connected with a toolbox so we pass -1 as the
     // toolbox session id.
