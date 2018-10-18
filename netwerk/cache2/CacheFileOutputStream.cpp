@@ -40,6 +40,7 @@ NS_INTERFACE_MAP_BEGIN(CacheFileOutputStream)
   NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncOutputStream)
   NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY(nsITellableStream)
   NS_INTERFACE_MAP_ENTRY(mozilla::net::CacheFileChunkListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutputStream)
 NS_INTERFACE_MAP_END
@@ -289,6 +290,17 @@ CacheFileOutputStream::Seek(int32_t whence, int64_t offset)
 }
 
 NS_IMETHODIMP
+CacheFileOutputStream::SetEOF()
+{
+  MOZ_ASSERT(false, "CacheFileOutputStream::SetEOF() not implemented");
+  // Right now we don't use SetEOF(). If we ever need this method, we need
+  // to think about what to do with input streams that already points beyond
+  // new EOF.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsITellableStream
+NS_IMETHODIMP
 CacheFileOutputStream::Tell(int64_t *_retval)
 {
   CacheFileAutoLock lock(mFile);
@@ -306,16 +318,6 @@ CacheFileOutputStream::Tell(int64_t *_retval)
 
   LOG(("CacheFileOutputStream::Tell() [this=%p, retval=%" PRId64 "]", this, *_retval));
   return NS_OK;
-}
-
-NS_IMETHODIMP
-CacheFileOutputStream::SetEOF()
-{
-  MOZ_ASSERT(false, "CacheFileOutputStream::SetEOF() not implemented");
-  // Right now we don't use SetEOF(). If we ever need this method, we need
-  // to think about what to do with input streams that already points beyond
-  // new EOF.
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // CacheFileChunkListener

@@ -34,6 +34,7 @@ public:
   NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSITELLABLESTREAM
 
   // |aInputStream| must be a non-blocking, non-async inputSteam.
   static nsresult
@@ -56,6 +57,7 @@ private:
   nsICloneableInputStream* MOZ_NON_OWNING_REF mWeakCloneableInputStream;
   nsIIPCSerializableInputStream* MOZ_NON_OWNING_REF mWeakIPCSerializableInputStream;
   nsISeekableStream* MOZ_NON_OWNING_REF mWeakSeekableInputStream;
+  nsITellableStream* MOZ_NON_OWNING_REF mWeakTellableInputStream;
 
   Mutex mLock;
 
