@@ -74,7 +74,7 @@ if __name__ == "__main__":
     branch, head_rev = calculate_branch_and_head_rev(ROOT)
 
     params = {
-        'repository_url': 'https://github.com/mozilla-mobile/focus-android'
+        'repository_url': 'https://github.com/mozilla-mobile/focus-android',
         'head_rev': head_rev,
         'branch': branch,
         'cron_task_id': os.environ.get('CRON_TASK_ID', '<cron_task_id>')
