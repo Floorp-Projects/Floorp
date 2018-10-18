@@ -17,7 +17,7 @@ const EDIT_ADDRESS_KEYWORDS = [
   "givenName", "additionalName", "familyName", "organization2", "streetAddress",
   "state", "province", "city", "country", "zip", "postalCode", "email", "tel",
 ];
-const MANAGE_CREDITCARDS_KEYWORDS = ["manageCreditCardsTitle", "addNewCreditCardTitle"];
+const MANAGE_CREDITCARDS_KEYWORDS = ["manageCreditCardsTitle", "addNewCreditCardTitle", "showCreditCardsBtnLabel"];
 const EDIT_CREDITCARD_KEYWORDS = ["cardNumber", "nameOnCard", "cardExpiresMonth", "cardExpiresYear", "cardNetwork"];
 const FIELD_STATES = {
   NORMAL: "NORMAL",

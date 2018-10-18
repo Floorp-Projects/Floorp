@@ -32,7 +32,7 @@ function load_channel(url) {
   URL = url; // save this to open the alt data channel later
   var chan = make_channel(url);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType("text/binary");
+  cc.preferAlternativeDataType("text/binary", "");
   chan.asyncOpen2(new ChannelListener(readTextData, null));
 }
 
@@ -64,7 +64,7 @@ function readTextData(request, buffer)
 function openAltChannel() {
   var chan = make_channel(URL);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType("text/parent-binary");
+  cc.preferAlternativeDataType("text/parent-binary", "");
   chan.asyncOpen2(new ChannelListener(readAltData, null));
 }
 

@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Lītōšonys nūsacejumi",
   "firstrun_privacy_notice": "Privatuma pīzeime",
   "firstrun_continue_to_login": "Turpynōt",
-  "firstrun_skip_login": "Izlaist itū sūli"
+  "firstrun_skip_login": "Izlaist itū sūli",
+  "context_menu_title": "Open menu"
 };

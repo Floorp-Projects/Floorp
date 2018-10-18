@@ -1,6 +1,5 @@
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SimpleTest.js */
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/EventUtils.js */
-/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/AddTask.js */
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 /* eslint-disable no-unused-vars */
 
@@ -202,15 +201,6 @@ async function cleanUpStorage() {
   await cleanUpCreditCards();
 }
 
-async function canTestOSKeyStoreLogin() {
-  let {canTest} = await invokeAsyncChromeTask("FormAutofillTest:CanTestOSKeyStoreLogin", "FormAutofillTest:CanTestOSKeyStoreLoginResult");
-  return canTest;
-}
-
-async function waitForOSKeyStoreLogin(login = false) {
-  await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", "FormAutofillTest:OSKeyStoreLoggedIn", {login});
-}
-
 function patchRecordCCNumber(record) {
   const number = record["cc-number"];
   const ccNumberFmt = {
@@ -271,12 +261,6 @@ function formAutoFillCommonSetup() {
     if (gPopupShownListener) {
       gPopupShownListener({results});
     }
-  });
-
-  add_task(async function setup() {
-    formFillChromeScript.sendAsyncMessage("setup");
-    info(`expecting the storage setup`);
-    await formFillChromeScript.promiseOneMessage("setup-finished");
   });
 
   SimpleTest.registerCleanupFunction(async () => {

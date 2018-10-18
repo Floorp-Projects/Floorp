@@ -458,6 +458,7 @@ add_task(async function checkUnknownIssuerLearnMoreLink() {
 });
 
 add_task(async function checkCautionClass() {
+  Services.prefs.setBoolPref("browser.security.newcerterrorpage.enabled", true);
   info("Checking that are potentially more dangerous get a 'caution' class");
   for (let useFrame of [false, true]) {
     let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
@@ -480,9 +481,11 @@ add_task(async function checkCautionClass() {
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
+  Services.prefs.clearUserPref("browser.security.newcerterrorpage.enabled");
 });
 
 add_task(async function checkViewCertificate() {
+  Services.prefs.setBoolPref("browser.security.newcerterrorpage.enabled", true);
   info("Loading a cert error and checking that the certificate can be shown.");
   for (let useFrame of [false, true]) {
     let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
@@ -506,6 +509,7 @@ add_task(async function checkViewCertificate() {
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
+  Services.prefs.clearUserPref("browser.security.newcerterrorpage.enabled");
 });
 
 function getCertChain(securityInfoAsString) {
