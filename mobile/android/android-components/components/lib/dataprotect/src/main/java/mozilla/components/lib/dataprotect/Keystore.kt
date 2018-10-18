@@ -135,7 +135,7 @@ internal open class KeyStoreWrapper {
  * @constructor Creates a new instance around a key identified by the given label
  */
 @TargetApi(Build.VERSION_CODES.M)
-class Keystore(val label: String) {
+open class Keystore(val label: String) {
     internal var wrapper: KeyStoreWrapper = KeyStoreWrapper()
 
     private fun getKey(): SecretKey? =
@@ -194,7 +194,7 @@ class Keystore(val label: String) {
      * @param plain The "plaintext" data to encrypt
      * @return The encrypted data to be stored
      */
-    fun encryptBytes(plain: ByteArray): ByteArray {
+    open fun encryptBytes(plain: ByteArray): ByteArray {
         // 5116-style interface  = [ inputs || ciphertext || atag ]
         // - inputs = [ version = 0x02 || cipher.iv (always 12 bytes) ]
         // - cipher.doFinal() provides [ ciphertext || atag ]
@@ -215,7 +215,7 @@ class Keystore(val label: String) {
      * @param encrypted The encrypted data to decrypt
      * @return The decrypted "plaintext" data
      */
-    fun decryptBytes(encrypted: ByteArray): ByteArray {
+    open fun decryptBytes(encrypted: ByteArray): ByteArray {
         val version = encrypted[0].toInt()
         if (version != ENCRYPTED_VERSION) {
             throw IllegalArgumentException("unsupported encrypted version: $version")
