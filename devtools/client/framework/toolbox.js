@@ -2345,7 +2345,7 @@ Toolbox.prototype = {
     await this.initInspector();
 
     // Only enable frame highlighting when the top level document is targeted
-    if (this._supportsFrameHighlight && this.rootFrameSelected) {
+    if (this.rootFrameSelected) {
       const frameActor = await this.walker.getNodeActorFromWindowID(frameId);
       this.highlighterUtils.highlightNodeFront(frameActor);
     }
@@ -2685,11 +2685,6 @@ Toolbox.prototype = {
 
         const autohide = !flags.testing;
         this._highlighter = await this._inspector.getHighlighter(autohide);
-        if (!("_supportsFrameHighlight" in this)) {
-          // Only works with FF58+ targets
-          this._supportsFrameHighlight =
-            await this.target.actorHasMethod("domwalker", "getNodeActorFromWindowID");
-        }
       }.bind(this))();
     }
     return this._initInspector;
