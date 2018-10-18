@@ -54,6 +54,7 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
   (define appPath (param "APP_PATH"))
   (define hasProfileDir (param "HAS_SANDBOXED_PROFILE"))
   (define profileDir (param "PROFILE_DIR"))
+  (define hasWindowServer (param "HAS_WINDOW_SERVER"))
   (define home-path (param "HOME_PATH"))
   (define debugWriteDir (param "DEBUG_WRITE_DIR"))
   (define testingReadPath1 (param "TESTING_READ_PATH1"))
@@ -191,8 +192,9 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
     (allow mach-lookup (global-name parentPort)))
   (if (string? crashPort)
     (allow mach-lookup (global-name crashPort)))
+  (if (string=? hasWindowServer "TRUE")
+    (allow mach-lookup (global-name "com.apple.windowserver.active")))
   (allow mach-lookup (global-name "com.apple.coreservices.launchservicesd"))
-  (allow mach-lookup (global-name "com.apple.windowserver.active"))
   (allow mach-lookup (global-name "com.apple.lsd.mapdb"))
 
   (if (>= macosMinorVersion 13)
