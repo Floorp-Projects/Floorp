@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "политиката за лични данни",
   "firstrun_continue_to_login": "Продължаване",
   "firstrun_skip_login": "Пропускане",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Научете повече"
 };

@@ -172,6 +172,20 @@ add_task(async function check_totalBookmarksCount() {
   await PlacesUtils.bookmarks.remove(bookmark.guid);
 });
 
+add_task(async function check_needsUpdate() {
+  QueryCache.queries.CheckBrowserNeedsUpdate.setUp(true);
+
+  const message = {id: "foo", targeting: "needsUpdate"};
+
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "Should select message because update count > 0");
+
+  QueryCache.queries.CheckBrowserNeedsUpdate.setUp(false);
+
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), null,
+    "Should not select message because update count == 0");
+});
+
 add_task(async function checksearchEngines() {
   const result = await ASRouterTargeting.Environment.searchEngines;
   const expectedInstalled = Services.search.getVisibleEngines()

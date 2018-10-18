@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Папулярныя тэмы:",
   "pocket_read_even_more": "Іншыя навіны",
   "pocket_more_reccommendations": "Больш рэкамендацый",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Як гэта працуе",
   "pocket_cta_button": "Атрымаць Pocket",
   "pocket_cta_text": "Захоўвайце ўлюбёныя гісторыі ў Pocket, і сілкуйце свой розум добрай чытанкай.",
   "highlights_empty_state": "Пачніце агляданне, і мы пакажам вам тут некаторыя з найлепшых артыкулаў, відэаролікаў і іншых старонак, якія вы нядаўна наведалі або дадалі ў закладкі.",
@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "паведамленнем аб прыватнасці",
   "firstrun_continue_to_login": "Працягнуць",
   "firstrun_skip_login": "Прапусціць гэты крок",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Падрабязней"
 };

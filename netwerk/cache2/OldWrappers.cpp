@@ -396,6 +396,11 @@ NS_IMETHODIMP _OldCacheEntryWrapper::GetAltDataSize(int64_t *aSize)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP _OldCacheEntryWrapper::GetAltDataType(nsACString &aType)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP _OldCacheEntryWrapper::GetPersistent(bool *aPersistToDisk)
 {
   if (!mOldDesc) {

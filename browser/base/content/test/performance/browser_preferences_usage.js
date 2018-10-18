@@ -98,7 +98,7 @@ add_task(async function startup() {
       // This is accessed in debug only.
     },
     "extensions.getAddons.cache.enabled": {
-      min: 5,
+      min: 4,
       max: 55,
     },
     "chrome.override_package.global": {
