@@ -73,6 +73,9 @@ class Table : public ShareableBase<Table>
     bool external() const { return external_; }
     TableKind kind() const { return kind_; }
     bool isTypedFunction() const { return kind_ == TableKind::TypedFunction; }
+    bool isFunction() const {
+        return kind_ == TableKind::AnyFunction || kind_ == TableKind::TypedFunction;
+    }
     uint32_t length() const { return length_; }
     Maybe<uint32_t> maximum() const { return maximum_; }
 

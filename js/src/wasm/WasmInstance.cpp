@@ -235,7 +235,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     return true;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -243,7 +243,7 @@ Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t a
     return instance->callImport(cx, funcImportIndex, argc, argv, &rval);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -255,7 +255,7 @@ Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t ar
     return ToInt32(cx, rval, (int32_t*)argv);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -263,7 +263,7 @@ Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t ar
     return false;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -291,7 +291,7 @@ ToRef(JSContext* cx, HandleValue val, void* addr)
     return true;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_ref(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -302,7 +302,7 @@ Instance::callImport_ref(Instance* instance, int32_t funcImportIndex, int32_t ar
     return ToRef(cx, rval, argv);
 }
 
-/* static */ uint32_t
+/* static */ uint32_t /* infallible */
 Instance::growMemory_i32(Instance* instance, uint32_t delta)
 {
     MOZ_ASSERT(!instance->isAsmJS());
@@ -319,7 +319,7 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta)
     return ret;
 }
 
-/* static */ uint32_t
+/* static */ uint32_t /* infallible */
 Instance::currentMemory_i32(Instance* instance)
 {
     // This invariant must hold when running Wasm code. Assert it here so we can
@@ -361,19 +361,19 @@ PerformWait(Instance* instance, uint32_t byteOffset, T value, int64_t timeout_ns
     }
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; nonnegative result for ok */
 Instance::wait_i32(Instance* instance, uint32_t byteOffset, int32_t value, int64_t timeout_ns)
 {
     return PerformWait<int32_t>(instance, byteOffset, value, timeout_ns);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; nonnegative result for ok */
 Instance::wait_i64(Instance* instance, uint32_t byteOffset, int64_t value, int64_t timeout_ns)
 {
     return PerformWait<int64_t>(instance, byteOffset, value, timeout_ns);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; nonnegative for ok */
 Instance::wake(Instance* instance, uint32_t byteOffset, int32_t count)
 {
     JSContext* cx = TlsContext.get();
@@ -402,7 +402,7 @@ Instance::wake(Instance* instance, uint32_t byteOffset, int32_t count)
     return int32_t(woken);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::memCopy(Instance* instance, uint32_t dstByteOffset, uint32_t srcByteOffset, uint32_t len)
 {
     WasmMemoryObject* mem = instance->memory();
@@ -435,7 +435,7 @@ Instance::memCopy(Instance* instance, uint32_t dstByteOffset, uint32_t srcByteOf
     return -1;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::memDrop(Instance* instance, uint32_t segIndex)
 {
     MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
@@ -455,7 +455,7 @@ Instance::memDrop(Instance* instance, uint32_t segIndex)
     return 0;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint32_t len)
 {
     WasmMemoryObject* mem = instance->memory();
@@ -484,7 +484,7 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
     return -1;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
                   uint32_t len, uint32_t segIndex)
 {
@@ -538,7 +538,7 @@ Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
     return -1;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len)
 {
     const SharedTable& table = instance->tables()[0];
@@ -580,7 +580,7 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, 
     return -1;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::tableDrop(Instance* instance, uint32_t segIndex)
 {
     MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
@@ -644,7 +644,7 @@ Instance::initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffs
     }
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
                     uint32_t len, uint32_t segIndex)
 {
@@ -695,7 +695,55 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
     return -1;
 }
 
-/* static */ void
+/* static */ void* /* (void*)-1 to signal trap; other pointer value for ok */
+Instance::tableGet(Instance* instance, uint32_t index)
+{
+    const Table& table = *instance->tables()[0];
+    MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
+    if (index >= table.length()) {
+        JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
+        return (void*)-1;
+    }
+    return table.objectArray()[index];
+}
+
+/* static */ uint32_t /* infallible */
+Instance::tableGrow(Instance* instance, uint32_t delta, void* initValue)
+{
+    RootedObject obj(TlsContext.get(), (JSObject*)initValue);
+    Table& table = *instance->tables()[0];
+    MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
+
+    uint32_t oldSize = table.grow(delta, TlsContext.get());
+    if (oldSize != uint32_t(-1) && initValue != nullptr) {
+        for (uint32_t i = 0; i < delta; i++) {
+            table.objectArray()[oldSize + i] = obj.get();
+        }
+    }
+    return oldSize;
+}
+
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
+Instance::tableSet(Instance* instance, uint32_t index, void* value)
+{
+    Table& table = *instance->tables()[0];
+    MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
+    if (index >= table.length()) {
+        JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
+        return -1;
+    }
+    table.objectArray()[index] = (JSObject*)value;
+    return 0;
+}
+
+/* static */ uint32_t /* infallible */
+Instance::tableSize(Instance* instance)
+{
+    Table& table = *instance->tables()[0];
+    return table.length();
+}
+
+/* static */ void /* infallible */
 Instance::postBarrier(Instance* instance, gc::Cell** location)
 {
     MOZ_ASSERT(location);
@@ -708,7 +756,7 @@ Instance::postBarrier(Instance* instance, gc::Cell** location)
 // When we fail to allocate we return a nullptr; the wasm side must check this
 // and propagate it as an error.
 
-/* static */ void*
+/* static */ void* /* null on OOM, otherwise a pointer */
 Instance::structNew(Instance* instance, uint32_t typeIndex)
 {
     JSContext* cx = TlsContext.get();
@@ -716,7 +764,7 @@ Instance::structNew(Instance* instance, uint32_t typeIndex)
     return TypedObject::createZeroed(cx, typeDescr);
 }
 
-/* static */ void*
+/* static */ void* /* infallible */
 Instance::structNarrow(Instance* instance, uint32_t mustUnboxAnyref, uint32_t outputTypeIndex,
                        void* maybeNullPtr)
 {

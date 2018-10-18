@@ -3186,6 +3186,85 @@ EmitMemOrTableInit(FunctionCompiler& f, bool isMem)
 }
 #endif // ENABLE_WASM_BULKMEM_OPS
 
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+// About these implementations: table.{get,grow,set} on table(anyfunc) is
+// rejected by the verifier, while table.{get,grow,set} on table(anyref)
+// requires gc_feature_opt_in and will always be handled by the baseline
+// compiler; we should never get here in that case.
+//
+// table.size must however be handled properly here.
+
+static bool
+EmitTableGet(FunctionCompiler& f)
+{
+    MDefinition* index;
+    if (!f.iter().readTableGet(&index)) {
+        return false;
+    }
+
+    MOZ_CRASH("Should not happen"); // See above
+}
+
+static bool
+EmitTableGrow(FunctionCompiler& f)
+{
+    MDefinition* delta;
+    MDefinition* initValue;
+    if (!f.iter().readTableGrow(&delta, &initValue)) {
+        return false;
+    }
+
+    MOZ_CRASH("Should not happen"); // See above
+}
+
+static bool
+EmitTableSet(FunctionCompiler& f)
+{
+    MDefinition* index;
+    MDefinition* value;
+    if (!f.iter().readTableSet(&index, &value)) {
+        return false;
+    }
+
+    MOZ_CRASH("Should not happen"); // See above
+}
+
+static bool
+EmitTableSize(FunctionCompiler& f)
+{
+    if (!f.iter().readTableSize()) {
+        return false;
+    }
+
+    if (f.inDeadCode()) {
+        return false;
+    }
+
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+    CallCompileState args(f, lineOrBytecode);
+    if (!f.startCall(&args)) {
+        return false;
+    }
+
+    if (!f.passInstance(&args)) {
+        return false;
+    }
+
+    if (!f.finishCall(&args)) {
+        return false;
+    }
+
+    MDefinition* ret;
+    if (!f.builtinInstanceMethodCall(SymbolicAddress::TableSize, args, ValType::I32, &ret)) {
+        return false;
+    }
+
+    f.iter().setResult(ret);
+    return true;
+}
+#endif  // ENABLE_WASM_GENERALIZED_TABLES
+
 static bool
 EmitBodyExprs(FunctionCompiler& f)
 {
@@ -3625,6 +3704,16 @@ EmitBodyExprs(FunctionCompiler& f)
                 CHECK(EmitMemOrTableDrop(f, /*isMem=*/false));
               case uint16_t(MiscOp::TableInit):
                 CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
+#endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+              case uint16_t(MiscOp::TableGet):
+                CHECK(EmitTableGet(f));
+              case uint16_t(MiscOp::TableGrow):
+                CHECK(EmitTableGrow(f));
+              case uint16_t(MiscOp::TableSet):
+                CHECK(EmitTableSet(f));
+              case uint16_t(MiscOp::TableSize):
+                CHECK(EmitTableSize(f));
 #endif
 #ifdef ENABLE_WASM_GC
               case uint16_t(MiscOp::StructNew):
