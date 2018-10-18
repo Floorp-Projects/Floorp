@@ -71,6 +71,7 @@
 #include "fennec/Telemetry.h"
 #include "fennec/ThumbnailHelper.h"
 #include "ScreenHelperAndroid.h"
+#include "WebExecutorSupport.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #define EVLOG(args...)  ALOG(args)
@@ -433,6 +434,7 @@ nsAppShell::nsAppShell()
         mozilla::GeckoScreenOrientation::Init();
         mozilla::GeckoSystemStateListener::Init();
         mozilla::PrefsHelper::Init();
+        mozilla::widget::WebExecutorSupport::Init();
         nsWindow::InitNatives();
 
         if (jni::IsFennec()) {
