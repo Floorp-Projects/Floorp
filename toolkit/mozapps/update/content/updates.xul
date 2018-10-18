@@ -20,6 +20,7 @@
 
 <wizard id="updates"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="&updateWizard.title;"
         windowtype="Update:Wizard"
         style="width: auto; height: auto"
@@ -49,7 +50,7 @@
     <vbox class="update-content" flex="1">
       <label>&updateCheck.label;</label>
       <separator class="thin"/>
-      <progressmeter id="checkingProgress" mode="undetermined"/>
+      <html:progress id="checkingProgress"/>
     </vbox>
   </wizardpage>
 
@@ -119,7 +120,7 @@
     <updateheader label="&downloadPage.title;"/>
     <vbox class="update-content" flex="1">
       <hbox id="downloadStatusProgress">
-        <progressmeter id="downloadProgress" mode="undetermined" flex="1"/>
+        <html:progress id="downloadProgress" max="100"/>
         <button id="pauseButton" oncommand="gDownloadingPage.onPause();"
                 paused="false"/>
       </hbox>

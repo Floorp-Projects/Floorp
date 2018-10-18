@@ -14,7 +14,6 @@ var EXPORTED_SYMBOLS = [
 ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -24,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
+
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 var gDownloadElementButtons = {
   cancel: {
@@ -177,7 +178,6 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
           </stack>
           <vbox class="downloadContainer" flex="1" pack="center">
             <description class="downloadTarget" crop="center"/>
-            <progressmeter class="downloadProgress" min="0" max="100"/>
             <description class="downloadDetails downloadDetailsNormal"
                          crop="end"/>
             <description class="downloadDetails downloadDetailsHover"
@@ -201,7 +201,6 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     for (let [propertyName, selector] of [
       ["_downloadTypeIcon", ".downloadTypeIcon"],
       ["_downloadTarget", ".downloadTarget"],
-      ["_downloadProgress", ".downloadProgress"],
       ["_downloadDetailsNormal", ".downloadDetailsNormal"],
       ["_downloadDetailsHover", ".downloadDetailsHover"],
       ["_downloadDetailsButtonHover", ".downloadDetailsButtonHover"],
@@ -209,6 +208,13 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     ]) {
       this[propertyName] = this.element.querySelector(selector);
     }
+
+    // HTML elements can be created directly without using parseXULToFragment.
+    let progress = this._downloadProgress =
+                   document.createElementNS(HTML_NS, "progress");
+    progress.className = "downloadProgress";
+    progress.setAttribute("max", "100");
+    this._downloadTarget.insertAdjacentElement("afterend", progress);
   },
 
   /**
@@ -270,28 +276,12 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    *        True to display the progress bar style for paused downloads.
    */
   showProgress(mode, value, paused) {
-    // The "undetermined" mode of the progressmeter is implemented with a
-    // different element structure, and with support from platform code as well.
-    // On Linux only, this mode isn't compatible with the custom styling that we
-    // apply separately with the "progress-undetermined" attribute.
-    this._downloadProgress.setAttribute("mode",
-      AppConstants.platform == "linux" ? "normal" : mode);
     if (mode == "undetermined") {
-      this._downloadProgress.setAttribute("progress-undetermined", "true");
+      this._downloadProgress.removeAttribute("value");
     } else {
-      this._downloadProgress.removeAttribute("progress-undetermined");
+      this._downloadProgress.setAttribute("value", value);
     }
-    this._downloadProgress.setAttribute("value", value);
-    if (paused) {
-      this._downloadProgress.setAttribute("paused", "true");
-    } else {
-      this._downloadProgress.removeAttribute("paused");
-    }
-
-    // Dispatch the ValueChange event for accessibility.
-    let event = this.element.ownerDocument.createEvent("Events");
-    event.initEvent("ValueChange", true, true);
-    this._downloadProgress.dispatchEvent(event);
+    this._downloadProgress.toggleAttribute("paused", !!paused);
   },
 
   /**
