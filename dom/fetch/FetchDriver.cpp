@@ -734,7 +734,7 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
   if (!aPreferredAlternativeDataType.IsEmpty()) {
     nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
     if (cic) {
-      cic->PreferAlternativeDataType(aPreferredAlternativeDataType, EmptyCString());
+      cic->PreferAlternativeDataType(aPreferredAlternativeDataType);
       MOZ_ASSERT(!mAltDataListener);
       mAltDataListener =
         new AlternativeDataStreamListener(this, chan, aPreferredAlternativeDataType);

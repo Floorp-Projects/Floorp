@@ -1587,11 +1587,11 @@ private:
     nsresult rv = mInterceptedChannel->GetChannel(getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(rv, false);
 
+    nsAutoCString alternativeDataType;
     nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(channel);
-    if (cic && !cic->PreferredAlternativeDataTypes().IsEmpty()) {
-      // TODO: the internal request probably needs all the preferred types.
-      nsAutoCString alternativeDataType;
-      alternativeDataType.Assign(mozilla::Get<0>(cic->PreferredAlternativeDataTypes()[0]));
+    if (cic &&
+        NS_SUCCEEDED(cic->GetPreferredAlternativeDataType(alternativeDataType)) &&
+        !alternativeDataType.IsEmpty()) {
       internalReq->SetPreferredAlternativeDataType(alternativeDataType);
     }
 

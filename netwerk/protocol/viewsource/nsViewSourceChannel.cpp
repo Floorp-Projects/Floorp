@@ -1146,12 +1146,3 @@ nsViewSourceChannel::LogBlockedCORSRequest(const nsAString& aMessage,
   }
   return mHttpChannel->LogBlockedCORSRequest(aMessage, aCategory);
 }
-
-const nsTArray<mozilla::Tuple<nsCString, nsCString>>&
-nsViewSourceChannel::PreferredAlternativeDataTypes()
-{
-    if (mCacheInfoChannel) {
-        return mCacheInfoChannel->PreferredAlternativeDataTypes();
-    }
-    return mEmptyArray;
-}
