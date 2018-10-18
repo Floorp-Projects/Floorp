@@ -1012,11 +1012,10 @@ var View = {
     let elt = document.createElement("td");
     if (typeof name == "string") {
       elt.textContent = name;
+    } else if (name.title) {
+      document.l10n.setAttributes(elt, name.id, {title: name.title});
     } else {
-      if (name.title)
-        document.l10n.setAttributes(elt, name.id, {title: name.title});
-      else
-        document.l10n.setAttributes(elt, name.id);
+      document.l10n.setAttributes(elt, name.id);
     }
     if (image)
       elt.style.backgroundImage = `url('${image}')`;
