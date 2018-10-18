@@ -179,6 +179,9 @@ pref("dom.permissions.revoke.enable", false);
 // Enable exposing timeToNonBlankPaint
 pref("dom.performance.time_to_non_blank_paint.enabled", false);
 
+// Enable exposing timeToContentfulPaint
+pref("dom.performance.time_to_contentful_paint.enabled", false);
+
 // Enable exposing timeToDOMContentFlushed
 pref("dom.performance.time_to_dom_content_flushed.enabled", false);
 

@@ -52,6 +52,8 @@ nsDOMNavigationTiming::Clear()
   mDOMContentLoadedEventStart = TimeStamp();
   mDOMContentLoadedEventEnd = TimeStamp();
   mDOMComplete = TimeStamp();
+  mContentfulPaint = TimeStamp();
+  mNonBlankPaint = TimeStamp();
 
   mDocShellHasBeenActiveSinceNavigationStart = false;
 }
@@ -308,7 +310,7 @@ nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer)
 {
   // Check TTI: see if it's been 5 seconds since the last Long Task
   TimeStamp now = TimeStamp::Now();
-  MOZ_RELEASE_ASSERT(!mNonBlankPaint.IsNull(), "TTI timeout with no non-blank-paint?");
+  MOZ_RELEASE_ASSERT(!mContentfulPaint.IsNull(), "TTI timeout with no contentful-paint?");
 
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   TimeStamp lastLongTaskEnded;
@@ -323,11 +325,10 @@ nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer)
       return;
     }
   }
-  // To correctly implement TTI/TTFI as proposed, we'd need to use
-  // FirstContentfulPaint (FCP, which we have not yet implemented) instead
-  // of FirstNonBlankPaing (FNBP) to start at, and not fire it until there
-  // are no more than 2 network loads.  By the proposed definition, without
-  // that we're closer to TimeToFirstInteractive.
+  // To correctly implement TTI/TTFI as proposed, we'd need to not
+  // fire it until there are no more than 2 network loads.  By the
+  // proposed definition, without that we're closer to
+  // TimeToFirstInteractive.
 
   // XXX check number of network loads, and if > 2 mark to check if loads
   // decreases to 2 (or record that point and let the normal timer here
@@ -341,7 +342,7 @@ nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer)
     mTTFI = MaxWithinWindowBeginningAtMin(lastLongTaskEnded, mDOMContentLoadedEventEnd,
                                           TimeDuration::FromMilliseconds(TTI_WINDOW_SIZE_MS));
     if (mTTFI.IsNull()) {
-      mTTFI = mNonBlankPaint;
+      mTTFI = mContentfulPaint;
     }
   }
   // XXX Implement TTI via check number of network loads, and if > 2 mark
@@ -399,15 +400,6 @@ nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
   }
 #endif
 
-  if (!mTTITimer) {
-    mTTITimer = NS_NewTimer();
-  }
-
-  // TTI is first checked 5 seconds after the FCP (non-blank-paint is very close to FCP).
-  mTTITimer->InitWithNamedFuncCallback(TTITimeoutCallback, this, TTI_WINDOW_SIZE_MS,
-                                       nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                                       "nsDOMNavigationTiming::TTITimeout");
-
   if (mDocShellHasBeenActiveSinceNavigationStart) {
     if (net::nsHttp::IsBeforeLastActiveTabLoadOptimization(mNavigationStart)) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_NON_BLANK_PAINT_NETOPT_MS,
@@ -423,6 +415,42 @@ nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
                                    mNavigationStart,
                                    mNonBlankPaint);
   }
+}
+
+void
+nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mNavigationStart.IsNull());
+
+  if (!mContentfulPaint.IsNull()) {
+    return;
+  }
+
+  mContentfulPaint = TimeStamp::Now();
+
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active()) {
+    TimeDuration elapsed = mContentfulPaint - mNavigationStart;
+    nsAutoCString spec;
+    if (mLoadedURI) {
+      mLoadedURI->GetSpec(spec);
+    }
+    nsPrintfCString marker("Contentful paint after %dms for URL %s, %s",
+                           int(elapsed.ToMilliseconds()), spec.get(),
+                           mDocShellHasBeenActiveSinceNavigationStart ? "foreground tab" : "this tab was inactive some of the time between navigation start and first non-blank paint");
+    profiler_add_marker(marker.get());
+  }
+#endif
+
+  if (!mTTITimer) {
+    mTTITimer = NS_NewTimer();
+  }
+
+  // TTI is first checked 5 seconds after the FCP (non-blank-paint is very close to FCP).
+  mTTITimer->InitWithNamedFuncCallback(TTITimeoutCallback, this, TTI_WINDOW_SIZE_MS,
+                                       nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                                       "nsDOMNavigationTiming::TTITimeout");
 }
 
 void

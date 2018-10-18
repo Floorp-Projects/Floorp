@@ -34,7 +34,8 @@ enum
 
 enum DisplayItemFlags
 {
-  TYPE_RENDERS_NO_IMAGES = 1 << 0
+  TYPE_RENDERS_NO_IMAGES = 1 << 0,
+  TYPE_IS_CONTENTFUL = 1 << 1
 };
 
 inline const char*
