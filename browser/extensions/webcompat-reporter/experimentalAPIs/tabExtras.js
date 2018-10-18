@@ -47,8 +47,8 @@ function getInfoFrameScript(messageName) {
     return messages.map(evt => {
       const {columnNumber, filename, level, lineNumber, timeStamp} = evt;
       const args = evt.arguments.map(arg => {
-        return arg.toString();
-      });
+        return "" + arg;
+      }).join(", ");
       const message = `[console.${level}(${args}) ${filename}:${lineNumber}:${columnNumber}]`;
       return {timeStamp, message};
     });

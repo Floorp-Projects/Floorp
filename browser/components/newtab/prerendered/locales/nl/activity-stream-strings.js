@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacyverklaring",
   "firstrun_continue_to_login": "Doorgaan",
   "firstrun_skip_login": "Deze stap overslaan",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Meer info"
 };

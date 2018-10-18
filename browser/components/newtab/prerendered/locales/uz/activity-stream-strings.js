@@ -107,6 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
   "firstrun_skip_login": "Skip this step",
+  "context_menu_title": "Open menu",
   "prefs_restore_defaults_button": "Asliga tiklash",
   "settings_pane_header": "Yangi ichki oyna parametrlari",
   "settings_pane_body2": "Bu sahifada nimani ko‘rishni xohlasangiz, o‘shani tanlang.",

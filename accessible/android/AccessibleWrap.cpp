@@ -228,16 +228,18 @@ AccessibleWrap::CreateBundle(int32_t aParentID,
 
   nsAutoString geckoRole;
   nsAutoString roleDescription;
-  nsAutoString className;
-  GetAndroidRoleAndClass(aRole, geckoRole, roleDescription, className);
+  int32_t androidClass = java::SessionAccessibility::CLASSNAME_VIEW;
   if (VirtualViewID() == kNoID) {
-    className.AssignLiteral("android.webkit.WebView");
-    roleDescription.AssignLiteral("");
+    androidClass = java::SessionAccessibility::CLASSNAME_WEBVIEW;
+  } else {
+    GetRoleDescription(aRole, geckoRole, roleDescription);
+    androidClass = GetAndroidClass(aRole);
   }
+
   GECKOBUNDLE_PUT(
     nodeInfo, "roleDescription", jni::StringParam(roleDescription));
   GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
-  GECKOBUNDLE_PUT(nodeInfo, "className", jni::StringParam(className));
+  GECKOBUNDLE_PUT(nodeInfo, "className", java::sdk::Integer::ValueOf(androidClass));
 
   if (!aTextValue.IsEmpty() &&
       (flags & java::SessionAccessibility::FLAG_EDITABLE)) {
@@ -410,10 +412,9 @@ AccessibleWrap::GetFlags(role aRole, uint64_t aState)
 }
 
 void
-AccessibleWrap::GetAndroidRoleAndClass(role aRole,
-                                       nsAString& aGeckoRole,
-                                       nsAString& aRoleDescription,
-                                       nsAString& aClassStr)
+AccessibleWrap::GetRoleDescription(role aRole,
+                                   nsAString& aGeckoRole,
+                                   nsAString& aRoleDescription)
 {
   nsresult rv = NS_OK;
 
@@ -431,6 +432,16 @@ AccessibleWrap::GetAndroidRoleAndClass(role aRole,
     return;
   }
 
+  GetAccService()->GetStringRole(aRole, aGeckoRole);
+  rv = bundle->GetStringFromName(NS_ConvertUTF16toUTF8(aGeckoRole).get(), aRoleDescription);
+  if (NS_FAILED(rv)) {
+    aRoleDescription.AssignLiteral("");
+  }
+}
+
+int32_t
+AccessibleWrap::GetAndroidClass(role aRole)
+{
 #define ROLE(geckoRole,                                                        \
              stringRole,                                                       \
              atkRole,                                                          \
@@ -440,20 +451,12 @@ AccessibleWrap::GetAndroidRoleAndClass(role aRole,
              androidClass,                                                     \
              nameRule)                                                         \
   case roles::geckoRole:                                                       \
-    rv = bundle->GetStringFromName(stringRole, aRoleDescription);              \
-    if (NS_FAILED(rv))                                                         \
-      aRoleDescription.AssignLiteral("");                                      \
-    aGeckoRole.AssignLiteral(stringRole);                                      \
-    aClassStr.AssignLiteral(androidClass);                                     \
-    break;
+    return androidClass;
 
   switch (aRole) {
 #include "RoleMap.h"
     default:
-      aRoleDescription.AssignLiteral("");
-      aGeckoRole.AssignLiteral("nothing");
-      aClassStr.AssignLiteral("android.view.View");
-      return;
+      return java::SessionAccessibility::CLASSNAME_VIEW;
   }
 
 #undef ROLE

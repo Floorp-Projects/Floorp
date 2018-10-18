@@ -647,12 +647,13 @@ CacheFile::OnMetadataRead(nsresult aResult)
       const char *altData = mMetadata->GetElement(CacheFileUtils::kAltDataKey);
       if (altData &&
           (NS_FAILED(CacheFileUtils::ParseAlternativeDataInfo(
-            altData, &mAltDataOffset, nullptr)) ||
+            altData, &mAltDataOffset, &mAltDataType)) ||
           (mAltDataOffset > mDataSize))) {
         // alt-metadata cannot be parsed or alt-data offset is invalid
         mMetadata->InitEmptyMetadata();
         isNew = true;
         mAltDataOffset = -1;
+        mAltDataType.Truncate();
         mDataSize = 0;
       } else {
         CacheFileAutoLock lock(this);
@@ -801,8 +802,6 @@ CacheFile::OpenAlternativeInputStream(nsICacheEntry *aEntryHandle,
 
   MOZ_ASSERT(mHandle || mMemoryOnly || mOpeningFile);
 
-  nsresult rv;
-
   if (NS_WARN_IF(!mReady)) {
     LOG(("CacheFile::OpenAlternativeInputStream() - CacheFile is not ready "
          "[this=%p]", this));
@@ -828,34 +827,12 @@ CacheFile::OpenAlternativeInputStream(nsICacheEntry *aEntryHandle,
     return mStatus;
   }
 
-  const char *altData = mMetadata->GetElement(CacheFileUtils::kAltDataKey);
-  MOZ_ASSERT(altData, "alt-metadata should exist but was not found!");
-  if (NS_WARN_IF(!altData)) {
-    LOG(("CacheFile::OpenAlternativeInputStream() - alt-metadata not found but "
-         "alt-data exists according to mAltDataOffset! [this=%p, ]", this));
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  int64_t offset;
-  nsCString availableAltData;
-  rv = CacheFileUtils::ParseAlternativeDataInfo(altData, &offset,
-                                                &availableAltData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ASSERT(false, "alt-metadata unexpectedly failed to parse");
-    LOG(("CacheFile::OpenAlternativeInputStream() - Cannot parse alternative "
-         "metadata! [this=%p]", this));
-    return rv;
-  }
-
-  if (availableAltData != aAltDataType) {
+  if (mAltDataType != aAltDataType) {
     LOG(("CacheFile::OpenAlternativeInputStream() - Alternative data is of a "
          "different type than requested [this=%p, availableType=%s, "
-         "requestedType=%s]", this, availableAltData.get(), aAltDataType));
+         "requestedType=%s]", this, mAltDataType.get(), aAltDataType));
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  // mAltDataOffset must be in sync with what is stored in metadata
-  MOZ_ASSERT(mAltDataOffset == offset);
 
   // Once we open input stream we no longer allow preloading of chunks without
   // input stream, i.e. we will no longer keep first few chunks preloaded when
@@ -925,6 +902,7 @@ CacheFile::OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputS
     }
     SetAltMetadata(nullptr);
     mAltDataOffset = -1;
+    mAltDataType.Truncate();
   }
 
   // Once we open output stream we no longer allow preloading of chunks without
@@ -1019,6 +997,7 @@ CacheFile::OpenAlternativeOutputStream(CacheOutputCloseListener *aCloseListener,
        "%p [this=%p]", mOutput, this));
 
   mDataAccessed = true;
+  mAltDataType = aAltDataType;
   NS_ADDREF(*_retval = mOutput);
   return NS_OK;
 }
@@ -1328,6 +1307,7 @@ CacheFile::SetAltMetadata(const char* aAltMetadata)
     mMetadata->SetElement(CacheFileUtils::kAltDataKey, nullptr);
 
     mAltDataOffset = -1;
+    mAltDataType.Truncate();
     hasAltData = false;
   }
 
@@ -2196,6 +2176,7 @@ CacheFile::RemoveOutput(CacheFileOutputStream *aOutput, nsresult aStatus)
         } else {
           SetAltMetadata(nullptr);
           mAltDataOffset = -1;
+          mAltDataType.Truncate();
         }
       }
     } else {
@@ -2378,6 +2359,19 @@ CacheFile::GetAltDataSize(int64_t *aSize)
   }
 
   *aSize = mDataSize - mAltDataOffset;
+  return NS_OK;
+}
+
+nsresult
+CacheFile::GetAltDataType(nsACString& aType)
+{
+  CacheFileAutoLock lock(this);
+
+  if (mAltDataOffset == -1) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aType = mAltDataType;
   return NS_OK;
 }
 

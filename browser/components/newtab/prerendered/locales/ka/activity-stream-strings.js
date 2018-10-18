@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "პირადი მონაცემების დაცვის განაცხადს",
   "firstrun_continue_to_login": "გაგრძელება",
   "firstrun_skip_login": "გამოტოვება",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "იხილეთ ვრცლად"
 };

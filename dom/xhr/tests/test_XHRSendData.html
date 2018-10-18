@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=464848
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="createFiles();">
+<body onload="setupAndRunTests();">
 <a target="_blank"
    href="https://bugzilla.mozilla.org/show_bug.cgi?id=464848">Mozilla Bug 464848</a>
 <p id="display">
@@ -25,6 +25,14 @@ var extensions = [".txt",".png",".jpg",".gif",".xml", "noext"];
 var fileTypes = ["text/plain", "image/png", "image/jpeg", "image/gif", "text/xml", null];
 var gen;
 var testDOMFiles;
+
+function setupAndRunTests() {
+  SpecialPowers.pushPrefEnv({set: [["dom.xhr.standard_content_type_normalization", true]]},
+  function() {
+    gen = runTests();
+    createFiles();
+  });
+}
 
 function createFiles() {
   var filesToCreate = new Array();
@@ -259,11 +267,6 @@ function is_identical_arraybuffer(ab1, ab2) {
 
 SimpleTest.finish();
 } /* runTests */
-
-SpecialPowers.pushPrefEnv({set: [["dom.xhr.standard_content_type_normalization", true]]},
-function() {
-  gen = runTests();
-});
 </script>
 </pre>
 </body>

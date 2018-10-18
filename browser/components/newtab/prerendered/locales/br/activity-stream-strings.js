@@ -74,10 +74,10 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "N'haller ket kargan ar skeudenn. Klaskit gant un URL disheñvel.",
   "pocket_read_more": "Danvezioù brudet:",
   "pocket_read_even_more": "Gwelet muioc'h a istorioù",
-  "pocket_more_reccommendations": "More Recommendations",
-  "pocket_how_it_works": "How it works",
-  "pocket_cta_button": "Get Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_more_reccommendations": "Erbedadennoù ouzhpenn",
+  "pocket_how_it_works": "Penaos ez a en-dro",
+  "pocket_cta_button": "Staliañ Pocket",
+  "pocket_cta_text": "Enrollit pennadoù a-zoare e Pocket ha magit ho spered gant lennadennoù boemus.",
   "highlights_empty_state": "Krogit da verdeiñ hag e tiskouezimp deoc’h pennadoù, videoioù ha pajennoù all gweladennet pe lakaet er sinedoù nevez ’zo.",
   "topstories_empty_state": "Aet oc'h betek penn. Distroit diwezhatoc'h evit muioc’h a istorioù digant {provider}. N’oc'h ket evit gortoz? Dibabit un danvez brudet evit klask muioc’h a bennadoù dedennus eus pep lec’h er web.",
   "manual_migration_explanation2": "Amprouit Firefox gant sinedoù, roll istor ha gerioù-tremen ur merdeer all.",
@@ -91,7 +91,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Merañ ar gevrenn",
   "section_menu_action_manage_webext": "Merañ an askouezh",
   "section_menu_action_add_topsite": "Ouzhpennañ ul lec'hienn gwellañ din",
-  "section_menu_action_add_search_engine": "Ouzhpennañ ul lusker enklask",
+  "section_menu_action_add_search_engine": "Ouzhpennañ ul lusker klask",
   "section_menu_action_move_up": "Dilec'hiañ etrezek ar c'hrec'h",
   "section_menu_action_move_down": "Dilec'hiañ etrezek an traoñ",
   "section_menu_action_privacy_notice": "Evezhiadennoù a-fet buhez prevez",
@@ -106,5 +106,7 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "divizoù arver",
   "firstrun_privacy_notice": "evezhiadennoù a-fet buhez prevez",
   "firstrun_continue_to_login": "Kenderc'hel",
-  "firstrun_skip_login": "Tremen ar bazenn-mañ"
+  "firstrun_skip_login": "Tremen ar bazenn-mañ",
+  "context_menu_title": "Open menu",
+  "pocket_learn_more": "Gouzout hiroc'h"
 };

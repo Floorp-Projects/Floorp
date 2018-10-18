@@ -240,6 +240,13 @@ interface nsICacheEntry : nsISupports
   readonly attribute long long altDataSize;
 
   /**
+  * Returns the type of the saved alt data.
+  * @throws
+  *    - NS_ERROR_NOT_AVAILABLE if alt data does not exist.
+  */
+  readonly attribute ACString altDataType;
+
+  /**
    * Opens and returns an output stream that a consumer may use to save an
    * alternate representation of the data.
    *

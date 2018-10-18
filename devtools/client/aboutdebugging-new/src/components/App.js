@@ -13,6 +13,7 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const { PAGES } = require("../constants");
+const Types = require("../types");
 
 const ConnectPage = createFactory(require("./connect/ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
@@ -28,8 +29,9 @@ class App extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       messageContexts: PropTypes.arrayOf(PropTypes.object).isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
-      runtimes: PropTypes.object.isRequired,
+      networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
+      usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
     };
   }
 
@@ -55,8 +57,9 @@ class App extends PureComponent {
       adbAddonStatus,
       dispatch,
       messageContexts,
-      runtimes,
+      networkRuntimes,
       selectedPage,
+      usbRuntimes,
     } = this.props;
 
     return LocalizationProvider(
@@ -68,8 +71,9 @@ class App extends PureComponent {
             adbAddonStatus,
             className: "app__sidebar",
             dispatch,
-            runtimes,
-            selectedPage
+            networkRuntimes,
+            selectedPage,
+            usbRuntimes,
           }
         ),
         dom.main(
@@ -84,9 +88,10 @@ class App extends PureComponent {
 const mapStateToProps = state => {
   return {
     adbAddonStatus: state.ui.adbAddonStatus,
-    runtimes: state.runtimes,
     networkLocations: state.ui.networkLocations,
+    networkRuntimes: state.runtimes.networkRuntimes,
     selectedPage: state.ui.selectedPage,
+    usbRuntimes: state.runtimes.usbRuntimes,
   };
 };
 

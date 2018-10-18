@@ -12,6 +12,7 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const { PAGES, RUNTIMES } = require("../../constants");
+const Types = require("../../types");
 loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 
 const SidebarFixedItem = createFactory(require("./SidebarFixedItem"));
@@ -27,8 +28,9 @@ class Sidebar extends PureComponent {
       adbAddonStatus: PropTypes.string,
       className: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
-      runtimes: PropTypes.object.isRequired,
+      networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
+      usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
     };
   }
 
@@ -49,8 +51,8 @@ class Sidebar extends PureComponent {
   }
 
   renderDevices() {
-    const { runtimes } = this.props;
-    if (!runtimes.networkRuntimes.length && !runtimes.usbRuntimes.length) {
+    const { networkRuntimes, usbRuntimes } = this.props;
+    if (!networkRuntimes.length && !usbRuntimes.length) {
       return Localized(
         {
           id: "about-debugging-sidebar-no-devices"
@@ -64,8 +66,8 @@ class Sidebar extends PureComponent {
     }
 
     return [
-      ...this.renderSidebarItems(GLOBE_ICON, runtimes.networkRuntimes),
-      ...this.renderSidebarItems(USB_ICON, runtimes.usbRuntimes),
+      ...this.renderSidebarItems(GLOBE_ICON, networkRuntimes),
+      ...this.renderSidebarItems(USB_ICON, usbRuntimes),
     ];
   }
 

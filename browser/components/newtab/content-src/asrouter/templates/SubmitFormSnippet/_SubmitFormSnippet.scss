@@ -3,10 +3,26 @@
   flex: 1 1 100%;
   width: 100%;
 
+  &.send_to_device_snippet {
+    text-align: center;
+
+    .message {
+      font-size: 16px;
+    }
+  }
+
   .ASRouterButton {
     &.primary {
-      font-size: 15px;
       flex: 1 1 0;
+    }
+  }
+
+  .scene2Icon {
+    width: 100%;
+
+    img {
+      width: 98px;
+      display: inline-block;
     }
   }
 
@@ -20,24 +36,34 @@
     font-size: 14px;
     align-self: stretch;
     flex: 0 0 100%;
+
+    p {
+      margin-top: 0;
+    }
   }
 
-  .privacy-notice {
+  .privacyNotice {
     color: var(--newtab-text-secondary-color);
     flex: 0 0 100%;
+
+    p {
+      margin-bottom: 0;
+    }
   }
 
   .innerWrapper {
     max-width: 670px;
     flex-wrap: wrap;
     justify-items: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
   }
 
   .footer {
     width: 100%;
     margin: 0 auto;
     text-align: right;
-    background: $grey-20;
+    background-color: var(--newtab-background-color);
     padding: 10px 0;
 
     .footer-content {
@@ -49,11 +75,12 @@
   }
 
   input {
-    &[type='email'] {
+    &.mainInput {
+      border-radius: 3px;
       background-color: var(--newtab-textbox-background-color);
       border: $input-border;
       padding: 0 8px;
-      height: 32px;
+      height: 100%;
       font-size: 15px;
       width: 50%;
 
@@ -62,5 +89,15 @@
         box-shadow: var(--newtab-textbox-focus-boxshadow);
       }
     }
+  }
+}
+
+.submissionStatus {
+  text-align: center;
+  font-size: 14px;
+  padding: 20px 0;
+
+  .submitStatusTitle {
+    font-size: 20px;
   }
 }

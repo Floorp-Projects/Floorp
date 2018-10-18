@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Infurmaziuns davart la protecziun da datas",
   "firstrun_continue_to_login": "Cuntinuar",
   "firstrun_skip_login": "Sursiglir quest pass",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Ulteriuras infurmaziuns"
 };

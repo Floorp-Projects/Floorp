@@ -34,11 +34,6 @@ class TextInputHandler;
   // return a context menu for this view
 - (NSMenu*)contextMenu;
 
-  // Allows callers to do a delayed invalidate (e.g., if an invalidate
-  // happens during drawing)
-- (void)setNeedsPendingDisplay;
-- (void)setNeedsPendingDisplayInRect:(NSRect)invalidRect;
-
   // called when our corresponding Gecko view goes away
 - (void)widgetDestroyed;
 

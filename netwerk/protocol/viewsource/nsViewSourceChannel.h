@@ -65,6 +65,7 @@ public:
 
 protected:
     ~nsViewSourceChannel() = default;
+    nsTArray<mozilla::Tuple<nsCString, nsCString>> mEmptyArray;
 
     // Clones aURI and prefixes it with "view-source:" schema,
     nsresult BuildViewSourceURI(nsIURI* aURI, nsIURI** aResult);

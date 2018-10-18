@@ -12,6 +12,7 @@ include URIParams;
 include PBackgroundSharedTypes;
 include NeckoChannelParams;
 include IPCServiceWorkerDescriptor;
+include IPCStream;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
@@ -93,6 +94,9 @@ parent:
   // sure not to send any more messages after that.
   async DeletingChannel();
 
+  // Called to get the input stream when altData was delivered.
+  async OpenOriginalCacheInputStream();
+
   // Tell the parent the amount bytes read by child for the e10s back pressure
   // flow control
   async BytesRead(int32_t count);
@@ -170,6 +174,7 @@ child:
   // See ADivertableParentChannel::CancelDiversion
   async CancelDiversion();
 
+  async OriginalCacheInputStreamAvailable(OptionalIPCStream stream);
 both:
   // After receiving this message, the parent also calls
   // SendFinishInterceptedRedirect, and makes sure not to send any more messages
