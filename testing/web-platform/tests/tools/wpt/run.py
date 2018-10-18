@@ -1,10 +1,7 @@
 import argparse
 import os
 import platform
-import shutil
-import subprocess
 import sys
-import tarfile
 from distutils.spawn import find_executable
 
 wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
@@ -295,10 +292,6 @@ class ChromeAndroid(BrowserSetup):
                 raise WptrunError("Unable to locate or install chromedriver binary")
 
 
-class ChromeWebDriver(Chrome):
-    name = "chrome_webdriver"
-    browser_cls = browser.ChromeWebDriver
-
 class Opera(BrowserSetup):
     name = "opera"
     browser_cls = browser.Opera
@@ -348,11 +341,6 @@ class EdgeWebDriver(Edge):
     browser_cls = browser.EdgeWebDriver
 
 
-class EdgeWebDriver(Edge):
-    name = "edge_webdriver"
-    browser_cls = browser.EdgeWebDriver
-
-
 class InternetExplorer(BrowserSetup):
     name = "ie"
     browser_cls = browser.InternetExplorer
@@ -389,11 +377,6 @@ class Safari(BrowserSetup):
                 raise WptrunError("Unable to locate safaridriver binary")
 
             kwargs["webdriver_binary"] = webdriver_binary
-
-
-class SafariWebDriver(Safari):
-    name = "safari_webdriver"
-    browser_cls = browser.SafariWebDriver
 
 
 class SafariWebDriver(Safari):
@@ -553,7 +536,7 @@ def main():
 
 if __name__ == "__main__":
     import pdb
-    from tools import localpaths
+    from tools import localpaths  # noqa: flake8
     try:
         main()
     except Exception:
