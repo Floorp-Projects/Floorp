@@ -10902,12 +10902,9 @@ nsCSSFrameConstructor::InitAndWrapInColumnSetFrameIfNeeded(
   ComputedStyle* aComputedStyle)
 {
   MOZ_ASSERT((aBlockFrame->IsBlockFrame() || aBlockFrame->IsDetailsFrame()),
-             "aBlock should either be a block frame or a details frame.");
+             "aBlockFrame should either be a block frame or a details frame.");
 
-  const nsStyleColumn* styleColumn = aComputedStyle->StyleColumn();
-
-  if (styleColumn->mColumnCount == nsStyleColumn::kColumnCountAuto &&
-      styleColumn->mColumnWidth.GetUnit() == eStyleUnit_Auto) {
+  if (!aComputedStyle->StyleColumn()->IsColumnContainerStyle()) {
     aBlockFrame->SetComputedStyleWithoutNotification(aComputedStyle);
     InitAndRestoreFrame(aState, aContent, aParentFrame, aBlockFrame);
     return aBlockFrame;

@@ -2756,6 +2756,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
     return (IsVisibleBorderStyle(mColumnRuleStyle) ? mColumnRuleWidth : 0);
   }
 
+  bool IsColumnContainerStyle() const {
+    return (mColumnCount != kColumnCountAuto ||
+            mColumnWidth.GetUnit() != eStyleUnit_Auto);
+  }
+
 protected:
   nscoord mColumnRuleWidth;  // coord
   nscoord mTwipsPerPixel;
