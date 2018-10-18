@@ -2330,7 +2330,10 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   }
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-  if (sEarlySandboxInit && IsContentSandboxEnabled()) {
+  // If we're launching a middleman process for a
+  // recording or replay, start the sandbox later.
+  if (sEarlySandboxInit && IsContentSandboxEnabled() &&
+      !IsRecordingOrReplaying()) {
     AppendSandboxParams(extraArgs);
   }
 #endif
@@ -2742,7 +2745,10 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
 #ifdef XP_MACOSX
   // If the sandbox was initialized during content process
   // startup, we must not send the SetProcessSandbox message.
-  shouldSandbox = shouldSandbox && !sEarlySandboxInit;
+  // If early startup was pref'd off or the process is a
+  // middleman process, send SetProcessSandbox now.
+  shouldSandbox = shouldSandbox &&
+    (!sEarlySandboxInit || IsRecordingOrReplaying());
 #endif
 
 #ifdef XP_LINUX
