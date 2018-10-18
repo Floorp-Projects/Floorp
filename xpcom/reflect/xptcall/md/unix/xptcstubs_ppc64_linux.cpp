@@ -66,6 +66,8 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     const uint8_t indexOfJSContext = info->IndexOfJSContext();
 
     uint64_t* ap = args;
+    uint32_t iCount = 0;
+    uint32_t fpCount = 0;
     uint64_t tempu64;
 
     for(i = 0; i < paramCount; i++) {
@@ -73,16 +75,23 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         const nsXPTType& type = param.GetType();
         nsXPTCMiniVariant* dp = &dispatchParams[i];
 
-        MOZ_CRASH("NYI: support implicit JSContext*, bug 1475699");
+        if (i == indexOfJSContext) {
+            if (iCount < GPR_COUNT)
+                iCount++;
+            else
+                ap++;
+        }
 
         if (!param.IsOut() && type == nsXPTType::T_DOUBLE) {
-            if (i < FPR_COUNT)
-                dp->val.d = fprData[i];
+            if (fpCount < FPR_COUNT) {
+                dp->val.d = fprData[fpCount++];
+            }
             else
                 dp->val.d = *(double*) ap;
         } else if (!param.IsOut() && type == nsXPTType::T_FLOAT) {
-            if (i < FPR_COUNT)
-                dp->val.f = (float) fprData[i]; // in registers floats are passed as doubles
+            if (fpCount < FPR_COUNT) {
+                dp->val.f = (float) fprData[fpCount++]; // in registers floats are passed as doubles
+            }
             else {
                 float *p = (float *)ap;
 #ifndef __LITTLE_ENDIAN__
@@ -91,8 +100,8 @@ PrepareAndDispatch(nsXPTCStubBase* self,
                 dp->val.f = *p;
             }
         } else { /* integer type or pointer */
-            if (i < GPR_COUNT)
-                tempu64 = gprData[i];
+            if (iCount < GPR_COUNT)
+                tempu64 = gprData[iCount];
             else
                 tempu64 = *ap;
 
@@ -124,7 +133,9 @@ PrepareAndDispatch(nsXPTCStubBase* self,
                 NS_ERROR("bad type");
         }
 
-        if (i >= 7)
+        if (iCount < GPR_COUNT)
+            iCount++;  // gprs are skipped for fp args, so this always needs inc
+        else
             ap++;
     }
 

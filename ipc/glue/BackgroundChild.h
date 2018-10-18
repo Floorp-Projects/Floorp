@@ -7,7 +7,6 @@
 #ifndef mozilla_ipc_backgroundchild_h__
 #define mozilla_ipc_backgroundchild_h__
 
-#include "base/process.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/Transport.h"
 
@@ -47,7 +46,6 @@ class BackgroundChild final
   friend class mozilla::dom::ContentChild;
   friend class mozilla::dom::ContentParent;
 
-  typedef base::ProcessId ProcessId;
   typedef mozilla::ipc::Transport Transport;
 
 public:

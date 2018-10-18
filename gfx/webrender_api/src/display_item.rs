@@ -435,6 +435,29 @@ impl BorderStyle {
     pub fn is_hidden(&self) -> bool {
         *self == BorderStyle::Hidden || *self == BorderStyle::None
     }
+
+    /// Returns true if the border style itself is opaque. Other
+    /// factors (such as color, or border radii) may mean that
+    /// the border segment isn't opaque regardless of this.
+    pub fn is_opaque(&self) -> bool {
+        match *self {
+            BorderStyle::None |
+            BorderStyle::Double |
+            BorderStyle::Dotted |
+            BorderStyle::Dashed |
+            BorderStyle::Hidden => {
+                false
+            }
+
+            BorderStyle::Solid |
+            BorderStyle::Groove |
+            BorderStyle::Ridge |
+            BorderStyle::Inset |
+            BorderStyle::Outset => {
+                true
+            }
+        }
+    }
 }
 
 #[repr(u32)]
