@@ -76,6 +76,7 @@ function TextPropertyEditor(ruleEditor, property) {
   this.prop = property;
   this.prop.editor = this;
   this.browserWindow = this.doc.defaultView.top;
+
   this._populatedComputed = false;
   this._hasPendingClick = false;
   this._clickedElementOptions = null;
@@ -521,22 +522,22 @@ TextPropertyEditor.prototype = {
       }
     }
 
+    const nodeFront = this.ruleView.inspector.selection.nodeFront;
+
     const flexToggle = this.valueSpan.querySelector(".ruleview-flex");
     if (flexToggle) {
       flexToggle.setAttribute("title", l10n("rule.flexToggle.tooltip"));
-      if (this.ruleView.highlighters.flexboxHighlighterShown ===
-          this.ruleView.inspector.selection.nodeFront) {
-        flexToggle.classList.add("active");
-      }
+      flexToggle.classList.toggle("active",
+        this.ruleView.highlighters.flexboxHighlighterShown === nodeFront);
     }
 
     const gridToggle = this.valueSpan.querySelector(".ruleview-grid");
     if (gridToggle) {
       gridToggle.setAttribute("title", l10n("rule.gridToggle.tooltip"));
-      if (this.ruleView.highlighters.gridHighlighters.has(
-            this.ruleView.inspector.selection.nodeFront)) {
-        gridToggle.classList.add("active");
-      }
+      gridToggle.classList.toggle("active",
+        this.ruleView.highlighters.gridHighlighters.has(nodeFront));
+      gridToggle.toggleAttribute("disabled",
+        !this.ruleView.highlighters.canGridHighlighterToggle(nodeFront));
     }
 
     const shapeToggle = this.valueSpan.querySelector(".ruleview-shapeswatch");

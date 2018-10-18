@@ -542,6 +542,7 @@ struct MemoryReport {
   uintptr_t vertex_data_textures;
   uintptr_t render_target_textures;
   uintptr_t texture_cache_textures;
+  uintptr_t depth_target_textures;
 
   bool operator==(const MemoryReport& aOther) const {
     return primitive_stores == aOther.primitive_stores &&
@@ -556,7 +557,8 @@ struct MemoryReport {
            gpu_cache_textures == aOther.gpu_cache_textures &&
            vertex_data_textures == aOther.vertex_data_textures &&
            render_target_textures == aOther.render_target_textures &&
-           texture_cache_textures == aOther.texture_cache_textures;
+           texture_cache_textures == aOther.texture_cache_textures &&
+           depth_target_textures == aOther.depth_target_textures;
   }
 };
 

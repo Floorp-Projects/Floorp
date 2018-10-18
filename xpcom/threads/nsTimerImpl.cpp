@@ -60,17 +60,13 @@ NS_GetTimerDeadlineHintOnCurrentThread(TimeStamp aDefault, uint32_t aSearchBound
 already_AddRefed<nsITimer>
 NS_NewTimer()
 {
-  return do_AddRef(new nsTimer());
+  return NS_NewTimer(nullptr);
 }
 
 already_AddRefed<nsITimer>
 NS_NewTimer(nsIEventTarget* aTarget)
 {
-  auto timer = MakeRefPtr<nsTimer>();
-  if (aTarget && MOZ_LIKELY(timer)) {
-    MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(aTarget));
-  }
-  return timer.forget();
+  return nsTimer::WithEventTarget(aTarget).forget();
 }
 
 mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
@@ -94,10 +90,7 @@ NS_NewTimerWithObserver(nsITimer** aTimer,
                         uint32_t aType,
                         nsIEventTarget* aTarget)
 {
-  auto timer = MakeRefPtr<nsTimer>();
-  if (aTarget) {
-    MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(aTarget));
-  }
+  auto timer = nsTimer::WithEventTarget(aTarget);
 
   MOZ_TRY(timer->Init(aObserver, aDelay, aType));
   timer.forget(aTimer);
@@ -125,10 +118,7 @@ NS_NewTimerWithCallback(nsITimer** aTimer,
                         uint32_t aType,
                         nsIEventTarget* aTarget)
 {
-  auto timer = MakeRefPtr<nsTimer>();
-  if (aTarget) {
-    MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(aTarget));
-  }
+  auto timer = nsTimer::WithEventTarget(aTarget);
 
   MOZ_TRY(timer->InitWithCallback(aCallback, aDelay, aType));
   timer.forget(aTimer);
@@ -156,10 +146,7 @@ NS_NewTimerWithCallback(nsITimer** aTimer,
                         uint32_t aType,
                         nsIEventTarget* aTarget)
 {
-  auto timer = MakeRefPtr<nsTimer>();
-  if (aTarget) {
-    MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(aTarget));
-  }
+  auto timer = nsTimer::WithEventTarget(aTarget);
 
   MOZ_TRY(timer->InitHighResolutionWithCallback(aCallback, aDelay, aType));
   timer.forget(aTimer);
@@ -193,10 +180,7 @@ NS_NewTimerWithFuncCallback(nsITimer** aTimer,
                             const char* aNameString,
                             nsIEventTarget* aTarget)
 {
-  auto timer = MakeRefPtr<nsTimer>();
-  if (aTarget) {
-    MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(aTarget));
-  }
+  auto timer = nsTimer::WithEventTarget(aTarget);
 
   MOZ_TRY(timer->InitWithNamedFuncCallback(aCallback, aClosure,
                                            aDelay, aType,
@@ -232,10 +216,7 @@ NS_NewTimerWithFuncCallback(nsITimer** aTimer,
                             nsTimerNameCallbackFunc aNameCallback,
                             nsIEventTarget* aTarget)
 {
-  auto timer = MakeRefPtr<nsTimer>();
-  if (aTarget) {
-    MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(aTarget));
-  }
+  auto timer = nsTimer::WithEventTarget(aTarget);
 
   MOZ_TRY(timer->InitWithNameableFuncCallback(aCallback, aClosure,
                                               aDelay, aType,
@@ -330,15 +311,17 @@ nsTimer::Release(void)
   return count;
 }
 
-nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
+nsTimerImpl::nsTimerImpl(nsITimer* aTimer, nsIEventTarget* aTarget) :
+  mEventTarget(aTarget),
   mHolder(nullptr),
   mType(0),
   mGeneration(0),
   mITimer(aTimer),
   mMutex("nsTimerImpl::mMutex")
 {
-  // XXXbsmedberg: shouldn't this be in Init()?
-  mEventTarget = mozilla::GetCurrentThreadEventTarget();
+  // XXX some code creates timers during xpcom shutdown, when threads are no
+  // longer available, so we cannot turn this on yet.
+  //MOZ_ASSERT(mEventTarget);
 }
 
 //static
@@ -908,6 +891,28 @@ size_t
 nsTimer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
+}
+
+/* static */ RefPtr<nsTimer>
+nsTimer::WithEventTarget(nsIEventTarget* aTarget)
+{
+  if (!aTarget) {
+    aTarget = mozilla::GetCurrentThreadEventTarget();
+  }
+  return do_AddRef(new nsTimer(aTarget));
+}
+
+/* static */ nsresult
+nsTimer::XPCOMConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  *aResult = nullptr;
+  if (aOuter != nullptr) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
+  auto timer = WithEventTarget(nullptr);
+
+  return timer->QueryInterface(aIID, aResult);
 }
 
 /* static */

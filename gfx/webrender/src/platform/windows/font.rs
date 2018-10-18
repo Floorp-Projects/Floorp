@@ -131,9 +131,20 @@ impl FontContext {
         }
 
         let system_fc = dwrote::FontCollection::system();
-        let font = match system_fc.get_font_from_descriptor(&font_handle) {
-            Some(font) => font,
-            None => { panic!("missing descriptor {:?}", font_handle) }
+        // A version of get_font_from_descriptor() that panics early to help with bug 1455848
+        let font = if let Some(family) = system_fc.get_font_family_by_name(&font_handle.family_name) {
+            let font = family.get_first_matching_font(font_handle.weight, font_handle.stretch, font_handle.style);
+            // Exact matches only here
+            if font.weight() == font_handle.weight &&
+                font.stretch() == font_handle.stretch &&
+                font.style() == font_handle.style
+            {
+                font
+            } else {
+                panic!("font mismatch for descriptor {:?} {:?}", font_handle, font.to_descriptor())
+            }
+        } else {
+            panic!("missing font family for descriptor {:?}", font_handle)
         };
         let face = font.create_font_face();
         self.fonts.insert(*font_key, face);

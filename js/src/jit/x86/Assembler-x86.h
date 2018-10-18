@@ -459,20 +459,11 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(dest.size() == 16);
         masm.vhaddpd_rr(src.encoding(), dest.encoding());
     }
-    void vsubpd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
+    void vsubpd(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         MOZ_ASSERT(src0.size() == 16);
         MOZ_ASSERT(dest.size() == 16);
-        switch (src1.kind()) {
-          case Operand::MEM_REG_DISP:
-            masm.vsubpd_mr(src1.disp(), src1.base(), src0.encoding(), dest.encoding());
-            break;
-          case Operand::MEM_ADDRESS32:
-            masm.vsubpd_mr(src1.address(), src0.encoding(), dest.encoding());
-            break;
-          default:
-            MOZ_CRASH("unexpected operand kind");
-        }
+        masm.vsubpd_rr(src1.encoding(), src0.encoding(), dest.encoding());
     }
 
     void vpunpckldq(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
