@@ -476,8 +476,8 @@ public:
   // AssignLiteral must ONLY be applied to an actual literal string, or
   // a character array *constant* declared without an explicit size.
   // Do not attempt to use it with a character array variable that is not
-  // constant or does not have static storage duration. Use AssignASCII for
-  // those.
+  // constant or does not have static storage duration. Use Assign or
+  // AssignASCII for those.
   //
   // This method does not need a fallible version, because it uses the
   // POD buffer of the literal as the string's buffer without allocating.
