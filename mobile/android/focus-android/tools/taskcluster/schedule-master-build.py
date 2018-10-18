@@ -52,9 +52,17 @@ def generate_compare_locales_task():
 	return taskcluster.slugId(), generate_task(
 		name = "(Focus for Android) String validation",
 		description = "Check Focus/Klar for Android for errors in en-US and l10n.",
-		command = ('pip install compare-locales>=4.0.1,<5.0'
+		command = ('pip install "compare-locales>=4.0.1,<5.0"'
+				   ' && mkdir -p /opt/focus-android/test_artifacts'
 				   ' && compare-locales --validate l10n.toml .'
-				   ' && compare-locales l10n.toml .'))
+				   ' && compare-locales --json=/opt/focus-android/test_artifacts/data.json l10n.toml .'),
+		artifacts = {
+			"public": {
+				"type": "directory",
+				"path": "/opt/focus-android/test_artifacts",
+				"expires": taskcluster.stringDate(taskcluster.fromNow('1 week'))
+			}
+		})
 
 
 def generate_webview_X86_ui_test_task(dependencies):
