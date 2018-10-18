@@ -223,7 +223,7 @@ GetLengthProperty(JSContext* cx, HandleObject obj, uint64_t* lengthp)
  */
 template <typename CharT>
 static bool
-StringIsArrayIndexHelper(const CharT* s, uint32_t length, uint32_t* indexp)
+StringIsArrayIndex(const CharT* s, uint32_t length, uint32_t* indexp)
 {
     const CharT* end = s + length;
 
@@ -265,20 +265,8 @@ js::StringIsArrayIndex(JSLinearString* str, uint32_t* indexp)
 {
     AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
-           ? StringIsArrayIndexHelper(str->latin1Chars(nogc), str->length(), indexp)
-           : StringIsArrayIndexHelper(str->twoByteChars(nogc), str->length(), indexp);
-}
-
-JS_FRIEND_API(bool)
-js::StringIsArrayIndex(const char16_t* str, uint32_t length, uint32_t* indexp)
-{
-    return StringIsArrayIndexHelper(str, length, indexp);
-}
-
-JS_FRIEND_API(bool)
-js::StringIsArrayIndex(const char* str, uint32_t length, uint32_t* indexp)
-{
-    return StringIsArrayIndexHelper(str, length, indexp);
+           ? ::StringIsArrayIndex(str->latin1Chars(nogc), str->length(), indexp)
+           : ::StringIsArrayIndex(str->twoByteChars(nogc), str->length(), indexp);
 }
 
 template <typename T>
