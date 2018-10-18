@@ -195,8 +195,7 @@ public:
   /**
    * Pend accessible tree update for content insertion.
    */
-  void ScheduleContentInsertion(Accessible* aContainer,
-                                nsIContent* aStartChildNode,
+  void ScheduleContentInsertion(nsIContent* aStartChildNode,
                                 nsIContent* aEndChildNode);
 
   /**

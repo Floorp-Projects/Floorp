@@ -777,10 +777,8 @@ DocAccessible::AttributeChanged(dom::Element* aElement,
   if (aAttribute == nsGkAtoms::aria_hidden) {
     if (aria::HasDefinedARIAHidden(aElement)) {
       ContentRemoved(aElement);
-    }
-    else {
-      ContentInserted(aElement->GetFlattenedTreeParent(),
-                      aElement, aElement->GetNextSibling());
+    } else {
+      ContentInserted(aElement, aElement->GetNextSibling());
     }
     return;
   }
@@ -1353,8 +1351,7 @@ DocAccessible::UnbindFromDocument(Accessible* aAccessible)
 }
 
 void
-DocAccessible::ContentInserted(nsIContent* aContainerNode,
-                               nsIContent* aStartChildNode,
+DocAccessible::ContentInserted(nsIContent* aStartChildNode,
                                nsIContent* aEndChildNode)
 {
   // Ignore content insertions until we constructed accessible tree. Otherwise
@@ -1362,14 +1359,8 @@ DocAccessible::ContentInserted(nsIContent* aContainerNode,
   if (mNotificationController && HasLoadState(eTreeConstructed)) {
     // Update the whole tree of this document accessible when the container is
     // null (document element is inserted or removed).
-    Accessible* container = aContainerNode ?
-      AccessibleOrTrueContainer(aContainerNode) : this;
-    if (container) {
-      // Ignore notification if the container node is no longer in the DOM tree.
-      mNotificationController->ScheduleContentInsertion(container,
-                                                        aStartChildNode,
-                                                        aEndChildNode);
-    }
+    mNotificationController->ScheduleContentInsertion(aStartChildNode,
+                                                      aEndChildNode);
   }
 }
 
@@ -1388,10 +1379,8 @@ DocAccessible::RecreateAccessible(nsIContent* aContent)
   // subclass hide and show events to handle them separately and implement their
   // coalescence with normal hide and show events. Note, in this case they
   // should be coalesced with normal show/hide events.
-
-  nsIContent* parent = aContent->GetFlattenedTreeParent();
   ContentRemoved(aContent);
-  ContentInserted(parent, aContent, aContent->GetNextSibling());
+  ContentInserted(aContent, aContent->GetNextSibling());
 }
 
 void

@@ -81,13 +81,17 @@
 
         var shadowRoot = iframe.contentDocument.getElementById("c2_c").shadowRoot;
         shadowRoot.firstElementChild.querySelector("span").remove();
+        // bug 1487312
+        shadowRoot.firstElementChild.offsetTop;
+        shadowRoot.appendChild(document.createElement("button"));
       };
 
       this.finalCheck = function runShadowTest_finalCheck() {
         var tree = {
           SECTION: [ // c2
             { TEXT_LEAF: [] }, // Some text
-            { TEXT_LEAF: [] } // More text
+            { TEXT_LEAF: [] }, // More text
+            { PUSHBUTTON: [] } // The button we appended.
           ]
         };
         testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
