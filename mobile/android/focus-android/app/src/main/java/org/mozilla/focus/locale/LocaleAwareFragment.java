@@ -32,17 +32,19 @@ public abstract class LocaleAwareFragment extends Fragment {
 
     @Override
     public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
-        final Animation animation;
-        try {
-            animation = AnimationUtils.loadAnimation(getActivity(), nextAnim);
-        } catch (Resources.NotFoundException e) {
-            return null;
+        Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
+        if (animation == null && nextAnim != 0) {
+            try {
+                animation = AnimationUtils.loadAnimation(getActivity(), nextAnim);
+            } catch (Resources.NotFoundException e) {
+                return null;
+            }
         }
 
         if (animation != null) {
             final AnimationSet animSet = new AnimationSet(true);
-            this.animationSet = animSet;
             animSet.addAnimation(animation);
+            this.animationSet = animSet;
             return animSet;
         } else {
             return null;
