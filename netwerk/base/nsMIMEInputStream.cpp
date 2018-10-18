@@ -47,6 +47,7 @@ public:
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIMIMEINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
+    NS_DECL_NSITELLABLESTREAM
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
     NS_DECL_NSIINPUTSTREAMCALLBACK
@@ -98,6 +99,7 @@ NS_INTERFACE_MAP_BEGIN(nsMIMEInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIMIMEInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIMIMEInputStream)
   NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY(nsITellableStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      IsIPCSerializable())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream,
@@ -120,7 +122,8 @@ NS_IMPL_CI_INTERFACE_GETTER(nsMIMEInputStream,
                             nsIMIMEInputStream,
                             nsIAsyncInputStream,
                             nsIInputStream,
-                            nsISeekableStream)
+                            nsISeekableStream,
+                            nsITellableStream)
 
 nsMIMEInputStream::nsMIMEInputStream()
   : mStartedReading(false)
@@ -312,13 +315,15 @@ nsMIMEInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
   return callback->OnInputStreamReady(this);
 }
 
-// nsISeekableStream
+// nsITellableStream
 NS_IMETHODIMP nsMIMEInputStream::Tell(int64_t *_retval)
 {
     INITSTREAMS;
-    nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStream);
+    nsCOMPtr<nsITellableStream> stream = do_QueryInterface(mStream);
     return stream->Tell(_retval);
 }
+
+// nsISeekableStream
 NS_IMETHODIMP nsMIMEInputStream::SetEOF(void) {
     INITSTREAMS;
     nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStream);

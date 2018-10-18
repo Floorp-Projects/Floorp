@@ -19,7 +19,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIPipe.h"
-#include "nsISeekableStream.h"
+#include "nsITellableStream.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsStreamUtils.h"
@@ -1078,7 +1078,7 @@ TEST(Pipes, Interfaces)
   nsCOMPtr<nsIAsyncInputStream> readerType1 = do_QueryInterface(reader);
   ASSERT_TRUE(readerType1);
 
-  nsCOMPtr<nsISeekableStream> readerType2 = do_QueryInterface(reader);
+  nsCOMPtr<nsITellableStream> readerType2 = do_QueryInterface(reader);
   ASSERT_TRUE(readerType2);
 
   nsCOMPtr<nsISearchableInputStream> readerType3 = do_QueryInterface(reader);

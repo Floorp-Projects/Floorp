@@ -51,6 +51,8 @@ NS_INTERFACE_MAP_BEGIN(NonBlockingAsyncInputStream)
                                      mWeakIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream,
                                      mWeakSeekableInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITellableStream,
+                                     mWeakTellableInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -88,6 +90,7 @@ NonBlockingAsyncInputStream::NonBlockingAsyncInputStream(already_AddRefed<nsIInp
   , mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
+  , mWeakTellableInputStream(nullptr)
   , mLock("NonBlockingAsyncInputStream::mLock")
   , mClosed(false)
 {
@@ -110,6 +113,12 @@ NonBlockingAsyncInputStream::NonBlockingAsyncInputStream(already_AddRefed<nsIInp
     do_QueryInterface(mInputStream);
   if (seekableStream && SameCOMIdentity(mInputStream, seekableStream)) {
     mWeakSeekableInputStream = seekableStream;
+  }
+
+  nsCOMPtr<nsITellableStream> tellableStream =
+    do_QueryInterface(mInputStream);
+  if (tellableStream && SameCOMIdentity(mInputStream, tellableStream)) {
+    mWeakTellableInputStream = tellableStream;
   }
 }
 
@@ -351,17 +360,19 @@ NonBlockingAsyncInputStream::Seek(int32_t aWhence, int64_t aOffset)
 }
 
 NS_IMETHODIMP
-NonBlockingAsyncInputStream::Tell(int64_t* aResult)
-{
-  NS_ENSURE_STATE(mWeakSeekableInputStream);
-  return mWeakSeekableInputStream->Tell(aResult);
-}
-
-NS_IMETHODIMP
 NonBlockingAsyncInputStream::SetEOF()
 {
   NS_ENSURE_STATE(mWeakSeekableInputStream);
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsITellableStream
+
+NS_IMETHODIMP
+NonBlockingAsyncInputStream::Tell(int64_t* aResult)
+{
+  NS_ENSURE_STATE(mWeakTellableInputStream);
+  return mWeakTellableInputStream->Tell(aResult);
 }
 
 void
