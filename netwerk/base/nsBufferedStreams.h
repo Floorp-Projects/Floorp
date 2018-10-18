@@ -26,6 +26,7 @@ class nsBufferedStream : public nsISeekableStream
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISEEKABLESTREAM
+    NS_DECL_NSITELLABLESTREAM
 
     nsBufferedStream();
 
