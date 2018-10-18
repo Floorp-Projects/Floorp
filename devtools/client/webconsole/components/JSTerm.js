@@ -550,6 +550,7 @@ class JSTerm extends Component {
     const { ConsoleCommand } = require("devtools/client/webconsole/types");
     const cmdMessage = new ConsoleCommand({
       messageText: executeString,
+      timeStamp: Date.now(),
     });
     this.hud.proxy.dispatchMessageAdd(cmdMessage);
 

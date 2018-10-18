@@ -39,6 +39,17 @@ async function performTests() {
   is(messagesText, `${simpleAwait} - Array [ "await1" ]`,
     "The output contains the the expected messages");
 
+  // Check that the timestamp of the result is accurate
+  const {
+    visibleMessages,
+    messagesById
+  } = hud.ui.consoleOutput.getStore().getState().messages;
+  const [commandId, resultId] = visibleMessages;
+  const delta = messagesById.get(resultId).timeStamp -
+    messagesById.get(commandId).timeStamp;
+  ok(delta >= 500,
+    `The result has a timestamp at least 500ms (${delta}ms) older than the command`);
+
   info("Check that assigning the result of a top-level await expression works");
   await executeAndWaitForResultMessage(
     `x = await new Promise(r => setTimeout(() => r("await2"), 500))`,
