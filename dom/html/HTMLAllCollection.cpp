@@ -49,10 +49,37 @@ HTMLAllCollection::Length()
   return Collection()->Length(true);
 }
 
-nsIContent*
+Element*
 HTMLAllCollection::Item(uint32_t aIndex)
 {
-  return Collection()->Item(aIndex);
+  nsIContent* item = Collection()->Item(aIndex);
+  return item ? item->AsElement() : nullptr;
+}
+
+void
+HTMLAllCollection::Item(const Optional<nsAString>& aNameOrIndex,
+                        Nullable<OwningHTMLCollectionOrElement>& aResult)
+{
+  if (!aNameOrIndex.WasPassed()) {
+    aResult.SetNull();
+    return;
+  }
+
+  const nsAString& nameOrIndex = aNameOrIndex.Value();
+  uint32_t indexVal;
+  if (js::StringIsArrayIndex(nameOrIndex.BeginReading(),
+                             nameOrIndex.Length(),
+                             &indexVal)) {
+    Element* element = Item(indexVal);
+    if (element) {
+      aResult.SetValue().SetAsElement() = element;
+    } else {
+      aResult.SetNull();
+    }
+    return;
+  }
+
+  NamedItem(nameOrIndex, aResult);
 }
 
 nsContentList*
@@ -121,7 +148,7 @@ HTMLAllCollection::GetDocumentAllList(const nsAString& aID)
 void
 HTMLAllCollection::NamedGetter(const nsAString& aID,
                                bool& aFound,
-                               Nullable<OwningNodeOrHTMLCollection>& aResult)
+                               Nullable<OwningHTMLCollectionOrElement>& aResult)
 {
   if (aID.IsEmpty()) {
     aFound = false;
@@ -148,7 +175,7 @@ HTMLAllCollection::NamedGetter(const nsAString& aID,
   // There's only 0 or 1 items. Return the first one or null.
   if (nsIContent* node = docAllList->Item(0, true)) {
     aFound = true;
-    aResult.SetValue().SetAsNode() = node;
+    aResult.SetValue().SetAsElement() = node->AsElement();
     return;
   }
 
