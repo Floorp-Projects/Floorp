@@ -1079,7 +1079,8 @@ public:
 
 private:
   // Helpers for ResolveFlexibleLengths():
-  void FreezeItemsEarly(bool aIsUsingFlexGrow);
+  void FreezeItemsEarly(bool aIsUsingFlexGrow,
+                        ComputedFlexLineInfo* aLineInfo);
 
   void FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
                                        bool aIsFinalIteration);
@@ -2503,7 +2504,8 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow)
+FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow,
+                           ComputedFlexLineInfo* aLineInfo)
 {
   // After we've established the type of flexing we're doing (growing vs.
   // shrinking), and before we try to flex any items, we freeze items that
@@ -2532,7 +2534,13 @@ FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow)
     if (!item->IsFrozen()) {
       numUnfrozenItemsToBeSeen--;
       bool shouldFreeze = (0.0f == item->GetFlexFactor(aIsUsingFlexGrow));
-      if (!shouldFreeze) {
+      // NOTE: We skip the "could flex but base size out of range"
+      // early-freezing if flex devtools are active, so that we can let the
+      // first run of the main flex layout loop compute how much this item
+      // wants to flex. (This skipping shouldn't impact results, because
+      // any affected items will just immediately be caught & frozen as min/max
+      // violations in that first loop, and that'll trigger another loop.)
+      if (!shouldFreeze && !aLineInfo) {
         if (aIsUsingFlexGrow) {
           if (item->GetFlexBaseSize() > item->GetMainSize()) {
             shouldFreeze = true;
@@ -2624,7 +2632,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
   // Do an "early freeze" for flex items that obviously can't flex in the
   // direction we've chosen:
-  FreezeItemsEarly(isUsingFlexGrow);
+  FreezeItemsEarly(isUsingFlexGrow, aLineInfo);
 
   if ((mNumFrozenItems == mNumItems) && !aLineInfo) {
     // All our items are frozen, so we have no flexible lengths to resolve,
