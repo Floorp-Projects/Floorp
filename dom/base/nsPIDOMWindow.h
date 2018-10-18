@@ -45,7 +45,6 @@ class nsXBLPrototypeHandler;
 typedef uint32_t SuspendTypes;
 
 namespace mozilla {
-class ThrottledEventQueue;
 class AutoplayPermissionManager;
 namespace dom {
 class AudioContext;
