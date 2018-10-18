@@ -79,6 +79,11 @@ public:
 
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
 
+  already_AddRefed<nsIDocShell> GetDocShell()
+  {
+    return do_AddRef(mDocShell.get());
+  }
+
   static void GetRootBrowsingContexts(
     nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
 
