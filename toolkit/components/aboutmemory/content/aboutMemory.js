@@ -18,7 +18,7 @@
 
 // ---------------------------------------------------------------------------
 
-var CC = Components.Constructor;
+let CC = Components.Constructor;
 
 const KIND_NONHEAP           = Ci.nsIMemoryReporter.KIND_NONHEAP;
 const KIND_HEAP              = Ci.nsIMemoryReporter.KIND_HEAP;
@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyGetter(this, "nsGzipConverter",
                             () => CC("@mozilla.org/streamconv;1?from=gzip&to=uncompressed",
                                      "nsIStreamConverter"));
 
-var gMgr = Cc["@mozilla.org/memory-reporter-manager;1"]
+let gMgr = Cc["@mozilla.org/memory-reporter-manager;1"]
              .getService(Ci.nsIMemoryReporterManager);
 
 const gPageName = "about:memory";
@@ -56,7 +56,7 @@ document.title = gPageName;
 
 const gUnnamedProcessStr = "Main Process";
 
-var gIsDiff = false;
+let gIsDiff = false;
 
 // ---------------------------------------------------------------------------
 
@@ -120,16 +120,16 @@ function onUnload() {
 
 // The <div> holding everything but the header and footer (if they're present).
 // It's what is updated each time the page changes.
-var gMain;
+let gMain;
 
 // The <div> holding the footer.
-var gFooter;
+let gFooter;
 
 // The "verbose" checkbox.
-var gVerbose;
+let gVerbose;
 
 // The "anonymize" checkbox.
-var gAnonymize;
+let gAnonymize;
 
 // Values for the |aFooterAction| argument to updateTitleMainAndFooter.
 const HIDE_FOOTER = 0;
@@ -527,7 +527,7 @@ function updateAboutMemoryFromReporters() {
 
 // Increment this if the JSON format changes.
 //
-var gCurrentFileFormatVersion = 1;
+let gCurrentFileFormatVersion = 1;
 
 
 /**
@@ -701,7 +701,7 @@ function updateAboutMemoryFromTwoFiles(aFilename1, aFilename2) {
 // ---------------------------------------------------------------------------
 
 // Something unlikely to appear in a process name.
-var kProcessPathSep = "^:^:^";
+let kProcessPathSep = "^:^:^";
 
 // Short for "diff report".
 function DReport(aKind, aUnits, aAmount, aDescription, aNMerged, aPresence) {
@@ -1346,7 +1346,7 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT) {
 // Global variable indicating if we've seen any invalid values for this
 // process;  it holds the unsafePaths of any such reports.  It is reset for
 // each new process.
-var gUnsafePathsWithInvalidValuesForThisProcess = [];
+let gUnsafePathsWithInvalidValuesForThisProcess = [];
 
 function appendWarningElements(aP, aHasKnownHeapAllocated,
                                aHasMozMallocUsableSize) {
@@ -1686,7 +1686,7 @@ function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
 // have been closed.  This doesn't seem like a big deal, because the number is
 // limited by the number of entries the user has changed from their original
 // state.
-var gShowSubtreesBySafeTreeId = {};
+let gShowSubtreesBySafeTreeId = {};
 
 function assertClassListContains(e, className) {
   assert(e, "undefined " + className);
