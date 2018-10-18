@@ -440,6 +440,20 @@ public:
       mPerformance->GetRandomTimelineSeed());
   }
 
+  DOMTimeMilliSec TimeToContentfulPaint() const
+  {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
+      return 0;
+    }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetTimeToContentfulPaint();
+    }
+    return nsRFPService::ReduceTimePrecisionAsMSecs(
+      GetDOMTiming()->GetTimeToContentfulPaint(),
+      mPerformance->GetRandomTimelineSeed());
+  }
+
   DOMTimeMilliSec TimeToDOMContentFlushed() const
   {
     if (!nsContentUtils::IsPerformanceTimingEnabled() ||
