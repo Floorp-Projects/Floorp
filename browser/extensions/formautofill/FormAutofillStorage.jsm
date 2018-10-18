@@ -1925,9 +1925,22 @@ FormAutofillStorage.prototype = {
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
       this._initializePromise = this._store.load()
-        .then(() => Promise.all([
-          this.addresses.initialize(),
-          this.creditCards.initialize()]));
+        .then(() => {
+          let initializeAutofillRecords = [this.addresses.initialize()];
+          if (FormAutofill.isAutofillCreditCardsEnabled) {
+            initializeAutofillRecords.push(this.creditCards.initialize());
+          } else {
+            // Make creditCards records unavailable to other modules
+            // because we never initialize it.
+            Object.defineProperty(this, "creditCards", {
+              get() {
+                throw new Error("CreditCards is not initialized. " +
+                                "Please restart if you flip the pref manually.");
+              },
+            });
+          }
+          return Promise.all(initializeAutofillRecords);
+        });
     }
     return this._initializePromise;
   },
