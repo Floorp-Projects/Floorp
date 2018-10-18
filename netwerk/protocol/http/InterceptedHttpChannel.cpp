@@ -1315,18 +1315,18 @@ InterceptedHttpChannel::GetAllowStaleCacheContent(bool *aAllowStaleCacheContent)
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::PreferAlternativeDataType(const nsACString & aType,
-                                                  const nsACString& aContentType)
+InterceptedHttpChannel::PreferAlternativeDataType(const nsACString & aType)
 {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
-  mPreferredCachedAltDataTypes.AppendElement(MakePair(nsCString(aType), nsCString(aContentType)));
+  mPreferredCachedAltDataType = aType;
   return NS_OK;
 }
 
-const nsTArray<mozilla::Tuple<nsCString, nsCString>>&
-InterceptedHttpChannel::PreferredAlternativeDataTypes()
+NS_IMETHODIMP
+InterceptedHttpChannel::GetPreferredAlternativeDataType(nsACString & aType)
 {
-  return mPreferredCachedAltDataTypes;
+  aType = mPreferredCachedAltDataType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1343,15 +1343,6 @@ InterceptedHttpChannel::OpenAlternativeOutputStream(const nsACString & type, int
 {
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->OpenAlternativeOutputStream(type, predictedSize, _retval);
-  }
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::GetOriginalInputStream(nsIInputStreamReceiver *aReceiver)
-{
-  if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->GetOriginalInputStream(aReceiver);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
