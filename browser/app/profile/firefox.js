@@ -1759,6 +1759,12 @@ pref("app.shield.optoutstudies.enabled", false);
 
 // Multi-lingual preferences
 pref("intl.multilingual.enabled", false);
+// AMO only serves language packs for release versions, so this feature only works on release.
+#ifdef RELEASE
+pref("intl.multilingual.downloadEnabled", true);
+#else
+pref("intl.multilingual.downloadEnabled", false);
+#endif
 
 // Simulate conditions that will happen when the browser
 // is running with Fission enabled. This is meant to assist
