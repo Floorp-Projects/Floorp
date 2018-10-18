@@ -65,15 +65,13 @@ public:
 private:
   PaymentItem(const nsAString& aLabel,
               nsIPaymentCurrencyAmount* aAmount,
-              const bool aPending,
-              const nsAString& aType);
+              const bool aPending);
 
   ~PaymentItem() = default;
 
   nsString mLabel;
   nsCOMPtr<nsIPaymentCurrencyAmount> mAmount;
   bool mPending;
-  nsString mType;
 };
 
 class PaymentDetailsModifier final : public nsIPaymentDetailsModifier

@@ -21,6 +21,7 @@ const PREF_CAPTIVE_TESTMODE = "network.captive-portal-service.testMode";
 const PREF_CAPTIVE_ENDPOINT = "captivedetect.canonicalURL";
 const PREF_CAPTIVE_MINTIME = "network.captive-portal-service.minInterval";
 const PREF_CAPTIVE_MAXTIME = "network.captive-portal-service.maxInterval";
+const PREF_DNS_NATIVE_IS_LOCALHOST = "network.dns.native-is-localhost";
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_CAPTIVE_ENABLED);
@@ -28,6 +29,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_CAPTIVE_ENDPOINT);
   Services.prefs.clearUserPref(PREF_CAPTIVE_MINTIME);
   Services.prefs.clearUserPref(PREF_CAPTIVE_MAXTIME);
+  Services.prefs.clearUserPref(PREF_DNS_NATIVE_IS_LOCALHOST);
 
   httpserver.stop(() => {});
 });
@@ -56,7 +58,7 @@ add_task(function setup(){
   Services.prefs.setIntPref(PREF_CAPTIVE_MINTIME, 50);
   Services.prefs.setIntPref(PREF_CAPTIVE_MAXTIME, 100);
   Services.prefs.setBoolPref(PREF_CAPTIVE_TESTMODE, true);
-
+  Services.prefs.setBoolPref(PREF_DNS_NATIVE_IS_LOCALHOST, true);
 });
 
 add_task(async function test_simple()

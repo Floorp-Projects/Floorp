@@ -27,13 +27,6 @@ body {
   color: var(--theme-selection-color);
 }
 
-:root[platform="win"],
-:root[platform="mac"] {
-  /* Set colors for native scrollbars on Windows dark theme */
-  /* Other platforms support for scrollbar theming is Bug 1460109 */
-  scrollbar-color: var(--theme-body-color-inactive) var(--theme-splitter-color);
-}
-
 .theme-selected,
 .CodeMirror-hint-active {
   background-color: var(--theme-selection-background);
@@ -256,14 +249,6 @@ div.CodeMirror span.eval-text {
 .cm-s-markup-view pre {
   line-height: 1.4em;
   min-height: 1.4em;
-}
-
-.devtools-textinput,
-.devtools-searchinput,
-.devtools-filterinput {
-  /* in between grey-85 and grey-90 */
-  background-color: #141416;
-  color: var(--theme-highlight-gray);
 }
 
 .CodeMirror-Tern-fname {

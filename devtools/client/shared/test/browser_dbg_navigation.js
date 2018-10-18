@@ -39,10 +39,10 @@ function test() {
   });
 }
 
-function testNavigate([aGrip, aResponse]) {
+function testNavigate(targetFront) {
   const outstanding = [promise.defer(), promise.defer()];
 
-  gClient.addListener("tabNavigated", function onTabNavigated(event, packet) {
+  targetFront.on("tabNavigated", function onTabNavigated(packet) {
     is(packet.url.split("/").pop(), TAB2_FILE,
       "Got a tab navigation notification.");
 
@@ -54,27 +54,27 @@ function testNavigate([aGrip, aResponse]) {
       outstanding[0].resolve();
     } else {
       ok(true, "Tab finished navigating.");
-      gClient.removeListener("tabNavigated", onTabNavigated);
+      targetFront.off("tabNavigated", onTabNavigated);
       outstanding[1].resolve();
     }
   });
 
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TAB2_URL);
   return promise.all(outstanding.map(e => e.promise))
-                .then(() => aGrip.actor);
+                .then(() => targetFront);
 }
 
-function testDetach(actor) {
-  const deferred = promise.defer();
-
-  gClient.addOneTimeListener("tabDetached", (type, packet) => {
-    ok(true, "Got a tab detach notification.");
-    is(packet.from, actor, "tab detach message comes from the expected actor");
-    deferred.resolve(gClient.close());
-  });
+async function testDetach(targetFront) {
+  const onDetached = targetFront.once("tabDetached");
 
   removeTab(gBrowser.selectedTab);
-  return deferred.promise;
+
+  const packet = await onDetached;
+  ok(true, "Got a tab detach notification.");
+  is(packet.from, targetFront.actorID,
+    "tab detach message comes from the expected actor");
+
+  return gClient.close();
 }
 
 registerCleanupFunction(function() {
@@ -83,8 +83,8 @@ registerCleanupFunction(function() {
 
 async function attachTargetActorForUrl(client, url) {
   const grip = await getTargetActorForUrl(client, url);
-  const [ response ] = await client.attachTarget(grip.actor);
-  return [grip, response];
+  const [, targetFront] = await client.attachTarget(grip.actor);
+  return targetFront;
 }
 
 function getTargetActorForUrl(client, url) {

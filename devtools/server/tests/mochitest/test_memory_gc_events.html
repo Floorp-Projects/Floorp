@@ -21,7 +21,7 @@ window.onload = function() {
   const EventEmitter = require("devtools/shared/event-emitter");
 
   (async function() {
-    const { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 
     const gotGcEvent = new Promise(resolve => {
@@ -35,7 +35,7 @@ window.onload = function() {
     await gotGcEvent;
 
     await memory.detach();
-    destroyServerAndFinish(client);
+    destroyServerAndFinish(target);
   })();
 };
 </script>

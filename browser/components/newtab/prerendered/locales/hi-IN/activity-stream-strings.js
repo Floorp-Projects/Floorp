@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "गोपनीयता नीति",
   "firstrun_continue_to_login": "जारी रखें",
   "firstrun_skip_login": "इस चरण को छोड़ दें",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "अधिक जानें"
 };

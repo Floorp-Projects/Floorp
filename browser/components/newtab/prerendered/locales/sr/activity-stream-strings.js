@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "обавештење о приватности",
   "firstrun_continue_to_login": "Настави",
   "firstrun_skip_login": "Прескочи овај корак",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Сазнајте више"
 };

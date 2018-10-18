@@ -20,8 +20,8 @@ function run_test() {
 
     const { tabs } = await listTabs(client);
     const tab = findTab(tabs, "test");
-    const [, tabClient] = await attachTarget(client, tab);
-    const [, threadClient] = await attachThread(tabClient);
+    const [, targetFront] = await attachTarget(client, tab);
+    const [, threadClient] = await attachThread(targetFront);
     await resume(threadClient);
 
     const { sources } = await getSources(threadClient);
@@ -34,7 +34,7 @@ function run_test() {
     Assert.equal(false, "actualLocation" in packet);
 
     packet = await executeOnNextTickAndWaitForPause(function() {
-      reload(tabClient).then(function() {
+      reload(targetFront).then(function() {
         loadSubScriptWithOptions(SOURCE_URL, {target: global, ignoreCache: true});
       });
     }, client);

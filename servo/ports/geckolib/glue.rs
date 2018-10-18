@@ -32,11 +32,13 @@ use style::gecko::global_style_data::{GLOBAL_STYLE_DATA, GlobalStyleData, STYLE_
 use style::gecko::restyle_damage::GeckoRestyleDamage;
 use style::gecko::selector_parser::{NonTSPseudoClass, PseudoElement};
 use style::gecko::traversal::RecalcStyleOnly;
+use style::gecko::url::CssUrlData;
 use style::gecko::wrapper::{GeckoElement, GeckoNode};
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::{RawGeckoElementBorrowed, RawGeckoElementBorrowedOrNull, RawGeckoNodeBorrowed};
 use style::gecko_bindings::bindings::{RawGeckoKeyframeListBorrowed, RawGeckoKeyframeListBorrowedMut};
 use style::gecko_bindings::bindings::RawGeckoPresContextBorrowed;
+use style::gecko_bindings::bindings::RawGeckoURLExtraDataBorrowedMut;
 use style::gecko_bindings::bindings::{RawServoAuthorStyles, RawServoAuthorStylesBorrowed};
 use style::gecko_bindings::bindings::{RawServoAuthorStylesBorrowedMut, RawServoAuthorStylesOwned};
 use style::gecko_bindings::bindings::{RawServoCounterStyleRule, RawServoCounterStyleRuleBorrowed};
@@ -80,6 +82,7 @@ use style::gecko_bindings::bindings::RawServoAnimationValueBorrowedOrNull;
 use style::gecko_bindings::bindings::RawServoAnimationValueMapBorrowedMut;
 use style::gecko_bindings::bindings::RawServoAnimationValueStrong;
 use style::gecko_bindings::bindings::RawServoAnimationValueTableBorrowed;
+use style::gecko_bindings::bindings::RawServoCssUrlDataBorrowed;
 use style::gecko_bindings::bindings::RawServoDeclarationBlockBorrowedOrNull;
 use style::gecko_bindings::bindings::RawServoStyleRuleBorrowed;
 use style::gecko_bindings::bindings::RawServoStyleSet;
@@ -90,7 +93,7 @@ use style::gecko_bindings::bindings::nsTimingFunctionBorrowedMut;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{CallerType, CSSPseudoElementType, CompositeOperation};
 use style::gecko_bindings::structs::{DeclarationBlockMutationClosure, Loader, LoaderReusableStyleSheets};
-use style::gecko_bindings::structs::{RawServoStyleRule, ComputedStyleStrong, RustString};
+use style::gecko_bindings::structs::{RawServoStyleRule, ComputedStyleStrong};
 use style::gecko_bindings::structs::{SheetParsingMode, nsAtom, nsCSSPropertyID};
 use style::gecko_bindings::structs::{StyleSheet as DomStyleSheet, SheetLoadData, SheetLoadDataHolder};
 use style::gecko_bindings::structs::{nsCSSFontDesc, nsCSSCounterDesc};
@@ -4192,7 +4195,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
 ) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
-    use style::values::specified::{BorderSideWidth, MozLength, BorderCornerRadius};
+    use style::values::generics::length::MozLength;
+    use style::values::specified::{BorderSideWidth, BorderCornerRadius};
     use style::values::specified::length::{NoCalcLength, NonNegativeLength, LengthOrPercentage};
 
     let long = get_longhand_from_id!(property);
@@ -4249,7 +4253,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
 ) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
-    use style::values::specified::MozLength;
+    use style::values::generics::length::MozLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
     use style::values::specified::length::{LengthOrPercentage, NoCalcLength};
 
@@ -4307,7 +4311,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
 ) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::values::computed::Percentage;
-    use style::values::specified::MozLength;
+    use style::values::generics::length::MozLength;
     use style::values::specified::length::LengthOrPercentage;
 
     let long = get_longhand_from_id!(property);
@@ -4495,24 +4499,26 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
     let condition = unsafe { cond.as_ref().unwrap().as_str_unchecked() };
     let mut input = ParserInput::new(&condition);
     let mut input = Parser::new(&mut input);
-    let cond = input.parse_entirely(|i| parse_condition_or_declaration(i));
-    if let Ok(cond) = cond {
-        let url_data = unsafe { dummy_url_data() };
-        // NOTE(emilio): The supports API is not associated to any stylesheet,
-        // so the fact that there is no namespace map here is fine.
-        let context = ParserContext::new_for_cssom(
-            url_data,
-            Some(CssRuleType::Style),
-            ParsingMode::DEFAULT,
-            QuirksMode::NoQuirks,
-            None,
-            None,
-        );
+    let cond = match input.parse_entirely(parse_condition_or_declaration) {
+        Ok(c) => c,
+        Err(..) => return false,
+    };
 
-        cond.eval(&context)
-    } else {
-        false
-    }
+    let url_data = unsafe { dummy_url_data() };
+
+    // NOTE(emilio): The supports API is not associated to any stylesheet,
+    // so the fact that there is no namespace map here is fine.
+    let context = ParserContext::new_for_cssom(
+        url_data,
+        Some(CssRuleType::Style),
+        ParsingMode::DEFAULT,
+        QuirksMode::NoQuirks,
+        None,
+        None,
+    );
+
+    let namespaces = Default::default();
+    cond.eval(&context, &namespaces)
 }
 
 #[no_mangle]
@@ -5459,21 +5465,29 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_ReleaseArcStringData(string: *const RawOffsetArc<RustString>) {
-    let string = string as *const RawOffsetArc<String>;
-    // Cause RawOffsetArc::drop to run, releasing the strong reference to the string data.
-    let _ = ptr::read(string);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_GetArcStringData(
-    string: *const RustString,
+pub unsafe extern "C" fn Servo_CssUrlData_GetSerialization(
+    url: RawServoCssUrlDataBorrowed,
     utf8_chars: *mut *const u8,
     utf8_len: *mut u32,
 ) {
-    let string = &*(string as *const String);
+    let url_data = CssUrlData::as_arc(&url);
+    let string = url_data.as_str();
     *utf8_len = string.len() as u32;
     *utf8_chars = string.as_ptr();
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_CssUrlData_GetExtraData(
+    url: RawServoCssUrlDataBorrowed,
+) -> RawGeckoURLExtraDataBorrowedMut {
+    unsafe { &mut *CssUrlData::as_arc(&url).extra_data.0.get() }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_CssUrlData_IsLocalRef(
+    url: RawServoCssUrlDataBorrowed
+) -> bool {
+    CssUrlData::as_arc(&url).is_fragment()
 }
 
 #[no_mangle]

@@ -9,6 +9,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
@@ -320,17 +321,11 @@ TalosPowersService.prototype = {
     },
 
     requestDumpCoverageCounters(arg, callback, win) {
-      let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].
-                         getService(Ci.nsICodeCoverage);
-      codeCoverage.dumpCounters();
-      callback();
+      PerTestCoverageUtils.afterTest().then(callback);
     },
 
     requestResetCoverageCounters(arg, callback, win) {
-      let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].
-                         getService(Ci.nsICodeCoverage);
-      codeCoverage.resetCounters();
-      callback();
+      PerTestCoverageUtils.beforeTest().then(callback);
     },
 
     dumpAboutSupport(arg, callback, win) {

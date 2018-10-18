@@ -107,7 +107,7 @@ function str_value(val, env, options) {
     const {Exp, Field} = val;
     const name = Field.Name[0];
     if ("FieldInstanceFunction" in Field) {
-      return Field.FieldCSU.Type.Name + "::" + name;
+      return Field.FieldCSU.Type.Name + "." + name;
     }
     const container = str_value(Exp[0]);
     if (container.startsWith("*"))

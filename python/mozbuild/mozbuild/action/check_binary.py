@@ -39,6 +39,7 @@ TARGET = {
     'readelf': '{}readelf'.format(
         buildconfig.substs.get('TOOLCHAIN_PREFIX', '')),
     'nm': '{}nm'.format(buildconfig.substs.get('TOOLCHAIN_PREFIX', '')),
+    'readobj': '{}readobj'.format(buildconfig.substs.get('TOOLCHAIN_PREFIX', '')),
 }
 
 if buildconfig.substs.get('HAVE_64BIT_BUILD'):
@@ -190,7 +191,24 @@ def check_nsmodules(target, binary):
                     symbols.append((int(data[2], 16), GUESSED_NSMODULE_SIZE,
                                     name))
     else:
-        for line in get_output(target['nm'], '-P', binary):
+        # MinGW-Clang, when building pdbs, doesn't include the symbol table into
+        # the final module. To get the NSModule info, we can look at the exported
+        # symbols. (#1475562)
+        if buildconfig.substs['OS_ARCH'] == 'WINNT' and \
+           buildconfig.substs['HOST_OS_ARCH'] != 'WINNT':
+            readobj_output = get_output(target['readobj'], '-coff-exports', binary)
+            # Transform the output of readobj into nm-like output
+            output = []
+            for line in readobj_output:
+                if "Name" in line:
+                    name = line.replace("Name:", "").strip()
+                elif "RVA" in line:
+                    rva = line.replace("RVA:", "").strip()
+                    output.append("%s r %s" % (name, rva))
+        else:
+            output = get_output(target['nm'], '-P', binary)
+
+        for line in output:
             data = line.split()
             # Some symbols may not have a size listed at all.
             if len(data) == 3:

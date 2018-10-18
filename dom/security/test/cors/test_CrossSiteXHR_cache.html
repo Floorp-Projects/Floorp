@@ -16,8 +16,12 @@
 <pre id="test">
 <script class="testbody" type="application/javascript">
 
+let gen;
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("This test needs to generate artificial pauses, hence it uses timeouts.  There is no way around it, unfortunately. :(");
+
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+                                     true]]});
 
 window.addEventListener("message", function(e) {
   gen.next(e.data);

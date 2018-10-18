@@ -4723,7 +4723,7 @@ SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static JSObject*
-CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier)
+CallModuleResolveHook(JSContext* cx, HandleValue referencingPrivate, HandleString specifier)
 {
     Handle<GlobalObject*> global = cx->global();
     RootedValue hookValue(cx, global->getReservedSlot(GlobalAppSlotModuleResolveHook));
@@ -4734,7 +4734,7 @@ CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier
     MOZ_ASSERT(hookValue.toObject().is<JSFunction>());
 
     JS::AutoValueArray<2> args(cx);
-    args[0].setObject(*module);
+    args[0].set(referencingPrivate);
     args[1].setString(specifier);
 
     RootedValue result(cx);
@@ -4774,7 +4774,7 @@ SetModuleMetadataHook(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-CallModuleMetadataHook(JSContext* cx, HandleObject module, HandleObject metaObject)
+CallModuleMetadataHook(JSContext* cx, HandleValue modulePrivate, HandleObject metaObject)
 {
     Handle<GlobalObject*> global = cx->global();
     RootedValue hookValue(cx, global->getReservedSlot(GlobalAppSlotModuleMetadataHook));
@@ -4785,11 +4785,58 @@ CallModuleMetadataHook(JSContext* cx, HandleObject module, HandleObject metaObje
     MOZ_ASSERT(hookValue.toObject().is<JSFunction>());
 
     JS::AutoValueArray<2> args(cx);
-    args[0].setObject(*module);
+    args[0].set(modulePrivate);
     args[1].setObject(*metaObject);
 
     RootedValue dummy(cx);
     return JS_CallFunctionValue(cx, nullptr, hookValue, args, &dummy);
+}
+
+static bool
+ReportArgumentTypeError(JSContext* cx, HandleValue value, const char* expected)
+{
+    const char* typeName = InformalValueTypeName(value);
+    JS_ReportErrorASCII(cx, "Expected %s, got %s", expected, typeName);
+    return false;
+}
+
+static bool
+ShellSetModulePrivate(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 2) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "setModulePrivate", "0", "s");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<ModuleObject>()) {
+        return ReportArgumentTypeError(cx, args[0], "module object");
+    }
+
+    JS::SetModulePrivate(&args[0].toObject(), args[1]);
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+ShellGetModulePrivate(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "getModulePrivate", "0", "s");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<ModuleObject>()) {
+        return ReportArgumentTypeError(cx, args[0], "module object");
+    }
+
+    args.rval().set(JS::GetModulePrivate(&args[0].toObject()));
+    return true;
 }
 
 static bool
@@ -6354,7 +6401,8 @@ enum class MailboxTag {
     Empty,
     SharedArrayBuffer,
     WasmMemory,
-    WasmModule
+    WasmModule,
+    Number,
 };
 
 struct SharedObjectMailbox
@@ -6365,6 +6413,7 @@ struct SharedObjectMailbox
             uint32_t              length;
         } sarb;
         const wasm::Module*       module;
+        double                    number;
     };
 
     SharedObjectMailbox() : tag(MailboxTag::Empty) {}
@@ -6394,6 +6443,7 @@ DestructSharedObjectMailbox()
         auto mbx = sharedObjectMailbox->lock();
         switch (mbx->tag) {
           case MailboxTag::Empty:
+          case MailboxTag::Number:
             break;
           case MailboxTag::SharedArrayBuffer:
           case MailboxTag::WasmMemory:
@@ -6422,6 +6472,10 @@ GetSharedObject(JSContext* cx, unsigned argc, Value* vp)
         switch (mbx->tag) {
           case MailboxTag::Empty: {
             break;
+          }
+          case MailboxTag::Number: {
+            args.rval().setNumber(mbx->val.number);
+            return true;
           }
           case MailboxTag::SharedArrayBuffer:
           case MailboxTag::WasmMemory: {
@@ -6542,6 +6596,10 @@ SetSharedObject(JSContext* cx, unsigned argc, Value* vp)
             JS_ReportErrorASCII(cx, "Invalid argument to SetSharedObject");
             return false;
         }
+    } else if (args.get(0).isNumber()) {
+        tag = MailboxTag::Number;
+        value.number = args.get(0).toNumber();
+        // Nothing
     } else if (args.get(0).isNullOrUndefined()) {
         // Nothing
     } else {
@@ -6554,6 +6612,7 @@ SetSharedObject(JSContext* cx, unsigned argc, Value* vp)
 
         switch (mbx->tag) {
           case MailboxTag::Empty:
+          case MailboxTag::Number:
             break;
           case MailboxTag::SharedArrayBuffer:
           case MailboxTag::WasmMemory:
@@ -8010,6 +8069,14 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Set the HostPopulateImportMeta hook to |function|.\n"
 "  This hook is used to create the metadata object returned by import.meta for\n"
 "  a module.  It should be implemented by the module loader."),
+
+    JS_FN_HELP("setModulePrivate", ShellSetModulePrivate, 2, 0,
+"setModulePrivate(scriptObject, privateValue)",
+"  Associate a private value with a module object.\n"),
+
+    JS_FN_HELP("getModulePrivate", ShellGetModulePrivate, 2, 0,
+"getModulePrivate(scriptObject)",
+"  Get the private value associated with a module object.\n"),
 
     JS_FN_HELP("getModuleLoadPath", GetModuleLoadPath, 0, 0,
 "getModuleLoadPath()",

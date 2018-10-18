@@ -130,6 +130,7 @@ Prompt.prototype = {
       type: aOptions.type || "date",
       value: aOptions.value,
       id: aOptions.id,
+      step: aOptions.step,
       max: aOptions.max,
       min: aOptions.min
     });

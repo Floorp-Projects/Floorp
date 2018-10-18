@@ -6,6 +6,7 @@ const schemas = {
   "simple_snippet": SimpleSnippetSchema,
   "newsletter_snippet": SubmitFormSnippetSchema,
   "fxa_signup_snippet": SubmitFormSnippetSchema,
+  "send_to_device_snippet": SubmitFormSnippetSchema,
 };
 
 describe("SnippetsTestMessageProvider", () => {

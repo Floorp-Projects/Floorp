@@ -54,6 +54,11 @@ public:
   bool mFakeDeviceChangeEventOn;
   int32_t mChannels;
 
+  bool operator ==(const MediaEnginePrefs& aRhs)
+  {
+    return memcmp(this, &aRhs, sizeof(MediaEnginePrefs)) == 0;
+  };
+
   // mWidth and/or mHeight may be zero (=adaptive default), so use functions.
 
   int32_t GetWidth(bool aHD = false) const {

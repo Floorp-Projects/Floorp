@@ -1622,6 +1622,10 @@ bool
 SetPropertyOnProto(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
                    HandleValue receiver, ObjectOpResult& result);
 
+bool
+AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj, int32_t int_id,
+                               HandleValue v, bool strict);
+
 /*
  * Indicates whether an assignment operation is qualified (`x.y = 0`) or
  * unqualified (`y = 0`). In strict mode, the latter is an error if no such

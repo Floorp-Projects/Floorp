@@ -1,7 +1,7 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {FormattedMessage, injectIntl} from "react-intl";
 import {cardContextTypes} from "./types";
 import {connect} from "react-redux";
-import {FormattedMessage} from "react-intl";
 import {GetPlatformString} from "content-src/lib/link-menu-options";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
@@ -245,7 +245,7 @@ export class _Card extends React.PureComponent {
           </div>
         </div>
       </a>
-      {!props.placeholder && <button className="context-menu-button icon"
+      {!props.placeholder && <button className="context-menu-button icon" title={this.props.intl.formatMessage({id: "context_menu_title"})}
         onClick={this.onMenuButtonClick}>
         <span className="sr-only">{`Open context menu for ${link.title}`}</span>
       </button>}
@@ -264,5 +264,5 @@ export class _Card extends React.PureComponent {
   }
 }
 _Card.defaultProps = {link: {}};
-export const Card = connect(state => ({platform: state.Prefs.values.platform}))(_Card);
+export const Card = connect(state => ({platform: state.Prefs.values.platform}))(injectIntl(_Card));
 export const PlaceholderCard = props => <Card placeholder={true} className={props.className} />;

@@ -106,5 +106,7 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "सेवा अटी",
   "firstrun_privacy_notice": "गोपनीयता सूचना",
   "firstrun_continue_to_login": "पुढे चला",
-  "firstrun_skip_login": "ही पायरी वगळा"
+  "firstrun_skip_login": "ही पायरी वगळा",
+  "context_menu_title": "Open menu",
+  "pocket_learn_more": "अधिक जाणा"
 };

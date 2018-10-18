@@ -45,24 +45,13 @@ buildid.h: $(MDDEPDIR)/buildid.h.stub
 endif
 endif
 
-ifdef JS_STANDALONE
-configure_dir = $(topsrcdir)/js/src
-else
-configure_dir = $(topsrcdir)
-endif
-
 BUILD_BACKEND_FILES := $(addprefix backend.,$(addsuffix Backend,$(BUILD_BACKENDS)))
 
 ifndef TEST_MOZBUILD
 ifndef MOZ_PROFILE_USE
 # We need to explicitly put BUILD_BACKEND_FILES here otherwise the rule in
 # rules.mk doesn't run early enough.
-$(TIERS) binaries:: CLOBBER $(configure_dir)/configure config.status $(BUILD_BACKEND_FILES)
-ifdef MOZ_WIDGET_TOOLKIT
-ifdef COMPILE_ENVIRONMENT
-$(TIERS) binaries:: $(topsrcdir)/js/src/configure js/src/config.status
-endif
-endif
+$(TIERS) binaries:: CLOBBER $(BUILD_BACKEND_FILES)
 endif
 endif
 
@@ -75,15 +64,6 @@ CLOBBER: $(topsrcdir)/CLOBBER
 	@echo 'Please run the build through "mach build".'
 	@exit 1
 endif
-
-config.status: $(configure_dir)/configure $(configure_dir)/old-configure
-js/src/config.status: $(topsrcdir)/js/src/configure $(topsrcdir)/js/src/old-configure
-config.status js/src/config.status:
-	@echo 'STOP!  $? has changed and needs to be run again.'
-	@echo 'Please rerun it.'
-	@echo 'To ignore this message, touch "$(CURDIR)/$@",'
-	@echo 'but your build might not succeed.'
-	@exit 1
 
 # Regenerate the build backend if it is out of date. We only have this rule in
 # this main make file because having it in rules.mk and applied to partial tree
@@ -118,19 +98,8 @@ install_manifests += dist/bin
 endif
 install_manifest_depends = \
   CLOBBER \
-  $(configure_dir)/configure \
-  config.status \
   $(BUILD_BACKEND_FILES) \
   $(NULL)
-
-ifdef MOZ_WIDGET_TOOLKIT
-ifdef COMPILE_ENVIRONMENT
-install_manifest_depends += \
-  $(topsrcdir)/js/src/configure \
-  js/src/config.status \
-  $(NULL)
-endif
-endif
 
 .PHONY: install-manifests
 install-manifests: $(addprefix install-,$(install_manifests))

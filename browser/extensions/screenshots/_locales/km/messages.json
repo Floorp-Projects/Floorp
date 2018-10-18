@@ -1,0 +1,17 @@
+{
+  "saveScreenshotSelectedArea": {
+    "message": "រក្សា​ទុក"
+  },
+  "cancelScreenshot": {
+    "message": "បោះបង់"
+  },
+  "downloadScreenshot": {
+    "message": "ទាញយក"
+  },
+  "copyScreenshot": {
+    "message": "ចម្លង"
+  },
+  "tourDone": {
+    "message": "បានធ្វើ"
+  }
+}

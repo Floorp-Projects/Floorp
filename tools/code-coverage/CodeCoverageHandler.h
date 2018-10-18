@@ -18,10 +18,8 @@ public:
   static CodeCoverageHandler* Get();
   CrossProcessMutex* GetMutex();
   CrossProcessMutexHandle GetMutexHandle(int aProcId);
-  static void DumpCounters();
-  static void DumpCountersSignalHandler(int);
-  static void ResetCounters();
-  static void ResetCountersSignalHandler(int);
+  static void FlushCounters();
+  static void FlushCountersSignalHandler(int);
 
 private:
   CodeCoverageHandler();

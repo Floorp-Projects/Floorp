@@ -55,9 +55,17 @@ public:
     : mURI(aURI)
     , mReferrer(aReferrer)
     , mReferrerPolicy(aReferrerPolicy)
- {
-   MOZ_ASSERT(aURI);
- }
+  {
+    MOZ_ASSERT(aURI);
+  }
+
+  URLAndReferrerInfo(nsIURI* aURI, URLExtraData* aExtraData)
+    : mURI(aURI)
+    , mReferrer(aExtraData->GetReferrer())
+    , mReferrerPolicy(aExtraData->GetReferrerPolicy())
+  {
+    MOZ_ASSERT(aURI);
+  }
 
   NS_INLINE_DECL_REFCOUNTING(URLAndReferrerInfo)
 

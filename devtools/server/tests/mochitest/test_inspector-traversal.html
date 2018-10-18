@@ -19,25 +19,22 @@ window.onload = function() {
 };
 
 let gInspectee = null;
-let gClient = null;
+let gTarget = null;
 let gWalker = null;
 const checkActorIDs = [];
 
 function assertOwnership() {
   assertOwnershipTrees(gWalker);
 }
-addTest(function setup() {
+addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
-    gInspectee = doc;
-    const {InspectorFront} = require("devtools/shared/fronts/inspector");
-    const inspector = InspectorFront(client, tab);
-    promiseDone(inspector.getWalker().then(walker => {
-      ok(walker, "getWalker() should return an actor.");
-      gClient = client;
-      gWalker = walker;
-    }).then(runNextTest));
-  });
+  const { target, doc } = await attachURL(url);
+  const inspector = target.getInspector();
+  gInspectee = doc;
+  gTarget = target;
+  gWalker = await inspector.getWalker();
+  ok(gWalker, "getWalker() should return an actor.");
+  runNextTest();
 });
 
 addTest(function testWalkerRoot() {
@@ -137,7 +134,7 @@ addTest(function testQuerySelectors() {
   }).then(() => {
     ok(!nodeList.actorID, "Actor should have been destroyed.");
     assertOwnership();
-    return checkMissing(gClient, nodeListID);
+    return checkMissing(gTarget, nodeListID);
   }).then(runNextTest));
 });
 
@@ -313,7 +310,7 @@ addTest(function testReleaseWalker() {
   checkActorIDs.push(gWalker.actorID);
 
   promiseDone(gWalker.release().then(() => {
-    const promises = Array.from(checkActorIDs, (id) => checkMissing(gClient, id));
+    const promises = Array.from(checkActorIDs, (id) => checkMissing(gTarget, id));
     return Promise.all(promises);
   }).then(runNextTest));
 });
@@ -321,7 +318,7 @@ addTest(function testReleaseWalker() {
 addTest(function cleanup() {
   gWalker = null;
   gInspectee = null;
-  gClient = null;
+  gTarget = null;
   runNextTest();
 });
   </script>

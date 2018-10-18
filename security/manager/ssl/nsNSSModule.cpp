@@ -34,6 +34,7 @@
 #include "nsTLSSocketProvider.h"
 #include "nsXULAppAPI.h"
 #include "OSKeyStore.h"
+#include "OSReauthenticator.h"
 
 #ifdef MOZ_XUL
 #include "nsCertTree.h"
@@ -160,6 +161,7 @@ NS_DEFINE_NAMED_CID(NS_SECURE_BROWSER_UI_CID);
 NS_DEFINE_NAMED_CID(NS_SITE_SECURITY_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_CERT_BLOCKLIST_CID);
 NS_DEFINE_NAMED_CID(NS_OSKEYSTORE_CID);
+NS_DEFINE_NAMED_CID(NS_OSREAUTHENTICATOR_CID);
 
 // Components that require main thread initialization could cause a deadlock
 // in necko code (bug 1418752). To prevent it we initialize all such components
@@ -221,6 +223,10 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
                 nullptr,
                 ProcessRestriction::ParentProcessOnly,
                 ThreadRestriction::MainThreadOnly> },
+  { &kNS_OSREAUTHENTICATOR_CID, false, nullptr, Constructor<OSReauthenticator,
+                nullptr,
+                ProcessRestriction::ParentProcessOnly,
+                ThreadRestriction::MainThreadOnly> },
   { nullptr }
 };
 
@@ -253,6 +259,7 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_SSSERVICE_CONTRACTID, &kNS_SITE_SECURITY_SERVICE_CID },
   { NS_CERTBLOCKLIST_CONTRACTID, &kNS_CERT_BLOCKLIST_CID },
   { NS_OSKEYSTORE_CONTRACTID, &kNS_OSKEYSTORE_CID},
+  { NS_OSREAUTHENTICATOR_CONTRACTID, &kNS_OSREAUTHENTICATOR_CID},
   { nullptr }
 };
 

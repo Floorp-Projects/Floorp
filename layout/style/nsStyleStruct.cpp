@@ -3855,7 +3855,8 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
     hint |= nsChangeHint_RepaintFrame;
   }
 
-  if (willChangeBitsChanged & NS_STYLE_WILL_CHANGE_FIXPOS_CB) {
+  if (willChangeBitsChanged & (NS_STYLE_WILL_CHANGE_FIXPOS_CB |
+                               NS_STYLE_WILL_CHANGE_ABSPOS_CB)) {
     hint |= nsChangeHint_UpdateContainingBlock;
   }
 

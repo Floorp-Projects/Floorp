@@ -249,8 +249,6 @@ exclude-multi-locale = [
 [[filters]]
     path = "{l}mobile/chrome/region.properties"
     key = [
-        "re:^browser\\.search\\.order\\.[1-9]$",
-        "re:^browser\\.search\\.[a-zA-Z]+\\.US",
         "re:^browser\\.contentHandlers\\.types\\.[0-5]\\..*$",
         "re:^gecko\\.handlerService\\.schemes\\..+$",
         "re:^gecko\\.handlerService\\.defaultHandlersVersion$",

@@ -1,0 +1,126 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Facer una captura"
+  },
+  "myShotsLink": {
+    "message": "Les mios captures"
+  },
+  "screenshotInstructions": {
+    "message": "Arrastra o primi na páxina pa esbillar una rexón. Primi ESC pa encaboxar."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Guardar"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Guardar lo visible"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Guardar la páxina completa"
+  },
+  "cancelScreenshot": {
+    "message": "Encaboxar"
+  },
+  "downloadScreenshot": {
+    "message": "Baxar"
+  },
+  "downloadOnlyNotice": {
+    "message": "Anguaño tas nel mou de namái descarga."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots camuda automáticamente al mou namái descarga nestes situaciones:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Na ventana de resotalar en privao."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Les cookies de terceros tán desactivaes."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "«Enxamás nun recordar l'historial» ta desactiváu."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Tas usando Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Desactiváronse les xubes."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Copióse l'enllaz"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "L'enllaz a la captura copióse al cartafueyu. Primi $META_KEY$-V p'apegar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Copiar"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Copióse la captura"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "La captura copióse al cartafueyu. Primi $META_KEY$-V p'apegar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorDetails": {
+    "message": "¡Perdón, pero nun pudimos guardar la to captura! Volvi tentalo más sero, por favor."
+  },
+  "connectionErrorDetails": {
+    "message": "Comprueba la conexón a internet. Si yes a coneutate a internet, quiciabes heba un problema temporal col serviciu de Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nun podemos guardar la captura porque hai un problema col serviciu de Firefox Screenshots. Volvi tentalo más sero."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Nun pue capturase esta páxina."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Esta páxina web nun ye estándar, asina que nun pues capturala."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "¡Nun pues facer captures de pantalla de Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "La esbilla ye perpequeña"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Les captures de pantalla tán desactivaes nel mou Restolar en privao"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Perdón poles molesties. Tamos trabayando nesta carauterística pa llanzamientos futuros."
+  },
+  "tourBodyIntro": {
+    "message": "Fai, guarda y comparti captures de pantalla ensin colar de Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Un mou nuevu de guardar"
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Captura lo que quies"
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Como te preste"
+  },
+  "tourSkip": {
+    "message": "SALTAR"
+  },
+  "tourDone": {
+    "message": "Fecho"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Términos"
+  },
+  "libraryLabel": {
+    "message": "Captures de pantalla"
+  }
+}

@@ -7,7 +7,7 @@ loadRelativeToScript('annotations.js');
 loadRelativeToScript('loadCallgraph.js');
 
 if (typeof scriptArgs[0] != 'string')
-    throw "Usage: computeGCFunctions.js <callgraph.txt> <out:gcFunctions.txt> <out:gcFunctions.lst> <out:gcEdges.txt> <out:suppressedFunctions.lst>";
+    throw "Usage: computeGCFunctions.js <callgraph.txt> <out:gcFunctions.txt> <out:gcFunctions.lst> <out:gcEdges.txt> <out:limitedFunctions.lst>";
 
 var start = "Time: " + new Date;
 
@@ -15,7 +15,7 @@ var callgraph_filename = scriptArgs[0];
 var gcFunctions_filename = scriptArgs[1] || "gcFunctions.txt";
 var gcFunctionsList_filename = scriptArgs[2] || "gcFunctions.lst";
 var gcEdges_filename = scriptArgs[3] || "gcEdges.txt";
-var suppressedFunctionsList_filename = scriptArgs[4] || "suppressedFunctions.lst";
+var limitedFunctionsList_filename = scriptArgs[4] || "limitedFunctions.lst";
 
 loadCallgraph(callgraph_filename);
 
@@ -23,7 +23,7 @@ printErr("Writing " + gcFunctions_filename);
 redirect(gcFunctions_filename);
 
 for (var name in gcFunctions) {
-    for (let readable of readableNames[name]) {
+    for (let readable of (readableNames[name] || [])) {
         print("");
         print("GC Function: " + name + "$" + readable);
         let current = name;
@@ -40,8 +40,12 @@ for (var name in gcFunctions) {
 printErr("Writing " + gcFunctionsList_filename);
 redirect(gcFunctionsList_filename);
 for (var name in gcFunctions) {
-    for (var readable of readableNames[name])
-        print(name + "$" + readable);
+    if (name in readableNames) {
+        for (var readable of readableNames[name])
+            print(name + "$" + readable);
+    } else {
+        print(name);
+    }
 }
 
 // gcEdges is a list of edges that can GC for more specific reasons than just
@@ -62,8 +66,7 @@ for (var block in gcEdges) {
   }
 }
 
-printErr("Writing " + suppressedFunctionsList_filename);
-redirect(suppressedFunctionsList_filename);
-for (var name in suppressedFunctions) {
-    print(name);
-}
+printErr("Writing " + limitedFunctionsList_filename);
+redirect(limitedFunctionsList_filename);
+for (const [name, limits] of Object.entries(limitedFunctions))
+    print(`${limits} ${name}`);

@@ -519,7 +519,8 @@ nsUrlClassifierPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in)
   }
 
   MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
-  LOG(("[%s] Loading PrefixSet successful", mName.get()));
+  LOG(("[%s] Loading PrefixSet successful (%u total prefixes)", mName.get(),
+       mTotalPrefixes));
 
   return NS_OK;
 }

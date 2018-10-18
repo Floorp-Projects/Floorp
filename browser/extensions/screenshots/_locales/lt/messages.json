@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "Darykite iškarpas ir ekrano nuotraukos su interneto turiniu bei saugokite jas laikinai arba visąlaik."
+  },
+  "addonAuthorsList": {
+    "message": "„Mozilla“ <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Padaryti ekrano nuotrauką"
+  },
+  "myShotsLink": {
+    "message": "Mano nuotraukos"
+  },
+  "screenshotInstructions": {
+    "message": "Tempkite arba spustelėkite tinklalapyje norėdami pasirinkti regioną. Spustelėkite „ESC“ norėdami atsisakyti."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Įrašyti"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Įrašyti matomą"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Įrašyti visą tinklalapį"
+  },
+  "cancelScreenshot": {
+    "message": "Atsisakyti"
+  },
+  "downloadScreenshot": {
+    "message": "Atsisiųsti"
+  },
+  "downloadOnlyNotice": {
+    "message": "Dabar esate tik atsiuntimo veiksenoje."
+  },
+  "downloadOnlyDetails": {
+    "message": "„Firefox“ ekrano nuotraukos automatiškai įjungia tik atsiuntimo veikseną tokiais atvejais:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "privačiojo naršymo lange"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "kai išjungti trečiųjų šalių slapukai"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "kai įjungta „niekada nevesti žurnalo“ nuostata"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Jūs naudojate „Firefox“ ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Įkėlimai išjungti."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Saitas nukopijuotas"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Jūsų nuotraukos saitas buvo nukopijuotas į iškarpinę. Spustelėkite „$META_KEY$-V“ norėdami įdėti.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopijuoti"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Nuotrauka nukopijuota"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Jūsų nuotrauka nukopijuota į iškarpinę. Spustelėkite $META_KEY$-V, norėdami įdėti.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Įrašytas paveikslas bus apkirptas iki $PIXELS$ taškų aukščio.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Neveikia."
+  },
+  "requestErrorDetails": {
+    "message": "Atsiprašome! Mums nepavyko įrašyti jūsų nuotraukos. Prašome pabandyti vėliau."
+  },
+  "connectionErrorTitle": {
+    "message": "Mums nepavyko prisijungti prie jūsų ekrano nuotraukų."
+  },
+  "connectionErrorDetails": {
+    "message": "Patikrinkite savo interneto ryšį. Jeigu galite prisijungti prie interneto, gali būti, kad yra laikina problema su „Firefox Screenshots“ paslauga."
+  },
+  "loginErrorDetails": {
+    "message": "Mums nepavyko įrašyti jūsų nuotraukos, nes yra problema su „Firefox Screenshots“ paslauga. Prašome pabandyti vėliau."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Mums nepavyko nufotografuoti šio tinklalapio."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Tai nėra įprastas tinklalapis, tad negalite padaryti jo nuotraukos."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Negalite padaryti „Firefox Screenshots“ tinklalapio nuotraukos!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Jūsų pasirinkimas yra per mažas"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Ekrano nuotraukos privačiajame naršyme neveikia"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Atsiprašome už nepatogumą. Mes dirbame prie šio funkcionalumo vėlesnėms versijoms."
+  },
+  "genericErrorTitle": {
+    "message": "Vau! „Firefox Screenshots“ sugedo."
+  },
+  "genericErrorDetails": {
+    "message": "Mes nesame tikri, kas ką tik nutiko. Norite pabandyti dar kartą arba nufotografuoti kitą tinklalapį?"
+  },
+  "tourBodyIntro": {
+    "message": "Darykite, įrašykite ir dalinkitės ekrano nuotraukomis nepalikdami „Firefox“."
+  },
+  "tourHeaderPageAction": {
+    "message": "Naujas būdas įrašyti"
+  },
+  "tourBodyPageAction": {
+    "message": "Išskleiskite tinklalapio veiksmų meniu, esantį adreso juostoje, bet kada, kai norite padaryti ekrano nuotrauką."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Užfiksuokite būtent tai, ką norite"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Spustelėkite ir tempkite, kad užfiksuotumėte tik dalį tinklalapio. Taip pat galite užvesti pelę, norėdami paryškinti savo pasirinkimą."
+  },
+  "tourHeaderFullPage": {
+    "message": "Fiksuokite langus arba ištisus tinklalapius"
+  },
+  "tourBodyFullPage": {
+    "message": "Pasirinkite mygtukus aukščiau dešinėje, norėdami užfiksuoti matomą lango dalį arba visą tinklalapį."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Kaip jums patogiau"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Įrašykite padarytas nuotraukas saityne patogesniam dalinimuisi, arba atsisiųskite jas į savo kompiuterį. Spustelėję mygtuką „Mano nuotraukos“, matysite visas savo padarytas nuotraukas."
+  },
+  "tourHeaderAccounts": {
+    "message": "Nuotraukos visur"
+  },
+  "tourBodyAccounts": {
+    "message": "Prisijungę su savo „Firefox“ paskyra, nuotraukas galėsite pasiekti visuose savo įrenginiuose, ir visam laikui įrašyti patinkančias."
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "Kita skaidrė"
+  },
+  "tourPrevious": {
+    "message": "Buvusi skaidrė"
+  },
+  "tourDone": {
+    "message": "Baigta"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Naudodamiesi „Firefox“ ekrano nuotraukomis, sutinkate su mūsų $TERMSANDPRIVACYNOTICETERMSLINK$ bei $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Sąlygomis"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Privatumo pranešimu"
+  },
+  "libraryLabel": {
+    "message": "Ekrano nuotraukos"
+  }
+}

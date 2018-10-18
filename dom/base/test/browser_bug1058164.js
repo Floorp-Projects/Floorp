@@ -4,6 +4,9 @@
 
 "use strict";
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
+																		true]]});
+
 const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 
 /**

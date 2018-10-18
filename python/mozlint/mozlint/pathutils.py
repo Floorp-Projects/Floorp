@@ -100,6 +100,9 @@ def collapse(paths, base=None, dotfiles=False):
         if not os.path.isdir(base):
             base = os.path.dirname(base)
 
+    if base in paths:
+        return [base]
+
     covered = set()
     full = set()
     for name in os.listdir(base):
@@ -124,25 +127,19 @@ def collapse(paths, base=None, dotfiles=False):
     return covered
 
 
-def filterpaths(paths, linter, **lintargs):
+def filterpaths(root, paths, include, exclude=None, extensions=None):
     """Filters a list of paths.
 
-    Given a list of paths, and a linter definition plus extra
-    arguments, return the set of paths that should be linted.
+    Given a list of paths and some filtering rules, return the set of paths
+    that should be linted.
 
     :param paths: A starting list of paths to possibly lint.
-    :param linter: A linter definition.
-    :param lintargs: Extra arguments passed to the linter.
-    :returns: A list of file paths to lint.
+    :param include: A list of paths that should be included (required).
+    :param exclude: A list of paths that should be excluded (optional).
+    :param extensions: A list of file extensions which should be considered (optional).
+    :returns: A tuple containing a list of file paths to lint and a list of
+              paths to exclude.
     """
-    include = linter.get('include', [])
-    exclude = lintargs.get('exclude', [])
-    exclude.extend(linter.get('exclude', []))
-    root = lintargs['root']
-
-    if not lintargs.get('use_filters', True) or (not include and not exclude):
-        return paths
-
     def normalize(path):
         if '*' not in path and not os.path.isabs(path):
             path = os.path.join(root, path)
@@ -153,14 +150,13 @@ def filterpaths(paths, linter, **lintargs):
 
     # Exclude paths with and without globs will be handled separately,
     # pull them apart now.
-    exclude = map(normalize, exclude)
+    exclude = map(normalize, exclude or [])
     excludepaths = [p for p in exclude if p.exists]
     excludeglobs = [p.path for p in exclude if not p.exists]
 
-    extensions = linter.get('extensions')
     keep = set()
     discard = set()
-    for path in map(FilterPath, paths):
+    for path in map(normalize, paths):
         # Exclude bad file extensions
         if extensions and path.isfile and path.ext not in extensions:
             continue
@@ -192,6 +188,7 @@ def filterpaths(paths, linter, **lintargs):
                 # no exclude paths in-between them.
                 if not any(e.contains(path) for e in excs):
                     keep.add(path)
+                    discard.update([e for e in excs if path.contains(e)])
 
         # Next expand excludes with globs in them so we can add them to
         # the set of files to discard.
@@ -199,9 +196,7 @@ def filterpaths(paths, linter, **lintargs):
             for p, f in path.finder.find(pattern):
                 discard.add(path.join(p))
 
-    # Only pass paths we couldn't exclude here to the underlying linter
-    lintargs['exclude'] = collapse([f.path for f in discard])
-    return [f.path for f in keep]
+    return [f.path for f in keep], collapse([f.path for f in discard])
 
 
 def findobject(path):

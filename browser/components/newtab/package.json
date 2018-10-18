@@ -88,13 +88,18 @@
   "main": "bootstrap.js",
   "repository": "mozilla/activity-stream",
   "config": {
+    "default_locale": "en-US",
+    "/*": "NB: This directory is *not* 'locales' to avoid mercurial hook for uplifts.",
+    "**": "It contains the source default locale strings to be exported for localization",
+    "*/": "and is the path used to update translated strings and to prerender strings.",
+    "locales_dir": "locales-src",
     "mc_dir": "../mozilla-central"
   },
   "scripts": {
     "mochitest": "(cd $npm_package_config_mc_dir && ./mach mochitest browser/components/newtab/test/browser --headless)",
     "mochitest-debug": "(cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/components/newtab/test/browser)",
     "bundle": "npm-run-all bundle:*",
-    "bundle:locales": "pontoon-to-json --src locales --dest data",
+    "bundle:locales": "pontoon-to-json --src $npm_package_config_locales_dir --dest data",
     "bundle:webpack": "webpack --config webpack.system-addon.config.js",
     "bundle:css": "node-sass --source-map true --source-map-contents content-src/styles -o css",
     "bundle:html": "rimraf prerendered && webpack --config webpack.prerender.config.js && node ./bin/render-activity-stream-html.js",
@@ -102,7 +107,7 @@
     "prebuildmc": "rimraf $npm_package_config_mc_dir/browser/components/newtab/",
     "buildmc:bundle": "npm run  bundle",
     "buildmc:copy": "rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/components/newtab/",
-    "buildmc:stringsExport": "cp locales/en-US/strings.properties $npm_package_config_mc_dir/browser/locales/en-US/chrome/browser/activity-stream/newtab.properties",
+    "buildmc:stringsExport": "cp $npm_package_config_locales_dir/$npm_package_config_default_locale/strings.properties $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/chrome/browser/activity-stream/newtab.properties",
     "buildmc:copyPingCentre": "cpx \"ping-centre/PingCentre.jsm\" $npm_package_config_mc_dir/browser/modules",
     "startmc": "npm-run-all --parallel startmc:*",
     "prestartmc": "npm run buildmc",

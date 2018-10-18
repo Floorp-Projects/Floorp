@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function
 import json
 import os
 import re
-import utils
+from talos import utils
 
 KEY_XRE = '{xre}'
 DEFAULT_DURATION = 100.0

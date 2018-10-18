@@ -5,6 +5,7 @@
 package org.mozilla.geckoview.test
 
 import org.mozilla.gecko.util.GeckoBundle
+import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
@@ -36,7 +37,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
                     @AssertCalled(count = 1, order = [1])
                     override fun onLoadRequest(session: GeckoSession, uri: String,
-                                               where: Int, flags: Int): GeckoResult<Boolean>? {
+                                               where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                         assertThat("URI should be " + testUri, uri, equalTo(testUri))
                         return null
                     }
@@ -221,7 +222,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2, order = [1, 2])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", uri, notNullValue())
                 assertThat("URL should match", uri,
@@ -400,7 +401,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", uri, notNullValue())
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
@@ -593,7 +594,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -642,7 +643,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -676,7 +677,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should match", uri, endsWith(HELLO2_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -709,8 +710,14 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean> {
-                return GeckoResult.fromValue(uri.endsWith(HELLO_HTML_PATH))
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny> {
+                val res : AllowOrDeny
+                if (uri.endsWith(HELLO_HTML_PATH)) {
+                    res = AllowOrDeny.DENY
+                } else {
+                    res = AllowOrDeny.ALLOW
+                }
+                return GeckoResult.fromValue(res)
             }
         })
 
@@ -744,7 +751,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
                 assertThat("Where should be correct", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
@@ -774,7 +781,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             // one when loading the URL and one when opening a new window.
             @AssertCalled(count = 2, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
                 assertThat("Where should be correct", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
@@ -870,9 +877,15 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean> {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny> {
                 // Pretend we handled the target="_blank" link click.
-                return GeckoResult.fromValue(uri.endsWith(NEW_SESSION_CHILD_HTML_PATH))
+                val res : AllowOrDeny
+                if (uri.endsWith(NEW_SESSION_CHILD_HTML_PATH)) {
+                    res = AllowOrDeny.DENY
+                } else {
+                    res = AllowOrDeny.ALLOW
+                }
+                return GeckoResult.fromValue(res)
             }
         })
 
@@ -885,7 +898,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
-                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                                       where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
                 assertThat("URI must match", uri,
                            endsWith(forEachCall(NEW_SESSION_CHILD_HTML_PATH, NEW_SESSION_HTML_PATH)))
                 return null

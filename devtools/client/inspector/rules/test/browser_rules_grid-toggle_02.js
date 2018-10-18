@@ -34,7 +34,9 @@ add_task(async function() {
   const overriddenGridToggle = overriddenContainer.querySelector(".ruleview-grid");
 
   info("Checking the initial state of the CSS grid toggle in the rule-view.");
-  ok(gridToggle && overriddenGridToggle, "Grid highlighter toggles are visible.");
+  ok(!gridToggle.hasAttribute("disabled"), "Grid highlighter toggle is not disabled.");
+  ok(!overriddenGridToggle.hasAttribute("disabled"),
+    "Grid highlighter toggle is not disabled.");
   ok(!gridToggle.classList.contains("active") &&
     !overriddenGridToggle.classList.contains("active"),
     "Grid highlighter toggle buttons are not active.");

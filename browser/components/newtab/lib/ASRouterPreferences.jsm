@@ -16,7 +16,9 @@ const DEFAULT_STATE = {
   _devtoolsPref: DEVTOOLS_PREF,
 };
 
-const USER_PREFERENCES = {snippets: "browser.newtabpage.activity-stream.feeds.snippets"};
+const USER_PREFERENCES = {
+  snippets: "browser.newtabpage.activity-stream.feeds.snippets",
+};
 
 const TEST_PROVIDER = {
   id: "snippets_local_testing",

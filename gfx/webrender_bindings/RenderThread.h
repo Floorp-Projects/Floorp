@@ -13,6 +13,7 @@
 #include "base/message_loop.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -151,7 +152,7 @@ public:
   void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aCallBack);
 
   /// Can only be called from the render thread.
-  void UpdateAndRender(wr::WindowId aWindowId, const TimeStamp& aStartTime, bool aRender, bool aReadback);
+  void UpdateAndRender(wr::WindowId aWindowId, const TimeStamp& aStartTime, bool aRender, const Maybe<gfx::IntSize>& aReadbackSize, const Maybe<Range<uint8_t>>& aReadbackBuffer);
 
   void Pause(wr::WindowId aWindowId);
   bool Resume(wr::WindowId aWindowId);

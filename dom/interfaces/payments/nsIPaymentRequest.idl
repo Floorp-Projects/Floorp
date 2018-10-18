@@ -30,7 +30,6 @@ interface nsIPaymentItem : nsISupports
   readonly attribute AString label;
   readonly attribute nsIPaymentCurrencyAmount amount;
   readonly attribute boolean pending;
-  readonly attribute AString type;
 };
 
 [scriptable, builtinclass, uuid(74259861-c318-40e8-b3d5-518e701bed80)]

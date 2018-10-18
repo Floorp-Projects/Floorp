@@ -140,8 +140,16 @@ Selection.prototype = {
       nodeFront = parentNode;
     }
 
+    if (this._nodeFront == null && nodeFront == null) {
+      // Avoid to notify multiple "unselected" events with a null/undefined nodeFront
+      // (e.g. once when the webpage start to navigate away from the current webpage,
+      // and then again while the new page is being loaded).
+      return;
+    }
+
     this._isSlotted = isSlotted;
     this._nodeFront = nodeFront;
+
     this.emit("new-node-front", nodeFront, this.reason);
   },
 

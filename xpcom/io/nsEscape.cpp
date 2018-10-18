@@ -401,17 +401,27 @@ bool
 NS_EscapeURL(const char* aPart, int32_t aPartLen, uint32_t aFlags,
              nsACString& aResult)
 {
+  size_t partLen;
   if (aPartLen < 0) {
-    aPartLen = strlen(aPart);
+    partLen = strlen(aPart);
+  } else {
+    partLen = aPartLen;
   }
 
-  bool result = false;
-  nsresult rv = T_EscapeURL(aPart, aPartLen, aFlags, nullptr, aResult, result);
+  return NS_EscapeURLSpan(MakeSpan(aPart, partLen), aFlags, aResult);
+}
+
+bool
+NS_EscapeURLSpan(mozilla::Span<const char> aStr, uint32_t aFlags,
+             nsACString& aResult)
+{
+  bool appended = false;
+  nsresult rv = T_EscapeURL(aStr.Elements(), aStr.Length(), aFlags, nullptr, aResult, appended);
   if (NS_FAILED(rv)) {
     ::NS_ABORT_OOM(aResult.Length() * sizeof(nsACString::char_type));
   }
 
-  return result;
+  return appended;
 }
 
 nsresult

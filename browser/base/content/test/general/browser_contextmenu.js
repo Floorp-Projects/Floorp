@@ -19,6 +19,12 @@ const chrome_base = "chrome://mochitests/content/browser/browser/base/content/te
 /* import-globals-from contextmenu_common.js */
 Services.scriptloader.loadSubScript(chrome_base + "contextmenu_common.js", this);
 
+add_task(async function init() {
+  // Ensure screenshots is really disabled (bug 1498738)
+  const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
+  await addon.disable({allowSystemAddons: true});
+});
+
 // Below are test cases for XUL element
 add_task(async function test_xul_text_link_label() {
   let url = chrome_base + "subtst_contextmenu_xul.xul";

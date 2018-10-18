@@ -12,26 +12,26 @@ function test() {
 
     let tab = yield addTab(TAB_URL);
     let { tabs } = yield listTabs(client);
-    let [, tabClient] = yield attachTarget(client, findTab(tabs, TAB_URL));
+    let [, targetFront] = yield attachTarget(client, findTab(tabs, TAB_URL));
 
-    let { workers } = yield listWorkers(tabClient);
+    let { workers } = yield listWorkers(targetFront);
     is(workers.length, 0);
 
     executeSoon(() => {
       evalInTab(tab, "var worker1 = new Worker('" + WORKER1_URL + "');");
     });
-    yield waitForWorkerListChanged(tabClient);
+    yield waitForWorkerListChanged(targetFront);
 
-    ({ workers } = yield listWorkers(tabClient));
+    ({ workers } = yield listWorkers(targetFront));
     is(workers.length, 1);
     is(workers[0].url, WORKER1_URL);
 
     executeSoon(() => {
       evalInTab(tab, "var worker2 = new Worker('" + WORKER2_URL + "');");
     });
-    yield waitForWorkerListChanged(tabClient);
+    yield waitForWorkerListChanged(targetFront);
 
-    ({ workers } = yield listWorkers(tabClient));
+    ({ workers } = yield listWorkers(targetFront));
     is(workers.length, 2);
     is(workers[0].url, WORKER1_URL);
     is(workers[1].url, WORKER2_URL);
@@ -39,18 +39,18 @@ function test() {
     executeSoon(() => {
       evalInTab(tab, "worker1.terminate()");
     });
-    yield waitForWorkerListChanged(tabClient);
+    yield waitForWorkerListChanged(targetFront);
 
-    ({ workers } = yield listWorkers(tabClient));
+    ({ workers } = yield listWorkers(targetFront));
     is(workers.length, 1);
     is(workers[0].url, WORKER2_URL);
 
     executeSoon(() => {
       evalInTab(tab, "worker2.terminate()");
     });
-    yield waitForWorkerListChanged(tabClient);
+    yield waitForWorkerListChanged(targetFront);
 
-    ({ workers } = yield listWorkers(tabClient));
+    ({ workers } = yield listWorkers(targetFront));
     is(workers.length, 0);
 
     yield close(client);

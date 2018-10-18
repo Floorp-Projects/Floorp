@@ -17,6 +17,17 @@ const MESSAGES = () => ([
     },
   },
   {
+    "id": "SIMPLE_TEST_BUTTON_URL_1",
+    "template": "simple_snippet",
+    "content": {
+      "icon": TEST_ICON,
+      "button_label": "Get one now!",
+      "button_url": "https://www.mozilla.org/en-US/firefox/accounts",
+      "text": "Sync it, link it, take it with you. All this and more with a Firefox Account.",
+      "block_button_text": "Block",
+    },
+  },
+  {
     "id": "SIMPLE_WITH_TITLE_TEST_1",
     "template": "simple_snippet",
     "content": {
@@ -36,9 +47,8 @@ const MESSAGES = () => ([
       "scene1_title_icon": "",
       "scene1_text": "Internet shutdowns, hackers, harassment &ndash; the health of the internet is on the line. Sign up and Mozilla will keep you updated on how you can help.",
       "scene1_button_label": "Continue",
-       // TODO: Need to update schema
-      // "scene1_button_color": "#712b00",
-      // "scene1_button_background_color": "#ff9400",
+      "scene1_button_color": "#712b00",
+      "scene1_button_background_color": "#ff9400",
       "scene2_dismiss_button_text": "Dismiss",
       "scene2_text": "Sign up for the Mozilla newsletter and we will keep you updated on how you can help.",
       "scene2_privacy_html": "I'm okay with Mozilla handling my info as explained in this <privacyLink>Privacy Notice</privacyLink>.",
@@ -61,17 +71,15 @@ const MESSAGES = () => ([
     "content": {
       "scene1_icon": TEST_ICON,
       "scene1_button_label": "Get connected with sync!",
-      // TODO: Need to update schema
-      // "scene1_button_color": "#712b00",
-      // "scene1_button_background_color": "#ff9400",
+      "scene1_button_color": "#712b00",
+      "scene1_button_background_color": "#ff9400",
 
       "scene1_text": "Connect to Firefox by securely syncing passwords, bookmarks, and open tabs.",
       "scene1_title": "Browser better.",
       "scene1_title_icon": "",
 
       "scene2_text": "Connect to your Firefox account to securely sync passwords, bookmarks, and open tabs.",
-      // TODO: needs to be added
-      // "scene2_title": "Title 123",
+      "scene2_title": "Title 123",
       "scene2_email_placeholder_text": "Your email",
       "scene2_button_label": "Continue",
       "scene2_dismiss_button_text": "Dismiss",
@@ -81,6 +89,42 @@ const MESSAGES = () => ([
       "success_text": "Check your inbox for the confirmation!",
       "error_text": "Error!",
       "hidden_inputs": {},
+    },
+  },
+  {
+    id: "SNIPPETS_SEND_TO_DEVICE_TEST",
+    template: "send_to_device_snippet",
+    content: {
+      include_sms: true,
+      locale: "en-CA",
+      country: "us",
+      message_id_sms: "ff-mobilesn-download",
+      message_id_email: "download-firefox-mobile",
+
+      scene1_button_background_color: "#6200a4",
+      scene1_button_color: "#FFFFFF",
+      scene1_button_label: "Install now",
+      scene1_icon: TEST_ICON,
+      scene1_text: "Browse without compromise with Firefox Mobile.",
+      scene1_title: "Full-featured. Customizable. Lightning fast",
+      scene1_title_icon: "",
+
+      scene2_button_label: "Send",
+      scene2_disclaimer_html: "The intended recipient of the email must have consented. <privacyLink>Learn more.</privacyLink>",
+      scene2_dismiss_button_text: "Dismiss",
+      scene2_icon: TEST_ICON,
+      scene2_input_placeholder: "Your email address or phone number",
+      scene2_text: "Send Firefox to your phone and take a powerful independent browser with you.",
+      scene2_title: "",
+
+      error_text: "Oops, there was a problem.",
+      success_title: "Your download link was sent.",
+      success_text: "Check your device for the email message!",
+      links: {"privacyLink": {"url": "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894"}},
+
+      // TODO: Not actually defined in the send to device schema
+      form_action: "https://basket.mozilla.org/subscribe.json",
+      hidden_inputs: {},
     },
   },
 ]);

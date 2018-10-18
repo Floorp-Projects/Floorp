@@ -13,7 +13,7 @@ var functionName;
 var functionBodies;
 
 if (typeof scriptArgs[0] != 'string' || typeof scriptArgs[1] != 'string')
-    throw "Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <suppressedFunctions.lst> <gcTypes.txt> <typeInfo.txt> [start end [tmpfile]]";
+    throw "Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <limitedFunctions.lst> <gcTypes.txt> <typeInfo.txt> [start end [tmpfile]]";
 
 var theFunctionNameToFind;
 if (scriptArgs[0] == '--function' || scriptArgs[0] == '-f') {
@@ -23,7 +23,7 @@ if (scriptArgs[0] == '--function' || scriptArgs[0] == '-f') {
 
 var gcFunctionsFile = scriptArgs[0] || "gcFunctions.lst";
 var gcEdgesFile = scriptArgs[1] || "gcEdges.txt";
-var suppressedFunctionsFile = scriptArgs[2] || "suppressedFunctions.lst";
+var limitedFunctionsFile = scriptArgs[2] || "limitedFunctions.lst";
 var gcTypesFile = scriptArgs[3] || "gcTypes.txt";
 var typeInfoFile = scriptArgs[4] || "typeInfo.txt";
 var batch = (scriptArgs[5]|0) || 1;
@@ -36,11 +36,13 @@ assert(text.pop().length == 0);
 for (var line of text)
     gcFunctions[mangled(line)] = true;
 
-var suppressedFunctions = {};
-var text = snarf(suppressedFunctionsFile).split("\n");
+var limitedFunctions = {};
+var text = snarf(limitedFunctionsFile).split("\n");
 assert(text.pop().length == 0);
 for (var line of text) {
-    suppressedFunctions[line] = true;
+    const [_, limits, func] = line.match(/(.*?) (.*)/);
+    assert(limits !== undefined);
+    limitedFunctions[func] = limits | 0;
 }
 text = null;
 
@@ -353,7 +355,7 @@ function edgeCanGC(edge)
         }
 
         var varName = variable.Name[0];
-        return indirectCallCannotGC(functionName, varName) ? null : "*" + varName;
+        return indirectCallCannotGC(functionName, varName) ? null : "'*" + varName + "'";
     }
 
     if (callee.Kind == "Fld") {
@@ -362,7 +364,11 @@ function edgeCanGC(edge)
         var fullFieldName = csuName + "." + field.Name[0];
         if (fieldCallCannotGC(csuName, fullFieldName))
             return null;
-        return (fullFieldName in suppressedFunctions) ? null : fullFieldName;
+
+        if (fullFieldName in gcFunctions)
+            return "'" + fullFieldName + "'";
+
+        return null;
     }
 }
 
@@ -501,7 +507,7 @@ function findGCBeforeValueUse(start_body, start_point, suppressed, variable)
 
             var src_gcInfo = gcInfo;
             var src_preGCLive = preGCLive;
-            if (!gcInfo && !(source in body.suppressed) && !suppressed) {
+            if (!gcInfo && !(body.limits[source] & LIMIT_CANNOT_GC) && !suppressed) {
                 var gcName = edgeCanGC(edge, body);
                 if (gcName)
                     src_gcInfo = {name:gcName, body:body, ppoint:source};
@@ -783,7 +789,7 @@ function processBodies(functionName)
 {
     if (!("DefineVariable" in functionBodies[0]))
         return;
-    var suppressed = (mangled(functionName) in suppressedFunctions);
+    var suppressed = Boolean(limitedFunctions[mangled(functionName)] & LIMIT_CANNOT_GC);
     for (var variable of functionBodies[0].DefineVariable) {
         var name;
         if (variable.Variable.Kind == "This")
@@ -848,11 +854,19 @@ function process(name, json) {
     functionName = name;
     functionBodies = JSON.parse(json);
 
+    // Annotate body with a table of all points within the body that may be in
+    // a limited scope (eg within the scope of a GC suppression RAII class.)
+    // body.limits is a plain object indexed by point, with the value being a
+    // bit set stored in an integer of the limit bits.
     for (var body of functionBodies)
-        body.suppressed = [];
+        body.limits = [];
+
     for (var body of functionBodies) {
-        for (var [pbody, id] of allRAIIGuardedCallPoints(typeInfo, functionBodies, body, isSuppressConstructor))
-            pbody.suppressed[id] = true;
+        for (var [pbody, id, limits] of allRAIIGuardedCallPoints(typeInfo, functionBodies, body, isLimitConstructor))
+        {
+            if (limits)
+                pbody.limits[id] = limits;
+        }
     }
     processBodies(functionName);
 }

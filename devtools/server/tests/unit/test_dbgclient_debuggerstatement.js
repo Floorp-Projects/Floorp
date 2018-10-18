@@ -4,7 +4,7 @@
 "use strict";
 
 var gClient;
-var gTabClient;
+var gTargetFront;
 var gDebuggee;
 
 function run_test() {
@@ -15,8 +15,8 @@ function run_test() {
   const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(function([type, traits]) {
-    attachTestTab(gClient, "test-1", function(reply, tabClient) {
-      gTabClient = tabClient;
+    attachTestTab(gClient, "test-1", function(reply, targetFront) {
+      gTargetFront = targetFront;
       test_threadAttach(reply.threadActor);
     });
   });
@@ -25,7 +25,7 @@ function run_test() {
 
 function test_threadAttach(threadActorID) {
   info("Trying to attach to thread " + threadActorID);
-  gTabClient.attachThread({}).then(function([response, threadClient]) {
+  gTargetFront.attachThread({}).then(function([response, threadClient]) {
     Assert.equal(threadClient.state, "paused");
     Assert.equal(threadClient.actor, threadActorID);
     threadClient.resume(function() {

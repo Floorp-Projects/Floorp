@@ -19,7 +19,7 @@ function run_test() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-source-map",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              gThreadClient = threadClient;
                              test_simple_source_map();
                            });
@@ -44,7 +44,7 @@ function test_simple_source_map() {
     expectedSources.delete(packet.source.url);
 
     if (expectedSources.size === 0) {
-      gClient.removeListener("newSource", _onNewSource);
+      gThreadClient.removeListener("newSource", _onNewSource);
       finishClient(gClient);
     }
   });

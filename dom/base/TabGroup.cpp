@@ -85,12 +85,7 @@ TabGroup::EnsureThrottledEventQueues()
   for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
     TaskCategory category = static_cast<TaskCategory>(i);
     if (category == TaskCategory::Worker || category == TaskCategory::Timer) {
-      nsCOMPtr<nsISerialEventTarget> target = ThrottledEventQueue::Create(mEventTargets[i]);
-      if (target) {
-        // This may return nullptr during xpcom shutdown.  This is ok as we
-        // do not guarantee a ThrottledEventQueue will be present.
-        mEventTargets[i] = target;
-      }
+      mEventTargets[i] = ThrottledEventQueue::Create(mEventTargets[i]);
     }
   }
 }

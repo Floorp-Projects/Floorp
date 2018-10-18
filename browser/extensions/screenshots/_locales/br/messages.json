@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "Tapit skeudennoù war ar Web hag enrollit anezho e-pad ur mare pe da viken."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Kemer un dapadenn-skramm"
+  },
+  "myShotsLink": {
+    "message": "Ma zapadennoù"
+  },
+  "screenshotInstructions": {
+    "message": "Riklit pe klikit war ar bajenn da ziuzañ ur vaezienn. Pouezit war ESC evit nullañ."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Enrollañ"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Enrollañ ar pezh a vez gwelet"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Enrollañ ar bajenn glok"
+  },
+  "cancelScreenshot": {
+    "message": "Nullañ"
+  },
+  "downloadScreenshot": {
+    "message": "Pellgargañ"
+  },
+  "downloadOnlyNotice": {
+    "message": "E mod pellgargañ hepken emaoc'h bremañ."
+  },
+  "downloadOnlyDetails": {
+    "message": "Mont a raio Firefox Screenshots e mod pellgargañ hepken en degouezhioù da heul:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "En ur prenestr merdeiñ prevez."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Diweredekaet eo toupinoù an tredeoù."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "Gweredekaet eo \"Na enrollañ ar roll istor\"."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Arverañ a rit Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Diweredekaet eo bet an hizivadurioù."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Ere eilet"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Eilet eo bet ere ho tapadenn er golver. Pouezit war $META_KEY$-V evit pegañ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Eilañ"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Tapadenn eilet"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Eilet eo bet ho tapadenn er golver. Pouezit war $META_KEY$-V evit pegañ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Ar skeudenn enrollet a vo krennet eus $PIXELS$ px en uhelder.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Degouezhet ez eus bet ur fazi."
+  },
+  "requestErrorDetails": {
+    "message": "Digarezit! N'haller ket enrollañ ho tapadenn. Klaskit en-dro diwezhatoc'h."
+  },
+  "connectionErrorTitle": {
+    "message": "N'haller ket adkennaskañ d'ho tapadennoù-skramm."
+  },
+  "connectionErrorDetails": {
+    "message": "Gwiriekait ho kennask kenrouedad. Ma 'z hoc'h gouest da gennaskañ ouzh ar genrouedad e c'hall bezañ abalamour d'ur gudenn gant ar gwazerezhioù Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "N'haller ket enrollañ ho tapadenn dre ma 'z eus bet ur gudenn gant ar gwazerezh Firefox Screenshots. Klaskit en-dro diwezhatoc'h."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "N'haller ket tapout ar bajenn-mañ."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "N'eo ket ur bajenn web reoliek neuze n'haller ket kemer un dapadenn-skramm ganti."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "N'hallit ket kemer un dapadenn-skramm eus ur bajenn Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Re vihan eo ho tiuzadenn"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Diweredekaet eo an tapadennoù-skramm er merdeiñ prevez."
+  },
+  "privateWindowErrorDetails": {
+    "message": "Digarezit evit ar gudenn. Labourat a reomp war ar c'heweriuster-mañ evit ermaeziadennoù da zont."
+  },
+  "genericErrorTitle": {
+    "message": "Chaous! Ur gudenn a zo savet gant Firefox Screenshots."
+  },
+  "genericErrorDetails": {
+    "message": "N'omp ket sur eus ar pezh a zo c'hoarvezet. Gallout a rit adklask pe kemer ur dapadenn eus ur bajenn all."
+  },
+  "tourBodyIntro": {
+    "message": "Kemerit, enrollit ha skignit tapadennoù-skramm he kuitaat Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Un doare nevez da enrollañ"
+  },
+  "tourBodyPageAction": {
+    "message": "Kreskiñ lañser gweredoù ar bajenn er varrenn chomlec'h pa fell deoc'h kemer un dapadenn-skramm."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Tapit ar pezh a fell deoc'h hepken"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Klikit ha riklit evit tapout ul lodenn eus ar bajenn hepken. Gallout a rit ivez tremen a-us evit usskediñ an diuzad."
+  },
+  "tourHeaderFullPage": {
+    "message": "Tapit prenestroù pe pajennoù a-bezh"
+  },
+  "tourBodyFullPage": {
+    "message": "Diuzit an afelloù a-us a-zehou evit skeudenniñ ar vaezienn welus er prenestr pe evit skeudenniñ ar bajenn a-bezh."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Evel ma fell deoc'h"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Enrollit ho tapadennoù didroc'het evit ar web evit skignañ aesoc'h, pe pellgargit anezho war ho urzhiataer. Gallout a rit ivez klikañ war an afell Ma zapadennoù evit kavout an holl dapadennoù kemeret ganeoc'h."
+  },
+  "tourHeaderAccounts": {
+    "message": "Tapadennoù da gas ganeoc'h"
+  },
+  "tourBodyAccounts": {
+    "message": "Kennaskit gant ho kont Firefox evit haeziñ ho tapadennoù war ho holl trevnadoù hag enrollañ pennrolloù da viken."
+  },
+  "tourSkip": {
+    "message": "TREMEN"
+  },
+  "tourNext": {
+    "message": "Treyonenn da-heul"
+  },
+  "tourPrevious": {
+    "message": "Treyonenn gent"
+  },
+  "tourDone": {
+    "message": "Graet"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "En ur implij Firefox Screenshots ec'h asantit d'hor $TERMSANDPRIVACYNOTICETERMSLINK$ ha $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Divizoù"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Evezhiadenn a-fed buhez prevez"
+  },
+  "libraryLabel": {
+    "message": "Tapadennoù-skramm"
+  }
+}

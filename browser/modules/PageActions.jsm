@@ -1185,6 +1185,21 @@ if (AppConstants.platform == "macosx") {
   });
 }
 
+if (AppConstants.isPlatformAndVersionAtLeast("win", "6.4")) {
+  gBuiltInActions.push(
+  // Share URL
+  {
+    id: "shareURL",
+    title: "shareURL-title",
+    onBeforePlacedInWindow(buttonNode) {
+      browserPageActions(buttonNode).shareURL.onBeforePlacedInWindow(buttonNode);
+    },
+    onCommand(event, buttonNode) {
+      browserPageActions(buttonNode).shareURL.onCommand(event, buttonNode);
+    },
+  });
+}
+
 /**
  * Gets a BrowserPageActions object in a browser window.
  *

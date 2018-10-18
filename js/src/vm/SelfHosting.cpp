@@ -1237,7 +1237,7 @@ intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp)
     }
 #endif
 
-    SharedMem<uint8_t*> data = tarray->viewDataEither().cast<uint8_t*>();
+    SharedMem<uint8_t*> data = tarray->dataPointerEither().cast<uint8_t*>();
     jit::AtomicOperations::memmoveSafeWhenRacy(data + byteDest, data + byteSrc, byteSize);
 
     args.rval().setUndefined();
@@ -1340,10 +1340,10 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
 
     size_t targetElementSize = TypedArrayElemSize(targetType);
     SharedMem<uint8_t*> targetData =
-        target->viewDataEither().cast<uint8_t*>() + targetOffset * targetElementSize;
+        target->dataPointerEither().cast<uint8_t*>() + targetOffset * targetElementSize;
 
     SharedMem<uint8_t*> unsafeSrcDataCrossCompartment =
-        unsafeTypedArrayCrossCompartment->viewDataEither().cast<uint8_t*>();
+        unsafeTypedArrayCrossCompartment->dataPointerEither().cast<uint8_t*>();
 
     uint32_t unsafeSrcElementSizeCrossCompartment =
         TypedArrayElemSize(unsafeSrcTypeCrossCompartment);
@@ -1374,7 +1374,7 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
     SharedMem<uint8_t*> unsafeSrcDataLimitCrossCompartment =
         unsafeSrcDataCrossCompartment + unsafeSrcByteLengthCrossCompartment;
     SharedMem<uint8_t*> targetDataLimit =
-        target->viewDataEither().cast<uint8_t*>() + targetLength * targetElementSize;
+        target->dataPointerEither().cast<uint8_t*>() + targetLength * targetElementSize;
 
     // Step 24 test (but not steps 24a-d -- the caller handles those).
     bool overlap =
@@ -1463,7 +1463,7 @@ CopyToDisjointArray(TypedArrayObject* target, uint32_t targetOffset, SharedMem<v
                     Scalar::Type srcType, uint32_t count)
 {
     Scalar::Type destType = target->type();
-    SharedMem<uint8_t*> dest = target->viewDataEither().cast<uint8_t*>() + targetOffset * TypedArrayElemSize(destType);
+    SharedMem<uint8_t*> dest = target->dataPointerEither().cast<uint8_t*>() + targetOffset * TypedArrayElemSize(destType);
 
     switch (destType) {
       case Scalar::Int8: {
@@ -1526,7 +1526,7 @@ js::SetDisjointTypedElements(TypedArrayObject* target, uint32_t targetOffset,
 {
     Scalar::Type unsafeSrcTypeCrossCompartment = unsafeSrcCrossCompartment->type();
 
-    SharedMem<void*> unsafeSrcDataCrossCompartment = unsafeSrcCrossCompartment->viewDataEither();
+    SharedMem<void*> unsafeSrcDataCrossCompartment = unsafeSrcCrossCompartment->dataPointerEither();
     uint32_t count = unsafeSrcCrossCompartment->length();
 
     CopyToDisjointArray(target, targetOffset,
@@ -1597,7 +1597,7 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     }
 
     jit::AtomicOperations::memcpySafeWhenRacy(SharedMem<uint8_t*>::unshared(copyOfSrcData.get()),
-                                              unsafeSrcCrossCompartment->viewDataEither().cast<uint8_t*>(),
+                                              unsafeSrcCrossCompartment->dataPointerEither().cast<uint8_t*>(),
                                               sourceByteLen);
 
     CopyToDisjointArray(target, targetOffset, SharedMem<void*>::unshared(copyOfSrcData.get()),
@@ -1684,10 +1684,10 @@ intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(elementSize == TypedArrayElemSize(unsafeTypedArrayCrossCompartment->type()));
 
     SharedMem<uint8_t*> sourceData =
-        source->viewDataEither().cast<uint8_t*>() + sourceOffset * elementSize;
+        source->dataPointerEither().cast<uint8_t*>() + sourceOffset * elementSize;
 
     SharedMem<uint8_t*> unsafeTargetDataCrossCompartment =
-        unsafeTypedArrayCrossCompartment->viewDataEither().cast<uint8_t*>();
+        unsafeTypedArrayCrossCompartment->dataPointerEither().cast<uint8_t*>();
 
     uint32_t byteLength = count * elementSize;
 
@@ -2190,7 +2190,8 @@ intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject result(cx);
-    result = moduleResolveHook(cx, module, specifier);
+    RootedValue referencingPrivate(cx, JS::GetModulePrivate(module));
+    result = moduleResolveHook(cx, referencingPrivate, specifier);
     if (!result) {
         return false;
     }

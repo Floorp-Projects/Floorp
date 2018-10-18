@@ -7,7 +7,7 @@
  * Test that reattaching to a previously detached thread works.
  */
 
-var gClient, gDebuggee, gThreadClient, gTabClient;
+var gClient, gDebuggee, gThreadClient, gTargetFront;
 
 function run_test() {
   initTestDebuggerServer();
@@ -17,8 +17,8 @@ function run_test() {
   const transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect().then(() => {
-    attachTestTab(gClient, "test-reattach", (reply, tabClient) => {
-      gTabClient = tabClient;
+    attachTestTab(gClient, "test-reattach", (reply, targetFront) => {
+      gTargetFront = targetFront;
       test_attach();
     });
   });
@@ -26,7 +26,7 @@ function run_test() {
 }
 
 function test_attach() {
-  gTabClient.attachThread({}).then(([response, threadClient]) => {
+  gTargetFront.attachThread({}).then(([response, threadClient]) => {
     Assert.equal(threadClient.state, "paused");
     gThreadClient = threadClient;
     threadClient.resume(test_detach);
@@ -36,16 +36,16 @@ function test_attach() {
 function test_detach() {
   gThreadClient.detach(() => {
     Assert.equal(gThreadClient.state, "detached");
-    Assert.equal(gTabClient.thread, null);
+    Assert.equal(gTargetFront.thread, null);
     test_reattach();
   });
 }
 
 function test_reattach() {
-  gTabClient.attachThread({}).then(([response, threadClient]) => {
+  gTargetFront.attachThread({}).then(([response, threadClient]) => {
     Assert.notEqual(gThreadClient, threadClient);
     Assert.equal(threadClient.state, "paused");
-    Assert.equal(gTabClient.thread, threadClient);
+    Assert.equal(gTargetFront.thread, threadClient);
     threadClient.resume(cleanup);
   });
 }

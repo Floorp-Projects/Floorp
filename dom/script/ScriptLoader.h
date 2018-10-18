@@ -521,8 +521,9 @@ private:
   ModuleScript* GetFetchedModule(nsIURI* aURL) const;
 
   friend JSObject*
-  HostResolveImportedModule(JSContext* aCx, JS::Handle<JSObject*> aModule,
-                          JS::Handle<JSString*> aSpecifier);
+  HostResolveImportedModule(JSContext* aCx,
+                            JS::Handle<JS::Value> aReferencingPrivate,
+                            JS::Handle<JSString*> aSpecifier);
 
   // Returns wether we should save the bytecode of this script after the
   // execution of the script.

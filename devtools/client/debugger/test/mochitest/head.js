@@ -180,8 +180,8 @@ function getAddonActorForId(aClient, aAddonId) {
 
 async function attachTargetActorForUrl(aClient, aUrl) {
   let grip = await getTargetActorForUrl(aClient, aUrl);
-  let [ response ] = await aClient.attachTarget(grip.actor);
-  return [grip, response];
+  let [ response, front ] = await aClient.attachTarget(grip.actor);
+  return [grip, response, front];
 }
 
 async function attachThreadActorForUrl(aClient, aUrl) {
@@ -450,7 +450,7 @@ function ensureThreadClientState(aPanel, aState) {
 
 function reload(aPanel, aUrl) {
   let activeTab = aPanel.panelWin.DebuggerController._target.activeTab;
-  aUrl ? activeTab.navigateTo(aUrl) : activeTab.reload();
+  aUrl ? activeTab.navigateTo({ url: aUrl }) : activeTab.reload();
 }
 
 function navigateActiveTabTo(aPanel, aUrl, aWaitForEventName, aEventRepeat) {
@@ -1089,9 +1089,9 @@ function attachTarget(client, tab) {
   return client.attachTarget(tab.actor);
 }
 
-function listWorkers(tabClient) {
+function listWorkers(targetFront) {
   info("Listing workers.");
-  return tabClient.listWorkers();
+  return targetFront.listWorkers();
 }
 
 function findWorker(workers, url) {
@@ -1104,19 +1104,14 @@ function findWorker(workers, url) {
   return null;
 }
 
-function attachWorker(tabClient, worker) {
+function attachWorker(targetFront, worker) {
   info("Attaching to worker with url '" + worker.url + "'.");
-  return tabClient.attachWorker(worker.actor);
+  return targetFront.attachWorker(worker.actor);
 }
 
-function waitForWorkerListChanged(tabClient) {
+function waitForWorkerListChanged(targetFront) {
   info("Waiting for worker list to change.");
-  return new Promise(function (resolve) {
-    tabClient.addListener("workerListChanged", function listener() {
-      tabClient.removeListener("workerListChanged", listener);
-      resolve();
-    });
-  });
+  return targetFront.once("workerListChanged");
 }
 
 function attachThread(workerClient, options) {
@@ -1124,14 +1119,10 @@ function attachThread(workerClient, options) {
   return workerClient.attachThread(options);
 }
 
-function waitForWorkerClose(workerClient) {
+async function waitForWorkerClose(workerClient) {
   info("Waiting for worker to close.");
-  return new Promise(function (resolve) {
-    workerClient.addOneTimeListener("close", function () {
-      info("Worker did close.");
-      resolve();
-    });
-  });
+  await workerClient.once("close");
+  info("Worker did close.");
 }
 
 function resume(threadClient) {
@@ -1292,12 +1283,12 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 
   let tab = await addTab(TAB_URL);
   let { tabs } = await listTabs(client);
-  let [, tabClient] = await attachTarget(client, findTab(tabs, TAB_URL));
+  let [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
 
   await createWorkerInTab(tab, WORKER_URL);
 
-  let { workers } = await listWorkers(tabClient);
-  let [, workerClient] = await attachWorker(tabClient,
+  let { workers } = await listWorkers(targetFront);
+  let [, workerClient] = await attachWorker(targetFront,
                                              findWorker(workers, WORKER_URL));
 
   let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
@@ -1307,5 +1298,5 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   let debuggerPanel = toolbox.getCurrentPanel();
   let gDebugger = debuggerPanel.panelWin;
 
-  return {client, tab, tabClient, workerClient, toolbox, gDebugger};
+  return {client, tab, targetFront, workerClient, toolbox, gDebugger};
 }

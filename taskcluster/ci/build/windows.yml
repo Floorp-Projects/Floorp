@@ -42,12 +42,6 @@ win32/opt:
         platform: windows2012-32/opt
         symbol: B
         tier: 1
-    stub-installer:
-        # Beta and release use a stub-requiring update channel
-        by-project:
-            default: false
-            mozilla-beta: true
-            mozilla-release: true
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -762,41 +756,6 @@ win64-devedition-nightly/opt:
         - win64-sccache
         - win64-node
 
-win32-mingw32/opt:
-    description: "Win32 MinGW Opt"
-    index:
-        product: firefox
-        job-name: win32-mingw32-opt
-    treeherder:
-        platform: windows-mingw32/all
-        symbol: WM32(Bo)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        docker-image: {in-tree: mingw32-build}
-        max-run-time: 7200
-        env:
-            PERFHERDER_EXTRA_OPTIONS: "opt"
-    run:
-        using: mozharness
-        actions: [build]
-        script: mozharness/scripts/fx_desktop_build.py
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_windows_32_mingw_builds.py
-        need-xvfb: false
-    run-on-projects: []
-    toolchains:
-        - mingw32-rust
-        - linux64-upx
-        - linux64-wine
-        - win64-cbindgen
-        - linux64-sccache
-        - linux64-mingw32-gcc
-        - linux64-mingw32-nsis
-        - linux64-mingw32-fxc2
-        - linux64-node
-
 win32-msvc/debug:
     description: "Win32 MSVC Debug"
     index:
@@ -839,12 +798,6 @@ win32-msvc/opt:
         platform: windows2012-32/opt
         symbol: Bmsvc
         tier: 1
-    stub-installer:
-        # Beta and release use a stub-requiring update channel
-        by-project:
-            default: false
-            mozilla-beta: true
-            mozilla-release: true
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -934,42 +887,6 @@ win64-msvc/opt:
         - win64-cbindgen
         - win64-sccache
         - win64-node
-
-win32-mingw32/debug:
-    description: "Win32 MinGW Debug"
-    index:
-        product: firefox
-        job-name: win32-mingw32-debug
-    treeherder:
-        platform: windows-mingw32/all
-        symbol: WM32(Bd)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        docker-image: {in-tree: mingw32-build}
-        max-run-time: 7200
-        env:
-            PERFHERDER_EXTRA_OPTIONS: "debug"
-    run:
-        using: mozharness
-        actions: [build]
-        script: mozharness/scripts/fx_desktop_build.py
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_windows_32_mingw_builds.py
-            - builds/releng_sub_windows_configs/32_mingw_debug.py
-        need-xvfb: false
-    run-on-projects: []
-    toolchains:
-        - mingw32-rust
-        - linux64-upx
-        - linux64-wine
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-mingw32-gcc
-        - linux64-mingw32-nsis
-        - linux64-mingw32-fxc2
-        - linux64-node
 
 win32-mingwclang/opt:
     description: "Win32 MinGW-Clang Opt"

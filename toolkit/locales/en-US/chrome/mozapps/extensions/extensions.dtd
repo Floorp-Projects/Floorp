@@ -19,9 +19,6 @@
 <!ENTITY installAddonFromFile.accesskey       "I">
 <!ENTITY toolsMenu.tooltip                    "Tools for all add-ons">
 
-<!ENTITY getThemes.description                "Looking to personalize your browser?">
-<!ENTITY getThemes.learnMore                  "Choose from thousands of themes.">
-
 
 <!ENTITY showUnsignedExtensions.button.label  "Some extensions could not be verified">
 <!ENTITY showAllExtensions.button.label       "Show all extensions">

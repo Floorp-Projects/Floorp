@@ -5,16 +5,17 @@ function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
 }
 
-function promiseBrowserEvent(browser, eventType, options) {
+function promiseBrowserEvent(browserOrFrame, eventType, options) {
   return new Promise((resolve) => {
     function handle(event) {
       // Since we'll be redirecting, don't make assumptions about the given URL and the loaded URL
-      if (event.target != browser.contentDocument || event.target.location.href == "about:blank") {
+      if (event.target != (browserOrFrame.contentDocument || browserOrFrame.document) ||
+                          event.target.location.href == "about:blank") {
         info("Skipping spurious '" + eventType + "' event" + " for " + event.target.location.href);
         return;
       }
       info("Received event " + eventType + " from browser");
-      browser.removeEventListener(eventType, handle, true);
+      browserOrFrame.removeEventListener(eventType, handle, true);
       if (options && options.resolveAtNextTick) {
         setTimeout(() => resolve(event), 0);
       } else {
@@ -22,7 +23,7 @@ function promiseBrowserEvent(browser, eventType, options) {
       }
     }
 
-    browser.addEventListener(eventType, handle, true);
+    browserOrFrame.addEventListener(eventType, handle, true);
     info("Now waiting for " + eventType + " event from browser");
   });
 }

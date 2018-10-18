@@ -366,7 +366,6 @@ class SCInput {
     static void getPair(uint64_t data, uint32_t* tagp, uint32_t* datap);
 
     MOZ_MUST_USE bool read(uint64_t* p);
-    MOZ_MUST_USE bool readNativeEndian(uint64_t* p);
     MOZ_MUST_USE bool readPair(uint32_t* tagp, uint32_t* datap);
     MOZ_MUST_USE bool readDouble(double* p);
     MOZ_MUST_USE bool readBytes(void* p, size_t nbytes);
@@ -703,18 +702,6 @@ SCInput::read(uint64_t* p)
 }
 
 bool
-SCInput::readNativeEndian(uint64_t* p)
-{
-    if (!point.canPeek()) {
-        *p = 0;  // initialize to shut GCC up
-        return reportTruncated();
-    }
-    *p = point.peek();
-    point.next();
-    return true;
-}
-
-bool
 SCInput::readPair(uint32_t* tagp, uint32_t* datap)
 {
     uint64_t u;
@@ -854,7 +841,7 @@ bool
 SCInput::readPtr(void** p)
 {
     uint64_t u;
-    if (!readNativeEndian(&u)) {
+    if (!read(&u)) {
         return false;
     }
     *p = reinterpret_cast<void*>(u);

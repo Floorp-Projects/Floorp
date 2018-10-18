@@ -1,0 +1,184 @@
+{
+  "addonDescription": {
+    "message": "خذ مقاطع و لقطات من الوب و احفظهم مؤقتًا أو دائمًا."
+  },
+  "addonAuthorsList": {
+    "message": "موزيلا <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "خذ لقطة شاشة"
+  },
+  "myShotsLink": {
+    "message": "لقطاتي"
+  },
+  "screenshotInstructions": {
+    "message": "اسحب أو انقر في الصفحة لاختيار منطقة. اضغط ESC للإلغاء."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "احفظ"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "احفظ الجزء المرئي"
+  },
+  "saveScreenshotFullPage": {
+    "message": "احفظ كل الصفحة"
+  },
+  "cancelScreenshot": {
+    "message": "ألغِ"
+  },
+  "downloadScreenshot": {
+    "message": "نزّل"
+  },
+  "downloadOnlyNotice": {
+    "message": "أنت حاليًا في وضع ”التنزيل فقط“."
+  },
+  "downloadOnlyDetails": {
+    "message": "تنتقل لقطات فَيرفُكس تلقائيا إلى وضع ”التنزيل فقط“ في الحالات التالية:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "في نافذة تصفح خاص."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "الكعكات من أطراف خارجية غير مفعلة."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "”لا تتذكر التأريخ أبدًا“ مفعّل."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "تستخدم الإصدارة طويلة الدعم من فَيَرفُكس."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "عُطل الرفع."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "نُسخ الرابط"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "نُسِخَ رابط اللقطة إلى الحافظة. اضغط $META_KEY$-V للصقها.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "انسخ"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "نُسخت اللقطة"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "نُسخت اللقطة إلى الحافظة. اضغط $META_KEY$-V للصقها.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "ستُقص الصورة المحفوظة ليصبح ارتفاعها $PIXELS$بكسل.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "خارج الخدمة."
+  },
+  "requestErrorDetails": {
+    "message": "تعذّر حفظ لقطتك. رجاء أعد المحاولة فيما بعد."
+  },
+  "connectionErrorTitle": {
+    "message": "تعذّر الاتصال بلقطات شاشتك."
+  },
+  "connectionErrorDetails": {
+    "message": "رجاء فحص اتصال الإنترنت. إذا كان باستطاعتك الاتصال بالإنترنت، فربما هناك عطل مؤقت في خدمة «لقطات شاشة فَيَرفُكس»."
+  },
+  "loginErrorDetails": {
+    "message": "تعذّر حفظ لقطتك لعُطل في خدمة «لقطات شاشة فَيَرفُكس». رجاء إعادة المحاولة لاحقًا."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "تعذّر أخذ لقطة شاشة لهذه الصفحة."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "ليست هذه صفحة وِب قياسية، لذا لا يمكنك أخذ لقطة لها."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "لا يمكننا أخذ لقطة لصفحة من صفحات «لقطات شاشة فَيَرفُكس»!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "التحديد صغير جدا"
+  },
+  "privateWindowErrorTitle": {
+    "message": "لقطات الشاشة معطّلة في وضع التصفح الخاص"
+  },
+  "privateWindowErrorDetails": {
+    "message": "نأسف على الإزعاج. نعمل على هذه الخاصية للإصدارات اللاحقة."
+  },
+  "genericErrorTitle": {
+    "message": "هناك عطل في «لقطات شاشة فَيَرفُكس»."
+  },
+  "genericErrorDetails": {
+    "message": "لسنا متأكدين ما المشكلة. أتمانع إعادة المحاولة أو أخذ لقطة لصفحة أخرى؟"
+  },
+  "tourBodyIntro": {
+    "message": "خذ لقطات الشاشة و احفظها و شاركها دون مغادرة فَيَرفُكس."
+  },
+  "tourHeaderPageAction": {
+    "message": "طريقة جديدة لحفظ اللقطات بها"
+  },
+  "tourBodyPageAction": {
+    "message": "وسّع قائمة إجراءات الصفحة في شريط العنوان لأخذ لقطة في أي وقت."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "التقط ما تريده فقط"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "انقر و اسحب لالتقاط جزء معين من الصفحة. يمكنك أيضًا التحويم لإبراز التحديد."
+  },
+  "tourHeaderFullPage": {
+    "message": "التقط النوافذ أو صفحات كاملة"
+  },
+  "tourBodyFullPage": {
+    "message": "اختر الأزرار في أعلى اليمين لالتقاط المنطقة المرئية في النافذة أو الصفحة كلها."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "كما تريدها"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "احفظ اللقطات التي أخذتها على الوب لمشاركتها بسهولة، أو نزّلها على حاسوبك. يمكنك أيضًل النقر على زر ”لقطاتي“ للعثور على كل اللقطات التي أخذتها."
+  },
+  "tourSkip": {
+    "message": "تخطَّ"
+  },
+  "tourNext": {
+    "message": "الشريحة التالية"
+  },
+  "tourPrevious": {
+    "message": "الشريحة السابقة"
+  },
+  "tourDone": {
+    "message": "تمّ"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "استخدامك للقطات شاشة فَيَرفُكس يُعد موافقة على $TERMSANDPRIVACYNOTICETERMSLINK$ و $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "الشروط"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "تنويه الخصوصية"
+  },
+  "libraryLabel": {
+    "message": "لقطات الشاشة"
+  }
+}

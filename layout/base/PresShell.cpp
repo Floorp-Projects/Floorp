@@ -2329,13 +2329,17 @@ PresShell::IntraLineMove(bool aForward, bool aExtend)
 NS_IMETHODIMP
 PresShell::PageMove(bool aForward, bool aExtend)
 {
-  nsIScrollableFrame *scrollableFrame =
-    GetScrollableFrameToScroll(nsIPresShell::eVertical);
-  if (!scrollableFrame)
+  nsIFrame* frame;
+  if (!aExtend) {
+    frame = do_QueryFrame(GetScrollableFrameToScroll(nsIPresShell::eVertical));
+  } else {
+    frame = mSelection->GetFrameToPageSelect();
+  }
+  if (!frame) {
     return NS_OK;
-
+  }
   RefPtr<nsFrameSelection> frameSelection = mSelection;
-  frameSelection->CommonPageMove(aForward, aExtend, scrollableFrame);
+  frameSelection->CommonPageMove(aForward, aExtend, frame);
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,

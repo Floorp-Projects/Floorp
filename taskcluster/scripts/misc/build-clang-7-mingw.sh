@@ -275,6 +275,11 @@ build_windres() {
   # Manually install only nm and windres
   cp binutils/windres $INSTALL_DIR/bin/$machine-w64-mingw32-windres
   cp binutils/nm-new $INSTALL_DIR/bin/$machine-w64-mingw32-nm
+
+  pushd $INSTALL_DIR/bin/
+  ln -s llvm-readobj $machine-w64-mingw32-readobj
+  popd
+
   popd
 }
 

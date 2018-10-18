@@ -1755,7 +1755,6 @@ nsContentUtils::IsHTMLBlock(nsIContent* aContent)
                                        nsGkAtoms::li,
                                        nsGkAtoms::listing,
                                        nsGkAtoms::menu,
-                                       nsGkAtoms::multicol, // XXX get rid of this one?
                                        nsGkAtoms::nav,
                                        nsGkAtoms::ol,
                                        nsGkAtoms::p,
@@ -10795,33 +10794,10 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aC
   return target.forget();
 }
 
-namespace {
-template<class T>
-bool IsLocalRefURL(const T& aString) {
-  // Find the first non-"C0 controls + space" character.
-  const typename T::char_type* current = aString.BeginReading();
-  for (; current != aString.EndReading(); current++) {
-    if (*current > 0x20) {
-      // if the first non-"C0 controls + space" character is '#', this is a
-      // local-ref URL.
-      return *current == '#';
-    }
-  }
-
-  return false;
-}
-}
-
 /* static */ bool
 nsContentUtils::IsLocalRefURL(const nsString& aString)
 {
-  return ::IsLocalRefURL(aString);
-}
-
-/* static */ bool
-nsContentUtils::IsLocalRefURL(const nsACString& aString)
-{
-  return ::IsLocalRefURL(aString);
+  return !aString.IsEmpty() && aString[0] == '#';
 }
 
 static const uint64_t kIdProcessBits = 32;

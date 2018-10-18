@@ -177,14 +177,13 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mFeedChardet(false)
   , mInitialEncodingWasFromParentFrame(false)
   , mHasHadErrors(false)
-  , mFlushTimer(NS_NewTimer())
+  , mFlushTimer(NS_NewTimer(mEventTarget))
   , mFlushTimerMutex("nsHtml5StreamParser mFlushTimerMutex")
   , mFlushTimerArmed(false)
   , mFlushTimerEverFired(false)
   , mMode(aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  mFlushTimer->SetTarget(mEventTarget);
 #ifdef DEBUG
   mAtomTable.SetPermittedLookupEventTarget(mEventTarget);
 #endif
@@ -854,7 +853,7 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, false);
     if (recordreplay::IsRecordingOrReplaying()) {
-      recordreplay::AddContentParseData(this, dst.data(), written);
+      recordreplay::AddContentParseData16(this, dst.data(), written);
     }
     if (hadErrors && !mHasHadErrors) {
       mHasHadErrors = true;
@@ -1113,7 +1112,7 @@ nsHtml5StreamParser::DoStopRequest()
     Tie(result, read, written, hadErrors) =
       mUnicodeDecoder->DecodeToUTF16(src, dst, true);
     if (recordreplay::IsRecordingOrReplaying()) {
-      recordreplay::AddContentParseData(this, dst.data(), written);
+      recordreplay::AddContentParseData16(this, dst.data(), written);
     }
     if (hadErrors && !mHasHadErrors) {
       mHasHadErrors = true;

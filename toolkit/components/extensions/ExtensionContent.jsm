@@ -658,8 +658,7 @@ class UserScript extends Script {
       return;
     }
 
-    const clonedMetadata = scriptMetadata ?
-            Cu.cloneInto(scriptMetadata, apiScope) : undefined;
+    let clonedMetadata;
 
     const UserScriptError = userScriptScope.Error;
     const UserScriptPromise = userScriptScope.Promise;
@@ -695,6 +694,10 @@ class UserScript extends Script {
         } catch (err) {
           Cu.reportError(`Error cloning userScriptAPIMethod parameters in ${fnName}: ${err}`);
           throw new UserScriptError("Only serializable parameters are supported");
+        }
+
+        if (clonedMetadata === undefined) {
+          clonedMetadata = Cu.cloneInto(scriptMetadata, apiScope);
         }
 
         const res = runSafeSyncWithoutClone(fn, fnArgs, clonedMetadata, userScriptScope);

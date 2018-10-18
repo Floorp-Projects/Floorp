@@ -87,7 +87,7 @@ SOURCES += [
 
 # WebGL Sources
 UNIFIED_SOURCES += [
-    'CacheMap.cpp',
+    'CacheInvalidator.cpp',
     'TexUnpackBlob.cpp',
     'WebGL1Context.cpp',
     'WebGL2Context.cpp',
@@ -154,7 +154,6 @@ UNIFIED_SOURCES += [
     'WebGLExtensionVertexArray.cpp',
     'WebGLFormats.cpp',
     'WebGLFramebuffer.cpp',
-    'WebGLFramebufferAttachable.cpp',
     'WebGLMemoryTracker.cpp',
     'WebGLObjectModel.cpp',
     'WebGLProgram.cpp',

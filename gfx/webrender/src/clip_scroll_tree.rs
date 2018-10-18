@@ -405,8 +405,8 @@ impl ClipScrollTree {
                 pt.add_item(format!("scrollable_size: {:?}", scrolling_info.scrollable_size));
                 pt.add_item(format!("scroll offset: {:?}", scrolling_info.offset));
             }
-            SpatialNodeType::ReferenceFrame(ref info) => {
-                pt.new_level(format!("ReferenceFrame {:?}", info.resolved_transform));
+            SpatialNodeType::ReferenceFrame(ref _info) => {
+                pt.new_level(format!("ReferenceFrame"));
                 pt.add_item(format!("index: {:?}", index));
             }
         }

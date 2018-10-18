@@ -197,7 +197,7 @@ function transformNavigationMessagePacket(packet) {
   const { message } = packet;
   return new ConsoleMessage({
     source: MESSAGE_SOURCE.CONSOLE_API,
-    type: MESSAGE_TYPE.LOG,
+    type: MESSAGE_TYPE.NAVIGATION_MARKER,
     level: MESSAGE_LEVEL.LOG,
     messageText: l10n.getFormatStr("webconsole.navigated", [message.url]),
     timeStamp: message.timeStamp,

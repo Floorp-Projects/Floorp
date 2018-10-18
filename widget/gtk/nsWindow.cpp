@@ -3731,12 +3731,18 @@ nsWindow::Create(nsIWidget* aParent,
         Unused << gfxPlatform::GetPlatform();
 
         bool useWebRender = gfx::gfxVars::UseWebRender() &&
-            AllowWebRenderForThisWindow();
+             AllowWebRenderForThisWindow();
+
+        bool shouldAccelerate = ComputeShouldAccelerate();
+        MOZ_ASSERT(shouldAccelerate | !useWebRender);
 
         // If using WebRender on X11, we need to select a visual with a depth buffer,
         // as well as an alpha channel if transparency is requested. This must be done
         // before the widget is realized.
-        if (mIsX11Display) {
+
+        // Use GL/WebRender compatible visual only when it is necessary, since
+        // the visual consumes more memory.
+        if (mIsX11Display && shouldAccelerate) {
             auto display =
                 GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
             auto screen = gtk_widget_get_screen(mShell);

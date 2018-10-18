@@ -221,7 +221,7 @@ FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr)
                 JS_ReportErrorUTF8(cx, "can't read %s: shared memory buffer", pathname.get());
                 return nullptr;
             }
-            char* buf = static_cast<char*>(ta.viewDataUnshared());
+            char* buf = static_cast<char*>(ta.dataPointerUnshared());
             size_t cc = fread(buf, 1, len, file);
             if (cc != len) {
                 if (ptrdiff_t(cc) < 0) {
@@ -370,7 +370,7 @@ osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorUTF8(cx, "can't write %s: shared memory buffer", filename.get());
         return false;
     }
-    void* buf = obj->viewDataUnshared();
+    void* buf = obj->dataPointerUnshared();
     if (fwrite(buf, obj->bytesPerElement(), obj->length(), file) != obj->length() ||
         !autoClose.release())
     {

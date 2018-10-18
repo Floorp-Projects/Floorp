@@ -27,8 +27,8 @@ class MOZ_STACK_CLASS nsViewportInfo
     nsViewportInfo(const mozilla::ScreenIntSize& aDisplaySize,
                    const mozilla::CSSToScreenScale& aDefaultZoom,
                    bool aAllowZoom) :
-      mDefaultZoomValid(true),
       mDefaultZoom(aDefaultZoom),
+      mDefaultZoomValid(true),
       mAutoSize(true),
       mAllowZoom(aAllowZoom)
     {
@@ -45,11 +45,11 @@ class MOZ_STACK_CLASS nsViewportInfo
                    const mozilla::CSSSize& aSize,
                    bool aAutoSize,
                    bool aAllowZoom) :
-                     mDefaultZoomValid(true),
                      mDefaultZoom(aDefaultZoom),
                      mMinZoom(aMinZoom),
                      mMaxZoom(aMaxZoom),
                      mSize(aSize),
+                     mDefaultZoomValid(true),
                      mAutoSize(aAutoSize),
                      mAllowZoom(aAllowZoom)
     {
@@ -75,10 +75,6 @@ class MOZ_STACK_CLASS nsViewportInfo
      */
     void ConstrainViewportValues();
 
-    // If the default zoom was specified and was between the min and max
-    // zoom values.
-    bool mDefaultZoomValid;
-
     // Default zoom indicates the level at which the display is 'zoomed in'
     // initially for the user, upon loading of the page.
     mozilla::CSSToScreenScale mDefaultZoom;
@@ -91,6 +87,10 @@ class MOZ_STACK_CLASS nsViewportInfo
 
     // The size of the viewport, specified by the <meta name="viewport"> tag.
     mozilla::CSSSize mSize;
+
+    // If the default zoom was specified and was between the min and max
+    // zoom values.
+    bool mDefaultZoomValid;
 
     // Whether or not we should automatically size the viewport to the device's
     // width. This is true if the document has been optimized for mobile, and

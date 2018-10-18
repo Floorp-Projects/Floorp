@@ -107,6 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
   "firstrun_skip_login": "Skip this step",
+  "context_menu_title": "Open menu",
   "default_label_loading": "Cargando…",
   "header_stories": "Histories destacaes",
   "header_visit_again": "Visitar de nueves",

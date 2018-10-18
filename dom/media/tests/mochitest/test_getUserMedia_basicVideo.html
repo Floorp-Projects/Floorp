@@ -12,14 +12,14 @@
   });
   /**
    * Run a test to verify that we can complete a start and stop media playback
-   * cycle for an video LocalMediaStream on a video HTMLMediaElement.
+   * cycle for an video MediaStream on a video HTMLMediaElement.
    */
   runTest(function () {
     var testVideo = createMediaElement('video', 'testVideo');
     var constraints = {video: true};
 
     return getUserMedia(constraints).then(stream => {
-      var playback = new LocalMediaStreamPlayback(testVideo, stream);
+      var playback = new MediaStreamPlayback(testVideo, stream);
       return playback.playMedia(false);
     });
   });

@@ -29,7 +29,7 @@ if (!DebuggerServer.initialized) {
  * @return {Promise} Promise resolving when the console is attached.
  *         The Promise resolves with an object containing :
  *           - tab: the attached tab
- *           - tabClient: the tab client
+ *           - targetFront: the target front
  *           - consoleClient: the console client
  *           - cleanup: a generator function which can be called to close
  *             the opened tab and disconnect its debugger client.
@@ -59,12 +59,12 @@ async function attachURL(url) {
     throw new Error(`Could not find a tab matching URL ${url}`);
   }
 
-  const [, tabClient] = await client.attachTarget(attachedTab.actor);
+  const [, targetFront] = await client.attachTarget(attachedTab.actor);
   const [, consoleClient] = await client.attachConsole(attachedTab.consoleActor, []);
 
   return {
     tab: attachedTab,
-    tabClient,
+    targetFront,
     consoleClient,
     cleanup,
   };

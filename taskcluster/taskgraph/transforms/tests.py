@@ -837,6 +837,9 @@ def split_serviceworker_e10s(config, tests):
             test['treeherder-symbol'] = join_symbol(group, symbol)
             test['mozharness']['extra-options'].append(
                 '--setpref="dom.serviceWorkers.parent_intercept=true"')
+
+            if 'web-platform' in test['suite']:
+                test['tier'] = 2
         yield test
 
 

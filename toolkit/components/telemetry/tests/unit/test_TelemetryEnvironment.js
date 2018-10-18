@@ -56,7 +56,8 @@ const GFX_DEVICE_ID = "0x1234";
 // The profile reset date, in milliseconds (Today)
 const PROFILE_RESET_DATE_MS = Date.now();
 // The profile creation date, in milliseconds (Yesterday).
-const PROFILE_CREATION_DATE_MS = PROFILE_RESET_DATE_MS - MILLISECONDS_PER_DAY;
+const PROFILE_FIRST_USE_MS = PROFILE_RESET_DATE_MS - MILLISECONDS_PER_DAY;
+const PROFILE_CREATION_DATE_MS = PROFILE_FIRST_USE_MS - MILLISECONDS_PER_DAY;
 
 const FLASH_PLUGIN_NAME = "Shockwave Flash";
 const FLASH_PLUGIN_DESC = "A mock flash plugin";
@@ -298,6 +299,7 @@ function spoofProfileReset() {
   return CommonUtils.writeJSON({
     created: PROFILE_CREATION_DATE_MS,
     reset: PROFILE_RESET_DATE_MS,
+    firstUse: PROFILE_FIRST_USE_MS,
   }, OS.Path.join(OS.Constants.Path.profileDir, "times.json"));
 }
 
@@ -453,6 +455,7 @@ function checkProfileSection(data) {
   Assert.ok("profile" in data, "There must be a profile section in Environment.");
   Assert.equal(data.profile.creationDate, truncateToDays(PROFILE_CREATION_DATE_MS));
   Assert.equal(data.profile.resetDate, truncateToDays(PROFILE_RESET_DATE_MS));
+  Assert.equal(data.profile.firstUseDate, truncateToDays(PROFILE_FIRST_USE_MS));
 }
 
 function checkPartnerSection(data, isInitial) {

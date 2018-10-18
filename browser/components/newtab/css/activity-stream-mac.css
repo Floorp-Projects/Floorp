@@ -1408,9 +1408,10 @@ a.firstrun-link {
 
 .confirmation-dialog .modal {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
-  left: 50%;
-  margin-left: -200px;
+  left: 0;
+  margin: auto;
   position: fixed;
+  right: 0;
   top: 20%;
   width: 400px; }
 
@@ -1896,6 +1897,7 @@ a.firstrun-link {
   transform: scaleX(-1); }
 
 .ASRouterButton {
+  font-weight: bold;
   white-space: nowrap;
   border-radius: 4px;
   border: 1px solid var(--newtab-border-secondary-color);
@@ -1908,7 +1910,7 @@ a.firstrun-link {
   .tall .ASRouterButton {
     margin-inline-start: 20px; }
   .ASRouterButton.primary {
-    border: 1px solid var(--newtab-border-primary-color);
+    border: 1px solid var(--newtab-button-primary-color);
     background-color: var(--newtab-button-primary-color);
     color: #F9F9FA; }
   .ASRouterButton.secondary {
@@ -1933,6 +1935,8 @@ a.firstrun-link {
   .SnippetBaseContainer a {
     cursor: pointer;
     color: var(--newtab-link-primary-color); }
+    [lwt-newtab-brighttext] .SnippetBaseContainer a {
+      font-weight: bold; }
   .SnippetBaseContainer .innerWrapper {
     margin: 0 auto;
     display: flex;
@@ -2002,9 +2006,9 @@ a.firstrun-link {
 
 .modalOverlayInner {
   width: 960px;
-  height: 510px;
+  height: 570px;
   position: fixed;
-  top: calc(50% - 255px);
+  top: calc(50% - 285px);
   left: calc(50% - 480px);
   background: #FFF;
   box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
@@ -2057,9 +2061,9 @@ a.firstrun-link {
         position: sticky; } }
     .modalOverlayInner .footer .modalButton {
       margin-top: 20px;
-      width: 150px;
+      min-width: 150px;
       height: 30px;
-      padding: 4px 0 6px;
+      padding: 4px 30px 6px;
       font-size: 15px; }
       .modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active, .modalOverlayInner .footer .modalButton:hover {
         box-shadow: 0 0 0 5px #D7D7DB;
@@ -2097,9 +2101,17 @@ a.firstrun-link {
   flex-direction: column;
   flex: 1 1 100%;
   width: 100%; }
+  .SubmitFormSnippet.send_to_device_snippet {
+    text-align: center; }
+    .SubmitFormSnippet.send_to_device_snippet .message {
+      font-size: 16px; }
   .SubmitFormSnippet .ASRouterButton.primary {
-    font-size: 15px;
     flex: 1 1 0; }
+  .SubmitFormSnippet .scene2Icon {
+    width: 100%; }
+    .SubmitFormSnippet .scene2Icon img {
+      width: 98px;
+      display: inline-block; }
   .SubmitFormSnippet form {
     display: flex;
     flex-direction: column;
@@ -2108,34 +2120,48 @@ a.firstrun-link {
     font-size: 14px;
     align-self: stretch;
     flex: 0 0 100%; }
-  .SubmitFormSnippet .privacy-notice {
+    .SubmitFormSnippet .message p {
+      margin-top: 0; }
+  .SubmitFormSnippet .privacyNotice {
     color: var(--newtab-text-secondary-color);
     flex: 0 0 100%; }
+    .SubmitFormSnippet .privacyNotice p {
+      margin-bottom: 0; }
   .SubmitFormSnippet .innerWrapper {
     max-width: 670px;
     flex-wrap: wrap;
-    justify-items: center; }
+    justify-items: center;
+    padding-top: 40px;
+    padding-bottom: 40px; }
   .SubmitFormSnippet .footer {
     width: 100%;
     margin: 0 auto;
     text-align: right;
-    background: #EDEDF0;
+    background-color: var(--newtab-background-color);
     padding: 10px 0; }
     .SubmitFormSnippet .footer .footer-content {
       margin: 0 auto;
       max-width: 768px;
       width: 100%;
       text-align: right; }
-  .SubmitFormSnippet input[type='email'] {
+  .SubmitFormSnippet input.mainInput {
+    border-radius: 3px;
     background-color: var(--newtab-textbox-background-color);
     border: 1px solid var(--newtab-textbox-border);
     padding: 0 8px;
-    height: 32px;
+    height: 100%;
     font-size: 15px;
     width: 50%; }
-    .SubmitFormSnippet input[type='email']:focus {
+    .SubmitFormSnippet input.mainInput:focus {
       border: 1px solid var(--newtab-textbox-focus-color);
       box-shadow: var(--newtab-textbox-focus-boxshadow); }
+
+.submissionStatus {
+  text-align: center;
+  font-size: 14px;
+  padding: 20px 0; }
+  .submissionStatus .submitStatusTitle {
+    font-size: 20px; }
 
 .onboardingMessageContainer {
   display: grid;
@@ -2209,13 +2235,14 @@ a.firstrun-link {
     .onboardingMessage .onboardingContent > span > p {
       color: #4A4A4F;
       margin-top: 0;
-      height: 130px;
+      height: 180px;
       margin-bottom: 12px;
       font-size: 15px;
       line-height: 22px; }
       @media (max-width: 650px) {
         .onboardingMessage .onboardingContent > span > p {
-          margin-bottom: 0; } }
+          margin-bottom: 0;
+          height: 160px; } }
   .onboardingMessage .onboardingButton {
     background-color: rgba(12, 12, 13, 0.1);
     border: 0;
@@ -2227,23 +2254,22 @@ a.firstrun-link {
     @media (max-width: 850px) {
       .onboardingMessage .onboardingButton {
         float: right;
-        margin-top: -60px;
-        margin-right: -10px; } }
+        margin-top: -105px;
+        margin-inline-end: -10px; } }
     @media (max-width: 650px) {
       .onboardingMessage .onboardingButton {
-        float: none;
-        margin-top: 30px; } }
+        float: none; } }
     .onboardingMessage .onboardingButton:focus, .onboardingMessage .onboardingButton.active, .onboardingMessage .onboardingButton:hover {
       box-shadow: 0 0 0 5px #D7D7DB;
       transition: box-shadow 150ms; }
   .onboardingMessage::before {
     content: '';
-    height: 220px;
+    height: 230px;
     width: 1px;
     position: absolute;
     background-color: #D7D7DB;
     margin-top: 40px;
-    margin-left: 215px; }
+    margin-inline-start: 215px; }
     @media (max-width: 850px) {
       .onboardingMessage::before {
         content: none; } }

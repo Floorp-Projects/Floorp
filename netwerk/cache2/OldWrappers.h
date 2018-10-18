@@ -160,6 +160,7 @@ public:
   NS_IMETHOD Recreate(bool, nsICacheEntry**) override;
   NS_IMETHOD GetDataSize(int64_t *size) override;
   NS_IMETHOD GetAltDataSize(int64_t *size) override;
+  NS_IMETHOD GetAltDataType(nsACString &aType) override;
   NS_IMETHOD OpenInputStream(int64_t offset, nsIInputStream * *_retval) override;
   NS_IMETHOD OpenOutputStream(int64_t offset, int64_t predictedSize, nsIOutputStream * *_retval) override;
   NS_IMETHOD MaybeMarkValid() override;

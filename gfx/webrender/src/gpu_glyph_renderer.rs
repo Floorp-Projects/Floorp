@@ -7,7 +7,7 @@
 use api::{DeviceIntPoint, DeviceIntRect, DeviceUintSize, FontRenderMode};
 use api::{ImageFormat, TextureTarget};
 use debug_colors;
-use device::{Device, Texture, TextureFilter, VAO};
+use device::{Device, Texture, TextureDrawTarget, TextureFilter, VAO};
 use euclid::{Point2D, Size2D, Transform3D, TypedVector2D, Vector2D};
 use internal_types::RenderTargetInfo;
 use pathfinder_gfx_utils::ShelfBinPacker;
@@ -194,7 +194,11 @@ impl Renderer {
                                                     projection,
                                                     &mut self.renderer_errors);
 
-        self.device.bind_draw_target(Some((&current_page.texture, 0)), Some(*target_size));
+        self.device.bind_draw_target(Some(TextureDrawTarget {
+            texture: &current_page.texture,
+            layer: 0,
+            with_depth: false,
+        }), Some(*target_size));
         self.device.clear_target(Some([0.0, 0.0, 0.0, 0.0]), None, None);
 
         self.device.set_blend(true);

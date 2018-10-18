@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* global getModuleLoadPath setModuleLoadHook setModuleResolveHook setModuleMetadataHook */
-/* global parseModule os */
+/* global getModulePrivate setModulePrivate parseModule os */
 
 // A basic synchronous module loader for testing the shell.
 {
@@ -19,6 +19,7 @@ const StringPrototypeIndexOf = String.prototype.indexOf;
 const StringPrototypeLastIndexOf = String.prototype.lastIndexOf;
 const StringPrototypeStartsWith = String.prototype.startsWith;
 const StringPrototypeSubstring = String.prototype.substring;
+const ErrorClass = Error;
 
 const ReflectLoader = new class {
     constructor() {
@@ -27,35 +28,39 @@ const ReflectLoader = new class {
         this.loadPath = getModuleLoadPath();
     }
 
-    resolve(name, module) {
+    resolve(name, referencingInfo) {
         if (os.path.isAbsolute(name))
             return name;
 
         let loadPath = this.loadPath;
-        if (module) {
-            // Treat |name| as a relative path if it starts with either "./"
-            // or "../".
-            let isRelative = ReflectApply(StringPrototypeStartsWith, name, ["./"])
-                          || ReflectApply(StringPrototypeStartsWith, name, ["../"])
-#ifdef XP_WIN
-                          || ReflectApply(StringPrototypeStartsWith, name, [".\\"])
-                          || ReflectApply(StringPrototypeStartsWith, name, ["..\\"])
-#endif
-                             ;
 
-            // If |name| is a relative path and |module|'s path is available,
-            // load |name| relative to the referring module.
-            if (isRelative && ReflectApply(MapPrototypeHas, this.modulePaths, [module])) {
-                let modulePath = ReflectApply(MapPrototypeGet, this.modulePaths, [module]);
-                let sepIndex = ReflectApply(StringPrototypeLastIndexOf, modulePath, ["/"]);
+        // Treat |name| as a relative path if it starts with either "./"
+        // or "../".
+        let isRelative = ReflectApply(StringPrototypeStartsWith, name, ["./"])
+                      || ReflectApply(StringPrototypeStartsWith, name, ["../"])
 #ifdef XP_WIN
-                let otherSepIndex = ReflectApply(StringPrototypeLastIndexOf, modulePath, ["\\"]);
-                if (otherSepIndex > sepIndex)
-                    sepIndex = otherSepIndex;
+                      || ReflectApply(StringPrototypeStartsWith, name, [".\\"])
+                      || ReflectApply(StringPrototypeStartsWith, name, ["..\\"])
 #endif
-                if (sepIndex >= 0)
-                    loadPath = ReflectApply(StringPrototypeSubstring, modulePath, [0, sepIndex]);
+                         ;
+
+        // If |name| is a relative path and the referencing module's path is
+        // available, load |name| relative to the that path.
+        if (isRelative) {
+            if (!referencingInfo) {
+                throw new ErrorClass("No referencing module for relative import");
             }
+
+            let path = referencingInfo.path;
+
+            let sepIndex = ReflectApply(StringPrototypeLastIndexOf, path, ["/"]);
+#ifdef XP_WIN
+            let otherSepIndex = ReflectApply(StringPrototypeLastIndexOf, path, ["\\"]);
+            if (otherSepIndex > sepIndex)
+                sepIndex = otherSepIndex;
+#endif
+            if (sepIndex >= 0)
+                loadPath = ReflectApply(StringPrototypeSubstring, path, [0, sepIndex]);
         }
 
         return os.path.join(loadPath, name);
@@ -155,8 +160,9 @@ const ReflectLoader = new class {
 
         let source = this.fetch(path);
         let module = parseModule(source, path);
+        let moduleInfo = { path: normalized };
+        setModulePrivate(module, moduleInfo);
         ReflectApply(MapPrototypeSet, this.registry, [normalized, module]);
-        ReflectApply(MapPrototypeSet, this.modulePaths, [module, path]);
         return module;
     }
 
@@ -175,12 +181,12 @@ const ReflectLoader = new class {
         return this.loadAndExecute(path);
     }
 
-    populateImportMeta(module, metaObject) {
-        // For the shell, use the script's filename as the base URL.
+    populateImportMeta(moduleInfo, metaObject) {
+        // For the shell, use the module's normalized path as the base URL.
 
         let path;
-        if (ReflectApply(MapPrototypeHas, this.modulePaths, [module])) {
-            path = ReflectApply(MapPrototypeGet, this.modulePaths, [module]);
+        if (moduleInfo) {
+            path = moduleInfo.path;
         } else {
             path = "(unknown)";
         }

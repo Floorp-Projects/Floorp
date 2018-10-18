@@ -17,6 +17,7 @@
 #include "frontend/BinSource-macros.h"
 #include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
+#include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "frontend/SharedContext.h"
 
@@ -24,7 +25,6 @@
 #include "vm/RegExpObject.h"
 
 #include "frontend/ParseContext-inl.h"
-#include "frontend/ParseNode-inl.h"
 #include "vm/JSContext-inl.h"
 
 // # About compliance with EcmaScript
@@ -214,13 +214,13 @@ BinASTParser<Tok>::parseLazyFunction(ScriptSource* scriptSource, const size_t fi
 }
 
 template<typename Tok> void
-BinASTParser<Tok>::forceStrictIfNecessary(FunctionBox* funbox, ListNode* directives)
+BinASTParser<Tok>::forceStrictIfNecessary(SharedContext* sc, ListNode* directives)
 {
     JSAtom* useStrict = cx_->names().useStrict;
 
     for (const ParseNode* directive : directives->contents()) {
         if (directive->as<NameNode>().atom() == useStrict) {
-            funbox->strictScript = true;
+            sc->strictScript = true;
             break;
         }
     }
@@ -235,14 +235,25 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     MOZ_ASSERT_IF(!parseContext_, lazyScript_);
 
     RootedAtom atom(cx_);
-    if (name) {
-        atom = name->name();
+
+    // Name might be any of {Identifier,ComputedPropertyName,LiteralPropertyName}
+    if (name && name->is<NameNode>()) {
+        atom = name->as<NameNode>().atom();
     }
 
     if (parseContext_ && syntax == FunctionSyntaxKind::Statement) {
         auto ptr = parseContext_->varScope().lookupDeclaredName(atom);
-        MOZ_ASSERT(ptr);
-        ptr->value()->alterKind(DeclarationKind::BodyLevelFunction);
+        if (!ptr) {
+            return raiseError("FunctionDeclaration without corresponding AssertedDeclaredName.");
+        }
+
+        // FIXME: Should be merged with ParseContext::tryDeclareVarHelper
+        //        (bug 1499044).
+        DeclarationKind declaredKind = ptr->value()->kind();
+        if (DeclarationKindIsVar(declaredKind)) {
+            MOZ_ASSERT(declaredKind != DeclarationKind::VarForAnnexBLexicalFunction);
+            ptr->value()->alterKind(DeclarationKind::BodyLevelFunction);
+        }
     }
 
     // Allocate the function before walking down the tree.
@@ -329,20 +340,49 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
     // as they don't yet apply to us.
     HandlePropertyName arguments = cx_->names().arguments;
     if (hasUsedName(arguments) || parseContext_->functionBox()->bindingsAccessedDynamically()) {
+        funbox->usesArguments = true;
+
         ParseContext::Scope& funScope = parseContext_->functionScope();
         ParseContext::Scope::AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(arguments);
         if (!p) {
             BINJS_TRY(funScope.addDeclaredName(parseContext_, p, arguments, DeclarationKind::Var,
                                                DeclaredNameInfo::npos));
             funbox->declaredArguments = true;
-            funbox->usesArguments = true;
+        } else if (p->value()->kind() != DeclarationKind::Var) {
+            // Lexicals, formal parameters, and body level functions shadow.
+            funbox->usesArguments = false;
+        }
 
+        if (funbox->usesArguments) {
             funbox->setArgumentsHasLocalBinding();
-            funbox->setDefinitelyNeedsArgsObj();
+
+            if (parseContext_->sc()->bindingsAccessedDynamically() ||
+                parseContext_->sc()->hasDebuggerStatement())
+            {
+                funbox->setDefinitelyNeedsArgsObj();
+            }
         }
     }
 
-    // Check all our bindings after maybe adding function This.
+    if (funbox->needsDotGeneratorName()) {
+        ParseContext::Scope& funScope = parseContext_->functionScope();
+        HandlePropertyName dotGenerator = cx_->names().dotGenerator;
+        ParseContext::Scope::AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
+        if (!p) {
+            BINJS_TRY(funScope.addDeclaredName(parseContext_, p, dotGenerator, DeclarationKind::Var,
+                                               DeclaredNameInfo::npos));
+        }
+
+        BINJS_TRY(usedNames_.noteUse(cx_, dotGenerator, parseContext_->scriptId(),
+                                     parseContext_->innermostScope()->id()));
+
+        BINJS_TRY_DECL(dotGen, factory_.newName(dotGenerator,
+                                                tokenizer_->pos(tokenizer_->offset()), cx_));
+
+        BINJS_TRY(factory_.prependInitialYield(&body->as<ListNode>(), dotGen));
+    }
+
+    // Check all our bindings after maybe adding function metavars.
     MOZ_TRY(checkFunctionClosedVars());
 
     BINJS_TRY_DECL(bindings,
@@ -472,50 +512,82 @@ template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> positionalParams,
                                                    ListNode* params)
 {
-#ifdef DEBUG
-    // positionalParams should have the same length as non-rest parameters.
-    size_t paramsCount = params->count();
-    if (paramsCount > 0) {
-        if (params->last()->isKind(ParseNodeKind::Spread)) {
-            paramsCount--;
-        }
-    }
-    MOZ_ASSERT(positionalParams.get().length() == paramsCount);
-#endif
+    // positionalParams should have the corresponding entry up to the last
+    // positional parameter.
 
+    // `positionalParams` corresponds to `expectedParams` parameter in the spec.
+    // `params` corresponds to `parseTree` in 3.1.9 CheckAssertedScope, and
+    // `positionalParamNames` parameter
+
+    // Steps 1-3.
+    // PositionalParameterNames (3.1.9 CheckAssertedScope step 5.d) and
+    // CreatePositionalParameterIndices (3.1.5 CheckPositionalParameterIndices
+    // step 1) are done implicitly.
     uint32_t i = 0;
+    const bool hasRest = parseContext_->functionBox()->hasRest();
     for (ParseNode* param : params->contents()) {
         if (param->isKind(ParseNodeKind::Assign)) {
             param = param->as<AssignmentNode>().left();
         }
-        if (param->isKind(ParseNodeKind::Spread)) {
-            continue;
-        }
 
-        MOZ_ASSERT(param->isKind(ParseNodeKind::Name) ||
-                   param->isKind(ParseNodeKind::Object) ||
-                   param->isKind(ParseNodeKind::Array));
+        // At this point, function body is not part of params list.
+        const bool isRest = hasRest && !param->pn_next;
+        if (isRest) {
+            // Rest parameter
 
-        if (JSAtom* name = positionalParams.get()[i]) {
+            // Step 3.
+            if (i >= positionalParams.get().length()) {
+                continue;
+            }
+
+            if (positionalParams.get()[i]) {
+                return raiseError("Expected positional parameter per AssertedParameterScope.paramNames, got rest parameter");
+            }
+        } else if (param->isKind(ParseNodeKind::Name)) {
             // Simple or default parameter.
-            if (param->isKind(ParseNodeKind::Object) || param->isKind(ParseNodeKind::Array)) {
-                return raiseError("AssertedPositionalParameterName: expected positional parameter, got destructuring parameter");
-            }
-            if (param->isKind(ParseNodeKind::Spread)) {
-                return raiseError("AssertedPositionalParameterName: expected positional parameter, got rest parameter");
+
+            // Step 2.a.
+            if (i >= positionalParams.get().length()) {
+                return raiseError("AssertedParameterScope.paramNames doesn't have corresponding entry to positional parameter");
             }
 
-            if (param->name() != name) {
-                return raiseError("AssertedPositionalParameterName: name mismatch");
+            JSAtom* name = positionalParams.get()[i];
+            if (!name) {
+                // Step 2.a.ii.1.
+                return raiseError("Expected destructuring/rest parameter per AssertedParameterScope.paramNames, got positional parameter");
             }
+
+            // Step 2.a.i.
+            if (param->as<NameNode>().name() != name) {
+                // Step 2.a.ii.1.
+                return raiseError("Name mismatch between AssertedPositionalParameterName in AssertedParameterScope.paramNames and actual parameter");
+            }
+
+            // Step 2.a.i.1.
+            // Implicitly done.
         } else {
-            // Destructuring or rest parameter.
-            if (param->isKind(ParseNodeKind::Name)) {
-                return raiseError("AssertedParameterName/AssertedRestParameterName: expected destructuring/rest parameter, got positional parameter");
+            // Destructuring parameter.
+
+            MOZ_ASSERT(param->isKind(ParseNodeKind::Object) ||
+                       param->isKind(ParseNodeKind::Array));
+
+            // Step 3.
+            if (i >= positionalParams.get().length()) {
+                continue;
+            }
+
+            if (positionalParams.get()[i]) {
+                return raiseError("Expected positional parameter per AssertedParameterScope.paramNames, got destructuring parameter");
             }
         }
 
         i++;
+    }
+
+    // Step 3.
+    if (positionalParams.get().length() > params->count()) {
+        // `positionalParams` has unchecked entries.
+        return raiseError("AssertedParameterScope.paramNames has unmatching items than the actual parameters");
     }
 
     return Ok();

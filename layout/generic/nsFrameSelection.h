@@ -425,6 +425,14 @@ public:
                                   int32_t*           aReturnOffset) const;
 
   /**
+   * GetFrameToPageSelect() returns a frame which is ancestor limit of
+   * per-page selection.  The frame may not be scrollable.  E.g.,
+   * when selection ancestor limit is set to a frame of an editing host of
+   * contenteditable element and it's not scrollable.
+   */
+  nsIFrame* GetFrameToPageSelect() const;
+
+  /**
    * Scrolling then moving caret placement code in common to text areas and
    * content areas should be located in the implementer
    * This method will accept the following parameters and perform the scroll
@@ -434,12 +442,14 @@ public:
    *
    * @param aForward if true, scroll forward if not scroll backward
    * @param aExtend  if true, extend selection to the new point
-   * @param aScrollableFrame the frame to scroll
+   * @param aFrame   the frame to scroll or container of per-page selection.
+   *                 if aExtend is true and selection may have ancestor limit,
+   *                 should set result of GetFrameToPageSelect().
    */
-  /*unsafe*/
+  MOZ_CAN_RUN_SCRIPT
   void CommonPageMove(bool aForward,
                       bool aExtend,
-                      nsIScrollableFrame* aScrollableFrame);
+                      nsIFrame* aFrame);
 
   void SetHint(CaretAssociateHint aHintRight) { mHint = aHintRight; }
   CaretAssociateHint GetHint() const { return mHint; }

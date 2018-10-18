@@ -52,36 +52,27 @@ WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)
     , mPrimaryRB( DoCreateRenderbuffer(webgl->gl) )
     , mEmulatePackedDepthStencil( EmulatePackedDepthStencil(webgl->gl) )
     , mSecondaryRB(0)
-    , mFormat(nullptr)
-    , mSamples(0)
-    , mImageDataStatus(WebGLImageDataStatus::NoImageData)
     , mHasBeenBound(false)
 {
     mContext->mRenderbuffers.insertBack(this);
+
+    // Bind our RB, or we might end up calling FramebufferRenderbuffer before we ever call
+    // BindRenderbuffer, since webgl.bindRenderbuffer doesn't actually call
+    // glBindRenderbuffer anymore.
+    mContext->gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mPrimaryRB);
 }
 
 void
 WebGLRenderbuffer::Delete()
 {
     mContext->gl->fDeleteRenderbuffers(1, &mPrimaryRB);
-    if (mSecondaryRB)
+    if (mSecondaryRB) {
         mContext->gl->fDeleteRenderbuffers(1, &mSecondaryRB);
+    }
+
+    mImageInfo = webgl::ImageInfo();
 
     LinkedListElement<WebGLRenderbuffer>::removeFrom(mContext->mRenderbuffers);
-}
-
-int64_t
-WebGLRenderbuffer::MemoryUsage() const
-{
-    // If there is no defined format, we're not taking up any memory
-    if (!mFormat)
-        return 0;
-
-    const auto bytesPerPixel = mFormat->format->estimatedBytesPerPixel;
-    const int64_t pixels = int64_t(mWidth) * int64_t(mHeight);
-
-    const int64_t totalSize = pixels * bytesPerPixel;
-    return totalSize;
 }
 
 static GLenum
@@ -214,30 +205,27 @@ WebGLRenderbuffer::RenderbufferStorage(uint32_t samples, GLenum internalFormat,
 
     mContext->OnDataAllocCall();
 
-    mSamples = samples;
-    mFormat = usage;
-    mWidth = width;
-    mHeight = height;
-    mImageDataStatus = WebGLImageDataStatus::UninitializedImageData;
-
-    InvalidateStatusOfAttachedFBs();
+    const uint32_t depth = 1;
+    const bool hasData = false;
+    mImageInfo = { usage, width, height, depth, hasData, uint8_t(samples) };
+    InvalidateCaches();
 }
 
 void
-WebGLRenderbuffer::DoFramebufferRenderbuffer(FBTarget target, GLenum attachment) const
+WebGLRenderbuffer::DoFramebufferRenderbuffer(const GLenum attachment) const
 {
     gl::GLContext* gl = mContext->gl;
 
     if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
         const GLuint stencilRB = (mSecondaryRB ? mSecondaryRB : mPrimaryRB);
-        gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_DEPTH_ATTACHMENT,
+        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER, mPrimaryRB);
-        gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_STENCIL_ATTACHMENT,
+        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER, stencilRB);
         return;
     }
 
-    gl->fFramebufferRenderbuffer(target.get(), attachment,
+    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachment,
                                  LOCAL_GL_RENDERBUFFER, mPrimaryRB);
 }
 
@@ -249,10 +237,10 @@ WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
 
     switch (pname.get()) {
     case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
-        if (!mFormat)
+        if (!mImageInfo.mFormat)
             return 0;
 
-        if (!mFormat->format->s)
+        if (!mImageInfo.mFormat->format->s)
             return 0;
 
         return 8;
@@ -275,8 +263,8 @@ WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
     case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
         {
             GLenum ret = LOCAL_GL_RGBA4;
-            if (mFormat) {
-                ret = mFormat->format->sizedFormat;
+            if (mImageInfo.mFormat) {
+                ret = mImageInfo.mFormat->format->sizedFormat;
 
                 if (!mContext->IsWebGL2() && ret == LOCAL_GL_DEPTH24_STENCIL8) {
                     ret = LOCAL_GL_DEPTH_STENCIL;

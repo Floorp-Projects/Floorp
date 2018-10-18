@@ -6,7 +6,7 @@ build = "build.rs"
 license = "MPL-2.0"
 
 [dependencies]
-base64 = "0.6"
+base64 = "0.9"
 bincode = "1.0"
 byteorder = "1.0"
 env_logger = { version = "0.5", optional = true }

@@ -147,8 +147,8 @@ nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame)
   IDTracker filterElement;
   bool watch = false;
   filterElement.Reset(mTargetContent, url,
-                      mFilter.GetURL()->mExtraData->GetReferrer(),
-                      mFilter.GetURL()->mExtraData->GetReferrerPolicy(),
+                      mFilter.GetURL()->ExtraData()->GetReferrer(),
+                      mFilter.GetURL()->ExtraData()->GetReferrerPolicy(),
                       watch);
   Element* element = filterElement.get();
   if (!element) {

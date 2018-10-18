@@ -41,6 +41,7 @@ public:
     const bool mIsArray;
     const uint8_t mElemSize;
     const nsCString mBaseMappedName; // Without any final "[0]".
+    const webgl::AttribBaseType mBaseType = webgl::AttribBaseType::Float;
 
     bool IsSampler() const;
 

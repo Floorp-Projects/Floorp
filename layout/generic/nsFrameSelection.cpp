@@ -1712,22 +1712,83 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
   return returnFrame;
 }
 
+nsIFrame*
+nsFrameSelection::GetFrameToPageSelect() const
+{
+  if (NS_WARN_IF(!mShell)) {
+    return nullptr;
+  }
+
+  nsIFrame* rootFrameToSelect;
+  if (mLimiter) {
+    rootFrameToSelect = mLimiter->GetPrimaryFrame();
+    if (NS_WARN_IF(!rootFrameToSelect)) {
+      return nullptr;
+    }
+  } else if (mAncestorLimiter) {
+    rootFrameToSelect = mAncestorLimiter->GetPrimaryFrame();
+    if (NS_WARN_IF(!rootFrameToSelect)) {
+      return nullptr;
+    }
+  } else {
+    rootFrameToSelect = mShell->GetRootScrollFrame();
+    if (NS_WARN_IF(!rootFrameToSelect)) {
+      return nullptr;
+    }
+  }
+
+  nsCOMPtr<nsIContent> contentToSelect = mShell->GetContentForScrolling();
+  if (contentToSelect) {
+    // If there is selected content, look for nearest and vertical scrollable
+    // parent under the root frame.
+    for (nsIFrame* frame = contentToSelect->GetPrimaryFrame();
+         frame && frame != rootFrameToSelect;
+         frame = frame->GetParent()) {
+      nsIScrollableFrame* scrollableFrame = do_QueryFrame(frame);
+      if (!scrollableFrame) {
+        continue;
+      }
+      ScrollStyles scrollStyles = scrollableFrame->GetScrollStyles();
+      if (scrollStyles.mVertical == NS_STYLE_OVERFLOW_HIDDEN) {
+        continue;
+      }
+      uint32_t directions = scrollableFrame->GetPerceivedScrollingDirections();
+      if (directions & nsIScrollableFrame::VERTICAL) {
+        // If there is sub scrollable frame, let's use its page size to select.
+        return frame;
+      }
+    }
+  }
+  // Otherwise, i.e., there is no scrollable frame or only the root frame is
+  // scrollable, let's return the root frame because Shift + PageUp/PageDown
+  // should expand the selection in the root content even if it's not
+  // scrollable.
+  return rootFrameToSelect;
+}
+
 void
 nsFrameSelection::CommonPageMove(bool aForward,
                                  bool aExtend,
-                                 nsIScrollableFrame* aScrollableFrame)
+                                 nsIFrame* aFrame)
 {
+  MOZ_ASSERT(aFrame);
+
   // expected behavior for PageMove is to scroll AND move the caret
   // and remain relative position of the caret in view. see Bug 4302.
 
-  //get the frame from the scrollable view
-
-  nsIFrame* scrolledFrame = aScrollableFrame->GetScrolledFrame();
-  if (!scrolledFrame)
+  // Get the scrollable frame.  If aFrame is not scrollable, this is nullptr.
+  nsIScrollableFrame* scrollableFrame = aFrame->GetScrollTargetFrame();
+  // Get the scrolled frame.  If aFrame is not scrollable, this is aFrame
+  // itself.
+  nsIFrame* scrolledFrame =
+    scrollableFrame ? scrollableFrame->GetScrolledFrame() : aFrame;
+  if (!scrolledFrame) {
     return;
+  }
 
   // find out where the caret is.
-  // we should know mDesiredPos value of nsFrameSelection, but I havent seen that behavior in other windows applications yet.
+  // we should know mDesiredPos value of nsFrameSelection, but I havent seen
+  // that behavior in other windows applications yet.
   Selection* domSel = GetSelection(SelectionType::eNormal);
   if (!domSel) {
     return;
@@ -1735,33 +1796,46 @@ nsFrameSelection::CommonPageMove(bool aForward,
 
   nsRect caretPos;
   nsIFrame* caretFrame = nsCaret::GetGeometry(domSel, &caretPos);
-  if (!caretFrame)
+  if (!caretFrame) {
     return;
+  }
 
-  //need to adjust caret jump by percentage scroll
-  nsSize scrollDelta = aScrollableFrame->GetPageScrollAmount();
-
-  if (aForward)
-    caretPos.y += scrollDelta.height;
-  else
-    caretPos.y -= scrollDelta.height;
+  if (scrollableFrame) {
+    // If aFrame is scrollable, adjust pseudo-click position with page scroll
+    // amount.
+    if (aForward) {
+      caretPos.y += scrollableFrame->GetPageScrollAmount().height;
+    } else {
+      caretPos.y -= scrollableFrame->GetPageScrollAmount().height;
+    }
+  } else {
+    // Otherwise, adjust pseudo-click position with the frame size.
+    if (aForward) {
+      caretPos.y += scrolledFrame->GetSize().height;
+    } else {
+      caretPos.y -= scrolledFrame->GetSize().height;
+    }
+  }
 
   caretPos += caretFrame->GetOffsetTo(scrolledFrame);
 
   // get a content at desired location
   nsPoint desiredPoint;
   desiredPoint.x = caretPos.x;
-  desiredPoint.y = caretPos.y + caretPos.height/2;
+  desiredPoint.y = caretPos.y + caretPos.height / 2;
   nsIFrame::ContentOffsets offsets =
       scrolledFrame->GetContentOffsetsFromPoint(desiredPoint);
 
-  if (!offsets.content)
+  if (!offsets.content) {
     return;
+  }
 
-  // scroll one page
-  aScrollableFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                             nsIScrollableFrame::PAGES,
-                             nsIScrollableFrame::SMOOTH);
+  // Scroll one page if necessary.
+  if (scrollableFrame) {
+    scrollableFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                               nsIScrollableFrame::PAGES,
+                               nsIScrollableFrame::SMOOTH);
+  }
 
   // place the caret
   HandleClick(offsets.content, offsets.offset,

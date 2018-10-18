@@ -8,11 +8,13 @@ import site
 import subprocess
 import argparse
 
-testdir = os.path.abspath(os.path.join(os.path.dirname(__file__), 't'))
-site.addsitedir(testdir)
-from testlib import Test, equal
+from glob import glob
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
+testdir = os.path.join(scriptdir, 't')
+
+site.addsitedir(testdir)
+from testlib import Test, equal
 
 parser = argparse.ArgumentParser(description='run hazard analysis tests')
 parser.add_argument(
@@ -40,7 +42,12 @@ parser.add_argument(
     '--verbose', '-v', action='store_true',
     help='Display verbose output, including commands executed')
 parser.add_argument(
-    'tests', nargs='*', default=['sixgill-tree', 'suppression', 'hazards', 'exceptions'],
+    'tests', nargs='*', default=[
+        'sixgill-tree',
+        'suppression',
+        'hazards',
+        'exceptions',
+        'virtual'],
     help='tests to run')
 
 cfg = parser.parse_args()
@@ -69,28 +76,41 @@ def binpath(prog):
     return os.path.join(cfg.sixgill_bin, prog)
 
 
-try:
-    os.mkdir(os.path.join('t', 'out'))
-except OSError:
-    pass
+def make_dir(dirname, exist_ok=True):
+    try:
+        os.mkdir(dirname)
+    except OSError as e:
+        if exist_ok and e.strerror == 'File exists':
+            pass
+        else:
+            raise
+
+
+outroot = os.path.join(testdir, 'out')
+make_dir(outroot)
 
 for name in cfg.tests:
     name = os.path.basename(name)
     indir = os.path.join(testdir, name)
-    outdir = os.path.join(testdir, 'out', name)
-    try:
-        os.mkdir(outdir)
-    except OSError:
-        pass
+    outdir = os.path.join(outroot, name)
+    make_dir(outdir)
 
     test = Test(indir, outdir, cfg, verbose=cfg.verbose)
 
     os.chdir(outdir)
-    subprocess.call(["sh", "-c", "rm *.xdb"])
+    for xdb in glob("*.xdb"):
+        os.unlink(xdb)
     if cfg.verbose:
         print("Running test %s" % name)
     testpath = os.path.join(indir, "test.py")
     testscript = open(testpath).read()
     testcode = compile(testscript, testpath, 'exec')
-    exec(testcode, {'test': test, 'equal': equal})
-    print("TEST-PASSED: %s" % name)
+    try:
+        exec(testcode, {'test': test, 'equal': equal})
+    except subprocess.CalledProcessError:
+        print("TEST-FAILED: %s" % name)
+    except StandardError:
+        print("TEST-FAILED: %s" % name)
+        raise
+    else:
+        print("TEST-PASSED: %s" % name)

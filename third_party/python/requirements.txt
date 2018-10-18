@@ -17,6 +17,12 @@ click==7.0 \
     --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13 \
     --hash=sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7 \
     # via pip-tools
+enum34==1.1.6 \
+    --hash=sha256:2d81cbbe0e73112bdfe6ef8576f2238f2ba27dd0d55752a776c41d38b7da2850 \
+    --hash=sha256:644837f692e5f550741432dd3f223bbb9852018674981b1664e5dc339387588a \
+    --hash=sha256:6bd0f6ad48ec2aa117d3d141940d484deccda84d4fcd884f5c3d93c23ecd8c79 \
+    --hash=sha256:8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1 \
+    # via mozilla-version
 funcsigs==1.0.2 \
     --hash=sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca \
     --hash=sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50 \
@@ -30,6 +36,8 @@ more-itertools==4.3.0 \
     --hash=sha256:c476b5d3a34e12d40130bc2f935028b5f636df8f372dc2c1c01dc19681b2039e \
     --hash=sha256:fcbfeaea0be121980e15bc97b3817b5202ca73d0eae185b4550cbfce2a3ebb3d \
     # via pytest
+mozilla-version==0.3.0 \
+    --hash=sha256:97f428f6a87f1a0569e03c39e446eeed87c3ec5d8300319d41e8348ef832e8ea
 pip-tools==3.0.0 \
     --hash=sha256:4a94997602848f77ff02f660c0fcdfeaf316924ebb236c865f9742ce212aa6f9 \
     --hash=sha256:e45e5198ce3799068642ebb0e7c9be5520bcff944c0186f79c1199a2759c970a

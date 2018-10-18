@@ -26,13 +26,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
-enum Arch {
-    X86,
-    X64,
-    Arm,
-    Aarch64
-}
-
 fn main() {
     // Tell Cargo to regenerate the bindings if the header file changes.
     println!("cargo:rerun-if-changed=baldrapi.h");
@@ -51,69 +44,6 @@ fn main() {
         .header("baldrapi.h")
         .clang_args(&["-x", "c++", "-std=gnu++14", "-fno-sized-deallocation", "-DRUST_BINDGEN"])
         .clang_arg("-I../..");
-
-    let arch = {
-        let target_arch = env::var("CARGO_CFG_TARGET_ARCH");
-        match target_arch.as_ref().map(|x| x.as_str()) {
-            Ok("aarch64") => Some(Arch::Aarch64),
-            Ok("arm") => Some(Arch::Arm),
-            Ok("x86") => Some(Arch::X86),
-            Ok("x86_64") => Some(Arch::X64),
-            _ => None
-        }
-    };
-
-    match env::var("CARGO_CFG_TARGET_OS").as_ref().map(|x| x.as_str()) {
-        Ok("android") => {
-            bindings = bindings.clang_arg("-DOS_ANDROID=1");
-            bindings = match arch.expect("unknown android architecture") {
-                Arch::Aarch64 => { bindings.clang_arg("--target=aarch64-linux-android") }
-                Arch::Arm => { bindings.clang_arg("--target=armv7-linux-androideabi") }
-                Arch::X86 => { bindings.clang_arg("--target=i686-linux-android") }
-                Arch::X64 => { bindings.clang_arg("--target=x86_64-linux-android") }
-            };
-        }
-
-        Ok("linux") | Ok("freebsd") | Ok("dragonfly") | Ok("openbsd") | Ok("bitrig") | Ok("netbsd")
-            | Ok("ios") => {
-            // Nothing to do in particular for these OSes, until proven the contrary.
-        }
-
-        Ok("macos") => {
-            bindings = bindings.clang_arg("-DOS_MACOSX=1");
-            bindings = bindings.clang_arg("-stdlib=libc++");
-            bindings = bindings.clang_arg("--target=x86_64-apple-darwin");
-        }
-
-        Ok("windows") => {
-            let arch = arch.expect("unknown Windows architecture");
-            bindings = bindings.clang_arg("-DOS_WIN=1")
-                .clang_arg("-DWIN32=1");
-            bindings = match env::var("CARGO_CFG_TARGET_ENV").as_ref().map(|x| x.as_str()) {
-                Ok("msvc") => {
-                    bindings = bindings.clang_arg("-fms-compatibility-version=19");
-                    bindings = bindings.clang_arg("-D_CRT_USE_BUILTIN_OFFSETOF");
-                    bindings = bindings.clang_arg("-DHAVE_VISIBILITY_HIDDEN_ATTRIBUTE=1");
-                    match arch {
-                        Arch::X86 => { bindings.clang_arg("--target=i686-pc-win32") },
-                        Arch::X64 => { bindings.clang_arg("--target=x86_64-pc-win32") },
-                        Arch::Aarch64 => { bindings.clang_arg("--target=aarch64-pc-windows-msvc") }
-                        _ => panic!("unknown Windows architecture for msvc build")
-                    }
-                }
-                Ok("gnu") => {
-                    match arch {
-                        Arch::X86 => { bindings.clang_arg("--target=i686-pc-mingw32") },
-                        Arch::X64 => { bindings.clang_arg("--target=x86_64-w64-mingw32") },
-                        _ => panic!("unknown Windows architecture for gnu build")
-                    }
-                }
-                _ => panic!("unknown Windows build environment")
-            };
-        }
-
-        os => panic!("unknown target os {:?}!", os)
-    }
 
     let path = PathBuf::from(env::var_os("MOZ_TOPOBJDIR").unwrap()).join("js/src/rust/extra-bindgen-flags");
 

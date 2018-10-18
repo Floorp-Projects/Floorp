@@ -29,6 +29,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/QuotaClient.h"
@@ -5414,6 +5415,8 @@ QuotaManager::EnsureTemporaryStorageIsInitialized()
     return NS_OK;
   }
 
+  TimeStamp startTime = TimeStamp::Now();
+
   nsresult rv = InitializeRepository(PERSISTENCE_TYPE_DEFAULT);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // We have to cleanup partially initialized quota.
@@ -5429,6 +5432,10 @@ QuotaManager::EnsureTemporaryStorageIsInitialized()
 
     return rv;
   }
+
+  Telemetry::AccumulateTimeDelta(Telemetry::QM_REPOSITORIES_INITIALIZATION_TIME,
+                                 startTime,
+                                 TimeStamp::Now());
 
   if (gFixedLimitKB >= 0) {
     mTemporaryStorageLimit = static_cast<uint64_t>(gFixedLimitKB) * 1024;

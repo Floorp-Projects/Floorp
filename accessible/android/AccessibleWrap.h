@@ -55,15 +55,16 @@ protected:
   static int32_t AcquireID();
   static void ReleaseID(int32_t aID);
 
+  static int32_t GetAndroidClass(role aRole);
+
   int32_t mID;
 
 private:
   void DOMNodeID(nsString& aDOMNodeID);
 
-  static void GetAndroidRoleAndClass(role aRole,
-                                     nsAString& aGeckoRole,
-                                     nsAString& aRoleDescription,
-                                     nsAString& aClassStr);
+  static void GetRoleDescription(role aRole,
+                                 nsAString& aGeckoRole,
+                                 nsAString& aRoleDescription);
 
   static uint64_t GetFlags(role aRole, uint64_t aState);
 };

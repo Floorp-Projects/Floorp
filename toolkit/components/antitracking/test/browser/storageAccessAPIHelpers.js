@@ -62,7 +62,7 @@ async function callRequestStorageAccess(callback) {
     }
     ok(success, "Should not have thrown");
 
-    await noStorageAccessInitially();
+    await hasStorageAccessInitially();
 
     await interactWithTracker();
 
@@ -89,11 +89,11 @@ async function callRequestStorageAccess(callback) {
     rejected = true;
   }
 
-  success = rejectTrackers && !threw && !rejected;
+  success = !threw && !rejected;
   let hasAccess = await document.hasStorageAccess();
   is(hasAccess, success,
      "Should " + (success ? "" : "not ") + "have storage access now");
-  if (success) {
+  if (success && rejectTrackers) {
     // Wait until the permission is visible in our process to avoid race
     // conditions.
     await waitUntilPermission("http://example.net/browser/toolkit/components/antitracking/test/browser/page.html",

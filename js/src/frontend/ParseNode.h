@@ -641,6 +641,7 @@ class ParseNode
         ParseNodeKind kind = getKind();
         return ParseNodeKind::BinOpFirst <= kind && kind <= ParseNodeKind::BinOpLast;
     }
+    inline bool isName(PropertyName* name) const;
 
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }
@@ -740,9 +741,6 @@ class ParseNode
     appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* right,
                        FullParseHandler* handler, ParseContext* pc);
 
-    // include "ParseNode-inl.h" for these methods.
-    inline PropertyName* name() const;
-
     /* True if pn is a parsenode representing a literal constant. */
     bool isLiteral() const {
         return isKind(ParseNodeKind::Number) ||
@@ -841,6 +839,11 @@ class NameNode : public ParseNode
         return pn_u.name.atom;
     }
 
+    PropertyName* name() const {
+        MOZ_ASSERT(isKind(ParseNodeKind::Name));
+        return atom()->asPropertyName();
+    }
+
     ParseNode* initializer() const {
         return pn_u.name.initOrStmt;
     }
@@ -858,6 +861,12 @@ class NameNode : public ParseNode
         return &pn_u.name.initOrStmt;
     }
 };
+
+inline bool
+ParseNode::isName(PropertyName* name) const
+{
+    return getKind() == ParseNodeKind::Name && as<NameNode>().name() == name;
+}
 
 class UnaryNode : public ParseNode
 {

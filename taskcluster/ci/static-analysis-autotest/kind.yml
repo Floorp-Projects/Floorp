@@ -75,7 +75,7 @@ jobs:
                 - builds/releng_base_firefox.py
                 - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win64.py
-                - builds/taskcluster_sub_win64/clang_debug.py
+                - builds/taskcluster_sub_win64/debug.py
         toolchains:
             - win64-clang-cl
             - win64-rust

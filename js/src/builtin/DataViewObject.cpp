@@ -71,15 +71,12 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
         obj->setIsSharedMemory();
     }
 
-    obj->setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(byteOffset));
-    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(byteLength));
-    obj->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*arrayBuffer));
+    obj->setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
+    obj->setFixedSlot(LENGTH_SLOT, Int32Value(byteLength));
+    obj->setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
 
     SharedMem<uint8_t*> ptr = arrayBuffer->dataPointerEither();
-    // A pointer to raw shared memory is exposed through the private slot.  This
-    // is safe so long as getPrivate() is not used willy-nilly.  It is wrapped in
-    // other accessors in TypedArrayObject.h.
-    obj->initPrivate(ptr.unwrap(/*safe - see above*/) + byteOffset);
+    obj->initDataPointer(ptr + byteOffset);
 
     // Include a barrier if the data view's data pointer is in the nursery, as
     // is done for typed arrays.
@@ -98,7 +95,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     }
 
     // Verify that the private slot is at the expected place
-    MOZ_ASSERT(obj->numFixedSlots() == TypedArrayObject::DATA_SLOT);
+    MOZ_ASSERT(obj->numFixedSlots() == DATA_SLOT);
 
     if (arrayBuffer->is<ArrayBufferObject>()) {
         if (!arrayBuffer->as<ArrayBufferObject>().addView(cx, obj)) {
@@ -415,7 +412,7 @@ DataViewObject::read(JSContext* cx, Handle<DataViewObject*> obj, const CallArgs&
     bool isLittleEndian = args.length() >= 2 && ToBoolean(args[1]);
 
     // Steps 6-7.
-    if (obj->arrayBufferEither().isDetached()) {
+    if (obj->hasDetachedBuffer()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
@@ -503,7 +500,7 @@ DataViewObject::write(JSContext* cx, Handle<DataViewObject*> obj, const CallArgs
     bool isLittleEndian = args.length() >= 3 && ToBoolean(args[2]);
 
     // Steps 7-8.
-    if (obj->arrayBufferEither().isDetached()) {
+    if (obj->hasDetachedBuffer()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
@@ -895,7 +892,7 @@ DataViewObject::byteLengthGetterImpl(JSContext* cx, const CallArgs& args)
     Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     // Step 6.
-    if (thisView->arrayBufferEither().isDetached()) {
+    if (thisView->hasDetachedBuffer()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
@@ -918,7 +915,7 @@ DataViewObject::byteOffsetGetterImpl(JSContext* cx, const CallArgs& args)
     Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
     // Step 6.
-    if (thisView->arrayBufferEither().isDetached()) {
+    if (thisView->hasDetachedBuffer()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
@@ -967,7 +964,7 @@ const ClassSpec DataViewObject::classSpec_ = {
 const Class DataViewObject::class_ = {
     "DataView",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     &DataViewObjectClassOps,
     &DataViewObject::classSpec_
@@ -1009,14 +1006,6 @@ const JSPropertySpec DataViewObject::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "DataView", JSPROP_READONLY),
     JS_PS_END
 };
-
-void
-DataViewObject::notifyBufferDetached(void* newData)
-{
-    setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
-    setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
-    setPrivate(newData);
-}
 
 JS_FRIEND_API(bool)
 JS_IsDataViewObject(JSObject* obj)

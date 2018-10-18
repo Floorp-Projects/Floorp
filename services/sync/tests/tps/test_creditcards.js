@@ -9,7 +9,7 @@ EnableEngines(["creditcards"]);
 var phases = {
   "phase1": "profile1",
   "phase2": "profile2",
-  "phase3": "profile1",
+  "phase3": "profile1"
 };
 
 const cc1 = [{

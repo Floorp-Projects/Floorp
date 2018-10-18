@@ -96,6 +96,10 @@ var gSwapInitialWhenHaveFrame = {
   // When there's a frame, '-moz-available' works out to the same as
   // 'auto' given the prerequisites of only 'display: block'.
   "width": [ "-moz-available" ],
+  // When there's a frame, these keywords works out to the same as the initial
+  // value, i.e. `auto`, given the prerequisites of only 'display: block'.
+  "height": [ "-moz-max-content", "-moz-min-content", "-moz-fit-content",
+              "-moz-available" ],
 };
 
 function swap_when_frame(property, value) {

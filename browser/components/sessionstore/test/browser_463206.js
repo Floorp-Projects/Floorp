@@ -22,7 +22,7 @@ add_task(async function() {
       aTextField.dispatchEvent(event);
     }
 
-    typeText(content.document.getElementById("out1"), Date.now());
+    typeText(content.document.getElementById("out1"), Date.now().toString(16));
     typeText(content.document.getElementsByName("1|#out2")[0], Math.random());
     typeText(content.frames[0].frames[1].document.getElementById("in1"), new Date());
   });

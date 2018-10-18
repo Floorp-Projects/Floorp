@@ -69,6 +69,8 @@
         await patch("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
         await put("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
         await get("baz", "?species=in=(52,60)");
+        await get("baz", "?a=&a=b");
+        await get("baz", "?a=b&a=c&d=1");
       }
     </script>
   </body>

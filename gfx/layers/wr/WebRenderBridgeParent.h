@@ -143,6 +143,7 @@ public:
   bool IsPendingComposite() override { return false; }
   void FinishPendingComposite() override { }
   void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
+  TimeDuration GetVsyncInterval() const override;
 
   // CompositableParentManager
   bool IsSameProcess() const override;
@@ -185,6 +186,14 @@ public:
    * want to trigger AsyncImagePipelines update checks.
    */
   void ScheduleGenerateFrame();
+
+  /**
+   * Schedule forced frame rendering at next composite timing.
+   *
+   * WebRender could skip frame rendering if there is no update.
+   * This function is used to force rendering even when there is not update.
+   */
+  void ScheduleForcedGenerateFrame();
 
   wr::Epoch UpdateWebRender(CompositorVsyncScheduler* aScheduler,
                             wr::WebRenderAPI* aApi,

@@ -4,6 +4,8 @@
 
 #include "nsNSSCertTrust.h"
 
+#include "certdb.h"
+
 void
 nsNSSCertTrust::AddCATrust(bool ssl, bool email)
 {

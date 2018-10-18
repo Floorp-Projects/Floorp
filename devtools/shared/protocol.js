@@ -1352,7 +1352,10 @@ Front.prototype = extend(Pool.prototype, {
     } else {
       this.actor().then(actorID => {
         packet.to = actorID;
-        this.conn._transport.send(packet);
+        // The connection might be closed during the promise resolution
+        if (this.conn._transport) {
+          this.conn._transport.send(packet);
+        }
       }).catch(console.error);
     }
   },

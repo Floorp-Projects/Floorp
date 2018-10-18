@@ -43,8 +43,7 @@ window.Application = {
         return toolbox.selectTool(toolId);
       }
     };
-
-    this.client.addListener("workerListChanged", this.updateWorkers);
+    this.toolbox.target.activeTab.on("workerListChanged", this.updateWorkers);
     this.client.addListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
     this.client.addListener("registration-changed", this.updateWorkers);
     this.client.addListener("processListChanged", this.updateWorkers);
@@ -89,7 +88,7 @@ window.Application = {
   },
 
   destroy() {
-    this.client.removeListener("workerListChanged", this.updateWorkers);
+    this.toolbox.target.activeTab.off("workerListChanged", this.updateWorkers);
     this.client.removeListener("serviceWorkerRegistrationListChanged",
       this.updateWorkers);
     this.client.removeListener("registration-changed", this.updateWorkers);

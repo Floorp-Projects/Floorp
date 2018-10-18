@@ -1948,6 +1948,7 @@ MacroAssembler::subFromStackPtr(Imm32 imm32)
     }
 }
 
+// clang-format off
 //{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
@@ -2759,3 +2760,4 @@ MacroAssembler::convertUInt64ToFloat32(Register64 src_, FloatRegister dest, Regi
 }
 
 //}}} check_macroassembler_style
+// clang-format on

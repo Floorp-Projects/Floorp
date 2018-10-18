@@ -16,7 +16,7 @@ function run_test() {
 
   client.connect().then(function() {
     attachTestTabAndResume(client, "test-symbols",
-                           function(response, tabClient, threadClient) {
+                           function(response, targetFront, threadClient) {
                              add_task(testSymbols.bind(null, client, debuggee));
                              run_next_test();
                            });

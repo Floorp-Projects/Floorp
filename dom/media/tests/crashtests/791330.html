@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=791330
           pc.createOffer(function (offer) {});
         }
         finally {
-          stream.stop();
+          stream.getTracks().forEach(t => t.stop());
 
           finish();
         }

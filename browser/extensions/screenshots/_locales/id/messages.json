@@ -1,0 +1,190 @@
+{
+  "addonDescription": {
+    "message": "Rekam klip dan tangkapan layar dari Web dan simpan untuk sementara atau secara permanen."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Buat Tangkapan Layar"
+  },
+  "myShotsLink": {
+    "message": "Tangkapan Saya"
+  },
+  "screenshotInstructions": {
+    "message": "Seret atau klik pada laman untuk memilih area. Tekan ESC untuk membatalkan."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Simpan"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Simpan yang terlihat"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Simpan laman sepenuhnya"
+  },
+  "cancelScreenshot": {
+    "message": "Batal"
+  },
+  "downloadScreenshot": {
+    "message": "Unduh"
+  },
+  "downloadOnlyNotice": {
+    "message": "Anda saat ini berada di mode Hanya-Unduh."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots secara otomatis berganti ke mode Hanya-Unduh pada situasi berikut:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Di jendela Penjelajahan Pribadi."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Kuki pihak ketiga dinonaktifkan."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Jangan pernah ingat riwayat” diaktifkan."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Anda menggunakan Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Unduhan dinonaktifkan."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Tautan Disalin"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Tautan ke gambar Anda telah disalin ke papan klip. Tekan $META_KEY$-V untuk menempelkan.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Salin"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Tangkapan Disalin"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Tangkapan Anda telah disalin ke papan klip. Tekan $META_KEY$-V untuk menempelkan.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Lebar gambar yang disimpan akan dipotong menjadi $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Tak dapat digunakan."
+  },
+  "requestErrorDetails": {
+    "message": "Maaf! Kami tidak dapat menyimpan gambar Anda. Silakan coba lagi."
+  },
+  "connectionErrorTitle": {
+    "message": "Kami tidak dapat terhubung dengan tangkapan layar Anda."
+  },
+  "connectionErrorDetails": {
+    "message": "Silakan periksa sambungan Internet Anda. Jika Anda dapat tersambung ke Internet, mungkin terjadi masalah sementara pada layanan Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Kami tidak dapat menyimpan gambar Anda karena ada masalah dengan layanan Firefox Screenshots. Silakan coba kembali nanti."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Kami tidak dapat menangkap layar laman ini."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ini bukan laman Web yang standar, sehingga Anda tidak dapat membuat tangkapan dari layar ini."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Anda tidak dapat merekam gambar dari laman Firefox Screenshots!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Seleksi Anda terlalu kecil"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots dinonaktifkan di Mode Penjelajahan Pribadi"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Maaf atas ketidaknyamanannya. Kami sedang mengerjakan fitur ini untuk peluncuran masa mendatang."
+  },
+  "genericErrorTitle": {
+    "message": "Wah! Firefox Screenshots mendadak kacau."
+  },
+  "genericErrorDetails": {
+    "message": "Kami tidak yakin akan apa yang terjadi. Ingin mencoba lagi atau merekam gambar dari laman yang berbeda?"
+  },
+  "tourBodyIntro": {
+    "message": "Ambil, simpan, dan bagikan tangkapan layar tanpa meninggalkan Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Cara baru untuk menyimpan"
+  },
+  "tourBodyPageAction": {
+    "message": "Bentangkan menu tindakan laman di bilah alamat setiap kali Anda ingin buat tangkapan layar."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Rekam Bagian Yang Anda Inginkan"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Klik dan seret untuk merekam sebagian area laman. Anda juga dapat menggeser kursor untuk menyoroti pilihan Anda."
+  },
+  "tourHeaderFullPage": {
+    "message": "Rekam Jendela atau Seluruh Laman"
+  },
+  "tourBodyFullPage": {
+    "message": "Pilih tombol di kanan atas untuk merekam area yang terlihat pada jendela atau rekam seluruh laman."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Sesuka Anda"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Simpan potongan tangkapan Anda ke Web agar mudah dibagikan, atau unduh ke komputer. Anda pun dapat mengeklik pada tombol Gambar Saya untuk menemukan semua tangkapan yang pernah Anda rekam."
+  },
+  "tourHeaderAccounts": {
+    "message": "Screenshots to Go"
+  },
+  "tourBodyAccounts": {
+    "message": "Masuk dengan Firefox Account untuk mengakses tangkapan Anda di semua peranti Anda dan menyimpan tangkapan favorit Anda selamanya."
+  },
+  "tourSkip": {
+    "message": "LEWATI"
+  },
+  "tourNext": {
+    "message": "Salindia Selanjutnya"
+  },
+  "tourPrevious": {
+    "message": "Salindia Sebelumnya"
+  },
+  "tourDone": {
+    "message": "Selesai"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Dengan menggunakan Firefox Screenshots, Anda setuju dengan $TERMSANDPRIVACYNOTICETERMSLINK$ dan $TERMSANDPRIVACYNOTICEPRIVACYLINK$ kami.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Ketentuan"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Kebijakan Privasi"
+  },
+  "libraryLabel": {
+    "message": "Screenshots"
+  }
+}

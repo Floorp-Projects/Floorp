@@ -38,25 +38,32 @@ MOZ_THREAD_LOCAL(uint32_t) threadType;
 JS_PUBLIC_DATA(uint64_t) maxAllocations = UINT64_MAX;
 JS_PUBLIC_DATA(uint64_t) counter = 0;
 JS_PUBLIC_DATA(bool) failAlways = true;
+MOZ_THREAD_LOCAL(bool) isAllocationThread;
 
 JS_PUBLIC_DATA(uint32_t) stackTargetThread = 0;
 JS_PUBLIC_DATA(uint64_t) maxStackChecks = UINT64_MAX;
 JS_PUBLIC_DATA(uint64_t) stackCheckCounter = 0;
 JS_PUBLIC_DATA(bool) stackCheckFailAlways = true;
+MOZ_THREAD_LOCAL(bool) isStackCheckThread;
 
 JS_PUBLIC_DATA(uint32_t) interruptTargetThread = 0;
 JS_PUBLIC_DATA(uint64_t) maxInterruptChecks = UINT64_MAX;
 JS_PUBLIC_DATA(uint64_t) interruptCheckCounter = 0;
 JS_PUBLIC_DATA(bool) interruptCheckFailAlways = true;
+MOZ_THREAD_LOCAL(bool) isInterruptCheckThread;
 
 bool
 InitThreadType(void) {
-    return threadType.init();
+    return threadType.init() && isAllocationThread.init() &&
+        isStackCheckThread.init() && isInterruptCheckThread.init();
 }
 
 void
 SetThreadType(ThreadType type) {
     threadType.set(type);
+    isAllocationThread.set(false);
+    isStackCheckThread.set(false);
+    isInterruptCheckThread.set(false);
 }
 
 uint32_t
@@ -64,10 +71,35 @@ GetThreadType(void) {
     return threadType.get();
 }
 
+uint32_t
+GetAllocationThreadType(void) {
+    if (isAllocationThread.get()) {
+        return js::THREAD_TYPE_CURRENT;
+    }
+    return threadType.get();
+}
+
+uint32_t
+GetStackCheckThreadType(void) {
+    if (isStackCheckThread.get()) {
+        return js::THREAD_TYPE_CURRENT;
+    }
+    return threadType.get();
+}
+
+uint32_t
+GetInterruptCheckThreadType(void) {
+    if (isInterruptCheckThread.get()) {
+        return js::THREAD_TYPE_CURRENT;
+    }
+    return threadType.get();
+}
+
 static inline bool
 IsHelperThreadType(uint32_t thread)
 {
-    return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_MAIN;
+    return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_MAIN &&
+        thread != THREAD_TYPE_CURRENT;
 }
 
 void
@@ -82,6 +114,9 @@ SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always)
     MOZ_ASSERT(counter + allocations > counter);
     MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
     targetThread = thread;
+    if (thread == js::THREAD_TYPE_CURRENT) {
+        isAllocationThread.set(true);
+    }
     maxAllocations = counter + allocations;
     failAlways = always;
 }
@@ -96,6 +131,7 @@ ResetSimulatedOOM()
     }
 
     targetThread = THREAD_TYPE_NONE;
+    isAllocationThread.set(false);
     maxAllocations = UINT64_MAX;
     failAlways = false;
 }
@@ -112,6 +148,9 @@ SimulateStackOOMAfter(uint64_t checks, uint32_t thread, bool always)
     MOZ_ASSERT(stackCheckCounter + checks > stackCheckCounter);
     MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
     stackTargetThread = thread;
+    if (thread == js::THREAD_TYPE_CURRENT) {
+        isStackCheckThread.set(true);
+    }
     maxStackChecks = stackCheckCounter + checks;
     stackCheckFailAlways = always;
 }
@@ -126,6 +165,7 @@ ResetSimulatedStackOOM()
     }
 
     stackTargetThread = THREAD_TYPE_NONE;
+    isStackCheckThread.set(false);
     maxStackChecks = UINT64_MAX;
     stackCheckFailAlways = false;
 }
@@ -142,6 +182,9 @@ SimulateInterruptAfter(uint64_t checks, uint32_t thread, bool always)
     MOZ_ASSERT(interruptCheckCounter + checks > interruptCheckCounter);
     MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
     interruptTargetThread = thread;
+    if (thread == js::THREAD_TYPE_CURRENT) {
+        isInterruptCheckThread.set(true);
+    }
     maxInterruptChecks = interruptCheckCounter + checks;
     interruptCheckFailAlways = always;
 }
@@ -156,6 +199,7 @@ ResetSimulatedInterrupt()
     }
 
     interruptTargetThread = THREAD_TYPE_NONE;
+    isInterruptCheckThread.set(false);
     maxInterruptChecks = UINT64_MAX;
     interruptCheckFailAlways = false;
 }

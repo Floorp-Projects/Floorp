@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "ਸੇਵਾ ਦੀਆਂ ਸ਼ਰਤਾਂ",
   "firstrun_privacy_notice": "ਪਰਦੇਦਾਰੀ ਦਾ ਨੋਟਿਸ",
   "firstrun_continue_to_login": "ਜਾਰੀ ਰੱਖੋ",
-  "firstrun_skip_login": "ਇਹ ਪਗ਼ ਛੱਡੋ"
+  "firstrun_skip_login": "ਇਹ ਪਗ਼ ਛੱਡੋ",
+  "context_menu_title": "Open menu"
 };

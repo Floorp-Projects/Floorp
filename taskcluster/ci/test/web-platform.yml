@@ -1,6 +1,10 @@
 job-defaults:
     instance-size: xlarge
     max-run-time: 5400
+    serviceworker-e10s:
+        by-test-platform:
+            linux64/debug: both
+            default: false
     mozharness:
         script: web_platform_tests.py
         config:
@@ -23,8 +27,8 @@ web-platform-tests:
         by-test-platform:
             android.*: 36
             linux.*/debug: 18
-            macosx64/opt: 5
-            macosx64/debug: 10
+            macosx64.*/opt: 8
+            macosx64/debug: 16
             windows10-64-ccov/debug: 15
             macosx64-ccov/debug: 24
             default: 12
@@ -59,9 +63,8 @@ web-platform-tests-headless:
     treeherder-symbol: W(wptH)
     chunks:
         by-test-platform:
-            macosx64/opt: 5
-            macosx64/debug: 10
-            default: 12
+            macosx64.*/opt: 8
+            macosx64/debug: 16
     e10s:
         by-test-platform:
             macosx.*: true
@@ -138,10 +141,7 @@ web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
     suite: web-platform-tests-wdspec
     treeherder-symbol: W(Wd)
-    chunks:
-        by-test-platform:
-            linux64-ccov/.*: 2
-            default: 2
+    chunks: 2
     mozharness:
         extra-options:
             - --test-type=wdspec

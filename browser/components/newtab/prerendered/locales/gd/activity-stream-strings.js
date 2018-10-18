@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "teirmichean na seirbheise",
   "firstrun_privacy_notice": "aithris na prìobhaideachd",
   "firstrun_continue_to_login": "Lean air adhart",
-  "firstrun_skip_login": "Leum seachad air seo"
+  "firstrun_skip_login": "Leum seachad air seo",
+  "context_menu_title": "Open menu"
 };

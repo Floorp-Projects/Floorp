@@ -476,6 +476,14 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx,
 {
     MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
     nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
+
+#if defined(DEBUG) && !defined(ANDROID)
+    if (!(Preferences::GetBool("security.allow_eval_with_system_principal"))) {
+      MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(subjectPrincipal),
+               "do not use eval with system privileges");
+    }
+#endif
+
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     nsresult rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
     NS_ASSERTION(NS_SUCCEEDED(rv), "CSP: Failed to get CSP from principal.");

@@ -22,13 +22,13 @@ add_task(async function() {
 
   let tab = await addTab(TAB_URL);
   let { tabs } = await listTabs(client);
-  let [, tabClient] = await attachTarget(client, findTab(tabs, TAB_URL));
+  let [, targetFront] = await attachTarget(client, findTab(tabs, TAB_URL));
 
-  await listWorkers(tabClient);
+  await listWorkers(targetFront);
   await createWorkerInTab(tab, WORKER_URL);
 
-  let { workers } = await listWorkers(tabClient);
-  let [, workerClient] = await attachWorker(tabClient,
+  let { workers } = await listWorkers(targetFront);
+  let [, workerClient] = await attachWorker(targetFront,
                                              findWorker(workers, WORKER_URL));
 
   let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerClient),

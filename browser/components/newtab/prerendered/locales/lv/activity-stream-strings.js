@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privātuma politikai",
   "firstrun_continue_to_login": "Turpināt",
   "firstrun_skip_login": "Izlaist šo soli",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Uzzināt vairāk"
 };

@@ -5,7 +5,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { MemoryFront } = require("devtools/shared/fronts/memory");
 const { Cu } = require("chrome");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 
@@ -31,11 +30,7 @@ MemoryPanel.prototype = {
 
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
-
-    const rootForm = await this.target.root;
-    this.panelWin.gFront = new MemoryFront(this.target.client,
-                                           this.target.form,
-                                           rootForm);
+    this.panelWin.gFront = this.target.getFront("memory");
     this.panelWin.gHeapAnalysesClient = new HeapAnalysesClient();
 
     await this.panelWin.gFront.attach();

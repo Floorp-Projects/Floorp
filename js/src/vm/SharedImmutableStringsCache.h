@@ -12,6 +12,7 @@
 
 #include <cstring>
 #include <new> // for placement new
+#include <utility> // std::move
 
 #include "builtin/String.h"
 
@@ -29,9 +30,9 @@ class SharedImmutableString;
 class SharedImmutableTwoByteString;
 
 /**
- * The `SharedImmutableStringsCache` allows for safely sharing and deduplicating
- * immutable strings (either `const char*` or `const char16_t*`) between
- * threads.
+ * The `SharedImmutableStringsCache` allows safely sharing and deduplicating
+ * immutable strings (either `const char*` [any encoding, not restricted to
+ * only Latin-1 or only UTF-8] or `const char16_t*`) between threads.
  *
  * The locking mechanism is dead-simple and coarse grained: a single lock guards
  * all of the internal table itself, the table's entries, and the entries'

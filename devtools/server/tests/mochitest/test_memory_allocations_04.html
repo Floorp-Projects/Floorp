@@ -19,7 +19,7 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    const { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
     await memory.attach();
 
     const allocs = [];
@@ -53,7 +53,7 @@ window.onload = function() {
     // (js/src/jit-test/tests/debug/Memory-allocationsSamplingProbability-*.js).
 
     await memory.detach();
-    destroyServerAndFinish(client);
+    destroyServerAndFinish(target);
   })();
 };
 </script>

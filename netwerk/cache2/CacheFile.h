@@ -92,6 +92,7 @@ public:
   nsresult   ThrowMemoryCachedData();
 
   nsresult GetAltDataSize(int64_t *aSize);
+  nsresult GetAltDataType(nsACString& aType);
 
   // metadata forwarders
   nsresult GetElement(const char *aKey, char **_retval);
@@ -215,6 +216,7 @@ private:
                                  // offset where alternative data starts.
                                  // Otherwise it is -1.
   nsCString      mKey;
+  nsCString      mAltDataType; // The type of the saved alt-data. May be empty.
 
   RefPtr<CacheFileHandle>      mHandle;
   RefPtr<CacheFileMetadata>    mMetadata;

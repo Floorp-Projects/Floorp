@@ -97,7 +97,7 @@ reftest.Runner = class {
     let reftestWin = this.parentWindow.open(
         "chrome://marionette/content/reftest.xul",
         "reftest",
-        "chrome,dialog,height=600,width=600");
+        "chrome,height=600,width=600");
 
     await new Promise(resolve => {
       reftestWin.addEventListener("load", resolve, {once: true});

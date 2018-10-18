@@ -728,7 +728,6 @@ xul|treechildren::-moz-tree-row(hover) {
 
 xul|treechildren::-moz-tree-row(selected) {
   background-color: var(--in-content-item-selected);
-  color: var(--in-content-selected-text);
 }
 
 /* Trees */
@@ -796,11 +795,13 @@ xul|treechildren::-moz-tree-row {
 
 /* Color needs to be set on tree cell in order to be applied */
 xul|treechildren::-moz-tree-cell-text,
+xul|treechildren::-moz-tree-twisty,
 xul|treechildren::-moz-tree-image {
   color: var(--in-content-text-color);
 }
 
 xul|treechildren::-moz-tree-cell-text(selected),
+xul|treechildren::-moz-tree-twisty(selected),
 xul|treechildren::-moz-tree-image(selected) {
   color: var(--in-content-selected-text);
 }
@@ -811,11 +812,16 @@ xul|treechildren::-moz-tree-image(selected) {
   border-radius: 4px;
   color: var(--grey-90);
   min-height: 32px;
+  -moz-box-align: center;
   padding: 4px;
 }
 
 .message-bar-description {
   line-height: 1.25;
+}
+
+.message-bar > description {
+  margin: 0;
 }
 
 /* The message-bar-button styles have extra specificity to override
@@ -868,6 +874,12 @@ xul|treechildren::-moz-tree-image(selected) {
 
 .card:hover {
   box-shadow: var(--card-shadow-hover);
+}
+
+.card-heading-image {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  margin: -16px -16px 16px;
 }
 
 .sidebar-footer-button {

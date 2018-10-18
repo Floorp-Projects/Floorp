@@ -277,6 +277,12 @@ impl Document {
             FrameMsg::AppendDynamicProperties(property_bindings) => {
                 self.dynamic_properties.add_properties(property_bindings);
             }
+            FrameMsg::SetPinchZoom(factor) => {
+                if self.view.pinch_zoom_factor != factor.get() {
+                    self.view.pinch_zoom_factor = factor.get();
+                    self.frame_is_valid = false;
+                }
+            }
         }
 
         DocumentOps::nop()
@@ -507,9 +513,6 @@ impl RenderBackend {
             }
             SceneMsg::SetPageZoom(factor) => {
                 doc.view.page_zoom_factor = factor.get();
-            }
-            SceneMsg::SetPinchZoom(factor) => {
-                doc.view.pinch_zoom_factor = factor.get();
             }
             SceneMsg::SetWindowParameters {
                 window_size,

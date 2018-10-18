@@ -99,7 +99,7 @@ def test_metadata_lsan_stack_depth():
     test = tests[1][2].pop()
     test_obj = wpttest.from_manifest(test, [], test_metadata.get_test(test.id))
 
-    assert test_obj.lsan_max_stack_depth == None
+    assert test_obj.lsan_max_stack_depth is None
 
     test_metadata = manifestexpected.static.compile(BytesIO(test_0),
                                                     {},

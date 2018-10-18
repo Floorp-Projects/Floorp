@@ -34,7 +34,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffect)
 
-  AnimationEffect(nsIDocument* aDocument, const TimingParams& aTiming);
+  AnimationEffect(nsIDocument* aDocument, TimingParams&& aTiming);
 
   virtual KeyframeEffect* AsKeyframeEffect() { return nullptr; }
 

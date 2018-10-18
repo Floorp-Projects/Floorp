@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Personvernbestemmelser",
   "firstrun_continue_to_login": "Fortsett",
   "firstrun_skip_login": "Hopp over dette trinnet",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Les mer"
 };

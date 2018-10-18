@@ -107,6 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
   "firstrun_skip_login": "Skip this step",
+  "context_menu_title": "Open menu",
   "default_label_loading": "Á Lódáil…",
   "header_stories": "Barrscéalta",
   "header_visit_again": "Cuairt Arís",

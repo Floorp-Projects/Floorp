@@ -9,6 +9,7 @@ import signal
 import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor
+from itertools import chain
 from math import ceil
 from multiprocessing import cpu_count
 from multiprocessing.queues import Queue
@@ -93,7 +94,7 @@ class LintRoller(object):
     """
     MAX_PATHS_PER_JOB = 50  # set a max size to prevent command lines that are too long on Windows
 
-    def __init__(self, root, **lintargs):
+    def __init__(self, root, exclude=None, **lintargs):
         self.parse = Parser(root)
         try:
             self.vcs = get_repository_object(root)
@@ -108,6 +109,7 @@ class LintRoller(object):
         self.result = ResultSummary()
 
         self.root = root
+        self.exclude = exclude or []
 
     def read(self, paths):
         """Parse one or more linters and add them to the registry.
@@ -117,8 +119,10 @@ class LintRoller(object):
         if isinstance(paths, basestring):
             paths = (paths,)
 
-        for path in paths:
-            self.linters.extend(self.parse(path))
+        for linter in chain(*[self.parse(p) for p in paths]):
+            # Add in our global excludes
+            linter.setdefault('exclude', []).extend(self.exclude)
+            self.linters.append(linter)
 
     def setup(self):
         """Run setup for applicable linters"""

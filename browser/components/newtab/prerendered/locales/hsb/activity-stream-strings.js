@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Zdźělenka priwatnosće",
   "firstrun_continue_to_login": "Pokročować",
   "firstrun_skip_login": "Tutón krok přeskočić",
+  "context_menu_title": "Open menu",
   "pocket_learn_more": "Dalše informacije"
 };

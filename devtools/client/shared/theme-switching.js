@@ -33,22 +33,6 @@
   const devtoolsStyleSheets = new WeakMap();
   let gOldTheme = "";
 
-  function forceStyle() {
-    const computedStyle = window.getComputedStyle(documentElement);
-    if (!computedStyle) {
-      // Null when documentElement is not ready. This method is anyways not
-      // required then as scrollbars would be in their state without flushing.
-      return;
-    }
-    // Save display value
-    const display = computedStyle.display;
-    documentElement.style.display = "none";
-    // Flush
-    window.getComputedStyle(documentElement).display;
-    // Restore
-    documentElement.style.display = display;
-  }
-
   /*
    * Notify the window that a theme switch finished so tests can check the DOM
    */
@@ -87,26 +71,6 @@
       const {styleSheet, loadPromise} = appendStyleSheet(document, url);
       devtoolsStyleSheets.get(newThemeDef).push(styleSheet);
       loadEvents.push(loadPromise);
-    }
-
-    if (os !== "win" && os !== "mac") {
-      // Windows & Mac always use native scrollbars, Linux still uses custom floating
-      // scrollbar implementation.
-      try {
-        const StylesheetUtils = require("devtools/shared/layout/utils");
-        const SCROLLBARS_URL = "chrome://devtools/skin/floating-scrollbars-dark-theme.css";
-        if (!Services.appShell.hiddenDOMWindow
-          .matchMedia("(-moz-overlay-scrollbars)").matches) {
-          if (newTheme == "dark") {
-            StylesheetUtils.loadSheet(window, SCROLLBARS_URL, "agent");
-          } else if (oldTheme == "dark") {
-            StylesheetUtils.removeSheet(window, SCROLLBARS_URL, "agent");
-          }
-          forceStyle();
-        }
-      } catch (e) {
-        console.warn("customize scrollbar styles is only supported in firefox");
-      }
     }
 
     Promise.all(loadEvents).then(() => {

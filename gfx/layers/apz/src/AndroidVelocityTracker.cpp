@@ -242,14 +242,12 @@ static bool SolveLeastSquares(const float* x,
   return true;
 }
 
-float
+Maybe<float>
 AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
 {
-  // Default fallback value.
-  float velocity = 0;
 
   if (mHistory.IsEmpty()) {
-    return velocity;
+    return Nothing{};
   }
 
   // Polynomial coefficients describing motion along the axis.
@@ -279,10 +277,10 @@ AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
     time[m] = -static_cast<float>(age) / 1000.0f;  // in seconds
     index--;
     m++;
-  } while (index > 0);
+  } while (index >= 0);
 
   if (m == 0) {
-    return velocity;  // no data
+    return Nothing{};  // no data
   }
 
   // Calculate a least squares polynomial fit.
@@ -297,14 +295,16 @@ AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
   if (degree >= 1) {  // otherwise, no velocity data available
     uint32_t n = degree + 1;
     if (SolveLeastSquares(time, pos, w, m, n, xcoeff)) {
-      velocity = xcoeff[1];
+      float velocity = xcoeff[1];
+
+      // The velocity needs to be negated because the positions represent
+      // touch positions, and the direction of scrolling is opposite to the
+      // direction of the finger's movement.
+      return Some(-velocity / 1000.0f);  // convert to pixels per millisecond
     }
   }
 
-  // The velocity needs to be negated because the positions represent
-  // touch positions, and the direction of scrolling is opposite to the
-  // direction of the finger's movement.
-  return -velocity / 1000.0f;  // convert to pixels per millisecond
+  return Nothing{};
 }
 
 void

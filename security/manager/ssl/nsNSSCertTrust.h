@@ -5,7 +5,6 @@
 #ifndef nsNSSCertTrust_h
 #define nsNSSCertTrust_h
 
-#include "certdb.h"
 #include "certt.h"
 
 /*

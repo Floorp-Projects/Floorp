@@ -133,10 +133,9 @@ FormAutofillParent.prototype = {
       case "sync-pane-loaded": {
         let formAutofillPreferences = new FormAutofillPreferences();
         let document = subject.document;
-        let prefGroupBox = formAutofillPreferences.init(document);
-        let parentNode = document.getElementById("mainPrefPane");
-        let insertBeforeNode = document.getElementById("historyGroup");
-        parentNode.insertBefore(prefGroupBox, insertBeforeNode);
+        let prefFragment = formAutofillPreferences.init(document);
+        let formAutofillGroupBox = document.getElementById("formAutofillGroupBox");
+        formAutofillGroupBox.appendChild(prefFragment);
         break;
       }
 
@@ -247,7 +246,7 @@ FormAutofillParent.prototype = {
       }
       case "FormAutofill:OpenPreferences": {
         const win = BrowserWindowTracker.getTopWindow();
-        win.openPreferences("panePrivacy", {origin: "autofillFooter"});
+        win.openPreferences("privacy-form-autofill", {origin: "autofillFooter"});
         break;
       }
       case "FormAutofill:GetDecryptedString": {

@@ -82,6 +82,10 @@ JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
 #undef TRACE_ROOTS
     TraceExactStackRootList<jsid>(trc, stackRoots[JS::RootKind::Id], "exact-id");
     TraceExactStackRootList<Value>(trc, stackRoots[JS::RootKind::Value], "exact-value");
+
+    // ConcreteTraceable calls through a function pointer.
+    JS::AutoSuppressGCAnalysis nogc;
+
     TraceExactStackRootList<ConcreteTraceable>(
         trc, stackRoots[JS::RootKind::Traceable], "Traceable");
 }

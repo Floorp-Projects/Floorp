@@ -544,6 +544,10 @@ pref("layers.low-precision-opacity", "1.0");
 // work harder keep scrolling smooth and memory low.
 pref("layers.max-active", 20);
 
+// On Fennec we need containerful scrolling to support zooming. Bug 1459312
+// tracks zooming with containerless scrolling.
+pref("layout.scroll.root-frame-containers", 1);
+
 pref("notification.feature.enabled", true);
 pref("dom.webnotifications.enabled", true);
 
@@ -836,7 +840,6 @@ pref("dom.vr.enabled", true);
 pref("browser.tabs.showAudioPlayingIcon", true);
 
 pref("dom.serviceWorkers.enabled", true);
-pref("dom.serviceWorkers.interception.enabled", true);
 
 // Allow service workers to open windows for a longer period after a notification
 // click on mobile.  This is to account for some devices being quite slow.

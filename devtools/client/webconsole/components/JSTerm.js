@@ -475,7 +475,7 @@ class JSTerm extends Component {
           this.props.clearHistory();
           break;
         case "inspectObject":
-          this.inspectObjectActor(helperResult.object);
+          this.hud.inspectObjectActor(helperResult.object);
           break;
         case "error":
           try {
@@ -511,16 +511,6 @@ class JSTerm extends Component {
     }
 
     return null;
-  }
-
-  inspectObjectActor(objectActor) {
-    this.hud.consoleOutput.dispatchMessageAdd({
-      helperResult: {
-        type: "inspectObject",
-        object: objectActor
-      }
-    }, true);
-    return this.hud.consoleOutput;
   }
 
   screenshotNotify(results) {

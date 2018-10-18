@@ -15,60 +15,50 @@ Bug 1023018 - Tests if the framerate actor keeps recording after navigations.
 <script>
 "use strict";
 
-window.onload = function() {
+window.onload = async function() {
+  // inspector-helpers doesnt wait for explicit finish
   SimpleTest.waitForExplicitFinish();
-  const {FramerateFront} = require("devtools/shared/fronts/framerate");
-  const {TargetFactory} = require("devtools/client/framework/target");
 
+  const TICK = 1000;
   const url = document.getElementById("testContent").href;
-  attachURL(url, onTab);
+  const { target, doc } = await attachURL(url);
+  const contentWin = doc.defaultView;
+  const front = target.getFront("framerate");
 
-  async function onTab(_, client, form, contentDoc) {
-    const contentWin = contentDoc.defaultView;
-    const chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    const selectedTab = chromeWin.gBrowser.selectedTab;
+  await front.startRecording();
+  await waitFor(TICK);
+  const firstBatch = await front.getPendingTicks();
+  await waitFor(TICK);
 
-    const target = await TargetFactory.forTab(selectedTab);
-    await target.attach();
-    const front = FramerateFront(client, form);
+  const onWillNavigate = target.once("will-navigate");
+  contentWin.location.reload();
+  await onWillNavigate;
 
-    front.startRecording().then(() => {
-      window.setTimeout(() => {
-        front.getPendingTicks().then(firstBatch => {
-          /* eslint-disable max-nested-callbacks */
-          target.once("will-navigate", () => {
-            window.setTimeout(() => {
-              front.stopRecording().then(secondBatch => {
-                onRecordingStopped(client, firstBatch, secondBatch);
-              });
-            }, 1000);
-          });
-          /* eslint-enable max-nested-callbacks */
-          contentWin.location.reload();
-        });
-      }, 1000);
-    });
-  }
-
-  function onRecordingStopped(client, firstBatch, secondBatch) {
-    ok(firstBatch, "There should be a first batch recording available.");
-    ok(secondBatch, "There should be a second batch recording available.");
-
-    const diff = secondBatch.length - firstBatch.length;
-    info("Difference in ticks: " + diff);
-    ok(diff > 0, "More ticks should be recorded in the second batch.");
-
-    ok(firstBatch.every((e) => secondBatch.includes(e)),
-      "All the ticks in the first batch should be in the second batch as well.");
-    ok(secondBatch.every((e, i, array) => i < array.length - 1 ? e < array[i + 1] : true),
-      "All the ticks in the final batch should be ascending in value.");
-
-    client.close().then(() => {
-      DebuggerServer.destroy();
-      SimpleTest.finish();
-    });
-  }
+  await waitFor(TICK);
+  const secondBatch = await front.stopRecording();
+  await onRecordingStopped(firstBatch, secondBatch);
+  target.destroy();
+  SimpleTest.finish();
 };
+
+// Local Helpers
+function waitFor(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function onRecordingStopped(firstBatch, secondBatch) {
+  ok(firstBatch, "There should be a first batch recording available.");
+  ok(secondBatch, "There should be a second batch recording available.");
+
+  const diff = secondBatch.length - firstBatch.length;
+  info("Difference in ticks: " + diff);
+  ok(diff > 0, "More ticks should be recorded in the second batch.");
+
+  ok(firstBatch.every((e) => secondBatch.includes(e)),
+    "All the ticks in the first batch should be in the second batch as well.");
+  ok(secondBatch.every((e, i, array) => i < array.length - 1 ? e < array[i + 1] : true),
+    "All the ticks in the final batch should be ascending in value.");
+}
 </script>
 </pre>
 <a id="testContent" target="_blank" href="inspector_getImageData.html">Test Document</a>

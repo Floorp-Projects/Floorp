@@ -19,7 +19,7 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   (async function() {
-    const { memory, client } = await startServerAndGetSelectedTabMemory();
+    const { memory, target } = await startServerAndGetSelectedTabMemory();
 
     let beforeGC, afterGC;
 
@@ -41,7 +41,7 @@ window.onload = function() {
 
     ok(true, "The amount of memory after GC should eventually decrease");
 
-    destroyServerAndFinish(client);
+    destroyServerAndFinish(target);
   })();
 };
 </script>

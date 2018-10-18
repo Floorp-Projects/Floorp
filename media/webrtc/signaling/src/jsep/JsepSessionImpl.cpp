@@ -652,6 +652,15 @@ JsepSessionImpl::CreateAnswerMsection(const JsepAnswerOptions& options,
     return NS_OK;
   }
 
+  MOZ_ASSERT(transceiver.IsAssociated());
+  if (msection.GetAttributeList().GetMid().empty()) {
+    msection.GetAttributeList().SetAttribute(
+        new SdpStringAttribute(SdpAttribute::kMidAttribute,
+          transceiver.GetMid()));
+  }
+
+  MOZ_ASSERT(transceiver.GetMid() == msection.GetAttributeList().GetMid());
+
   SdpSetupAttribute::Role role;
   rv = DetermineAnswererSetupRole(remoteMsection, &role);
   NS_ENSURE_SUCCESS(rv, rv);

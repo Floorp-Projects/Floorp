@@ -58,7 +58,9 @@ function isMedia({ mimeType }) {
   return mimeType && (
     mimeType.includes("audio/") ||
     mimeType.includes("video/") ||
-    mimeType.includes("model/"));
+    mimeType.includes("model/") ||
+    mimeType === "application/vnd.apple.mpegurl" ||
+    mimeType === "application/x-mpegurl");
 }
 
 function isWS({ requestHeaders, responseHeaders }) {

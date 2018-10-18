@@ -23,16 +23,16 @@ struct FeatureMap {
  */
 static FeatureMap sSupportedFeatures[] = {
   { "autoplay", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "camera", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
-  { "encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
-  { "fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
-  { "geolocation", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
-  { "microphone", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
-  { "midi", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
-  { "payment", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "camera", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "geolocation", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "microphone", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "midi", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "payment", FeaturePolicyUtils::FeaturePolicyValue::eAll },
   // TODO: not supported yet!!!
-  { "speaker", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
-  { "vr", FeaturePolicyUtils::FeaturePolicyValue::eAll  },
+  { "speaker", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "vr", FeaturePolicyUtils::FeaturePolicyValue::eAll },
 };
 
 /* static */ bool

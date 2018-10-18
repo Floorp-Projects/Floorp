@@ -2452,6 +2452,11 @@ this.XPIDatabaseReconcile = {
     // appDisabled depends on whether the add-on is a foreignInstall so update
     aNewAddon.appDisabled = !XPIDatabase.isUsableAddon(aNewAddon);
 
+    if (aLocation.isSystem) {
+      const pref = `extensions.${aId.split("@")[0]}.enabled`;
+      aNewAddon.userDisabled = !Services.prefs.getBoolPref(pref, true);
+    }
+
     if (isDetectedInstall && aNewAddon.foreignInstall) {
       // Add the installation source info for the sideloaded extension.
       aNewAddon.installTelemetryInfo = {

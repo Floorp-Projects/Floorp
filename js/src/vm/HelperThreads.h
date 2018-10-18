@@ -848,6 +848,15 @@ class SourceCompressionTask
 
     void work();
     void complete();
+
+  private:
+    struct PerformTaskWork;
+    friend struct PerformTaskWork;
+
+    // The work algorithm, aware whether it's compressing one-byte UTF-8 source
+    // text or UTF-16, for CharT either Utf8Unit or char16_t.  Invoked by
+    // work() after doing a type-test of the ScriptSource*.
+    template<typename CharT> void workEncodingSpecific();
 };
 
 // A PromiseHelperTask is an OffThreadPromiseTask that executes a single job on

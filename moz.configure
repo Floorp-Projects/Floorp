@@ -39,6 +39,12 @@ def imply_disable_compile_environment(value):
     if value:
         return False
 
+option(env='MOZ_COPY_PDBS',
+    help='For builds that do not support symbols in the normal fashion,'
+         ' generate and copy them into the resulting build archive.')
+
+set_config('MOZ_COPY_PDBS', depends_if('MOZ_COPY_PDBS')(lambda _: True))
+
 imply_option('--enable-compile-environment', imply_disable_compile_environment)
 
 option('--disable-compile-environment',

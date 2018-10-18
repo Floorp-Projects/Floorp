@@ -72,6 +72,7 @@
     "browser_style": true,
     "default_icon": "icons/lightbulb.svg",
     "default_title": "Report Site Issue…",
+    "pinned": false,
     "show_matches": ["http://*/*", "https://*/*"]
   }
 }

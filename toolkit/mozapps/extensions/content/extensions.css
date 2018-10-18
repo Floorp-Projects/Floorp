@@ -140,10 +140,16 @@ row[unsupported="true"] {
 #addons-page[warning="safemode"] #detail-view[loading="true"] .global-warning {
   display: none;
 }
-
-#addons-page .view-pane:not([type="theme"]) #getthemes-container,
 #addons-page .view-pane:not([type="plugin"]) #plugindeprecation-notice {
   display: none;
+}
+
+.list-view-notice {
+  margin-inline-start: 32px;
+}
+
+.list-view-notice > .message-bar {
+  width: 664px;
 }
 
 .addon .relnotes {

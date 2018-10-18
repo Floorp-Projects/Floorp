@@ -5,6 +5,21 @@
 #include "nsISupports.idl"
 
 interface nsIOutputStream;
+interface nsIInputStream;
+
+%{C++
+namespace mozilla {
+template<typename... Elements> class Tuple;
+} // namespace mozilla
+%}
+
+[ref] native ConstPreferenceArray(const nsTArray<mozilla::Tuple<nsCString, nsCString>>);
+
+[scriptable, uuid(1fb8ccf2-5fa5-45ec-bc57-8c8022a5d0d3)]
+interface nsIInputStreamReceiver : nsISupports
+{
+  void onInputStreamReady(in nsIInputStream aStream);
+};
 
 [scriptable, uuid(72c34415-c6eb-48af-851f-772fa9ee5972)]
 interface nsICacheInfoChannel : nsISupports
@@ -79,16 +94,25 @@ interface nsICacheInfoChannel : nsISupports
    * Calling this method instructs the channel to serve the alternative data
    * if that was previously saved in the cache, otherwise it will serve the
    * real data.
+   * @param type
+   *        a string identifying the alt-data format
+   * @param contentType
+   *        the contentType for which the preference applies.
+   *        an empty contentType means the preference applies for ANY contentType
+   *
+   * The method may be called several times, with different type and contentType.
+   *
    * Must be called before AsyncOpen.
    */
-  void preferAlternativeDataType(in ACString type);
+  void preferAlternativeDataType(in ACString type, in ACString contentType);
 
   /**
    * Get the preferred alternative data type set by preferAlternativeDataType().
-   * This attribute stands for the desired data type instead of the type of the
+   * The returned types stand for the desired data type instead of the type of the
    * information retrieved from the network stack.
    */
-  readonly attribute ACString preferredAlternativeDataType;
+  [noscript, notxpcom, nostdcall]
+  ConstPreferenceArray preferredAlternativeDataTypes();
 
   /**
    * Holds the type of the alternative data representation that the channel
@@ -98,6 +122,13 @@ interface nsICacheInfoChannel : nsISupports
    * Can only be called during or after OnStartRequest.
    */
   readonly attribute ACString alternativeDataType;
+
+  /**
+   * Sometimes when the channel is delivering alt-data, we may want to somehow
+   * access the original content too. This method asynchronously opens the
+   * input stream and delivers it to the receiver.
+   */
+  void getOriginalInputStream(in nsIInputStreamReceiver aReceiver);
 
   /**
    * Opens and returns an output stream that a consumer may use to save an

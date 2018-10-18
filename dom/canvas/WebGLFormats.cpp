@@ -14,6 +14,39 @@
 namespace mozilla {
 namespace webgl {
 
+static TextureBaseType
+ToBaseType(const ComponentType type)
+{
+    switch (type) {
+    case ComponentType::Int:
+        return TextureBaseType::Int;
+    case ComponentType::UInt:
+        return TextureBaseType::UInt;
+    case ComponentType::NormInt:
+    case ComponentType::NormUInt:
+    case ComponentType::Float:
+    //case ComponentType::Depth:
+        return TextureBaseType::Float;
+    }
+    MOZ_CRASH("pacify gcc6 warning");
+}
+
+const char*
+ToString(const TextureBaseType x)
+{
+    switch (x) {
+    case webgl::TextureBaseType::Float:
+        return "FLOAT";
+    case webgl::TextureBaseType::Int:
+        return "INT";
+    case webgl::TextureBaseType::UInt:
+        return "UINT";
+    }
+    MOZ_CRASH("pacify gcc6 warning");
+}
+
+// -
+
 template<typename K, typename V, typename K2, typename V2>
 static inline void
 AlwaysInsert(std::map<K,V>& dest, const K2& key, const V2& val)
@@ -231,7 +264,8 @@ AddFormatInfo(EffectiveFormat format, const char* name, GLenum sizedFormat,
 #endif
 
     const FormatInfo info = { format, name, sizedFormat, unsizedFormat, componentType,
-                              isSRGB, compressedFormatInfo, bytesPerPixel, r,g,b,a,d,s };
+                              ToBaseType(componentType), isSRGB, compressedFormatInfo,
+                              bytesPerPixel, r,g,b,a,d,s };
     AlwaysInsert(gFormatInfoMap, format, info);
 }
 
@@ -302,11 +336,12 @@ InitFormatInfo()
     AddFormatInfo(FOO(DEPTH_COMPONENT16 ), 2, 0,0,0,0, 16,0, UnsizedFormat::D , false, ComponentType::NormUInt);
     AddFormatInfo(FOO(DEPTH_COMPONENT24 ), 3, 0,0,0,0, 24,0, UnsizedFormat::D , false, ComponentType::NormUInt);
     AddFormatInfo(FOO(DEPTH_COMPONENT32F), 4, 0,0,0,0, 32,0, UnsizedFormat::D , false, ComponentType::Float);
-    AddFormatInfo(FOO(DEPTH24_STENCIL8  ), 4, 0,0,0,0, 24,8, UnsizedFormat::DEPTH_STENCIL, false, ComponentType::Special);
-    AddFormatInfo(FOO(DEPTH32F_STENCIL8 ), 5, 0,0,0,0, 32,8, UnsizedFormat::DEPTH_STENCIL, false, ComponentType::Special);
+    // DEPTH_STENCIL types are sampled as their depth component.
+    AddFormatInfo(FOO(DEPTH24_STENCIL8  ), 4, 0,0,0,0, 24,8, UnsizedFormat::DEPTH_STENCIL, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(DEPTH32F_STENCIL8 ), 5, 0,0,0,0, 32,8, UnsizedFormat::DEPTH_STENCIL, false, ComponentType::Float);
 
     // GLES 3.0.4, p205-206, "Required Renderbuffer Formats"
-    AddFormatInfo(FOO(STENCIL_INDEX8), 1, 0,0,0,0, 0,8, UnsizedFormat::S, false, ComponentType::UInt);
+    AddFormatInfo(FOO(STENCIL_INDEX8), 1, 0,0,0,0, 0,8, UnsizedFormat::S, false, ComponentType::Int);
 
     // GLES 3.0.4, p147, table 3.19
     // GLES 3.0.4  p286+  $C.1 "ETC Compressed Texture Image Formats"

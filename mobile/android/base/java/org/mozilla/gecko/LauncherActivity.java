@@ -17,6 +17,7 @@ import android.util.Log;
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.switchboard.SwitchBoard;
+import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.webapps.WebAppActivity;
 import org.mozilla.gecko.webapps.WebAppIndexer;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
@@ -42,6 +43,7 @@ import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SAVE_AS_PDF;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SIGN_UP;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.SUMO_DEFAULT_BROWSER;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_FXA_SIGNIN;
+import static org.mozilla.gecko.util.FileUtils.isContentUri;
 
 import org.mozilla.gecko.deeplink.DeepLinkContract;
 
@@ -67,8 +69,9 @@ public class LauncherActivity extends Activity {
         } else if (isWebAppIntent(safeIntent)) {
             dispatchWebAppIntent();
 
-        // If it's not a view intent, it won't be a custom tabs intent either. Just launch!
-        } else if (!isViewIntentWithURL(safeIntent)) {
+        // If it's not a view intent, it won't be a custom tabs intent either, and for content URI
+        // let's handle only with normal tabs for the moment
+        } else if (!isViewIntentWithURL(safeIntent) || isContentUri(safeIntent.getData())) {
             dispatchNormalIntent();
 
         } else if (isCustomTabsIntent(safeIntent) && isCustomTabsEnabled(this) ) {

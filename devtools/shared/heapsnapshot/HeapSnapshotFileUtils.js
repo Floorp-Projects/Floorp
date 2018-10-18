@@ -15,8 +15,8 @@
 //
 // The heap snapshot file path conventions permits the following forms:
 //
-//     $TEMP_DIRECTORY/XXXXXXXXXX.fxsnapshot.gz
-//     $TEMP_DIRECTORY/XXXXXXXXXX-XXXXX.fxsnapshot.gz
+//     $TEMP_DIRECTORY/XXXXXXXXXX.fxsnapshot
+//     $TEMP_DIRECTORY/XXXXXXXXXX-XXXXX.fxsnapshot
 //
 // Where the strings of "X" are zero or more digits.
 
@@ -28,7 +28,7 @@ loader.lazyRequireGetter(this, "FileUtils",
 loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
 
 function getHeapSnapshotFileTemplate() {
-  return OS.Path.join(OS.Constants.Path.tmpDir, `${Date.now()}.fxsnapshot.gz`);
+  return OS.Path.join(OS.Constants.Path.tmpDir, `${Date.now()}.fxsnapshot`);
 }
 
 /**
@@ -63,7 +63,7 @@ exports.getHeapSnapshotTempFilePath = function(snapshotId) {
   if (!isValidSnapshotFileId(snapshotId)) {
     return null;
   }
-  return OS.Path.join(OS.Constants.Path.tmpDir, snapshotId + ".fxsnapshot.gz");
+  return OS.Path.join(OS.Constants.Path.tmpDir, snapshotId + ".fxsnapshot");
 };
 
 /**

@@ -187,19 +187,6 @@ WebGLContext::IsTexParamValid(GLenum pname) const
     }
 }
 
-void
-WebGLContext::InvalidateResolveCacheForTextureWithTexUnit(const GLuint texUnit)
-{
-    if (mBound2DTextures[texUnit])
-        mBound2DTextures[texUnit]->InvalidateResolveCache();
-    if (mBoundCubeMapTextures[texUnit])
-        mBoundCubeMapTextures[texUnit]->InvalidateResolveCache();
-    if (mBound3DTextures[texUnit])
-        mBound3DTextures[texUnit]->InvalidateResolveCache();
-    if (mBound2DArrayTextures[texUnit])
-        mBound2DArrayTextures[texUnit]->InvalidateResolveCache();
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////
 // GL calls
 
@@ -263,7 +250,7 @@ WebGLContext::GenerateMipmap(GLenum rawTexTarget)
     if (!ValidateTexTarget(this, funcDims, rawTexTarget, &texTarget, &tex))
         return;
 
-    tex->GenerateMipmap(texTarget);
+    tex->GenerateMipmap();
 }
 
 JS::Value

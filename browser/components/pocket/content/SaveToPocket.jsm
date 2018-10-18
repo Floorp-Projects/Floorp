@@ -528,9 +528,6 @@ var SaveToPocket = {
   },
 
   uninit() {
-    // For speed sake, we should only do a shutdown if we're being disabled.
-    // On an app shutdown, just let it fade away...
     Services.prefs.removeObserver("extensions.pocket.enabled", prefObserver);
-    PocketOverlay.shutdown();
   },
 };

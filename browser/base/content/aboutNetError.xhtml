@@ -133,7 +133,7 @@
           <div id="errorLongDesc" />
 
           <div id="learnMoreContainer">
-            <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
+            <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new" data-telemetry-id="learn_more_link">&errorReporting.learnMore;</a></p>
           </div>
         </div>
 
@@ -141,7 +141,7 @@
              init for other error types .-->
         <div id="certificateErrorReporting">
           <p class="toggle-container-with-text">
-            <input type="checkbox" id="automaticallyReportInFuture" role="checkbox" />
+            <input type="checkbox" id="automaticallyReportInFuture" role="checkbox"  data-telemetry-id="auto_report_cb"/>
             <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic2;</label>
           </p>
         </div>
@@ -152,9 +152,9 @@
         </div>
 
         <div id="certErrorAndCaptivePortalButtonContainer" class="button-container">
-          <button id="returnButton" class="primary" autocomplete="off">&returnToPreviousPage.label;</button>
+          <button id="returnButton" class="primary" autocomplete="off" data-telemetry-id="return_button_top">&returnToPreviousPage.label;</button>
           <button id="openPortalLoginPageButton" class="primary" autocomplete="off">&openPortalLoginPage.label2;</button>
-          <button id="advancedButton" autocomplete="off">&advanced.label;</button>
+          <button id="advancedButton" data-telemetry-id="advanced_button" autocomplete="off">&advanced.label;</button>
           <button id="moreInformationButton" autocomplete="off">&moreInformation.label;</button>
         </div>
       </div>
@@ -170,14 +170,14 @@
             <button id="advancedPanelErrorTryAgain" class="primary" autocomplete="off">&retry.label;</button>
           </div>
           <div class="exceptionDialogButtonContainer">
-            <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>
+            <button id="exceptionDialogButton" data-telemetry-id="exception_button">&securityOverride.exceptionButtonLabel;</button>
           </div>
         </div>
 
         <div id="certificateErrorDebugInformation">
-          <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
+          <button id="copyToClipboard" data-telemetry-id="clipboard_button_top">&certerror.copyToClipboard.label;</button>
           <div id="certificateErrorText"/>
-          <button id="copyToClipboard">&certerror.copyToClipboard.label;</button>
+          <button id="copyToClipboard" data-telemetry-id="clipboard_button_bot">&certerror.copyToClipboard.label;</button>
         </div>
       </div>
     </div>

@@ -131,7 +131,7 @@ async function startTest() {
       checkTrackChanged(1, false);
     } else if (steps == 3) {
       checkTrackChanged(2, true);
-      stream.stop();
+      stream.getTracks().forEach(t => t.stop());
     }
   }
 

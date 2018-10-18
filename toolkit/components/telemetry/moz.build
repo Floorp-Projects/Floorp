@@ -98,6 +98,7 @@ EXTRA_JS_MODULES += [
     'app/TelemetryTimestamps.jsm',
     'app/TelemetryUtils.jsm',
     'other/GCTelemetry.jsm',
+    'other/MemoryTelemetry.jsm',
     'other/UITelemetry.jsm',
     'pings/EventPing.jsm',
     'pings/HealthPing.jsm',
