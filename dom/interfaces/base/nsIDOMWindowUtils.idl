@@ -1357,11 +1357,6 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   readonly attribute Element containerElement;
 
-  [noscript] void RenderDocument(in nsConstRect aRect,
-                                 in uint32_t aFlags,
-                                 in nscolor aBackgroundColor,
-                                 in gfxContext aThebesContext);
-
   /**
    * advanceTimeAndRefresh allows the caller to take over the refresh
    * driver timing for a window.  A call to advanceTimeAndRefresh does
