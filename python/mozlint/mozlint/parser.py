@@ -11,6 +11,8 @@ import yaml
 from .errors import LinterNotFound, LinterParseError
 from .types import supported_types
 
+GLOBAL_SUPPORT_FILES = []
+
 
 class Parser(object):
     """Reads and validates lint configuration files."""
@@ -103,7 +105,7 @@ class Parser(object):
             linter['name'] = name
             linter['path'] = path
             self._validate(linter)
-            linter.setdefault('support-files', []).append(path)
+            linter.setdefault('support-files', []).extend(GLOBAL_SUPPORT_FILES + [path])
             linter.setdefault('include', ['.'])
             linters.append(linter)
         return linters
