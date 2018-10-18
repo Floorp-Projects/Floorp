@@ -70,49 +70,49 @@ linux64-clang-7:
     toolchains:
         - linux64-gcc-4.9
 
-linux64-clang-7-mingw-x86:
-    description: "MinGW-Clang 7 x86 toolchain build"
+linux64-clang-trunk-mingw-x86:
+    description: "MinGW-Clang Trunk x86 toolchain build"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TMW(clang7-32)
+        symbol: TMW(clang-x86)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
         max-run-time: 7200
     run:
         using: toolchain-script
-        script: build-clang-7-mingw.sh
+        script: build-clang-trunk-mingw.sh
         arguments: [
             'x86'
         ]
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-7-mingw.json'
+            - 'build/build-clang/clang-trunk-mingw.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clangmingw.tar.xz
     toolchains:
         - linux64-gcc-4.9
 
-linux64-clang-7-mingw-x64:
-    description: "MinGW-Clang 7 Pre x64 toolchain build"
+linux64-clang-trunk-mingw-x64:
+    description: "MinGW-Clang Trunk x64 toolchain build"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TMW(clang7-64)
+        symbol: TMW(clang-x64)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
         max-run-time: 7200
     run:
         using: toolchain-script
-        script: build-clang-7-mingw.sh
+        script: build-clang-trunk-mingw.sh
         arguments: [
             'x64'
         ]
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-7-mingw.json'
+            - 'build/build-clang/clang-trunk-mingw.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clangmingw.tar.xz
     toolchains:
