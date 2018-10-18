@@ -161,12 +161,31 @@ var ThirdPartyCookies = {
     }
   },
 
+  get categoryLabelDefault() {
+    delete this.categoryLabelDefault;
+    return this.categoryLabelDefault =
+      document.getElementById("identity-popup-content-blocking-category-label-default");
+  },
+
+  get categoryLabelTrackers() {
+    delete this.categoryLabelTrackers;
+    return this.categoryLabelTrackers =
+      document.getElementById("identity-popup-content-blocking-category-label-trackers");
+  },
+
+  updateCategoryLabel() {
+    let rejectTrackers = this.behaviorPref == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+    this.categoryLabelDefault.hidden = rejectTrackers;
+    this.categoryLabelTrackers.hidden = !rejectTrackers;
+  },
+
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(this, "behaviorPref", this.PREF_ENABLED,
-                                          Ci.nsICookieService.BEHAVIOR_ACCEPT);
+      Ci.nsICookieService.BEHAVIOR_ACCEPT, this.updateCategoryLabel.bind(this));
     XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
     XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
       this.PREF_REPORT_BREAKAGE_ENABLED, false);
+    this.updateCategoryLabel();
   },
   get enabled() {
     return this.PREF_ENABLED_VALUES.includes(this.behaviorPref);
