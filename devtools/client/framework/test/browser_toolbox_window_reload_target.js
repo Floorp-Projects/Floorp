@@ -65,9 +65,6 @@ add_task(async function() {
 
   gBrowser.selectedBrowser.messageManager.removeMessageListener("devtools:test:load", reloadCounter);
 
-  // If we finish too early, the inspector breaks promises.
-  await toolbox.getPanel("inspector").once("new-root");
-
   await toolbox.destroy();
   gBrowser.removeCurrentTab();
 });
@@ -88,9 +85,14 @@ function testReload(shortcut, toolbox, toolID) {
   const mm = gBrowser.selectedBrowser.messageManager;
 
   return new Promise(resolve => {
+    // The inspector needs some special care.
+    const toolUpdated = toolID === "inspector"
+      ? toolbox.getPanel("inspector").once("new-root")
+      : Promise.resolve();
+
     const complete = () => {
       mm.removeMessageListener("devtools:test:load", complete);
-      resolve();
+      toolUpdated.then(resolve);
     };
     mm.addMessageListener("devtools:test:load", complete);
 
