@@ -293,6 +293,11 @@ var gBrowserLanguagesDialog = {
   _requestedLocales: null,
   requestedLocales: null,
 
+  get downloadEnabled() {
+    // Downloading langpacks isn't always supported, check the pref.
+    return Services.prefs.getBoolPref("intl.multilingual.downloadEnabled");
+  },
+
   beforeAccept() {
     this.requestedLocales = this.getRequestedLocales();
     return true;
@@ -352,6 +357,10 @@ var gBrowserLanguagesDialog = {
   },
 
   async loadLocalesFromAMO() {
+    if (!this.downloadEnabled) {
+      return;
+    }
+
     // Disable the dropdown while we hit the network.
     this._availableLocales.disableWithMessageId("browser-languages-searching");
 
@@ -404,10 +413,12 @@ var gBrowserLanguagesDialog = {
     } else {
       items = [];
     }
-    items.push({
-      label: await document.l10n.formatValue("browser-languages-search"),
-      value: "search",
-    });
+    if (this.downloadEnabled) {
+      items.push({
+        label: await document.l10n.formatValue("browser-languages-search"),
+        value: "search",
+      });
+    }
     this._availableLocales.setItems(items);
   },
 
