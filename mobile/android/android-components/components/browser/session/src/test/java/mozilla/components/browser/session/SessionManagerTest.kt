@@ -65,6 +65,34 @@ class SessionManagerTest {
     }
 
     @Test
+    fun `session can be added by specifying parent`() {
+        val manager = SessionManager(mock())
+        val session1 = Session("https://www.mozilla.org")
+        val session2 = Session("https://www.firefox.com")
+        val session3 = Session("https://wiki.mozilla.org")
+        val session4 = Session("https://github.com/mozilla-mobile/android-components")
+
+        manager.add(session1)
+        manager.add(session2)
+        manager.add(session3, parent = session1)
+        manager.add(session4, parent = session2)
+
+        assertNull(manager.sessions[0].parentId)
+        assertNull(manager.sessions[1].parentId)
+        assertEquals(session1.id, manager.sessions[2].parentId)
+        assertEquals(session2.id, manager.sessions[3].parentId)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `session manager throws exception if parent is not in session manager`() {
+        val parent = Session("https://www.mozilla.org")
+        val session = Session("https://www.firefox.com")
+
+        val manager = SessionManager(mock())
+        manager.add(session, parent = parent)
+    }
+
+    @Test
     fun `session can be selected`() {
         val session1 = Session("http://www.mozilla.org")
         val session2 = Session("http://www.firefox.com")

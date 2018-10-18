@@ -72,7 +72,21 @@ class SessionManager(
     /**
      * Adds the provided session.
      */
-    fun add(session: Session, selected: Boolean = false, engineSession: EngineSession? = null) = synchronized(values) {
+    fun add(
+        session: Session,
+        selected: Boolean = false,
+        engineSession: EngineSession? = null,
+        parent: Session? = null
+    ) = synchronized(values) {
+
+        parent?.let {
+            if (!values.contains(it)) {
+                throw IllegalArgumentException("The parent does not exist")
+            }
+
+            session.parentId = parent.id
+        }
+
         values.add(session)
 
         engineSession?.let { link(session, it) }
