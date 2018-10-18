@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/cls-decl-async-gen-meth-static.template
 /*---
-description: Reset element (identifier) does not support initializer (static class expression async generator method)
+description: Rest element (identifier) does not support initializer (static class expression async generator method)
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
 features: [async-iteration]
 flags: [generated, async]

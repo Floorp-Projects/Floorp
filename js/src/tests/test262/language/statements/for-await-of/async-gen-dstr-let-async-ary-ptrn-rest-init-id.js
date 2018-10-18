@@ -3,7 +3,7 @@
 // - src/dstr-binding-for-await/ary-ptrn-rest-init-id.case
 // - src/dstr-binding-for-await/default/for-await-of-async-gen-let-async.template
 /*---
-description: Reset element (identifier) does not support initializer (for-await-of statement)
+description: Rest element (identifier) does not support initializer (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
 features: [destructuring-binding, async-iteration]
 flags: [generated, async]

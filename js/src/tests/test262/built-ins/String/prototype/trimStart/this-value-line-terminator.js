@@ -26,7 +26,7 @@ var expected = 'a' + lt + 'b' + lt;
 
 assert.sameValue(
   trimStart.call(str),
-  expected,
+  expected
 );
 
 reportCompare(0, 0);

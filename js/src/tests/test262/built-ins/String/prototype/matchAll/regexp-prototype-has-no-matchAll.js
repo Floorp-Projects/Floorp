@@ -11,17 +11,28 @@ info: |
       a. Let matcher be ? GetMethod(regexp, @@matchAll).
       b. If matcher is not undefined, then
         [...]
-    3. Return ? MatchAllIterator(regexp, O).
+    [...]
+    4. Let matcher be ? RegExpCreate(R, "g").
+    [...]
+
+  21.2.3.2.3 Runtime Semantics: RegExpCreate ( P, F )
+    [...]
+    2. Return ? RegExpInitialize(obj, P, F).
+
+  21.2.3.2.2 Runtime Semantics: RegExpInitialize ( obj, pattern, flags )
+    1. If pattern is undefined, let P be the empty String.
+    2. Else, let P be ? ToString(pattern).
+    [...]
 features: [Symbol.matchAll, String.prototype.matchAll]
 includes: [compareArray.js, compareIterator.js, regExpUtils.js]
 ---*/
 
 delete RegExp.prototype[Symbol.matchAll];
-var str = 'a*b';
+var str = '/a/g*/b/g';
 
 assert.compareIterator(str.matchAll(/\w/g), [
-  matchValidator(['a'], 0, str),
-  matchValidator(['b'], 2, str)
+  matchValidator(['/a/g'], 0, str),
+  matchValidator(['/b/g'], 5, str)
 ]);
 
 reportCompare(0, 0);
