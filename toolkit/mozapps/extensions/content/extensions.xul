@@ -232,70 +232,70 @@
             </hbox>
           </hbox>
 
+          <hbox id="heading">
+            <hbox class="heading-inner" align="start">
+              <label id="heading-name" class="header-name" flex="1"/>
+
+              <hbox id="updates-container" align="center">
+                <image class="spinner"/>
+                <label id="updates-noneFound" hidden="true"
+                        value="&updates.noneFound.label;"/>
+                <button id="updates-manualUpdatesFound-btn" class="button-link"
+                        hidden="true" label="&updates.manualUpdatesFound.label;"
+                        command="cmd_goToAvailableUpdates"/>
+                <label id="updates-progress" hidden="true"
+                        value="&updates.updating.label;"/>
+                <label id="updates-installed" hidden="true"
+                        value="&updates.installed.label;"/>
+                <label id="updates-downloaded" hidden="true"
+                        value="&updates.downloaded.label;"/>
+                <button id="updates-restart-btn" class="button-link" hidden="true"
+                        label="&updates.restart.label;"
+                        command="cmd_restartApp"/>
+              </hbox>
+
+              <toolbarbutton id="header-utils-btn" class="header-button" type="menu"
+                             tooltiptext="&toolsMenu.tooltip;">
+                <menupopup id="utils-menu">
+                  <menuitem id="utils-updateNow"
+                            label="&updates.checkForUpdates.label;"
+                            accesskey="&updates.checkForUpdates.accesskey;"
+                            command="cmd_findAllUpdates"/>
+                  <menuitem id="utils-viewUpdates"
+                            label="&updates.viewUpdates.label;"
+                            accesskey="&updates.viewUpdates.accesskey;"
+                            command="cmd_goToRecentUpdates"/>
+                  <menuseparator id="utils-installFromFile-separator"/>
+                  <menuitem id="utils-installFromFile"
+                            label="&installAddonFromFile.label;"
+                            accesskey="&installAddonFromFile.accesskey;"
+                            command="cmd_installFromFile"/>
+                  <menuitem id="utils-debugAddons"
+                            label="&debugAddons.label;"
+                            accesskey="&debugAddons.accesskey;"
+                            command="cmd_debugAddons"/>
+                  <menuseparator/>
+                  <menuitem id="utils-autoUpdateDefault"
+                            label="&updates.updateAddonsAutomatically.label;"
+                            accesskey="&updates.updateAddonsAutomatically.accesskey;"
+                            type="checkbox" autocheck="false"
+                            command="cmd_toggleAutoUpdateDefault"/>
+                  <menuitem id="utils-resetAddonUpdatesToAutomatic"
+                            label="&updates.resetUpdatesToAutomatic.label;"
+                            accesskey="&updates.resetUpdatesToAutomatic.accesskey;"
+                            command="cmd_resetAddonAutoUpdate"/>
+                  <menuitem id="utils-resetAddonUpdatesToManual"
+                            label="&updates.resetUpdatesToManual.label;"
+                            accesskey="&updates.resetUpdatesToManual.accesskey;"
+                            command="cmd_resetAddonAutoUpdate"/>
+                </menupopup>
+              </toolbarbutton>
+            </hbox>
+          </hbox>
+
           <deck id="headered-views-content" flex="1" selectedIndex="0">
             <!-- list view -->
             <vbox id="list-view" flex="1" class="view-pane" align="stretch" tabindex="0">
-              <hbox id="list-view-heading">
-                <hbox class="list-view-heading-inner">
-                  <label id="list-view-heading-name" class="header-name" flex="1"/>
-
-                  <hbox id="updates-container" align="center">
-                    <image class="spinner"/>
-                    <label id="updates-noneFound" hidden="true"
-                           value="&updates.noneFound.label;"/>
-                    <button id="updates-manualUpdatesFound-btn" class="button-link"
-                            hidden="true" label="&updates.manualUpdatesFound.label;"
-                            command="cmd_goToAvailableUpdates"/>
-                    <label id="updates-progress" hidden="true"
-                           value="&updates.updating.label;"/>
-                    <label id="updates-installed" hidden="true"
-                           value="&updates.installed.label;"/>
-                    <label id="updates-downloaded" hidden="true"
-                           value="&updates.downloaded.label;"/>
-                    <button id="updates-restart-btn" class="button-link" hidden="true"
-                            label="&updates.restart.label;"
-                            command="cmd_restartApp"/>
-                  </hbox>
-
-                  <toolbarbutton id="header-utils-btn" class="header-button" type="menu"
-                                 tooltiptext="&toolsMenu.tooltip;">
-                    <menupopup id="utils-menu">
-                      <menuitem id="utils-updateNow"
-                                label="&updates.checkForUpdates.label;"
-                                accesskey="&updates.checkForUpdates.accesskey;"
-                                command="cmd_findAllUpdates"/>
-                      <menuitem id="utils-viewUpdates"
-                                label="&updates.viewUpdates.label;"
-                                accesskey="&updates.viewUpdates.accesskey;"
-                                command="cmd_goToRecentUpdates"/>
-                      <menuseparator id="utils-installFromFile-separator"/>
-                      <menuitem id="utils-installFromFile"
-                                label="&installAddonFromFile.label;"
-                                accesskey="&installAddonFromFile.accesskey;"
-                                command="cmd_installFromFile"/>
-                      <menuitem id="utils-debugAddons"
-                                label="&debugAddons.label;"
-                                accesskey="&debugAddons.accesskey;"
-                                command="cmd_debugAddons"/>
-                      <menuseparator/>
-                      <menuitem id="utils-autoUpdateDefault"
-                                label="&updates.updateAddonsAutomatically.label;"
-                                accesskey="&updates.updateAddonsAutomatically.accesskey;"
-                                type="checkbox" autocheck="false"
-                                command="cmd_toggleAutoUpdateDefault"/>
-                      <menuitem id="utils-resetAddonUpdatesToAutomatic"
-                                label="&updates.resetUpdatesToAutomatic.label;"
-                                accesskey="&updates.resetUpdatesToAutomatic.accesskey;"
-                                command="cmd_resetAddonAutoUpdate"/>
-                      <menuitem id="utils-resetAddonUpdatesToManual"
-                                label="&updates.resetUpdatesToManual.label;"
-                                accesskey="&updates.resetUpdatesToManual.accesskey;"
-                                command="cmd_resetAddonAutoUpdate"/>
-                    </menupopup>
-                  </toolbarbutton>
-                </hbox>
-              </hbox>
-
               <!-- info UI for add-ons that have been disabled for being unsigned -->
               <vbox id="disabled-unsigned-addons-info" hidden="true">
                 <label id="disabled-unsigned-addons-heading" value="&disabledUnsigned.heading;"/>
