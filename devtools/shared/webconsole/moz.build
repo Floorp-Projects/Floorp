@@ -8,6 +8,21 @@ if CONFIG['OS_TARGET'] != 'Android':
     MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
     XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
+# Compute where to put transpiled files into omni.ja package
+# All DevTools modules are used via resource://devtools/ URI
+# See devtools/shared/jar.mn for how this resource is mapped into jar package.
+base = FINAL_TARGET_FILES.chrome.devtools.modules
+
+# Now, navigate to the right sub-directory into devtools root modules folder
+for dir in RELATIVEDIR.split('/'):
+    base = base[dir]
+base += ["!reserved-js-words.js"]
+
+GENERATED_FILES += ['reserved-js-words.js']
+ReservedWordsGenerated = GENERATED_FILES['reserved-js-words.js']
+ReservedWordsGenerated.script = 'GenerateReservedWordsJS.py'
+ReservedWordsGenerated.inputs = ['/js/src/frontend/ReservedWords.h']
+
 DevToolsModules(
     'client.js',
     'js-property-provider.js',
