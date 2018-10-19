@@ -295,6 +295,7 @@ ChildProcessInfo::SendMessage(const Message& aMsg)
   case MessageType::RunToPoint:
   case MessageType::DebuggerRequest:
   case MessageType::SetBreakpoint:
+  case MessageType::MiddlemanCallResponse:
     mMessages.emplaceBack(aMsg.Clone());
     break;
   default:
@@ -407,7 +408,10 @@ ChildProcessInfo::OnIncomingRecoveryMessage(const Message& aMsg)
   }
   case MessageType::HitBreakpoint:
   case MessageType::DebuggerResponse:
+  case MessageType::MiddlemanCallRequest:
     SendNextRecoveryMessage();
+    break;
+  case MessageType::ResetMiddlemanCalls:
     break;
   default:
     MOZ_CRASH("Unexpected message during recovery");

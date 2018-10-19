@@ -534,6 +534,7 @@ extract_signature(const char *src, uint32_t sigIndex, const char * dest)
   for (i = 0; i <= sigIndex; i++) {
     /* Avoid leaking while skipping signatures */
     free(extractedSignature);
+    extractedSignature = NULL;
 
     /* skip past the signature algorithm ID */
     if (fseeko(fpSrc, sizeof(uint32_t), SEEK_CUR)) {

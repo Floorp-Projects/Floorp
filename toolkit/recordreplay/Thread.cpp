@@ -234,10 +234,12 @@ Thread::SpawnThread(Thread* aThread)
 /* static */ NativeThreadId
 Thread::StartThread(Callback aStart, void* aArgument, bool aNeedsJoin)
 {
-  EnsureNotDivergedFromRecording();
-
   Thread* thread = Thread::Current();
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
+    EnsureNotDivergedFromRecording();
+    Unreachable();
+  }
 
   MonitorAutoLock lock(*gMonitor);
 
@@ -387,7 +389,15 @@ Thread::WaitForIdleThreads()
       Thread* thread = GetById(i);
       if (!thread->mIdle) {
         done = false;
-        if (thread->mUnrecordedWaitCallback && !thread->mUnrecordedWaitNotified) {
+
+        // Check if there is a callback we can invoke to get this thread to
+        // make progress. The mUnrecordedWaitOnlyWhenDiverged flag is used to
+        // avoid perturbing the behavior of threads that may or may not be
+        // waiting on an unrecorded resource, depending on whether they have
+        // diverged from the recording yet.
+        if (thread->mUnrecordedWaitCallback && !thread->mUnrecordedWaitNotified &&
+            (!thread->mUnrecordedWaitOnlyWhenDiverged ||
+             thread->WillDivergeFromRecordingSoon())) {
           // Set this flag before releasing the idle lock. Otherwise it's
           // possible the thread could call NotifyUnrecordedWait while we
           // aren't holding the lock, and we would set the flag afterwards
@@ -395,10 +405,11 @@ Thread::WaitForIdleThreads()
           thread->mUnrecordedWaitNotified = true;
 
           // Release the idle lock here to avoid any risk of deadlock.
+          std::function<void()> callback = thread->mUnrecordedWaitCallback;
           {
             MonitorAutoUnlock unlock(*gMonitor);
             AutoPassThroughThreadEvents pt;
-            thread->mUnrecordedWaitCallback();
+            callback();
           }
 
           // Releasing the global lock means that we need to start over
@@ -436,7 +447,7 @@ Thread::ResumeIdleThreads()
 }
 
 void
-Thread::NotifyUnrecordedWait(const std::function<void()>& aCallback)
+Thread::NotifyUnrecordedWait(const std::function<void()>& aCallback, bool aOnlyWhenDiverged)
 {
   MonitorAutoLock lock(*gMonitor);
   if (mUnrecordedWaitCallback) {
@@ -449,6 +460,7 @@ Thread::NotifyUnrecordedWait(const std::function<void()>& aCallback)
   }
 
   mUnrecordedWaitCallback = aCallback;
+  mUnrecordedWaitOnlyWhenDiverged = aOnlyWhenDiverged;
 
   // The main thread might be able to make progress now by calling the routine
   // if it is waiting for idle replay threads.
@@ -470,9 +482,10 @@ Thread::MaybeWaitForCheckpointSave()
 extern "C" {
 
 MOZ_EXPORT void
-RecordReplayInterface_NotifyUnrecordedWait(const std::function<void()>& aCallback)
+RecordReplayInterface_NotifyUnrecordedWait(const std::function<void()>& aCallback,
+                                           bool aOnlyWhenDiverged)
 {
-  Thread::Current()->NotifyUnrecordedWait(aCallback);
+  Thread::Current()->NotifyUnrecordedWait(aCallback, aOnlyWhenDiverged);
 }
 
 MOZ_EXPORT void
