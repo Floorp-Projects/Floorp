@@ -71,9 +71,12 @@ class WorkerDetail extends PureComponent {
 
     return Localized(
       {
-          className: `worker-detail__status worker-detail__status--${ status }`,
+        id: ftlId
       },
       dom.div(
+        {
+          className: `worker-detail__status worker-detail__status--${ status }`,
+        },
         status
       )
     );
