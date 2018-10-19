@@ -39,9 +39,10 @@ add_task(async function setup() {
   let scalars = Services.telemetry.snapshotScalars(
     Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT, false).parent;
 
-  is(scalars["contentblocking.enabled"], true, "CB was enabled at startup");
-  is(scalars["contentblocking.fastblock_enabled"], AppConstants.NIGHTLY_BUILD,
-     "FB is enabled in Nightly");
+  is(scalars["contentblocking.enabled"], Services.prefs.getBoolPref("browser.contentblocking.enabled"),
+    "CB enabled status was recorded at startup");
+  is(scalars["contentblocking.fastblock_enabled"], Services.prefs.getBoolPref("browser.fastblock.enabled"),
+    "FB enabled status was recorded at startup");
   is(scalars["contentblocking.exceptions"], 0, "no CB exceptions at startup");
 });
 

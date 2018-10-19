@@ -5913,11 +5913,7 @@ pref("dom.event.default_to_passive_touch_listeners", true);
 pref("browser.fastblock.timeout", 5000);
 // The amount of time (ms) since navigation start after which
 // we'll stop blocking tracker connections (0 = no limit).
-#ifdef NIGHTLY_BUILD
 pref("browser.fastblock.limit", 20000);
-#else
-pref("browser.fastblock.limit", 0);
-#endif
 
 // Enable clipboard readText() and writeText() by default
 pref("dom.events.asyncClipboard", true);
