@@ -79,9 +79,34 @@ protected:
     nsDeviceContext*          mContext; // owner
     RefPtr<nsAtom>         mLocaleLanguage;
 
-    // We don't allow this array to grow beyond kMaxCacheEntries,
-    // so use an autoarray to avoid separate allocation.
-    AutoTArray<nsFontMetrics*,kMaxCacheEntries> mFontMetrics;
+    // We may not flush older entries immediately the array reaches
+    // kMaxCacheEntries length, because this usually happens on a stylo
+    // thread where we can't safely delete metrics objects. So we allocate an
+    // oversized autoarray buffer here, so that we're unlikely to overflow
+    // it and need separate heap allocation before the flush happens on the
+    // main thread.
+    AutoTArray<nsFontMetrics*,kMaxCacheEntries*2> mFontMetrics;
+
+    bool mFlushPending = false;
+
+    class FlushFontMetricsTask : public mozilla::Runnable
+    {
+    public:
+        explicit FlushFontMetricsTask(nsFontCache* aCache)
+            : mozilla::Runnable("FlushFontMetricsTask")
+            , mCache(aCache)
+        { }
+        NS_IMETHOD Run() override
+        {
+            // Partially flush the cache, leaving the kMaxCacheEntries/2 most
+            // recent entries.
+            mCache->Flush(mCache->mFontMetrics.Length() - kMaxCacheEntries / 2);
+            mCache->mFlushPending = false;
+            return NS_OK;
+        }
+    private:
+        RefPtr<nsFontCache> mCache;
+    };
 };
 
 NS_IMPL_ISUPPORTS(nsFontCache, nsIObserver)
@@ -150,9 +175,16 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
 
     // It's not in the cache. Get font metrics and then cache them.
     // If the cache has reached its size limit, drop the older half of the
-    // entries.
-    if (n >= kMaxCacheEntries - 1) {
-        Flush(kMaxCacheEntries / 2);
+    // entries; but if we're on a stylo thread (the usual case), we have
+    // to post a task back to the main thread to do the flush.
+    if (n >= kMaxCacheEntries - 1 && !mFlushPending) {
+        if (NS_IsMainThread()) {
+            Flush(mFontMetrics.Length() - kMaxCacheEntries / 2);
+        } else {
+            mFlushPending = true;
+            nsCOMPtr<nsIRunnable> flushTask = new FlushFontMetricsTask(this);
+            MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(flushTask));
+        }
     }
 
     nsFontMetrics::Params params = aParams;

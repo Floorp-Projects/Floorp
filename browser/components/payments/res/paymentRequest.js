@@ -167,6 +167,9 @@ var paymentRequest = {
         id: "basic-card-page",
         onboardingWizard: true,
       };
+      state["basic-card-page"] = {
+        selectedStateKey: "selectedPaymentCard",
+      };
     }
 
     paymentDialog.setStateFromParent(state);

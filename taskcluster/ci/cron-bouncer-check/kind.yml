@@ -12,7 +12,6 @@ transforms:
 job-defaults:
     name: bouncer-check
     description: bouncer check
-    run-on-projects: []  # to make sure this never runs as part of CI
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 1200
@@ -23,6 +22,7 @@ job-defaults:
     attributes:
         build_platform: linux64
         build_type: opt
+        cron: true
     treeherder:
         symbol: Rel(ckbouncer)
         kind: test
@@ -34,6 +34,7 @@ jobs:
         index:
             product: firefox
             job-name: firefox-bouncer-check
+        run-on-projects: [release]
         run:
             config:
                 by-project:
@@ -59,6 +60,7 @@ jobs:
 
     devedition:
         shipping-product: devedition
+        run-on-projects: [mozilla-beta]
         index:
             product: devedition
             job-name: devedition-bouncer-check
