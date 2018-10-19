@@ -1349,6 +1349,10 @@ Editor.prototype = {
     });
   },
 
+  isDestroyed: function() {
+    return !editors.get(this);
+  },
+
   destroy: function() {
     this.container = null;
     this.config = null;
