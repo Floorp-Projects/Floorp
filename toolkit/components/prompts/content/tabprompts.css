@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Tab Modal Prompt boxes */
+.tabModalBackground,
 tabmodalprompt {
   width: 100%;
   height: 100%;
@@ -32,4 +33,20 @@ tabmodalprompt {
 
 tabmodalprompt label[value=""] {
   visibility: collapse;
+}
+
+/* Tab-Modal Payment Request widget */
+.paymentDialogContainer {
+  position: absolute;
+}
+
+.paymentDialogContainerFrame {
+  box-sizing: border-box;
+  height: 500px;
+  /* Center the dialog with 20% on the left/right and 60% width for content */
+  left: 20%;
+  position: absolute;
+  /* Overlap the chrome */
+  top: -6px;
+  width: 60%;
 }
