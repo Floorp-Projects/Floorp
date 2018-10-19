@@ -200,15 +200,8 @@ class TestQuitRestart(MarionetteTestCase):
 
     @unittest.skipIf(sys.platform.startswith("win"), "Bug 1493796")
     def test_in_app_restart_with_callback_but_process_quit(self):
-        timeout_shutdown = self.marionette.shutdown_timeout
-        # Wait at least 70s for the hang monitor in case of a shutdown hang
-        self.marionette.shutdown_timeout = 70
-
-        try:
-            with self.assertRaisesRegexp(IOError, "Process unexpectedly quit without restarting"):
-                self.marionette.restart(in_app=True, callback=lambda: self.shutdown(restart=False))
-        finally:
-            self.marionette.shutdown_timeout = timeout_shutdown
+        with self.assertRaisesRegexp(IOError, "Process unexpectedly quit without restarting"):
+            self.marionette.restart(in_app=True, callback=lambda: self.shutdown(restart=False))
 
     @unittest.skipIf(sys.platform.startswith("win"), "Bug 1493796")
     def test_in_app_restart_with_callback_missing_shutdown(self):
