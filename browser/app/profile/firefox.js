@@ -1784,6 +1784,3 @@ pref("prio.enabled", true);
 pref("browser.fastblock.enabled", true);
 #endif
 
-// Telemetry Coverage is disabled by default.
-pref("toolkit.telemetry.coverage.enabled", false);
-pref("toolkit.telemetry.coverage.endpoint.base", "https://telemetry-coverage.mozilla.org");
