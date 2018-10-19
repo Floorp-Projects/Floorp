@@ -87,7 +87,6 @@ tasks:
           - queue:create-task:highest:aws-provisioner-v1/gecko-focus
           - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-v1
           - queue:scheduler-id:${scheduler_id}
-          - secrets:get:project/android-components/publish
         payload:
           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
           image: 'mozillamobile/android-components:1.5'

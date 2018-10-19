@@ -52,9 +52,6 @@ def generate_build_task(version):
                 "git checkout {}".format(version))
 
     assemble_task = 'assembleRelease'
-    scopes = [
-        "secrets:get:project/android-components/publish",
-    ]
     artifacts = fetch_build_task_artifacts()
 
     return taskcluster.slugId(), BUILDER.build_task(
@@ -68,7 +65,7 @@ def generate_build_task(version):
             "chainOfTrust": True
         },
         worker_type='gecko-focus',
-        scopes=scopes,
+        scopes=[],
         artifacts=artifacts,
     )
 
