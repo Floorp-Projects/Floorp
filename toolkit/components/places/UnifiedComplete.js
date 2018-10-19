@@ -812,6 +812,17 @@ Search.prototype = {
     // Check for Preloaded Sites Expiry before Autofill
     await this._checkPreloadedSitesExpiry();
 
+    // If the query is simply "@", then the results should be a list of all the
+    // search engines with "@" aliases, without a hueristic result.
+    if (this._trimmedOriginalSearchString == "@") {
+      let added = await this._addSearchEngineTokenAliasResults();
+      if (added) {
+        this._cleanUpNonCurrentMatches(null);
+        this._autocompleteSearch.finishSearch(true);
+        return;
+      }
+    }
+
     // Add the first heuristic result, if any.  Set _addingHeuristicFirstMatch
     // to true so that when the result is added, "heuristic" can be included in
     // its style.
@@ -886,7 +897,7 @@ Search.prototype = {
           if (this._searchEngineAliasMatch || this.hasBehavior("restrict")) {
             // Wait for the suggestions to be added.
             await searchSuggestionsCompletePromise;
-            this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.SUGGESTION);
+            this._cleanUpNonCurrentMatches(null);
             this._autocompleteSearch.finishSearch(true);
             return;
           }
@@ -1069,6 +1080,30 @@ Search.prototype = {
       Infinity,
       ["preloaded-top-site"]
     );
+    return true;
+  },
+
+  /**
+   * Adds matches for all the engines with "@" aliases, if any.
+   *
+   * @returns {bool} True if any results were added, false if not.
+   */
+  async _addSearchEngineTokenAliasResults() {
+    let engines = await PlacesSearchAutocompleteProvider.tokenAliasEngines();
+    if (!engines || !engines.length) {
+      return false;
+    }
+    for (let { engine, tokenAliases } of engines) {
+      let alias = tokenAliases[0];
+      // `input` should have a trailing space so that when the user selects the
+      // result, they can start typing their query without first having to enter
+      // a space between the alias and query.
+      this._addSearchEngineMatch({
+        engine,
+        alias,
+        input: alias + " ",
+      });
+    }
     return true;
   },
 
@@ -1398,11 +1433,10 @@ Search.prototype = {
       return false;
     }
 
-    let query = this._trimmedOriginalSearchString.substr(alias.length + 1);
     this._searchEngineAliasMatch = {
       engine,
-      query,
       alias,
+      query: this._trimmedOriginalSearchString.substr(alias.length + 1),
     };
     this._addSearchEngineMatch(this._searchEngineAliasMatch);
     if (!this._keywordSubstitute) {
@@ -1448,29 +1482,36 @@ Search.prototype = {
    *
    * @param {nsISearchEngine} engine
    *        The search engine associated with the match.
-   * @param {string} query
+   * @param {string} [query]
    *        The search query string.
    * @param {string} [alias]
-   *        The search engine alias associated with the match.
+   *        The search engine alias associated with the match, if any.
    * @param {string} [suggestion]
-   *        The suggestion from the search engine.
+   *        The suggestion from the search engine, if you're adding a suggestion
+   *        match.
    * @param {bool} [historical]
-   *        True if the suggestion is from the user's local history.
+   *        True if you're adding a suggestion match and the suggestion is from
+   *        the user's local history (and not the search engine).
+   * @param {string} [input]
+   *        Use this value to override the action.params.input that this method
+   *        would otherwise compute.
    */
   _addSearchEngineMatch({engine,
-                         query,
-                         alias,
-                         suggestion,
-                         historical}) {
+                         query = "",
+                         alias = undefined,
+                         suggestion = undefined,
+                         historical = false,
+                         input = undefined}) {
     let actionURLParams = {
       engineName: engine.name,
-      input: suggestion || this._originalSearchString,
+      input: input || suggestion || this._originalSearchString,
       searchQuery: query,
     };
-    if (suggestion)
-      actionURLParams.searchSuggestion = suggestion;
     if (alias) {
       actionURLParams.alias = alias;
+    }
+    if (suggestion) {
+      actionURLParams.searchSuggestion = suggestion;
     }
     let value = PlacesUtils.mozActionURI("searchengine", actionURLParams);
     let match = {
