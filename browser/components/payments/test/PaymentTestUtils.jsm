@@ -112,7 +112,6 @@ var PaymentTestUtils = {
      * @param {PaymentMethodData[]} methodData
      * @param {PaymentDetailsInit} details
      * @param {PaymentOptions} options
-     * @returns {Object}
      */
     createAndShowRequest: ({methodData, details, options}) => {
       const rq = new content.PaymentRequest(Cu.cloneInto(methodData, content), details, options);
@@ -122,9 +121,6 @@ var PaymentTestUtils = {
       content.showPromise = rq.show();
 
       handle.destruct();
-      return {
-        requestId: rq.id,
-      };
     },
   },
 
