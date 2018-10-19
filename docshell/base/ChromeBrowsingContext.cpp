@@ -64,6 +64,15 @@ ChromeBrowsingContext::Cast(const BrowsingContext* aContext)
 }
 
 void
+ChromeBrowsingContext::GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows)
+{
+  aWindows.SetCapacity(mWindowGlobals.Count());
+  for (auto iter = mWindowGlobals.Iter(); !iter.Done(); iter.Next()) {
+    aWindows.AppendElement(iter.Get()->GetKey());
+  }
+}
+
+void
 ChromeBrowsingContext::RegisterWindowGlobal(WindowGlobalParent* aGlobal)
 {
   MOZ_ASSERT(!mWindowGlobals.Contains(aGlobal), "Global already registered!");
@@ -75,6 +84,13 @@ ChromeBrowsingContext::UnregisterWindowGlobal(WindowGlobalParent* aGlobal)
 {
   MOZ_ASSERT(mWindowGlobals.Contains(aGlobal), "Global not registered!");
   mWindowGlobals.RemoveEntry(aGlobal);
+}
+
+JSObject*
+ChromeBrowsingContext::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto)
+{
+  return ChromeBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
