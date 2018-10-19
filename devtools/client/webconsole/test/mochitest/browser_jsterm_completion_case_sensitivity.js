@@ -82,6 +82,23 @@ async function performTests() {
 
   jsterm.setInputValue("");
 
+  info("Check that Javascript keywords are displayed first");
+  onPopUpOpen = autocompletePopup.once("popup-opened");
+  EventUtils.sendString("func");
+  await onPopUpOpen;
+
+  is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "function - Function",
+    "popup has expected item");
+  checkJsTermCompletionValue(jsterm, "    tion", "completeNode has expected value");
+
+  onPopupClose = autocompletePopup.once("popup-closed");
+  EventUtils.synthesizeKey("KEY_Tab");
+  await onPopupClose;
+  checkInput("function|", "The input was completed as expected");
+  checkJsTermCompletionValue(jsterm, "", "completeNode is empty");
+
+  jsterm.setInputValue("");
+
   info("Check that filtering the cache works like on the server");
   onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.sendString("fooBar.");
