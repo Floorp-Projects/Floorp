@@ -2902,6 +2902,9 @@ var NativeWindow = {
         return;
       }
 
+      // Find the HTMLMediaElement host if the element is inside video controls UA Widget.
+      this._target = this._findMediaElementHostFromControls(this._target);
+
       // Try to build a list of contextmenu items. If successful, actually show the
       // native context menu by passing the list to Java.
       this._buildMenu(event.clientX, event.clientY);
@@ -2963,6 +2966,27 @@ var NativeWindow = {
           this.menus[context] = [];
         }
         this.menus[context] = this.menus[context].concat(items);
+    },
+
+    _findMediaElementHostFromControls(element) {
+      if (!(element instanceof HTMLMediaElement)) {
+        let n = element;
+        while (n) {
+          if (n instanceof ShadowRoot) {
+            if (n.host instanceof HTMLMediaElement) {
+              // Node is a UA Widget Shadow Root with HTMLMediaElement as host
+              return n.host;
+            }
+            // Node is a normal Shadow Root, give up
+            return element;
+          }
+          // Set the node to its parentNode and continue the loop.
+          n = n.parentNode;
+        }
+      }
+      // Return the element given that the loop ends without finding anything,
+      // or because the element is already an HTMLMediaElement.
+      return element;
     },
 
     /* Does the basic work of building a context menu to show. Will combine HTML and Native
