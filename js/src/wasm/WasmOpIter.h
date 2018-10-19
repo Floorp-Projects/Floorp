@@ -2055,6 +2055,14 @@ OpIter<Policy>::readMemOrTableCopy(bool isMem, Value* dst, Value* src, Value* le
         }
     }
 
+    uint8_t memOrTableFlags;
+    if (!readFixedU8(&memOrTableFlags)) {
+        return fail(isMem ? "unable to read memory flags" : "unable to read table flags");
+    }
+    if (memOrTableFlags != 0) {
+        return fail(isMem ? "memory flags must be zero" : "table flags must be zero");
+    }
+
     if (!popWithType(ValType::I32, len)) {
         return false;
     }
@@ -2114,6 +2122,14 @@ OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len)
         return fail("can't touch memory without memory");
     }
 
+    uint8_t memoryFlags;
+    if (!readFixedU8(&memoryFlags)) {
+        return fail("unable to read memory flags");
+    }
+    if (memoryFlags != 0) {
+        return fail("memory flags must be zero");
+    }
+
     if (!popWithType(ValType::I32, len)) {
         return false;
     }
@@ -2156,6 +2172,14 @@ OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
 
     if (!popWithType(ValType::I32, dst)) {
         return false;
+    }
+
+    uint8_t memOrTableFlags;
+    if (!readFixedU8(&memOrTableFlags)) {
+        return fail(isMem ? "unable to read memory flags" : "unable to read table flags");
+    }
+    if (memOrTableFlags != 0) {
+        return fail(isMem ? "memory flags must be zero" : "table flags must be zero");
     }
 
     if (!readVarU32(segIndex)) {

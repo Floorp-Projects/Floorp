@@ -295,6 +295,10 @@ release-mark-as-shipped
 -----------------------
 Marks releases as shipped in Ship-It v1
 
+release-mark-as-started
+-----------------------
+Marks releases as started in Ship-It v1
+
 release-bouncer-aliases
 -----------------------
 Update Bouncer's (download.mozilla.org) "latest" aliases.
