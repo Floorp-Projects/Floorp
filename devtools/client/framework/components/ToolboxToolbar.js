@@ -245,9 +245,7 @@ class ToolboxToolbar extends Component {
         disabled,
         menuId: id + "-panel",
         doc: toolbox.doc,
-        className: `devtools-button command-button ${
-          isChecked ? "command-button-checked " : ""
-        }`,
+        className: `devtools-button command-button ${isChecked ? "checked" : ""}`,
         ref: "frameMenuButton",
         title: description,
         onCloseButton: toolbox.highlighterUtils.unhighlight,
