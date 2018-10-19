@@ -887,7 +887,7 @@ WorkerTarget.prototype = {
 
   get form() {
     return {
-      consoleActor: this._workerTargetFront.consoleActor
+      consoleActor: this._workerTargetFront.consoleActor,
     };
   },
 

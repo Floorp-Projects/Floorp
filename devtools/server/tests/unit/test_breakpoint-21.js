@@ -42,7 +42,7 @@ const test = async function() {
   let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
   const source = gThreadClient.source(packet.frame.where.source);
   const location = {
-    line: gDebuggee.line0 + 8
+    line: gDebuggee.line0 + 8,
   };
 
   const [res, bpClient] = await setBreakpoint(source, location);

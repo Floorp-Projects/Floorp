@@ -23,7 +23,7 @@ const {
   MESSAGE_TYPE,
 } = require("devtools/client/webconsole/constants");
 const {
-  getInitialMessageCountForViewport
+  getInitialMessageCountForViewport,
 } = require("devtools/client/webconsole/utils/messages.js");
 
 class ConsoleOutput extends Component {
@@ -45,7 +45,7 @@ class ConsoleOutput extends Component {
       visibleMessages: PropTypes.array.isRequired,
       networkMessageActiveTabId: PropTypes.string.isRequired,
       onFirstMeaningfulPaint: PropTypes.func.isRequired,
-      pausedExecutionPoint: PropTypes.any
+      pausedExecutionPoint: PropTypes.any,
     };
   }
 
@@ -134,7 +134,7 @@ class ConsoleOutput extends Component {
       serviceContainer,
       timestampsVisible,
       initialized,
-      pausedExecutionPoint
+      pausedExecutionPoint,
     } = this.props;
 
     if (!initialized) {
@@ -157,7 +157,7 @@ class ConsoleOutput extends Component {
       networkMessageUpdate: networkMessagesUpdate[messageId],
       networkMessageActiveTabId,
       pausedExecutionPoint,
-      getMessage: () => messages.get(messageId)
+      getMessage: () => messages.get(messageId),
     }));
 
     return (

@@ -16,7 +16,7 @@ add_task(async function() {
   await checkState([
     [
       ["localStorage", "http://test1.example.org"],
-      ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"]
+      ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"],
     ],
   ]);
 
@@ -27,7 +27,7 @@ add_task(async function() {
   await checkState([
     [
       ["localStorage", "http://test1.example.org"],
-      ["ls1", "ls2", "ls3", "ls5", "ls6", "ls7"]
+      ["ls1", "ls2", "ls3", "ls5", "ls6", "ls7"],
     ],
   ]);
 
@@ -38,7 +38,7 @@ add_task(async function() {
   await checkState([
     [
       ["localStorage", "http://test1.example.org"],
-      ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"]
+      ["ls1", "ls2", "ls3", "ls4", "ls5", "ls6", "ls7"],
     ],
   ]);
   // Updating a row
@@ -58,7 +58,7 @@ add_task(async function() {
   await checkState([
     [
       ["localStorage", "http://test1.example.org"],
-      [ ]
+      [ ],
     ],
   ]);
 

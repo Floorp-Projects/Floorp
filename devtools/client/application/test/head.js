@@ -68,7 +68,7 @@ async function unregisterAllWorkers(client) {
   for (const worker of workers.service) {
     await client.request({
       to: worker.registrationActor,
-      type: "unregister"
+      type: "unregister",
     });
   }
 }

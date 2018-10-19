@@ -606,7 +606,7 @@ InplaceEditor.prototype = {
     return {
       value: preRawValue + incrementedValue + postRawValue,
       start: range.start + selection[0],
-      end: range.start + selection[1]
+      end: range.start + selection[1],
     };
   },
 
@@ -690,7 +690,7 @@ InplaceEditor.prototype = {
       value: m[0],
       start: start + m.index,
       end: start + m.index + m[0].length,
-      type: type
+      type: type,
     };
   },
 
@@ -758,7 +758,7 @@ InplaceEditor.prototype = {
         return {
           value: first + mid + last,
           start: start,
-          end: start + mid.length
+          end: start + mid.length,
         };
       }
     }
@@ -906,7 +906,7 @@ InplaceEditor.prototype = {
 
     return {
       value: "#" + rawValue,
-      selection: [offset + 1, offsetEnd + 1]
+      selection: [offset + 1, offsetEnd + 1],
     };
   },
 
@@ -1457,7 +1457,7 @@ InplaceEditor.prototype = {
           finalList.push({
             preLabel: startCheckQuery,
             label: list[i],
-            postLabel: postLabelValues[i] ? postLabelValues[i] : ""
+            postLabel: postLabelValues[i] ? postLabelValues[i] : "",
           });
         } else if (count > 0) {
           // Since count was incremented, we had already crossed the entries
@@ -1687,7 +1687,7 @@ function copyBoxModelStyles(from, to) {
     "borderTopWidth",
     "borderRightWidth",
     "borderBottomWidth",
-    "borderLeftWidth"
+    "borderLeftWidth",
   ];
 
   const win = from.ownerDocument.defaultView;

@@ -59,7 +59,7 @@ function testCSSAttrs(aID) {
     "margin-left": computedStyle.marginLeft,
     "margin-right": computedStyle.marginRight,
     "margin-top": computedStyle.marginTop,
-    "margin-bottom": computedStyle.marginBottom
+    "margin-bottom": computedStyle.marginBottom,
   };
   testAttrs(aID, attrs, true);
 }
@@ -75,7 +75,7 @@ function testAbsentCSSAttrs(aID) {
     "margin-left": "",
     "margin-right": "",
     "margin-top": "",
-    "margin-bottom": ""
+    "margin-bottom": "",
   };
   testAbsentAttrs(aID, attrs);
 }
@@ -102,7 +102,7 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel) {
 
     let attrs = {
       "posinset": String(aPosInSet),
-      "setsize": String(aSetSize)
+      "setsize": String(aSetSize),
     };
     testAttrs(aAccOrElmOrID, attrs, true);
   }
@@ -299,7 +299,7 @@ function buildDefaultTextAttrs(aID, aFontSize, aFontWeight, aFontFamily) {
     "font-weight": aFontWeight ? aFontWeight : kNormalFontWeight,
     "color": computedStyle.color,
     "font-family": aFontFamily ? aFontFamily : fontFamily(computedStyle),
-    "text-position": computedStyle.verticalAlign
+    "text-position": computedStyle.verticalAlign,
   };
 
   return defAttrs;

@@ -25,7 +25,7 @@ function getOrCreateCert(nickname) {
           return;
         }
         resolve(c);
-      }
+      },
     });
   });
 }
@@ -39,7 +39,7 @@ function removeCert(nickname) {
           return;
         }
         resolve();
-      }
+      },
     });
   });
 }

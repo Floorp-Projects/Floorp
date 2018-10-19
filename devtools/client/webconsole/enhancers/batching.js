@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  BATCH_ACTIONS
+  BATCH_ACTIONS,
 } = require("devtools/client/shared/redux/middleware/debounce");
 
 /**

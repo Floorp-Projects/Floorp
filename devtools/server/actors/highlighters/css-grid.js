@@ -63,7 +63,7 @@ const GRID_LINES_PROPERTIES = {
     lineDash: [0, 0],
     alpha: 1,
     lineWidth: 3,
-  }
+  },
 };
 
 const GRID_GAP_PATTERN_WIDTH = 14; // px
@@ -219,7 +219,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // Initialize the <canvas> position to the top left corner of the page.
     this._canvasPosition = {
       x: 0,
-      y: 0
+      y: 0,
     };
 
     // Calling `updateCanvasPosition` anyway since the highlighter could be initialized
@@ -231,17 +231,17 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   _buildMarkup() {
     const container = createNode(this.win, {
       attributes: {
-        "class": "highlighter-container"
-      }
+        "class": "highlighter-container",
+      },
     });
 
     const root = createNode(this.win, {
       parent: container,
       attributes: {
         "id": "root",
-        "class": "root"
+        "class": "root",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // We use a <canvas> element so that we can draw an arbitrary number of lines
@@ -255,9 +255,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         "class": "canvas",
         "hidden": "true",
         "width": CANVAS_SIZE,
-        "height": CANVAS_SIZE
+        "height": CANVAS_SIZE,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Build the SVG element.
@@ -268,18 +268,18 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         "id": "elements",
         "width": "100%",
         "height": "100%",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const regions = createSVGNode(this.win, {
       nodeType: "g",
       parent: svg,
       attributes: {
-        "class": "regions"
+        "class": "regions",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -287,9 +287,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       parent: regions,
       attributes: {
         "class": "areas",
-        "id": "areas"
+        "id": "areas",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -297,9 +297,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       parent: regions,
       attributes: {
         "class": "cells",
-        "id": "cells"
+        "id": "cells",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Build the grid area infobar markup.
@@ -309,43 +309,43 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         "class": "area-infobar-container",
         "id": "area-infobar-container",
         "position": "top",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const areaInfobar = createNode(this.win, {
       parent: areaInfobarContainer,
       attributes: {
-        "class": "infobar"
+        "class": "infobar",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const areaTextbox = createNode(this.win, {
       parent: areaInfobar,
       attributes: {
-        "class": "infobar-text"
+        "class": "infobar-text",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: areaTextbox,
       attributes: {
         "class": "area-infobar-name",
-        "id": "area-infobar-name"
+        "id": "area-infobar-name",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: areaTextbox,
       attributes: {
         "class": "area-infobar-dimensions",
-        "id": "area-infobar-dimensions"
+        "id": "area-infobar-dimensions",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Build the grid cell infobar markup.
@@ -355,43 +355,43 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         "class": "cell-infobar-container",
         "id": "cell-infobar-container",
         "position": "top",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const cellInfobar = createNode(this.win, {
       parent: cellInfobarContainer,
       attributes: {
-        "class": "infobar"
+        "class": "infobar",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const cellTextbox = createNode(this.win, {
       parent: cellInfobar,
       attributes: {
-        "class": "infobar-text"
+        "class": "infobar-text",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: cellTextbox,
       attributes: {
         "class": "cell-infobar-position",
-        "id": "cell-infobar-position"
+        "id": "cell-infobar-position",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: cellTextbox,
       attributes: {
         "class": "cell-infobar-dimensions",
-        "id": "cell-infobar-dimensions"
+        "id": "cell-infobar-dimensions",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Build the grid line infobar markup.
@@ -401,43 +401,43 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         "class": "line-infobar-container",
         "id": "line-infobar-container",
         "position": "top",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const lineInfobar = createNode(this.win, {
       parent: lineInfobarContainer,
       attributes: {
-        "class": "infobar"
+        "class": "infobar",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const lineTextbox = createNode(this.win, {
       parent: lineInfobar,
       attributes: {
-        "class": "infobar-text"
+        "class": "infobar-text",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: lineTextbox,
       attributes: {
         "class": "line-infobar-number",
-        "id": "line-infobar-number"
+        "id": "line-infobar-number",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: lineTextbox,
       attributes: {
         "class": "line-infobar-names",
-        "id": "line-infobar-names"
+        "id": "line-infobar-names",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     return container;
@@ -833,14 +833,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         // account.
         const svgPoints = points.map(point => ({
           x: Math.round(point.x / devicePixelRatio),
-          y: Math.round(point.y / devicePixelRatio)
+          y: Math.round(point.y / devicePixelRatio),
         }));
 
         // Scale down by `displayPixelRatio` since infobar's HTML elements already take it
         // into account; and the zoom scaling is handled by `moveInfobar`.
         const bounds = getBoundsFromPoints(points.map(point => ({
           x: Math.round(point.x / displayPixelRatio),
-          y: Math.round(point.y / displayPixelRatio)
+          y: Math.round(point.y / displayPixelRatio),
         })));
 
         paths.push(getPathDescriptionFromPoints(svgPoints));
@@ -1006,14 +1006,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // Scale down by `devicePixelRatio` since SVG element already take them into account.
     const svgPoints = points.map(point => ({
       x: Math.round(point.x / devicePixelRatio),
-      y: Math.round(point.y / devicePixelRatio)
+      y: Math.round(point.y / devicePixelRatio),
     }));
 
     // Scale down by `displayPixelRatio` since infobar's HTML elements already take it
     // into account, and the zoom scaling is handled by `moveInfobar`.
     const bounds = getBoundsFromPoints(points.map(point => ({
       x: Math.round(point.x / displayPixelRatio),
-      y: Math.round(point.y / displayPixelRatio)
+      y: Math.round(point.y / displayPixelRatio),
     })));
 
     const cells = this.getElement("cells");
@@ -1429,7 +1429,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.ctx.translate(offset - canvasX, offset - canvasY);
 
     const lineOptions = {
-      matrix: this.currentMatrix
+      matrix: this.currentMatrix,
     };
 
     if (this.options.showInfiniteLines) {
@@ -1678,7 +1678,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const container = this.getElement("area-infobar-container");
     moveInfobar(container, bounds, this.win, {
       position: "bottom",
-      hideIfOffscreen: true
+      hideIfOffscreen: true,
     });
   }
 
@@ -1706,7 +1706,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const container = this.getElement("cell-infobar-container");
     moveInfobar(container, bounds, this.win, {
       position: "top",
-      hideIfOffscreen: true
+      hideIfOffscreen: true,
     });
   }
 

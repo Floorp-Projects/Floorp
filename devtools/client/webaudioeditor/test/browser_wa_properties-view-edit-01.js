@@ -15,7 +15,7 @@ add_task(async function() {
 
   const events = Promise.all([
     get3(gFront, "create-node"),
-    waitForGraphRendered(panelWin, 3, 2)
+    waitForGraphRendered(panelWin, 3, 2),
   ]);
   reload(target);
   const [actors] = await events;
@@ -25,7 +25,7 @@ add_task(async function() {
   // Wait for the node to be set as well as the inspector to come fully into the view
   await Promise.all([
     waitForInspectorRender(panelWin, EVENTS),
-    once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED)
+    once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED),
   ]);
 
   const setAndCheck = setAndCheckVariable(panelWin, gVars);
@@ -33,13 +33,13 @@ add_task(async function() {
   checkVariableView(gVars, 0, {
     "type": "sine",
     "frequency": 440,
-    "detune": 0
+    "detune": 0,
   }, "default loaded string");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
   await waitForInspectorRender(panelWin, EVENTS);
   checkVariableView(gVars, 0, {
-    "gain": 0
+    "gain": 0,
   }, "default loaded number");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));

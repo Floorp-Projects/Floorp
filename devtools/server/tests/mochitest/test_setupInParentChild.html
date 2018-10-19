@@ -26,8 +26,8 @@ window.onload = function() {
     "set": [
       // Always log packets when running tests.
       ["devtools.debugger.log", true],
-      ["dom.mozBrowserFramesEnabled", true]
-    ]
+      ["dom.mozBrowserFramesEnabled", true],
+    ],
   }, runTests);
 };
 
@@ -60,7 +60,7 @@ function runTests() {
     // Ask the child to call setupInParent
     DebuggerServer.setupInChild({
       module: "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/setup-in-child.js",
-      setupChild: "callParent"
+      setupChild: "callParent",
     });
   };
   Services.ppmm.addMessageListener("test:setupChild", onChild);
@@ -82,7 +82,7 @@ function runTests() {
     DebuggerServer.setupInChild({
       module: "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/setup-in-child.js",
       setupChild: "setupChild",
-      args: [1, "two", {three: true}]
+      args: [1, "two", {three: true}],
     });
   });
 

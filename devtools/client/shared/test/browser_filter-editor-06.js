@@ -28,28 +28,28 @@ add_task(async function() {
     {
       name: "blur",
       unit: "px",
-      type: "length"
+      type: "length",
     },
     {
       name: "contrast",
       unit: "%",
-      type: "percentage"
+      type: "percentage",
     },
     {
       name: "hue-rotate",
       unit: "deg",
-      type: "angle"
+      type: "angle",
     },
     {
       name: "drop-shadow",
       placeholder: L10N.getStr("dropShadowPlaceholder"),
-      type: "string"
+      type: "string",
     },
     {
       name: "url",
       placeholder: "example.svg#c1",
-      type: "string"
-    }
+      type: "string",
+    },
   ];
 
   info("Test adding new filters with different units");

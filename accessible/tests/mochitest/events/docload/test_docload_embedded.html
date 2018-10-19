@@ -29,7 +29,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, getAccessible(this.DOMNode)),
-        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getIframeDoc)
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getIframeDoc),
       ];
 
       this.invoke = () => (this.DOMNode.src = aURL);
@@ -40,9 +40,9 @@
           children: [
             {
               role: ROLE_DOCUMENT,
-              name: aURL == "about:license" ? "Licenses" : aURL
-            }
-          ]
+              name: aURL == "about:license" ? "Licenses" : aURL,
+            },
+          ],
         });
 
       this.getID = () => `change iframe src on ${aURL}`;

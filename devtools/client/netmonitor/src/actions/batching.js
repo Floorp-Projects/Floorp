@@ -18,14 +18,14 @@ const {
 function batchActions(actions) {
   return {
     type: BATCH_ACTIONS,
-    actions
+    actions,
   };
 }
 
 function batchEnable(enabled) {
   return {
     type: BATCH_ENABLE,
-    enabled
+    enabled,
   };
 }
 

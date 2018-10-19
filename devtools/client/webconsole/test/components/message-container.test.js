@@ -23,7 +23,7 @@ describe("MessageContainer component:", () => {
     const message = stubPreparedMessages.get("console.log('foobar', 'test')");
     const rendered = render(MessageContainer({
       getMessage: () => message,
-      serviceContainer
+      serviceContainer,
     }));
 
     expect(rendered.text().includes("foobar")).toBe(true);
@@ -32,22 +32,22 @@ describe("MessageContainer component:", () => {
     const messageTypes = [
       {
         component: ConsoleApiCall,
-        message: stubPreparedMessages.get("console.log('foobar', 'test')")
+        message: stubPreparedMessages.get("console.log('foobar', 'test')"),
       },
       {
         component: EvaluationResult,
-        message: stubPreparedMessages.get("new Date(0)")
+        message: stubPreparedMessages.get("new Date(0)"),
       },
       {
         component: PageError,
-        message: stubPreparedMessages.get("ReferenceError: asdf is not defined")
+        message: stubPreparedMessages.get("ReferenceError: asdf is not defined"),
       },
       {
         component: PageError,
         message: stubPreparedMessages.get(
           "Unknown property ‘such-unknown-property’.  Declaration dropped."
-        )
-      }
+        ),
+      },
     ];
 
     messageTypes.forEach(info => {

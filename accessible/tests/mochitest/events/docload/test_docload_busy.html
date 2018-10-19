@@ -41,8 +41,8 @@
             // creation, there are no events we could use to catch it.
             let { state, isEnabled } = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
             return state & STATE_BUSY && !isEnabled;
-          }
-        }
+          },
+        },
       ];
 
       this.invoke = () => (this.DOMNode.style.visibility = "visible");

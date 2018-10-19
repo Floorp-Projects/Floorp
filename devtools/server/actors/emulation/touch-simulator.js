@@ -41,7 +41,7 @@ TouchSimulator.prototype = {
     "mouseenter",
     "mouseover",
     "mouseout",
-    "mouseleave"
+    "mouseleave",
   ],
 
   contextMenuTimeout: null,
@@ -351,7 +351,7 @@ TouchSimulator.prototype = {
       return 0;
     }
     return 300;
-  }
+  },
 };
 
 exports.TouchSimulator = TouchSimulator;

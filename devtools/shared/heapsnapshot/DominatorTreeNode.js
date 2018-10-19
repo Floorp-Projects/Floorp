@@ -252,7 +252,7 @@ DominatorTreeNode.insert = function(nodeTree, path, newChildren, moreChildrenAva
 
     return tree.children
       ? immutableUpdate(tree, {
-        children: tree.children.map(c => insert(c, i + 1))
+        children: tree.children.map(c => insert(c, i + 1)),
       })
       : tree;
   }

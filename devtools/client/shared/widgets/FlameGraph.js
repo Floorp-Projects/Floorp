@@ -354,7 +354,7 @@ FlameGraph.prototype = {
   getOuterBounds: function() {
     return {
       startTime: this._bounds.start / this._pixelRatio,
-      endTime: this._bounds.end / this._pixelRatio
+      endTime: this._bounds.end / this._pixelRatio,
     };
   },
 
@@ -366,7 +366,7 @@ FlameGraph.prototype = {
     return {
       startTime: this._selection.start / this._pixelRatio,
       endTime: this._selection.end / this._pixelRatio,
-      verticalOffset: this._verticalOffset / this._pixelRatio
+      verticalOffset: this._verticalOffset / this._pixelRatio,
     };
   },
 
@@ -582,7 +582,7 @@ FlameGraph.prototype = {
     this._drawTicks(dataOffset, dataScale, {
       from: 0,
       to: headerHeight,
-      renderText: true
+      renderText: true,
     });
   },
 
@@ -757,7 +757,7 @@ FlameGraph.prototype = {
       if (rectWidth > minVisibleBlockWidth) {
         visibleBlocksInfoStore.push({
           block: block,
-          rect: { rectLeft, rectTop, rectWidth, rectHeight }
+          rect: { rectLeft, rectTop, rectWidth, rectHeight },
         });
       }
     }
@@ -1158,7 +1158,7 @@ FlameGraph.prototype = {
     if ("testX" in e && "testY" in e) {
       return {
         mouseX: e.testX * this._pixelRatio,
-        mouseY: e.testY * this._pixelRatio
+        mouseY: e.testY * this._pixelRatio,
       };
     }
 
@@ -1176,7 +1176,7 @@ FlameGraph.prototype = {
     if (this.hasData()) {
       setNamedTimeout(this._uid, GRAPH_RESIZE_EVENTS_DRAIN, this.refresh);
     }
-  }
+  },
 };
 
 /**
@@ -1237,7 +1237,7 @@ var FlameGraphUtils = {
       contentOnly: options.contentOnly,
       isRoot: false,
       isLeaf: false,
-      isMetaCategoryOut: false
+      isMetaCategoryOut: false,
     };
 
     // Take the timestamp of the first sample as prevTime. 0 is incorrect due
@@ -1361,7 +1361,7 @@ var FlameGraphUtils = {
             y: frameIndex * FLAME_GRAPH_BLOCK_HEIGHT,
             width: time - prevTime,
             height: FLAME_GRAPH_BLOCK_HEIGHT,
-            text: label
+            text: label,
           });
         }
       }
@@ -1434,7 +1434,7 @@ var FlameGraphUtils = {
     }
 
     return label;
-  }
+  },
 };
 
 exports.FlameGraph = FlameGraph;

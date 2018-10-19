@@ -63,7 +63,7 @@ async function talosStart() {
             Services.wm.removeListener(listener);
             resolve(win);
           }
-        }
+        },
       };
       Services.wm.addListener(listener);
     });

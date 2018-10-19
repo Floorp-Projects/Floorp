@@ -35,7 +35,7 @@ const PerformanceFront = FrontClassWithSpec(performanceSpec, {
 
     return this._traits;
   }, {
-    impl: "_connect"
+    impl: "_connect",
   }),
 
   get traits() {
@@ -60,11 +60,11 @@ const PerformanceFront = FrontClassWithSpec(performanceSpec, {
     const {
       position: currentPosition,
       totalSize,
-      generation: currentGeneration
+      generation: currentGeneration,
     } = this._currentBufferStatus;
     const {
       position: origPosition,
-      generation: origGeneration
+      generation: origGeneration,
     } = recording.getStartingBufferStatus();
 
     const normalizedCurrent = (totalSize * (currentGeneration - origGeneration)) +

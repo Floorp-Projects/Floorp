@@ -16,14 +16,14 @@ const { setSelectedRecording, getSelectedRecordingIndex } = require("devtools/cl
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const {
     EVENTS,
     $,
     PerformanceController,
-    WaterfallView
+    WaterfallView,
   } = panel.panelWin;
 
   const waterfallBtn = $("toolbarbutton[data-view='waterfall']");

@@ -12,7 +12,7 @@ class PanelHeader extends Component {
   static get propTypes() {
     return {
       id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired
+      name: PropTypes.string.isRequired,
     };
   }
 

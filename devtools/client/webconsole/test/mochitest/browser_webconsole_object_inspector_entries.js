@@ -48,7 +48,7 @@ add_task(async function() {
 async function testMap(oi) {
   info("Expanding the Map");
   let onMapOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   oi.querySelector(".arrow").click();
@@ -65,7 +65,7 @@ async function testMap(oi) {
   const entriesNode = oiNodes[2];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onMapOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   entriesNode.querySelector(".arrow").click();
@@ -79,7 +79,7 @@ async function testMap(oi) {
 async function testLargeMap(oi) {
   info("Expanding the large map");
   let onMapOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   oi.querySelector(".arrow").click();
@@ -96,7 +96,7 @@ async function testLargeMap(oi) {
   const entriesNode = oiNodes[2];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onMapOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   entriesNode.querySelector(".arrow").click();
@@ -114,7 +114,7 @@ async function testLargeMap(oi) {
 async function testSet(oi) {
   info("Expanding the Set");
   let onSetOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   oi.querySelector(".arrow").click();
@@ -131,7 +131,7 @@ async function testSet(oi) {
   const entriesNode = oiNodes[2];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onSetOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   entriesNode.querySelector(".arrow").click();
@@ -145,7 +145,7 @@ async function testSet(oi) {
 async function testLargeSet(oi) {
   info("Expanding the large Set");
   let onSetOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   oi.querySelector(".arrow").click();
@@ -162,7 +162,7 @@ async function testLargeSet(oi) {
   const entriesNode = oiNodes[2];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onSetOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   entriesNode.querySelector(".arrow").click();

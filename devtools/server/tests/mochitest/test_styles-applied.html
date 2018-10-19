@@ -101,7 +101,7 @@ addTest(function noInheritedStyles() {
 addTest(function matchedSelectors() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#test-node").then(node => {
     return gStyles.getApplied(node, {
-      inherited: true, filter: "user", matchedSelectors: true
+      inherited: true, filter: "user", matchedSelectors: true,
     });
   }).then(applied => {
     is(applied[3].matchedSelectors[0], ".inheritable-rule",
@@ -114,7 +114,7 @@ addTest(function matchedSelectors() {
 addTest(function testMediaQuery() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#mediaqueried").then(node => {
     return gStyles.getApplied(node, {
-      inherited: false, filter: "user", matchedSelectors: true
+      inherited: false, filter: "user", matchedSelectors: true,
     });
   }).then(applied => {
     is(applied[1].rule.type, 1, "Entry 1 is a rule style");

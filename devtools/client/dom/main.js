@@ -11,7 +11,7 @@ const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/
 // Module Loader
 const require = BrowserLoader({
   baseURI: "resource://devtools/client/dom/",
-  window
+  window,
 }).require;
 
 XPCOMUtils.defineConstant(this, "require", require);

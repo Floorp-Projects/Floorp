@@ -4,7 +4,7 @@
 const {
   L10nRegistry,
   FileSource,
-  IndexedFileSource
+  IndexedFileSource,
 } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
@@ -87,7 +87,7 @@ add_task(async function test_methods_calling() {
 add_task(async function test_has_one_source() {
   let oneSource = new FileSource("app", ["en-US"], "./app/data/locales/{locale}/");
   fs = {
-    "./app/data/locales/en-US/test.ftl": "key = value en-US"
+    "./app/data/locales/en-US/test.ftl": "key = value en-US",
   };
   L10nRegistry.registerSource(oneSource);
 
@@ -129,7 +129,7 @@ add_task(async function test_has_two_sources() {
   L10nRegistry.registerSource(secondSource);
   fs = {
     "./platform/data/locales/en-US/test.ftl": "key = platform value",
-    "./app/data/locales/pl/test.ftl": "key = app value"
+    "./app/data/locales/pl/test.ftl": "key = app value",
   };
 
 
@@ -186,7 +186,7 @@ add_task(async function test_indexed() {
   ]);
   L10nRegistry.registerSource(oneSource);
   fs = {
-    "/data/locales/pl/test.ftl": "key = value"
+    "/data/locales/pl/test.ftl": "key = value",
   };
 
   equal(L10nRegistry.sources.size, 1);
@@ -209,13 +209,13 @@ add_task(async function test_override() {
   L10nRegistry.registerSource(fileSource);
 
   let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
-    "/data/locales/pl/test.ftl"
+    "/data/locales/pl/test.ftl",
   ]);
   L10nRegistry.registerSource(oneSource);
 
   fs = {
     "/app/data/locales/pl/test.ftl": "key = value",
-    "/data/locales/pl/test.ftl": "key = addon value"
+    "/data/locales/pl/test.ftl": "key = addon value",
   };
 
   equal(L10nRegistry.sources.size, 2);
@@ -250,7 +250,7 @@ add_task(async function test_updating() {
   ]);
   L10nRegistry.registerSource(oneSource);
   fs = {
-    "/data/locales/pl/test.ftl": "key = value"
+    "/data/locales/pl/test.ftl": "key = value",
   };
 
   let ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
@@ -262,7 +262,7 @@ add_task(async function test_updating() {
 
 
   const newSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
-    "/data/locales/pl/test.ftl"
+    "/data/locales/pl/test.ftl",
   ]);
   fs["/data/locales/pl/test.ftl"] = "key = new value";
   L10nRegistry.updateSource(newSource);
@@ -286,13 +286,13 @@ add_task(async function test_removing() {
   L10nRegistry.registerSource(fileSource);
 
   let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
-    "/data/locales/pl/test.ftl"
+    "/data/locales/pl/test.ftl",
   ]);
   L10nRegistry.registerSource(oneSource);
 
   fs = {
     "/app/data/locales/pl/test.ftl": "key = value",
-    "/data/locales/pl/test.ftl": "key = addon value"
+    "/data/locales/pl/test.ftl": "key = addon value",
   };
 
   equal(L10nRegistry.sources.size, 2);
@@ -355,7 +355,7 @@ add_task(async function test_missing_file() {
   fs = {
     "./app/data/locales/en-US/test.ftl": "key = value en-US",
     "./platform/data/locales/en-US/test.ftl": "key = value en-US",
-    "./platform/data/locales/en-US/test2.ftl": "key2 = value2 en-US"
+    "./platform/data/locales/en-US/test2.ftl": "key2 = value2 en-US",
   };
 
 

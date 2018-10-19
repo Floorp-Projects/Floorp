@@ -58,7 +58,7 @@ function test_source_content() {
   node.setSourceContent("c.js", "content for c.js");
 
   let { code, map } = node.toStringWithSourceMap({
-    file: "abc.js"
+    file: "abc.js",
   });
 
   code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());

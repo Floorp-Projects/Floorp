@@ -5,7 +5,7 @@
 
 const messages = [
   "The quick brown fox jumps over the lazy dog",
-  ""
+  "",
 ];
 const ALGORITHMS = [
   {

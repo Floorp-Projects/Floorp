@@ -78,7 +78,7 @@ var TalosContentProfiler;
         detail: {
           name,
           data,
-        }
+        },
       });
       document.dispatchEvent(event);
 

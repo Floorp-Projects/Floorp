@@ -34,7 +34,7 @@ function* testSteps()
 
   const indexData = [
     { name: "type", keyPath: "type", options: { } },
-    { name: "length", keyPath: "length", options: { unique: true } }
+    { name: "length", keyPath: "length", options: { unique: true } },
   ];
 
   const objectStoreDataTypeSort = [

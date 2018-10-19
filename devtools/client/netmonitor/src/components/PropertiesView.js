@@ -63,7 +63,7 @@ class PropertiesView extends Component {
       filterPlaceHolder: PropTypes.string,
       sectionNames: PropTypes.array,
       openLink: PropTypes.func,
-      cropLimit: PropTypes.number
+      cropLimit: PropTypes.number,
     };
   }
 
@@ -74,7 +74,7 @@ class PropertiesView extends Component {
       expandableStrings: false,
       filterPlaceHolder: "",
       sectionNames: [],
-      cropLimit: 1024
+      cropLimit: 1024,
     };
   }
 

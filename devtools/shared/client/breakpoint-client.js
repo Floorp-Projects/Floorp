@@ -53,7 +53,7 @@ BreakpointClient.prototype = {
    * Remove the breakpoint from the server.
    */
   remove: DebuggerClient.requester({
-    type: "delete"
+    type: "delete",
   }),
 
   /**
@@ -95,7 +95,7 @@ BreakpointClient.prototype = {
       const info = {
         line: this.location.line,
         column: this.location.column,
-        condition: condition
+        condition: condition,
       };
 
       // Remove the current breakpoint and add a new one with the
@@ -121,7 +121,7 @@ BreakpointClient.prototype = {
     }
 
     return deferred.promise;
-  }
+  },
 };
 
 eventSource(BreakpointClient.prototype);

@@ -15,7 +15,7 @@ class Sidebar extends PureComponent {
     return {
       children: PropTypes.oneOfType([
         PropTypes.array,
-        PropTypes.element
+        PropTypes.element,
       ]).isRequired,
       onAfterChange: PropTypes.func,
       onAllTabsMenuClick: PropTypes.func,

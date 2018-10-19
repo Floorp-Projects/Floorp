@@ -16,7 +16,7 @@ function requestProperties(grip) {
     grip: grip,
     type: constants.FETCH_PROPERTIES,
     status: "start",
-    error: false
+    error: false,
   };
 }
 
@@ -29,7 +29,7 @@ function receiveProperties(grip, response, error) {
     type: constants.FETCH_PROPERTIES,
     status: "end",
     response: response,
-    error: error
+    error: error,
   };
 }
 

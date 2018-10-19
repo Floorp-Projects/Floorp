@@ -50,8 +50,8 @@ function run_test() {
                         "Object": { count: 100 },
                         "RegExp": { count: 200 },
                         "Array": { count: 400 },
-                        "Function": { count: 800 }
-                      }
+                        "Function": { count: 800 },
+                      },
                     }));
 
   do_test_finished();

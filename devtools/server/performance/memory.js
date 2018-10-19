@@ -230,7 +230,7 @@ Memory.prototype = {
   getAllocationsSettings: expectState("attached", function() {
     return {
       maxLogLength: this.dbg.memory.maxAllocationsLogLength,
-      probability: this.dbg.memory.allocationSamplingProbability
+      probability: this.dbg.memory.allocationSamplingProbability,
     };
   }, "getting allocations settings"),
 

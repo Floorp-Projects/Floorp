@@ -41,8 +41,8 @@ add_task(async function() {
       tag: "button",
       "margin-right": "0px",
       id: "button",
-      "margin-bottom": "0px"
-    }
+      "margin-bottom": "0px",
+    },
   });
 
   info("Name change event");
@@ -85,7 +85,7 @@ add_task(async function() {
         "margin-top": "0px",
         tag: "button",
         "text-align": "center",
-        "text-indent": "0px"
+        "text-indent": "0px",
       }});
       is(newAttrs.live, "polite", "Attributes are updated");
     }, () => ContentTask.spawn(browser, null, () =>
@@ -100,7 +100,7 @@ add_task(async function() {
 
   info("Reorder event");
   is(accessibleSliderFront.childCount, 1, "Slider has only 1 child");
-  const [firstChild, ] = await accessibleSliderFront.children();
+  const [firstChild ] = await accessibleSliderFront.children();
   is(firstChild.indexInParent, 0, "Slider's first child has correct index in parent");
   await emitA11yEvent(accessibleSliderFront, "reorder",
     childCount => {

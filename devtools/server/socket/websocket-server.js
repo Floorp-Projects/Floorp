@@ -201,7 +201,7 @@ const accept = async function(transport, input, output) {
       executeSoon(() => {
         upgradeListener.onTransportAvailable(transport, input, output);
       });
-    }
+    },
   };
 
   return new Promise((resolve, reject) => {

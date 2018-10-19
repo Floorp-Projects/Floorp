@@ -125,7 +125,7 @@ Transport.prototype = {
     this.emit("message", object);
   },
 
-  onStopListening: function() {}
+  onStopListening: function() {},
 
 };
 
@@ -172,7 +172,7 @@ LocalDevice.prototype = {
   set name(name) {
     this._name = name;
     log("Device: " + this._name);
-  }
+  },
 
 };
 
@@ -189,10 +189,10 @@ function Discovery() {
 
   this._transports = {
     scan: null,
-    update: null
+    update: null,
   };
   this._expectingReplies = {
-    from: new Set()
+    from: new Set(),
   };
 
   this._onRemoteScan = this._onRemoteScan.bind(this);
@@ -348,7 +348,7 @@ Discovery.prototype = {
   _sendStatusTo: function(port) {
     const status = {
       device: this.device.name,
-      services: this.localServices
+      services: this.localServices,
     };
     this._outgoingTransport.send(status, port);
   },
@@ -429,7 +429,7 @@ Discovery.prototype = {
         }
       }
     }
-  }
+  },
 
 };
 

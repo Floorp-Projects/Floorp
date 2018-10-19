@@ -25,7 +25,7 @@ add_task(async function() {
 
   info("Click on the 'log' filter");
   await setFilterState(hud, {
-    log: false
+    log: false,
   });
 
   checkTelemetryEvent({
@@ -36,7 +36,7 @@ add_task(async function() {
 
   info("Click on the 'netxhr' filter");
   await setFilterState(hud, {
-    netxhr: true
+    netxhr: true,
   });
 
   checkTelemetryEvent({
@@ -79,7 +79,7 @@ function checkTelemetryEvent(expectedEvent) {
   const f = e => JSON.stringify(e, null, 2);
   is(f(event), f({
     ...expectedEvent,
-    "session_id": event.session_id
+    "session_id": event.session_id,
   }), "The event has the expected data");
 }
 

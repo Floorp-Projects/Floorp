@@ -33,7 +33,7 @@ function setup(cb, additionalOpts = {}) {
       lineNumbers: true,
       foldGutter: true,
       gutters: ["CodeMirror-linenumbers", "breakpoints", "CodeMirror-foldgutter"],
-      cssProperties: getClientCssProperties()
+      cssProperties: getClientCssProperties(),
     };
 
     for (const o in additionalOpts) {
@@ -50,7 +50,7 @@ function setup(cb, additionalOpts = {}) {
             resolve({
               ed: editor,
               win: win,
-              edWin: editor.container.contentWindow.wrappedJSObject
+              edWin: editor.container.contentWindow.wrappedJSObject,
             });
             cb(editor, win);
           }, err => ok(false, err.message));
@@ -111,7 +111,7 @@ function read(url) {
 
   const channel = NetUtil.newChannel({
     uri: url,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   const input = channel.open2();
   scriptableStream.init(input);

@@ -91,7 +91,7 @@ Prompt.prototype = {
       type: "checkbox",
       label: aOptions.label,
       checked: aOptions.checked,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 
@@ -101,7 +101,7 @@ Prompt.prototype = {
       value: aOptions.value,
       hint: aOptions.hint,
       autofocus: aOptions.autofocus,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 
@@ -111,7 +111,7 @@ Prompt.prototype = {
       value: aOptions.value,
       hint: aOptions.hint,
       autofocus: aOptions.autofocus,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 
@@ -121,7 +121,7 @@ Prompt.prototype = {
       value: aOptions.value,
       hint: aOptions.hint,
       autofocus: aOptions.autofocus,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 
@@ -132,7 +132,7 @@ Prompt.prototype = {
       id: aOptions.id,
       step: aOptions.step,
       max: aOptions.max,
-      min: aOptions.min
+      min: aOptions.min,
     });
   },
 
@@ -140,7 +140,7 @@ Prompt.prototype = {
     return this._addInput({
       type: "color",
       value: aOptions.value,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 
@@ -148,7 +148,7 @@ Prompt.prototype = {
     return this._addInput({
       type: "label",
       label: aOptions.label,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 
@@ -156,7 +156,7 @@ Prompt.prototype = {
     return this._addInput({
       type: "menulist",
       values: aOptions.values,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 
@@ -164,7 +164,7 @@ Prompt.prototype = {
     return this._addInput({
       type: "icongrid",
       items: aOptions.items,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 
@@ -172,7 +172,7 @@ Prompt.prototype = {
     return this._addInput({
       type: "tabs",
       items: aOptions.items,
-      id: aOptions.id
+      id: aOptions.id,
     });
   },
 

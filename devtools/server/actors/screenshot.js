@@ -16,5 +16,5 @@ exports.ScreenshotActor = protocol.ActorClassWithSpec(screenshotSpec, {
 
   capture: function(args) {
     return captureScreenshot(args, this.document);
-  }
+  },
 });

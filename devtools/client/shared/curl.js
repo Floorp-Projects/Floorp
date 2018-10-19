@@ -127,7 +127,7 @@ const Curl = {
     command = command.concat(postData);
 
     return command.join(" ");
-  }
+  },
 };
 
 exports.Curl = Curl;
@@ -392,7 +392,7 @@ const CurlUtils = {
                      .replace(/%/g, "\"%\"")
                      .replace(/\\/g, "\\\\")
                      .replace(/[\r\n]+/g, "\"^$&\"") + "\"";
-  }
+  },
 };
 
 exports.CurlUtils = CurlUtils;

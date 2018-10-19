@@ -86,7 +86,7 @@ Client.defaultSendOOB = ({ authResult, oob }) => {
       }
       promptWindow.document.documentElement.acceptDialog();
       promptWindow = null;
-    }
+    },
   };
 };
 

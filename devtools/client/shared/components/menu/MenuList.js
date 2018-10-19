@@ -131,7 +131,7 @@ class MenuList extends PureComponent {
       onMouseOver: this.onMouseOverOrFocus,
       onMouseOut: this.onMouseOutOrBlur,
       onFocus: this.onMouseOverOrFocus,
-      onBlur: this.onMouseOutOrBlur
+      onBlur: this.onMouseOutOrBlur,
     };
 
     if (this.props.id) {

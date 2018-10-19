@@ -11,9 +11,9 @@ const heapSnapshotFileSpec = generateActorSpec({
   methods: {
     transferHeapSnapshot: {
       request: {
-        snapshotId: Arg(0, "string")
-      }
-    }
+        snapshotId: Arg(0, "string"),
+      },
+    },
   },
 });
 

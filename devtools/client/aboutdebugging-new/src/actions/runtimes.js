@@ -103,7 +103,7 @@ function connectRuntime(id) {
           id,
           connection,
           type: runtime.type,
-        }
+        },
       });
     } catch (e) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e.message });
@@ -126,7 +126,7 @@ function disconnectRuntime(id) {
         runtime: {
           id,
           type: runtime.type,
-        }
+        },
       });
     } catch (e) {
       dispatch({ type: DISCONNECT_RUNTIME_FAILURE, error: e.message });

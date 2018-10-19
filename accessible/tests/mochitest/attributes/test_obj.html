@@ -135,7 +135,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
         var gfxInfo = Cc["@mozilla.org/gfx/info;1"].
           getService(Ci.nsIGfxInfo);
         var attrs = {
-          "D2D": (gfxInfo.D2DEnabled ? "true" : "false")
+          "D2D": (gfxInfo.D2DEnabled ? "true" : "false"),
         };
         testAttrs(getApplicationAccessible(), attrs, false);
       }

@@ -100,7 +100,7 @@ class DeviceAdder extends PureComponent {
     if (!deviceAdderDisplayed) {
       return dom.div(
         {
-          id: "device-adder"
+          id: "device-adder",
         },
         dom.button(
           {

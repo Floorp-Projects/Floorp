@@ -36,7 +36,7 @@ const testPackets = Array.from({length: NUM_MESSAGES}).map((el, id) => ({
     "arguments": [
       "foobar",
       `${id % 2 === 0 ? "Even" : "Odd"} text`,
-      id
+      id,
     ],
     "columnNumber": 1,
     "counter": null,
@@ -50,8 +50,8 @@ const testPackets = Array.from({length: NUM_MESSAGES}).map((el, id) => ({
     "timeStamp": 1455064271115 + id,
     "timer": null,
     "workerType": "none",
-    "category": "webdev"
-  }
+    "category": "webdev",
+  },
 }));
 const lastPacket = testPackets.pop();
 
@@ -66,7 +66,7 @@ function startMeasure(label) {
         performance.clearMeasures(label);
       }
       return entries[entries.length - 1];
-    }
+    },
   };
 }
 
@@ -184,7 +184,7 @@ window.onload = async function() {
     entries: 100000000,
     interval: 1,
     features: ["js"],
-    threads: ["GeckoMain"]
+    threads: ["GeckoMain"],
   };
   Services.profiler.StartProfiler(
     settings.entries,

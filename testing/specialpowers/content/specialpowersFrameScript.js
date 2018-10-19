@@ -20,7 +20,7 @@ SpecialPowersManager.prototype = {
   handleEvent: function handleEvent(aEvent) {
     var window = aEvent.target.defaultView;
     attachSpecialPowersToWindow(window, mm);
-  }
+  },
 };
 
 var specialpowersmanager = new SpecialPowersManager();

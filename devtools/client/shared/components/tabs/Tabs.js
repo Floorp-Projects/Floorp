@@ -37,7 +37,7 @@ define(function(require, exports, module) {
         className: PropTypes.oneOfType([
           PropTypes.array,
           PropTypes.string,
-          PropTypes.object
+          PropTypes.object,
         ]),
         tabActive: PropTypes.number,
         onMount: PropTypes.func,
@@ -45,7 +45,7 @@ define(function(require, exports, module) {
         onAfterChange: PropTypes.func,
         children: PropTypes.oneOfType([
           PropTypes.array,
-          PropTypes.element
+          PropTypes.element,
         ]).isRequired,
         showAllTabsMenu: PropTypes.bool,
         onAllTabsMenuClick: PropTypes.func,
@@ -178,7 +178,7 @@ define(function(require, exports, module) {
     onOverflow(event) {
       if (event.target.classList.contains("tabs-menu")) {
         this.setState({
-          overflow: true
+          overflow: true,
         });
       }
     }
@@ -186,7 +186,7 @@ define(function(require, exports, module) {
     onUnderflow(event) {
       if (event.target.classList.contains("tabs-menu")) {
         this.setState({
-          overflow: false
+          overflow: false,
         });
       }
     }
@@ -432,8 +432,8 @@ define(function(require, exports, module) {
         title: PropTypes.string.isRequired,
         children: PropTypes.oneOfType([
           PropTypes.array,
-          PropTypes.element
-        ]).isRequired
+          PropTypes.element,
+        ]).isRequired,
       };
     }
 

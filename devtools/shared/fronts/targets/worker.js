@@ -49,7 +49,7 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
 
     return response;
   }, {
-    impl: "_attach"
+    impl: "_attach",
   }),
 
   detach: custom(async function() {
@@ -62,7 +62,7 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
     this.destroy();
     return response;
   }, {
-    impl: "_detach"
+    impl: "_detach",
   }),
 
   reconfigure: function() {

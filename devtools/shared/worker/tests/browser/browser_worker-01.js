@@ -33,7 +33,7 @@ async function testWorker(context, workerFactory) {
   const results = await worker.performTask("plotTimestampsGraph", {
     timestamps: WORKER_DATA,
     interval: INTERVAL,
-    duration: DURATION
+    duration: DURATION,
   });
 
   ok(results.plottedData.length,

@@ -34,7 +34,7 @@ class multiE10SWarning extends Component {
   render() {
     return dom.div(
       {
-        className: "service-worker-multi-process"
+        className: "service-worker-multi-process",
       },
       dom.div(
         {},

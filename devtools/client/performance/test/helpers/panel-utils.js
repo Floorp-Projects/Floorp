@@ -49,7 +49,7 @@ exports.initPerformanceInNewTab = async function({ url, win }, options = {}) {
 exports.initPerformanceInTab = async function({ tab }) {
   return exports.initPanelInTab({
     tool: "performance",
-    tab: tab
+    tab: tab,
   });
 };
 
@@ -69,7 +69,7 @@ exports.initConsoleInNewTab = async function({ url, win }, options = {}) {
 exports.initConsoleInTab = async function({ tab }) {
   const { target, toolbox, panel } = await exports.initPanelInTab({
     tool: "webconsole",
-    tab: tab
+    tab: tab,
   });
 
   const consoleMethod = async function(method, label, event) {

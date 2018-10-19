@@ -14,7 +14,7 @@ const { startRecording, stopRecording, waitForOverviewRenderedWithMarkers } = re
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { WaterfallView } = panel.panelWin;

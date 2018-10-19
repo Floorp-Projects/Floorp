@@ -131,7 +131,7 @@ function initCallWatcherBackend(aUrl) {
     await registerActorInContentProcess("chrome://mochitests/content/browser/devtools/client/canvasdebugger/test/call-watcher-actor.js", {
       prefix: "callWatcher",
       constructor: "CallWatcherActor",
-      type: { target: true }
+      type: { target: true },
     });
 
     const target = await TargetFactory.forTab(tab);

@@ -45,7 +45,7 @@ LongStringActor.prototype = {
       "initial": this.string.substring(
         0, DebuggerServer.LONG_STRING_INITIAL_LENGTH),
       "length": this.stringLength,
-      "actor": this.actorID
+      "actor": this.actorID,
     };
   },
 
@@ -58,7 +58,7 @@ LongStringActor.prototype = {
   onSubstring: function(request) {
     return {
       "from": this.actorID,
-      "substring": this.string.substring(request.start, request.end)
+      "substring": this.string.substring(request.start, request.end),
     };
   },
 
@@ -78,12 +78,12 @@ LongStringActor.prototype = {
     if (this.registeredPool && this.registeredPool.longStringActors) {
       delete this.registeredPool.longStringActors[this.string];
     }
-  }
+  },
 };
 
 LongStringActor.prototype.requestTypes = {
   "substring": LongStringActor.prototype.onSubstring,
-  "release": LongStringActor.prototype.onRelease
+  "release": LongStringActor.prototype.onRelease,
 };
 
 /**

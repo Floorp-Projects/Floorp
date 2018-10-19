@@ -10,7 +10,7 @@ const WebGLPrimitivesType = {
   "LINE_STRIP": 3,
   "TRIANGLES": 4,
   "TRIANGLE_STRIP": 5,
-  "TRIANGLE_FAN": 6
+  "TRIANGLE_FAN": 6,
 };
 
 /**
@@ -46,7 +46,7 @@ exports.WebGLPrimitiveCounter = class WebGLPrimitiveCounter {
       tris: this._tris,
       vertices: this._vertices,
       points: this._points,
-      lines: this._lines
+      lines: this._lines,
     };
 
     this._tris = 0;

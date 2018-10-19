@@ -23,7 +23,7 @@ add_task(async function() {
     messages: [
       { text: "running network console logging tests" },
       { text: "test-network.html" },
-      { text: "testscript.js" }
+      { text: "testscript.js" },
     ],
   });
 

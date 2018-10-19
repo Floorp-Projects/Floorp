@@ -72,7 +72,7 @@ define(function(require, exports, module) {
             JSONView.Locale.$STR("jsonViewer.ExpandAll")
           ),
           SearchBox({
-            actions: this.props.actions
+            actions: this.props.actions,
           })
         )
       );

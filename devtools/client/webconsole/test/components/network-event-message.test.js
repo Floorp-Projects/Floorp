@@ -59,7 +59,7 @@ describe("NetworkEventMessage component:", () => {
       const indent = 10;
       let wrapper = render(NetworkEventMessage({
         message: Object.assign({}, message, {indent}),
-        serviceContainer
+        serviceContainer,
       }));
       let indentEl = wrapper.find(".indent");
       expect(indentEl.prop("style").width).toBe(`${indent * INDENT_WIDTH}px`);

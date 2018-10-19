@@ -26,7 +26,7 @@ ruleTester.run("no-useless-run-test", rule, {
   valid: [
     "function run_test() {}",
     "function run_test() {let args = 1; run_next_test();}",
-    "function run_test() {fakeCall(); run_next_test();}"
+    "function run_test() {fakeCall(); run_next_test();}",
   ],
   invalid: [
     // Single-line case.
@@ -109,6 +109,6 @@ foo();
 
 // A comment
 bar();
-`)
-  ]
+`),
+  ],
 });

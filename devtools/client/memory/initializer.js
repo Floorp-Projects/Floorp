@@ -25,7 +25,7 @@ const initialize = async function() {
   const app = createElement(App, {
     toolbox: gToolbox,
     front: gFront,
-    heapWorker: gHeapAnalysesClient
+    heapWorker: gHeapAnalysesClient,
   });
   const provider = createElement(Provider, { store }, app);
   ReactDOM.render(provider, root);

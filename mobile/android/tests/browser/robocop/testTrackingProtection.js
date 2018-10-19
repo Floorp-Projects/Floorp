@@ -72,7 +72,7 @@ function doUpdate() {
       },
       updateSuccess: function(requestedTimeout) {
         resolve();
-      }
+      },
     };
 
     dbService.beginUpdate(listener, "test-track-simple", "");

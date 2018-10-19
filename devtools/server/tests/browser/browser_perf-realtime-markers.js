@@ -19,13 +19,13 @@ add_task(async function() {
   const counters = {
     markers: [],
     memory: [],
-    ticks: []
+    ticks: [],
   };
 
   const deferreds = {
     markers: defer(),
     memory: defer(),
-    ticks: defer()
+    ticks: defer(),
   };
 
   front.on("timeline-data", handler);

@@ -36,9 +36,9 @@ const SymbolIteratorActor  = protocol.ActorClassWithSpec(symbolIteratorSpec, {
         const symbol = symbols[index];
         return {
           name: symbol.toString(),
-          descriptor: objectActor._propertyDescriptor(symbol)
+          descriptor: objectActor._propertyDescriptor(symbol),
         };
-      }
+      },
     };
   },
 
@@ -46,7 +46,7 @@ const SymbolIteratorActor  = protocol.ActorClassWithSpec(symbolIteratorSpec, {
     return {
       type: this.typeName,
       actor: this.actorID,
-      count: this.iterator.size
+      count: this.iterator.size,
     };
   },
 
@@ -56,13 +56,13 @@ const SymbolIteratorActor  = protocol.ActorClassWithSpec(symbolIteratorSpec, {
       ownSymbols.push(this.iterator.symbolDescription(i));
     }
     return {
-      ownSymbols
+      ownSymbols,
     };
   },
 
   all() {
     return this.slice({ start: 0, count: this.iterator.size });
-  }
+  },
 });
 
 exports.SymbolIteratorActor = SymbolIteratorActor;

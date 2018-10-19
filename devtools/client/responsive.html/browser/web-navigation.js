@@ -37,7 +37,7 @@ function BrowserElementWebNavigation(browser) {
 BrowserElementWebNavigation.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebNavigation
+    Ci.nsIWebNavigation,
   ]),
 
   get _mm() {

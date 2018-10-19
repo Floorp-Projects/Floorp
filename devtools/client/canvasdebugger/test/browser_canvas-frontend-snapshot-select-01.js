@@ -84,7 +84,7 @@ async function ifTestingSupported() {
     return Promise.all([
       callListPopulated,
       thumbnailsDisplayed,
-      screenshotDisplayed
+      screenshotDisplayed,
     ]);
   }
 

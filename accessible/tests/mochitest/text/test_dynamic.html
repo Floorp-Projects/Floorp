@@ -17,7 +17,7 @@
   <script type="application/javascript">
     function insertBefore(aId, aEl, aTextBefore, aTextAfter, aStartIdx, aEndIdx) {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, aId)
+        new invokerChecker(EVENT_REORDER, aId),
       ];
 
       this.invoke = function insertBefore_invoke() {

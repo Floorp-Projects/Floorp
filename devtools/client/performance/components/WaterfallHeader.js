@@ -23,7 +23,7 @@ function WaterfallHeader(props) {
   const tickInterval = TickUtils.findOptimalTickInterval({
     ticksMultiple: WATERFALL_HEADER_TICKS_MULTIPLE,
     ticksSpacingMin: WATERFALL_HEADER_TICKS_SPACING_MIN,
-    dataScale: dataScale
+    dataScale: dataScale,
   });
 
   const ticks = [];
@@ -35,7 +35,7 @@ function WaterfallHeader(props) {
     const node = dom.div({
       key: x,
       className: "plain waterfall-header-tick",
-      style: { transform: `translateX(${left}px)` }
+      style: { transform: `translateX(${left}px)` },
     }, label);
     ticks.push(node);
   }
@@ -45,7 +45,7 @@ function WaterfallHeader(props) {
     dom.div(
       {
         className: "waterfall-sidebar theme-sidebar waterfall-header-name",
-        style: { width: sidebarWidth + "px" }
+        style: { width: sidebarWidth + "px" },
       },
       L10N.getStr("timeline.records")
     ),

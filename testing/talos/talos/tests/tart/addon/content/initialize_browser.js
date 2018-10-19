@@ -25,7 +25,7 @@ function initializeBrowser(win) {
       const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"]
                                .getService(Ci.nsIClipboardHelper);
       gClipboardHelper.copyString(text);
-    }
+    },
   };
 
   var groupMM = win.getGroupMessageManager("browsers");
@@ -36,7 +36,7 @@ function initializeBrowser(win) {
     function sendResult(result) {
       groupMM.broadcastAsyncMessage(TART_PREFIX + "chrome-exec-reply", {
         id: m.data.id,
-        result
+        result,
       });
     }
 

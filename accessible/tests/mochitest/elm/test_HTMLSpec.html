@@ -37,9 +37,9 @@
           {
             role: ROLE_TEXT_LEAF,
             states: STATE_LINKED,
-            actions: "jump"
-          }
-        ]
+            actions: "jump",
+          },
+        ],
       };
       testElm("a_href", obj);
 
@@ -54,9 +54,9 @@
           {
             role: ROLE_TEXT_LEAF,
             absentStates: STATE_LINKED,
-            actions: null
-          }
-        ]
+            actions: null,
+          },
+        ],
       };
       testElm("a_nohref", obj);
 
@@ -70,9 +70,9 @@
         children: [
           {
             role: ROLE_TEXT,
-            children: [ { role: ROLE_TEXT_LEAF } ]
-          }
-        ]
+            children: [ { role: ROLE_TEXT_LEAF } ],
+          },
+        ],
       };
       testElm("td_abbr", obj);
 
@@ -93,7 +93,7 @@
         states: STATE_LINKED,
         actions: "jump",
         interfaces: [ nsIAccessibleHyperLink ],
-        children: []
+        children: [],
       };
       testElm(getAccessible("imgmap").firstChild, obj);
 
@@ -103,7 +103,7 @@
       obj = {
         todo_role: "ROLE_SHAPE",
         absentStates: STATE_LINKED,
-        children: []
+        children: [],
       };
       testElm(getAccessible("imgmap").lastChild, obj);
 
@@ -121,13 +121,13 @@
       obj = {
         role: ROLE_NOTE,
         attributes: { "xml-roles": "complementary" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("aside", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       obj = { // HTML:audio
-        role: ROLE_GROUPING
+        role: ROLE_GROUPING,
       };
       testElm("audio", obj);
 
@@ -136,12 +136,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "font-weight": kBoldFontWeight }
+          6: { "font-weight": kBoldFontWeight },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:b text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:b text
+        ],
       };
       testElm("b_container", obj);
 
@@ -151,13 +151,13 @@
         todo_textAttrs: {
           0: { },
           5: { "writing-mode": "rl" },
-          8: { }
+          8: { },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
           { role: ROLE_TEXT_LEAF }, // HTML:bdi text
-          { role: ROLE_TEXT_LEAF } // plain text
-        ]
+          { role: ROLE_TEXT_LEAF }, // plain text
+        ],
       };
       testElm("bdi_container", obj);
 
@@ -168,11 +168,11 @@
         role: ROLE_PARAGRAPH,
         todo_textAttrs: {
           0: { },
-          6: { "writing-mode": "rl" }
+          6: { "writing-mode": "rl" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-        ]
+        ],
       };
       testElm("bdo_container", obj);
 
@@ -182,7 +182,7 @@
       obj = {
         role: ROLE_BLOCKQUOTE,
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
-        children: [ { role: ROLE_PARAGRAPH } ]
+        children: [ { role: ROLE_PARAGRAPH } ],
       };
       testElm("blockquote", obj);
 
@@ -191,7 +191,7 @@
 
       obj = {
         role: ROLE_PARAGRAPH,
-        children: [ { role: ROLE_WHITESPACE } ]
+        children: [ { role: ROLE_WHITESPACE } ],
       };
       testElm("br_container", obj);
 
@@ -200,7 +200,7 @@
         role: ROLE_PUSHBUTTON,
         absentStates: STATE_DEFAULT,
         actions: "press",
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("button", obj);
 
@@ -210,7 +210,7 @@
       obj = {
         role: ROLE_PUSHBUTTON,
         states: STATE_DEFAULT,
-        actions: "press"
+        actions: "press",
       };
       testElm("button_default", obj);
 
@@ -218,7 +218,7 @@
       // HTML:canvas
 
       obj = {
-        role: ROLE_CANVAS
+        role: ROLE_CANVAS,
       };
       testElm("canvas", obj);
 
@@ -228,44 +228,44 @@
       obj = {
         role: ROLE_TABLE,
         relations: {
-          RELATION_LABELLED_BY: "caption"
+          RELATION_LABELLED_BY: "caption",
         },
         interfaces: nsIAccessibleTable,
         children: [
           {
             role: ROLE_CAPTION,
             relations: {
-              RELATION_LABEL_FOR: "table"
+              RELATION_LABEL_FOR: "table",
             },
-            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
           },
           { // td inside thead
             role: ROLE_ROW,
             children: [
               {
                 role: ROLE_COLUMNHEADER,
-                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ]
+                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ],
               },
-              { role: ROLE_COLUMNHEADER }
-            ]
+              { role: ROLE_COLUMNHEADER },
+            ],
           },
           { // td inside tbody
             role: ROLE_ROW,
             children: [
               {
                 role: ROLE_ROWHEADER,
-                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ]
+                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ],
               },
               {
                 role: ROLE_CELL,
-                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ]
-              }
-            ]
+                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ],
+              },
+            ],
           },
           { // td inside tfoot
-            role: ROLE_ROW
-          }
-        ]
+            role: ROLE_ROW,
+          },
+        ],
       };
       testElm("table", obj);
 
@@ -276,12 +276,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "font-style": "italic" }
+          6: { "font-style": "italic" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:cite text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:cite text
+        ],
       };
       testElm("cite_container", obj);
 
@@ -292,12 +292,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "font-family": kMonospaceFontFamily }
+          6: { "font-family": kMonospaceFontFamily },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:code text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:code text
+        ],
       };
       testElm("code_container", obj);
 
@@ -309,8 +309,8 @@
           { ROW: [
             { role: ROLE_CELL },
             { role: ROLE_CELL },
-            { role: ROLE_CELL }
-          ] }
+            { role: ROLE_CELL },
+          ] },
         ] };
       testElm("colNcolgroup_table", obj);
 
@@ -319,7 +319,7 @@
 
       obj =
         { PARAGRAPH: [
-          { TEXT_LEAF: [] } // HTML:data text
+          { TEXT_LEAF: [] }, // HTML:data text
         ] };
       testElm("data_container", obj);
 
@@ -340,17 +340,17 @@
             states: STATE_READONLY,
             interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
             children: [ // dt
-              { role: ROLE_TEXT_LEAF }
-            ]
+              { role: ROLE_TEXT_LEAF },
+            ],
           },
           {
             role: ROLE_DEFINITION,
             interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
             children: [ // dd
-              { role: ROLE_TEXT_LEAF }
-            ]
-          }
-        ]
+              { role: ROLE_TEXT_LEAF },
+            ],
+          },
+        ],
       };
       testElm("dl", obj);
 
@@ -361,8 +361,8 @@
         role: ROLE_PARAGRAPH,
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_CONTENT_DELETION  }
-        ]
+          { role: ROLE_CONTENT_DELETION  },
+        ],
       };
       testElm("del_container", obj);
 
@@ -375,10 +375,10 @@
           {
             role: ROLE_SUMMARY,
             states: STATE_EXPANDED,
-            actions: "collapse"
+            actions: "collapse",
          },
-         { role: ROLE_PARAGRAPH }
-        ]
+         { role: ROLE_PARAGRAPH },
+        ],
       };
       testElm("details", obj);
 
@@ -391,9 +391,9 @@
           {
             role: ROLE_SUMMARY,
             states: STATE_COLLAPSED,
-            actions: "expand"
-         }
-        ]
+            actions: "expand",
+         },
+        ],
       };
       testElm("details_closed", obj);
 
@@ -404,12 +404,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { "font-style": "italic" },
-          12: { }
+          12: { },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // HTML:dfn text
-          { role: ROLE_TEXT_LEAF } // plain text
-        ]
+          { role: ROLE_TEXT_LEAF }, // plain text
+        ],
       };
       testElm("dfn_container", obj);
 
@@ -425,8 +425,8 @@
         role: ROLE_SECTION,
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
         children: [
-          { role: ROLE_TEXT_LEAF } // plain text
-        ]
+          { role: ROLE_TEXT_LEAF }, // plain text
+        ],
       };
       testElm("div", obj);
 
@@ -437,12 +437,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "font-style": "italic" }
+          6: { "font-style": "italic" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:em text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:em text
+        ],
       };
       testElm("em_container", obj);
 
@@ -452,14 +452,14 @@
       if (WIN) {
         obj = {
           role: ROLE_EMBEDDED_OBJECT,
-          states: STATE_UNAVAILABLE
+          states: STATE_UNAVAILABLE,
         };
 
         testElm("embed_plugin_windowless", obj);
 
         obj = {
           role: ROLE_EMBEDDED_OBJECT,
-          absentStates: STATE_UNAVAILABLE
+          absentStates: STATE_UNAVAILABLE,
         };
         testElm("embed_plugin_windowed", obj);
       }
@@ -470,20 +470,20 @@
       obj = {
         role: ROLE_GROUPING,
         relations: {
-          RELATION_LABELLED_BY: "legend"
+          RELATION_LABELLED_BY: "legend",
         },
         children: [
           {
             role: ROLE_LABEL,
             relations: {
-              RELATION_LABEL_FOR: "fieldset"
+              RELATION_LABEL_FOR: "fieldset",
             },
-            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
           },
           {
-            role: ROLE_ENTRY
-          }
-        ]
+            role: ROLE_ENTRY,
+          },
+        ],
       };
       testElm("fieldset", obj);
 
@@ -494,18 +494,18 @@
         role: ROLE_FIGURE,
         attributes: { "xml-roles": "figure" },
         relations: {
-          RELATION_LABELLED_BY: "figcaption"
+          RELATION_LABELLED_BY: "figcaption",
         },
         children: [
           { role: ROLE_GRAPHIC },
           {
             role: ROLE_CAPTION,
             relations: {
-              RELATION_LABEL_FOR: "figure"
+              RELATION_LABEL_FOR: "figure",
             },
-            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
-          }
-        ]
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+          },
+        ],
       };
       testElm("figure", obj);
 
@@ -515,14 +515,14 @@
       obj = {
         role: ROLE_FOOTER,
         attributes: { "xml-roles": "contentinfo" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("footer", obj);
 
       obj = {
         role: ROLE_SECTION,
         absentAttributes: { "xml-roles": "contentinfo" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("footer_in_article", obj);
       testElm("footer_in_aside", obj);
@@ -540,7 +540,7 @@
 
       obj = {
         role: ROLE_FORM,
-        absentAttributes: { "xml-roles": "form" }
+        absentAttributes: { "xml-roles": "form" },
       };
       testElm("form", obj);
 
@@ -548,7 +548,7 @@
 
       obj = {
         role: ROLE_FORM,
-        attributes: { "xml-roles": "form" }
+        attributes: { "xml-roles": "form" },
       };
       testElm("named_form", obj);
 
@@ -559,10 +559,10 @@
         INTERNAL_FRAME: [ { // HTML:iframe
           DOCUMENT: [ {
             INTERNAL_FRAME: [ { // HTML:frame
-              DOCUMENT: [ { role: ROLE_TEXT_LEAF} ]
-            } ]
-          } ]
-        } ]
+              DOCUMENT: [ { role: ROLE_TEXT_LEAF} ],
+            } ],
+          } ],
+        } ],
       };
       testElm("frameset_container", obj);
 
@@ -572,42 +572,42 @@
       obj = {
         role: ROLE_HEADING,
         attributes: { "level": "1" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("h1", obj);
 
       obj = {
         role: ROLE_HEADING,
         attributes: { "level": "2" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("h2", obj);
 
       obj = {
         role: ROLE_HEADING,
         attributes: { "level": "3" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("h3", obj);
 
       obj = {
         role: ROLE_HEADING,
         attributes: { "level": "4" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("h4", obj);
 
       obj = {
         role: ROLE_HEADING,
         attributes: { "level": "5" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("h5", obj);
 
       obj = {
         role: ROLE_HEADING,
         attributes: { "level": "6" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("h6", obj);
 
@@ -617,14 +617,14 @@
       obj = {
         role: ROLE_HEADER,
         attributes: { "xml-roles": "banner" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("header", obj);
 
       obj = {
         role: ROLE_SECTION,
         absentAttributes: { "xml-roles": "banner" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("header_in_article", obj);
       testElm("header_in_aside", obj);
@@ -650,12 +650,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "font-style": "italic" }
+          6: { "font-style": "italic" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:i text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:i text
+        ],
       };
       testElm("i_container", obj);
 
@@ -664,7 +664,7 @@
 
       obj = {
         role: ROLE_GRAPHIC,
-        interfaces: [ nsIAccessibleImage ]
+        interfaces: [ nsIAccessibleImage ],
       };
       testElm("img", obj);
 
@@ -673,7 +673,7 @@
 
       obj = {
         role: ROLE_PUSHBUTTON,
-        absentStates: STATE_DEFAULT
+        absentStates: STATE_DEFAULT,
       };
       testElm("input_button", obj);
 
@@ -684,14 +684,14 @@
         role: ROLE_CHECKBUTTON,
         states: STATE_CHECKABLE,
         absentStates: STATE_CHECKED,
-        actions: "check"
+        actions: "check",
       };
       testElm("input_checkbox", obj);
 
       obj = {
         role: ROLE_CHECKBUTTON,
         states: STATE_CHECKABLE | STATE_CHECKED,
-        actions: "uncheck"
+        actions: "uncheck",
       };
       testElm("input_checkbox_true", obj);
 
@@ -701,8 +701,8 @@
       obj = {
         TEXT_CONTAINER: [
           { role: ROLE_PUSHBUTTON },
-          { role: ROLE_LABEL }
-        ]
+          { role: ROLE_LABEL },
+        ],
       };
       testElm("input_file", obj);
 
@@ -712,7 +712,7 @@
       obj = {
         role: ROLE_PUSHBUTTON,
         absentStates: STATE_DEFAULT,
-        actions: "press"
+        actions: "press",
       };
       testElm("input_image", obj);
       testElm("input_submit", obj);
@@ -720,7 +720,7 @@
       obj = {
         role: ROLE_PUSHBUTTON,
         actions: "press",
-        states: STATE_DEFAULT
+        states: STATE_DEFAULT,
       };
       testElm("input_image_default", obj);
       testElm("input_submit_default", obj);
@@ -738,18 +738,18 @@
             actions: "activate",
             interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
             children: [
-              { role: ROLE_TEXT_LEAF }
-            ]
+              { role: ROLE_TEXT_LEAF },
+            ],
           },
           {
             role: ROLE_PUSHBUTTON,
-            actions: "press"
+            actions: "press",
           },
           {
             role: ROLE_PUSHBUTTON,
-            actions: "press"
-          }
-        ]
+            actions: "press",
+          },
+        ],
       };
       testElm("input_number", obj);
 
@@ -762,8 +762,8 @@
         actions: "activate",
         interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
         children: [
-          { role: ROLE_TEXT_LEAF }
-        ]
+          { role: ROLE_TEXT_LEAF },
+        ],
       };
       testElm("input_email", obj);
       testElm("input_search", obj);
@@ -781,9 +781,9 @@
         actions: "activate",
         children: [
         {
-            role: ROLE_TEXT_LEAF
-          }
-        ]
+            role: ROLE_TEXT_LEAF,
+          },
+        ],
       };
       testElm("input_password", obj);
       ok(getAccessible("input_password").firstChild.name != "44",
@@ -795,9 +795,9 @@
         actions: "activate",
         children: [
         {
-            role: ROLE_TEXT_LEAF
-          }
-        ]
+            role: ROLE_TEXT_LEAF,
+          },
+        ],
       };
       testElm("input_password_readonly", obj);
       ok(getAccessible("input_password_readonly").firstChild.name != "44",
@@ -810,14 +810,14 @@
         role: ROLE_RADIOBUTTON,
         states: STATE_CHECKABLE,
         absentStates: STATE_CHECKED,
-        actions: "select"
+        actions: "select",
       };
       testElm("input_radio", obj);
 
       obj = {
         role: ROLE_RADIOBUTTON,
         states: STATE_CHECKABLE | STATE_CHECKED,
-        actions: "select"
+        actions: "select",
       };
       testElm("input_radio_true", obj);
 
@@ -825,7 +825,7 @@
       // HTML:input@type="range"
 
       obj = {
-        role: ROLE_SLIDER
+        role: ROLE_SLIDER,
       };
       testElm("input_range", obj);
 
@@ -835,7 +835,7 @@
       obj = {
         role: ROLE_PUSHBUTTON,
         actions: "press",
-        absentStates: STATE_DEFAULT
+        absentStates: STATE_DEFAULT,
       };
       testElm("input_reset", obj);
 
@@ -850,8 +850,8 @@
           { role: ROLE_SPINBUTTON },
           { role: ROLE_TEXT_LEAF },
           { role: ROLE_ENTRY },
-          { role: ROLE_PUSHBUTTON }
-        ]
+          { role: ROLE_PUSHBUTTON },
+        ],
       };
       testElm("input_time", obj);
 
@@ -866,8 +866,8 @@
           { role: ROLE_SPINBUTTON },
           { role: ROLE_TEXT_LEAF },
           { role: ROLE_SPINBUTTON },
-          { role: ROLE_PUSHBUTTON }
-        ]
+          { role: ROLE_PUSHBUTTON },
+        ],
       };
       testElm("input_date", obj);
 
@@ -878,8 +878,8 @@
         role: ROLE_PARAGRAPH,
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_CONTENT_INSERTION  }
-        ]
+          { role: ROLE_CONTENT_INSERTION  },
+        ],
       };
       testElm("ins_container", obj);
 
@@ -890,12 +890,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "font-family": kMonospaceFontFamily }
+          6: { "font-family": kMonospaceFontFamily },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:kbd text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:kbd text
+        ],
       };
       testElm("kbd_container", obj);
 
@@ -910,9 +910,9 @@
         children: [
           { COMBOBOX_LIST: [
             { role: ROLE_COMBOBOX_OPTION }, // high grade
-            { role: ROLE_COMBOBOX_OPTION } // medium grade
-          ] }
-        ]
+            { role: ROLE_COMBOBOX_OPTION }, // medium grade
+          ] },
+        ],
       };
       testElm("keygen", obj);
 
@@ -922,33 +922,33 @@
       obj = {
         role: ROLE_LABEL,
         todo_relations: {
-          RELATION_LABEL_FOR: "label_input"
+          RELATION_LABEL_FOR: "label_input",
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
           {
             role: ROLE_ENTRY,
             relations: {
-              RELATION_LABELLED_BY: "label"
-            }
-          }
-        ]
+              RELATION_LABELLED_BY: "label",
+            },
+          },
+        ],
       };
       testElm("label", obj);
 
       obj = {
         role: ROLE_LABEL,
         relations: {
-          RELATION_LABEL_FOR: "label_for_input"
-        }
+          RELATION_LABEL_FOR: "label_for_input",
+        },
       };
       testElm("label_for", obj);
 
       obj = {
         role: ROLE_ENTRY,
         relations: {
-          RELATION_LABELLED_BY: "label_for"
-        }
+          RELATION_LABELLED_BY: "label_for",
+        },
       };
       testElm("label_for_input", obj);
 
@@ -962,9 +962,9 @@
           { // li
             role: ROLE_LISTITEM,
             states: STATE_READONLY,
-            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
-          }
-        ]
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+          },
+        ],
       };
       testElm("ul", obj);
       testElm("ol", obj);
@@ -980,7 +980,7 @@
       obj = {
         todo_role: ROLE_GROUPING,
         attributes: { "xml-roles": "main" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("main", obj);
 
@@ -991,7 +991,7 @@
          "map element is not accessible if used as an image map");
 
       obj = {
-        role: ROLE_TEXT_CONTAINER
+        role: ROLE_TEXT_CONTAINER,
       };
       testElm("map", obj);
 
@@ -1002,12 +1002,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "background-color": "rgb(255, 255, 0)" }
+          6: { "background-color": "rgb(255, 255, 0)" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:mark text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:mark text
+        ],
       };
       testElm("mark_container", obj);
 
@@ -1015,7 +1015,7 @@
       // HTML:math
 
       obj = {
-        role: ROLE_MATHML_MATH
+        role: ROLE_MATHML_MATH,
       };
       testElm("math", obj);
 
@@ -1023,7 +1023,7 @@
       // HTML:menu
 
       obj = {
-        todo_role: ROLE_MENUPOPUP
+        todo_role: ROLE_MENUPOPUP,
       };
       testElm("menu", obj);
 
@@ -1038,7 +1038,7 @@
       obj = {
         role: ROLE_SECTION,
         attributes: { "xml-roles": "navigation" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("nav", obj);
 
@@ -1049,13 +1049,13 @@
         obj = {
           role: ROLE_EMBEDDED_OBJECT,
           states: STATE_UNAVAILABLE,
-          children: [ ] // no child for HTML:param
+          children: [ ], // no child for HTML:param
         };
         testElm("object_plugin_windowless", obj);
 
         obj = {
           role: ROLE_EMBEDDED_OBJECT,
-          absentStates: STATE_UNAVAILABLE
+          absentStates: STATE_UNAVAILABLE,
         };
         testElm("object_plugin_windowed", obj);
       }
@@ -1072,15 +1072,15 @@
           { GROUPING: [ // HTML:optgroup
             { role: ROLE_STATICTEXT },
             { role: ROLE_OPTION }, // HTML:option
-            { role: ROLE_OPTION }
+            { role: ROLE_OPTION },
           ] },
           {
             role: ROLE_OPTION,
             states: STATE_FOCUSABLE,
             actions: "select",
-            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
-          }
-        ]
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+          },
+        ],
       };
       testElm("select_listbox", obj);
 
@@ -1090,8 +1090,8 @@
         children: [
           { role: ROLE_OPTION },
           { role: ROLE_OPTION },
-          { role: ROLE_OPTION }
-        ]
+          { role: ROLE_OPTION },
+        ],
       };
       testElm("select_listbox_multiselectable", obj);
 
@@ -1104,10 +1104,10 @@
             children: [
               { role: ROLE_COMBOBOX_OPTION },
               { role: ROLE_COMBOBOX_OPTION },
-              { role: ROLE_COMBOBOX_OPTION }
-            ]
-          }
-        ]
+              { role: ROLE_COMBOBOX_OPTION },
+            ],
+          },
+        ],
       };
       testElm("select_combobox", obj);
 
@@ -1118,17 +1118,17 @@
         role: ROLE_SECTION,
         attributes: { "live": "polite" },
         todo_relations: {
-          RELATION_CONTROLLED_BY: "output_input"
+          RELATION_CONTROLLED_BY: "output_input",
         },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("output", obj);
 
       obj = {
         role: ROLE_ENTRY,
         relations: {
-          RELATION_CONTROLLER_FOR: "output"
-        }
+          RELATION_CONTROLLER_FOR: "output",
+        },
       };
       testElm("output_input", obj);
 
@@ -1137,7 +1137,7 @@
 
       obj = {
         role: ROLE_TEXT_CONTAINER,
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("pre", obj);
 
@@ -1147,13 +1147,13 @@
       obj = {
         role: ROLE_PROGRESSBAR,
         absentStates: STATE_MIXED,
-        interfaces: [ nsIAccessibleValue ]
+        interfaces: [ nsIAccessibleValue ],
       };
       testElm("progress", obj);
 
       obj = {
         role: ROLE_PROGRESSBAR,
-        states: STATE_MIXED
+        states: STATE_MIXED,
       };
       testElm("progress_indeterminate", obj);
 
@@ -1166,8 +1166,8 @@
         children: [
           { role: ROLE_STATICTEXT }, // left quote
           { role: ROLE_TEXT_LEAF }, // quoted text
-          { role: ROLE_STATICTEXT } // right quote
-        ]
+          { role: ROLE_STATICTEXT }, // right quote
+        ],
       };
       testElm("q", obj);
 
@@ -1183,12 +1183,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "text-line-through-style": "solid" }
+          6: { "text-line-through-style": "solid" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:i text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:i text
+        ],
       };
       testElm("s_container", obj);
 
@@ -1199,8 +1199,8 @@
         role: ROLE_PARAGRAPH,
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:samp text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:samp text
+        ],
       };
       testElm("samp_container", obj);
 
@@ -1210,7 +1210,7 @@
       obj = {
         role: ROLE_SECTION,
         absentAttributes: { "xml-roles": "region" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("section", obj);
 
@@ -1219,7 +1219,7 @@
       obj = {
         role: ROLE_SECTION,
         attributes: { "xml-roles": "region" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("named_section", obj);
 
@@ -1230,12 +1230,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "font-size": "10pt" }
+          6: { "font-size": "10pt" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:small text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:small text
+        ],
       };
       testElm("small_container", obj);
 
@@ -1256,8 +1256,8 @@
         role: ROLE_PARAGRAPH,
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:strong text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:strong text
+        ],
       };
       testElm("strong_container", obj);
 
@@ -1268,12 +1268,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "text-position": "sub" }
+          6: { "text-position": "sub" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:sub text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:sub text
+        ],
       };
       testElm("sub_container", obj);
 
@@ -1284,12 +1284,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "text-position": "super" }
+          6: { "text-position": "super" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:sup text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:sup text
+        ],
       };
       testElm("sup_container", obj);
 
@@ -1297,7 +1297,7 @@
       // HTML:svg
 
       obj = {
-        todo_role: ROLE_GRAPHIC
+        todo_role: ROLE_GRAPHIC,
       };
       testElm("svg", obj);
 
@@ -1308,7 +1308,7 @@
         role: ROLE_ENTRY,
         extraStates: EXT_STATE_MULTI_LINE | EXT_STATE_EDITABLE,
         actions: "activate",
-        interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
       };
       testElm("textarea", obj);
 
@@ -1318,7 +1318,7 @@
       obj = {
         role: ROLE_TEXT,
         attributes: { "xml-roles": "time", "datetime": "2001-05-15 19:00" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("time", obj);
 
@@ -1329,12 +1329,12 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "text-underline-style": "solid" }
+          6: { "text-underline-style": "solid" },
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:u text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:u text
+        ],
       };
       testElm("u_container", obj);
 
@@ -1347,14 +1347,14 @@
           { role: ROLE_TEXT_LEAF }, // plain text
           { role: ROLE_TEXT_LEAF }, // HTML:var text
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF } // HTML:var text
-        ]
+          { role: ROLE_TEXT_LEAF }, // HTML:var text
+        ],
       };
       testElm("var_container", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       obj = { // HTML:video
-        role: ROLE_GROUPING
+        role: ROLE_GROUPING,
       };
       testElm("video", obj);
 

@@ -22,7 +22,7 @@ function* testSteps()
     { name: "11", options: { keyPath: "foo", autoIncrement: true } },
     { name: "" },
     { name: null },
-    { name: undefined }
+    { name: undefined },
   ];
 
   let request = indexedDB.open(name, 1);

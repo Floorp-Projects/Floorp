@@ -48,7 +48,7 @@ add_task(async function() {
     oldpanel: "headers",
     newpanel: "cookies",
   }, {
-    method: "sidepanel_changed"
+    method: "sidepanel_changed",
   });
 
   return teardown(monitor);

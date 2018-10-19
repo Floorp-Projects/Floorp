@@ -15,37 +15,37 @@
     function doTest() {
       var tests = [{
         accOrElmOrID: "can_wheel",
-        expectedHints: ["Swipe with two fingers to move between pages"]
+        expectedHints: ["Swipe with two fingers to move between pages"],
       }, {
         accOrElmOrID: "nested_link",
         expectedHints: [{string: "link-hint"},
-          "Swipe with two fingers to move between pages"]
+          "Swipe with two fingers to move between pages"],
       }, {
         accOrElmOrID: "nested_link",
         oldAccOrElmOrID: "can_wheel",
-        expectedHints: [{string: "link-hint"}]
+        expectedHints: [{string: "link-hint"}],
       }, {
         accOrElmOrID: "link_with_default_hint",
-        expectedHints: [{string: "link-hint"}]
+        expectedHints: [{string: "link-hint"}],
       }, {
         accOrElmOrID: "link_with_hint_override",
-        expectedHints: ["Tap and hold to get to menu"]
+        expectedHints: ["Tap and hold to get to menu"],
       }, {
         accOrElmOrID: "button_with_default_hint",
-        expectedHints: [{string: "pushbutton-hint"}]
+        expectedHints: [{string: "pushbutton-hint"}],
       }, {
         accOrElmOrID: "button_with_hint_override",
-        expectedHints: ["Tap and hold to activate"]
+        expectedHints: ["Tap and hold to activate"],
       }, {
         accOrElmOrID: "nested_link2",
-        expectedHints: [{string: "link-hint"}]
+        expectedHints: [{string: "link-hint"}],
       }, {
         accOrElmOrID: "nested_link3",
         expectedHints: [{string: "link-hint"}, {string: "pushbutton-hint"},
-          "Double tap and hold to activate"]
+          "Double tap and hold to activate"],
       }, {
         accOrElmOrID: "menuitemradio",
-        expectedHints: [{string: "radiomenuitem-hint"}]
+        expectedHints: [{string: "radiomenuitem-hint"}],
       }];
 
       // Test hints.

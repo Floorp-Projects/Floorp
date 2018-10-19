@@ -20,8 +20,8 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "layoutview",
-      newpanel: "animationinspector"
-    }
+      newpanel: "animationinspector",
+    },
   },
   {
     timestamp: null,
@@ -31,8 +31,8 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "animationinspector",
-      newpanel: "fontinspector"
-    }
+      newpanel: "fontinspector",
+    },
   },
   {
     timestamp: null,
@@ -42,8 +42,8 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "fontinspector",
-      newpanel: "layoutview"
-    }
+      newpanel: "layoutview",
+    },
   },
   {
     timestamp: null,
@@ -53,8 +53,8 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "layoutview",
-      newpanel: "computedview"
-    }
+      newpanel: "computedview",
+    },
   },
   {
     timestamp: null,
@@ -64,8 +64,8 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "computedview",
-      newpanel: "animationinspector"
-    }
+      newpanel: "animationinspector",
+    },
   },
   {
     timestamp: null,
@@ -75,8 +75,8 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "animationinspector",
-      newpanel: "fontinspector"
-    }
+      newpanel: "fontinspector",
+    },
   },
   {
     timestamp: null,
@@ -86,8 +86,8 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "fontinspector",
-      newpanel: "layoutview"
-    }
+      newpanel: "layoutview",
+    },
   },
   {
     timestamp: null,
@@ -97,9 +97,9 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "layoutview",
-      newpanel: "computedview"
-    }
-  }
+      newpanel: "computedview",
+    },
+  },
 ];
 
 add_task(async function() {
