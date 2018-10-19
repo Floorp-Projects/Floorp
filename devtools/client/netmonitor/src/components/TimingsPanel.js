@@ -96,7 +96,6 @@ class TimingsPanel extends Component {
         timelines,
         MDNLink({
           url: getNetMonitorTimingsURL(),
-          title: L10N.getStr("netmonitor.timings.learnMore")
         }),
       )
     );
