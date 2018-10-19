@@ -287,8 +287,10 @@ public:
 
   // nsISeekableStream
   NS_IMETHOD Seek(int32_t, int64_t) override { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD Tell(int64_t*) override { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD SetEOF() override { return NS_ERROR_NOT_IMPLEMENTED; }
+
+  // nsITellableStream
+  NS_IMETHOD Tell(int64_t*) override { return NS_ERROR_NOT_IMPLEMENTED; }
 
 private:
   ~QIInputStream() = default;
@@ -307,6 +309,7 @@ NS_INTERFACE_MAP_BEGIN(QIInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream, mCloneable)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream, mIPCSerializable)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, mSeekable)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITellableStream, mSeekable)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
