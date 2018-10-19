@@ -473,7 +473,7 @@ public:
                        aFallible);
   }
 
-  // AssignLiteral must ONLY be applied to an actual literal string, or
+  // AssignLiteral must ONLY be called with an actual literal string, or
   // a character array *constant* declared without an explicit size.
   // Do not attempt to use it with a character array variable that is not
   // constant or does not have static storage duration. Use Assign or
@@ -490,7 +490,7 @@ public:
     AssignLiteral(aStr, N - 1);
   }
 
-  // AssignLiteral must ONLY be applied to an actual literal string, or
+  // AssignLiteral must ONLY be called with an actual literal string, or
   // a char array *constant* declared without an explicit size.
   // Do not attempt to use it with a non-constant char array variable.
   // Use AssignASCII for that.
@@ -593,7 +593,7 @@ public:
                                              size_type aLength,
                                              const fallible_t&);
 
-  // ReplaceLiteral must ONLY be applied to an actual literal string.
+  // ReplaceLiteral must ONLY be called with an actual literal string.
   // Do not attempt to use it with a character array variable.
   // Use Replace or ReplaceASCII for that.
   template<int N>
@@ -641,7 +641,7 @@ public:
   // Appends a literal string ("" literal in the 8-bit case and u"" literal
   // in the 16-bit case) to the string.
   //
-  // AppendLiteral must ONLY be applied to an actual literal string.
+  // AppendLiteral must ONLY be called with an actual literal string.
   // Do not attempt to use it with a character array variable.
   // Use Append or AppendASCII for that.
   template<int N>
@@ -802,7 +802,7 @@ public:
     Replace(aPos, 0, aTuple);
   }
 
-  // InsertLiteral must ONLY be applied to an actual literal string.
+  // InsertLiteral must ONLY be called with an actual literal string.
   // Do not attempt to use it with a character array variable.
   // Use Insert for that.
   template<int N>
