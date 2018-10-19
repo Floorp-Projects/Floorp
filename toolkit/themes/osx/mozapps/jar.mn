@@ -13,7 +13,6 @@ toolkit.jar:
   skin/classic/mozapps/extensions/toolbarbutton-dropmarker.png    (extensions/toolbarbutton-dropmarker.png)
   skin/classic/mozapps/extensions/heart.png                       (extensions/heart.png)
 * skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
-  skin/classic/mozapps/extensions/eula.css                        (extensions/eula.css)
   skin/classic/mozapps/extensions/blocklist.css                   (extensions/blocklist.css)
   skin/classic/mozapps/plugins/pluginHelp-16.png                  (plugins/pluginHelp-16.png)
   skin/classic/mozapps/profile/profileSelection.css               (profile/profileSelection.css)
