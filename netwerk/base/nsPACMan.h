@@ -209,6 +209,20 @@ private:
    */
   void ContinueLoadingAfterPACUriKnown();
 
+/**
+   * This method may be called to reload the PAC file.  While we are loading
+   * the PAC file, any asynchronous PAC queries will be queued up to be
+   * processed once the PAC file finishes loading.
+   *
+   * @param aSpec
+   *        The non normalized uri spec of this URI used for comparison with
+   *        system proxy settings to determine if the PAC uri has changed.
+   * @param aResetLoadFailureCount
+   *        A flag saying whether the exponential back-off for attempting to reload the
+   *        PAC should be reset.
+   */
+  nsresult LoadPACFromURI(const nsACString &aSpec, bool aResetLoadFailureCount);
+
   /**
    * Reload the PAC file if there is reason to.
    */
