@@ -38,11 +38,14 @@ class SourceEditor extends Component {
 
     // Delay to CodeMirror initialization content to prevent UI freezing
     this.editorTimeout = setTimeout(() => {
+      this.editorTimeout = null;
       this.editor.appendToLocalElement(this.refs.editorElement);
+
       // CodeMirror's setMode() (syntax highlight) is the performance bottleneck when
       // processing large content, so we enable it asynchronously within the setTimeout
       // to avoid UI blocking. (rendering source code -> drawing syntax highlight)
       this.editorSetModeTimeout = setTimeout(() => {
+        this.editorSetModeTimeout = null;
         this.editor.setMode(mode);
       });
     });
@@ -55,16 +58,26 @@ class SourceEditor extends Component {
   componentDidUpdate(prevProps) {
     const { mode, text } = this.props;
 
+    // Bail out if the editor has been destroyed in the meantime.
+    if (this.editor.isDestroyed()) {
+      return;
+    }
+
     if (prevProps.text !== text) {
       // Reset the existed 'mode' attribute in order to make setText() process faster
       // to prevent drawing unnecessary syntax highlight.
       this.editor.setMode(null);
       this.editor.setText(text);
 
+      if (this.editorSetModeTimeout) {
+        clearTimeout(this.editorSetModeTimeout);
+      }
+
       // CodeMirror's setMode() (syntax highlight) is the performance bottleneck when
       // processing large content, so we enable it asynchronously within the setTimeout
       // to avoid UI blocking. (rendering source code -> drawing syntax highlight)
       this.editorSetModeTimeout = setTimeout(() => {
+        this.editorSetModeTimeout = null;
         this.editor.setMode(mode);
       });
     }
