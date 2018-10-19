@@ -149,7 +149,18 @@ static size_t MallocGoodSize(size_t aSize) {
 // Heuristic to choose the size of the next BumpChunk for small allocations.
 // `start` is the size of the first chunk. `used` is the total size of all
 // BumpChunks in this LifoAlloc so far.
-static size_t NextSize(size_t start, size_t used) { return start; }
+static size_t NextSize(size_t start, size_t used) {
+  // Double the size, up to 1 MB.
+  const size_t mb = 1 * 1024 * 1024;
+  if (used < mb) {
+    return Max(start, used);
+  }
+
+  // After 1 MB, grow more gradually, to waste less memory.
+  // The sequence (in megabytes) begins:
+  // 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, ...
+  return JS_ROUNDUP(used / 8, mb);
+}
 
 LifoAlloc::UniqueBumpChunk LifoAlloc::newChunkWithCapacity(size_t n,
                                                            bool oversize) {
