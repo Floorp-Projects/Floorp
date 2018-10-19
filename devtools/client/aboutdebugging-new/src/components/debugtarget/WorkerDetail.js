@@ -71,7 +71,7 @@ class WorkerDetail extends PureComponent {
 
     return Localized(
       {
-        id: ftlId
+        id: ftlId,
       },
       dom.div(
         {
