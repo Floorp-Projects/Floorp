@@ -40,7 +40,9 @@ class TemporaryExtensionAction extends PureComponent {
     const { dispatch, target } = this.props;
 
     return dom.div(
-      {},
+      {
+        className: "toolbar",
+      },
       InspectAction({ dispatch, target }),
       Localized(
         {
@@ -48,7 +50,7 @@ class TemporaryExtensionAction extends PureComponent {
         },
         dom.button(
           {
-            className: "aboutdebugging-button",
+            className: "default-button",
             onClick: e => this.reload()
           },
           "Reload",
@@ -60,7 +62,7 @@ class TemporaryExtensionAction extends PureComponent {
         },
         dom.button(
           {
-            className: "aboutdebugging-button js-temporary-extension-remove-button",
+            className: "default-button js-temporary-extension-remove-button",
             onClick: e => this.remove()
           },
           "Remove",
