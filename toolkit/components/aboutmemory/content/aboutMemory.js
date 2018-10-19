@@ -325,19 +325,16 @@ function onLoad() {
   gVerbose.id = "verbose"; // used for testing
   appendTextNode(label1, "verbose");
 
-  const kEllipsis = "\u2026";
-
   // The "measureButton" id is used for testing.
   appendButton(row1, CuDesc, doMeasure, "Measure", "measureButton");
-  appendButton(row1, LdDesc, () => fileInput1.click(), "Load" + kEllipsis);
-  appendButton(row1, DfDesc, () => fileInput2.click(),
-               "Load and diff" + kEllipsis);
+  appendButton(row1, LdDesc, () => fileInput1.click(), "Load…");
+  appendButton(row1, DfDesc, () => fileInput2.click(), "Load and diff…");
 
   let row2 = appendElement(ops, "div", "opsRow");
 
   let labelDiv2 =
     appendElementWithText(row2, "div", "opsRowLabel", "Save memory reports");
-  appendButton(row2, SvDesc, saveReportsToFile, "Measure and save" + kEllipsis);
+  appendButton(row2, SvDesc, saveReportsToFile, "Measure and save…");
 
   // XXX: this isn't a great place for this checkbox, but I can't think of
   // anywhere better.
@@ -1419,9 +1416,6 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
 function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
                                           aDegenerates, aHeapTotal,
                                           aHasMozMallocUsableSize) {
-  const kUpwardsArrow   = "\u2191",
-        kDownwardsArrow = "\u2193";
-
   let appendLink = function(aHere, aThere, aArrow) {
     let link = appendElementWithText(aP, "a", "upDownArrow", aArrow);
     link.href = "#" + aThere + aN;
@@ -1434,7 +1428,7 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   };
 
   appendElementWithText(aP, "h1", "", aProcess);
-  appendLink("start", "end", kDownwardsArrow);
+  appendLink("start", "end", "↓");
 
   // We'll fill this in later.
   let warningsDiv = appendElement(aP, "div", "accuracyWarning");
@@ -1514,7 +1508,7 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   }
 
   appendElementWithText(aP, "h3", "", "End of " + aProcess);
-  appendLink("end", "start", kUpwardsArrow);
+  appendLink("end", "start", "↑");
 }
 
 /**
@@ -1630,21 +1624,9 @@ function pad(aS, aN, aC) {
   return padding + aS;
 }
 
-// There's a subset of the Unicode "light" box-drawing chars that is widely
-// implemented in terminals, and this code sticks to that subset to maximize
-// the chance that copying and pasting about:memory output to a terminal will
-// work correctly.
-const kHorizontal                   = "\u2500",
-      kVertical                     = "\u2502",
-      kUpAndRight                   = "\u2514",
-      kUpAndRight_Right_Right       = "\u2514\u2500\u2500",
-      kVerticalAndRight             = "\u251c",
-      kVerticalAndRight_Right_Right = "\u251c\u2500\u2500",
-      kVertical_Space_Space         = "\u2502  ";
-
-const kNoKidsSep                    = " \u2500\u2500 ",
-      kHideKidsSep                  = " ++ ",
-      kShowKidsSep                  = " -- ";
+const kNoKidsSep   = " ── ",
+      kHideKidsSep = " ++ ",
+      kShowKidsSep = " -- ";
 
 function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
                           aPresence) {
@@ -1788,7 +1770,11 @@ function expandPathToThisElement(aElement) {
  */
 function appendTreeElements(aP, aRoot, aProcess, aPadText) {
   /**
-   * Appends the elements for a particular tree, without a heading.
+   * Appends the elements for a particular tree, without a heading. There's a
+   * subset of the Unicode "light" box-drawing chars that is widely implemented
+   * in terminals, and this code sticks to that subset to maximize the chance
+   * that copying and pasting about:memory output to a terminal will work
+   * correctly.
    *
    * @param aP
    *        The parent DOM node.
@@ -1825,10 +1811,8 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
     let extraTreelineLength =
       Math.max(aParentStringLength - valueText.length, 0);
     if (extraTreelineLength > 0) {
-      aTreelineText2a =
-        appendN(aTreelineText2a, kHorizontal, extraTreelineLength);
-      aTreelineText2b =
-        appendN(aTreelineText2b, " ", extraTreelineLength);
+      aTreelineText2a = appendN(aTreelineText2a, "─", extraTreelineLength);
+      aTreelineText2b = appendN(aTreelineText2b, " ", extraTreelineLength);
     }
     let treelineText = aTreelineText1 + aTreelineText2a;
     appendElementWithText(aP, "span", "treeline", treelineText);
@@ -1909,10 +1893,10 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       for (let i = 0; i < aT._kids.length; i++) {
         let kidTreelineText2a, kidTreelineText2b;
         if (i < aT._kids.length - 1) {
-          kidTreelineText2a = kVerticalAndRight_Right_Right;
-          kidTreelineText2b = kVertical_Space_Space;
+          kidTreelineText2a = "├──";
+          kidTreelineText2b = "│  ";
         } else {
-          kidTreelineText2a = kUpAndRight_Right_Right;
+          kidTreelineText2a = "└──";
           kidTreelineText2b = "   ";
         }
         aUnsafeNames.push(aT._kids[i]._unsafeName);
