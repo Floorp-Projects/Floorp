@@ -331,10 +331,6 @@ private:
         sIsPumpingMessages = aIsPumping;
     }
 
-    void SetInKillHardShutdown() {
-        mInKillHardShutdown = true;
-    }
-
 #ifdef OS_WIN
     struct MOZ_STACK_CLASS SyncStackFrame
     {
@@ -863,8 +859,6 @@ private:
     // held in a queue until another thread deems it is safe to send them.
     bool mIsPostponingSends;
     std::vector<UniquePtr<Message>> mPostponedSends;
-
-    bool mInKillHardShutdown;
 
     bool mBuildIDsConfirmedMatch;
 };
