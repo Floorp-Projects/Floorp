@@ -183,7 +183,7 @@ class ConnectPage extends PureComponent {
         },
         dom.h1(
           {
-            className: "page__title"
+            className: "page__title",
           },
           "Connect a Device"
         )
