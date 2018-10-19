@@ -389,7 +389,9 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     accessTokenLevel = sandbox::USER_INTERACTIVE;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
-  } else if (aSandboxLevel == 1) {
+  } else {
+    MOZ_ASSERT(aSandboxLevel == 1);
+    
     jobLevel = sandbox::JOB_NONE;
     accessTokenLevel = sandbox::USER_NON_ADMIN;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
@@ -746,14 +748,9 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetDelayedProcessMitigations.");
 
-#ifndef NIGHTLY_BUILD
-  // We are experimenting with using restricting SIDs in the nightly builds
-  mPolicy->SetDoNotUseRestrictingSIDs();
-#else
   // Add rule to allow read / write access to a special plugin temp dir.
   AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
                    sPluginTempDir, NS_LITERAL_STRING("\\*"));
-#endif
 
   if (aSandboxLevel >= 2) {
     // Level 2 and above uses low integrity, so we need to give write access to
