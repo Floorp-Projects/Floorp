@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.apache.tools.ant.taskdefs.condition.Os
+
+// Configure the Python environments
+envs {
+    bootstrapDirectory = new File(buildDir, 'bootstrap')
+    envsDirectory = new File(buildDir, 'envs')
+
+    // Setup a miniconda environment.
+    conda "Miniconda3", "Miniconda3-latest", "64"
+}
+
+// Setup the python environment before the build starts.
+
+task createBuildDir {
+    description = "Make sure the build dir exists before creating the Python Environments"
+    onlyIf {
+        !file(buildDir).exists()
+    }
+    doLast {
+        println "Creating build directory:" + buildDir.getPath()
+        buildDir.mkdir()
+    }
+}
+
+// Make sure that a build directory exists before attempting to download
+// the Python environment in the preBuild step. This will fail if the directory
+// doesn't exist. This is an issue with the gradle-python-envs plugin:
+// https://github.com/JetBrains/gradle-python-envs/issues/26
+preBuild.dependsOn(createBuildDir)
+preBuild.finalizedBy("build_envs")
+
+// Generate the Metrics API
+android.applicationVariants.all { variant ->
+    def sourceOutputDir =  "$buildDir/telemetry/src/${variant.name}/kotlin"
+    def generateKotlinAPI = task("generateMetricsSourceFor${variant.name.capitalize()}", type: Exec) {
+        description = "Generate the Kotlin code for the Metrics API"
+
+        workingDir  rootDir
+        // Note that the command line is OS dependant: on linux/mac is Miniconda3/bin/python.
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            commandLine "$buildDir/bootstrap/Miniconda3/python"
+        } else {
+            commandLine "$buildDir/bootstrap/Miniconda3/bin/python"
+        }
+        // TODO use the published glean_parsers package once bug 1497800 lands
+        // The path to the parser needs to be hardcoded now that we're using a stubbed parser.
+        args "$rootDir/components/service/glean/scripts/parser.py"
+        args "$projectDir/metrics.yaml"
+        args "$sourceOutputDir"
+
+        // Only show the output if something went wrong.
+        ignoreExitValue = true
+        standardOutput = new ByteArrayOutputStream()
+        errorOutput = standardOutput
+        doLast {
+            if (execResult.exitValue != 0) {
+                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+            }
+        }
+    }
+
+    // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
+    // searching for "registerJavaGeneratingTask", and finding
+    // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
+    // The added directory doesn't appear in the paths listed by the
+    // `sourceSets` task, for reasons unknown.
+    variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
+}
