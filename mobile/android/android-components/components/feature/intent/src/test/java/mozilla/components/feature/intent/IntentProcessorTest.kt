@@ -148,7 +148,7 @@ class IntentProcessorTest {
         `when`(intent.dataString).thenReturn("http://mozilla.org")
 
         handler.process(intent)
-        verify(sessionManager).add(anySession(), eq(false), eq(null))
+        verify(sessionManager).add(anySession(), eq(false), eq(null), eq(null))
         verify(engineSession).loadUrl("http://mozilla.org")
 
         val customTabSession = sessionManager.all[0]
