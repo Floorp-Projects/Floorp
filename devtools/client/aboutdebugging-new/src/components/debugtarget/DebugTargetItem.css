@@ -16,16 +16,14 @@
  */
 .debug-target-item {
   display: grid;
-  grid-template-columns: calc(var(--base-distance) * 10) auto max-content;
+  grid-template-columns: 54px auto max-content;
   grid-template-rows: auto auto;
-  grid-row-gap: calc(var(--base-distance) * 5);
-  grid-column-gap: calc(var(--base-distance) * 2);
+  grid-row-gap: 20px;
 }
 
 .debug-target-item__icon {
   height: 36px;
   width: 36px;
-  justify-self: center;
 }
 
 .debug-target-item__info {

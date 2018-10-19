@@ -25,11 +25,11 @@ class ConnectSection extends PureComponent {
       },
       dom.h2(
         {
-          className: "alt-subheading",
+          className: "page__section__title",
         },
         dom.img(
           {
-            className: "alt-subheading__icon",
+            className: "page__section__icon",
             src: this.props.icon,
           }
         ),

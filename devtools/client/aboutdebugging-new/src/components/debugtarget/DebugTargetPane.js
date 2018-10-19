@@ -48,7 +48,7 @@ class DebugTargetPane extends PureComponent {
         className: "js-debug-target-pane",
       },
       dom.h2(
-        { className: "main-subheading" },
+        {},
         dom.a(
           {
             className: "debug-target-pane__title js-debug-target-pane-title" +
