@@ -98,6 +98,10 @@ private:
   // recorded events cannot be accessed.
   bool mDivergedFromRecording;
 
+  // Whether this thread should diverge from the recording at the next
+  // opportunity. This can be set from any thread.
+  Atomic<bool, SequentiallyConsistent, Behavior::DontPreserve> mShouldDivergeFromRecording;
+
   // Start routine and argument which the thread is currently executing. This
   // is cleared after the routine finishes and another start routine may be
   // assigned to the thread. mNeedsJoin specifies whether the thread must be
@@ -130,6 +134,7 @@ private:
   // and whether the callback has been invoked yet while the main thread is
   // waiting for threads to become idle. Protected by the thread monitor.
   std::function<void()> mUnrecordedWaitCallback;
+  bool mUnrecordedWaitOnlyWhenDiverged;
   bool mUnrecordedWaitNotified;
 
 public:
@@ -176,6 +181,26 @@ public:
     mDivergedFromRecording = true;
   }
   bool HasDivergedFromRecording() const {
+    return mDivergedFromRecording;
+  }
+
+  // Mark this thread as needing to diverge from the recording soon, and wake
+  // it up in case it can make progress now. The mShouldDivergeFromRecording
+  // flag is separate from mDivergedFromRecording so that the thread can only
+  // begin diverging from the recording at calls to MaybeDivergeFromRecording.
+  void SetShouldDivergeFromRecording() {
+    MOZ_RELEASE_ASSERT(CurrentIsMainThread());
+    mShouldDivergeFromRecording = true;
+    Notify(mId);
+  }
+  bool WillDivergeFromRecordingSoon() {
+    MOZ_RELEASE_ASSERT(CurrentIsMainThread());
+    return mShouldDivergeFromRecording;
+  }
+  bool MaybeDivergeFromRecording() {
+    if (mShouldDivergeFromRecording) {
+      mDivergedFromRecording = true;
+    }
     return mDivergedFromRecording;
   }
 
@@ -253,7 +278,8 @@ public:
   static void WaitForeverNoIdle();
 
   // See RecordReplay.h.
-  void NotifyUnrecordedWait(const std::function<void()>& aCallback);
+  void NotifyUnrecordedWait(const std::function<void()>& aCallback,
+                            bool aOnlyWhenDiverged);
   static void MaybeWaitForCheckpointSave();
 
   // Wait for all other threads to enter the idle state necessary for saving
@@ -287,6 +313,60 @@ public:
     if (!mPassedThrough) {
       mThread->SetPassThrough(false);
     }
+  }
+};
+
+// Mark a region of code where a thread's event stream can be accessed.
+// This class has several properties:
+//
+// - When recording, all writes to the thread's event stream occur atomically
+//   within the class: the end of the stream cannot be hit at an intermediate
+//   point.
+//
+// - When replaying, this checks for the end of the stream, and blocks the
+//   thread if necessary.
+//
+// - When replaying, this is a point where the thread can begin diverging from
+//   the recording. Checks for divergence should occur after the constructor
+//   finishes.
+class MOZ_RAII RecordingEventSection
+{
+  Thread* mThread;
+
+public:
+  explicit RecordingEventSection(Thread* aThread)
+    : mThread(aThread)
+  {
+    if (!aThread || !aThread->CanAccessRecording()) {
+      return;
+    }
+    if (IsRecording()) {
+      MOZ_RELEASE_ASSERT(!aThread->Events().mInRecordingEventSection);
+      aThread->Events().mFile->mStreamLock.ReadLock();
+      aThread->Events().mInRecordingEventSection = true;
+    } else {
+      while (!aThread->MaybeDivergeFromRecording() && aThread->Events().AtEnd()) {
+        HitEndOfRecording();
+      }
+    }
+  }
+
+  ~RecordingEventSection() {
+    if (!mThread || !mThread->CanAccessRecording()) {
+      return;
+    }
+    if (IsRecording()) {
+      mThread->Events().mFile->mStreamLock.ReadUnlock();
+      mThread->Events().mInRecordingEventSection = false;
+    }
+  }
+
+  bool CanAccessEvents() {
+    if (!mThread || mThread->PassThroughEvents() || mThread->HasDivergedFromRecording()) {
+      return false;
+    }
+    MOZ_RELEASE_ASSERT(mThread->CanAccessRecording());
+    return true;
   }
 };
 

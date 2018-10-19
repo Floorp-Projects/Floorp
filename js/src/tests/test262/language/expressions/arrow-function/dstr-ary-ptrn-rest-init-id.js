@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/arrow-function.template
 /*---
-description: Reset element (identifier) does not support initializer (arrow function expression)
+description: Rest element (identifier) does not support initializer (arrow function expression)
 esid: sec-arrow-function-definitions-runtime-semantics-evaluation
 es6id: 14.2.16
 features: [destructuring-binding]

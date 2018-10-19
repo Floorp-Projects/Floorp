@@ -1,11 +1,11 @@
 // |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
-// - src/class-fields/redeclaration-symbol.case
-// - src/class-fields/default/cls-expr.template
+// - src/class-elements/redeclaration-symbol.case
+// - src/class-elements/default/cls-expr.template
 /*---
 description: Redeclaration of public fields with the same name (field definitions in a class expression)
 esid: prod-FieldDefinition
-features: [class, class-fields-public]
+features: [class-fields-public, class]
 flags: [generated]
 includes: [propertyHelper.js, compareArray.js]
 info: |

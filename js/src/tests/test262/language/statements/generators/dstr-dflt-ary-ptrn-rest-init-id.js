@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/gen-func-decl-dflt.template
 /*---
-description: Reset element (identifier) does not support initializer (generator function declaration (default parameter))
+description: Rest element (identifier) does not support initializer (generator function declaration (default parameter))
 esid: sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
 es6id: 14.4.12
 features: [generators, destructuring-binding, default-parameters]

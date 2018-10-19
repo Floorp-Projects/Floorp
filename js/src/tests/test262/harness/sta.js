@@ -6,8 +6,6 @@ description: >
 
         Test262Error
         $ERROR
-
-includes: [sta.js]
 ---*/
 
 assert(typeof Test262Error === "function");

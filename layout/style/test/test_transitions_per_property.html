@@ -458,11 +458,11 @@ var transformTests = [
     expected_uncomputed: 'rotate(-22.5deg) translate(5%, 5%) rotate(22.5deg)',
     round_error_ok: true },
   // test percent translation using matrix decomposition
-  { start: 'rotate(45deg) rotate(-45deg)',
+  { start: 'matrix(1, 0, 0, 1, 0, 0)',
     end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
     expected: 'matrix(1, 0, 0, 1, -2.5, 15)',
     round_error_ok: true },
-  { start: 'rotate(45deg) rotate(-45deg)',
+  { start: 'matrix(1, 0, 0, 1, 0, 0)',
     end: 'rotate(-90deg) translate(20%, 20%) rotate(90deg)',
     expected: 'matrix(1, 0, 0, 1, 2.5, -15)',
     round_error_ok: true },

@@ -356,21 +356,21 @@ function checkMiscPrefixed(opcode, expect_failure) {
                 [funcBody(
                     {locals:[],
                      body:[0x41, 0x0, 0x41, 0x0, 0x41, 0x0, // 3 x const.i32 0
-                           MiscPrefix, opcode]})])]);
+                           MiscPrefix, ...opcode]})])]);
     if (expect_failure) {
         assertErrorMessage(() => new WebAssembly.Module(binary),
                            WebAssembly.CompileError, /unrecognized opcode/);
     } else {
-        assertEq(true, WebAssembly.validate(binary));
+        assertEq(WebAssembly.validate(binary), true);
     }
 }
 
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill opcode encodings
 
-checkMiscPrefixed(0x0a, false); // memory.copy
-checkMiscPrefixed(0x0b, false); // memory.fill
-checkMiscPrefixed(0x0f, true);  // table.copy+1, which is currently unassigned
+checkMiscPrefixed([0x0a, 0x00], false); // memory.copy, flags=0
+checkMiscPrefixed([0x0b, 0x00], false); // memory.fill, flags=0
+checkMiscPrefixed([0x0f], true);        // table.copy+1, which is currently unassigned
 
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill arguments

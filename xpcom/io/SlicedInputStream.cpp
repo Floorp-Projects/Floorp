@@ -26,6 +26,8 @@ NS_INTERFACE_MAP_BEGIN(SlicedInputStream)
                                      mWeakIPCSerializableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream,
                                      mWeakSeekableInputStream || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITellableStream,
+                                     mWeakTellableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream,
                                      mWeakAsyncInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback,
@@ -44,6 +46,7 @@ SlicedInputStream::SlicedInputStream(already_AddRefed<nsIInputStream> aInputStre
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
+  , mWeakTellableInputStream(nullptr)
   , mWeakAsyncInputStream(nullptr)
   , mWeakInputStreamLength(nullptr)
   , mWeakAsyncInputStreamLength(nullptr)
@@ -63,6 +66,7 @@ SlicedInputStream::SlicedInputStream()
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
+  , mWeakTellableInputStream(nullptr)
   , mWeakAsyncInputStream(nullptr)
   , mStart(0)
   , mLength(0)
@@ -100,6 +104,12 @@ SlicedInputStream::SetSourceStream(already_AddRefed<nsIInputStream> aInputStream
     do_QueryInterface(mInputStream);
   if (seekableStream && SameCOMIdentity(mInputStream, seekableStream)) {
     mWeakSeekableInputStream = seekableStream;
+  }
+
+  nsCOMPtr<nsITellableStream> tellableStream =
+    do_QueryInterface(mInputStream);
+  if (tellableStream && SameCOMIdentity(mInputStream, tellableStream)) {
+    mWeakTellableInputStream = tellableStream;
   }
 
   nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
@@ -544,14 +554,26 @@ SlicedInputStream::Seek(int32_t aWhence, int64_t aOffset)
 }
 
 NS_IMETHODIMP
-SlicedInputStream::Tell(int64_t *aResult)
+SlicedInputStream::SetEOF()
 {
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakSeekableInputStream);
 
+  mClosed = true;
+  return mWeakSeekableInputStream->SetEOF();
+}
+
+// nsITellableStream
+
+NS_IMETHODIMP
+SlicedInputStream::Tell(int64_t *aResult)
+{
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakTellableInputStream);
+
   int64_t tell = 0;
 
-  nsresult rv = mWeakSeekableInputStream->Tell(&tell);
+  nsresult rv = mWeakTellableInputStream->Tell(&tell);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -567,16 +589,6 @@ SlicedInputStream::Tell(int64_t *aResult)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-SlicedInputStream::SetEOF()
-{
-  NS_ENSURE_STATE(mInputStream);
-  NS_ENSURE_STATE(mWeakSeekableInputStream);
-
-  mClosed = true;
-  return mWeakSeekableInputStream->SetEOF();
 }
 
 // nsIInputStreamLength

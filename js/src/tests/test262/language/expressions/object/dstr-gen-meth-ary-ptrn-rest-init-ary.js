@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-ary.case
 // - src/dstr-binding/default/gen-meth.template
 /*---
-description: Reset element (nested array pattern) does not support initializer (generator method)
+description: Rest element (nested array pattern) does not support initializer (generator method)
 esid: sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
 es6id: 14.4.13
 features: [generators, destructuring-binding]

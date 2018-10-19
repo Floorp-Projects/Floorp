@@ -1,12 +1,10 @@
 // |reftest| skip error:SyntaxError -- class-fields-public is not supported
-// This file was procedurally generated from the following sources:
-// - src/class-fields/propname-constructor.case
-// - src/class-fields/propname-error/cls-expr-literal-name.template
+// Copyright (C) 2017 Valerie Young. All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: class fields forbid PropName 'constructor' (early error -- PropName of IdentifierName is forbidden)
 esid: sec-class-definitions-static-semantics-early-errors
 features: [class, class-fields-public]
-flags: [generated]
 negative:
   phase: parse
   type: SyntaxError
@@ -15,7 +13,7 @@ info: |
     LiteralPropertyName : IdentifierName
       Return StringValue of IdentifierName.
 
-    
+
     // This test file tests the following early error:
     Static Semantics: Early Errors
 

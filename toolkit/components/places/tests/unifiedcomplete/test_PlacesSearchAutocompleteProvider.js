@@ -18,80 +18,104 @@ add_task(async function() {
 
 add_task(async function search_engine_match() {
   let engine = await promiseDefaultSearchEngine();
-  let token = engine.getResultDomain();
-  let match = await PlacesSearchAutocompleteProvider.findMatchByToken(token.substr(0, 1));
-  Assert.equal(match.url, engine.searchForm);
-  Assert.equal(match.engineName, engine.name);
-  Assert.equal(match.iconUrl, engine.iconURI ? engine.iconURI.spec : null);
+  let domain = engine.getResultDomain();
+  let token = domain.substr(0, 1);
+  let matchedEngine =
+    await PlacesSearchAutocompleteProvider.engineForDomainPrefix(token);
+  Assert.equal(matchedEngine, engine);
 });
 
 add_task(async function no_match() {
-  Assert.equal(null, await PlacesSearchAutocompleteProvider.findMatchByToken("test"));
+  Assert.equal(
+    null,
+    await PlacesSearchAutocompleteProvider.engineForDomainPrefix("test")
+  );
 });
 
 add_task(async function hide_search_engine_nomatch() {
   let engine = await promiseDefaultSearchEngine();
-  let token = engine.getResultDomain();
+  let domain = engine.getResultDomain();
+  let token = domain.substr(0, 1);
   let promiseTopic = promiseSearchTopic("engine-changed");
   Services.search.removeEngine(engine);
   await promiseTopic;
   Assert.ok(engine.hidden);
-  let match = await PlacesSearchAutocompleteProvider.findMatchByToken(token.substr(0, 1));
-  Assert.ok(!match || match.token != token);
+  let matchedEngine =
+    await PlacesSearchAutocompleteProvider.engineForDomainPrefix(token);
+  Assert.ok(!matchedEngine || matchedEngine.getResultDomain() != domain);
 });
 
 add_task(async function add_search_engine_match() {
   let promiseTopic = promiseSearchTopic("engine-added");
-  Assert.equal(null, await PlacesSearchAutocompleteProvider.findMatchByToken("bacon"));
+  Assert.equal(
+    null,
+    await PlacesSearchAutocompleteProvider.engineForDomainPrefix("bacon")
+  );
   Services.search.addEngineWithDetails("bacon", "", "pork", "Search Bacon",
                                        "GET", "http://www.bacon.moz/?search={searchTerms}");
   await promiseTopic;
-  let match = await PlacesSearchAutocompleteProvider.findMatchByToken("bacon");
-  Assert.equal(match.url, "http://www.bacon.moz");
-  Assert.equal(match.engineName, "bacon");
-  Assert.equal(match.iconUrl, null);
+  let matchedEngine =
+    await PlacesSearchAutocompleteProvider.engineForDomainPrefix("bacon");
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.searchForm, "http://www.bacon.moz");
+  Assert.equal(matchedEngine.name, "bacon");
+  Assert.equal(matchedEngine.iconURI, null);
 });
 
 add_task(async function test_aliased_search_engine_match() {
-  Assert.equal(null, await PlacesSearchAutocompleteProvider.findMatchByAlias("sober"));
+  Assert.equal(
+    null,
+    await PlacesSearchAutocompleteProvider.engineForAlias("sober")
+  );
   // Lower case
-  let match = await PlacesSearchAutocompleteProvider.findMatchByAlias("pork");
-  Assert.equal(match.engineName, "bacon");
-  Assert.equal(match.aliases[0], "pork");
-  Assert.equal(match.iconUrl, null);
+  let matchedEngine =
+    await PlacesSearchAutocompleteProvider.engineForAlias("pork");
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.name, "bacon");
+  Assert.equal(matchedEngine.alias, "pork");
+  Assert.equal(matchedEngine.iconURI, null);
   // Upper case
-  let match1 = await PlacesSearchAutocompleteProvider.findMatchByAlias("PORK");
-  Assert.equal(match1.engineName, "bacon");
-  Assert.equal(match1.aliases[0], "pork");
-  Assert.equal(match1.iconUrl, null);
+  matchedEngine = await PlacesSearchAutocompleteProvider.engineForAlias("PORK");
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.name, "bacon");
+  Assert.equal(matchedEngine.alias, "pork");
+  Assert.equal(matchedEngine.iconURI, null);
   // Cap case
-  let match2 = await PlacesSearchAutocompleteProvider.findMatchByAlias("Pork");
-  Assert.equal(match2.engineName, "bacon");
-  Assert.equal(match2.aliases[0], "pork");
-  Assert.equal(match2.iconUrl, null);
+  matchedEngine = await PlacesSearchAutocompleteProvider.engineForAlias("Pork");
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.name, "bacon");
+  Assert.equal(matchedEngine.alias, "pork");
+  Assert.equal(matchedEngine.iconURI, null);
 });
 
 add_task(async function test_aliased_search_engine_match_upper_case_alias() {
   let promiseTopic = promiseSearchTopic("engine-added");
-  Assert.equal(null, await PlacesSearchAutocompleteProvider.findMatchByToken("patch"));
+  Assert.equal(
+    null,
+    await PlacesSearchAutocompleteProvider.engineForDomainPrefix("patch")
+  );
   Services.search.addEngineWithDetails("patch", "", "PR", "Search Patch",
                                        "GET", "http://www.patch.moz/?search={searchTerms}");
   await promiseTopic;
   // lower case
-  let match = await PlacesSearchAutocompleteProvider.findMatchByAlias("pr");
-  Assert.equal(match.engineName, "patch");
-  Assert.equal(match.aliases[0], "PR");
-  Assert.equal(match.iconUrl, null);
+  let matchedEngine =
+    await PlacesSearchAutocompleteProvider.engineForAlias("pr");
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.name, "patch");
+  Assert.equal(matchedEngine.alias, "PR");
+  Assert.equal(matchedEngine.iconURI, null);
   // Upper case
-  let match1 = await PlacesSearchAutocompleteProvider.findMatchByAlias("PR");
-  Assert.equal(match1.engineName, "patch");
-  Assert.equal(match1.aliases[0], "PR");
-  Assert.equal(match1.iconUrl, null);
+  matchedEngine = await PlacesSearchAutocompleteProvider.engineForAlias("PR");
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.name, "patch");
+  Assert.equal(matchedEngine.alias, "PR");
+  Assert.equal(matchedEngine.iconURI, null);
   // Cap case
-  let match2 = await PlacesSearchAutocompleteProvider.findMatchByAlias("Pr");
-  Assert.equal(match2.engineName, "patch");
-  Assert.equal(match2.aliases[0], "PR");
-  Assert.equal(match2.iconUrl, null);
+  matchedEngine = await PlacesSearchAutocompleteProvider.engineForAlias("Pr");
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.name, "patch");
+  Assert.equal(matchedEngine.alias, "PR");
+  Assert.equal(matchedEngine.iconURI, null);
 });
 
 add_task(async function remove_search_engine_nomatch() {
@@ -99,7 +123,10 @@ add_task(async function remove_search_engine_nomatch() {
   let promiseTopic = promiseSearchTopic("engine-removed");
   Services.search.removeEngine(engine);
   await promiseTopic;
-  Assert.equal(null, await PlacesSearchAutocompleteProvider.findMatchByToken("bacon"));
+  Assert.equal(
+    null,
+    await PlacesSearchAutocompleteProvider.engineForDomainPrefix("bacon")
+  );
 });
 
 add_task(async function test_parseSubmissionURL_basic() {
@@ -117,8 +144,10 @@ add_task(async function test_parseSubmissionURL_basic() {
 });
 
 add_task(async function test_builtin_aliased_search_engine_match() {
-  let match = await PlacesSearchAutocompleteProvider.findMatchByAlias("@google");
-  Assert.equal(match.engineName, "Google");
+  let matchedEngine =
+    await PlacesSearchAutocompleteProvider.engineForAlias("@google");
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.name, "Google");
 });
 
 function promiseDefaultSearchEngine() {

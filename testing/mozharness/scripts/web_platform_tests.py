@@ -230,8 +230,14 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd += ["--device-serial=%s" % self.device_serial]
             cmd += ["--package-name=%s" % self.query_package_name()]
 
-        if not sys.platform.startswith("linux"):
+        if sys.platform == "darwin":
             cmd += ["--exclude=css"]
+
+        if mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1":
+            # On Windows 7 --install-fonts fails, so fall back to a Firefox-specific codepath
+            self._install_fonts()
+        else:
+            cmd += ["--install-fonts"]
 
         for test_type in test_types:
             cmd.append("--test-type=%s" % test_type)
@@ -328,8 +334,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
     def run_tests(self):
         dirs = self.query_abs_dirs()
-
-        self._install_fonts()
 
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,

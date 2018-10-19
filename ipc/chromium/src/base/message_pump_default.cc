@@ -60,6 +60,19 @@ void MessagePumpDefault::Run(Delegate* delegate) {
       AUTO_PROFILER_LABEL("MessagePumpDefault::Run:Wait", IDLE);
       {
         AUTO_PROFILER_THREAD_SLEEP;
+        // Some threads operating a message pump (i.e. the compositor thread)
+        // can diverge from Web Replay recordings, after which the thread needs
+        // to be explicitly notified in order to coordinate with the
+        // record/replay checkpoint system.
+        if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+          // Workaround static analysis. Message pumps for which the lambda
+          // below might be called will not be destroyed.
+          void* thiz = this;
+
+          mozilla::recordreplay::MaybeWaitForCheckpointSave();
+          mozilla::recordreplay::NotifyUnrecordedWait([=]() { ((MessagePumpDefault*)thiz)->ScheduleWork(); },
+                                                      /* aOnlyWhenDiverged = */ true);
+        }
         event_.Wait();
       }
     } else {

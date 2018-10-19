@@ -49,7 +49,7 @@ class WindowsNetworkFunctionsWrapper : nsISupports
   );
 
   protected:
-    ~WindowsNetworkFunctionsWrapper(){};
+    virtual ~WindowsNetworkFunctionsWrapper(){};
 
 };
 

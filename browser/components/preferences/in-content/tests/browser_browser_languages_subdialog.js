@@ -4,9 +4,11 @@
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+
 AddonTestUtils.initMochitest(this);
 
 const BROWSER_LANGUAGES_URL = "chrome://browser/content/preferences/browserLanguages.xul";
+const DICTIONARY_ID_PL = "pl@dictionaries.addons.mozilla.org";
 
 function getManifestData(locale) {
   return {
@@ -74,6 +76,45 @@ async function createLanguageToolsFile() {
   let files = {[filename]: {results}};
   let tempdir = AddonTestUtils.tempDir.clone();
   let dir = await AddonTestUtils.promiseWriteFilesToDir(tempdir.path, files);
+  dir.append(filename);
+
+  return dir;
+}
+
+async function createDictionaryBrowseResults() {
+  let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+  let dictionaryPath = testDir + "/addons/pl-dictionary.xpi";
+  let filename = "dictionaries.json";
+  let response = {
+    page_size: 25,
+    page_count: 1,
+    count: 1,
+    results: [{
+      current_version: {
+        id: 1823648,
+        compatibility: {
+          firefox: {max: "9999", min: "4.0"},
+        },
+        files: [{
+          platform: "all",
+          url: dictionaryPath,
+        }],
+        version: "1.0.20160228",
+      },
+      default_locale: "pl",
+      description: "Polish spell-check",
+      guid: DICTIONARY_ID_PL,
+      name: "Polish Dictionary",
+      slug: "polish-spellchecker-dictionary",
+      status: "public",
+      summary: "Polish dictionary",
+      type: "dictionary",
+    }],
+  };
+
+  let files = {[filename]: response};
+  let dir = await AddonTestUtils.promiseWriteFilesToDir(
+    AddonTestUtils.tempDir.path, files);
   dir.append(filename);
 
   return dir;
@@ -245,12 +286,16 @@ add_task(async function testInstallFromAMO() {
 
   let langpacksFile = await createLanguageToolsFile();
   let langpacksUrl = Services.io.newFileURI(langpacksFile).spec;
+  let dictionaryBrowseFile = await createDictionaryBrowseResults();
+  let browseApiEndpoint = Services.io.newFileURI(dictionaryBrowseFile).spec;
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.locale.requested", "en-US"],
       ["extensions.getAddons.langpacks.url", langpacksUrl],
       ["extensions.langpacks.signatures.required", false],
+      ["extensions.getAddons.get.url", browseApiEndpoint],
     ],
   });
 
@@ -277,6 +322,10 @@ add_task(async function testInstallFromAMO() {
   is(Services.locale.availableLocales.join(","),
      "en-US", "There is only one installed locale");
 
+  // Verify that there are no extra dictionaries.
+  let dicts = await AddonManager.getAddonsByTypes(["dictionary"]);
+  is(dicts.length, 0, "There are no installed dictionaries");
+
   // Add Polish, this will install the langpack.
   requestLocale("pl", available, dialogDoc);
 
@@ -293,10 +342,21 @@ add_task(async function testInstallFromAMO() {
   is(Services.locale.availableLocales.sort().join(","),
      "en-US,pl", "Polish is now installed");
 
-  // Uninstall the langpack.
-  langpacks = await AddonManager.getAddonsByTypes(["locale"]);
-  is(langpacks.length, 1, "There is one langpacks installed");
-  await Promise.all(langpacks.map(pack => pack.uninstall()));
+  await BrowserTestUtils.waitForCondition(async () => {
+    let newDicts = await AddonManager.getAddonsByTypes(["dictionary"]);
+    let done = newDicts.length != 0;
+
+    if (done) {
+      is(newDicts[0].id, DICTIONARY_ID_PL, "The polish dictionary was installed");
+    }
+
+    return done;
+  });
+
+  // Uninstall the langpack and dictionary.
+  let installs = await AddonManager.getAddonsByTypes(["locale", "dictionary"]);
+  is(installs.length, 2, "There is one langpack and one dictionary installed");
+  await Promise.all(installs.map(item => item.uninstall()));
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
