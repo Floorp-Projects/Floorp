@@ -83,9 +83,8 @@ class GeckoWebViewProvider : IWebViewProvider {
         if (geckoRuntime == null) {
             val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
             runtimeSettingsBuilder.useContentProcessHint(true)
-            // Safe browsing is not ready #3309
-            runtimeSettingsBuilder.blockMalware(true)
-            runtimeSettingsBuilder.blockPhishing(true)
+            runtimeSettingsBuilder.blockMalware(Settings.getInstance(context).shouldUseSafeBrowsing())
+            runtimeSettingsBuilder.blockPhishing(Settings.getInstance(context).shouldUseSafeBrowsing())
             runtimeSettingsBuilder.nativeCrashReportingEnabled(false)
             runtimeSettingsBuilder.javaCrashReportingEnabled(false)
             geckoRuntime =
@@ -256,6 +255,12 @@ class GeckoWebViewProvider : IWebViewProvider {
                         GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
                     }
                     geckoRuntime!!.settings.cookieBehavior = cookiesValue
+                }
+                context.getString(R.string.pref_key_safe_browsing) -> {
+                    val shouldUseSafeBrowsing =
+                        Settings.getInstance(context).shouldUseSafeBrowsing()
+                    geckoRuntime!!.settings.blockMalware = shouldUseSafeBrowsing
+                    geckoRuntime!!.settings.blockPhishing = shouldUseSafeBrowsing
                 }
                 else -> return
             }

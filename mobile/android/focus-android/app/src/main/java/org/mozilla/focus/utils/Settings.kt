@@ -124,6 +124,11 @@ class Settings private constructor(context: Context) {
                     getPreferenceKey(R.string.pref_key_privacy_block_ads),
                     true)
 
+    fun shouldUseSafeBrowsing() =
+        preferences.getBoolean(
+            getPreferenceKey(R.string.pref_key_safe_browsing),
+            true)
+
     fun shouldBlockAnalyticTrackers() =
             preferences.getBoolean(
                     getPreferenceKey(R.string.pref_key_privacy_block_analytics),

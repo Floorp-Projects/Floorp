@@ -761,4 +761,10 @@ be temporary, and you can try again later.</li>
     <string name="preference_autocomplete_preinstalled_summary">Enable to have %1$s autocomplete over 450 popular URLs in the address bar.</string>
     <string name="preference_category_autocomplete_custom_urls">Custom URLs</string>
     <string name="preference_autocomplete_subitem_customlist">Custom URLs</string>
+
+    <!-- Preference category for safe browsing settings -->
+    <string name="preference_category_safe_browsing">Block dangerous and deceptive content</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing">Check webpages for phishing, unwanted software and malware.</string>
 </resources>

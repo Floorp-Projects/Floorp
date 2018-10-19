@@ -55,6 +55,12 @@ object SupportUtils {
         return "https://support.mozilla.org/1/mobile/$appVersion/$osTarget/$langTag/$escapedTopic"
     }
 
+    // For some reason this URL has a different format than the other SUMO URLs
+    fun getSafeBrowsingURL(): String {
+        val langTag = Locales.getLanguageTag(Locale.getDefault())
+        return "https://support.mozilla.org/$langTag/kb/how-does-phishing-and-malware-protection-work"
+    }
+
     private fun getEncodedTopicUTF8(topic: String): String {
         try {
             return URLEncoder.encode(topic, "UTF-8")
