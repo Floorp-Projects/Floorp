@@ -159,6 +159,9 @@ class SessionManager(
 
         val selectionUpdated = recalculateSelectionIndex(indexToRemove, selectParentIfExists, session.parentId)
 
+        values.filter { it.parentId == session.id }
+            .forEach { child -> child.parentId = session.parentId }
+
         notifyObservers { onSessionRemoved(session) }
 
         // NB: we're not explicitly calling notifyObservers here, since adding a session when none

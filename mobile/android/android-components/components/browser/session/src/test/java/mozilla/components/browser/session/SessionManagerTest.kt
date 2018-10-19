@@ -649,4 +649,44 @@ class SessionManagerTest {
         assertEquals(parent02, manager.sessions[5]) // └── parent 2
         assertEquals(child003, manager.sessions[6]) //     └── child 3
     }
+
+    @Test
+    fun `SessionManager updates parent id of children after updating parent`() {
+        val session1 = Session("https://www.firefox.com")
+        val session2 = Session("https://developer.mozilla.org/en-US/")
+        val session3 = Session("https://www.mozilla.org/en-US/internet-health/")
+        val session4 = Session("https://www.mozilla.org/en-US/technology/")
+
+        val manager = SessionManager(mock())
+        manager.add(session1)
+        manager.add(session2, parent = session1)
+        manager.add(session3, parent = session2)
+        manager.add(session4, parent = session3)
+
+        // session 1 <- session2 <- session3 <- session4
+        assertNull(session1.parentId)
+        assertEquals(session1.id, session2.parentId)
+        assertEquals(session2.id, session3.parentId)
+        assertEquals(session3.id, session4.parentId)
+
+        manager.remove(session3)
+
+        assertEquals(session1, manager.sessions[0])
+        assertEquals(session2, manager.sessions[1])
+        assertEquals(session4, manager.sessions[2])
+
+        // session1 <- session2 <- session4
+        assertNull(session1.parentId)
+        assertEquals(session1.id, session2.parentId)
+        assertEquals(session2.id, session4.parentId)
+
+        manager.remove(session1)
+
+        assertEquals(session2, manager.sessions[0])
+        assertEquals(session4, manager.sessions[1])
+
+        // session2 <- session4
+        assertNull(session2.parentId)
+        assertEquals(session2.id, session4.parentId)
+    }
 }
