@@ -250,7 +250,8 @@ class Message extends Component {
         frame,
         onClick: onFrameClick,
         showEmptyPathAsHost: true,
-        sourceMapService: serviceContainer ? serviceContainer.sourceMapService : undefined,
+        sourceMapService:
+          serviceContainer ? serviceContainer.sourceMapService : undefined,
       }) : null
     );
 
