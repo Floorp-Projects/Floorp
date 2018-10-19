@@ -16,7 +16,10 @@
 #include "ipc/Channel.h"
 #include "mac/handler/exception_handler.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/VsyncDispatcher.h"
 
@@ -63,6 +66,9 @@ static IntroductionMessage* gIntroductionMessage;
 
 // When recording, whether developer tools server code runs in the middleman.
 static bool gDebuggerRunsInMiddleman;
+
+// Any response received to the last MiddlemanCallRequest message.
+static MiddlemanCallResponseMessage* gCallResponseMessage;
 
 // Processing routine for incoming channel messages.
 static void
@@ -159,6 +165,14 @@ ChannelMessageHandler(Message* aMsg)
       });
     break;
   }
+  case MessageType::MiddlemanCallResponse: {
+    MonitorAutoLock lock(*gMonitor);
+    MOZ_RELEASE_ASSERT(!gCallResponseMessage);
+    gCallResponseMessage = (MiddlemanCallResponseMessage*) aMsg;
+    aMsg = nullptr; // Avoid freeing the message below.
+    gMonitor->NotifyAll();
+    break;
+  }
   default:
     MOZ_CRASH();
   }
@@ -187,6 +201,7 @@ ListenForCheckpointThreadMain(void*)
   }
 }
 
+// Shared memory block for graphics data.
 void* gGraphicsShmem;
 
 void
@@ -325,9 +340,11 @@ DebuggerRunsInMiddleman()
 }
 
 void
-MaybeCreateInitialCheckpoint()
+CreateCheckpoint()
 {
-  NewCheckpoint(/* aTemporary = */ false);
+  if (!HasDivergedFromRecording()) {
+    NewCheckpoint(/* aTemporary = */ false);
+  }
 }
 
 void
@@ -398,7 +415,7 @@ SetVsyncObserver(VsyncObserver* aObserver)
   gVsyncObserver = aObserver;
 }
 
-void
+static void
 NotifyVsyncObserver()
 {
   if (gVsyncObserver) {
@@ -406,30 +423,68 @@ NotifyVsyncObserver()
   }
 }
 
+// Whether an update has been sent to the compositor for a normal paint, and we
+// haven't reached PaintFromMainThread yet. This is used to preserve the
+// invariant that there can be at most one paint performed between two
+// checkpoints, other than repaints triggered by the debugger.
+static bool gHasActivePaint;
+
+bool
+OnVsync()
+{
+  // In the repainting stress mode, we create a new checkpoint on every vsync
+  // message received from the UI process. When we notify the parent about the
+  // new checkpoint it will trigger a repaint to make sure that all layout and
+  // painting activity can occur when diverged from the recording.
+  if (parent::InRepaintStressMode()) {
+    CreateCheckpoint();
+  }
+
+  // After a paint starts, ignore incoming vsyncs until the paint completes.
+  return !gHasActivePaint;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Painting
 ///////////////////////////////////////////////////////////////////////////////
 
-// Graphics memory is only written on the compositor thread and read on the
-// main thread and by the middleman. The gPendingPaint flag is used to
-// synchronize access, so that data is not read until the paint has completed.
-static Maybe<PaintMessage> gPaintMessage;
-static bool gPendingPaint;
-
-// Target buffer for the draw target created by the child process widget.
+// Target buffer for the draw target created by the child process widget, which
+// the compositor thread writes to.
 static void* gDrawTargetBuffer;
 static size_t gDrawTargetBufferSize;
+
+// Dimensions of the last paint which the compositor performed.
+static size_t gPaintWidth, gPaintHeight;
+
+// How many updates have been sent to the compositor thread and haven't been
+// processed yet. This can briefly become negative if the main thread sends an
+// update and the compositor processes it before the main thread reaches
+// NotifyPaintStart. Outside of this window, the compositor can only write to
+// gDrawTargetBuffer or update gPaintWidth/gPaintHeight if this is non-zero.
+static Atomic<int32_t, SequentiallyConsistent, Behavior::DontPreserve> gNumPendingPaints;
+
+// ID of the compositor thread.
+static Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve> gCompositorThreadId;
 
 already_AddRefed<gfx::DrawTarget>
 DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
 {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
 
+  // Keep track of the compositor thread ID.
+  size_t threadId = Thread::Current()->Id();
+  if (gCompositorThreadId) {
+    MOZ_RELEASE_ASSERT(threadId == gCompositorThreadId);
+  } else {
+    gCompositorThreadId = threadId;
+  }
+
   if (aSize.IsEmpty()) {
     return nullptr;
   }
 
-  gPaintMessage = Some(PaintMessage(aSize.width, aSize.height));
+  gPaintWidth = aSize.width;
+  gPaintHeight = aSize.height;
 
   gfx::IntSize size(aSize.width, aSize.height);
   size_t bufferSize = layers::ImageDataSerializer::ComputeRGBBufferSize(size, gSurfaceFormat);
@@ -458,42 +513,135 @@ NotifyPaintStart()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  NewCheckpoint(/* aTemporary = */ false);
+  // A new paint cannot be triggered until the last one finishes and has been
+  // sent to the middleman.
+  MOZ_RELEASE_ASSERT(HasDivergedFromRecording() || !gHasActivePaint);
 
-  gPendingPaint = true;
+  gNumPendingPaints++;
+  gHasActivePaint = true;
+
+  CreateCheckpoint();
 }
 
-void
-WaitForPaintToComplete()
+static void
+PaintFromMainThread()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  MonitorAutoLock lock(*gMonitor);
-  while (gPendingPaint) {
-    gMonitor->Wait();
-  }
-  if (IsActiveChild() && gPaintMessage.isSome()) {
+  // There cannot not be any other in flight paints.
+  MOZ_RELEASE_ASSERT(!gNumPendingPaints);
+
+  // Clear the active flag now that we have completed the paint.
+  MOZ_RELEASE_ASSERT(gHasActivePaint);
+  gHasActivePaint = false;
+
+  if (IsActiveChild() && gDrawTargetBuffer) {
     memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
-    gChannel->SendMessage(gPaintMessage.ref());
+    gChannel->SendMessage(PaintMessage(navigation::LastNormalCheckpoint(),
+                                       gPaintWidth, gPaintHeight));
   }
 }
 
 void
 NotifyPaintComplete()
 {
-  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(Thread::Current()->Id() == gCompositorThreadId);
 
-  MonitorAutoLock lock(*gMonitor);
-  MOZ_RELEASE_ASSERT(gPendingPaint);
-  gPendingPaint = false;
-  gMonitor->Notify();
+  // Notify the main thread in case it is waiting for this paint to complete.
+  {
+    MonitorAutoLock lock(*gMonitor);
+    if (--gNumPendingPaints == 0) {
+      gMonitor->Notify();
+    }
+  }
+
+  // Notify the middleman about the completed paint from the main thread.
+  NS_DispatchToMainThread(NewRunnableFunction("PaintFromMainThread", PaintFromMainThread));
+}
+
+void
+Repaint(size_t* aWidth, size_t* aHeight)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(HasDivergedFromRecording());
+
+  // Don't try to repaint if the first normal paint hasn't occurred yet.
+  if (!gCompositorThreadId) {
+    *aWidth = 0;
+    *aHeight = 0;
+    return;
+  }
+
+  // Ignore the request to repaint if the compositor thread has already
+  // diverged from the recording. In this case we have already done a repaint
+  // and the last graphics we sent will still be correct.
+  Thread* compositorThread = Thread::GetById(gCompositorThreadId);
+  if (!compositorThread->WillDivergeFromRecordingSoon()) {
+    // Create an artifical vsync to see if graphics have changed since the last
+    // paint and a new paint is needed.
+    NotifyVsyncObserver();
+
+    if (gNumPendingPaints) {
+      // Allow the compositor to diverge from the recording so it can perform
+      // any paint we just triggered, or finish any in flight paint that that
+      // existed at the point we are paused at.
+      Thread::GetById(gCompositorThreadId)->SetShouldDivergeFromRecording();
+
+      // Wait for the compositor to finish all in flight paints, including any
+      // one we just triggered.
+      MonitorAutoLock lock(*gMonitor);
+      while (gNumPendingPaints) {
+        gMonitor->Wait();
+      }
+    }
+  }
+
+  if (gDrawTargetBuffer) {
+    memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
+    *aWidth = gPaintWidth;
+    *aHeight = gPaintHeight;
+  } else {
+    *aWidth = 0;
+    *aHeight = 0;
+  }
+}
+
+static bool
+CompositorCanPerformMiddlemanCalls()
+{
+  // After repainting finishes the compositor is not allowed to send call
+  // requests to the middleman anymore.
+  return !!gNumPendingPaints;
+}
+
+bool
+SuppressMessageAfterDiverge(IPC::Message* aMsg)
+{
+  MOZ_RELEASE_ASSERT(HasDivergedFromRecording());
+
+  // Only messages necessary for compositing can be sent after the sending
+  // thread has diverged from the recording. Sending other messages can risk
+  // deadlocking when a necessary lock is held by an idle thread (we probably
+  // need a more robust way to deal with this problem).
+
+  IPC::Message::msgid_t type = aMsg->type();
+  if (type >= layers::PLayerTransaction::PLayerTransactionStart &&
+      type <= layers::PLayerTransaction::PLayerTransactionEnd) {
+    return false;
+  }
+
+  if (type == layers::PCompositorBridge::Msg_PTextureConstructor__ID) {
+    return false;
+  }
+
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Checkpoint Messages
 ///////////////////////////////////////////////////////////////////////////////
 
-// When recording, the time when the last HitCheckpoint message was sent.
+// The time when the last HitCheckpoint message was sent.
 static double gLastCheckpointTime;
 
 // When recording and we are idle, the time when we became idle.
@@ -534,7 +682,7 @@ HitCheckpoint(size_t aId, bool aRecordingEndpoint)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Debugger Messages
+// Message Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 void
@@ -556,6 +704,52 @@ HitBreakpoint(bool aRecordingEndpoint, const uint32_t* aBreakpoints, size_t aNum
       gChannel->SendMessage(*msg);
       free(msg);
     });
+}
+
+bool
+SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
+                         InfallibleVector<char>* aOutputData)
+{
+  Thread* thread = Thread::Current();
+
+  // Middleman calls can only be made from the main and compositor threads.
+  // These two threads cannot simultaneously send call requests or other
+  // messages, as doing so will race both here and in Channel::SendMessage.
+  // CompositorCanPerformMiddlemanCalls() ensures that the main thread is
+  // not actively sending messages at times when the compositor performs
+  // middleman calls.
+  MOZ_RELEASE_ASSERT(thread->IsMainThread() || thread->Id() == gCompositorThreadId);
+
+  if (thread->Id() == gCompositorThreadId && !CompositorCanPerformMiddlemanCalls()) {
+    return false;
+  }
+
+  MonitorAutoLock lock(*gMonitor);
+
+  MOZ_RELEASE_ASSERT(!gCallResponseMessage);
+
+  MiddlemanCallRequestMessage* msg = MiddlemanCallRequestMessage::New(aInputData, aInputSize);
+  gChannel->SendMessage(*msg);
+  free(msg);
+
+  while (!gCallResponseMessage) {
+    gMonitor->Wait();
+  }
+
+  aOutputData->append(gCallResponseMessage->BinaryData(), gCallResponseMessage->BinaryDataSize());
+
+  free(gCallResponseMessage);
+  gCallResponseMessage = nullptr;
+
+  gMonitor->Notify();
+  return true;
+}
+
+void
+SendResetMiddlemanCalls()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  gChannel->SendMessage(ResetMiddlemanCallsMessage());
 }
 
 } // namespace child

@@ -7,8 +7,10 @@
 #ifndef mozilla_recordreplay_ChildInternal_h
 #define mozilla_recordreplay_ChildInternal_h
 
+#include "Channel.h"
 #include "ChildIPC.h"
 #include "JSControl.h"
+#include "MiddlemanCall.h"
 #include "Monitor.h"
 
 namespace mozilla {
@@ -62,6 +64,10 @@ js::ExecutionPoint CurrentExecutionPoint(const js::BreakpointPosition& aPosition
 // executing into an ExecutionPoint.
 js::ExecutionPoint TimeWarpTargetExecutionPoint(ProgressCounter aTarget);
 
+// Synchronously paint the current contents into the graphics shared memory
+// object, returning the size of the painted area via aWidth/aHeight.
+void Repaint(size_t* aWidth, size_t* aHeight);
+
 // Called when running forward, immediately before hitting a normal or
 // temporary checkpoint.
 void BeforeCheckpoint();
@@ -69,6 +75,9 @@ void BeforeCheckpoint();
 // Called immediately after hitting a normal or temporary checkpoint, either
 // when running forward or immediately after rewinding.
 void AfterCheckpoint(const CheckpointId& aCheckpoint);
+
+// Get the ID of the last normal checkpoint.
+size_t LastNormalCheckpoint();
 
 } // namespace navigation
 
@@ -115,6 +124,11 @@ void EndIdleTime();
 
 // Whether the middleman runs developer tools server code.
 bool DebuggerRunsInMiddleman();
+
+// Send messages operating on middleman calls.
+bool SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
+                              InfallibleVector<char>* aOutputData);
+void SendResetMiddlemanCalls();
 
 } // namespace child
 

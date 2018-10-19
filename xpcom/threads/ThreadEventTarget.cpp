@@ -134,6 +134,14 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlag
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
+  // Don't dispatch runnables to other threads when replaying and diverged from
+  // the recording, to avoid deadlocking with other idle threads. The browser
+  // remains paused after diverging from the recording, and threads will not
+  // run their event loops.
+  if (recordreplay::HasDivergedFromRecording()) {
+    return NS_ERROR_FAILURE;
+  }
+
 #ifdef MOZ_TASK_TRACER
   nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(event.take());
   (static_cast<TracedRunnable*>(tracedRunnable.get()))->DispatchTask();
