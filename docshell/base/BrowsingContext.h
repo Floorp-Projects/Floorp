@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BrowsingContext_h
-#define BrowsingContext_h
+#ifndef mozilla_dom_BrowsingContext_h
+#define mozilla_dom_BrowsingContext_h
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
@@ -158,4 +158,5 @@ private:
 
 } // namespace dom
 } // namespace mozilla
-#endif
+
+#endif // !defined(mozilla_dom_BrowsingContext_h)
