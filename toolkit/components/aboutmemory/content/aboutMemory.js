@@ -18,7 +18,7 @@
 
 // ---------------------------------------------------------------------------
 
-let CC = Components.Constructor;
+var CC = Components.Constructor;
 
 const KIND_NONHEAP           = Ci.nsIMemoryReporter.KIND_NONHEAP;
 const KIND_HEAP              = Ci.nsIMemoryReporter.KIND_HEAP;
@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyGetter(this, "nsGzipConverter",
                             () => CC("@mozilla.org/streamconv;1?from=gzip&to=uncompressed",
                                      "nsIStreamConverter"));
 
-let gMgr = Cc["@mozilla.org/memory-reporter-manager;1"]
+var gMgr = Cc["@mozilla.org/memory-reporter-manager;1"]
              .getService(Ci.nsIMemoryReporterManager);
 
 const gPageName = "about:memory";
@@ -56,7 +56,7 @@ document.title = gPageName;
 
 const gUnnamedProcessStr = "Main Process";
 
-let gIsDiff = false;
+var gIsDiff = false;
 
 // ---------------------------------------------------------------------------
 
@@ -84,15 +84,15 @@ function assert(aCond, aMsg) {
 // This is used for malformed input from memory reporters.
 function assertInput(aCond, aMsg) {
   if (!aCond) {
-    throw new Error(`Invalid memory report(s): ${aMsg}`);
+    throw new Error("Invalid memory report(s): " + aMsg);
   }
 }
 
-function handleException(aEx) {
-  let str = "" + aEx;
+function handleException(ex) {
+  let str = "" + ex;
   if (str.startsWith(gAssertionFailureMsgPrefix)) {
     // Argh, assertion failure within this file!  Give up.
-    throw aEx;
+    throw ex;
   } else {
     // File or memory reporter problem.  Print a message.
     updateMainAndFooter(str, NO_TIMESTAMP, HIDE_FOOTER, "badInputWarning");
@@ -106,9 +106,9 @@ function reportAssertionFailure(aMsg) {
   }
 }
 
-function debug(aVal) {
+function debug(x) {
   let section = appendElement(document.body, "div", "section");
-  appendElementWithText(section, "div", "debug", JSON.stringify(aVal));
+  appendElementWithText(section, "div", "debug", JSON.stringify(x));
 }
 
 // ---------------------------------------------------------------------------
@@ -120,16 +120,16 @@ function onUnload() {
 
 // The <div> holding everything but the header and footer (if they're present).
 // It's what is updated each time the page changes.
-let gMain;
+var gMain;
 
 // The <div> holding the footer.
-let gFooter;
+var gFooter;
 
 // The "verbose" checkbox.
-let gVerbose;
+var gVerbose;
 
 // The "anonymize" checkbox.
-let gAnonymize;
+var gAnonymize;
 
 // Values for the |aFooterAction| argument to updateTitleMainAndFooter.
 const HIDE_FOOTER = 0;
@@ -143,7 +143,7 @@ function updateTitleMainAndFooter(aTitleNote, aMsg, aShowTimestamp,
                                   aFooterAction, aClassName) {
   document.title = gPageName;
   if (aTitleNote) {
-    document.title += ` (${aTitleNote})`;
+    document.title += " (" + aTitleNote + ")";
   }
 
   // Clear gMain by replacing it with an empty node.
@@ -168,7 +168,7 @@ function updateTitleMainAndFooter(aTitleNote, aMsg, aShowTimestamp,
       // JS has many options for pretty-printing timestamps. We use
       // toISOString() because it has sub-second granularity, which is useful
       // if you quickly and repeatedly click one of the buttons.
-      aMsg += ` (${(new Date()).toISOString()})`;
+      aMsg += " (" + (new Date()).toISOString() + ")";
     }
     msgElement = appendElementWithText(gMain, "div", className, aMsg);
   }
@@ -264,17 +264,18 @@ function onLoad() {
   });
 
   // Ditto.
-  let fileInput2 = appendHiddenFileInput(header, "fileInput2", function(aElem) {
+  let fileInput2 =
+      appendHiddenFileInput(header, "fileInput2", function(e) {
     let file = this.files[0];
     // First time around, we stash a copy of the filename and reinvoke.  Second
     // time around we do the diff and display.
     if (!this.filename1) {
       this.filename1 = file.mozFullPath;
 
-      // aElem.skipClick is only true when testing -- it allows fileInput2's
+      // e.skipClick is only true when testing -- it allows fileInput2's
       // onchange handler to be re-called without having to go via the file
       // picker.
-      if (!aElem.skipClick) {
+      if (!e.skipClick) {
         this.click();
       }
     } else {
@@ -324,16 +325,19 @@ function onLoad() {
   gVerbose.id = "verbose"; // used for testing
   appendTextNode(label1, "verbose");
 
+  const kEllipsis = "\u2026";
+
   // The "measureButton" id is used for testing.
   appendButton(row1, CuDesc, doMeasure, "Measure", "measureButton");
-  appendButton(row1, LdDesc, () => fileInput1.click(), "Load…");
-  appendButton(row1, DfDesc, () => fileInput2.click(), "Load and diff…");
+  appendButton(row1, LdDesc, () => fileInput1.click(), "Load" + kEllipsis);
+  appendButton(row1, DfDesc, () => fileInput2.click(),
+               "Load and diff" + kEllipsis);
 
   let row2 = appendElement(ops, "div", "opsRow");
 
   let labelDiv2 =
     appendElementWithText(row2, "div", "opsRowLabel", "Save memory reports");
-  appendButton(row2, SvDesc, saveReportsToFile, "Measure and save…");
+  appendButton(row2, SvDesc, saveReportsToFile, "Measure and save" + kEllipsis);
 
   // XXX: this isn't a great place for this checkbox, but I can't think of
   // anywhere better.
@@ -401,9 +405,9 @@ function onLoad() {
   let search = location.href.split("?")[1];
   if (search) {
     let searchSplit = search.split("&");
-    for (let s of searchSplit) {
-      if (s.toLowerCase().startsWith("file=")) {
-        let filename = s.substring("file=".length);
+    for (let i = 0; i < searchSplit.length; i++) {
+      if (searchSplit[i].toLowerCase().startsWith("file=")) {
+        let filename = searchSplit[i].substring("file=".length);
         updateAboutMemoryFromFile(decodeURIComponent(filename));
         return;
       }
@@ -472,13 +476,13 @@ function dumpGCLogAndCCLog(aVerbose) {
                                        NO_TIMESTAMP, HIDE_FOOTER);
   let section = appendElement(gMain, "div", "section");
 
-  function displayInfo(aGCLog, aCCLog, aIsParent) {
+  function displayInfo(gcLog, ccLog, isParent) {
     appendElementWithText(section, "div", "",
-                          "Saved GC log to " + aGCLog.path);
+                          "Saved GC log to " + gcLog.path);
 
     let ccLogType = aVerbose ? "verbose" : "concise";
     appendElementWithText(section, "div", "",
-                          "Saved " + ccLogType + " CC log to " + aCCLog.path);
+                          "Saved " + ccLogType + " CC log to " + ccLog.path);
   }
 
   dumper.dumpGCAndCCLogsToFile("", aVerbose, /* dumpChildProcesses = */ true,
@@ -526,7 +530,7 @@ function updateAboutMemoryFromReporters() {
 
 // Increment this if the JSON format changes.
 //
-let gCurrentFileFormatVersion = 1;
+var gCurrentFileFormatVersion = 1;
 
 
 /**
@@ -565,7 +569,8 @@ function updateAboutMemoryFromJSONObject(aObj) {
 
     let processMemoryReportsFromFile =
         function(aHandleReport, aDisplayReports) {
-      for (let r of aObj.reports) {
+      for (let i = 0; i < aObj.reports.length; i++) {
+        let r = aObj.reports[i];
         aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
                       r.description, r._presence);
       }
@@ -681,7 +686,7 @@ function updateAboutMemoryFromFile(aFilename) {
  *        The name of the first file being read from.
  */
 function updateAboutMemoryFromTwoFiles(aFilename1, aFilename2) {
-  let titleNote = `diff of ${aFilename1} and ${aFilename2}`;
+  let titleNote = "diff of " + aFilename1 + " and " + aFilename2;
   loadMemoryReportsFromFile(aFilename1, titleNote, function(aStr1) {
     loadMemoryReportsFromFile(aFilename2, titleNote, function(aStr2) {
       try {
@@ -700,7 +705,7 @@ function updateAboutMemoryFromTwoFiles(aFilename1, aFilename2) {
 // ---------------------------------------------------------------------------
 
 // Something unlikely to appear in a process name.
-let kProcessPathSep = "^:^:^";
+var kProcessPathSep = "^:^:^";
 
 // Short for "diff report".
 function DReport(aKind, aUnits, aAmount, aDescription, aNMerged, aPresence) {
@@ -770,7 +775,9 @@ DReport.ADDED_FOR_BALANCE = 3;
  */
 function makeDReportMap(aJSONReports) {
   let dreportMap = {};
-  for (let jr of aJSONReports) {
+  for (let i = 0; i < aJSONReports.length; i++) {
+    let jr = aJSONReports[i];
+
     assert(jr.process !== undefined, "Missing process");
     assert(jr.path !== undefined, "Missing path");
     assert(jr.kind !== undefined, "Missing kind");
@@ -1005,8 +1012,8 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize) {
     let processes = Object.keys(pcollsByProcess);
     processes.sort(function(aProcessA, aProcessB) {
       assert(aProcessA != aProcessB,
-             `Elements of Object.keys() should be unique, but ` +
-             `saw duplicate '${aProcessA}' elem.`);
+             "Elements of Object.keys() should be unique, but " +
+             "saw duplicate '" + aProcessA + "' elem.");
 
       // Always put the main process first.
       if (aProcessA == gUnnamedProcessStr) {
@@ -1041,7 +1048,8 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize) {
     });
 
     // Generate output for each process.
-    for (let [i, process] of processes.entries()) {
+    for (let i = 0; i < processes.length; i++) {
+      let process = processes[i];
       let section = appendElement(gMain, "div", "section");
 
       appendProcessAboutMemoryElements(section, i, process,
@@ -1087,9 +1095,9 @@ function TreeNode(aUnsafeName, aUnits, aIsDegenerate) {
 TreeNode.prototype = {
   findKid(aUnsafeName) {
     if (this._kids) {
-      for (let kid of this._kids) {
-        if (kid._unsafeName === aUnsafeName) {
-          return kid;
+      for (let i = 0; i < this._kids.length; i++) {
+        if (this._kids[i]._unsafeName === aUnsafeName) {
+          return this._kids[i];
         }
       }
     }
@@ -1115,8 +1123,8 @@ TreeNode.prototype = {
 
     // Compute the maximum absolute value of all descendants.
     let max = Math.abs(this._amount);
-    for (let kid of this._kids) {
-      max = Math.max(max, kid.maxAbsDescendant());
+    for (let i = 0; i < this._kids.length; i++) {
+      max = Math.max(max, this._kids[i].maxAbsDescendant());
     }
     this._maxAbsDescendant = max;
     return max;
@@ -1126,7 +1134,7 @@ TreeNode.prototype = {
     switch (this._units) {
       case UNITS_BYTES: return formatBytes(this._amount);
       case UNITS_COUNT:
-      case UNITS_COUNT_CUMULATIVE: return formatNum(this._amount);
+      case UNITS_COUNT_CUMULATIVE: return formatInt(this._amount);
       case UNITS_PERCENTAGE: return formatPercentage(this._amount);
       default:
         throw "Invalid memory report(s): bad units in TreeNode.toString";
@@ -1195,8 +1203,8 @@ function fillInTree(aRoot) {
       // Non-leaf node with multiple children.  Derive its _amount and
       // _description entirely from its children...
       let kidsBytes = 0;
-      for (let kid of aT._kids) {
-        kidsBytes += fillInNonLeafNodes(kid);
+      for (let i = 0; i < aT._kids.length; i++) {
+        kidsBytes += fillInNonLeafNodes(aT._kids[i]);
       }
 
       // ... except in one special case. When diffing two memory report sets,
@@ -1295,8 +1303,8 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT) {
   // _hideKids property and process all children.
   if (isInsignificant(aT._kids[0])) {
     aT._hideKids = true;
-    for (let kid of aT._kids) {
-      sortTreeAndInsertAggregateNodes(aTotalBytes, kid);
+    for (let i = 0; i < aT._kids.length; i++) {
+      sortTreeAndInsertAggregateNodes(aTotalBytes, aT._kids[i]);
     }
     return;
   }
@@ -1311,7 +1319,7 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT) {
       let nAgg = aT._kids.length - i0;
       // Create an aggregate node.  Inherit units from the parent;  everything
       // in the tree should have the same units anyway (we test this later).
-      let aggT = new TreeNode(`(${nAgg} tiny)`, aT._units);
+      let aggT = new TreeNode("(" + nAgg + " tiny)", aT._units);
       aggT._kids = [];
       let aggBytes = 0;
       for ( ; i < aT._kids.length; i++) {
@@ -1327,8 +1335,8 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT) {
       aT._kids.sort(TreeNode.compareAmounts);
 
       // Process the moved children.
-      for (let kid of aggT._kids) {
-        sortTreeAndInsertAggregateNodes(aTotalBytes, kid);
+      for (i = 0; i < aggT._kids.length; i++) {
+        sortTreeAndInsertAggregateNodes(aTotalBytes, aggT._kids[i]);
       }
       return;
     }
@@ -1345,7 +1353,7 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT) {
 // Global variable indicating if we've seen any invalid values for this
 // process;  it holds the unsafePaths of any such reports.  It is reset for
 // each new process.
-let gUnsafePathsWithInvalidValuesForThisProcess = [];
+var gUnsafePathsWithInvalidValuesForThisProcess = [];
 
 function appendWarningElements(aP, aHasKnownHeapAllocated,
                                aHasMozMallocUsableSize) {
@@ -1411,11 +1419,14 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
 function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
                                           aDegenerates, aHeapTotal,
                                           aHasMozMallocUsableSize) {
+  const kUpwardsArrow   = "\u2191",
+        kDownwardsArrow = "\u2193";
+
   let appendLink = function(aHere, aThere, aArrow) {
     let link = appendElementWithText(aP, "a", "upDownArrow", aArrow);
     link.href = "#" + aThere + aN;
     link.id = aHere + aN;
-    link.title = `Go to the ${aThere} of ${aProcess}`;
+    link.title = "Go to the " + aThere + " of " + aProcess;
     link.style = "text-decoration: none";
 
     // This gives nice spacing when we copy and paste.
@@ -1423,7 +1434,7 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   };
 
   appendElementWithText(aP, "h1", "", aProcess);
-  appendLink("start", "end", "↓");
+  appendLink("start", "end", kDownwardsArrow);
 
   // We'll fill this in later.
   let warningsDiv = appendElement(aP, "div", "accuracyWarning");
@@ -1482,12 +1493,14 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
 
   // Now generate the elements, putting non-degenerate trees first.
   let pre = appendSectionHeader(aP, "Other Measurements");
-  for (let t of otherTrees) {
+  for (let i = 0; i < otherTrees.length; i++) {
+    let t = otherTrees[i];
     appendTreeElements(pre, t, aProcess, "");
     appendTextNode(pre, "\n"); // blank lines after non-degenerate trees
   }
-  for (let t of otherDegenerates) {
-    let padText = "".padStart(maxStringLength - t.toString().length, " ");
+  for (let i = 0; i < otherDegenerates.length; i++) {
+    let t = otherDegenerates[i];
+    let padText = pad("", maxStringLength - t.toString().length, " ");
     appendTreeElements(pre, t, aProcess, padText);
   }
   appendTextNode(aP, "\n"); // gives nice spacing when we copy and paste
@@ -1501,49 +1514,67 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   }
 
   appendElementWithText(aP, "h3", "", "End of " + aProcess);
-  appendLink("end", "start", "↑");
+  appendLink("end", "start", kUpwardsArrow);
 }
 
-// Used for UNITS_BYTES values that are printed as MiB.
-const kMBStyle = {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2
-};
-
-// Used for UNITS_PERCENTAGE values.
-const kPercStyle = {
-  style: "percent",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2
-};
-
-// Used for fractions within the tree.
-const kFracStyle = {
-  style: "percent",
-  minimumIntegerDigits: 2,
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2
-};
-
-// Used for special-casing 100% fractions within the tree.
-const kFrac1Style = {
-  style: "percent",
-  minimumIntegerDigits: 3,
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1
-};
+/**
+ * Determines if a number has a negative sign when converted to a string.
+ * Works even for -0.
+ *
+ * @param aN
+ *        The number.
+ * @return A boolean.
+ */
+function hasNegativeSign(aN) {
+  if (aN === 0) { // this succeeds for 0 and -0
+    return 1 / aN === -Infinity; // this succeeds for -0
+  }
+  return aN < 0;
+}
 
 /**
  * Formats an int as a human-readable string.
  *
  * @param aN
  *        The integer to format.
- * @param aOptions
- *        Optional options object.
+ * @param aExtra
+ *        An extra string to tack onto the end.
  * @return A human-readable string representing the int.
+ *
+ * Note: building an array of chars and converting that to a string with
+ * Array.join at the end is more memory efficient than using string
+ * concatenation.  See bug 722972 for details.
  */
-function formatNum(aN, aOptions) {
-  return aN.toLocaleString('en-US', aOptions);
+function formatInt(aN, aExtra) {
+  let neg = false;
+  if (hasNegativeSign(aN)) {
+    neg = true;
+    aN = -aN;
+  }
+  let s = [];
+  while (true) {
+    let k = aN % 1000;
+    aN = Math.floor(aN / 1000);
+    if (aN > 0) {
+      if (k < 10) {
+        s.unshift(",00", k);
+      } else if (k < 100) {
+        s.unshift(",0", k);
+      } else {
+        s.unshift(",", k);
+      }
+    } else {
+      s.unshift(k);
+      break;
+    }
+  }
+  if (neg) {
+    s.unshift("-");
+  }
+  if (aExtra) {
+    s.push(aExtra);
+  }
+  return s.join("");
 }
 
 /**
@@ -1554,48 +1585,66 @@ function formatNum(aN, aOptions) {
  * @return The string representation.
  */
 function formatBytes(aBytes) {
-  return gVerbose.checked
-       ? `${formatNum(aBytes)} B`
-       : `${formatNum(aBytes / (1024 * 1024), kMBStyle)} MB`;
+  let unit = gVerbose.checked ? " B" : " MB";
+
+  let s;
+  if (gVerbose.checked) {
+    s = formatInt(aBytes, unit);
+  } else {
+    let mbytes = (aBytes / (1024 * 1024)).toFixed(2);
+    let a = String(mbytes).split(".");
+    // If the argument to formatInt() is -0, it will print the negative sign.
+    s = formatInt(Number(a[0])) + "." + a[1] + unit;
+  }
+  return s;
 }
 
 /**
- * Converts a UNITS_PERCENTAGE value to an appropriate string representation.
+ * Converts a percentage to an appropriate string representation.
  *
  * @param aPerc100x
  *        The percentage, multiplied by 100 (see nsIMemoryReporter).
  * @return The string representation
  */
 function formatPercentage(aPerc100x) {
-  // A percentage like 12.34% will have an aPerc100x value of 1234, and we need
-  // to divide that by 10,000 to get the 0.1234 that toLocaleString() wants.
-  return formatNum(aPerc100x / 10000, kPercStyle);
+  return (aPerc100x / 100).toFixed(2) + "%";
 }
 
-/*
- * Converts a tree fraction to an appropriate string representation.
+/**
+ * Right-justifies a string in a field of a given width, padding as necessary.
  *
- * @param aNum
- *        The numerator.
- * @param aDenom
- *        The denominator.
- * @return The string representation
+ * @param aS
+ *        The string.
+ * @param aN
+ *        The field width.
+ * @param aC
+ *        The char used to pad.
+ * @return The string representation.
  */
-function formatTreeFrac(aNum, aDenom) {
-  // Two special behaviours here:
-  // - We treat 0 / 0 as 100%.
-  // - We want 4 digits, as much as possible, because it gives good vertical
-  //   alignment. For positive numbers, 00.00%--99.99% works straighforwardly,
-  //   but 100.0% needs special handling.
-  let num = aDenom === 0 ? 1 : (aNum / aDenom);
-  return (0.99995 <= num && num <= 1)
-         ? formatNum(1, kFrac1Style)
-         : formatNum(num, kFracStyle);
+function pad(aS, aN, aC) {
+  let padding = "";
+  let n2 = aN - aS.length;
+  for (let i = 0; i < n2; i++) {
+    padding += aC;
+  }
+  return padding + aS;
 }
 
-const kNoKidsSep   = " ── ",
-      kHideKidsSep = " ++ ",
-      kShowKidsSep = " -- ";
+// There's a subset of the Unicode "light" box-drawing chars that is widely
+// implemented in terminals, and this code sticks to that subset to maximize
+// the chance that copying and pasting about:memory output to a terminal will
+// work correctly.
+const kHorizontal                   = "\u2500",
+      kVertical                     = "\u2502",
+      kUpAndRight                   = "\u2514",
+      kUpAndRight_Right_Right       = "\u2514\u2500\u2500",
+      kVerticalAndRight             = "\u251c",
+      kVerticalAndRight_Right_Right = "\u251c\u2500\u2500",
+      kVertical_Space_Space         = "\u2502  ";
+
+const kNoKidsSep                    = " \u2500\u2500 ",
+      kHideKidsSep                  = " ++ ",
+      kShowKidsSep                  = " -- ";
 
 function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
                           aPresence) {
@@ -1618,7 +1667,7 @@ function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
   }
 
   if (aNMerged) {
-    let noteText = ` [${aNMerged}]`;
+    let noteText = " [" + aNMerged + "]";
     if (!aPresence) {
       noteText += "\n";
     }
@@ -1648,7 +1697,8 @@ function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
      default: assert(false, "bad presence");
       break;
     }
-    let noteSpan = appendElementWithText(aP, "span", "mrNote", ` [${c}]\n`);
+    let noteSpan = appendElementWithText(aP, "span", "mrNote",
+                                         " [" + c + "]\n");
     noteSpan.title = title;
   }
 }
@@ -1660,11 +1710,11 @@ function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
 // have been closed.  This doesn't seem like a big deal, because the number is
 // limited by the number of entries the user has changed from their original
 // state.
-let gShowSubtreesBySafeTreeId = {};
+var gShowSubtreesBySafeTreeId = {};
 
-function assertClassListContains(aElem, aClassName) {
-  assert(aElem, "undefined " + aClassName);
-  assert(aElem.classList.contains(aClassName), "classname isn't " + aClassName);
+function assertClassListContains(e, className) {
+  assert(e, "undefined " + className);
+  assert(e.classList.contains(className), "classname isn't " + className);
 }
 
 function toggle(aEvent) {
@@ -1738,11 +1788,7 @@ function expandPathToThisElement(aElement) {
  */
 function appendTreeElements(aP, aRoot, aProcess, aPadText) {
   /**
-   * Appends the elements for a particular tree, without a heading. There's a
-   * subset of the Unicode "light" box-drawing chars that is widely implemented
-   * in terminals, and this code sticks to that subset to maximize the chance
-   * that copying and pasting about:memory output to a terminal will work
-   * correctly.
+   * Appends the elements for a particular tree, without a heading.
    *
    * @param aP
    *        The parent DOM node.
@@ -1754,15 +1800,19 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
    *        The root of the tree this sub-tree belongs to.
    * @param aT
    *        The tree.
-   * @param aTlThis
-   *        The treeline for this entry.
-   * @param aTlKids
-   *        The treeline for this entry's children.
+   * @param aTreelineText1
+   *        The first part of the treeline for this entry and this entry's
+   *        children.
+   * @param aTreelineText2a
+   *        The second part of the treeline for this entry.
+   * @param aTreelineText2b
+   *        The second part of the treeline for this entry's children.
    * @param aParentStringLength
    *        The length of the formatted byte count of the top node in the tree.
    */
   function appendTreeElements2(aP, aProcess, aUnsafeNames, aRoot, aT,
-                               aTlThis, aTlKids, aParentStringLength) {
+                               aTreelineText1, aTreelineText2a,
+                               aTreelineText2b, aParentStringLength) {
     function appendN(aS, aC, aN) {
       for (let i = 0; i < aN; i++) {
         aS += aC;
@@ -1772,13 +1822,16 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
 
     // The tree line.  Indent more if this entry is narrower than its parent.
     let valueText = aT.toString();
-    let extraTlLength =
+    let extraTreelineLength =
       Math.max(aParentStringLength - valueText.length, 0);
-    if (extraTlLength > 0) {
-      aTlThis = appendN(aTlThis, "─", extraTlLength);
-      aTlKids = appendN(aTlKids, " ", extraTlLength);
+    if (extraTreelineLength > 0) {
+      aTreelineText2a =
+        appendN(aTreelineText2a, kHorizontal, extraTreelineLength);
+      aTreelineText2b =
+        appendN(aTreelineText2b, " ", extraTreelineLength);
     }
-    appendElementWithText(aP, "span", "treeline", aTlThis);
+    let treelineText = aTreelineText1 + aTreelineText2a;
+    appendElementWithText(aP, "span", "treeline", treelineText);
 
     // Detect and record invalid values.  But not if gIsDiff is true, because
     // we expect negative values in that case.
@@ -1789,9 +1842,9 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       tIsInvalid = true;
       let unsafePath = aUnsafeNames.join("/");
       gUnsafePathsWithInvalidValuesForThisProcess.push(unsafePath);
-      reportAssertionFailure(
-        `Invalid value (${aT._amount} / ${aRoot._amount}) for ` +
-        flipBackslashes(unsafePath));
+      reportAssertionFailure("Invalid value (" + aT._amount + " / " +
+                             aRoot._amount + ") for " +
+                             flipBackslashes(unsafePath));
     }
 
     // For non-leaf nodes, the entire sub-tree is put within a span so it can
@@ -1803,7 +1856,7 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       // Determine if we should show the sub-tree below this entry;  this
       // involves reinstating any previous toggling of the sub-tree.
       let unsafePath = aUnsafeNames.join("/");
-      let safeTreeId = `${aProcess}:${flipBackslashes(unsafePath)}`;
+      let safeTreeId = aProcess + ":" + flipBackslashes(unsafePath);
       showSubtrees = !aT._hideKids;
       if (gShowSubtreesBySafeTreeId[safeTreeId] !== undefined) {
         showSubtrees = gShowSubtreesBySafeTreeId[safeTreeId];
@@ -1823,9 +1876,15 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
                           valueText);
 
     // The percentage (omitted for single entries).
+    let percText;
     if (!aT._isDegenerate) {
-      let percText = formatTreeFrac(aT._amount, aRoot._amount);
-      appendElementWithText(d, "span", "mrPerc", ` (${percText})`);
+      // Treat 0 / 0 as 100%.
+      let num = aRoot._amount === 0 ? 100 : (100 * aT._amount / aRoot._amount);
+      let numText = num.toFixed(2);
+      percText = numText === "100.00"
+               ? " (100.0%)"
+               : (0 <= num && num < 10 ? " (0" : " (") + numText + "%)";
+      appendElementWithText(d, "span", "mrPerc", percText);
     }
 
     // The separator.
@@ -1846,21 +1905,20 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       // The 'kids' class is just used for sanity checking in toggle().
       d = appendElement(aP, "span", showSubtrees ? "kids" : "kids hidden");
 
-      let tlThisForMost, tlKidsForMost;
-      if (aT._kids.length > 1) {
-        tlThisForMost = aTlKids + "├──";
-        tlKidsForMost = aTlKids + "│  ";
-      }
-      let tlThisForLast = aTlKids + "└──";
-      let tlKidsForLast = aTlKids + "   ";
-
-      for (let [i, kid] of aT._kids.entries()) {
-        let isLast = i == aT._kids.length - 1;
-        aUnsafeNames.push(kid._unsafeName);
-        appendTreeElements2(d, aProcess, aUnsafeNames, aRoot, kid,
-                            !isLast ? tlThisForMost : tlThisForLast,
-                            !isLast ? tlKidsForMost : tlKidsForLast,
-                            valueText.length);
+      let kidTreelineText1 = aTreelineText1 + aTreelineText2b;
+      for (let i = 0; i < aT._kids.length; i++) {
+        let kidTreelineText2a, kidTreelineText2b;
+        if (i < aT._kids.length - 1) {
+          kidTreelineText2a = kVerticalAndRight_Right_Right;
+          kidTreelineText2b = kVertical_Space_Space;
+        } else {
+          kidTreelineText2a = kUpAndRight_Right_Right;
+          kidTreelineText2b = "   ";
+        }
+        aUnsafeNames.push(aT._kids[i]._unsafeName);
+        appendTreeElements2(d, aProcess, aUnsafeNames, aRoot, aT._kids[i],
+                            kidTreelineText1, kidTreelineText2a,
+                            kidTreelineText2b, valueText.length);
         aUnsafeNames.pop();
       }
     }
@@ -1868,7 +1926,7 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
 
   let rootStringLength = aRoot.toString().length;
   appendTreeElements2(aP, aProcess, [aRoot._unsafeName], aRoot, aRoot,
-                      aPadText, aPadText, rootStringLength);
+                      aPadText, "", "", rootStringLength);
 }
 
 // ---------------------------------------------------------------------------
@@ -1888,14 +1946,14 @@ function saveReportsToFile() {
   fp.addToRecentDocs = true;
   fp.defaultString = "memory-report.json.gz";
 
-  let fpFinish = function(aFile) {
+  let fpFinish = function(file) {
     let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
                    .getService(Ci.nsIMemoryInfoDumper);
     let finishDumping = () => {
-      updateMainAndFooter("Saved memory reports to " + aFile.path,
+      updateMainAndFooter("Saved memory reports to " + file.path,
                           SHOW_TIMESTAMP, HIDE_FOOTER);
     };
-    dumper.dumpMemoryReportsToNamedFile(aFile.path, finishDumping, null,
+    dumper.dumpMemoryReportsToNamedFile(file.path, finishDumping, null,
                                         gAnonymize.checked);
   };
 
@@ -1911,8 +1969,8 @@ function saveReportsToFile() {
   } catch (ex) {
     // This will fail on Android, since there is no Save as file picker there.
     // Just save to the default downloads dir if it does.
-    Downloads.getSystemDownloadsDirectory().then(function(aDirPath) {
-      let file = FileUtils.File(aDirPath);
+    Downloads.getSystemDownloadsDirectory().then(function(dirPath) {
+      let file = FileUtils.File(dirPath);
       file.append(fp.defaultString);
       fpFinish(file);
     });
