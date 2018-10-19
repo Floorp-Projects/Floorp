@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/PWindowGlobalChild.h"
+#include "nsWrapperCache.h"
 
 class nsGlobalWindowInner;
 class nsDocShell;
@@ -23,11 +24,12 @@ class WindowGlobalParent;
  * Actor for a single nsGlobalWindowInner. This actor is used to communicate
  * information to the parent process asynchronously.
  */
-class WindowGlobalChild : public PWindowGlobalChild
+class WindowGlobalChild : public nsWrapperCache
+                        , public PWindowGlobalChild
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WindowGlobalChild)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(WindowGlobalChild)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WindowGlobalChild)
 
   dom::BrowsingContext* BrowsingContext() { return mBrowsingContext; }
   nsGlobalWindowInner* WindowGlobal() { return mWindowGlobal; }
@@ -41,11 +43,15 @@ public:
 
   // Get the other side of this actor if it is an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is not in-process.
-  already_AddRefed<WindowGlobalParent> GetOtherSide();
+  already_AddRefed<WindowGlobalParent> GetParentActor();
 
   // Create and initialize the WindowGlobalChild object.
   static already_AddRefed<WindowGlobalChild>
   Create(nsGlobalWindowInner* aWindow);
+
+  nsISupports* GetParentObject();
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;

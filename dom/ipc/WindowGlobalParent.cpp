@@ -7,6 +7,7 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/ipc/InProcessParent.h"
 #include "mozilla/dom/ChromeBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalActorsBinding.h"
 
 using namespace mozilla::ipc;
 
@@ -59,7 +60,7 @@ WindowGlobalParent::Init(const WindowGlobalInit& aInit)
     // In the in-process case, we can get it from the other side's
     // WindowGlobalChild.
     MOZ_ASSERT(Manager()->GetProtocolTypeId() == PInProcessMsgStart);
-    RefPtr<WindowGlobalChild> otherSide = GetOtherSide();
+    RefPtr<WindowGlobalChild> otherSide = GetChildActor();
     if (otherSide && otherSide->WindowGlobal()) {
       // Get the toplevel window from the other side.
       RefPtr<nsDocShell> docShell = nsDocShell::Cast(otherSide->WindowGlobal()->GetDocShell());
@@ -82,7 +83,7 @@ WindowGlobalParent::Init(const WindowGlobalInit& aInit)
 }
 
 already_AddRefed<WindowGlobalChild>
-WindowGlobalParent::GetOtherSide()
+WindowGlobalParent::GetChildActor()
 {
   if (mIPCClosed) {
     return nullptr;
@@ -111,7 +112,23 @@ WindowGlobalParent::~WindowGlobalParent()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION(WindowGlobalParent, mFrameLoader, mBrowsingContext)
+JSObject*
+WindowGlobalParent::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto)
+{
+  return WindowGlobalParent_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsISupports*
+WindowGlobalParent::GetParentObject()
+{
+  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalParent,
+                                      mFrameLoader,
+                                      mBrowsingContext)
+
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WindowGlobalParent, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WindowGlobalParent, Release)
 
