@@ -1735,35 +1735,6 @@ CacheIRCompiler::emitGuardClass()
 }
 
 bool
-CacheIRCompiler::emitGuardIsExtensible()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    AutoScratchRegister scratch(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure)) {
-        return false;
-    }
-
-    Address shape(obj, ShapedObject::offsetOfShape());
-    masm.loadPtr(shape, scratch);
-
-    Address baseShape(scratch, Shape::offsetOfBaseShape());
-    masm.loadPtr(baseShape, scratch);
-
-    Address baseShapeFlags(scratch, BaseShape::offsetOfFlags());
-    masm.loadPtr(baseShapeFlags, scratch);
-
-    masm.and32(Imm32(js::BaseShape::NOT_EXTENSIBLE), scratch);
-
-    // Spectre-style checks are not needed here because we do not
-    // interpret data based on this check.
-    masm.branch32(Assembler::Equal, scratch, Imm32(js::BaseShape::NOT_EXTENSIBLE),
-                  failure->label());
-    return true;
-}
-
-bool
 CacheIRCompiler::emitGuardIsNativeFunction()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -2865,96 +2836,13 @@ CacheIRCompiler::emitGuardIndexGreaterThanDenseInitLength()
     // Load obj->elements.
     masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
-    // Ensure index >= initLength.
+    // Ensure index >= capacity.
     Label outOfBounds;
     Address capacity(scratch, ObjectElements::offsetOfInitializedLength());
     masm.spectreBoundsCheck32(index, capacity, scratch2, &outOfBounds);
     masm.jump(failure->label());
     masm.bind(&outOfBounds);
 
-    return true;
-}
-
-bool
-CacheIRCompiler::emitGuardIndexGreaterThanDenseCapacity()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Register index = allocator.useRegister(masm, reader.int32OperandId());
-    AutoScratchRegister scratch(allocator, masm);
-    AutoScratchRegister scratch2(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure)) {
-        return false;
-    }
-
-    // Load obj->elements.
-    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
-
-    // Ensure index >= capacity.
-    Label outOfBounds;
-    Address capacity(scratch, ObjectElements::offsetOfCapacity());
-    masm.spectreBoundsCheck32(index, capacity, scratch2, &outOfBounds);
-    masm.jump(failure->label());
-    masm.bind(&outOfBounds);
-
-    return true;
-}
-
-bool
-CacheIRCompiler::emitGuardIndexGreaterThanArrayLength()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Register index = allocator.useRegister(masm, reader.int32OperandId());
-    AutoScratchRegister scratch(allocator, masm);
-    AutoScratchRegister scratch2(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure)) {
-        return false;
-    }
-
-    // Load obj->elements.
-    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
-
-    // Ensure index >= length;
-    Label outOfBounds;
-    Address length(scratch, ObjectElements::offsetOfLength());
-    masm.spectreBoundsCheck32(index, length, scratch2, &outOfBounds);
-    masm.jump(failure->label());
-    masm.bind(&outOfBounds);
-    return true;
-}
-
-bool
-CacheIRCompiler::emitGuardIndexIsValidUpdateOrAdd()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Register index = allocator.useRegister(masm, reader.int32OperandId());
-    AutoScratchRegister scratch(allocator, masm);
-    AutoScratchRegister scratch2(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure)) {
-        return false;
-    }
-
-    // Load obj->elements.
-    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
-
-    Label success;
-
-    // If length is writable, branch to &success.  All indices are writable.
-    Address flags(scratch, ObjectElements::offsetOfFlags());
-    masm.branchTest32(Assembler::Zero, flags,
-                      Imm32(ObjectElements::Flags::NONWRITABLE_ARRAY_LENGTH),
-                      &success);
-
-    // Otherwise, ensure index is in bounds.
-    Address length(scratch, ObjectElements::offsetOfLength());
-    masm.spectreBoundsCheck32(index, length, scratch2,
-                              /* failure = */ failure->label());
-    masm.bind(&success);
     return true;
 }
 
