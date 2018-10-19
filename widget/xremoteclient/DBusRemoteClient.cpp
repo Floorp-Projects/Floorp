@@ -43,6 +43,7 @@ DBusRemoteClient::Init()
     return NS_ERROR_FAILURE;
 
   dbus_connection_set_exit_on_disconnect(mConnection, false);
+  dbus_connection_setup_with_g_main(mConnection, nullptr);
 
   return NS_OK;
 }
