@@ -262,7 +262,7 @@ FilePicker.prototype = {
   },
 
   classID: Components.ID("{18a4e042-7c7c-424b-a583-354e68553a7f}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker, Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker, Ci.nsIObserver]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FilePicker]);

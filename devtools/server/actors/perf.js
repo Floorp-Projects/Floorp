@@ -25,7 +25,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     // Only setup the observers on a supported platform.
     if (IS_SUPPORTED_PLATFORM) {
       this._observer = {
-        observe: this._observe.bind(this)
+        observe: this._observe.bind(this),
       };
       Services.obs.addObserver(this._observer, "profiler-started");
       Services.obs.addObserver(this._observer, "profiler-stopped");
@@ -57,7 +57,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
       interval: options.interval || 1,
       features: options.features ||
         ["js", "stackwalk", "responsiveness", "threads", "leaf"],
-      threads: options.threads || ["GeckoMain", "Compositor"]
+      threads: options.threads || ["GeckoMain", "Compositor"],
     };
 
     try {
@@ -159,5 +159,5 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
         this.emit(topic);
         break;
     }
-  }
+  },
 });

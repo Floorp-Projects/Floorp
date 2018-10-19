@@ -186,7 +186,7 @@ ProjectList.prototype = {
       this._renderProjectItem({
         panel: panelItemNode,
         name: tab.name,
-        icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON
+        icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON,
       });
       panelItemNode.addEventListener("click", () => {
         AppManager.selectedProject = {
@@ -194,7 +194,7 @@ ProjectList.prototype = {
           app: tab,
           icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON,
           location: tab.url,
-          name: tab.name
+          name: tab.name,
         };
       }, true);
     }
@@ -230,14 +230,14 @@ ProjectList.prototype = {
       this._renderProjectItem({
         panel: panelItemNode,
         name: Strings.GetStringFromName("mainProcess_label"),
-        icon: AppManager.DEFAULT_PROJECT_ICON
+        icon: AppManager.DEFAULT_PROJECT_ICON,
       });
       runtimeAppsNode.appendChild(panelItemNode);
       panelItemNode.addEventListener("click", () => {
         AppManager.selectedProject = {
           type: "mainProcess",
           name: Strings.GetStringFromName("mainProcess_label"),
-          icon: AppManager.DEFAULT_PROJECT_ICON
+          icon: AppManager.DEFAULT_PROJECT_ICON,
         };
       }, true);
     }
@@ -249,7 +249,7 @@ ProjectList.prototype = {
       this._renderProjectItem({
         panel: panelItemNode,
         name: app.manifest.name,
-        icon: app.iconURL || AppManager.DEFAULT_PROJECT_ICON
+        icon: app.iconURL || AppManager.DEFAULT_PROJECT_ICON,
       });
       runtimeAppsNode.appendChild(panelItemNode);
       panelItemNode.addEventListener("click", () => {
@@ -257,7 +257,7 @@ ProjectList.prototype = {
           type: "runtimeApp",
           app: app.manifest,
           icon: app.iconURL || AppManager.DEFAULT_PROJECT_ICON,
-          name: app.manifest.name
+          name: app.manifest.name,
         };
       }, true);
     }
@@ -324,14 +324,14 @@ ProjectList.prototype = {
               this._renderProjectItem({
                 panel: panelItemNode,
                 name: project.name,
-                icon: project.icon
+                icon: project.icon,
               });
             });
           } else {
             this._renderProjectItem({
               panel: panelItemNode,
               name: project.name || AppManager.DEFAULT_PROJECT_NAME,
-              icon: project.icon || AppManager.DEFAULT_PROJECT_ICON
+              icon: project.icon || AppManager.DEFAULT_PROJECT_ICON,
             });
           }
           panelItemNode.addEventListener("click", () => {
@@ -365,5 +365,5 @@ ProjectList.prototype = {
     this._UI = null;
     this._parentWindow = null;
     this._panelNodeEl = null;
-  }
+  },
 };

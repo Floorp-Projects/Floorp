@@ -51,7 +51,7 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
    "   <div></div>",
    "  </div>",
    " </body>",
-   " </html>"
+   " </html>",
   ].join("\n"));
 
 add_task(async function test() {
@@ -59,7 +59,7 @@ add_task(async function test() {
   const browser = tab.linkedBrowser;
 
   const completer = new CSSCompleter({
-    cssProperties: getClientCssProperties()
+    cssProperties: getClientCssProperties(),
   });
   const checkState = state => {
     if (state[0] == "null" && (!completer.state || completer.state == "null")) {

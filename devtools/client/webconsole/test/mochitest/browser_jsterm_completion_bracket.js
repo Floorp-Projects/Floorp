@@ -51,7 +51,7 @@ async function testInputs(jsterm) {
       `"DATA-TEST"`,
     ],
     expectedCompletionText: `"bar"]`,
-    expectedInputAfterCompletion: `window.testObject["bar"]`
+    expectedInputAfterCompletion: `window.testObject["bar"]`,
   }, {
     description: "Test that the list can be filtered even without quote",
     input: "window.testObject[d",
@@ -118,7 +118,7 @@ async function testInputs(jsterm) {
       "Test that filtering without quote displays the popup when there's only 1 match",
     input: "window.testObject[DATA-",
     expectedItems: [
-      `"DATA-TEST"`
+      `"DATA-TEST"`,
     ],
     expectedCompletionText: `TEST"]`,
     expectedInputAfterCompletion: `window.testObject["DATA-TEST"]`,
@@ -134,7 +134,7 @@ async function testInput(jsterm, {
   input,
   expectedItems,
   expectedCompletionText,
-  expectedInputAfterCompletion
+  expectedInputAfterCompletion,
 }) {
   const {autocompletePopup} = jsterm;
 

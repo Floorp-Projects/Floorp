@@ -9,7 +9,7 @@ const { PrefsHelper } = require("devtools/client/shared/prefs");
 
 function test() {
   const Prefs = new PrefsHelper("devtools.debugger", {
-    "foo": ["Bool", "enabled"]
+    "foo": ["Bool", "enabled"],
   });
 
   const originalPrefValue = Services.prefs.getBoolPref("devtools.debugger.enabled");

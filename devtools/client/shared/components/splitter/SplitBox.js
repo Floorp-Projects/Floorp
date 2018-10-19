@@ -24,24 +24,24 @@ class SplitBox extends Component {
       // Initial width of controlled panel.
       initialWidth: PropTypes.oneOfType([
         PropTypes.number,
-        PropTypes.string
+        PropTypes.string,
       ]),
       // Initial height of controlled panel.
       initialHeight: PropTypes.oneOfType([
         PropTypes.number,
-        PropTypes.string
+        PropTypes.string,
       ]),
       // Left/top panel
       startPanel: PropTypes.any,
       // Min panel size.
       minSize: PropTypes.oneOfType([
         PropTypes.number,
-        PropTypes.string
+        PropTypes.string,
       ]),
       // Max panel size.
       maxSize: PropTypes.oneOfType([
         PropTypes.number,
-        PropTypes.string
+        PropTypes.string,
       ]),
       // Right/bottom panel
       endPanel: PropTypes.any,
@@ -62,7 +62,7 @@ class SplitBox extends Component {
     return {
       splitterSize: 5,
       vert: true,
-      endPanelControl: false
+      endPanelControl: false,
     };
   }
 
@@ -84,7 +84,7 @@ class SplitBox extends Component {
       // Width of controlled panel.
       width: props.initialWidth || props.initialSize,
       // Height of controlled panel.
-      height: props.initialHeight || props.initialSize
+      height: props.initialHeight || props.initialSize,
     };
 
     this.onStartMove = this.onStartMove.bind(this);
@@ -146,7 +146,7 @@ class SplitBox extends Component {
     this.splitBox.classList.add("dragging");
 
     this.setState({
-      defaultCursor: defaultCursor
+      defaultCursor: defaultCursor,
     });
   }
 
@@ -184,7 +184,7 @@ class SplitBox extends Component {
         x - nodeBounds.left;
 
       this.setState({
-        width: size
+        width: size,
       });
     } else {
       size = endPanelControl ?
@@ -192,7 +192,7 @@ class SplitBox extends Component {
         y - nodeBounds.top;
 
       this.setState({
-        height: size
+        height: size,
       });
     }
   }
@@ -220,29 +220,29 @@ class SplitBox extends Component {
       leftPanelStyle = {
         maxWidth: endPanelControl ? null : maxSize,
         minWidth: endPanelControl ? null : minSize,
-        width: endPanelControl ? null : this.state.width
+        width: endPanelControl ? null : this.state.width,
       };
       rightPanelStyle = {
         maxWidth: endPanelControl ? maxSize : null,
         minWidth: endPanelControl ? minSize : null,
-        width: endPanelControl ? this.state.width : null
+        width: endPanelControl ? this.state.width : null,
       };
     } else {
       leftPanelStyle = {
         maxHeight: endPanelControl ? null : maxSize,
         minHeight: endPanelControl ? null : minSize,
-        height: endPanelControl ? null : this.state.height
+        height: endPanelControl ? null : this.state.height,
       };
       rightPanelStyle = {
         maxHeight: endPanelControl ? maxSize : null,
         minHeight: endPanelControl ? minSize : null,
-        height: endPanelControl ? this.state.height : null
+        height: endPanelControl ? this.state.height : null,
       };
     }
 
     // Calculate splitter size
     const splitterStyle = {
-      flex: "0 0 " + splitterSize + "px"
+      flex: "0 0 " + splitterSize + "px",
     };
 
     return (
@@ -269,7 +269,7 @@ class SplitBox extends Component {
             style: splitterStyle,
             onStart: this.onStartMove,
             onStop: this.onStopMove,
-            onMove: this.onMove
+            onMove: this.onMove,
           }) : null,
         endPanel ?
           dom.div({

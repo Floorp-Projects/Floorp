@@ -707,7 +707,7 @@ function makeFilterPredicate(filterString) {
 exports.censusReportToCensusTreeNode = function(breakdown, report,
                                                  options = {
                                                    invert: false,
-                                                   filter: null
+                                                   filter: null,
                                                  }) {
   // Reset the counter so that turning the same census report into a
   // CensusTreeNode tree repeatedly is idempotent.

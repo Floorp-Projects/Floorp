@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const PREF_BRANCH = "extensions.webcompat.";
 const PREF_DEFAULTS = {
   perform_injections: true,
-  perform_ua_overrides: true
+  perform_ua_overrides: true,
 };
 
 const INJECTIONS_ENABLE_PREF_NAME = "extensions.webcompat.perform_injections";
@@ -27,7 +27,7 @@ function InjectionsEnablePrefObserver() {
   let isEnabled = Services.prefs.getBoolPref(INJECTIONS_ENABLE_PREF_NAME);
   webextensionPort.postMessage({
     type: "injection-pref-changed",
-    prefState: isEnabled
+    prefState: isEnabled,
   });
 }
 
@@ -86,7 +86,7 @@ this.startup = function({webExtension}) {
       Services.obs.removeObserver(this, UA_OVERRIDES_INIT_TOPIC);
       overrider = new UAOverrider(UAOverrides);
       overrider.init();
-    }
+    },
   };
   Services.obs.addObserver(uaStartupObserver, UA_OVERRIDES_INIT_TOPIC);
 
@@ -105,7 +105,7 @@ this.startup = function({webExtension}) {
         console.error(ex);
       });
       Services.obs.removeObserver(this, BROWSER_STARTUP_FINISHED_TOPIC);
-    }
+    },
   };
   Services.obs.addObserver(appStartupObserver, BROWSER_STARTUP_FINISHED_TOPIC);
 };

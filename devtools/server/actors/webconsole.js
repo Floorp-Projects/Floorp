@@ -327,7 +327,7 @@ WebConsoleActor.prototype =
     if (this.netmonitors) {
       for (const { messageManager } of this.netmonitors) {
         messageManager.sendAsyncMessage("debug:destroy-network-monitor", {
-          actorID: this.actorID
+          actorID: this.actorID,
         });
       }
       this.netmonitors = null;
@@ -459,7 +459,7 @@ WebConsoleActor.prototype =
       sources: () => DevToolsUtils.reportException("WebConsoleActor",
         Error("sources not yet implemented")),
       createEnvironmentActor: (env) => this.createEnvironmentActor(env),
-      getGlobalDebugObject: () => this.globalDebugObject
+      getGlobalDebugObject: () => this.globalDebugObject,
     }, this.conn);
     pool.addActor(actor);
     return actor.form();
@@ -640,12 +640,12 @@ WebConsoleActor.prototype =
                   constructor: "NetworkMonitorActor",
                   args: [
                     { outerWindowID: this.parentActor.outerWindowID },
-                    this.actorID
+                    this.actorID,
                   ],
                 });
               this.netmonitors.push({
                 messageManager: this.parentActor.messageManager,
-                parentProcess: true
+                parentProcess: true,
               });
             }
 
@@ -661,7 +661,7 @@ WebConsoleActor.prototype =
 
             this.netmonitors.push({
               messageManager: mmMockChild,
-              parentProcess: !isInContentProcess
+              parentProcess: !isInContentProcess,
             });
 
             // Create a StackTraceCollector that's going to be shared both by
@@ -772,7 +772,7 @@ WebConsoleActor.prototype =
           if (this.netmonitors) {
             for (const { messageManager } of this.netmonitors) {
               messageManager.sendAsyncMessage("debug:destroy-network-monitor", {
-                actorID: this.actorID
+                actorID: this.actorID,
               });
             }
             this.netmonitors = null;
@@ -945,7 +945,7 @@ WebConsoleActor.prototype =
     const resultID = Date.now();
     this.conn.send({
       from: this.actorID,
-      resultID: resultID
+      resultID: resultID,
     });
 
     // Then, execute the script that may pause.
@@ -1106,7 +1106,7 @@ WebConsoleActor.prototype =
             frame = {
               source: "debugger eval code",
               line,
-              column
+              column,
             };
           }
         } catch (ex) {
@@ -1124,7 +1124,7 @@ WebConsoleActor.prototype =
                   source: note.fileName,
                   line: note.lineNumber,
                   column: note.columnNumber,
-                }
+                },
               });
             }
           }
@@ -1319,13 +1319,13 @@ WebConsoleActor.prototype =
         if (key == "NetworkMonitor.saveRequestAndResponseBodies") {
           for (const { messageManager } of this.netmonitors) {
             messageManager.sendAsyncMessage("debug:netmonitor-preference", {
-              saveRequestAndResponseBodies: this._prefs[key]
+              saveRequestAndResponseBodies: this._prefs[key],
             });
           }
         } else if (key == "NetworkMonitor.throttleData") {
           for (const { messageManager } of this.netmonitors) {
             messageManager.sendAsyncMessage("debug:netmonitor-preference", {
-              throttleData: this._prefs[key]
+              throttleData: this._prefs[key],
             });
           }
         }
@@ -1398,7 +1398,7 @@ WebConsoleActor.prototype =
   _getWebConsoleCommandsCache: function() {
     if (!this._webConsoleCommandsCache) {
       const helpers = {
-        sandbox: Object.create(null)
+        sandbox: Object.create(null),
       };
       addWebConsoleCommands(helpers);
       this._webConsoleCommandsCache = Object.getOwnPropertyNames(helpers.sandbox);
@@ -1478,7 +1478,7 @@ WebConsoleActor.prototype =
           filename: s.source,
           lineNumber: s.line,
           columnNumber: s.column,
-          functionName: s.functionDisplayName
+          functionName: s.functionDisplayName,
         });
         s = s.parent;
       }
@@ -1500,7 +1500,7 @@ WebConsoleActor.prototype =
             source: note.sourceName,
             line: note.lineNumber,
             column: note.columnNumber,
-          }
+          },
         });
       }
     }
@@ -1602,7 +1602,7 @@ WebConsoleActor.prototype =
       uri: NetUtil.newURI(url),
       loadingNode: doc,
       securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     });
 
     channel.QueryInterface(Ci.nsIHttpChannel);
@@ -1643,7 +1643,7 @@ WebConsoleActor.prototype =
           messageManager.removeMessageListener("debug:get-network-event-actor:response",
             onMessage);
           resolve({
-            eventActor: data.actor
+            eventActor: data.actor,
           });
         }
       };
@@ -1687,7 +1687,7 @@ WebConsoleActor.prototype =
       end: reflowInfo.end,
       sourceURL: reflowInfo.sourceURL,
       sourceLine: reflowInfo.sourceLine,
-      functionName: reflowInfo.functionName
+      functionName: reflowInfo.functionName,
     };
 
     this.conn.send(packet);
@@ -1814,7 +1814,7 @@ WebConsoleActor.prototype.requestTypes =
   clearMessagesCache: WebConsoleActor.prototype.clearMessagesCache,
   getPreferences: WebConsoleActor.prototype.getPreferences,
   setPreferences: WebConsoleActor.prototype.setPreferences,
-  sendHTTPRequest: WebConsoleActor.prototype.sendHTTPRequest
+  sendHTTPRequest: WebConsoleActor.prototype.sendHTTPRequest,
 };
 
 exports.WebConsoleActor = WebConsoleActor;

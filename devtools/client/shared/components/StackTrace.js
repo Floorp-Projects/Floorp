@@ -15,7 +15,7 @@ const l10n = new LocalizationHelper("devtools/client/locales/webconsole.properti
 class AsyncFrameClass extends Component {
   static get propTypes() {
     return {
-      asyncCause: PropTypes.string.isRequired
+      asyncCause: PropTypes.string.isRequired,
     };
   }
 
@@ -53,7 +53,7 @@ class StackTrace extends Component {
       if (s.asyncCause) {
         frames.push("\t", AsyncFrame({
           key: `${i}-asyncframe`,
-          asyncCause: s.asyncCause
+          asyncCause: s.asyncCause,
         }), "\n");
       }
 

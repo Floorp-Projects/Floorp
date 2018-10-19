@@ -76,7 +76,7 @@ EDGES.internalType = function(breakdown, report) {
   return Object.keys(report).map(key => ({
     edge: key,
     referent: report[key],
-    breakdown: breakdown.then
+    breakdown: breakdown.then,
   }));
 };
 
@@ -84,7 +84,7 @@ EDGES.descriptiveType = function(breakdown, report) {
   return Object.keys(report).map(key => ({
     edge: key,
     referent: report[key],
-    breakdown: breakdown.then
+    breakdown: breakdown.then,
   }));
 };
 
@@ -92,7 +92,7 @@ EDGES.objectClass = function(breakdown, report) {
   return Object.keys(report).map(key => ({
     edge: key,
     referent: report[key],
-    breakdown: key === "other" ? breakdown.other : breakdown.then
+    breakdown: key === "other" ? breakdown.other : breakdown.then,
   }));
 };
 
@@ -112,7 +112,7 @@ EDGES.allocationStack = function(breakdown, report) {
     edges.push({
       edge: key,
       referent: value,
-      breakdown: key === "noStack" ? breakdown.noStack : breakdown.then
+      breakdown: key === "noStack" ? breakdown.noStack : breakdown.then,
     });
   });
   return edges;
@@ -122,7 +122,7 @@ EDGES.filename = function(breakdown, report) {
   return Object.keys(report).map(key => ({
     edge: key,
     referent: report[key],
-    breakdown: key === "noFilename" ? breakdown.noFilename : breakdown.then
+    breakdown: key === "noFilename" ? breakdown.noFilename : breakdown.then,
   }));
 };
 

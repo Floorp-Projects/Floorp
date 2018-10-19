@@ -524,7 +524,7 @@ class RuntimeParser {
         type: "sel",
         exp: null,
         vars: variants[0],
-        def: variants[1]
+        def: variants[1],
       };
     }
 
@@ -587,7 +587,7 @@ class RuntimeParser {
       type: "sel",
       exp: selector,
       vars: variants[0],
-      def: variants[1]
+      def: variants[1],
     };
   }
 
@@ -616,7 +616,7 @@ class RuntimeParser {
       return {
         type: "getattr",
         id: literal,
-        name
+        name,
       };
     }
 
@@ -628,7 +628,7 @@ class RuntimeParser {
       return {
         type: "getvar",
         id: literal,
-        key
+        key,
       };
     }
 
@@ -647,7 +647,7 @@ class RuntimeParser {
       return {
         type: "call",
         fun: literal,
-        args
+        args,
       };
     }
 
@@ -696,7 +696,7 @@ class RuntimeParser {
             args.push({
               type: "narg",
               name: exp.name,
-              val
+              val,
             });
           } else {
             this._index = this._source.lastIndexOf(":", this._index) + 1;
@@ -769,7 +769,7 @@ class RuntimeParser {
 
     return {
       type: "num",
-      val: num
+      val: num,
     };
   }
 
@@ -814,7 +814,7 @@ class RuntimeParser {
         attrs[key] = val;
       } else {
         attrs[key] = {
-          val
+          val,
         };
       }
 
@@ -910,7 +910,7 @@ class RuntimeParser {
       this._index++;
       return {
         type: "var",
-        name: this.getIdentifier()
+        name: this.getIdentifier(),
       };
     }
 
@@ -924,7 +924,7 @@ class RuntimeParser {
         (cc1 >= 65 && cc1 <= 90)) { // A-Z
       return {
         type: "ref",
-        name: this.getEntryIdentifier()
+        name: this.getEntryIdentifier(),
       };
     }
 
@@ -1688,7 +1688,7 @@ function Pattern(env, ptn) {
  */
 function resolve(ctx, args, message, errors = []) {
   const env = {
-    ctx, args, errors, dirty: new WeakSet()
+    ctx, args, errors, dirty: new WeakSet(),
   };
   return Type(env, message).toString(ctx);
 }
@@ -1760,7 +1760,7 @@ class MessageContext {
   constructor(locales, {
     functions = {},
     useIsolating = true,
-    transform = v => v
+    transform = v => v,
   } = {}) {
     this.locales = Array.isArray(locales) ? locales : [locales];
 

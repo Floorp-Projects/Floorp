@@ -48,7 +48,7 @@ PropertyIteratorClient.prototype = {
    */
   names: DebuggerClient.requester({
     type: "names",
-    indexes: arg(0)
+    indexes: arg(0),
   }, {}),
 
   /**
@@ -64,7 +64,7 @@ PropertyIteratorClient.prototype = {
   slice: DebuggerClient.requester({
     type: "slice",
     start: arg(0),
-    count: arg(1)
+    count: arg(1),
   }, {}),
 
   /**
@@ -74,7 +74,7 @@ PropertyIteratorClient.prototype = {
    *        The function called when we receive the property values.
    */
   all: DebuggerClient.requester({
-    type: "all"
+    type: "all",
   }, {}),
 };
 

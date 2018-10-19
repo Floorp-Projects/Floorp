@@ -60,7 +60,7 @@ WorkerTargetActorList.prototype = {
     }
 
     // Delete each actor for which we don't have a debugger.
-    for (const [dbg, ] of this._actors) {
+    for (const [dbg ] of this._actors) {
       if (!dbgs.has(dbg)) {
         this._actors.delete(dbg);
       }
@@ -130,7 +130,7 @@ WorkerTargetActorList.prototype = {
     if (matchWorkerDebugger(dbg, this._options)) {
       this._notifyListChanged();
     }
-  }
+  },
 };
 
 exports.WorkerTargetActorList = WorkerTargetActorList;
@@ -155,7 +155,7 @@ ServiceWorkerRegistrationActorList.prototype = {
     }
 
     // Delete each actor for which we don't have a registration.
-    for (const [registration, ] of this._actors) {
+    for (const [registration ] of this._actors) {
       if (!registrations.has(registration)) {
         this._actors.delete(registration);
       }
@@ -219,7 +219,7 @@ ServiceWorkerRegistrationActorList.prototype = {
 
   onUnregister(registration) {
     this._notifyListChanged();
-  }
+  },
 };
 
 exports.ServiceWorkerRegistrationActorList = ServiceWorkerRegistrationActorList;

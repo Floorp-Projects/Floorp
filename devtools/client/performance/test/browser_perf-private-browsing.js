@@ -34,7 +34,7 @@ async function createPanelInNewWindow(options) {
 async function createPanelInWindow(options, win = window) {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: win
+    win: win,
   }, options);
 
   gPanelWinTuples.push({ panel, win });
@@ -43,7 +43,7 @@ async function createPanelInWindow(options, win = window) {
 
 async function testNormalWindow() {
   const { panel } = await createPanelInWindow({
-    private: false
+    private: false,
   });
 
   const { PerformanceView } = panel.panelWin;
@@ -57,7 +57,7 @@ async function testPrivateWindow() {
     private: true,
     // The add-on SDK can't seem to be able to listen to "ready" or "close"
     // events for private tabs. Don't really absolutely need to though.
-    dontWaitForTabReady: true
+    dontWaitForTabReady: true,
   });
 
   const { PerformanceView } = panel.panelWin;

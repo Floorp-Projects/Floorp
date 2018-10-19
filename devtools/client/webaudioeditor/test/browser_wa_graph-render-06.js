@@ -14,7 +14,7 @@ add_task(async function() {
 
   const events = Promise.all([
     getN(gFront, "create-node", 3),
-    waitForGraphRendered(panelWin, 3, 1, 0)
+    waitForGraphRendered(panelWin, 3, 1, 0),
   ]);
   reload(target);
   await events;

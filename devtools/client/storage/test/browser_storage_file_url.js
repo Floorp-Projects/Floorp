@@ -46,18 +46,18 @@ add_task(async function() {
       ["cookies", actualPath],
       [
         getCookieId("test1", "", cookiePath),
-        getCookieId("test2", "", cookiePath)
-      ]
+        getCookieId("test2", "", cookiePath),
+      ],
     ], [
       ["indexedDB", actualPath, "MyDatabase (default)", "MyObjectStore"],
-      [12345, 54321, 67890, 98765]
+      [12345, 54321, 67890, 98765],
     ], [
       ["localStorage", actualPath],
-      ["test3", "test4"]
+      ["test3", "test4"],
     ], [
       ["sessionStorage", actualPath],
-      ["test5", "test6"]
-    ]
+      ["test5", "test6"],
+    ],
   ]);
 
   await finishTests();

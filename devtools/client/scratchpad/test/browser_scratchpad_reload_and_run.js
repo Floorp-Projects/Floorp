@@ -7,7 +7,7 @@ var DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 var EDITOR_TEXT = [
   "var evt = new CustomEvent('foo', { bubbles: true });",
   "document.body.innerHTML = 'Modified text';",
-  "window.dispatchEvent(evt);"
+  "window.dispatchEvent(evt);",
 ].join("\n");
 
 add_task(async function test() {

@@ -16,7 +16,7 @@ const {
 const CONTENT_MIME_TYPE_ABBREVIATIONS = {
   "ecmascript": "js",
   "javascript": "js",
-  "x-javascript": "js"
+  "x-javascript": "js",
 };
 
 /**
@@ -299,7 +299,7 @@ function getUrlDetails(url) {
     host,
     scheme,
     unicodeUrl,
-    isLocal
+    isLocal,
   };
 }
 

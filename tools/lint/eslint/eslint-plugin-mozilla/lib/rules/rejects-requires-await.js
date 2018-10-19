@@ -11,8 +11,8 @@
 module.exports = {
   meta: {
     messages: {
-      rejectRequiresAwait: "Assert.rejects needs to be preceded by await."
-    }
+      rejectRequiresAwait: "Assert.rejects needs to be preceded by await.",
+    },
   },
 
   create(context) {
@@ -29,12 +29,12 @@ module.exports = {
             if (node.parent.type !== "AwaitExpression") {
               context.report({
                 node,
-                messageId: "rejectRequiresAwait"
+                messageId: "rejectRequiresAwait",
               });
             }
           }
         }
-      }
+      },
     };
-  }
+  },
 };

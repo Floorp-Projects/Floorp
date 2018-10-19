@@ -11,7 +11,7 @@ const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 const {
   callFunctionWithAsyncStack,
   getStack,
-  getNthPathExcluding
+  getNthPathExcluding,
 } = require("devtools/client/shared/webpack/shims/platform-stack-stub");
 
 function f3() {

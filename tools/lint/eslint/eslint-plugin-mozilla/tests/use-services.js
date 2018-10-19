@@ -25,13 +25,13 @@ ruleTester.run("use-services", rule, {
   valid: [
     'Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)',
     'Components.classes["@mozilla.org/uuid-generator;1"].getService(Components.interfaces.nsIUUIDGenerator)',
-    "Services.wm.addListener()"
+    "Services.wm.addListener()",
   ],
   invalid: [
     invalidCode('Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);',
       "wm"),
     invalidCode(
       'Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(Components.interfaces.nsIAppStartup);',
-      "startup")
-  ]
+      "startup"),
+  ],
 });

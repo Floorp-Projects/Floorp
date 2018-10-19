@@ -25,24 +25,24 @@ add_task(async function() {
         {
           label: "blur",
           value: "2",
-          unit: "px"
+          unit: "px",
         },
         {
           label: "contrast",
           value: "200",
-          unit: "%"
+          unit: "%",
         },
         {
           label: "hue-rotate",
           value: "20.2",
-          unit: "deg"
+          unit: "deg",
         },
         {
           label: "drop-shadow",
           value: "5px 5px black",
-          unit: null
-        }
-      ]
+          unit: null,
+        },
+      ],
     },
     {
       cssValue: "hue-rotate(420.2deg)",
@@ -50,9 +50,9 @@ add_task(async function() {
         {
           label: "hue-rotate",
           value: "420.2",
-          unit: "deg"
-        }
-      ]
+          unit: "deg",
+        },
+      ],
     },
     {
       cssValue: "url(example.svg)",
@@ -60,14 +60,14 @@ add_task(async function() {
         {
           label: "url",
           value: "example.svg",
-          unit: null
-        }
-      ]
+          unit: null,
+        },
+      ],
     },
     {
       cssValue: "none",
-      expected: []
-    }
+      expected: [],
+    },
   ];
 
   const container = doc.querySelector("#filter-container");

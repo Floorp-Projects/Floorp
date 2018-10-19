@@ -48,5 +48,5 @@ LightweightThemeConsumer.prototype = {
     let msg = active ? { type: "LightweightTheme:Update", data: aData } :
                        { type: "LightweightTheme:Disable" };
     EventDispatcher.instance.sendRequest(msg);
-  }
+  },
 };

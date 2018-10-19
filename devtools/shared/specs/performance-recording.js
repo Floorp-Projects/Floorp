@@ -6,7 +6,7 @@
 const { generateActorSpec } = require("devtools/shared/protocol");
 
 const performanceRecordingSpec = generateActorSpec({
-  typeName: "performance-recording"
+  typeName: "performance-recording",
 });
 
 exports.performanceRecordingSpec = performanceRecordingSpec;

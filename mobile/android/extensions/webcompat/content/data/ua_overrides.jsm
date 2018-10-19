@@ -24,7 +24,7 @@ const UAOverrides = [
     uaTransformer: (originalUA) => {
       let prefix = originalUA.substr(0, originalUA.indexOf(")") + 1);
       return `${prefix} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36`;
-    }
+    },
   },
 
   /*
@@ -42,7 +42,7 @@ const UAOverrides = [
     uaTransformer: (originalUA) => {
       let prefix = originalUA.substr(0, originalUA.indexOf(")") + 1);
       return prefix + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.85 Mobile Safari/537.36";
-    }
+    },
   },
 
   /*
@@ -58,8 +58,8 @@ const UAOverrides = [
     uriMatcher: (uri) => uri.includes("sites.google.com"),
     uaTransformer: (originalUA) => {
       return originalUA + " Chrome/68.0.3440.85 Mobile Safari/537.366";
-    }
-  }
+    },
+  },
 ];
 
 var EXPORTED_SYMBOLS = ["UAOverrides"]; /* exported UAOverrides */

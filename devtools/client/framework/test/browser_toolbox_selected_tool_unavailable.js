@@ -20,9 +20,9 @@ const testToolDefinition = {
         toolbox: toolbox,
         isReady: true,
         destroy: () => {},
-        panelDoc: iframeWindow.document
+        panelDoc: iframeWindow.document,
     };
-  }
+  },
 };
 
 add_task(async function() {

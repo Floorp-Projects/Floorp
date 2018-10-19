@@ -14,7 +14,7 @@ Object.defineProperty(this, "NetworkHelper", {
   },
   configurable: true,
   writeable: false,
-  enumerable: true
+  enumerable: true,
 });
 
 const wpl = Ci.nsIWebProgressListener;
@@ -22,15 +22,15 @@ const TEST_CASES = [
   {
     description: "weak cipher",
     input: wpl.STATE_IS_BROKEN | wpl.STATE_USES_WEAK_CRYPTO,
-    expected: ["cipher"]
+    expected: ["cipher"],
   }, {
     description: "only STATE_IS_BROKEN flag",
     input: wpl.STATE_IS_BROKEN,
-    expected: []
+    expected: [],
   }, {
     description: "only STATE_IS_SECURE flag",
     input: wpl.STATE_IS_SECURE,
-    expected: []
+    expected: [],
   },
 ];
 

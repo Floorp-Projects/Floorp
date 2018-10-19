@@ -4,7 +4,7 @@
 "use strict";
 
 const {
-  ConsoleAPIListener
+  ConsoleAPIListener,
 } = require("devtools/server/actors/webconsole/listeners/console-api");
 const { on, once, off, emit, count, handler } = require("devtools/shared/event-emitter");
 
@@ -189,7 +189,7 @@ const TESTS = {
 
         listener.destroy();
         done();
-      }
+      },
     });
 
     listener.init();
@@ -259,7 +259,7 @@ const TESTS = {
         actual.push(type);
         equal(this, object, "the contextual object is correct for object listener");
         deepEqual(rest, [10, 20, 30], "arguments are properly passed");
-      }
+      },
     };
 
     on(target, "foo", listener);
@@ -284,7 +284,7 @@ const TESTS = {
           off(target, "message", object);
           actual.push(2);
         });
-      }
+      },
     };
 
     on(target, "message", object);
@@ -309,7 +309,7 @@ const TESTS = {
         equal(type, "foo", "event type is properly passed");
         equal(value, "bar", "correct argument was passed");
         equal(this, object, "the contextual object is correct for object listener");
-      }
+      },
     };
 
     const pFoo = once(target, "foo", object);
@@ -328,7 +328,7 @@ const TESTS = {
     on(target, "data", fail);
     off(target, "data", fail, undefined);
     emit(target, "data", "Listener should be removed");
-  }
+  },
 
 };
 

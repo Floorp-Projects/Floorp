@@ -145,7 +145,7 @@ async function getContentSize() {
         scrollMinY: content.scrollMinY,
         scrollMinX: content.scrollMinX,
         innerWidth: content.innerWidth,
-        innerHeight: content.innerHeight
+        innerHeight: content.innerHeight,
       };
     }
   );

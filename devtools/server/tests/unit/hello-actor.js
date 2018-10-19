@@ -10,10 +10,10 @@ const helloSpec = protocol.generateActorSpec({
   typeName: "helloActor",
 
   methods: {
-    hello: {}
-  }
+    hello: {},
+  },
 });
 
 var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
-  hello: function() {}
+  hello: function() {},
 });

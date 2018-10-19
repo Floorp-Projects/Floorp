@@ -76,7 +76,7 @@ WalkerIndex.prototype = {
     // Add the type/node to the list
     this._data.get(value).push({
       type: type,
-      node: node
+      node: node,
     });
   },
 
@@ -114,7 +114,7 @@ WalkerIndex.prototype = {
     }
 
     this.currentlyIndexing = false;
-  }
+  },
 };
 
 exports.WalkerIndex = WalkerIndex;
@@ -263,7 +263,7 @@ WalkerSearch.prototype = {
     });
 
     return resultList;
-  }
+  },
 };
 
 WalkerSearch.SEARCH_METHOD_CONTAINS = (query, candidate) => {

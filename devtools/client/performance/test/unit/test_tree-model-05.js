@@ -15,23 +15,23 @@ var gThread = synthesizeProfileForTest([{
     { location: "(root)" },
     { location: "A" },
     { location: "B" },
-    { location: "C" }
-  ]
+    { location: "C" },
+  ],
 }, {
   time: time++,
   frames: [
     { location: "(root)" },
     { location: "A" },
     { location: "D" },
-    { location: "C" }
-  ]
+    { location: "C" },
+  ],
 }, {
   time: time++,
   frames: [
     { location: "(root)" },
     { location: "A" },
     { location: "E" },
-    { location: "C" }
+    { location: "C" },
   ],
 }, {
   time: time++,
@@ -39,8 +39,8 @@ var gThread = synthesizeProfileForTest([{
     { location: "(root)" },
     { location: "A" },
     { location: "B" },
-    { location: "F" }
-  ]
+    { location: "F" },
+  ],
 }]);
 
 add_task(function test() {

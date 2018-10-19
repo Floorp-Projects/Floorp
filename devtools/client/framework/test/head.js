@@ -65,7 +65,7 @@ async function openScratchpadWindow() {
       onReady: function() {
         win.Scratchpad.removeObserver(this);
         resolve(win);
-      }
+      },
     });
   });
 }

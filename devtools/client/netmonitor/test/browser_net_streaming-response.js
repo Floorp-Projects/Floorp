@@ -23,7 +23,7 @@ add_task(async function() {
 
   const REQUESTS = [
     [ "hls-m3u8", /^#EXTM3U/ ],
-    [ "mpeg-dash", /^<\?xml/ ]
+    [ "mpeg-dash", /^<\?xml/ ],
   ];
 
   let wait = waitForNetworkEvents(monitor, REQUESTS.length);
@@ -52,7 +52,7 @@ add_task(async function() {
       CONTENT_TYPE_SJS + "?fmt=" + fmt,
       {
         status: 200,
-        statusText: "OK"
+        statusText: "OK",
       });
   });
 

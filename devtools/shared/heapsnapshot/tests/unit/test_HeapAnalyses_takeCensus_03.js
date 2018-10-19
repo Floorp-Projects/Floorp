@@ -35,7 +35,7 @@ add_task(async function() {
   failed = false;
   try {
     await client.takeCensus(snapshotFilePath, {
-      breakdown: { by: "some classification that we do not have" }
+      breakdown: { by: "some classification that we do not have" },
     });
   } catch (e) {
     failed = true;

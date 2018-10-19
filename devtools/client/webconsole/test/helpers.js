@@ -28,7 +28,7 @@ function setupActions() {
 
   return {
     ...reduxActions,
-    messagesAdd: packets => reduxActions.messagesAdd(packets, idGenerator)
+    messagesAdd: packets => reduxActions.messagesAdd(packets, idGenerator),
   };
 }
 
@@ -46,8 +46,8 @@ function setupStore(input = [], {
         releaseActor: () => {},
         target: {
           activeTab: {
-            ensureCSSErrorReportingEnabled: () => {}
-          }
+            ensureCSSErrorReportingEnabled: () => {},
+          },
         },
       },
     };

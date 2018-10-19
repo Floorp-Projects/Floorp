@@ -21,9 +21,9 @@
         children: [
           { // text child
             role: ROLE_TEXT_LEAF,
-            children: []
-          }
-        ]
+            children: [],
+          },
+        ],
       };
 
       testAccessibleTree("c1", accTree);
@@ -34,32 +34,32 @@
         children: [
           {
             role: ROLE_TEXT_LEAF,
-            name: "Hello1"
+            name: "Hello1",
           },
           {
-            role: ROLE_WHITESPACE
-          },
-          {
-            role: ROLE_TEXT_LEAF,
-            name: "Hello2"
-          },
-          {
-            role: ROLE_SEPARATOR
+            role: ROLE_WHITESPACE,
           },
           {
             role: ROLE_TEXT_LEAF,
-            name: "Hello3 "
+            name: "Hello2",
+          },
+          {
+            role: ROLE_SEPARATOR,
+          },
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "Hello3 ",
           },
           {
             role: ROLE_PARAGRAPH,
             children: [
               {
                 role: ROLE_TEXT_LEAF,
-                name: "Hello4 "
-              }
-            ]
-          }
-        ]
+                name: "Hello4 ",
+              },
+            ],
+          },
+        ],
       };
 
       testAccessibleTree("c3", accTree);
@@ -70,22 +70,22 @@
         children: [
           {
             role: ROLE_TEXT_LEAF,
-            name: "helllo "
+            name: "helllo ",
           },
           {
             role: ROLE_PARAGRAPH,
             children: [
               {
                 role: ROLE_TEXT_LEAF,
-                name: "blabla"
-              }
-            ]
+                name: "blabla",
+              },
+            ],
           },
           {
             role: ROLE_TEXT_LEAF,
-            name: "hello "
-          }
-        ]
+            name: "hello ",
+          },
+        ],
       };
 
       testAccessibleTree("c4", accTree);
@@ -100,11 +100,11 @@
               { // text child
                 role: ROLE_TEXT_LEAF,
                 name: "Hello",
-                children: []
-              }
-            ]
-          }
-        ]
+                children: [],
+              },
+            ],
+          },
+        ],
       };
 
       testAccessibleTree("c5", accTree);
@@ -116,7 +116,7 @@
           { // text leaf
             role: ROLE_TEXT_LEAF,
             name: "This ",
-            children: []
+            children: [],
           },
           { // abbr tag
             role: ROLE_TEXT,
@@ -125,16 +125,16 @@
               { // text leaf with actual text
                 role: ROLE_TEXT_LEAF,
                 name: "a11y",
-                children: []
-              }
-            ]
+                children: [],
+              },
+            ],
           },
           { // text leaf
             role: ROLE_TEXT_LEAF,
             name: " test",
-            children: []
-          }
-        ]
+            children: [],
+          },
+        ],
       };
 
       testAccessibleTree("c6", accTree);
@@ -146,7 +146,7 @@
           { // text leaf
             role: ROLE_TEXT_LEAF,
             name: "This ",
-            children: []
+            children: [],
           },
           { // acronym tag
             role: ROLE_TEXT,
@@ -155,16 +155,16 @@
               { // text leaf with actual text
                 role: ROLE_TEXT_LEAF,
                 name: "PC",
-                children: []
-              }
-            ]
+                children: [],
+              },
+            ],
           },
           { // text leaf
             role: ROLE_TEXT_LEAF,
             name: " is broken",
-            children: []
-          }
-        ]
+            children: [],
+          },
+        ],
       };
 
       testAccessibleTree("c7", accTree);
@@ -174,8 +174,8 @@
         SECTION: [
           { GRAPHIC: [] },
           { TEXT_LEAF: [] },
-          { GRAPHIC: [] }
-        ]
+          { GRAPHIC: [] },
+        ],
       };
       testAccessibleTree("c8", accTree);
 

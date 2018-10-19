@@ -42,7 +42,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
       actor: this.actorID,
       consoleActor: this._consoleActor,
       url: this._dbg.url,
-      type: this._dbg.type
+      type: this._dbg.type,
     };
     if (this._dbg.type === Ci.nsIWorkerDebugger.TYPE_SERVICE) {
       const registration = this._getServiceWorkerRegistrationInfo();
@@ -75,7 +75,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
 
     return {
       type: "attached",
-      url: this._dbg.url
+      url: this._dbg.url,
     };
   },
 
@@ -104,7 +104,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
     if (this._threadActor !== null) {
       return {
         type: "connected",
-        threadActor: this._threadActor
+        threadActor: this._threadActor,
       };
     }
 
@@ -118,7 +118,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
       return {
         type: "connected",
         threadActor: this._threadActor,
-        consoleActor: this._consoleActor
+        consoleActor: this._consoleActor,
       };
     }, (error) => {
       return { error: error.toString() };
@@ -182,7 +182,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
 
     this._dbg.removeListener(this);
     this._attached = false;
-  }
+  },
 });
 
 exports.WorkerTargetActor = WorkerTargetActor;

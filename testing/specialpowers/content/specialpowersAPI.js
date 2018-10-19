@@ -326,7 +326,7 @@ SpecialPowersHandler.prototype = {
 
   preventExtensions(target) {
     throw "Can't call preventExtensions on SpecialPowers wrapped object";
-  }
+  },
 };
 
 // SPConsoleListener reflects nsIConsoleMessage objects into JS in a
@@ -395,7 +395,7 @@ SPConsoleListener.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener,
-                                          Ci.nsIObserver])
+                                          Ci.nsIObserver]),
 };
 
 function wrapCallback(cb) {
@@ -601,7 +601,7 @@ SpecialPowersAPI.prototype = {
         } else if (aMessage.name == "SPChromeScriptAssert") {
           assert(aMessage.json);
         }
-      }
+      },
     };
     this._addMessageListener("SPChromeScriptMessage", chromeScript);
     this._addMessageListener("SPChromeScriptAssert", chromeScript);
@@ -718,7 +718,7 @@ SpecialPowersAPI.prototype = {
 
       this._addMessageListener("SPProcessCrashManagerWait", messageListener);
       this._sendAsyncMessage("SPProcessCrashManagerWait", {
-        crashIds
+        crashIds,
       });
     });
   },
@@ -728,7 +728,7 @@ SpecialPowersAPI.prototype = {
     if (aExpectingProcessCrash) {
       var message = {
         op: "delete-crash-dump-files",
-        filenames: this._encounteredCrashDumpFiles
+        filenames: this._encounteredCrashDumpFiles,
       };
       if (!this._sendSyncMessage("SPProcessCrashService", message)[0]) {
         success = false;
@@ -742,7 +742,7 @@ SpecialPowersAPI.prototype = {
     var self = this;
     var message = {
       op: "find-crash-dump-files",
-      crashDumpFilesToIgnore: this._unexpectedCrashDumpFiles
+      crashDumpFilesToIgnore: this._unexpectedCrashDumpFiles,
     };
     var crashDumpFiles = this._sendSyncMessage("SPProcessCrashService", message)[0];
     crashDumpFiles.forEach(function(aFilename) {
@@ -753,7 +753,7 @@ SpecialPowersAPI.prototype = {
 
   removePendingCrashDumpFiles() {
     var message = {
-      op: "delete-pending-crash-dump-files"
+      op: "delete-pending-crash-dump-files",
     };
     var removed = this._sendSyncMessage("SPProcessCrashService", message)[0];
     return removed;
@@ -939,7 +939,7 @@ SpecialPowersAPI.prototype = {
         var permission = aSubject.QueryInterface(Ci.nsIPermission);
         this._specialPowersAPI._permissionObserver.observe(permission, aData);
       }
-    }
+    },
   },
 
   popPermissions(callback) {
@@ -979,7 +979,7 @@ SpecialPowersAPI.prototype = {
     _nextCallback: null,
     _obsDataMap: {
       "deleted": "remove",
-      "added": "add"
+      "added": "add",
     },
     observe(permission, aData) {
       if (this._self._applyingPermissions) {
@@ -1011,7 +1011,7 @@ SpecialPowersAPI.prototype = {
           }
         }
       }
-    }
+    },
   },
 
   /*
@@ -1914,7 +1914,7 @@ SpecialPowersAPI.prototype = {
       "permission": permission,
       "principal": principal,
       "expireType": (typeof expireType === "number") ? expireType : 0,
-      "expireTime": (typeof expireTime === "number") ? expireTime : 0
+      "expireTime": (typeof expireTime === "number") ? expireTime : 0,
     };
 
     this._sendSyncMessage("SPPermissionManager", msg);
@@ -1929,7 +1929,7 @@ SpecialPowersAPI.prototype = {
     var msg = {
       "op": "remove",
       "type": type,
-      "principal": principal
+      "principal": principal,
     };
 
     this._sendSyncMessage("SPPermissionManager", msg);
@@ -1944,7 +1944,7 @@ SpecialPowersAPI.prototype = {
     var msg = {
       "op": "has",
       "type": type,
-      "principal": principal
+      "principal": principal,
     };
 
     return this._sendSyncMessage("SPPermissionManager", msg)[0];
@@ -1960,7 +1960,7 @@ SpecialPowersAPI.prototype = {
       "op": "test",
       "type": type,
       "value": value,
-      "principal": principal
+      "principal": principal,
     };
     return this._sendSyncMessage("SPPermissionManager", msg)[0];
   },
@@ -1980,7 +1980,7 @@ SpecialPowersAPI.prototype = {
     var msg = {
       "op": "notify",
       "observerTopic": topic,
-      "observerData": data
+      "observerData": data,
     };
     this._sendSyncMessage("SPObserverService", msg);
   },
@@ -2157,7 +2157,7 @@ SpecialPowersAPI.prototype = {
 
           let httpStatus = this.httpStatus;
           resolve({status, httpStatus});
-        }
+        },
       };
       let uri = NetUtil.newURI(url);
       let channel = NetUtil.newChannel({uri, loadUsingSystemPrincipal});

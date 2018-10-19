@@ -407,7 +407,7 @@ TreeWidget.prototype = {
     } else if (bottom > height) {
       this._selectedLabel.scrollIntoView(false);
     }
-  }
+  },
 };
 
 module.exports.TreeWidget = TreeWidget;
@@ -620,5 +620,5 @@ TreeItem.prototype = {
     this.label = null;
     this.items = null;
     this.children = null;
-  }
+  },
 };

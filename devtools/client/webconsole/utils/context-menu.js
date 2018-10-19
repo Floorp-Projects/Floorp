@@ -54,7 +54,7 @@ function createContextMenu(hud, parentNode, {
   const { source, request } = message || {};
 
   const menu = new Menu({
-    id: "webconsole-menu"
+    id: "webconsole-menu",
   });
 
   // Copy URL for a network request.
@@ -78,7 +78,7 @@ function createContextMenu(hud, parentNode, {
       label: l10n.getStr("webconsole.menu.openInNetworkPanel.label"),
       accesskey: l10n.getStr("webconsole.menu.openInNetworkPanel.accesskey"),
       visible: source === MESSAGE_SOURCE.NETWORK,
-      click: () => serviceContainer.openNetworkPanel(message.messageId)
+      click: () => serviceContainer.openNetworkPanel(message.messageId),
     }));
   }
 
@@ -211,7 +211,7 @@ exports.createContextMenu = createContextMenu;
 function createEditContextMenu() {
   const docshell = window.docShell;
   const menu = new Menu({
-    id: "webconsole-menu"
+    id: "webconsole-menu",
   });
   menu.append(new MenuItem({
     id: "editmenu-undo",
@@ -222,7 +222,7 @@ function createEditContextMenu() {
     },
   }));
   menu.append(new MenuItem({
-    type: "separator"
+    type: "separator",
   }));
   menu.append(new MenuItem({
     id: "editmenu-cut",
@@ -257,7 +257,7 @@ function createEditContextMenu() {
     },
   }));
   menu.append(new MenuItem({
-    type: "separator"
+    type: "separator",
   }));
   menu.append(new MenuItem({
     id: "editmenu-selectAll",

@@ -12,14 +12,14 @@ const environmentSpec = generateActorSpec({
     assign: {
       request: {
         name: Arg(1),
-        value: Arg(2)
-      }
+        value: Arg(2),
+      },
     },
     bindings: {
       request: {},
       response: {
-        bindings: RetVal("json")
-      }
+        bindings: RetVal("json"),
+      },
     },
   },
 });

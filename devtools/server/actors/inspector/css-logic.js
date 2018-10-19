@@ -38,7 +38,7 @@ const {
   isContentStylesheet,
   shortSource,
   FILTER,
-  STATUS
+  STATUS,
 } = require("devtools/shared/inspector/css-logic");
 const InspectorUtils = require("InspectorUtils");
 
@@ -876,7 +876,7 @@ CssSheet.prototype = {
 
   toString: function() {
     return "CssSheet[" + this.shortSource + "]";
-  }
+  },
 };
 
 /**

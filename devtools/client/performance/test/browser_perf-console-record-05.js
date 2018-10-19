@@ -17,7 +17,7 @@ const { getSelectedRecording } = require("devtools/client/performance/test/helpe
 add_task(async function() {
   const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { panel } = await initPerformanceInTab({ tab: target.tab });
@@ -25,7 +25,7 @@ add_task(async function() {
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
-    skipWaitingForBackendReady: true
+    skipWaitingForBackendReady: true,
   });
   await console.profile("rust");
   await started;
@@ -44,12 +44,12 @@ add_task(async function() {
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
-    expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
+    expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL],
   });
 
   let stopped = waitForRecordingStoppedEvents(panel, {
     // only emitted for manual recordings
-    skipWaitingForBackendReady: true
+    skipWaitingForBackendReady: true,
   });
   await console.profileEnd("rust");
   await stopped;

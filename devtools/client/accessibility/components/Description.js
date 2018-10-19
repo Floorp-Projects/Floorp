@@ -27,7 +27,7 @@ class OldVersionDescription extends Component {
         p({ className: "general" },
           img({
             src: "chrome://devtools/skin/images/accessibility.svg",
-            alt: L10N.getStr("accessibility.logo")
+            alt: L10N.getStr("accessibility.logo"),
           }), L10N.getStr("accessibility.description.oldVersion")))
     );
   }
@@ -42,7 +42,7 @@ class Description extends Component {
     return {
       accessibility: PropTypes.object.isRequired,
       canBeEnabled: PropTypes.bool,
-      dispatch: PropTypes.func.isRequired
+      dispatch: PropTypes.func.isRequired,
     };
   }
 
@@ -50,7 +50,7 @@ class Description extends Component {
     super(props);
 
     this.state = {
-      enabling: false
+      enabling: false,
     };
 
     this.onEnable = this.onEnable.bind(this);
@@ -104,7 +104,7 @@ class Description extends Component {
         div({ className: "general", role: "presentation" },
           img({
             src: "chrome://devtools/skin/images/accessibility.svg",
-            alt: L10N.getStr("accessibility.logo")
+            alt: L10N.getStr("accessibility.logo"),
           }),
           div({ role: "presentation" },
             LearnMoreLink({
@@ -112,7 +112,7 @@ class Description extends Component {
                     "?utm_source=devtools&utm_medium=a11y-panel-description",
               learnMoreStringKey: "accessibility.learnMore",
               l10n: L10N,
-              messageStringKey: "accessibility.description.general.p1"
+              messageStringKey: "accessibility.description.general.p1",
             }),
             p({}, L10N.getStr("accessibility.description.general.p2"))
           )
@@ -123,7 +123,7 @@ class Description extends Component {
           disabled: enabling || disableButton,
           busy: enabling,
           "data-standalone": true,
-          title
+          title,
         }, L10N.getStr(enableButtonStr))
       )
     );
@@ -131,7 +131,7 @@ class Description extends Component {
 }
 
 const mapStateToProps = ({ ui }) => ({
-  canBeEnabled: ui.canBeEnabled
+  canBeEnabled: ui.canBeEnabled,
 });
 
 // Exports from this module

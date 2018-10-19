@@ -134,7 +134,7 @@ ThreadNode.prototype = {
       contentOnly: options.contentOnly,
       isRoot: false,
       isLeaf: false,
-      isMetaCategoryOut: false
+      isMetaCategoryOut: false,
     };
 
     let byteSize = 0;
@@ -367,7 +367,7 @@ ThreadNode.prototype = {
 
   hasOptimizations: function() {
     return null;
-  }
+  },
 };
 
 /**
@@ -549,7 +549,7 @@ FrameNode.prototype = {
    */
   getTierData: function() {
     return this._tierData;
-  }
+  },
 };
 
 exports.ThreadNode = ThreadNode;

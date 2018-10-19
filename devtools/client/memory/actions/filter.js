@@ -9,7 +9,7 @@ const { refresh } = require("./refresh");
 const setFilterString = exports.setFilterString = function(filterString) {
   return {
     type: actions.SET_FILTER_STRING,
-    filter: filterString
+    filter: filterString,
   };
 };
 

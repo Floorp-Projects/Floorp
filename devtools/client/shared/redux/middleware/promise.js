@@ -33,7 +33,7 @@ function promiseMiddleware({ dispatch, getState }) {
         executeSoon(() => {
           dispatch(Object.assign({}, action, {
             status: "done",
-            value: value
+            value: value,
           }));
           resolve(value);
         });
@@ -41,7 +41,7 @@ function promiseMiddleware({ dispatch, getState }) {
         executeSoon(() => {
           dispatch(Object.assign({}, action, {
             status: "error",
-            error: error.message || error
+            error: error.message || error,
           }));
           reject(error);
         });

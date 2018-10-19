@@ -6,7 +6,7 @@
 
 function test() {
   const options = {
-    tabContent: "test inspecting primitive values"
+    tabContent: "test inspecting primitive values",
   };
   openTabAndScratchpad(options)
     .then(runTests)

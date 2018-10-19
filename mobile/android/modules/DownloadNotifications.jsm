@@ -34,7 +34,7 @@ const kButtons = {
                                          "alertDownloadsResume"),
   CANCEL: new DownloadNotificationButton("cancel",
                                          "drawable://close",
-                                         "alertDownloadsCancel")
+                                         "alertDownloadsCancel"),
 };
 
 var notifications = new Map();
@@ -101,7 +101,7 @@ var DownloadNotifications = {
             if (notification) {
               notification.hide();
             }
-          }
+          },
         }});
     }
 
@@ -209,7 +209,7 @@ DownloadNotification.prototype = {
     let options = {
       icon: "drawable://alert_download",
       cookie: getCookieFromDownload(this.download),
-      handlerKey: DownloadNotifications._notificationKey
+      handlerKey: DownloadNotifications._notificationKey,
     };
 
     if (this._downloading) {
@@ -283,7 +283,7 @@ var ConfirmCancelPrompt = {
       download.cancel().catch(Cu.reportError);
       download.removePartialData().catch(Cu.reportError);
     }
-  }
+  },
 };
 
 function DownloadNotificationButton(buttonId, iconUrl, titleStringName, onClicked) {

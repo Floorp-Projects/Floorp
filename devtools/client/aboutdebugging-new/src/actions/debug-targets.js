@@ -16,7 +16,7 @@ const {
 
 const {
   getCurrentClient,
-  getCurrentRuntime
+  getCurrentRuntime,
 } = require("../modules/runtimes-state-helper");
 
 const {

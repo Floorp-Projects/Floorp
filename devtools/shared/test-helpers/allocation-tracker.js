@@ -183,6 +183,6 @@ exports.allocationTracker = function() {
       dbg.onNewGlobalObject = undefined;
       dbg.removeAllDebuggees();
       dbg = null;
-    }
+    },
   };
 };

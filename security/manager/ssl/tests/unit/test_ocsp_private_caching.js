@@ -34,7 +34,7 @@ function add_flush_cache() {
           observed = true;
           run_next_test();
         }
-      }
+      },
     };
     Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(observer);
   });

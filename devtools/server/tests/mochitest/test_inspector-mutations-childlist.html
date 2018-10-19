@@ -114,7 +114,7 @@ addTest(mutationTest({
   autoCleanup: false,
   postCheck: function(mutations) {
     is(mutations.length, 0, "Dummy mutation is filtered out.");
-  }
+  },
 }));
 
 // Test a simple move to a different location in the sibling list for the same
@@ -123,7 +123,7 @@ addTest(mutationTest({
   autoCleanup: false,
   load: ["#longlist div"],
   moves: [
-    ["#a", "#longlist"]
+    ["#a", "#longlist"],
   ],
   postCheck: function(mutations) {
     const remove = mutations[0];
@@ -137,7 +137,7 @@ addTest(mutationTest({
     is(a.parentNode(), remove.target, "Should still be a child of longlist.");
     is(remove.target, add.target,
        "First and second mutations should be against the same node.");
-  }
+  },
 }));
 
 // Test a move to another location that is within our ownership tree.
@@ -145,7 +145,7 @@ addTest(mutationTest({
   autoCleanup: false,
   load: ["#longlist div", "#longlist-sibling"],
   moves: [
-    ["#a", "#longlist-sibling"]
+    ["#a", "#longlist-sibling"],
   ],
   postCheck: function(mutations) {
     const remove = mutations[0];
@@ -158,7 +158,7 @@ addTest(mutationTest({
     is(a.id, "a", "Added node should be #a");
     is(a.parentNode(), add.target, "Should still be a child of longlist.");
     is(add.target.id, "longlist-sibling", "long-sibling should be the target.");
-  }
+  },
 }));
 
 // Move an unseen node with a seen parent into our ownership tree - should generate a
@@ -167,7 +167,7 @@ addTest(mutationTest({
   autoCleanup: false,
   load: ["#longlist"],
   moves: [
-    ["#longlist-sibling", "#longlist"]
+    ["#longlist-sibling", "#longlist"],
   ],
   postCheck: function(mutations) {
     is(mutations.length, 2, "Should generate two mutations");
@@ -177,7 +177,7 @@ addTest(mutationTest({
     is(mutations[1].type, "childList", "Should be childList mutations.");
     is(mutations[1].added.length, 0, "Should have no adds.");
     is(mutations[1].removed.length, 0, "Should have no removes.");
-  }
+  },
 }));
 
 // Move an unseen node with an unseen parent into our ownership tree.  Should only
@@ -186,14 +186,14 @@ addTest(mutationTest({
   autoCleanup: false,
   load: ["#longlist div"],
   moves: [
-    ["#longlist-sibling-firstchild", "#longlist"]
+    ["#longlist-sibling-firstchild", "#longlist"],
   ],
   postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate two mutations");
     is(mutations[0].type, "childList", "Should be childList mutations.");
     is(mutations[0].added.length, 0, "Should have no adds.");
     is(mutations[0].removed.length, 0, "Should have no removes.");
-  }
+  },
 }));
 
 // Move a node between unseen nodes, should generate no mutations.
@@ -201,11 +201,11 @@ addTest(mutationTest({
   autoCleanup: false,
   load: ["html"],
   moves: [
-    ["#longlist-sibling", "#longlist"]
+    ["#longlist-sibling", "#longlist"],
   ],
   postCheck: function(mutations) {
     is(mutations.length, 0, "Should generate no mutations.");
-  }
+  },
 }));
 
 // Orphan a node and don't clean it up
@@ -213,7 +213,7 @@ addTest(mutationTest({
   autoCleanup: false,
   load: ["#longlist div"],
   moves: [
-    ["#longlist", null]
+    ["#longlist", null],
   ],
   postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
@@ -224,7 +224,7 @@ addTest(mutationTest({
     is(ownership.orphaned.length, 1, "Should have one orphaned subtree.");
     is(ownershipTreeSize(ownership.orphaned[0]), 1 + 26 + 26,
        "Should have orphaned longlist, and 26 children, and 26 singleTextChilds");
-  }
+  },
 }));
 
 // Orphan a node, and do clean it up.
@@ -232,7 +232,7 @@ addTest(mutationTest({
   autoCleanup: true,
   load: ["#longlist div"],
   moves: [
-    ["#longlist", null]
+    ["#longlist", null],
   ],
   postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
@@ -241,7 +241,7 @@ addTest(mutationTest({
     is(change.removed.length, 1, "Should have removed a child.");
     const ownership = clientOwnershipTree(gWalker);
     is(ownership.orphaned.length, 0, "Should have no orphaned subtrees.");
-  }
+  },
 }));
 
 // Orphan a node by moving it into the tree but out of our visible subtree.
@@ -249,7 +249,7 @@ addTest(mutationTest({
   autoCleanup: false,
   load: ["#longlist div"],
   moves: [
-    ["#longlist", "#longlist-sibling"]
+    ["#longlist", "#longlist-sibling"],
   ],
   postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
@@ -260,7 +260,7 @@ addTest(mutationTest({
     is(ownership.orphaned.length, 1, "Should have one orphaned subtree.");
     is(ownershipTreeSize(ownership.orphaned[0]), 1 + 26 + 26,
        "Should have orphaned longlist, 26 children, and 26 singleTextChilds.");
-  }
+  },
 }));
 
 // Orphan a node by moving it into the tree but out of our visible subtree,
@@ -269,7 +269,7 @@ addTest(mutationTest({
   autoCleanup: true,
   load: ["#longlist div"],
   moves: [
-    ["#longlist", "#longlist-sibling"]
+    ["#longlist", "#longlist-sibling"],
   ],
   postCheck: function(mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
@@ -278,7 +278,7 @@ addTest(mutationTest({
     is(change.removed.length, 1, "Should have removed a child.");
     const ownership = clientOwnershipTree(gWalker);
     is(ownership.orphaned.length, 0, "Should have no orphaned subtrees.");
-  }
+  },
 }));
 
 addTest(function cleanup() {

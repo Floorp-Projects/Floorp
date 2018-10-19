@@ -25,7 +25,7 @@ function run_test() {
         // reported by DebuggerClient.requester (because we are using the local
         // transport and share a stack) which causes the test to fail.
         Services.tm.dispatchToMainThread({
-          run: test_black_box
+          run: test_black_box,
         });
       });
   });

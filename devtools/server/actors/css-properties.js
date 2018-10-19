@@ -33,7 +33,7 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
     };
 
     return { properties, pseudoElements, supportedFeature };
-  }
+  },
 });
 
 /**

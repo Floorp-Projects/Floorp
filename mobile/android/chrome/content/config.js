@@ -177,7 +177,7 @@ var NewPrefDialog = {
   // Actual Services.prefs.*etBoolPref()
   toggleBoolValue: function AC_toggleBoolValue() {
     this._booleanValue.value = (this._booleanValue.value == "true" ? "false" : "true");
-  }
+  },
 };
 
 
@@ -506,7 +506,7 @@ var AboutConfig = {
     } else {
       gClipboardHelper.copyString(pref.value);
     }
-  }
+  },
 };
 
 
@@ -694,6 +694,6 @@ Pref.prototype = {
       valDiv.setAttribute("disabled", this.locked);
       this.li.querySelector(".pref-name").setAttribute("locked", true);
     }
-  }
+  },
 };
 

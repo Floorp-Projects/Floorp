@@ -70,14 +70,14 @@ function GripMessageBody(props) {
       if (value) {
         dispatch(actions.showObjectInSidebar(value));
       }
-    }
+    },
   };
 
   if (typeof grip === "string" || (grip && grip.type === "longString")) {
     Object.assign(objectInspectorProps, {
       useQuotes,
       escapeWhitespace,
-      style: styleObject
+      style: styleObject,
     });
   }
 
@@ -115,7 +115,7 @@ function cleanupStyle(userProvidedStyle, createElement) {
     })
     .reduce((object, name) => {
       return Object.assign({
-        [name]: dummy.style[name]
+        [name]: dummy.style[name],
       }, object);
     }, {});
 }

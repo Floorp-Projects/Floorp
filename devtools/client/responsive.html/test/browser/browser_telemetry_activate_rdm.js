@@ -13,8 +13,8 @@ const DATA = [
     value: null,
     extra: {
       host: "none",
-      width: "1300"
-    }
+      width: "1300",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -23,8 +23,8 @@ const DATA = [
     value: null,
     extra: {
       host: "none",
-      width: "1300"
-    }
+      width: "1300",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -33,8 +33,8 @@ const DATA = [
     value: null,
     extra: {
       host: "bottom",
-      width: "1300"
-    }
+      width: "1300",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -43,9 +43,9 @@ const DATA = [
     value: null,
     extra: {
       host: "bottom",
-      width: "1300"
-    }
-  }
+      width: "1300",
+    },
+  },
 ];
 
 add_task(async function() {

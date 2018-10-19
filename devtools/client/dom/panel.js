@@ -214,7 +214,7 @@ DomPanel.prototype = {
 
 function exportIntoContentScope(win, obj, defineAs) {
   const clone = Cu.createObjectIn(win, {
-    defineAs: defineAs
+    defineAs: defineAs,
   });
 
   const props = Object.getOwnPropertyNames(obj);
@@ -223,7 +223,7 @@ function exportIntoContentScope(win, obj, defineAs) {
     const propValue = obj[propName];
     if (typeof propValue == "function") {
       Cu.exportFunction(propValue, clone, {
-        defineAs: propName
+        defineAs: propName,
       });
     }
   }

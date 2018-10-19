@@ -104,8 +104,8 @@ window.onload = function() {
       desc: "Search for tag with one result.",
       search: "body",
       expected: [
-        {node: inspectee.body, type: "tag"}
-      ]
+        {node: inspectee.body, type: "tag"},
+      ],
     },
     {
       desc: "Search for tag with multiple results",
@@ -114,7 +114,7 @@ window.onload = function() {
         {node: inspectee.querySelectorAll("h2")[0], type: "tag"},
         {node: inspectee.querySelectorAll("h2")[1], type: "tag"},
         {node: inspectee.querySelectorAll("h2")[2], type: "tag"},
-      ]
+      ],
     },
     {
       desc: "Search for selector with multiple results",
@@ -123,7 +123,7 @@ window.onload = function() {
         {node: inspectee.querySelectorAll("h2")[0], type: "selector"},
         {node: inspectee.querySelectorAll("h2")[1], type: "selector"},
         {node: inspectee.querySelectorAll("h2")[2], type: "selector"},
-      ]
+      ],
     },
     {
       desc: "Search for selector with multiple results",
@@ -132,7 +132,7 @@ window.onload = function() {
         {node: inspectee.querySelectorAll("h2")[0], type: "selector"},
         {node: inspectee.querySelectorAll("h2")[1], type: "selector"},
         {node: inspectee.querySelectorAll("h2")[2], type: "selector"},
-      ]
+      ],
     },
     {
       desc: "Search for selector with multiple results",
@@ -141,14 +141,14 @@ window.onload = function() {
         {node: inspectee.querySelectorAll("h2")[0], type: "selector"},
         {node: inspectee.querySelectorAll("h2")[1], type: "selector"},
         {node: inspectee.querySelectorAll("h2")[2], type: "selector"},
-      ]
+      ],
     },
     {
       desc: "Search with multiple matches in a single tag expecting a single result",
       search: "💩",
       expected: [
-        {node: inspectee.getElementById("💩"), type: "attributeValue"}
-      ]
+        {node: inspectee.getElementById("💩"), type: "attributeValue"},
+      ],
     },
     {
       desc: "Search that has tag and text results",
@@ -157,7 +157,7 @@ window.onload = function() {
         {node: inspectee.querySelector("h1"), type: "tag"},
         {node: inspectee.querySelector("h1 + p").childNodes[0], type: "text"},
         {node: inspectee.querySelector("h1 + p > strong").childNodes[0], type: "text"},
-      ]
+      ],
     },
     ];
 
@@ -191,7 +191,7 @@ window.onload = function() {
     results = walkerSearch.search("before element");
     isDeeply(results, [
       {node: styleText, type: "text"},
-      {node: beforeElt, type: "text"}
+      {node: beforeElt, type: "text"},
     ], "Text search works for pseudo element");
 
     // ::after
@@ -205,7 +205,7 @@ window.onload = function() {
     results = walkerSearch.search("after element");
     isDeeply(results, [
       {node: styleText, type: "text"},
-      {node: afterElt, type: "text"}
+      {node: afterElt, type: "text"},
     ], "Text search works for pseudo element");
 
     runNextTest();
@@ -229,7 +229,7 @@ window.onload = function() {
     results = walkerSearch.search("h3");
     isDeeply(results, [
       expected[1],
-      expected[2]
+      expected[2],
     ], "Results are updated after removal");
 
     // eslint-disable-next-line new-cap
@@ -246,7 +246,7 @@ window.onload = function() {
     isDeeply(results, [
       {node: inspectee.body, type: "attributeName"},
       expected[1],
-      expected[2]
+      expected[2],
     ], "Results are updated after addition");
 
     // eslint-disable-next-line new-cap

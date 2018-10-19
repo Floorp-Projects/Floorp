@@ -13,11 +13,11 @@ const {
   FrontClassWithSpec,
   custom,
   preEvent,
-  types
+  types,
 } = require("devtools/shared/protocol.js");
 const {
   inspectorSpec,
-  walkerSpec
+  walkerSpec,
 } = require("devtools/shared/specs/inspector");
 const defer = require("devtools/shared/defer");
 loader.lazyRequireGetter(this, "nodeConstants",
@@ -135,7 +135,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       }
     });
   }, {
-    impl: "_unretainNode"
+    impl: "_unretainNode",
   }),
 
   releaseNode: custom(function(node, options = {}) {
@@ -145,7 +145,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     this._releaseFront(node, !!options.force);
     return this._releaseNode({ actorID: actorID });
   }, {
-    impl: "_releaseNode"
+    impl: "_releaseNode",
   }),
 
   findInspectingNode: custom(function() {
@@ -153,7 +153,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       return response.node;
     });
   }, {
-    impl: "_findInspectingNode"
+    impl: "_findInspectingNode",
   }),
 
   querySelector: custom(function(queryNode, selector) {
@@ -161,7 +161,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       return response.node;
     });
   }, {
-    impl: "_querySelector"
+    impl: "_querySelector",
   }),
 
   getNodeActorFromObjectActor: custom(function(objectActorID) {
@@ -169,7 +169,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       return response ? response.node : null;
     });
   }, {
-    impl: "_getNodeActorFromObjectActor"
+    impl: "_getNodeActorFromObjectActor",
   }),
 
   getNodeActorFromWindowID: custom(function(windowID) {
@@ -177,7 +177,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       return response ? response.node : null;
     });
   }, {
-    impl: "_getNodeActorFromWindowID"
+    impl: "_getNodeActorFromWindowID",
   }),
 
   getStyleSheetOwnerNode: custom(function(styleSheetActorID) {
@@ -185,7 +185,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       return response ? response.node : null;
     });
   }, {
-    impl: "_getStyleSheetOwnerNode"
+    impl: "_getStyleSheetOwnerNode",
   }),
 
   getNodeFromActor: custom(function(actorID, path) {
@@ -193,7 +193,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       return response ? response.node : null;
     });
   }, {
-    impl: "_getNodeFromActor"
+    impl: "_getNodeFromActor",
   }),
 
   /*
@@ -241,7 +241,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       resultsIndex: searchData.index,
     };
   }, {
-    impl: "_search"
+    impl: "_search",
   }),
 
   _releaseFront: function(node, force) {
@@ -414,7 +414,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       this.emit("mutations", emitMutations);
     });
   }, {
-    impl: "_getMutations"
+    impl: "_getMutations",
   }),
 
   /**
@@ -438,7 +438,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
       nextSibling: nextSibling,
     };
   }, {
-    impl: "_removeNode"
+    impl: "_removeNode",
   }),
 });
 
@@ -497,7 +497,7 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
       return walker;
     });
   }, {
-    impl: "_getWalker"
+    impl: "_getWalker",
   }),
 
   getPageStyle: custom(function() {
@@ -512,7 +512,7 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
       });
     });
   }, {
-    impl: "_getPageStyle"
+    impl: "_getPageStyle",
   }),
 
   pickColorFromPage: custom(async function(options) {
@@ -523,8 +523,8 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
       telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED).add(true);
     }
   }, {
-    impl: "_pickColorFromPage"
-  })
+    impl: "_pickColorFromPage",
+  }),
 });
 
 exports.InspectorFront = InspectorFront;

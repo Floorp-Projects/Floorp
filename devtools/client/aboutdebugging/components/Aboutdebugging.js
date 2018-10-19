@@ -32,17 +32,17 @@ const panels = [{
   id: "addons",
   name: Strings.GetStringFromName("addons"),
   icon: "chrome://devtools/skin/images/debugging-addons.svg",
-  component: AddonsPanel
+  component: AddonsPanel,
 }, {
   id: "tabs",
   name: Strings.GetStringFromName("tabs"),
   icon: "chrome://devtools/skin/images/debugging-tabs.svg",
-  component: TabsPanel
+  component: TabsPanel,
 }, {
   id: "workers",
   name: Strings.GetStringFromName("workers"),
   icon: "chrome://devtools/skin/images/debugging-workers.svg",
-  component: WorkersPanel
+  component: WorkersPanel,
 }];
 
 const defaultPanelId = "addons";
@@ -52,7 +52,7 @@ class AboutDebuggingApp extends Component {
     return {
       client: PropTypes.instanceOf(DebuggerClient).isRequired,
       connect: PropTypes.object.isRequired,
-      telemetry: PropTypes.instanceOf(Telemetry).isRequired
+      telemetry: PropTypes.instanceOf(Telemetry).isRequired,
     };
   }
 
@@ -60,7 +60,7 @@ class AboutDebuggingApp extends Component {
     super(props);
 
     this.state = {
-      selectedPanelId: window.location.hash.substr(1) || defaultPanelId
+      selectedPanelId: window.location.hash.substr(1) || defaultPanelId,
     };
 
     this.onHashChange = this.onHashChange.bind(this);
@@ -85,7 +85,7 @@ class AboutDebuggingApp extends Component {
 
   onHashChange() {
     this.setState({
-      selectedPanelId: window.location.hash.substr(1) || defaultPanelId
+      selectedPanelId: window.location.hash.substr(1) || defaultPanelId,
     });
   }
 

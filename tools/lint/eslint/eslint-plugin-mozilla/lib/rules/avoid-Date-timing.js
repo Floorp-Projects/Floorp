@@ -16,9 +16,9 @@ module.exports = {
   meta: {
     docs: {
       description: "disallow use of Date for timing measurements",
-      category: "Best Practices"
+      category: "Best Practices",
     },
-    schema: []
+    schema: [],
   },
 
   // ---------------------------------------------------------------------------
@@ -51,8 +51,8 @@ module.exports = {
 
         context.report(node, "use performance.now() instead of new Date() for timing " +
                              "measurements");
-      }
+      },
     };
-  }
+  },
 };
 

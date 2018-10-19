@@ -52,7 +52,7 @@ class ConsoleTable extends Component {
     const headerItems = [];
     columns.forEach((value, key) => headerItems.push(dom.div({
       className: "new-consoletable-header",
-      role: "columnheader"
+      role: "columnheader",
     }, value))
   );
     return headerItems;
@@ -71,7 +71,7 @@ class ConsoleTable extends Component {
           dom.div(
             {
               role: "gridcell",
-              className: (index % 2) ? "odd" : "even"
+              className: (index % 2) ? "odd" : "even",
             },
             GripMessageBody({
               grip: item[key],
@@ -108,8 +108,8 @@ class ConsoleTable extends Component {
         className: "new-consoletable",
         role: "grid",
         style: {
-          gridTemplateColumns: `repeat(${columns.size}, auto)`
-        }
+          gridTemplateColumns: `repeat(${columns.size}, auto)`,
+        },
       },
         this.getHeaders(columns),
         this.getRows(columns, items)
@@ -134,7 +134,7 @@ function getTableItems(data = {}, type, headers = null) {
         l10n.getStr("table.index") : l10n.getStr("table.iterationIndex")
     ),
     [VALUE_NAME]: l10n.getStr("table.value"),
-    key: l10n.getStr("table.key")
+    key: l10n.getStr("table.key"),
   };
 
   let columns = new Map();
@@ -168,7 +168,7 @@ function getTableItems(data = {}, type, headers = null) {
     }
 
     const item = {
-      [INDEX_NAME]: index
+      [INDEX_NAME]: index,
     };
 
     const property = data[index].value;
@@ -225,7 +225,7 @@ function getTableItems(data = {}, type, headers = null) {
 
   return {
     columns,
-    items
+    items,
   };
 }
 

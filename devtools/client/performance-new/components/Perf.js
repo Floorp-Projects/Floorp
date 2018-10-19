@@ -44,7 +44,7 @@ class Perf extends PureComponent {
 
       // DispatchProps:
       changeRecordingState: PropTypes.func.isRequired,
-      reportProfilerReady: PropTypes.func.isRequired
+      reportProfilerReady: PropTypes.func.isRequired,
     };
   }
 
@@ -68,7 +68,7 @@ class Perf extends PureComponent {
       const [
         isActive,
         isSupportedPlatform,
-        isLockedForPrivateBrowsing
+        isLockedForPrivateBrowsing,
       ] = results;
 
       let recordingState = this.props.recordingState;

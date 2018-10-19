@@ -35,8 +35,8 @@ function run_test() {
 
   census = saveHeapSnapshotAndTakeCensus(dbg, {
     breakdown: { by: "objectClass",
-                 then: { by: "allocationStack" }
-    }
+                 then: { by: "allocationStack" },
+    },
   });
 
   let seen = 0;

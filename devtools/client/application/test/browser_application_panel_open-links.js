@@ -16,7 +16,7 @@ add_task(async function() {
 
   const {
     panel,
-    toolbox
+    toolbox,
   } = await openNewTabAndApplicationPanel(TAB_URL);
 
   const doc = panel.panelWin.document;

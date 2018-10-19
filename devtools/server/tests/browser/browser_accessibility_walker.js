@@ -29,7 +29,7 @@ add_task(async function() {
 
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
-    role: "pushbutton"
+    role: "pushbutton",
   });
 
   const ancestry = await a11yWalker.getAncestry(accessibleFront);

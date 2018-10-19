@@ -42,5 +42,5 @@ ContentProcessListener.prototype = {
     Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_SCRIPT);
 
     this.listener = null;
-  }
+  },
 };

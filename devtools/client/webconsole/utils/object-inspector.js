@@ -65,7 +65,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
 
   if (override.autoFocusRoot) {
     Object.assign(objectInspectorProps, {
-      focusedItem: roots[0]
+      focusedItem: roots[0],
     });
   }
 
@@ -75,7 +75,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
 function createRootsFromGrip(grip) {
   return [{
     path: Symbol((grip && grip.actor) || JSON.stringify(grip)),
-    contents: { value: grip }
+    contents: { value: grip },
   }];
 }
 

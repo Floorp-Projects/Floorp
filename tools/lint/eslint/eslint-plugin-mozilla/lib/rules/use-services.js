@@ -31,7 +31,7 @@ var servicesASTParser = {
     "nsIIOService": "io",
     "nsISpeculativeConnect": "io",
     "nsICookieManager": "cookies",
-    "nsIBlocklistService": "blocklist"
+    "nsIBlocklistService": "blocklist",
   },
 
   /**
@@ -93,7 +93,7 @@ var servicesASTParser = {
         this.result[this.identifiers[gettersVarName][name]] = name;
       }
     }
-  }
+  },
 };
 
 function getInterfacesFromServicesFile() {
@@ -157,6 +157,6 @@ module.exports = function(context) {
 
       context.report(node,
                      `Use Services.${serviceName} rather than getService().`);
-    }
+    },
   };
 };

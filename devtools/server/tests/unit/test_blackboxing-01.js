@@ -33,7 +33,7 @@ const testBlackBox = async function() {
   const source = gThreadClient.source(packet.frame.where.source);
 
   await setBreakpoint(source, {
-    line: 2
+    line: 2,
   });
   await resume(gThreadClient);
 

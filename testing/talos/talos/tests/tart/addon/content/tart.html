@@ -27,8 +27,8 @@ function chromeExec(commandName, data, doneCallback) {
           name: commandName,
           data,
         },
-        doneCallback
-      }
+        doneCallback,
+      },
     })
   );
 }
@@ -147,8 +147,8 @@ var defaultConfig = {
         simpleFadeDpiCurrent: false,
         iconFadeDpiCurrent: false,
         lastTabFadeDpiCurrent: false,
-        customize: false
-      }
+        customize: false,
+      },
     };
 
 var simpleInfo = "Measure open/close of a new tab of about:blank";
@@ -171,7 +171,7 @@ var testsInfo = {
       simpleFadeDpiCurrent: fadeInfo + dpiCurrentInfo,
       iconFadeDpiCurrent: fadeInfo + dpiCurrentInfo,
       lastTabFadeDpiCurrent: "Focus the last tab, then measure Fade-out/in (requires to manually add a tab before testing)",
-      customize: "Measure (Australis) Customize-mode enter/exit"
+      customize: "Measure (Australis) Customize-mode enter/exit",
 };
 
 

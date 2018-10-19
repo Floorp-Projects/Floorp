@@ -25,7 +25,7 @@ add_task(async function() {
 
   const exportEvents = Promise.all([
     waitUntilAction(store, actions.EXPORT_SNAPSHOT_START),
-    waitUntilAction(store, actions.EXPORT_SNAPSHOT_END)
+    waitUntilAction(store, actions.EXPORT_SNAPSHOT_END),
   ]);
   dispatch(exportSnapshot(getState().snapshots[0], destPath));
   await exportEvents;

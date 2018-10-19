@@ -57,7 +57,7 @@ this.Census = (function() {
   Census.walkAnything = {
     enter: () => Census.walkAnything,
     done: () => undefined,
-    check: () => undefined
+    check: () => undefined,
   };
 
   // A walker that requires all leaves to be zeros.
@@ -68,7 +68,7 @@ this.Census = (function() {
       if (elt !== 0) {
         throw new Error("Census mismatch: expected zero, found " + elt);
       }
-    }
+    },
   };
 
   function expectedObject() {
@@ -107,14 +107,14 @@ this.Census = (function() {
           },
 
           done: () => unvisited.forEach(prop => missing(prop, basis[prop])),
-          check: expectedObject
+          check: expectedObject,
         };
       }
 
       return {
         enter: expectedLeaf,
         done: expectedLeaf,
-        check: elt => compare(elt, basis)
+        check: elt => compare(elt, basis),
       };
     };
   }
@@ -137,7 +137,7 @@ this.Census = (function() {
       }
     },
     missing: missingProp,
-    extra: extraProp
+    extra: extraProp,
   });
 
   function ok(val) {
@@ -151,7 +151,7 @@ this.Census = (function() {
   Census.assertAllNotLessThan = makeBasisChecker({
     compare: (subject, basis) => ok(subject >= basis),
     missing: missingProp,
-    extra: () => Census.walkAnything
+    extra: () => Census.walkAnything,
   });
 
   // Return a walker that checks that the subject census has at most as many
@@ -159,7 +159,7 @@ this.Census = (function() {
   Census.assertAllNotMoreThan = makeBasisChecker({
     compare: (subject, basis) => ok(subject <= basis),
     missing: missingProp,
-    extra: () => Census.walkAnything
+    extra: () => Census.walkAnything,
   });
 
   // Return a walker that checks that the subject census has within |fudge|
@@ -168,7 +168,7 @@ this.Census = (function() {
     return makeBasisChecker({
       compare: (subject, base) => ok(Math.abs(subject - base) <= fudge),
       missing: missingProp,
-      extra: () => Census.walkAnything
+      extra: () => Census.walkAnything,
     })(basis);
   };
 

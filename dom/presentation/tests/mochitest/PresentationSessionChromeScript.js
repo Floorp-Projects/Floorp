@@ -97,7 +97,7 @@ const mockedServerSocket = {
   },
   simulateOnSocketAccepted(serverSocket, socketTransport) {
     this._listener.onSocketAccepted(serverSocket, socketTransport);
-  }
+  },
 };
 
 const mockedSocketTransport = {
@@ -217,7 +217,7 @@ const mockedDevicePrompt = {
   },
   simulateCancel(result) {
     this._request.cancel(result);
-  }
+  },
 };
 
 const mockedSessionTransport = {
@@ -306,7 +306,7 @@ const mockedSessionTransport = {
   onOffer(aOffer) {
   },
   onAnswer(aAnswer) {
-  }
+  },
 };
 
 const mockedNetworkInfo = {

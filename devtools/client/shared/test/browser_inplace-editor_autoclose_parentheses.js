@@ -46,11 +46,11 @@ add_task(async function() {
       start: runPropertyAutocompletionTest,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
       property: {
-        name: "background-image"
+        name: "background-image",
       },
       cssVariables: new Map(),
       done: resolve,
-      popup: popup
+      popup: popup,
     }, doc);
   });
 

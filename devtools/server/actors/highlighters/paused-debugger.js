@@ -29,7 +29,7 @@ PausedDebuggerOverlay.prototype = {
     const prefix = this.ID_CLASS_PREFIX;
 
     const container = createNode(window, {
-      attributes: {"class": "highlighter-container"}
+      attributes: {"class": "highlighter-container"},
     });
 
     // Wrapper element.
@@ -39,18 +39,18 @@ PausedDebuggerOverlay.prototype = {
         "id": "root",
         "class": "root",
         "hidden": "true",
-        "overlay": "true"
+        "overlay": "true",
       },
-      prefix
+      prefix,
     });
 
     const toolbar = createNode(window, {
       parent: wrapper,
       attributes: {
         "id": "toolbar",
-        "class": "toolbar"
+        "class": "toolbar",
       },
-      prefix
+      prefix,
     });
 
     createNode(window, {
@@ -58,9 +58,9 @@ PausedDebuggerOverlay.prototype = {
       parent: toolbar,
       attributes: {
         "id": "reason",
-        "class": "reason"
+        "class": "reason",
       },
-      prefix
+      prefix,
     });
 
     return container;
@@ -111,6 +111,6 @@ PausedDebuggerOverlay.prototype = {
 
     // Hide the overlay.
     this.getElement("root").setAttribute("hidden", "true");
-  }
+  },
 };
 exports.PausedDebuggerOverlay = PausedDebuggerOverlay;

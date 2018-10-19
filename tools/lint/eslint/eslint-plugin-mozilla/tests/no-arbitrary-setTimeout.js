@@ -31,11 +31,11 @@ ruleTester.run("no-arbitrary-setTimeout", rule, {
   valid: [
     wrapCode("setTimeout(function() {}, 0);"),
     wrapCode("setTimeout(function() {});"),
-    wrapCode("setTimeout(function() {}, 10);", "test_foo.js")
+    wrapCode("setTimeout(function() {}, 10);", "test_foo.js"),
   ],
   invalid: [
     invalidCode("setTimeout(function() {}, 10);"),
-    invalidCode("setTimeout(function() {}, timeout);")
-  ]
+    invalidCode("setTimeout(function() {}, timeout);"),
+  ],
 });
 

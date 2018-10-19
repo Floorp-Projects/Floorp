@@ -14,7 +14,7 @@ const {
   clickedOnEllipseEdge,
   distanceToLine,
   projection,
-  clickedOnPoint
+  clickedOnPoint,
 } = require("devtools/server/actors/utils/shapes-utils");
 const {
   identity,
@@ -24,7 +24,7 @@ const {
   scale,
   rotate,
   changeMatrixBase,
-  getBasis
+  getBasis,
 } = require("devtools/shared/layout/dom-matrix-2d");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
@@ -95,8 +95,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _buildMarkup() {
     const container = createNode(this.win, {
       attributes: {
-        "class": "highlighter-container"
-      }
+        "class": "highlighter-container",
+      },
     });
 
     // The root wrapper is used to unzoom the highlighter when needed.
@@ -104,9 +104,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       parent: container,
       attributes: {
         "id": "root",
-        "class": "root"
+        "class": "root",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const mainSvg = createSVGNode(this.win, {
@@ -116,9 +116,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "id": "shape-container",
         "class": "shape-container",
         "viewBox": "0 0 100 100",
-        "preserveAspectRatio": "none"
+        "preserveAspectRatio": "none",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // This clipPath and its children make sure the element quad outline
@@ -130,7 +130,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "id": "clip-path",
         "class": "clip-path",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -139,9 +139,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "clip-polygon",
         "class": "clip-polygon",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -150,9 +150,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "clip-ellipse",
         "class": "clip-ellipse",
-        "hidden": true
+        "hidden": true,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -161,9 +161,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "clip-rect",
         "class": "clip-rect",
-        "hidden": true
+        "hidden": true,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Rectangle that displays the element quads. Only shown for shape-outside.
@@ -179,9 +179,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "x": 0,
         "y": 0,
         "width": 100,
-        "height": 100
+        "height": 100,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // clipPath that corresponds to the element's quads. Only applied for shape-outside.
@@ -194,7 +194,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "id": "quad-clip-path",
         "class": "quad-clip-path",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -206,9 +206,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "x": -1,
         "y": -1,
         "width": 102,
-        "height": 102
+        "height": 102,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const mainGroup = createSVGNode(this.win, {
@@ -217,7 +217,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "group",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Append a polygon for polygon shapes.
@@ -227,9 +227,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "polygon",
         "class": "polygon",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Append an ellipse for circle/ellipse shapes.
@@ -239,9 +239,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "ellipse",
         "class": "ellipse",
-        "hidden": true
+        "hidden": true,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Append a rect for inset().
@@ -251,9 +251,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "rect",
         "class": "rect",
-        "hidden": true
+        "hidden": true,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Dashed versions of each shape. Only shown for the parts of the shape
@@ -267,7 +267,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "hidden": "true",
         "stroke-dasharray": "5, 5",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -279,7 +279,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "hidden": "true",
         "stroke-dasharray": "5, 5",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -291,7 +291,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "hidden": "true",
         "stroke-dasharray": "5, 5",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -301,9 +301,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "id": "bounding-box",
         "class": "bounding-box",
         "stroke-dasharray": "5, 5",
-        "hidden": true
+        "hidden": true,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -313,7 +313,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "id": "rotate-line",
         "class": "rotate-line",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Append a path to display the markers for the shape.
@@ -324,7 +324,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "id": "markers-outline",
         "class": "markers-outline",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -334,7 +334,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "id": "markers",
         "class": "markers",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     createSVGNode(this.win, {
@@ -343,9 +343,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "marker-hover",
         "class": "marker-hover",
-        "hidden": true
+        "hidden": true,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     return container;
@@ -370,7 +370,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       top: dims.top / zoom,
       left: dims.left / zoom,
       width: dims.width / zoom,
-      height: dims.height / zoom
+      height: dims.height / zoom,
     };
   }
 
@@ -398,7 +398,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       top: dims.top / zoom,
       left: dims.left / zoom,
       width: dims.width / zoom,
-      height: dims.height / zoom
+      height: dims.height / zoom,
     };
   }
 
@@ -1390,7 +1390,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         { pointName: "scale-e", x: e[0], y: e[1], anchor: "w" },
         { pointName: "scale-w", x: w[0], y: w[1], anchor: "e" },
         { pointName: "rotate", x: rotatePoint[0], y: rotatePoint[1],
-          cursor: hoverCursor
+          cursor: hoverCursor,
         },
       ];
 
@@ -1477,12 +1477,12 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _emitHoverEvent(point) {
     if (point === null || point === undefined) {
       this.emit("highlighter-event", {
-        type: "shape-hover-off"
+        type: "shape-hover-off",
       });
     } else {
       this.emit("highlighter-event", {
         type: "shape-hover-on",
-        point: point.toString()
+        point: point.toString(),
       });
     }
   }
@@ -1749,19 +1749,19 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     const shapeTypes = [{
       name: "polygon",
       prefix: "polygon(",
-      coordParser: this.polygonPoints.bind(this)
+      coordParser: this.polygonPoints.bind(this),
     }, {
       name: "circle",
       prefix: "circle(",
-      coordParser: this.circlePoints.bind(this)
+      coordParser: this.circlePoints.bind(this),
     }, {
       name: "ellipse",
       prefix: "ellipse(",
-      coordParser: this.ellipsePoints.bind(this)
+      coordParser: this.ellipsePoints.bind(this),
     }, {
       name: "inset",
       prefix: "inset(",
-      coordParser: this.insetPoints.bind(this)
+      coordParser: this.insetPoints.bind(this),
     }];
     const geometryTypes = ["margin", "border", "padding", "content"];
 
@@ -1783,7 +1783,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         definition = definition.substring(prefix.length, definition.lastIndexOf(")"));
         return {
           shapeType: name,
-          coordinates: coordParser(definition)
+          coordinates: coordParser(definition),
         };
       }
     }
@@ -2730,7 +2730,7 @@ const getObjectBoundingBox = (top, left, width, height, node) => {
     top: top + delta,
     left: left + delta,
     width: width - 2 * delta,
-    height: height - 2 * delta
+    height: height - 2 * delta,
   };
 };
 
