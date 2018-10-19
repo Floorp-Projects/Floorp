@@ -284,4 +284,8 @@ class Session(
     override fun hashCode(): Int {
         return id.hashCode()
     }
+
+    override fun toString(): String {
+        return "Session($id, $url)"
+    }
 }

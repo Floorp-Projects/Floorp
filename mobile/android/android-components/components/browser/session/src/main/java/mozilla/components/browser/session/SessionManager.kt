@@ -79,15 +79,19 @@ class SessionManager(
         parent: Session? = null
     ) = synchronized(values) {
 
-        parent?.let {
-            if (!values.contains(it)) {
+        if (parent != null) {
+            val parentIndex = values.indexOf(parent)
+
+            if (parentIndex == -1) {
                 throw IllegalArgumentException("The parent does not exist")
             }
 
             session.parentId = parent.id
-        }
 
-        values.add(session)
+            values.add(parentIndex + 1, session)
+        } else {
+            values.add(session)
+        }
 
         engineSession?.let { link(session, it) }
 

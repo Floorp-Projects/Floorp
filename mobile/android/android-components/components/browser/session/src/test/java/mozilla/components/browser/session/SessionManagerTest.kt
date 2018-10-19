@@ -77,8 +77,8 @@ class SessionManagerTest {
         manager.add(session4, parent = session2)
 
         assertNull(manager.sessions[0].parentId)
-        assertNull(manager.sessions[1].parentId)
-        assertEquals(session1.id, manager.sessions[2].parentId)
+        assertNull(manager.sessions[2].parentId)
+        assertEquals(session1.id, manager.sessions[1].parentId)
         assertEquals(session2.id, manager.sessions[3].parentId)
     }
 
@@ -586,19 +586,21 @@ class SessionManagerTest {
 
         val session1 = Session("https://www.firefox.com")
         val session2 = Session("https://getpocket.com")
-        val child = Session("https://www.mozilla.org/en-US/internet-health/")
+        val child1 = Session("https://www.mozilla.org/en-US/internet-health/")
+        val child2 = Session("https://www.mozilla.org/en-US/technology/")
 
         val manager = SessionManager(mock())
         manager.add(parent)
         manager.add(session1)
         manager.add(session2)
-        manager.add(child, parent = parent)
+        manager.add(child1, parent = parent)
+        manager.add(child2, parent = parent)
 
-        manager.select(child)
-        manager.remove(child, selectParentIfExists = false)
+        manager.select(child1)
+        manager.remove(child1, selectParentIfExists = false)
 
-        assertEquals(session2, manager.selectedSession)
-        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
+        assertEquals(session1, manager.selectedSession)
+        assertEquals("https://www.firefox.com", manager.selectedSessionOrThrow.url)
     }
 
     @Test
@@ -617,5 +619,34 @@ class SessionManagerTest {
 
         assertEquals(session2, manager.selectedSession)
         assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
+    }
+
+    @Test
+    fun `Sessions with parent are added after parent`() {
+        val parent01 = Session("https://www.mozilla.org")
+        val parent02 = Session("https://getpocket.com")
+
+        val session1 = Session("https://www.firefox.com")
+        val session2 = Session("https://developer.mozilla.org/en-US/")
+        val child001 = Session("https://www.mozilla.org/en-US/internet-health/")
+        val child002 = Session("https://www.mozilla.org/en-US/technology/")
+        val child003 = Session("https://getpocket.com/add/")
+
+        val manager = SessionManager(mock())
+        manager.add(parent01)
+        manager.add(session1)
+        manager.add(child001, parent = parent01)
+        manager.add(session2)
+        manager.add(parent02)
+        manager.add(child002, parent = parent01)
+        manager.add(child003, parent = parent02)
+
+        assertEquals(parent01, manager.sessions[0]) // ├── parent 1
+        assertEquals(child002, manager.sessions[1]) // │   ├── child 2
+        assertEquals(child001, manager.sessions[2]) // │   └── child 1
+        assertEquals(session1, manager.sessions[3]) // ├──session 1
+        assertEquals(session2, manager.sessions[4]) // ├──session 2
+        assertEquals(parent02, manager.sessions[5]) // └── parent 2
+        assertEquals(child003, manager.sessions[6]) //     └── child 3
     }
 }
