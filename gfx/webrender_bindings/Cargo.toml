@@ -23,7 +23,7 @@ default-features = false
 features = ["capture", "serialize_program"]
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.5.1"
+dwrote = "0.5.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
