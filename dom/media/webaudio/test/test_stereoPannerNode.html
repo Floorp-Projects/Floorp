@@ -101,10 +101,8 @@ function expectedBufferForStereo(panning, gain) {
                                          length: BUF_SIZE,
                                          sampleRate: SR });
   var gainPanning = gainForPanningStereoToStereo(panning);
-  gainPanning[0] *= gain;
-  gainPanning[1] *= gain;
   for (var i = 0; i < BUF_SIZE; i++) {
-    var values = [ sine(i), sine(i) ];
+    var values = [ gain * sine(i), gain * sine(i) ];
     var processed = applyStereoToStereoPanning(values[0], values[1], gainPanning, PANNING);
     expectedBuffer.getChannelData(0)[i] = processed[0];
     expectedBuffer.getChannelData(1)[i] = processed[1];
