@@ -144,6 +144,11 @@ class FlexItemSizingProperties extends PureComponent {
       lineGrowthState
     } = flexItemSizing;
 
+    // Don't attempt to display anything useful if everything is 0.
+    if (!mainFinalSize && !mainBaseSize && !mainDeltaSize) {
+      return null;
+    }
+
     const flexGrow = properties["flex-grow"];
     const flexGrow0 = parseFloat(flexGrow) === 0;
     const flexShrink = properties["flex-shrink"];

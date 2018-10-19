@@ -118,6 +118,7 @@
   align-items: center;
   height: 32px;
   padding: 0 3px;
+  border-block-end: 1px solid var(--theme-splitter-color);
 }
 
 .flex-header-button-prev::before {
@@ -141,10 +142,6 @@
 /**
  * Flex Item List
  */
-
-.flex-header + .flex-item-list {
-  border-block-start: 1px solid var(--theme-splitter-color);
-}
 
 .flex-item-list {
   font-size: 12px;
@@ -190,7 +187,6 @@
  */
 
 .flex-outline-container {
-  border-block-start: 1px solid var(--theme-splitter-color);
   display: flex;
   justify-content: center;
 }
@@ -406,6 +402,13 @@
   display: grid;
   grid-template-columns: 1fr max-content;
   grid-column-gap: var(--padding);
+}
+
+/* If the outline isn't displayed before the sizing information, then no need for a first
+   top border or padding */
+:not(.flex-outline-container) + .flex-item-sizing > .section:first-child {
+  border: 0;
+  padding-block-start: 0;
 }
 
 .flex-item-sizing .section:first-child {
