@@ -74,7 +74,6 @@ class WorkerDetail extends PureComponent {
           className: `worker-detail__status worker-detail__status--${ status }`,
       },
       dom.div(
-        },
         status
       )
     );
