@@ -65,6 +65,7 @@ public class DefaultBrowserPreference extends Preference {
 
         if (!browsers.hasDefaultBrowser(context)) {
             Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL));
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             getContext().startActivity(i);
             TelemetryWrapper.makeDefaultBrowserOpenWith();
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
