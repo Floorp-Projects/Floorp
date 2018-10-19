@@ -7,6 +7,7 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ipc/InProcessChild.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/WindowGlobalActorsBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,7 +55,7 @@ WindowGlobalChild::Create(nsGlobalWindowInner* aWindow)
 }
 
 already_AddRefed<WindowGlobalParent>
-WindowGlobalChild::GetOtherSide()
+WindowGlobalChild::GetParentActor()
 {
   if (mIPCClosed) {
     return nullptr;
@@ -73,7 +74,23 @@ WindowGlobalChild::~WindowGlobalChild()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION(WindowGlobalChild, mWindowGlobal, mBrowsingContext)
+JSObject*
+WindowGlobalChild::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto)
+{
+  return WindowGlobalChild_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsISupports*
+WindowGlobalChild::GetParentObject()
+{
+  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild,
+                                      mWindowGlobal,
+                                      mBrowsingContext)
+
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WindowGlobalChild, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WindowGlobalChild, Release)
 
