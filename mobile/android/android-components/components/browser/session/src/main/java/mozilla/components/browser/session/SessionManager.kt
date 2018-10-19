@@ -140,7 +140,10 @@ class SessionManager(
     /**
      * Removes the provided session. If no session is provided then the selected session is removed.
      */
-    fun remove(session: Session = selectedSessionOrThrow) = synchronized(values) {
+    fun remove(
+        session: Session = selectedSessionOrThrow,
+        selectParentIfExists: Boolean = false
+    ) = synchronized(values) {
         val indexToRemove = values.indexOf(session)
         if (indexToRemove == -1) {
             return
@@ -150,10 +153,42 @@ class SessionManager(
 
         unlink(session)
 
+        val selectionUpdated = recalculateSelectionIndex(indexToRemove, selectParentIfExists, session.parentId)
+
+        notifyObservers { onSessionRemoved(session) }
+
+        // NB: we're not explicitly calling notifyObservers here, since adding a session when none
+        // are present will notify observers with onSessionSelected.
+        if (selectedIndex == NO_SELECTION && defaultSession != null) {
+            add(defaultSession.invoke())
+            return
+        }
+
+        if (selectionUpdated && selectedIndex != NO_SELECTION) {
+            notifyObservers { onSessionSelected(selectedSessionOrThrow) }
+        }
+    }
+
+    /**
+     * Recalculate the index of the selected session after a session was removed. Returns true if the index has changed.
+     * False otherwise.
+     */
+    private fun recalculateSelectionIndex(
+        indexToRemove: Int,
+        selectParentIfExists: Boolean,
+        parentId: String?
+    ): Boolean {
         // Recalculate selection
         val newSelectedIndex = when {
             // All items have been removed
             values.size == 0 -> NO_SELECTION
+
+            // The selected session was removed and it has a parent
+            selectParentIfExists && indexToRemove == selectedIndex && parentId != null -> {
+                val parent = findSessionById(parentId)
+                    ?: throw java.lang.IllegalStateException("Parent session referenced by id does not exist")
+                values.indexOf(parent)
+            }
 
             // Something on the left of our selection has been removed, we need to move the index to the left
             indexToRemove < selectedIndex -> selectedIndex - 1
@@ -171,18 +206,7 @@ class SessionManager(
             selectedIndex = newSelectedIndex
         }
 
-        notifyObservers { onSessionRemoved(session) }
-
-        // NB: we're not explicitly calling notifyObservers here, since adding a session when none
-        // are present will notify observers with onSessionSelected.
-        if (selectedIndex == NO_SELECTION && defaultSession != null) {
-            add(defaultSession.invoke())
-            return
-        }
-
-        if (selectionUpdated && selectedIndex != NO_SELECTION) {
-            notifyObservers { onSessionSelected(selectedSessionOrThrow) }
-        }
+        return selectionUpdated
     }
 
     /**

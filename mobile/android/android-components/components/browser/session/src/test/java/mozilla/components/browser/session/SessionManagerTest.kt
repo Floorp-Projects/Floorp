@@ -15,12 +15,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.times
-import org.mockito.Mockito.never
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.spy
 
 class SessionManagerTest {
     @Test
@@ -558,5 +557,65 @@ class SessionManagerTest {
         manager.add(session)
 
         assertNull(manager.selectedSession)
+    }
+
+    @Test
+    fun `parent will be selected if child is removed and flag is set to true`() {
+        val parent = Session("https://www.mozilla.org")
+
+        val session1 = Session("https://www.firefox.com")
+        val session2 = Session("https://getpocket.com")
+        val child = Session("https://www.mozilla.org/en-US/internet-health/")
+
+        val manager = SessionManager(mock())
+        manager.add(parent)
+        manager.add(session1)
+        manager.add(session2)
+        manager.add(child, parent = parent)
+
+        manager.select(child)
+        manager.remove(child, selectParentIfExists = true)
+
+        assertEquals(parent, manager.selectedSession)
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+    }
+
+    @Test
+    fun `parent will not be selected if child is removed and flag is set to false`() {
+        val parent = Session("https://www.mozilla.org")
+
+        val session1 = Session("https://www.firefox.com")
+        val session2 = Session("https://getpocket.com")
+        val child = Session("https://www.mozilla.org/en-US/internet-health/")
+
+        val manager = SessionManager(mock())
+        manager.add(parent)
+        manager.add(session1)
+        manager.add(session2)
+        manager.add(child, parent = parent)
+
+        manager.select(child)
+        manager.remove(child, selectParentIfExists = false)
+
+        assertEquals(session2, manager.selectedSession)
+        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
+    }
+
+    @Test
+    fun `Setting selectParentIfExists when removing session without parent has no effect`() {
+        val session1 = Session("https://www.firefox.com")
+        val session2 = Session("https://getpocket.com")
+        val session3 = Session("https://www.mozilla.org/en-US/internet-health/")
+
+        val manager = SessionManager(mock())
+        manager.add(session1)
+        manager.add(session2)
+        manager.add(session3)
+
+        manager.select(session3)
+        manager.remove(session3, selectParentIfExists = true)
+
+        assertEquals(session2, manager.selectedSession)
+        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
     }
 }
