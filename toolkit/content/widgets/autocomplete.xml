@@ -964,9 +964,7 @@
             let originalValue, originalText, originalType;
             let style = controller.getStyleAt(this._currentIndex);
             let value =
-              style &&
-                style.includes("autofill") &&
-                style.includes("heuristic") ?
+              style && style.includes("autofill") ?
               controller.getFinalCompleteValueAt(this._currentIndex) :
               controller.getValueAt(this._currentIndex);
             let label = controller.getLabelAt(this._currentIndex);
@@ -1803,8 +1801,9 @@
 
           let action;
 
-          if (initialTypes.has("autofill")) {
-            // Treat autofills as visiturl actions.
+          if (initialTypes.has("autofill") && !initialTypes.has("action")) {
+            // Treat autofills as visiturl actions, unless they are already also
+            // actions.
             action = {
               type: "visiturl",
               params: { url: title },
