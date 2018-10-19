@@ -98,7 +98,7 @@ def create_test_manifest(tests, url_base="/"):
     source_files = []
     for i, (test, _, test_type, _) in enumerate(tests):
         if test_type:
-            source_files.append((SourceFileWithTest(test, str(i) * 40, item_classes[test_type]), True))
+            source_files.append(SourceFileWithTest(test, str(i) * 40, item_classes[test_type]))
     m = manifest.Manifest()
     m.update(source_files)
     return m

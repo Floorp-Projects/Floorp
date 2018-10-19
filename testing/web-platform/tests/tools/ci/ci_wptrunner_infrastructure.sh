@@ -19,7 +19,6 @@ test_infrastructure() {
 
 main() {
     PRODUCTS=( "firefox" "chrome" )
-    ./wpt manifest --rebuild -p ~/meta/MANIFEST.json
     for PRODUCT in "${PRODUCTS[@]}"; do
         if [ "$PRODUCT" != "firefox" ]; then
             # Firefox is expected to work using pref settings for DNS
