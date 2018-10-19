@@ -261,7 +261,10 @@ public:
   // a char array *constant* declared without an explicit size.
   // Do not attempt to use it with a non-constant char array variable.
   // Use EqualsASCII for that.
-  // The template trick to acquire the array length at compile time without
+  // (Although this method may happen to produce expected results for other
+  // char arrays that have bound one greater than the sequence of interest,
+  // such use is discouraged for reasons of readability and maintainability.)
+  // The template trick to acquire the array bound at compile time without
   // using a macro is due to Corey Kosak, with much thanks.
   template<int N>
   inline bool EqualsLiteral(const char (&aStr)[N]) const
@@ -283,6 +286,9 @@ public:
   // literal string, or a char array *constant* declared without an
   // explicit size.  Do not attempt to use it with a non-constant char array
   // variable. Use LowerCaseEqualsASCII for that.
+  // (Although this method may happen to produce expected results for other
+  // char arrays that have bound one greater than the sequence of interest,
+  // such use is discouraged for reasons of readability and maintainability.)
   template<int N>
   bool LowerCaseEqualsLiteral(const char (&aStr)[N]) const
   {
