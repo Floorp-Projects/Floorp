@@ -134,8 +134,7 @@ public:
 
         GetGainValuesForPanning(panning, monoToStereo, gainL, gainR);
         ApplyStereoPanning(aInput, aOutput,
-                           gainL * aInput.mVolume,
-                           gainR * aInput.mVolume,
+                           gainL, gainR,
                            panning <= 0);
       }
     } else {
@@ -152,8 +151,8 @@ public:
         float left, right;
         GetGainValuesForPanning(values[counter], monoToStereo, left, right);
 
-        alignedComputedGain[counter] = left * aInput.mVolume;
-        alignedComputedGain[WEBAUDIO_BLOCK_SIZE + counter] = right * aInput.mVolume;
+        alignedComputedGain[counter] = left;
+        alignedComputedGain[WEBAUDIO_BLOCK_SIZE + counter] = right;
         onLeft[counter] = values[counter] <= 0;
       }
 

@@ -59,6 +59,7 @@ void ApplyStereoPanning(const AudioBlock& aInput, AudioBlock* aOutput,
   } else {
     GainStereoToStereo(aInput, aOutput, aGainL, aGainR, aOnLeft);
   }
+  aOutput->mVolume = aInput.mVolume;
 }
 
 } // namespace dom

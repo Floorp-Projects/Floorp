@@ -496,7 +496,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
     // Compute the output.
     ApplyStereoPanning(aInput, aOutput, gainL, gainR, azimuth <= 0);
 
-    aOutput->mVolume = aInput.mVolume * distanceGain * coneGain;
+    aOutput->mVolume *= distanceGain * coneGain;
   } else {
     float positionX[WEBAUDIO_BLOCK_SIZE];
     float positionY[WEBAUDIO_BLOCK_SIZE];
@@ -591,7 +591,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
 
       alignedPanningL[counter] = gainL;
       alignedPanningR[counter] = gainR;
-      alignedGain[counter] = aInput.mVolume * distanceGain * coneGain;
+      alignedGain[counter] = distanceGain * coneGain;
       onLeft[counter] = azimuth <= 0;
     }
 
