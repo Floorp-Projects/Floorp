@@ -1107,6 +1107,52 @@ Search.prototype = {
     return true;
   },
 
+  async _matchSearchEngineTokenAlias() {
+    // We need a single "@engine" search token.
+    if (this._searchTokens.length != 1) {
+      return false;
+    }
+    let token = this._searchTokens[0];
+    if (token[0] != "@" || token.length == 1) {
+      return false;
+    }
+
+    // See if any engine token alias starts with the search token.
+    let engines = await PlacesSearchAutocompleteProvider.tokenAliasEngines();
+    for (let { engine, tokenAliases } of engines) {
+      for (let alias of tokenAliases) {
+        if (alias.startsWith(token.toLocaleLowerCase())) {
+          // We found one.  The match we add here is a little special compared
+          // to others.  It needs to be an autofill match and its `value` must
+          // be the string that will be autofilled so that the controller will
+          // autofill it.  But it also must be a searchengine action so that the
+          // front end will style it as a search engine result.  The front end
+          // uses `finalCompleteValue` as the URL for autofill results, so set
+          // that to the moz-action URL.
+          let aliasPreservingUserCase = token + alias.substr(token.length);
+          let value = aliasPreservingUserCase + " ";
+          this._addMatch({
+            value,
+            finalCompleteValue: PlacesUtils.mozActionURI("searchengine", {
+              engineName: engine.name,
+              alias: aliasPreservingUserCase,
+              input: value,
+              searchQuery: "",
+            }),
+            comment: engine.name,
+            frecency: FRECENCY_DEFAULT,
+            style: "autofill action searchengine",
+            icon: engine.iconURI ? engine.iconURI.spec : null,
+          });
+          this._result.setDefaultIndex(0);
+          return true;
+        }
+      }
+    }
+
+    return false;
+  },
+
   async _matchFirstHeuristicResult(conn) {
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
@@ -1165,6 +1211,13 @@ Search.prototype = {
 
     if (this.pending && shouldAutofill) {
       let matched = this._matchPreloadedSiteForAutofill();
+      if (matched) {
+        return true;
+      }
+    }
+
+    if (this.pending && shouldAutofill) {
+      let matched = await this._matchSearchEngineTokenAlias();
       if (matched) {
         return true;
       }

@@ -164,6 +164,7 @@ add_task(async function engineWithSuggestions() {
     });
   }
 
+  engine.alias = "";
   await cleanup();
 });
 
@@ -173,17 +174,20 @@ add_task(async function engineWithSuggestions() {
 add_task(async function tokenAliasEngines() {
   let tokenEngines = [];
   for (let engine of Services.search.getEngines()) {
-    let tokenAliases = engine.wrappedJSObject._internalAliases;
+    let aliases = [];
+    if (engine.alias) {
+      aliases.push(engine.alias);
+    }
+    aliases.push(...engine.wrappedJSObject._internalAliases);
+    let tokenAliases = aliases.filter(a => a.startsWith("@"));
     if (tokenAliases.length) {
       tokenEngines.push({ engine, tokenAliases });
     }
   }
-
   if (!tokenEngines.length) {
     Assert.ok(true, "No token alias engines, skipping task.");
     return;
   }
-
   info("Got token alias engines: " +
        tokenEngines.map(({ engine }) => engine.name));
 
