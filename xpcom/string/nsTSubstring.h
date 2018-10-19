@@ -593,9 +593,11 @@ public:
                                              size_type aLength,
                                              const fallible_t&);
 
-  // ReplaceLiteral must ONLY be called with an actual literal string.
-  // Do not attempt to use it with a character array variable.
-  // Use Replace or ReplaceASCII for that.
+  // ReplaceLiteral must ONLY be called with an actual literal string, or
+  // a character array *constant* of static storage duration declared
+  // without an explicit size and with an initializer that is a string
+  // literal or is otherwise null-terminated.
+  // Use Replace or ReplaceASCII for other character array variables.
   template<int N>
   void ReplaceLiteral(index_type aCutStart, size_type aCutLength,
                       const char_type (&aStr)[N])
@@ -641,9 +643,11 @@ public:
   // Appends a literal string ("" literal in the 8-bit case and u"" literal
   // in the 16-bit case) to the string.
   //
-  // AppendLiteral must ONLY be called with an actual literal string.
-  // Do not attempt to use it with a character array variable.
-  // Use Append or AppendASCII for that.
+  // AppendLiteral must ONLY be called with an actual literal string, or
+  // a character array *constant* of static storage duration declared
+  // without an explicit size and with an initializer that is a string
+  // literal or is otherwise null-terminated.
+  // Use Append or AppendASCII for other character array variables.
   template<int N>
   void AppendLiteral(const char_type (&aStr)[N])
   {
@@ -802,9 +806,11 @@ public:
     Replace(aPos, 0, aTuple);
   }
 
-  // InsertLiteral must ONLY be called with an actual literal string.
-  // Do not attempt to use it with a character array variable.
-  // Use Insert for that.
+  // InsertLiteral must ONLY be called with an actual literal string, or
+  // a character array *constant* of static storage duration declared
+  // without an explicit size and with an initializer that is a string
+  // literal or is otherwise null-terminated.
+  // Use Insert for other character array variables.
   template<int N>
   void InsertLiteral(const char_type (&aStr)[N], index_type aPos)
   {
