@@ -3709,6 +3709,7 @@ SetPropIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
     if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+        sp.opcodeProperty("op", JSOp(*pc_));
         sp.valueProperty("base", lhsVal_);
         sp.valueProperty("property", idVal_);
         sp.valueProperty("value", rhsVal_);
