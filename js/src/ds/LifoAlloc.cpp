@@ -166,7 +166,16 @@ MallocGoodSize(size_t aSize)
 static size_t
 NextSize(size_t start, size_t used)
 {
-    return start;
+    // Double the size, up to 1 MB.
+    const size_t mb = 1 * 1024 * 1024;
+    if (used < mb) {
+        return Max(start, used);
+    }
+
+    // After 1 MB, grow more gradually, to waste less memory.
+    // The sequence (in megabytes) begins:
+    // 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, ...
+    return JS_ROUNDUP(used / 8, mb);
 }
 
 LifoAlloc::UniqueBumpChunk
