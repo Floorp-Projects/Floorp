@@ -211,8 +211,23 @@ nsJARChannel::nsJARChannel()
 nsJARChannel::~nsJARChannel()
 {
     LOG(("nsJARChannel::~nsJARChannel [this=%p]\n", this));
+    if (NS_IsMainThread()) {
+        return;
+    }
+
+    // Proxy release the following members to main thread.
     NS_ReleaseOnMainThreadSystemGroup("nsJARChannel::mLoadInfo",
                                       mLoadInfo.forget());
+    NS_ReleaseOnMainThreadSystemGroup("nsJARChannel::mCallbacks",
+                                      mCallbacks.forget());
+    NS_ReleaseOnMainThreadSystemGroup("nsJARChannel::mProgressSink",
+                                      mProgressSink.forget());
+    NS_ReleaseOnMainThreadSystemGroup("nsJARChannel::mLoadGroup",
+                                      mLoadGroup.forget());
+    NS_ReleaseOnMainThreadSystemGroup("nsJARChannel::mListener",
+                                      mListener.forget());
+    NS_ReleaseOnMainThreadSystemGroup("nsJARChannel::mListenerContext",
+                                      mListenerContext.forget());
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsJARChannel,
