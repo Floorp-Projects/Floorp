@@ -220,6 +220,8 @@ _Sample apps using various components._
 
 * [**DataProtect**](samples/dataprotect) - An app demoing how to use the [**Dataprotect**](components/lib/dataprotect/README.md) component to load and store encrypted data in `SharedPreferences`.
 
+* [**Glean**](samples/glean) - An app demoing how to use the [**Glean**](components/service/glean/README.md) library to collect and send telemetry data.
+
 # License
 
     This Source Code Form is subject to the terms of the Mozilla Public

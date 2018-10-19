@@ -1,0 +1,52 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+plugins {
+    id "com.jetbrains.python.envs" version "0.0.25"
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion Config.compileSdkVersion
+
+    defaultConfig {
+        applicationId "org.mozilla.samples.glean"
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'x86', 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+}
+
+dependencies {
+    implementation project(':service-glean')
+
+    implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
+
+    implementation Deps.support_appcompat
+    implementation Deps.support_customtabs
+}
+
+apply from: '../../components/service/glean/scripts/sdk_generator.gradle'
