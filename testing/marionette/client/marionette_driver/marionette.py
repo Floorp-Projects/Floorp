@@ -1303,6 +1303,10 @@ class Marionette(object):
         self.process_id = self.session.get("moz:processID", self.session.get("processId"))
         self.profile = self.session.get("moz:profile")
 
+        timeout = self.session.get("moz:shutdownTimeout")
+        if timeout is not None:
+            self.shutdown_timeout = timeout / 1000 + 10
+
         return self.session
 
     @property
