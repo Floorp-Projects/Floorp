@@ -474,10 +474,10 @@ public:
   }
 
   // AssignLiteral must ONLY be called with an actual literal string, or
-  // a character array *constant* declared without an explicit size.
-  // Do not attempt to use it with a character array variable that is not
-  // constant or does not have static storage duration. Use Assign or
-  // AssignASCII for those.
+  // a character array *constant* of static storage duration declared
+  // without an explicit size and with an initializer that is a string
+  // literal or is otherwise null-terminated.
+  // Use Assign or AssignASCII for other character array variables.
   //
   // This method does not need a fallible version, because it uses the
   // POD buffer of the literal as the string's buffer without allocating.
@@ -491,9 +491,9 @@ public:
   }
 
   // AssignLiteral must ONLY be called with an actual literal string, or
-  // a char array *constant* declared without an explicit size.
-  // Do not attempt to use it with a non-constant char array variable.
-  // Use AssignASCII for that.
+  // a char array *constant* declared without an explicit size and with an
+  // initializer that is a string literal or is otherwise null-terminated.
+  // Use AssignASCII for other char array variables.
   //
   // This method takes an 8-bit (ASCII-only!) string that is expanded
   // into a 16-bit string at run time causing a run-time allocation.
