@@ -90,6 +90,7 @@ function testItemMatchesExpectedValues(item, values, index) {
   }
 }
 
+// Test for items in "flex-sanity" flex container:
 function testFlexSanity() {
   let container = document.getElementById("flex-sanity");
   let flex = container.getAsFlexContainer();
@@ -180,8 +181,37 @@ function testFlexSanity() {
           "flex-grow item should have expected mainDeltaSize.");
 }
 
+// Test for items in "flex-growing" flex container:
+function testFlexGrowing() {
+  let expectedValues = [
+    { mainBaseSize:  10,
+      mainDeltaSize: 10,
+      mainMinSize:   35 },
+    { mainBaseSize:  20,
+      mainDeltaSize: 5,
+      mainMinSize:   28 },
+    { mainBaseSize:  30,
+      mainDeltaSize: 7  },
+    { mainBaseSize:  0,
+      mainDeltaSize: 48,
+      mainMaxSize:   20 },
+  ];
+
+  let container = document.getElementById("flex-growing");
+  let items = container.getAsFlexContainer().getLines()[0].getItems();
+  is(items.length, container.children.length,
+     "Line should have as many items as the flex container has child elems");
+
+  for (let i = 0; i < items.length; ++i) {
+    let item = items[i];
+    let values = expectedValues[i];
+    testItemMatchesExpectedValues(item, values, i);
+  }
+}
+
 function runTests() {
   testFlexSanity();
+  testFlexGrowing();
   SimpleTest.finish();
 }
 </script>
@@ -208,9 +238,6 @@ function runTests() {
     <div style="flex: 0 0 10px; max-width: 5px"></div>
     <!-- Inflexible item that is trivially clamped to larger min-width: -->
     <div style="flex: 0 0 10px; min-width: 15px"></div>
-    <!-- XXXdholbert should create a second container here w/ specific
-         hardcoded flex base sizes so we can predict & check mainDeltaSize
-         for this item: -->
     <!-- Item that wants to grow but is trivially clamped to max-width
          below base size: -->
     <div style="flex: 1 1 50px; max-width: 10px"></div>
@@ -218,6 +245,61 @@ function runTests() {
       <div class="white">replaced</div>
     </div>
     anon item for text
+  </div>
+
+  <!-- Second flex container to be tested, with items that grow by specific
+       predictable amounts. This ends up triggering 4 passes of the main
+       flexbox layout algorithm loop - and note that for each item, we only
+       report (via 'mainDeltaSize') the delta that it wanted in the *last pass
+       of the loop before that item was frozen*.
+
+       Here's what goes on in each pass (and the tentative deltas)
+     * PASS 1
+        - Available space = 120 - 10 - 20 - 30 - 0 = 60px.
+        - Sum of flex values = 1+1+2+16 = 20. So 1 "share" is 60px/20 = 3px.
+        - Deltas (space distributed): +3px, +3px, +6px, +48px
+          VIOLATIONS:
+            item0 is now 10+3 = 13px, which under its min
+            item1 is now 20+3 = 23px, which under its min
+            item3 is now 0+48 = 48px, which over its max
+        - the magnitude of max-violations (how far we're out of bounds) exceeds
+          magnitude of min-violations, so we prioritize the max-violations.
+        - So we freeze item3 at its max-width, 20px, leaving its final "desired"
+          mainDeltaSize at +48px from this pass.
+
+     * PASS 2
+        - Available space = 120 - 10 - 20 - 30 - 20 = 40px.
+        - Sum of flex values = 1+1+2 = 4. So 1 "share" is 40px/4 = 10px.
+        - Deltas (space distributed): +10px, +10px, +20px, +0px.
+          VIOLATIONS:
+            item0 is now 10+10 = 20px, which is under its min
+        - So we freeze item0 at its min-width, 35px, leaving its final "desired"
+          mainDeltaSize at +10px from this pass.
+
+     * PASS 3
+        - Available space = 120 - 35 - 20 - 30 - 20 = 15px.
+        - Sum of flex values = 1+2 = 3. So 1 "share" is 15px/3 = 5px.
+        - Deltas (space distributed): +0px, +5px, +10px, +0px.
+          VIOLATIONS:
+            item1 is now 20+5 = 25px, which is under its min
+        - So we freeze item1 at its min-width, 28px, leaving its final "desired"
+          mainDeltaSize at +5px from this pass.
+
+     * PASS 4
+        - Available space = 120 - 35 - 28 - 30 - 20 = 7px.
+        - Sum of flex values = 2. So 1 "share" is 7px/2 = 3.5px
+        - Deltas (space distributed): +0px, +0px, +7px, +0px.
+          VIOLATIONS:
+            None! (So, we'll be done after this pass!)
+        - So we freeze item2 (the only unfrozen item) at its flexed size, 37px,
+          and set its final "desired" mainDeltaSize to +7px from this pass.
+        - And we're done!
+       -->
+  <div id="flex-growing" class="container" style="width: 120px">
+    <div style="flex: 1 10px; min-width: 35px"></div>
+    <div style="flex: 1 20px; min-width: 28px"></div>
+    <div style="flex: 2 30px; min-width: 0"></div>
+    <div style="flex: 16 0px; max-width: 20px"></div>
   </div>
 </body>
 </html>
