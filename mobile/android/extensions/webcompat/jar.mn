@@ -1,0 +1,3 @@
+[features/webcompat@mozilla.org] chrome.jar:
+% content webcompat %content/
+  content/ (content/*)
