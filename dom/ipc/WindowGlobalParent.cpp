@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/ipc/InProcessParent.h"
-#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ChromeBrowsingContext.h"
 
 using namespace mozilla::ipc;
 
@@ -15,21 +15,42 @@ namespace dom {
 
 WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
                                        bool aInProcess)
-  : mBrowsingContextId(aInit.browsingContextId())
-  , mDocumentPrincipal(aInit.principal())
+  : mDocumentPrincipal(aInit.principal())
   , mInProcess(aInProcess)
-  , mIPCClosed(false)
+  , mIPCClosed(true)  // Closed until WGP::Init
 {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "Parent process only");
   MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
-  MOZ_RELEASE_ASSERT(mBrowsingContextId != 0, "Must be made in BrowsingContext");
+
+  // NOTE: mBrowsingContext initialized in Init()
+  MOZ_RELEASE_ASSERT(aInit.browsingContextId() != 0,
+                     "Must be made in BrowsingContext");
 }
 
 void
-WindowGlobalParent::Init()
+WindowGlobalParent::Init(const WindowGlobalInit& aInit)
 {
   MOZ_ASSERT(Manager(), "Should have a manager!");
   MOZ_ASSERT(!mFrameLoader, "Cannot Init() a WindowGlobalParent twice!");
+
+  MOZ_ASSERT(mIPCClosed, "IPC shouldn't be open yet");
+  mIPCClosed = false;
+
+  // Determine which content process the window global is coming from.
+  ContentParentId processId(0);
+  if (!mInProcess) {
+    processId = static_cast<ContentParent*>(Manager()->Manager())->ChildID();
+  }
+
+  mBrowsingContext = ChromeBrowsingContext::Get(aInit.browsingContextId());
+  MOZ_ASSERT(mBrowsingContext);
+
+  // XXX(nika): This won't be the case soon, but for now this is a good
+  // assertion as we can't switch processes. We should relax this eventually.
+  MOZ_ASSERT(mBrowsingContext->IsOwnedByProcess(processId));
+
+  // Attach ourself to the browsing context.
+  mBrowsingContext->RegisterWindowGlobal(this);
 
   // Determine what toplevel frame element our WindowGlobalParent is being
   // embedded in.
@@ -60,12 +81,6 @@ WindowGlobalParent::Init()
   }
 }
 
-already_AddRefed<dom::BrowsingContext>
-WindowGlobalParent::BrowsingContext()
-{
-  return dom::BrowsingContext::Get(mBrowsingContextId);
-}
-
 already_AddRefed<WindowGlobalChild>
 WindowGlobalParent::GetOtherSide()
 {
@@ -89,13 +104,14 @@ void
 WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   mIPCClosed = true;
+  mBrowsingContext->UnregisterWindowGlobal(this);
 }
 
 WindowGlobalParent::~WindowGlobalParent()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION(WindowGlobalParent, mFrameLoader)
+NS_IMPL_CYCLE_COLLECTION(WindowGlobalParent, mFrameLoader, mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WindowGlobalParent, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WindowGlobalParent, Release)
 
