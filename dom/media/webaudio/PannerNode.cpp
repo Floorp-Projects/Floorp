@@ -462,9 +462,6 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
       return;
     }
 
-    // The output of this node is always stereo, no matter what the inputs are.
-    aOutput->AllocateChannels(2);
-
     ComputeAzimuthAndElevation(position, azimuth, elevation);
     coneGain = ComputeConeGain(position, orientation);
 
@@ -507,9 +504,6 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
     float orientationX[WEBAUDIO_BLOCK_SIZE];
     float orientationY[WEBAUDIO_BLOCK_SIZE];
     float orientationZ[WEBAUDIO_BLOCK_SIZE];
-
-    // The output of this node is always stereo, no matter what the inputs are.
-    aOutput->AllocateChannels(2);
 
     if (!mPositionX.HasSimpleValue()) {
       mPositionX.GetValuesAtTime(tick, positionX, WEBAUDIO_BLOCK_SIZE);

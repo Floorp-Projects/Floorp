@@ -92,16 +92,18 @@ public:
   void UpmixToStereoIfNeeded(const AudioBlock& aInput, AudioBlock* aOutput)
   {
     if (aInput.ChannelCount() == 2) {
-      const float* inputL = static_cast<const float*>(aInput.mChannelData[0]);
-      const float* inputR = static_cast<const float*>(aInput.mChannelData[1]);
-      float* outputL = aOutput->ChannelFloatsForWrite(0);
-      float* outputR = aOutput->ChannelFloatsForWrite(1);
-
-      AudioBlockCopyChannelWithScale(inputL, aInput.mVolume, outputL);
-      AudioBlockCopyChannelWithScale(inputR, aInput.mVolume, outputR);
+      *aOutput = aInput;
     } else {
       MOZ_ASSERT(aInput.ChannelCount() == 1);
-      GainMonoToStereo(aInput, aOutput, aInput.mVolume, aInput.mVolume);
+      aOutput->SetBuffer(aInput.GetBuffer());
+      aOutput->mChannelData.SetLength(2);
+      for (uint32_t i = 0; i < 2; ++i) {
+        aOutput->mChannelData[i] = aInput.ChannelData<float>()[0];
+      }
+      // 1/sqrt(2) multiplier is because StereoPanner up-mixing differs from
+      // input up-mixing.
+      aOutput->mVolume = M_SQRT1_2 * aInput.mVolume;
+      aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
     }
   }
 
@@ -119,7 +121,6 @@ public:
       // If input is silent, so is the output
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
     } else if (mPan.HasSimpleValue()) {
-      aOutput->AllocateChannels(2);
       float panning = mPan.GetValue();
       // If the panning is 0.0, we can simply copy the input to the
       // output with gain applied, up-mixing to stereo if needed.
@@ -138,7 +139,6 @@ public:
                            panning <= 0);
       }
     } else {
-      aOutput->AllocateChannels(2);
       float computedGain[2*WEBAUDIO_BLOCK_SIZE + 4];
       bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
