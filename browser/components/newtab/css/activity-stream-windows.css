@@ -1931,7 +1931,8 @@ a.firstrun-link {
   align-items: center; }
   .SnippetBaseContainer a {
     cursor: pointer;
-    color: var(--newtab-link-primary-color); }
+    color: var(--newtab-link-primary-color);
+    text-decoration: underline; }
     [lwt-newtab-brighttext] .SnippetBaseContainer a {
       font-weight: bold; }
   .SnippetBaseContainer .innerWrapper {
@@ -2069,6 +2070,37 @@ a.firstrun-link {
 .SimpleSnippet.tall {
   padding: 27px 0; }
 
+.SimpleSnippet p em {
+  color: #0C0C0D;
+  font-style: normal;
+  background: #FFE900; }
+
+.SimpleSnippet.bold .donation-form-url,
+.SimpleSnippet.bold .donation-amount, .SimpleSnippet.takeover .donation-form-url,
+.SimpleSnippet.takeover .donation-amount {
+  padding-top: 8px;
+  padding-bottom: 8px; }
+
+.SimpleSnippet.bold {
+  height: 176px; }
+  .SimpleSnippet.bold .body {
+    font-size: 14px;
+    line-height: 20px;
+    margin-bottom: 20px; }
+  .SimpleSnippet.bold .icon {
+    width: 71px;
+    height: 71px; }
+
+.SimpleSnippet.takeover {
+  height: 344px; }
+  .SimpleSnippet.takeover .body {
+    font-size: 16px;
+    line-height: 24px;
+    margin-bottom: 35px; }
+  .SimpleSnippet.takeover .icon {
+    width: 79px;
+    height: 79px; }
+
 .SimpleSnippet .title {
   display: inline;
   font-size: inherit;
@@ -2090,6 +2122,12 @@ a.firstrun-link {
 
 .SimpleSnippet.tall .icon {
   margin-inline-end: 20px; }
+
+.SimpleSnippet.takeover .icon, .SimpleSnippet.bold .icon {
+  margin-inline-end: 20px; }
+
+.SimpleSnippet .icon {
+  align-self: flex-start; }
 
 .SimpleSnippet .ASRouterButton {
   cursor: pointer; }
@@ -2272,5 +2310,41 @@ a.firstrun-link {
         content: none; } }
   .onboardingMessage:last-child::before {
     content: none; }
+
+.EOYSnippetForm {
+  margin-top: 12px;
+  align-self: start;
+  font-size: 12px;
+  display: flex;
+  align-items: center; }
+  .EOYSnippetForm .donation-amount,
+  .EOYSnippetForm .donation-form-url {
+    white-space: nowrap;
+    font-size: 14px;
+    padding: 5px 14px;
+    border-radius: 2px; }
+  .EOYSnippetForm .donation-amount {
+    color: #0C0C0D;
+    margin-inline-end: 18px;
+    border: 1px solid #B1B1B3;
+    background: #F9F9FA;
+    cursor: pointer; }
+  .EOYSnippetForm input[type='radio'] {
+    opacity: 0;
+    margin-inline-end: -18px; }
+    .EOYSnippetForm input[type='radio']:checked + .donation-amount {
+      background: #737373;
+      color: #FFF;
+      border: 1px solid #4A4A4F; }
+  .EOYSnippetForm .monthly-checkbox-container {
+    width: 100%; }
+  .EOYSnippetForm .donation-form-url {
+    margin-inline-start: 18px;
+    background-color: #0C99D5;
+    border: 0;
+    color: #FFF;
+    align-self: flex-end;
+    display: flex;
+    cursor: pointer; }
 
 /*# sourceMappingURL=activity-stream-windows.css.map */

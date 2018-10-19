@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Популярни теми:",
   "pocket_read_even_more": "Повече публикации",
   "pocket_more_reccommendations": "Повече препоръчани",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Как работи",
   "pocket_cta_button": "Вземете Pocket",
   "pocket_cta_text": "Запазете статиите, които харесвате в Pocket и заредете ума си с увлекателни четива.",
   "highlights_empty_state": "Разглеждайте и тук ще ви покажем някои от най-добрите статии, видео и други страници, които сте посетили или отметнали наскоро.",

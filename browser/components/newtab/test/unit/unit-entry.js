@@ -140,6 +140,7 @@ const TEST_GLOBAL = {
       getPrefType() {},
       clearUserPref() {},
       getStringPref() {},
+      setStringPref() {},
       getIntPref() {},
       getBoolPref() {},
       setBoolPref() {},
