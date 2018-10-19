@@ -364,6 +364,10 @@ richlistbox.list > richlistitem.addon {
   cursor: pointer;
 }
 
+.relnotes-container {
+  cursor: auto;
+}
+
 .addon-view[type="theme"] .icon {
   list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.svg");
 }
