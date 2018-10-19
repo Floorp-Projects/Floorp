@@ -31,7 +31,7 @@ class nsIChannel;
 class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShell;
-class nsDocShellLoadInfo;
+class nsDocShellLoadState;
 class nsIDocument;
 class nsIPrincipal;
 class nsIScriptTimeoutHandler;
@@ -1121,12 +1121,12 @@ public:
 
   virtual nsDOMWindowList* GetFrames() = 0;
 
-  // aLoadInfo will be passed on through to the windowwatcher.
+  // aLoadState will be passed on through to the windowwatcher.
   // aForceNoOpener will act just like a "noopener" feature in aOptions except
   //                will not affect any other window features.
   virtual nsresult Open(const nsAString& aUrl, const nsAString& aName,
                         const nsAString& aOptions,
-                        nsDocShellLoadInfo* aLoadInfo,
+                        nsDocShellLoadState* aLoadState,
                         bool aForceNoOpener,
                         nsPIDOMWindowOuter **_retval) = 0;
   virtual nsresult OpenDialog(const nsAString& aUrl, const nsAString& aName,

@@ -61,7 +61,7 @@ XPIDL_MODULE = 'docshell'
 EXPORTS += [
     'nsCTooltipTextProvider.h',
     'nsDocShell.h',
-    'nsDocShellLoadInfo.h',
+    'nsDocShellLoadState.h',
     'nsDocShellLoadTypes.h',
     'nsDocShellTreeOwner.h',
     'nsILinkHandler.h',
@@ -88,7 +88,7 @@ UNIFIED_SOURCES += [
     'nsDocShell.cpp',
     'nsDocShellEditorData.cpp',
     'nsDocShellEnumerator.cpp',
-    'nsDocShellLoadInfo.cpp',
+    'nsDocShellLoadState.cpp',
     'nsDocShellTreeOwner.cpp',
     'nsDSURIContentListener.cpp',
     'nsPingListener.cpp',

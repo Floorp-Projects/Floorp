@@ -72,7 +72,7 @@ class nsITimeoutHandler;
 class nsIWebBrowserChrome;
 class mozIDOMWindowProxy;
 
-class nsDocShellLoadInfo;
+class nsDocShellLoadState;
 class nsDOMWindowList;
 class nsScreen;
 class nsHistory;
@@ -607,7 +607,7 @@ public:
             mozilla::ErrorResult& aError);
   nsresult Open(const nsAString& aUrl, const nsAString& aName,
                 const nsAString& aOptions,
-                nsDocShellLoadInfo* aLoadInfo,
+                nsDocShellLoadState* aLoadState,
                 bool aForceNoOpener,
                 nsPIDOMWindowOuter **_retval) override;
   mozilla::dom::Navigator* GetNavigator() override;
@@ -879,7 +879,7 @@ private:
    * @param aExtraArgument Another way to pass arguments in.  This is mutually
    *        exclusive with the argv approach.
    *
-   * @param aLoadInfo to be passed on along to the windowwatcher.
+   * @param aLoadState to be passed on along to the windowwatcher.
    *
    * @param aForceNoOpener if true, will act as if "noopener" were passed in
    *                       aOptions, but without affecting any other window
@@ -901,7 +901,7 @@ private:
                         bool aNavigate,
                         nsIArray *argv,
                         nsISupports *aExtraArgument,
-                        nsDocShellLoadInfo* aLoadInfo,
+                        nsDocShellLoadState* aLoadState,
                         bool aForceNoOpener,
                         nsPIDOMWindowOuter **aReturn);
 

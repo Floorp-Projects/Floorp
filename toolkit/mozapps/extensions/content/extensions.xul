@@ -518,7 +518,6 @@
                           <hbox id="detail-name-container" class="name-container"
                                 align="start">
                             <label id="detail-name" flex="1"/>
-                            <label id="detail-version"/>
                             <label id="detail-legacy-warning" class="legacy-warning text-link" value="&addon.legacy.label;"/>
                             <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
                             <label class="update-postfix" value="&addon.update.postfix;"/>
@@ -573,6 +572,7 @@
                                       command="cmd_findItemUpdates"/>
                             </hbox>
                           </row>
+                          <row class="detail-row" id="detail-version" label="&detail.version.label;"/>
                           <row class="detail-row" id="detail-dateUpdated" label="&detail.lastupdated.label;"/>
                           <row class="detail-row-complex" id="detail-homepage-row" label="&detail.home;">
                             <label class="detail-row-label" value="&detail.home;"/>
