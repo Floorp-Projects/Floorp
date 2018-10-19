@@ -83,7 +83,7 @@
 
 #define UNKNOWN_FILE_WARNING(_leafName) \
   QM_WARNING("Something (%s) in the directory that doesn't belong!", \
-             NS_ConvertUTF16toUTF8(leafName).get())
+             NS_ConvertUTF16toUTF8(_leafName).get())
 
 // The amount of time, in milliseconds, that our IO thread will stay alive
 // after the last event it processes.
@@ -1817,6 +1817,11 @@ protected:
   virtual ~RepositoryOperationBase()
   { }
 
+  template<typename UpgradeMethod>
+  nsresult
+  MaybeUpgradeClients(const OriginProps& aOriginsProps,
+                      UpgradeMethod aMethod);
+
 private:
   virtual nsresult
   PrepareOriginDirectory(OriginProps& aOriginProps, bool* aRemoved) = 0;
@@ -1872,7 +1877,7 @@ public:
 
 private:
   nsresult
-  MaybeUpgradeClients(const OriginProps& aOriginProps);
+  MaybeRemoveMorgueDirectory(const OriginProps& aOriginProps);
 
   nsresult
   MaybeRemoveAppsData(const OriginProps& aOriginProps,
@@ -1899,9 +1904,6 @@ public:
   { }
 
 private:
-  nsresult
-  MaybeUpgradeClients(const OriginProps& aOriginProps);
-
   nsresult
   PrepareOriginDirectory(OriginProps& aOriginProps, bool* aRemoved) override;
 
@@ -8855,6 +8857,76 @@ RepositoryOperationBase::ProcessRepository()
   return NS_OK;
 }
 
+template<typename UpgradeMethod>
+nsresult
+RepositoryOperationBase::MaybeUpgradeClients(const OriginProps& aOriginProps,
+                                             UpgradeMethod aMethod)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+  MOZ_ASSERT(aMethod);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
+  nsresult rv =
+    aOriginProps.mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  while (true) {
+    nsCOMPtr<nsIFile> file;
+    rv = entries->GetNextFile(getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!file) {
+      break;
+    }
+
+    bool isDirectory;
+    rv = file->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString leafName;
+    rv = file->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isDirectory) {
+      // Unknown files during upgrade are allowed. Just warn if we find them.
+      if (!IsOriginMetadata(leafName) &&
+          !IsTempMetadata(leafName)) {
+        UNKNOWN_FILE_WARNING(leafName);
+      }
+      continue;
+    }
+
+    Client::Type clientType;
+    rv = Client::TypeFromText(leafName, clientType);
+    if (NS_FAILED(rv)) {
+      UNKNOWN_FILE_WARNING(leafName);
+      continue;
+    }
+
+    Client* client = quotaManager->GetClient(clientType);
+    MOZ_ASSERT(client);
+
+    rv = (client->*aMethod)(file);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult
 CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
                                                             nsIFile* aDirectory)
@@ -9185,77 +9257,41 @@ UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
 }
 
 nsresult
-UpgradeStorageFrom1_0To2_0Helper::MaybeUpgradeClients(
+UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveMorgueDirectory(
                                                 const OriginProps& aOriginProps)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aOriginProps.mDirectory);
 
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  // The Cache API was creating top level morgue directories by accident for
+  // a short time in nightly.  This unfortunately prevents all storage from
+  // working.  So recover these profiles permanently by removing these corrupt
+  // directories as part of this upgrade.
 
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv =
-    aOriginProps.mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsCOMPtr<nsIFile> morgueDir;
+  nsresult rv = aOriginProps.mDirectory->Clone(getter_AddRefs(morgueDir));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  nsCOMPtr<nsIFile> file;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) && file) {
-    bool isDirectory;
-    rv = file->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsString leafName;
-    rv = file->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!isDirectory) {
-      // Unknown files during upgrade are allowed. Just warn if we find them.
-      if (!IsOriginMetadata(leafName) &&
-          !IsTempMetadata(leafName)) {
-        UNKNOWN_FILE_WARNING(leafName);
-      }
-      continue;
-    }
-
-    // The Cache API was creating top level morgue directories by accident for
-    // a short time in nightly.  This unfortunately prevents all storage from
-    // working.  So recover these profiles permanently by removing these corrupt
-    // directories as part of this upgrade.
-    if (leafName.EqualsLiteral("morgue")) {
-      QM_WARNING("Deleting accidental morgue directory!");
-
-      rv = file->Remove(/* recursive */ true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      continue;
-    }
-
-    Client::Type clientType;
-    rv = Client::TypeFromText(leafName, clientType);
-    if (NS_FAILED(rv)) {
-      UNKNOWN_FILE_WARNING(leafName);
-      continue;
-    }
-
-    Client* client = quotaManager->GetClient(clientType);
-    MOZ_ASSERT(client);
-
-    rv = client->UpgradeStorageFrom1_0To2_0(file);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
+  rv = morgueDir->Append(NS_LITERAL_STRING("morgue"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  bool exists;
+  rv = morgueDir->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    QM_WARNING("Deleting accidental morgue directory!");
+
+    rv = morgueDir->Remove(/* recursive */ true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -9368,7 +9404,13 @@ UpgradeStorageFrom1_0To2_0Helper::PrepareOriginDirectory(
   MOZ_ASSERT(aOriginProps.mDirectory);
   MOZ_ASSERT(aRemoved);
 
-  nsresult rv = MaybeUpgradeClients(aOriginProps);
+  nsresult rv = MaybeRemoveMorgueDirectory(aOriginProps);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = MaybeUpgradeClients(aOriginProps,
+                           &Client::UpgradeStorageFrom1_0To2_0);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9457,68 +9499,6 @@ UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
 }
 
 nsresult
-UpgradeStorageFrom2_0To2_1Helper::MaybeUpgradeClients(
-                                                const OriginProps& aOriginProps)
-{
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
-
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv =
-    aOriginProps.mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> file;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) && file) {
-    bool isDirectory;
-    rv = file->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsString leafName;
-    rv = file->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!isDirectory) {
-      // Unknown files during upgrade are allowed. Just warn if we find them.
-      if (!IsOriginMetadata(leafName) &&
-          !IsTempMetadata(leafName)) {
-        UNKNOWN_FILE_WARNING(leafName);
-      }
-      continue;
-    }
-
-    Client::Type clientType;
-    rv = Client::TypeFromText(leafName, clientType);
-    if (NS_FAILED(rv)) {
-      UNKNOWN_FILE_WARNING(leafName);
-      continue;
-    }
-
-    Client* client = quotaManager->GetClient(clientType);
-    MOZ_ASSERT(client);
-
-    rv = client->UpgradeStorageFrom2_0To2_1(file);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
 UpgradeStorageFrom2_0To2_1Helper::PrepareOriginDirectory(
                                                       OriginProps& aOriginProps,
                                                       bool* aRemoved)
@@ -9527,7 +9507,8 @@ UpgradeStorageFrom2_0To2_1Helper::PrepareOriginDirectory(
   MOZ_ASSERT(aOriginProps.mDirectory);
   MOZ_ASSERT(aRemoved);
 
-  nsresult rv = MaybeUpgradeClients(aOriginProps);
+  nsresult rv = MaybeUpgradeClients(aOriginProps,
+                                    &Client::UpgradeStorageFrom2_0To2_1);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
