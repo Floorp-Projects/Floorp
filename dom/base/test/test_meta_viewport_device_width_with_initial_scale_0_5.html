@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>device-width with initial-scale=0.5 in meta viewport</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=0.5">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>width=device-width, initial-scale=0.5</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function device_width_with_initial_scale_0_5() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      is(info.width, 1600, "width should be the display width / initial-scale");
+      is(info.height, 960, "height should be the display height / initial-scale");
+      is(info.defaultZoom, 0.5, "initial-scale should be 0.5");
+    });
+  </script>
+</body>
+</html>
