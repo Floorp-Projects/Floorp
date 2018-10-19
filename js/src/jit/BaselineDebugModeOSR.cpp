@@ -206,13 +206,13 @@ CollectJitStackScripts(JSContext* cx, const Debugger::ExecutionObservableSet& ob
                 // it points into the debug mode OSR handler and cannot be
                 // used to look up a corresponding ICEntry.
                 //
-                // See cases F and G in PatchBaselineFramesForDebugMode.
+                // See case F in PatchBaselineFramesForDebugMode.
                 if (!entries.append(DebugModeOSREntry(script, info))) {
                     return false;
                 }
-            } else if (baselineFrame->isHandlingException()) {
-                // We are in the middle of handling an exception and the frame
-                // must have an override pc.
+            } else if (baselineFrame->hasOverridePc()) {
+                // If the frame is not settled on a pc with an ICEntry, overridePc
+                // will contain an explicit bytecode offset. We can (and must) use that.
                 uint32_t offset = script->pcToOffset(baselineFrame->overridePc());
                 if (!entries.append(DebugModeOSREntry(script, offset))) {
                     return false;
@@ -368,7 +368,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
     // Off to On:
     //  A. From a "can call" stub.
     //  B. From a VM call.
-    //  H. From inside HandleExceptionBaseline.
+    //  H. From inside HandleExceptionBaseline
     //  I. From inside the interrupt handler via the prologue stack check.
     //  J. From the warmup counter in the prologue.
     //
@@ -376,8 +376,9 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
     //  - All the ways above.
     //  C. From the debug trap handler.
     //  D. From the debug prologue.
-    //  K. From a JSOP_DEBUGAFTERYIELD instruction.
     //  E. From the debug epilogue.
+    //  G. From GeneratorThrowOrReturn
+    //  K. From a JSOP_DEBUGAFTERYIELD instruction.
     //
     // Cycles (On to Off to On)+ or (Off to On to Off)+:
     //  F. Undo cases B, C, D, E, I or J above on previously patched yet unpopped
@@ -438,19 +439,18 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
             }
 
             if (kind == ICEntry::Kind_Invalid) {
-                // Case H above.
+                // Cases G and H above.
                 //
-                // We are recompiling on-stack scripts from inside the
-                // exception handler, by way of an onExceptionUnwind
-                // invocation, on a pc without an ICEntry. This means the
-                // frame must have an override pc.
+                // We are recompiling a frame with an override pc.
+                // This may occur from inside the exception handler,
+                // by way of an onExceptionUnwind invocation, on a pc
+                // without an ICEntry. It may also happen if we call
+                // GeneratorThrowOrReturn and trigger onEnterFrame.
                 //
                 // If profiling is off, patch the resume address to nullptr,
                 // to ensure the old address is not used anywhere.
-                //
                 // If profiling is on, JSJitProfilingFrameIterator requires a
                 // valid return address.
-                MOZ_ASSERT(frame.baselineFrame()->isHandlingException());
                 MOZ_ASSERT(frame.baselineFrame()->overridePc() == pc);
                 uint8_t* retAddr;
                 if (cx->runtime()->geckoProfiler().enabled()) {
@@ -695,7 +695,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     }
 
     JitSpew(JitSpew_BaselineDebugModeOSR, "Recompiling (%s:%u:%u) for %s",
-            script->filename(), script->lineno(), script->column(), 
+            script->filename(), script->lineno(), script->column(),
             observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
     AutoKeepTypeScripts keepTypes(cx);
