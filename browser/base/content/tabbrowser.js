@@ -1094,13 +1094,8 @@ window._gBrowser = {
     if (newBrowser.hasAttribute("tabmodalPromptShowing")) {
       let prompts = newBrowser.parentNode.getElementsByTagNameNS(this._XUL_NS, "tabmodalprompt");
       let prompt = prompts[prompts.length - 1];
-      // @tabmodalPromptShowing is also set for other tab modal prompts
-      // (e.g. the Payment Request dialog) so there may not be a <tabmodalprompt>.
-      // Bug 1492814 will implement this for the Payment Request dialog.
-      if (prompt) {
-        prompt.Dialog.setDefaultFocus();
-        return;
-      }
+      prompt.Dialog.setDefaultFocus();
+      return;
     }
 
     // Focus the location bar if it was previously focused for that tab.

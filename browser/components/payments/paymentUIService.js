@@ -15,12 +15,8 @@
 
 "use strict";
 
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
-                               "resource:///modules/BrowserWindowTracker.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "paymentSrv",
@@ -49,44 +45,10 @@ PaymentUIService.prototype = {
 
   showPayment(requestId) {
     this.log.debug("showPayment:", requestId);
-    let request = paymentSrv.getPaymentRequestById(requestId);
-    let merchantBrowser = this.findBrowserByTabId(request.tabId);
-    let chromeWindow = merchantBrowser.ownerGlobal;
-    let {gBrowser} = chromeWindow;
-    let browserContainer = gBrowser.getBrowserContainer(merchantBrowser);
-    let container = chromeWindow.document.createElementNS(XHTML_NS, "div");
-    container.dataset.requestId = requestId;
-    container.classList.add("paymentDialogContainer");
-    container.hidden = true;
-    let paymentsBrowser = chromeWindow.document.createElementNS(XHTML_NS, "iframe");
-    paymentsBrowser.classList.add("paymentDialogContainerFrame");
-    paymentsBrowser.setAttribute("type", "content");
-    paymentsBrowser.setAttribute("remote", "true");
-    paymentsBrowser.setAttribute("src", `${this.DIALOG_URL}?requestId=${requestId}`);
-    // append the frame to start the loading
-    container.appendChild(paymentsBrowser);
-    browserContainer.prepend(container);
-
-    // Only show the frame and change the UI when the dialog is ready to show.
-    paymentsBrowser.addEventListener("tabmodaldialogready", function readyToShow() {
-      if (!container) {
-        // The dialog was closed by the DOM code before it was ready to be shown.
-        return;
-      }
-      container.hidden = false;
-
-      // Prevent focusing or interacting with the <browser>.
-      merchantBrowser.setAttribute("tabmodalPromptShowing", "true");
-
-      // Darken the merchant content area.
-      let tabModalBackground = chromeWindow.document.createElement("box");
-      tabModalBackground.classList.add("tabModalBackground", "paymentDialogBackground");
-      // Insert the same way as <tabmodalprompt>.
-      merchantBrowser.parentNode.insertBefore(tabModalBackground,
-                                              merchantBrowser.nextElementSibling);
-    }, {
-      once: true,
-    });
+    let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    chromeWindow.openDialog(`${this.DIALOG_URL}?requestId=${requestId}`,
+                            `${this.REQUEST_ID_PREFIX}${requestId}`,
+                            "modal,dialog,centerscreen,resizable=no");
   },
 
   abortPayment(requestId) {
@@ -119,18 +81,6 @@ PaymentUIService.prototype = {
         closed = this.closeDialog(requestId);
         break;
     }
-
-    let dialogContainer;
-    if (!closed) {
-      // We need to call findDialog before we respond below as getPaymentRequestById
-      // may fail due to the request being removed upon completion.
-      dialogContainer = this.findDialog(requestId).dialogContainer;
-      if (!dialogContainer) {
-        this.log.error("completePayment: no dialog found");
-        return;
-      }
-    }
-
     let responseCode = closed ?
         Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED :
         Ci.nsIPaymentActionResponse.COMPLETE_FAILED;
@@ -140,18 +90,23 @@ PaymentUIService.prototype = {
     paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
 
     if (!closed) {
-      dialogContainer.querySelector("iframe").contentWindow.paymentDialogWrapper.updateRequest();
+      let dialog = this.findDialog(requestId);
+      if (!dialog) {
+        this.log.error("completePayment: no dialog found");
+        return;
+      }
+      dialog.paymentDialogWrapper.updateRequest();
     }
   },
 
   updatePayment(requestId) {
-    let {dialogContainer} = this.findDialog(requestId);
+    let dialog = this.findDialog(requestId);
     this.log.debug("updatePayment:", requestId);
-    if (!dialogContainer) {
+    if (!dialog) {
       this.log.error("updatePayment: no dialog found");
       return;
     }
-    dialogContainer.querySelector("iframe").contentWindow.paymentDialogWrapper.updateRequest();
+    dialog.paymentDialogWrapper.updateRequest();
   },
 
   closePayment(requestId) {
@@ -165,55 +120,31 @@ PaymentUIService.prototype = {
    * @returns {boolean} whether the specified dialog was closed.
    */
   closeDialog(requestId) {
-    let {
-      browser,
-      dialogContainer,
-    } = this.findDialog(requestId);
-    if (!dialogContainer) {
+    let win = this.findDialog(requestId);
+    if (!win) {
       return false;
     }
-    this.log.debug(`closing: ${requestId}`);
-    dialogContainer.remove();
-    if (!dialogContainer.hidden) {
-      // If the container is no longer hidden then the background was added after
-      // `tabmodaldialogready` so remove it.
-      browser.parentElement.querySelector(".paymentDialogBackground").remove();
-
-      if (!browser.tabModalPromptBox || browser.tabModalPromptBox.listPrompts().length == 0) {
-        browser.removeAttribute("tabmodalPromptShowing");
-      }
-    }
+    this.log.debug(`closing: ${win.name}`);
+    win.close();
     return true;
   },
 
   findDialog(requestId) {
-    for (let win of BrowserWindowTracker.orderedWindows) {
-      for (let dialogContainer of win.document.querySelectorAll(".paymentDialogContainer")) {
-        if (dialogContainer.dataset.requestId == requestId) {
-          return {
-            dialogContainer,
-            browser: dialogContainer.parentElement.querySelector("browser"),
-          };
-        }
+    for (let win of Services.wm.getEnumerator(null)) {
+      if (win.name == `${this.REQUEST_ID_PREFIX}${requestId}`) {
+        return win;
       }
     }
-    return {};
+
+    return null;
   },
 
-  findBrowserByTabId(tabId) {
-    for (let win of BrowserWindowTracker.orderedWindows) {
-      for (let browser of win.gBrowser.browsers) {
-        if (!browser.frameLoader || !browser.frameLoader.tabParent) {
-          continue;
-        }
-        if (browser.frameLoader.tabParent.tabId == tabId) {
-          return browser;
-        }
-      }
-    }
+  requestIdForWindow(window) {
+    let windowName = window.name;
 
-    this.log.error("findBrowserByTabId: No browser found for tabId:", tabId);
-    return null;
+    return windowName.startsWith(this.REQUEST_ID_PREFIX) ?
+      windowName.replace(this.REQUEST_ID_PREFIX, "") : // returns suffix, which is the requestId
+      null;
   },
 };
 
