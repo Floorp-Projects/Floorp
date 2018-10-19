@@ -71,7 +71,8 @@ class TempCollection {
 
   async add(record) {
     let guid = "temp-" + Math.abs(Math.random() * 0xffffffff|0);
-    let recordToSave = Object.assign({guid}, record);
+    let timeLastModified = Date.now();
+    let recordToSave = Object.assign({guid, timeLastModified}, record);
     await this._formAutofillCollection.computeFields(recordToSave);
     this._data[guid] = recordToSave;
     return guid;
@@ -502,6 +503,7 @@ var paymentDialogWrapper = {
     selectedPayerAddressGUID: payerGUID,
     selectedPaymentCardGUID: paymentCardGUID,
     selectedPaymentCardSecurityCode: cardSecurityCode,
+    selectedShippingAddressGUID: shippingGUID,
   }) {
     let methodData = await this._convertProfileBasicCardToPaymentMethodData(paymentCardGUID,
                                                                             cardSecurityCode);
@@ -513,11 +515,27 @@ var paymentDialogWrapper = {
       return;
     }
 
-    let {
-      payerName,
-      payerEmail,
-      payerPhone,
-    } = await this._convertProfileAddressToPayerData(payerGUID);
+    let payerName = "";
+    let payerEmail = "";
+    let payerPhone = "";
+    if (payerGUID) {
+      let payerData = await this._convertProfileAddressToPayerData(payerGUID);
+      payerName = payerData.payerName;
+      payerEmail = payerData.payerEmail;
+      payerPhone = payerData.payerPhone;
+    }
+
+    // Update the lastUsedTime for the payerAddress and paymentCard. Check if
+    // the record exists in formAutofillStorage because it may be temporary.
+    if (shippingGUID && await formAutofillStorage.addresses.get(shippingGUID)) {
+      formAutofillStorage.addresses.notifyUsed(shippingGUID);
+    }
+    if (payerGUID && await formAutofillStorage.addresses.get(payerGUID)) {
+      formAutofillStorage.addresses.notifyUsed(payerGUID);
+    }
+    if (await formAutofillStorage.creditCards.get(paymentCardGUID)) {
+      formAutofillStorage.creditCards.notifyUsed(paymentCardGUID);
+    }
 
     this.pay({
       methodName: "basic-card",
