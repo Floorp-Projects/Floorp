@@ -1488,7 +1488,7 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
     appendTextNode(pre, "\n"); // blank lines after non-degenerate trees
   }
   for (let t of otherDegenerates) {
-    let padText = pad("", maxStringLength - t.toString().length, " ");
+    let padText = "".padStart(maxStringLength - t.toString().length, " ");
     appendTreeElements(pre, t, aProcess, padText);
   }
   appendTextNode(aP, "\n"); // gives nice spacing when we copy and paste
@@ -1592,26 +1592,6 @@ function formatTreeFrac(aNum, aDenom) {
   return (0.99995 <= num && num <= 1)
          ? formatNum(1, kFrac1Style)
          : formatNum(num, kFracStyle);
-}
-
-/**
- * Right-justifies a string in a field of a given width, padding as necessary.
- *
- * @param aS
- *        The string.
- * @param aN
- *        The field width.
- * @param aC
- *        The char used to pad.
- * @return The string representation.
- */
-function pad(aS, aN, aC) {
-  let padding = "";
-  let n2 = aN - aS.length;
-  for (let i = 0; i < n2; i++) {
-    padding += aC;
-  }
-  return padding + aS;
 }
 
 const kNoKidsSep   = " ── ",
