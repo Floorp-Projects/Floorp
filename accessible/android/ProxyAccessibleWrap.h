@@ -34,6 +34,16 @@ public:
 
   virtual uint32_t ChildCount() const override;
 
+  virtual Accessible* GetChildAt(uint32_t aIndex) const override;
+
+  virtual ENameValueFlag Name(nsString& aName) const override;
+
+  virtual void Value(nsString& aValue) const override;
+
+  virtual uint64_t State() override;
+
+  virtual nsIntRect Bounds() const override;
+
   virtual void ScrollTo(uint32_t aHow) const override;
 
   // AccessibleWrap
@@ -44,7 +54,15 @@ public:
 
   virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset) override;
 
-  virtual mozilla::java::GeckoBundle::LocalRef ToBundle() override;
+private:
+  virtual role WrapperRole() override;
+
+  virtual AccessibleWrap* WrapperParent() override;
+
+  virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal, double* aMaxVal, double* aStep) override;
+
+  virtual void WrapperDOMNodeID(nsString& aDOMNodeID) override;
+
 };
 
 class DocProxyAccessibleWrap : public ProxyAccessibleWrap
