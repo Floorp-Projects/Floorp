@@ -162,7 +162,8 @@ MaybeWaitForRecordReplayCheckpointSave(AutoLockHelperThreadState& locked)
 
         // Now that we are holding the helper thread state lock again,
         // notify the record/replay system that we might block soon.
-        mozilla::recordreplay::NotifyUnrecordedWait(HelperThread::WakeupAll);
+        mozilla::recordreplay::NotifyUnrecordedWait(HelperThread::WakeupAll,
+                                                    /* aOnlyWhenDiverged = */ false);
     }
 }
 

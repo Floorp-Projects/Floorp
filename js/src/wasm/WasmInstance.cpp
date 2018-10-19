@@ -714,13 +714,18 @@ Instance::structNew(Instance* instance, uint32_t typeIndex)
 
 /* static */ void*
 Instance::structNarrow(Instance* instance, uint32_t mustUnboxAnyref, uint32_t outputTypeIndex,
-                       void* nonnullPtr)
+                       void* maybeNullPtr)
 {
     JSContext* cx = TlsContext.get();
 
     Rooted<TypedObject*> obj(cx);
     Rooted<StructTypeDescr*> typeDescr(cx);
 
+    if (maybeNullPtr == nullptr) {
+        return maybeNullPtr;
+    }
+
+    void* nonnullPtr = maybeNullPtr;
     if (mustUnboxAnyref) {
         Rooted<NativeObject*> no(cx, static_cast<NativeObject*>(nonnullPtr));
         if (!no->is<TypedObject>()) {

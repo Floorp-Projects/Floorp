@@ -69,8 +69,6 @@ SendGraphicsMemoryToChild()
   MOZ_RELEASE_ASSERT(kr == KERN_SUCCESS);
 }
 
-static Maybe<PaintMessage> gLastPaint;
-
 // Global object for the sandbox used to paint graphics data in this process.
 static JS::PersistentRootedObject* gGraphicsSandbox;
 
@@ -109,16 +107,46 @@ InitGraphicsSandbox()
 // Buffer used to transform graphics memory, if necessary.
 static void* gBufferMemory;
 
+// The dimensions of the data in the graphics shmem buffer.
+static size_t gLastPaintWidth, gLastPaintHeight;
+
+// Explicit Paint messages received from the child need to be handled with
+// care to make sure we show correct graphics. Each Paint message is for the
+// the process state at the most recent checkpoint in the past. When running
+// (forwards or backwards) between the checkpoint and the Paint message,
+// we could pause at a breakpoint and repaint the graphics at that point,
+// reflecting the process state at a point later than at the checkpoint.
+// In this case the Paint message's graphics will be stale. To avoid showing
+// its graphics, we wait until both the Paint and the checkpoint itself have
+// been hit, with no intervening repaint.
+
+// The last explicit paint message received from the child, if there has not
+// been an intervening repaint.
+static UniquePtr<PaintMessage> gLastExplicitPaint;
+
+// The last checkpoint the child reached, if there has not been an intervening
+// repaint.
+static size_t gLastCheckpoint;
+
 void
 UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (aMsg) {
-    gLastPaint = Some(*aMsg);
-  } else if (!gLastPaint.isSome()) {
+    gLastPaintWidth = aMsg->mWidth;
+    gLastPaintHeight = aMsg->mHeight;
+  }
+
+  if (!gLastPaintWidth || !gLastPaintHeight) {
     return;
   }
+
+  bool hadFailure = !aMsg;
+
+  // Clear out the last explicit paint information. This may delete aMsg.
+  gLastExplicitPaint = nullptr;
+  gLastCheckpoint = CheckpointId::Invalid;
 
   // Make sure there is a sandbox which is running the graphics JS module.
   if (!gGraphicsSandbox) {
@@ -128,8 +156,8 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
   AutoSafeJSContext cx;
   JSAutoRealm ar(cx, *gGraphicsSandbox);
 
-  size_t width = gLastPaint.ref().mWidth;
-  size_t height = gLastPaint.ref().mHeight;
+  size_t width = gLastPaintWidth;
+  size_t height = gLastPaintHeight;
   size_t stride = layers::ImageDataSerializer::ComputeRGBStride(gSurfaceFormat, width);
 
   // Make sure the width and height are appropriately sized.
@@ -160,16 +188,52 @@ UpdateGraphicsInUIProcess(const PaintMessage* aMsg)
     JS_NewArrayBufferWithExternalContents(cx, width * height * 4, memory);
   MOZ_RELEASE_ASSERT(bufferObject);
 
-  JS::AutoValueArray<3> args(cx);
+  JS::AutoValueArray<4> args(cx);
   args[0].setObject(*bufferObject);
   args[1].setInt32(width);
   args[2].setInt32(height);
+  args[3].setBoolean(hadFailure);
 
   // Call into the graphics module to update the canvas it manages.
   RootedValue rval(cx);
   if (!JS_CallFunctionName(cx, *gGraphicsSandbox, "Update", args, &rval)) {
     MOZ_CRASH("UpdateGraphicsInUIProcess");
   }
+}
+
+static void
+MaybeTriggerExplicitPaint()
+{
+  if (gLastExplicitPaint && gLastExplicitPaint->mCheckpointId == gLastCheckpoint) {
+    UpdateGraphicsInUIProcess(gLastExplicitPaint.get());
+  }
+}
+
+void
+MaybeUpdateGraphicsAtPaint(const PaintMessage& aMsg)
+{
+  gLastExplicitPaint.reset(new PaintMessage(aMsg));
+  MaybeTriggerExplicitPaint();
+}
+
+void
+MaybeUpdateGraphicsAtCheckpoint(size_t aCheckpointId)
+{
+  gLastCheckpoint = aCheckpointId;
+  MaybeTriggerExplicitPaint();
+}
+
+bool
+InRepaintStressMode()
+{
+  static bool checked = false;
+  static bool rv;
+  if (!checked) {
+    AutoEnsurePassThroughThreadEvents pt;
+    rv = TestEnv("MOZ_RECORD_REPLAY_REPAINT_STRESS");
+    checked = true;
+  }
+  return rv;
 }
 
 } // namespace parent

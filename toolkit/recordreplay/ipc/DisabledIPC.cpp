@@ -40,7 +40,7 @@ ParentProcessId()
   MOZ_CRASH();
 }
 
-void MaybeCreateInitialCheckpoint()
+void CreateCheckpoint()
 {
   MOZ_CRASH();
 }
@@ -51,8 +51,8 @@ SetVsyncObserver(VsyncObserver* aObserver)
   MOZ_CRASH();
 }
 
-void
-NotifyVsyncObserver()
+bool
+OnVsync()
 {
   MOZ_CRASH();
 }
@@ -69,14 +69,14 @@ NotifyPaintComplete()
   MOZ_CRASH();
 }
 
-void
-WaitForPaintToComplete()
+already_AddRefed<gfx::DrawTarget>
+DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
 {
   MOZ_CRASH();
 }
 
-already_AddRefed<gfx::DrawTarget>
-DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize)
+bool
+SuppressMessageAfterDiverge(IPC::Message* aMsg)
 {
   MOZ_CRASH();
 }

@@ -258,12 +258,16 @@ static inline bool HasDivergedFromRecording();
 // The callback passed to NotifyUnrecordedWait will be invoked at most once
 // by the main thread whenever the main thread is waiting for other threads to
 // become idle, and at most once after the call to NotifyUnrecordedWait if the
-// main thread is already waiting for other threads to become idle.
+// main thread is already waiting for other threads to become idle. If
+// aOnlyWhenDiverged is specified, the callback will only be invoked if the
+// thread has diverged from the recording (causing all resources to be treated
+// as unrecorded).
 //
 // The callback should poke the thread so that it is no longer blocked on the
 // resource. The thread must call MaybeWaitForCheckpointSave before blocking
 // again.
-MFBT_API void NotifyUnrecordedWait(const std::function<void()>& aCallback);
+MFBT_API void NotifyUnrecordedWait(const std::function<void()>& aCallback,
+                                   bool aOnlyWhenDiverged);
 MFBT_API void MaybeWaitForCheckpointSave();
 
 // API for debugging inconsistent behavior between recording and replay.
