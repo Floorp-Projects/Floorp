@@ -698,13 +698,15 @@ PausedPhase::MaybeDivergeFromRecording()
     return false;
   }
 
+  size_t index = mRequestIndex;
+
   if (!EnsureTemporaryCheckpoint()) {
     // One of the premature exit cases was hit in EnsureTemporaryCheckpoint.
     // Don't allow any operations that can diverge from the recording.
     return false;
   }
 
-  if (mRequests[mRequestIndex].mUnhandledDivergence) {
+  if (mRequests[index].mUnhandledDivergence) {
     // We tried to process this request before and had an unhandled divergence.
     // Disallow the request handler from doing anything that might diverge from
     // the recording.
@@ -1109,6 +1111,12 @@ AfterCheckpoint(const CheckpointId& aCheckpoint)
   gNavigation->AfterCheckpoint(aCheckpoint);
 }
 
+size_t
+LastNormalCheckpoint()
+{
+  return gNavigation->LastCheckpoint().mNormal;
+}
+
 void
 DebuggerRequest(js::CharBuffer* aRequestBuffer)
 {
@@ -1190,9 +1198,13 @@ extern "C" {
 MOZ_EXPORT ProgressCounter
 RecordReplayInterface_NewTimeWarpTarget()
 {
+  if (AreThreadEventsDisallowed()) {
+    return 0;
+  }
+
   // NewTimeWarpTarget() must be called at consistent points between recording
   // and replaying.
-  recordreplay::RecordReplayAssert("NewTimeWarpTarget");
+  RecordReplayAssert("NewTimeWarpTarget");
 
   if (!gNavigation) {
     return 0;

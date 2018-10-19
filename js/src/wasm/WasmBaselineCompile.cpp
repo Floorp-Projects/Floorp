@@ -9239,8 +9239,15 @@ BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode, const MIRTypeVector& sig
 
     popValueStackBy(numArgs);
 
-    // Note, a number of clients of emitInstanceCall currently assume that the
-    // following operation does not destroy ReturnReg.
+    // Note, many clients of emitInstanceCall currently assume that pushing the
+    // result here does not destroy ReturnReg.
+    //
+    // Furthermore, clients assume that even if retType == ExprType::Void, the
+    // callee may have returned a status result and left it in ReturnReg for us
+    // to find, and that that register will not be destroyed here (or above).
+    // In this case the callee will have a C++ declaration stating that there is
+    // a return value.  Examples include memory and table operations that are
+    // implemented as callouts.
 
     pushReturnedIfNonVoid(baselineCall, retType);
 }
@@ -10080,14 +10087,7 @@ BaseCompiler::emitStructNarrow()
         return true;
     }
 
-    // Null pointers are just passed through.
-
-    Label done;
-    Label doTest;
     RegPtr rp = popRef();
-    masm.branchTestPtr(Assembler::NonZero, rp, rp, &doTest);
-    pushRef(NULLREF_VALUE);
-    masm.jump(&done);
 
     // AnyRef -> (ref T) must first unbox; leaves rp or null
 
@@ -10097,14 +10097,10 @@ BaseCompiler::emitStructNarrow()
 
     const StructType& outputStruct = env_.types[outputType.refTypeIndex()].structType();
 
-    masm.bind(&doTest);
-
     pushI32(mustUnboxAnyref);
     pushI32(outputStruct.moduleIndex_);
     pushRef(rp);
     emitInstanceCall(lineOrBytecode, SigPIIP_, ExprType::AnyRef, SymbolicAddress::StructNarrow);
-
-    masm.bind(&done);
 
     return true;
 }

@@ -59,6 +59,7 @@ MOZ_EXPORT void
 RecordReplayInterface_RegisterTrigger(void* aObj, const std::function<void()>& aCallback)
 {
   MOZ_RELEASE_ASSERT(aObj);
+  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
 
   Thread* thread = Thread::Current();
   if (thread->HasDivergedFromRecording()) {
@@ -83,6 +84,9 @@ RecordReplayInterface_RegisterTrigger(void* aObj, const std::function<void()>& a
       gTriggerInfoMap->insert(TriggerInfoMap::value_type(aObj, info));
     }
   }
+
+  RecordingEventSection res(thread);
+  MOZ_RELEASE_ASSERT(res.CanAccessEvents());
 
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::RegisterTrigger);
   thread->Events().CheckInput(id);
@@ -157,7 +161,10 @@ MOZ_EXPORT void
 RecordReplayInterface_ExecuteTriggers()
 {
   Thread* thread = Thread::Current();
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
+  RecordingEventSection res(thread);
+  if (!res.CanAccessEvents()) {
+    return;
+  }
 
   if (IsRecording()) {
     // Invoke the callbacks for any triggers waiting for execution, including
