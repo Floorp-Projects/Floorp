@@ -148,6 +148,7 @@ class Animation;
 class AnonymousContent;
 class Attr;
 class BoxObject;
+class XULBroadcastManager;
 class ClientInfo;
 class ClientState;
 class CDATASection;
@@ -3442,6 +3443,15 @@ public:
   mozilla::dom::Promise* GetDocumentReadyForIdle(mozilla::ErrorResult& aRv);
 
   nsIDOMXULCommandDispatcher* GetCommandDispatcher();
+  bool HasXULBroadcastManager() const
+  {
+    return mXULBroadcastManager;
+  };
+  void InitializeXULBroadcastManager();
+  mozilla::dom::XULBroadcastManager* GetXULBroadcastManager() const
+  {
+    return mXULBroadcastManager;
+  }
   already_AddRefed<nsINode> GetPopupNode();
   void SetPopupNode(nsINode* aNode);
   nsINode* GetPopupRangeParent(ErrorResult& aRv);
@@ -4738,6 +4748,8 @@ protected:
   uint32_t mIgnoreOpensDuringUnloadCounter;
 
   nsCOMPtr<nsIDOMXULCommandDispatcher> mCommandDispatcher; // [OWNER] of the focus tracker
+
+  RefPtr<mozilla::dom::XULBroadcastManager> mXULBroadcastManager;
 
   // At the moment, trackers might be blocked by Tracking Protection or FastBlock.
   // In order to know the numbers of trackers detected and blocked, we add

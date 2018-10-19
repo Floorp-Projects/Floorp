@@ -23,6 +23,7 @@ config = {
 
     "vcs_share_base": "/builds/hg-shared",
     "version_path": "browser/config/version.txt",
+    "status_path": ".l10n_bumper_status",
 
     "bump_configs": [{
         "path": "mobile/locales/l10n-changesets.json",

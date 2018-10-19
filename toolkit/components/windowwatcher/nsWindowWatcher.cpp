@@ -22,7 +22,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
-#include "nsDocShellLoadState.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocumentLoader.h"
@@ -325,7 +325,7 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent,
                             /* navigate = */ true, argv,
                             /* aIsPopupSpam = */ false,
                             /* aForceNoOpener = */ false,
-                            /* aLoadState = */ nullptr,
+                            /* aLoadInfo = */ nullptr,
                             aResult);
 }
 
@@ -391,7 +391,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
                              nsISupports* aArguments,
                              bool aIsPopupSpam,
                              bool aForceNoOpener,
-                             nsDocShellLoadState* aLoadState,
+                             nsDocShellLoadInfo* aLoadInfo,
                              mozIDOMWindowProxy** aResult)
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -412,7 +412,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             aCalledFromScript, dialog,
                             aNavigate, argv, aIsPopupSpam,
-                            aForceNoOpener, aLoadState, aResult);
+                            aForceNoOpener, aLoadInfo, aResult);
 }
 
 // This static function checks if the aDocShell uses an UserContextId equal to
@@ -637,7 +637,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                     nsIArray* aArgv,
                                     bool aIsPopupSpam,
                                     bool aForceNoOpener,
-                                    nsDocShellLoadState* aLoadState,
+                                    nsDocShellLoadInfo* aLoadInfo,
                                     mozIDOMWindowProxy** aResult)
 {
   nsresult rv = NS_OK;
@@ -821,7 +821,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                      sizeSpec.PositionSpecified(),
                                      sizeSpec.SizeSpecified(),
                                      uriToLoad, name, features, aForceNoOpener,
-                                     aLoadState, &windowIsNew,
+                                     aLoadInfo, &windowIsNew,
                                      getter_AddRefs(newWindow));
 
         if (NS_SUCCEEDED(rv)) {
@@ -1118,12 +1118,12 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     }
   }
 
-  RefPtr<nsDocShellLoadState> loadState = aLoadState;
-  if (uriToLoad && aNavigate && !loadState) {
-    loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadInfo> loadInfo = aLoadInfo;
+  if (uriToLoad && aNavigate && !loadInfo) {
+    loadInfo = new nsDocShellLoadInfo();
 
     if (subjectPrincipal) {
-      loadState->SetTriggeringPrincipal(subjectPrincipal);
+      loadInfo->SetTriggeringPrincipal(subjectPrincipal);
     }
 
     /* use the URL from the *extant* document, if any. The usual accessor
@@ -1138,8 +1138,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     }
     if (doc) {
       // Set the referrer
-      loadState->SetReferrer(doc->GetDocumentURI());
-      loadState->SetReferrerPolicy(doc->GetReferrerPolicy());
+      loadInfo->SetReferrer(doc->GetDocumentURI());
+      loadInfo->SetReferrerPolicy(doc->GetReferrerPolicy());
     }
   }
 
@@ -1181,13 +1181,13 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   }
 
   if (uriToLoad && aNavigate) {
-    loadState->SetURI(uriToLoad);
-    loadState->SetLoadFlags(windowIsNew ?
+    newDocShell->LoadURI(
+      uriToLoad,
+      loadInfo,
+      windowIsNew ?
         static_cast<uint32_t>(nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD) :
-                            static_cast<uint32_t>(nsIWebNavigation::LOAD_FLAGS_NONE));
-    loadState->SetFirstParty(true);
-    // Should this pay attention to errors returned by LoadURI?
-    newDocShell->LoadURI(loadState);
+        static_cast<uint32_t>(nsIWebNavigation::LOAD_FLAGS_NONE),
+      true);
   }
 
   // Copy the current session storage for the current domain. Don't perform the
