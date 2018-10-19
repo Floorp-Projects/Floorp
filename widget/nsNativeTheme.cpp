@@ -105,7 +105,8 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, StyleAppearance aWidgetType)
   // focus something in the window.
 #if defined(XP_MACOSX)
   // Mac always draws focus rings for textboxes and lists.
-  if (aWidgetType == StyleAppearance::NumberInput ||
+  if (aWidgetType == StyleAppearance::MenulistTextfield ||
+      aWidgetType == StyleAppearance::NumberInput ||
       aWidgetType == StyleAppearance::Textfield ||
       aWidgetType == StyleAppearance::TextfieldMultiline ||
       aWidgetType == StyleAppearance::Searchfield ||
@@ -347,6 +348,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
 
   return (aWidgetType == StyleAppearance::NumberInput ||
           aWidgetType == StyleAppearance::Button ||
+          aWidgetType == StyleAppearance::MenulistTextfield ||
           aWidgetType == StyleAppearance::Textfield ||
           aWidgetType == StyleAppearance::TextfieldMultiline ||
           aWidgetType == StyleAppearance::Listbox ||

@@ -778,6 +778,9 @@ CreateHeaderBar()
 static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
+  MOZ_ASSERT(aWidgetType != MOZ_GTK_DROPDOWN_ENTRY,
+             "Callers should be passing MOZ_GTK_ENTRY");
+
   switch (aWidgetType) {
     case MOZ_GTK_WINDOW:
       return CreateWindowWidget();
@@ -1509,6 +1512,10 @@ GtkStyleContext*
 GetStyleContext(WidgetNodeType aNodeType, GtkTextDirection aDirection,
                 GtkStateFlags aStateFlags, StyleFlags aFlags)
 {
+  if (aNodeType == MOZ_GTK_DROPDOWN_ENTRY) {
+    aNodeType = MOZ_GTK_ENTRY;
+  }
+
   GtkStyleContext* style;
   if (gtk_check_version(3, 20, 0) != nullptr) {
     style = GetWidgetStyleInternal(aNodeType);
