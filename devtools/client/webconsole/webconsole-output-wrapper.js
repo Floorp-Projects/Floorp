@@ -66,7 +66,7 @@ WebConsoleOutputWrapper.prototype = {
           hud.owner.openLink(url, e);
         },
         canRewind: () => {
-          if (!hud.owner.target.activeTab) {
+          if (!(hud.owner && hud.owner.target && hud.owner.target.activeTab)) {
             return false;
           }
 
