@@ -582,7 +582,10 @@ var paymentDialogWrapper = {
                                      formAutofillStorage[collectionName];
 
       if (guid) {
-        let preserveOldProperties = true;
+        // We only care to preserve old properties for credit cards,
+        // because credit cards don't get their full record sent to the
+        // unprivileged frame (the cc-number is excluded).
+        let preserveOldProperties = collectionName == "creditCards";
         await collection.update(guid, record, preserveOldProperties);
       } else {
         responseMessage.guid = await collection.add(record);
