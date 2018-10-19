@@ -92,12 +92,12 @@ const SearchAutocompleteProviderInternal = {
     if (engine.alias) {
       aliases.push(engine.alias);
     }
-    let tokenAliases = engine.wrappedJSObject._internalAliases;
-    aliases.push(...tokenAliases);
+    aliases.push(...engine.wrappedJSObject._internalAliases);
     for (let alias of aliases) {
       this.enginesByAlias.set(alias.toLocaleLowerCase(), engine);
     }
 
+    let tokenAliases = aliases.filter(a => a.startsWith("@"));
     if (tokenAliases.length) {
       this.tokenAliasEngines.push({ engine, tokenAliases });
     }

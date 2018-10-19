@@ -138,7 +138,12 @@ add_task(async function nonHeuristicAliases() {
   // "@").
   let tokenEngines = [];
   for (let engine of Services.search.getEngines()) {
-    let tokenAliases = engine.wrappedJSObject._internalAliases;
+    let aliases = [];
+    if (engine.alias) {
+      aliases.push(engine.alias);
+    }
+    aliases.push(...engine.wrappedJSObject._internalAliases);
+    let tokenAliases = aliases.filter(a => a.startsWith("@"));
     if (tokenAliases.length) {
       tokenEngines.push({ engine, tokenAliases });
     }
@@ -171,6 +176,13 @@ add_task(async function nonHeuristicAliases() {
 
 
 async function doSimpleTest(revertBetweenSteps) {
+  // When autofill is enabled, searching for "@tes" will autofill to "@test",
+  // which gets in the way of this test task, so temporarily disable it.
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.urlbar.autoFill");
+  });
+
   // "@tes" -- not an alias, no highlight
   gURLBar.search(ALIAS.substr(0, ALIAS.length - 1));
   await promiseSearchComplete();
@@ -223,6 +235,8 @@ async function doSimpleTest(revertBetweenSteps) {
 
   EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
+
+  Services.prefs.clearUserPref("browser.urlbar.autoFill");
 }
 
 function assertAlias(aliasPresent, expectedAlias = ALIAS) {
