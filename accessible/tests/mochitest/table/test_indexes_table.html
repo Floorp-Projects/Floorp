@@ -134,6 +134,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       ];
       testTableIndexes("tablewithcelldisplayblock", idxes);
 
+      // ////////////////////////////////////////////////////////////////////////
+      // A table with a cell that has display: block; and a cell with colspan.
+      // This makes us fall back to the ARIAGridCellAccessible implementation.
+      idxes = [
+        [0, 0, 1]
+      ];
+      testTableIndexes("tablewithcolspanandcelldisplayblock", idxes);
+
       SimpleTest.finish();
     }
 
@@ -416,6 +424,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
     <tr>
       <th>a</th>
       <td style="display: block;">b</td>
+    </tr>
+  </table>
+
+  <table id="tablewithcolspanandcelldisplayblock">
+    <tr>
+      <th colspan="2">a</th>
+      <td style="display: block;" >b</td>
     </tr>
   </table>
 
