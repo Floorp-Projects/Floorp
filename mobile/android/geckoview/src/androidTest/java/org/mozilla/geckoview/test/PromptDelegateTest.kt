@@ -3,6 +3,7 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
@@ -49,10 +50,11 @@ class PromptDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 2)
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
-                assertThat("URL should not be null", uri, notNullValue())
-                assertThat("URL should match", uri, endsWith(forEachCall(POPUP_HTML_PATH, HELLO_HTML_PATH)))
+                assertThat("URL should not be null", request.uri, notNullValue())
+                assertThat("URL should match", request.uri, endsWith(forEachCall(POPUP_HTML_PATH, HELLO_HTML_PATH)))
                 return null
             }
         })
@@ -75,10 +77,11 @@ class PromptDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1)
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int): GeckoResult<AllowOrDeny>? {
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
-                assertThat("URL should not be null", uri, notNullValue())
-                assertThat("URL should match", uri, endsWith(POPUP_HTML_PATH))
+                assertThat("URL should not be null", request.uri, notNullValue())
+                assertThat("URL should match", request.uri, endsWith(POPUP_HTML_PATH))
                 return null
             }
 

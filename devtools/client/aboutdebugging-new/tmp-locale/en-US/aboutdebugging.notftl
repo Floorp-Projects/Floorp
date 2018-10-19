@@ -59,6 +59,11 @@ about-debugging-connect-wifi-step-enable-debug = Enable Remote Debugging via WiF
 about-debugging-connect-usb
   .title = Via USB
 
+about-debugging-connect-usb-disabled = Enabling this will download and add the required Android USB debugging components to Firefox.
+about-debugging-connect-usb-enable-button = Enable USB Devices
+about-debugging-connect-usb-disable-button = Disable USB Devices
+about-debugging-connect-usb-updating-button = Updating…
+
 # USB section step by step guide
 about-debugging-connect-usb-step-enable-dev-menu = Enable Developer menu on your Android device
 

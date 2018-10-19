@@ -1880,33 +1880,6 @@ BaselineCacheIRCompiler::emitCallProxySetByValue()
 }
 
 bool
-BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Register id = allocator.useRegister(masm, reader.int32OperandId());
-    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-    bool strict = reader.readBool();
-    AutoScratchRegister scratch(allocator, masm);
-
-    allocator.discardStack(masm);
-
-    AutoStubFrame stubFrame(*this);
-    stubFrame.enter(masm, scratch);
-
-    masm.Push(Imm32(strict));
-    masm.Push(val);
-    masm.Push(id);
-    masm.Push(obj);
-
-    if (!callVM(masm, AddOrUpdateSparseElementHelperInfo)) {
-        return false;
-    }
-    stubFrame.leave(masm);
-    return true;
-}
-
-
-bool
 BaselineCacheIRCompiler::emitMegamorphicSetElement()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());

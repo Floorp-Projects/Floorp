@@ -618,6 +618,50 @@ TelemetryImpl::SetHistogramRecordingEnabled(const nsACString &id, bool aEnabled)
 }
 
 NS_IMETHODIMP
+TelemetryImpl::GetSnapshotForHistograms(const nsACString& aStoreName,
+                                        bool aClearStore, JSContext* aCx,
+                                        JS::MutableHandleValue aResult)
+{
+  unsigned int dataset = mCanRecordExtended ?
+    nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN :
+    nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
+  return TelemetryHistogram::CreateHistogramSnapshots(aCx, aResult, dataset, aClearStore);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetSnapshotForKeyedHistograms(const nsACString& aStoreName,
+                                             bool aClearStore, JSContext* aCx,
+                                             JS::MutableHandleValue aResult)
+{
+  unsigned int dataset = mCanRecordExtended ?
+    nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN :
+    nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
+  return TelemetryHistogram::GetKeyedHistogramSnapshots(aCx, aResult, dataset, aClearStore);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetSnapshotForScalars(const nsACString& aStoreName,
+                                     bool aClearStore, JSContext* aCx,
+                                     JS::MutableHandleValue aResult)
+{
+  unsigned int dataset = mCanRecordExtended ?
+    nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN :
+    nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
+  return TelemetryScalar::CreateSnapshots(dataset, aClearStore, aCx, 1, aResult);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetSnapshotForKeyedScalars(const nsACString& aStoreName,
+                                          bool aClearStore, JSContext* aCx,
+                                          JS::MutableHandleValue aResult)
+{
+  unsigned int dataset = mCanRecordExtended ?
+    nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN :
+    nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
+  return TelemetryScalar::CreateKeyedSnapshots(dataset, aClearStore, aCx, 1, aResult);
+}
+
+NS_IMETHODIMP
 TelemetryImpl::SnapshotHistograms(unsigned int aDataset,
                                   bool aClearHistograms, JSContext* aCx,
                                   JS::MutableHandleValue aResult)

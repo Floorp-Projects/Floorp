@@ -77,11 +77,6 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
       // Preferences are initialized via the SetXPCOMProcessAttributes message.
       PreferencesLoaded();
     }
-    if (type == dom::PBrowser::Msg_RenderLayers__ID) {
-      // Graphics are being loaded or unloaded for a tab, so update what we are
-      // showing to the UI process according to the last paint performed.
-      UpdateGraphicsInUIProcess(nullptr);
-    }
     return false;
   }
 
@@ -115,6 +110,13 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
 static bool
 AlwaysForwardMessage(const IPC::Message& aMessage)
 {
+  // Always forward messages in repaint stress mode, as the active child is
+  // almost always a replaying child and lost messages make it hard to load
+  // pages completely.
+  if (InRepaintStressMode()) {
+    return true;
+  }
+
   IPC::Message::msgid_t type = aMessage.type();
 
   // Forward close messages so that the tab shuts down properly even if it is

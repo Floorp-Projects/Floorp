@@ -159,6 +159,12 @@ row[unsupported="true"] {
   -moz-user-select: text;
 }
 
+#detail-name-container {
+  /* Set a max-width on this so the labels inside of this will wrap instead of
+     growing the card horizontally with long names. */
+  max-width: 580px;
+}
+
 /* Make sure we're not animating hidden images. See bug 623739. */
 #view-port:not([selectedIndex="0"]) #discover-view .loading,
 #discover-view:not([selectedIndex="0"]) .loading {

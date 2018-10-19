@@ -205,27 +205,14 @@ class ProcessHandlerMixin(object):
             return self.returncode
 
         def poll(self):
-            """Check if child process has terminated, and set returncode attribute.
-
-            This method overrides the Popen.poll implementation for our custom
-            process handling for Windows.
+            """ Popen.poll
+                Check if child process has terminated. Set and return returncode attribute.
             """
-            if isWin:
-                # If we have a handle, check that the process is still alive.
-                if self._handle:
-                    returncode = winprocess.GetExitCodeProcess(self._handle)
+            # If we have a handle, the process is alive
+            if isWin and getattr(self, '_handle', None):
+                return None
 
-                    # If the process doesn't exist anymore run cleanup steps
-                    if returncode != winprocess.STILL_ACTIVE:
-                        self.returncode = returncode
-                        self._cleanup()
-                    else:
-                        self.returncode = None
-
-            else:
-                self.returncode = subprocess.Popen.poll(self)
-
-            return self.returncode
+            return subprocess.Popen.poll(self)
 
         def wait(self):
             """ Popen.wait

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { AnimationsFront } = require("devtools/shared/fronts/animation");
 const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
@@ -102,7 +101,7 @@ class AnimationInspector {
 
     const target = this.inspector.target;
     const direction = this.win.document.dir;
-    this.animationsFront = new AnimationsFront(target.client, target.form);
+    this.animationsFront = target.getFront("animations");
     this.animationsFront.setWalkerActor(this.inspector.walker);
 
     this.animationsCurrentTimeListeners = [];
@@ -326,7 +325,12 @@ class AnimationInspector {
     // sice the scrubber position is related the currentTime.
     // Also, don't update the state of removed animations since React components
     // may refer to the same instance still.
-    animations = await this.updateAnimations(animations);
+    try {
+      animations = await this.updateAnimations(animations);
+    } catch (_) {
+      console.error(`Updating Animations failed`);
+      return;
+    }
 
     this.updateState(animations.concat(addedAnimations));
   }

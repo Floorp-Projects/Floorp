@@ -1,7 +1,7 @@
 // |reftest| skip error:SyntaxError -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
-// - src/class-fields/init-err-contains-arguments.case
-// - src/class-fields/initializer-error/cls-decl-fields-typeof.template
+// - src/class-elements/init-err-contains-arguments.case
+// - src/class-elements/initializer-error/cls-decl-fields-typeof.template
 /*---
 description: Syntax error if `arguments` used in class field (typeof expression)
 esid: sec-class-definitions-static-semantics-early-errors

@@ -426,15 +426,15 @@ nsNSSSocketInfo::DriveHandshake()
   if (!mFd) {
     return NS_ERROR_FAILURE;
   }
-  PRErrorCode errorCode = GetErrorCode();
-  if (errorCode) {
+  if (IsCanceled()) {
+    PRErrorCode errorCode = GetErrorCode();
     return GetXPCOMFromNSSError(errorCode);
   }
 
   SECStatus rv = SSL_ForceHandshake(mFd);
 
   if (rv != SECSuccess) {
-    errorCode = PR_GetError();
+    PRErrorCode errorCode = PR_GetError();
     if (errorCode == PR_WOULD_BLOCK_ERROR) {
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
@@ -719,29 +719,6 @@ void nsSSLIOLayerHelpers::Cleanup()
   mInsecureFallbackSites.Clear();
 }
 
-static void
-nsHandleSSLError(nsNSSSocketInfo* socketInfo,
-                 PRErrorCode err)
-{
-  if (!NS_IsMainThread()) {
-    NS_ERROR("nsHandleSSLError called off the main thread");
-    return;
-  }
-
-  // SetCanceled is only called by the main thread or the socket transport
-  // thread. Whenever this function is called on the main thread, the SSL
-  // thread is blocked on it. So, no mutex is necessary for
-  // SetCanceled()/GetError*().
-  if (socketInfo->GetErrorCode()) {
-    // If the socket has been flagged as canceled,
-    // the code who did was responsible for setting the error code.
-    return;
-  }
-
-  // We must cancel, which sets the error code.
-  socketInfo->SetCanceled(err);
-}
-
 namespace {
 
 enum Operation { reading, writing, not_reading_or_writing };
@@ -762,7 +739,7 @@ getSocketInfoIfRunning(PRFileDesc* fd, Operation op)
 
   nsNSSSocketInfo* socketInfo = (nsNSSSocketInfo*) fd->secret;
 
-  if (socketInfo->GetErrorCode()) {
+  if (socketInfo->IsCanceled()) {
     PRErrorCode err = socketInfo->GetErrorCode();
     PR_SetError(err, 0);
     if (op == reading || op == writing) {
@@ -1127,25 +1104,6 @@ nsDumpBuffer(unsigned char* buf, int len)
 #define DEBUG_DUMP_BUFFER(buf,len)
 #endif
 
-class SSLErrorRunnable : public SyncRunnableBase
-{
- public:
-  SSLErrorRunnable(nsNSSSocketInfo* infoObject,
-                   PRErrorCode errorCode)
-    : mInfoObject(infoObject)
-    , mErrorCode(errorCode)
-  {
-  }
-
-  virtual void RunOnTargetThread() override
-  {
-    nsHandleSSLError(mInfoObject, mErrorCode);
-  }
-
-  RefPtr<nsNSSSocketInfo> mInfoObject;
-  const PRErrorCode mErrorCode;
-};
-
 namespace {
 
 uint32_t tlsIntoleranceTelemetryBucket(PRErrorCode err)
@@ -1347,17 +1305,13 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
     // This is the common place where we trigger non-cert-errors on a SSL
     // socket. This might be reached at any time of the connection.
     //
-    // The socketInfo->GetErrorCode() check is here to ensure we don't try to
-    // do the synchronous dispatch to the main thread unnecessarily after we've
-    // already handled a certificate error. (SSLErrorRunnable calls
-    // nsHandleSSLError, which has logic to avoid replacing the error message,
-    // so without the !socketInfo->GetErrorCode(), it would just be an
-    // expensive no-op.)
+    // IsCanceled() is backed by an atomic boolean. It will only ever go from
+    // false to true, so we will never erroneously not call SetCanceled here. We
+    // could in theory overwrite a previously-set error code, but we'll always
+    // have some sort of error.
     if (!wantRetry && mozilla::psm::IsNSSErrorCode(err) &&
-        !socketInfo->GetErrorCode()) {
-      RefPtr<SyncRunnableBase> runnable(
-        new SSLErrorRunnable(socketInfo, err));
-      (void) runnable->DispatchToMainThreadAndWait();
+        !socketInfo->IsCanceled()) {
+      socketInfo->SetCanceled(err);
     }
   } else if (wasReading && 0 == bytesTransfered) {
     // zero bytes on reading, socket closed
@@ -1393,7 +1347,7 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
     // (erroneously) calls an I/O function (PR_Send/PR_Recv/etc.) again on
     // this socket. Note that we use the original error because if we use
     // PR_CONNECT_RESET_ERROR, we'll repeated try to reconnect.
-    if (originalError != PR_WOULD_BLOCK_ERROR && !socketInfo->GetErrorCode()) {
+    if (originalError != PR_WOULD_BLOCK_ERROR && !socketInfo->IsCanceled()) {
       socketInfo->SetCanceled(originalError);
     }
     PR_SetError(err, 0);

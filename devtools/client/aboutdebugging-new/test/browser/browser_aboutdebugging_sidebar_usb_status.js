@@ -11,17 +11,6 @@ const { ADB } = require("devtools/shared/adb/adb");
  * devices scanning.
  */
 add_task(async function() {
-  // Make sure the ADB addon is removed and ADB is stopped when the test ends.
-  registerCleanupFunction(async function() {
-    try {
-      await adbAddon.uninstall();
-    } catch (e) {
-      // Will throw if the addon is already uninstalled, ignore exceptions here.
-    }
-
-    await ADB.kill();
-  });
-
   await pushPref("devtools.remote.adb.extensionURL",
                  CHROME_URL_ROOT + "resources/test-adb-extension/adb-extension-#OS#.xpi");
 

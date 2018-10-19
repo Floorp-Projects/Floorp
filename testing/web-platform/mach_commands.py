@@ -78,6 +78,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         return kwargs
 
     def kwargs_firefox(self, kwargs):
+        import mozinfo
         from wptrunner import wptcommandline
         kwargs = self.kwargs_common(kwargs)
 
@@ -90,7 +91,12 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         if kwargs["webdriver_binary"] is None:
             kwargs["webdriver_binary"] = self.get_binary_path("geckodriver", validate_exists=False)
 
-        self.setup_fonts_firefox()
+
+        if mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1":
+            # On Windows 7 --install-fonts fails, so fall back to a Firefox-specific codepath
+            self.setup_fonts_firefox()
+        else:
+            kwargs["install_fonts"] = True
 
         kwargs = wptcommandline.check_args(kwargs)
 
@@ -119,6 +125,12 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         from tools.wpt import run
 
+        # Add additional kwargs consumed by the run frontend. Currently we don't
+        # have a way to set these through mach
+        kwargs["channel"] = None
+        kwargs["prompt"] = True
+        kwargs["install_browser"] = False
+
         try:
             kwargs = run.setup_wptrunner(run.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root),
                                          **kwargs)
@@ -139,6 +151,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         if not os.path.exists(ahem_dest) and os.path.exists(ahem_src):
             with open(ahem_src, "rb") as src, open(ahem_dest, "wb") as dest:
                 dest.write(src.read())
+
 
 
 class WebPlatformTestsUpdater(MozbuildObject):

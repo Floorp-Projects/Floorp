@@ -982,8 +982,6 @@ extern const VMFunction ProxyHasOwnInfo;
 
 extern const VMFunction NativeGetElementInfo;
 
-extern const VMFunction AddOrUpdateSparseElementHelperInfo;
-
 // TailCall VMFunctions
 extern const VMFunction DoConcatStringObjectInfo;
 

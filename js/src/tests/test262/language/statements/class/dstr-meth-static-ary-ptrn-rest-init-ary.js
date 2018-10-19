@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-ary.case
 // - src/dstr-binding/default/cls-decl-meth-static.template
 /*---
-description: Reset element (nested array pattern) does not support initializer (static class expression method)
+description: Rest element (nested array pattern) does not support initializer (static class expression method)
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
 es6id: 14.5.15
 features: [destructuring-binding]

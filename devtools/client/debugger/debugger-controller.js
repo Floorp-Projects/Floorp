@@ -479,8 +479,8 @@ Workers.prototype = {
 
     this._updateWorkerList();
 
-    // `_targetFront` can be BrowsingContextTargetFront (protocol.js front) or
-    // WorkerClient/DebuggerClient (old fashion client)
+    // `_targetFront` can be BrowsingContextTargetFront/WorkerTargetFront (protocol.js
+    // front) or DebuggerClient (old fashion client)
     if (typeof(this._targetFront.on) == "function") {
       this._targetFront.on("workerListChanged", this._onWorkerListChanged);
     } else {
@@ -529,8 +529,8 @@ Workers.prototype = {
   },
 
   _onWorkerSelect: function (workerForm) {
-    DebuggerController.client.attachWorker(workerForm.actor).then(([response, workerClient]) => {
-      let toolbox = gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
+    DebuggerController.client.attachWorker(workerForm.actor).then(([response, workerTargetFront]) => {
+      let toolbox = gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
                                           "jsdebugger", Toolbox.HostType.WINDOW);
       window.emit(EVENTS.WORKER_SELECTED, toolbox);
     });

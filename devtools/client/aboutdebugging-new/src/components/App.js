@@ -36,7 +36,12 @@ class App extends PureComponent {
   }
 
   getSelectedPageComponent() {
-    const { dispatch, networkLocations, selectedPage } = this.props;
+    const {
+      adbAddonStatus,
+      dispatch,
+      networkLocations,
+      selectedPage
+    } = this.props;
 
     if (!selectedPage) {
       // No page selected.
@@ -45,7 +50,11 @@ class App extends PureComponent {
 
     switch (selectedPage) {
       case PAGES.CONNECT:
-        return ConnectPage({ dispatch, networkLocations });
+        return ConnectPage({
+          adbAddonStatus,
+          dispatch,
+          networkLocations
+        });
       default:
         // All pages except for the CONNECT page are RUNTIME pages.
         return RuntimePage({ dispatch });

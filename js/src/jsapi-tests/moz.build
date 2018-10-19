@@ -97,6 +97,7 @@ UNIFIED_SOURCES += [
     'testSharedImmutableStringsCache.cpp',
     'testSourcePolicy.cpp',
     'testStringBuffer.cpp',
+    'testStringIsArrayIndex.cpp',
     'testStructuredClone.cpp',
     'testSymbol.cpp',
     'testThreadingConditionVariable.cpp',

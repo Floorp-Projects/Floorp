@@ -9,6 +9,13 @@
 TestRunner.logEnabled = true;
 TestRunner.logger = LogController;
 
+if (!("SpecialPowers" in window)) {
+  dump("SimpleTest setup.js found SpecialPowers unavailable: reloading...\n");
+  setTimeout(() => {
+    window.location.reload();
+  }, 1000);
+}
+
 /* Helper function */
 function parseQueryString(encodedString, useArrays) {
   // strip a leading '?' from the encoded string

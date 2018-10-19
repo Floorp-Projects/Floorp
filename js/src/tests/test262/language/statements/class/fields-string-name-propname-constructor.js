@@ -1,12 +1,10 @@
 // |reftest| skip error:SyntaxError -- class-fields-public is not supported
-// This file was procedurally generated from the following sources:
-// - src/class-fields/propname-constructor.case
-// - src/class-fields/propname-error/cls-decl-string-name.template
+// Copyright (C) 2017 Valerie Young. All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: class fields forbid PropName 'constructor' (early error -- PropName of StringLiteral is forbidden value)
 esid: sec-class-definitions-static-semantics-early-errors
 features: [class, class-fields-public]
-flags: [generated]
 negative:
   phase: parse
   type: SyntaxError
@@ -16,7 +14,7 @@ info: |
     LiteralPropertyName : StringLiteral
       Return the String value whose code units are the SV of the StringLiteral.
 
-    
+
     // This test file tests the following early error:
     Static Semantics: Early Errors
 

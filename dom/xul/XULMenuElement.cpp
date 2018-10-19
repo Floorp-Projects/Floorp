@@ -25,23 +25,10 @@ XULMenuElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return XULMenuElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsIFrame*
-XULMenuElement::GetFrame()
-{
-  nsCOMPtr<nsIContent> kungFuDeathGrip = this; // keep a reference
-
-  nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
-  if (doc) {
-    doc->FlushPendingNotifications(FlushType::Frames);
-  }
-
-  return GetPrimaryFrame();
-}
-
 already_AddRefed<Element>
 XULMenuElement::GetActiveChild()
 {
-  nsMenuFrame* menu = do_QueryFrame(GetFrame());
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
   if (menu) {
     RefPtr<Element> el;
     menu->GetActiveChild(getter_AddRefs(el));
@@ -53,7 +40,7 @@ XULMenuElement::GetActiveChild()
 void
 XULMenuElement::SetActiveChild(Element* arg)
 {
-  nsMenuFrame* menu = do_QueryFrame(GetFrame());
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
   if (menu) {
     menu->SetActiveChild(arg);
   }
@@ -75,7 +62,7 @@ XULMenuElement::HandleKeyPress(KeyboardEvent& keyEvent)
   if (nsMenuBarListener::IsAccessKeyPressed(&keyEvent))
     return false;
 
-  nsMenuFrame* menu = do_QueryFrame(GetFrame());
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
   if (!menu) {
     return false;
   }
@@ -104,7 +91,7 @@ XULMenuElement::HandleKeyPress(KeyboardEvent& keyEvent)
 bool
 XULMenuElement::OpenedWithKey()
 {
-  nsMenuFrame* menuframe = do_QueryFrame(GetFrame());
+  nsMenuFrame* menuframe = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
   if (!menuframe) {
     return false;
   }

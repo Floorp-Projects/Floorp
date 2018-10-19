@@ -60,10 +60,12 @@ enum class StreamName
 };
 
 class File;
+class RecordingEventSection;
 
 class Stream
 {
   friend class File;
+  friend class RecordingEventSection;
 
   // File this stream belongs to.
   File* mFile;
@@ -117,6 +119,9 @@ class Stream
   // flushed.
   size_t mFlushedChunks;
 
+  // Whether there is a RecordingEventSection instance active for this stream.
+  bool mInRecordingEventSection;
+
   Stream(File* aFile, StreamName aName, size_t aNameIndex)
     : mFile(aFile)
     , mName(aName)
@@ -133,6 +138,7 @@ class Stream
     , mLastEvent((ThreadEvent) 0)
     , mChunkIndex(0)
     , mFlushedChunks(0)
+    , mInRecordingEventSection(false)
   {}
 
 public:
@@ -204,6 +210,7 @@ public:
   };
 
   friend class Stream;
+  friend class RecordingEventSection;
 
 private:
   // Open file handle, or 0 if closed.

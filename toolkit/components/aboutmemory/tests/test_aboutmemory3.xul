@@ -363,11 +363,11 @@ Other Measurements\n\
    │  │  ├──-0.00 MB (18.18%) ── e [-]\n\
    │  │  └──-0.00 MB (13.64%) ── d [-]\n\
    │  ├──-0.00 MB (22.73%) ── f [-]\n\
-   │  └───0.00 MB (-4.55%) ── (fake child) [!]\n\
+   │  └───0.00 MB (-04.55%) ── (fake child) [!]\n\
    └──-0.00 MB (50.00%) -- g\n\
       ├──-0.00 MB (31.82%) ── i [-]\n\
       ├──-0.00 MB (27.27%) ── h [-]\n\
-      └───0.00 MB (-9.09%) ── (fake child) [!]\n\
+      └───0.00 MB (-09.09%) ── (fake child) [!]\n\
 \n\
 End of P8\n\
 ";
@@ -383,7 +383,7 @@ Explicit Allocations\n\
 -10,005 B (100.0%) -- explicit\n\
 ├──-10,000 B (99.95%) ── storage/prefixset/goog-phish-shavar\n\
 ├───────-6 B (00.06%) ── spell-check [2]\n\
-└────────1 B (-0.01%) ── xpcom/category-manager\n\
+└────────1 B (-00.01%) ── xpcom/category-manager\n\
 \n\
 Other Measurements\n\
 \n\
@@ -461,11 +461,11 @@ Other Measurements\n\
    │  │   ├──-4 B (18.18%) ── e [-]\n\
    │  │   └──-3 B (13.64%) ── d [-]\n\
    │  ├───-5 B (22.73%) ── f [-]\n\
-   │  └────1 B (-4.55%) ── (fake child) [!]\n\
+   │  └────1 B (-04.55%) ── (fake child) [!]\n\
    └──-11 B (50.00%) -- g\n\
       ├───-7 B (31.82%) ── i [-]\n\
       ├───-6 B (27.27%) ── h [-]\n\
-      └────2 B (-9.09%) ── (fake child) [!]\n\
+      └────2 B (-09.09%) ── (fake child) [!]\n\
 \n\
 End of P8\n\
 ";

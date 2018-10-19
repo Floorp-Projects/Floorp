@@ -10,6 +10,24 @@ ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonRepository",
                                "resource://gre/modules/addons/AddonRepository.jsm");
+ChromeUtils.defineModuleGetter(this, "RemoteSettings",
+                               "resource://services-settings/remote-settings.js");
+
+async function installFromUrl(url, hash) {
+  let install = await AddonManager.getInstallForURL(
+    url, "application/x-xpinstall", hash);
+  return install.install();
+}
+
+async function dictionaryIdsForLocale(locale) {
+  let entries = await RemoteSettings("language-dictionaries").get({
+    filters: {id: locale},
+  });
+  if (entries.length > 0) {
+    return entries[0].dictionaries;
+  }
+  return [];
+}
 
 class OrderedListBox {
   constructor({richlistbox, upButton, downButton, removeButton, onRemove}) {
@@ -394,34 +412,58 @@ var gBrowserLanguagesDialog = {
   },
 
   async availableLanguageSelected(item) {
-    let available = new Set(Services.locale.availableLocales);
-
-    if (available.has(item.value)) {
-      this._requestedLocales.addItem(item);
-      if (available.size == this._requestedLocales.items.length) {
-        // Remove the installed label, they're all installed.
-        this._availableLocales.items.shift();
-        this._availableLocales.setItems(this._availableLocales.items);
-      }
+    if (Services.locale.availableLocales.includes(item.value)) {
+      this.requestLocalLanguage(item);
     } else if (this.availableLangpacks.has(item.value)) {
-      this._availableLocales.disableWithMessageId("browser-languages-downloading");
-
-      let {url, hash} = this.availableLangpacks.get(item.value);
-      let install = await AddonManager.getInstallForURL(
-        url, "application/x-xpinstall", hash);
-
-      try {
-        await install.install();
-      } catch (e) {
-        this.showError();
-        return;
-      }
-
-      item.installed = true;
-      this._requestedLocales.addItem(item);
-      this._availableLocales.enableWithMessageId("browser-languages-select-language");
+      await this.requestRemoteLanguage(item);
     } else {
       this.showError();
+    }
+  },
+
+  requestLocalLanguage(item, available) {
+    this._requestedLocales.addItem(item);
+    let requestedCount = this._requestedLocales.items.length;
+    let availableCount = Services.locale.availableLocales.length;
+    if (requestedCount == availableCount) {
+      // Remove the installed label, they're all installed.
+      this._availableLocales.items.shift();
+      this._availableLocales.setItems(this._availableLocales.items);
+    }
+  },
+
+  async requestRemoteLanguage(item) {
+    this._availableLocales.disableWithMessageId(
+      "browser-languages-downloading");
+
+    let {url, hash} = this.availableLangpacks.get(item.value);
+
+    try {
+      await installFromUrl(url, hash);
+    } catch (e) {
+      this.showError();
+      return;
+    }
+
+    item.installed = true;
+    this._requestedLocales.addItem(item);
+    this._availableLocales.enableWithMessageId(
+      "browser-languages-select-language");
+
+    // This is an async task that will install the recommended dictionaries for
+    // this locale. This will fail silently at least until a management UI is
+    // added in bug 1493705.
+    this.installDictionariesForLanguage(item.value);
+  },
+
+  async installDictionariesForLanguage(locale) {
+    try {
+      let ids = await dictionaryIdsForLocale(locale);
+      let addonInfos = await AddonRepository.getAddonsByIDs(ids);
+      await Promise.all(addonInfos.map(
+        info => installFromUrl(info.sourceURI.spec)));
+    } catch (e) {
+      Cu.reportError(e);
     }
   },
 

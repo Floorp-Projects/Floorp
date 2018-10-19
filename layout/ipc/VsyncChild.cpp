@@ -67,14 +67,12 @@ VsyncChild::RecvNotify(const TimeStamp& aVsyncTimestamp)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsShutdown);
 
-  // Ignore Vsync messages sent to a recording/replaying process. Vsyncs are
-  // triggered at the top of the main thread's event loop instead.
-  if (recordreplay::IsRecordingOrReplaying()) {
-    return IPC_OK();
-  }
-
   SchedulerGroup::MarkVsyncRan();
   if (mObservingVsync && mObserver) {
+    if (recordreplay::IsRecordingOrReplaying() && !recordreplay::child::OnVsync()) {
+      return IPC_OK();
+    }
+
     mObserver->NotifyVsync(aVsyncTimestamp);
   }
   return IPC_OK();

@@ -1604,7 +1604,13 @@ var FrontClassWithSpec = function(actorSpec, frontProto) {
   // Existing Fronts are relying on the initialize instead of constructor methods.
   const cls = function() {
     const instance = Object.create(cls.prototype);
-    instance.initialize.apply(instance, arguments);
+    const initializer = instance.initialize.apply(instance, arguments);
+
+    // Async Initialization
+    // return a promise that resolves with the instance if the initializer is async
+    if (initializer && typeof initializer.then === "function") {
+      return initializer.then(resolve => instance);
+    }
     return instance;
   };
   cls.prototype = extend(Front.prototype, generateRequestMethods(actorSpec, frontProto));

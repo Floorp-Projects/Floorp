@@ -4,18 +4,17 @@
 /*---
 esid: pending
 description: |
-  Re-throws errors thrown while accessing species constructed RegExp's
-  unicode property
+  Doesn't access the "unicode" property of the constructed RegExp
 info: |
   RegExp.prototype [ @@matchAll ] ( string )
     [...]
-    3. Return ? MatchAllIterator(R, string).
-
-  MatchAllIterator ( R, O )
+    4. Let C be ? SpeciesConstructor(R, %RegExp%).
+    5. Let flags be ? ToString(? Get(R, "flags")).
+    6. Let matcher be ? Construct(C, « R, flags »).
     [...]
-    2. If ? IsRegExp(R) is true, then
-      [...]
-      e. Let fullUnicode be ? ToBoolean(? Get(matcher, "unicode")).
+    11. If flags contains "u", let fullUnicode be true.
+    12. Else, let fullUnicode be false.
+    [...]
 features: [Symbol.matchAll, Symbol.species]
 ---*/
 
@@ -30,8 +29,6 @@ regexp.constructor = {
   }
 };
 
-assert.throws(Test262Error, function() {
-  regexp[Symbol.matchAll]('');
-});
+regexp[Symbol.matchAll]('');
 
 reportCompare(0, 0);

@@ -15,8 +15,10 @@ assert.sameValue(
   'The value of `Array.prototype.flat.name` is `"flat"`'
 );
 
-verifyNotEnumerable(Array.prototype.flat, 'name');
-verifyNotWritable(Array.prototype.flat, 'name');
-verifyConfigurable(Array.prototype.flat, 'name');
+verifyProperty(Array.prototype.flat, 'name', {
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

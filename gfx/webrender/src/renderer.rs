@@ -4624,6 +4624,7 @@ impl DebugServer {
 // that we can use in wrench reftests to ensure that
 // tests are batching and/or allocating on render
 // targets as we expect them to.
+#[repr(C)]
 pub struct RendererStats {
     pub total_draw_calls: usize,
     pub alpha_target_count: usize,

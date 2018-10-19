@@ -135,6 +135,13 @@ private:
     SERVER_RESPONSE_INVALID = 2,
   };
 
+  // The target filename for the downloaded file.
+  nsCString mFileName;
+
+  // True if extension of this file matches any extension in the
+  // kBinaryFileExtensions list.
+  bool mIsBinaryFile;
+
   // Number of blocklist and allowlist hits we have seen.
   uint32_t mBlocklistCount;
   uint32_t mAllowlistCount;
@@ -397,6 +404,7 @@ NS_IMPL_ISUPPORTS(PendingLookup,
 
 PendingLookup::PendingLookup(nsIApplicationReputationQuery* aQuery,
                              nsIApplicationReputationCallback* aCallback) :
+  mIsBinaryFile(false),
   mBlocklistCount(0),
   mAllowlistCount(0),
   mQuery(aQuery),
@@ -849,12 +857,8 @@ PendingLookup::LookupNext()
   // Look up all of the URLs that could allow or block this download.
   // Blocklist first.
 
-  // If any of mAnylistSpecs or mBlocklistSpecs matched the blocklist,
-  // go ahead and block.
-  if (mBlocklistCount > 0) {
-    return OnComplete(true, NS_OK,
-                      nsIApplicationReputationService::VERDICT_DANGEROUS);
-  }
+  // If a url is in blocklist we should call PendingLookup::OnComplete directly.
+  MOZ_ASSERT(mBlocklistCount == 0);
 
   int index = mAnylistSpecs.Length() - 1;
   nsCString spec;
@@ -863,7 +867,10 @@ PendingLookup::LookupNext()
     spec = mAnylistSpecs[index];
     mAnylistSpecs.RemoveElementAt(index);
     RefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
-    return lookup->LookupSpec(spec, LookupType::BothLists);
+
+    // We don't need to check whitelist if the file is not a binary file.
+    auto type = mIsBinaryFile ? LookupType::BothLists : LookupType::BlocklistOnly;
+    return lookup->LookupSpec(spec, type);
   }
 
   index = mBlocklistSpecs.Length() - 1;
@@ -882,6 +889,8 @@ PendingLookup::LookupNext()
     return OnComplete(false, NS_OK);
   }
 
+  MOZ_ASSERT_IF(!mIsBinaryFile, mAllowlistSpecs.Length() == 0);
+
   // Only binary signatures remain.
   index = mAllowlistSpecs.Length() - 1;
   if (index >= 0) {
@@ -892,43 +901,35 @@ PendingLookup::LookupNext()
     return lookup->LookupSpec(spec, LookupType::AllowlistOnly);
   }
 
-  // Check whether or not the file is eligible for remote lookups.
-  bool isBinaryFile = false;
-  nsAutoCString fileName;
-  nsresult rv = mQuery->GetSuggestedFileName(fileName);
-  if (NS_SUCCEEDED(rv) && !fileName.IsEmpty()) {
-    LOG(("Suggested filename: %s [this = %p]", fileName.get(), this));
-    isBinaryFile = IsFileType(fileName, kBinaryFileExtensions,
-                              ArrayLength(kBinaryFileExtensions));
-    AccumulateCategorical(isBinaryFile ?
+  if (!mFileName.IsEmpty()) {
+    AccumulateCategorical(mIsBinaryFile ?
                           mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::BinaryFile :
                           mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::NonBinaryFile);
   } else {
-    LOG(("No suggested filename [this = %p]", this));
     AccumulateCategorical(mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::MissingFilename);
   }
 
-  if (IsFileType(fileName, kDmgFileExtensions,
+  if (IsFileType(mFileName, kDmgFileExtensions,
                  ArrayLength(kDmgFileExtensions))) {
     AccumulateCategorical(mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_ARCHIVE::DmgFile);
-  } else if (IsFileType(fileName, kRarFileExtensions,
+  } else if (IsFileType(mFileName, kRarFileExtensions,
                         ArrayLength(kRarFileExtensions))) {
     AccumulateCategorical(mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_ARCHIVE::RarFile);
-  } else if (IsFileType(fileName, kZipFileExtensions,
+  } else if (IsFileType(mFileName, kZipFileExtensions,
                         ArrayLength(kZipFileExtensions))) {
     AccumulateCategorical(mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_ARCHIVE::ZipFile);
-  } else if (isBinaryFile) {
+  } else if (mIsBinaryFile) {
     AccumulateCategorical(mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_ARCHIVE::OtherBinaryFile);
   }
 
   // There are no more URIs to check against local list. If the file is
   // not eligible for remote lookup, bail.
-  if (!isBinaryFile) {
+  if (!mIsBinaryFile) {
     LOG(("Not eligible for remote lookups [this=%p]", this));
     return OnComplete(false, NS_OK);
   }
 
-  rv = SendRemoteQuery();
+  nsresult rv = SendRemoteQuery();
   if (NS_FAILED(rv)) {
     return OnComplete(false, rv);
   }
@@ -1261,19 +1262,34 @@ PendingLookup::DoLookupInternal()
     LOG(("ApplicationReputation: Got no redirects [this=%p]", this));
   }
 
-  // Extract the signature and parse certificates so we can use it to check
-  // whitelists.
-  nsCOMPtr<nsIArray> sigArray;
-  rv = mQuery->GetSignatureInfo(getter_AddRefs(sigArray));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (sigArray) {
-    rv = ParseCertificates(sigArray);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mQuery->GetSuggestedFileName(mFileName);
+  if (NS_SUCCEEDED(rv) && !mFileName.IsEmpty()) {
+    mIsBinaryFile = IsFileType(mFileName, kBinaryFileExtensions,
+                               ArrayLength(kBinaryFileExtensions));
+    LOG(("Suggested filename: %s [binary = %d, this = %p]",
+         mFileName.get(), mIsBinaryFile, this));
+  } else {
+    nsAutoCString errorName;
+    mozilla::GetErrorName(rv, errorName);
+    LOG(("No suggested filename [rv = %s, this = %p]", errorName.get(), this));
+    mFileName = EmptyCString();
   }
 
-  rv = GenerateWhitelistStrings();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // We can skip parsing certificate for non-binary files because we only
+  // check local block list for them.
+  if (mIsBinaryFile) {
+    nsCOMPtr<nsIArray> sigArray;
+    rv = mQuery->GetSignatureInfo(getter_AddRefs(sigArray));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (sigArray) {
+      rv = ParseCertificates(sigArray);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = GenerateWhitelistStrings();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Start the call chain.
   return LookupNext();
@@ -1456,11 +1472,8 @@ PendingLookup::SendRemoteQueryInternal()
   rv = mQuery->GetSha256Hash(sha256Hash);
   NS_ENSURE_SUCCESS(rv, rv);
   mRequest.mutable_digests()->set_sha256(sha256Hash.Data());
-  nsCString fileName;
-  rv = mQuery->GetSuggestedFileName(fileName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mRequest.set_file_basename(fileName.get());
-  mRequest.set_download_type(GetDownloadType(fileName));
+  mRequest.set_file_basename(mFileName.get());
+  mRequest.set_download_type(GetDownloadType(mFileName));
 
   if (mRequest.signature().trusted()) {
     LOG(("Got signed binary for remote application reputation check "

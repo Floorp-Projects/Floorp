@@ -6,6 +6,7 @@
 #include "AccessibleWrap.h"
 
 #include "Accessible-inl.h"
+#include "AndroidInputType.h"
 #include "DocAccessibleWrap.h"
 #include "IDSet.h"
 #include "JavaBuiltins.h"
@@ -286,10 +287,11 @@ AccessibleWrap::CreateBundle(int32_t aParentID,
     GECKOBUNDLE_PUT(nodeInfo, "rangeInfo", rangeInfo);
   }
 
-  nsString inputType;
-  nsAccUtils::GetAccAttr(aAttributes, nsGkAtoms::textInputType, inputType);
-  if (!inputType.IsEmpty()) {
-    GECKOBUNDLE_PUT(nodeInfo, "inputType", jni::StringParam(inputType));
+  nsString inputTypeAttr;
+  nsAccUtils::GetAccAttr(aAttributes, nsGkAtoms::textInputType, inputTypeAttr);
+  int32_t inputType = GetInputType(inputTypeAttr);
+  if (inputType) {
+    GECKOBUNDLE_PUT(nodeInfo, "inputType", java::sdk::Integer::ValueOf(inputType));
   }
 
   nsString posinset;
@@ -460,6 +462,36 @@ AccessibleWrap::GetAndroidClass(role aRole)
   }
 
 #undef ROLE
+}
+
+int32_t
+AccessibleWrap::GetInputType(const nsString& aInputTypeAttr)
+{
+  if (aInputTypeAttr.EqualsIgnoreCase("email")) {
+    return java::sdk::InputType::TYPE_CLASS_TEXT | java::sdk::InputType::TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS;
+  }
+
+  if (aInputTypeAttr.EqualsIgnoreCase("number")) {
+    return java::sdk::InputType::TYPE_CLASS_NUMBER;
+  }
+
+  if (aInputTypeAttr.EqualsIgnoreCase("password")) {
+    return java::sdk::InputType::TYPE_CLASS_TEXT | java::sdk::InputType::TYPE_TEXT_VARIATION_WEB_PASSWORD;
+  }
+
+  if (aInputTypeAttr.EqualsIgnoreCase("tel")) {
+    return java::sdk::InputType::TYPE_CLASS_PHONE;
+  }
+
+  if (aInputTypeAttr.EqualsIgnoreCase("text")) {
+    return java::sdk::InputType::TYPE_CLASS_TEXT | java::sdk::InputType::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT;
+  }
+
+  if (aInputTypeAttr.EqualsIgnoreCase("url")) {
+    return java::sdk::InputType::TYPE_CLASS_TEXT | java::sdk::InputType::TYPE_TEXT_VARIATION_URI;
+  }
+
+  return 0;
 }
 
 void

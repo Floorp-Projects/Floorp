@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/cls-expr-gen-meth.template
 /*---
-description: Reset element (identifier) does not support initializer (class expression method)
+description: Rest element (identifier) does not support initializer (class expression method)
 esid: sec-class-definitions-runtime-semantics-evaluation
 es6id: 14.5.16
 features: [generators, destructuring-binding]

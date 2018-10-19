@@ -2345,7 +2345,7 @@ Toolbox.prototype = {
     await this.initInspector();
 
     // Only enable frame highlighting when the top level document is targeted
-    if (this._supportsFrameHighlight && this.rootFrameSelected) {
+    if (this.rootFrameSelected) {
       const frameActor = await this.walker.getNodeActorFromWindowID(frameId);
       this.highlighterUtils.highlightNodeFront(frameActor);
     }
@@ -2680,18 +2680,11 @@ Toolbox.prototype = {
         this._selection = new Selection(this._walker);
         this._selection.on("new-node-front", this._onNewSelectedNodeFront);
 
-        if (this.highlighterUtils.isRemoteHighlightable()) {
-          this.walker.on("highlighter-ready", this._highlighterReady);
-          this.walker.on("highlighter-hide", this._highlighterHidden);
+        this.walker.on("highlighter-ready", this._highlighterReady);
+        this.walker.on("highlighter-hide", this._highlighterHidden);
 
-          const autohide = !flags.testing;
-          this._highlighter = await this._inspector.getHighlighter(autohide);
-        }
-        if (!("_supportsFrameHighlight" in this)) {
-          // Only works with FF58+ targets
-          this._supportsFrameHighlight =
-            await this.target.actorHasMethod("domwalker", "getNodeActorFromWindowID");
-        }
+        const autohide = !flags.testing;
+        this._highlighter = await this._inspector.getHighlighter(autohide);
       }.bind(this))();
     }
     return this._initInspector;
@@ -2769,14 +2762,6 @@ Toolbox.prototype = {
       this._inspector.destroy();
 
       if (this._highlighter) {
-        // Note that if the toolbox is closed, this will work fine, but will fail
-        // in case the browser is closed and will trigger a noSuchActor message.
-        // We ignore the promise that |_hideBoxModel| returns, since we should still
-        // proceed with the rest of destruction if it fails.
-        // FF42+ now does the cleanup from the actor.
-        if (!this.highlighter.traits.autoHideOnDestroy) {
-          this.highlighterUtils.unhighlight();
-        }
         await this._highlighter.destroy();
       }
       if (this._selection) {

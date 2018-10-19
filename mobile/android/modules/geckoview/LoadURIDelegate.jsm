@@ -18,16 +18,23 @@ GeckoViewUtils.initLogging("LoadURIDelegate", this);
 const LoadURIDelegate = {
   // Delegate URI loading to the app.
   // Return whether the loading has been handled.
-  load: function(aWindow, aEventDispatcher, aUri, aWhere, aFlags) {
+  load: function(aWindow, aEventDispatcher, aUri, aWhere, aFlags,
+                 aTriggeringPrincipal) {
     if (!aWindow) {
       return false;
     }
+
+    const triggerUri = aTriggeringPrincipal &&
+                       (aTriggeringPrincipal.isNullPrincipal
+                        ? null
+                        : aTriggeringPrincipal.URI);
 
     const message = {
       type: "GeckoView:OnLoadRequest",
       uri: aUri ? aUri.displaySpec : "",
       where: aWhere,
-      flags: aFlags
+      flags: aFlags,
+      triggerUri: triggerUri && triggerUri.displaySpec,
     };
 
     let handled = undefined;

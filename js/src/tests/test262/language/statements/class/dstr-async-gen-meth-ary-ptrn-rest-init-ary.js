@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-ary.case
 // - src/dstr-binding/default/cls-decl-async-gen-meth.template
 /*---
-description: Reset element (nested array pattern) does not support initializer (class expression method)
+description: Rest element (nested array pattern) does not support initializer (class expression method)
 esid: sec-class-definitions-runtime-semantics-evaluation
 features: [async-iteration]
 flags: [generated, async]

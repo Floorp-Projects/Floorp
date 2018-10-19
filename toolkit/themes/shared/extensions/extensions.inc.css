@@ -237,11 +237,6 @@ button.warning {
   min-height: 32px;
 }
 
-#header-search > moz-input-box > .textbox-search-sign {
-  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
-  margin-inline-end: 5px;
-}
-
 #search-label {
   margin: 0;
   margin-inline-end: 4px;

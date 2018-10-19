@@ -13,17 +13,7 @@ const TEST_NETWORK_LOCATION = "localhost:1111";
 add_task(async function() {
   const { document, tab } = await openAboutDebugging();
 
-  const sidebarItems = document.querySelectorAll(".js-sidebar-item");
-  const connectSidebarItem = [...sidebarItems].find(element => {
-    return element.textContent === "Connect";
-  });
-  ok(connectSidebarItem, "Sidebar contains a Connect item");
-
-  info("Click on the Connect item in the sidebar");
-  connectSidebarItem.click();
-
-  info("Wait until Connect page is displayed");
-  await waitUntil(() => document.querySelector(".js-connect-page"));
+  await selectConnectPage(document);
 
   let networkLocations = document.querySelectorAll(".js-network-location");
   is(networkLocations.length, 0, "By default, no network locations are displayed");

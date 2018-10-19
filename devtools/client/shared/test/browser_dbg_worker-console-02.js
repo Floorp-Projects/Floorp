@@ -19,7 +19,7 @@ var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function testWhilePaused() {
   const dbg = await initWorkerDebugger(TAB_URL, WORKER_URL);
-  const {client, tab, workerClient, toolbox} = dbg;
+  const {client, tab, workerTargetFront, toolbox} = dbg;
 
   // Execute some basic math to make sure evaluations are working.
   const jsterm = await getSplitConsole(toolbox);
@@ -55,8 +55,8 @@ add_task(async function testWhilePaused() {
   await resume(dbg);
 
   terminateWorkerInTab(tab, WORKER_URL);
-  await waitForWorkerClose(workerClient);
-  await gDevTools.closeToolbox(TargetFactory.forWorker(workerClient));
+  await waitForWorkerClose(workerTargetFront);
+  await gDevTools.closeToolbox(TargetFactory.forWorker(workerTargetFront));
   await close(client);
   await removeTab(tab);
 });

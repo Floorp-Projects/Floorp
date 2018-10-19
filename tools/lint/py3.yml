@@ -13,8 +13,6 @@ py3:
         - dom/canvas/test
         - dom/media/test
         - gfx
-        - intl/icu
-        - ipc/chromium
         - ipc/ipdl
         - js/src
         - layout/reftests
@@ -23,10 +21,8 @@ py3:
         - media
         - memory/replace
         - modules/freetype2
-        - nsprpub
         - python/safety
         - security/manager/ssl
-        - security/nss
         - servo
         - testing/awsy
         - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
@@ -37,7 +33,6 @@ py3:
         - testing/tools/iceserver
         - testing/tps
         - testing/web-platform
-        - third_party
         - toolkit
         - tools/jprof
         - tools/profiler

@@ -13,7 +13,6 @@
 #include "ProcessRecordReplay.h"
 #include "ProcessRewind.h"
 #include "Thread.h"
-#include "ipc/Channel.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
@@ -74,18 +73,11 @@ namespace recordreplay {
 // Function Redirections
 ///////////////////////////////////////////////////////////////////////////////
 
-// Capture the arguments that can be passed to a redirection, and provide
-// storage to specify the redirection's return value. We only need to capture
-// enough argument data here for calls made directly from Gecko code,
-// i.e. where events are not passed through. Calls made while events are passed
-// through are performed with the same stack and register state as when they
-// were initially invoked.
-//
-// Arguments and return value indexes refer to the register contents as passed
-// to the function originally. For functions with complex or floating point
-// arguments and return values, the right index to use might be different than
-// expected, per the requirements of the System V x64 ABI.
-struct CallArguments
+struct CallArguments;
+
+// All argument and return value data that is stored in registers and whose
+// values are preserved when calling a redirected function.
+struct CallRegisterArguments
 {
 protected:
   size_t arg0;      // 0
@@ -101,6 +93,28 @@ protected:
   size_t rval1;     // 80
   double floatrval0; // 88
   double floatrval1; // 96
+                     // Size: 104
+
+public:
+  void CopyFrom(const CallRegisterArguments* aArguments);
+  void CopyTo(CallRegisterArguments* aArguments) const;
+  void CopyRvalFrom(const CallRegisterArguments* aArguments);
+};
+
+// Capture the arguments that can be passed to a redirection, and provide
+// storage to specify the redirection's return value. We only need to capture
+// enough argument data here for calls made directly from Gecko code,
+// i.e. where events are not passed through. Calls made while events are passed
+// through are performed with the same stack and register state as when they
+// were initially invoked.
+//
+// Arguments and return value indexes refer to the register contents as passed
+// to the function originally. For functions with complex or floating point
+// arguments and return values, the right index to use might be different than
+// expected, per the requirements of the System V x64 ABI.
+struct CallArguments : public CallRegisterArguments
+{
+protected:
   size_t stack[64]; // 104
                     // Size: 616
 
@@ -119,6 +133,12 @@ public:
     case 5: return (T&)arg5;
     default: return (T&)stack[Index - 6];
     }
+  }
+
+  template <size_t Offset>
+  size_t* StackAddress() {
+    static_assert(Offset % sizeof(size_t) == 0, "Bad stack offset");
+    return &stack[Offset / sizeof(size_t)];
   }
 
   template <typename T, size_t Index = 0>
@@ -142,6 +162,27 @@ public:
   }
 };
 
+inline void
+CallRegisterArguments::CopyFrom(const CallRegisterArguments* aArguments)
+{
+  memcpy(this, aArguments, sizeof(CallRegisterArguments));
+}
+
+inline void
+CallRegisterArguments::CopyTo(CallRegisterArguments* aArguments) const
+{
+  memcpy(aArguments, this, sizeof(CallRegisterArguments));
+}
+
+inline void
+CallRegisterArguments::CopyRvalFrom(const CallRegisterArguments* aArguments)
+{
+  rval0 = aArguments->rval0;
+  rval1 = aArguments->rval1;
+  floatrval0 = aArguments->floatrval0;
+  floatrval1 = aArguments->floatrval1;
+}
+
 // Generic type for a system error code.
 typedef ssize_t ErrorType;
 
@@ -163,6 +204,15 @@ enum class PreambleResult {
   // Do not add an event for the call, as if events were passed through.
   PassThrough
 };
+
+// Signature for a function that is called on entry to a redirection and can
+// modify its behavior.
+typedef PreambleResult (*PreambleFn)(CallArguments* aArguments);
+
+// Signature for a function that conveys data about a call to or from the
+// middleman process.
+struct MiddlemanCallContext;
+typedef void (*MiddlemanCallFn)(MiddlemanCallContext& aCx);
 
 // Information about a system library API function which is being redirected.
 struct Redirection
@@ -187,7 +237,15 @@ struct Redirection
   SaveOutputFn mSaveOutput;
 
   // If specified, will be called upon entry to the redirected call.
-  PreambleResult (*mPreamble)(CallArguments* aArguments);
+  PreambleFn mPreamble;
+
+  // If specified, will be called while replaying and diverged from the
+  // recording to perform this call in the middleman process.
+  MiddlemanCallFn mMiddlemanCall;
+
+  // Additional preamble that is only called while replaying and diverged from
+  // the recording.
+  PreambleFn mMiddlemanPreamble;
 };
 
 // All platform specific redirections, indexed by the call event.
@@ -468,15 +526,6 @@ RR_WriteBufferViaRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aEr
   aEvents.RecordOrReplayBytes(buf, rval + Offset);
 }
 
-// Insert an atomic access while recording/replaying so that calls to this
-// function replay in the same order they occurred in while recording. This is
-// used for functions that are used in inter-thread synchronization.
-static inline void
-RR_OrderCall(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
-{
-  AutoOrderedAtomicAccess();
-}
-
 // Record/replay a scalar return value.
 static inline void
 RR_ScalarRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
@@ -520,7 +569,7 @@ template <size_t ReturnValue>
 static inline PreambleResult
 Preamble_Veto(CallArguments* aArguments)
 {
-  aArguments->Rval<size_t>() = 0;
+  aArguments->Rval<size_t>() = ReturnValue;
   return PreambleResult::Veto;
 }
 
@@ -531,7 +580,7 @@ Preamble_VetoIfNotPassedThrough(CallArguments* aArguments)
   if (AreThreadEventsPassedThrough()) {
     return PreambleResult::PassThrough;
   }
-  aArguments->Rval<size_t>() = 0;
+  aArguments->Rval<size_t>() = ReturnValue;
   return PreambleResult::Veto;
 }
 

@@ -2715,7 +2715,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mMediaPrincipalHandle, PRINCIPAL_HANDLE_NONE),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
   INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
-  INIT_CANONICAL(mIsAudioDataAudible, false)
+  INIT_CANONICAL(mIsAudioDataAudible, false),
+  mSetSinkRequestsCount(0)
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -3674,7 +3675,7 @@ MediaDecoderStateMachine::InvokeSetSink(RefPtr<AudioDeviceInfo> aSink)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSink);
 
-  ++mSetSinkRequestsCount;
+  Unused << ++mSetSinkRequestsCount;
   return InvokeAsync(
            OwnerThread(), this, __func__,
            &MediaDecoderStateMachine::SetSink, aSink);

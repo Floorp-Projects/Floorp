@@ -44,6 +44,7 @@ public:
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSISTRINGINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSITELLABLESTREAM
   NS_DECL_NSISUPPORTSPRIMITIVE
   NS_DECL_NSISUPPORTSCSTRING
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
@@ -109,6 +110,7 @@ NS_IMPL_QUERY_INTERFACE_CI(nsStringInputStream,
                            nsIInputStream,
                            nsISupportsCString,
                            nsISeekableStream,
+                           nsITellableStream,
                            nsIIPCSerializableInputStream,
                            nsICloneableInputStream)
 NS_IMPL_CI_INTERFACE_GETTER(nsStringInputStream,
@@ -116,6 +118,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsStringInputStream,
                             nsIInputStream,
                             nsISupportsCString,
                             nsISeekableStream,
+                            nsITellableStream,
                             nsICloneableInputStream)
 
 /////////
@@ -323,17 +326,6 @@ nsStringInputStream::Seek(int32_t aWhence, int64_t aOffset)
 }
 
 NS_IMETHODIMP
-nsStringInputStream::Tell(int64_t* aOutWhere)
-{
-  if (Closed()) {
-    return NS_BASE_STREAM_CLOSED;
-  }
-
-  *aOutWhere = mOffset;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsStringInputStream::SetEOF()
 {
   if (Closed()) {
@@ -341,6 +333,21 @@ nsStringInputStream::SetEOF()
   }
 
   mOffset = Length();
+  return NS_OK;
+}
+
+/////////
+// nsITellableStream implementation
+/////////
+
+NS_IMETHODIMP
+nsStringInputStream::Tell(int64_t* aOutWhere)
+{
+  if (Closed()) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  *aOutWhere = mOffset;
   return NS_OK;
 }
 

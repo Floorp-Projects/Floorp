@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-obj.case
 // - src/dstr-binding/default/meth.template
 /*---
-description: Reset element (nested object pattern) does not support initializer (method)
+description: Rest element (nested object pattern) does not support initializer (method)
 esid: sec-runtime-semantics-definemethod
 es6id: 14.3.8
 features: [destructuring-binding]

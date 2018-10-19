@@ -17,6 +17,7 @@ NS_IMPL_RELEASE(PartiallySeekableInputStream);
 NS_INTERFACE_MAP_BEGIN(PartiallySeekableInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY(nsITellableStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
                                      mWeakCloneableInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,

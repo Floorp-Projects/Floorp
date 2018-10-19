@@ -523,10 +523,30 @@ function forwardToScript(name) {
 
 const gRequestHandlers = {
 
+  repaint() {
+    if (!RecordReplayControl.maybeDivergeFromRecording()) {
+      return {};
+    }
+    return RecordReplayControl.repaint();
+  },
+
   findScripts(request) {
+    const query = Object.assign({}, request.query);
+    if ("global" in query) {
+      query.global = gPausedObjects.getObject(query.global);
+    }
+    if ("source" in query) {
+      query.source = gScriptSources.getObject(query.source);
+      if (!query.source) {
+        return [];
+      }
+    }
+    const scripts = dbg.findScripts(query);
     const rv = [];
-    gScripts.forEach((id) => {
-      rv.push(getScriptData(id));
+    scripts.forEach(script => {
+      if (considerScript(script)) {
+        rv.push(getScriptData(gScripts.getId(script)));
+      }
     });
     return rv;
   },

@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-obj.case
 // - src/dstr-binding/default/const-stmt.template
 /*---
-description: Reset element (nested object pattern) does not support initializer (`const` statement)
+description: Rest element (nested object pattern) does not support initializer (`const` statement)
 esid: sec-let-and-const-declarations-runtime-semantics-evaluation
 es6id: 13.3.1.4
 features: [destructuring-binding]

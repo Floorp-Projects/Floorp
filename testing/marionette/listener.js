@@ -1647,22 +1647,20 @@ async function reftestWait(url, remote) {
         observer.observe(root, {attributes: true});
       });
     }
-
-    logger.debug("Waiting for rendering");
-
-    await new Promise(resolve => {
-      let maybeResolve = () => {
-        if (flushRendering()) {
-          win.addEventListener("MozAfterPaint", maybeResolve, {once: true});
-        } else {
-          win.setTimeout(resolve, 0);
-        }
-      };
-      maybeResolve();
-    });
-  } else {
-    flushRendering();
   }
+
+  logger.debug("Waiting for rendering");
+
+  await new Promise(resolve => {
+    let maybeResolve = () => {
+      if (flushRendering()) {
+        win.addEventListener("MozAfterPaint", maybeResolve, {once: true});
+      } else {
+        win.setTimeout(resolve, 0);
+      }
+    };
+    maybeResolve();
+  });
 
   if (remote) {
     windowUtils.updateLayerTree();

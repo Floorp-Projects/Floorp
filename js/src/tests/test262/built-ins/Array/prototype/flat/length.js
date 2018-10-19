@@ -14,8 +14,10 @@ assert.sameValue(
   'The value of `Array.prototype.flat.length` is `0`'
 );
 
-verifyNotEnumerable(Array.prototype.flat, 'length');
-verifyNotWritable(Array.prototype.flat, 'length');
-verifyConfigurable(Array.prototype.flat, 'length');
+verifyProperty(Array.prototype.flat, 'length', {
+  enumerable: false,
+  writable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

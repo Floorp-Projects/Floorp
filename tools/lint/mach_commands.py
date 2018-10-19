@@ -20,6 +20,7 @@ from mach.decorators import (
 
 
 here = os.path.abspath(os.path.dirname(__file__))
+THIRD_PARTY_PATHS = os.path.join('tools', 'rewriting', 'ThirdPartyPaths.txt')
 GLOBAL_EXCLUDES = [
     'tools/lint/test/files',
 ]
@@ -31,9 +32,17 @@ def setup_argument_parser():
 
 
 def get_global_excludes(topsrcdir):
+    # exclude misc paths
     excludes = GLOBAL_EXCLUDES[:]
+
+    # exclude top level paths that look like objdirs
     excludes.extend([name for name in os.listdir(topsrcdir)
                      if name.startswith('obj') and os.path.isdir(name)])
+
+    # exclude third party paths
+    with open(os.path.join(topsrcdir, THIRD_PARTY_PATHS), 'r') as fh:
+        excludes.extend([f.strip() for f in fh.readlines()])
+
     return excludes
 
 
@@ -47,11 +56,12 @@ class MachCommands(MachCommandBase):
     def lint(self, *runargs, **lintargs):
         """Run linters."""
         self._activate_virtualenv()
-        from mozlint import cli
+        from mozlint import cli, parser
 
         lintargs.setdefault('root', self.topsrcdir)
         lintargs['exclude'] = get_global_excludes(lintargs['root'])
         cli.SEARCH_PATHS.append(here)
+        parser.GLOBAL_SUPPORT_FILES.append(os.path.join(self.topsrcdir, THIRD_PARTY_PATHS))
         return cli.run(*runargs, **lintargs)
 
     @Command('eslint', category='devenv',

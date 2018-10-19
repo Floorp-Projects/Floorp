@@ -44,6 +44,7 @@ let extensionControlledContentIds = {
   "privacy.containers": "browserContainersExtensionContent",
   "homepage_override": "browserHomePageExtensionContent",
   "newTabURL": "browserNewTabExtensionContent",
+  "webNotificationsDisabled": "browserNotificationsPermissionExtensionContent",
   "defaultSearch": "browserDefaultSearchExtensionContent",
   "proxy.settings": "proxyExtensionContent",
   get "websites.trackingProtectionMode"() {
@@ -61,6 +62,7 @@ let extensionControlledContentIds = {
 const extensionControlledL10nKeys = {
   "homepage_override": "homepage-override",
   "newTabURL": "new-tab-url",
+  "webNotificationsDisabled": "web-notifications",
   "defaultSearch": "default-search",
   "privacy.containers": "privacy-containers",
   "websites.trackingProtectionMode": contentBlockingUiEnabled ?

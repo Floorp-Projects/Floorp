@@ -52,6 +52,60 @@ interface nsITelemetry : nsISupports
 
 
   /**
+   * Serializes the histograms from the given store to a JSON-style object.
+   * The returned structure looks like:
+   *   { "process": { "name1": histogramData1, "name2": histogramData2 }, ... }
+   *
+   * Where histogramDataN has the following properties:
+   *   min - minimum bucket size
+   *   max - maximum bucket size
+   *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN,
+   *                    HISTOGRAM_FLAG, HISTOGRAM_COUNT, or HISTOGRAM_CATEGORICAL
+   *   counts - array representing contents of the buckets in the histogram
+   *   ranges - array with calculated bucket sizes
+   *   sum - sum of the bucket contents
+   * TODO(bug 1468761): Return packed histograms.
+   *
+   * @param aStoreName The name of the store to snapshot. Ignored at the moment.
+   * @param aClearStore Whether to clear out the histograms in the named store after snapshotting.
+   */
+  [implicit_jscontext]
+  jsval getSnapshotForHistograms(in ACString aStoreName, in boolean aClearStore);
+
+  /**
+   * Serializes the keyed histograms from the given store to a JSON-style object.
+   * The returned structure looks like:
+   *   { "process": { "name1": { "key_1": histogramData1, "key_2": histogramData2 }, ...}, ... }
+   *
+   * @param aStoreName The name of the store to snapshot. Ignored at the moment.
+   * @param aClearStore Whether to clear out the keyed histograms in the named store after snapshotting.
+   */
+  [implicit_jscontext]
+  jsval getSnapshotForKeyedHistograms(in ACString aStoreName, in boolean aClearStore);
+
+  /**
+   * Serializes the scalars from the given store to a JSON-style object.
+   * The returned structure looks like:
+   *   { "process": { "category1.probe": 1,"category1.other_probe": false, ... }, ... }.
+   *
+   * @param aStoreName The name of the store to snapshot. Ignored at the moment.
+   * @param aClearStore Whether to clear out the scalars in the named store after snapshotting.
+   */
+  [implicit_jscontext]
+  jsval getSnapshotForScalars(in ACString aStoreName, in boolean aClearStore);
+
+  /**
+   * Serializes the keyed scalars from the given store to a JSON-style object.
+   * The returned structure looks like:
+   *   { "process": { "category1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
+   *
+   * @param aStoreName The name of the store to snapshot. Ignored at the moment.
+   * @param aClearStore Whether to clear out the keyed scalars in the named store after snapshotting.
+   */
+  [implicit_jscontext]
+  jsval getSnapshotForKeyedScalars(in ACString aStoreName, in boolean aClearStore);
+
+  /**
    * Serializes the histograms from the given dataset to a JSON-style object.
    * The returned structure looks like:
    *   { process1: {name1: {histogramData1}, name2:{histogramData2}...}}

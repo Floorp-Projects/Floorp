@@ -5,13 +5,10 @@ import re
 import shutil
 import stat
 import subprocess
-import sys
 import tempfile
 from abc import ABCMeta, abstractmethod
-from ConfigParser import RawConfigParser
 from datetime import datetime, timedelta
 from distutils.spawn import find_executable
-from io import BytesIO
 
 from utils import call, get, untar, unzip
 
@@ -650,10 +647,6 @@ class Safari(Browser):
 
     def version(self, binary):
         return None
-
-
-class SafariWebDriver(Safari):
-    product = "safari_webdriver"
 
 
 class SafariWebDriver(Safari):

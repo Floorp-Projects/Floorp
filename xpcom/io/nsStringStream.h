@@ -16,6 +16,7 @@
  *   nsIStringInputStream
  *   nsIInputStream
  *   nsISeekableStream
+ *   nsITellableStream
  *   nsISupportsCString
  */
 #define NS_STRINGINPUTSTREAM_CONTRACTID "@mozilla.org/io/string-input-stream;1"
@@ -29,7 +30,7 @@
 
 /**
  * Factory method to get an nsInputStream from a byte buffer.  Result will
- * implement nsIStringInputStream and nsISeekableStream.
+ * implement nsIStringInputStream, nsITellableStream and nsISeekableStream.
  *
  * If aAssignment is NS_ASSIGNMENT_COPY, then the resulting stream holds a copy
  * of the given buffer (aStringToRead), and the caller is free to discard
@@ -54,7 +55,7 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
 
 /**
  * Factory method to get an nsInputStream from an nsACString.  Result will
- * implement nsIStringInputStream and nsISeekableStream.
+ * implement nsIStringInputStream, nsTellableStream and nsISeekableStream.
  */
 extern nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,

@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/meth-dflt.template
 /*---
-description: Reset element (identifier) does not support initializer (method (default parameter))
+description: Rest element (identifier) does not support initializer (method (default parameter))
 esid: sec-runtime-semantics-definemethod
 es6id: 14.3.8
 features: [destructuring-binding, default-parameters]

@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-obj.case
 // - src/dstr-binding/default/cls-expr-async-gen-meth-static-dflt.template
 /*---
-description: Reset element (nested object pattern) does not support initializer (static class expression async generator method (default parameter))
+description: Rest element (nested object pattern) does not support initializer (static class expression async generator method (default parameter))
 esid: sec-class-definitions-runtime-semantics-evaluation
 features: [async-iteration]
 flags: [generated, async]

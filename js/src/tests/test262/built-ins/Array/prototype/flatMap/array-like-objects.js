@@ -20,18 +20,18 @@ var a = getArgumentsObject(1, 2);
 var actual = [].flatMap.call(a, double);
 assert.compareArray(actual, [2, 4], 'arguments objects');
 
-var a = {
+a = {
   length: 1,
   0: 1,
 };
-var actual = [].flatMap.call(a, double);
+actual = [].flatMap.call(a, double);
 assert.compareArray(actual, [2], 'array-like objects');
 
-var a = {
+a = {
   length: void 0,
   0: 1,
 };
-var actual = [].flatMap.call(a, double);
+actual = [].flatMap.call(a, double);
 assert.compareArray(actual, [], 'array-like objects; undefined length');
 
 reportCompare(0, 0);

@@ -219,11 +219,6 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 - (float)roundedCornerRadius;
 @end
 
-@interface NSView(DraggableRegion)
-- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove;
-- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove forUnderTitlebar:(BOOL)aForUnderTitlebar;
-@end
-
 @interface NSWindow(NSWindowShouldZoomOnDoubleClick)
 + (BOOL)_shouldZoomOnDoubleClick; // present on 10.7 and above
 @end

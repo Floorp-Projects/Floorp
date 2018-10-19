@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-obj.case
 // - src/dstr-binding/default/try.template
 /*---
-description: Reset element (nested object pattern) does not support initializer (try statement)
+description: Rest element (nested object pattern) does not support initializer (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
 es6id: 13.15.7
 features: [destructuring-binding]

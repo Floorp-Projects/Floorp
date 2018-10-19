@@ -378,17 +378,16 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override
-    public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session, final String urlStr,
-                                                  final int target,
-                                                  final int flags) {
-        final Uri uri = Uri.parse(urlStr);
+    public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session,
+                                                  final LoadRequest request) {
+        final Uri uri = Uri.parse(request.uri);
         if (uri == null) {
             // We can't really handle this, so deny it?
-            Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
+            Log.w(LOGTAG, "Failed to parse URL for navigation: " + request.uri);
             return GeckoResult.fromValue(AllowOrDeny.DENY);
         }
 
-        if (mManifest.isInScope(uri) && target != TARGET_WINDOW_NEW) {
+        if (mManifest.isInScope(uri) && request.target != TARGET_WINDOW_NEW) {
             // This is in scope and wants to load in the same frame, so
             // let Gecko handle it.
             return GeckoResult.fromValue(AllowOrDeny.ALLOW);
@@ -416,7 +415,7 @@ public class WebAppActivity extends AppCompatActivity
             try {
                 startActivity(intent);
             } catch (ActivityNotFoundException e) {
-                Log.w(LOGTAG, "No activity handler found for: " + urlStr);
+                Log.w(LOGTAG, "No activity handler found for: " + request.uri);
             }
         }
 

@@ -23,7 +23,7 @@ var PermissionPrompts = {
 
   configurations: {
     shareDevices: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
         await clickOn("#webRTC-shareDevices");
@@ -31,7 +31,7 @@ var PermissionPrompts = {
     },
 
     shareMicrophone: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
         await clickOn("#webRTC-shareMicrophone");
@@ -39,7 +39,7 @@ var PermissionPrompts = {
     },
 
     shareVideoAndMicrophone: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
         await clickOn("#webRTC-shareDevices2");
@@ -47,7 +47,7 @@ var PermissionPrompts = {
     },
 
     shareScreen: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
         await clickOn("#webRTC-shareScreen");
@@ -55,7 +55,7 @@ var PermissionPrompts = {
     },
 
     geo: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
         await clickOn("#geo");
@@ -63,7 +63,7 @@ var PermissionPrompts = {
     },
 
     persistentStorage: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
         await clickOn("#persistent-storage");
@@ -71,7 +71,7 @@ var PermissionPrompts = {
     },
 
     loginCapture: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
         await clickOn("#login-capture");
@@ -79,7 +79,7 @@ var PermissionPrompts = {
     },
 
     notifications: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
         await clickOn("#web-notifications");
@@ -87,7 +87,7 @@ var PermissionPrompts = {
     },
 
     addons: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         Services.prefs.setBoolPref("xpinstall.whitelist.required", true);
 
@@ -97,7 +97,7 @@ var PermissionPrompts = {
     },
 
     addonsNoWhitelist: {
-      selectors: ["#notification-popup"],
+      selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         Services.prefs.setBoolPref("xpinstall.whitelist.required", false);
 

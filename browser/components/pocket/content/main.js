@@ -55,8 +55,6 @@ ChromeUtils.defineModuleGetter(this, "pktApi",
 var pktUI = (function() {
 
     // -- Initialization (on startup and new windows) -- //
-    var _currentPanelDidShow;
-    var _currentPanelDidHide;
 
     // Init panel id at 0. The first actual panel id will have the number 1 so
     // in case at some point any panel has the id 0 we know there is something
@@ -68,56 +66,6 @@ var pktUI = (function() {
     var savePanelWidth = 350;
     var savePanelHeights = {collapsed: 153, expanded: 272};
 
-    var _lastAddSucceeded = false;
-
-    // -- Event Handling -- //
-
-    /**
-     * Event handler when Pocket toolbar button is pressed
-     */
-
-    function pocketPanelDidShow(event) {
-        if (_currentPanelDidShow) {
-            _currentPanelDidShow(event);
-        }
-
-    }
-
-    function pocketPanelDidHide(event) {
-        if (_currentPanelDidHide) {
-            _currentPanelDidHide(event);
-        }
-
-        // clear the panel
-        getPanelFrame().setAttribute("src", "about:blank");
-
-        if (_lastAddSucceeded) {
-            var libraryButton = document.getElementById("library-button");
-            if (!Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") ||
-                !libraryButton ||
-                libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
-                libraryButton.getAttribute("overflowedItem") == "true" ||
-                !libraryButton.closest("#nav-bar")) {
-                return;
-            }
-            libraryButton.removeAttribute("fade");
-            libraryButton.setAttribute("animate", "pocket");
-            libraryButton.addEventListener("animationend", onLibraryButtonAnimationEnd);
-        }
-    }
-
-    function onLibraryButtonAnimationEnd(event) {
-        let doc = event.target.ownerDocument;
-        let libraryButton = doc.getElementById("library-button");
-        if (event.animationName.startsWith("library-pocket-animation")) {
-            libraryButton.setAttribute("fade", "true");
-        } else if (event.animationName == "library-pocket-fade") {
-            libraryButton.removeEventListener("animationend", onLibraryButtonAnimationEnd);
-            libraryButton.removeAttribute("animate");
-            libraryButton.removeAttribute("fade");
-        }
-    }
-
     // -- Communication to API -- //
 
     /**
@@ -128,7 +76,6 @@ var pktUI = (function() {
     }
 
     function tryToSaveUrl(url, title) {
-
         // If the user is logged in, go ahead and save the current page
         if (pktApi.isUserLoggedIn()) {
             saveAndShowConfirmation(url, title);
@@ -195,9 +142,6 @@ var pktUI = (function() {
                 + inOverflowMenu
                 + "&locale="
                 + getUILocale(), {
-                    onShow() {
-                    },
-                    onHide: panelDidHide,
                     width: inOverflowMenu ? overflowMenuWidth : 300,
                     height: startheight,
             });
@@ -231,7 +175,6 @@ var pktUI = (function() {
                 + "&locale=" + getUILocale(), {
                 onShow() {
                     var saveLinkMessageId = "saveLink";
-                    _lastAddSucceeded = false;
                     getPanelFrame().setAttribute("itemAdded", "false");
 
                     // Send error message for invalid url
@@ -270,7 +213,6 @@ var pktUI = (function() {
                                 ho2,
                             };
                             pktUIMessaging.sendMessageToPanel(panelId, saveLinkMessageId, successResponse);
-                            _lastAddSucceeded = true;
                             getPanelFrame().setAttribute("itemAdded", "true");
                         },
                         error(error, request) {
@@ -298,7 +240,6 @@ var pktUI = (function() {
                     // Send the link
                     pktApi.addLink(url, options);
                 },
-                onHide: panelDidHide,
                 width: inOverflowMenu ? overflowMenuWidth : savePanelWidth,
                 height: startheight,
             });
@@ -309,7 +250,6 @@ var pktUI = (function() {
      * Open a generic panel
      */
     function showPanel(url, options) {
-
         // Add new panel id
         _panelId += 1;
         url += ("&panelId=" + _panelId);
@@ -318,6 +258,7 @@ var pktUI = (function() {
         // as if the user tries to click again on the toolbar button the overlay
         // will close instead of the button will be clicked
         var iframe = getPanelFrame();
+        options.onShow = options.onShow || (() => {});
 
         // Register event handlers
         registerEventMessages();
@@ -325,15 +266,16 @@ var pktUI = (function() {
         // Load the iframe
         iframe.setAttribute("src", url);
 
-        // Uncomment to leave panel open -- for debugging
-        // panel.setAttribute('noautohide', true);
-        // panel.setAttribute('consumeoutsideclicks', false);
-        //
-
-        // For some reason setting onpopupshown and onpopuphidden on the panel directly didn't work, so
-        // do it this hacky way for now
-        _currentPanelDidShow = options.onShow;
-        _currentPanelDidHide = options.onHide;
+        if (iframe.contentDocument &&
+            iframe.contentDocument.readyState == "complete" &&
+            iframe.contentDocument.documentURI != "about:blank") {
+          options.onShow();
+        } else {
+          // iframe didn't load yet. This seems to always be the case when in
+          // the toolbar panel, but never the case for a subview.
+          // XXX this only being fired when it's a _capturing_ listener!
+          iframe.addEventListener("load", options.onShow, { once: true, capture: true });
+        }
 
         resizePanel({
             width: options.width,
@@ -356,15 +298,6 @@ var pktUI = (function() {
         // Set an explicit size, panel will adapt.
         iframe.style.width  = options.width + "px";
         iframe.style.height = options.height + "px";
-    }
-
-    /**
-     * Called when the signup and saved panel was hidden
-     */
-    function panelDidHide() {
-        // clear the onShow and onHide values
-        _currentPanelDidShow = null;
-        _currentPanelDidHide = null;
     }
 
     /**
@@ -517,7 +450,6 @@ var pktUI = (function() {
                 success(data, response) {
                     var successResponse = {status: "success"};
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _deleteItemMessageId, successResponse);
-                    _lastAddSucceeded = false;
                     getPanelFrame().setAttribute("itemAdded", "false");
                 },
                 error(error, response) {
@@ -635,9 +567,6 @@ var pktUI = (function() {
         getPanelFrame,
 
         openTabWithUrl,
-
-        pocketPanelDidShow,
-        pocketPanelDidHide,
 
         tryToSaveUrl,
         tryToSaveCurrentPage,

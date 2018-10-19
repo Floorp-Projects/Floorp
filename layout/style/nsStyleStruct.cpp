@@ -3908,7 +3908,8 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
        mAnimationFillModeCount != aNewData.mAnimationFillModeCount ||
        mAnimationPlayStateCount != aNewData.mAnimationPlayStateCount ||
        mAnimationIterationCountCount != aNewData.mAnimationIterationCountCount ||
-       mScrollSnapCoordinate != aNewData.mScrollSnapCoordinate)) {
+       mScrollSnapCoordinate != aNewData.mScrollSnapCoordinate ||
+       mWillChange != aNewData.mWillChange)) {
     hint |= nsChangeHint_NeutralChange;
   }
 

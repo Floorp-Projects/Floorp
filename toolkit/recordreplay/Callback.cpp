@@ -49,6 +49,9 @@ BeginCallback(size_t aCallbackId)
   }
   thread->SetPassThrough(false);
 
+  RecordingEventSection res(thread);
+  MOZ_RELEASE_ASSERT(res.CanAccessEvents());
+
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::ExecuteCallback);
   thread->Events().WriteScalar(aCallbackId);
 }
@@ -73,7 +76,8 @@ SaveOrRestoreCallbackData(void** aData)
   MOZ_RELEASE_ASSERT(gCallbackData);
 
   Thread* thread = Thread::Current();
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
+  RecordingEventSection res(thread);
+  MOZ_RELEASE_ASSERT(res.CanAccessEvents());
 
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::RestoreCallbackData);
 
@@ -102,7 +106,8 @@ void
 PassThroughThreadEventsAllowCallbacks(const std::function<void()>& aFn)
 {
   Thread* thread = Thread::Current();
-  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
+  RecordingEventSection res(thread);
+  MOZ_RELEASE_ASSERT(res.CanAccessEvents());
 
   if (IsRecording()) {
     if (thread->IsMainThread()) {

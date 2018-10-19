@@ -9,6 +9,7 @@ import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 
 import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.ExtractedText
@@ -54,8 +55,8 @@ class Callbacks private constructor() {
         override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
         }
 
-        override fun onLoadRequest(session: GeckoSession, uri: String, where: Int,
-                                   flags: Int): GeckoResult<AllowOrDeny>? {
+        override fun onLoadRequest(session: GeckoSession,
+                                   request: LoadRequest): GeckoResult<AllowOrDeny>? {
             return null
         }
 

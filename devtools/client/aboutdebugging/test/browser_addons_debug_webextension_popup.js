@@ -12,7 +12,6 @@ requestLongerTimeout(2);
 
 const ADDON_ID = "test-devtools-webextension@mozilla.org";
 const ADDON_NAME = "test-devtools-webextension";
-const ADDON_MANIFEST_PATH = "addons/test-devtools-webextension/manifest.json";
 
 const {
   BrowserToolboxProcess
@@ -42,6 +41,46 @@ function makeWidgetId(id) {
 }
 
 add_task(async function testWebExtensionsToolboxSwitchToPopup() {
+  const addonFile = ExtensionTestCommon.generateXPI({
+    background: function() {
+      const {browser} = this;
+      window.myWebExtensionShowPopup = function() {
+        browser.test.sendMessage("readyForOpenPopup");
+      };
+    },
+    manifest: {
+      name: ADDON_NAME,
+      applications: {
+        gecko: {id: ADDON_ID},
+      },
+      browser_action: {
+        default_title: "WebExtension Popup Debugging",
+        default_popup: "popup.html",
+      },
+    },
+    files: {
+      "popup.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script src="popup.js"></script>
+          </head>
+          <body>
+            Background Page Body Test Content
+          </body>
+        </html>
+      `,
+      "popup.js": function() {
+        const {browser} = this;
+        window.myWebExtensionPopupAddonFunction = function() {
+          browser.test.sendMessage("popupPageFunctionCalled",
+                                   browser.runtime.getManifest());
+        };
+      },
+    },
+  });
+  registerCleanupFunction(() => addonFile.remove(false));
+
   let onReadyForOpenPopup;
   let onPopupCustomMessage;
 
@@ -81,7 +120,7 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
 
   const {
     tab, document, debugBtn,
-  } = await setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_MANIFEST_PATH);
+  } = await setupTestAboutDebuggingWebExtension(ADDON_NAME, addonFile);
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!

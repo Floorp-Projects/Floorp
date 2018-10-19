@@ -1123,13 +1123,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  // When recording or replaying, vsync observers are notified whenever
-  // processing events on the main thread. Waiting for explicit vsync messages
-  // from the UI process can result in paints happening at unexpected times.
-  if (recordreplay::IsRecordingOrReplaying() && mIsMainThread == MAIN_THREAD) {
-    recordreplay::child::NotifyVsyncObserver();
-  }
-
   // The toplevel event loop normally blocks waiting for the next event, but
   // if we're trying to shut this thread down, we must exit the event loop when
   // the event queue is empty.

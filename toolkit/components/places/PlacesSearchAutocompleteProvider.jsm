@@ -19,19 +19,18 @@ const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
 
 const SearchAutocompleteProviderInternal = {
   /**
-   * Array of objects in the format returned by findMatchByToken.
+   * {Map} domain string => nsISearchEngine with that domain.  If more than one
+   * engine has the same domain, the last one passed to _addEngine will be the
+   * one in this map.
    */
-  priorityMatches: null,
+  enginesByDomain: new Map(),
 
   /**
-   * Array of objects in the format returned by findMatchByAlias.
+   * {Map} lowercased alias string => nsISearchEngine with that alias.  If more
+   * than one engine has the same alias, the last one passed to _addEngine will
+   * be the one in this map.
    */
-  aliasMatches: null,
-
-  /**
-   * Object for the default search match.
-   **/
-  defaultMatch: null,
+  enginesByAlias: new Map(),
 
   initialize() {
     return new Promise((resolve, reject) => {
@@ -68,18 +67,8 @@ const SearchAutocompleteProviderInternal = {
   },
 
   _refresh() {
-    this.priorityMatches = [];
-    this.aliasMatches = [];
-    this.defaultMatch = null;
-
-    let currentEngine = Services.search.currentEngine;
-    // This can be null in XCPShell.
-    if (currentEngine) {
-      this.defaultMatch = {
-        engineName: currentEngine.name,
-        iconUrl: currentEngine.iconURI ? currentEngine.iconURI.spec : null,
-      };
-    }
+    this.enginesByDomain.clear();
+    this.enginesByAlias.clear();
 
     // The search engines will always be processed in the order returned by the
     // search service, which can be defined by the user.
@@ -88,85 +77,80 @@ const SearchAutocompleteProviderInternal = {
 
   _addEngine(engine) {
     let domain = engine.getResultDomain();
-
     if (domain && !engine.hidden) {
-      this.priorityMatches.push({
-        token: domain,
-        // The searchForm property returns a simple URL for the search engine, but
-        // we may need an URL which includes an affiliate code (bug 990799).
-        url: engine.searchForm,
-        engineName: engine.name,
-        iconUrl: engine.iconURI ? engine.iconURI.spec : null,
-      });
+      this.enginesByDomain.set(domain, engine);
     }
 
     let aliases = [];
-
     if (engine.alias) {
       aliases.push(engine.alias);
     }
     aliases.push(...engine.wrappedJSObject._internalAliases);
-
-    if (aliases.length) {
-      this.aliasMatches.push({
-        aliases,
-        engineName: engine.name,
-        iconUrl: engine.iconURI ? engine.iconURI.spec : null,
-        resultDomain: domain,
-      });
+    for (let alias of aliases) {
+      this.enginesByAlias.set(alias.toLocaleLowerCase(), engine);
     }
-  },
-
-  getSuggestionController(searchToken, inPrivateContext, maxLocalResults,
-                          maxRemoteResults, userContextId) {
-    let engine = Services.search.currentEngine;
-    if (!engine) {
-      return null;
-    }
-    return new SearchSuggestionControllerWrapper(engine, searchToken,
-                                                 inPrivateContext,
-                                                 maxLocalResults, maxRemoteResults,
-                                                 userContextId);
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsISupportsWeakReference]),
 };
 
-function SearchSuggestionControllerWrapper(engine, searchToken,
-                                           inPrivateContext,
-                                           maxLocalResults, maxRemoteResults,
-                                           userContextId) {
-  this._controller = new SearchSuggestionController();
-  this._controller.maxLocalResults = maxLocalResults;
-  this._controller.maxRemoteResults = maxRemoteResults;
-  let promise = this._controller.fetch(searchToken, inPrivateContext, engine, userContextId);
-  this._suggestions = [];
-  this._success = false;
-  this._promise = promise.then(results => {
-    this._success = true;
+class SuggestionsFetch {
+  /**
+   * Create a new instance of this class for each new suggestions fetch.
+   *
+   * @param {nsISearchEngine} engine
+   *        The engine from which suggestions will be fetched.
+   * @param {string} searchToken
+   *        The search query string.
+   * @param {bool} inPrivateContext
+   *        Pass true if the fetch is being done in a private window.
+   * @param {int} maxLocalResults
+   *        The maximum number of results to fetch from the user's local
+   *        history.
+   * @param {int} maxRemoteResults
+   *        The maximum number of results to fetch from the search engine.
+   * @param {int} userContextId
+   *        The user context ID in which the fetch is being performed.
+   */
+  constructor(engine,
+              searchToken,
+              inPrivateContext,
+              maxLocalResults,
+              maxRemoteResults,
+              userContextId) {
+    this._controller = new SearchSuggestionController();
+    this._controller.maxLocalResults = maxLocalResults;
+    this._controller.maxRemoteResults = maxRemoteResults;
+    this._engine = engine;
     this._suggestions = [];
-    if (results) {
-      this._suggestions = this._suggestions.concat(
-        results.local.map(r => ({ suggestion: r, historical: true }))
-      );
-      this._suggestions = this._suggestions.concat(
-        results.remote.map(r => ({ suggestion: r, historical: false }))
-      );
-    }
-  }).catch(err => {
-    // fetch() rejects its promise if there's a pending request.
-  });
-}
-
-SearchSuggestionControllerWrapper.prototype = {
+    this._success = false;
+    this._promise = this._controller.fetch(searchToken, inPrivateContext, engine, userContextId).then(results => {
+      this._success = true;
+      if (results) {
+        this._suggestions.push(
+          ...results.local.map(r => ({ suggestion: r, historical: true })),
+          ...results.remote.map(r => ({ suggestion: r, historical: false }))
+        );
+      }
+    }).catch(err => {
+      // fetch() rejects its promise if there's a pending request.
+    });
+  }
 
   /**
-   * Resolved when all suggestions have been fetched.
+   * {nsISearchEngine} The engine from which suggestions are being fetched.
+   */
+  get engine() {
+    return this._engine;
+  }
+
+  /**
+   * {promise} Resolved when all suggestions have been fetched.
    */
   get fetchCompletePromise() {
     return this._promise;
-  },
+  }
 
   /**
    * Returns one suggestion, if any are available, otherwise returns null.
@@ -175,17 +159,15 @@ SearchSuggestionControllerWrapper.prototype = {
    *  - the fetch failed
    *  - the fetch didn't complete yet (should have awaited the promise)
    *
-   * @return An object {match, suggestion, historical}.
+   * @returns {object} An object { suggestion, historical } or null if no
+   *          suggestions are available.
+   *          - suggestion {string} The suggestion.
+   *          - historical {bool} True if the suggestion comes from the user's
+   *            local history (instead of the search engine).
    */
   consume() {
-    if (!this._suggestions.length)
-      return null;
-    let { suggestion, historical } = this._suggestions.shift();
-    return { match: SearchAutocompleteProviderInternal.defaultMatch,
-             suggestion,
-             historical,
-           };
-  },
+    return this._suggestions.shift() || null;
+  }
 
   /**
    * Returns the number of fetched suggestions, or -1 if the fetching was
@@ -193,15 +175,15 @@ SearchSuggestionControllerWrapper.prototype = {
    */
   get resultsCount() {
     return this._success ? this._suggestions.length : -1;
-  },
+  }
 
   /**
    * Stops the fetch.
    */
   stop() {
     this._controller.stop();
-  },
-};
+  }
+}
 
 var gInitializationPromise = null;
 
@@ -219,61 +201,50 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
   },
 
   /**
-   * Matches a given string to an item that should be included by URL search
-   * components, like autocomplete in the address bar.
+   * Gets the engine whose domain matches a given prefix.
    *
-   * @param searchToken
-   *        String containing the first part of the matching domain name.
-   *
-   * @return An object with the following properties, or undefined if the token
-   *         does not match any relevant URL:
-   *         {
-   *           token: The full string used to match the search term to the URL.
-   *           url: The URL to navigate to if the match is selected.
-   *           engineName: The display name of the search engine.
-   *           iconUrl: Icon associated to the match, or null if not available.
-   *         }
+   * @param   {string} prefix
+   *          String containing the first part of the matching domain name.
+   * @returns {nsISearchEngine} The matching engine or null if there isn't one.
    */
-  async findMatchByToken(searchToken) {
+  async engineForDomainPrefix(prefix) {
     await this.ensureInitialized();
 
     // Match at the beginning for now.  In the future, an "options" argument may
     // allow the matching behavior to be tuned.
-    return SearchAutocompleteProviderInternal.priorityMatches.find(m => {
-      return m.token.startsWith(searchToken) ||
-             m.token.startsWith("www." + searchToken);
-    });
+    let tuples = SearchAutocompleteProviderInternal.enginesByDomain.entries();
+    for (let [domain, engine] of tuples) {
+      if (domain.startsWith(prefix) || domain.startsWith("www." + prefix)) {
+        return engine;
+      }
+    }
+    return null;
   },
 
   /**
-   * Matches a given search string to an item that should be included by
-   * components wishing to search using search engine aliases, like
-   * autocomple.
+   * Gets the engine with a given alias.
    *
-   * @param searchToken
-   *        Search string to match exactly a search engine alias.
-   *
-   * @return An object with the following properties, or undefined if the token
-   *         does not match any relevant URL:
-   *         {
-   *           alias: The matched search engine's alias.
-   *           engineName: The display name of the search engine.
-   *           iconUrl: Icon associated to the match, or null if not available.
-   *           resultDomain: The domain name for the search engine's results;
-   *                         see nsISearchEngine::getResultDomain.
-   *         }
+   * @param   {string} alias
+   *          A search engine alias.
+   * @returns {nsISearchEngine} The matching engine or null if there isn't one.
    */
-  async findMatchByAlias(searchToken) {
+  async engineForAlias(alias) {
     await this.ensureInitialized();
 
-    return SearchAutocompleteProviderInternal.aliasMatches
-             .find(m => m.aliases.some(a => a.toLocaleLowerCase() == searchToken.toLocaleLowerCase()));
+    return SearchAutocompleteProviderInternal
+           .enginesByAlias.get(alias.toLocaleLowerCase()) || null;
   },
 
-  async getDefaultMatch() {
+  /**
+   * Use this to get the current engine rather than Services.search.currentEngine
+   * directly.  This method makes sure that the service is first initialized.
+   *
+   * @returns {nsISearchEngine} The current search engine.
+   */
+  async currentEngine() {
     await this.ensureInitialized();
 
-    return SearchAutocompleteProviderInternal.defaultMatch;
+    return Services.search.currentEngine;
   },
 
   /**
@@ -308,13 +279,39 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
     };
   },
 
-  getSuggestionController(searchToken, inPrivateContext, maxLocalResults,
-                          maxRemoteResults, userContextId) {
+  /**
+   * Starts a new suggestions fetch.
+   *
+   * @param   {nsISearchEngine} engine
+   *          The engine from which suggestions will be fetched.
+   * @param   {string} searchToken
+   *          The search query string.
+   * @param   {bool} inPrivateContext
+   *          Pass true if the fetch is being done in a private window.
+   * @param   {int} maxLocalResults
+   *          The maximum number of results to fetch from the user's local
+   *          history.
+   * @param   {int} maxRemoteResults
+   *          The maximum number of results to fetch from the search engine.
+   * @param   {int} userContextId
+   *          The user context ID in which the fetch is being performed.
+   * @returns {SuggestionsFetch} A new suggestions fetch object you should use
+   *          to track the fetch.
+   */
+  newSuggestionsFetch(engine,
+                      searchToken,
+                      inPrivateContext,
+                      maxLocalResults,
+                      maxRemoteResults,
+                      userContextId) {
     if (!SearchAutocompleteProviderInternal.initialized) {
       throw new Error("The component has not been initialized.");
     }
-    return SearchAutocompleteProviderInternal.getSuggestionController(
-      searchToken, inPrivateContext, maxLocalResults, maxRemoteResults,
-      userContextId);
+    if (!engine) {
+      throw new Error("`engine` is null");
+    }
+    return new SuggestionsFetch(engine, searchToken, inPrivateContext,
+                                maxLocalResults, maxRemoteResults,
+                                userContextId);
   },
 });

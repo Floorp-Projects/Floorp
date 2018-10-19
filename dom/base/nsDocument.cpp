@@ -258,6 +258,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #ifdef MOZ_XUL
+#include "mozilla/dom/XULBroadcastManager.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIXULWindow.h"
 #include "nsXULCommandDispatcher.h"
@@ -1743,6 +1744,10 @@ nsDocument::~nsDocument()
 
   if (mStyleImageLoader) {
     mStyleImageLoader->DropDocumentReference();
+  }
+
+  if (mXULBroadcastManager) {
+    mXULBroadcastManager->DropDocumentReference();
   }
 
   delete mHeaderData;
@@ -5113,6 +5118,9 @@ nsDocument::EndUpdate()
   MaybeEndOutermostXBLUpdate();
 
   MaybeInitializeFinalizeFrameLoaders();
+  if (mXULBroadcastManager) {
+    mXULBroadcastManager->MaybeBroadcast();
+  }
 }
 
 void
@@ -10245,6 +10253,15 @@ nsIDocument::GetCommandDispatcher()
     mCommandDispatcher = new nsXULCommandDispatcher(this);
   }
   return mCommandDispatcher;
+}
+
+void
+nsIDocument::InitializeXULBroadcastManager()
+{
+  if (mXULBroadcastManager) {
+    return;
+  }
+  mXULBroadcastManager = new XULBroadcastManager(this);
 }
 
 static JSObject*

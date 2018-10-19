@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, print_function
 
+import sys
+import unittest
 import urllib
 
 from unittest import skip
@@ -196,6 +198,7 @@ class TestQuitRestart(MarionetteTestCase):
         with self.assertRaisesRegexp(ValueError, "is not callable"):
             self.marionette.restart(in_app=True, callback=4)
 
+    @unittest.skipIf(sys.platform.startswith("win"), "Bug 1493796")
     def test_in_app_restart_with_callback_but_process_quit(self):
         timeout_shutdown = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
         # Wait at least 70s for the hang monitor in case of a shutdown hang
@@ -207,6 +210,7 @@ class TestQuitRestart(MarionetteTestCase):
         finally:
             self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout_shutdown
 
+    @unittest.skipIf(sys.platform.startswith("win"), "Bug 1493796")
     def test_in_app_restart_with_callback_missing_shutdown(self):
         try:
             timeout_shutdown = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT

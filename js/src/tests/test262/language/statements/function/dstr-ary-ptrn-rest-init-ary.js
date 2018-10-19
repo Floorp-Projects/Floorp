@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-ary.case
 // - src/dstr-binding/default/func-decl.template
 /*---
-description: Reset element (nested array pattern) does not support initializer (function declaration)
+description: Rest element (nested array pattern) does not support initializer (function declaration)
 esid: sec-function-definitions-runtime-semantics-instantiatefunctionobject
 es6id: 14.1.19
 features: [destructuring-binding]

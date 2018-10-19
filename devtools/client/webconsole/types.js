@@ -22,6 +22,7 @@ exports.ConsoleCommand = function(props) {
     groupId: null,
     indent: 0,
     private: false,
+    timeStamp: null,
   }, props);
 };
 

@@ -26,6 +26,7 @@ if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['NIGHTLY_BUILD']:
         'ipc/ParentIPC.cpp',
         'Lock.cpp',
         'MemorySnapshot.cpp',
+        'MiddlemanCall.cpp',
         'ProcessRecordReplay.cpp',
         'ProcessRedirectDarwin.cpp',
         'ProcessRewind.cpp',

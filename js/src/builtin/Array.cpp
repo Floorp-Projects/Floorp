@@ -223,7 +223,7 @@ GetLengthProperty(JSContext* cx, HandleObject obj, uint64_t* lengthp)
  */
 template <typename CharT>
 static bool
-StringIsArrayIndex(const CharT* s, uint32_t length, uint32_t* indexp)
+StringIsArrayIndexHelper(const CharT* s, uint32_t length, uint32_t* indexp)
 {
     const CharT* end = s + length;
 
@@ -265,8 +265,20 @@ js::StringIsArrayIndex(JSLinearString* str, uint32_t* indexp)
 {
     AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
-           ? ::StringIsArrayIndex(str->latin1Chars(nogc), str->length(), indexp)
-           : ::StringIsArrayIndex(str->twoByteChars(nogc), str->length(), indexp);
+           ? StringIsArrayIndexHelper(str->latin1Chars(nogc), str->length(), indexp)
+           : StringIsArrayIndexHelper(str->twoByteChars(nogc), str->length(), indexp);
+}
+
+JS_FRIEND_API(bool)
+js::StringIsArrayIndex(const char16_t* str, uint32_t length, uint32_t* indexp)
+{
+    return StringIsArrayIndexHelper(str, length, indexp);
+}
+
+JS_FRIEND_API(bool)
+js::StringIsArrayIndex(const char* str, uint32_t length, uint32_t* indexp)
+{
+    return StringIsArrayIndexHelper(str, length, indexp);
 }
 
 template <typename T>
@@ -411,6 +423,9 @@ js::GetElementsWithAdder(JSContext* cx, HandleObject obj, HandleObject receiver,
 
     return true;
 }
+
+static bool
+ObjectMayHaveExtraIndexedProperties(JSObject* obj);
 
 static inline bool
 IsPackedArrayOrNoExtraIndexedProperties(JSObject* obj, uint64_t length)
@@ -1047,8 +1062,8 @@ ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj)
  * elements. This includes other indexed properties in its shape hierarchy, and
  * indexed properties or elements along its prototype chain.
  */
-bool
-js::ObjectMayHaveExtraIndexedProperties(JSObject* obj)
+static bool
+ObjectMayHaveExtraIndexedProperties(JSObject* obj)
 {
     MOZ_ASSERT_IF(obj->hasDynamicPrototype(), !obj->isNative());
 

@@ -10,6 +10,8 @@
 #include <prthread.h>
 #include "mozilla/gfx/Types.h"
 
+#define  BACK_BUFFER_NUM 2
+
 namespace mozilla {
 namespace widget {
 
@@ -126,7 +128,7 @@ private:
   nsWaylandDisplay*         mWaylandDisplay;
   WindowBackBuffer*         mWaylandBuffer;
   LayoutDeviceIntRegion     mWaylandBufferDamage;
-  WindowBackBuffer*         mBackupBuffer;
+  WindowBackBuffer*         mBackupBuffer[BACK_BUFFER_NUM];
   RefPtr<gfxImageSurface>   mImageSurface;
   wl_callback*              mFrameCallback;
   wl_surface*               mLastCommittedSurface;

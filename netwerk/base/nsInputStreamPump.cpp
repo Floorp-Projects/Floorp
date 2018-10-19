@@ -574,10 +574,10 @@ nsInputStreamPump::OnStateTransfer()
         //       such an error.  (see bug 189672)
 
         // in most cases this QI will succeed (mAsyncStream is almost always
-        // a nsPipeInputStream, which implements nsISeekableStream::Tell).
+        // a nsPipeInputStream, which implements nsITellableStream::Tell).
         int64_t offsetBefore;
-        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
-        if (seekable && NS_FAILED(seekable->Tell(&offsetBefore))) {
+        nsCOMPtr<nsITellableStream> tellable = do_QueryInterface(mAsyncStream);
+        if (tellable && NS_FAILED(tellable->Tell(&offsetBefore))) {
             MOZ_ASSERT_UNREACHABLE("Tell failed on readable stream");
             offsetBefore = 0;
         }
@@ -602,11 +602,11 @@ nsInputStreamPump::OnStateTransfer()
         // don't enter this code if ODA failed or called Cancel
         if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(mStatus)) {
             // test to see if this ODA failed to consume data
-            if (seekable) {
+            if (tellable) {
                 // NOTE: if Tell fails, which can happen if the stream is
                 // now closed, then we assume that everything was read.
                 int64_t offsetAfter;
-                if (NS_FAILED(seekable->Tell(&offsetAfter)))
+                if (NS_FAILED(tellable->Tell(&offsetAfter)))
                     offsetAfter = offsetBefore + odaAvail;
                 if (offsetAfter > offsetBefore)
                     mStreamOffset += (offsetAfter - offsetBefore);

@@ -12,7 +12,6 @@ requestLongerTimeout(2);
 
 const ADDON_NOBG_ID = "test-devtools-webextension-nobg@mozilla.org";
 const ADDON_NOBG_NAME = "test-devtools-webextension-nobg";
-const ADDON_NOBG_PATH = "addons/test-devtools-webextension-nobg/manifest.json";
 
 const {
   BrowserToolboxProcess
@@ -26,9 +25,19 @@ const {
  *   webextension context);
  */
 add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
+  const addonFile = ExtensionTestCommon.generateXPI({
+    manifest: {
+      name: ADDON_NOBG_NAME,
+      applications: {
+        gecko: {id: ADDON_NOBG_ID},
+      },
+    },
+  });
+  registerCleanupFunction(() => addonFile.remove(false));
+
   const {
     tab, document, debugBtn,
-  } = await setupTestAboutDebuggingWebExtension(ADDON_NOBG_NAME, ADDON_NOBG_PATH);
+  } = await setupTestAboutDebuggingWebExtension(ADDON_NOBG_NAME, addonFile);
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
@@ -36,41 +45,37 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
         .getService(Ci.nsIEnvironment);
   const testScript = function() {
     /* eslint-disable no-undef */
-    toolbox.selectTool("inspector")
-      .then(inspector => {
-        return inspector.walker.querySelector(inspector.walker.rootNode, "body");
-      })
-      .then((nodeActor) => {
-        if (!nodeActor) {
-          throw new Error("nodeActor not found");
-        }
+    toolbox.selectTool("inspector").then(async inspector => {
+      const nodeActor = await inspector.walker.querySelector(
+        inspector.walker.rootNode, "body");
 
-        dump("Got a nodeActor\n");
+      if (!nodeActor) {
+        throw new Error("nodeActor not found");
+      }
 
-        if (!(nodeActor.inlineTextChild)) {
-          throw new Error("inlineTextChild not found");
-        }
+      if (!(nodeActor.inlineTextChild)) {
+        throw new Error("inlineTextChild not found");
+      }
 
-        dump("Got a nodeActor with an inline text child\n");
+      dump("Got a nodeActor with an inline text child\n");
 
-        const expectedValue = "Your addon does not have any document opened yet.";
-        const actualValue = nodeActor.inlineTextChild._form.nodeValue;
+      const expectedValue = "Your addon does not have any document opened yet.";
+      const actualValue = nodeActor.inlineTextChild._form.nodeValue;
 
-        if (actualValue !== expectedValue) {
-          throw new Error(
-            `mismatched inlineTextchild value: "${actualValue}" !== "${expectedValue}"`
-          );
-        }
+      if (actualValue !== expectedValue) {
+        throw new Error(
+          `mismatched inlineTextchild value: "${actualValue}" !== "${expectedValue}"`
+        );
+      }
 
-        dump("Got the expected inline text content in the selected node\n");
-        return Promise.resolve();
-      })
-      .then(() => toolbox.destroy())
-      .catch((error) => {
-        dump("Error while running code in the browser toolbox process:\n");
-        dump(error + "\n");
-        dump("stack:\n" + error.stack + "\n");
-      });
+      dump("Got the expected inline text content in the selected node\n");
+
+      await toolbox.destroy();
+    }).catch((error) => {
+      dump("Error while running code in the browser toolbox process:\n");
+      dump(error + "\n");
+      dump("stack:\n" + error.stack + "\n");
+    });
     /* eslint-enable no-undef */
   };
   env.set("MOZ_TOOLBOX_TEST_SCRIPT", "new " + testScript);

@@ -44,32 +44,32 @@ function test() {
     // createWorker in the tab to be resolved.
     yield createWorkerInTab(tab, WORKER1_URL);
     let { workers } = yield listWorkers(targetFront);
-    let [, workerClient1] = yield attachWorker(targetFront,
+    let [, workerTargetFront1] = yield attachWorker(targetFront,
                                                findWorker(workers, WORKER1_URL));
-    is(workerClient1.isClosed, false, "worker in tab 1 should not be closed");
+    is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");
 
     executeSoon(() => {
       BrowserTestUtils.loadURI(tab.linkedBrowser, TAB2_URL);
     });
-    yield waitForWorkerClose(workerClient1);
-    is(workerClient1.isClosed, true, "worker in tab 1 should be closed");
+    yield waitForWorkerClose(workerTargetFront1);
+    is(workerTargetFront1.isClosed, true, "worker in tab 1 should be closed");
 
     yield createWorkerInTab(tab, WORKER2_URL);
     ({ workers } = yield listWorkers(targetFront));
-    const [, workerClient2] = yield attachWorker(targetFront,
+    const [, workerTargetFront2] = yield attachWorker(targetFront,
                                                findWorker(workers, WORKER2_URL));
-    is(workerClient2.isClosed, false, "worker in tab 2 should not be closed");
+    is(workerTargetFront2.isClosed, false, "worker in tab 2 should not be closed");
 
     executeSoon(() => {
       tab.linkedBrowser.goBack();
     });
-    yield waitForWorkerClose(workerClient2);
-    is(workerClient2.isClosed, true, "worker in tab 2 should be closed");
+    yield waitForWorkerClose(workerTargetFront2);
+    is(workerTargetFront2.isClosed, true, "worker in tab 2 should be closed");
 
     ({ workers } = yield listWorkers(targetFront));
-    [, workerClient1] = yield attachWorker(targetFront,
+    [, workerTargetFront1] = yield attachWorker(targetFront,
                                            findWorker(workers, WORKER1_URL));
-    is(workerClient1.isClosed, false, "worker in tab 1 should not be closed");
+    is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");
 
     yield close(client);
     SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);

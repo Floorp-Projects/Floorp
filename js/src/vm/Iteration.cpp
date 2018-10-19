@@ -837,11 +837,11 @@ static inline bool
 CanCompareIterableObjectToCache(JSObject* obj)
 {
     if (obj->isNative()) {
-        return obj->as<NativeObject>().hasEmptyElements();
+        return obj->as<NativeObject>().getDenseInitializedLength() == 0;
     }
     if (obj->is<UnboxedPlainObject>()) {
         if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando()) {
-            return expando->hasEmptyElements();
+            return expando->getDenseInitializedLength() == 0;
         }
         return true;
     }
@@ -899,7 +899,7 @@ CanStoreInIteratorCache(JSObject* obj)
 {
     do {
         if (obj->isNative()) {
-            MOZ_ASSERT(obj->as<NativeObject>().hasEmptyElements());
+            MOZ_ASSERT(obj->as<NativeObject>().getDenseInitializedLength() == 0);
 
             // Typed arrays have indexed properties not captured by the Shape guard.
             // Enumerate hooks may add extra properties.

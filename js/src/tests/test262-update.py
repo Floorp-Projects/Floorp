@@ -21,7 +21,12 @@ from itertools import chain
 UNSUPPORTED_FEATURES = set([
     "tail-call-optimization",
     "class-fields-public",
+    "class-static-fields-public",
     "class-fields-private",
+    "class-static-fields-private",
+    "class-methods-private",
+    "class-static-methods-private",
+    "dynamic-import",
     "regexp-dotall",
     "regexp-lookbehind",
     "regexp-named-groups",
@@ -37,6 +42,8 @@ FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
     "BigInt": "!this.hasOwnProperty('BigInt')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
+    "Intl.ListFormat": "!Intl.hasOwnProperty('ListFormat')",
+    "Intl.Segmenter": "!Intl.hasOwnProperty('Segmenter')",
 }
 RELEASE_OR_BETA = set()
 
