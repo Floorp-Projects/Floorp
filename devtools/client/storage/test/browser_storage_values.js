@@ -46,7 +46,8 @@ const testCases = [
     getCookieId("c_encoded", "test1.example.org",
                 "/browser/devtools/client/storage/test/"),
     [
-      {name: "c_encoded", value: encodeURIComponent(JSON.stringify({foo: {foo1: "bar"}}))},
+      {name: "c_encoded",
+       value: encodeURIComponent(JSON.stringify({foo: {foo1: "bar"}}))},
     ],
   ],
   [null, [
