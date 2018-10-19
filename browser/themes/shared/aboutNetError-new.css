@@ -47,6 +47,10 @@ button:disabled {
   cursor: pointer;
 }
 
+#errorWhatToDoTitle {
+  margin-top: 2em;
+}
+
 #prefChangeContainer {
   display: none;
 }
