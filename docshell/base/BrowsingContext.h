@@ -124,8 +124,8 @@ public:
     nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
 
   nsISupports* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(BrowsingContext)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContext)
