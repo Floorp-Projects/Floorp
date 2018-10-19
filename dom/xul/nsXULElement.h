@@ -693,8 +693,6 @@ protected:
     void SetDrawsTitle(bool aState);
     void UpdateBrightTitlebarForeground(nsIDocument* aDocument);
 
-    void RemoveBroadcaster(const nsAString & broadcasterId);
-
 protected:
     void AddTooltipSupport();
     void RemoveTooltipSupport();
