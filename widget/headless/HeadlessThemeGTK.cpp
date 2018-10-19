@@ -45,6 +45,7 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       result.left = 7;
       break;
     case StyleAppearance::FocusOutline:
+    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
       result.top = 5;
@@ -100,12 +101,6 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       result.right = 1;
       result.bottom = 1;
       result.left = 0;
-      break;
-    case StyleAppearance::MenulistTextfield:
-      result.top = 1;
-      result.right = 0;
-      result.bottom = 1;
-      result.left = 1;
       break;
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
@@ -251,6 +246,7 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       aResult->width = 14;
       aResult->height = 26;
       break;
+    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
       aResult->width = 0;
