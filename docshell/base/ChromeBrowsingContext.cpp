@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ChromeBrowsingContext.h"
+#include "mozilla/dom/ChromeBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,6 +55,27 @@ ChromeBrowsingContext::ChromeBrowsingContext(BrowsingContext* aParent,
     const BrowsingContext* aContext) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   return static_cast<const ChromeBrowsingContext*>(aContext);
+}
+
+void ChromeBrowsingContext::RegisterWindowGlobal(WindowGlobalParent* aGlobal) {
+  MOZ_ASSERT(!mWindowGlobals.Contains(aGlobal), "Global already registered!");
+  mWindowGlobals.PutEntry(aGlobal);
+}
+
+void ChromeBrowsingContext::UnregisterWindowGlobal(
+    WindowGlobalParent* aGlobal) {
+  MOZ_ASSERT(mWindowGlobals.Contains(aGlobal), "Global not registered!");
+  mWindowGlobals.RemoveEntry(aGlobal);
+}
+
+void ChromeBrowsingContext::Traverse(nsCycleCollectionTraversalCallback& cb) {
+  ChromeBrowsingContext* tmp = this;
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowGlobals);
+}
+
+void ChromeBrowsingContext::Unlink() {
+  ChromeBrowsingContext* tmp = this;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobals);
 }
 
 }  // namespace dom
