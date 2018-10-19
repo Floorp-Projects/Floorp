@@ -19,10 +19,12 @@
         onkeypress="gSitePermissionsManager.onWindowKeyPress(event);">
 
   <linkset>
+    <link rel="localization" href="browser/preferences/preferences.ftl"/>
     <link rel="localization" href="browser/preferences/permissions.ftl"/>
   </linkset>
 
   <script src="chrome://browser/content/preferences/sitePermissions.js"/>
+  <script type="application/javascript" src="chrome://browser/content/preferences/in-content/extensionControlled.js"/>
 
   <keyset>
     <key data-l10n-id="permissions-close-key" modifiers="accel" oncommand="window.close();"/>
@@ -63,6 +65,13 @@
     <checkbox id="permissionsDisableCheckbox"/>
     <description id="permissionsDisableDescription"/>
     <spacer flex="1"/>
+    <hbox id="browserNotificationsPermissionExtensionContent" 
+          class="extension-controlled" align="center" hidden="true">
+      <description control="disableNotificationsPermissionExtension" flex="1"/>
+      <button id="disableNotificationsPermissionExtension"
+              class="extension-controlled-button accessory-button"
+              data-l10n-id="disable-extension"/>
+    </hbox>
     <hbox class="actionButtons" align="right" flex="1">
       <button oncommand="close();" icon="close" id="cancel"
               data-l10n-id="permissions-button-cancel" />

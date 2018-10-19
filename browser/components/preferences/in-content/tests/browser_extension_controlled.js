@@ -11,6 +11,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "proxyType", PROXY_PREF);
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
+const PERMISSIONS_URL = "chrome://browser/content/preferences/sitePermissions.xul";
+let sitePermissionsDialog;
 
 function getSupportsFile(path) {
   let cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
@@ -66,6 +68,19 @@ function waitForMessageContent(messageId, l10nId, doc) {
     getElement(messageId, doc),
     target => doc.l10n.getAttributes(target).id === l10nId,
     { childList: true });
+}
+
+async function openNotificationsPermissionDialog() {
+  let dialogOpened = promiseLoadSubDialog(PERMISSIONS_URL);
+
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    let doc = content.document;
+    let settingsButton = doc.getElementById("notificationSettingsButton");
+    settingsButton.click();
+  });
+
+  sitePermissionsDialog = await dialogOpened;
+  await sitePermissionsDialog.document.mozSubdialogReady;
 }
 
 add_task(async function testExtensionControlledHomepage() {
@@ -337,6 +352,75 @@ add_task(async function testExtensionControlledNewTab() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   let addon = await AddonManager.getAddonByID("@set_newtab");
   await addon.uninstall();
+});
+
+add_task(async function testExtensionControlledWebNotificationsPermission() {
+  let manifest = {
+    manifest_version: 2,
+    name: "TestExtension",
+    version: "1.0",
+    description: "Testing WebNotificationsDisable",
+    applications: {gecko: {id: "@web_notifications_disable"}},
+    permissions: [
+      "browserSettings",
+    ],
+    browser_action: {
+      default_title: "Testing",
+    },
+  };
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  await openNotificationsPermissionDialog();
+
+  let doc = sitePermissionsDialog.document;
+  let extensionControlledContent = doc.getElementById("browserNotificationsPermissionExtensionContent");
+
+  // Test that extension content is initially hidden.
+  ok(extensionControlledContent.hidden, "Extension content is initially hidden");
+
+  // Install an extension that will disable web notifications permission.
+  let messageShown = waitForMessageShown("browserNotificationsPermissionExtensionContent", doc);
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest,
+    useAddonManager: "permanent",
+    background() {
+      browser.browserSettings.webNotificationsDisabled.set({value: true});
+      browser.test.sendMessage("load-extension");
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("load-extension");
+  await messageShown;
+
+  let controlledDesc = extensionControlledContent.querySelector("description");
+  Assert.deepEqual(doc.l10n.getAttributes(controlledDesc), {
+    id: "extension-controlled-web-notifications",
+    args: {
+      name: "TestExtension",
+    },
+  }, "The user is notified that an extension is controlling the web notifications permission");
+  is(extensionControlledContent.hidden, false, "The extension controlled row is not hidden");
+
+  // Disable the extension.
+  doc.getElementById("disableNotificationsPermissionExtension").click();
+
+  // Verify the user is notified how to enable the extension.
+  await waitForEnableMessage(extensionControlledContent.id, doc);
+  is(doc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
+    "extension-controlled-enable",
+    "The user is notified of how to enable the extension again");
+
+  // Verify the enable message can be dismissed.
+  let hidden = waitForMessageHidden(extensionControlledContent.id, doc);
+  let dismissButton = controlledDesc.querySelector("image:last-of-type");
+  dismissButton.click();
+  await hidden;
+
+  // Verify that the extension controlled content in hidden again.
+  is(extensionControlledContent.hidden, true, "The extension controlled row is now hidden");
+
+  await extension.unload();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testExtensionControlledDefaultSearch() {

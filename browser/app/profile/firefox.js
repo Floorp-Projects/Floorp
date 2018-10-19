@@ -1519,15 +1519,11 @@ pref("browser.contentblocking.global-toggle.enabled", true);
 pref("browser.contentblocking.global-toggle.enabled", false);
 #endif
 
-// Define a set of default features for the Content Blocking UI
-#ifdef EARLY_BETA_OR_EARLIER
-pref("browser.contentblocking.fastblock.ui.enabled", true);
-pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
-#else
+// Disable the UI for FastBlock in product.
 pref("browser.contentblocking.fastblock.ui.enabled", false);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", false);
-#endif
 
+// Define a set of default features for the Content Blocking UI.
 pref("browser.contentblocking.trackingprotection.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
@@ -1779,8 +1775,3 @@ pref("prio.publicKeyB", "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35
 #if defined(NIGHTLY_BUILD) && defined(MOZ_LIBPRIO)
 pref("prio.enabled", true);
 #endif
-
-#ifdef NIGHTLY_BUILD
-pref("browser.fastblock.enabled", true);
-#endif
-

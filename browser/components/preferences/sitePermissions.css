@@ -23,8 +23,12 @@
   margin-inline-end: 5px;
 }
 
+#browserNotificationsPermissionExtensionContent,
 #permissionsDisableDescription {
   margin-inline-start: 32px;
+}
+
+#permissionsDisableDescription {
   color: #737373;
   line-height: 110%;
 }
