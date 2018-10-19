@@ -55,6 +55,7 @@ export class SimpleSnippet extends React.PureComponent {
   renderText() {
     const {props} = this;
     return (<RichText text={props.content.text}
+      customElements={this.props.customElements}
       localization_id="text"
       links={props.content.links}
       sendClick={props.sendClick} />);
@@ -62,11 +63,18 @@ export class SimpleSnippet extends React.PureComponent {
 
   render() {
     const {props} = this;
-    const className = `SimpleSnippet${props.content.tall ? " tall" : ""}`;
-    return (<SnippetBase {...props} className={className}>
+    let className = "SimpleSnippet";
+    if (props.className) {
+      className += ` ${props.className}`;
+    }
+    if (props.content.tall) {
+      className += " tall";
+    }
+    return (<SnippetBase {...props} className={className} textStyle={this.props.textStyle}>
       <img src={safeURI(props.content.icon) || DEFAULT_ICON_PATH} className="icon" />
       <div>
         {this.renderTitleIcon()} {this.renderTitle()} <p className="body">{this.renderText()}</p>
+        {this.props.extraContent}
       </div>
       {<div>{this.renderButton()}</div>}
     </SnippetBase>);
