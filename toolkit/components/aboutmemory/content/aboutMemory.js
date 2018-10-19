@@ -1127,7 +1127,7 @@ TreeNode.prototype = {
     switch (this._units) {
       case UNITS_BYTES: return formatBytes(this._amount);
       case UNITS_COUNT:
-      case UNITS_COUNT_CUMULATIVE: return formatInt(this._amount);
+      case UNITS_COUNT_CUMULATIVE: return formatNum(this._amount);
       case UNITS_PERCENTAGE: return formatPercentage(this._amount);
       default:
         throw "Invalid memory report(s): bad units in TreeNode.toString";
@@ -1505,64 +1505,46 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   appendLink("end", "start", "↑");
 }
 
-/**
- * Determines if a number has a negative sign when converted to a string.
- * Works even for -0.
- *
- * @param aN
- *        The number.
- * @return A boolean.
- */
-function hasNegativeSign(aN) {
-  if (aN === 0) { // this succeeds for 0 and -0
-    return 1 / aN === -Infinity; // this succeeds for -0
-  }
-  return aN < 0;
-}
+// Used for UNITS_BYTES values that are printed as MiB.
+const kMBStyle = {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+};
+
+// Used for UNITS_PERCENTAGE values.
+const kPercStyle = {
+  style: "percent",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+};
+
+// Used for fractions within the tree.
+const kFracStyle = {
+  style: "percent",
+  minimumIntegerDigits: 2,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+};
+
+// Used for special-casing 100% fractions within the tree.
+const kFrac1Style = {
+  style: "percent",
+  minimumIntegerDigits: 3,
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+};
 
 /**
  * Formats an int as a human-readable string.
  *
  * @param aN
  *        The integer to format.
- * @param aExtra
- *        An extra string to tack onto the end.
+ * @param aOptions
+ *        Optional options object.
  * @return A human-readable string representing the int.
- *
- * Note: building an array of chars and converting that to a string with
- * Array.join at the end is more memory efficient than using string
- * concatenation.  See bug 722972 for details.
  */
-function formatInt(aN, aExtra) {
-  let neg = false;
-  if (hasNegativeSign(aN)) {
-    neg = true;
-    aN = -aN;
-  }
-  let s = [];
-  while (true) {
-    let k = aN % 1000;
-    aN = Math.floor(aN / 1000);
-    if (aN > 0) {
-      if (k < 10) {
-        s.unshift(",00", k);
-      } else if (k < 100) {
-        s.unshift(",0", k);
-      } else {
-        s.unshift(",", k);
-      }
-    } else {
-      s.unshift(k);
-      break;
-    }
-  }
-  if (neg) {
-    s.unshift("-");
-  }
-  if (aExtra) {
-    s.push(aExtra);
-  }
-  return s.join("");
+function formatNum(aN, aOptions) {
+  return aN.toLocaleString("en-US", aOptions);
 }
 
 /**
@@ -1573,29 +1555,43 @@ function formatInt(aN, aExtra) {
  * @return The string representation.
  */
 function formatBytes(aBytes) {
-  let unit = gVerbose.checked ? " B" : " MB";
-
-  let s;
-  if (gVerbose.checked) {
-    s = formatInt(aBytes, unit);
-  } else {
-    let mbytes = (aBytes / (1024 * 1024)).toFixed(2);
-    let a = String(mbytes).split(".");
-    // If the argument to formatInt() is -0, it will print the negative sign.
-    s = formatInt(Number(a[0])) + "." + a[1] + unit;
-  }
-  return s;
+  return gVerbose.checked
+       ? `${formatNum(aBytes)} B`
+       : `${formatNum(aBytes / (1024 * 1024), kMBStyle)} MB`;
 }
 
 /**
- * Converts a percentage to an appropriate string representation.
+ * Converts a UNITS_PERCENTAGE value to an appropriate string representation.
  *
  * @param aPerc100x
  *        The percentage, multiplied by 100 (see nsIMemoryReporter).
  * @return The string representation
  */
 function formatPercentage(aPerc100x) {
-  return (aPerc100x / 100).toFixed(2) + "%";
+  // A percentage like 12.34% will have an aPerc100x value of 1234, and we need
+  // to divide that by 10,000 to get the 0.1234 that toLocaleString() wants.
+  return formatNum(aPerc100x / 10000, kPercStyle);
+}
+
+/*
+ * Converts a tree fraction to an appropriate string representation.
+ *
+ * @param aNum
+ *        The numerator.
+ * @param aDenom
+ *        The denominator.
+ * @return The string representation
+ */
+function formatTreeFrac(aNum, aDenom) {
+  // Two special behaviours here:
+  // - We treat 0 / 0 as 100%.
+  // - We want 4 digits, as much as possible, because it gives good vertical
+  //   alignment. For positive numbers, 00.00%--99.99% works straighforwardly,
+  //   but 100.0% needs special handling.
+  let num = aDenom === 0 ? 1 : (aNum / aDenom);
+  return (0.99995 <= num && num <= 1)
+         ? formatNum(1, kFrac1Style)
+         : formatNum(num, kFracStyle);
 }
 
 /**
@@ -1849,15 +1845,9 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
                           valueText);
 
     // The percentage (omitted for single entries).
-    let percText;
     if (!aT._isDegenerate) {
-      // Treat 0 / 0 as 100%.
-      let num = aRoot._amount === 0 ? 100 : (100 * aT._amount / aRoot._amount);
-      let numText = num.toFixed(2);
-      percText = numText === "100.00"
-               ? " (100.0%)"
-               : (0 <= num && num < 10 ? " (0" : " (") + numText + "%)";
-      appendElementWithText(d, "span", "mrPerc", percText);
+      let percText = formatTreeFrac(aT._amount, aRoot._amount);
+      appendElementWithText(d, "span", "mrPerc", ` (${percText})`);
     }
 
     // The separator.
