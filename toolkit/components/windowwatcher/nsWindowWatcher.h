@@ -88,7 +88,7 @@ protected:
                               nsIArray* aArgv,
                               bool aIsPopupSpam,
                               bool aForceNoOpener,
-                              nsDocShellLoadState* aLoadState,
+                              nsDocShellLoadInfo* aLoadInfo,
                               mozIDOMWindowProxy** aResult);
 
   static nsresult URIfromURL(const char* aURL,
