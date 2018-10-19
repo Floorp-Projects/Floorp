@@ -1167,12 +1167,72 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
 #endif
 }
 
+#ifdef JS_JITSPEW
+static bool
+GetStubEnteredCount(ICStub* stub, uint32_t* count)
+{
+    if (stub->isCacheIR_Regular()) {
+        *count = stub->toCacheIR_Regular()->enteredCount();
+        return true;
+    }
+    return false;
+}
+
+static void
+DumpICInfo(JSScript* script)
+{
+    MOZ_ASSERT(script->hasBaselineScript());
+    BaselineScript* blScript = script->baselineScript();
+
+    if (!JitSpewEnabled(JitSpew_BaselineIC_Statistics)) {
+        return;
+    }
+
+    Fprinter& out = JitSpewPrinter();
+
+    const char* filename = script->filename() ? script->filename() : "unknown";
+    out.printf("Dumping IC info for %s:%d\n", filename,
+            PCToLineNumber(script, script->code()));
+
+    for (size_t i = 0; i < blScript->numICEntries(); i++) {
+        ICEntry& entry = blScript->icEntry(i);
+        if (!entry.hasStub()) {
+            continue;
+        }
+
+        unsigned column;
+        jsbytecode* pc = entry.pc(script);
+        unsigned int line = PCToLineNumber(script, pc, &column);
+        out.printf("\t%s:%u:%u (%s) \t", filename, line, column, CodeName[*pc]);
+
+        ICStub* stub = entry.firstStub();
+        while (stub) {
+            uint32_t count;
+            if (GetStubEnteredCount(stub, &count)) {
+                out.printf("%u -> ", count);
+            } else if (stub->isFallback()) {
+                out.printf("(fb) %u", stub->toFallbackStub()->enteredCount());
+            } else {
+                out.printf(" <unknown> -> ");
+            }
+            stub = stub->next();
+        }
+        out.printf("\n");
+    }
+}
+#endif
+
+
 void
 jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script)
 {
     if (!script->hasBaselineScript()) {
         return;
     }
+
+#ifdef JS_JITSPEW
+    DumpICInfo(script);
+#endif
 
     if (script->baselineScript()->active()) {
         // Script is live on the stack. Keep the BaselineScript, but destroy
