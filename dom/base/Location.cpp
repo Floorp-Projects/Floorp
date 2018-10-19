@@ -9,7 +9,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIDocShell.h"
-#include "nsDocShellLoadState.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
@@ -61,7 +61,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Location, mInnerWindow)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Location)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Location)
 
-already_AddRefed<nsDocShellLoadState>
+already_AddRefed<nsDocShellLoadInfo>
 Location::CheckURL(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
                    ErrorResult& aRv)
 {
@@ -152,16 +152,16 @@ Location::CheckURL(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   }
 
   // Create load info
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
-  loadState->SetTriggeringPrincipal(triggeringPrincipal);
+  loadInfo->SetTriggeringPrincipal(triggeringPrincipal);
 
   if (sourceURI) {
-    loadState->SetReferrer(sourceURI);
-    loadState->SetReferrerPolicy(referrerPolicy);
+    loadInfo->SetReferrer(sourceURI);
+    loadInfo->SetReferrerPolicy(referrerPolicy);
   }
 
-  return loadState.forget();
+  return loadInfo.forget();
 }
 
 nsresult
@@ -212,31 +212,27 @@ Location::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (docShell) {
-
-    RefPtr<nsDocShellLoadState> loadState =
+    RefPtr<nsDocShellLoadInfo> loadInfo =
       CheckURL(aURI, aSubjectPrincipal, aRv);
     if (aRv.Failed()) {
       return;
     }
 
     if (aReplace) {
-      loadState->SetLoadType(LOAD_STOP_CONTENT_AND_REPLACE);
+      loadInfo->SetLoadType(LOAD_STOP_CONTENT_AND_REPLACE);
     } else {
-      loadState->SetLoadType(LOAD_STOP_CONTENT);
+      loadInfo->SetLoadType(LOAD_STOP_CONTENT);
     }
 
     // Get the incumbent script's browsing context to set as source.
     nsCOMPtr<nsPIDOMWindowInner> sourceWindow =
       do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
     if (sourceWindow) {
-      loadState->SetSourceDocShell(sourceWindow->GetDocShell());
+      loadInfo->SetSourceDocShell(sourceWindow->GetDocShell());
     }
 
-    loadState->SetURI(aURI);
-    loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
-    loadState->SetFirstParty(true);
-
-    nsresult rv = docShell->LoadURI(loadState);
+    nsresult rv = docShell->LoadURI(aURI, loadInfo,
+                                    nsIWebNavigation::LOAD_FLAGS_NONE, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
     }

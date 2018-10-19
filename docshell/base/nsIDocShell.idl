@@ -17,7 +17,7 @@
 #include "nsIURI.h"
 class nsPresContext;
 class nsIPresShell;
-class nsDocShellLoadState;
+class nsDocShellLoadInfo;
 namespace mozilla {
 class Encoding;
 class HTMLEditor;
@@ -63,7 +63,7 @@ interface nsICommandManager;
 interface nsICommandParams;
 interface nsILoadURIDelegate;
 native TabChildRef(already_AddRefed<nsITabChild>);
-native nsDocShellLoadStatePtr(nsDocShellLoadState*);
+native nsDocShellLoadInfoPtr(nsDocShellLoadInfo*);
 
 webidl BrowsingContext;
 webidl ContentFrameMessageManager;
@@ -78,9 +78,23 @@ interface nsIDocShell : nsIDocShellTreeItem
    * however, the URL dispatcher will go through its normal process of content
    * loading.
    *
-   * @param loadState   - This is the extended load info for this load.
+   * @param uri        - The URI to load.
+   * @param loadInfo   - This is the extended load info for this load.  This
+   *                     most often will be null, but if you need to do
+   *                     additional setup for this load you can get a loadInfo
+   *                     object by calling createLoadInfo.  Once you have this
+   *                     object you can set the needed properties on it and
+   *                     then pass it to loadURI.
+   * @param aLoadFlags - Flags to modify load behaviour. Flags are defined in
+   *                     nsIWebNavigation.  Note that using flags outside
+   *                     LOAD_FLAGS_MASK is only allowed if passing in a
+   *                     non-null loadInfo.  And even some of those might not
+   *                     be allowed.  Use at your own risk.
    */
-  [noscript]void loadURI(in nsDocShellLoadStatePtr loadState);
+  [noscript]void loadURI(in nsIURI uri,
+                         in nsDocShellLoadInfoPtr loadInfo,
+                         in unsigned long aLoadFlags,
+                         in boolean firstParty);
 
   const long INTERNAL_LOAD_FLAGS_NONE                    = 0x0;
   const long INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL       = 0x1;
@@ -90,12 +104,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   // This flag marks the first load in this object
   // @see nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD
   const long INTERNAL_LOAD_FLAGS_FIRST_LOAD              = 0x8;
-
-
-  // The set of flags that should not be set before calling into
-  // nsDocShell::LoadURI and other nsDocShell loading functions.
-  const long INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS     = 0xf;
-
 
   const long INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER       = 0x10;
   const long INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES     = 0x20;
@@ -190,7 +198,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in nsIPrincipal aPrincipalToInherit,
                               in uint32_t aFlags,
                               in AString aWindowTarget,
-                              in ACString aTypeHint,
+                              in string aTypeHint,
                               in AString aFileName,
                               in nsIInputStream aPostDataStream,
                               in nsIInputStream aHeadersStream,
