@@ -1471,7 +1471,8 @@ PendingLookup::SendRemoteQueryInternal()
   nsCString sha256Hash;
   rv = mQuery->GetSha256Hash(sha256Hash);
   NS_ENSURE_SUCCESS(rv, rv);
-  mRequest.mutable_digests()->set_sha256(sha256Hash.Data());
+  mRequest.mutable_digests()->set_sha256(
+    std::string(sha256Hash.Data(), sha256Hash.Length()));
   mRequest.set_file_basename(mFileName.get());
   mRequest.set_download_type(GetDownloadType(mFileName));
 
