@@ -402,9 +402,9 @@ function onLoad() {
   let search = location.href.split("?")[1];
   if (search) {
     let searchSplit = search.split("&");
-    for (let i = 0; i < searchSplit.length; i++) {
-      if (searchSplit[i].toLowerCase().startsWith("file=")) {
-        let filename = searchSplit[i].substring("file=".length);
+    for (let s of searchSplit) {
+      if (s.toLowerCase().startsWith("file=")) {
+        let filename = s.substring("file=".length);
         updateAboutMemoryFromFile(decodeURIComponent(filename));
         return;
       }
@@ -566,8 +566,7 @@ function updateAboutMemoryFromJSONObject(aObj) {
 
     let processMemoryReportsFromFile =
         function(aHandleReport, aDisplayReports) {
-      for (let i = 0; i < aObj.reports.length; i++) {
-        let r = aObj.reports[i];
+      for (let r of aObj.reports) {
         aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
                       r.description, r._presence);
       }
@@ -772,9 +771,7 @@ DReport.ADDED_FOR_BALANCE = 3;
  */
 function makeDReportMap(aJSONReports) {
   let dreportMap = {};
-  for (let i = 0; i < aJSONReports.length; i++) {
-    let jr = aJSONReports[i];
-
+  for (let jr of aJSONReports) {
     assert(jr.process !== undefined, "Missing process");
     assert(jr.path !== undefined, "Missing path");
     assert(jr.kind !== undefined, "Missing kind");
@@ -1045,8 +1042,7 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize) {
     });
 
     // Generate output for each process.
-    for (let i = 0; i < processes.length; i++) {
-      let process = processes[i];
+    for (let [i, process] of processes.entries()) {
       let section = appendElement(gMain, "div", "section");
 
       appendProcessAboutMemoryElements(section, i, process,
@@ -1092,9 +1088,9 @@ function TreeNode(aUnsafeName, aUnits, aIsDegenerate) {
 TreeNode.prototype = {
   findKid(aUnsafeName) {
     if (this._kids) {
-      for (let i = 0; i < this._kids.length; i++) {
-        if (this._kids[i]._unsafeName === aUnsafeName) {
-          return this._kids[i];
+      for (let kid of this._kids) {
+        if (kid._unsafeName === aUnsafeName) {
+          return kid;
         }
       }
     }
@@ -1120,8 +1116,8 @@ TreeNode.prototype = {
 
     // Compute the maximum absolute value of all descendants.
     let max = Math.abs(this._amount);
-    for (let i = 0; i < this._kids.length; i++) {
-      max = Math.max(max, this._kids[i].maxAbsDescendant());
+    for (let kid of this._kids) {
+      max = Math.max(max, kid.maxAbsDescendant());
     }
     this._maxAbsDescendant = max;
     return max;
@@ -1200,8 +1196,8 @@ function fillInTree(aRoot) {
       // Non-leaf node with multiple children.  Derive its _amount and
       // _description entirely from its children...
       let kidsBytes = 0;
-      for (let i = 0; i < aT._kids.length; i++) {
-        kidsBytes += fillInNonLeafNodes(aT._kids[i]);
+      for (let kid of aT._kids) {
+        kidsBytes += fillInNonLeafNodes(kid);
       }
 
       // ... except in one special case. When diffing two memory report sets,
@@ -1300,8 +1296,8 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT) {
   // _hideKids property and process all children.
   if (isInsignificant(aT._kids[0])) {
     aT._hideKids = true;
-    for (let i = 0; i < aT._kids.length; i++) {
-      sortTreeAndInsertAggregateNodes(aTotalBytes, aT._kids[i]);
+    for (let kid of aT._kids) {
+      sortTreeAndInsertAggregateNodes(aTotalBytes, kid);
     }
     return;
   }
@@ -1332,8 +1328,8 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT) {
       aT._kids.sort(TreeNode.compareAmounts);
 
       // Process the moved children.
-      for (i = 0; i < aggT._kids.length; i++) {
-        sortTreeAndInsertAggregateNodes(aTotalBytes, aggT._kids[i]);
+      for (let kid of aggT._kids) {
+        sortTreeAndInsertAggregateNodes(aTotalBytes, kid);
       }
       return;
     }
@@ -1487,13 +1483,11 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
 
   // Now generate the elements, putting non-degenerate trees first.
   let pre = appendSectionHeader(aP, "Other Measurements");
-  for (let i = 0; i < otherTrees.length; i++) {
-    let t = otherTrees[i];
+  for (let t of otherTrees) {
     appendTreeElements(pre, t, aProcess, "");
     appendTextNode(pre, "\n"); // blank lines after non-degenerate trees
   }
-  for (let i = 0; i < otherDegenerates.length; i++) {
-    let t = otherDegenerates[i];
+  for (let t of otherDegenerates) {
     let padText = pad("", maxStringLength - t.toString().length, " ");
     appendTreeElements(pre, t, aProcess, padText);
   }
@@ -1892,8 +1886,7 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       let tlThisForLast = aTlKids + "└──";
       let tlKidsForLast = aTlKids + "   ";
 
-      for (let i = 0; i < aT._kids.length; i++) {
-        let kid = aT._kids[i];
+      for (let [i, kid] of aT._kids.entries()) {
         let isLast = i == aT._kids.length - 1;
         aUnsafeNames.push(kid._unsafeName);
         appendTreeElements2(d, aProcess, aUnsafeNames, aRoot, kid,
