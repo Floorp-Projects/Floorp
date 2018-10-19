@@ -32,6 +32,7 @@ function PaymentUIService() {
       prefix: "Payment UI Service",
     });
   });
+  Services.wm.addListener(this);
   this.log.debug("constructor");
 }
 
@@ -40,6 +41,19 @@ PaymentUIService.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
   DIALOG_URL: "chrome://payments/content/paymentDialogWrapper.xul",
   REQUEST_ID_PREFIX: "paymentRequest-",
+
+  // nsIWindowMediatorListener implementation:
+
+  onOpenWindow(aWindow) {},
+  onCloseWindow(aWindow) {
+    let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    let requestId = this.requestIdForWindow(domWindow);
+    if (!requestId || !paymentSrv.getPaymentRequestById(requestId)) {
+      return;
+    }
+    this.log.debug(`onCloseWindow, close of window for active requestId: ${requestId}`);
+    this.rejectPaymentForClosedDialog(requestId);
+  },
 
   // nsIPaymentUIService implementation:
 
@@ -65,6 +79,20 @@ PaymentUIService.prototype = {
 
     abortResponse.init(requestId, response);
     paymentSrv.respondPayment(abortResponse);
+  },
+
+  rejectPaymentForClosedDialog(requestId) {
+    this.log.debug("rejectPaymentForClosedDialog:", requestId);
+    const rejectResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"]
+                            .createInstance(Ci.nsIPaymentShowActionResponse);
+    rejectResponse.init(requestId,
+                        Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
+                        "", // payment method
+                        null, // payment method data
+                        "", // payer name
+                        "", // payer email
+                        "");// payer phone
+    paymentSrv.respondPayment(rejectResponse);
   },
 
   completePayment(requestId) {
