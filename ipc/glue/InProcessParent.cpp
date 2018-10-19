@@ -18,7 +18,7 @@ IPCResult
 InProcessParent::RecvPWindowGlobalConstructor(PWindowGlobalParent* aActor,
                                               const WindowGlobalInit& aInit)
 {
-  static_cast<WindowGlobalParent*>(aActor)->Init();
+  static_cast<WindowGlobalParent*>(aActor)->Init(aInit);
   return IPC_OK();
 }
 
