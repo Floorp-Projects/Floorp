@@ -12,6 +12,7 @@
 #include "nsIFile.h"
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
+#include "nsXULAppAPI.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -134,60 +135,44 @@ nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated)
 }
 
 #if defined(MOZ_CONTENT_SANDBOX)
+// Get the path to the .app directory for the parent process. When executing
+// in the child process, this is the outer .app (such as Firefox.app) and not
+// the inner .app containing the child process executable.
 bool
-nsMacUtilsImpl::GetAppPaths(nsCString &aAppPath,
-                            nsCString &aAppBinaryPath,
-                            nsCString &aAppDir)
+nsMacUtilsImpl::GetAppPath(nsCString &aAppPath)
 {
   nsAutoCString appPath;
   nsAutoCString appBinaryPath(
     (CommandLine::ForCurrentProcess()->argv()[0]).c_str());
 
+  auto pattern = NS_LITERAL_CSTRING(".app/Contents/MacOS/");
   nsAutoCString::const_iterator start, end;
   appBinaryPath.BeginReading(start);
   appBinaryPath.EndReading(end);
-  if (RFindInReadable(NS_LITERAL_CSTRING(".app/Contents/MacOS/"), start, end)) {
+  if (RFindInReadable(pattern, start, end)) {
     end = start;
-    ++end; ++end; ++end; ++end;
     appBinaryPath.BeginReading(start);
+
+    // If we're executing in a child process, get the
+    // parent .app by searching right-to-left once more.
+    if (!XRE_IsParentProcess()) {
+      if (RFindInReadable(pattern, start, end)) {
+        end = start;
+        appBinaryPath.BeginReading(start);
+      } else {
+        return false;
+      }
+    }
+
+    ++end; ++end; ++end; ++end;
     appPath.Assign(Substring(start, end));
   } else {
     return false;
   }
 
-  nsCOMPtr<nsIFile> app, appBinary;
+  nsCOMPtr<nsIFile> app;
   nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appPath),
                                 true, getter_AddRefs(app));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appBinaryPath),
-                       true, getter_AddRefs(appBinary));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIFile> appDir;
-  nsCOMPtr<nsIProperties> dirSvc =
-    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-  if (!dirSvc) {
-    return false;
-  }
-  rv = dirSvc->Get(NS_GRE_DIR,
-                   NS_GET_IID(nsIFile), getter_AddRefs(appDir));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  bool exists;
-  rv = appDir->Exists(&exists);
-  if (NS_FAILED(rv) || !exists) {
-    return false;
-  }
-
-  // appDir points to .app/Contents/Resources, for our purposes we want
-  // .app/Contents.
-  nsCOMPtr<nsIFile> appDirParent;
-  rv = appDir->GetParent(getter_AddRefs(appDirParent));
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -197,18 +182,6 @@ nsMacUtilsImpl::GetAppPaths(nsCString &aAppPath,
     return false;
   }
   app->GetNativePath(aAppPath);
-
-  rv = appBinary->Normalize();
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  appBinary->GetNativePath(aAppBinaryPath);
-
-  rv = appDirParent->Normalize();
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  appDirParent->GetNativePath(aAppDir);
 
   return true;
 }
