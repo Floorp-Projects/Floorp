@@ -1,6 +1,5 @@
 import ConfigParser
 import argparse
-import hashlib
 import imp
 import os
 import sys
@@ -106,8 +105,7 @@ def run(src_root, obj_root, logger=None, **kwargs):
         logger.debug("Skipping manifest download")
 
     if kwargs["update"] or kwargs["rebuild"]:
-        manifests = update(logger, src_wpt_dir, test_paths, rebuild=kwargs["rebuild"],
-                           cache_root=kwargs["cache_root"])
+        manifests = update(logger, src_wpt_dir, test_paths, rebuild=kwargs["rebuild"])
     else:
         logger.debug("Skipping manifest update")
         manifests = load_manifests(test_paths)
@@ -166,17 +164,24 @@ def generate_config(logger, repo_root, wpt_dir, dest_path, force_rewrite=False):
     return dest_config_path
 
 
-def update(logger, wpt_dir, test_paths, rebuild=False, config_dir=None, cache_root=None):
+def update(logger, wpt_dir, test_paths, rebuild=False, config_dir=None):
     rv = {}
-    wptdir_hash = hashlib.sha256(os.path.abspath(wpt_dir)).hexdigest()
+
     for url_base, paths in test_paths.iteritems():
+        m = None
         manifest_path = paths["manifest_path"]
-        this_cache_root = os.path.join(cache_root, wptdir_hash, os.path.dirname(paths["manifest_rel_path"]))
-        m = manifest.manifest.load_and_update(paths["tests_path"],
-                                              manifest_path,
-                                              url_base,
-                                              working_copy=True,
-                                              cache_root=this_cache_root)
+        if not rebuild and os.path.exists(manifest_path):
+            logger.info("Updating manifest %s" % manifest_path)
+            try:
+                m = manifest.manifest.load(paths["tests_path"], manifest_path)
+            except manifest.manifest.ManifestVersionMismatch:
+                logger.info("Manifest format changed, rebuilding")
+        if m is None:
+            logger.info("Recreating manifest %s" % manifest_path)
+            m = manifest.manifest.Manifest(url_base)
+        manifest.update.update(paths["tests_path"], m, working_copy=True)
+        manifest.manifest.write(m, manifest_path)
+
         path_data = {"url_base": url_base}
         path_data.update(paths)
         rv[m] = path_data
