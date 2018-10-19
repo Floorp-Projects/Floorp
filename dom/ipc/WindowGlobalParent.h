@@ -17,7 +17,7 @@ class nsFrameLoader;
 namespace mozilla {
 namespace dom  {
 
-class BrowsingContext;
+class ChromeBrowsingContext;
 class WindowGlobalChild;
 
 /**
@@ -46,7 +46,7 @@ public:
   nsIPrincipal* DocumentPrincipal() { return mDocumentPrincipal; }
 
   // The BrowsingContext which this WindowGlobal has been loaded into.
-  already_AddRefed<dom::BrowsingContext> BrowsingContext();
+  ChromeBrowsingContext* BrowsingContext() { return mBrowsingContext; }
 
   // Get the root nsFrameLoader object for the tree of BrowsingContext nodes
   // which this WindowGlobal is a part of. This will be the nsFrameLoader
@@ -63,7 +63,7 @@ public:
 
   // Initialize the mFrameLoader fields for a created WindowGlobalParent. Must
   // be called after setting the Manager actor.
-  void Init();
+  void Init(const WindowGlobalInit& aInit);
 
 protected:
   // IPC messages
@@ -74,17 +74,12 @@ protected:
 private:
   ~WindowGlobalParent();
 
-  // XXX(nika): We should store the BrowsingContext here. Unfortunately, the
-  // parent process is not sent down the BrowsingContext object until
-  // potentially after the WindowGlobalChild has been created. We should change
-  // this in the future.
-  uint64_t mBrowsingContextId;
-
   // NOTE: This document principal doesn't reflect possible |document.domain|
   // mutations which may have been made in the actual document.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   RefPtr<nsFrameLoader> mFrameLoader;
+  RefPtr<ChromeBrowsingContext> mBrowsingContext;
   bool mInProcess;
   bool mIPCClosed;
 };
