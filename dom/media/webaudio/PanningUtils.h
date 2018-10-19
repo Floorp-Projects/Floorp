@@ -52,6 +52,8 @@ template<typename T, typename U>
 void ApplyStereoPanning(const AudioBlock& aInput, AudioBlock* aOutput,
                         T aGainL, T aGainR, U aOnLeft)
 {
+  aOutput->AllocateChannels(2);
+
   if (aInput.ChannelCount() == 1) {
     GainMonoToStereo(aInput, aOutput, aGainL, aGainR);
   } else {
