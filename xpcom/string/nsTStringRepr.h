@@ -258,9 +258,9 @@ public:
   bool NS_FASTCALL EqualsASCII(const char* aData) const;
 
   // EqualsLiteral must ONLY be called with an actual literal string, or
-  // a char array *constant* declared without an explicit size.
-  // Do not attempt to use it with a non-constant char array variable.
-  // Use EqualsASCII for that.
+  // a char array *constant* declared without an explicit size and with an
+  // initializer that is a string literal or is otherwise null-terminated.
+  // Use EqualsASCII for other char array variables.
   // (Although this method may happen to produce expected results for other
   // char arrays that have bound one greater than the sequence of interest,
   // such use is discouraged for reasons of readability and maintainability.)
@@ -282,10 +282,10 @@ public:
                                         size_type aLen) const;
   bool NS_FASTCALL LowerCaseEqualsASCII(const char* aData) const;
 
-  // LowerCaseEqualsLiteral must ONLY be called with an actual
-  // literal string, or a char array *constant* declared without an
-  // explicit size.  Do not attempt to use it with a non-constant char array
-  // variable. Use LowerCaseEqualsASCII for that.
+  // LowerCaseEqualsLiteral must ONLY be called with an actual literal string,
+  // or a char array *constant* declared without an explicit size and with an
+  // initializer that is a string literal or is otherwise null-terminated.
+  // Use LowerCaseEqualsASCII for other char array variables.
   // (Although this method may happen to produce expected results for other
   // char arrays that have bound one greater than the sequence of interest,
   // such use is discouraged for reasons of readability and maintainability.)
