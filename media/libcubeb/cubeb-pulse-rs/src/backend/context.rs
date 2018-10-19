@@ -33,8 +33,10 @@ pub struct PulseContext {
     pub context: Option<pulse::Context>,
     pub default_sink_info: Option<DefaultInfo>,
     pub context_name: Option<CString>,
-    pub collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
-    pub collection_changed_user_ptr: *mut c_void,
+    pub input_collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
+    pub input_collection_changed_user_ptr: *mut c_void,
+    pub output_collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
+    pub output_collection_changed_user_ptr: *mut c_void,
     pub error: bool,
     pub version_2_0_0: bool,
     pub version_0_9_8: bool,
@@ -58,8 +60,10 @@ impl PulseContext {
             context: None,
             default_sink_info: None,
             context_name: name,
-            collection_changed_callback: None,
-            collection_changed_user_ptr: ptr::null_mut(),
+            input_collection_changed_callback: None,
+            input_collection_changed_user_ptr: ptr::null_mut(),
+            output_collection_changed_callback: None,
+            output_collection_changed_user_ptr: ptr::null_mut(),
             error: true,
             version_0_9_8: false,
             version_2_0_0: false,
@@ -77,8 +81,10 @@ impl PulseContext {
             context: None,
             default_sink_info: None,
             context_name: name,
-            collection_changed_callback: None,
-            collection_changed_user_ptr: ptr::null_mut(),
+            input_collection_changed_callback: None,
+            input_collection_changed_user_ptr: ptr::null_mut(),
+            output_collection_changed_callback: None,
+            output_collection_changed_user_ptr: ptr::null_mut(),
             error: true,
             version_0_9_8: false,
             version_2_0_0: false,
@@ -474,11 +480,22 @@ impl ContextOps for PulseContext {
                         };
                         cubeb_log!("{} {} index {}", op, dev, index);
                     }
-                    unsafe {
-                        ctx.collection_changed_callback.unwrap()(
-                            ctx as *mut _ as *mut _,
-                            ctx.collection_changed_user_ptr,
-                        );
+
+                    if f == pulse::SubscriptionEventFacility::Source {
+                        unsafe {
+                            ctx.input_collection_changed_callback.unwrap()(
+                                ctx as *mut _ as *mut _,
+                                ctx.input_collection_changed_user_ptr,
+                            );
+                        }
+                    }
+                    if f == pulse::SubscriptionEventFacility::Sink {
+                        unsafe {
+                            ctx.output_collection_changed_callback.unwrap()(
+                                ctx as *mut _ as *mut _,
+                                ctx.output_collection_changed_user_ptr,
+                            );
+                        }
                     }
                 }
             }
@@ -492,25 +509,34 @@ impl ContextOps for PulseContext {
             ctx.mainloop.signal();
         }
 
-        self.collection_changed_callback = cb;
-        self.collection_changed_user_ptr = user_ptr;
+        if devtype.contains(DeviceType::INPUT) {
+            self.input_collection_changed_callback = cb;
+            self.input_collection_changed_user_ptr = user_ptr;
+        }
+        if devtype.contains(DeviceType::OUTPUT) {
+            self.output_collection_changed_callback = cb;
+            self.output_collection_changed_user_ptr = user_ptr;
+        }
+
+        let mut mask = pulse::SubscriptionMask::empty();
+        if self.input_collection_changed_callback.is_some() {
+            mask |= pulse::SubscriptionMask::SOURCE;
+        }
+        if self.output_collection_changed_callback.is_some() {
+            mask |= pulse::SubscriptionMask::SINK;
+        }
 
         let user_data: *mut c_void = self as *const _ as *mut _;
         if let Some(ref context) = self.context {
             self.mainloop.lock();
 
-            let mut mask = pulse::SubscriptionMask::empty();
-            if self.collection_changed_callback.is_none() {
-                // Unregister subscription
-                context.clear_subscribe_callback();
+            if cb.is_none() {
+                if mask.is_empty() {
+                    // Unregister subscription
+                    context.clear_subscribe_callback();
+                }
             } else {
                 context.set_subscribe_callback(update_collection, user_data);
-                if devtype.contains(DeviceType::INPUT) {
-                    mask |= pulse::SubscriptionMask::SOURCE
-                };
-                if devtype.contains(DeviceType::OUTPUT) {
-                    mask = pulse::SubscriptionMask::SINK
-                };
             }
 
             if let Ok(o) = context.subscribe(mask, success, self as *const _ as *mut _) {
