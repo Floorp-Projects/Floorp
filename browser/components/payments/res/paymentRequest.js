@@ -273,14 +273,27 @@ var paymentRequest = {
     window.removeEventListener("paymentChromeToContent", this);
   },
 
+  _sortObjectsByTimeLastUsed(objects) {
+    let sortedValues = Object.values(objects).sort((a, b) => {
+      let aLastUsed = a.timeLastUsed || a.timeLastModified;
+      let bLastUsed = b.timeLastUsed || b.timeLastModified;
+      return bLastUsed - aLastUsed;
+    });
+    let sortedObjects = {};
+    for (let obj of sortedValues) {
+      sortedObjects[obj.guid] = obj;
+    }
+    return sortedObjects;
+  },
+
   getAddresses(state) {
     let addresses = Object.assign({}, state.savedAddresses, state.tempAddresses);
-    return addresses;
+    return this._sortObjectsByTimeLastUsed(addresses);
   },
 
   getBasicCards(state) {
     let cards = Object.assign({}, state.savedBasicCards, state.tempBasicCards);
-    return cards;
+    return this._sortObjectsByTimeLastUsed(cards);
   },
 };
 

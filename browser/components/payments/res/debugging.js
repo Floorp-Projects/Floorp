@@ -208,6 +208,7 @@ let ADDRESSES_1 = {
     "postal-code": "90210",
     "street-address": "123 Sesame Street,\nApt 40",
     "tel": "+1 519 555-5555",
+    timeLastUsed: 50000,
   },
   "68gjdh354j": {
     "additional-name": "Z.",
@@ -221,6 +222,7 @@ let ADDRESSES_1 = {
     "postal-code": "94041",
     "street-address": "P.O. Box 123",
     "tel": "+1 650 555-5555",
+    timeLastUsed: 30000,
   },
   "abcde12345": {
     "address-level2": "Mountain View",
@@ -229,6 +231,7 @@ let ADDRESSES_1 = {
     "given-name": "Mrs.",
     "guid": "abcde12345",
     "name": "Mrs. Fields",
+    timeLastUsed: 70000,
   },
   "german1": {
     "additional-name": "Y.",
@@ -244,6 +247,7 @@ let ADDRESSES_1 = {
     "postal-code": "10997",
     "street-address": "Schlesische Str. 27",
     "tel": "+49 30 983333002",
+    timeLastUsed: 10000,
   },
   "missing-country": {
     "address-level1": "ON",
@@ -255,6 +259,7 @@ let ADDRESSES_1 = {
     "postal-code": "H0H 0H0",
     "street-address": "123 Yonge Street\nSuite 2300",
     "tel": "+1 416 555-5555",
+    timeLastUsed: 90000,
   },
 };
 
@@ -271,6 +276,7 @@ let DUPED_ADDRESSES = {
     "guid": "a9e830667189",
     "tel": "+19871234567",
     "name": "Bob Smith",
+    timeLastUsed: 10001,
   },
   "72a15aed206d": {
     "street-address": "1 New St",
@@ -283,6 +289,7 @@ let DUPED_ADDRESSES = {
     "tel": "+19871234567",
     "name": "Mary Sue",
     "address-line1": "1 New St",
+    timeLastUsed: 10009,
   },
   "2b4dce0fbc1f": {
     "street-address": "123 Park St",
@@ -296,6 +303,7 @@ let DUPED_ADDRESSES = {
     "guid": "2b4dce0fbc1f",
     "name": "Rita Foo",
     "address-line1": "123 Park St",
+    timeLastUsed: 10005,
   },
   "46b2635a5b26": {
     "street-address": "432 Another St",
@@ -309,6 +317,7 @@ let DUPED_ADDRESSES = {
     "guid": "46b2635a5b26",
     "name": "Rita Foo",
     "address-line1": "432 Another St",
+    timeLastUsed: 10003,
   },
 };
 
@@ -321,7 +330,7 @@ let BASIC_CARDS_1 = {
     "version": 1,
     "timeCreated": 1505240896213,
     "timeLastModified": 1515609524588,
-    "timeLastUsed": 0,
+    "timeLastUsed": 10000,
     "timesUsed": 0,
     "cc-name": "John Smith",
     "cc-exp-month": 6,
@@ -339,7 +348,7 @@ let BASIC_CARDS_1 = {
     "version": 1,
     "timeCreated": 1517890536491,
     "timeLastModified": 1517890564518,
-    "timeLastUsed": 0,
+    "timeLastUsed": 50000,
     "timesUsed": 0,
     "cc-name": "Jane Doe",
     "cc-exp-month": 5,
@@ -357,7 +366,7 @@ let BASIC_CARDS_1 = {
     "version": 1,
     "timeCreated": 1517890536491,
     "timeLastModified": 1517890564518,
-    "timeLastUsed": 0,
+    "timeLastUsed": 90000,
     "timesUsed": 0,
     "cc-name": "Jane Fields",
     "cc-given-name": "Jane",
@@ -373,7 +382,7 @@ let BASIC_CARDS_1 = {
     "version": 1,
     "timeCreated": 1517890536491,
     "timeLastModified": 1517890564518,
-    "timeLastUsed": 0,
+    "timeLastUsed": 70000,
     "timesUsed": 0,
     "cc-name": "Capt America",
     "cc-given-name": "Capt",
@@ -391,7 +400,7 @@ let BASIC_CARDS_1 = {
     "version": 1,
     "timeCreated": 1517890536491,
     "timeLastModified": 1517890564518,
-    "timeLastUsed": 0,
+    "timeLastUsed": 30000,
     "timesUsed": 0,
     "cc-exp-month": 8,
     "cc-exp-year": 2024,
