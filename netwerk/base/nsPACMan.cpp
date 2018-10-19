@@ -502,7 +502,7 @@ nsPACMan::AsyncGetProxyForURI(nsIURI *uri,
       TimeStamp::Now() > mScheduledReload) {
     LOG(("nsPACMan::AsyncGetProxyForURI reload as scheduled\n"));
 
-    LoadPACFromURI(mAutoDetect? EmptyCString(): mPACURISpec);
+    LoadPACFromURI(mAutoDetect? EmptyCString(): mPACURISpec, false);
   }
 
   RefPtr<PendingPACQuery> query =
@@ -537,20 +537,28 @@ nsPACMan::PostQuery(PendingPACQuery *query)
 nsresult
 nsPACMan::LoadPACFromURI(const nsACString &aSpec)
 {
+  return LoadPACFromURI(aSpec, true);
+}
+
+nsresult
+nsPACMan::LoadPACFromURI(const nsACString &aSpec, bool aResetLoadFailureCount)
+{
   NS_ENSURE_STATE(!mShutdown);
 
   nsCOMPtr<nsIStreamLoader> loader =
       do_CreateInstance(NS_STREAMLOADER_CONTRACTID);
   NS_ENSURE_STATE(loader);
 
-  LOG(("nsPACMan::LoadPACFromURI aSpec: %s\n", aSpec.BeginReading()));
+  LOG(("nsPACMan::LoadPACFromURI aSpec: %s, aResetLoadFailureCount: %s\n", aSpec.BeginReading(), aResetLoadFailureCount? "true": "false"));
 
   CancelExistingLoad();
 
   mLoader = loader;
   mPACURIRedirectSpec.Truncate();
   mNormalPACURISpec.Truncate(); // set at load time
-  mLoadFailureCount = 0;  // reset
+  if (aResetLoadFailureCount) {
+    mLoadFailureCount = 0;
+  }
   mAutoDetect = aSpec.IsEmpty();
   mPACURISpec.Assign(aSpec);
 
