@@ -37,7 +37,7 @@ add_task(async function() {
     CONTENT_TYPE_SJS + "?fmt=txt",
     {
       status: 200,
-      statusText: "DA DA DA"
+      statusText: "DA DA DA",
     }
   );
 

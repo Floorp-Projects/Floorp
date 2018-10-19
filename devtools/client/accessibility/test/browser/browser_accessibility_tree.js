@@ -28,33 +28,33 @@ const tests = [{
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
-    }]
-  }
+      name: `"Accessibility Panel Test"`,
+    }],
+  },
 }, {
   desc: "Expand first tree node.",
   action: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "paragraph",
-      name: `""`
-    }]
-  }
+      name: `""`,
+    }],
+  },
 }, {
   desc: "Collapse first tree node.",
   action: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
-    }]
-  }
+      name: `"Accessibility Panel Test"`,
+    }],
+  },
 }];
 
 /**

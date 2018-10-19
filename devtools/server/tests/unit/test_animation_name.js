@@ -21,7 +21,7 @@ function run_test() {
     },
     CSSTransition: function() {
       this.effect = {target: getMockNode()};
-    }
+    },
   };
 
   window.CSSAnimation.prototype = Object.create(window.Animation.prototype);
@@ -31,8 +31,8 @@ function run_test() {
   function getMockNode() {
     return {
       ownerDocument: {
-        defaultView: window
-      }
+        defaultView: window,
+      },
     };
   }
 
@@ -48,32 +48,32 @@ function run_test() {
     desc: "Animation with an id",
     animation: new window.Animation(),
     props: { id: "animation-id" },
-    expectedName: "animation-id"
+    expectedName: "animation-id",
   }, {
     desc: "Animation without an id",
     animation: new window.Animation(),
     props: {},
-    expectedName: ""
+    expectedName: "",
   }, {
     desc: "CSSTransition with an id",
     animation: new window.CSSTransition(),
     props: { id: "transition-with-id", transitionProperty: "width" },
-    expectedName: "transition-with-id"
+    expectedName: "transition-with-id",
   }, {
     desc: "CSSAnimation with an id",
     animation: new window.CSSAnimation(),
     props: { id: "animation-with-id", animationName: "move" },
-    expectedName: "animation-with-id"
+    expectedName: "animation-with-id",
   }, {
     desc: "CSSTransition without an id",
     animation: new window.CSSTransition(),
     props: { transitionProperty: "width" },
-    expectedName: "width"
+    expectedName: "width",
   }, {
     desc: "CSSAnimation without an id",
     animation: new window.CSSAnimation(),
     props: { animationName: "move" },
-    expectedName: "move"
+    expectedName: "move",
   }];
 
   for (const { desc, animation, props, expectedName } of TEST_DATA) {

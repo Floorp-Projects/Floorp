@@ -23,7 +23,7 @@ module.exports = function(context) {
 
   var DICTIONARY = {
     "addEventListener": "removeEventListener",
-    "on": "off"
+    "on": "off",
   };
   // Invert this dictionary to make it easy later.
   var INVERTED_DICTIONARY = {};
@@ -55,7 +55,7 @@ module.exports = function(context) {
       functionName: node.callee.property.name,
       type: node.arguments[0].value,
       node: node.callee.property,
-      useCapture: capture
+      useCapture: capture,
     });
   }
 
@@ -73,7 +73,7 @@ module.exports = function(context) {
     removedListeners.push({
       functionName: node.callee.property.name,
       type: node.arguments[0].value,
-      useCapture: capture
+      useCapture: capture,
     });
   }
 
@@ -130,9 +130,9 @@ module.exports = function(context) {
           "No corresponding '{{functionName}}({{type}})' was found.",
           {
             functionName: DICTIONARY[listener.functionName],
-            type: listener.type
+            type: listener.type,
           });
       });
-    }
+    },
   };
 };

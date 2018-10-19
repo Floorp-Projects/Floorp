@@ -50,7 +50,7 @@ function testOpenWithState() {
   const state = {
     filename: "testfile",
     executionContext: 2,
-    text: "test text"
+    text: "test text",
   };
 
   openScratchpad(function(win) {

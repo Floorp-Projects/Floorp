@@ -17,22 +17,22 @@ var tabs = [
   {
     title: "Tab 0",
     desc: "Toggles cache on.",
-    startToolbox: true
+    startToolbox: true,
   },
   {
     title: "Tab 1",
     desc: "Toolbox open before Tab 1 toggles cache.",
-    startToolbox: true
+    startToolbox: true,
   },
   {
     title: "Tab 2",
     desc: "Opens toolbox after Tab 1 has toggled cache. Also closes and opens.",
-    startToolbox: false
+    startToolbox: false,
   },
   {
     title: "Tab 3",
     desc: "No toolbox",
-    startToolbox: false
+    startToolbox: false,
   }];
 
 async function initTab(tabX, startToolbox) {

@@ -56,7 +56,7 @@ function testListeners() {
 function testRestoreNotFromFile() {
   const session = [{
     text: "test1",
-    executionContext: 1
+    executionContext: 1,
   }];
 
   const [win] = ScratchpadManager.restoreSession(session);
@@ -74,7 +74,7 @@ function testRestoreFromFileSaved() {
     filename: "test.js",
     text: "test1",
     executionContext: 1,
-    saved: true
+    saved: true,
   }];
 
   const [win] = ScratchpadManager.restoreSession(session);
@@ -94,7 +94,7 @@ function testRestoreFromFileUnsaved() {
     filename: "test.js",
     text: "test1",
     executionContext: 1,
-    saved: false
+    saved: false,
   }];
 
   const [win] = ScratchpadManager.restoreSession(session);

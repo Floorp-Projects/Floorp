@@ -69,7 +69,7 @@ DocumentEventsListener.prototype = {
       // milliseconds since the UNIX epoch, when the parser finished its work
       // on the main document, that is when its Document.readyState changes to
       // 'interactive' and the corresponding readystatechange event is thrown
-      time: window.performance.timing.domInteractive
+      time: window.performance.timing.domInteractive,
     };
     this.console.conn.send(packet);
   },
@@ -88,7 +88,7 @@ DocumentEventsListener.prototype = {
       // milliseconds since the UNIX epoch, when the parser finished its work
       // on the main document, that is when its Document.readyState changes to
       // 'complete' and the corresponding readystatechange event is thrown
-      time: window.performance.timing.domComplete
+      time: window.performance.timing.domComplete,
     };
     this.console.conn.send(packet);
   },
@@ -97,5 +97,5 @@ DocumentEventsListener.prototype = {
     EventEmitter.off(this.console.parentActor, "window-ready", this.onWindowReady);
 
     this.listener = null;
-  }
+  },
 };

@@ -134,7 +134,7 @@ this.EventManager.prototype = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver]),
 };
 
 const AccessibilityEventObserver = {
@@ -283,5 +283,5 @@ const AccessibilityEventObserver = {
     } finally {
       return;
     }
-  }
+  },
 };

@@ -26,7 +26,7 @@ add_task(async function() {
 
     hide: function() {
       this.isShown = false;
-    }
+    },
   };
 
   info("Expecting a node-highlighted event");

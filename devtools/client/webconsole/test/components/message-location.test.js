@@ -26,7 +26,7 @@ describe("Message - location element", () => {
       serviceContainer: Object.assign({}, serviceContainer, {
         onViewSourceInDebugger,
         onViewSource,
-      })
+      }),
     }));
 
     // There should be the location
@@ -50,7 +50,7 @@ describe("Message - location element", () => {
       serviceContainer: Object.assign({}, serviceContainer, {
         onViewSource,
         onViewSourceInDebugger: undefined,
-      })
+      }),
     }));
 
     // There should be the location

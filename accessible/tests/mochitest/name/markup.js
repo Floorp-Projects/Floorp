@@ -97,7 +97,7 @@ var gTestIterator =
   ruleIdx: -1,
   elm: null,
   container: null,
-  testID: ""
+  testID: "",
 };
 
 /**
@@ -254,7 +254,7 @@ function testNameForElmRule(aElm, aRule) {
 
       mLocalName: tagname,
       mAttrName: attrname,
-      mAttrValue: aElm.getAttribute("id")
+      mAttrValue: aElm.getAttribute("id"),
     };
 
     var treeWalker = document.createTreeWalker(document.body,
@@ -360,7 +360,7 @@ function evaluateXPath(aNode, aExpr, aResolver) {
 
 function htmlDocResolver(aPrefix) {
   var ns = {
-    "html": "http://www.w3.org/1999/xhtml"
+    "html": "http://www.w3.org/1999/xhtml",
   };
   return ns[aPrefix] || null;
 }

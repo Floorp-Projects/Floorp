@@ -93,7 +93,7 @@ function cssTokenizerWithLineColumn(string) {
     if (prevToken) {
       prevToken.loc.end = {
         line: lineNumber,
-        column: columnNumber
+        column: columnNumber,
       };
     }
 
@@ -107,7 +107,7 @@ function cssTokenizerWithLineColumn(string) {
     } else {
       const startLoc = {
         line: lineNumber,
-        column: columnNumber
+        column: columnNumber,
       };
       token.loc = {start: startLoc};
 
@@ -1267,7 +1267,7 @@ function parseSingleValue(isCssPropertyKnown, value) {
                                       "a: " + value + ";")[0];
   return {
     value: declaration ? declaration.value : "",
-    priority: declaration ? declaration.priority : ""
+    priority: declaration ? declaration.priority : "",
   };
 }
 

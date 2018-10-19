@@ -36,7 +36,7 @@ add_test(function test_bug1024090_send_one() {
   addAndSend("Notification:Save", msgReply, msgHandler, {
     origin: systemNotification.origin,
     notification: systemNotification,
-    requestID
+    requestID,
   });
 });
 
@@ -51,6 +51,6 @@ add_test(function test_bug1024090_get_one() {
 
   addAndSend("Notification:GetAll", msgReply, msgHandler, {
     origin: systemNotification.origin,
-    requestID
+    requestID,
   });
 });

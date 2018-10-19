@@ -406,7 +406,7 @@ function getBindingElementAndPseudo(node) {
   }
   return {
     bindingElement: bindingElement,
-    pseudo: pseudo
+    pseudo: pseudo,
   };
 }
 exports.getBindingElementAndPseudo = getBindingElementAndPseudo;

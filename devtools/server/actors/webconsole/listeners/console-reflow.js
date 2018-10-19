@@ -58,7 +58,7 @@ ConsoleReflowListener.prototype =
       end: end,
       sourceURL: filename,
       sourceLine: frame ? frame.lineNumber : null,
-      functionName: frame ? frame.name : null
+      functionName: frame ? frame.name : null,
     });
   },
 

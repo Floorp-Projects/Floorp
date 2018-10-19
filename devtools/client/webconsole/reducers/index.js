@@ -21,5 +21,5 @@ exports.reducers = {
   ui,
   notifications,
   history,
-  objectInspector: objectInspector.reducer.default
+  objectInspector: objectInspector.reducer.default,
 };

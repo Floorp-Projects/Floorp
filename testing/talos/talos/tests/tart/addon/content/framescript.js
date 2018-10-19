@@ -19,7 +19,7 @@
 
     sendAsyncMessage(TART_PREFIX + "chrome-exec-message", {
       command: e.detail.command,
-      id: uniqueMessageId
+      id: uniqueMessageId,
     });
   }, false);
 })();

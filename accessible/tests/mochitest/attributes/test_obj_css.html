@@ -22,7 +22,7 @@
       this.accessible = getAccessible(aID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, this.accessible)
+        new invokerChecker(EVENT_HIDE, this.accessible),
       ];
 
       this.invoke = function removeElm_invoke() {

@@ -48,7 +48,7 @@ ChannelEventSink.prototype = {
       }
     }
     callback.onRedirectVerifyCallback(Cr.NS_OK);
-  }
+  },
 };
 
 const ChannelEventSinkFactory = XPCOMUtils.generateSingletonFactory(ChannelEventSink);

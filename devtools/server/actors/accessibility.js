@@ -14,7 +14,7 @@ const events = require("devtools/shared/event-emitter");
 const {
   accessibleSpec,
   accessibleWalkerSpec,
-  accessibilitySpec
+  accessibilitySpec,
 } = require("devtools/shared/specs/accessibility");
 
 const { isXUL } = require("devtools/server/actors/highlighters/utils/markup");
@@ -34,7 +34,7 @@ const RELATIONS_TO_IGNORE = new Set([
   nsIAccessibleRelation.RELATION_CONTAINING_TAB_PANE,
   nsIAccessibleRelation.RELATION_CONTAINING_WINDOW,
   nsIAccessibleRelation.RELATION_PARENT_WINDOW_OF,
-  nsIAccessibleRelation.RELATION_SUBWINDOW_OF
+  nsIAccessibleRelation.RELATION_SUBWINDOW_OF,
 ]);
 
 const {
@@ -52,7 +52,7 @@ const {
   EVENT_REORDER,
   EVENT_STATE_CHANGE,
   EVENT_TEXT_ATTRIBUTE_CHANGED,
-  EVENT_VALUE_CHANGE
+  EVENT_VALUE_CHANGE,
 } = nsIAccessibleEvent;
 
 // TODO: We do not need this once bug 1422913 is fixed. We also would not need
@@ -102,7 +102,7 @@ const NAME_FROM_SUBTREE_RULE_ROLES = new Set([
   nsIAccessibleRole.ROLE_TEAR_OFF_MENU_ITEM,
   nsIAccessibleRole.ROLE_TERM,
   nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
-  nsIAccessibleRole.ROLE_TOOLTIP
+  nsIAccessibleRole.ROLE_TOOLTIP,
 ]);
 
 const IS_OSX = Services.appinfo.OS === "Darwin";
@@ -197,7 +197,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
 
         return defunct;
       },
-      configurable: true
+      configurable: true,
     });
   },
 
@@ -321,7 +321,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     const extState = {};
     this.rawAccessible.getState(state, extState);
     return [
-      ...this.walker.a11yService.getStringStates(state.value, extState.value)
+      ...this.walker.a11yService.getStringStates(state.value, extState.value),
     ];
   },
 
@@ -427,7 +427,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       indexInParent: this.indexInParent,
       states: this.states,
       actions: this.actions,
-      attributes: this.attributes
+      attributes: this.attributes,
     };
   },
 
@@ -457,9 +457,9 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
   */
   get audit() {
     return this.isDefunct ? null : {
-      contrastRatio: this._getContrastRatio()
+      contrastRatio: this._getContrastRatio(),
     };
-  }
+  },
 });
 
 /**
@@ -1058,7 +1058,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       this._isPicking = false;
       this._currentAccessible = null;
     }
-  }
+  },
 });
 
 /**
@@ -1076,7 +1076,7 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
       this._msgName = `debug:${this.conn.prefix}accessibility`;
       this.conn.setupInParent({
         module: "devtools/server/actors/accessibility-parent",
-        setupParent: "setupParentProcess"
+        setupParent: "setupParentProcess",
       });
 
       this.onMessage = this.onMessage.bind(this);
@@ -1096,7 +1096,7 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
     return this.initializedDeferred.promise.then(() => ({
       enabled: this.enabled,
       canBeEnabled: this.canBeEnabled,
-      canBeDisabled: this.canBeDisabled
+      canBeDisabled: this.canBeDisabled,
     }));
   },
 
@@ -1318,7 +1318,7 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
     this.walker = null;
     this.targetActor = null;
     resolver();
-  }
+  },
 });
 
 exports.AccessibleActor = AccessibleActor;

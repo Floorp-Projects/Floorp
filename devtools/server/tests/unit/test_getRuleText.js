@@ -13,14 +13,14 @@ const TEST_DATA = [
     input: "",
     line: 1,
     column: 1,
-    throws: true
+    throws: true,
   },
   {
     desc: "Simplest test case",
     input: "#id{color:red;background:yellow;}",
     line: 1,
     column: 1,
-    expected: {offset: 4, text: "color:red;background:yellow;"}
+    expected: {offset: 4, text: "color:red;background:yellow;"},
   },
   {
     desc: "Multiple rules test case",
@@ -28,26 +28,26 @@ const TEST_DATA = [
       "{ position:absolute; line-height: 45px}",
     line: 1,
     column: 34,
-    expected: {offset: 56, text: " position:absolute; line-height: 45px"}
+    expected: {offset: 56, text: " position:absolute; line-height: 45px"},
   },
   {
     desc: "Unclosed rule",
     input: "#id{color:red;background:yellow;",
     line: 1,
     column: 1,
-    expected: {offset: 4, text: "color:red;background:yellow;"}
+    expected: {offset: 4, text: "color:red;background:yellow;"},
   },
   {
     desc: "Null input",
     input: null,
     line: 1,
     column: 1,
-    throws: true
+    throws: true,
   },
   {
     desc: "Missing loc",
     input: "#id{color:red;background:yellow;}",
-    throws: true
+    throws: true,
   },
   {
     desc: "Multi-lines CSS",
@@ -60,11 +60,11 @@ const TEST_DATA = [
       " /*something else here */",
       "* {",
       "  color: purple;",
-      "}"
+      "}",
     ].join("\n"),
     line: 7,
     column: 1,
-    expected: {offset: 116, text: "\n  color: purple;\n"}
+    expected: {offset: 116, text: "\n  color: purple;\n"},
   },
   {
     desc: "Multi-lines CSS and multi-line rule",
@@ -92,21 +92,21 @@ const TEST_DATA = [
     column: 1,
     expected: {
       offset: 30,
-      text: "\n    margin: 0;\n    padding: 15px 15px 2px 15px;\n    color: red;\n"}
+      text: "\n    margin: 0;\n    padding: 15px 15px 2px 15px;\n    color: red;\n"},
   },
   {
     desc: "Content string containing a } character",
     input: "   #id{border:1px solid red;content: '}';color:red;}",
     line: 1,
     column: 4,
-    expected: {offset: 7, text: "border:1px solid red;content: '}';color:red;"}
+    expected: {offset: 7, text: "border:1px solid red;content: '}';color:red;"},
   },
   {
     desc: "Rule contains no tokens",
     input: "div{}",
     line: 1,
     column: 1,
-    expected: {offset: 4, text: ""}
+    expected: {offset: 4, text: ""},
   },
 ];
 

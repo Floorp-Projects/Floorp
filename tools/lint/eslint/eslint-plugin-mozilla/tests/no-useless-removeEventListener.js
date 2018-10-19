@@ -81,6 +81,6 @@ ruleTester.run("no-useless-removeEventListener", rule, {
                 "});"),
     invalidCode("elt.addEventListener(eventName, function listener() {" +
                 "  elt.removeEventListener(eventName, listener);" +
-                "});")
-  ]
+                "});"),
+  ],
 });

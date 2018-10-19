@@ -181,12 +181,12 @@ class GeckoViewContent extends GeckoViewContentModule {
             let state = this.collectSessionState();
             sendAsyncMessage("GeckoView:SaveStateFinish", {
               state: state ? JSON.stringify(state) : null,
-              id: aMsg.data.id
+              id: aMsg.data.id,
             });
           } catch (e) {
             sendAsyncMessage("GeckoView:SaveStateFinish", {
               error: e.message,
-              id: aMsg.data.id
+              id: aMsg.data.id,
             });
           }
         }
@@ -266,7 +266,7 @@ class GeckoViewContent extends GeckoViewContentModule {
             elementType,
             elementSrc: (isImage || isMedia)
                         ? node.currentSrc || node.src
-                        : null
+                        : null,
           });
           aEvent.preventDefault();
         }
@@ -300,12 +300,12 @@ class GeckoViewContent extends GeckoViewContentModule {
       case "DOMTitleChanged":
         this.eventDispatcher.sendRequest({
           type: "GeckoView:DOMTitleChanged",
-          title: content.document.title
+          title: content.document.title,
         });
         break;
       case "DOMWindowFocus":
         this.eventDispatcher.sendRequest({
-          type: "GeckoView:DOMWindowFocus"
+          type: "GeckoView:DOMWindowFocus",
         });
         break;
       case "DOMWindowClose":
@@ -315,7 +315,7 @@ class GeckoViewContent extends GeckoViewContentModule {
 
         aEvent.preventDefault();
         this.eventDispatcher.sendRequest({
-          type: "GeckoView:DOMWindowClose"
+          type: "GeckoView:DOMWindowClose",
         });
         break;
       case "focusin":

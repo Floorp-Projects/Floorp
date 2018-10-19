@@ -207,7 +207,7 @@ const Types = exports.__TypesForTests = [
   {
     types: ["longstring"],
     spec: "devtools/shared/specs/string",
-    front: null
+    front: null,
   },
   {
     types: ["longstractor"],

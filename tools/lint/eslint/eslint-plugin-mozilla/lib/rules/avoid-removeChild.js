@@ -48,6 +48,6 @@ module.exports = function(context) {
         context.report(node, "use element.firstChild.remove() instead of " +
                              "element.removeChild(element.firstChild)");
       }
-    }
+    },
   };
 };

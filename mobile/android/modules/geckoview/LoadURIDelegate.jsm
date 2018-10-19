@@ -27,7 +27,7 @@ const LoadURIDelegate = {
       type: "GeckoView:OnLoadRequest",
       uri: aUri ? aUri.displaySpec : "",
       where: aWhere,
-      flags: aFlags
+      flags: aFlags,
     };
 
     let handled = undefined;
@@ -58,7 +58,7 @@ const LoadURIDelegate = {
       uri: aUri && aUri.spec,
       error: aError,
       errorModule: aErrorModule,
-      errorClass
+      errorClass,
     };
 
     let errorPageURI = undefined;
@@ -78,5 +78,5 @@ const LoadURIDelegate = {
         aWindow.closed || errorPageURI !== undefined);
 
     return errorPageURI;
-  }
+  },
 };

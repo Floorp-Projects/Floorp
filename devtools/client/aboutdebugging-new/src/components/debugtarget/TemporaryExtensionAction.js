@@ -46,24 +46,24 @@ class TemporaryExtensionAction extends PureComponent {
       InspectAction({ dispatch, target }),
       Localized(
         {
-          id: "about-debugging-tmp-extension-reload-button"
+          id: "about-debugging-tmp-extension-reload-button",
         },
         dom.button(
           {
             className: "default-button",
-            onClick: e => this.reload()
+            onClick: e => this.reload(),
           },
           "Reload",
         )
       ),
       Localized(
         {
-          id: "about-debugging-tmp-extension-remove-button"
+          id: "about-debugging-tmp-extension-remove-button",
         },
         dom.button(
           {
             className: "default-button js-temporary-extension-remove-button",
-            onClick: e => this.remove()
+            onClick: e => this.remove(),
           },
           "Remove",
         )

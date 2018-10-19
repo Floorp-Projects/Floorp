@@ -51,7 +51,7 @@ var listener = {
     if (!ALLOW_CONSOLE_ERRORS) {
       do_throw("head_devtools.js got console message: " + string + "\n");
     }
-  }
+  },
 };
 /* eslint-enable no-undef */
 

@@ -9,7 +9,7 @@ const {
   Option,
   RetVal,
   generateActorSpec,
-  types
+  types,
 } = require("devtools/shared/protocol");
 
 types.addDictType("netevent.headers-cookies", {
@@ -159,50 +159,50 @@ const networkEventSpec = generateActorSpec({
   methods: {
     release: {
       // This makes protocol.js call destroy method
-      release: true
+      release: true,
     },
     getRequestHeaders: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getRequestCookies: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getRequestPostData: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getResponseHeaders: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getResponseCookies: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getResponseCache: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getResponseContent: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getEventTimings: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getSecurityInfo: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getStackTrace: {
       request: {},
       // stacktrace is an "array:string", but not always.
-      response: RetVal("json")
+      response: RetVal("json"),
     },
-  }
+  },
 });
 
 exports.networkEventSpec = networkEventSpec;

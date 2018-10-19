@@ -24,49 +24,49 @@ add_task(async function() {
     url: SJS_URL + "?badSyntax",
     name: "Could not parse header error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that could not be " +
-          "parsed successfully."
+          "parsed successfully.",
   }, hud);
 
   await navigateAndCheckForWarningMessage({
     url: SJS_URL + "?noMaxAge",
     name: "No max-age error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that did not include " +
-          "a \u2018max-age\u2019 directive."
+          "a \u2018max-age\u2019 directive.",
   }, hud);
 
   await navigateAndCheckForWarningMessage({
     url: SJS_URL + "?invalidIncludeSubDomains",
     name: "Invalid includeSubDomains error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included an " +
-          "invalid \u2018includeSubDomains\u2019 directive."
+          "invalid \u2018includeSubDomains\u2019 directive.",
   }, hud);
 
   await navigateAndCheckForWarningMessage({
     url: SJS_URL + "?invalidMaxAge",
     name: "Invalid max-age error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included an " +
-          "invalid \u2018max-age\u2019 directive."
+          "invalid \u2018max-age\u2019 directive.",
   }, hud);
 
   await navigateAndCheckForWarningMessage({
     url: SJS_URL + "?multipleIncludeSubDomains",
     name: "Multiple includeSubDomains error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included " +
-          "multiple \u2018includeSubDomains\u2019 directives."
+          "multiple \u2018includeSubDomains\u2019 directives.",
   }, hud);
 
   await navigateAndCheckForWarningMessage({
     url: SJS_URL + "?multipleMaxAge",
     name: "Multiple max-age error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included " +
-          "multiple \u2018max-age\u2019 directives."
+          "multiple \u2018max-age\u2019 directives.",
   }, hud);
 
   await navigateAndCheckForWarningMessage({
     url: SJS_URL + "?multipleReportURIs",
     name: "Multiple report-uri error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included " +
-          "multiple \u2018report-uri\u2019 directives."
+          "multiple \u2018report-uri\u2019 directives.",
   }, hud);
 
   // The root used for mochitests is not built-in, so set the relevant pref to
@@ -77,7 +77,7 @@ add_task(async function() {
     url: SJS_URL + "?pinsetDoesNotMatch",
     name: "Non-matching pinset error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that did not include " +
-          "a matching pin."
+          "a matching pin.",
   }, hud);
 
   Services.prefs.setBoolPref(NON_BUILTIN_ROOT_PREF, false);
@@ -87,7 +87,7 @@ add_task(async function() {
     name: "Non-built-in root error displayed successfully",
     text: "Public-Key-Pins: The certificate used by the site was not issued " +
           "by a certificate in the default root certificate store. To " +
-          "prevent accidental breakage, the specified header was ignored."
+          "prevent accidental breakage, the specified header was ignored.",
   }, hud);
 });
 

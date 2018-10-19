@@ -46,7 +46,7 @@ function run_test() {
     other: {
       "js::Shape": { bytes: 80, count: 8 },
     },
-    domNode: {}
+    domNode: {},
   };
 
   const EXPECTED = {
@@ -95,12 +95,12 @@ function run_test() {
             id: 18,
             parent: 15,
             reportLeafIndex: 2,
-          }
+          },
         ],
         id: 15,
         parent: 14,
         reportLeafIndex: undefined,
-      }
+      },
     ],
     id: 14,
     parent: undefined,

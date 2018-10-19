@@ -214,7 +214,7 @@ Toolbox.HostType = {
   RIGHT: "right",
   LEFT: "left",
   WINDOW: "window",
-  CUSTOM: "custom"
+  CUSTOM: "custom",
 };
 
 Toolbox.prototype = {
@@ -429,7 +429,7 @@ Toolbox.prototype = {
     return (async function() {
       this.browserRequire = BrowserLoader({
         window: this.doc.defaultView,
-        useOnlyShared: true
+        useOnlyShared: true,
       }).require;
 
       if (this.win.location.href.startsWith(this._URL)) {
@@ -486,7 +486,7 @@ Toolbox.prototype = {
       });
 
       this.shortcuts = new KeyShortcuts({
-        window: this.doc.defaultView
+        window: this.doc.defaultView,
       });
       // Get the DOM element to mount the ToolboxController to.
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
@@ -554,7 +554,7 @@ Toolbox.prototype = {
 
       await promise.all([
         splitConsolePromise,
-        framesPromise
+        framesPromise,
       ]);
 
       // Lazily connect to the profiler here and don't wait for it to complete,
@@ -738,7 +738,7 @@ Toolbox.prototype = {
     const browserWin = this.win.top;
     this.telemetry.preparePendingEvent(browserWin, "open", "tools", null, [
       "entrypoint", "first_panel", "host", "shortcut",
-      "splitconsole", "width", "session_id"
+      "splitconsole", "width", "session_id",
     ]);
     this.telemetry.addEventProperty(
       browserWin, "open", "tools", null, "host", this._getTelemetryHostString()
@@ -795,7 +795,7 @@ Toolbox.prototype = {
       isTargetSupported,
       isCurrentlyVisible,
       isChecked,
-      onKeyDown
+      onKeyDown,
     } = options;
     const toolbox = this;
     const button = {
@@ -831,7 +831,7 @@ Toolbox.prototype = {
       visibilityswitch: `devtools.${id}.enabled`,
       // The toolbar has a container at the start and end of the toolbar for
       // holding buttons. By default the buttons are placed in the end container.
-      isInStartContainer: !!isInStartContainer
+      isInStartContainer: !!isInStartContainer,
     };
     if (typeof setup == "function") {
       const onChange = () => {
@@ -891,7 +891,7 @@ Toolbox.prototype = {
       ["reload", false],
       ["reload2", false],
       ["forceReload", true],
-      ["forceReload2", true]
+      ["forceReload2", true],
     ].forEach(([id, force]) => {
       const key = L10N.getStr("toolbox." + id + ".key");
       this.shortcuts.on(key, event => {
@@ -1094,7 +1094,7 @@ Toolbox.prototype = {
 
       hostTypes.push({
         position,
-        switchHost: this.switchHost.bind(this, position)
+        switchHost: this.switchHost.bind(this, position),
       });
     }
 
@@ -1314,7 +1314,7 @@ Toolbox.prototype = {
       isInStartContainer: true,
       isTargetSupported: target => {
         return target.activeTab && target.activeTab.traits.frames;
-      }
+      },
     });
 
     return this.pickerButton;
@@ -1331,8 +1331,8 @@ Toolbox.prototype = {
     if (this.target.activeTab) {
       await this.target.activeTab.reconfigure({
         options: {
-          "cacheDisabled": cacheDisabled
-        }
+          "cacheDisabled": cacheDisabled,
+        },
       });
 
       // This event is only emitted for tests in order to know when to reload
@@ -1354,8 +1354,8 @@ Toolbox.prototype = {
     if (this.target.activeTab) {
       this.target.activeTab.reconfigure({
         options: {
-          "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
-        }
+          "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled,
+        },
       });
     }
   },
@@ -1403,8 +1403,8 @@ Toolbox.prototype = {
     this.isPaintFlashing = !this.isPaintFlashing;
     return this.target.activeTab.reconfigure({
       options: {
-        "paintFlashing": this.isPaintFlashing
-      }
+        "paintFlashing": this.isPaintFlashing,
+      },
     });
   },
 
@@ -1458,7 +1458,7 @@ Toolbox.prototype = {
     const {
       isTargetSupported,
       isCurrentlyVisible,
-      visibilityswitch
+      visibilityswitch,
     } = button;
 
     if (!Services.prefs.getBoolPref(visibilityswitch, true)) {
@@ -1973,14 +1973,14 @@ Toolbox.prototype = {
         "panel_name": prevPanelName,
         "next_panel": panelName,
         "reason": reason,
-        "session_id": this.sessionId
+        "session_id": this.sessionId,
       });
     }
 
     const browserWin = this.win.top;
     this.telemetry.addEventProperties(browserWin, "open", "tools", null, {
       "width": width,
-      "session_id": this.sessionId
+      "session_id": this.sessionId,
     });
 
     if (id === "webconsole") {
@@ -1994,7 +1994,7 @@ Toolbox.prototype = {
       "start_state": reason,
       "panel_name": panelName,
       "cold": cold,
-      "session_id": this.sessionId
+      "session_id": this.sessionId,
     });
 
     if (reason !== "initial_panel") {
@@ -2082,7 +2082,7 @@ Toolbox.prototype = {
       this.telemetry.recordEvent("activate", "split_console", null, {
         "host": this._getTelemetryHostString(),
         "width": Math.ceil(this.win.outerWidth / 50) * 50,
-        "session_id": this.sessionId
+        "session_id": this.sessionId,
       });
       this.emit("split-console");
       this.focusConsoleInput();
@@ -2104,7 +2104,7 @@ Toolbox.prototype = {
     this.telemetry.recordEvent("deactivate", "split_console", null, {
       "host": this._getTelemetryHostString(),
       "width": Math.ceil(this.win.outerWidth / 50) * 50,
-      "session_id": this.sessionId
+      "session_id": this.sessionId,
     });
 
     this.emit("split-console");
@@ -2222,7 +2222,7 @@ Toolbox.prototype = {
    */
   raise: function() {
     this.postMessage({
-      name: "raise-host"
+      name: "raise-host",
     });
   },
 
@@ -2267,7 +2267,7 @@ Toolbox.prototype = {
     }
     this.postMessage({
       name: "set-host-title",
-      title
+      title,
     });
   },
 
@@ -2489,7 +2489,7 @@ Toolbox.prototype = {
     // switched
     this.postMessage({
       name: "switch-host",
-      hostType
+      hostType,
     });
 
     return this.once("host-changed");
@@ -2909,12 +2909,12 @@ Toolbox.prototype = {
       "panel_name": this.getTelemetryPanelNameOrOther(this.currentToolId),
       "next_panel": "none",
       "reason": "toolbox_close",
-      "session_id": this.sessionId
+      "session_id": this.sessionId,
     });
     this.telemetry.recordEvent("close", "tools", null, {
       "host": host,
       "width": width,
-      "session_id": this.sessionId
+      "session_id": this.sessionId,
     });
 
     // Finish all outstanding tasks (which means finish destroying panels and

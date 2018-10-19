@@ -129,7 +129,7 @@ const sessionRestoreTest = {
     }
 
     win.gBrowser.addTrustedTab("chrome://session-restore-test/content/index.html" + queryString);
-  }
+  },
 };
 
 

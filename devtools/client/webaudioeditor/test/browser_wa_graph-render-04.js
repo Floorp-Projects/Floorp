@@ -14,7 +14,7 @@ add_task(async function() {
 
   const events = Promise.all([
     getN(gFront, "create-node", 5),
-    waitForGraphRendered(panelWin, 5, 2, 3)
+    waitForGraphRendered(panelWin, 5, 2, 3),
   ]);
   reload(target);
   const [actors] = await events;
@@ -25,7 +25,7 @@ add_task(async function() {
   const edges = [
     [mod1, gain, "gain", "mod1 -> gain[gain]"],
     [mod2, carrier, "frequency", "mod2 -> carrier[frequency]"],
-    [mod2, carrier, "detune", "mod2 -> carrier[detune]"]
+    [mod2, carrier, "detune", "mod2 -> carrier[detune]"],
   ];
 
   edges.forEach(([source, target, param, msg], i) => {

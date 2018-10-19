@@ -18,13 +18,13 @@ function* testSteps()
     { key: "237-23-7736", value: { name: "Joe", height: 65, weight: 150 } },
     { key: "237-23-7737", value: { name: "Pat", height: 65 } },
     { key: "237-23-7738", value: { name: "Mel", height: 66, weight: {} } },
-    { key: "237-23-7739", value: { name: "Tom", height: 62, weight: 130 } }
+    { key: "237-23-7739", value: { name: "Tom", height: 62, weight: 130 } },
   ];
 
   const indexData = {
     name: "weight",
     keyPath: "weight",
-    options: { unique: false }
+    options: { unique: false },
   };
 
   const weightSort = [1, 0, 3, 7, 4, 2];

@@ -202,5 +202,5 @@ RuntimeList.prototype = {
     this._Cmds = null;
     this._parentWindow = null;
     this._panelNodeEl = null;
-  }
+  },
 };

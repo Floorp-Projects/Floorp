@@ -16,7 +16,7 @@ const {
 const { buildHarLog } = require("./har-builder-utils");
 const L10N = new LocalizationHelper("devtools/client/locales/har.properties");
 const {
-  TIMING_KEYS
+  TIMING_KEYS,
 } = require("../constants");
 
 /**
@@ -153,7 +153,7 @@ HarBuilder.prototype = {
     // Event timing info isn't available
     const timings = {
       onContentLoad: -1,
-      onLoad: -1
+      onLoad: -1,
     };
 
     const getTimingMarker = this._options.getTimingMarker;
@@ -181,7 +181,7 @@ HarBuilder.prototype = {
     }
 
     const request = {
-      bodySize: 0
+      bodySize: 0,
     };
     request.method = file.method;
     request.url = file.url;
@@ -251,7 +251,7 @@ HarBuilder.prototype = {
       this.fetchData(entry.value).then(value => {
         result.push({
           name: entry.name,
-          value: value
+          value: value,
         });
       });
     });
@@ -332,7 +332,7 @@ HarBuilder.prototype = {
     }
 
     const response = {
-      status: 0
+      status: 0,
     };
 
     // Arbitrary value if it's aborted to make sure status has a number
@@ -367,7 +367,7 @@ HarBuilder.prototype = {
   buildContent: async function(file) {
     const content = {
       mimeType: file.mimeType,
-      size: -1
+      size: -1,
     };
 
     // When using HarAutomation, HarCollector will automatically fetch responseContent,
@@ -462,7 +462,7 @@ HarBuilder.prototype = {
     this.promises.push(promise);
 
     return promise;
-  }
+  },
 };
 
 // Helpers

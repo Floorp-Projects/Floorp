@@ -28,17 +28,17 @@
     const attrs3 = domLoc.getAttributes(p3);
     isDeeply(attrs1, {
       id: null,
-      args: null
+      args: null,
     });
     isDeeply(attrs2, {
       id: "id1",
-      args: null
+      args: null,
     });
     isDeeply(attrs3, {
       id: "id2",
       args: {
-        userName: "John"
-      }
+        userName: "John",
+      },
     });
 
     SimpleTest.finish();

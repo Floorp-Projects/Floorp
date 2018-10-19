@@ -62,7 +62,7 @@ exports.scrollCanvasGraph = (graph, { axis, wheel, x, y }) => {
   y /= graph._window.devicePixelRatio;
   graph._onMouseMove({
     testX: x,
-    testY: y
+    testY: y,
   });
   graph._onMouseWheel({
     testX: x,
@@ -70,6 +70,6 @@ exports.scrollCanvasGraph = (graph, { axis, wheel, x, y }) => {
     axis: axis,
     detail: wheel,
     HORIZONTAL_AXIS: exports.HORIZONTAL_AXIS,
-    VERTICAL_AXIS: exports.VERTICAL_AXIS
+    VERTICAL_AXIS: exports.VERTICAL_AXIS,
   });
 };

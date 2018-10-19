@@ -67,7 +67,7 @@ add_task(async function() {
 
 function expandObjectInspector(oi) {
   const onMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   oi.querySelector(".arrow").click();

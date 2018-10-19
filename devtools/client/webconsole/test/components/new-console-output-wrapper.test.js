@@ -26,8 +26,8 @@ async function getWebConsoleOutputWrapper() {
       releaseActor: () => {},
       target: {
         activeTab: {
-          ensureCSSErrorReportingEnabled: () => {}
-        }
+          ensureCSSErrorReportingEnabled: () => {},
+        },
       },
     },
   };

@@ -46,7 +46,7 @@ FrameTargetActorProxy.prototype = {
         // Reject the update promise if the tab was destroyed while requesting an update
         this._deferredUpdate.reject({
           error: "tabDestroyed",
-          message: "Tab destroyed while performing a FrameTargetActorProxy update"
+          message: "Tab destroyed while performing a FrameTargetActorProxy update",
         });
       }
       this.exit();

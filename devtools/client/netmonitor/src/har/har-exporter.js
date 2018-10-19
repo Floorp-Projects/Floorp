@@ -15,7 +15,7 @@ var uid = 1;
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
   log: function(...args) {
-  }
+  },
 };
 
 /**
@@ -194,7 +194,7 @@ const HarExporter = {
       getTabTarget,
     } = connector;
     const {
-      form: { title, url }
+      form: { title, url },
     } = getTabTarget();
 
     // Disconnect from redux actions/store.

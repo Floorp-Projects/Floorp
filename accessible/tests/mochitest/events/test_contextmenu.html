@@ -42,7 +42,7 @@
 
     function selectMenuItem() {
       this.eventSeq = [
-        new invokerChecker(EVENT_FOCUS, getFocusedMenuItem)
+        new invokerChecker(EVENT_FOCUS, getFocusedMenuItem),
       ];
 
       this.invoke = function selectMenuItem_invoke() {
@@ -57,7 +57,7 @@
     function closeContextMenu(aID) {
       this.eventSeq = [
         new invokerChecker(EVENT_MENUPOPUP_END,
-                           getAccessible(getContextMenuNode()))
+                           getAccessible(getContextMenuNode())),
       ];
 
       this.invoke = function closeContextMenu_invoke() {

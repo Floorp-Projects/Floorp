@@ -25,17 +25,17 @@ Object.defineProperty(this, "require", {
   get() {
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     return require;
-  }
+  },
 });
 Object.defineProperty(this, "devtools", {
   get() {
     return require("devtools/client/framework/devtools").gDevTools;
-  }
+  },
 });
 Object.defineProperty(this, "browser", {
   get() {
     return require("devtools/client/framework/devtools-browser").gDevToolsBrowser;
-  }
+  },
 });
 
 /**
@@ -129,7 +129,7 @@ const gDevToolsBrowserMethods = [
   "hasToolboxOpened",
 
   // Used by browser.js
-  "forgetBrowserWindow"
+  "forgetBrowserWindow",
 ];
 this.gDevToolsBrowser = {
   // Used by webide.js
@@ -139,7 +139,7 @@ this.gDevToolsBrowser = {
   // Used by a test (should be removed)
   get _trackedBrowserWindows() {
     return browser._trackedBrowserWindows;
-  }
+  },
 };
 gDevToolsBrowserMethods.forEach(name => {
   this.gDevToolsBrowser[name] = (...args) => {

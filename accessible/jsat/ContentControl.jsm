@@ -479,7 +479,7 @@ this.ContentControl.prototype = {
           moveMethod: aOptions.moveMethod,
           moveToFocused: aOptions.moveToFocused,
           noOpIfOnScreen: true,
-        }
+        },
       }, null, true);
     };
 
@@ -496,6 +496,6 @@ this.ContentControl.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference,
-    Ci.nsIMessageListener
-  ])
+    Ci.nsIMessageListener,
+  ]),
 };

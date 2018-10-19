@@ -25,11 +25,11 @@ var WaterfallView = extend(DetailsSubview, {
   WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS: 20,
 
   observedPrefs: [
-    "hidden-markers"
+    "hidden-markers",
   ],
 
   rerenderPrefs: [
-    "hidden-markers"
+    "hidden-markers",
   ],
 
   // Units are in milliseconds.
@@ -203,7 +203,7 @@ var WaterfallView = extend(DetailsSubview, {
     WaterfallUtils.collapseMarkersIntoNode({
       rootNode: rootMarkerNode,
       markersList: markers,
-      filter: this._hiddenMarkers
+      filter: this._hiddenMarkers,
     });
 
     this._cache.set(markers, rootMarkerNode);
@@ -240,13 +240,13 @@ var WaterfallView = extend(DetailsSubview, {
       dataScale,
       sidebarWidth: this.WATERFALL_MARKER_SIDEBAR_WIDTH,
       waterfallWidth: this.waterfallWidth,
-      onFocus: node => this._onMarkerSelected("selected", node)
+      onFocus: node => this._onMarkerSelected("selected", node),
     });
 
     ReactDOM.render(treeView, this.treeContainer);
   },
 
-  toString: () => "[object WaterfallView]"
+  toString: () => "[object WaterfallView]",
 });
 
 EventEmitter.decorate(WaterfallView);

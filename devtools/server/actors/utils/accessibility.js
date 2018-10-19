@@ -58,7 +58,7 @@ function getContrastRatioFor(node) {
   return {
     ratio: colorUtils.calculateContrastRatio([ bgR, bgG, bgB, bgA ],
                                              [ textR, textG, textB, textA ]),
-    largeText: Math.ceil(parseFloat(fontSize) * 72) / 96 >= (isBoldText ? 14 : 18)
+    largeText: Math.ceil(parseFloat(fontSize) * 72) / 96 >= (isBoldText ? 14 : 18),
   };
 }
 

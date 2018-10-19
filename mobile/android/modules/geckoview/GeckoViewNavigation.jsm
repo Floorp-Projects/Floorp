@@ -36,7 +36,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       "GeckoView:GoForward",
       "GeckoView:LoadUri",
       "GeckoView:Reload",
-      "GeckoView:Stop"
+      "GeckoView:Stop",
     ]);
   }
 
@@ -111,7 +111,7 @@ class GeckoViewNavigation extends GeckoViewModule {
             Services.obs.removeObserver(handler, "geckoview-window-created");
             resolve(aSubject);
           }
-        }
+        },
       };
 
       // This event is emitted from createBrowser() in geckoview.js
@@ -129,14 +129,14 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     const message = {
       type: "GeckoView:OnNewSession",
-      uri: aUri ? aUri.displaySpec : ""
+      uri: aUri ? aUri.displaySpec : "",
     };
 
     let browser = undefined;
     this.eventDispatcher.sendRequestForResult(message).then(sessionId => {
       return this.waitAndSetupWindow(sessionId, {
         opener: (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_OPENER) ? null : aOpener,
-        nextTabParentId: aNextTabParentId
+        nextTabParentId: aNextTabParentId,
       });
     }).then(window => {
       browser = (window && window.browser) || null;

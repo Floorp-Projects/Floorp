@@ -34,7 +34,7 @@ add_task(async function test_methods_calling() {
   }
 
   const l10n = new Localization([
-    "/browser/menu.ftl"
+    "/browser/menu.ftl",
   ], generateMessages);
 
   let values = await l10n.formatValues([{id: "key"}, {id: "key2"}]);
@@ -80,7 +80,7 @@ key = { PLATFORM() ->
   }
 
   const l10n = new Localization([
-    "/test.ftl"
+    "/test.ftl",
   ], generateMessages);
 
   let values = await l10n.formatValues([{id: "key"}]);

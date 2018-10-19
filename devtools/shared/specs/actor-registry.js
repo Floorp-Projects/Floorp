@@ -15,8 +15,8 @@ const actorActorSpec = generateActorSpec({
   methods: {
     unregister: {
       request: {},
-      response: {}
-    }
+      response: {},
+    },
   },
 });
 
@@ -30,14 +30,14 @@ const actorRegistrySpec = generateActorSpec({
       request: {
         sourceText: Arg(0, "string"),
         filename: Arg(1, "string"),
-        options: Arg(2, "json")
+        options: Arg(2, "json"),
       },
 
       response: {
-        actorActor: RetVal("actorActor")
-      }
-    }
-  }
+        actorActor: RetVal("actorActor"),
+      },
+    },
+  },
 });
 
 exports.actorRegistrySpec = actorRegistrySpec;

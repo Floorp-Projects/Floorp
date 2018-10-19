@@ -56,7 +56,7 @@ function test() {
     const options = {
       form: response,
       client: client,
-      chrome: true
+      chrome: true,
     };
 
     TargetFactory.forRemoteTab(options).then(testTarget.bind(null, client));

@@ -20,7 +20,7 @@
      static get propTypes() {
        return {
          actions: PropTypes.object,
-         isValidJson: PropTypes.bool
+         isValidJson: PropTypes.bool,
        };
      }
 

@@ -17,7 +17,7 @@ for (const childSpec of Object.values(specs.childSpecs)) {
       this.actorID = form.actor;
       this.hosts = form.hosts;
       return null;
-    }
+    },
   });
 }
 
@@ -26,7 +26,7 @@ const StorageFront = protocol.FrontClassWithSpec(specs.storageSpec, {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.storageActor;
     this.manage(this);
-  }
+  },
 });
 
 exports.StorageFront = StorageFront;

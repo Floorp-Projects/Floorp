@@ -23,7 +23,7 @@
       this.childNode = null;
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.invoke = function addChild_invoke() {
@@ -56,7 +56,7 @@
       this.child = null;
 
       this.eventSeq = [
-        new removeChildChecker(this)
+        new removeChildChecker(this),
       ];
 
       this.invoke = function removeChild_invoke() {

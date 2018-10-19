@@ -25,7 +25,7 @@ Test that the currently selected view is rendered.
              // Dominator tree view.
 
              await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
-               view: { state: viewState.DOMINATOR_TREE, },
+               view: { state: viewState.DOMINATOR_TREE },
              })), container);
 
              ok(container.querySelector(`[data-state=${dominatorTreeState.LOADED}]`),
@@ -34,7 +34,7 @@ Test that the currently selected view is rendered.
              // Census view.
 
              await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
-               view: { state: viewState.CENSUS, },
+               view: { state: viewState.CENSUS },
              })), container);
 
              ok(container.querySelector(`[data-state=${censusState.SAVED}]`),
@@ -43,7 +43,7 @@ Test that the currently selected view is rendered.
              // Diffing view.
 
              await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
-               view: { state: viewState.DIFFING, },
+               view: { state: viewState.DIFFING },
                snapshot: null,
                diffing: {
                  firstSnapshotId: null,

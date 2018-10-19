@@ -49,7 +49,7 @@ window.onload = function() {
       node: fronts[0],
       type: "search",
       resultsIndex: 0,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Default options work");
 
     results = await walkerFront.search("h2", { });
@@ -57,7 +57,7 @@ window.onload = function() {
       node: fronts[1],
       type: "search",
       resultsIndex: 1,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with empty options");
 
     // Clear search data to remove result state on the front
@@ -75,7 +75,7 @@ window.onload = function() {
       node: fronts[0],
       type: "search",
       resultsIndex: 0,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
     results = await walkerFront.search("h2");
@@ -83,7 +83,7 @@ window.onload = function() {
       node: fronts[1],
       type: "search",
       resultsIndex: 1,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
     results = await walkerFront.search("h2");
@@ -91,7 +91,7 @@ window.onload = function() {
       node: fronts[2],
       type: "search",
       resultsIndex: 2,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
     results = await walkerFront.search("h2");
@@ -99,7 +99,7 @@ window.onload = function() {
       node: fronts[0],
       type: "search",
       resultsIndex: 0,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
     // Clear search data to remove result state on the front
@@ -117,7 +117,7 @@ window.onload = function() {
       node: fronts[2],
       type: "search",
       resultsIndex: 2,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=true)");
 
     results = await walkerFront.search("h2", {reverse: true});
@@ -125,7 +125,7 @@ window.onload = function() {
       node: fronts[1],
       type: "search",
       resultsIndex: 1,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=true)");
 
     results = await walkerFront.search("h2", {reverse: true});
@@ -133,7 +133,7 @@ window.onload = function() {
       node: fronts[0],
       type: "search",
       resultsIndex: 0,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=true)");
 
     results = await walkerFront.search("h2", {reverse: true});
@@ -141,7 +141,7 @@ window.onload = function() {
       node: fronts[2],
       type: "search",
       resultsIndex: 2,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=true)");
 
     results = await walkerFront.search("h2", {reverse: false});
@@ -149,7 +149,7 @@ window.onload = function() {
       node: fronts[0],
       type: "search",
       resultsIndex: 0,
-      resultsLength: 3
+      resultsLength: 3,
     }, "Search works with multiple results (reverse=false)");
 
     // Clear search data to remove result state on the front

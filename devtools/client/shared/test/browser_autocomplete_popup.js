@@ -13,7 +13,7 @@ add_task(async function() {
 
   const autocompleteOptions = {
     position: "top",
-    autoSelect: true
+    autoSelect: true,
   };
   const popup = new AutocompletePopup(doc, autocompleteOptions);
   input.focus();

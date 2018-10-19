@@ -40,7 +40,7 @@ function receiveProfile(profile, getSymbolTableCallback) {
   const tab = browser.addWebTab("https://perf-html.io/from-addon", {
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
       userContextId: browser.contentPrincipal.userContextId,
-    })
+    }),
   });
   browser.selectedTab = tab;
   const mm = tab.linkedBrowser.messageManager;
@@ -55,7 +55,7 @@ function receiveProfile(profile, getSymbolTableCallback) {
       const [addr, index, buffer] = result;
       mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
         status: "success",
-        debugName, breakpadId, result: [addr, index, buffer]
+        debugName, breakpadId, result: [addr, index, buffer],
       });
     }, error => {
       mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
@@ -171,12 +171,12 @@ async function setRecordingPreferences(preferenceFront, settings) {
     preferenceFront.setCharPref(
       `devtools.performance.recording.threads`,
       JSON.stringify(settings.threads)
-    )
+    ),
   ]);
 }
 
 module.exports = {
   receiveProfile,
   getRecordingPreferences,
-  setRecordingPreferences
+  setRecordingPreferences,
 };

@@ -24,7 +24,7 @@ const CLASSIFY_TESTS = [
   { input: "#FE01CB", output: "hex" },
   { input: "#FE01CB80", output: "hex" },
   { input: "blue", output: "name" },
-  { input: "orange", output: "name" }
+  { input: "orange", output: "name" },
 ];
 
 function compareWithInspectorUtils(input, isColor) {

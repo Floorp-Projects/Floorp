@@ -178,5 +178,5 @@ var gActionDescrMap =
   collapse: "Collapse",
   expand: "Expand",
   activate: "Activate",
-  cycle: "Cycle"
+  cycle: "Cycle",
 };

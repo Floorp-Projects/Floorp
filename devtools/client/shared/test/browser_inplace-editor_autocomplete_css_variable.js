@@ -76,11 +76,11 @@ add_task(async function() {
       start: runAutocompletionTest,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
       property: {
-        name: "color"
+        name: "color",
       },
       cssVariables: new Map(CSS_VARIABLES),
       done: resolve,
-      popup: popup
+      popup: popup,
     }, doc);
   });
 

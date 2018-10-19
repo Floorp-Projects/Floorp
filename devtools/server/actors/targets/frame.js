@@ -16,7 +16,7 @@
 var { Cr } = require("chrome");
 var {
   BrowsingContextTargetActor,
-  browsingContextTargetPrototype
+  browsingContextTargetPrototype,
 } = require("devtools/server/actors/targets/browsing-context");
 
 const { extend } = require("devtools/shared/extend");
@@ -50,7 +50,7 @@ frameTargetPrototype.initialize = function(connection, chromeGlobal) {
 
   Object.defineProperty(this, "docShell", {
     value: this._chromeGlobal.docShell,
-    configurable: true
+    configurable: true,
   });
 };
 
@@ -59,7 +59,7 @@ Object.defineProperty(frameTargetPrototype, "title", {
     return this.window.document.title;
   },
   enumerable: true,
-  configurable: true
+  configurable: true,
 });
 
 frameTargetPrototype.exit = function() {

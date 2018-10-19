@@ -10,8 +10,8 @@ const frameSpec = generateActorSpec({
 
   methods: {
     getEnvironment: {
-      response: RetVal("json")
-    }
+      response: RetVal("json"),
+    },
   },
 });
 

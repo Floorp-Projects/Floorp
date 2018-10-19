@@ -214,7 +214,7 @@ class ResponsePanel extends Component {
     // Display HTML under Properties View
     if (Filters.html(this.props.request)) {
       object[RESPONSE_PREVIEW] = {
-        HTML_PREVIEW: { responseContent }
+        HTML_PREVIEW: { responseContent },
       };
     }
 

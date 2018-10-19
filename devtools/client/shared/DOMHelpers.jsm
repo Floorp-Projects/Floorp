@@ -160,5 +160,5 @@ DOMHelpers.prototype = {
     } else {
       docShell.chromeEventHandler.addEventListener("DOMContentLoaded", onReady);
     }
-  }
+  },
 };

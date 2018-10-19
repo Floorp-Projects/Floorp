@@ -54,7 +54,7 @@ class WasmRemap {
     const result = this._map.originalPositionFor({
       line: 1,
       column: generatedPosition.line,
-      bias: generatedPosition.bias
+      bias: generatedPosition.bias,
     });
     return result;
   }
@@ -97,7 +97,7 @@ class WasmRemap {
         generatedColumn,
         originalLine,
         originalColumn,
-        name
+        name,
       } = entry;
       callback({
         source,

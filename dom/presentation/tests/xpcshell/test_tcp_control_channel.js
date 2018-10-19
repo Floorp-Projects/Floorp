@@ -60,7 +60,7 @@ function loopOfferAnser() {
   pcs.listener = {
     onServerReady() {
       testPresentationServer();
-    }
+    },
   };
 
   // First run with TLS enabled.
@@ -164,7 +164,7 @@ function testPresentationServer() {
       candidate = {
         candidate: "1 1 UDP 1 127.0.0.1 34567 type host",
         sdpMid: "helloworld",
-        sdpMLineIndex: 1
+        sdpMLineIndex: 1,
       };
       controllerControlChannel.sendIceCandidate(JSON.stringify(candidate));
     },
@@ -342,7 +342,7 @@ function oneMoreLoop() {
     pcs.listener = {
       onServerReady() {
         testPresentationServer();
-      }
+      },
     };
 
     // Second run with TLS disabled.
