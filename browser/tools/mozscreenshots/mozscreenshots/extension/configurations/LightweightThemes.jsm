@@ -25,14 +25,14 @@ var LightweightThemes = {
 
   configurations: {
     noLWT: {
-      selectors: ["#navigator-toolbox"],
+      selectors: [],
       async applyConfig() {
         LightweightThemeManager.currentTheme = null;
       },
     },
 
     darkLWT: {
-      selectors: ["#navigator-toolbox"],
+      selectors: [],
       applyConfig() {
         LightweightThemeManager.setLocalTheme({
           id:          "black",
@@ -45,14 +45,14 @@ var LightweightThemes = {
         // Wait for LWT listener
         return new Promise(resolve => {
           setTimeout(() => {
-            resolve("darkLWT");
+            resolve();
           }, 500);
         });
       },
     },
 
     lightLWT: {
-      selectors: ["#navigator-toolbox"],
+      selectors: [],
       applyConfig() {
         LightweightThemeManager.setLocalTheme({
           id:          "white",
@@ -64,21 +64,21 @@ var LightweightThemes = {
         // Wait for LWT listener
         return new Promise(resolve => {
           setTimeout(() => {
-            resolve("lightLWT");
+            resolve();
           }, 500);
         });
       },
     },
 
     compactLight: {
-      selectors: ["#navigator-toolbox"],
+      selectors: [],
       applyConfig() {
         LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-compact-light@mozilla.org");
       },
     },
 
     compactDark: {
-      selectors: ["#navigator-toolbox"],
+      selectors: [],
       applyConfig() {
         LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-compact-dark@mozilla.org");
       },

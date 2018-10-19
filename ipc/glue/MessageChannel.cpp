@@ -995,6 +995,17 @@ MessageChannel::Echo(Message* aMsg)
 bool
 MessageChannel::Send(Message* aMsg)
 {
+    if (recordreplay::HasDivergedFromRecording() &&
+        recordreplay::child::SuppressMessageAfterDiverge(aMsg))
+    {
+        // Only certain IPDL messages are allowed to be sent in a replaying
+        // process after it has diverged from the recording, to avoid
+        // deadlocking with threads that remain idle. The browser remains
+        // paused after diverging from the recording, and other IPDL messages
+        // do not need to be sent.
+        return true;
+    }
+
     if (aMsg->size() >= kMinTelemetryMessageSize) {
         Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE2, aMsg->size());
     }

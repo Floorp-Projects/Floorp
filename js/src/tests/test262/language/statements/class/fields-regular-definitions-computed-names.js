@@ -1,11 +1,11 @@
 // |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
-// - src/class-fields/computed-names.case
-// - src/class-fields/productions/cls-decl-regular-definitions.template
+// - src/class-elements/computed-names.case
+// - src/class-elements/productions/cls-decl-regular-definitions.template
 /*---
 description: Computed property names (regular fields defintion)
 esid: prod-FieldDefinition
-features: [computed-property-names, class, class-fields-public]
+features: [class-fields-public, computed-property-names, class]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -26,7 +26,7 @@ var x = "b";
 
 class C {
   [x] = 42; [10] = "meep"; ["not initialized"]
-
+  
 }
 
 var c = new C();

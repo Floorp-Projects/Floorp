@@ -315,23 +315,29 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
     let currentNode = treeWalker.currentNode;
     let displayType = this.walker.getNode(currentNode).displayType;
 
-    if (!displayType) {
-      return null;
-    }
-
-    if (type == "flex") {
-      if (displayType == "inline-flex" || displayType == "flex") {
-        return new FlexboxActor(this, currentNode);
-      } else if (onlyLookAtCurrentNode) {
+    // If the node is an element, check first if it is itself a flex or a grid.
+    if (currentNode.nodeType === currentNode.ELEMENT_NODE) {
+      if (!displayType) {
         return null;
       }
-    } else if (type == "grid" &&
-               (displayType == "inline-grid" || displayType == "grid")) {
-      return new GridActor(this, currentNode);
+
+      if (type == "flex") {
+        if (displayType == "inline-flex" || displayType == "flex") {
+          return new FlexboxActor(this, currentNode);
+        } else if (onlyLookAtCurrentNode) {
+          return null;
+        }
+      } else if (type == "grid" &&
+                 (displayType == "inline-grid" || displayType == "grid")) {
+        return new GridActor(this, currentNode);
+      }
     }
 
     // Otherwise, check if this is a flex/grid item or the parent node is a flex/grid
     // container.
+    // Note that text nodes that are children of flex/grid containers are wrapped in
+    // anonymous containers, so even if their displayType getter returns null we still
+    // want to walk up the chain to find their container.
     while ((currentNode = treeWalker.parentNode())) {
       if (!currentNode) {
         break;

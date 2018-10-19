@@ -1,11 +1,11 @@
 // |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
-// - src/class-fields/literal-names.case
-// - src/class-fields/productions/cls-decl-new-sc-line-generator.template
+// - src/class-elements/literal-names.case
+// - src/class-elements/productions/cls-decl-new-sc-line-generator.template
 /*---
 description: Literal property names (field definitions followed by a method in a new line with a semicolon)
 esid: prod-FieldDefinition
-features: [class, class-fields-public, generators]
+features: [class-fields-public, class, generators]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -28,7 +28,7 @@ class C {
   a; b = 42;
   c = fn;
   *m() { return 42; }
-
+  
 }
 
 var c = new C();

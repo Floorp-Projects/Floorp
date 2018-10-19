@@ -401,6 +401,37 @@ Middleman_MaybeSwitchToReplayingChild(JSContext* aCx, unsigned aArgc, Value* aVp
   return true;
 }
 
+static bool
+Middleman_HadRepaint(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isNumber() || !args.get(1).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad width/height");
+    return false;
+  }
+
+  size_t width = args.get(0).toNumber();
+  size_t height = args.get(1).toNumber();
+
+  PaintMessage message(CheckpointId::Invalid, width, height);
+  parent::UpdateGraphicsInUIProcess(&message);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool
+Middleman_HadRepaintFailure(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  parent::UpdateGraphicsInUIProcess(nullptr);
+
+  args.rval().setUndefined();
+  return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Devtools Sandbox
 ///////////////////////////////////////////////////////////////////////////////
@@ -824,6 +855,26 @@ RecordReplay_TimeWarpTargetExecutionPoint(JSContext* aCx, unsigned aArgc, Value*
 }
 
 static bool
+RecordReplay_Repaint(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  size_t width, height;
+  child::Repaint(&width, &height);
+
+  RootedObject obj(aCx, JS_NewObject(aCx, nullptr));
+  if (!obj ||
+      !JS_DefineProperty(aCx, obj, "width", (double) width, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(aCx, obj, "height", (double) height, JSPROP_ENUMERATE))
+  {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+static bool
 RecordReplay_Dump(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   // This method is an alternative to dump() that can be used in places where
@@ -859,6 +910,8 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("setBreakpoint", Middleman_SetBreakpoint, 2, 0),
   JS_FN("clearBreakpoint", Middleman_ClearBreakpoint, 1, 0),
   JS_FN("maybeSwitchToReplayingChild", Middleman_MaybeSwitchToReplayingChild, 0, 0),
+  JS_FN("hadRepaint", Middleman_HadRepaint, 2, 0),
+  JS_FN("hadRepaintFailure", Middleman_HadRepaintFailure, 0, 0),
   JS_FS_END
 };
 
@@ -870,6 +923,7 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
   JS_FN("getContent", RecordReplay_GetContent, 1, 0),
   JS_FN("currentExecutionPoint", RecordReplay_CurrentExecutionPoint, 1, 0),
   JS_FN("timeWarpTargetExecutionPoint", RecordReplay_TimeWarpTargetExecutionPoint, 1, 0),
+  JS_FN("repaint", RecordReplay_Repaint, 0, 0),
   JS_FN("dump", RecordReplay_Dump, 1, 0),
   JS_FS_END
 };

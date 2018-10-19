@@ -32,7 +32,9 @@ const errors = [
 ];
 
 for (const input of errors) {
-  assert.throws(CustomError, function() { new Intl.Locale(input) });
+  assert.throws(CustomError, function() {
+    new Intl.Locale(input);
+  });
 }
 
 reportCompare(0, 0);

@@ -126,7 +126,6 @@ var TrackingProtection = {
 };
 
 var ThirdPartyCookies = {
-  reportBreakageLabel: "cookierestrictions",
   telemetryIdentifier: "cr",
   PREF_ENABLED: "network.cookie.cookieBehavior",
   PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.rejecttrackers.reportBreakage.enabled",
@@ -144,12 +143,49 @@ var ThirdPartyCookies = {
       document.getElementById("identity-popup-content-blocking-category-3rdpartycookies");
   },
 
+  get reportBreakageLabel() {
+    switch (this.behaviorPref) {
+    case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+      return "nocookiesblocked";
+    case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+      return "allthirdpartycookiesblocked";
+    case Ci.nsICookieService.BEHAVIOR_REJECT:
+      return "allcookiesblocked";
+    case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+      return "cookiesfromunvisitedsitesblocked";
+    default:
+      Cu.reportError(`Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`);
+      // fall through
+    case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+      return "cookierestrictions";
+    }
+  },
+
+  get categoryLabelDefault() {
+    delete this.categoryLabelDefault;
+    return this.categoryLabelDefault =
+      document.getElementById("identity-popup-content-blocking-category-label-default");
+  },
+
+  get categoryLabelTrackers() {
+    delete this.categoryLabelTrackers;
+    return this.categoryLabelTrackers =
+      document.getElementById("identity-popup-content-blocking-category-label-trackers");
+  },
+
+  updateCategoryLabel() {
+    let rejectTrackers = this.behaviorPref == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+    this.categoryLabelDefault.hidden = rejectTrackers;
+    this.categoryLabelTrackers.hidden = !rejectTrackers;
+  },
+
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(this, "behaviorPref", this.PREF_ENABLED,
-                                          Ci.nsICookieService.BEHAVIOR_ACCEPT);
+      Ci.nsICookieService.BEHAVIOR_ACCEPT, this.updateCategoryLabel.bind(this));
     XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
     XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
       this.PREF_REPORT_BREAKAGE_ENABLED, false);
+    this.updateCategoryLabel();
   },
   get enabled() {
     return this.PREF_ENABLED_VALUES.includes(this.behaviorPref);

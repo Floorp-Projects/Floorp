@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-ary.case
 // - src/dstr-binding/default/var-stmt.template
 /*---
-description: Reset element (nested array pattern) does not support initializer (`var` statement)
+description: Rest element (nested array pattern) does not support initializer (`var` statement)
 esid: sec-variable-statement-runtime-semantics-evaluation
 es6id: 13.3.2.4
 features: [destructuring-binding]

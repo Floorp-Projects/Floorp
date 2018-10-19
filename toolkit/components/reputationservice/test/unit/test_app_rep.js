@@ -19,6 +19,8 @@ var NO_LIST = 2;
 var whitelistedURI = createURI("http://foo:bar@whitelisted.com/index.htm#junk");
 var exampleURI = createURI("http://user:password@example.com/i.html?foo=bar");
 var blocklistedURI = createURI("http://baz:qux@blocklisted.com?xyzzy");
+var binaryFile = "binaryFile.exe";
+var nonBinaryFile = "nonBinaryFile.txt";
 
 const appRepURLPref = "browser.safebrowsing.downloads.remote.url";
 
@@ -292,6 +294,7 @@ add_test(function test_blocklist_trumps_allowlist() {
   gAppRep.queryReputation({
     sourceURI: whitelistedURI,
     referrerURI: blocklistedURI,
+    suggestedFileName: binaryFile,
     fileSize: 12,
   }, function onComplete(aShouldBlock, aStatus) {
     Assert.equal(Cr.NS_OK, aStatus);
@@ -337,6 +340,7 @@ add_test(function test_redirect_on_blocklist() {
     sourceURI: whitelistedURI,
     referrerURI: exampleURI,
     redirects: badRedirects,
+    suggestedFileName: binaryFile,
     fileSize: 12,
   }, function onComplete(aShouldBlock, aStatus) {
     Assert.equal(Cr.NS_OK, aStatus);
@@ -354,6 +358,25 @@ add_test(function test_whitelisted_source() {
   listCounts[ALLOW_LIST]++;
   gAppRep.queryReputation({
     sourceURI: whitelistedURI,
+    suggestedFileName: binaryFile,
+    fileSize: 12,
+  }, function onComplete(aShouldBlock, aStatus) {
+    Assert.equal(Cr.NS_OK, aStatus);
+    Assert.ok(!aShouldBlock);
+    check_telemetry(counts.shouldBlock, listCounts);
+    run_next_test();
+  });
+});
+
+add_test(function test_whitelisted_non_binary_source() {
+  Services.prefs.setCharPref(appRepURLPref,
+                             "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  listCounts[NO_LIST]++;
+  gAppRep.queryReputation({
+    sourceURI: whitelistedURI,
+    suggestedFileName: nonBinaryFile,
     fileSize: 12,
   }, function onComplete(aShouldBlock, aStatus) {
     Assert.equal(Cr.NS_OK, aStatus);

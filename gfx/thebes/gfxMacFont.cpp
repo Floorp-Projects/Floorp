@@ -7,6 +7,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "gfxCoreTextShaper.h"
 #include <algorithm>
@@ -149,8 +150,11 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
     cairo_font_options_t *fontOptions = cairo_font_options_create();
 
     // turn off font anti-aliasing based on user pref setting
-    if (mAdjustedSize <=
-        (gfxFloat)gfxPlatformMac::GetPlatform()->GetAntiAliasingThreshold()) {
+    if ((mAdjustedSize <=
+         (gfxFloat)gfxPlatformMac::GetPlatform()->GetAntiAliasingThreshold()) ||
+        // Turn off AA for Ahem for testing purposes when requested.
+        MOZ_UNLIKELY(StaticPrefs::gfx_font_ahem_antialias_none() &&
+                     mFontEntry->FamilyName().EqualsLiteral("Ahem"))) {
         cairo_font_options_set_antialias(fontOptions, CAIRO_ANTIALIAS_NONE);
         mAntialiasOption = kAntialiasNone;
     } else if (mStyle.useGrayscaleAntialiasing) {

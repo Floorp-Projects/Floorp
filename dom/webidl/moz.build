@@ -103,9 +103,6 @@ with Files("FakePluginTagInit.webidl"):
 with Files("FeaturePolicy.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
-with Files("Flex.webidl"):
-    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
-
 with Files("FocusEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
@@ -507,7 +504,6 @@ WEBIDL_FILES = [
     'FileSystemDirectoryReader.webidl',
     'FileSystemEntry.webidl',
     'FileSystemFileEntry.webidl',
-    'Flex.webidl',
     'FocusEvent.webidl',
     'FontFace.webidl',
     'FontFaceSet.webidl',

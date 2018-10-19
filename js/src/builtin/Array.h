@@ -196,9 +196,6 @@ array_construct(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 IsCrossRealmArrayConstructor(JSContext* cx, const Value& v, bool* result);
 
-extern bool
-ObjectMayHaveExtraIndexedProperties(JSObject* obj);
-
 class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
 {
     /*

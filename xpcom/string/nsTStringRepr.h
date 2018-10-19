@@ -257,11 +257,14 @@ public:
   // null-terminated.
   bool NS_FASTCALL EqualsASCII(const char* aData) const;
 
-  // EqualsLiteral must ONLY be applied to an actual literal string, or
-  // a char array *constant* declared without an explicit size.
-  // Do not attempt to use it with a regular char* pointer, or with a
-  // non-constant char array variable. Use EqualsASCII for them.
-  // The template trick to acquire the array length at compile time without
+  // EqualsLiteral must ONLY be called with an actual literal string, or
+  // a char array *constant* declared without an explicit size and with an
+  // initializer that is a string literal or is otherwise null-terminated.
+  // Use EqualsASCII for other char array variables.
+  // (Although this method may happen to produce expected results for other
+  // char arrays that have bound one greater than the sequence of interest,
+  // such use is discouraged for reasons of readability and maintainability.)
+  // The template trick to acquire the array bound at compile time without
   // using a macro is due to Corey Kosak, with much thanks.
   template<int N>
   inline bool EqualsLiteral(const char (&aStr)[N]) const
@@ -279,11 +282,13 @@ public:
                                         size_type aLen) const;
   bool NS_FASTCALL LowerCaseEqualsASCII(const char* aData) const;
 
-  // LowerCaseEqualsLiteral must ONLY be applied to an actual
-  // literal string, or a char array *constant* declared without an
-  // explicit size.  Do not attempt to use it with a regular char*
-  // pointer, or with a non-constant char array variable. Use
-  // LowerCaseEqualsASCII for them.
+  // LowerCaseEqualsLiteral must ONLY be called with an actual literal string,
+  // or a char array *constant* declared without an explicit size and with an
+  // initializer that is a string literal or is otherwise null-terminated.
+  // Use LowerCaseEqualsASCII for other char array variables.
+  // (Although this method may happen to produce expected results for other
+  // char arrays that have bound one greater than the sequence of interest,
+  // such use is discouraged for reasons of readability and maintainability.)
   template<int N>
   bool LowerCaseEqualsLiteral(const char (&aStr)[N]) const
   {

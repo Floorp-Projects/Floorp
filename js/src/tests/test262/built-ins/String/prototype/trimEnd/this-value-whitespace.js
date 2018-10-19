@@ -29,7 +29,7 @@ var expected = wspc + 'a' + wspc + 'b';
 
 assert.sameValue(
   trimEnd.call(str),
-  expected,
+  expected
 );
 
 reportCompare(0, 0);

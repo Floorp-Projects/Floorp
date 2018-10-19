@@ -425,6 +425,15 @@ PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
     return nsEventStatus_eIgnore;
   }
 
+  if (nsCOMPtr<nsIPresShell> presShell = mTabChild->GetPresShell()) {
+    // Because the root resolution is conceptually at the parent/child process
+    // boundary, we need to apply that resolution here because we're sending
+    // the event from the child to the parent process.
+    LayoutDevicePoint pt(aEvent->mRefPoint);
+    pt = pt * presShell->GetResolution();
+    aEvent->mRefPoint = LayoutDeviceIntPoint::Round(pt);
+  }
+
   switch (aEvent->mClass) {
     case eWheelEventClass:
       Unused <<

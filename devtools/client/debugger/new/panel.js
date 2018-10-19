@@ -64,11 +64,11 @@ DebuggerPanel.prototype = {
   },
 
   openWorkerToolbox: async function(worker) {
-    const [response, workerClient] =
+    const [response, workerTargetFront] =
       await this.toolbox.target.client.attachWorker(worker.actor);
-    const workerTarget = TargetFactory.forWorker(workerClient);
+    const workerTarget = TargetFactory.forWorker(workerTargetFront);
     const toolbox = await gDevTools.showToolbox(workerTarget, "jsdebugger", Toolbox.HostType.WINDOW);
-    toolbox.once("destroy", () => workerClient.detach());
+    toolbox.once("destroy", () => workerTargetFront.detach());
   },
 
   getFrames: function() {

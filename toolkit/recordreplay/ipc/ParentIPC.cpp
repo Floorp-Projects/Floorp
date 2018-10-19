@@ -226,6 +226,7 @@ static void RecvHitBreakpoint(const HitBreakpointMessage& aMsg);
 static void RecvDebuggerResponse(const DebuggerResponseMessage& aMsg);
 static void RecvRecordingFlushed();
 static void RecvAlwaysMarkMajorCheckpoints();
+static void RecvMiddlemanCallRequest(const MiddlemanCallRequestMessage& aMsg);
 
 // The role taken by the active child.
 class ChildRoleActive final : public ChildRole
@@ -250,7 +251,7 @@ public:
   void OnIncomingMessage(const Message& aMsg) override {
     switch (aMsg.mType) {
     case MessageType::Paint:
-      UpdateGraphicsInUIProcess((const PaintMessage*) &aMsg);
+      MaybeUpdateGraphicsAtPaint((const PaintMessage&) aMsg);
       break;
     case MessageType::HitCheckpoint:
       RecvHitCheckpoint((const HitCheckpointMessage&) aMsg);
@@ -266,6 +267,12 @@ public:
       break;
     case MessageType::AlwaysMarkMajorCheckpoints:
       RecvAlwaysMarkMajorCheckpoints();
+      break;
+    case MessageType::MiddlemanCallRequest:
+      RecvMiddlemanCallRequest((const MiddlemanCallRequestMessage&) aMsg);
+      break;
+    case MessageType::ResetMiddlemanCalls:
+      ResetMiddlemanCalls();
       break;
     default:
       MOZ_CRASH("Unexpected message");
@@ -970,10 +977,44 @@ static bool gResumeForwardOrBackward = false;
 // Hit any breakpoints installed for forced pauses.
 static void HitForcedPauseBreakpoints(bool aRecordingBoundary);
 
+static void
+MaybeSendRepaintMessage()
+{
+  // In repaint stress mode, we want to trigger a repaint at every checkpoint,
+  // so before resuming after the child pauses at each checkpoint, send it a
+  // repaint message. There might not be a debugger open, so manually craft the
+  // same message which the debugger would send to trigger a repaint and parse
+  // the result.
+  if (InRepaintStressMode()) {
+    MaybeSwitchToReplayingChild();
+
+    const char16_t contents[] = u"{\"type\":\"repaint\"}";
+
+    js::CharBuffer request, response;
+    request.append(contents, ArrayLength(contents) - 1);
+    SendRequest(request, &response);
+
+    AutoSafeJSContext cx;
+    JS::RootedValue value(cx);
+    if (JS_ParseJSON(cx, response.begin(), response.length(), &value)) {
+      MOZ_RELEASE_ASSERT(value.isObject());
+      JS::RootedObject obj(cx, &value.toObject());
+      RootedValue width(cx), height(cx);
+      if (JS_GetProperty(cx, obj, "width", &width) && width.isNumber() && width.toNumber() &&
+          JS_GetProperty(cx, obj, "height", &height) && height.isNumber() && height.toNumber()) {
+        PaintMessage message(CheckpointId::Invalid, width.toNumber(), height.toNumber());
+        UpdateGraphicsInUIProcess(&message);
+      }
+    }
+  }
+}
+
 void
 Resume(bool aForward)
 {
   gActiveChild->WaitUntilPaused();
+
+  MaybeSendRepaintMessage();
 
   // Set the preferred direction of travel.
   gResumeForwardOrBackward = false;
@@ -1125,6 +1166,7 @@ static void
 RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
 {
   UpdateCheckpointTimes(aMsg);
+  MaybeUpdateGraphicsAtCheckpoint(aMsg.mCheckpointId);
 
   // Resume either forwards or backwards. Break the resume off into a separate
   // runnable, to avoid starving any code already on the stack and waiting for
@@ -1197,6 +1239,18 @@ HitForcedPauseBreakpoints(bool aRecordingBoundary)
                                                          newBreakpoints, breakpoints.length(),
                                                          aRecordingBoundary));
   }
+}
+
+static void
+RecvMiddlemanCallRequest(const MiddlemanCallRequestMessage& aMsg)
+{
+  InfallibleVector<char> outputData;
+  ProcessMiddlemanCall(aMsg.BinaryData(), aMsg.BinaryDataSize(), &outputData);
+
+  MiddlemanCallResponseMessage* response =
+    MiddlemanCallResponseMessage::New(outputData.begin(), outputData.length());
+  gActiveChild->SendMessage(*response);
+  free(response);
 }
 
 } // namespace parent

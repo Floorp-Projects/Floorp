@@ -16,14 +16,15 @@
 
 class nsContentList;
 class nsHTMLDocument;
-class nsIContent;
 class nsINode;
 
 namespace mozilla {
 namespace dom {
 
-class OwningNodeOrHTMLCollection;
+class Element;
+class OwningHTMLCollectionOrElement;
 template<typename> struct Nullable;
+template<typename> class Optional;
 
 class HTMLAllCollection final : public nsISupports
                               , public nsWrapperCache
@@ -40,32 +41,32 @@ public:
   nsINode* GetParentObject() const;
 
   uint32_t Length();
-  nsIContent* Item(uint32_t aIndex);
-  void Item(const nsAString& aName, Nullable<OwningNodeOrHTMLCollection>& aResult)
+  Element* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
-    NamedItem(aName, aResult);
-  }
-  nsIContent* IndexedGetter(uint32_t aIndex, bool& aFound)
-  {
-    nsIContent* result = Item(aIndex);
+    Element* result = Item(aIndex);
     aFound = !!result;
     return result;
   }
 
   void NamedItem(const nsAString& aName,
-                 Nullable<OwningNodeOrHTMLCollection>& aResult)
+                 Nullable<OwningHTMLCollectionOrElement>& aResult)
   {
     bool found = false;
     NamedGetter(aName, found, aResult);
   }
   void NamedGetter(const nsAString& aName,
                    bool& aFound,
-                   Nullable<OwningNodeOrHTMLCollection>& aResult);
+                   Nullable<OwningHTMLCollectionOrElement>& aResult);
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  void LegacyCall(JS::Handle<JS::Value>, const nsAString& aName,
-                  Nullable<OwningNodeOrHTMLCollection>& aResult)
+
+  void Item(const Optional<nsAString>& aNameOrIndex,
+            Nullable<OwningHTMLCollectionOrElement>& aResult);
+
+  void LegacyCall(JS::Handle<JS::Value>,
+                  const Optional<nsAString>& aNameOrIndex,
+                  Nullable<OwningHTMLCollectionOrElement>& aResult)
   {
-    NamedItem(aName, aResult);
+    Item(aNameOrIndex, aResult);
   }
 
 private:
@@ -75,6 +76,11 @@ private:
    * Returns the HTMLCollection for document.all[aID], or null if there isn't one.
    */
   nsContentList* GetDocumentAllList(const nsAString& aID);
+
+  /**
+   * Helper for indexed getter and spec Item() method.
+   */
+  Element* Item(uint32_t aIndex);
 
   RefPtr<nsHTMLDocument> mDocument;
   RefPtr<nsContentList> mCollection;

@@ -263,7 +263,7 @@ android.libraryVariants.all { variant ->
         options.bootClasspath = [
             file("${System.properties['java.home']}/lib/rt.jar")] + android.bootClasspath
         options.memberLevel = JavadocMemberLevel.PROTECTED
-        options.source = 7
+        options.source = 8
         options.links("https://d.android.com/reference/")
 
         options.docTitle = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"

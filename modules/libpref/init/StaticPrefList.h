@@ -466,6 +466,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "gfx.font_ahem_antialias_none",
+   gfx_font_ahem_antialias_none,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // HTML5 parser prefs
 //---------------------------------------------------------------------------

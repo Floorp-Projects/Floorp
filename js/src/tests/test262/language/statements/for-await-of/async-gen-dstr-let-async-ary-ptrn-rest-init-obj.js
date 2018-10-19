@@ -3,7 +3,7 @@
 // - src/dstr-binding-for-await/ary-ptrn-rest-init-obj.case
 // - src/dstr-binding-for-await/default/for-await-of-async-gen-let-async.template
 /*---
-description: Reset element (nested object pattern) does not support initializer (for-await-of statement)
+description: Rest element (nested object pattern) does not support initializer (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
 features: [destructuring-binding, async-iteration]
 flags: [generated, async]

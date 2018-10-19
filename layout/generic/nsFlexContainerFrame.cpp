@@ -303,6 +303,8 @@ public:
 
   // Accessors:
   // XXXdholbert [BEGIN DEPRECATED]
+  // These should not be used in layout, but they are useful for devtools API
+  // which reports physical axis direction.
   AxisOrientationType GetMainAxis() const  { return mMainAxis;  }
   AxisOrientationType GetCrossAxis() const { return mCrossAxis; }
   // XXXdholbert [END DEPRECATED]
@@ -1077,7 +1079,8 @@ public:
 
 private:
   // Helpers for ResolveFlexibleLengths():
-  void FreezeItemsEarly(bool aIsUsingFlexGrow);
+  void FreezeItemsEarly(bool aIsUsingFlexGrow,
+                        ComputedFlexLineInfo* aLineInfo);
 
   void FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
                                        bool aIsFinalIteration);
@@ -2501,7 +2504,8 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow)
+FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow,
+                           ComputedFlexLineInfo* aLineInfo)
 {
   // After we've established the type of flexing we're doing (growing vs.
   // shrinking), and before we try to flex any items, we freeze items that
@@ -2530,7 +2534,13 @@ FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow)
     if (!item->IsFrozen()) {
       numUnfrozenItemsToBeSeen--;
       bool shouldFreeze = (0.0f == item->GetFlexFactor(aIsUsingFlexGrow));
-      if (!shouldFreeze) {
+      // NOTE: We skip the "could flex but base size out of range"
+      // early-freezing if flex devtools are active, so that we can let the
+      // first run of the main flex layout loop compute how much this item
+      // wants to flex. (This skipping shouldn't impact results, because
+      // any affected items will just immediately be caught & frozen as min/max
+      // violations in that first loop, and that'll trigger another loop.)
+      if (!shouldFreeze && !aLineInfo) {
         if (aIsUsingFlexGrow) {
           if (item->GetFlexBaseSize() > item->GetMainSize()) {
             shouldFreeze = true;
@@ -2616,13 +2626,26 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 {
   MOZ_LOG(gFlexContainerLog, LogLevel::Debug, ("ResolveFlexibleLengths\n"));
 
+  // Before we start resolving sizes: if we have an aLineInfo structure to fill
+  // out, we inform it of each item's base size, and we initialize the "delta"
+  // for each item to 0. (And if the flex algorithm wants to grow or shrink the
+  // item, we'll update this delta further down.)
+  if (aLineInfo) {
+    uint32_t itemIndex = 0;
+    for (FlexItem* item = mItems.getFirst(); item; item = item->getNext(),
+                                                   ++itemIndex) {
+      aLineInfo->mItems[itemIndex].mMainBaseSize = item->GetFlexBaseSize();
+      aLineInfo->mItems[itemIndex].mMainDeltaSize = 0;
+    }
+  }
+
   // Determine whether we're going to be growing or shrinking items.
   const bool isUsingFlexGrow =
     (mTotalOuterHypotheticalMainSize < aFlexContainerMainSize);
 
   // Do an "early freeze" for flex items that obviously can't flex in the
   // direction we've chosen:
-  FreezeItemsEarly(isUsingFlexGrow);
+  FreezeItemsEarly(isUsingFlexGrow, aLineInfo);
 
   if ((mNumFrozenItems == mNumItems) && !aLineInfo) {
     // All our items are frozen, so we have no flexible lengths to resolve,
@@ -2659,21 +2682,6 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
         item->SetMainSize(item->GetFlexBaseSize());
       }
       availableFreeSpace -= item->GetMainSize();
-    }
-
-    // If we have an aLineInfo structure to fill out, and this is the
-    // first time through the loop, capture these sizes as mainBaseSizes.
-    // We only care about the first iteration, because additional
-    // iterations will only reset item base sizes to these values.
-    // We also set a 0 mainDeltaSize. This will be modified later if
-    // the item is stretched or shrunk.
-    if (aLineInfo && (iterationCounter == 0)) {
-      uint32_t itemIndex = 0;
-      for (FlexItem* item = mItems.getFirst(); item; item = item->getNext(),
-                                                     ++itemIndex) {
-        aLineInfo->mItems[itemIndex].mMainBaseSize = item->GetMainSize();
-        aLineInfo->mItems[itemIndex].mMainDeltaSize = 0;
-      }
     }
 
     MOZ_LOG(gFlexContainerLog, LogLevel::Debug,
@@ -2850,37 +2858,44 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
           uint32_t itemIndex = 0;
           for (FlexItem* item = mItems.getFirst(); item; item = item->getNext(),
                                                          ++itemIndex) {
-            // Calculate a deltaSize that represents how much the
-            // flex sizing algorithm "wants" to stretch or shrink this
-            // item during this pass through the algorithm. Later
-            // passes through the algorithm may overwrite this value.
-            // Also, this value may not reflect how much the size of
-            // the item is actually changed, since the size of the
-            // item will be clamped to min and max values later in
-            // this pass. That's intentional, since we want to report
-            // the value that the sizing algorithm tried to stretch
-            // or shrink the item.
-            nscoord deltaSize = item->GetMainSize() -
-              aLineInfo->mItems[itemIndex].mMainBaseSize;
+            if (!item->IsFrozen()) {
+              // Calculate a deltaSize that represents how much the flex sizing
+              // algorithm "wants" to stretch or shrink this item during this
+              // pass through the algorithm. Later passes through the algorithm
+              // may overwrite this, until this item is frozen. Note that this
+              // value may not reflect how much the size of the item is
+              // actually changed, since the size of the item will be clamped
+              // to min and max values later in this pass. That's intentional,
+              // since we want to report the value that the sizing algorithm
+              // tried to stretch or shrink the item.
+              nscoord deltaSize = item->GetMainSize() -
+                aLineInfo->mItems[itemIndex].mMainBaseSize;
 
-            aLineInfo->mItems[itemIndex].mMainDeltaSize = deltaSize;
-            // If any item on the line is growing, mark the aLineInfo
-            // structure; likewise if any item is shrinking. Items in
-            // a line can't be both growing and shrinking.
-            if (deltaSize > 0) {
-              MOZ_ASSERT(item->IsFrozen() || isUsingFlexGrow,
-                "Unfrozen items shouldn't grow without isUsingFlexGrow.");
-              MOZ_ASSERT(aLineInfo->mGrowthState !=
-                         ComputedFlexLineInfo::GrowthState::SHRINKING);
-              aLineInfo->mGrowthState =
-                ComputedFlexLineInfo::GrowthState::GROWING;
-            } else if (deltaSize < 0) {
-              MOZ_ASSERT(item->IsFrozen() || !isUsingFlexGrow,
-               "Unfrozen items shouldn't shrink with isUsingFlexGrow.");
-              MOZ_ASSERT(aLineInfo->mGrowthState !=
-                         ComputedFlexLineInfo::GrowthState::GROWING);
-              aLineInfo->mGrowthState =
-                ComputedFlexLineInfo::GrowthState::SHRINKING;
+              aLineInfo->mItems[itemIndex].mMainDeltaSize = deltaSize;
+              // If any (unfrozen) item on the line is growing, we mark the
+              // aLineInfo structure; likewise if any item is shrinking.
+              // (Note: a line can't contain a mix of items that are growing
+              // and shrinking. Also, the sign of any delta should match the
+              // type of flex factor we're using [grow vs shrink].)
+              if (deltaSize > 0) {
+                MOZ_ASSERT(isUsingFlexGrow,
+                           "Unfrozen items can only grow if we're "
+                           "distributing (positive) space with flex-grow");
+                MOZ_ASSERT(aLineInfo->mGrowthState !=
+                           ComputedFlexLineInfo::GrowthState::SHRINKING,
+                           "shouldn't flip flop from shrinking to growing");
+                aLineInfo->mGrowthState =
+                  ComputedFlexLineInfo::GrowthState::GROWING;
+              } else if (deltaSize < 0) {
+                MOZ_ASSERT(!isUsingFlexGrow,
+                           "Unfrozen items can only shrink if we're "
+                           "distributing (negative) space with flex-shrink");
+                MOZ_ASSERT(aLineInfo->mGrowthState !=
+                           ComputedFlexLineInfo::GrowthState::GROWING,
+                           "shouldn't flip flop from growing to shrinking");
+                aLineInfo->mGrowthState =
+                  ComputedFlexLineInfo::GrowthState::SHRINKING;
+              }
             }
           }
         }
@@ -4669,6 +4684,21 @@ nsFlexContainerFrame::IsUsedFlexBasisContent(const nsStyleCoord* aFlexBasis,
      aMainSize->GetUnit() == eStyleUnit_Auto);
 }
 
+static mozilla::dom::FlexPhysicalDirection
+ConvertAxisOrientationTypeToAPIEnum(AxisOrientationType aAxisOrientation)
+{
+  switch (aAxisOrientation) {
+    case eAxis_LR:
+      return mozilla::dom::FlexPhysicalDirection::Horizontal_lr;
+    case eAxis_RL:
+      return mozilla::dom::FlexPhysicalDirection::Horizontal_rl;
+    case eAxis_TB:
+      return mozilla::dom::FlexPhysicalDirection::Vertical_tb;
+    default:
+      return mozilla::dom::FlexPhysicalDirection::Vertical_bt;
+  }
+}
+
 void
 nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    ReflowOutput&     aDesiredSize,
@@ -4722,6 +4752,19 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       MOZ_ASSERT(containerInfo->mLines.IsEmpty(),
                  "Shouldn't have lines yet.");
     }
+
+    // Set the axis physical directions.
+    AxisOrientationType mainAxis = aAxisTracker.GetMainAxis();
+    AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
+    if (aAxisTracker.AreAxesInternallyReversed()) {
+      mainAxis = GetReverseAxis(mainAxis);
+      crossAxis = GetReverseAxis(crossAxis);
+    }
+
+    containerInfo->mMainAxisDirection =
+      ConvertAxisOrientationTypeToAPIEnum(mainAxis);
+    containerInfo->mCrossAxisDirection =
+      ConvertAxisOrientationTypeToAPIEnum(crossAxis);
 
     for (const FlexLine* line = lines.getFirst(); line;
          line = line->getNext()) {

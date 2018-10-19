@@ -855,6 +855,9 @@ pref("gfx.font_rendering.graphite.enabled", true);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
+// Disable antialiasing of Ahem, for use in tests
+pref("gfx.font_ahem_antialias_none", false);
+
 #ifdef XP_WIN
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
@@ -5910,11 +5913,7 @@ pref("dom.event.default_to_passive_touch_listeners", true);
 pref("browser.fastblock.timeout", 5000);
 // The amount of time (ms) since navigation start after which
 // we'll stop blocking tracker connections (0 = no limit).
-#ifdef NIGHTLY_BUILD
 pref("browser.fastblock.limit", 20000);
-#else
-pref("browser.fastblock.limit", 0);
-#endif
 
 // Enable clipboard readText() and writeText() by default
 pref("dom.events.asyncClipboard", true);
@@ -5938,5 +5937,6 @@ pref("prio.enabled", false);
 #ifdef NIGHTLY_BUILD
 // Bug 1499552; add a dummy pref to verify that collection of preferences
 // via telemetry is working as expected.
-pref("app.normandy.test.with_default", false);
+pref("app.normandy.test.with_true_default", true);
+pref("app.normandy.test.with_false_default", false);
 #endif

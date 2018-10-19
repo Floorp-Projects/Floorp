@@ -46,7 +46,7 @@ add_test(async function() {
 
   var item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
   var name = gManagerWindow.document.getAnonymousElementByAttribute(item, "anonid", "name");
-  is(name.value, "manually updating addon", "Should show the old name in the list");
+  is(name.textContent, "manually updating addon", "Should show the old name in the list");
   get_tooltip_info(item).then(({ name, version }) => {
     is(name, "manually updating addon", "Should show the old name in the tooltip");
     is(version, "1.0", "Should still show the old version in the tooltip");

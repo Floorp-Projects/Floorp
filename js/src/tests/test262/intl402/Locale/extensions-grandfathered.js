@@ -44,13 +44,7 @@ const testData = [
             region: "DE",
             numberingSystem: "latn",
         },
-        canonical: "i-default",
-        extensions: {
-            language: undefined,
-            script: undefined,
-            region: undefined,
-            numberingSystem: undefined,
-        },
+        canonical: "fr-Cyrl-DE-u-nu-latn",
     },
 
     // Irregular grandfathered with modern replacement.
@@ -62,13 +56,7 @@ const testData = [
             region: "US",
             numberingSystem: "latn",
         },
-        canonical: "en-GB-oxendict-u-nu-latn",
-        extensions: {
-            language: "en",
-            script: undefined,
-            region: "GB",
-            numberingSystem: "latn",
-        },
+        canonical: "fr-Cyrl-US-oxendict-u-nu-latn",
     },
 
     // Regular grandfathered without modern replacement.
@@ -80,13 +68,7 @@ const testData = [
             region: "FR",
             numberingSystem: "latn",
         },
-        canonical: "cel-gaulish",
-        extensions: {
-            language: undefined,
-            script: undefined,
-            region: undefined,
-            numberingSystem: undefined,
-        },
+        canonical: "fr-Cyrl-FR-u-nu-latn",
     },
 
     // Regular grandfathered with modern replacement.
@@ -98,21 +80,15 @@ const testData = [
             region: "ZZ",
             numberingSystem: "latn",
         },
-        canonical: "jbo-u-nu-latn",
-        extensions: {
-            language: "jbo",
-            script: undefined,
-            region: undefined,
-            numberingSystem: "latn",
-        },
+        canonical: "fr-Cyrl-ZZ-u-nu-latn",
     },
 ];
 
-for (const {tag, options, canonical, extensions} of testData) {
+for (const {tag, options, canonical} of testData) {
     const loc = new Intl.Locale(tag, options);
     assert.sameValue(loc.toString(), canonical);
 
-    for (const [name, value] of Object.entries(extensions)) {
+    for (const [name, value] of Object.entries(options)) {
         assert.sameValue(loc[name], value);
     }
 }

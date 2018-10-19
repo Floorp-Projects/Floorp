@@ -976,11 +976,14 @@ WebConsoleActor.prototype =
    *         `resultID` field, with a sanitized helperResult field.
    */
   _waitForResultAndSend: async function(response) {
+    let updateTimestamp = false;
+
     // Wait for asynchronous command completion before sending back the response
     if (
       response.helperResult && typeof response.helperResult.then == "function"
     ) {
       response.helperResult = await response.helperResult;
+      updateTimestamp = true;
     } else if (response.awaitResult && typeof response.awaitResult.then === "function") {
       let result;
       try {
@@ -1000,6 +1003,14 @@ WebConsoleActor.prototype =
 
       // Remove the promise from the response object.
       delete response.awaitResult;
+
+      updateTimestamp = true;
+    }
+
+    if (updateTimestamp) {
+      // We need to compute the timestamp again as the one in the response was set before
+      // doing the evaluation, which is now innacurate since we waited for a bit.
+      response.timestamp = Date.now();
     }
 
     // Finally, send an unsolicited evaluationResult packet with

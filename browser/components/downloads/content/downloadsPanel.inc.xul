@@ -128,11 +128,9 @@
                   flex="1"
                   class="downloadContainer">
               <description id="downloadsSummaryDescription"/>
-              <progressmeter id="downloadsSummaryProgress"
+              <html:progress id="downloadsSummaryProgress"
                              class="downloadProgress"
-                             min="0"
-                             max="100"
-                             mode="normal" />
+                             max="100"/>
               <description id="downloadsSummaryDetails"
                            crop="end"/>
             </vbox>

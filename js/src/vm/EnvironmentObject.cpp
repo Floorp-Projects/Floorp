@@ -2807,10 +2807,11 @@ DebugEnvironments::takeFrameSnapshot(JSContext* cx, Handle<DebugEnvironmentProxy
      * invariants since DebugEnvironmentProxy::maybeSnapshot can already be nullptr.
      */
 
+    JSScript* script = frame.script();
+
     // Act like no snapshot was taken if we run OOM while taking the snapshot.
     Rooted<GCVector<Value>> vec(cx, GCVector<Value>(cx));
     if (debugEnv->environment().is<CallObject>()) {
-        JSScript* script = frame.script();
 
         FunctionScope* scope = &script->bodyScope()->as<FunctionScope>();
         uint32_t frameSlotCount = scope->nextFrameSlot();
@@ -2848,7 +2849,7 @@ DebugEnvironments::takeFrameSnapshot(JSContext* cx, Handle<DebugEnvironmentProxy
             LexicalScope* scope = &debugEnv->environment().as<LexicalEnvironmentObject>().scope();
             frameSlotStart = scope->firstFrameSlot();
             frameSlotEnd = scope->nextFrameSlot();
-        } else {
+        } else if (debugEnv->environment().is<VarEnvironmentObject>()) {
             VarEnvironmentObject* env = &debugEnv->environment().as<VarEnvironmentObject>();
             if (frame.isFunctionFrame()) {
                 VarScope* scope = &env->scope().as<VarScope>();
@@ -2856,14 +2857,20 @@ DebugEnvironments::takeFrameSnapshot(JSContext* cx, Handle<DebugEnvironmentProxy
                 frameSlotEnd = scope->nextFrameSlot();
             } else {
                 EvalScope* scope = &env->scope().as<EvalScope>();
-                MOZ_ASSERT(scope == frame.script()->bodyScope());
+                MOZ_ASSERT(scope == script->bodyScope());
                 frameSlotStart = 0;
                 frameSlotEnd = scope->nextFrameSlot();
             }
+        } else {
+            MOZ_ASSERT(&debugEnv->environment().as<ModuleEnvironmentObject>() ==
+                       script->module()->environment());
+            ModuleScope* scope = &script->bodyScope()->as<ModuleScope>();
+            frameSlotStart = 0;
+            frameSlotEnd = scope->nextFrameSlot();
         }
 
         uint32_t frameSlotCount = frameSlotEnd - frameSlotStart;
-        MOZ_ASSERT(frameSlotCount <= frame.script()->nfixed());
+        MOZ_ASSERT(frameSlotCount <= script->nfixed());
 
         if (!vec.resize(frameSlotCount)) {
             cx->recoverFromOutOfMemory();
@@ -3020,6 +3027,12 @@ DebugEnvironments::onPopWith(AbstractFramePtr frame)
     if (DebugEnvironments* envs = realm->debugEnvs()) {
         envs->liveEnvs.remove(&frame.environmentChain()->as<WithEnvironmentObject>());
     }
+}
+
+void
+DebugEnvironments::onPopModule(JSContext* cx, const EnvironmentIter& ei)
+{
+    onPopGeneric<ModuleEnvironmentObject, ModuleScope>(cx, ei);
 }
 
 void

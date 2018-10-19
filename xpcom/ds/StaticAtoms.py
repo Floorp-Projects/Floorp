@@ -17,8 +17,13 @@ import sys
 # The first argument is the atom's identifier.
 # The second argument is the atom's string value.
 #
+# Please keep the Atom() definitions on one line as this is parsed by the
+#   htmlparser: parser/html/java/htmlparser
+# Please keep "START ATOMS" and "END ATOMS" comments as the parser uses them.
+#
 # It is not possible to conditionally define static atoms with #ifdef etc.
 STATIC_ATOMS = [
+    # START ATOMS
     # --------------------------------------------------------------------------
     # Generic atoms
     # --------------------------------------------------------------------------
@@ -75,8 +80,7 @@ STATIC_ATOMS = [
     Atom("allowpopupstoescapesandbox", "allow-popups-to-escape-sandbox"),
     Atom("allowpopups", "allow-popups"),
     Atom("allowpresentation", "allow-presentation"),
-    Atom("allowstorageaccessbyuseractivatetion",
-         "allow-storage-access-by-user-activation"),
+    Atom("allowstorageaccessbyuseractivatetion", "allow-storage-access-by-user-activation"),
     Atom("allowsameorigin", "allow-same-origin"),
     Atom("allowscripts", "allow-scripts"),
     Atom("allowscriptstoclose", "allowscriptstoclose"),
@@ -2316,6 +2320,7 @@ STATIC_ATOMS = [
     InheritingAnonBoxAtom("AnonBox_mozSVGOuterSVGAnonChild", ":-moz-svg-outer-svg-anon-child"),
     InheritingAnonBoxAtom("AnonBox_mozSVGForeignContent", ":-moz-svg-foreign-content"),
     InheritingAnonBoxAtom("AnonBox_mozSVGText", ":-moz-svg-text"),
+    # END ATOMS
 ] + HTML_PARSER_ATOMS
 
 

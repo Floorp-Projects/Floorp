@@ -125,6 +125,7 @@ public:
     // These are mandatory.
     NS_FORWARD_NSIINPUTSTREAM(mStream->)
     NS_FORWARD_NSISEEKABLESTREAM(mSeekableStream->)
+    NS_FORWARD_NSITELLABLESTREAM(mSeekableStream->)
     NS_FORWARD_NSICLONEABLEINPUTSTREAM(mCloneableInputStream->)
 
     // This is optional. We use a conditional QI to keep it from being called

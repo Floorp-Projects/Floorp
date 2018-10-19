@@ -174,22 +174,6 @@ public class GeckoSession extends LayerSession
                 "GeckoView:OnNewSession"
             }
         ) {
-            // This needs to match nsIBrowserDOMWindow.idl
-            private int convertGeckoTarget(int geckoTarget) {
-                switch (geckoTarget) {
-                    case 0: // OPEN_DEFAULTWINDOW
-                    case 1: // OPEN_CURRENTWINDOW
-                        return NavigationDelegate.TARGET_WINDOW_CURRENT;
-                    default: // OPEN_NEWWINDOW, OPEN_NEWTAB, OPEN_SWITCHTAB
-                        return NavigationDelegate.TARGET_WINDOW_NEW;
-                }
-            }
-
-            // The flags are already matched with nsIDocShell.idl.
-            private int filterFlags(int flags) {
-                return flags & NavigationDelegate.LOAD_REQUEST_IS_USER_TRIGGERED;
-            }
-
             private @NavigationDelegate.LoadErrorCategory int getErrorCategory(
                     long errorModule, @NavigationDelegate.LoadError int error) {
                 // Match flags with XPCOM ErrorList.h.
@@ -304,14 +288,17 @@ public class GeckoSession extends LayerSession
                     delegate.onCanGoForward(GeckoSession.this,
                                             message.getBoolean("canGoForward"));
                 } else if ("GeckoView:OnLoadRequest".equals(event)) {
-                    final String uri = message.getString("uri");
-                    final int where = convertGeckoTarget(message.getInt("where"));
-                    final int flags = filterFlags(message.getInt("flags"));
+                    final NavigationDelegate.LoadRequest request =
+                        new NavigationDelegate.LoadRequest(
+                              message.getString("uri"),
+                              message.getString("triggerUri"),
+                              message.getInt("where"),
+                              message.getInt("flags"));
 
-                    if (!IntentUtils.isUriSafeForScheme(uri)) {
+                    if (!IntentUtils.isUriSafeForScheme(request.uri)) {
                         callback.sendError("Blocked unsafe intent URI");
 
-                        delegate.onLoadError(GeckoSession.this, uri,
+                        delegate.onLoadError(GeckoSession.this, request.uri,
                                              NavigationDelegate.ERROR_CATEGORY_URI,
                                              NavigationDelegate.ERROR_MALFORMED_URI);
 
@@ -319,7 +306,7 @@ public class GeckoSession extends LayerSession
                     }
 
                     final GeckoResult<AllowOrDeny> result =
-                        delegate.onLoadRequest(GeckoSession.this, uri, where, flags);
+                        delegate.onLoadRequest(GeckoSession.this, request);
 
                     if (result == null) {
                         callback.sendSuccess(null);
@@ -2556,15 +2543,55 @@ public class GeckoSession extends LayerSession
         public static final int TARGET_WINDOW_CURRENT = 1;
         public static final int TARGET_WINDOW_NEW = 2;
 
-        @IntDef(flag = true,
-                value = {LOAD_REQUEST_IS_USER_TRIGGERED})
-        /* package */ @interface LoadRequestFlags {}
-
-        // Match with nsIDocShell.idl.
         /**
-         * The load request was triggered by user input.
+         * Load request details.
          */
-        public static final int LOAD_REQUEST_IS_USER_TRIGGERED = 0x1000;
+        public static class LoadRequest {
+            /* package */ LoadRequest(@NonNull final String uri,
+                                      @Nullable final String triggerUri,
+                                      int geckoTarget,
+                                      int flags) {
+                this.uri = uri;
+                this.triggerUri = triggerUri;
+                this.target = convertGeckoTarget(geckoTarget);
+
+                // Match with nsIDocShell.idl.
+                this.isUserTriggered = (flags & 0x1000) != 0;
+            }
+
+            // This needs to match nsIBrowserDOMWindow.idl
+            private @TargetWindow int convertGeckoTarget(int geckoTarget) {
+                switch (geckoTarget) {
+                    case 0: // OPEN_DEFAULTWINDOW
+                    case 1: // OPEN_CURRENTWINDOW
+                        return TARGET_WINDOW_CURRENT;
+                    default: // OPEN_NEWWINDOW, OPEN_NEWTAB, OPEN_SWITCHTAB
+                        return TARGET_WINDOW_NEW;
+                }
+            }
+
+            /**
+             * The URI to be loaded.
+             */
+            public final @NonNull String uri;
+
+            /**
+             * The URI of the origin page that triggered the load request.
+             * null for initial loads and loads originating from data: URIs.
+             */
+            public final @Nullable String triggerUri;
+
+            /**
+             * The target where the window has requested to open.
+             * One of {@link #TARGET_WINDOW_NONE TARGET_WINDOW_*}.
+             */
+            public final @TargetWindow int target;
+
+            /**
+             * True if and only if the request was triggered by user interaction.
+             */
+            public final boolean isUserTriggered;
+        }
 
         /**
          * A request to open an URI. This is called before each page load to
@@ -2574,12 +2601,7 @@ public class GeckoSession extends LayerSession
          * GeckoSession via onNewSession.
          *
          * @param session The GeckoSession that initiated the callback.
-         * @param uri The URI to be loaded.
-         * @param target The target where the window has requested to open.
-         *               One of {@link #TARGET_WINDOW_NONE TARGET_WINDOW_*}.
-         * @param flags The load request flags.
-         *              One or more of {@link #LOAD_REQUEST_IS_USER_TRIGGERED
-         *              LOAD_REQUEST_*}.
+         * @param request The {@link LoadRequest} containing the request details.
          *
          * @return A {@link GeckoResult} with a AllowOrDeny value which indicates whether
          *         or not the load was handled. If unhandled, Gecko will continue the
@@ -2587,9 +2609,7 @@ public class GeckoSession extends LayerSession
          *         A null return value is interpreted as false (unhandled).
          */
         @Nullable GeckoResult<AllowOrDeny> onLoadRequest(@NonNull GeckoSession session,
-                                                         @NonNull String uri,
-                                                         @TargetWindow int target,
-                                                         @LoadRequestFlags int flags);
+                                                         @NonNull LoadRequest request);
 
         /**
         * A request has been made to open a new session. The URI is provided only for

@@ -120,11 +120,11 @@ const TargetFactory = exports.TargetFactory = {
     return targetPromise;
   },
 
-  forWorker: function(workerClient) {
-    let target = targets.get(workerClient);
+  forWorker: function(workerTargetFront) {
+    let target = targets.get(workerTargetFront);
     if (target == null) {
-      target = new WorkerTarget(workerClient);
-      targets.set(workerClient, target);
+      target = new WorkerTarget(workerTargetFront);
+      targets.set(workerTargetFront, target);
     }
     return target;
   },
@@ -848,9 +848,9 @@ TabTarget.prototype = {
   },
 };
 
-function WorkerTarget(workerClient) {
+function WorkerTarget(workerTargetFront) {
   EventEmitter.decorate(this);
-  this._workerClient = workerClient;
+  this._workerTargetFront = workerTargetFront;
 }
 
 /**
@@ -858,9 +858,9 @@ function WorkerTarget(workerClient) {
  * either a local or remote tab, WorkerTarget always represents a remote worker.
  * Moreover, unlike TabTarget, which is constructed with a placeholder object
  * for remote tabs (from which a TargetFront can then be lazily obtained),
- * WorkerTarget is constructed with a WorkerClient directly.
+ * WorkerTarget is constructed with a WorkerTargetFront directly.
  *
- * WorkerClient is designed to mimic the interface of TargetFront as closely as
+ * WorkerTargetFront is designed to mimic the interface of TargetFront as closely as
  * possible. This allows us to debug workers as if they were ordinary tabs,
  * requiring only minimal changes to the rest of the frontend.
  */
@@ -878,7 +878,7 @@ WorkerTarget.prototype = {
   },
 
   get url() {
-    return this._workerClient.url;
+    return this._workerTargetFront.url;
   },
 
   get isWorkerTarget() {
@@ -887,12 +887,12 @@ WorkerTarget.prototype = {
 
   get form() {
     return {
-      consoleActor: this._workerClient.consoleActor
+      consoleActor: this._workerTargetFront.consoleActor
     };
   },
 
   get activeTab() {
-    return this._workerClient;
+    return this._workerTargetFront;
   },
 
   get activeConsole() {
@@ -900,7 +900,7 @@ WorkerTarget.prototype = {
   },
 
   get client() {
-    return this._workerClient.client;
+    return this._workerTargetFront.client;
   },
 
   get canRewind() {
@@ -908,7 +908,7 @@ WorkerTarget.prototype = {
   },
 
   destroy: function() {
-    this._workerClient.detach();
+    this._workerTargetFront.detach();
   },
 
   hasActor: function(name) {

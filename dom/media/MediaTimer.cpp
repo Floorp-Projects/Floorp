@@ -21,7 +21,6 @@ NS_IMPL_RELEASE_WITH_DESTROY(MediaTimer, DispatchDestroy())
 
 MediaTimer::MediaTimer(bool aFuzzy)
   : mMonitor("MediaTimer Monitor")
-  , mTimer(NS_NewTimer())
   , mCreationTimeStamp(TimeStamp::Now())
   , mUpdateScheduled(false)
   , mFuzzy(aFuzzy)
@@ -33,7 +32,7 @@ MediaTimer::MediaTimer(bool aFuzzy)
   RefPtr<SharedThreadPool> threadPool(
     SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaTimer"), 1));
   mThread = threadPool.get();
-  mTimer->SetTarget(mThread);
+  mTimer = NS_NewTimer(mThread);
 }
 
 void

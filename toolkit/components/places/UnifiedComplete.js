@@ -745,9 +745,9 @@ Search.prototype = {
       this._sleepResolve();
       this._sleepResolve = null;
     }
-    if (this._searchSuggestionController) {
-      this._searchSuggestionController.stop();
-      this._searchSuggestionController = null;
+    if (this._suggestionsFetch) {
+      this._suggestionsFetch.stop();
+      this._suggestionsFetch = null;
     }
     if (typeof this.interrupt == "function") {
       this.interrupt();
@@ -835,7 +835,7 @@ Search.prototype = {
       // If the heuristic result is a search engine result with an alias and an
       // empty query, then we're done.  We want to show only that single result
       // as a clear hint that the user can continue typing to search.
-      if (this._searchEngineAliasHasEmptyQuery) {
+      if (this._searchEngineAliasMatch && !this._searchEngineAliasMatch.query) {
         this._cleanUpNonCurrentMatches(null, false);
         this._autocompleteSearch.finishSearch(true);
         return;
@@ -847,7 +847,8 @@ Search.prototype = {
     let extensionsCompletePromise = Promise.resolve();
     if (this._searchTokens.length > 0 &&
         ExtensionSearchHandler.isKeywordRegistered(this._searchTokens[0]) &&
-        this._originalSearchString.length > this._searchTokens[0].length) {
+        this._originalSearchString.length > this._searchTokens[0].length &&
+        !this._searchEngineAliasMatch) {
       // Do not await on this, since extensions cannot notify when they are done
       // adding results, it may take too long.
       extensionsCompletePromise = this._matchExtensionSuggestions();
@@ -856,23 +857,39 @@ Search.prototype = {
     }
 
     let searchSuggestionsCompletePromise = Promise.resolve();
-    if (this._enableActions && this._searchTokens.length > 0) {
-      // Limit the string sent for search suggestions to a maximum length.
-      let searchString = this._searchTokens.join(" ")
-                             .substr(0, UrlbarPrefs.get("maxCharsForSearchSuggestions"));
-      // Avoid fetching suggestions if they are not required, private browsing
-      // mode is enabled, or the search string may expose sensitive information.
-      if (this.hasBehavior("searches") && !this._inPrivateWindow &&
-          !this._prohibitSearchSuggestionsFor(searchString)) {
-        searchSuggestionsCompletePromise = this._matchSearchSuggestions(searchString);
-        if (this.hasBehavior("restrict")) {
-          // Wait for the suggestions to be added.
-          await searchSuggestionsCompletePromise;
-          this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.SUGGESTION);
-          // We're done if we're restricting to search suggestions.
-          // Notify the result completion then stop the search.
-          this._autocompleteSearch.finishSearch(true);
-          return;
+    if (this._enableActions) {
+      let query =
+        this._searchEngineAliasMatch ? this._searchEngineAliasMatch.query :
+        this._searchTokens.join(" ");
+      if (query) {
+        // Limit the string sent for search suggestions to a maximum length.
+        query = query.substr(0, UrlbarPrefs.get("maxCharsForSearchSuggestions"));
+        // Avoid fetching suggestions if they are not required, private browsing
+        // mode is enabled, or the query may expose sensitive information.
+        if (this.hasBehavior("searches") &&
+            !this._inPrivateWindow &&
+            !this._prohibitSearchSuggestionsFor(query)) {
+          let engine;
+          if (this._searchEngineAliasMatch) {
+            engine = this._searchEngineAliasMatch.engine;
+          } else {
+            engine = await PlacesSearchAutocompleteProvider.currentEngine();
+            if (!this.pending) {
+              return;
+            }
+          }
+          searchSuggestionsCompletePromise =
+            this._matchSearchSuggestions(engine, query);
+          // If the user has used a search engine alias, then the only results
+          // we want to show are suggestions from that engine, so we're done.
+          // We're also done if we're restricting results to suggestions.
+          if (this._searchEngineAliasMatch || this.hasBehavior("restrict")) {
+            // Wait for the suggestions to be added.
+            await searchSuggestionsCompletePromise;
+            this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.SUGGESTION);
+            this._autocompleteSearch.finishSearch(true);
+            return;
+          }
         }
       }
     }
@@ -1157,33 +1174,38 @@ Search.prototype = {
     return false;
   },
 
-  _matchSearchSuggestions(searchString) {
-    this._searchSuggestionController =
-      PlacesSearchAutocompleteProvider.getSuggestionController(
+  _matchSearchSuggestions(engine, searchString) {
+    this._suggestionsFetch =
+      PlacesSearchAutocompleteProvider.newSuggestionsFetch(
+        engine,
         searchString,
         this._inPrivateWindow,
         UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
         UrlbarPrefs.get("maxRichResults") - UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
         this._userContextId
       );
-    return this._searchSuggestionController.fetchCompletePromise.then(() => {
-      // The search has been canceled already.
-      if (!this._searchSuggestionController)
+    return this._suggestionsFetch.fetchCompletePromise.then(() => {
+      // The fetch has been canceled already.
+      if (!this._suggestionsFetch) {
         return;
-      if (this._searchSuggestionController.resultsCount >= 0 &&
-          this._searchSuggestionController.resultsCount < 2) {
-        // The original string is used to properly compare with the next search.
+      }
+      if (this._suggestionsFetch.resultsCount >= 0 &&
+          this._suggestionsFetch.resultsCount < 2) {
+        // The original string is used to properly compare with the next fetch.
         this._lastLowResultsSearchSuggestion = this._originalSearchString;
       }
       while (this.pending) {
-        let result = this._searchSuggestionController.consume();
+        let result = this._suggestionsFetch.consume();
         if (!result)
           break;
-        let { match, suggestion, historical } = result;
+        let { suggestion, historical } = result;
         if (!looksLikeUrl(suggestion)) {
-          // Don't include the restrict token, if present.
-          let searchString = this._searchTokens.join(" ");
-          this._addSearchEngineMatch(match, searchString, suggestion, historical);
+          this._addSearchEngineMatch({
+            engine,
+            query: searchString,
+            suggestion,
+            historical,
+          });
         }
       }
     }).catch(Cu.reportError);
@@ -1192,6 +1214,12 @@ Search.prototype = {
   _prohibitSearchSuggestionsFor(searchString) {
     if (this._prohibitSearchSuggestions)
       return true;
+
+    // Never prohibit suggestions when the user has used a search engine alias.
+    // We want "@engine query" to return suggestions from the engine.
+    if (this._searchEngineAliasMatch) {
+      return false;
+    }
 
     // Suggestions for a single letter are unlikely to be useful.
     if (searchString.length < 2)
@@ -1319,13 +1347,17 @@ Search.prototype = {
       return false;
     }
 
-    let match =
-      await PlacesSearchAutocompleteProvider.findMatchByToken(searchStr);
+    let engine =
+      await PlacesSearchAutocompleteProvider.engineForDomainPrefix(searchStr);
+    if (!engine) {
+      return false;
+    }
+    let url = engine.searchForm;
+    let domain = engine.getResultDomain();
     // Verify that the match we got is acceptable. Autofilling "example/" to
     // "example.com/" would not be good.
-    if (!match ||
-        (this._strippedPrefix && !match.url.startsWith(this._strippedPrefix)) ||
-        !(match.token + "/").includes(this._searchString)) {
+    if ((this._strippedPrefix && !url.startsWith(this._strippedPrefix)) ||
+        !(domain + "/").includes(this._searchString)) {
       return false;
     }
 
@@ -1333,13 +1365,11 @@ Search.prototype = {
     // any, plus the portion of the engine domain that the user typed.  Append a
     // trailing slash too, as is usual with autofill.
     let value =
-      this._strippedPrefix +
-      match.token.substr(match.token.indexOf(searchStr)) +
-      "/";
+      this._strippedPrefix + domain.substr(domain.indexOf(searchStr)) + "/";
 
-    let finalCompleteValue = match.url;
+    let finalCompleteValue = url;
     try {
-      let fixupInfo = Services.uriFixup.getFixupURIInfo(match.url, 0);
+      let fixupInfo = Services.uriFixup.getFixupURIInfo(url, 0);
       if (fixupInfo.fixedURI) {
         finalCompleteValue = fixupInfo.fixedURI.spec;
       }
@@ -1349,8 +1379,8 @@ Search.prototype = {
     this._addMatch({
       value,
       finalCompleteValue,
-      comment: match.engineName,
-      icon: match.iconUrl,
+      comment: engine.name,
+      icon: engine.iconURI ? engine.iconURI.spec : null,
       style: "priority-search",
       frecency: Infinity,
     });
@@ -1358,32 +1388,38 @@ Search.prototype = {
   },
 
   async _matchSearchEngineAlias() {
-    if (this._searchTokens.length < 1)
+    if (this._searchTokens.length < 1) {
       return false;
+    }
 
     let alias = this._searchTokens[0];
-    let match = await PlacesSearchAutocompleteProvider.findMatchByAlias(alias);
-    if (!match)
+    let engine = await PlacesSearchAutocompleteProvider.engineForAlias(alias);
+    if (!engine) {
       return false;
+    }
 
-    match.engineAlias = alias;
     let query = this._trimmedOriginalSearchString.substr(alias.length + 1);
-
-    this._addSearchEngineMatch(match, query);
-    this._searchEngineAliasHasEmptyQuery = !query;
+    this._searchEngineAliasMatch = {
+      engine,
+      query,
+      alias,
+    };
+    this._addSearchEngineMatch(this._searchEngineAliasMatch);
     if (!this._keywordSubstitute) {
-      this._keywordSubstitute = match.resultDomain;
+      this._keywordSubstitute = engine.getResultDomain();
     }
     return true;
   },
 
   async _matchCurrentSearchEngine() {
-    let match = await PlacesSearchAutocompleteProvider.getDefaultMatch();
-    if (!match)
+    let engine = await PlacesSearchAutocompleteProvider.currentEngine();
+    if (!engine || !this.pending) {
       return false;
-
-    let query = this._originalSearchString;
-    this._addSearchEngineMatch(match, query);
+    }
+    this._addSearchEngineMatch({
+      engine,
+      query: this._originalSearchString,
+    });
     return true;
   },
 
@@ -1407,22 +1443,40 @@ Search.prototype = {
     });
   },
 
-  _addSearchEngineMatch(searchMatch, query, suggestion = "", historical = false) {
+  /**
+   * Adds a search engine match.
+   *
+   * @param {nsISearchEngine} engine
+   *        The search engine associated with the match.
+   * @param {string} query
+   *        The search query string.
+   * @param {string} [alias]
+   *        The search engine alias associated with the match.
+   * @param {string} [suggestion]
+   *        The suggestion from the search engine.
+   * @param {bool} [historical]
+   *        True if the suggestion is from the user's local history.
+   */
+  _addSearchEngineMatch({engine,
+                         query,
+                         alias,
+                         suggestion,
+                         historical}) {
     let actionURLParams = {
-      engineName: searchMatch.engineName,
+      engineName: engine.name,
       input: suggestion || this._originalSearchString,
       searchQuery: query,
     };
     if (suggestion)
       actionURLParams.searchSuggestion = suggestion;
-    if (searchMatch.engineAlias) {
-      actionURLParams.alias = searchMatch.engineAlias;
+    if (alias) {
+      actionURLParams.alias = alias;
     }
     let value = PlacesUtils.mozActionURI("searchengine", actionURLParams);
     let match = {
       value,
-      comment: searchMatch.engineName,
-      icon: searchMatch.iconUrl,
+      comment: engine.name,
+      icon: engine.iconURI ? engine.iconURI.spec : null,
       style: "action searchengine",
       frecency: FRECENCY_DEFAULT,
     };

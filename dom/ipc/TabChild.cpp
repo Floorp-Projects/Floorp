@@ -1226,10 +1226,10 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
   }
 
   // We have now done enough initialization for the record/replay system to
-  // create checkpoints. Try to create the initial checkpoint now, in case this
-  // process never paints later on (the usual place where checkpoints occur).
+  // create checkpoints. Create a checkpoint now, in case this process never
+  // paints later on (the usual place where checkpoints occur).
   if (recordreplay::IsRecordingOrReplaying()) {
-    recordreplay::child::MaybeCreateInitialCheckpoint();
+    recordreplay::child::CreateCheckpoint();
   }
 
   return IPC_OK();

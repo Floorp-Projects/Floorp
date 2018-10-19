@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'aboutdebugging.js',
+    'initializer.js',
 )
 
 DIRS += [

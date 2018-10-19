@@ -111,16 +111,16 @@ var _attachConsole = async function(
                     "worker actor\n");
       return;
     }
-    const [workerResponse, workerClient] =
+    const [workerResponse, workerTargetFront] =
       await targetFront.attachWorker(workerTargetActor);
-    if (!workerClient || workerResponse.error) {
-      console.error("attachWorker failed. No worker client or " +
+    if (!workerTargetFront || workerResponse.error) {
+      console.error("attachWorker failed. No worker target front or " +
                     " error: " + workerResponse.error);
       return;
     }
-    await workerClient.attachThread({});
-    state.actor = workerClient.consoleActor;
-    state.dbgClient.attachConsole(workerClient.consoleActor, listeners)
+    await workerTargetFront.attachThread({});
+    state.actor = workerTargetFront.consoleActor;
+    state.dbgClient.attachConsole(workerTargetFront.consoleActor, listeners)
       .then(_onAttachConsole.bind(null, state), _onAttachError.bind(null, state));
   } else {
     state.actor = tab.consoleActor;

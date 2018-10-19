@@ -7,20 +7,6 @@ mingw-capitalization:
     exclude:
         # We do not compile WebRTC with MinGW yet
         - media/webrtc
-        - media/mtransport/third_party/nrappkit/src/util/util.c
-        - gfx/angle/checkout/src/common/tls.cpp
-        - gfx/cairo/cairo/src/cairo-atomic-private.h
-        - gfx/harfbuzz/src/hb-directwrite.cc
-        - gfx/skia/skia/src/xps/SkXPSDevice.cpp
-        - gfx/skia/skia/src/xps/SkXPSDevice.h
-        - gfx/skia/skia/src/xps/SkXPSDocument.h
-        - ipc/chromium/src/third_party/libevent
-        - modules/freetype2/builds/mac/ftmac.c
-        - other-licenses/7zstub
-        - security/nss/nss-tool/common/util.cc
-        - toolkit/crashreporter/google-breakpad/src/tools/windows
-        - toolkit/crashreporter/google-breakpad/src/common/windows
-        - third_party/python/psutil/psutil
     type: external
     level: error
     payload: cpp.mingw-capitalization:lint

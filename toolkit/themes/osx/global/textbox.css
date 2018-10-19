@@ -74,15 +74,6 @@ textbox[type="search"] {
   margin-bottom: 1px;
 }
 
-textbox[type="search"].compact {
-  padding: 0;
-  font-size: 11px;
-}
-
-textbox[type="search"].compact > moz-input-box > .textbox-search-icons > .textbox-search-clear {
-  width: 11px;
-}
-
 .textbox-search-clear:not([disabled]) {
   cursor: default;
 }

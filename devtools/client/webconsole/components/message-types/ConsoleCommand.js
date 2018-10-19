@@ -35,6 +35,7 @@ function ConsoleCommand(props) {
     type,
     level,
     messageText,
+    timeStamp,
   } = message;
 
   // This uses a Custom Element to syntax highlight when possible. If it's not
@@ -48,6 +49,7 @@ function ConsoleCommand(props) {
     messageBody,
     serviceContainer,
     indent,
+    timeStamp,
     timestampsVisible,
   });
 }

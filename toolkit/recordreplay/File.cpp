@@ -47,13 +47,7 @@ Stream::ReadBytes(void* aData, size_t aSize)
     }
 
     MOZ_RELEASE_ASSERT(mBufferPos == mBufferLength);
-
-    // If we try to read off the end of a stream then we must have hit the end
-    // of the replay for this thread.
-    while (mChunkIndex == mChunks.length()) {
-      MOZ_RELEASE_ASSERT(mName == StreamName::Event);
-      HitEndOfRecording();
-    }
+    MOZ_RELEASE_ASSERT(mChunkIndex < mChunks.length());
 
     const StreamChunkLocation& chunk = mChunks[mChunkIndex++];
 
@@ -89,6 +83,7 @@ void
 Stream::WriteBytes(const void* aData, size_t aSize)
 {
   MOZ_RELEASE_ASSERT(mFile->OpenForWriting());
+  MOZ_RELEASE_ASSERT(mName != StreamName::Event || mInRecordingEventSection);
 
   // Prevent the entire file from being flushed while we write this data.
   AutoReadSpinLock streamLock(mFile->mStreamLock);

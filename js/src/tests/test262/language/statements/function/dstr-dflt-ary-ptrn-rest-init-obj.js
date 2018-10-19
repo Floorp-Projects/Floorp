@@ -3,7 +3,7 @@
 // - src/dstr-binding/ary-ptrn-rest-init-obj.case
 // - src/dstr-binding/default/func-decl-dflt.template
 /*---
-description: Reset element (nested object pattern) does not support initializer (function declaration (default parameter))
+description: Rest element (nested object pattern) does not support initializer (function declaration (default parameter))
 esid: sec-function-definitions-runtime-semantics-instantiatefunctionobject
 es6id: 14.1.19
 features: [destructuring-binding, default-parameters]

@@ -15,6 +15,7 @@
 
 <dialog id="changemp" title="&setPassword.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         style="width: 40em;" 
         ondialogaccept="setPassword();"
         onload="init()">
@@ -59,7 +60,7 @@
 
   <groupbox>
     <caption label="&setPassword.meter.label;"/>
-    <progressmeter id="pwmeter" mode="determined" value="0"/>
+    <html:progress id="pwmeter" value="0" max="100"/>
   </groupbox>
 
   <description control="pw2" class="header">&masterPasswordWarning.label;</description>

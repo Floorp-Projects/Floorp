@@ -23,15 +23,15 @@ struct FeatureMap {
  */
 static FeatureMap sSupportedFeatures[] = {
   { "autoplay", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "camera", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "camera", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
   { "encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll },
   { "fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eAll },
   { "geolocation", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "microphone", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "midi", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "microphone", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
+  { "midi", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
   { "payment", FeaturePolicyUtils::FeaturePolicyValue::eAll },
   // TODO: not supported yet!!!
-  { "speaker", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "speaker", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
   { "vr", FeaturePolicyUtils::FeaturePolicyValue::eAll },
 };
 

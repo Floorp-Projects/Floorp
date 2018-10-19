@@ -55,7 +55,7 @@ assert.throws(
   TypeError,
   function() {
     String.prototype.trimEnd.call(thisVal);
-  },
+  }
 );
 
 reportCompare(0, 0);

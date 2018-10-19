@@ -5,7 +5,7 @@
 /*---
 description: It is a Syntax Error if BoundNames of FormalParameters contains any duplicate elements. (async function declaration)
 esid: sec-async-function-definitions
-features: [default-parameters]
+features: [default-parameters, async-functions]
 flags: [generated]
 negative:
   phase: parse
@@ -15,6 +15,7 @@ info: |
 
     AsyncFunctionDeclaration :
       async function BindingIdentifier ( FormalParameters ) { AsyncFunctionBody }
+
 
     14.1.2 Static Semantics: Early Errors
 

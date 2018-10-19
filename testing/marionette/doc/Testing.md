@@ -15,6 +15,9 @@ distinct components that we test:
   - and the **harness** that backs the Marionette, or `Mn` job on
     try, tests is verified using separate mock-styled unit tests.
 
+All these tests can be run by using [mach].
+
+[mach]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/mach
 
 xpcshell unit tests
 -------------------
@@ -37,7 +40,7 @@ These unit tests run as part of the `X` jobs on Treeherder.
 Marionette functional tests
 ---------------------------
 
-We also have a set of functional tests that make use of the Marionette
+We also have a set of [functional tests] that make use of the Marionette
 Python client.  These start a Firefox process and tests the Marionette
 protocol input and output, and will appear as `Mn` on Treeherder.
 The following command will run all tests locally:
@@ -48,9 +51,9 @@ But you can also run individual tests:
 
 	% ./mach marionette test testing/marionette/harness/marionette_harness/tests/unit/test_navigation.py
 
-In case you want to run the tests with another Firefox binary:
+In case you want to run the tests with another binary like [Firefox Nightly]:
 
-	% ./mach marionette test --binary /path/to/firefox TEST
+	% ./mach marionette test --binary /path/to/nightly/firefox TEST
 
 When working on Marionette it is often useful to surface the stdout
 from Gecko, which can be achived using the `--gecko-log` option.
@@ -71,6 +74,9 @@ there is also `MOZ_HEADLESS_WIDTH` and `MOZ_HEADLESS_HEIGHT` for
 controlling the dimensions of the no-op virtual display.  This is
 similar to using Xvfb(1) which you may know from the X windowing system,
 but has the additional benefit of also working on macOS and Windows.
+
+[functional tests]: PythonTests.html
+[Firefox Nightly]: https://nightly.mozilla.org/
 
 
 ### Android

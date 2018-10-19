@@ -12,7 +12,6 @@ requestLongerTimeout(2);
 
 const ADDON_ID = "test-devtools-webextension@mozilla.org";
 const ADDON_NAME = "test-devtools-webextension";
-const ADDON_PATH = "addons/test-devtools-webextension/manifest.json";
 
 const {
   BrowserToolboxProcess
@@ -24,9 +23,22 @@ const {
  *   background page as default target;
  */
 add_task(async function testWebExtensionsToolboxInspector() {
+  const addonFile = ExtensionTestCommon.generateXPI({
+    background: function() {
+      document.body.innerText = "Background Page Body Test Content";
+    },
+    manifest: {
+      name: ADDON_NAME,
+      applications: {
+        gecko: {id: ADDON_ID},
+      },
+    },
+  });
+  registerCleanupFunction(() => addonFile.remove(false));
+
   const {
     tab, document, debugBtn,
-  } = await setupTestAboutDebuggingWebExtension(ADDON_NAME, ADDON_PATH);
+  } = await setupTestAboutDebuggingWebExtension(ADDON_NAME, addonFile);
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!

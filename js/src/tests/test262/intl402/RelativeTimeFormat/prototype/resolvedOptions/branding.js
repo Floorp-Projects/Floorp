@@ -5,7 +5,7 @@
 esid: sec-Intl.RelativeTimeFormat.prototype.resolvedOptions
 description: Verifies the branding check for the "resolvedOptions" function of the RelativeTimeFormat prototype object.
 info: |
-    Intl.RelativeTimeFormat.prototype.resolvedOptions( value, unit )
+    Intl.RelativeTimeFormat.prototype.resolvedOptions ()
 
     2. If Type(relativeTimeFormat) is not Object or relativeTimeFormat does not have an [[InitializedRelativeTimeFormat]] internal slot whose value is true, throw a TypeError exception.
 features: [Intl.RelativeTimeFormat]

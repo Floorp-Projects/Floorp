@@ -96,7 +96,6 @@ AddonTargetActor.prototype = {
       consoleActor: this._consoleActor.actorID,
 
       traits: {
-        highlightable: false,
         networkMonitor: false,
       },
     };

@@ -11,8 +11,6 @@
 
 namespace js {
 
-namespace jit { class CacheIRCompiler; }
-
 /*
  * Shaped objects are a variant of JSObject that use a GCPtrShape for their
  * |shapeOrExpando_| field. All objects that point to a js::Shape as their
@@ -59,8 +57,6 @@ class ShapedObject : public JSObject
   private:
     // See JSObject::offsetOfGroup() comment.
     friend class js::jit::MacroAssembler;
-
-    friend class js::jit::CacheIRCompiler;
 
     static constexpr size_t offsetOfShape() {
         static_assert(offsetOfShapeOrExpando() == offsetof(shadow::Object, shape),

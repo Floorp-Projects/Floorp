@@ -7,17 +7,7 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://devtools/content/aboutdebugging-new/aboutdebugging.css"/>
-    <script>
-    "use strict";
-
-    const { BrowserLoader } =
-      ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
-    const { require } = BrowserLoader({
-      baseURI: "resource://devtools/client/aboutdebugging-new/",
-      window,
-    });
-    require("./aboutdebugging");
-    </script>
+    <script type="application/javascript" src="resource://devtools/client/aboutdebugging-new/initializer.js"></script>
   </head>
   <body>
     <div id="mount"></div>

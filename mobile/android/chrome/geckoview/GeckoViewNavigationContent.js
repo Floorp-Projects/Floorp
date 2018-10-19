@@ -20,7 +20,9 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
   // nsILoadURIDelegate.
   loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
     debug `loadURI: uri=${aUri && aUri.spec}
-                    where=${aWhere} flags=${aFlags}`;
+                    where=${aWhere} flags=${aFlags}
+                    tp=${aTriggeringPrincipal && aTriggeringPrincipal.URI &&
+                         aTriggeringPrincipal.URI.spec}`;
 
     if (!this.enabled) {
       return false;
@@ -32,7 +34,7 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
     }
 
     return LoadURIDelegate.load(content, this.eventDispatcher,
-                                aUri, aWhere, aFlags);
+                                aUri, aWhere, aFlags, aTriggeringPrincipal);
   }
 
   // nsILoadURIDelegate.

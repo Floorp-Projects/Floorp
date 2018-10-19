@@ -279,17 +279,10 @@ class ElementSpecific
             return true;
         }
 
-        // Inhibit unaligned accesses on ARM (bug 1097253, a compiler bug).
-#if defined(__arm__) && MOZ_IS_GCC
-#  define JS_VOLATILE_ARM volatile
-#else
-#  define JS_VOLATILE_ARM
-#endif
-
         SharedMem<void*> data = Ops::extract(source);
         switch (source->type()) {
           case Scalar::Int8: {
-            SharedMem<JS_VOLATILE_ARM int8_t*> src = data.cast<JS_VOLATILE_ARM int8_t*>();
+            SharedMem<int8_t*> src = data.cast<int8_t*>();
             for (uint32_t i = 0; i < count; ++i) {
                 Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             }
@@ -297,49 +290,49 @@ class ElementSpecific
           }
           case Scalar::Uint8:
           case Scalar::Uint8Clamped: {
-            SharedMem<JS_VOLATILE_ARM uint8_t*> src = data.cast<JS_VOLATILE_ARM uint8_t*>();
+            SharedMem<uint8_t*> src = data.cast<uint8_t*>();
             for (uint32_t i = 0; i < count; ++i) {
                 Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             }
             break;
           }
           case Scalar::Int16: {
-            SharedMem<JS_VOLATILE_ARM int16_t*> src = data.cast<JS_VOLATILE_ARM int16_t*>();
+            SharedMem<int16_t*> src = data.cast<int16_t*>();
             for (uint32_t i = 0; i < count; ++i) {
                 Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             }
             break;
           }
           case Scalar::Uint16: {
-            SharedMem<JS_VOLATILE_ARM uint16_t*> src = data.cast<JS_VOLATILE_ARM uint16_t*>();
+            SharedMem<uint16_t*> src = data.cast<uint16_t*>();
             for (uint32_t i = 0; i < count; ++i) {
                 Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             }
             break;
           }
           case Scalar::Int32: {
-            SharedMem<JS_VOLATILE_ARM int32_t*> src = data.cast<JS_VOLATILE_ARM int32_t*>();
+            SharedMem<int32_t*> src = data.cast<int32_t*>();
             for (uint32_t i = 0; i < count; ++i) {
                 Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             }
             break;
           }
           case Scalar::Uint32: {
-            SharedMem<JS_VOLATILE_ARM uint32_t*> src = data.cast<JS_VOLATILE_ARM uint32_t*>();
+            SharedMem<uint32_t*> src = data.cast<uint32_t*>();
             for (uint32_t i = 0; i < count; ++i) {
                 Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             }
             break;
           }
           case Scalar::Float32: {
-            SharedMem<JS_VOLATILE_ARM float*> src = data.cast<JS_VOLATILE_ARM float*>();
+            SharedMem<float*> src = data.cast<float*>();
             for (uint32_t i = 0; i < count; ++i) {
                 Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             }
             break;
           }
           case Scalar::Float64: {
-            SharedMem<JS_VOLATILE_ARM double*> src = data.cast<JS_VOLATILE_ARM double*>();
+            SharedMem<double*> src = data.cast<double*>();
             for (uint32_t i = 0; i < count; ++i) {
                 Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             }
@@ -348,8 +341,6 @@ class ElementSpecific
           default:
             MOZ_CRASH("setFromTypedArray with a typed array with bogus type");
         }
-
-#undef JS_VOLATILE_ARM
 
         return true;
     }

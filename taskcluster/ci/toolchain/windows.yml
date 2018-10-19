@@ -117,8 +117,7 @@ win64-rust-1.29:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            # Rustc 1.30 beta for rust-lang/rust#52847
-            '--channel', 'beta-2018-09-28',
+            '--channel', '1.29.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',

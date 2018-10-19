@@ -16,8 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=445177
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=445177">Mozilla Bug 445177</a>
 
 
-<hbox id="b1" value="foo"/>
-<hbox id="o1" observes="b1"/>
+<xul:hbox id="b1" value="foo"/>
+<xul:hbox id="o1" observes="b1"/>
 
 <pre id="test">
   <script class="testbody" type="text/javascript">

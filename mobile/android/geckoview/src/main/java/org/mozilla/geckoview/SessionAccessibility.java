@@ -333,7 +333,7 @@ public class SessionAccessibility {
                 // Set bundle keys like role and hint
                 Bundle bundle = node.getExtras();
                 if (nodeInfo.containsKey("hint")) {
-                    final String hint =  nodeInfo.getString("hint");
+                    final String hint = nodeInfo.getString("hint");
                     bundle.putCharSequence("AccessibilityNodeInfo.hint", hint);
                     if (Build.VERSION.SDK_INT >= 26) {
                         node.setHintText(hint);
@@ -397,33 +397,7 @@ public class SessionAccessibility {
                     node.setCollectionInfo(collectionInfo);
                 }
 
-                // Set inputType
-                switch (nodeInfo.getString("inputType", "").toLowerCase()) {
-                    case "email":
-                        node.setInputType(InputType.TYPE_CLASS_TEXT |
-                                InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
-                        break;
-                    case "number":
-                        node.setInputType(InputType.TYPE_CLASS_NUMBER);
-                        break;
-                    case "password":
-                        node.setInputType(InputType.TYPE_CLASS_TEXT |
-                                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD);
-                        break;
-                    case "tel":
-                        node.setInputType(InputType.TYPE_CLASS_PHONE);
-                        break;
-                    case "text":
-                        node.setInputType(InputType.TYPE_CLASS_TEXT |
-                                InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
-                        break;
-                    case "url":
-                        node.setInputType(InputType.TYPE_CLASS_TEXT |
-                                InputType.TYPE_TEXT_VARIATION_URI);
-                        break;
-                    default:
-                        break;
-                }
+                node.setInputType(nodeInfo.getInt("inputType"));
             }
 
             // SDK 23 and above

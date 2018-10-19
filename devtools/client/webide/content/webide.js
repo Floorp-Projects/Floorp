@@ -232,8 +232,6 @@ var UI = {
   busyWithProgressUntil: function(promise, operationDescription) {
     const busy = this.busyUntil(promise, operationDescription);
     const win = document.querySelector("window");
-    const progress = document.querySelector("#action-busy-determined");
-    progress.mode = "undetermined";
     win.classList.add("busy-determined");
     win.classList.remove("busy-undetermined");
     return busy;

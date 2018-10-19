@@ -283,7 +283,12 @@ RuleEditor.prototype = {
     if (Tools.styleEditor.isTargetSupported(target)) {
       gDevTools.showToolbox(target, "styleeditor").then(toolbox => {
         const {url, line, column} = this._currentLocation;
-        toolbox.getCurrentPanel().selectStyleSheet(url, line, column);
+
+        if (!this.rule.sheet.href && this.rule.sheet.nodeHref) {
+          toolbox.getCurrentPanel().selectStyleSheet(this.rule.sheet, line, column);
+        } else {
+          toolbox.getCurrentPanel().selectStyleSheet(url, line, column);
+        }
       });
     }
   },

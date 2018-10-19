@@ -33,6 +33,10 @@
   list-style-image: url(chrome://browser/skin/search-glass.svg);
 }
 
+#appMenu-taskmanager-button {
+  list-style-image: url("chrome://browser/skin/performance.svg");
+}
+
 #appMenu-help-button {
   list-style-image: url(chrome://global/skin/icons/help.svg);
 }

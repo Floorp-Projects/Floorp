@@ -201,7 +201,6 @@ extern const char* const CacheKindNames[];
     _(GuardClass)                         /* Guard an object class, per GuardClassKind */ \
     _(GuardAnyClass)                      /* Guard an arbitrary class for an object */ \
     _(GuardCompartment)                   \
-    _(GuardIsExtensible)                  \
     _(GuardIsNativeFunction)              \
     _(GuardIsNativeObject)                \
     _(GuardIsProxy)                       \
@@ -223,9 +222,6 @@ extern const char* const CacheKindNames[];
     _(GuardHasGetterSetter)               \
     _(GuardGroupHasUnanalyzedNewScript)   \
     _(GuardIndexIsNonNegative)            \
-    _(GuardIndexGreaterThanDenseCapacity) \
-    _(GuardIndexGreaterThanArrayLength)   \
-    _(GuardIndexIsValidUpdateOrAdd)       \
     _(GuardIndexGreaterThanDenseInitLength) \
     _(GuardTagNotEqual)                   \
     _(GuardXrayExpandoShapeAndDefaultProto) \
@@ -271,7 +267,6 @@ extern const char* const CacheKindNames[];
     _(CallSetArrayLength)                 \
     _(CallProxySet)                       \
     _(CallProxySetByValue)                \
-    _(CallAddOrUpdateSparseElementHelper) \
     _(CallInt32ToString)                  \
     _(CallNumberToString)                 \
                                           \
@@ -770,9 +765,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         // Use RawWord, because compartments never move and it can't be GCed.
         addStubField(uintptr_t(compartment), StubField::Type::RawWord);
     }
-    void guardIsExtensible(ObjOperandId obj) {
-        writeOpWithOperandId(CacheOp::GuardIsExtensible, obj);
-    }
     void guardNoDetachedTypedObjects() {
         writeOp(CacheOp::GuardNoDetachedTypedObjects);
     }
@@ -817,18 +809,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     }
     void guardIndexGreaterThanDenseInitLength(ObjOperandId obj, Int32OperandId index) {
         writeOpWithOperandId(CacheOp::GuardIndexGreaterThanDenseInitLength, obj);
-        writeOperandId(index);
-    }
-    void guardIndexGreaterThanDenseCapacity(ObjOperandId obj, Int32OperandId index) {
-        writeOpWithOperandId(CacheOp::GuardIndexGreaterThanDenseCapacity, obj);
-        writeOperandId(index);
-    }
-    void guardIndexGreaterThanArrayLength(ObjOperandId obj, Int32OperandId index) {
-        writeOpWithOperandId(CacheOp::GuardIndexGreaterThanArrayLength, obj);
-        writeOperandId(index);
-    }
-    void guardIndexIsValidUpdateOrAdd(ObjOperandId obj, Int32OperandId index) {
-        writeOpWithOperandId(CacheOp::GuardIndexIsValidUpdateOrAdd, obj);
         writeOperandId(index);
     }
     void guardTagNotEqual(ValueTagOperandId lhs, ValueTagOperandId rhs) {
@@ -1057,12 +1037,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     }
     void callProxySetByValue(ObjOperandId obj, ValOperandId id, ValOperandId rhs, bool strict) {
         writeOpWithOperandId(CacheOp::CallProxySetByValue, obj);
-        writeOperandId(id);
-        writeOperandId(rhs);
-        buffer_.writeByte(uint32_t(strict));
-    }
-    void callAddOrUpdateSparseElementHelper(ObjOperandId obj, Int32OperandId id, ValOperandId rhs, bool strict) {
-        writeOpWithOperandId(CacheOp::CallAddOrUpdateSparseElementHelper, obj);
         writeOperandId(id);
         writeOperandId(rhs);
         buffer_.writeByte(uint32_t(strict));
@@ -1778,10 +1752,6 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
 
     bool tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId objId, uint32_t index,
                                       Int32OperandId indexId, ValOperandId rhsId);
-
-    bool tryAttachAddOrUpdateSparseElement(HandleObject obj, ObjOperandId objId, uint32_t index,
-                                           Int32OperandId indexId, ValOperandId rhsId);
-
 
     bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
                                ValOperandId rhsId, bool handleDOMProxies);

@@ -383,6 +383,10 @@ function makeSearchMatch(input, extra = {}) {
   if (extra.heuristic) {
     style.push("heuristic");
   }
+  if ("searchSuggestion" in extra) {
+    params.searchSuggestion = extra.searchSuggestion;
+    style.push("suggestion");
+  }
   return {
     uri: makeActionURI("searchengine", params),
     title: params.engineName,
@@ -465,6 +469,33 @@ function addTestEngine(basename, httpServer = undefined) {
     info("Adding engine from URL: " + dataUrl + basename);
     Services.search.addEngine(dataUrl + basename, null, false);
   });
+}
+
+/**
+ * Sets up a search engine that provides some suggestions by appending strings
+ * onto the search query.
+ *
+ * @param   {function} suggestionsFn
+ *          A function that returns an array of suggestion strings given a
+ *          search string.  If not given, a default function is used.
+ * @returns {nsISearchEngine} The new engine.
+ */
+async function addTestSuggestionsEngine(suggestionsFn = null) {
+  // This port number should match the number in engine-suggestions.xml.
+  let server = makeTestServer(9000);
+  server.registerPathHandler("/suggest", (req, resp) => {
+    // URL query params are x-www-form-urlencoded, which converts spaces into
+    // plus signs, so un-convert any plus signs back to spaces.
+    let searchStr = decodeURIComponent(req.queryString.replace(/\+/g, " "));
+    let suggestions =
+      suggestionsFn ? suggestionsFn(searchStr) :
+      ["foo", "bar"].map(s => searchStr + " " + s);
+    let data = [searchStr, suggestions];
+    resp.setHeader("Content-Type", "application/json", false);
+    resp.write(JSON.stringify(data));
+  });
+  let engine = await addTestEngine("engine-suggestions.xml", server);
+  return engine;
 }
 
 // Ensure we have a default search engine and the keyword.enabled preference

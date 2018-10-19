@@ -34,7 +34,7 @@ var ControlCenter = {
 
   configurations: {
     about: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage("about:rights");
         await openIdentityPopup();
@@ -42,7 +42,8 @@ var ControlCenter = {
     },
 
     localFile: {
-      selectors: ["#identity-popup"],
+      // This selector is different so we can exclude the changing file: path
+      selectors: ["#identity-popup-security"],
       async applyConfig() {
         let channel = NetUtil.newChannel({
             uri: "resource://mozscreenshots/lib/mozscreenshots.html",
@@ -55,14 +56,10 @@ var ControlCenter = {
         await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         await openIdentityPopup();
       },
-
-      async verifyConfig() {
-        return { todo: "Bug 1373563: intermittent controlCenter_localFile on Taskcluster" };
-      },
     },
 
     http: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(HTTP_PAGE);
         await openIdentityPopup();
@@ -70,7 +67,7 @@ var ControlCenter = {
     },
 
     httpSubView: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(HTTP_PAGE);
         await openIdentityPopup(true);
@@ -78,7 +75,7 @@ var ControlCenter = {
     },
 
     https: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(HTTPS_PAGE);
         await openIdentityPopup();
@@ -86,7 +83,7 @@ var ControlCenter = {
     },
 
     httpsSubView: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(HTTPS_PAGE);
         await openIdentityPopup(true);
@@ -94,7 +91,7 @@ var ControlCenter = {
     },
 
     singlePermission: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         let uri = Services.io.newURI(PERMISSIONS_PAGE);
         SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
@@ -105,7 +102,7 @@ var ControlCenter = {
     },
 
     allPermissions: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         // TODO: (Bug 1330601) Rewrite this to consider temporary (TAB) permission states.
         // There are 2 possible non-default permission states, so we alternate between them.
@@ -121,7 +118,7 @@ var ControlCenter = {
     },
 
     mixed: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(MIXED_CONTENT_URL);
         await openIdentityPopup();
@@ -129,7 +126,7 @@ var ControlCenter = {
     },
 
     mixedSubView: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(MIXED_CONTENT_URL);
         await openIdentityPopup(true);
@@ -137,7 +134,7 @@ var ControlCenter = {
     },
 
     mixedPassive: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(MIXED_PASSIVE_CONTENT_URL);
         await openIdentityPopup();
@@ -145,7 +142,7 @@ var ControlCenter = {
     },
 
     mixedPassiveSubView: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(MIXED_PASSIVE_CONTENT_URL);
         await openIdentityPopup(true);
@@ -153,7 +150,7 @@ var ControlCenter = {
     },
 
     mixedActive: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(MIXED_ACTIVE_CONTENT_URL);
         await openIdentityPopup();
@@ -161,7 +158,7 @@ var ControlCenter = {
     },
 
     mixedActiveSubView: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(MIXED_ACTIVE_CONTENT_URL);
         await openIdentityPopup(true);
@@ -169,7 +166,7 @@ var ControlCenter = {
     },
 
     mixedActiveUnblocked: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;
@@ -181,7 +178,7 @@ var ControlCenter = {
     },
 
     mixedActiveUnblockedSubView: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;
@@ -193,7 +190,7 @@ var ControlCenter = {
     },
 
     httpPassword: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(HTTP_PASSWORD_PAGE);
         await openIdentityPopup();
@@ -201,7 +198,7 @@ var ControlCenter = {
     },
 
     httpPasswordSubView: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         await loadPage(HTTP_PASSWORD_PAGE);
         await openIdentityPopup(true);
@@ -209,7 +206,7 @@ var ControlCenter = {
     },
 
     trackingProtectionNoElements: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
 
@@ -219,7 +216,7 @@ var ControlCenter = {
     },
 
     trackingProtectionEnabled: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
         await UrlClassifierTestUtils.addTestTrackers();
@@ -230,7 +227,7 @@ var ControlCenter = {
     },
 
     trackingProtectionDisabled: {
-      selectors: ["#identity-popup"],
+      selectors: ["#navigator-toolbox", "#identity-popup"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;

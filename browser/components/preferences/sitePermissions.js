@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from in-content/extensionControlled.js */
+
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource:///modules/SitePermissions.jsm");
@@ -42,6 +44,8 @@ function Permission(principal, type, capability, l10nId) {
 }
 
 const PERMISSION_STATES = [SitePermissions.ALLOW, SitePermissions.BLOCK, SitePermissions.PROMPT];
+const NOTIFICATIONS_PERMISSION_OVERRIDE_KEY = "webNotificationsDisabled";
+const NOTIFICATIONS_PERMISSION_PREF = "permissions.default.desktop-notification";
 
 var gSitePermissionsManager = {
   _type: "",
@@ -74,42 +78,28 @@ var gSitePermissionsManager = {
     this._removeAllButton = document.getElementById("removeAllPermissions");
     this._searchBox = document.getElementById("searchBox");
     this._checkbox = document.getElementById("permissionsDisableCheckbox");
+    this._disableExtensionButton = document.getElementById("disableNotificationsPermissionExtension");
+    this._permissionsDisableDescription = document.getElementById("permissionsDisableDescription");
 
-    let permissionsDisableDescription = document.getElementById("permissionsDisableDescription");
     let permissionsText = document.getElementById("permissionsText");
 
     let l10n = sitePermissionsL10n[this._type];
     document.l10n.setAttributes(permissionsText, l10n.description);
     document.l10n.setAttributes(this._checkbox, l10n.disableLabel);
-    document.l10n.setAttributes(permissionsDisableDescription, l10n.disableDescription);
+    document.l10n.setAttributes(this._permissionsDisableDescription, l10n.disableDescription);
     document.l10n.setAttributes(document.documentElement, l10n.window);
 
     await document.l10n.translateElements([
       permissionsText,
       this._checkbox,
-      permissionsDisableDescription,
+      this._permissionsDisableDescription,
       document.documentElement,
     ]);
 
-    // Initialize the checkbox state.
+    // Initialize the checkbox state and handle showing notification permission UI
+    // when it is disabled by an extension.
     this._defaultPermissionStatePrefName = "permissions.default." + this._type;
-    let pref = Services.prefs.getPrefType(this._defaultPermissionStatePrefName);
-    if (pref != Services.prefs.PREF_INVALID) {
-      this._currentDefaultPermissionsState = Services.prefs.getIntPref(this._defaultPermissionStatePrefName);
-    }
-
-    if (this._currentDefaultPermissionsState === null) {
-      this._checkbox.setAttribute("hidden", true);
-      permissionsDisableDescription.setAttribute("hidden", true);
-    } else if (this._currentDefaultPermissionsState == SitePermissions.BLOCK) {
-      this._checkbox.checked = true;
-    } else {
-      this._checkbox.checked = false;
-    }
-
-    if (Services.prefs.prefIsLocked(this._defaultPermissionStatePrefName)) {
-      this._checkbox.disabled = true;
-    }
+    this._watchPermissionPrefChange();
 
     this._loadPermissions();
     this.buildPermissionsList();
@@ -153,6 +143,68 @@ var gSitePermissionsManager = {
     let menulist = permissionlistitem.getElementsByTagName("menulist")[0];
     menulist.selectedItem =
       menulist.getElementsByAttribute("value", perm.capability)[0];
+  },
+
+  _handleCheckboxUIUpdates() {
+    let pref = Services.prefs.getPrefType(this._defaultPermissionStatePrefName);
+    if (pref != Services.prefs.PREF_INVALID) {
+      this._currentDefaultPermissionsState = Services.prefs.getIntPref(this._defaultPermissionStatePrefName);
+    }
+
+    if (this._currentDefaultPermissionsState === null) {
+      this._checkbox.setAttribute("hidden", true);
+      this._permissionsDisableDescription.setAttribute("hidden", true);
+    } else if (this._currentDefaultPermissionsState == SitePermissions.BLOCK) {
+      this._checkbox.checked = true;
+    } else {
+      this._checkbox.checked = false;
+    }
+
+    if (Services.prefs.prefIsLocked(this._defaultPermissionStatePrefName)) {
+      this._checkbox.disabled = true;
+    }
+  },
+
+  /**
+  * Listen for changes to the permissions.default.* pref and make
+  * necessary changes to the UI.
+  */
+  _watchPermissionPrefChange() {
+    this._handleCheckboxUIUpdates();
+
+    if (this._type == "desktop-notification") {
+      this._handleWebNotificationsDisable();
+
+      this._disableExtensionButton.addEventListener(
+        "command",
+        makeDisableControllingExtension(PREF_SETTING_TYPE, NOTIFICATIONS_PERMISSION_OVERRIDE_KEY)
+      );
+    }
+
+    let observer = () => {
+      this._handleCheckboxUIUpdates();
+      if (this._type == "desktop-notification") {
+        this._handleWebNotificationsDisable();
+      }
+    };
+    Services.prefs.addObserver(this._defaultPermissionStatePrefName, observer);
+    window.addEventListener("unload", () => {
+      Services.prefs.removeObserver(this._defaultPermissionStatePrefName, observer);
+    });
+  },
+
+  /**
+  * Handles the UI update for web notifications disable by extensions.
+  */
+  async _handleWebNotificationsDisable() {
+    let prefLocked = Services.prefs.prefIsLocked(NOTIFICATIONS_PERMISSION_PREF);
+    if (prefLocked) {
+      // An extension can't control these settings if they're locked.
+      hideControllingExtension(NOTIFICATIONS_PERMISSION_OVERRIDE_KEY);
+    } else {
+      let isControlled = await handleControllingExtension(PREF_SETTING_TYPE, NOTIFICATIONS_PERMISSION_OVERRIDE_KEY);
+      this._checkbox.disabled = isControlled;
+    }
   },
 
   _getCapabilityString(capability) {
