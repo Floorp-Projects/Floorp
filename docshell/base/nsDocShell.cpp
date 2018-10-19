@@ -169,7 +169,7 @@
 #include "nsDocShellCID.h"
 #include "nsDocShellEditorData.h"
 #include "nsDocShellEnumerator.h"
-#include "nsDocShellLoadState.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsDOMCID.h"
 #include "nsDOMNavigationTiming.h"
@@ -643,12 +643,14 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 }
 
 NS_IMETHODIMP
-nsDocShell::LoadURI(nsDocShellLoadState* aLoadState)
+nsDocShell::LoadURI(nsIURI* aURI,
+                    nsDocShellLoadInfo* aLoadInfo,
+                    uint32_t aLoadFlags,
+                    bool aFirstParty)
 {
-  MOZ_ASSERT(aLoadState, "Must have a valid load state!");
-  MOZ_ASSERT((aLoadState->LoadFlags() & INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0,
-             "Should not have these flags set");
-  MOZ_ASSERT(aLoadState->URI(), "Should have a valid URI to load");
+  MOZ_ASSERT(aLoadInfo || (aLoadFlags & EXTRA_LOAD_FLAGS) == 0,
+             "Unexpected flags");
+  MOZ_ASSERT((aLoadFlags & 0xf) == 0, "Should not have these flags set");
 
   // Note: we allow loads to get through here even if mFiredUnloadEvent is
   // true; that case will get handled in LoadInternal or LoadHistoryEntry,
@@ -660,121 +662,86 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState)
     return NS_OK; // JS may not handle returning of an error code
   }
 
+  nsCOMPtr<nsIURI> referrer;
+  nsCOMPtr<nsIURI> originalURI;
+  Maybe<nsCOMPtr<nsIURI>> resultPrincipalURI;
+  bool keepResultPrincipalURIIfSet = false;
+  bool loadReplace = false;
+  nsCOMPtr<nsIInputStream> postStream;
+  nsCOMPtr<nsIInputStream> headersStream;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+  bool inheritPrincipal = false;
+  bool principalIsExplicit = false;
+  bool sendReferrer = true;
+  uint32_t referrerPolicy = RP_Unset;
+  bool isSrcdoc = false;
+  nsCOMPtr<nsISHEntry> shEntry;
+  nsString target;
+  nsAutoString srcdoc;
+  bool forceAllowDataURI = false;
+  bool originalFrameSrc = false;
+  nsCOMPtr<nsIDocShell> sourceDocShell;
+  nsCOMPtr<nsIURI> baseURI;
+
+  uint32_t loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
+
+  NS_ENSURE_ARG(aURI);
+
   if (!StartupTimeline::HasRecord(StartupTimeline::FIRST_LOAD_URI) &&
-      mItemType == typeContent && !NS_IsAboutBlank(aLoadState->URI())) {
+      mItemType == typeContent && !NS_IsAboutBlank(aURI)) {
     StartupTimeline::RecordOnce(StartupTimeline::FIRST_LOAD_URI);
+  }
+
+  // Extract the info from the DocShellLoadInfo struct...
+  if (aLoadInfo) {
+    referrer = aLoadInfo->Referrer();
+    originalURI = aLoadInfo->OriginalURI();
+    aLoadInfo->GetMaybeResultPrincipalURI(resultPrincipalURI);
+    keepResultPrincipalURIIfSet = aLoadInfo->KeepResultPrincipalURIIfSet();
+    loadReplace = aLoadInfo->LoadReplace();
+    // Get the appropriate loadType from nsIDocShellLoadInfo type
+    loadType = aLoadInfo->LoadType();
+
+    triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
+    inheritPrincipal = aLoadInfo->InheritPrincipal();
+    principalIsExplicit = aLoadInfo->PrincipalIsExplicit();
+    shEntry = aLoadInfo->SHEntry();
+    aLoadInfo->GetTarget(target);
+    postStream = aLoadInfo->PostDataStream();
+    headersStream = aLoadInfo->HeadersStream();
+    sendReferrer = aLoadInfo->SendReferrer();
+    referrerPolicy = aLoadInfo->ReferrerPolicy();
+    isSrcdoc = aLoadInfo->IsSrcdocLoad();
+    aLoadInfo->GetSrcdocData(srcdoc);
+    sourceDocShell = aLoadInfo->SourceDocShell();
+    baseURI = aLoadInfo->BaseURI();
+    forceAllowDataURI = aLoadInfo->ForceAllowDataURI();
+    originalFrameSrc = aLoadInfo->OriginalFrameSrc();
   }
 
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
           ("nsDocShell[%p]: loading %s with flags 0x%08x",
-           this, aLoadState->URI()->GetSpecOrDefault().get(),
-           aLoadState->LoadFlags()));
+           this, aURI->GetSpecOrDefault().get(), aLoadFlags));
 
-  if (!aLoadState->SHEntry() &&
-      !LOAD_TYPE_HAS_FLAGS(aLoadState->LoadType(),
-                           LOAD_FLAGS_REPLACE_HISTORY)) {
-    // This is possibly a subframe, so handle it accordingly.
-    //
-    // If history exists, it will be loaded into the aLoadState object, and the
-    // LoadType will be changed.
-    MaybeHandleSubframeHistory(aLoadState);
-  }
-
-  if (aLoadState->SHEntry()) {
-#ifdef DEBUG
-    MOZ_LOG(gDocShellLog, LogLevel::Debug,
-           ("nsDocShell[%p]: loading from session history", this));
-#endif
-
-    return LoadHistoryEntry(aLoadState->SHEntry(), aLoadState->LoadType());
-  }
-
-  // On history navigation via Back/Forward buttons, don't execute
-  // automatic JavaScript redirection such as |location.href = ...| or
-  // |window.open()|
-  //
-  // LOAD_NORMAL:        window.open(...) etc.
-  // LOAD_STOP_CONTENT:  location.href = ..., location.assign(...)
-  if ((aLoadState->LoadType() == LOAD_NORMAL ||
-       aLoadState->LoadType() == LOAD_STOP_CONTENT) &&
-      ShouldBlockLoadingForBackButton()) {
-    return NS_OK;
-  }
-
-  // Set up the inheriting principal in LoadState.
-  nsresult rv = aLoadState->SetupInheritingPrincipal(mItemType, mOriginAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aLoadState->SetupTriggeringPrincipal(mOriginAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aLoadState->CalculateDocShellInternalLoadFlags();
-
-  mozilla::Maybe<nsCOMPtr<nsIURI>> resultPrincipalURI;
-  aLoadState->GetMaybeResultPrincipalURI(resultPrincipalURI);
-
-  MOZ_ASSERT(aLoadState->TypeHint().IsVoid(),
-             "Typehint should be null when calling InternalLoad from LoadURI");
-  MOZ_ASSERT(aLoadState->FileName().IsVoid(),
-             "FileName should be null when calling InternalLoad from LoadURI");
-  MOZ_ASSERT(aLoadState->SHEntry() == nullptr,
-             "SHEntry should be null when calling InternalLoad from LoadURI");
-
-  return InternalLoad(aLoadState->URI(),
-                      aLoadState->OriginalURI(),
-                      resultPrincipalURI,
-                      aLoadState->KeepResultPrincipalURIIfSet(),
-                      aLoadState->LoadReplace(),
-                      aLoadState->Referrer(),
-                      aLoadState->ReferrerPolicy(),
-                      aLoadState->TriggeringPrincipal(),
-                      aLoadState->PrincipalToInherit(),
-                      aLoadState->DocShellInternalLoadFlags(),
-                      aLoadState->Target(),
-                      aLoadState->TypeHint(),
-                      aLoadState->FileName(),
-                      aLoadState->PostDataStream(),
-                      aLoadState->HeadersStream(),
-                      aLoadState->LoadType(),
-                      aLoadState->SHEntry(),
-                      aLoadState->FirstParty(),
-                      aLoadState->SrcdocData(),
-                      aLoadState->SourceDocShell(),
-                      aLoadState->BaseURI(),
-                      nullptr, // no nsIDocShell
-                      nullptr); // no nsIRequest
-}
-
-void
-nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState)
-{
-  // First, verify if this is a subframe.
+  if (!shEntry &&
+      !LOAD_TYPE_HAS_FLAGS(loadType, LOAD_FLAGS_REPLACE_HISTORY)) {
+    // First verify if this is a subframe.
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
     GetSameTypeParent(getter_AddRefs(parentAsItem));
     nsCOMPtr<nsIDocShell> parentDS(do_QueryInterface(parentAsItem));
+    uint32_t parentLoadType;
 
-  if (!parentDS || parentDS == static_cast<nsIDocShell*>(this)) {
-    // This is the root docshell. If we got here while
-    // executing an onLoad Handler,this load will not go
-    // into session history.
-    bool inOnLoadHandler = false;
-    GetIsExecutingOnLoadHandler(&inOnLoadHandler);
-    if (inOnLoadHandler) {
-      aLoadState->SetLoadType(LOAD_NORMAL_REPLACE);
-    }
-    return;
-  }
-
-  /* OK. It is a subframe. Checkout the parent's loadtype. If the parent was
-   * loaded through a history mechanism, then get the SH entry for the child from
-   * the parent. This is done to restore frameset navigation while going
-   * back/forward. If the parent was loaded through any other loadType, set the
-   * child's loadType too accordingly, so that session history does not get
-   * confused.
+    if (parentDS && parentDS != static_cast<nsIDocShell*>(this)) {
+      /* OK. It is a subframe. Checkout the
+       * parent's loadtype. If the parent was loaded thro' a history
+       * mechanism, then get the SH entry for the child from the parent.
+       * This is done to restore frameset navigation while going back/forward.
+       * If the parent was loaded through any other loadType, set the
+       * child's loadType too accordingly, so that session history does not
+       * get confused.
        */
 
       // Get the parent's load type
-  uint32_t parentLoadType;
       parentDS->GetLoadType(&parentLoadType);
 
       // Get the ShEntry for the child from the parent
@@ -782,17 +749,13 @@ nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState)
       bool oshe = false;
       parentDS->GetCurrentSHEntry(getter_AddRefs(currentSH), &oshe);
       bool dynamicallyAddedChild = mDynamicallyCreated;
-
       if (!dynamicallyAddedChild && !oshe && currentSH) {
         currentSH->HasDynamicallyAddedChild(&dynamicallyAddedChild);
       }
-
       if (!dynamicallyAddedChild) {
         // Only use the old SHEntry, if we're sure enough that
         // it wasn't originally for some other frame.
-    nsCOMPtr<nsISHEntry> shEntry;
         parentDS->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
-    aLoadState->SetSHEntry(shEntry);
       }
 
       // Make some decisions on the child frame's loadType based on the
@@ -805,13 +768,58 @@ nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState)
       // currentSHEntry is null.
       nsCOMPtr<nsISHEntry> currentChildEntry;
       GetCurrentSHEntry(getter_AddRefs(currentChildEntry), &oshe);
-
-  if (mCurrentURI && (!NS_IsAboutBlank(mCurrentURI) || currentChildEntry)) {
+      if (!mCurrentURI || (NS_IsAboutBlank(mCurrentURI) && !currentChildEntry)) {
+        // This is a newly created frame. Check for exception cases first.
+        // By default the subframe will inherit the parent's loadType.
+        if (shEntry && (parentLoadType == LOAD_NORMAL ||
+                        parentLoadType == LOAD_LINK   ||
+                        parentLoadType == LOAD_NORMAL_EXTERNAL)) {
+          // The parent was loaded normally. In this case, this *brand new*
+          // child really shouldn't have a SHEntry. If it does, it could be
+          // because the parent is replacing an existing frame with a new frame,
+          // in the onLoadHandler. We don't want this url to get into session
+          // history. Clear off shEntry, and set load type to
+          // LOAD_BYPASS_HISTORY.
+          bool inOnLoadHandler = false;
+          parentDS->GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+          if (inOnLoadHandler) {
+            loadType = LOAD_NORMAL_REPLACE;
+            shEntry = nullptr;
+          }
+        } else if (parentLoadType == LOAD_REFRESH) {
+          // Clear shEntry. For refresh loads, we have to load
+          // what comes thro' the pipe, not what's in history.
+          shEntry = nullptr;
+        } else if ((parentLoadType == LOAD_BYPASS_HISTORY) ||
+                   (shEntry &&
+                    ((parentLoadType & LOAD_CMD_HISTORY) ||
+                     (parentLoadType == LOAD_RELOAD_NORMAL) ||
+                     (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE) ||
+                     (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE) ||
+                     (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE)))) {
+          // If the parent url, bypassed history or was loaded from
+          // history, pass on the parent's loadType to the new child
+          // frame too, so that the child frame will also
+          // avoid getting into history.
+          loadType = parentLoadType;
+        } else if (parentLoadType == LOAD_ERROR_PAGE) {
+          // If the parent document is an error page, we don't
+          // want to update global/session history. However,
+          // this child frame is not an error page.
+          loadType = LOAD_BYPASS_HISTORY;
+        } else if ((parentLoadType == LOAD_RELOAD_BYPASS_CACHE) ||
+                   (parentLoadType == LOAD_RELOAD_BYPASS_PROXY) ||
+                   (parentLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE)) {
+          // the new frame should inherit the parent's load type so that it also
+          // bypasses the cache and/or proxy
+          loadType = parentLoadType;
+        }
+      } else {
         // This is a pre-existing subframe. If
         // 1. The load of this frame was not originally initiated by session
         //    history directly (i.e. (!shEntry) condition succeeded, but it can
         //    still be a history load on parent which causes this frame being
-    //    loaded), which we checked with the above assert, and
+        //    loaded), and
         // 2. mCurrentURI is not null, nor the initial about:blank,
         // it is possible that a parent's onLoadHandler or even self's
         // onLoadHandler is loading a new page in this child. Check parent's and
@@ -823,57 +831,187 @@ nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState)
         GetBusyFlags(&selfBusy);
         if (parentBusy & BUSY_FLAGS_BUSY ||
             selfBusy & BUSY_FLAGS_BUSY) {
-      aLoadState->SetLoadType(LOAD_NORMAL_REPLACE);
-      aLoadState->SetSHEntry(nullptr);
+          loadType = LOAD_NORMAL_REPLACE;
+          shEntry = nullptr;
+        }
+      }
+    } // parentDS
+    else {
+      // This is the root docshell. If we got here while
+      // executing an onLoad Handler,this load will not go
+      // into session history.
+      bool inOnLoadHandler = false;
+      GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+      if (inOnLoadHandler) {
+        loadType = LOAD_NORMAL_REPLACE;
+      }
     }
-    return;
+  } // !shEntry
+
+  if (shEntry) {
+#ifdef DEBUG
+    MOZ_LOG(gDocShellLog, LogLevel::Debug,
+           ("nsDocShell[%p]: loading from session history", this));
+#endif
+
+    return LoadHistoryEntry(shEntry, loadType);
   }
 
-  // This is a newly created frame. Check for exception cases first.
-  // By default the subframe will inherit the parent's loadType.
-  if (aLoadState->SHEntry() && (parentLoadType == LOAD_NORMAL ||
-                                parentLoadType == LOAD_LINK   ||
-                                parentLoadType == LOAD_NORMAL_EXTERNAL)) {
-    // The parent was loaded normally. In this case, this *brand new*
-    // child really shouldn't have a SHEntry. If it does, it could be
-    // because the parent is replacing an existing frame with a new frame,
-    // in the onLoadHandler. We don't want this url to get into session
-    // history. Clear off shEntry, and set load type to
-    // LOAD_BYPASS_HISTORY.
-      bool inOnLoadHandler = false;
-    parentDS->GetIsExecutingOnLoadHandler(&inOnLoadHandler);
-      if (inOnLoadHandler) {
-      aLoadState->SetLoadType(LOAD_NORMAL_REPLACE);
-      aLoadState->SetSHEntry(nullptr);
-    }
-  } else if (parentLoadType == LOAD_REFRESH) {
-    // Clear shEntry. For refresh loads, we have to load
-    // what comes through the pipe, not what's in history.
-    aLoadState->SetSHEntry(nullptr);
-  } else if ((parentLoadType == LOAD_BYPASS_HISTORY) ||
-             (aLoadState->SHEntry() &&
-              ((parentLoadType & LOAD_CMD_HISTORY) ||
-               (parentLoadType == LOAD_RELOAD_NORMAL) ||
-               (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE) ||
-               (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE) ||
-               (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE)))) {
-    // If the parent url, bypassed history or was loaded from
-    // history, pass on the parent's loadType to the new child
-    // frame too, so that the child frame will also
-    // avoid getting into history.
-    aLoadState->SetLoadType(parentLoadType);
-  } else if (parentLoadType == LOAD_ERROR_PAGE) {
-    // If the parent document is an error page, we don't
-    // want to update global/session history. However,
-    // this child frame is not an error page.
-    aLoadState->SetLoadType(LOAD_BYPASS_HISTORY);
-  } else if ((parentLoadType == LOAD_RELOAD_BYPASS_CACHE) ||
-             (parentLoadType == LOAD_RELOAD_BYPASS_PROXY) ||
-             (parentLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE)) {
-    // the new frame should inherit the parent's load type so that it also
-    // bypasses the cache and/or proxy
-    aLoadState->SetLoadType(parentLoadType);
+  // On history navigation via Back/Forward buttons, don't execute
+  // automatic JavaScript redirection such as |location.href = ...| or
+  // |window.open()|
+  //
+  // LOAD_NORMAL:        window.open(...) etc.
+  // LOAD_STOP_CONTENT:  location.href = ..., location.assign(...)
+  if ((loadType == LOAD_NORMAL || loadType == LOAD_STOP_CONTENT) &&
+      ShouldBlockLoadingForBackButton()) {
+    return NS_OK;
   }
+
+  // Perform the load...
+
+  // We need a principalToInherit.
+  //
+  // If principalIsExplicit is not set there are 4 possibilities:
+  // (1) If the system principal or an expanded principal was passed
+  //     in and we're a typeContent docshell, inherit the principal
+  //     from the current document instead.
+  // (2) In all other cases when the principal passed in is not null,
+  //     use that principal.
+  // (3) If the caller has allowed inheriting from the current document,
+  //     or if we're being called from system code (eg chrome JS or pure
+  //     C++) then inheritPrincipal should be true and InternalLoad will get
+  //     a principal from the current document. If none of these things are
+  //     true, then
+  // (4) we don't pass a principal into the channel, and a principal will be
+  //     created later from the channel's internal data.
+  //
+  // If principalIsExplicit *is* set, there are 4 possibilities
+  // (1) If the system principal or an expanded principal was passed in
+  //     and we're a typeContent docshell, return an error.
+  // (2) In all other cases when the principal passed in is not null,
+  //     use that principal.
+  // (3) If the caller has allowed inheriting from the current document,
+  //     then inheritPrincipal should be true and InternalLoad will get
+  //     a principal from the current document. If none of these things are
+  //     true, then
+  // (4) we dont' pass a principal into the channel, and a principal will be
+  //     created later from the channel's internal data.
+  nsCOMPtr<nsIPrincipal> principalToInherit = triggeringPrincipal;
+  if (principalToInherit && mItemType != typeChrome) {
+    if (nsContentUtils::IsSystemPrincipal(principalToInherit)) {
+      if (principalIsExplicit) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+      principalToInherit = nullptr;
+      inheritPrincipal = true;
+    } else if (nsContentUtils::IsExpandedPrincipal(principalToInherit)) {
+      if (principalIsExplicit) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+      // Don't inherit from the current page.  Just do the safe thing
+      // and pretend that we were loaded by a nullprincipal.
+      //
+      // We didn't inherit OriginAttributes here as ExpandedPrincipal doesn't
+      // have origin attributes.
+      principalToInherit = NullPrincipal::CreateWithInheritedAttributes(this);
+      inheritPrincipal = false;
+    }
+  }
+  if (!principalToInherit && !inheritPrincipal && !principalIsExplicit) {
+    // See if there's system or chrome JS code running
+    inheritPrincipal = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
+  }
+
+  if (aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL) {
+    inheritPrincipal = false;
+    // If aFirstParty is true and the pref 'privacy.firstparty.isolate' is
+    // enabled, we will set firstPartyDomain on the origin attributes.
+    principalToInherit = NullPrincipal::CreateWithInheritedAttributes(this, aFirstParty);
+  }
+
+  // If the triggeringPrincipal is not passed explicitly, we first try to create
+  // a principal from the referrer, since the referrer URI reflects the web origin
+  // that triggered the load. If there is no referrer URI, we fall back to using
+  // the SystemPrincipal. It's safe to assume that no provided triggeringPrincipal
+  // and no referrer simulate a load that was triggered by the system.
+  // It's important to note that this block of code needs to appear *after* the block
+  // where we munge the principalToInherit, because otherwise we would never enter
+  // code blocks checking if the principalToInherit is null and we will end up with
+  // a wrong inheritPrincipal flag.
+  if (!triggeringPrincipal) {
+    if (referrer) {
+      nsresult rv = CreatePrincipalFromReferrer(referrer,
+                                                getter_AddRefs(triggeringPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+    }
+  }
+
+  uint32_t flags = 0;
+
+  if (inheritPrincipal) {
+    MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(principalToInherit), "Should not inherit SystemPrincipal");
+    flags |= INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
+  }
+
+  if (!sendReferrer) {
+    flags |= INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER;
+  }
+
+  if (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+    flags |= INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+  }
+
+  if (aLoadFlags & LOAD_FLAGS_FIRST_LOAD) {
+    flags |= INTERNAL_LOAD_FLAGS_FIRST_LOAD;
+  }
+
+  if (aLoadFlags & LOAD_FLAGS_BYPASS_CLASSIFIER) {
+    flags |= INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER;
+  }
+
+  if (aLoadFlags & LOAD_FLAGS_FORCE_ALLOW_COOKIES) {
+    flags |= INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
+  }
+
+  if (isSrcdoc) {
+    flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+  }
+
+  if (forceAllowDataURI) {
+    flags |= INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+  }
+
+  if (originalFrameSrc) {
+    flags |= INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
+  }
+
+  return InternalLoad(aURI,
+                      originalURI,
+                      resultPrincipalURI,
+                      keepResultPrincipalURIIfSet,
+                      loadReplace,
+                      referrer,
+                      referrerPolicy,
+                      triggeringPrincipal,
+                      principalToInherit,
+                      flags,
+                      target,
+                      nullptr,      // No type hint
+                      VoidString(), // No forced download
+                      postStream,
+                      headersStream,
+                      loadType,
+                      nullptr, // No SHEntry
+                      aFirstParty,
+                      srcdoc,
+                      sourceDocShell,
+                      baseURI,
+                      nullptr,  // No nsIDocShell
+                      nullptr); // No nsIRequest
 }
 
 /*
@@ -4088,7 +4226,7 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI,
                                nsIURI* aBaseURI,
                                nsIPrincipal* aTriggeringPrincipal)
 {
-  NS_ASSERTION((aLoadFlags & INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0, "Unexpected flags");
+  NS_ASSERTION((aLoadFlags & 0xf) == 0, "Unexpected flags");
 
   if (!IsNavigationAllowed()) {
     return NS_OK; // JS may not handle returning of an error code
@@ -4183,28 +4321,27 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI,
   uint32_t extraFlags = (aLoadFlags & EXTRA_LOAD_FLAGS);
   aLoadFlags &= ~EXTRA_LOAD_FLAGS;
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
   /*
    * If the user "Disables Protection on This Page", we have to make sure to
    * remember the users decision when opening links in child tabs [Bug 906190]
    */
+  uint32_t loadType;
   if (aLoadFlags & LOAD_FLAGS_ALLOW_MIXED_CONTENT) {
-    loadState->SetLoadType(MAKE_LOAD_TYPE(LOAD_NORMAL_ALLOW_MIXED_CONTENT, aLoadFlags));
+    loadType = MAKE_LOAD_TYPE(LOAD_NORMAL_ALLOW_MIXED_CONTENT, aLoadFlags);
   } else {
-    loadState->SetLoadType(MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags));
+    loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
   }
 
-  loadState->SetURI(uri);
-  loadState->SetLoadFlags(extraFlags);
-  loadState->SetFirstParty(true);
-  loadState->SetPostDataStream(postStream);
-  loadState->SetReferrer(aReferringURI);
-  loadState->SetReferrerPolicy((mozilla::net::ReferrerPolicy)aReferrerPolicy);
-  loadState->SetHeadersStream(aHeaderStream);
-  loadState->SetBaseURI(aBaseURI);
-  loadState->SetTriggeringPrincipal(aTriggeringPrincipal);
-  loadState->SetForceAllowDataURI(forceAllowDataURI);
+  loadInfo->SetLoadType(loadType);
+  loadInfo->SetPostDataStream(postStream);
+  loadInfo->SetReferrer(aReferringURI);
+  loadInfo->SetReferrerPolicy((mozilla::net::ReferrerPolicy)aReferrerPolicy);
+  loadInfo->SetHeadersStream(aHeaderStream);
+  loadInfo->SetBaseURI(aBaseURI);
+  loadInfo->SetTriggeringPrincipal(aTriggeringPrincipal);
+  loadInfo->SetForceAllowDataURI(forceAllowDataURI);
 
   if (fixupInfo) {
     nsAutoString searchProvider, keyword;
@@ -4213,7 +4350,7 @@ nsDocShell::LoadURIWithOptions(const nsAString& aURI,
     MaybeNotifyKeywordSearchLoading(searchProvider, keyword);
   }
 
-  rv = LoadURI(loadState);
+  rv = LoadURI(uri, loadInfo, extraFlags, true);
 
   // Save URI string in case it's needed later when
   // sending to search engine service in EndPageLoad()
@@ -4781,7 +4918,7 @@ nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI, nsIChannel* aFa
   return InternalLoad(aErrorURI, nullptr, Nothing(), false, false, nullptr, RP_Unset,
                       nsContentUtils::GetSystemPrincipal(), nullptr,
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
-                      VoidCString(), VoidString(), nullptr, nullptr,
+                      nullptr, VoidString(), nullptr, nullptr,
                       LOAD_ERROR_PAGE, nullptr, true, VoidString(), this,
                       nullptr, nullptr, nullptr);
 }
@@ -4793,7 +4930,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
     return NS_OK; // JS may not handle returning of an error code
   }
   nsresult rv;
-  NS_ASSERTION(((aReloadFlags & INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0),
+  NS_ASSERTION(((aReloadFlags & 0xf) == 0),
                "Reload command not updated to use load flags!");
   NS_ASSERTION((aReloadFlags & EXTRA_LOAD_FLAGS) == 0,
                "Don't pass these flags to Reload");
@@ -4881,7 +5018,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                       triggeringPrincipal,
                       flags,
                       EmptyString(),   // No window target
-                      NS_LossyConvertUTF16toASCII(contentTypeHint),
+                      NS_LossyConvertUTF16toASCII(contentTypeHint).get(),
                       VoidString(),    // No forced download
                       nullptr,         // No post data
                       nullptr,         // No headers data
@@ -6133,22 +6270,22 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDel
 {
   NS_ENSURE_ARG(aURI);
 
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
   /* We do need to pass in a referrer, but we don't want it to
    * be sent to the server.
    */
-  loadState->SetSendReferrer(false);
+  loadInfo->SetSendReferrer(false);
 
   /* for most refreshes the current URI is an appropriate
    * internal referrer
    */
-  loadState->SetReferrer(mCurrentURI);
+  loadInfo->SetReferrer(mCurrentURI);
 
-  loadState->SetOriginalURI(mCurrentURI);
-  loadState->SetResultPrincipalURI(aURI);
-  loadState->SetResultPrincipalURIIsSome(true);
-  loadState->SetKeepResultPrincipalURIIfSet(true);
+  loadInfo->SetOriginalURI(mCurrentURI);
+  loadInfo->SetResultPrincipalURI(aURI);
+  loadInfo->SetResultPrincipalURIIsSome(true);
+  loadInfo->SetKeepResultPrincipalURIIfSet(true);
 
   // Set the triggering pricipal to aPrincipal if available, or current
   // document's principal otherwise.
@@ -6160,8 +6297,8 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDel
     }
     principal = doc->NodePrincipal();
   }
-  loadState->SetTriggeringPrincipal(principal);
-  loadState->SetPrincipalIsExplicit(true);
+  loadInfo->SetTriggeringPrincipal(principal);
+  loadInfo->SetPrincipalIsExplicit(true);
 
   /* Check if this META refresh causes a redirection
    * to another site.
@@ -6174,7 +6311,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDel
      * we have in mind (15000 ms as defined by REFRESH_REDIRECT_TIMER).
      * Pass a REPLACE flag to LoadURI().
      */
-    loadState->SetLoadType(LOAD_NORMAL_REPLACE);
+    loadInfo->SetLoadType(LOAD_NORMAL_REPLACE);
 
     /* for redirects we mimic HTTP, which passes the
      *  original referrer
@@ -6182,21 +6319,17 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDel
     nsCOMPtr<nsIURI> internalReferrer;
     GetReferringURI(getter_AddRefs(internalReferrer));
     if (internalReferrer) {
-      loadState->SetReferrer(internalReferrer);
+      loadInfo->SetReferrer(internalReferrer);
     }
   } else {
-    loadState->SetLoadType(LOAD_REFRESH);
+    loadInfo->SetLoadType(LOAD_REFRESH);
   }
-
-  loadState->SetURI(aURI);
-  loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL);
-  loadState->SetFirstParty(true);
 
   /*
    * LoadURI(...) will cancel all refresh timers... This causes the
    * Timer and its refreshData instance to be released...
    */
-  LoadURI(loadState);
+  LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL, true);
 
   return NS_OK;
 }
@@ -8962,7 +9095,7 @@ public:
                     nsIPrincipal* aTriggeringPrincipal,
                     nsIPrincipal* aPrincipalToInherit,
                     uint32_t aFlags,
-                    const nsACString& aTypeHint,
+                    const char* aTypeHint,
                     nsIInputStream* aPostData,
                     nsIInputStream* aHeadersData,
                     uint32_t aLoadType,
@@ -8972,7 +9105,6 @@ public:
                     nsIDocShell* aSourceDocShell,
                     nsIURI* aBaseURI)
     : mozilla::Runnable("InternalLoadEvent")
-    , mTypeHint(aTypeHint)
     , mSrcdoc(aSrcdoc)
     , mDocShell(aDocShell)
     , mURI(aURI)
@@ -8993,6 +9125,12 @@ public:
     , mSourceDocShell(aSourceDocShell)
     , mBaseURI(aBaseURI)
   {
+    // Make sure to keep null things null as needed
+    if (aTypeHint) {
+      mTypeHint = aTypeHint;
+    } else {
+      mTypeHint.SetIsVoid(true);
+    }
   }
 
   NS_IMETHOD
@@ -9005,7 +9143,8 @@ public:
                                    mReferrerPolicy,
                                    mTriggeringPrincipal, mPrincipalToInherit,
                                    mFlags, EmptyString(),
-                                   mTypeHint,
+                                   mTypeHint.IsVoid() ? nullptr
+                                                      : mTypeHint.get(),
                                    VoidString(), mPostData,
                                    mHeadersData, mLoadType, mSHEntry,
                                    mFirstParty, mSrcdoc, mSourceDocShell,
@@ -9076,7 +9215,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIPrincipal* aPrincipalToInherit,
                          uint32_t aFlags,
                          const nsAString& aWindowTarget,
-                         const nsACString& aTypeHint,
+                         const char* aTypeHint,
                          const nsAString& aFileName,
                          nsIInputStream* aPostData,
                          nsIInputStream* aHeadersData,
@@ -9357,31 +9496,31 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         MOZ_ASSERT(!aSHEntry);
         MOZ_ASSERT(aFirstParty); // Windowwatcher will assume this.
 
-        RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
+        RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
         // Set up our loadinfo so it will do the load as much like we would have
         // as possible.
-        loadState->SetReferrer(aReferrer);
-        loadState->SetReferrerPolicy((mozilla::net::ReferrerPolicy)aReferrerPolicy);
-        loadState->SetSendReferrer(!(aFlags &
+        loadInfo->SetReferrer(aReferrer);
+        loadInfo->SetReferrerPolicy((mozilla::net::ReferrerPolicy)aReferrerPolicy);
+        loadInfo->SetSendReferrer(!(aFlags &
                                     INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
-        loadState->SetOriginalURI(aOriginalURI);
-        loadState->SetMaybeResultPrincipalURI(aResultPrincipalURI);
-        loadState->SetKeepResultPrincipalURIIfSet(aKeepResultPrincipalURIIfSet);
-        loadState->SetLoadReplace(aLoadReplace);
-        loadState->SetTriggeringPrincipal(aTriggeringPrincipal);
-        loadState->SetInheritPrincipal(
+        loadInfo->SetOriginalURI(aOriginalURI);
+        loadInfo->SetMaybeResultPrincipalURI(aResultPrincipalURI);
+        loadInfo->SetKeepResultPrincipalURIIfSet(aKeepResultPrincipalURIIfSet);
+        loadInfo->SetLoadReplace(aLoadReplace);
+        loadInfo->SetTriggeringPrincipal(aTriggeringPrincipal);
+        loadInfo->SetInheritPrincipal(
           aFlags & INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL);
         // Explicit principal because we do not want any guesses as to what the
         // principal to inherit is: it should be aTriggeringPrincipal.
-        loadState->SetPrincipalIsExplicit(true);
-        loadState->SetLoadType(LOAD_LINK);
-        loadState->SetForceAllowDataURI(aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI);
+        loadInfo->SetPrincipalIsExplicit(true);
+        loadInfo->SetLoadType(LOAD_LINK);
+        loadInfo->SetForceAllowDataURI(aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI);
 
         rv = win->Open(NS_ConvertUTF8toUTF16(spec),
                        aWindowTarget, // window name
                        EmptyString(), // Features
-                       loadState,
+                       loadInfo,
                        true, // aForceNoOpener
                        getter_AddRefs(newWin));
         MOZ_ASSERT(!newWin);
@@ -10192,7 +10331,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       uint32_t aReferrerPolicy,
                       nsIPrincipal* aTriggeringPrincipal,
                       nsIPrincipal* aPrincipalToInherit,
-                      const nsACString& aTypeHint,
+                      const char* aTypeHint,
                       const nsAString& aFileName,
                       nsIInputStream* aPostData,
                       nsIInputStream* aHeadersData,
@@ -10541,8 +10680,8 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     loadInfo->SetResultPrincipalURI(aResultPrincipalURI.ref());
   }
 
-  if (!aTypeHint.IsVoid()) {
-    channel->SetContentType(aTypeHint);
+  if (aTypeHint && *aTypeHint) {
+    channel->SetContentType(nsDependentCString(aTypeHint));
     mContentTypeHint = aTypeHint;
   } else {
     mContentTypeHint.Truncate();
@@ -12096,7 +12235,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
                     principalToInherit,
                     flags,
                     EmptyString(),      // No window target
-                    contentType,        // Type hint
+                    contentType.get(),  // Type hint
                     VoidString(),       // No forced file download
                     postData,           // Post data stream
                     nullptr,            // No headers stream
@@ -13284,7 +13423,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              aContent->NodePrincipal(),
                              flags,
                              target,                    // Window target
-                             NS_LossyConvertUTF16toASCII(typeHint),
+                             NS_LossyConvertUTF16toASCII(typeHint).get(),
                              aFileName,                 // Download as file
                              aPostDataStream,           // Post data stream
                              aHeadersDataStream,        // Headers stream
