@@ -4,9 +4,6 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "CSS_ANGLEUNIT",
-  "devtools/shared/css/properties-db", true);
-
 const SPECIALVALUES = new Set([
   "initial",
   "inherit",
@@ -14,6 +11,8 @@ const SPECIALVALUES = new Set([
 ]);
 
 const {getCSSLexer} = require("devtools/shared/css/lexer");
+
+loader.lazyRequireGetter(this, "CSS_ANGLEUNIT", "devtools/shared/css/constants", true);
 
 /**
  * This module is used to convert between various angle units.
