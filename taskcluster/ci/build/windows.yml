@@ -249,7 +249,7 @@ win32-nightly/opt:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        max-run-time: 7200
+        max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
@@ -288,7 +288,7 @@ win64-nightly/opt:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        max-run-time: 7200
+        max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
@@ -693,7 +693,7 @@ win32-devedition-nightly/opt:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        max-run-time: 7200
+        max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
@@ -733,7 +733,7 @@ win64-devedition-nightly/opt:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
-        max-run-time: 7200
+        max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
