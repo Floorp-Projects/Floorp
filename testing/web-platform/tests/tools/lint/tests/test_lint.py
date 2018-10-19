@@ -401,13 +401,13 @@ def test_check_css_globally_unique_ignored_dir(caplog):
 
 def test_all_filesystem_paths():
     with mock.patch(
-            'tools.lint.lint.walk',
-            return_value=[('',
-                           [('dir_a', None), ('dir_b', None)],
-                           [('file_a', None), ('file_b', None)]),
-                          ('dir_a',
+            'os.walk',
+            return_value=[('.',
+                           ['dir_a', 'dir_b'],
+                           ['file_a', 'file_b']),
+                          (os.path.join('.', 'dir_a'),
                            [],
-                           [('file_c', None), ('file_d', None)])]
+                           ['file_c', 'file_d'])]
     ):
         got = list(lint_mod.all_filesystem_paths('.'))
         assert got == ['file_a',
