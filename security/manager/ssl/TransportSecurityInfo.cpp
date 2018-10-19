@@ -52,6 +52,7 @@ TransportSecurityInfo::TransportSecurityInfo()
   , mHasIsEVStatus(false)
   , mHaveCipherSuiteAndProtocol(false)
   , mHaveCertErrorBits(false)
+  , mCanceled(false)
   , mMutex("TransportSecurityInfo::mMutex")
   , mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE)
   , mErrorCode(0)
@@ -84,10 +85,21 @@ TransportSecurityInfo::SetOriginAttributes(
   mOriginAttributes = aOriginAttributes;
 }
 
+// NB: GetErrorCode may be called before an error code is set (if ever). In that
+// case, this returns (by pointer) 0, which is treated as a successful value.
 NS_IMETHODIMP
 TransportSecurityInfo::GetErrorCode(int32_t* state)
 {
   MutexAutoLock lock(mMutex);
+
+  // We're in an inconsistent state if we think we've been canceled but no error
+  // code was set or we haven't been canceled but an error code was set.
+  MOZ_ASSERT(!((mCanceled && mErrorCode == 0) ||
+              (!mCanceled && mErrorCode != 0)));
+  if ((mCanceled && mErrorCode == 0) || (!mCanceled && mErrorCode != 0)) {
+    mCanceled = true;
+    mErrorCode = SEC_ERROR_LIBRARY_FAILURE;
+  }
 
   *state = mErrorCode;
   return NS_OK;
@@ -96,9 +108,20 @@ TransportSecurityInfo::GetErrorCode(int32_t* state)
 void
 TransportSecurityInfo::SetCanceled(PRErrorCode errorCode)
 {
-  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(errorCode != 0);
+  if (errorCode == 0) {
+    errorCode = SEC_ERROR_LIBRARY_FAILURE;
+  }
 
+  MutexAutoLock lock(mMutex);
   mErrorCode = errorCode;
+  mCanceled = true;
+}
+
+bool
+TransportSecurityInfo::IsCanceled()
+{
+  return mCanceled;
 }
 
 NS_IMETHODIMP
@@ -391,6 +414,11 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream)
   }
   // PRErrorCode will be a negative value
   mErrorCode = static_cast<PRErrorCode>(errorCode);
+  // If mErrorCode is non-zero, SetCanceled was called on the
+  // TransportSecurityInfo that was serialized.
+  if (mErrorCode != 0) {
+    mCanceled = true;
+  }
 
   // Re-purpose mErrorMessageCached to represent serialization version
   // If string doesn't match exact version it will be treated as older

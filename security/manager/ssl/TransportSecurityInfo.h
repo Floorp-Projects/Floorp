@@ -68,6 +68,7 @@ public:
   void SetOriginAttributes(const OriginAttributes& aOriginAttributes);
 
   void SetCanceled(PRErrorCode errorCode);
+  bool IsCanceled();
 
   void SetStatusErrorBits(nsNSSCertificate* cert, uint32_t collected_errors);
 
@@ -103,6 +104,11 @@ public:
   bool mHaveCertErrorBits;
 
 private:
+  // True if SetCanceled has been called (or if this was deserialized with a
+  // non-zero mErrorCode, which can only be the case if SetCanceled was called
+  // on the original TransportSecurityInfo).
+  Atomic<bool> mCanceled;
+
   mutable ::mozilla::Mutex mMutex;
 
 protected:

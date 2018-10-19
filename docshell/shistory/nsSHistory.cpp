@@ -13,7 +13,7 @@
 #include "nsDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
-#include "nsDocShellLoadInfo.h"
+#include "nsDocShellLoadState.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIObserverService.h"
@@ -1575,7 +1575,7 @@ nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
 {
   NS_ENSURE_STATE(aFrameDS && aFrameEntry);
 
-  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState();
 
   /* Set the loadType in the SHEntry too to  what was passed on.
    * This will be passed on to child subframes later in nsDocShell,
@@ -1583,19 +1583,21 @@ nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
    */
   aFrameEntry->SetLoadType(aLoadType);
 
-  loadInfo->SetLoadType(aLoadType);
-  loadInfo->SetSHEntry(aFrameEntry);
+  loadState->SetLoadType(aLoadType);
+  loadState->SetSHEntry(aFrameEntry);
 
   nsCOMPtr<nsIURI> originalURI = aFrameEntry->GetOriginalURI();
-  loadInfo->SetOriginalURI(originalURI);
+  loadState->SetOriginalURI(originalURI);
 
-  loadInfo->SetLoadReplace(aFrameEntry->GetLoadReplace());
+  loadState->SetLoadReplace(aFrameEntry->GetLoadReplace());
 
-  nsCOMPtr<nsIURI> nextURI = aFrameEntry->GetURI();
+  nsCOMPtr<nsIURI> newURI = aFrameEntry->GetURI();
+  loadState->SetURI(newURI);
+  loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
+  loadState->SetFirstParty(false);
+
   // Time to initiate a document load
-  return aFrameDS->LoadURI(nextURI, loadInfo,
-                           nsIWebNavigation::LOAD_FLAGS_NONE, false);
-
+  return aFrameDS->LoadURI(loadState);
 }
 
 NS_IMETHODIMP_(void)
