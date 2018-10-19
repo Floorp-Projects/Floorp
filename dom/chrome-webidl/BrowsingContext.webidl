@@ -17,3 +17,8 @@ interface BrowsingContext {
 
   readonly attribute BrowsingContext? opener;
 };
+
+[Exposed=Window, ChromeOnly]
+interface ChromeBrowsingContext : BrowsingContext {
+  sequence<WindowGlobalParent> getWindowGlobals();
+};
