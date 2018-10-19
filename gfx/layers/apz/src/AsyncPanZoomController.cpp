@@ -3963,6 +3963,16 @@ AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncTransformCon
        * GetOverscrollTransform(aMode);
 }
 
+LayoutDeviceToParentLayerScale
+AsyncPanZoomController::GetCurrentPinchZoomScale(AsyncTransformConsumer aMode) const
+{
+  CSSToParentLayerScale2D scale = GetEffectiveZoom(aMode);
+  // Note that in general the zoom might have different x- and y-scales.
+  // However, this function in particular is only used on the WebRender codepath
+  // for which the scales should always be the same.
+  return scale.ToScaleFactor() / Metrics().GetDevPixelsPerCSSPixel();
+}
+
 CSSRect
 AsyncPanZoomController::GetEffectiveLayoutViewport(AsyncTransformConsumer aMode) const
 {
