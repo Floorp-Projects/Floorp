@@ -69,18 +69,13 @@ class WorkerDetail extends PureComponent {
     const status = this.props.target.details.status.toLowerCase();
     const ftlId = this.getStatusFtlId(status);
 
-    return dom.dt(
-      {},
-      Localized(
-        {
-          id: ftlId,
+    return Localized(
+      {
+          className: `worker-detail__status worker-detail__status--${ status }`,
+      },
+      dom.div(
         },
-        dom.span(
-          {
-            className: `badge ${status === "running" ? "badge--success" : ""}`,
-          },
-          status
-        )
+        status
       )
     );
   }

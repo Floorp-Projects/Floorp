@@ -61,7 +61,7 @@ class ServiceWorkerAction extends PureComponent {
   _renderButton(label, onClick) {
     return dom.button(
       {
-        className: "default-button",
+        className: "aboutdebugging-button",
         onClick: e => onClick(),
       },
       label,
@@ -69,12 +69,7 @@ class ServiceWorkerAction extends PureComponent {
   }
 
   render() {
-    return dom.div(
-      {
-        className: "toolbar",
-      },
-      this._renderAction()
-    );
+    return dom.div({}, this._renderAction());
   }
 }
 
