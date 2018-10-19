@@ -113,13 +113,13 @@ public:
   {
     // The output of this node is always stereo, no matter what the inputs are.
     MOZ_ASSERT(aInput.ChannelCount() <= 2);
-    aOutput->AllocateChannels(2);
     bool monoToStereo = aInput.ChannelCount() == 1;
 
     if (aInput.IsNull()) {
       // If input is silent, so is the output
-      SetToSilentStereoBlock(aOutput);
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
     } else if (mPan.HasSimpleValue()) {
+      aOutput->AllocateChannels(2);
       float panning = mPan.GetValue();
       // If the panning is 0.0, we can simply copy the input to the
       // output with gain applied, up-mixing to stereo if needed.
@@ -138,6 +138,7 @@ public:
                            panning <= 0);
       }
     } else {
+      aOutput->AllocateChannels(2);
       float computedGain[2*WEBAUDIO_BLOCK_SIZE + 4];
       bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
