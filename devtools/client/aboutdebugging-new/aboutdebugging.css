@@ -2,15 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
-* Global styles
-*/
+@import "chrome://global/skin/in-content/common.css";
 @import "resource://devtools/client/themes/variables.css";
-@import "resource://devtools/client/aboutdebugging-new/src/base.css";
 
-/*
-* Components
-*/
 @import "resource://devtools/client/aboutdebugging-new/src/components/App.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/RuntimeInfo.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/connect/ConnectPage.css";
@@ -26,3 +20,78 @@
 @import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarFixedItem.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarItem.css";
 @import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarRuntimeItem.css";
+
+:root {
+  /* Import css variables from common.css */
+  --text-color: var(--in-content-page-color);
+
+  /* */
+  /* Variables with values from common.css, which are hardcoded there */
+  /* */
+
+  /* global layout vars */
+  --page-width: 664px;
+  --base-distance: 4px;
+
+  /* global styles */
+  --base-font-size: 15px; /* root font of 11px * 1.36em = 15px */
+  --base-line-height: 1.8;
+  --button-form-width: 150px;
+  --input-hpadding: 5px;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+}
+
+dd {
+  margin: 0;
+  padding: 0;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ellipsis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.separator {
+  margin: calc(var(--base-distance) * 4) 0;
+}
+
+.std-button {
+  box-sizing: border-box;
+  margin: 0;
+  min-width: var(--button-form-width);
+}
+
+.std-input,
+/* NOTE: this is here to override the rules in common.css, which have higher
+specificity. Once we stop importing that stylesheet, this extra selector can
+be removed. */
+.std-input[type=text] {
+  box-sizing: border-box;
+  line-height: unset;
+  padding: 0 var(--input-hpadding);
+  height: 100%;
+}
+
+/* TODO: check these values */
+.aboutdebugging-button {
+  height: 36px;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-inline-start: 4px;
+  margin-inline-end: 4px;
+  min-width: 100px;
+  padding-inline-start: 20px;
+  padding-inline-end: 20px;
+}
