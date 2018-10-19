@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
+#include "nsWrapperCache.h"
 
 class nsIPrincipal;
 class nsIURI;
@@ -23,11 +24,12 @@ class WindowGlobalChild;
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
  */
-class WindowGlobalParent final : public PWindowGlobalParent
+class WindowGlobalParent final : public nsWrapperCache
+                               , public PWindowGlobalParent
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WindowGlobalParent)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(WindowGlobalParent)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WindowGlobalParent)
 
   // Has this actor been shut down
   bool IsClosed() { return mIPCClosed; }
@@ -38,7 +40,7 @@ public:
 
   // Get the other side of this actor if it is an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is not in-process.
-  already_AddRefed<WindowGlobalChild> GetOtherSide();
+  already_AddRefed<WindowGlobalChild> GetChildActor();
 
   // The principal of this WindowGlobal. This value will not change over the
   // lifetime of the WindowGlobal object, even to reflect changes in
@@ -64,6 +66,10 @@ public:
   // Initialize the mFrameLoader fields for a created WindowGlobalParent. Must
   // be called after setting the Manager actor.
   void Init(const WindowGlobalInit& aInit);
+
+  nsISupports* GetParentObject();
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   // IPC messages

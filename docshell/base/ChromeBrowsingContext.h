@@ -38,9 +38,14 @@ public:
     return mProcessId == aProcessId;
   }
 
+  void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
+
   // Called by WindowGlobalParent to register and unregister window globals.
   void RegisterWindowGlobal(WindowGlobalParent* aGlobal);
   void UnregisterWindowGlobal(WindowGlobalParent* aGlobal);
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb);
