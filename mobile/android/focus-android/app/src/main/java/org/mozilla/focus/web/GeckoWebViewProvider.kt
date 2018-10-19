@@ -80,8 +80,8 @@ class GeckoWebViewProvider : IWebViewProvider {
             val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
             runtimeSettingsBuilder.useContentProcessHint(true)
             // Safe browsing is not ready #3309
-            runtimeSettingsBuilder.blockMalware(false)
-            runtimeSettingsBuilder.blockPhishing(false)
+            runtimeSettingsBuilder.blockMalware(true)
+            runtimeSettingsBuilder.blockPhishing(true)
             runtimeSettingsBuilder.nativeCrashReportingEnabled(false)
             runtimeSettingsBuilder.javaCrashReportingEnabled(false)
             geckoRuntime =
