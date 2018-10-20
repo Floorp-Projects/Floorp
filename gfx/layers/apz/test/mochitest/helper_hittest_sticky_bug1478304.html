@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing with sticky element inside a transform (bug 1478304)</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    #subframe {
+      width: 500px;
+      height: 200px;
+      overflow-y: auto;
+    }
+    #transform { 
+      transform: translate(0); 
+    }
+    #sticky {
+      background-color: white;
+      position: sticky;
+      top: 0;
+    }
+    #spacer {
+      width: 100px;
+      height: 1000px;
+    }
+    </style>
+</head>
+<body>
+  <div id="subframe">
+    <div id="transform">
+      <div id="sticky">sticky with transformed parent (click me or hover me and try a scroll)</div>
+      <div id="spacer"></div>
+    </div>
+  </div>
+</body>
+<script type="application/javascript">
+
+function* test(testDriver) {
+  var utils = getHitTestConfig().utils;
+
+  var subframe = document.getElementById("subframe");
+  var sticky = document.getElementById("sticky");
+
+  checkHitResult(
+    hitTest(centerOf(sticky)),
+    APZHitResultFlags.VISIBLE,
+    utils.getViewId(subframe),
+    "subframe was successfully hit");
+
+  subtestDone();
+}
+
+waitUntilApzStable().then(runContinuation(test));
+
+</script>
+</html>
