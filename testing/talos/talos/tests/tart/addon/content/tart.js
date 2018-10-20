@@ -393,27 +393,13 @@ Tart.prototype = {
   },
 
   _reportAllResults() {
-    var testNames = [];
-    var testResults = [];
-
     var out = "";
     for (var i in this._results) {
       res = this._results[i];
       var disp = [].concat(res.value).map(function(a) { return (isNaN(a) ? -1 : a.toFixed(1)); }).join(" ");
       out += res.name + ": " + disp + "\n";
-
-      if (!Array.isArray(res.value)) { // Waw intervals array is not reported to talos
-        testNames.push(res.name);
-        testResults.push(res.value);
-      }
     }
     this._log("\n" + out);
-
-    if (content && content.tpRecordTime) {
-      content.tpRecordTime(testResults.join(","), 0, testNames.join(","));
-    } else {
-      // alert(out);
-    }
   },
 
   _onTestComplete: null,
