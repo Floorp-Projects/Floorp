@@ -17,8 +17,11 @@
 #include <memory>
 #include <string.h>
 #include "cubeb/cubeb.h"
-#include "common.h"
 #include <string>
+
+//#define ENABLE_NORMAL_LOG
+//#define ENABLE_VERBOSE_LOG
+#include "common.h"
 
 using namespace std;
 

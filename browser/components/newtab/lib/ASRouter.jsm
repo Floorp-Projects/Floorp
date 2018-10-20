@@ -895,6 +895,9 @@ class _ASRouter {
       case ra.OPEN_ABOUT_PAGE:
         target.browser.ownerGlobal.openTrustedLinkIn(`about:${action.data.args}`, "tab");
         break;
+      case ra.OPEN_PREFERENCES_PAGE:
+        target.browser.ownerGlobal.openPreferences(action.data.category, {origin: action.data.origin});
+        break;
       case ra.OPEN_APPLICATIONS_MENU:
         UITour.showMenu(target.browser.ownerGlobal, action.data.args);
         break;

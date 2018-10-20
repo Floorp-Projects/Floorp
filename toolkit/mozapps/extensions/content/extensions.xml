@@ -1492,7 +1492,9 @@
     <handlers>
       <handler event="click" button="0"><![CDATA[
         if (!["button", "checkbox", "menulist", "menuitem"].includes(event.originalTarget.localName) &&
-            !event.originalTarget.classList.contains("text-link")) {
+            !event.originalTarget.classList.contains("text-link") &&
+            // Treat the relnotes container as embedded text instead of a click target.
+            !event.originalTarget.closest(".relnotes-container")) {
           this.showInDetailView();
         }
       ]]></handler>

@@ -133,6 +133,7 @@ for (const type of [
   "OPEN_PRIVATE_BROWSER_WINDOW",
   "OPEN_URL",
   "OPEN_ABOUT_PAGE",
+  "OPEN_PREFERENCES_PAGE",
   "SHOW_FIREFOX_ACCOUNTS",
 ]) {
   ASRouterActions[type] = type;
