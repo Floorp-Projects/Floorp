@@ -538,6 +538,11 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   loadContext->SetRemoteTabs(mChromeFlags &
                              nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
 
+  // Send our browsing context to the parent process.
+  RefPtr<BrowsingContext> browsingContext =
+      nsDocShell::Cast(docShell)->GetBrowsingContext();
+  SendRootBrowsingContext(BrowsingContextId(browsingContext->Id()));
+
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.
   // Then this chrome event handler, will be inherited to inner windows.

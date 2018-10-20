@@ -67,6 +67,7 @@ class DataSourceSurface;
 
 namespace dom {
 
+class ChromeBrowsingContext;
 class ClonedMessageData;
 class nsIContentParent;
 class Element;
@@ -124,6 +125,8 @@ class TabParent final : public PBrowserParent,
   already_AddRefed<nsIWidget> GetTopLevelWidget();
 
   nsIXULBrowserWindow* GetXULBrowserWindow();
+
+  ChromeBrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
 
   void Destroy();
 
@@ -584,6 +587,9 @@ class TabParent final : public PBrowserParent,
   virtual mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(
       const nsCString& aFirstPartyURI) override;
 
+  virtual mozilla::ipc::IPCResult RecvRootBrowsingContext(
+      const BrowsingContextId& aId) override;
+
   mozilla::ipc::IPCResult RecvSetSystemFont(
       const nsCString& aFontName) override;
   mozilla::ipc::IPCResult RecvGetSystemFont(nsCString* aFontName) override;
@@ -660,6 +666,9 @@ class TabParent final : public PBrowserParent,
   // Destroy message and before we've received __delete__. This allows us to
   // dispatch message manager messages during this time.
   RefPtr<nsFrameLoader> mFrameLoader;
+
+  // The root browsing context loaded in this TabParent.
+  RefPtr<ChromeBrowsingContext> mBrowsingContext;
 
   TabId mTabId;
 
