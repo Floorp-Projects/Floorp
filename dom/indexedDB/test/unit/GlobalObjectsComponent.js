@@ -35,7 +35,7 @@ GlobalObjectsComponent.prototype =
       ok(db, "Got database");
       finishTest();
     };
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([GlobalObjectsComponent]);

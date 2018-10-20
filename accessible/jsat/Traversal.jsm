@@ -56,7 +56,7 @@ BaseTraversalRule.prototype = {
       return Filters.IGNORE;
     },
 
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIAccessibleTraversalRule])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIAccessibleTraversalRule]),
 };
 
 var gSimpleTraversalRoles =
@@ -221,7 +221,7 @@ var TraversalRules = { // jshint ignore:line
         "main",
         "navigation",
         "search",
-        "region"
+        "region",
         ]);
 
       return matchedRole ? Filters.MATCH : Filters.IGNORE;
@@ -346,7 +346,7 @@ var TraversalRules = { // jshint ignore:line
       return Filters.IGNORE;
     }
     return Filters.MATCH;
-  }
+  },
 };
 
 var TraversalHelper = {
@@ -393,6 +393,6 @@ var TraversalHelper = {
     }
     return aVirtualCursor[aMethod](rule);
 
-  }
+  },
 
 };

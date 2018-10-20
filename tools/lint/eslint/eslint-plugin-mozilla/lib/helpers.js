@@ -34,17 +34,17 @@ const callExpressionDefinitions = [
   /^DevToolsUtils\.defineLazyGetter\(this, "(\w+)"/,
   /^Object\.defineProperty\(this, "(\w+)"/,
   /^Reflect\.defineProperty\(this, "(\w+)"/,
-  /^this\.__defineGetter__\("(\w+)"/
+  /^this\.__defineGetter__\("(\w+)"/,
 ];
 
 const callExpressionMultiDefinitions = [
   "XPCOMUtils.defineLazyGlobalGetters(this,",
   "XPCOMUtils.defineLazyModuleGetters(this,",
-  "XPCOMUtils.defineLazyServiceGetters(this,"
+  "XPCOMUtils.defineLazyServiceGetters(this,",
 ];
 
 const imports = [
-  /^(?:Cu|Components\.utils|ChromeUtils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/
+  /^(?:Cu|Components\.utils|ChromeUtils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/,
 ];
 
 const workerImportFilenameMatch = /(.*\/)*(.*?\.jsm?)/;
@@ -156,7 +156,7 @@ module.exports = {
           throw new Error("Left more nodes than entered.");
         }
         parents.pop();
-      }
+      },
     });
     if (parents.length) {
       throw new Error("Entered more nodes than left.");
@@ -269,7 +269,7 @@ module.exports = {
       return express.arguments[0].elements.map(literal => {
         return {
           name: literal.value,
-          writable: false
+          writable: false,
         };
       });
     }
@@ -298,7 +298,7 @@ module.exports = {
           // of them.
           let explicit = globalModules[match[1]].length == 1;
           return globalModules[match[1]].map(name => ({
-            name, writable: true, explicit
+            name, writable: true, explicit,
           }));
         }
 
@@ -416,7 +416,7 @@ module.exports = {
       comment: true,
       attachComment: true,
       ecmaVersion: this.getECMAVersion(),
-      sourceType: "script"
+      sourceType: "script",
     };
   },
 
@@ -543,7 +543,7 @@ module.exports = {
 
         manifests.push({
           file: path.join(dir, name),
-          manifest
+          manifest,
         });
       } catch (e) {
       }
@@ -746,5 +746,5 @@ module.exports = {
 
   getSavedRuleData(rule) {
     return require("./rules/saved-rules-data.json").rulesData[rule];
-  }
+  },
 };

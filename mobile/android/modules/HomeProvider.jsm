@@ -180,7 +180,7 @@ var HomeProvider = Object.freeze({
 
     gSyncCallbacks[datasetId] = {
       interval: interval,
-      callback: callback
+      callback: callback,
     };
 
     if (!gTimerRegistered) {
@@ -198,7 +198,7 @@ var HomeProvider = Object.freeze({
     delete gSyncCallbacks[datasetId];
     Services.prefs.clearUserPref(getLastSyncPrefName(datasetId));
     // You can't unregister a update timer, so we don't try to do that.
-  }
+  },
 });
 
 var gDatabaseEnsured = false;
@@ -311,7 +311,7 @@ function refreshDataset(datasetId) {
 
     EventDispatcher.instance.sendRequest({
       type: "HomePanels:RefreshDataset",
-      datasetId: datasetId
+      datasetId: datasetId,
     });
   }, 100, Ci.nsITimer.TYPE_ONE_SHOT);
 
@@ -366,7 +366,7 @@ HomeStorage.prototype = {
               background_color: item.background_color,
               background_url: item.background_url,
               filter: item.filter,
-              created: Date.now()
+              created: Date.now(),
             };
             yield db.executeCached(SQL.insertItem, params);
           }
@@ -397,5 +397,5 @@ HomeStorage.prototype = {
 
       refreshDataset(this.datasetId);
     }.bind(this));
-  }
+  },
 };

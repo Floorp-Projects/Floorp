@@ -193,7 +193,7 @@ function insertTrustAnchorsFromDatabase() {
           {
             "label": label,
             "binNumber": gTrustAnchors.maxBin,
-            "sha256Fingerprint": encodedFingerprint
+            "sha256Fingerprint": encodedFingerprint,
           });
       }
     }

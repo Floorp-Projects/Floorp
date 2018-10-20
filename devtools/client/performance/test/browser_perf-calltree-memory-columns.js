@@ -15,7 +15,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, $, $$, DetailsView, MemoryCallTreeView } = panel.panelWin;
@@ -46,7 +46,7 @@ add_task(async function() {
     "self-size": true,
     "self-size-percentage": true,
     "samples": false,
-    "function": true
+    "function": true,
   });
 
   await teardownToolboxAndRemoveTab(panel);

@@ -15,7 +15,7 @@ const TEST_CASES = [
    "ss1", "name"],
   [
     ["cookies", "http://test1.example.org"],
-    getCookieId("c1", "test1.example.org", "/browser"), "name"
+    getCookieId("c1", "test1.example.org", "/browser"), "name",
   ],
   [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
    1, "name"],

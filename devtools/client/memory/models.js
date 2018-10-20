@@ -63,7 +63,7 @@ const censusDisplayModel = exports.censusDisplay = PropTypes.shape({
   inverted: PropTypes.bool.isRequired,
   breakdown: PropTypes.shape({
     by: PropTypes.string.isRequired,
-  })
+  }),
 });
 
 /**
@@ -78,7 +78,7 @@ const labelDisplayModel = exports.labelDisplay = PropTypes.shape({
   tooltip: PropTypes.string.isRequired,
   breakdown: PropTypes.shape({
     by: PropTypes.string.isRequired,
-  })
+  }),
 });
 
 /**
@@ -92,7 +92,7 @@ const treeMapDisplayModel = exports.treeMapDisplay = PropTypes.shape({
   inverted: PropTypes.bool.isRequired,
   breakdown: PropTypes.shape({
     by: PropTypes.string.isRequired,
-  })
+  }),
 });
 
 /**
@@ -123,7 +123,7 @@ const treeMapModel = exports.treeMapModel = PropTypes.shape({
       default:
         assert(false, `Unexpected treeMap state: ${treeMap.state}`);
     }
-  })
+  }),
 });
 
 const censusModel = exports.censusModel = PropTypes.shape({
@@ -171,7 +171,7 @@ const censusModel = exports.censusModel = PropTypes.shape({
       default:
         assert(false, `Unexpected census state: ${census.state}`);
     }
-  })
+  }),
 });
 
 /**

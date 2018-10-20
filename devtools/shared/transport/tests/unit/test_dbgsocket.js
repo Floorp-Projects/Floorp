@@ -42,7 +42,7 @@ async function test_socket_conn() {
   const unicodeString = "(╯°□°）╯︵ ┻━┻";
   const transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
-    port: gPort
+    port: gPort,
   });
 
   // Assert that connection settings are available on transport object
@@ -87,7 +87,7 @@ async function test_socket_shutdown() {
   try {
     await DebuggerClient.socketConnect({
       host: "127.0.0.1",
-      port: gPort
+      port: gPort,
     });
   } catch (e) {
     if (e.result == Cr.NS_ERROR_CONNECTION_REFUSED ||
@@ -113,7 +113,7 @@ function test_pipe_conn() {
     },
     onClosed: function(status) {
       run_next_test();
-    }
+    },
   };
 
   transport.ready();

@@ -45,7 +45,7 @@ function run_test() {
         }],
       ]);
       /* eslint-enable */
-    }
+    },
   };
 
   const INDICES = new Set([3, 5, 9]);

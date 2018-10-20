@@ -23,7 +23,7 @@ function invalidCode(code, type, message) {
 ruleTester.run("mark-exported-symbols-as-used", rule, {
   valid: [
     "var EXPORTED_SYMBOLS = ['foo'];",
-    "this.EXPORTED_SYMBOLS = ['foo'];"
+    "this.EXPORTED_SYMBOLS = ['foo'];",
   ],
   invalid: [
     invalidCode("let EXPORTED_SYMBOLS = ['foo'];", "VariableDeclaration",
@@ -31,6 +31,6 @@ ruleTester.run("mark-exported-symbols-as-used", rule, {
     invalidCode("var EXPORTED_SYMBOLS = 'foo';", "VariableDeclaration",
                 "Unexpected assignment of non-Array to EXPORTED_SYMBOLS"),
     invalidCode("this.EXPORTED_SYMBOLS = 'foo';", "AssignmentExpression",
-                "Unexpected assignment of non-Array to EXPORTED_SYMBOLS")
-  ]
+                "Unexpected assignment of non-Array to EXPORTED_SYMBOLS"),
+  ],
 });

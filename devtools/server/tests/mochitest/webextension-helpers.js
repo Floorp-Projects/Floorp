@@ -47,7 +47,7 @@ function setWebExtensionOOPMode(oopMode) {
   return SpecialPowers.pushPrefEnv({
     "set": [
       ["extensions.webextensions.remote", oopMode],
-    ]
+    ],
   });
 }
 

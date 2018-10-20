@@ -31,13 +31,13 @@ function synthesizeProfileForTest(samples) {
   samples.unshift({
     time: 0,
     frames: [
-      { location: "(root)" }
-    ]
+      { location: "(root)" },
+    ],
   });
 
   const uniqueStacks = new RecordingUtils.UniqueStacks();
   return RecordingUtils.deflateThread({
     samples: samples,
-    markers: []
+    markers: [],
   }, uniqueStacks);
 }

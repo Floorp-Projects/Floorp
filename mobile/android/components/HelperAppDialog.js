@@ -72,7 +72,7 @@ HelperAppLauncherDialog.prototype = {
     if (!alreadyResolved) {
       let innerURI = NetUtil.newChannel({
         uri: url,
-        loadUsingSystemPrincipal: true
+        loadUsingSystemPrincipal: true,
       }).URI;
 
       if (!url.equals(innerURI)) {
@@ -125,7 +125,7 @@ HelperAppLauncherDialog.prototype = {
       OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE,
       OMA_DRM_MESSAGE_MIME,
       OMA_DRM_CONTENT_MIME,
-      OMA_DRM_RIGHTS_MIME
+      OMA_DRM_RIGHTS_MIME,
     ].includes(mimeType);
   },
 
@@ -167,7 +167,7 @@ HelperAppLauncherDialog.prototype = {
           aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.saveToDisk;
           aLauncher.saveToDisk(null, false);
           return true;
-        }
+        },
       });
     }
 
@@ -217,10 +217,10 @@ HelperAppLauncherDialog.prototype = {
       title: bundle.GetStringFromName("helperapps.pick"),
       buttons: [
         newButtonOrder ? alwaysUse : justOnce,
-        newButtonOrder ? justOnce : alwaysUse
+        newButtonOrder ? justOnce : alwaysUse,
       ],
       // Tapping an app twice should choose "Just once".
-      doubleTapButton: newButtonOrder ? 1 : 0
+      doubleTapButton: newButtonOrder ? 1 : 0,
     }, (data) => {
       if (data.button < 0) {
         aLauncher.cancel(Cr.NS_BINDING_ABORTED);
@@ -264,7 +264,7 @@ HelperAppLauncherDialog.prototype = {
       "type": "Download:AndroidDownloadManager",
       "uri": aLauncher.source.spec,
       "mimeType": mimeType,
-      "filename": aLauncher.suggestedFileName
+      "filename": aLauncher.suggestedFileName,
     });
   },
 

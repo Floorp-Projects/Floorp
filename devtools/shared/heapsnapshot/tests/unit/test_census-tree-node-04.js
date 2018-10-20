@@ -83,7 +83,7 @@ function run_test() {
                 id: 6,
                 parent: 5,
                 reportLeafIndex: 2,
-              }
+              },
             ],
             id: 5,
             parent: 2,
@@ -148,7 +148,7 @@ function run_test() {
         children: undefined,
         id: 9,
         parent: 1,
-        reportLeafIndex: 5
+        reportLeafIndex: 5,
       },
     ],
     id: 1,

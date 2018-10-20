@@ -193,14 +193,14 @@ SpecialPowersObserver.prototype._registerObservers = {
         // so we fake these properties.
         msg.permission = {
           principal: {
-            originAttributes: {appId: permission.principal.appId}
+            originAttributes: {appId: permission.principal.appId},
           },
-          type: permission.type
+          type: permission.type,
         };
       default:
         this._self._sendAsyncMessage("specialpowers-" + aTopic, msg);
     }
-  }
+  },
 };
 
 /**

@@ -7,7 +7,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "ContentTask"
+  "ContentTask",
 ];
 
 ChromeUtils.import("resource://gre/modules/Promise.jsm");

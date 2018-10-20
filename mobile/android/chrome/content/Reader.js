@@ -118,7 +118,7 @@ var Reader = {
       case "Reader:FaviconRequest": {
         GlobalEventDispatcher.sendRequestForResult({
           type: "Reader:FaviconRequest",
-          url: message.data.url
+          url: message.data.url,
         }).then(data => {
           message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", data);
         });
@@ -174,7 +174,7 @@ var Reader = {
         title: title,
         clickCallback: () => this.pageAction.readerModeCallback(browser),
         important: true,
-        useTint: useTint
+        useTint: useTint,
       });
     };
 
@@ -211,7 +211,7 @@ var Reader = {
   _showSystemUI: function(visibility) {
       WindowEventDispatcher.sendRequest({
           type: "SystemUI:Visibility",
-          visible: visibility
+          visible: visibility,
       });
   },
 

@@ -334,5 +334,5 @@ Spectrum.prototype = {
     this.alphaSlider = this.alphaSliderInner = this.alphaSliderHelper = null;
     this.parentEl = null;
     this.element = null;
-  }
+  },
 };

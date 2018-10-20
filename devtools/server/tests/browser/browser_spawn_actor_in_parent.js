@@ -34,7 +34,7 @@ add_task(async function() {
     args,
     isInParent,
     conn,
-    mm
+    mm,
   } = await inParentFront.test();
   is(args[0], 1, "first actor constructor arg is correct");
   is(args[1], 2, "first actor constructor arg is correct");

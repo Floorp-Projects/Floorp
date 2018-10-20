@@ -127,7 +127,7 @@ function newSubconnection(prefix) {
   const { conn, transport } = newConnection(prefix);
   transport.hooks = {
     onPacket: (packet) => gMainConnection.send(packet),
-    onClosed: () => {}
+    onClosed: () => {},
   };
   gMainConnection.setForwarding(prefix, transport);
 
@@ -177,7 +177,7 @@ EchoActor.prototype.onEcho = function(request) {
   return JSON.parse(JSON.stringify(request));
 };
 EchoActor.prototype.requestTypes = {
-  "echo": EchoActor.prototype.onEcho
+  "echo": EchoActor.prototype.onEcho,
 };
 
 function TestForwardPrefix12WithActor1() {

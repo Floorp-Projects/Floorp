@@ -32,6 +32,6 @@ module.exports = function(context) {
         helpers.addVarToScope(global, context.getScope(),
                               frameScriptEnv.globals[global]);
       }
-    }
+    },
   };
 };

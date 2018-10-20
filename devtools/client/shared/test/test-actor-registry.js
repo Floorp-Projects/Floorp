@@ -21,7 +21,7 @@
     const options = {
       type: { target: true },
       constructor: "TestActor",
-      prefix: "testActor"
+      prefix: "testActor",
     };
     const testActorFront = await registryFront.registerActor(ACTOR_URL, options);
     return testActorFront;

@@ -73,7 +73,7 @@ async function testInitialState(editor) {
 
   const color = await getComputedStyleProperty({
     selector: "body",
-    name: "background-color"
+    name: "background-color",
   });
   is(color, "rgb(255, 255, 255)",
      "content's background color is initially white");

@@ -58,7 +58,7 @@ ContentObserver.prototype = {
   _onInnerWindowDestroyed: function(subject, topic, data) {
     const id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     EventEmitter.emit(this, "global-destroyed", id);
-  }
+  },
 };
 
 // Utility functions.

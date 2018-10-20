@@ -22,7 +22,7 @@ add_task(async function() {
        .querySelectorAll("*")
        .forEach(console.log)`,
     `document`,
-    `"😎"`
+    `"😎"`,
   ];
 
   const onLastMessage = waitForMessage(hud, `"😎"`);

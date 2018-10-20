@@ -10,39 +10,39 @@ const contentScripts = {
       matches: ["*://webcompat-addon-testcases.schub.io/*"],
       css: [{file: "injections/css/bug0000000-dummy-css-injection.css"}],
       js: [{file: "injections/js/bug0000000-dummy-js-injection.js"}],
-      runAt: "document_start"
-    }
+      runAt: "document_start",
+    },
   ],
   desktop: [
     {
       matches: ["https://ib.absa.co.za/*"],
       js: [{file: "injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js"}],
-      runAt: "document_start"
+      runAt: "document_start",
     },
     {
       matches: ["http://histography.io/*"],
       js: [{file: "injections/js/bug1457335-histography.io-ua-change.js"}],
-      runAt: "document_start"
+      runAt: "document_start",
     },
     {
       matches: ["*://*.bankofamerica.com/*"],
       js: [{file: "injections/js/bug1472075-bankofamerica.com-ua-change.js"}],
-      runAt: "document_start"
+      runAt: "document_start",
     },
     {
       matches: ["http://202.166.205.141/bbvrs/*"],
       js: [{file: "injections/js/bug1472081-election.gov.np-window.sidebar-shim.js"}],
       runAt: "document_start",
-      allFrames: true
+      allFrames: true,
     },
     {
       matches: ["*://portalminasnet.com/*"],
       js: [{file: "injections/js/bug1482066-portalminasnet.com-window.sidebar-shim.js"}],
       runAt: "document_start",
-      allFrames: true
-    }
+      allFrames: true,
+    },
   ],
-  android: []
+  android: [],
 };
 
 /* globals browser */

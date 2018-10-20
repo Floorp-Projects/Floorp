@@ -129,7 +129,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     tel.recordEvent("activate", "responsive_design", null, {
       "host": hostType,
       "width": Math.ceil(window.outerWidth / 50) * 50,
-      "session_id": toolbox ? toolbox.sessionId : -1
+      "session_id": toolbox ? toolbox.sessionId : -1,
     });
 
     // Track opens keyed by the UI entry point used.
@@ -192,7 +192,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     t.recordEvent("deactivate", "responsive_design", null, {
       "host": hostType,
       "width": Math.ceil(window.outerWidth / 50) * 50,
-      "session_id": toolbox ? toolbox.sessionId : -1
+      "session_id": toolbox ? toolbox.sessionId : -1,
     });
   },
 
@@ -347,7 +347,7 @@ ResponsiveUI.prototype = {
         debug("Wait until browser mounted");
         await message.wait(toolWindow, "browser-mounted");
         return ui.getViewportBrowser();
-      }
+      },
     });
     debug("Wait until swap start");
     await this.swap.start();

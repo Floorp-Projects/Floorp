@@ -21,7 +21,7 @@ const CLASSIFY_TESTS = [
   { input: "0.5GRAD", output: "grad" },
   { input: "0.33turn", output: "turn" },
   { input: "0.33TURN", output: "turn" },
-  { input: "-0.33turn", output: "turn" }
+  { input: "-0.33turn", output: "turn" },
 ];
 
 function run_test() {

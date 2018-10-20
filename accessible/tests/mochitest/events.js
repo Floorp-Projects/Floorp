@@ -112,7 +112,7 @@ function waitForEvent(aEventType, aTargetOrFunc, aFunc, aContext, aArg1, aArg2) 
         },
         0
       );
-    }
+    },
   };
 
   registerA11yEventListener(aEventType, handler);
@@ -134,7 +134,7 @@ function waitForEventPromise(eventType, target) {
           Services.obs.removeObserver(this, "accessible-event");
           resolve(event);
         }
-      }
+      },
     };
     Services.obs.addObserver(eventObserver, "accessible-event");
   });
@@ -1411,7 +1411,7 @@ function synthContextMenu(aID, aCheckerOrEventSeq) {
  */
 function openCombobox(aComboboxID) {
   this.eventSeq = [
-    new stateChangeChecker(STATE_EXPANDED, false, true, aComboboxID)
+    new stateChangeChecker(STATE_EXPANDED, false, true, aComboboxID),
   ];
 
   this.invoke = function openCombobox_invoke() {
@@ -1429,7 +1429,7 @@ function openCombobox(aComboboxID) {
  */
 function closeCombobox(aComboboxID) {
   this.eventSeq = [
-    new stateChangeChecker(STATE_EXPANDED, false, false, aComboboxID)
+    new stateChangeChecker(STATE_EXPANDED, false, false, aComboboxID),
   ];
 
   this.invoke = function closeCombobox_invoke() {
@@ -1569,7 +1569,7 @@ function moveCaretToDOMPoint(aID, aDOMPointNodeID, aDOMPointOffset,
   };
 
   this.eventSeq = [
-    new caretMoveChecker(aExpectedOffset, this.target)
+    new caretMoveChecker(aExpectedOffset, this.target),
   ];
 
   if (this.focus)
@@ -1593,7 +1593,7 @@ function setCaretOffset(aID, aOffset, aFocusTargetID) {
   };
 
   this.eventSeq = [
-    new caretMoveChecker(this.offset, this.target)
+    new caretMoveChecker(this.offset, this.target),
   ];
 
   if (this.focus)
@@ -1904,7 +1904,7 @@ function selChangeSeq(aUnselectedID, aSelectedID) {
   if (!aUnselectedID) {
     return [
       new stateChangeChecker(STATE_SELECTED, false, true, aSelectedID),
-      new invokerChecker(EVENT_SELECTION, aSelectedID)
+      new invokerChecker(EVENT_SELECTION, aSelectedID),
     ];
   }
 
@@ -1914,13 +1914,13 @@ function selChangeSeq(aUnselectedID, aSelectedID) {
     [
       new stateChangeChecker(STATE_SELECTED, false, false, aUnselectedID),
       new stateChangeChecker(STATE_SELECTED, false, true, aSelectedID),
-      new invokerChecker(EVENT_SELECTION, aSelectedID)
+      new invokerChecker(EVENT_SELECTION, aSelectedID),
     ],
     [
       new stateChangeChecker(STATE_SELECTED, false, true, aSelectedID),
       new stateChangeChecker(STATE_SELECTED, false, false, aUnselectedID),
-      new invokerChecker(EVENT_SELECTION, aSelectedID)
-    ]
+      new invokerChecker(EVENT_SELECTION, aSelectedID),
+    ],
   ];
 }
 
@@ -1930,7 +1930,7 @@ function selChangeSeq(aUnselectedID, aSelectedID) {
 function selRemoveSeq(aUnselectedID) {
   return [
     new stateChangeChecker(STATE_SELECTED, false, false, aUnselectedID),
-    new invokerChecker(EVENT_SELECTION_REMOVE, aUnselectedID)
+    new invokerChecker(EVENT_SELECTION_REMOVE, aUnselectedID),
   ];
 }
 
@@ -1940,7 +1940,7 @@ function selRemoveSeq(aUnselectedID) {
 function selAddSeq(aSelectedID) {
   return [
     new stateChangeChecker(STATE_SELECTED, false, true, aSelectedID),
-    new invokerChecker(EVENT_SELECTION_ADD, aSelectedID)
+    new invokerChecker(EVENT_SELECTION_ADD, aSelectedID),
   ];
 }
 
@@ -2027,7 +2027,7 @@ var gA11yEventObserver =
 
     for (var index = 0; index < listenersArray.length; index++)
       listenersArray[index].handleEvent(event);
-  }
+  },
 };
 
 function listenA11yEvents(aStartToListen) {
@@ -2164,7 +2164,7 @@ var gLogger =
     var endIdx = startIdx + aFeature.length;
     return endIdx == gA11yEventDumpFeature.length ||
       gA11yEventDumpFeature[endIdx] == ";";
-  }
+  },
 };
 
 
@@ -2194,7 +2194,7 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID) {
     getID: function invoker_getID() {
       return aItemID;
     },
-    eventSeq: [ new invokerChecker(aEventType, aTarget) ]
+    eventSeq: [ new invokerChecker(aEventType, aTarget) ],
   };
 
   this.queue.push(invoker);

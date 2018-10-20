@@ -22,7 +22,7 @@ const ActorActor = protocol.ActorClassWithSpec(actorActorSpec, {
 
   unregister: function() {
     unregisterActor(this.options);
-  }
+  },
 });
 
 /*
@@ -41,10 +41,10 @@ const ActorRegistryActor = protocol.ActorClassWithSpec(actorRegistrySpec, {
       return ActorActor(this.conn, {
         name: constructor,
         tab: type.tab,
-        global: type.global
+        global: type.global,
       });
     });
-  }
+  },
 });
 
 exports.ActorRegistryActor = ActorRegistryActor;

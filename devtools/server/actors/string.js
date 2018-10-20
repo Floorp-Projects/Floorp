@@ -29,7 +29,7 @@ exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
       type: "longString",
       actor: this.actorID,
       length: this.str.length,
-      initial: this.str.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH)
+      initial: this.str.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH),
     };
   },
 
@@ -37,5 +37,5 @@ exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
     return Promise.resolve(this.str.substring(start, end));
   },
 
-  release: function() { }
+  release: function() { },
 });

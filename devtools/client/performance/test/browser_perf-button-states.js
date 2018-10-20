@@ -13,7 +13,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { $, $$, EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
@@ -24,12 +24,12 @@ add_task(async function() {
 
   const uiStartClick = once(PerformanceView, EVENTS.UI_START_RECORDING);
   const recordingStarted = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-started"]
+    expectedArgs: ["recording-started"],
   });
   const backendStartReady = once(PerformanceController,
                                EVENTS.BACKEND_READY_AFTER_RECORDING_START);
   const uiStateRecording = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
-    expectedArgs: ["recording"]
+    expectedArgs: ["recording"],
   });
 
   click(recordButton);
@@ -46,12 +46,12 @@ add_task(async function() {
 
   const uiStopClick = once(PerformanceView, EVENTS.UI_STOP_RECORDING);
   const recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopped"]
+    expectedArgs: ["recording-stopped"],
   });
   const backendStopReady = once(PerformanceController,
                                EVENTS.BACKEND_READY_AFTER_RECORDING_STOP);
   const uiStateRecorded = once(PerformanceView, EVENTS.UI_STATE_CHANGED, {
-    expectedArgs: ["recorded"]
+    expectedArgs: ["recorded"],
   });
 
   click(recordButton);

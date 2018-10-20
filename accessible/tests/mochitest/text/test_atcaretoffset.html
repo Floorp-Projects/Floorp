@@ -68,13 +68,13 @@
         return true;
       };
 
-      Object.defineProperty(this, "offset", { get() { return this.mOffset; }
+      Object.defineProperty(this, "offset", { get() { return this.mOffset; },
       });
 
       Object.defineProperty(this, "offsetDescr", { get() {
           return this.mOffset + " offset (" + this.mLine.number + " line, " +
             (this.mOffset - this.mLine.start) + " offset on the line)";
-        }
+        },
       });
 
       Object.defineProperty(this, "tests", { get() {
@@ -91,7 +91,7 @@
             [ testTextAtOffset, BOUNDARY_LINE_START, cLine.start, nLine.start],
             [ testTextAtOffset, BOUNDARY_LINE_END, pLine.end, cLine.end],
             [ testTextAfterOffset, BOUNDARY_LINE_START, nLine.start, nnLine.start],
-            [ testTextAfterOffset, BOUNDARY_LINE_END, cLine.end, nLine.end]
+            [ testTextAfterOffset, BOUNDARY_LINE_END, cLine.end, nLine.end],
           ];
 
           // Word boundary tests.
@@ -137,7 +137,7 @@
               nWord.start, nnWord.start ],
             [ testTextAfterOffset, BOUNDARY_WORD_END,
               (isAfterWordEnd ? nWord : cWord).end,
-              (isAfterWordEnd ? nnWord : nWord).end ]
+              (isAfterWordEnd ? nnWord : nWord).end ],
           ];
 
           // Character boundary tests.
@@ -155,11 +155,11 @@
               this.mAtWrappedLineEnd ? this.offset : nextOffset ],
             [ testTextAfterOffset, BOUNDARY_CHAR,
               this.mAtWrappedLineEnd ? this.offset : nextOffset,
-              this.mAtWrappedLineEnd ? nextOffset : nextAfterNextOffset ]
+              this.mAtWrappedLineEnd ? nextOffset : nextAfterNextOffset ],
           ];
 
           return lineTests.concat(wordTests.concat(charTests));
-        }
+        },
       });
 
       Object.defineProperty(this, "failures", { get() {
@@ -168,7 +168,7 @@
           if (this.mOffset == this.mLine.end)
             return this.mLine.lineEndFailures;
           return [];
-        }
+        },
       });
 
       this.mOffset = -1;
@@ -183,11 +183,11 @@
     function line(aWholeText, aLines, aIndex) {
       Object.defineProperty(this, "prevLine", { get() {
           return new line(aWholeText, aLines, aIndex - 1);
-        }
+        },
       });
       Object.defineProperty(this, "nextLine", { get() {
           return new line(aWholeText, aLines, aIndex + 1);
-        }
+        },
       });
 
       Object.defineProperty(this, "start", { get() {
@@ -198,7 +198,7 @@
             return aWholeText.length;
 
           return aLines[aIndex][2];
-        }
+        },
       });
       Object.defineProperty(this, "end", { get() {
           if (aIndex < 0)
@@ -208,12 +208,12 @@
             return aWholeText.length;
 
           return aLines[aIndex][3];
-        }
+        },
       });
 
-      Object.defineProperty(this, "number", { get() { return aIndex; }
+      Object.defineProperty(this, "number", { get() { return aIndex; },
       });
-      Object.defineProperty(this, "wholeText", { get() { return aWholeText; }
+      Object.defineProperty(this, "wholeText", { get() { return aWholeText; },
       });
       this.isFakeLine = function line_isFakeLine() {
         return aIndex < 0 || aIndex >= aLines.length;
@@ -227,7 +227,7 @@
 
           var words = aLines[aIndex][4].words;
           return new word(this, words, words.length - 2);
-        }
+        },
       });
       Object.defineProperty(this, "firstWord", { get() {
           if (aIndex < 0)
@@ -237,7 +237,7 @@
 
           var words = aLines[aIndex][4].words;
           return new word(this, words, 0);
-        }
+        },
       });
 
       this.isLastWord = function line_isLastWord(aWord) {
@@ -250,14 +250,14 @@
             return [];
 
           return aLines[aIndex][4].lsf || [];
-        }
+        },
       });
       Object.defineProperty(this, "lineEndFailures", { get() {
           if (aIndex < 0 || aIndex >= aLines.length)
             return [];
 
           return aLines[aIndex][4].lef || [];
-        }
+        },
       });
     }
 
@@ -273,7 +273,7 @@
           if (this.start == prevLineLastWord.start && !this.isFakeStartWord())
             return prevLineLastWord.prevWord;
           return prevLineLastWord;
-        }
+        },
       });
       Object.defineProperty(this, "nextWord", { get() {
           if (aIndex + 2 < aWords.length)
@@ -283,7 +283,7 @@
           if (this.end == nextLineFirstWord.end && !this.isFakeEndWord())
             return nextLineFirstWord.nextWord;
           return nextLineFirstWord;
-        }
+        },
       });
 
       Object.defineProperty(this, "line", { get() { return aLine; } });
@@ -295,14 +295,14 @@
           if (this.isFakeEndWord())
             return aLine.end;
            return aWords[aIndex];
-        }
+        },
       });
       Object.defineProperty(this, "end", { get() {
           if (this.isFakeStartWord())
             return 0;
 
           return this.isFakeEndWord() ? aLine.end : aWords[aIndex + 1];
-        }
+        },
       });
 
       this.toString = function word_toString() {
@@ -378,12 +378,12 @@
       traverseTextByLines(gQueue, "textarea",
                           [ [ "aword", "\n", 0, 5, { words: [ 0, 5 ] } ],
                             [ "two ", "", 6, 10, { words: [ 6, 9 ] } ],
-                            [ "words", "", 10, 15, { words: [ 10, 15 ] } ]
+                            [ "words", "", 10, 15, { words: [ 10, 15 ] } ],
                           ] );
 
       var line4 = [ // "riend "
         [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
-        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ]
+        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
       ];
       traverseTextByLines(gQueue, "ta_wrapped",
                           [ [ "hi ", "", 0, 3, { words: [ 0, 2 ] } ],
@@ -392,7 +392,7 @@
                             [ "longf", "", 12, 17, { words: [ 12, 17 ] } ],
                             [ "riend ", "", 17, 23, { words: [ 17, 22 ], lsf: line4 } ],
                             [ "t sq ", "", 23, 28, { words: [ 23, 24, 25, 27 ] } ],
-                            [ "t", "", 28, 29, { words: [ 28, 29 ] } ]
+                            [ "t", "", 28, 29, { words: [ 28, 29 ] } ],
                           ] );
 
       gQueue.invoke(); // will call SimpleTest.finish();

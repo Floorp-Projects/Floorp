@@ -22,7 +22,7 @@ var observer1 = {
       info("1st timer triggered (before being cancelled). Should not have happened!");
       Assert.ok(false);
     }
-  }
+  },
 };
 
 var observer2 = {
@@ -39,7 +39,7 @@ var observer2 = {
 
       do_test_finished();
     }
-  }
+  },
 };
 
 function run_test() {

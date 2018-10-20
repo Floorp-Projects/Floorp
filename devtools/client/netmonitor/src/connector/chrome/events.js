@@ -44,7 +44,7 @@ class CDPConnector {
       this.Page.disable(),
       this.payloads.clear(),
       this.Network.enable(),
-      this.Page.enable()
+      this.Page.enable(),
     ]);
   }
 
@@ -110,7 +110,7 @@ class CDPConnector {
       return;
     }
     this.update(requestId, {
-      requestHeaders: header
+      requestHeaders: header,
     }).then(() => {
       window.emit(EVENTS.RECEIVED_REQUEST_HEADERS, header);
     });
@@ -121,7 +121,7 @@ class CDPConnector {
       return;
     }
     this.update(requestId, {
-      eventTimings: timings
+      eventTimings: timings,
     }).then(() => {
       window.emit(EVENTS.RECEIVED_EVENT_TIMINGS, requestId);
     });
@@ -138,7 +138,7 @@ class CDPConnector {
       return;
     }
     this.update(requestId, {
-      responseHeaders: header
+      responseHeaders: header,
     }).then(() => {
       window.emit(EVENTS.RECEIVED_RESPONSE_HEADERS, header);
     });
@@ -231,5 +231,5 @@ class CDPConnector {
 }
 
 module.exports = {
-  CDPConnector
+  CDPConnector,
 };

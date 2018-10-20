@@ -29,7 +29,7 @@ add_task(async function() {
   if (arrayOiNodes.length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
     await waitForNodeMutation(arrayOi, {
-      childList: true
+      childList: true,
     });
     arrayOiNodes = arrayOi.querySelectorAll(".node");
   }
@@ -58,7 +58,7 @@ add_task(async function() {
   if (objectOiNodes.length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
     await waitForNodeMutation(objectOi, {
-      childList: true
+      childList: true,
     });
     objectOiNodes = objectOi.querySelectorAll(".node");
   }

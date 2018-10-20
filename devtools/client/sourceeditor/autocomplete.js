@@ -11,7 +11,7 @@ const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const CM_TERN_SCRIPTS = [
   "chrome://devtools/content/sourceeditor/codemirror/addon/tern/tern.js",
-  "chrome://devtools/content/sourceeditor/codemirror/addon/hint/show-hint.js"
+  "chrome://devtools/content/sourceeditor/codemirror/addon/hint/show-hint.js",
 ];
 
 const autocompleteMap = new WeakMap();
@@ -65,7 +65,7 @@ function initializeAutoCompletion(ctx, options = {}) {
         }
 
         return tip;
-      }
+      },
     });
 
     const keyMap = {};
@@ -99,7 +99,7 @@ function initializeAutoCompletion(ctx, options = {}) {
     ed.on("destroy", destroyTern);
 
     autocompleteMap.set(ed, {
-      destroy: destroyTern
+      destroy: destroyTern,
     });
 
     // TODO: Integrate tern autocompletion with this autocomplete API.
@@ -133,7 +133,7 @@ function initializeAutoCompletion(ctx, options = {}) {
   let popup = new AutocompletePopup(win.parent.document, {
     position: "bottom",
     autoSelect: true,
-    onClick: insertSelectedPopupItem
+    onClick: insertSelectedPopupItem,
   });
 
   const cycle = reverse => {
@@ -154,7 +154,7 @@ function initializeAutoCompletion(ctx, options = {}) {
     "Enter": () => {
       const wasHandled = insertSelectedPopupItem();
       return wasHandled ? true : CodeMirror.Pass;
-    }
+    },
   };
 
   const autoCompleteCallback = autoComplete.bind(null, ctx);
@@ -182,7 +182,7 @@ function initializeAutoCompletion(ctx, options = {}) {
     keyMap: keyMap,
     destroy: destroy,
     insertingSuggestion: false,
-    suggestionInsertedOnce: false
+    suggestionInsertedOnce: false,
   });
 }
 
@@ -291,7 +291,7 @@ function cycleSuggestions(ed, reverse) {
   } else {
     const fromCur = {
       line: cur.line,
-      ch: cur.ch - popup.selectedItem.text.length
+      ch: cur.ch - popup.selectedItem.text.length,
     };
     if (reverse) {
       popup.selectPreviousItem();

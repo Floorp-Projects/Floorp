@@ -74,7 +74,7 @@
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
-        new stateChangeChecker(STATE_CHECKED, false, aIsChecked, this.DOMNode)
+        new stateChangeChecker(STATE_CHECKED, false, aIsChecked, this.DOMNode),
       ];
 
       this.invoke = function changeCheckInput_invoke() {
@@ -100,7 +100,7 @@
 
       this.eventSeq = [
         new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.fileControl),
-        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.browseButton)
+        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.browseButton),
       ];
 
       this.getID = function stateChangeOnFileInput_getID() {
@@ -111,7 +111,7 @@
     function dupeStateChange(aID, aAttr, aValue,
                              aState, aIsExtraState, aIsEnabled) {
       this.eventSeq = [
-        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, getNode(aID))
+        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, getNode(aID)),
       ];
 
       this.invoke = function dupeStateChange_invoke() {
@@ -128,7 +128,7 @@
       this.eventSeq = [ ];
       this.unexpectedEventSeq = [
         new stateChangeChecker(aState, aIsExtraState, false, getNode(aID)),
-        new stateChangeChecker(aState, aIsExtraState, true, getNode(aID))
+        new stateChangeChecker(aState, aIsExtraState, true, getNode(aID)),
       ];
 
       this.invoke = function oppositeStateChange_invoke() {
@@ -147,7 +147,7 @@
     function echoingStateChange(aID, aARIAAttr, aAttr, aValue,
                                aState, aIsExtraState, aIsEnabled) {
       this.eventSeq = [
-        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, getNode(aID))
+        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, getNode(aID)),
       ];
 
       this.invoke = function echoingStateChange_invoke() {

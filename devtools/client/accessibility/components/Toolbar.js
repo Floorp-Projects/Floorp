@@ -21,7 +21,7 @@ class Toolbar extends Component {
     return {
       dispatch: PropTypes.func.isRequired,
       accessibility: PropTypes.object.isRequired,
-      canBeDisabled: PropTypes.bool.isRequired
+      canBeDisabled: PropTypes.bool.isRequired,
     };
   }
 
@@ -29,7 +29,7 @@ class Toolbar extends Component {
     super(props);
 
     this.state = {
-      disabling: false
+      disabling: false,
     };
 
     this.onDisable = this.onDisable.bind(this);
@@ -82,26 +82,26 @@ class Toolbar extends Component {
     return (
       div({
         className: "devtools-toolbar",
-        role: "toolbar"
+        role: "toolbar",
       }, Button({
         className: "disable",
         id: "accessibility-disable-button",
         onClick: this.onDisable,
         disabled: disabling || isDisabled,
         busy: disabling,
-        title
+        title,
       }, L10N.getStr(disableButtonStr)),
       Button({
         className: "help",
         title: L10N.getStr("accessibility.learnMore"),
-        onClick: this.onLearnMoreClick
+        onClick: this.onLearnMoreClick,
       }))
     );
   }
 }
 
 const mapStateToProps = ({ ui }) => ({
-  canBeDisabled: ui.canBeDisabled
+  canBeDisabled: ui.canBeDisabled,
 });
 
 // Exports from this module

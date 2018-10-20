@@ -61,7 +61,7 @@ module.exports = {
     // Firefox specific function.
     // eslint-disable-next-line max-len
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
-    "uneval": false
+    "uneval": false,
   },
 
   "overrides": [{
@@ -73,9 +73,9 @@ module.exports = {
     "rules": {
       "no-unused-vars": ["error", {
         "args": "none",
-        "vars": "local"
-      }]
-    }
+        "vars": "local",
+      }],
+    },
   }],
 
   rules: {
@@ -83,6 +83,6 @@ module.exports = {
     "mozilla/mark-test-function-used": "error",
     "mozilla/no-arbitrary-setTimeout": "error",
     "mozilla/no-useless-run-test": "error",
-    "no-shadow": "error"
-  }
+    "no-shadow": "error",
+  },
 };

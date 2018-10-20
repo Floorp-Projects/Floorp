@@ -13,7 +13,7 @@ const DOCUMENT_WITH_ONE_STYLESHEET = "data:text/html;charset=UTF-8," +
            " </head>",
            " <body>",
            " </body>",
-           "</html>"
+           "</html>",
           ].join("\n"));
 
 add_task(async function() {

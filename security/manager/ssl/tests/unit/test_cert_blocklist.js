@@ -282,7 +282,7 @@ function run_test() {
                      { " a0X7/7DlTaedpgrIJg25iBPOkIM=": true},
                    "YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy":
                      { " YW5vdGhlciBzZXJpYWwu": true,
-                       " c2VyaWFsMi4=": true }
+                       " c2VyaWFsMi4=": true },
                  };
 
   add_task(async function() {

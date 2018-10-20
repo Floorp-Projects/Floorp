@@ -109,8 +109,8 @@ var WebcompatReporter = {
     let options = {
       action: {
         label: this.strings.GetStringFromName("webcompat.reportDesktopModeYes.label"),
-        callback: () => this.reportIssue({tab: tab})
-      }
+        callback: () => this.reportIssue({tab: tab}),
+      },
     };
     Snackbars.show(message, Snackbars.LENGTH_LONG, options);
   },
@@ -135,7 +135,7 @@ var WebcompatReporter = {
       BrowserApp.addTab(webcompatURL, {parentId: tabData.tab.id, isPrivate: isPrivateTab});
       resolve();
     });
-  }
+  },
 };
 
 XPCOMUtils.defineLazyGetter(WebcompatReporter, "strings", function() {

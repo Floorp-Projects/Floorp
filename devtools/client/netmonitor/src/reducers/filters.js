@@ -8,7 +8,7 @@ const {
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
   TOGGLE_REQUEST_FILTER_TYPE,
   SET_REQUEST_FILTER_TEXT,
-  FILTER_TAGS
+  FILTER_TAGS,
 } = require("../constants");
 
 function FilterTypes(overrideParams = {}) {
@@ -89,5 +89,5 @@ function filters(state = new Filters(), action) {
 module.exports = {
   FilterTypes,
   Filters,
-  filters
+  filters,
 };

@@ -20,7 +20,7 @@
 const scale = (sx = 1, sy = sx) => [
   sx, 0, 0,
   0, sy, 0,
-  0, 0, 1
+  0, 0, 1,
 ];
 exports.scale = scale;
 
@@ -40,7 +40,7 @@ exports.scale = scale;
 const translate = (tx = 0, ty = tx) => [
   1, 0, tx,
   0, 1, ty,
-  0, 0, 1
+  0, 0, 1,
 ];
 exports.translate = translate;
 
@@ -75,7 +75,7 @@ const rotate = (angle = 0) => {
   return [
     cos,  sin, 0,
     -sin, cos, 0,
-    0,    0,   1
+    0,    0,   1,
   ];
 };
 exports.rotate = rotate;
@@ -89,7 +89,7 @@ exports.rotate = rotate;
 const identity = () => [
   1, 0, 0,
   0, 1, 0,
-  0, 0, 1
+  0, 0, 1,
 ];
 exports.identity = identity;
 
@@ -119,7 +119,7 @@ const multiply = (M1, M2) => {
   return [
     c11, c12, c13,
     c21, c22, c23,
-    c31, c32, c33
+    c31, c32, c33,
   ];
 };
 exports.multiply = multiply;
@@ -222,7 +222,7 @@ function getNodeTransformationMatrix(node, ancestor = node.parentElement) {
   return [
     a, c, e,
     b, d, f,
-    0, 0, 1
+    0, 0, 1,
   ];
 }
 exports.getNodeTransformationMatrix = getNodeTransformationMatrix;

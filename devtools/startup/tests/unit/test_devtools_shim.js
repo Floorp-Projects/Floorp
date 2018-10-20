@@ -24,7 +24,7 @@ function createMockDevTools() {
   ];
 
   const mock = {
-    callLog: {}
+    callLog: {},
   };
 
   for (const method of methods) {

@@ -32,7 +32,7 @@ class MainFrame extends Component {
       accessibility: PropTypes.object.isRequired,
       walker: PropTypes.object.isRequired,
       enabled: PropTypes.bool.isRequired,
-      dispatch: PropTypes.func.isRequired
+      dispatch: PropTypes.func.isRequired,
     };
   }
 
@@ -107,7 +107,7 @@ class MainFrame extends Component {
           endPanelControl: true,
           startPanel: div({
             className: "main-panel",
-            role: "presentation"
+            role: "presentation",
           }, AccessibilityTree({ walker })),
           endPanel: RightSidebar({ walker }),
           vert: this.useLandscapeMode,
@@ -117,7 +117,7 @@ class MainFrame extends Component {
 }
 
 const mapStateToProps = ({ ui }) => ({
-  enabled: ui.enabled
+  enabled: ui.enabled,
 });
 
 // Exports from this module

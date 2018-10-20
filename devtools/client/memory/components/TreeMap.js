@@ -12,7 +12,7 @@ const startVisualization = require("./tree-map/start");
 class TreeMap extends Component {
   static get propTypes() {
     return {
-      treeMap: treeMapModel
+      treeMap: treeMapModel,
     };
   }
 
@@ -68,7 +68,7 @@ class TreeMap extends Component {
     return dom.div(
       {
         ref: "container",
-        className: "tree-map-container"
+        className: "tree-map-container",
       }
     );
   }

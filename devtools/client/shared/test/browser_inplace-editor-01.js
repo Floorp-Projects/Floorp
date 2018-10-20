@@ -56,7 +56,7 @@ function testReturnCommit(doc) {
       editor.input.value = "Test Value";
       EventUtils.sendKey("return");
     },
-    done: onDone("Test Value", true, def)
+    done: onDone("Test Value", true, def),
   }, doc);
 
   return def.promise;
@@ -72,7 +72,7 @@ function testBlurCommit(doc) {
       editor.input.value = "Test Value";
       editor.input.blur();
     },
-    done: onDone("Test Value", true, def)
+    done: onDone("Test Value", true, def),
   }, doc, "Edit Me!");
 
   return def.promise;
@@ -87,7 +87,7 @@ function testAdvanceCharCommit(doc) {
     start: function(editor) {
       EventUtils.sendString("Test:");
     },
-    done: onDone("Test", true, def)
+    done: onDone("Test", true, def),
   }, doc);
 
   return def.promise;
@@ -118,7 +118,7 @@ function testAdvanceCharsFunction(doc) {
         EventUtils.sendChar(ch);
       }
     },
-    done: onDone(":Test", true, def)
+    done: onDone(":Test", true, def),
   }, doc);
 
   return def.promise;
@@ -134,7 +134,7 @@ function testEscapeCancel(doc) {
       editor.input.value = "Test Value";
       EventUtils.sendKey("escape");
     },
-    done: onDone("initial text", false, def)
+    done: onDone("initial text", false, def),
   }, doc);
 
   return def.promise;

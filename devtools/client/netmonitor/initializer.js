@@ -87,7 +87,7 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
         target,
         viewSourceInDebugger() {
           throw new Error("toolbox.viewSourceInDebugger is not implement from a tab");
-        }
+        },
       };
 
       const api = new NetMonitorAPI();

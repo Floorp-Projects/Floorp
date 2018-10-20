@@ -88,7 +88,7 @@ ThreadClient.prototype = {
   _doResume: DebuggerClient.requester({
     type: "resume",
     resumeLimit: arg(0),
-    rewind: arg(1)
+    rewind: arg(1),
   }, {
     before: function(packet) {
       this._assertPaused("resume");
@@ -135,7 +135,7 @@ ThreadClient.prototype = {
    */
   reconfigure: DebuggerClient.requester({
     type: "reconfigure",
-    options: arg(0)
+    options: arg(0),
   }),
 
   /**
@@ -272,7 +272,7 @@ ThreadClient.prototype = {
    */
   _doInterrupt: DebuggerClient.requester({
     type: "interrupt",
-    when: arg(0)
+    when: arg(0),
   }),
 
   /**
@@ -353,7 +353,7 @@ ThreadClient.prototype = {
   eval: DebuggerClient.requester({
     type: "clientEvaluate",
     frame: arg(0),
-    expression: arg(1)
+    expression: arg(1),
   }, {
     before: function(packet) {
       this._assertPaused("eval");
@@ -378,7 +378,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   detach: DebuggerClient.requester({
-    type: "detach"
+    type: "detach",
   }, {
     after: function(response) {
       this.client.unregisterClient(this);
@@ -408,7 +408,7 @@ ThreadClient.prototype = {
    */
   threadGrips: DebuggerClient.requester({
     type: "threadGrips",
-    actors: arg(0)
+    actors: arg(0),
   }),
 
   /**
@@ -418,7 +418,7 @@ ThreadClient.prototype = {
    *        Called with the thread's response.
    */
   eventListeners: DebuggerClient.requester({
-    type: "eventListeners"
+    type: "eventListeners",
   }),
 
   /**
@@ -428,7 +428,7 @@ ThreadClient.prototype = {
    *        Called with the thread's response.
    */
   getSources: DebuggerClient.requester({
-    type: "sources"
+    type: "sources",
   }),
 
   /**
@@ -457,7 +457,7 @@ ThreadClient.prototype = {
   getFrames: DebuggerClient.requester({
     type: "frames",
     start: arg(0),
-    count: arg(1)
+    count: arg(1),
   }),
 
   /**
@@ -708,7 +708,7 @@ ThreadClient.prototype = {
   setXHRBreakpoint: DebuggerClient.requester({
     type: "setXHRBreakpoint",
     path: arg(0),
-    method: arg(1)
+    method: arg(1),
   }),
 
   /**
@@ -719,7 +719,7 @@ ThreadClient.prototype = {
   removeXHRBreakpoint: DebuggerClient.requester({
     type: "removeXHRBreakpoint",
     path: arg(0),
-    method: arg(1)
+    method: arg(1),
   }),
 
   /**
@@ -751,10 +751,10 @@ ThreadClient.prototype = {
    */
   getPrototypesAndProperties: DebuggerClient.requester({
     type: "prototypesAndProperties",
-    actors: arg(0)
+    actors: arg(0),
   }),
 
-  events: ["newSource"]
+  events: ["newSource"],
 };
 
 eventSource(ThreadClient.prototype);

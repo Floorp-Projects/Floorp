@@ -47,7 +47,7 @@ function ui(state = UiState(), action) {
     case SIDEBAR_CLOSE:
       return Object.assign({}, state, {
         sidebarVisible: false,
-        gripInSidebar: null
+        gripInSidebar: null,
       });
     case INITIALIZE:
       return Object.assign({}, state, {initialized: true});

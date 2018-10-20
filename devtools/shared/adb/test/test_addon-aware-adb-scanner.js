@@ -15,7 +15,7 @@ function prepareMockScanner() {
     enable: sinon.spy(),
     disable: sinon.spy(),
     scan: sinon.spy(),
-    listRuntimes: sinon.spy()
+    listRuntimes: sinon.spy(),
   };
   EventEmitter.decorate(mockScanner);
   return mockScanner;

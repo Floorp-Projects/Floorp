@@ -22,7 +22,7 @@ const REPORT1 = {
   "other": {
     count: 10,
     bytes: 100,
-  }
+  },
 };
 
 const REPORT2 = {
@@ -37,7 +37,7 @@ const REPORT2 = {
   "other": {
     count: 10,
     bytes: 100,
-  }
+  },
 };
 
 const EXPECTED = {

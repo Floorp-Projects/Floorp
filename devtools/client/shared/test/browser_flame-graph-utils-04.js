@@ -18,7 +18,7 @@ function performTest() {
   const out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
     flattenRecursion: true,
     contentOnly: true,
-    showIdleBlocks: "\m/"
+    showIdleBlocks: "\m/",
   });
 
   ok(out, "Some data was outputted properly");
@@ -50,41 +50,41 @@ function performTest() {
 
 var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
-    location: "http://A"
+    location: "http://A",
   }, {
-    location: "http://A"
+    location: "http://A",
   }, {
-    location: "http://A"
+    location: "http://A",
   }, {
-    location: "https://B"
+    location: "https://B",
   }, {
-    location: "https://B"
+    location: "https://B",
   }, {
     location: "file://C",
   }, {
-    location: "chrome://D"
+    location: "chrome://D",
   }, {
-    location: "resource://E"
+    location: "resource://E",
   }],
-  time: 50
+  time: 50,
 }, {
   frames: [],
-  time: 100
+  time: 100,
 }, {
   frames: [{
-    location: "http://A"
+    location: "http://A",
   }, {
-    location: "https://B"
+    location: "https://B",
   }, {
     location: "file://C",
   }],
-  time: 150
+  time: 150,
 }]);
 
 var EXPECTED_OUTPUT = [{
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -93,7 +93,7 @@ var EXPECTED_OUTPUT = [{
     y: 0,
     width: 50,
     height: 15,
-    text: "http://A"
+    text: "http://A",
   }, {
     startTime: 100,
     frameKey: "http://A",
@@ -101,14 +101,14 @@ var EXPECTED_OUTPUT = [{
     y: 0,
     width: 50,
     height: 15,
-    text: "http://A"
-  }]
+    text: "http://A",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -117,10 +117,10 @@ var EXPECTED_OUTPUT = [{
     y: 45,
     width: 50,
     height: 15,
-    text: "Gecko"
-  }]
+    text: "Gecko",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -129,7 +129,7 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 50,
     height: 15,
-    text: "https://B"
+    text: "https://B",
   }, {
     startTime: 100,
     frameKey: "https://B",
@@ -137,14 +137,14 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 50,
     height: 15,
-    text: "https://B"
-  }]
+    text: "https://B",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -153,7 +153,7 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 50,
     height: 15,
-    text: "file://C"
+    text: "file://C",
   }, {
     startTime: 100,
     frameKey: "file://C",
@@ -161,8 +161,8 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 50,
     height: 15,
-    text: "file://C"
-  }]
+    text: "file://C",
+  }],
 }, {
   blocks: [{
     startTime: 50,
@@ -171,18 +171,18 @@ var EXPECTED_OUTPUT = [{
     y: 0,
     width: 50,
     height: 15,
-    text: "m/"
-  }]
+    text: "m/",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }];

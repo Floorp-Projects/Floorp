@@ -635,9 +635,12 @@ html|input.urlbar-input {
   display: none;
 }
 
-/* Only show the "Search with" label on hover or selection. */
-#PopupAutoCompleteRichResult > richlistbox > richlistitem:not([selected]):not(:hover) > .ac-action[actiontype=searchengine],
-#PopupAutoCompleteRichResult > richlistbox > richlistitem:not([selected]):not(:hover) > .ac-separator[actiontype=searchengine] {
+/* Normally we want to show the "Search with Engine" label only on hover or
+   selection, but we also want to show it for "alias offer" results -- that is,
+   non-heuristic search engine results that have an alias and empty query.
+   These results tell the user that they can be used to search. */
+#PopupAutoCompleteRichResult > richlistbox > richlistitem:not([selected]):not(:hover):not(.aliasOffer) > .ac-action[actiontype=searchengine],
+#PopupAutoCompleteRichResult > richlistbox > richlistitem:not([selected]):not(:hover):not(.aliasOffer) > .ac-separator[actiontype=searchengine] {
   display: none;
 }
 

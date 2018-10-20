@@ -75,7 +75,7 @@ function parseStack(stack) {
         fileName: fileName,
         name: name,
         lineNumber: lineNumber,
-        columnNumber: columnNumber
+        columnNumber: columnNumber,
       });
     }
     return frames;
@@ -106,7 +106,7 @@ function readURI(uri) {
   ).open2();
   const count = stream.available();
   const data = NetUtil.readInputStreamToString(stream, count, {
-    charset: "UTF-8"
+    charset: "UTF-8",
   });
 
   stream.close();
@@ -169,19 +169,19 @@ function load(loader, module) {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: require
+      value: require,
     },
     module: {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: module
+      value: module,
     },
     exports: {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: module.exports
+      value: module.exports,
     },
   };
 
@@ -219,7 +219,7 @@ function load(loader, module) {
     sandbox = Sandbox({
       name: module.uri,
       prototype: Object.create(globals, descriptors),
-      invisibleToDebugger: loader.invisibleToDebugger
+      invisibleToDebugger: loader.invisibleToDebugger,
     });
   }
   sandboxes[module.uri] = sandbox;
@@ -421,7 +421,7 @@ function lazyRequireModule(obj, moduleId, prop = moduleId) {
 // with it during link time.
 function Require(loader, requirer) {
   const {
-    modules, mapping, mappingCache, requireHook
+    modules, mapping, mappingCache, requireHook,
   } = loader;
 
   function require(id) {
@@ -555,7 +555,7 @@ function Module(id, uri) {
     id: { enumerable: true, value: id },
     exports: { enumerable: true, writable: true, value: Object.create(null),
                configurable: true },
-    uri: { value: uri }
+    uri: { value: uri },
   });
 }
 
@@ -612,8 +612,8 @@ function Loader(options) {
     "@loader/options": options,
     "chrome": { Cc, Ci, Cu, Cr, Cm,
                 CC: bind(CC, Components), components: Components,
-                ChromeWorker
-    }
+                ChromeWorker,
+    },
   };
 
   const builtinModuleExports = modules;
@@ -629,7 +629,7 @@ function Loader(options) {
       enumerable: true,
       get: function() {
         return builtinModuleExports[id];
-      }
+      },
     });
 
     modules[uri] = module;

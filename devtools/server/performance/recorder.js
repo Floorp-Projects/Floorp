@@ -25,7 +25,7 @@ const PROFILER_EVENTS = [
   "console-api-profiler",
   "profiler-started",
   "profiler-stopped",
-  "profiler-status"
+  "profiler-status",
 ];
 
 // Max time in milliseconds for the allocations event to occur, which will
@@ -172,7 +172,7 @@ PerformanceRecorder.prototype = {
 
     await this.startRecording(Object.assign({}, getPerformanceRecordingPrefs(), {
       console: true,
-      label: profileLabel
+      label: profileLabel,
     }));
   },
 
@@ -337,13 +337,13 @@ PerformanceRecorder.prototype = {
         this._memory.attach();
       }
       const recordingOptions = Object.assign(mapRecordingOptions("memory", options), {
-        drainAllocationsTimeout: DRAIN_ALLOCATIONS_TIMEOUT
+        drainAllocationsTimeout: DRAIN_ALLOCATIONS_TIMEOUT,
       });
       memoryStart = this._memory.startRecordingAllocations(recordingOptions);
     }
 
     const [profilerStartData, timelineStartData, memoryStartData] = await Promise.all([
-      profilerStart, timelineStart, memoryStart
+      profilerStart, timelineStart, memoryStart,
     ]);
 
     const data = Object.create(null);
@@ -352,7 +352,7 @@ PerformanceRecorder.prototype = {
     const startTimes = [
       profilerStartData.currentTime,
       memoryStartData,
-      timelineStartData
+      timelineStartData,
     ].filter(Boolean);
     data.startTime = Math.min(...startTimes);
     data.position = profilerStartData.position;
@@ -470,7 +470,7 @@ PerformanceRecorder.prototype = {
     return Object.assign({}, allocationSettings, this._profiler.getStartOptions());
   },
 
-  toString: () => "[object PerformanceRecorder]"
+  toString: () => "[object PerformanceRecorder]",
 };
 
 /**
@@ -487,7 +487,7 @@ function getPerformanceRecordingPrefs() {
     allocationsSampleProbability:
       +Services.prefs.getCharPref("devtools.performance.memory.sample-probability"),
     allocationsMaxLogLength:
-      Services.prefs.getIntPref("devtools.performance.memory.max-log-length")
+      Services.prefs.getIntPref("devtools.performance.memory.max-log-length"),
   };
 }
 

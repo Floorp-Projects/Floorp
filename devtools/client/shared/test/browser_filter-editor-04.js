@@ -33,7 +33,7 @@ add_task(async function() {
   info("Test re-ordering neighbour filters");
   widget._mouseDown({
     target: first().querySelector("i"),
-    pageY: 0
+    pageY: 0,
   });
   widget._mouseMove({ pageY: LIST_ITEM_HEIGHT });
 
@@ -49,7 +49,7 @@ add_task(async function() {
   info("Test re-ordering first and last filters");
   widget._mouseDown({
     target: first().querySelector("i"),
-    pageY: 0
+    pageY: 0,
   });
   widget._mouseMove({ pageY: LIST_ITEM_HEIGHT * 2 });
 
@@ -66,7 +66,7 @@ add_task(async function() {
 
   widget._mouseDown({
     target: first().querySelector("i"),
-    pageY: 0
+    pageY: 0,
   });
   widget._mouseMove({ pageY: -LIST_ITEM_HEIGHT * 5 });
   ok(first().getBoundingClientRect().top >= boundaries.top,
@@ -77,7 +77,7 @@ add_task(async function() {
   info("Test dragging last element out of list");
   widget._mouseDown({
     target: last().querySelector("i"),
-    pageY: 0
+    pageY: 0,
   });
   widget._mouseMove({ pageY: -LIST_ITEM_HEIGHT * 5 });
   ok(last().getBoundingClientRect().bottom <= boundaries.bottom,

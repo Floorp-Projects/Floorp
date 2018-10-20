@@ -40,12 +40,12 @@ window.onload = async function() {
         DOMNode: {},
         accessible: {
           on: () => {},
-          off: () => {}
-        }
+          off: () => {},
+        },
       },
       ui: {
-        supports: {}
-      }
+        supports: {},
+      },
     };
 
     const mockStore = createStore((state, action) =>
@@ -63,9 +63,9 @@ window.onload = async function() {
       ...mockState,
       ui: {
         supports: {
-          relations: true
-        }
-      }
+          relations: true,
+        },
+      },
     };
     await mockStore.dispatch({ type: "update", ...state });
     relationsNode = document.getElementById("/relations");
@@ -82,15 +82,15 @@ window.onload = async function() {
             actorID: "server1.conn2.child1/accessible29",
             typeName: "accessible",
             name: "New Tab",
-            role: "document"
-          }
-        }
+            role: "document",
+          },
+        },
       },
       ui: {
         supports: {
-          relations: true
-        }
-      }
+          relations: true,
+        },
+      },
     };
     await mockStore.dispatch({ type: "update", ...state });
     relationsNode = document.getElementById("/relations");

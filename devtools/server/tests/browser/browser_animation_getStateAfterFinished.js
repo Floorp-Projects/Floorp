@@ -20,7 +20,7 @@ add_task(async function() {
 
   info("Apply the multiple-animations-2 class to start the animations");
   await node.modifyAttributes([
-    {attributeName: "class", newValue: "multiple-animations-2"}
+    {attributeName: "class", newValue: "multiple-animations-2"},
   ]);
 
   info("Get the list of players, by the time this executes, the first, " +

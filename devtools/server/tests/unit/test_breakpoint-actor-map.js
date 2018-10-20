@@ -20,12 +20,12 @@ function test_get_actor() {
   const bpStore = new BreakpointActorMap();
   const location = {
     originalSourceActor: { actor: "actor1" },
-    originalLine: 3
+    originalLine: 3,
   };
   const columnLocation = {
     originalSourceActor: { actor: "actor2" },
     originalLine: 5,
-    originalColumn: 15
+    originalColumn: 15,
   };
 
   // Shouldn't have breakpoint
@@ -59,7 +59,7 @@ function test_set_actor() {
   let location = {
     originalSourceActor: { actor: "actor1" },
     originalLine: 10,
-    originalColumn: 9
+    originalColumn: 9,
   };
   bpStore.setActor(location, {});
   Assert.ok(!!bpStore.getActor(location),
@@ -68,7 +68,7 @@ function test_set_actor() {
   // Breakpoint without column (whole line breakpoint)
   location = {
     originalSourceActor: { actor: "actor2" },
-    originalLine: 103
+    originalLine: 103,
   };
   bpStore.setActor(location, {});
   Assert.ok(!!bpStore.getActor(location),
@@ -81,7 +81,7 @@ function test_delete_actor() {
   let location = {
     originalSourceActor: { actor: "actor1" },
     originalLine: 10,
-    originalColumn: 9
+    originalColumn: 9,
   };
   bpStore.setActor(location, {});
   bpStore.deleteActor(location);
@@ -91,7 +91,7 @@ function test_delete_actor() {
   // Breakpoint without column (whole line breakpoint)
   location = {
     originalSourceActor: { actor: "actor2" },
-    originalLine: 103
+    originalLine: 103,
   };
   bpStore.setActor(location, {});
   bpStore.deleteActor(location);
@@ -108,7 +108,7 @@ function test_find_actors() {
     { originalSourceActor: { actor: "actor2" }, originalLine: 10, originalColumn: 1 },
     { originalSourceActor: { actor: "actor2" }, originalLine: 20, originalColumn: 5 },
     { originalSourceActor: { actor: "actor2" }, originalLine: 30, originalColumn: 34 },
-    { originalSourceActor: { actor: "actor2" }, originalLine: 40, originalColumn: 56 }
+    { originalSourceActor: { actor: "actor2" }, originalLine: 40, originalColumn: 56 },
   ];
 
   const bpStore = new BreakpointActorMap();
@@ -166,7 +166,7 @@ function test_duplicate_actors() {
   let location = {
     originalSourceActor: { actorID: "foo-actor" },
     originalLine: 10,
-    originalColumn: 9
+    originalColumn: 9,
   };
   bpStore.setActor(location, {});
   bpStore.setActor(location, {});
@@ -176,7 +176,7 @@ function test_duplicate_actors() {
   // Breakpoint without column (whole line breakpoint)
   location = {
     originalSourceActor: { actorID: "foo-actor" },
-    originalLine: 15
+    originalLine: 15,
   };
   bpStore.setActor(location, {});
   bpStore.setActor(location, {});

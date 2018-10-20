@@ -278,23 +278,35 @@ class UrlbarValueFormatter {
       return false;
     }
 
-    // There can only be an alias to highlight if the heuristic result is
-    // an alias searchengine result and it's either currently selected or
-    // was selected when the popup was closed.  We also need to check
-    // whether a one-off search button is selected because in that case
-    // there won't be a selection but the alias should not be highlighted.
-    if ((popup.selectedIndex < 0 &&
-         popup._previousSelectedIndex != 0) ||
-        popup.selectedIndex > 0 ||
-        popup.oneOffSearchButtons.selectedButton) {
+    if (popup.oneOffSearchButtons.selectedButton) {
       return false;
     }
-    let heuristicItem = popup.richlistbox.children[0] || null;
-    if (!heuristicItem ||
-        heuristicItem.getAttribute("actiontype") != "searchengine") {
+
+    // To determine whether the input contains a search engine alias, check the
+    // value of the selected result -- whether it's a search engine result with
+    // an alias.  Actually, check the selected listbox item, not the result in
+    // the controller, because we want to continue highlighting the alias when
+    // the popup is closed and the search has stopped.  The selected index when
+    // the popup is closed is zero, however, which is why we check the previous
+    // selected index.
+    let itemIndex =
+      popup.selectedIndex < 0 ? popup._previousSelectedIndex :
+      popup.selectedIndex;
+    if (itemIndex < 0) {
       return false;
     }
-    let url = heuristicItem.getAttribute("url");
+    let item = popup.richlistbox.children[itemIndex] || null;
+
+    // This actiontype check isn't necessary because we call _parseActionUrl
+    // below and we could check action.type instead.  But since this method is
+    // called very often, as an optimization, first do a simple string
+    // comparison on actiontype before continuing with the more expensive regexp
+    // that _parseActionUrl uses.
+    if (!item || item.getAttribute("actiontype") != "searchengine") {
+      return false;
+    }
+
+    let url = item.getAttribute("url");
     let action = this.urlbarInput._parseActionUrl(url);
     if (!action) {
       return false;
@@ -308,12 +320,18 @@ class UrlbarValueFormatter {
     let textNode = editor.rootElement.firstChild;
     let value = textNode.textContent;
 
-    // Make sure the heuristic result's input matches the current urlbar input
-    // because the urlbar input can change without the popup results changing.
-    // Most notably that happens when the user performs a search using an alias:
-    // The popup closes, the search results page is loaded, and the urlbar value
-    // is set to the URL of the page.
-    if (decodeURIComponent(action.params.input) != value) {
+    // Make sure the item's input matches the current urlbar input because the
+    // urlbar input can change without the popup results changing.  Most notably
+    // that happens when the user performs a search using an alias: The popup
+    // closes (preserving its items), the search results page is loaded, and the
+    // urlbar value is set to the URL of the page.
+    //
+    // If the item is the heuristic item, then its input is the value that the
+    // user has typed in the input.  If the item is not the heuristic item, then
+    // its input is "@engine ".  So in order to make sure the item's input
+    // matches the current urlbar input, we need to check that the urlbar input
+    // starts with the item's input.
+    if (!value.trim().startsWith(decodeURIComponent(action.params.input).trim())) {
       return false;
     }
 

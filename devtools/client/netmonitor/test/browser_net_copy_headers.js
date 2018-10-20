@@ -43,7 +43,7 @@ add_task(async function() {
     "Connection: keep-alive",
     "Upgrade-Insecure-Requests: 1",
     "Pragma: no-cache",
-    "Cache-Control: no-cache"
+    "Cache-Control: no-cache",
   ].join("\n");
 
   await waitForClipboardPromise(function setup() {
@@ -63,7 +63,7 @@ add_task(async function() {
     "content-length: 465",
     "connection: close",
     "server: httpd.js",
-    "date: Sun, 3 May 2015 11:11:11 GMT"
+    "date: Sun, 3 May 2015 11:11:11 GMT",
   ].join("\n");
 
   EventUtils.sendMouseEvent({ type: "contextmenu" },

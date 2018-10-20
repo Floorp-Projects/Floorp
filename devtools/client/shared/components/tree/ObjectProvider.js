@@ -76,7 +76,7 @@ define(function(require, exports, module) {
     getType: function(object) {
       return (object instanceof ObjectProperty) ?
         typeof object.value : typeof object;
-    }
+    },
   };
 
   function ObjectProperty(name, value) {

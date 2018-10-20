@@ -38,7 +38,7 @@ define(function(require, exports, module) {
           PropTypes.array,
           PropTypes.object,
           PropTypes.bool,
-          PropTypes.number
+          PropTypes.number,
         ]),
         dataSize: PropTypes.number,
         expandedNodes: PropTypes.instanceOf(Set),
@@ -105,7 +105,7 @@ define(function(require, exports, module) {
       // Take all available horizontal space.
       const columns = [{
         id: "value",
-        width: "100%"
+        width: "100%",
       }];
 
       // Render tree component.
@@ -125,7 +125,7 @@ define(function(require, exports, module) {
 
       if (!isObject(data)) {
         content = div({className: "jsonPrimitiveValue"}, Rep({
-          object: data
+          object: data,
         }));
       } else if (data instanceof Error) {
         content = div({className: "jsonParseError"},

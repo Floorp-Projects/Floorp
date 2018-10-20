@@ -5,8 +5,10 @@ export class ASRouterAdmin extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onMessage = this.onMessage.bind(this);
+    this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
+    this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
     this.findOtherBundledMessagesOfSameTemplate = this.findOtherBundledMessagesOfSameTemplate.bind(this);
-    this.state = {};
+    this.state = {messageFilter: "all"};
   }
 
   onMessage({data: action}) {
@@ -55,6 +57,10 @@ export class ASRouterAdmin extends React.PureComponent {
     ASRouterUtils.sendMessage({type: "EXPIRE_QUERY_CACHE"});
   }
 
+  resetPref() {
+    ASRouterUtils.sendMessage({type: "RESET_PROVIDER_PREF"});
+  }
+
   renderMessageItem(msg) {
     const isCurrent = msg.id === this.state.lastMessageId;
     const isBlocked = this.state.messageBlockList.includes(msg.id);
@@ -81,34 +87,61 @@ export class ASRouterAdmin extends React.PureComponent {
     if (!this.state.messages) {
       return null;
     }
+    const messagesToShow = this.state.messageFilter === "all" ? this.state.messages : this.state.messages.filter(message => message.provider === this.state.messageFilter);
     return (<table><tbody>
-      {this.state.messages.map(msg => this.renderMessageItem(msg))}
+      {messagesToShow.map(msg => this.renderMessageItem(msg))}
     </tbody></table>);
+  }
+
+  onChangeMessageFilter(event) {
+    this.setState({messageFilter: event.target.value});
+  }
+
+  renderMessageFilter() {
+    if (!this.state.providers) {
+      return null;
+    }
+    return (<p>Show messages from <select value={this.state.messageFilter} onChange={this.onChangeMessageFilter}>
+      <option value="all">all providers</option>
+      {this.state.providers.map(provider => (<option key={provider.id} value={provider.id}>{provider.id}</option>))}
+    </select></p>);
   }
 
   renderTableHead() {
     return (<thead>
       <tr className="message-item">
         <td>id</td>
+        <td>enabled</td>
         <td>source</td>
         <td>last updated</td>
       </tr>
     </thead>);
   }
 
+  handleEnabledToggle(event) {
+    const action = {type: event.target.checked ? "ENABLE_PROVIDER" : "DISABLE_PROVIDER", data: event.target.name};
+    ASRouterUtils.sendMessage(action);
+    this.setState({messageFilter: "all"});
+  }
+
   renderProviders() {
+    const providersConfig = this.state.providerPrefs;
+    const providerInfo = this.state.providers;
     return (<table>{this.renderTableHead()}<tbody>
-      {this.state.providers.map((provider, i) => {
+      {providersConfig.map((provider, i) => {
+        const isTestProvider = provider.id === "snippets_local_testing";
+        const info = providerInfo.find(p => p.id === provider.id) || {};
         let label = "(local)";
         if (provider.type === "remote") {
-          label = <a target="_blank" href={provider.url}>{provider.url}</a>;
+          label = <a target="_blank" href={info.url}>{info.url}</a>;
         } else if (provider.type === "remote-settings") {
           label = `${provider.bucket} (Remote Settings)`;
         }
         return (<tr className="message-item" key={i}>
           <td>{provider.id}</td>
+          <td>{isTestProvider ? null : <input type="checkbox" name={provider.id} checked={provider.enabled} onChange={this.handleEnabledToggle} />}</td>
           <td>{label}</td>
-          <td>{provider.lastUpdated ? new Date(provider.lastUpdated).toString() : ""}</td>
+          <td style={{whiteSpace: "nowrap"}}>{info.lastUpdated ? new Date(info.lastUpdated).toLocaleString() : ""}</td>
         </tr>);
       })}
     </tbody></table>);
@@ -120,8 +153,10 @@ export class ASRouterAdmin extends React.PureComponent {
       <h2>Targeting Utilities</h2>
       <button className="button" onClick={this.expireCache}>Expire Cache</button> (This expires the cache in ASR Targeting for bookmarks and top sites)
       <h2>Message Providers</h2>
+      <button className="button" onClick={this.resetPref}>Restore defaults</button>
       {this.state.providers ? this.renderProviders() : null}
       <h2>Messages</h2>
+      {this.renderMessageFilter()}
       {this.renderMessages()}
     </div>);
   }

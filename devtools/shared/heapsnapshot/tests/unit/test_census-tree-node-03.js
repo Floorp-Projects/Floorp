@@ -11,7 +11,7 @@ const countBreakdown = { by: "count", count: true, bytes: true };
 const BREAKDOWN = {
   by: "objectClass",
   then: countBreakdown,
-  other: { by: "internalType", then: countBreakdown }
+  other: { by: "internalType", then: countBreakdown },
 };
 
 const REPORT = {
@@ -19,8 +19,8 @@ const REPORT = {
   "Array": { bytes: 100, count: 1 },
   "other": {
     "JIT::CODE::NOW!!!": { bytes: 20, count: 2 },
-    "JIT::CODE::LATER!!!": { bytes: 40, count: 4 }
-  }
+    "JIT::CODE::LATER!!!": { bytes: 40, count: 4 },
+  },
 };
 
 const EXPECTED = {

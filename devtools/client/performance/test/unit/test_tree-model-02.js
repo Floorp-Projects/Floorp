@@ -45,14 +45,14 @@ var gThread = synthesizeProfileForTest([{
     { location: "(root)" },
     { location: "A" },
     { location: "B" },
-    { location: "C" }
-  ]
+    { location: "C" },
+  ],
 }, {
   time: null,
   frames: [
     { location: "(root)" },
     { location: "A" },
     { location: "B" },
-    { location: "D" }
-  ]
+    { location: "D" },
+  ],
 }]);

@@ -72,16 +72,16 @@ const gProfile = RecordingUtils.deflateProfile({
         { location: "(root)" },
         { location: "http://content/A" },
         { location: "http://content/B" },
-        { location: "http://content/C" }
-      ]
+        { location: "http://content/C" },
+      ],
     }, {
       time: 1 + 1,
       frames: [
         { location: "(root)" },
         { location: "http://content/A" },
         { location: "http://content/B" },
-        { location: "http://content/D" }
-      ]
+        { location: "http://content/D" },
+      ],
     }, {
       time: 1 + 1 + 2,
       frames: [
@@ -90,20 +90,20 @@ const gProfile = RecordingUtils.deflateProfile({
         { location: "http://content/E" },
         { location: "http://content/F" },
         { location: "platform_JS", category: CATEGORY_INDEX("js") },
-      ]
+      ],
     }, {
       time: 1 + 1 + 2 + 3,
       frames: [
         { location: "(root)" },
         { location: "platform_JS2", category: CATEGORY_INDEX("js") },
-      ]
+      ],
     }, {
       time: 1 + 1 + 2 + 3 + 5,
       frames: [
         { location: "(root)" },
         { location: "http://content/A" },
         { location: "platform_GC", category: CATEGORY_INDEX("gc") },
-      ]
-    }]
-  }]
+      ],
+    }],
+  }],
 });

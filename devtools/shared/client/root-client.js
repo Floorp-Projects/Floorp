@@ -41,7 +41,7 @@ function RootClient(client, greeting) {
       this.rootForm = this._getRoot();
       return this.rootForm;
     },
-    configurable: true
+    configurable: true,
   });
 
   // Cache of already created global scoped fronts
@@ -94,7 +94,7 @@ RootClient.prototype = {
    *        Called with the response packet.
    */
   listServiceWorkerRegistrations: DebuggerClient.requester({
-    type: "listServiceWorkerRegistrations"
+    type: "listServiceWorkerRegistrations",
   }),
 
   /**
@@ -152,7 +152,7 @@ RootClient.prototype = {
         const processActor = form.actor;
         const response = await this._client.request({
           to: processActor,
-          type: "listWorkers"
+          type: "listWorkers",
         });
         workers = workers.concat(response.workers);
       }
@@ -163,7 +163,7 @@ RootClient.prototype = {
     const result = {
       service: [],
       shared: [],
-      other: []
+      other: [],
     };
 
     registrations.forEach(form => {
@@ -174,7 +174,7 @@ RootClient.prototype = {
         fetch: form.fetch,
         registrationActor: form.actor,
         active: form.active,
-        lastUpdateTime: form.lastUpdateTime
+        lastUpdateTime: form.lastUpdateTime,
       });
     });
 
@@ -182,7 +182,7 @@ RootClient.prototype = {
       const worker = {
         name: form.url,
         url: form.url,
-        workerTargetActor: form.actor
+        workerTargetActor: form.actor,
       };
       switch (form.type) {
         case Ci.nsIWorkerDebugger.TYPE_SERVICE:
@@ -232,7 +232,7 @@ RootClient.prototype = {
   getTab: function(filter) {
     const packet = {
       to: this.actor,
-      type: "getTab"
+      type: "getTab",
     };
 
     if (filter) {
@@ -339,7 +339,7 @@ RootClient.prototype = {
   },
   get request() {
     return this._client.request;
-  }
+  },
 };
 
 module.exports = RootClient;

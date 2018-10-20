@@ -36,7 +36,7 @@ var testSquareAndSumFunction = {
     var retval = this._sas;
     this._sas = 0; // Prepare for next group
     return retval;
-  }
+  },
 };
 
 function test_aggregate_registration() {

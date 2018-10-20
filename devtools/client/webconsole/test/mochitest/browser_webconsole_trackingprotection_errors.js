@@ -41,7 +41,7 @@ async function testClickOpenNewTab(hud, message) {
   checkLink({
     ...linkSimulation,
     expectedLink: LEARN_MORE_URI,
-    expectedTab: "tab"
+    expectedTab: "tab",
   });
 }
 

@@ -38,8 +38,8 @@ const EXPECTED_REQUESTS = [
       status: 200,
       statusText: "OK",
       type: "html",
-      fullMimeType: "text/html; charset=utf-8"
-    }
+      fullMimeType: "text/html; charset=utf-8",
+    },
   },
   {
     method: "GET",
@@ -49,8 +49,8 @@ const EXPECTED_REQUESTS = [
       status: 200,
       statusText: "OK",
       type: "css",
-      fullMimeType: "text/css; charset=utf-8"
-    }
+      fullMimeType: "text/css; charset=utf-8",
+    },
   },
   {
     method: "GET",
@@ -60,8 +60,8 @@ const EXPECTED_REQUESTS = [
       status: 200,
       statusText: "OK",
       type: "js",
-      fullMimeType: "application/javascript; charset=utf-8"
-    }
+      fullMimeType: "application/javascript; charset=utf-8",
+    },
   },
   {
     method: "GET",
@@ -71,8 +71,8 @@ const EXPECTED_REQUESTS = [
       status: 200,
       statusText: "OK",
       type: "woff",
-      fullMimeType: "font/woff"
-    }
+      fullMimeType: "font/woff",
+    },
   },
   {
     method: "GET",
@@ -82,8 +82,8 @@ const EXPECTED_REQUESTS = [
       status: 200,
       statusText: "OK",
       type: "png",
-      fullMimeType: "image/png"
-    }
+      fullMimeType: "image/png",
+    },
   },
   {
     method: "GET",
@@ -93,8 +93,8 @@ const EXPECTED_REQUESTS = [
       status: 200,
       statusText: "OK",
       type: "ogg",
-      fullMimeType: "audio/ogg"
-    }
+      fullMimeType: "audio/ogg",
+    },
   },
   {
     method: "GET",
@@ -104,7 +104,7 @@ const EXPECTED_REQUESTS = [
       status: 200,
       statusText: "OK",
       type: "webm",
-      fullMimeType: "video/webm"
+      fullMimeType: "video/webm",
     },
   },
   {
@@ -115,8 +115,8 @@ const EXPECTED_REQUESTS = [
       status: 200,
       statusText: "OK",
       type: "x-shockwave-flash",
-      fullMimeType: "application/x-shockwave-flash"
-    }
+      fullMimeType: "application/x-shockwave-flash",
+    },
   },
   {
     method: "GET",
@@ -125,8 +125,8 @@ const EXPECTED_REQUESTS = [
       fuzzyUrl: true,
       status: 101,
       statusText: "Switching Protocols",
-    }
-  }
+    },
+  },
 ];
 
 add_task(async function() {

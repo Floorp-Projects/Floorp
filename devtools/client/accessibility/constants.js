@@ -43,7 +43,7 @@ exports.ORDERED_PROPS = [
   "indexInParent",
   "states",
   "relations",
-  "attributes"
+  "attributes",
 ];
 
 // Accessible events (emitted by accessible front) that the accessible component
@@ -58,7 +58,7 @@ exports.ACCESSIBLE_EVENTS = [
   "states-change",
   "text-change",
   "value-change",
-  "index-in-parent-change"
+  "index-in-parent-change",
 ];
 
 // Telemetry name constants.
