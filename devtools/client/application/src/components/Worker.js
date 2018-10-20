@@ -35,8 +35,8 @@ class Worker extends Component {
         scope: PropTypes.string.isRequired,
         // registrationActor can be missing in e10s.
         registrationActor: PropTypes.string,
-        workerTargetActor: PropTypes.string
-      }).isRequired
+        workerTargetActor: PropTypes.string,
+      }).isRequired,
     };
   }
 
@@ -67,7 +67,7 @@ class Worker extends Component {
     const { client, worker } = this.props;
     client.request({
       to: worker.registrationActor,
-      type: "start"
+      type: "start",
     });
   }
 
@@ -75,7 +75,7 @@ class Worker extends Component {
     const { client, worker } = this.props;
     client.request({
       to: worker.registrationActor,
-      type: "unregister"
+      type: "unregister",
     });
   }
 
@@ -120,7 +120,7 @@ class Worker extends Component {
         button({
           onClick: this.unregister,
           className: "devtools-button worker__unregister-button js-unregister-button",
-          "data-standalone": true
+          "data-standalone": true,
         })
       ) : null;
 
@@ -129,11 +129,11 @@ class Worker extends Component {
     const debugLink = Localized({
       id: "serviceworker-worker-debug",
       // The localized title is only displayed if the debug link is disabled.
-      attrs: { title: !this.isRunning() }
+      attrs: { title: !this.isRunning() },
     },
       a({
         onClick: this.isRunning() ? this.debug : null,
-        className: `${debugLinkDisabled} worker__debug-link js-debug-link`
+        className: `${debugLinkDisabled} worker__debug-link js-debug-link`,
       })
     );
 
@@ -142,7 +142,7 @@ class Worker extends Component {
         { id: "serviceworker-worker-start" },
         a({
           onClick: this.start,
-          className: "worker__start-link"
+          className: "worker__start-link",
         })
       ) : null;
 
@@ -154,7 +154,7 @@ class Worker extends Component {
           // workaround. See Bug 1465718. worker.lastUpdateTime is in microseconds,
           // convert to a valid timestamp in milliseconds by dividing by 1000.
           "$date": worker.lastUpdateTime / 1000,
-          time: time({ className: "js-sw-updated" })
+          time: time({ className: "js-sw-updated" }),
         },
         span({ className: "worker__data__updated" })
       ) : null;

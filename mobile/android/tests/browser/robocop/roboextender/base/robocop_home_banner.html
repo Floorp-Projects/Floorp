@@ -25,7 +25,7 @@ function addMessage() {
     },
     ondismiss: function() {
       EventDispatcher.instance.sendRequest({ type: "TestHomeBanner:MessageDismissed" });
-    }
+    },
   });
   EventDispatcher.instance.sendRequest({ type: "TestHomeBanner:MessageAdded" });
 }

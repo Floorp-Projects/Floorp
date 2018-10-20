@@ -39,7 +39,7 @@ exports.local = {
           return;
         }
         deferred.resolve(cert);
-      }
+      },
     });
     return deferred.promise;
   },
@@ -58,9 +58,9 @@ exports.local = {
           return;
         }
         deferred.resolve();
-      }
+      },
     });
     return deferred.promise;
-  }
+  },
 
 };

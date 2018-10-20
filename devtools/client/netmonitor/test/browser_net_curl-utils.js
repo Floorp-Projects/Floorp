@@ -153,7 +153,7 @@ function testRemoveBinaryDataFromMultipartText(data) {
     "\\r\\n\\r\\n",
     boundary + "--",
     "\\r\\n",
-    "'"
+    "'",
   ].join("");
 
   const EXPECTED_WIN_RESULT = [
@@ -171,7 +171,7 @@ function testRemoveBinaryDataFromMultipartText(data) {
     "\u000d\u000A\u000d\u000A",
     '"' + boundary + '--"^',
     "\u000d\u000A",
-    '""'
+    '""',
   ].join("");
 
   if (Services.appinfo.OS != "WINNT") {
@@ -248,7 +248,7 @@ async function createCurlData(selected, getLongString, requestData) {
     method,
     headers: [],
     httpVersion,
-    postDataText: null
+    postDataText: null,
   };
 
   const requestHeaders = await requestData(id, "requestHeaders");

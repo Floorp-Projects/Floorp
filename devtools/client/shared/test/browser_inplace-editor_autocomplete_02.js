@@ -38,7 +38,7 @@ const mockGetCSSValuesForPropertyName = function(propertyName) {
       "inline",
       "inline-block",
       "none",
-    ]
+    ],
   };
   return values[propertyName] || [];
 };
@@ -56,10 +56,10 @@ add_task(async function() {
       start: runAutocompletionTest,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
       property: {
-        name: "display"
+        name: "display",
       },
       done: resolve,
-      popup: popup
+      popup: popup,
     }, doc);
   });
 

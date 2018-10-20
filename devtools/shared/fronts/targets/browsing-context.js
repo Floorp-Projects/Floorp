@@ -58,7 +58,7 @@ const BrowsingContextFront = protocol.FrontClassWithSpec(browsingContextTargetSp
 
     return response;
   }, {
-    impl: "_attach"
+    impl: "_attach",
   }),
 
   reconfigure: custom(async function({ options }) {
@@ -70,7 +70,7 @@ const BrowsingContextFront = protocol.FrontClassWithSpec(browsingContextTargetSp
 
     return response;
   }, {
-    impl: "_reconfigure"
+    impl: "_reconfigure",
   }),
 
   detach: custom(async function() {
@@ -94,7 +94,7 @@ const BrowsingContextFront = protocol.FrontClassWithSpec(browsingContextTargetSp
 
     return response;
   }, {
-    impl: "_detach"
+    impl: "_detach",
   }),
 
   attachWorker: function(workerTargetActor) {

@@ -176,20 +176,20 @@ FirefoxOnAndroidRuntime.prototype._packageName = function() {
 Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "shortName", {
   get() {
     return `Firefox ${this._channel()}`;
-  }
+  },
 });
 
 Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "deviceName", {
   get() {
     return this._model || this.device.id;
-  }
+  },
 });
 
 Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "name", {
   get() {
     const channel = this._channel();
     return "Firefox " + channel + " on Android (" + this.deviceName + ")";
-  }
+  },
 });
 
 exports.ADBScanner = ADBScanner;

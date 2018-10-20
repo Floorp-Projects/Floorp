@@ -4,7 +4,7 @@
  */
 
 const MANIFESTS = [
-  do_get_file("data/test_bug292789.manifest")
+  do_get_file("data/test_bug292789.manifest"),
 ];
 
 registerManifests(MANIFESTS);

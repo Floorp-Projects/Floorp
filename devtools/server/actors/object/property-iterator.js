@@ -78,7 +78,7 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
     return {
       type: this.typeName,
       actor: this.actorID,
-      count: this.iterator.size
+      count: this.iterator.size,
     };
   },
 
@@ -88,7 +88,7 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
       list.push(this.iterator.propertyName(idx));
     }
     return {
-      names: indexes
+      names: indexes,
     };
   },
 
@@ -100,13 +100,13 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
     }
 
     return {
-      ownProperties
+      ownProperties,
     };
   },
 
   all() {
     return this.slice({ start: 0, count: this.iterator.size });
-  }
+  },
 });
 
 /**
@@ -125,7 +125,7 @@ function enumArrayProperties(objectActor, options) {
     },
     propertyDescription(index) {
       return objectActor._propertyDescriptor(index);
-    }
+    },
   };
 }
 
@@ -234,7 +234,7 @@ function enumObjectProperties(objectActor, options) {
         desc.getterPrototypeLevel = getterPrototypeLevel;
       }
       return desc;
-    }
+    },
   };
 }
 
@@ -274,11 +274,11 @@ function enumMapEntries(objectActor) {
           type: "mapEntry",
           preview: {
             key: gripFromEntry(objectActor, key),
-            value: gripFromEntry(objectActor, val)
-          }
-        }
+            value: gripFromEntry(objectActor, val),
+          },
+        },
       };
-    }
+    },
   };
 }
 
@@ -312,11 +312,11 @@ function enumStorageEntries(objectActor) {
           type: "storageEntry",
           preview: {
             key: gripFromEntry(objectActor, key),
-            value: gripFromEntry(objectActor, val)
-          }
-        }
+            value: gripFromEntry(objectActor, val),
+          },
+        },
       };
-    }
+    },
   };
 }
 
@@ -355,11 +355,11 @@ function enumWeakMapEntries(objectActor) {
           type: "mapEntry",
           preview: {
             key: gripFromEntry(objectActor, key),
-            value: gripFromEntry(objectActor, val)
-          }
-        }
+            value: gripFromEntry(objectActor, val),
+          },
+        },
       };
-    }
+    },
   };
 }
 
@@ -391,9 +391,9 @@ function enumSetEntries(objectActor) {
       const val = values[index];
       return {
         enumerable: true,
-        value: gripFromEntry(objectActor, val)
+        value: gripFromEntry(objectActor, val),
       };
-    }
+    },
   };
 }
 
@@ -426,9 +426,9 @@ function enumWeakSetEntries(objectActor) {
       const val = keys[index];
       return {
         enumerable: true,
-        value: gripFromEntry(objectActor, val)
+        value: gripFromEntry(objectActor, val),
       };
-    }
+    },
   };
 }
 

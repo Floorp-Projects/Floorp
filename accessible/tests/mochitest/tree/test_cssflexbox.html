@@ -24,29 +24,29 @@
         children: [
           { // Bug 1277559. Button outside the flexed content
             role: ROLE_PUSHBUTTON,
-            name: "Button"
+            name: "Button",
           },
           { // Visually first button in the 3 button row
             role: ROLE_PUSHBUTTON,
-            name: "First"
+            name: "First",
           },
           { // Flushed right third button in the 3 button row
             role: ROLE_PUSHBUTTON,
-            name: "Second"
+            name: "Second",
           },
           { // Middle button in the 3 button row
             role: ROLE_PUSHBUTTON,
-            name: "Third"
+            name: "Third",
           }, // end bug 1277559
           { // Bug 962558: DOM first, Order 2.
             role: ROLE_PUSHBUTTON,
-            name: "two, tab first"
+            name: "two, tab first",
           },
           { // DOM order second, flex order 1
             role: ROLE_PUSHBUTTON,
-            name: "one, tab second"
-          } // end bug 962558
-        ]
+            name: "one, tab second",
+          }, // end bug 962558
+        ],
       };
       testAccessibleTree("flex_elements", accTree);
 

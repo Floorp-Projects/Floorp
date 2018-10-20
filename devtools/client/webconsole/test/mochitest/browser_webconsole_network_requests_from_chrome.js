@@ -21,7 +21,7 @@ add_task(async function() {
           subject.sourceName.includes("webconsole")) {
         good = false;
       }
-    }
+    },
   };
   Services.console.registerListener(listener);
 

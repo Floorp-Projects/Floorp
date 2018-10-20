@@ -21,7 +21,7 @@ const PromisesFront = FrontClassWithSpec(promisesSpec, {
 
   destroy: function() {
     Front.prototype.destroy.call(this);
-  }
+  },
 });
 
 exports.PromisesFront = PromisesFront;

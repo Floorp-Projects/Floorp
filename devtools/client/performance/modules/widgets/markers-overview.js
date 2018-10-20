@@ -162,7 +162,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
     const tickInterval = TickUtils.findOptimalTickInterval({
       ticksMultiple: OVERVIEW_HEADER_TICKS_MULTIPLE,
       ticksSpacingMin: OVERVIEW_HEADER_TICKS_SPACING_MIN,
-      dataScale: dataScale
+      dataScale: dataScale,
     });
 
     ctx.textBaseline = "middle";
@@ -228,7 +228,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
       getColor("body-color-alt", theme), 0.25);
     this.alternatingBackgroundColor = colorUtils.setAlpha(
       getColor("body-color", theme), 0.05);
-  }
+  },
 });
 
 exports.MarkersOverview = MarkersOverview;

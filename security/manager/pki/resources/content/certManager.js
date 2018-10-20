@@ -380,7 +380,7 @@ function restoreCerts() {
       let interfaceRequestor = {
         getInterface() {
           return prompter;
-        }
+        },
       };
       certdb.importUserCertificate(dataArray, dataArray.length, interfaceRequestor);
     } else {

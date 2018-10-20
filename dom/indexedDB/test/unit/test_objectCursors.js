@@ -11,12 +11,12 @@ function* testSteps()
 
   const objectStores = [
     { name: "a", autoIncrement: false },
-    { name: "b", autoIncrement: true }
+    { name: "b", autoIncrement: true },
   ];
 
   const indexes = [
     { name: "a", options: { } },
-    { name: "b", options: { unique: true } }
+    { name: "b", options: { unique: true } },
   ];
 
   var j = 0;

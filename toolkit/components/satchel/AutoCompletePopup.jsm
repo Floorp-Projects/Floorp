@@ -31,6 +31,10 @@ var AutoCompleteResultView = {
     return this.results[index].value;
   },
 
+  getFinalCompleteValueAt(index) {
+    return this.results[index].value;
+  },
+
   getLabelAt(index) {
     // Unused by richlist autocomplete - see getCommentAt.
     return "";

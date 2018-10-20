@@ -53,7 +53,7 @@ class RuntimePage extends PureComponent {
     return Localized(
       {
         id: localizationId,
-        attrs: { name: true }
+        attrs: { name: true },
       },
       DebugTargetPane({
         actionComponent,

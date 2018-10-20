@@ -19,7 +19,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 class VisibilityHandler extends Component {
   static get propTypes() {
     return {
-      children: PropTypes.element.isRequired
+      children: PropTypes.element.isRequired,
     };
   }
 

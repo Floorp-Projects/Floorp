@@ -653,5 +653,5 @@ AbstractTreeItem.prototype = {
    */
   _onBlur: function(e) {
     this._rootItem.emit("blur", this);
-  }
+  },
 };

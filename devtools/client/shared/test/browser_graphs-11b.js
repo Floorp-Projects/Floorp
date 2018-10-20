@@ -10,7 +10,7 @@ const BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
 const CATEGORIES = [
   { color: "#46afe3", label: "Foo" },
   { color: "#eb5368", label: "Bar" },
-  { color: "#70bf53", label: "Baz" }
+  { color: "#70bf53", label: "Baz" },
 ];
 
 add_task(async function() {
@@ -39,17 +39,17 @@ async function testGraph(graph) {
   graph.format = CATEGORIES;
   graph.dataOffsetX = 1000;
   graph.setData([{
-    delta: 1100, values: [0, 2, 3]
+    delta: 1100, values: [0, 2, 3],
   }, {
-    delta: 1200, values: [1, 0, 2]
+    delta: 1200, values: [1, 0, 2],
   }, {
-    delta: 1300, values: [2, 1, 0]
+    delta: 1300, values: [2, 1, 0],
   }, {
-    delta: 1400, values: [0, 3, 1]
+    delta: 1400, values: [0, 3, 1],
   }, {
-    delta: 1500, values: [3, 0, 2]
+    delta: 1500, values: [3, 0, 2],
   }, {
-    delta: 1600, values: [3, 2, 0]
+    delta: 1600, values: [3, 2, 0],
   }]);
 
   /* eslint-disable max-len */
@@ -64,19 +64,19 @@ async function testGraph(graph) {
     highlights: "[{type:0, start:34.33333333333333, end:66.66666666666666, top:85, bottom:100}, {type:0, start:67.66666666666666, end:100, top:70, bottom:100}, {type:0, start:134.33333333333331, end:166.66666666666666, top:55, bottom:100}, {type:0, start:167.66666666666666, end:200, top:55, bottom:100}]",
     selection: "({start:34.33333333333333, end:200})",
     leftmost: "({type:0, start:34.33333333333333, end:66.66666666666666, top:85, bottom:100})",
-    rightmost: "({type:0, start:167.66666666666666, end:200, top:55, bottom:100})"
+    rightmost: "({type:0, start:167.66666666666666, end:200, top:55, bottom:100})",
   });
   await testLegend(graph, 1, {
     highlights: "[{type:1, start:0, end:33.33333333333333, top:70, bottom:100}, {type:1, start:67.66666666666666, end:100, top:54, bottom:69}, {type:1, start:101, end:133.33333333333331, top:55, bottom:100}, {type:1, start:167.66666666666666, end:200, top:24, bottom:54}]",
     selection: "({start:0, end:200})",
     leftmost: "({type:1, start:0, end:33.33333333333333, top:70, bottom:100})",
-    rightmost: "({type:1, start:167.66666666666666, end:200, top:24, bottom:54})"
+    rightmost: "({type:1, start:167.66666666666666, end:200, top:24, bottom:54})",
   });
   await testLegend(graph, 2, {
     highlights: "[{type:2, start:0, end:33.33333333333333, top:24, bottom:69}, {type:2, start:34.33333333333333, end:66.66666666666666, top:54, bottom:84}, {type:2, start:101, end:133.33333333333331, top:39, bottom:54}, {type:2, start:134.33333333333331, end:166.66666666666666, top:24, bottom:54}]",
     selection: "({start:0, end:166.66666666666666})",
     leftmost: "({type:2, start:0, end:33.33333333333333, top:24, bottom:69})",
-    rightmost: "({type:2, start:134.33333333333331, end:166.66666666666666, top:24, bottom:54})"
+    rightmost: "({type:2, start:134.33333333333331, end:166.66666666666666, top:24, bottom:54})",
   });
   /* eslint-enable max-len */
 }
@@ -128,6 +128,6 @@ function mockEvent(node) {
   return {
     target: node,
     preventDefault: () => {},
-    stopPropagation: () => {}
+    stopPropagation: () => {},
   };
 }

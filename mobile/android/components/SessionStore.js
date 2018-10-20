@@ -226,7 +226,7 @@ SessionStore.prototype = {
           if (window) { // can be null if we're restarting
             window.WindowEventDispatcher.sendRequest({
               type: "PrivateBrowsing:Data",
-              noChange: true
+              noChange: true,
             });
           }
         }
@@ -242,7 +242,7 @@ SessionStore.prototype = {
 
               if (window.BrowserApp.tabs.length == 0) {
                 window.BrowserApp.addTab("about:home", {
-                  selected: true
+                  selected: true,
                 });
               }
               // Normally, _restoreWindow() will have set this to true already,
@@ -281,7 +281,7 @@ SessionStore.prototype = {
         if (data.shouldNotifyTabsOpenedToJava) {
           let window = Services.wm.getMostRecentWindow("navigator:browser");
           window.WindowEventDispatcher.sendRequest({
-            type: "Tabs:TabsOpened"
+            type: "Tabs:TabsOpened",
           });
         }
         break;
@@ -1095,7 +1095,7 @@ SessionStore.prototype = {
     if (window) { // can be null if we're restarting
       window.WindowEventDispatcher.sendRequest({
         type: "PrivateBrowsing:Data",
-        session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
+        session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null,
       });
     }
 
@@ -1323,7 +1323,7 @@ SessionStore.prototype = {
         isPrivate: tabData.isPrivate,
         desktopMode: tabData.desktopMode,
         cancelEditMode: selected,
-        parentId: tabData.parentId
+        parentId: tabData.parentId,
       };
 
       let tab = window.BrowserApp.addTab(activeSHEntry.url, params);
@@ -1523,7 +1523,7 @@ SessionStore.prototype = {
       isPrivate: aCloseTabData.isPrivate,
       desktopMode: aCloseTabData.desktopMode,
       tabIndex: this._lastClosedTabIndex,
-      parentId: aCloseTabData.parentId
+      parentId: aCloseTabData.parentId,
     };
     let tab = aWindow.BrowserApp.addTab(aCloseTabData.entries[aCloseTabData.index - 1].url, params);
     tab.browser.__SS_data = aCloseTabData;
@@ -1597,7 +1597,7 @@ SessionStore.prototype = {
     log("sending " + tabs.length + " closed tabs to Java");
     EventDispatcher.instance.sendRequest({
       type: "ClosedTabs:Data",
-      tabs: tabs
+      tabs: tabs,
     });
   },
 
@@ -1656,7 +1656,7 @@ SessionStore.prototype = {
   setLoadState: function ss_setLoadState(aState) {
     this.flushPendingState();
     this._loadState = aState;
-  }
+  },
 
 };
 

@@ -10,7 +10,7 @@
 add_task(async function() {
   const {
     getFormattedSize,
-    getFormattedTime
+    getFormattedTime,
   } = require("devtools/client/netmonitor/src/utils/format-utils");
 
   requestLongerTimeout(2);

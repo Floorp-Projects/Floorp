@@ -44,7 +44,7 @@ class ConnectPage extends PureComponent {
     return Localized(
       {
         id: "about-debugging-connect-wifi",
-        attrs: { title: true }
+        attrs: { title: true },
       },
       ConnectSection(
         {
@@ -57,7 +57,7 @@ class ConnectPage extends PureComponent {
             getString("about-debugging-connect-wifi-step-open-firefox"),
             getString("about-debugging-connect-wifi-step-open-options"),
             getString("about-debugging-connect-wifi-step-enable-debug"),
-          ]
+          ],
         })
       )
     );
@@ -99,7 +99,7 @@ class ConnectPage extends PureComponent {
 
     return Localized(
       {
-        id: localizedState
+        id: localizedState,
       },
       dom.button(
         {
@@ -119,7 +119,7 @@ class ConnectPage extends PureComponent {
     return Localized(
       {
         id: "about-debugging-connect-usb",
-        attrs: { title: true }
+        attrs: { title: true },
       },
       ConnectSection(
         {
@@ -132,7 +132,7 @@ class ConnectPage extends PureComponent {
               getString("about-debugging-connect-usb-step-enable-dev-menu"),
               getString("about-debugging-connect-usb-step-enable-debug"),
               getString("about-debugging-connect-usb-step-plug-device"),
-            ]
+            ],
           }) :
           Localized(
             {
@@ -140,7 +140,7 @@ class ConnectPage extends PureComponent {
             },
             dom.aside(
               {
-                className: "js-connect-usb-disabled-message"
+                className: "js-connect-usb-disabled-message",
               },
               "Enabling this will download and add the required Android USB debugging " +
               "components to Firefox."
@@ -157,7 +157,7 @@ class ConnectPage extends PureComponent {
     return Localized(
       {
         id: "about-debugging-connect-network",
-        attrs: { title: true }
+        attrs: { title: true },
       },
       ConnectSection(
         {
@@ -179,11 +179,11 @@ class ConnectPage extends PureComponent {
       },
       Localized(
         {
-          id: "about-debugging-connect-title"
+          id: "about-debugging-connect-title",
         },
         dom.h1(
           {
-            className: "page__title"
+            className: "page__title",
           },
           "Connect a Device"
         )

@@ -30,12 +30,12 @@ var WCUL10n = require("devtools/client/webconsole/webconsole-l10n");
 const DOCS_GA_PARAMS = `?${new URLSearchParams({
   "utm_source": "mozilla",
   "utm_medium": "firefox-console-errors",
-  "utm_campaign": "default"
+  "utm_campaign": "default",
 })}`;
 const STATUS_CODES_GA_PARAMS = `?${new URLSearchParams({
   "utm_source": "mozilla",
   "utm_medium": "devtools-webconsole",
-  "utm_campaign": "default"
+  "utm_campaign": "default",
 })}`;
 
 const wcActions = require("devtools/client/webconsole/actions/index");
@@ -560,7 +560,7 @@ async function openDebugger(options = {}) {
     return {
       target,
       toolbox,
-      panel: toolbox.getCurrentPanel()
+      panel: toolbox.getCurrentPanel(),
     };
   }
 

@@ -17,17 +17,17 @@ module.exports = {
     "chrome-test": require("../lib/configs/chrome-test"),
     "mochitest-test": require("../lib/configs/mochitest-test"),
     "recommended": require("../lib/configs/recommended"),
-    "xpcshell-test": require("../lib/configs/xpcshell-test")
+    "xpcshell-test": require("../lib/configs/xpcshell-test"),
   },
   environments: {
     "browser-window": require("../lib/environments/browser-window.js"),
     "chrome-worker": require("../lib/environments/chrome-worker.js"),
     "frame-script": require("../lib/environments/frame-script.js"),
     "jsm": require("../lib/environments/jsm.js"),
-    "simpletest": require("../lib/environments/simpletest.js")
+    "simpletest": require("../lib/environments/simpletest.js"),
   },
   processors: {
-    ".xml": require("../lib/processors/xbl-bindings")
+    ".xml": require("../lib/processors/xbl-bindings"),
   },
   rules: {
     "avoid-Date-timing": require("../lib/rules/avoid-Date-timing"),
@@ -66,6 +66,6 @@ module.exports = {
     "use-ownerGlobal": require("../lib/rules/use-ownerGlobal"),
     "use-includes-instead-of-indexOf": require("../lib/rules/use-includes-instead-of-indexOf"),
     "use-services": require("../lib/rules/use-services"),
-    "var-only-at-top-level": require("../lib/rules/var-only-at-top-level")
-  }
+    "var-only-at-top-level": require("../lib/rules/var-only-at-top-level"),
+  },
 };

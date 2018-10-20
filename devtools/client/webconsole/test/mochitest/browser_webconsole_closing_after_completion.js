@@ -31,7 +31,7 @@ add_task(async function() {
   hud.jsterm.focus();
   EventUtils.synthesizeKey("i", {
     accelKey: true,
-    [Services.appinfo.OS == "Darwin" ? "altKey" : "shiftKey"]: true
+    [Services.appinfo.OS == "Darwin" ? "altKey" : "shiftKey"]: true,
   });
 
   await onToolboxDestroyed;

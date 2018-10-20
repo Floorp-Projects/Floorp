@@ -452,7 +452,7 @@ function add_connection_test(aHost, aExpectedResult,
       this.outputStream = this.transport.openOutputStream(0, 0, 0)
                             .QueryInterface(Ci.nsIAsyncOutputStream);
       return this.defer.promise;
-    }
+    },
   };
 
   /* Returns a promise to connect to host that resolves to the result of that
@@ -683,7 +683,7 @@ function startOCSPResponder(serverPort, identity, nssDBLocation,
                      "Should have 0 remaining expected response types");
       }
       httpServer.stop(callback);
-    }
+    },
   };
 }
 

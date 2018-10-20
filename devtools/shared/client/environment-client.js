@@ -35,7 +35,7 @@ EnvironmentClient.prototype = {
    * Fetches the bindings introduced by this lexical environment.
    */
   getBindings: DebuggerClient.requester({
-    type: "bindings"
+    type: "bindings",
   }),
 
   /**
@@ -45,8 +45,8 @@ EnvironmentClient.prototype = {
   assign: DebuggerClient.requester({
     type: "assign",
     name: arg(0),
-    value: arg(1)
-  })
+    value: arg(1),
+  }),
 };
 
 eventSource(EnvironmentClient.prototype);

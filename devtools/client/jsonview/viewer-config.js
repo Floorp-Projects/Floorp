@@ -55,9 +55,9 @@ require.config({
   },
   map: {
     "*": {
-      "Services": "ServicesMock"
-    }
-  }
+      "Services": "ServicesMock",
+    },
+  },
 });
 
 // Load the main panel module

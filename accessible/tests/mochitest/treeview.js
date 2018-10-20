@@ -13,7 +13,7 @@ function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView) {
     treeNode,
 
     eventSeq: [
-        new invokerChecker(EVENT_REORDER, treeNode)
+        new invokerChecker(EVENT_REORDER, treeNode),
     ],
 
     invoke() {
@@ -22,7 +22,7 @@ function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView) {
 
     getID() {
       return "Load XUL tree " + prettyName(treeID);
-    }
+    },
   });
   gXULTreeLoadContext.queue.onFinish = function() {
     SimpleTest.executeSoon(doTestFunc);
@@ -57,7 +57,7 @@ function nsTreeTreeView() {
     new treeItem("row1"),
     new treeItem("row2_", true, [new treeItem("row2.1_"), new treeItem("row2.2_")]),
     new treeItem("row3_", false, [new treeItem("row3.1_"), new treeItem("row3.2_")]),
-    new treeItem("row4")
+    new treeItem("row4"),
   ];
 }
 
@@ -177,7 +177,7 @@ nsTreeView.prototype =
       data: null,
       parentIndex: -1,
       level: 0,
-      index: -1
+      index: -1,
     };
 
     this.getInfoByIndexIntl(aRowIndex, info, this.mData, 0);
@@ -232,8 +232,8 @@ nsTreeView.prototype =
   mCyclerStates: [
     "cyclerState1",
     "cyclerState2",
-    "cyclerState3"
-  ]
+    "cyclerState3",
+  ],
 };
 
 function treeItem(aText, aOpen, aChildren) {
@@ -254,5 +254,5 @@ var gXULTreeLoadContext =
   doTestFunc: null,
   treeID: null,
   treeView: null,
-  queue: null
+  queue: null,
 };

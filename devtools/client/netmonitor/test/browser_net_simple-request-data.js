@@ -194,7 +194,7 @@ function test() {
         "httpVersion",
         "status",
         "statusText",
-        "headersSize"
+        "headersSize",
       ]);
 
       const requestItem = getSortedRequests(store.getState()).get(0);
@@ -222,7 +222,7 @@ function test() {
         SIMPLE_SJS,
         {
           status: "200",
-          statusText: "Och Aye"
+          statusText: "Och Aye",
         }
       );
     });
@@ -231,7 +231,7 @@ function test() {
       await waitForRequestData(store, [
         "transferredSize",
         "contentSize",
-        "mimeType"
+        "mimeType",
       ]);
 
       const requestItem = getSortedRequests(store.getState()).get(0);
@@ -275,7 +275,7 @@ function test() {
         "GET",
         SIMPLE_SJS,
         {
-          time: true
+          time: true,
         }
       );
     });
@@ -311,7 +311,7 @@ function test() {
         "GET",
         SIMPLE_SJS,
         {
-          time: true
+          time: true,
         }
       );
     });

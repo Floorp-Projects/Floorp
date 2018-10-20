@@ -43,7 +43,7 @@ function promiseGetAssertion(tab) {
       challenge: content.crypto.getRandomValues(new Uint8Array(16)),
       timeout: 5000, // the minimum timeout is actually 15 seconds
       rpId: content.document.domain,
-      allowCredentials: [newCredential]
+      allowCredentials: [newCredential],
     };
 
     return content.navigator.credentials.get({publicKey});
@@ -55,8 +55,8 @@ add_task(async function test_setup() {
     "set": [
       ["security.webauth.webauthn", true],
       ["security.webauth.webauthn_enable_softtoken", true],
-      ["security.webauth.webauthn_enable_usbtoken", false]
-    ]
+      ["security.webauth.webauthn_enable_usbtoken", false],
+    ],
   });
 });
 

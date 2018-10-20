@@ -18,15 +18,15 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 
 const ExpectedError = {
   message: "Single argument Cu.import exposes new globals to all modules",
-  type: "CallExpression"
+  type: "CallExpression",
 };
 
 ruleTester.run("no-single-arg-cu-import", rule, {
   valid: [
-    "Cu.import('fake', {});"
+    "Cu.import('fake', {});",
   ],
   invalid: [{
     code: "Cu.import('fake');",
-    errors: [ExpectedError]
-  }]
+    errors: [ExpectedError],
+  }],
 });

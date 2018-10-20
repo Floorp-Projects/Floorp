@@ -425,7 +425,7 @@ public:
   virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
     mozilla::layers::LayerManager* aLayerManager,
     const nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters,
+    const mozilla::Maybe<ContainerLayerParameters>& aParameters,
     const mozilla::DisplayItemClip* aClip) const = 0;
   /**
    * Ensure's aLayer is clipped to the display port.

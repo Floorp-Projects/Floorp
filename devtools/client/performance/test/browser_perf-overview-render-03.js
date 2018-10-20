@@ -15,7 +15,7 @@ const { waitUntil } = require("devtools/client/performance/test/helpers/wait-uti
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { PerformanceController, OverviewView } = panel.panelWin;

@@ -140,6 +140,13 @@ pref("devtools.performance.ui.experimental", true);
 pref("devtools.performance.ui.experimental", false);
 #endif
 
+// Preferences for the new performance panel
+// This pref configures the base URL for the perf.html instance to use. This is
+// useful so that a developer can change it while working on perf.html, or in
+// tests.
+// This isn't exposed directly to the user.
+pref("devtools.performance.recording.ui-base-url", "https://perf-html.io");
+
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
 

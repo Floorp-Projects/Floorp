@@ -43,7 +43,7 @@ function test_source_maps() {
     sources: ["/a"],
     names: [],
     mappings: "AACA",
-    sourcesContent: ["foo"]
+    sourcesContent: ["foo"],
   });
   Cu.evalInSandbox(code, gDebuggee, "1.8",
                    "http://example.com/foo.js", 1);

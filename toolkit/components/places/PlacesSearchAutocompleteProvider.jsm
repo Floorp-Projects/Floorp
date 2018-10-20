@@ -19,18 +19,24 @@ const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
 
 const SearchAutocompleteProviderInternal = {
   /**
-   * {Map} domain string => nsISearchEngine with that domain.  If more than one
-   * engine has the same domain, the last one passed to _addEngine will be the
-   * one in this map.
+   * {Map<string: nsISearchEngine>} Maps from each domain to the engine with
+   * that domain.  If more than one engine has the same domain, the last one
+   * passed to _addEngine will be the one in this map.
    */
   enginesByDomain: new Map(),
 
   /**
-   * {Map} lowercased alias string => nsISearchEngine with that alias.  If more
-   * than one engine has the same alias, the last one passed to _addEngine will
-   * be the one in this map.
+   * {Map<string: nsISearchEngine>} Maps from each lowercased alias to the
+   * engine with that alias.  If more than one engine has the same alias, the
+   * last one passed to _addEngine will be the one in this map.
    */
   enginesByAlias: new Map(),
+
+  /**
+   * {array<{ {nsISearchEngine} engine, {array<string>} tokenAliases }>} Array
+   * of engines that have "@" aliases.
+   */
+  tokenAliasEngines: [],
 
   initialize() {
     return new Promise((resolve, reject) => {
@@ -69,6 +75,7 @@ const SearchAutocompleteProviderInternal = {
   _refresh() {
     this.enginesByDomain.clear();
     this.enginesByAlias.clear();
+    this.tokenAliasEngines = [];
 
     // The search engines will always be processed in the order returned by the
     // search service, which can be defined by the user.
@@ -89,6 +96,11 @@ const SearchAutocompleteProviderInternal = {
     for (let alias of aliases) {
       this.enginesByAlias.set(alias.toLocaleLowerCase(), engine);
     }
+
+    let tokenAliases = aliases.filter(a => a.startsWith("@"));
+    if (tokenAliases.length) {
+      this.tokenAliasEngines.push({ engine, tokenAliases });
+    }
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
@@ -101,7 +113,7 @@ class SuggestionsFetch {
    *
    * @param {nsISearchEngine} engine
    *        The engine from which suggestions will be fetched.
-   * @param {string} searchToken
+   * @param {string} searchString
    *        The search query string.
    * @param {bool} inPrivateContext
    *        Pass true if the fetch is being done in a private window.
@@ -114,7 +126,7 @@ class SuggestionsFetch {
    *        The user context ID in which the fetch is being performed.
    */
   constructor(engine,
-              searchToken,
+              searchString,
               inPrivateContext,
               maxLocalResults,
               maxRemoteResults,
@@ -125,7 +137,7 @@ class SuggestionsFetch {
     this._engine = engine;
     this._suggestions = [];
     this._success = false;
-    this._promise = this._controller.fetch(searchToken, inPrivateContext, engine, userContextId).then(results => {
+    this._promise = this._controller.fetch(searchString, inPrivateContext, engine, userContextId).then(results => {
       this._success = true;
       if (results) {
         this._suggestions.push(
@@ -236,6 +248,18 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
   },
 
   /**
+   * Gets the list of engines with token ("@") aliases.
+   *
+   * @returns {array<{ {nsISearchEngine} engine, {array<string>} tokenAliases }>}
+   *          Array of objects { engine, tokenAliases } for token alias engines.
+   */
+  async tokenAliasEngines() {
+    await this.ensureInitialized();
+
+    return SearchAutocompleteProviderInternal.tokenAliasEngines.slice();
+  },
+
+  /**
    * Use this to get the current engine rather than Services.search.currentEngine
    * directly.  This method makes sure that the service is first initialized.
    *
@@ -284,7 +308,7 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    *
    * @param   {nsISearchEngine} engine
    *          The engine from which suggestions will be fetched.
-   * @param   {string} searchToken
+   * @param   {string} searchString
    *          The search query string.
    * @param   {bool} inPrivateContext
    *          Pass true if the fetch is being done in a private window.
@@ -299,7 +323,7 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    *          to track the fetch.
    */
   newSuggestionsFetch(engine,
-                      searchToken,
+                      searchString,
                       inPrivateContext,
                       maxLocalResults,
                       maxRemoteResults,
@@ -310,7 +334,7 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
     if (!engine) {
       throw new Error("`engine` is null");
     }
-    return new SuggestionsFetch(engine, searchToken, inPrivateContext,
+    return new SuggestionsFetch(engine, searchString, inPrivateContext,
                                 maxLocalResults, maxRemoteResults,
                                 userContextId);
   },

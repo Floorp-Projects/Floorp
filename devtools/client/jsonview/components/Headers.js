@@ -11,7 +11,7 @@ define(function(require, exports, module) {
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-  const { div, span, table, tbody, tr, td, } = dom;
+  const { div, span, table, tbody, tr, td } = dom;
 
   /**
    * This template is responsible for rendering basic layout
@@ -65,8 +65,8 @@ define(function(require, exports, module) {
       return {
         headers: PropTypes.arrayOf(PropTypes.shape({
           name: PropTypes.string,
-          value: PropTypes.string
-        }))
+          value: PropTypes.string,
+        })),
       };
     }
 
@@ -74,7 +74,7 @@ define(function(require, exports, module) {
       super(props);
 
       this.state = {
-        headers: []
+        headers: [],
       };
     }
 

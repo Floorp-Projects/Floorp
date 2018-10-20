@@ -116,7 +116,7 @@ function serverOwnershipSubtree(walker, node) {
   }
   return {
     name: actor.actorID,
-    children: sortOwnershipChildren(children)
+    children: sortOwnershipChildren(children),
   };
 }
 
@@ -128,7 +128,7 @@ function serverOwnershipTree(walker) {
     orphaned: [...serverWalker._orphaned]
               .map(o => serverOwnershipSubtree(serverWalker, o.rawNode)),
     retained: [...serverWalker._retainedOrphans]
-              .map(o => serverOwnershipSubtree(serverWalker, o.rawNode))
+              .map(o => serverOwnershipSubtree(serverWalker, o.rawNode)),
   };
 }
 
@@ -136,7 +136,7 @@ function clientOwnershipSubtree(node) {
   return {
     name: node.actorID,
     children: sortOwnershipChildren(node.treeChildren()
-              .map(child => clientOwnershipSubtree(child)))
+              .map(child => clientOwnershipSubtree(child))),
   };
 }
 
@@ -144,7 +144,7 @@ function clientOwnershipTree(walker) {
   return {
     root: clientOwnershipSubtree(walker.rootNode),
     orphaned: [...walker._orphaned].map(o => clientOwnershipSubtree(o)),
-    retained: [...walker._retainedOrphans].map(o => clientOwnershipSubtree(o))
+    retained: [...walker._retainedOrphans].map(o => clientOwnershipSubtree(o)),
   };
 }
 

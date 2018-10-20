@@ -41,7 +41,7 @@ describe("Filtering - Hidden messages", () => {
       [FILTERS.INFO]: 0,
       [FILTERS.DEBUG]: 0,
       [FILTERS.TEXT]: 10,
-      global: 11
+      global: 11,
     });
 
     // Numbers update if the text search is cleared.
@@ -62,7 +62,7 @@ describe("Filtering - Hidden messages", () => {
       [FILTERS.INFO]: 2,
       [FILTERS.DEBUG]: 2,
       [FILTERS.TEXT]: 0,
-      global: 22
+      global: 22,
     });
   });
 
@@ -72,7 +72,7 @@ describe("Filtering - Hidden messages", () => {
     let counter = getFilteredMessagesCount(store.getState());
     expect(counter).toEqual(Object.assign({}, BASIC_TEST_CASE_FILTERED_MESSAGE_COUNT, {
       [FILTERS.LOG]: 0,
-      global: 6
+      global: 6,
     }));
 
     store.dispatch(actions.filterToggle(FILTERS.ERROR));
@@ -81,7 +81,7 @@ describe("Filtering - Hidden messages", () => {
     expect(counter).toEqual(Object.assign({}, BASIC_TEST_CASE_FILTERED_MESSAGE_COUNT, {
       [FILTERS.ERROR]: 0,
       [FILTERS.LOG]: 0,
-      global: 3
+      global: 3,
     }));
 
     store.dispatch(actions.filterToggle(FILTERS.LOG));
@@ -165,7 +165,7 @@ const BASIC_TEST_CASE_FILTERED_MESSAGE_COUNT = {
   [FILTERS.INFO]: 1,
   [FILTERS.DEBUG]: 1,
   [FILTERS.TEXT]: 0,
-  global: 11
+  global: 11,
 };
 
 function prepareBaseStore() {

@@ -112,7 +112,7 @@ addEventListener("TalosPowers:ParentExec:QueryEvent", function(e) {
     // reply to content via an event
     let contentEvent = Cu.cloneInto({
       bubbles: true,
-      detail: reply.data.result
+      detail: reply.data.result,
     }, content);
     content.dispatchEvent(new content.CustomEvent(e.detail.listeningTo, contentEvent));
   });
@@ -120,6 +120,6 @@ addEventListener("TalosPowers:ParentExec:QueryEvent", function(e) {
   // Send the query to the parent process
   sendAsyncMessage("TalosPowers:ParentExec:QueryMsg", {
     command: e.detail.command,
-    id: uniqueMessageId
+    id: uniqueMessageId,
   });
 }, false, true); // wantsUntrusted since we're exposing to unprivileged

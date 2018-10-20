@@ -2018,25 +2018,30 @@ impl ClipBatcher {
             let gpu_address = gpu_cache.get_address(&clip_node.gpu_cache_handle);
 
             match clip_node.item {
-                ClipItem::Image(ref mask) => {
-                    if let Ok(cache_item) = resource_cache.get_cached_image(
-                        ImageRequest {
-                            key: mask.image,
-                            rendering: ImageRendering::Auto,
-                            tile: None,
+                ClipItem::Image(ref mask, is_valid) => {
+                    if is_valid {
+                        if let Ok(cache_item) = resource_cache.get_cached_image(
+                            ImageRequest {
+                                key: mask.image,
+                                rendering: ImageRendering::Auto,
+                                tile: None,
+                            }
+                        ) {
+                            self.images
+                                .entry(cache_item.texture_id)
+                                .or_insert(Vec::new())
+                                .push(ClipMaskInstance {
+                                    clip_data_address: gpu_address,
+                                    resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
+                                    ..instance
+                                });
+                        } else {
+                            warn!("Warnings: skip a image mask");
+                            debug!("Key:{:?} Rect::{:?}", mask.image, mask.rect);
+                            continue;
                         }
-                    ) {
-                        self.images
-                            .entry(cache_item.texture_id)
-                            .or_insert(Vec::new())
-                            .push(ClipMaskInstance {
-                                clip_data_address: gpu_address,
-                                resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
-                                ..instance
-                            });
                     } else {
-                        warn!("Warnings: skip a image mask");
-                        debug!("Key:{:?} Rect::{:?}", mask.image, mask.rect);
+                        warn!("Warnings: clip masks that are tiled blobs are not yet supported (#2852)");
                         continue;
                     }
                 }

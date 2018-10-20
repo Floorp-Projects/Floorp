@@ -1361,6 +1361,14 @@ pub extern "C" fn wr_transaction_scroll_layer(
 }
 
 #[no_mangle]
+pub extern "C" fn wr_transaction_pinch_zoom(
+    txn: &mut Transaction,
+    pinch_zoom: f32
+) {
+    txn.set_pinch_zoom(ZoomFactor::new(pinch_zoom));
+}
+
+#[no_mangle]
 pub extern "C" fn wr_resource_updates_add_image(
     txn: &mut Transaction,
     image_key: WrImageKey,

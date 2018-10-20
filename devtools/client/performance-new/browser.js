@@ -7,6 +7,8 @@ const Services = require("Services");
 const TRANSFER_EVENT = "devtools:perf-html-transfer-profile";
 const SYMBOL_TABLE_REQUEST_EVENT = "devtools:perf-html-request-symbol-table";
 const SYMBOL_TABLE_RESPONSE_EVENT = "devtools:perf-html-reply-symbol-table";
+const UI_BASE_URL_PREF = "devtools.performance.recording.ui-base-url";
+const UI_BASE_URL_DEFAULT = "https://perf-html.io";
 
 /**
  * This file contains all of the privileged browser-specific functionality. This helps
@@ -37,10 +39,11 @@ function receiveProfile(profile, getSymbolTableCallback) {
   const browser = win.gBrowser;
   Services.focus.activeWindow = win;
 
-  const tab = browser.addWebTab("https://perf-html.io/from-addon", {
+  const baseUrl = Services.prefs.getStringPref(UI_BASE_URL_PREF, UI_BASE_URL_DEFAULT);
+  const tab = browser.addWebTab(`${baseUrl}/from-addon`, {
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
       userContextId: browser.contentPrincipal.userContextId,
-    })
+    }),
   });
   browser.selectedTab = tab;
   const mm = tab.linkedBrowser.messageManager;
@@ -55,7 +58,7 @@ function receiveProfile(profile, getSymbolTableCallback) {
       const [addr, index, buffer] = result;
       mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
         status: "success",
-        debugName, breakpadId, result: [addr, index, buffer]
+        debugName, breakpadId, result: [addr, index, buffer],
       });
     }, error => {
       mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
@@ -171,12 +174,12 @@ async function setRecordingPreferences(preferenceFront, settings) {
     preferenceFront.setCharPref(
       `devtools.performance.recording.threads`,
       JSON.stringify(settings.threads)
-    )
+    ),
   ]);
 }
 
 module.exports = {
   receiveProfile,
   getRecordingPreferences,
-  setRecordingPreferences
+  setRecordingPreferences,
 };

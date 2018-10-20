@@ -54,7 +54,7 @@
           {"string": "cellInfoAbbr", "args": [2, 2]}, "col2",
           {"string": "tableAbbr"},
           {"string": "tblColumnInfoAbbr", "count": 2},
-          {"string": "tblRowInfoAbbr", "count": 2}]]
+          {"string": "tblRowInfoAbbr", "count": 2}]],
       }, {
         accOrElmOrID: "table2",
         expectedUtterance: [[
@@ -116,7 +116,7 @@
           {"string": "cellInfoAbbr", "args": [2, 2]},
           {"string": "tableAbbr"},
           {"string": "tblColumnInfoAbbr", "count": 2},
-          {"string": "tblRowInfoAbbr", "count": 2}]]
+          {"string": "tblRowInfoAbbr", "count": 2}]],
       }, {
         accOrElmOrID: "table3",
         expectedUtterance: [[
@@ -155,7 +155,7 @@
           {"string": "cellInfoAbbr", "args": [1, 2]}, "colheader",
           {"string": "tableAbbr"},
           {"string": "tblColumnInfoAbbr", "count": 1},
-          {"string": "tblRowInfoAbbr", "count": 2}]]
+          {"string": "tblRowInfoAbbr", "count": 2}]],
       }, {
         accOrElmOrID: "table4",
         expectedUtterance: [[
@@ -230,11 +230,11 @@
           {"string": "cellInfoAbbr", "args": [3, 3]}, "col3", "row2",
           {"string": "tableAbbr"},
           {"string": "tblColumnInfoAbbr", "count": 4},
-          {"string": "tblRowInfoAbbr", "count": 3}]]
+          {"string": "tblRowInfoAbbr", "count": 3}]],
       }, {
         accOrElmOrID: "table5",
         expectedUtterance: [["Row1", "Row2"], ["Row1", "Row2"]],
-        expectedBraille: [["Row1", "Row2"], ["Row1", "Row2"]]
+        expectedBraille: [["Row1", "Row2"], ["Row1", "Row2"]],
       }, {
         // Test pivot to table1_th1 from table1.
         accOrElmOrID: "table1_th1",
@@ -246,7 +246,7 @@
           {"string": "rowInfo", "args": [1]}]],
         expectedBraille: [[
           {"string": "cellInfoAbbr", "args": [1, 1]}, "col1"], ["col1",
-          {"string": "cellInfoAbbr", "args": [1, 1]}]]
+          {"string": "cellInfoAbbr", "args": [1, 1]}]],
       }, {
         // Test pivot to table1_td2 from table1.
         accOrElmOrID: "table1_td2",
@@ -258,7 +258,7 @@
           {"string": "rowInfo", "args": [2]}, "col2"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [2, 2]}, "col2", "cell2"],
-          ["cell2", {"string": "cellInfoAbbr", "args": [2, 2]}, "col2"]]
+          ["cell2", {"string": "cellInfoAbbr", "args": [2, 2]}, "col2"]],
       }, {
         // Test pivot to table1_td2 from table1_th1.
         accOrElmOrID: "table1_td2",
@@ -270,7 +270,7 @@
           {"string": "rowInfo", "args": [2]}, "col2"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [2, 2]}, "col2", "cell2"],
-          ["cell2", {"string": "cellInfoAbbr", "args": [2, 2]}, "col2"]]
+          ["cell2", {"string": "cellInfoAbbr", "args": [2, 2]}, "col2"]],
       }, {
         // Test pivot to table1_td2 from table1_td1.
         accOrElmOrID: "table1_td2",
@@ -280,7 +280,7 @@
           {"string": "columnInfo", "args": [2]}, "col2"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [2, 2]}, "col2", "cell2"],
-          ["cell2", {"string": "cellInfoAbbr", "args": [2, 2]}, "col2"]]
+          ["cell2", {"string": "cellInfoAbbr", "args": [2, 2]}, "col2"]],
       }, {
         // Test pivot to table2_cell_1 from table2.
         accOrElmOrID: "table2_cell_1",
@@ -292,7 +292,7 @@
           {"string": "rowInfo", "args": [1]}, "col1"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [1, 1]}, "col1", "cell1"],
-          ["cell1", {"string": "cellInfoAbbr", "args": [1, 1]}, "col1"]]
+          ["cell1", {"string": "cellInfoAbbr", "args": [1, 1]}, "col1"]],
       }, {
         // Test pivot to table2_cell_2 from table2.
         accOrElmOrID: "table2_cell_2",
@@ -329,7 +329,7 @@
           {"string": "tableAbbr"},
           {"string": "tblColumnInfoAbbr", "count": 1},
           {"string": "tblRowInfoAbbr", "count": 2},
-          {"string": "cellInfoAbbr", "args": [2, 1]}, "col2"]]
+          {"string": "cellInfoAbbr", "args": [2, 1]}, "col2"]],
       }, {
         // Test pivot to table2_cell_1 from table2_cell_2.
         accOrElmOrID: "table2_cell_1",
@@ -339,7 +339,7 @@
           {"string": "columnInfo", "args": [1]}, "col1"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [1, 1]}, "col1", "cell1"],
-          ["cell1", {"string": "cellInfoAbbr", "args": [1, 1]}, "col1"]]
+          ["cell1", {"string": "cellInfoAbbr", "args": [1, 1]}, "col1"]],
       }, {
         // Test pivot to table3_cell from table2.
         accOrElmOrID: "table3_cell",
@@ -361,7 +361,7 @@
           {"string": "rowInfo", "args": [1]}, "col2"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [1, 2]}, "colheader", "bla"],
-          ["bla", {"string": "cellInfoAbbr", "args": [1, 2]}, "colheader"]]
+          ["bla", {"string": "cellInfoAbbr", "args": [1, 2]}, "colheader"]],
       }, {
         // Test pivot to table3_cell from table2_cell_1.
         accOrElmOrID: "table3_cell",
@@ -382,7 +382,7 @@
           {"string": "rowInfo", "args": [1]}, "col2"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [1, 2]}, "colheader", "bla"],
-          ["bla", {"string": "cellInfoAbbr", "args": [1, 2]}, "colheader"]]
+          ["bla", {"string": "cellInfoAbbr", "args": [1, 2]}, "colheader"]],
       }, {
         // Test pivot to table3_cell from table3_ch.
         accOrElmOrID: "table3_cell",
@@ -392,7 +392,7 @@
           {"string": "rowInfo", "args": [2]}]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [1, 2]}, "bla"],
-          ["bla", {"string": "cellInfoAbbr", "args": [1, 2]}]]
+          ["bla", {"string": "cellInfoAbbr", "args": [1, 2]}]],
       }, {
         // Test pivot to table3_cell from table1_td1.
         accOrElmOrID: "table3_cell",
@@ -420,7 +420,7 @@
           {"string": "tblRowInfo", "count": 2}]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [1, 2]}, "colheader", "bla"],
-          ["bla", {"string": "cellInfoAbbr", "args": [1, 2]}, "colheader"]]
+          ["bla", {"string": "cellInfoAbbr", "args": [1, 2]}, "colheader"]],
       }, {
         // Test pivot to table4_ch_3 from table4.
         accOrElmOrID: "table4_ch_3",
@@ -432,7 +432,7 @@
           {"string": "rowInfo", "args": [1]}]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [3, 1]}, "col3"],
-          ["col3", {"string": "cellInfoAbbr", "args": [3, 1]}]]
+          ["col3", {"string": "cellInfoAbbr", "args": [3, 1]}]],
       }, {
         // Test pivot to table4_rh_1 from table4_ch_3.
         accOrElmOrID: "table4_rh_1",
@@ -446,7 +446,7 @@
           {"string": "spansColumns", "args": [2]}, "col1"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [1, 2]}, "col1", "row1"],
-          ["row1", {"string": "cellInfoAbbr", "args": [1, 2]}, "col1"]]
+          ["row1", {"string": "cellInfoAbbr", "args": [1, 2]}, "col1"]],
       }, {
         // Test pivot to table4_cell_3 from table4_rh_1.
         accOrElmOrID: "table4_cell_3",
@@ -458,7 +458,7 @@
           {"string": "spansRows", "args": [2]}]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [4, 2]}, "cell2"],
-          ["cell2", {"string": "cellInfoAbbr", "args": [4, 2]}]]
+          ["cell2", {"string": "cellInfoAbbr", "args": [4, 2]}]],
       }, {
         // Test pivot to table4_cell_5 from table4_cell_3.
         accOrElmOrID: "table4_cell_5",
@@ -471,7 +471,7 @@
           {"string": "rowInfo", "args": [3]}, "col2", "row2"]],
         expectedBraille: [
           [{"string": "cellInfoAbbr", "args": [2, 3]}, "col2", "row2", "cell3"],
-          ["cell3", {"string": "cellInfoAbbr", "args": [2, 3]}, "col2", "row2"]]
+          ["cell3", {"string": "cellInfoAbbr", "args": [2, 3]}, "col2", "row2"]],
       }];
 
       // Test outputs (utterance and braille) for tables including their
@@ -479,7 +479,7 @@
       function testOutputOrder(aOutputOrder) {
         return function() {
           SpecialPowers.pushPrefEnv({
-            "set": [[PREF_UTTERANCE_ORDER, aOutputOrder]]
+            "set": [[PREF_UTTERANCE_ORDER, aOutputOrder]],
           }, function() {
             tests.forEach(function run(test) {
               testOutput(test.expectedUtterance[aOutputOrder], test.accOrElmOrID,

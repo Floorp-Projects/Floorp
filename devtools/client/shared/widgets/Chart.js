@@ -23,7 +23,7 @@ const L10N = new LocalizationHelper(NET_STRINGS_URI);
 var Chart = {
   Pie: createPieChart,
   Table: createTableChart,
-  PieTable: createPieTableChart
+  PieTable: createPieTableChart,
 };
 
 /**
@@ -101,7 +101,7 @@ function createPieTableChart(document,
 
   const pie = Chart.Pie(document, {
     width: diameter,
-    data: data
+    data: data,
   });
 
   const table = Chart.Table(document, {

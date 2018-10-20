@@ -52,7 +52,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.menuNode),
         new invokerChecker(EVENT_REORDER, getNode(aParentMenuID)),
-        new invokerChecker(EVENT_MENUPOPUP_START, this.menuNode)
+        new invokerChecker(EVENT_MENUPOPUP_START, this.menuNode),
       ];
 
       this.invoke = function showMenu_invoke() {
@@ -76,7 +76,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getMenu, this),
         new invokerChecker(EVENT_MENUPOPUP_END, getMenu, this),
-        new invokerChecker(EVENT_REORDER, getNode(aParentMenuID))
+        new invokerChecker(EVENT_REORDER, getNode(aParentMenuID)),
       ];
 
       this.invoke = function closeMenu_invoke() {
@@ -103,11 +103,11 @@
 
     function focusInsideMenu(aMenuID, aMenuBarID) {
       this.eventSeq = [
-        new invokerChecker(EVENT_FOCUS, getNode(aMenuID))
+        new invokerChecker(EVENT_FOCUS, getNode(aMenuID)),
       ];
 
       this.unexpectedEventSeq = [
-        new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID))
+        new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID)),
       ];
 
       this.invoke = function focusInsideMenu_invoke() {
@@ -122,7 +122,7 @@
     function blurMenu(aMenuBarID) {
       var eventSeq = [
         new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID)),
-        new invokerChecker(EVENT_FOCUS, getNode("outsidemenu"))
+        new invokerChecker(EVENT_FOCUS, getNode("outsidemenu")),
       ];
 
       this.__proto__ = new synthClick("outsidemenu", eventSeq);

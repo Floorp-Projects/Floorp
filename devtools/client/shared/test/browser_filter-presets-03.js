@@ -27,7 +27,7 @@ add_task(async function() {
   const removeButton = widget.el.querySelector(".preset .remove-button");
   const onRender = widget.once("render");
   widget._presetClick({
-    target: removeButton
+    target: removeButton,
   });
 
   await onRender;

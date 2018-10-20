@@ -243,8 +243,8 @@ const imageToImageData = async function(node, maxDim) {
     size: {
       naturalWidth: imgWidth,
       naturalHeight: imgHeight,
-      resized: resizeRatio !== 1
-    }
+      resized: resizeRatio !== 1,
+    },
   };
 };
 

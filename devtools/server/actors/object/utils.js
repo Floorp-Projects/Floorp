@@ -100,7 +100,7 @@ function createValueGrip(value, pool, makeObjectGrip) {
           type: "null",
           optimizedOut: value.optimizedOut,
           uninitialized: value.uninitialized,
-          missingArguments: value.missingArguments
+          missingArguments: value.missingArguments,
         };
       }
       return makeObjectGrip(value, pool);

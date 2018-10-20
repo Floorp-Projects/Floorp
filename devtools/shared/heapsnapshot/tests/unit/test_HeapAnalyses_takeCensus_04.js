@@ -56,15 +56,15 @@ add_task(async function test() {
           then: {
             by: "count",
             bytes: true,
-            count: true
+            count: true,
           },
           noStack: {
             by: "count",
             bytes: true,
-            count: true
-          }
-        }
-      }
+            count: true,
+          },
+        },
+      },
     });
 
   // Test the generated report.

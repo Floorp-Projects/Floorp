@@ -29,13 +29,13 @@ const symbolIteratorSpec = generateActorSpec({
         start: Option(0, "number"),
         count: Option(0, "number"),
       },
-      response: RetVal("symboliterator.data")
+      response: RetVal("symboliterator.data"),
     },
     all: {
       request: {},
-      response: RetVal("symboliterator.data")
+      response: RetVal("symboliterator.data"),
     },
-  }
+  },
 });
 
 exports.symbolIteratorSpec = symbolIteratorSpec;

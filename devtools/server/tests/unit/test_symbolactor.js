@@ -21,8 +21,8 @@ function makeMockSymbolActor() {
   actor.actorID = "symbol1";
   actor.registeredPool = {
     symbolActors: {
-      [symbol]: actor
-    }
+      [symbol]: actor,
+    },
   };
   return actor;
 }

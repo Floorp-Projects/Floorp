@@ -40,7 +40,7 @@ exports.debugLocalAddon = async function(addonID) {
     addonID,
     onClose: () => {
       browserToolboxProcess = null;
-    }
+    },
   });
 };
 

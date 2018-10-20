@@ -52,7 +52,7 @@ function convertsOffsetsToCoordinates() {
 
   let coordinates = b.offsetsToCoordinates({style: {
     left: "0px",
-    top: "0px"
+    top: "0px",
   }});
   Assert.equal(coordinates.length, 2);
   Assert.equal(coordinates[0], 0);
@@ -60,14 +60,14 @@ function convertsOffsetsToCoordinates() {
 
   coordinates = b.offsetsToCoordinates({style: {
     left: "0px",
-    top: "300px"
+    top: "300px",
   }});
   Assert.equal(coordinates[0], 0);
   Assert.equal(coordinates[1], 0);
 
   coordinates = b.offsetsToCoordinates({style: {
     left: "200px",
-    top: "100px"
+    top: "100px",
   }});
   Assert.equal(coordinates[0], 1);
   Assert.equal(coordinates[1], 1);
@@ -107,10 +107,10 @@ function getCanvasMock(w = 200, h = 400) {
         bezierCurveTo: () => {},
         save: () => {},
         restore: () => {},
-        setTransform: () => {}
+        setTransform: () => {},
       };
     },
     width: w,
-    height: h
+    height: h,
   };
 }

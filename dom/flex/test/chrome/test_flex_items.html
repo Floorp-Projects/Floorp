@@ -15,6 +15,13 @@
     /* This just needs to be large enough so that no shrinking is required. */
     width: 1600px;
   }
+  .clamped-huge-item {
+    flex: 1 1 1650px; /* This needs to be bigger than #flex-sanity, to test
+                         the scenario it's aiming to test (early clamping of a
+                         flex item which, if left unclamped, would've reversed
+                         the direction of flexing & made everything shrink). */
+    max-width: 10px;
+  }
 
   .base        { align-self: baseline; }
   .lastbase    { align-self: last baseline; }
@@ -144,6 +151,9 @@ function testFlexSanity() {
       mainDeltaSize: 0 },
     { mainBaseSize: 50,
       mainMaxSize: 10 },
+    { mainBaseSize: 1650,
+      mainMaxSize: 10,
+      mainDeltaSize: 0 },
     { mainDeltaSize: 0 },
     { /* final item is anonymous flex item */ },
   ];
@@ -241,6 +251,7 @@ function runTests() {
     <!-- Item that wants to grow but is trivially clamped to max-width
          below base size: -->
     <div style="flex: 1 1 50px; max-width: 10px"></div>
+    <div class="clamped-huge-item"></div>
     <div style="display:contents">
       <div class="white">replaced</div>
     </div>

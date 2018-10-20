@@ -15,7 +15,7 @@ class PanelMenuEntry extends Component {
       id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
       selected: PropTypes.bool,
-      selectPanel: PropTypes.func.isRequired
+      selectPanel: PropTypes.func.isRequired,
     };
   }
 

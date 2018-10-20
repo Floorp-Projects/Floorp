@@ -46,7 +46,7 @@ add_task(async function() {
     CONTENT_TYPE_SJS + "?fmt=html-long",
     {
       status: 200,
-      statusText: "OK"
+      statusText: "OK",
     });
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");

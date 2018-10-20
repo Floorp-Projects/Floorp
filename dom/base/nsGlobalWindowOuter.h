@@ -91,7 +91,6 @@ struct IdleObserverHolder;
 namespace mozilla {
 class AbstractThread;
 class DOMEventTargetHelper;
-class ThrottledEventQueue;
 namespace dom {
 class BarProp;
 struct ChannelPixelLayout;

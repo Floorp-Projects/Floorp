@@ -25,7 +25,7 @@ function run_test() {
     objects: { by: "objectClass" },
     scripts: { by: "internalType" },
     strings: { by: "internalType" },
-    other: { by: "internalType" }
+    other: { by: "internalType" },
   };
 
   threw = false;

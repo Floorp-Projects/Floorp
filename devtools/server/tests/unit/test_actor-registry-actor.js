@@ -31,7 +31,7 @@ function registerNewActor() {
   const options = {
     prefix: "helloActor",
     constructor: "HelloActor",
-    type: { global: true }
+    type: { global: true },
   };
 
   gRegistryFront
@@ -49,7 +49,7 @@ function talkToNewActor() {
     Assert.ok(!!helloActor);
     gClient.request({
       to: helloActor,
-      type: "hello"
+      type: "hello",
     }, response => {
       Assert.ok(!response.error);
       unregisterNewActor();

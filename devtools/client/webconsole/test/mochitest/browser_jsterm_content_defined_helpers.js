@@ -55,7 +55,8 @@ async function performTests() {
     is(autocompleteItems.length, 1,
       `There's no duplicated "${helper}" item in the autocomplete popup`);
     const msg = await jsterm.execute(`${helper}()`);
-    ok(msg.textContent.includes(PREFIX + helper), `output is correct for ${helper}()`);
+    is(msg.textContent.trim(), `"${PREFIX + helper}"`,
+      `output is correct for ${helper}()`);
   }
 }
 

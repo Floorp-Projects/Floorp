@@ -121,7 +121,7 @@ async function getSizing(rdmUI) {
   const sizing = await ContentTask.spawn(browser, {}, async function() {
     return {
       width: content.innerWidth,
-      height: content.innerHeight
+      height: content.innerHeight,
     };
   });
   return sizing;

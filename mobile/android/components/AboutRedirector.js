@@ -9,7 +9,7 @@ var modules = {
   fennec: {
     uri: "chrome://browser/content/about.xhtml",
     privileged: true,
-    hide: true
+    hide: true,
   },
 
   // about:firefox is an alias for about:fennec, but not hidden from about:about
@@ -21,56 +21,56 @@ var modules = {
   empty: {
     uri: "about:blank",
     privileged: false,
-    hide: true
+    hide: true,
   },
 
   rights: {
     uri: "chrome://browser/content/aboutRights.xhtml",
-    privileged: false
+    privileged: false,
   },
   blocked: {
     uri: "chrome://browser/content/blockedSite.xhtml",
     privileged: false,
-    hide: true
+    hide: true,
   },
   certerror: {
     uri: "chrome://browser/content/aboutCertError.xhtml",
     privileged: false,
-    hide: true
+    hide: true,
   },
   home: {
     uri: "chrome://browser/content/aboutHome.xhtml",
-    privileged: false
+    privileged: false,
   },
   downloads: {
     uri: "chrome://browser/content/aboutDownloads.xhtml",
-    privileged: true
+    privileged: true,
   },
   reader: {
     uri: "chrome://global/content/reader/aboutReader.html",
     privileged: false,
-    hide: true
+    hide: true,
   },
   feedback: {
     uri: "chrome://browser/content/aboutFeedback.xhtml",
-    privileged: true
+    privileged: true,
   },
   privatebrowsing: {
     uri: "chrome://browser/content/aboutPrivateBrowsing.xhtml",
-    privileged: true
+    privileged: true,
   },
   logins: {
     uri: "chrome://browser/content/aboutLogins.xhtml",
-    privileged: true
+    privileged: true,
   },
   accounts: {
     uri: "chrome://browser/content/aboutAccounts.xhtml",
-    privileged: true
+    privileged: true,
   },
   experiments: {
     uri: "chrome://browser/content/aboutExperiments.xhtml",
     privileged: true,
-    hide: true
+    hide: true,
   },
 };
 
@@ -111,7 +111,7 @@ AboutRedirector.prototype = {
     channel.originalURI = aURI;
 
     return channel;
-  }
+  },
 };
 
 const components = [AboutRedirector];

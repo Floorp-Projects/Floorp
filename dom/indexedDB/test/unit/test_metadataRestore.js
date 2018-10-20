@@ -59,7 +59,7 @@ function* testSteps()
 
     // This one lives in storage/default/http+++localhost+90
     { url: "http://localhost:90", dbName: "dbL",
-      dbOptions: { version: 1, storage: "default" } }
+      dbOptions: { version: 1, storage: "default" } },
   ];
 
   function openDatabase(params) {

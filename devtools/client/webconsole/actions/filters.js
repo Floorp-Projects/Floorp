@@ -21,7 +21,7 @@ const {
 function filterTextSet(text) {
   return {
     type: FILTER_TEXT_SET,
-    text
+    text,
   };
 }
 

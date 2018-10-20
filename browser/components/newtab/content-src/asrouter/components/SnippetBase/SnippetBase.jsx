@@ -30,7 +30,7 @@ export class SnippetBase extends React.PureComponent {
     }
 
     return (
-      <button className="blockButton" title={this.props.content.block_button_text} onClick={this.onBlockClicked} />
+      <button className="blockButton" title={this.props.content.block_button_text || "Remove this"} onClick={this.onBlockClicked} />
     );
   }
 
@@ -39,7 +39,7 @@ export class SnippetBase extends React.PureComponent {
 
     const containerClassName = `SnippetBaseContainer${props.className ? ` ${props.className}` : ""}`;
 
-    return (<div className={containerClassName}>
+    return (<div className={containerClassName} style={this.props.textStyle}>
       <div className="innerWrapper">
         {props.children}
       </div>

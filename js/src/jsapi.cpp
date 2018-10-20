@@ -778,7 +778,9 @@ ReleaseAssertObjectHasNoWrappers(JSContext* cx, HandleObject target)
 }
 
 /*
- * Brain transplants. Not for beginners or the squeamish.
+ * [SMDOC] Brain transplants.
+ *
+ * Not for beginners or the squeamish.
  *
  * Sometimes a web spec requires us to transplant an object from one
  * compartment to another, like when a DOM node is inserted into a document in

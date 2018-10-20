@@ -65,37 +65,37 @@ function testToString(angle, deg, rad, grad, turn) {
 function getAngleValidityData() {
   return [{
     angle: "0.2turn",
-    result: true
+    result: true,
   }, {
     angle: "-0.2turn",
-    result: true
+    result: true,
   }, {
     angle: "-.2turn",
-    result: true
+    result: true,
   }, {
     angle: "1e02turn",
-    result: true
+    result: true,
   }, {
     angle: "-2e2turn",
-    result: true
+    result: true,
   }, {
     angle: ".2turn",
-    result: true
+    result: true,
   }, {
     angle: "0.2aaturn",
-    result: false
+    result: false,
   }, {
     angle: "2dega",
-    result: false
+    result: false,
   }, {
     angle: "0.deg",
-    result: false
+    result: false,
   }, {
     angle: ".deg",
-    result: false
+    result: false,
   }, {
     angle: "..2turn",
-    result: false
+    result: false,
   }];
 }
 
@@ -105,72 +105,72 @@ function getTestData() {
     deg: "0deg",
     rad: "0rad",
     grad: "0grad",
-    turn: "0turn"
+    turn: "0turn",
   }, {
     authored: "180deg",
     deg: "180deg",
     rad: `${Math.round(Math.PI * 10000) / 10000}rad`,
     grad: "200grad",
-    turn: "0.5turn"
+    turn: "0.5turn",
   }, {
     authored: "180DEG",
     deg: "180DEG",
     rad: `${Math.round(Math.PI * 10000) / 10000}RAD`,
     grad: "200GRAD",
-    turn: "0.5TURN"
+    turn: "0.5TURN",
   }, {
     authored: `-${Math.PI}rad`,
     deg: "-180deg",
     rad: `-${Math.PI}rad`,
     grad: "-200grad",
-    turn: "-0.5turn"
+    turn: "-0.5turn",
   }, {
     authored: `-${Math.PI}RAD`,
     deg: "-180DEG",
     rad: `-${Math.PI}RAD`,
     grad: "-200GRAD",
-    turn: "-0.5TURN"
+    turn: "-0.5TURN",
   }, {
     authored: "100grad",
     deg: "90deg",
     rad: `${Math.round(Math.PI / 2 * 10000) / 10000}rad`,
     grad: "100grad",
-    turn: "0.25turn"
+    turn: "0.25turn",
   }, {
     authored: "100GRAD",
     deg: "90DEG",
     rad: `${Math.round(Math.PI / 2 * 10000) / 10000}RAD`,
     grad: "100GRAD",
-    turn: "0.25TURN"
+    turn: "0.25TURN",
   }, {
     authored: "-1turn",
     deg: "-360deg",
     rad: `${-1 * Math.round(Math.PI * 2 * 10000) / 10000}rad`,
     grad: "-400grad",
-    turn: "-1turn"
+    turn: "-1turn",
   }, {
     authored: "-10TURN",
     deg: "-3600DEG",
     rad: `${-1 * Math.round(Math.PI * 2 * 10 * 10000) / 10000}RAD`,
     grad: "-4000GRAD",
-    turn: "-10TURN"
+    turn: "-10TURN",
   }, {
     authored: "inherit",
     deg: "inherit",
     rad: "inherit",
     grad: "inherit",
-    turn: "inherit"
+    turn: "inherit",
   }, {
     authored: "initial",
     deg: "initial",
     rad: "initial",
     grad: "initial",
-    turn: "initial"
+    turn: "initial",
   }, {
     authored: "unset",
     deg: "unset",
     rad: "unset",
     grad: "unset",
-    turn: "unset"
+    turn: "unset",
   }];
 }

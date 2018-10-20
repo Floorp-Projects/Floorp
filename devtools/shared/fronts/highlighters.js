@@ -6,7 +6,7 @@
 const { FrontClassWithSpec, custom } = require("devtools/shared/protocol");
 const {
   customHighlighterSpec,
-  highlighterSpec
+  highlighterSpec,
 } = require("devtools/shared/specs/highlighters");
 
 const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
@@ -23,7 +23,7 @@ const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
     }
     return this._pick();
   }, {
-    impl: "_pick"
+    impl: "_pick",
   }),
 });
 
@@ -36,19 +36,19 @@ const CustomHighlighterFront = FrontClassWithSpec(customHighlighterSpec, {
     this._isShown = true;
     return this._show(...args);
   }, {
-    impl: "_show"
+    impl: "_show",
   }),
 
   hide: custom(function() {
     this._isShown = false;
     return this._hide();
   }, {
-    impl: "_hide"
+    impl: "_hide",
   }),
 
   isShown: function() {
     return this._isShown;
-  }
+  },
 });
 
 exports.CustomHighlighterFront = CustomHighlighterFront;

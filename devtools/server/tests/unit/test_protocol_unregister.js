@@ -5,7 +5,7 @@ const {types} = require("devtools/shared/protocol");
 function run_test() {
   types.addType("test", {
     read: (v) => "successful read: " + v,
-    write: (v) => "successful write: " + v
+    write: (v) => "successful write: " + v,
   });
 
   // Verify the type registered correctly.

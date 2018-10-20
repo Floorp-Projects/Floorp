@@ -119,7 +119,7 @@ Parser.prototype = {
   },
 
   _cache: null,
-  errors: null
+  errors: null,
 };
 
 /**
@@ -240,7 +240,7 @@ SyntaxTreesPool.prototype = {
   },
 
   _trees: null,
-  _cache: null
+  _cache: null,
 };
 
 /**
@@ -289,7 +289,7 @@ SyntaxTree.prototype = {
           info = {
             name: node.name,
             location: ParserHelpers.getNodeLocation(node),
-            evalString: ParserHelpers.getIdentifierEvalString(node)
+            evalString: ParserHelpers.getIdentifierEvalString(node),
           };
 
           // Abruptly halt walking the syntax tree.
@@ -313,7 +313,7 @@ SyntaxTree.prototype = {
        */
       onThisExpression(node) {
         this.onIdentifier(node);
-      }
+      },
     });
 
     return info;
@@ -348,7 +348,7 @@ SyntaxTree.prototype = {
         if (includesToken(functionName)) {
           store.push({
             functionName: functionName,
-            functionLocation: ParserHelpers.getNodeLocation(node)
+            functionLocation: ParserHelpers.getNodeLocation(node),
           });
         }
       },
@@ -379,7 +379,7 @@ SyntaxTree.prototype = {
             functionLocation: functionLocation,
             inferredName: inferredName,
             inferredChain: inferredChain,
-            inferredLocation: inferredLocation
+            inferredLocation: inferredLocation,
           });
         }
       },
@@ -404,10 +404,10 @@ SyntaxTree.prototype = {
           store.push({
             inferredName: inferredName,
             inferredChain: inferredChain,
-            inferredLocation: inferredLocation
+            inferredLocation: inferredLocation,
           });
         }
-      }
+      },
     });
 
     return store;
@@ -416,7 +416,7 @@ SyntaxTree.prototype = {
   AST: null,
   url: "",
   length: 0,
-  offset: 0
+  offset: 0,
 };
 
 /**
@@ -541,7 +541,7 @@ var ParserHelpers = {
       return {
         name: parent.id.name,
         chain: null,
-        loc: this.getNodeLocation(parent.id)
+        loc: this.getNodeLocation(parent.id),
       };
     }
 
@@ -554,7 +554,7 @@ var ParserHelpers = {
       return {
         name: propertyLeaf,
         chain: propertyChain,
-        loc: this.getNodeLocation(parent.left)
+        loc: this.getNodeLocation(parent.left),
       };
     }
 
@@ -568,7 +568,7 @@ var ParserHelpers = {
       return {
         name: propertyLeaf,
         chain: propertyChain,
-        loc: this.getNodeLocation(propertyKey)
+        loc: this.getNodeLocation(propertyKey),
       };
     }
 
@@ -576,7 +576,7 @@ var ParserHelpers = {
     return {
       name: "",
       chain: null,
-      loc: null
+      loc: null,
     };
   },
 
@@ -731,7 +731,7 @@ var ParserHelpers = {
       default:
         return "";
     }
-  }
+  },
 };
 
 /**
@@ -776,7 +776,7 @@ var SyntaxTreeVisitor = {
         if (predicate(e)) {
           store.push(e);
         }
-      }
+      },
     });
     return store;
   },
@@ -2438,7 +2438,7 @@ var SyntaxTreeVisitor = {
         this[element.type](element, node, callbacks);
       }
     }
-  }
+  },
 };
 
 XPCOMUtils.defineLazyGetter(Parser, "reflectionAPI", () => Reflect);

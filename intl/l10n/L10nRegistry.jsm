@@ -251,8 +251,8 @@ const MSG_CONTEXT_OPTIONS = {
         default:
           return "other";
       }
-    }
-  }
+    },
+  },
 };
 
 /**

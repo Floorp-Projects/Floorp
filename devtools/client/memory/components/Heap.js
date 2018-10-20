@@ -229,7 +229,7 @@ class Heap extends Component {
     return dom.div(
       {
         id: "heap-view",
-        "data-state": state
+        "data-state": state,
       },
       dom.div(
         {
@@ -260,7 +260,7 @@ class Heap extends Component {
 
     return this._renderHeapView(state, dom.span(
       {
-        className: `snapshot-status ${throbber}`
+        className: `snapshot-status ${throbber}`,
       },
       statusText
     ));
@@ -326,22 +326,22 @@ class Heap extends Component {
       {
         className: "vbox",
         style: {
-          overflowY: "auto"
-        }
+          overflowY: "auto",
+        },
       },
       IndividualsHeader(),
       Individuals({
         individuals,
         dominatorTree,
         onViewSourceInDebugger,
-        onFocus: this.props.onFocusIndividual
+        onFocus: this.props.onFocusIndividual,
       })
     );
 
     const shortestPaths = ShortestPaths({
       graph: individuals.focused
         ? individuals.focused.shortestPaths
-        : null
+        : null,
     });
 
     return this._renderHeapView(
@@ -376,8 +376,8 @@ class Heap extends Component {
       {
         className: "vbox",
         style: {
-          overflowY: "auto"
-        }
+          overflowY: "auto",
+        },
       },
       DominatorTreeHeader(),
       DominatorTree({
@@ -393,7 +393,7 @@ class Heap extends Component {
     const shortestPaths = ShortestPaths({
       graph: dominatorTree.focused
         ? dominatorTree.focused.shortestPaths
-        : null
+        : null,
     });
 
     return this._renderHeapView(

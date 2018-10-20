@@ -33,12 +33,12 @@ class TemporaryExtensionInstaller extends PureComponent {
   render() {
     return Localized(
       {
-        id: "about-debugging-tmp-extension-install-button"
+        id: "about-debugging-tmp-extension-install-button",
       },
       dom.button(
         {
           className: "aboutdebugging-button js-temporary-extension-install-button",
-          onClick: e => this.install()
+          onClick: e => this.install(),
         },
         "Load Temporary Add-on…"
       )

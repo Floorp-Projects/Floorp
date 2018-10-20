@@ -20,7 +20,7 @@ const changeRecordingState = exports.changeRecordingState =
   (state, options = { didRecordingUnexpectedlyStopped: false }) => ({
     type: "CHANGE_RECORDING_STATE",
     state,
-    didRecordingUnexpectedlyStopped: options.didRecordingUnexpectedlyStopped
+    didRecordingUnexpectedlyStopped: options.didRecordingUnexpectedlyStopped,
   });
 
 /**
@@ -60,7 +60,7 @@ function _dispatchAndUpdatePreferences(action) {
  */
 exports.changeInterval = interval => _dispatchAndUpdatePreferences({
   type: "CHANGE_INTERVAL",
-  interval
+  interval,
 });
 
 /**
@@ -69,7 +69,7 @@ exports.changeInterval = interval => _dispatchAndUpdatePreferences({
  */
 exports.changeEntries = entries => _dispatchAndUpdatePreferences({
   type: "CHANGE_ENTRIES",
-  entries
+  entries,
 });
 
 /**
@@ -78,7 +78,7 @@ exports.changeEntries = entries => _dispatchAndUpdatePreferences({
  */
 exports.changeFeatures = features => _dispatchAndUpdatePreferences({
   type: "CHANGE_FEATURES",
-  features
+  features,
 });
 
 /**
@@ -87,7 +87,7 @@ exports.changeFeatures = features => _dispatchAndUpdatePreferences({
  */
 exports.changeThreads = threads => _dispatchAndUpdatePreferences({
   type: "CHANGE_THREADS",
-  threads
+  threads,
 });
 
 /**
@@ -97,7 +97,7 @@ exports.changeThreads = threads => _dispatchAndUpdatePreferences({
  */
 exports.initializeStore = values => ({
   type: "INITIALIZE_STORE",
-  ...values
+  ...values,
 });
 
 /**
@@ -176,7 +176,7 @@ exports.getProfileAndStopProfiler = () => {
       return [
         new Uint32Array(addresses),
         new Uint32Array(index),
-        new Uint8Array(buffer)
+        new Uint8Array(buffer),
       ];
     }
 

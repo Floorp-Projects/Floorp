@@ -133,7 +133,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     consoleActor.setPreferences({
       preferences: {
         "NetworkMonitor.throttleData": throttleData,
-      }
+      },
     });
     return true;
   },

@@ -112,7 +112,7 @@ add_task(async function() {
   testAutocompleteContents([
     "mime-type:text/css",
     "mime-type:text/html",
-    "mime-type:text/plain"
+    "mime-type:text/plain",
   ], document);
 
   // The negative filter flags

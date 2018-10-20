@@ -41,7 +41,7 @@ async function performTests() {
   if (windowOiNodes.length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
     await waitForNodeMutation(windowOi, {
-      childList: true
+      childList: true,
     });
     windowOiNodes = windowOi.querySelectorAll(".node");
   }

@@ -28,7 +28,7 @@ const tests = [{
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }],
     sidebar: {
       name: "Accessibility Panel Test",
@@ -39,24 +39,24 @@ const tests = [{
       keyboardShortcut: "",
       childCount: 2,
       indexInParent: 0,
-      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"],
+    },
+  },
 }, {
   desc: "Expand first tree node.",
   action: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "paragraph",
-      name: `""`
-    } ]
-  }
+      name: `""`,
+    } ],
+  },
 }, {
   desc: "Select second tree node.",
   action: async ({ doc }) => selectRow(doc, 1),
@@ -73,12 +73,12 @@ const tests = [{
       relations: {
         "containing document": {
           role: "document",
-          name: "Accessibility Panel Test"
-        }
+          name: "Accessibility Panel Test",
+        },
       },
-      states: ["selectable text", "opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["selectable text", "opaque", "enabled", "sensitive"],
+    },
+  },
 }, {
   desc: "Select containing document.",
   action: async ({ doc, win }) => {
@@ -99,9 +99,9 @@ const tests = [{
       keyboardShortcut: "",
       childCount: 2,
       indexInParent: 0,
-      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"],
+    },
+  },
 }];
 
 /**

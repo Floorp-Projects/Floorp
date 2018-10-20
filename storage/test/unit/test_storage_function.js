@@ -24,7 +24,7 @@ var testSquareFunction = {
   onFunctionCall(val) {
     ++this.calls;
     return val.getInt32(0) * val.getInt32(0);
-  }
+  },
 };
 
 function test_function_registration() {

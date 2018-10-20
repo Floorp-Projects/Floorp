@@ -19,7 +19,7 @@ function startupWebAudioEditor() {
     ContextView.initialize(),
     InspectorView.initialize(),
     PropertiesView.initialize(),
-    AutomationView.initialize()
+    AutomationView.initialize(),
   ]);
 }
 
@@ -32,7 +32,7 @@ function shutdownWebAudioEditor() {
     ContextView.destroy(),
     InspectorView.destroy(),
     PropertiesView.destroy(),
-    AutomationView.destroy()
+    AutomationView.destroy(),
   ]);
 }
 
@@ -222,5 +222,5 @@ var WebAudioEditorController = {
   async _onChangeParam({ actor, param, value }) {
     const node = await WebAudioEditorController.getNode(actor);
     window.emit(EVENTS.CHANGE_PARAM, node, param, value);
-  }
+  },
 };

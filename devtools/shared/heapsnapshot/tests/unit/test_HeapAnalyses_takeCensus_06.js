@@ -10,9 +10,9 @@ const BREAKDOWN = {
   then: {
     by: "allocationStack",
     then: { by: "count", count: true, bytes: true },
-    noStack: { by: "count", count: true, bytes: true }
+    noStack: { by: "count", count: true, bytes: true },
   },
-  other: { by: "count", count: true, bytes: true }
+  other: { by: "count", count: true, bytes: true },
 };
 
 add_task(async function() {
@@ -57,13 +57,13 @@ add_task(async function() {
   ok(true, "Should have read the heap snapshot");
 
   const { report } = await client.takeCensus(snapshotFilePath, {
-    breakdown: BREAKDOWN
+    breakdown: BREAKDOWN,
   });
 
   const { report: treeNode } = await client.takeCensus(snapshotFilePath, {
-    breakdown: BREAKDOWN
+    breakdown: BREAKDOWN,
   }, {
-    asTreeNode: true
+    asTreeNode: true,
   });
 
   const markers = treeNode.children.find(c => c.name === "AllocationMarker");

@@ -13,7 +13,7 @@ function mappingCallFrames(callFrames) {
         scriptId,
         url,
         lineNumber,
-        columnNumber
+        columnNumber,
       } = frame;
       const stack = {
         scriptId,
@@ -37,7 +37,7 @@ function Cause(initiator) {
   const cause = {
     type: type,
     loadingDocumentUri: url,
-    stacktrace: mappingCallFrames(callFrames)
+    stacktrace: mappingCallFrames(callFrames),
   };
   return cause;
 }
@@ -66,7 +66,7 @@ function PostData(id, postData, header) {
   const {headers, headersSize} = header;
   const payload = {};
   const requestPostData = {
-    from: id, postDataDiscarded: false, postData: {}
+    from: id, postDataDiscarded: false, postData: {},
   };
   if (postData) {
     requestPostData.postData.text = postData;
@@ -94,7 +94,7 @@ function Request(id, requestData) {
     isXHR: false, // TODO: verify
     startedDateTime: timestamp,
     fromCache: undefined,
-    fromServiceWorker: undefined
+    fromServiceWorker: undefined,
   };
 }
 
@@ -103,5 +103,5 @@ module.exports = {
   Cookie,
   Header,
   Request,
-  PostData
+  PostData,
 };

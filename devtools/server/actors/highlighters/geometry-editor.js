@@ -76,7 +76,7 @@ var GeoProp = {
 
   crossAxis: function(name) {
     return this.isHorizontal(name) ? "y" : "x";
-  }
+  },
 };
 
 /**
@@ -111,7 +111,7 @@ function getOffsetParent(node) {
 
   return {
     element: offsetParent,
-    dimension: {width, height}
+    dimension: {width, height},
   };
 }
 
@@ -139,7 +139,7 @@ function getDefinedGeometryProperties(node) {
         // getCSSStyleRules returns rules ordered from least to most specific
         // so just override any previous properties we have set.
         props.set(name, {
-          cssRule: rule
+          cssRule: rule,
         });
       }
     }
@@ -154,7 +154,7 @@ function getDefinedGeometryProperties(node) {
         props.set(name, {
           // There's no cssRule to store here, so store the node instead since
           // node.style exists.
-          cssRule: node
+          cssRule: node,
         });
       }
     }
@@ -235,7 +235,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
 
   _buildMarkup() {
     const container = createNode(this.win, {
-      attributes: {"class": "highlighter-container"}
+      attributes: {"class": "highlighter-container"},
     });
 
     const root = createNode(this.win, {
@@ -243,9 +243,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "root",
         "class": "root",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const svg = createSVGNode(this.win, {
@@ -254,9 +254,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "elements",
         "width": "100%",
-        "height": "100%"
+        "height": "100%",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Offset parent node highlighter.
@@ -266,9 +266,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "class": "offset-parent",
         "id": "offset-parent",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Current node highlighter (margin box).
@@ -278,9 +278,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "class": "current-node",
         "id": "current-node",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Build the 4 side arrows, handlers and labels.
@@ -291,9 +291,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         attributes: {
           "class": "arrow " + name,
           "id": "arrow-" + name,
-          "hidden": "true"
+          "hidden": "true",
         },
-        prefix: this.ID_CLASS_PREFIX
+        prefix: this.ID_CLASS_PREFIX,
       });
 
       createSVGNode(this.win, {
@@ -304,9 +304,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
           "id": "handler-" + name,
           "r": "4",
           "data-side": name,
-          "hidden": "true"
+          "hidden": "true",
         },
-        prefix: this.ID_CLASS_PREFIX
+        prefix: this.ID_CLASS_PREFIX,
       });
 
       // Labels are positioned by using a translated <g>. This group contains
@@ -318,9 +318,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         parent: svg,
         attributes: {
           "id": "label-" + name,
-          "hidden": "true"
+          "hidden": "true",
         },
-        prefix: this.ID_CLASS_PREFIX
+        prefix: this.ID_CLASS_PREFIX,
       });
 
       const subG = createSVGNode(this.win, {
@@ -329,8 +329,8 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         attributes: {
           "transform": GeoProp.isHorizontal(name)
                        ? "translate(-30 -30)"
-                       : "translate(5 -10)"
-        }
+                       : "translate(5 -10)",
+        },
       });
 
       createSVGNode(this.win, {
@@ -340,9 +340,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
           "class": "label-bubble",
           "d": GeoProp.isHorizontal(name)
                ? "M0 0 L60 0 L60 20 L35 20 L30 25 L25 20 L0 20z"
-               : "M5 0 L65 0 L65 20 L5 20 L5 15 L0 10 L5 5z"
+               : "M5 0 L65 0 L65 20 L5 20 L5 15 L0 10 L5 5z",
         },
-        prefix: this.ID_CLASS_PREFIX
+        prefix: this.ID_CLASS_PREFIX,
       });
 
       createSVGNode(this.win, {
@@ -352,9 +352,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
           "class": "label-text",
           "id": "label-text-" + name,
           "x": GeoProp.isHorizontal(name) ? "30" : "35",
-          "y": "10"
+          "y": "10",
         },
-        prefix: this.ID_CLASS_PREFIX
+        prefix: this.ID_CLASS_PREFIX,
       });
     }
 
@@ -433,7 +433,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
             unit,
             x: pageX,
             y: pageY,
-            inc: ratio * dir
+            inc: ratio * dir,
           };
 
           this.getElement("handler-" + side).classList.add("dragging");

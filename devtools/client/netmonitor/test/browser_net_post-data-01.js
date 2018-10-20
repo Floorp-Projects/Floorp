@@ -48,7 +48,7 @@ add_task(async function() {
       type: "plain",
       fullMimeType: "text/plain; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
-      time: true
+      time: true,
     }
   );
   verifyRequestItemTarget(
@@ -63,7 +63,7 @@ add_task(async function() {
       type: "plain",
       fullMimeType: "text/plain; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
-      time: true
+      time: true,
     }
   );
 

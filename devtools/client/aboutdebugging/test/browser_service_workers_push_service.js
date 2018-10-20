@@ -32,7 +32,7 @@ add_task(async function() {
     init() {},
     register(pageRecord) {
       const registration = {
-        endpoint: FAKE_ENDPOINT
+        endpoint: FAKE_ENDPOINT,
       };
       this._registrations.set(pageRecord.scope, registration);
       this._notify(pageRecord.scope);

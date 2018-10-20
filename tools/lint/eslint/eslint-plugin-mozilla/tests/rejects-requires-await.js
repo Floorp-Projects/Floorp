@@ -23,10 +23,10 @@ function invalidCode(code, messageId) {
 ruleTester.run("reject-requires-await", rule, {
   valid: [
     "async() => { await Assert.rejects(foo, /assertion/) }",
-    "async() => { await Assert.rejects(foo, /assertion/, 'msg') }"
+    "async() => { await Assert.rejects(foo, /assertion/, 'msg') }",
   ],
   invalid: [
     invalidCode("Assert.rejects(foo)"),
-    invalidCode("Assert.rejects(foo, 'msg')")
-  ]
+    invalidCode("Assert.rejects(foo, 'msg')"),
+  ],
 });

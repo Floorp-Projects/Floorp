@@ -29,16 +29,16 @@ function testRestore() {
     {
       filename: "testfile",
       text: "test1",
-      executionContext: 2
+      executionContext: 2,
     },
     {
       text: "text2",
-      executionContext: 1
+      executionContext: 1,
     },
     {
       text: "text3",
-      executionContext: 1
-    }
+      executionContext: 1,
+    },
   ];
 
   asyncMap(states, function(state, done) {

@@ -11,7 +11,7 @@ const {
 function updateDomain(url) {
   return {
     type: UPDATE_DOMAIN,
-    url
+    url,
   };
 }
 

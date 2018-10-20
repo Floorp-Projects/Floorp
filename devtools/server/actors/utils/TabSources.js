@@ -160,7 +160,7 @@ TabSources.prototype = {
       originalUrl: originalUrl,
       generatedSource: generatedSource,
       isInlineSource: isInlineSource,
-      contentType: contentType
+      contentType: contentType,
     });
 
     const sourceActorStore = this._thread.sourceActorStore;
@@ -614,7 +614,7 @@ TabSources.prototype = {
     const {
       generatedSourceActor,
       generatedLine,
-      generatedColumn
+      generatedColumn,
     } = generatedLocation;
     const source = generatedSourceActor.source;
 
@@ -629,10 +629,10 @@ TabSources.prototype = {
           source: originalUrl,
           line: originalLine,
           column: originalColumn,
-          name: originalName
+          name: originalName,
         } = map.originalPositionFor({
           line: generatedLine,
-          column: generatedColumn == null ? Infinity : generatedColumn
+          column: generatedColumn == null ? Infinity : generatedColumn,
         });
 
         // Since the `Debugger.Source` instance may come from a
@@ -645,7 +645,7 @@ TabSources.prototype = {
         return new OriginalLocation(
           originalUrl ? this.source({
             originalUrl: originalUrl,
-            generatedSource: source
+            generatedSource: source,
           }) : null,
           originalLine,
           originalColumn,
@@ -662,7 +662,7 @@ TabSources.prototype = {
     const {
       originalSourceActor,
       originalLine,
-      originalColumn
+      originalColumn,
     } = originalLocation;
 
     const source = (originalSourceActor.source ||
@@ -675,7 +675,7 @@ TabSources.prototype = {
         return map.allGeneratedPositionsFor({
           source: originalSourceActor.url,
           line: originalLine,
-          column: originalColumn
+          column: originalColumn,
         }).map(({ line, column, lastColumn }) => {
           return new GeneratedLocation(
             this.createNonSourceMappedActor(source),
@@ -713,17 +713,17 @@ TabSources.prototype = {
       if (map) {
         const {
           originalLine,
-          originalColumn
+          originalColumn,
         } = originalLocation;
 
         const {
           line: generatedLine,
-          column: generatedColumn
+          column: generatedColumn,
         } = map.generatedPositionFor({
           source: originalSourceActor.url,
           line: originalLine,
           column: originalColumn == null ? 0 : originalColumn,
-          bias: SourceMapConsumer.LEAST_UPPER_BOUND
+          bias: SourceMapConsumer.LEAST_UPPER_BOUND,
         });
 
         return new GeneratedLocation(
@@ -815,7 +815,7 @@ TabSources.prototype = {
       }
     }
     return actors;
-  }
+  },
 };
 
 /*

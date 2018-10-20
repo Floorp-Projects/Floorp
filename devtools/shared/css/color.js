@@ -18,7 +18,7 @@ const SPECIALVALUES = new Set([
   "initial",
   "inherit",
   "transparent",
-  "unset"
+  "unset",
 ]);
 
 /**
@@ -85,7 +85,7 @@ CssColor.COLORUNIT = {
   "hex": "hex",
   "name": "name",
   "rgb": "rgb",
-  "hsl": "hsl"
+  "hsl": "hsl",
 };
 
 CssColor.prototype = {
@@ -417,7 +417,7 @@ CssColor.prototype = {
       h,
       s,
       l,
-      a: parseFloat(a.toFixed(1))
+      a: parseFloat(a.toFixed(1)),
     };
   },
 
@@ -1180,7 +1180,7 @@ function blendColors(foregroundColor, backgroundColor = [ 255, 255, 255, 1 ]) {
     (1 - fgA) * bgR + fgA * fgR,
     (1 - fgA) * bgG + fgA * fgG,
     (1 - fgA) * bgB + fgA * fgB,
-    fgA + bgA * (1 - fgA)
+    fgA + bgA * (1 - fgA),
   ];
 }
 

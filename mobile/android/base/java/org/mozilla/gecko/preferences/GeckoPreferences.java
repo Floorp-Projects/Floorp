@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -37,8 +38,12 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -854,6 +859,27 @@ public class GeckoPreferences
                     if (!isHealthReportEnabled) {
                         ((SwitchPreference) pref).setChecked(isHealthReportEnabled);
                         pref.setEnabled(isHealthReportEnabled);
+
+                        // Instruct the user on how to enable Health Report
+                        final String RIGHT_CHEVRON_SPACE_PADDED = " > ";
+                        StringBuilder healthReportSettingPath = new StringBuilder()
+                                .append(getString(R.string.pref_category_privacy_short))
+                                .append(RIGHT_CHEVRON_SPACE_PADDED)
+                                .append(getString(R.string.pref_category_datareporting))
+                                .append(RIGHT_CHEVRON_SPACE_PADDED)
+                                .append(getString(R.string.datareporting_fhr_title));
+                        SpannableString boldSettingsLocation = new SpannableString(healthReportSettingPath);
+                        boldSettingsLocation.setSpan(new StyleSpan(Typeface.BOLD),
+                                0, healthReportSettingPath.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+
+                        SpannableStringBuilder summaryTextBuilder = new SpannableStringBuilder()
+                                .append(getString(R.string.pref_feature_tips_notification_summary))
+                                .append("\n\n")
+                                .append(getString(R.string.pref_feature_tips_notification_enabling_hint))
+                                .append(" ")
+                                .append(boldSettingsLocation);
+
+                        pref.setSummary(summaryTextBuilder);
                     }
                 }
 

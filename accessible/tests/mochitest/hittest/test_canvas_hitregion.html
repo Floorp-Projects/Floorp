@@ -49,7 +49,7 @@
       var hitcanvas = getAccessible("hitcanvas");
       var hitcheck = getAccessible("hitcheck");
 
-      var [hitX, hitY, /* hitWidth, hitHeight */] = getBounds(hitcanvas);
+      var [hitX, hitY /* hitWidth, hitHeight */] = getBounds(hitcanvas);
       var [deltaX, deltaY] = CSSToDevicePixels(window, offsetX, offsetY);
 
       var docAcc = getAccessible(document);

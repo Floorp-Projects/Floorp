@@ -13,7 +13,7 @@ class RecordingList extends Component {
   static get propTypes() {
     return {
       items: PropTypes.arrayOf(PropTypes.object).isRequired,
-      itemComponent: PropTypes.func.isRequired
+      itemComponent: PropTypes.func.isRequired,
     };
   }
 

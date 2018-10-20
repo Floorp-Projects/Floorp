@@ -26,7 +26,7 @@ loader.lazyRequireGetter(this, "naturalSortCaseInsensitive",
 const COOKIE_SAMESITE = {
   LAX: "Lax",
   STRICT: "Strict",
-  UNSET: "Unset"
+  UNSET: "Unset",
 };
 
 const SAFE_HOSTS_PREFIXES_REGEX =
@@ -75,7 +75,7 @@ var illegalFileNameCharacters = [
   "\\x00-\\x24",
   // Special characters
   "/:*?\\\"<>|\\\\",
-  "]"
+  "]",
 ].join("");
 var ILLEGAL_CHAR_REGEX = new RegExp(illegalFileNameCharacters, "g");
 
@@ -295,7 +295,7 @@ StorageActors.defaults = function(typeName, observationTopics) {
 
       return {
         actor: this.actorID,
-        hosts: hosts
+        hosts: hosts,
       };
     },
 
@@ -347,7 +347,7 @@ StorageActors.defaults = function(typeName, observationTopics) {
       const toReturn = {
         offset: offset,
         total: 0,
-        data: []
+        data: [],
       };
 
       let principal = null;
@@ -424,7 +424,7 @@ StorageActors.defaults = function(typeName, observationTopics) {
       // need to use system principal.
       return Cc["@mozilla.org/systemprincipal;1"]
                 .createInstance(Ci.nsIPrincipal);
-    }
+    },
   };
 };
 
@@ -463,7 +463,7 @@ StorageActors.createActor = function(options = {}, overrides = {}) {
  * The Cookies actor and front.
  */
 StorageActors.createActor({
-  typeName: "cookies"
+  typeName: "cookies",
 }, {
   initialize(storageActor) {
     protocol.Actor.prototype.initialize.call(this, null);
@@ -564,7 +564,7 @@ StorageActors.createActor({
       hostOnly: !cookie.isDomain,
       isSecure: cookie.isSecure,
       isHttpOnly: cookie.isHttpOnly,
-      sameSite: this.getSameSiteStringFromCookie(cookie)
+      sameSite: this.getSameSiteStringFromCookie(cookie),
     };
   },
 
@@ -689,7 +689,7 @@ StorageActors.createActor({
       { name: "hostOnly", editable: false, hidden: true },
       { name: "isSecure", editable: true, hidden: true },
       { name: "isHttpOnly", editable: true, hidden: false },
-      { name: "sameSite", editable: false, hidden: false }
+      { name: "sameSite", editable: false, hidden: false },
     ];
   },
 
@@ -757,7 +757,7 @@ StorageActors.createActor({
 
     this.conn.setupInParent({
       module: "devtools/server/actors/storage",
-      setupParent: "setupParentProcessForCookies"
+      setupParent: "setupParentProcessForCookies",
     });
 
     this.getCookiesFromHost =
@@ -781,7 +781,7 @@ StorageActors.createActor({
     function callParentProcess(methodName, ...args) {
       const reply = mm.sendSyncMessage("debug:storage-cookie-request-parent", {
         method: methodName,
-        args: args
+        args: args,
       });
 
       if (reply.length === 0) {
@@ -861,7 +861,7 @@ var cookieHelpers = {
           isHttpOnly: nsiCookie.isHttpOnly,
           isSession: nsiCookie.isSession,
           expires: nsiCookie.expires,
-          originAttributes: nsiCookie.originAttributes
+          originAttributes: nsiCookie.originAttributes,
         };
         break;
       }
@@ -1094,7 +1094,7 @@ exports.setupParentProcessForCookies = function({ mm, prefix }) {
     try {
       mm.sendAsyncMessage("debug:storage-cookie-request-child", {
         method: methodName,
-        args: args
+        args: args,
       });
     } catch (e) {
       // We may receive a NS_ERROR_NOT_INITIALIZED if the target window has
@@ -1123,7 +1123,7 @@ exports.setupParentProcessForCookies = function({ mm, prefix }) {
       // the parent process e.g. observers.
       cookieHelpers.removeCookieObservers();
       setMessageManager(null);
-    }
+    },
   };
 };
 
@@ -1162,7 +1162,7 @@ function getObjectForLocalOrSessionStorage(type) {
         const key = storage.key(i);
         storageArray.push({
           name: key,
-          value: storage.getItem(key)
+          value: storage.getItem(key),
         });
       }
       return storageArray;
@@ -1189,7 +1189,7 @@ function getObjectForLocalOrSessionStorage(type) {
     async getFields() {
       return [
         { name: "name", editable: true },
-        { name: "value", editable: true }
+        { name: "value", editable: true },
       ];
     },
 
@@ -1280,7 +1280,7 @@ function getObjectForLocalOrSessionStorage(type) {
 
       return {
         name: item.name,
-        value: new LongStringActor(this.conn, item.value || "")
+        value: new LongStringActor(this.conn, item.value || ""),
       };
     },
   };
@@ -1291,7 +1291,7 @@ function getObjectForLocalOrSessionStorage(type) {
  */
 StorageActors.createActor({
   typeName: "localStorage",
-  observationTopics: ["dom-storage2-changed", "dom-private-storage2-changed"]
+  observationTopics: ["dom-storage2-changed", "dom-private-storage2-changed"],
 }, getObjectForLocalOrSessionStorage("localStorage"));
 
 /**
@@ -1299,11 +1299,11 @@ StorageActors.createActor({
  */
 StorageActors.createActor({
   typeName: "sessionStorage",
-  observationTopics: ["dom-storage2-changed", "dom-private-storage2-changed"]
+  observationTopics: ["dom-storage2-changed", "dom-private-storage2-changed"],
 }, getObjectForLocalOrSessionStorage("sessionStorage"));
 
 StorageActors.createActor({
-  typeName: "Cache"
+  typeName: "Cache",
 }, {
   async getCachesForHost(host) {
     const uri = Services.io.newURI(host);
@@ -1348,7 +1348,7 @@ StorageActors.createActor({
 
     return {
       actor: this.actorID,
-      hosts: hosts
+      hosts: hosts,
     };
   },
 
@@ -1389,7 +1389,7 @@ StorageActors.createActor({
   async getFields() {
     return [
       { name: "url", editable: false },
-      { name: "status", editable: false }
+      { name: "status", editable: false },
     ];
   },
 
@@ -1478,7 +1478,7 @@ StorageActors.createActor({
    */
   onItemUpdated(action, host, path) {
     this.storageActor.update(action, "Cache", {
-      [host]: [ JSON.stringify(path) ]
+      [host]: [ JSON.stringify(path) ],
     });
   },
 });
@@ -1507,9 +1507,9 @@ IndexMetadata.prototype = {
       name: this._name,
       keyPath: this._keyPath,
       unique: this._unique,
-      multiEntry: this._multiEntry
+      multiEntry: this._multiEntry,
     };
-  }
+  },
 };
 
 /**
@@ -1536,7 +1536,7 @@ function ObjectStoreMetadata(objectStore) {
         indexNames: [...index.objectStore.indexNames],
         keyPath: index.objectStore.keyPath,
         name: index.objectStore.name,
-      }
+      },
     };
 
     this._indexes.push([newIndex, new IndexMetadata(index)]);
@@ -1550,9 +1550,9 @@ ObjectStoreMetadata.prototype = {
       autoIncrement: this._autoIncrement,
       indexes: JSON.stringify(
         [...this._indexes.values()].map(index => index.toObject())
-      )
+      ),
     };
-  }
+  },
 };
 
 /**
@@ -1595,13 +1595,13 @@ DatabaseMetadata.prototype = {
       storage: this.storage,
       origin: this._origin,
       version: this._version,
-      objectStores: this._objectStores.size
+      objectStores: this._objectStores.size,
     };
-  }
+  },
 };
 
 StorageActors.createActor({
-  typeName: "indexedDB"
+  typeName: "indexedDB",
 }, {
   initialize(storageActor) {
     protocol.Actor.prototype.initialize.call(this, null);
@@ -1802,7 +1802,7 @@ StorageActors.createActor({
         objectStore: item.name,
         keyPath: item.keyPath,
         autoIncrement: item.autoIncrement,
-        indexes: item.indexes
+        indexes: item.indexes,
       };
     }
     if ("objectStores" in item) {
@@ -1813,7 +1813,7 @@ StorageActors.createActor({
         storage: item.storage,
         origin: item.origin,
         version: item.version,
-        objectStores: item.objectStores
+        objectStores: item.objectStores,
       };
     }
 
@@ -1831,7 +1831,7 @@ StorageActors.createActor({
     // Indexed db entry
     return {
       name: item.name,
-      value: new LongStringActor(this.conn, value)
+      value: new LongStringActor(this.conn, value),
     };
   },
 
@@ -1847,7 +1847,7 @@ StorageActors.createActor({
 
     return {
       actor: this.actorID,
-      hosts: hosts
+      hosts: hosts,
     };
   },
 
@@ -1860,7 +1860,7 @@ StorageActors.createActor({
     }
 
     this.storageActor.update(action, "indexedDB", {
-      [host]: [ JSON.stringify(path) ]
+      [host]: [ JSON.stringify(path) ],
     });
   },
 
@@ -1889,7 +1889,7 @@ StorageActors.createActor({
 
     this.conn.setupInParent({
       module: "devtools/server/actors/storage",
-      setupParent: "setupParentProcessForIndexedDB"
+      setupParent: "setupParentProcessForIndexedDB",
     });
 
     this.getDBMetaData = callParentProcessAsync.bind(null, "getDBMetaData");
@@ -1927,7 +1927,7 @@ StorageActors.createActor({
 
       mm.sendAsyncMessage("debug:storage-indexedDB-request-parent", {
         method: methodName,
-        args: args
+        args: args,
       });
 
       return deferred.promise;
@@ -1949,7 +1949,7 @@ StorageActors.createActor({
       case "object store":
         return [
           { name: "name", editable: false },
-          { name: "value", editable: false }
+          { name: "value", editable: false },
         ];
 
       // Detail of indexedDB for one origin
@@ -1963,21 +1963,21 @@ StorageActors.createActor({
           { name: "objectStores", editable: false },
         ];
     }
-  }
+  },
 });
 
 var indexedDBHelpers = {
   backToChild(...args) {
     Services.mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
       method: "backToChild",
-      args: args
+      args: args,
     });
   },
 
   onItemUpdated(action, host, path) {
     Services.mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
       method: "onItemUpdated",
-      args: [ action, host, path ]
+      args: [ action, host, path ],
     });
   },
 
@@ -2183,7 +2183,7 @@ var indexedDBHelpers = {
 
       files.push({
         file: relative,
-        storage: storage === "permanent" ? "persistent" : storage
+        storage: storage === "permanent" ? "persistent" : storage,
       });
     }
 
@@ -2193,7 +2193,7 @@ var indexedDBHelpers = {
         if (name) {
           names.push({
             name,
-            storage
+            storage,
           });
         }
       }
@@ -2342,7 +2342,7 @@ var indexedDBHelpers = {
       id: id,
       index: options.index,
       offset: options.offset,
-      size: options.size
+      size: options.size,
     });
     return this.backToChild("getValuesForHost", {result: result});
   },
@@ -2399,7 +2399,7 @@ var indexedDBHelpers = {
         const count = event2.target.result;
         objectsSize.push({
           key: host + dbName + objectStore + index,
-          count: count
+          count: count,
         });
 
         if (!offset) {
@@ -2423,7 +2423,7 @@ var indexedDBHelpers = {
               db.close();
               success.resolve({
                 data: data,
-                objectsSize: objectsSize
+                objectsSize: objectsSize,
               });
               return;
             }
@@ -2514,7 +2514,7 @@ var indexedDBHelpers = {
         console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
         throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
     }
-  }
+  },
 };
 
 /**
@@ -2885,7 +2885,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
       }
     }
     return null;
-  }
+  },
 });
 
 exports.StorageActor = StorageActor;

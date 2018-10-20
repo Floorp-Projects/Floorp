@@ -12,7 +12,7 @@ const {
   UNHIGHLIGHT,
   UPDATE_CAN_BE_DISABLED,
   UPDATE_CAN_BE_ENABLED,
-  UPDATE_DETAILS
+  UPDATE_DETAILS,
 } = require("../constants");
 
 const TreeView = require("devtools/client/shared/components/tree/TreeView");
@@ -27,7 +27,7 @@ function getInitialState() {
     canBeEnabled: true,
     selected: null,
     highlighted: null,
-    expanded: new Set()
+    expanded: new Set(),
   };
 }
 

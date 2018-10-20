@@ -43,7 +43,7 @@ function eval_code() {
   Cu.evalInSandbox([
     "this.line0 = Error().lineNumber;",
     "function f() {}",
-    "stopMe(f, {});"
+    "stopMe(f, {});",
   ].join("\n"), gDebuggee);
 }
 

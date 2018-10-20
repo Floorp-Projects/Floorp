@@ -10,7 +10,7 @@
 var {
   getLayoutChangesObserver,
   releaseLayoutChangesObserver,
-  LayoutChangesObserver
+  LayoutChangesObserver,
 } = require("devtools/server/actors/reflow");
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -48,9 +48,9 @@ MockWindow.prototype = {
         return {
           QueryInterface: function() {
             return self.docShell;
-          }
+          },
         };
-      }
+      },
     };
   },
   setTimeout: function(cb) {
@@ -58,7 +58,7 @@ MockWindow.prototype = {
     // of depending on a real timeout
     return cb;
   },
-  clearTimeout: function() {}
+  clearTimeout: function() {},
 };
 
 function MockDocShell() {
@@ -80,14 +80,14 @@ MockDocShell.prototype = {
         if (type === "resize" && cb === this.resizeCb) {
           this.resizeCb = null;
         }
-      }
+      },
     };
   },
   mockResize: function() {
     if (this.resizeCb) {
       this.resizeCb();
     }
-  }
+  },
 };
 
 function run_test() {

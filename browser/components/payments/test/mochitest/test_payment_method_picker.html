@@ -44,7 +44,7 @@ add_task(async function test_empty() {
 });
 
 add_task(async function test_initialSet() {
-  picker1.requestStore.setState({
+  await picker1.requestStore.setState({
     savedBasicCards: {
       "48bnds6854t": {
         "cc-exp": "2017-02",
@@ -54,6 +54,7 @@ add_task(async function test_initialSet() {
         "cc-number": "************9999",
         "cc-type": "mastercard",
         "guid": "48bnds6854t",
+        timeLastUsed: 300,
       },
       "68gjdh354j": {
         "cc-exp": "2017-08",
@@ -63,6 +64,7 @@ add_task(async function test_initialSet() {
         "cc-number": "***********1234",
         "cc-type": "visa",
         "guid": "68gjdh354j",
+        timeLastUsed: 100,
       },
       "123456789abc": {
         "cc-name": "Jane Fields",
@@ -71,19 +73,20 @@ add_task(async function test_initialSet() {
         "cc-family-name": "Fields",
         "cc-number": "************9876",
         "guid": "123456789abc",
+        timeLastUsed: 200,
       },
     },
   });
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 3, "Check dropdown has all three cards");
-  ok(options[0].textContent.includes("John Doe"), "Check first card");
-  ok(options[1].textContent.includes("J Smith"), "Check second card");
-  ok(options[2].textContent.includes("Jane Fields"), "Check third card");
+  ok(options[0].textContent.includes("John Doe"), "Check first card based on timeLastUsed");
+  ok(options[1].textContent.includes("Jane Fields"), "Check second card based on timeLastUsed");
+  ok(options[2].textContent.includes("J Smith"), "Check third card based on timeLastUsed");
 });
 
 add_task(async function test_update() {
-  picker1.requestStore.setState({
+  await picker1.requestStore.setState({
     savedBasicCards: {
       "48bnds6854t": {
         // Same GUID, different values to trigger an update
@@ -183,7 +186,7 @@ add_task(async function test_change_selected_card() {
 });
 
 add_task(async function test_delete() {
-  picker1.requestStore.setState({
+  await picker1.requestStore.setState({
     savedBasicCards: {
       // 48bnds6854t was deleted
       "68gjdh354j": {

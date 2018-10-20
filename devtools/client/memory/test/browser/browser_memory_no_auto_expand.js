@@ -28,7 +28,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   is(getState().allocations.recording, true);
 
   const nameElems = [
-    ...doc.querySelectorAll(".heap-tree-item-field.heap-tree-item-name")
+    ...doc.querySelectorAll(".heap-tree-item-field.heap-tree-item-name"),
   ];
 
   for (const el of nameElems) {

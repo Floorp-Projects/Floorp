@@ -24,7 +24,6 @@ class nsPIDOMWindowOuter;
 
 namespace mozilla {
 class AbstractThread;
-class ThrottledEventQueue;
 namespace dom {
 class TabChild;
 

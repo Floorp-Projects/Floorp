@@ -73,9 +73,9 @@ EventLoopStack.prototype = {
     return new EventLoop({
       thread: this._thread,
       connection: this._connection,
-      hooks: this._hooks
+      hooks: this._hooks,
     });
-  }
+  },
 };
 
 /**

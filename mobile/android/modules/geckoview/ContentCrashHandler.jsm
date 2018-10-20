@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
-  Services: "resource://gre/modules/Services.jsm"
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 ChromeUtils.defineModuleGetter(this, "OS",
@@ -62,7 +62,7 @@ var ContentCrashHandler = {
       minidumpPath,
       extrasPath,
       success: true,
-      fatal: false
+      fatal: false,
     });
-  }
+  },
 };

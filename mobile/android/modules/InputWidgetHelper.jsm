@@ -46,7 +46,7 @@ var InputWidgetHelper = {
       buttons: [
         this.strings().GetStringFromName("inputWidgetHelper.set"),
         this.strings().GetStringFromName("inputWidgetHelper.clear"),
-        this.strings().GetStringFromName("inputWidgetHelper.cancel")
+        this.strings().GetStringFromName("inputWidgetHelper.cancel"),
       ],
     }).addDatePicker({
       value: aElement.value,
@@ -126,5 +126,5 @@ var InputWidgetHelper = {
     } catch (e) {
       return 0;
     }
-  }
+  },
 };

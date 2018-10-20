@@ -37,7 +37,7 @@ class WorkersPanel extends Component {
   static get propTypes() {
     return {
       client: PropTypes.instanceOf(DebuggerClient).isRequired,
-      id: PropTypes.string.isRequired
+      id: PropTypes.string.isRequired,
     };
   }
 
@@ -94,7 +94,7 @@ class WorkersPanel extends Component {
       workers: {
         service: [],
         shared: [],
-        other: []
+        other: [],
       },
       processCount: 1,
     };
@@ -140,7 +140,7 @@ class WorkersPanel extends Component {
     }
     return dom.p(
       {
-        className: "service-worker-disabled"
+        className: "service-worker-disabled",
       },
       dom.div({ className: "warning" }),
       dom.span(
@@ -152,7 +152,7 @@ class WorkersPanel extends Component {
       dom.a(
         {
           href: MORE_INFO_URL,
-          target: "_blank"
+          target: "_blank",
         },
         Strings.GetStringFromName("configurationIsNotCompatible.learnMore")
       ),
@@ -171,17 +171,17 @@ class WorkersPanel extends Component {
         id: id + "-panel",
         className: "panel",
         role: "tabpanel",
-        "aria-labelledby": id + "-header"
+        "aria-labelledby": id + "-header",
       },
       PanelHeader({
         id: id + "-header",
-        name: Strings.GetStringFromName("workers")
+        name: Strings.GetStringFromName("workers"),
       }),
       isMultiE10S ? MultiE10SWarning() : "",
       dom.div(
         {
           id: "workers",
-          className: "inverted-icons"
+          className: "inverted-icons",
         },
         TargetList({
           client,
@@ -191,7 +191,7 @@ class WorkersPanel extends Component {
           name: Strings.GetStringFromName("serviceWorkers"),
           sort: true,
           targetClass: ServiceWorkerTarget,
-          targets: workers.service
+          targets: workers.service,
         }),
         TargetList({
           client,
@@ -199,7 +199,7 @@ class WorkersPanel extends Component {
           name: Strings.GetStringFromName("sharedWorkers"),
           sort: true,
           targetClass: WorkerTarget,
-          targets: workers.shared
+          targets: workers.shared,
         }),
         TargetList({
           client,
@@ -207,7 +207,7 @@ class WorkersPanel extends Component {
           name: Strings.GetStringFromName("otherWorkers"),
           sort: true,
           targetClass: WorkerTarget,
-          targets: workers.other
+          targets: workers.other,
         })
       )
     );

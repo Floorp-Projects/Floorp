@@ -32,12 +32,12 @@ const rootSpec = protocol.generateActorSpec({
       response: { value: RetVal("number") },
     },
     simpleThrow: {
-      response: { value: RetVal("number") }
+      response: { value: RetVal("number") },
     },
     promiseThrow: {
       response: { value: RetVal("number") },
-    }
-  }
+    },
+  },
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
@@ -87,7 +87,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
       deferred.reject(sequence++);
     });
     return deferred.promise;
-  }
+  },
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
@@ -96,7 +96,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  }
+  },
 });
 
 function run_test() {

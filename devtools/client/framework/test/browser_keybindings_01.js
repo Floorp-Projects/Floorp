@@ -35,11 +35,11 @@ function buildDevtoolsKeysetMap(keyset) {
         ctrlKey: modifiers.match("ctrl"),
         altKey: modifiers.match("alt"),
         metaKey: modifiers.match("meta"),
-        accelKey: modifiers.match("accel")
+        accelKey: modifiers.match("accel"),
       },
       synthesizeKey: function() {
         EventUtils.synthesizeKey(this.key, this.modifierOpt);
-      }
+      },
     });
   });
 }

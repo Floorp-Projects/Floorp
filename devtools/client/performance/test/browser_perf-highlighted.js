@@ -15,7 +15,7 @@ const { waitUntil } = require("devtools/client/performance/test/helpers/wait-uti
 add_task(async function() {
   const { target, toolbox, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const tab = toolbox.doc.getElementById("toolbox-tab-performance");

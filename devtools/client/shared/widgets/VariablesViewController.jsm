@@ -18,7 +18,7 @@ Object.defineProperty(this, "WebConsoleUtils", {
     return require("devtools/client/webconsole/utils").Utils;
   },
   configurable: true,
-  enumerable: true
+  enumerable: true,
 });
 
 XPCOMUtils.defineLazyGetter(this, "VARIABLES_SORTING_ENABLED", () =>
@@ -185,7 +185,7 @@ VariablesViewController.prototype = {
         type: "property-iterator",
         propertyIterator: iterator,
         start: start,
-        count: count
+        count: count,
       };
 
       // Query the name of the first and last items for this slice
@@ -226,7 +226,7 @@ VariablesViewController.prototype = {
           aTarget.addItems(ownProperties, {
             sorted: true,
             // Expansion handlers must be set after the properties are added.
-            callback: this.addExpander
+            callback: this.addExpander,
           });
         }
         deferred.resolve();
@@ -255,14 +255,14 @@ VariablesViewController.prototype = {
       // First enumerate array items, e.g. properties from `0` to `array.length`.
       const options = {
         ignoreNonIndexedProperties: true,
-        query: aQuery
+        query: aQuery,
       };
       objectClient.enumProperties(options, ({ iterator }) => {
         const sliceGrip = {
           type: "property-iterator",
           propertyIterator: iterator,
           start: 0,
-          count: iterator.count
+          count: iterator.count,
         };
         this._populatePropertySlices(aTarget, sliceGrip)
             .then(() => {
@@ -270,14 +270,14 @@ VariablesViewController.prototype = {
               const options = {
                 ignoreIndexedProperties: true,
                 sort: true,
-                query: aQuery
+                query: aQuery,
               };
               objectClient.enumProperties(options, ({ iterator }) => {
                 const sliceGrip = {
                   type: "property-iterator",
                   propertyIterator: iterator,
                   start: 0,
-                  count: iterator.count
+                  count: iterator.count,
                 };
                 deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
               });
@@ -290,7 +290,7 @@ VariablesViewController.prototype = {
           type: "property-iterator",
           propertyIterator: iterator,
           start: 0,
-          count: iterator.count
+          count: iterator.count,
         };
         deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
       });
@@ -355,7 +355,7 @@ VariablesViewController.prototype = {
       entriesList.showArrow();
       this.addExpander(entriesList, {
         type: "entries-list",
-        obj: aGrip
+        obj: aGrip,
       });
     }
 
@@ -404,7 +404,7 @@ VariablesViewController.prototype = {
         // Not all variables need to force sorted properties.
         sorted: sortable,
         // Expansion handlers must be set after the properties are added.
-        callback: this.addExpander
+        callback: this.addExpander,
       });
 
       // Add the variable's __proto__.
@@ -493,7 +493,7 @@ VariablesViewController.prototype = {
       // Arguments aren't sorted.
       sorted: false,
       // Expansion handlers must be set after the properties are added.
-      callback: this.addExpander
+      callback: this.addExpander,
     });
 
     // Add nodes for every other variable in the scope.
@@ -501,7 +501,7 @@ VariablesViewController.prototype = {
       // Not all variables need to force sorted properties.
       sorted: VARIABLES_SORTING_ENABLED,
       // Expansion handlers must be set after the properties are added.
-      callback: this.addExpander
+      callback: this.addExpander,
     });
   },
 
@@ -521,7 +521,7 @@ VariablesViewController.prototype = {
             type: "property-iterator",
             propertyIterator: response.iterator,
             start: 0,
-            count: response.iterator.count
+            count: response.iterator.count,
           };
 
           resolve(this._populatePropertySlices(target, sliceGrip));
@@ -619,9 +619,9 @@ VariablesViewController.prototype = {
     if (aSource.type === "mapEntry" || aSource.type === "storageEntry") {
       aTarget.addItems({
         key: { value: aSource.preview.key },
-        value: { value: aSource.preview.value }
+        value: { value: aSource.preview.value },
       }, {
-        callback: this.addExpander
+        callback: this.addExpander,
       });
 
       return promise.resolve();
@@ -847,5 +847,5 @@ var StackFrameUtils = this.StackFrameUtils = {
         break;
     }
     return label;
-  }
+  },
 };

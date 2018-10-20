@@ -36,8 +36,8 @@ add_task(async function() {
       tag: "button",
       "margin-right": "0px",
       id: "button",
-      "margin-bottom": "0px"
-    }
+      "margin-bottom": "0px",
+    },
   });
 
   info("Children");
@@ -45,7 +45,7 @@ add_task(async function() {
   is(children.length, 1, "Accessible Front has correct number of children");
   checkA11yFront(children[0], {
     name: "Accessible Button",
-    role: "text leaf"
+    role: "text leaf",
   });
 
   info("Relations");

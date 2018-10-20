@@ -61,7 +61,7 @@ var JsCallTreeView = extend(DetailsSubview, {
       contentOnly: !PerformanceController.getOption("show-platform-data"),
       invertTree: PerformanceController.getOption("invert-call-tree"),
       flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
-      showOptimizationHint: showOptimizations
+      showOptimizationHint: showOptimizations,
     };
     const threadNode =
       this.threadNode = this._prepareCallTree(profile, interval, options);
@@ -109,7 +109,7 @@ var JsCallTreeView = extend(DetailsSubview, {
             this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
           }
         });
-      }
+      },
     });
 
     ReactDOM.render(optimizations, this.optimizationsElement);
@@ -169,7 +169,7 @@ var JsCallTreeView = extend(DetailsSubview, {
       // Call trees should only auto-expand when not inverted. Passing undefined
       // will default to the CALL_TREE_AUTO_EXPAND depth.
       autoExpandDepth: inverted ? 0 : undefined,
-      showOptimizationHint: options.showOptimizationHint
+      showOptimizationHint: options.showOptimizationHint,
     });
 
     // Bind events.
@@ -188,7 +188,7 @@ var JsCallTreeView = extend(DetailsSubview, {
     return root;
   },
 
-  toString: () => "[object JsCallTreeView]"
+  toString: () => "[object JsCallTreeView]",
 });
 
 EventEmitter.decorate(JsCallTreeView);

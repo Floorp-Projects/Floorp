@@ -270,7 +270,7 @@ if (!isWorker) {
   Services.prefs.addObserver("devtools.dump.emit", {
     observe: () => {
       loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
-    }
+    },
   });
 }
 

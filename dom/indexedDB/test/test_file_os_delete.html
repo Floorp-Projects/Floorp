@@ -23,11 +23,11 @@
 
     const fileData1 = {
       key: 1,
-      obj: { id: 1, file: getRandomFile("random.bin", 100000) }
+      obj: { id: 1, file: getRandomFile("random.bin", 100000) },
     };
     const fileData2 = {
       key: 2,
-      obj: { id: 1, file: getRandomFile("random.bin", 100000) }
+      obj: { id: 1, file: getRandomFile("random.bin", 100000) },
     };
 
     SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.dataThreshold", -1]] },

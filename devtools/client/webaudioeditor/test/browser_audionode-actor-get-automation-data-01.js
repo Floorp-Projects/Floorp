@@ -10,7 +10,7 @@ add_task(async function() {
   const { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
   const [_, [destNode, oscNode, gainNode]] = await Promise.all([
     front.setup({ reload: true }),
-    get3(front, "create-node")
+    get3(front, "create-node"),
   ]);
 
   const t0 = 0, t1 = 0.1, t2 = 0.2, t3 = 0.3, t4 = 0.4, t5 = 0.6, t6 = 0.7, t7 = 1;
