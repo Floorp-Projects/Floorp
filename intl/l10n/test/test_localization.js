@@ -30,7 +30,7 @@ add_task(async function test_methods_calling() {
   L10nRegistry.registerSource(source);
 
   async function* generateMessages(resIds) {
-    yield * await L10nRegistry.generateContexts(["de", "en-US"], resIds);
+    yield * await L10nRegistry.generateBundles(["de", "en-US"], resIds);
   }
 
   const l10n = new Localization([
@@ -76,7 +76,7 @@ key = { PLATFORM() ->
   L10nRegistry.registerSource(source);
 
   async function* generateMessages(resIds) {
-    yield * await L10nRegistry.generateContexts(["en-US"], resIds);
+    yield * await L10nRegistry.generateBundles(["en-US"], resIds);
   }
 
   const l10n = new Localization([
@@ -111,7 +111,7 @@ add_task(async function test_add_remove_resourceIds() {
   L10nRegistry.registerSource(source);
 
   async function* generateMessages(resIds) {
-    yield * await L10nRegistry.generateContexts(["en-US"], resIds);
+    yield * await L10nRegistry.generateBundles(["en-US"], resIds);
   }
 
   const l10n = new Localization(["/browser/menu.ftl"], generateMessages);

@@ -492,7 +492,7 @@ At the moment Fluent supports two formatters that match JS Intl API counterparts
 
 With time more formatters will be added.
 
-__ http://projectfluent.org/fluent/guide/functions.html#partial-arguments
+__ https://projectfluent.org/fluent/guide/functions.html#partial-arguments
 __ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat
 __ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat
 
@@ -668,10 +668,10 @@ since the class and file names may show up during debugging or profiling,
 below is a list of major components, each with a corresponding file in `/intl/l10n`
 modules in Gecko.
 
-MessageContext
+FluentBundle
 --------------
 
-MessageContext is the lowest level API. It's fully synchronous, contains a parser for the
+FluentBundle is the lowest level API. It's fully synchronous, contains a parser for the
 FTL file format and a resolver for the logic. It is not meant to be used by
 consumers directly.
 
@@ -684,7 +684,7 @@ That part of the codebase is also the first that we'll be looking to port to Rus
 Localization
 ------------
 
-Localization is a higher level API which uses :js:`MessageContext` internally but
+Localization is a higher level API which uses :js:`FluentBundle` internally but
 provides a full layer of compound message formatting and robust error fall-backing.
 
 It is intended for use in runtime code and contains all fundamental localization
@@ -714,11 +714,11 @@ L10nRegistry
 
 L10nRegistry is our resource management service. It replaces :js:`ChromeRegistry` and
 maintains the state of resources packaged into the build and language packs,
-providing an asynchronous iterator of :js:`MessageContext` objects for a given locale set
+providing an asynchronous iterator of :js:`FluentBundle` objects for a given locale set
 and resources that the :js:`Localization` class uses.
 
 
-.. _Fluent: http://projectfluent.org/
+.. _Fluent: https://projectfluent.org/
 .. _DTD: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Tutorial/Localization
 .. _StringBundle: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Tutorial/Property_Files
 .. _Firefox Preferences: https://bugzilla.mozilla.org/show_bug.cgi?id=1415730
@@ -727,6 +727,6 @@ and resources that the :js:`Localization` class uses.
 .. _CLDR: http://cldr.unicode.org/
 .. _ICU: http://site.icu-project.org/
 .. _Unicode: https://www.unicode.org/
-.. _Fluent Syntax Guide: http://projectfluent.org/fluent/guide/
+.. _Fluent Syntax Guide: https://projectfluent.org/fluent/guide/
 .. _Pontoon: https://pontoon.mozilla.org/
 .. _Plural Rules: http://cldr.unicode.org/index/cldr-spec/plural-rules

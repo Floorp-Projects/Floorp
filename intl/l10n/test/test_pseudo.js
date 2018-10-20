@@ -27,7 +27,7 @@ key = This is a single message
   L10nRegistry.registerSource(source);
 
   return async function* generateMessages(resIds) {
-    yield * await L10nRegistry.generateContexts(["de"], resIds);
+    yield * await L10nRegistry.generateBundles(["de"], resIds);
   };
 }
 

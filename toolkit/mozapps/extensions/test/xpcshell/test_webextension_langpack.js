@@ -120,16 +120,16 @@ add_task(async function() {
 
   {
     // Toolkit string
-    let ctxs = L10nRegistry.generateContexts(["und"], ["toolkit_test.ftl"]);
-    let ctx0 = (await ctxs.next()).value;
-    equal(ctx0.hasMessage("message-id1"), true);
+    let bundles = L10nRegistry.generateBundles(["und"], ["toolkit_test.ftl"]);
+    let bundle0 = (await bundles.next()).value;
+    equal(bundle0.hasMessage("message-id1"), true);
   }
 
   {
     // Browser string
-    let ctxs = L10nRegistry.generateContexts(["und"], ["browser.ftl"]);
-    let ctx0 = (await ctxs.next()).value;
-    equal(ctx0.hasMessage("message-browser"), true);
+    let bundles = L10nRegistry.generateBundles(["und"], ["browser.ftl"]);
+    let bundle0 = (await bundles.next()).value;
+    equal(bundle0.hasMessage("message-browser"), true);
   }
 
   {

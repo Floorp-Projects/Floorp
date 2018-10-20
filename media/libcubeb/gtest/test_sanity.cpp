@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+
+//#define ENABLE_NORMAL_LOG
+//#define ENABLE_VERBOSE_LOG
 #include "common.h"
 
 #define STREAM_RATE 44100

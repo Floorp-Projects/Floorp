@@ -25,12 +25,12 @@ class App extends Component {
       workers: PropTypes.object.isRequired,
       serviceContainer: PropTypes.object.isRequired,
       domain: PropTypes.string.isRequired,
-      messageContexts: PropTypes.array.isRequired,
+      fluentBundles: PropTypes.array.isRequired,
     };
   }
 
   render() {
-    let { workers, domain, client, serviceContainer, messageContexts } = this.props;
+    let { workers, domain, client, serviceContainer, fluentBundles } = this.props;
 
     // Filter out workers from other domains
     workers = workers.filter((x) => new URL(x.url).hostname === domain);
@@ -38,7 +38,7 @@ class App extends Component {
 
     return (
       LocalizationProvider(
-        { messages: messageContexts },
+        { messages: fluentBundles },
         main(
           { className: `application ${isEmpty ? "application--empty" : ""}` },
           isEmpty ? WorkerListEmpty({ serviceContainer })

@@ -20,8 +20,9 @@
 #include <mutex>
 #include <string>
 #include "cubeb/cubeb.h"
+//#define ENABLE_NORMAL_LOG
+//#define ENABLE_VERBOSE_LOG
 #include "common.h"
-
 const uint32_t SAMPLE_FREQUENCY = 48000;
 const uint32_t TONE_FREQUENCY = 440;
 const double OUTPUT_AMPLITUDE = 0.25;

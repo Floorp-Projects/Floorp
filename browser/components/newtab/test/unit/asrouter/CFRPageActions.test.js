@@ -58,10 +58,16 @@ describe("CFRPageActions", () => {
             label: {string_id: "primary_button_id"},
             action: {id: "primary_action"},
           },
-          secondary: {
+          secondary: [{
             label: {string_id: "secondary_button_id"},
             action: {id: "secondary_action"},
-          },
+          }, {
+            label: {string_id: "secondary_button_id_2"},
+            action: {id: "secondary_action"},
+          }, {
+            label: {string_id: "secondary_button_id_3"},
+            action: {id: "secondary_action"},
+          }],
         },
       },
     };
@@ -399,6 +405,10 @@ describe("CFRPageActions", () => {
           .resolves({value: "Primary Button", attributes: {accesskey: "p"}})
           .withArgs({string_id: "secondary_button_id"})
           .resolves({value: "Secondary Button", attributes: {accesskey: "s"}})
+          .withArgs({string_id: "secondary_button_id_2"})
+          .resolves({value: "Secondary Button 2", attributes: {accesskey: "a"}})
+          .withArgs({string_id: "secondary_button_id_3"})
+          .resolves({value: "Secondary Button 3", attributes: {accesskey: "g"}})
           .withArgs(sinon.match({string_id: "cfr-doorhanger-extension-learn-more-link"}))
           .resolves("Learn more")
           .withArgs(sinon.match({string_id: "cfr-doorhanger-extension-total-users"}))

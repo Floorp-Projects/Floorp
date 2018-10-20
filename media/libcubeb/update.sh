@@ -77,8 +77,5 @@ fi
 echo "Applying disable-assert.patch on top of $rev"
 patch -p3 < disable-assert.patch
 
-echo "Applying prefer-pulse-rust.patch on top of $rev"
-patch -p3 < prefer-pulse-rust.patch
-
 echo "Applying disable-device-switching.patch on top of $rev"
 patch -p3 < disable-device-switching.patch
