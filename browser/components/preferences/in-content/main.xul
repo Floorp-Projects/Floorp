@@ -654,6 +654,13 @@
   <checkbox id="searchStartTyping"
             data-l10n-id="browsing-search-on-start-typing"
             preference="accessibility.typeaheadfind"/>
+  <hbox align="center" data-subcategory="cfr">
+    <checkbox id="cfrRecommendations"
+            class="tail-with-learn-more"
+            data-l10n-id="browsing-cfr-recommendations"
+            preference="browser.newtabpage.activity-stream.asrouter.userprefs.cfr"/>
+    <label id="cfrLearnMore" class="learnMore text-link" data-l10n-id="browsing-cfr-recommendations-learn-more"/>
+  </hbox>
 </groupbox>
 
 <hbox id="networkProxyCategory"

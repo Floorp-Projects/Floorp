@@ -318,7 +318,13 @@ class PageAction {
 
     const {primary, secondary} = content.buttons;
     const primaryBtnStrings = await this.getStrings(primary.label);
-    const secondaryBtnStrings = await this.getStrings(secondary.label);
+
+    // For each secondary action, get the strings and attributes
+    const secondaryBtnStrings = [];
+    for (let button of secondary) {
+      let label = await this.getStrings(button.label);
+      secondaryBtnStrings.push({label, attributes: label.attributes});
+    }
 
     const mainAction = {
       label: primaryBtnStrings,
@@ -333,11 +339,28 @@ class PageAction {
     };
 
     const secondaryActions = [{
-      label: secondaryBtnStrings,
-      accessKey: secondaryBtnStrings.attributes.accesskey,
+      label: secondaryBtnStrings[0].label,
+      accessKey: secondaryBtnStrings[0].attributes.accesskey,
       callback: () => {
+        this.dispatchUserAction(secondary[0].action);
         this.hide();
         this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "DISMISS"});
+        RecommendationMap.delete(browser);
+      },
+    }, {
+      label: secondaryBtnStrings[1].label,
+      accessKey: secondaryBtnStrings[1].attributes.accesskey,
+      callback: () => {
+        this._blockMessage(id);
+        this.hide();
+        RecommendationMap.delete(browser);
+      },
+    }, {
+      label: secondaryBtnStrings[2].label,
+      accessKey: secondaryBtnStrings[2].attributes.accesskey,
+      callback: () => {
+        this.dispatchUserAction(secondary[2].action);
+        this.hide();
         RecommendationMap.delete(browser);
       },
     }];

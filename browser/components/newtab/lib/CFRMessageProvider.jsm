@@ -74,10 +74,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 1},
@@ -118,10 +126,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 3},
@@ -162,10 +178,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 1},
@@ -206,10 +230,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 3},
@@ -250,10 +282,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 1},
@@ -294,10 +334,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 3},
@@ -338,10 +386,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 1},
@@ -382,10 +438,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 3},
@@ -426,10 +490,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 1},
@@ -470,10 +542,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 3},
@@ -514,10 +594,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 1},
@@ -558,10 +646,18 @@ const CFR_MESSAGES = [
             data: {url: null},
           },
         },
-        secondary: {
+        secondary: [{
           label: {string_id: "cfr-doorhanger-extension-cancel-button"},
           action: {type: "CANCEL"},
-        },
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
+        }, {
+          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {category: "general-cfr", origin: "CFR"},
+          },
+        }],
       },
     },
     frequency: {lifetime: 3},
