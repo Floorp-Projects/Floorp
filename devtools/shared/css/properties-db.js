@@ -26,53 +26,6 @@ try {
 }
 
 /**
- * All CSS types that properties can support. This list can be manually edited.
- *
- * The existing numbers are for backward compatibility so that newer versions
- * are still able to debug an old version correctly.
- */
-exports.CSS_TYPES = {
-  "COLOR": 2,
-  "GRADIENT": 4,
-  "TIMING_FUNCTION": 10,
-};
-
-/**
- * All CSS <angle> types that properties can support. This list can be manually edited.
- */
-exports.CSS_ANGLEUNIT = {
-  "deg": "deg",
-  "rad": "rad",
-  "grad": "grad",
-  "turn": "turn",
-};
-
-/**
- * All cubic-bezier CSS timing-function names. This list can be manually edited.
- */
-exports.BEZIER_KEYWORDS = ["linear", "ease-in-out", "ease-in", "ease-out", "ease"];
-
-/**
- * Functions that accept a color argument. This list can be manually edited.
- */
-exports.COLOR_TAKING_FUNCTIONS = ["linear-gradient", "-moz-linear-gradient",
-                                  "repeating-linear-gradient",
-                                  "-moz-repeating-linear-gradient", "radial-gradient",
-                                  "-moz-radial-gradient", "repeating-radial-gradient",
-                                  "-moz-repeating-radial-gradient", "drop-shadow"];
-
-/**
- * Functions that accept an angle argument. This list can be manually edited.
- */
-exports.ANGLE_TAKING_FUNCTIONS = ["linear-gradient", "-moz-linear-gradient",
-                                  "repeating-linear-gradient",
-                                  "-moz-repeating-linear-gradient", "rotate", "rotateX",
-                                  "rotateY", "rotateZ", "rotate3d", "skew", "skewX",
-                                  "skewY", "hue-rotate"];
-
-exports.BASIC_SHAPE_FUNCTIONS = ["polygon", "circle", "ellipse", "inset"];
-
-/**
  * The list of all CSS Pseudo Elements.
  *
  * This list can be updated with `mach devtools-css-db`.
