@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.928';
-var pdfjsBuild = 'e41c50c3';
+var pdfjsVersion = '2.0.936';
+var pdfjsBuild = 'd2189293';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -148,6 +148,8 @@ exports.InvalidPDFException = pdfjsSharedUtil.InvalidPDFException;
 exports.MissingPDFException = pdfjsSharedUtil.MissingPDFException;
 exports.SVGGraphics = pdfjsDisplaySVG.SVGGraphics;
 exports.NativeImageDecoding = pdfjsSharedUtil.NativeImageDecoding;
+exports.CMapCompressionType = pdfjsSharedUtil.CMapCompressionType;
+exports.PermissionFlag = pdfjsSharedUtil.PermissionFlag;
 exports.UnexpectedResponseException = pdfjsSharedUtil.UnexpectedResponseException;
 exports.OPS = pdfjsSharedUtil.OPS;
 exports.VerbosityLevel = pdfjsSharedUtil.VerbosityLevel;
@@ -4224,7 +4226,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.928',
+    apiVersion: '2.0.936',
     source: {
       data: source.data,
       url: source.url,
@@ -4999,10 +5001,8 @@ class WorkerTransport {
       const fullReader = this._fullReader;
       fullReader.headersReady.then(() => {
         if (!fullReader.isStreamingSupported || !fullReader.isRangeSupported) {
-          if (this._lastProgress) {
-            if (loadingTask.onProgress) {
-              loadingTask.onProgress(this._lastProgress);
-            }
+          if (this._lastProgress && loadingTask.onProgress) {
+            loadingTask.onProgress(this._lastProgress);
           }
           fullReader.onProgress = evt => {
             if (loadingTask.onProgress) {
@@ -5077,6 +5077,12 @@ class WorkerTransport {
       loadingTask._capability.reject(new _util.UnknownErrorException(exception.message, exception.details));
     }, this);
     messageHandler.on('DataLoaded', function (data) {
+      if (loadingTask.onProgress) {
+        loadingTask.onProgress({
+          loaded: data.length,
+          total: data.length
+        });
+      }
       this.downloadInfoCapability.resolve(data);
     }, this);
     messageHandler.on('StartRenderPage', function (data) {
@@ -5555,8 +5561,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.928';
-  exports.build = build = 'e41c50c3';
+  exports.version = version = '2.0.936';
+  exports.build = build = 'd2189293';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
