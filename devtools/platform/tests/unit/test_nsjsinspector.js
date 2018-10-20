@@ -13,7 +13,7 @@ var inspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
 // Emulate 10 simultaneously-debugged windows from 3 separate client connections.
 var requestor = (count) => ({
   url: "http://foo/bar/" + count,
-  connection: "conn" + (count % 3)
+  connection: "conn" + (count % 3),
 });
 
 function run_test() {

@@ -12,7 +12,7 @@ async function ifWebGLSupported() {
   reload(target);
   const [[programActor]] = await promise.all([
     getPrograms(front, 1),
-    once(panel, EVENTS.SOURCES_SHOWN)
+    once(panel, EVENTS.SOURCES_SHOWN),
   ]);
 
   const programItem = shadersListView.selectedItem;

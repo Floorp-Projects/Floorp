@@ -115,7 +115,7 @@ BottomHost.prototype = {
     }
 
     return promise.resolve(null);
-  }
+  },
 };
 
 /**
@@ -306,7 +306,7 @@ WindowHost.prototype = {
     }
 
     return promise.resolve(null);
-  }
+  },
 };
 
 /**
@@ -366,7 +366,7 @@ CustomHost.prototype = {
       this._sendMessageToTopWindow("close");
     }
     return promise.resolve(null);
-  }
+  },
 };
 
 /**
@@ -383,6 +383,6 @@ exports.Hosts = {
   "left": LeftHost,
   "right": RightHost,
   "window": WindowHost,
-  "custom": CustomHost
+  "custom": CustomHost,
 };
 

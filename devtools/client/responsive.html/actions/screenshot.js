@@ -79,5 +79,5 @@ module.exports = {
 
       dispatch({ type: TAKE_SCREENSHOT_END });
     };
-  }
+  },
 };

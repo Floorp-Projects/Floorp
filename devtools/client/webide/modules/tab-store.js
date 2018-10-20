@@ -157,7 +157,7 @@ TabStore.prototype = {
       return TargetFactory.forRemoteTab({
         form: store._selectedTab,
         client: store._connection.client,
-        chrome: false
+        chrome: false,
       });
     })();
     this._selectedTabTargetPromise.then(target => {

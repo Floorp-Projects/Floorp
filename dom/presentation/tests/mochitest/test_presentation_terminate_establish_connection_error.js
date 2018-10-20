@@ -149,7 +149,7 @@ function testConnectionTerminate() {
         ok(true, "observe receiver page closing");
         aResolve();
       });
-    })
+    }),
   ]);
 
   gScript.addMessageListener("prepare-for-terminate", function prepareForTerminateHandler() {

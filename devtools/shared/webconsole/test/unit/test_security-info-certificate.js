@@ -14,7 +14,7 @@ Object.defineProperty(this, "NetworkHelper", {
   },
   configurable: true,
   writeable: false,
-  enumerable: true
+  enumerable: true,
 });
 
 const DUMMY_CERT = {
@@ -29,7 +29,7 @@ const DUMMY_CERT = {
   validity: {
     notBeforeLocalDay: "yesterday",
     notAfterLocalDay: "tomorrow",
-  }
+  },
 };
 
 function run_test() {

@@ -59,7 +59,7 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
 
   // Test table accessible tree.
   var tableObj = {
-    children: []
+    children: [],
   };
   switch (aTableType) {
     case kTable:
@@ -80,9 +80,9 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
       children: [
         {
           role: ROLE_TEXT_LEAF,
-          name: aCaption
-        }
-      ]
+          name: aCaption,
+        },
+      ],
     };
 
     tableObj.children.push(captionObj);
@@ -92,19 +92,19 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
   if (aColHeaderType) {
     var headersObj = {
       role: ROLE_LIST,
-      children: []
+      children: [],
     };
 
     for (let idx = 0; idx < colsCount; idx++) {
       var headerCellObj = {
-        role: ROLE_COLUMNHEADER
+        role: ROLE_COLUMNHEADER,
       };
       headersObj.children.push(headerCellObj);
     }
 
     if (aColHeaderType == kTreeColumnHeader) {
       var columnPickerObj = {
-        role: ROLE_PUSHBUTTON
+        role: ROLE_PUSHBUTTON,
       };
 
       headersObj.children.push(columnPickerObj);
@@ -117,7 +117,7 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
   for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     let rowObj = {
       role: aRowRoles ? aRowRoles[rowIdx] : ROLE_ROW,
-      children: []
+      children: [],
     };
 
     for (let colIdx = 0; colIdx < colsCount; colIdx++) {

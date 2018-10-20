@@ -56,5 +56,5 @@ CanvasDebuggerPanel.prototype = {
       this.panelWin.gFront.destroy();
       this.emit("destroyed");
     });
-  }
+  },
 };

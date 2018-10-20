@@ -41,7 +41,7 @@ window.Application = {
     const serviceContainer = {
       selectTool(toolId) {
         return toolbox.selectTool(toolId);
-      }
+      },
     };
     this.toolbox.target.activeTab.on("workerListChanged", this.updateWorkers);
     this.client.addListener("serviceWorkerRegistrationListChanged", this.updateWorkers);

@@ -6,7 +6,7 @@
 
 function ResponseInfo(id, response, content) {
   const {
-    mimeType
+    mimeType,
   } = response;
   const {body, base64Encoded} = content;
   return {
@@ -15,8 +15,8 @@ function ResponseInfo(id, response, content) {
       mimeType: mimeType,
       text: !body ? "" : body,
       size: !body ? 0 : body.length,
-      encoding: base64Encoded ? "base64" : undefined
-    }
+      encoding: base64Encoded ? "base64" : undefined,
+    },
   };
 }
 
@@ -29,7 +29,7 @@ function ResponseContent(id, response, content) {
       responseContent,
       contentSize: !body ? 0 : body.length,
       transferredSize: encodedDataLength, // TODO: verify
-      mimeType: mimeType
+      mimeType: mimeType,
     }, body);
   return payload;
 }
@@ -54,7 +54,7 @@ function Timings(id, timing) {
     connectEnd,
     sendStart,
     sendEnd,
-    receiveHeadersEnd
+    receiveHeadersEnd,
   } = timing;
   const dns = parseInt(dnsEnd - dnsStart, 10);
   const connect = parseInt(connectEnd - connectStart, 10);
@@ -79,19 +79,19 @@ function State(response, headers) {
     status,
     statusText,
     remoteIPAddress,
-    remotePort
+    remotePort,
   } = response;
   return {
     remoteAddress: remoteIPAddress,
     remotePort,
     status,
     statusText,
-    headersSize
+    headersSize,
   };
 }
 module.exports = {
   State,
   Timings,
   ResponseContent,
-  SecurityDetails
+  SecurityDetails,
 };

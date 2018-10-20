@@ -22,7 +22,7 @@ RedirectHttpsOnly.prototype = {
   getInterface(iid) {
     return this.QueryInterface(iid);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink]),
 };
 
 /** This class loads a resource into a single string. ResourceLoader.load() is
@@ -41,7 +41,7 @@ ResourceLoader.load = function(uri, doc) {
       uri,
       loadingNode: doc,
       securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_SCRIPT
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_SCRIPT,
     });
 
     ioChannel.loadGroup = doc.documentLoadGroup.QueryInterface(Ci.nsILoadGroup);
@@ -76,7 +76,7 @@ ResourceLoader.prototype = {
   getInterface(iid) {
     return this.QueryInterface(iid);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener]),
 };
 
 /**
@@ -96,7 +96,7 @@ function createLocationFromURI(uri) {
     origin: uri.prePath,
     toString() {
       return uri.spec;
-    }
+    },
   };
 }
 
@@ -200,8 +200,8 @@ IdpSandbox.prototype = {
       wantGlobalProperties: [
         "indexedDB", "XMLHttpRequest", "TextEncoder", "TextDecoder",
         "URL", "URLSearchParams", "atob", "btoa", "Blob", "crypto",
-        "rtcIdentityProvider", "fetch"
-      ]
+        "rtcIdentityProvider", "fetch",
+      ],
     });
     let registrar = this.sandbox.rtcIdentityProvider;
     if (!Cu.isXrayWrapper(registrar)) {
@@ -254,7 +254,7 @@ IdpSandbox.prototype = {
 
   toString() {
     return this.source.spec;
-  }
+  },
 };
 
 var EXPORTED_SYMBOLS = ["IdpSandbox"];

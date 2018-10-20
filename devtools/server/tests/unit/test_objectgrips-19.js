@@ -32,17 +32,17 @@ async function run_test_with_server(server, callback) {
 async function test_wrapped_primitive_grips() {
   const tests = [{
     value: true,
-    class: "Boolean"
+    class: "Boolean",
   }, {
     value: 123,
-    class: "Number"
+    class: "Number",
   }, {
     value: "foo",
-    class: "String"
+    class: "String",
   }, {
     value: Symbol("bar"),
     class: "Symbol",
-    name: "bar"
+    name: "bar",
   }];
   for (const data of tests) {
     await new Promise(function(resolve) {

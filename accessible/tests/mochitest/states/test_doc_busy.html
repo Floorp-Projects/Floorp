@@ -25,13 +25,13 @@
     function loadFile() {
       var eventSeq = [
         new stateChangeChecker(STATE_BUSY, false, true, document, null, false, true),
-        new stateChangeChecker(STATE_BUSY, false, false, document)
+        new stateChangeChecker(STATE_BUSY, false, false, document),
       ];
       defineScenario(this, eventSeq); // both events were fired
 
       var unexpectedEventSeq = [
         new stateChangeChecker(STATE_BUSY, false, true, document),
-        new stateChangeChecker(STATE_BUSY, false, false, document)
+        new stateChangeChecker(STATE_BUSY, false, false, document),
       ];
       defineScenario(this, [], unexpectedEventSeq); // events were coalesced
 

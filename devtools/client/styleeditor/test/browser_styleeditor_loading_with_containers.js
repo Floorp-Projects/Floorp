@@ -13,13 +13,13 @@ const EXPECTED_SHEETS = [
     sheetIndex: 0,
     name: /^simple.css$/,
     rules: 1,
-    active: true
+    active: true,
   }, {
     sheetIndex: 1,
     name: /^<.*>$/,
     rules: 3,
-    active: false
-  }
+    active: false,
+  },
 ];
 
 add_task(async function() {

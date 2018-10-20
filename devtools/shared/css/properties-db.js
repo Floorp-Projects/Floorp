@@ -21,7 +21,7 @@ try {
                 `being run, then it needs to be fixed.`, error);
   db = {
     CSS_PROPERTIES: {},
-    PSEUDO_ELEMENTS: []
+    PSEUDO_ELEMENTS: [],
   };
 }
 
@@ -46,5 +46,5 @@ exports.CSS_PROPERTIES = db.CSS_PROPERTIES;
 
 exports.CSS_PROPERTIES_DB = {
   properties: db.CSS_PROPERTIES,
-  pseudoElements: db.PSEUDO_ELEMENTS
+  pseudoElements: db.PSEUDO_ELEMENTS,
 };

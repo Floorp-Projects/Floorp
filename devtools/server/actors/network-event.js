@@ -241,7 +241,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     return {
       timings: this._timings,
       totalTime: this._totalTime,
-      offsets: this._offsets
+      offsets: this._offsets,
     };
   },
 
@@ -388,7 +388,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._discardResponseBody = !!info.discardResponseBody;
 
     this.emit("network-event-update:response-start", "responseStart", {
-      response: info
+      response: info,
     });
   },
 
@@ -515,7 +515,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._offsets = offsets;
 
     this.emit("network-event-update:event-timings", "eventTimings", {
-      totalTime: total
+      totalTime: total,
     });
   },
 

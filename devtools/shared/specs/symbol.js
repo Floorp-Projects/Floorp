@@ -14,9 +14,9 @@ const symbolSpec = generateActorSpec({
   methods: {
     release: {
       request: {},
-      response: {}
+      response: {},
     },
-  }
+  },
 });
 
 exports.symbolSpec = symbolSpec;

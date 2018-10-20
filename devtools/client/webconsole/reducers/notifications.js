@@ -12,7 +12,7 @@ const {
 
 const {
   appendNotification,
-  removeNotificationWithValue
+  removeNotificationWithValue,
 } = require("devtools/client/shared/components/NotificationBox");
 
 /**

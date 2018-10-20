@@ -67,7 +67,7 @@ window.onload = async function() {
     const href = "http://example.com/";
     const l10n = new MockL10N({
       message: "This is a message that contains a link. %S",
-      link: "Learn more"
+      link: "Learn more",
     });
     const learnMoreLink = LearnMoreLink(
       { href, l10n, learnMoreStringKey: "link", messageStringKey: "message" });

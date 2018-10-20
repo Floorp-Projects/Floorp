@@ -41,9 +41,9 @@ const TESTS = [
       "     ",
       "span {",
       "  padding-left: 10px;",
-      "}"
+      "}",
     ],
-    expected: {indentUnit: 2, indentWithTabs: false}
+    expected: {indentUnit: 2, indentWithTabs: false},
   },
   {
     desc: "four spaces",
@@ -69,9 +69,9 @@ const TESTS = [
       "        var result = x - y;",
       "        result %= 2;",
       "    }",
-      "}"
+      "}",
     ],
-    expected: {indentUnit: 4, indentWithTabs: false}
+    expected: {indentUnit: 4, indentWithTabs: false},
   },
   {
     desc: "tabs",
@@ -86,9 +86,9 @@ const TESTS = [
       "",
       "span {",
       "\tpadding-left: 10px;",
-      "}"
+      "}",
     ],
-    expected: {indentUnit: 2, indentWithTabs: true}
+    expected: {indentUnit: 2, indentWithTabs: true},
   },
   {
     desc: "no indent",
@@ -97,9 +97,9 @@ const TESTS = [
       "           // stray thing",
       "var y = 9;",
       "    ",
-      ""
+      "",
     ],
-    expected: {indentUnit: 2, indentWithTabs: false}
+    expected: {indentUnit: 2, indentWithTabs: false},
   },
 ];
 

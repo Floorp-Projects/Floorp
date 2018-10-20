@@ -486,7 +486,7 @@ function parseLanguageTag(locale) {
     if (hasOwn(localeLowercase, grandfatheredMappings)) {
         return {
             locale: grandfatheredMappings[localeLowercase],
-            grandfathered: true
+            grandfathered: true,
         };
     }
 

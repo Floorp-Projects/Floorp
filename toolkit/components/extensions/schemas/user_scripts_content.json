@@ -18,6 +18,7 @@
     "functions": [
       {
         "name": "setScriptAPIs",
+        "permissions": ["manifest:user_scripts.api_script"],
         "allowedContexts": ["content", "content_only"],
         "type": "function",
         "description": "Provides a set of custom API methods available to the registered userScripts",

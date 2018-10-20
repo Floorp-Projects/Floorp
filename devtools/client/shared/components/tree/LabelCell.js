@@ -20,7 +20,7 @@ define(function(require, exports, module) {
     static get propTypes() {
       return {
         id: PropTypes.string.isRequired,
-        member: PropTypes.object.isRequired
+        member: PropTypes.object.isRequired,
       };
     }
 
@@ -53,12 +53,12 @@ define(function(require, exports, module) {
           role: "presentation"},
           dom.span({
             className: iconClassList.join(" "),
-            role: "presentation"
+            role: "presentation",
           }),
           dom.span({
             className: "treeLabel " + member.type + "Label",
             "aria-labelledby": id,
-            "data-level": level
+            "data-level": level,
           }, member.name)
         )
       );

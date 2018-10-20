@@ -22,11 +22,11 @@ function run_test() {
       by: "objectClass",
       then: bucket,
       other: bucket,
-    }
+    },
   });
 
   const byClassNameCount = snapshot.takeCensus({
-    breakdown: objectClassCount
+    breakdown: objectClassCount,
   });
 
   const keys = new Set(Object.keys(byClassName));

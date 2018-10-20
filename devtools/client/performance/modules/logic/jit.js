@@ -5,7 +5,7 @@
 
 // An outcome of an OptimizationAttempt that is considered successful.
 const SUCCESSFUL_OUTCOMES = [
-  "GenericSuccess", "Inlined", "DOM", "Monomorphic", "Polymorphic"
+  "GenericSuccess", "Inlined", "DOM", "Monomorphic", "Polymorphic",
 ];
 
 /**
@@ -154,7 +154,7 @@ const JITOptimizations = function(rawSites, stringTable) {
       return {
         id: site.id,
         strategy: stringTable[a[STRATEGY_SLOT]],
-        outcome: stringTable[a[OUTCOME_SLOT]]
+        outcome: stringTable[a[OUTCOME_SLOT]],
       };
     });
     const types = data.types.map((t) => {
@@ -169,7 +169,7 @@ const JITOptimizations = function(rawSites, stringTable) {
         id: site.id,
         typeset,
         site: stringTable[t.site],
-        mirType: stringTable[t.mirType]
+        mirType: stringTable[t.mirType],
       };
     });
     // Add IDs to to all children objects, so we can correllate sites when
@@ -181,7 +181,7 @@ const JITOptimizations = function(rawSites, stringTable) {
       types,
       propertyName: maybeString(stringTable, data.propertyName),
       line: data.line,
-      column: data.column
+      column: data.column,
     };
   }
 
@@ -198,7 +198,7 @@ JITOptimizations.prototype = {
 
   get length() {
     return this.optimizationSites.length;
-  }
+  },
 };
 
 /**
@@ -239,7 +239,7 @@ function maybeTypeset(typeset, stringTable) {
       keyedBy: maybeString(stringTable, ty.keyedBy),
       name: maybeString(stringTable, ty.name),
       location: maybeString(stringTable, ty.location),
-      line: ty.line
+      line: ty.line,
     };
   });
 }
@@ -248,7 +248,7 @@ function maybeTypeset(typeset, stringTable) {
 const IMPLEMENTATION_MAP = {
   "interpreter": 0,
   "baseline": 1,
-  "ion": 2
+  "ion": 2,
 };
 const IMPLEMENTATION_NAMES = Object.keys(IMPLEMENTATION_MAP);
 

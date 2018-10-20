@@ -62,7 +62,7 @@ function toolboxRegister(aToolbox) {
         },
       };
     },
-    key: "t"
+    key: "t",
   });
 }
 
@@ -105,7 +105,7 @@ function testUnregister() {
   toolbox.removeAdditionalTool(TOOL_ID);
 
   Promise.all([
-    waitForToolInstanceDestroyed
+    waitForToolInstanceDestroyed,
   ]).then(toolboxToolUnregistered);
 }
 

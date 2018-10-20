@@ -132,13 +132,13 @@ CSSCompleter.prototype = {
           return Promise.resolve([{
             label: "media",
             preLabel: this.completing,
-            text: "media"
+            text: "media",
           }]);
         } else if ("keyframes".startsWith(this.completing)) {
           return Promise.resolve([{
             label: "keyframes",
             preLabel: this.completing,
-            text: "keyframes"
+            text: "keyframes",
           }]);
         }
     }
@@ -808,7 +808,7 @@ CSSCompleter.prototype = {
         label: value,
         preLabel: query,
         text: value,
-        score: count
+        score: count,
       };
 
       // In case the query's state is tag and the item's state is id or class
@@ -851,7 +851,7 @@ CSSCompleter.prototype = {
         finalList.push({
           preLabel: startProp,
           label: propName,
-          text: propName + ": "
+          text: propName + ": ",
         });
       } else if (this.propertyNames[i] > startProp) {
         // We have crossed all possible matches alphabetically.
@@ -886,7 +886,7 @@ CSSCompleter.prototype = {
         finalList.push({
           preLabel: startValue,
           label: value,
-          text: value
+          text: value,
         });
       } else if (list[i] > startValue) {
         // We have crossed all possible matches alphabetically.
@@ -1042,7 +1042,7 @@ CSSCompleter.prototype = {
 
           const forwState = this.resolveState(limitedSource, {
             line: line,
-            ch: token.endOffset + ech
+            ch: token.endOffset + ech,
           });
           if (check(forwState)) {
             if (prevToken && prevToken.tokenType == "whitespace") {
@@ -1050,7 +1050,7 @@ CSSCompleter.prototype = {
             }
             location = {
               line: line,
-              ch: token.startOffset + ech
+              ch: token.startOffset + ech,
             };
             found = true;
             break;
@@ -1103,7 +1103,7 @@ CSSCompleter.prototype = {
 
           const backState = this.resolveState(limitedSource, {
             line: line,
-            ch: token.startOffset
+            ch: token.startOffset,
           });
           if (check(backState)) {
             if (tokens[i + 1] && tokens[i + 1].tokenType == "whitespace") {
@@ -1111,7 +1111,7 @@ CSSCompleter.prototype = {
             }
             location = {
               line: line,
-              ch: isValue ? token.endOffset : token.startOffset
+              ch: isValue ? token.endOffset : token.startOffset,
             };
             found = true;
             break;
@@ -1154,8 +1154,8 @@ CSSCompleter.prototype = {
         selector: selector,
         loc: {
           start: start,
-          end: end
-        }
+          end: end,
+        },
       };
     } else if (state == CSS_STATES.property) {
       // A property can only be a single word and thus very easy to calculate.
@@ -1171,13 +1171,13 @@ CSSCompleter.prototype = {
             loc: {
               start: {
                 line: line,
-                ch: token.startOffset
+                ch: token.startOffset,
               },
               end: {
                 line: line,
-                ch: token.endOffset
-              }
-            }
+                ch: token.endOffset,
+              },
+            },
           };
         }
       }
@@ -1201,12 +1201,12 @@ CSSCompleter.prototype = {
         value: value,
         loc: {
           start: start,
-          end: end
-        }
+          end: end,
+        },
       };
     }
     return null;
-  }
+  },
 };
 
 module.exports = CSSCompleter;

@@ -9,10 +9,10 @@
 const {
   censusDisplays,
   censusState,
-  viewState
+  viewState,
 } = require("devtools/client/memory/constants");
 const {
-  setCensusDisplayAndRefresh
+  setCensusDisplayAndRefresh,
 } = require("devtools/client/memory/actions/census-display");
 const {
   takeSnapshotAndCensus,

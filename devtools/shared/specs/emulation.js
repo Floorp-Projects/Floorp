@@ -11,119 +11,119 @@ const emulationSpec = generateActorSpec({
   methods: {
     setDPPXOverride: {
       request: {
-        dppx: Arg(0, "number")
+        dppx: Arg(0, "number"),
       },
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     getDPPXOverride: {
       request: {},
       response: {
-        dppx: RetVal("number")
-      }
+        dppx: RetVal("number"),
+      },
     },
 
     clearDPPXOverride: {
       request: {},
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     setNetworkThrottling: {
       request: {
-        options: Arg(0, "json")
+        options: Arg(0, "json"),
       },
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     getNetworkThrottling: {
       request: {},
       response: {
-        state: RetVal("json")
-      }
+        state: RetVal("json"),
+      },
     },
 
     clearNetworkThrottling: {
       request: {},
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     setTouchEventsOverride: {
       request: {
-        flag: Arg(0, "number")
+        flag: Arg(0, "number"),
       },
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     getTouchEventsOverride: {
       request: {},
       response: {
-        flag: RetVal("number")
-      }
+        flag: RetVal("number"),
+      },
     },
 
     clearTouchEventsOverride: {
       request: {},
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     setMetaViewportOverride: {
       request: {
-        flag: Arg(0, "number")
+        flag: Arg(0, "number"),
       },
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     getMetaViewportOverride: {
       request: {},
       response: {
-        flag: RetVal("number")
-      }
+        flag: RetVal("number"),
+      },
     },
 
     clearMetaViewportOverride: {
       request: {},
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     setUserAgentOverride: {
       request: {
-        flag: Arg(0, "string")
+        flag: Arg(0, "string"),
       },
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
 
     getUserAgentOverride: {
       request: {},
       response: {
-        userAgent: RetVal("string")
-      }
+        userAgent: RetVal("string"),
+      },
     },
 
     clearUserAgentOverride: {
       request: {},
       response: {
-        valueChanged: RetVal("boolean")
-      }
+        valueChanged: RetVal("boolean"),
+      },
     },
-  }
+  },
 });
 
 exports.emulationSpec = emulationSpec;

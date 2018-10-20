@@ -34,7 +34,7 @@
       { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: true },
       { host: "http://example.com", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: false },
       { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: false },
-      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: true }
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: true },
     ];
 
     const iframe1Path =
@@ -66,7 +66,7 @@
           ["browser.contentblocking.enabled", true],
           ["browser.contentblocking.ui.enabled", true],
           ["network.cookie.cookieBehavior", testData[testIndex].cookieBehavior],
-        ]
+        ],
       }, () => {
         iframe.src = testData[testIndex].host + iframe1Path;
       });

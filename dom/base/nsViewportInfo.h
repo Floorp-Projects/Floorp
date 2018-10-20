@@ -66,6 +66,18 @@ class MOZ_STACK_CLASS nsViewportInfo
     bool IsAutoSizeEnabled() const { return mAutoSize; }
     bool IsZoomAllowed() const { return mAllowZoom; }
 
+    enum {
+      Auto = -1,
+      ExtendToZoom = -2,
+      DeviceSize = -3, // for device-width or device-height
+    };
+    // MIN/MAX computations where one of the arguments is auto resolve to the
+    // other argument. For instance, MIN(0.25, auto) = 0.25, and
+    // MAX(5, auto) = 5.
+    // https://drafts.csswg.org/css-device-adapt/#constraining-defs
+    static const float& Max(const float& aA, const float& aB);
+    static const float& Min(const float& aA, const float& aB);
+
   private:
 
     /**

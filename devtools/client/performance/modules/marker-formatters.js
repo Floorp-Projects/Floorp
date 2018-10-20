@@ -49,7 +49,7 @@ exports.Formatters = {
   StylesFields: function(marker) {
     if ("isAnimationOnly" in marker) {
       return {
-        [L10N.getStr("marker.field.isAnimationOnly")]: marker.isAnimationOnly
+        [L10N.getStr("marker.field.isAnimationOnly")]: marker.isAnimationOnly,
       };
     }
     return null;
@@ -95,7 +95,7 @@ exports.Formatters = {
     if ("causeName" in marker && !JS_MARKER_MAP[marker.causeName]) {
       const label = PREFS["show-platform-data"] ? marker.causeName : GECKO_SYMBOL;
       return {
-        [L10N.getStr("marker.field.causeName")]: label
+        [L10N.getStr("marker.field.causeName")]: label,
       };
     }
     return null;
@@ -147,7 +147,7 @@ exports.Formatters = {
   CycleCollectionFields: function(marker) {
     const label = marker.name.replace(/nsCycleCollector::/g, "");
     return {
-      [L10N.getStr("marker.field.type")]: label
+      [L10N.getStr("marker.field.type")]: label,
     };
   },
 
@@ -155,7 +155,7 @@ exports.Formatters = {
     if ("workerOperation" in marker) {
       const label = L10N.getStr(`marker.worker.${marker.workerOperation}`);
       return {
-        [L10N.getStr("marker.field.type")]: label
+        [L10N.getStr("marker.field.type")]: label,
       };
     }
     return null;
@@ -165,7 +165,7 @@ exports.Formatters = {
     if ("messagePortOperation" in marker) {
       const label = L10N.getStr(`marker.messagePort.${marker.messagePortOperation}`);
       return {
-        [L10N.getStr("marker.field.type")]: label
+        [L10N.getStr("marker.field.type")]: label,
       };
     }
     return null;
@@ -174,12 +174,12 @@ exports.Formatters = {
   /* Group 2 - User Controlled */
 
   ConsoleTimeFields: {
-    [L10N.getStr("marker.field.consoleTimerName")]: "causeName"
+    [L10N.getStr("marker.field.consoleTimerName")]: "causeName",
   },
 
   TimeStampFields: {
-    [L10N.getStr("marker.field.label")]: "causeName"
-  }
+    [L10N.getStr("marker.field.label")]: "causeName",
+  },
 };
 
 /**

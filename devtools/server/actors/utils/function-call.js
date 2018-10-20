@@ -55,7 +55,7 @@ exports.FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
       type: type,
       name: name,
       stack: stack,
-      timestamp: timestamp
+      timestamp: timestamp,
     };
 
     // Store a weak reference to all objects so we don't
@@ -90,7 +90,7 @@ exports.FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
     this.details.previews = {
       caller: this._generateStringPreview(caller),
       args: this._generateArgsPreview(args),
-      result: this._generateStringPreview(result)
+      result: this._generateStringPreview(result),
     };
   },
 
@@ -108,7 +108,7 @@ exports.FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
       timestamp: this.details.timestamp,
       callerPreview: this.details.previews.caller,
       argsPreview: this.details.previews.args,
-      resultPreview: this.details.previews.result
+      resultPreview: this.details.previews.result,
     };
   },
 
@@ -136,7 +136,7 @@ exports.FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
       type: type,
       name: name,
       stack: stack,
-      timestamp: timestamp
+      timestamp: timestamp,
     };
   },
 
@@ -218,7 +218,7 @@ exports.FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
       return "Object";
     }
     return data + "";
-  }
+  },
 });
 
 /**
@@ -234,7 +234,7 @@ var gEnumsLookupTable = {};
 // These values are returned from errors, or empty values,
 // and need to be ignored when checking arguments due to the bitwise math.
 var INVALID_ENUMS = [
-  "INVALID_ENUM", "NO_ERROR", "INVALID_VALUE", "OUT_OF_MEMORY", "NONE"
+  "INVALID_ENUM", "NO_ERROR", "INVALID_VALUE", "OUT_OF_MEMORY", "NONE",
 ];
 
 function getBitToEnumValue(type, object, arg) {

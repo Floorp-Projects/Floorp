@@ -24,7 +24,7 @@ this.rpc = function(method, ...params) {
     type: "rpc",
     method: method,
     params: params,
-    id: id
+    id: id,
   }));
 
   const deferred = defer();
@@ -59,7 +59,7 @@ this.addEventListener("message", function(event) {
       const connection = DebuggerServer.connectToParent(packet.id, this);
       connections[packet.id] = {
         connection,
-        rpcs: []
+        rpcs: [],
       };
 
       // Step 4: Create a thread actor for the connection to the parent.
@@ -88,7 +88,7 @@ this.addEventListener("message", function(event) {
           return sources;
         },
 
-        window: global
+        window: global,
       };
 
       const threadActor = new ThreadActor(parent, global);

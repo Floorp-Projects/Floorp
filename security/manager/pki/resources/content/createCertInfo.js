@@ -23,7 +23,7 @@ function onLoad() {
       if (topic == "keygen-finished") {
         window.close();
       }
-    }
+    },
   };
 
   keygenThread.startKeyGeneration(obs);

@@ -57,5 +57,5 @@ let PresentationView = {
                                    JSON.stringify({ result: "error",
                                                     reason: e.message }));
     }
-  }
+  },
 };

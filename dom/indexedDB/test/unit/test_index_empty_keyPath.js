@@ -12,7 +12,7 @@ function* testSteps()
   const objectStoreData = [
     { key: "1", value: "foo" },
     { key: "2", value: "bar" },
-    { key: "3", value: "baz" }
+    { key: "3", value: "baz" },
   ];
 
   let request = indexedDB.open(name, 1);

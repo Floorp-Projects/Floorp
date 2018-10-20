@@ -161,7 +161,7 @@ add_task(async function() {
     "//  line 2",
     "//   line 3",
     "//    line 4",
-    "//     line 5"
+    "//     line 5",
   ].join("\n"));
 
   await promiseWaitForFocus();
@@ -200,7 +200,7 @@ add_task(async function() {
      true],
     ["line",
      {line: 0, ch: 7},
-     true]
+     true],
   ];
 
   for (const v of testVectors) {

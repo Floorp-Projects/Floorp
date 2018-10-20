@@ -138,7 +138,7 @@ add_task(async function() {
 
       for (const region of ["content", "padding", "border", "margin"]) {
         const expected = node.getBoxQuads({
-          box: region
+          box: region,
         })[0];
         const [actual] = getAdjustedQuads(doc.defaultView, node, region);
 

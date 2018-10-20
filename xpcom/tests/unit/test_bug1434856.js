@@ -19,7 +19,7 @@ function run_test() {
 
     run() {
       complete = true;
-    }
+    },
   };
 
   Services.tm.dispatchToMainThread(runnable);

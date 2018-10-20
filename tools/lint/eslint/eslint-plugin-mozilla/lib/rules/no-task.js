@@ -26,6 +26,6 @@ module.exports = function(context) {
           callee.object.name === "Task") {
         context.report({node, message: "Task.jsm is deprecated."});
       }
-    }
+    },
   };
 };

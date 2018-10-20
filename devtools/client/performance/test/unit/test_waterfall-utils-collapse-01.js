@@ -13,7 +13,7 @@ add_task(function test() {
 
   WaterfallUtils.collapseMarkersIntoNode({
     rootNode: rootMarkerNode,
-    markersList: gTestMarkers
+    markersList: gTestMarkers,
   });
 
   function compare(marker, expected) {
@@ -59,9 +59,9 @@ const gExpectedOutput = {
         { start: 10, end: 11, name: "Parse HTML" },
         { start: 12, end: 13, name: "Parse XML" },
         { start: 14, end: 15, name: "GarbageCollection" },
-      ]}
+      ]},
     ]},
     { start: 25, end: 30, name: "Javascript", submarkers: [
       { start: 26, end: 27, name: "Paint" },
-    ]}
+    ]},
   ]};

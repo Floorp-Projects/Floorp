@@ -19,7 +19,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 function error(code, message) {
   return {
     code,
-    errors: [{message, type: "Identifier"}]
+    errors: [{message, type: "Identifier"}],
   };
 }
 
@@ -54,7 +54,7 @@ ruleTester.run("balanced-listeners", rule, {
 
     "elt.addEventListener('event', handler, {once: true});",
 
-    "elt.addEventListener('event', handler, {once: true, capture: true});"
+    "elt.addEventListener('event', handler, {once: true, capture: true});",
   ],
   invalid: [
     error("elt.addEventListener('click', handler, false);",
@@ -74,6 +74,6 @@ ruleTester.run("balanced-listeners", rule, {
 
     error("elt.addEventListener('click', handler, true);" +
           "elt.removeEventListener('click', handler);",
-          "No corresponding 'removeEventListener(click)' was found.")
-  ]
+          "No corresponding 'removeEventListener(click)' was found."),
+  ],
 });

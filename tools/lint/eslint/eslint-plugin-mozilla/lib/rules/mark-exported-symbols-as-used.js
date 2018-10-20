@@ -13,7 +13,7 @@ function markArrayElementsAsUsed(context, node, expression) {
   if (expression.type != "ArrayExpression") {
     context.report({
       node,
-      message: "Unexpected assignment of non-Array to EXPORTED_SYMBOLS"
+      message: "Unexpected assignment of non-Array to EXPORTED_SYMBOLS",
     });
     return;
   }
@@ -66,13 +66,13 @@ module.exports = function(context) {
             // the script executes.
             context.report({
               node,
-              message: "EXPORTED_SYMBOLS cannot be declared via `let`. Use `var` or `this.EXPORTED_SYMBOLS =`"
+              message: "EXPORTED_SYMBOLS cannot be declared via `let`. Use `var` or `this.EXPORTED_SYMBOLS =`",
             });
           }
 
           markArrayElementsAsUsed(context, node, item.init);
         }
       }
-    }
+    },
   };
 };

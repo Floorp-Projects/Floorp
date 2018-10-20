@@ -18,7 +18,7 @@ function* testSteps()
     { ss: "237-23-7736", name: "Joe" },
 
     // This one will be added.
-    { ss: "237-23-7737", name: "Pat" }
+    { ss: "237-23-7737", name: "Pat" },
   ];
 
   // Post-add and post-remove data ordered by name.

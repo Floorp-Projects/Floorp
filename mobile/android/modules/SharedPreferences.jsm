@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 var Scope = Object.freeze({
   APP:          "app",
   PROFILE:      "profile",
-  GLOBAL:       "global"
+  GLOBAL:       "global",
 });
 
 /**
@@ -42,7 +42,7 @@ var SharedPreferences = {
    */
   forAndroid: function(branch) {
     return new SharedPreferencesImpl({ scope: Scope.GLOBAL, branch: branch });
-  }
+  },
 };
 
 /**

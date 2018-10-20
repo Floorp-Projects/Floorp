@@ -37,8 +37,8 @@ const rootSpec = protocol.generateActorSpec({
 
   events: {
     "string-event": {
-      str: Arg(0, "longstring")
-    }
+      str: Arg(0, "longstring"),
+    },
   },
 
   methods: {
@@ -53,8 +53,8 @@ const rootSpec = protocol.generateActorSpec({
     },
     emitLongString: {
       oneway: true,
-    }
-  }
+    },
+  },
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
@@ -91,7 +91,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  }
+  },
 });
 
 function run_test() {

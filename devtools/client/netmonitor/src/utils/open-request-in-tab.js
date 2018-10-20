@@ -27,7 +27,7 @@ function openRequestInTab(url, requestHeaders, requestPostData) {
   } else {
     openPostRequestInTabHelper({
       url,
-      data: requestPostData.postData
+      data: requestPostData.postData,
     });
   }
 }

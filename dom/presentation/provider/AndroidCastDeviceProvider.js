@@ -296,7 +296,7 @@ ChromecastRemoteDisplayDevice.prototype = {
       // Launch Chromecast service in Android.
       EventDispatcher.instance.sendRequestForResult({
         type: TOPIC_ANDROID_CAST_DEVICE_START,
-        id:   this.id
+        id:   this.id,
       }).then(result => {
         log("Chromecast is connected.");
       }).catch(error => {
@@ -318,7 +318,7 @@ ChromecastRemoteDisplayDevice.prototype = {
     // Disconnect from Chromecast.
     EventDispatcher.instance.sendRequestForResult({
       type: TOPIC_ANDROID_CAST_DEVICE_STOP,
-      id:   this.id
+      id:   this.id,
     });
   },
 

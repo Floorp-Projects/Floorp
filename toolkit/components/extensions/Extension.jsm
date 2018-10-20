@@ -859,9 +859,20 @@ class ExtensionData {
   }
 
   hasPermission(perm, includeOptional = false) {
+    // If the permission is a "manifest property" permission, we check if the extension
+    // does have the required property in its manifest.
     let manifest_ = "manifest:";
     if (perm.startsWith(manifest_)) {
-      return this.manifest[perm.substr(manifest_.length)] != null;
+      // Handle nested "manifest property" permission (e.g. as in "manifest:property.nested").
+      let value = this.manifest;
+      for (let prop of perm.substr(manifest_.length).split(".")) {
+        if (!value) {
+          break;
+        }
+        value = value[prop];
+      }
+
+      return value != null;
     }
 
     if (this.permissions.has(perm)) {

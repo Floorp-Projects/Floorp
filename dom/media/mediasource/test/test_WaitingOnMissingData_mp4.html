@@ -44,7 +44,7 @@ runWithMSE(async (ms, el) => {
   p = once(el, "ended");
   await Promise.all([
     fetchAndLoad(audiosb, "bipbop/bipbop_audio", [5], ".m4s"),
-    fetchAndLoad(videosb, "bipbop/bipbop_video", [6], ".m4s")
+    fetchAndLoad(videosb, "bipbop/bipbop_video", [6], ".m4s"),
   ]);
   ms.endOfStream();
   await p;

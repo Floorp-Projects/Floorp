@@ -25,7 +25,7 @@
 
       // Multiple selection changes will be coalesced, so just listen for one.
       this.eventSeq = [
-        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID),
       ];
 
       this.invoke = function addSelection_invoke() {
@@ -68,7 +68,7 @@
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID),
       ];
 
       this.invoke = function changeSelection_invoke() {
@@ -97,7 +97,7 @@
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, document)
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, document),
       ];
 
       this.invoke = function removeSelection_invoke() {
@@ -123,7 +123,7 @@
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID),
       ];
 
       this.invoke = function changeDOMSelection_invoke() {

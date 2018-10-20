@@ -22,7 +22,7 @@ if (!navigator.platform.includes("Win")) {
       return WINDOWS_UA;
     }, window),
 
-    set: exportFunction(function() {}, window)
+    set: exportFunction(function() {}, window),
   });
 
   Object.defineProperty(window.navigator.wrappedJSObject, "appVersion", {
@@ -30,7 +30,7 @@ if (!navigator.platform.includes("Win")) {
       return "appVersion";
     }, window),
 
-    set: exportFunction(function() {}, window)
+    set: exportFunction(function() {}, window),
   });
 
   Object.defineProperty(window.navigator.wrappedJSObject, "platform", {
@@ -38,6 +38,6 @@ if (!navigator.platform.includes("Win")) {
       return "Win64";
     }, window),
 
-    set: exportFunction(function() {}, window)
+    set: exportFunction(function() {}, window),
   });
 }

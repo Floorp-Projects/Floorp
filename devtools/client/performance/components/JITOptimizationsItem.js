@@ -26,7 +26,7 @@ const OPTIMIZATION_ITEM_TYPES = ["site", "attempts", "types", "attempt", "type",
  *        integrated as of yet.
  */
 const {
-  JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome
+  JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome,
 } = require("devtools/client/performance/modules/logic/jit");
 const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
 const JIT_SAMPLES = L10N.getStr("jit.samples");
@@ -44,7 +44,7 @@ class JITOptimizationsItem extends Component {
       depth: PropTypes.number.isRequired,
       arrow: PropTypes.element.isRequired,
       item: PropTypes.object,
-      focused: PropTypes.bool
+      focused: PropTypes.bool,
     };
   }
 
@@ -85,7 +85,7 @@ class JITOptimizationsItem extends Component {
         source: frameData.url,
         line: +site.data.line,
         column: site.data.column,
-      }
+      },
     });
     const children = [text, frame];
 
@@ -127,7 +127,7 @@ class JITOptimizationsItem extends Component {
   _renderObservedType({ onViewSourceInDebugger, item: type }) {
     const children = [
       dom.span({ className: "optimization-observed-type-keyed" },
-        `${type.keyedBy}${type.name ? ` → ${type.name}` : ""}`)
+        `${type.keyedBy}${type.name ? ` → ${type.name}` : ""}`),
     ];
 
     // If we have a line and location, make a link to the debugger
@@ -139,7 +139,7 @@ class JITOptimizationsItem extends Component {
             source: type.location,
             line: type.line,
             column: type.column,
-          }
+          },
         })
       );
     // Otherwise if we just have a location, it's probably just a memory location.
@@ -181,7 +181,7 @@ class JITOptimizationsItem extends Component {
     return dom.div(
       {
         className: `optimization-tree-item optimization-tree-item-${type}`,
-        style: { marginInlineStart: depth * TREE_ROW_HEIGHT }
+        style: { marginInlineStart: depth * TREE_ROW_HEIGHT },
       },
       arrow,
       content

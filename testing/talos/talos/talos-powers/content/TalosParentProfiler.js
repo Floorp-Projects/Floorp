@@ -208,6 +208,6 @@ var TalosParentProfiler;
           resolve();
         }, "talos-profile-gathered");
       });
-    }
+    },
   };
 })();

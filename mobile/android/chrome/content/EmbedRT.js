@@ -34,7 +34,7 @@ var EmbedRT = {
     let sandbox = new Cu.Sandbox(principal,
       {
         sandboxName: scriptURL,
-        wantGlobalProperties: ["indexedDB"]
+        wantGlobalProperties: ["indexedDB"],
       }
     );
 
@@ -60,5 +60,5 @@ var EmbedRT = {
         dump("Exception calling 'load' method in script: " + scriptURL + "\n" + e);
       }
     }
-  }
+  },
 };

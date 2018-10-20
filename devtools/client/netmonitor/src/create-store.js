@@ -30,13 +30,13 @@ function configureStore(connector, telemetry) {
   // Prepare initial state.
   const initialState = {
     filters: new Filters({
-      requestFilterTypes: getFilterState()
+      requestFilterTypes: getFilterState(),
     }),
     requests: new Requests(),
     sort: new Sort(),
     timingMarkers: new TimingMarkers(),
     ui: UI({
-      columns: getColumnState()
+      columns: getColumnState(),
     }),
   };
 

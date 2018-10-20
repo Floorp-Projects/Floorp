@@ -34,9 +34,9 @@ add_task(async function() {
         statusText: "OK (service worker)",
         displayedStatus: "service worker",
         type: "plain",
-        fullMimeType: "text/plain; charset=UTF-8"
+        fullMimeType: "text/plain; charset=UTF-8",
       },
-      stackFunctions: ["doXHR", "performRequests"]
+      stackFunctions: ["doXHR", "performRequests"],
     },
   ];
 

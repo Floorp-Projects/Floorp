@@ -69,7 +69,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this._options = {
       useSourceMaps: false,
-      autoBlackBox: false
+      autoBlackBox: false,
     };
 
     this.breakpointActorMap = new BreakpointActorMap();
@@ -280,7 +280,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._nestedEventLoops = new EventLoopStack({
       hooks: this._parent,
       connection: this.conn,
-      thread: this
+      thread: this,
     });
 
     this.dbg.addDebuggees();
@@ -411,7 +411,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     dumpn("ThreadActor.prototype.onDetach: returning 'detached' packet");
     return {
-      type: "detached"
+      type: "detached",
     };
   },
 
@@ -474,7 +474,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         packet.frame.where = {
           source: originalLocation.originalSourceActor.form(),
           line: originalLocation.originalLine,
-          column: originalLocation.originalColumn
+          column: originalLocation.originalColumn,
         };
 
         Promise.resolve(onPacket(packet))
@@ -482,7 +482,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
             reportError(error);
             return {
               error: "unknownError",
-              message: error.message + "\n" + error.stack
+              message: error.message + "\n" + error.stack,
             };
           })
           .then(pkt => {
@@ -558,7 +558,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           thread.createCompletionGrip(packet, completion);
         } else {
           packet.why.frameFinished = {
-            terminated: true
+            terminated: true,
           };
         }
         return packet;
@@ -743,13 +743,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       startLocation: startLocation,
       steppingType: steppingType,
       rewinding: rewinding,
-      completion
+      completion,
     };
 
     return {
       onEnterFrame: this._makeOnEnterFrame(steppingHookState),
       onPop: this._makeOnPop(steppingHookState),
-      onStep: this._makeOnStep(steppingHookState)
+      onStep: this._makeOnStep(steppingHookState),
     };
   },
 
@@ -768,7 +768,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (!["break", "step", "next", "finish", "warp"].includes(steppingType)) {
       return Promise.reject({
         error: "badParameterType",
-        message: "Unknown resumeLimit type"
+        message: "Unknown resumeLimit type",
       });
     }
 
@@ -868,7 +868,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    */
   _onWindowReady: function() {
     this._maybeListenToEvents({
-      pauseOnDOMEvents: this._pauseOnDOMEvents
+      pauseOnDOMEvents: this._pauseOnDOMEvents,
     });
   },
 
@@ -881,7 +881,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         error: "wrongState",
         message: "Can't resume when debuggee isn't paused. Current state is '"
           + this._state + "'",
-        state: this._state
+        state: this._state,
       };
     }
 
@@ -894,7 +894,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return {
         error: "wrongOrder",
         message: "trying to resume in the wrong order.",
-        lastPausedUrl: this._nestedEventLoops.lastPausedUrl
+        lastPausedUrl: this._nestedEventLoops.lastPausedUrl,
       };
     }
 
@@ -902,7 +902,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (rewinding && !this.dbg.replaying) {
       return {
         error: "cantRewind",
-        message: "Can't rewind a debuggee that is not replaying."
+        message: "Can't rewind a debuggee that is not replaying.",
       };
     }
 
@@ -1185,7 +1185,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         form.where = {
           source: sourceForm,
           line: originalLocation.originalLine,
-          column: originalLocation.originalColumn
+          column: originalLocation.originalColumn,
         };
         form.source = sourceForm;
         return form;
@@ -1245,7 +1245,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // timeout flush the buffered packets.
 
       return {
-        sources: this.sources.iter().map(s => s.form())
+        sources: this.sources.iter().map(s => s.form()),
       };
     });
   },
@@ -1330,7 +1330,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (!this.global) {
       return {
         error: "notImplemented",
-        message: "eventListeners request is only supported in content debugging"
+        message: "eventListeners request is only supported in content debugging",
       };
     }
 
@@ -1356,7 +1356,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         const nodeDO = this.globalDebugObject.makeDebuggeeValue(node);
         listenerForm.node = {
           selector: selector,
-          object: createValueGrip(nodeDO, this._pausePool, this.objectGrip)
+          object: createValueGrip(nodeDO, this._pausePool, this.objectGrip),
         };
         listenerForm.type = handler.type;
         listenerForm.capturing = handler.capturing;
@@ -1644,7 +1644,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       createEnvironmentActor: (e, p) => this.createEnvironmentActor(e, p),
       promote: () => this.threadObjectGrip(actor),
       isThreadLifetimePool: () => actor.registeredPool !== this.threadLifetimePool,
-      getGlobalDebugObject: () => this.globalDebugObject
+      getGlobalDebugObject: () => this.globalDebugObject,
     }, this.conn);
     pool.addActor(actor);
     pool.objectActors.set(value, actor);
@@ -1837,7 +1837,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
       packet.why = { type: "exception",
                      exception: createValueGrip(value, this._pausePool,
-                                                this.objectGrip)
+                                                this.objectGrip),
       };
       this.conn.send(packet);
 
@@ -1873,7 +1873,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.conn.send({
       from: this._parent.actorID,
       type,
-      source: source.form()
+      source: source.form(),
     });
 
     // For compatibility and debugger still using `newSource` on the thread client,
@@ -1881,7 +1881,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.conn.send({
       from: this.actorID,
       type,
-      source: source.form()
+      source: source.form(),
     });
   },
 
@@ -1895,7 +1895,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.conn.send({
       from: this._parent.actorID,
       type: "updatedSource",
-      source: source.form()
+      source: source.form(),
     });
   },
 
@@ -2024,7 +2024,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
     return { from: this.actorID,
              actors: result };
-  }
+  },
 });
 
 Object.assign(ThreadActor.prototype.requestTypes, {
@@ -2040,7 +2040,7 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
   "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties,
-  "skipBreakpoints": ThreadActor.prototype.onSkipBreakpoints
+  "skipBreakpoints": ThreadActor.prototype.onSkipBreakpoints,
 });
 
 exports.ThreadActor = ThreadActor;
@@ -2059,7 +2059,7 @@ function PauseActor(pool) {
 }
 
 PauseActor.prototype = {
-  actorPrefix: "pause"
+  actorPrefix: "pause",
 };
 
 /**
@@ -2085,7 +2085,7 @@ Object.assign(ChromeDebuggerActor.prototype, {
   constructor: ChromeDebuggerActor,
 
   // A constant prefix that will be used to form the actor ID by the server.
-  actorPrefix: "chromeDebugger"
+  actorPrefix: "chromeDebugger",
 });
 
 exports.ChromeDebuggerActor = ChromeDebuggerActor;
@@ -2113,7 +2113,7 @@ Object.assign(AddonThreadActor.prototype, {
   constructor: AddonThreadActor,
 
   // A constant prefix that will be used to form the actor ID by the server.
-  actorPrefix: "addonThread"
+  actorPrefix: "addonThread",
 });
 
 exports.AddonThreadActor = AddonThreadActor;

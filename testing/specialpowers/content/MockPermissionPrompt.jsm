@@ -22,7 +22,7 @@ var newFactory = {
   lockFactory(aLock) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
 };
 
 var MockPermissionPrompt = {
@@ -76,5 +76,5 @@ MockPermissionPromptInstance.prototype = {
     }
 
     request.allow();
-  }
+  },
 };

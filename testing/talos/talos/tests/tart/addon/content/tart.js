@@ -51,7 +51,7 @@ Tart.prototype = {
 
     cleanup(handler, win) {
       win.gBrowser.tabContainer.removeEventListener("transitionend", handler);
-    }
+    },
   },
 
   customizeEnterDetector: {
@@ -65,7 +65,7 @@ Tart.prototype = {
 
     cleanup(handler, win) {
       win.gNavToolbox.removeEventListener("customizationready", handler);
-    }
+    },
   },
 
   makeNewTabURLChangePromise(url) {
@@ -104,7 +104,7 @@ Tart.prototype = {
     cleanup(handler, win) {
       win.gNavToolbox.removeEventListener("customization-transitionend", handler);
       win.gNavToolbox.removeEventListener("customizationready", handler);
-    }
+    },
   },
 
   customizeExitDetector: {
@@ -118,7 +118,7 @@ Tart.prototype = {
 
     cleanup(handler, win) {
       win.gNavToolbox.removeEventListener("aftercustomization", handler);
-    }
+    },
   },
 
   clickNewTab() {
@@ -508,7 +508,7 @@ Tart.prototype = {
         function() { animate(0, closeCurrentTab, next); },
 
         function() { animate(rest, addTab, next, true, "simple-open-DPI1", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "simple-close-DPI1", tabRefDuration); }
+        function() { animate(rest, closeCurrentTab, next, true, "simple-close-DPI1", tabRefDuration); },
       ],
 
       iconDpi1: [
@@ -520,7 +520,7 @@ Tart.prototype = {
         function() { animate(0, closeCurrentTab, next); },
 
         function() { animate(rest, addTab, next, true, "icon-open-DPI1", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "icon-close-DPI1", tabRefDuration); }
+        function() { animate(rest, closeCurrentTab, next, true, "icon-close-DPI1", tabRefDuration); },
       ],
 
       iconDpi2: [
@@ -532,7 +532,7 @@ Tart.prototype = {
         function() { animate(0, closeCurrentTab, next); },
 
         function() { animate(rest, addTab, next, true, "icon-open-DPI2", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "icon-close-DPI2", tabRefDuration); }
+        function() { animate(rest, closeCurrentTab, next, true, "icon-close-DPI2", tabRefDuration); },
       ],
 
       newtabNoPreload: [
@@ -542,7 +542,7 @@ Tart.prototype = {
           self.makeNewTabURLChangePromise("about:newtab").then(next);
         },
         function() { animate(rest, addTab, next, true, "newtab-open-preload-no", tabRefDuration); },
-        function() { animate(0, closeCurrentTab, next); }
+        function() { animate(0, closeCurrentTab, next); },
       ],
 
       newtabYesPreload: [
@@ -555,7 +555,7 @@ Tart.prototype = {
         function() { animate(0, closeCurrentTab, next); },
 
         function() { animate(1000, addTab, next, true, "newtab-open-preload-yes", tabRefDuration); },
-        function() { animate(0, closeCurrentTab, next); }
+        function() { animate(0, closeCurrentTab, next); },
       ],
 
       simple3open3closeDpiCurrent: [
@@ -565,7 +565,7 @@ Tart.prototype = {
 
         function() { animate(rest, closeCurrentTab, next, true, "simple3-3-close-DPIcurrent", tabRefDuration); },
         function() { animate(rest, closeCurrentTab, next, true, "simple3-2-close-DPIcurrent", tabRefDuration); },
-        function() { animate(rest, closeCurrentTab, next, true, "simple3-1-close-DPIcurrent", tabRefDuration); }
+        function() { animate(rest, closeCurrentTab, next, true, "simple3-1-close-DPIcurrent", tabRefDuration); },
       ],
 
       multi: [
@@ -652,8 +652,8 @@ Tart.prototype = {
         function() { animate(rest, customizeEnterCss, next, true, "3-customize-enter-css", custRefDuration); },
         function() { animate(0, customizeExit, next); },
 
-        function() { animate(0, closeCurrentTab, next); }
-      ]
+        function() { animate(0, closeCurrentTab, next); },
+      ],
     };
 
     // Construct the sequence array: config.repeat times config.subtests,
@@ -684,5 +684,5 @@ Tart.prototype = {
     Profiler.mark("TART - start", true);
 
     return this._startTest();
-  }
+  },
 };

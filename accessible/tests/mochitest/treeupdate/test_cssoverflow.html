@@ -35,7 +35,7 @@
       this.scrollAreaNode = getNode(aScrollAreaID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.container)
+        new invokerChecker(EVENT_REORDER, this.container),
       ];
 
       this.invoke = function changeScrollRange_invoke() {
@@ -47,9 +47,9 @@
         var accTree =
           { SECTION: [ // container
             { SECTION: [ // scroll area
-              { ENTRY: [] } // child content
+              { ENTRY: [] }, // child content
             ] },
-            { ENTRY: [] } // inserted input
+            { ENTRY: [] }, // inserted input
           ] };
         testAccessibleTree(this.container, accTree);
       };
@@ -69,7 +69,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getAccessible, this.scrollAreaNode),
-        new invokerChecker(EVENT_REORDER, this.container)
+        new invokerChecker(EVENT_REORDER, this.container),
       ];
 
       this.invoke = function changeScrollbarStyles_invoke() {
@@ -83,7 +83,7 @@
       this.finalCheck = function changeScrollbarStyles_finalCheck() {
         var accTree =
           { SECTION: [ // container
-            { SECTION: [] } // scroll area
+            { SECTION: [] }, // scroll area
           ] };
         testAccessibleTree(this.container, accTree);
       };

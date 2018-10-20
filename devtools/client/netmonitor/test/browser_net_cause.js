@@ -17,35 +17,35 @@ const EXPECTED_REQUESTS = [
     causeType: "document",
     causeUri: null,
     // The document load has internal privileged JS code on the stack
-    stack: true
+    stack: true,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "stylesheet_request",
     causeType: "stylesheet",
     causeUri: CAUSE_URL,
-    stack: false
+    stack: false,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "img_request",
     causeType: "img",
     causeUri: CAUSE_URL,
-    stack: false
+    stack: false,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "xhr_request",
     causeType: "xhr",
     causeUri: CAUSE_URL,
-    stack: [{ fn: "performXhrRequestCallback", file: CAUSE_FILE_NAME, line: 26 }]
+    stack: [{ fn: "performXhrRequestCallback", file: CAUSE_FILE_NAME, line: 26 }],
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: CAUSE_URL,
-    stack: [{ fn: "performFetchRequest", file: CAUSE_FILE_NAME, line: 31 }]
+    stack: [{ fn: "performFetchRequest", file: CAUSE_FILE_NAME, line: 31 }],
   },
   {
     method: "GET",
@@ -56,7 +56,7 @@ const EXPECTED_REQUESTS = [
       { fn: "performPromiseFetchRequestCallback", file: CAUSE_FILE_NAME, line: 37 },
       { fn: "performPromiseFetchRequest", file: CAUSE_FILE_NAME, line: 36,
         asyncCause: "promise callback" },
-    ]
+    ],
   },
   {
     method: "GET",
@@ -67,14 +67,14 @@ const EXPECTED_REQUESTS = [
       { fn: "performTimeoutFetchRequestCallback2", file: CAUSE_FILE_NAME, line: 44 },
       { fn: "performTimeoutFetchRequestCallback1", file: CAUSE_FILE_NAME, line: 43,
         asyncCause: "setTimeout handler" },
-    ]
+    ],
   },
   {
     method: "POST",
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: CAUSE_URL,
-    stack: [{ fn: "performBeaconRequest", file: CAUSE_FILE_NAME, line: 50 }]
+    stack: [{ fn: "performBeaconRequest", file: CAUSE_FILE_NAME, line: 50 }],
   },
 ];
 

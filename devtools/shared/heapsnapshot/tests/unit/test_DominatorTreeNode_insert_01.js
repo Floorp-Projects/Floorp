@@ -81,7 +81,7 @@ const expected = {
               children: undefined,
             },
           ],
-          moreChildrenAvailable: false
+          moreChildrenAvailable: false,
         },
         {
           nodeId: 3,
@@ -93,7 +93,7 @@ const expected = {
           children: undefined,
         },
       ],
-      moreChildrenAvailable: true
+      moreChildrenAvailable: true,
     },
     {
       nodeId: 5,
@@ -103,9 +103,9 @@ const expected = {
       parentId: 1000,
       moreChildrenAvailable: true,
       children: undefined,
-    }
+    },
   ],
-  moreChildrenAvailable: true
+  moreChildrenAvailable: true,
 };
 
 function run_test() {

@@ -248,5 +248,5 @@ SimpleListWidget.prototype = {
   _headerTextNode: null,
   _headerTextValue: "",
   _emptyTextNode: null,
-  _emptyTextValue: ""
+  _emptyTextValue: "",
 };

@@ -291,7 +291,7 @@ ClipManager::DefineScrollLayers(const ActiveScrolledRoot* aASR,
   Maybe<wr::WrClipId> ancestorScrollId = DefineScrollLayers(aASR->mParent, aItem, aSc);
 
   Maybe<ScrollMetadata> metadata = aASR->mScrollableFrame->ComputeScrollMetadata(
-      mManager, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+      mManager, aItem->ReferenceFrame(), Nothing(), nullptr);
   MOZ_ASSERT(metadata);
   FrameMetrics& metrics = metadata->GetMetrics();
 

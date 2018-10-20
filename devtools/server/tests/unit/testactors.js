@@ -58,7 +58,7 @@ TestTabList.prototype = {
   constructor: TestTabList,
   getList: function() {
     return Promise.resolve([...this._targetActors]);
-  }
+  },
 };
 
 exports.createRootActor = function createRootActor(connection) {
@@ -83,7 +83,7 @@ function TestTargetActor(connection, global) {
     findDebuggees: () => [this._global],
     shouldAddNewGlobalAsDebuggee: g => g.hostAnnotations &&
                                        g.hostAnnotations.type == "document" &&
-                                       g.hostAnnotations.element === this._global
+                                       g.hostAnnotations.element === this._global,
 
   });
 }
@@ -157,5 +157,5 @@ TestTargetActor.prototype = {
 TestTargetActor.prototype.requestTypes = {
   "attach": TestTargetActor.prototype.onAttach,
   "detach": TestTargetActor.prototype.onDetach,
-  "reload": TestTargetActor.prototype.onReload
+  "reload": TestTargetActor.prototype.onReload,
 };

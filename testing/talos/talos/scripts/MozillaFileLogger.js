@@ -11,7 +11,7 @@ function contentDispatchEvent(type, data, sync) {
 
   var element = new CustomEvent("contentEvent", {
     bubbles: true,
-    detail: { sync, type, data: JSON.stringify(data) }
+    detail: { sync, type, data: JSON.stringify(data) },
   });
   document.dispatchEvent(element);
 }

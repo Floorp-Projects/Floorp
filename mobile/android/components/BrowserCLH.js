@@ -237,7 +237,7 @@ BrowserCLH.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   // XPCOMUtils factory
-  classID: Components.ID("{be623d20-d305-11de-8a39-0800200c9a66}")
+  classID: Components.ID("{be623d20-d305-11de-8a39-0800200c9a66}"),
 };
 
 var components = [ BrowserCLH ];

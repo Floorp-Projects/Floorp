@@ -102,17 +102,30 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
   }
 
   pay() {
+    let state = this.requestStore.getState();
     let {
       selectedPayerAddress,
       selectedPaymentCard,
       selectedPaymentCardSecurityCode,
-    } = this.requestStore.getState();
+      selectedShippingAddress,
+    } = state;
 
-    paymentRequest.pay({
-      selectedPayerAddressGUID: selectedPayerAddress,
+    let data = {
       selectedPaymentCardGUID: selectedPaymentCard,
       selectedPaymentCardSecurityCode,
-    });
+    };
+
+    data.selectedShippingAddressGUID =
+      state.request.paymentOptions.requestShipping ?
+      selectedShippingAddress :
+      null;
+
+    data.selectedPayerAddressGUID =
+      this._isPayerRequested(state.request.paymentOptions) ?
+      selectedPayerAddress :
+      null;
+
+    paymentRequest.pay(data);
   }
 
   changeShippingAddress(shippingAddressGUID) {
@@ -171,7 +184,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
    *
    * @param {object} state - See `PaymentsStore.setState`
    */
-  setStateFromParent(state) {
+  async setStateFromParent(state) {
     let oldAddresses = paymentRequest.getAddresses(this.requestStore.getState());
     if (state.request) {
       state = this._updateCompleteStatus(state);
@@ -385,7 +398,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
       let link = manageTextEl.querySelector("a");
       // The href is only set to be exposed to accessibility tools so users know what will open.
       // The actual opening happens from the click event listener.
-      link.href = "about:preferences#privacy-address-autofill";
+      link.href = "about:preferences#privacy-form-autofill";
     }
 
     this._renderPayButton(state);

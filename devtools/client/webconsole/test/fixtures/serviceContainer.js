@@ -25,5 +25,5 @@ module.exports = {
   },
   openLink: () => {},
   // eslint-disable-next-line react/display-name
-  createElement: tagName => document.createElement(tagName)
+  createElement: tagName => document.createElement(tagName),
 };

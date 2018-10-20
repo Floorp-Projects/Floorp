@@ -38,7 +38,7 @@ class SidebarItem extends PureComponent {
                       ""
                    ) +
                    (selectable ? " sidebar-item--selectable" : ""),
-        onClick: selectable ? () => this.onItemClick() : null
+        onClick: selectable ? () => this.onItemClick() : null,
       },
       children
     );

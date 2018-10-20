@@ -306,7 +306,7 @@ NetworkResponseListener.prototype = {
     const httpActivity = this.httpActivity;
     CacheEntry.getCacheEntry(this.request, (descriptor) => {
       httpActivity.owner.addResponseCache({
-        responseCache: descriptor
+        responseCache: descriptor,
       });
     });
   },
@@ -453,7 +453,7 @@ NetworkResponseListener.prototype = {
       response,
       {
         discardResponseBody: this.httpActivity.discardResponseBody,
-        truncated: this.truncated
+        truncated: this.truncated,
       }
     );
 

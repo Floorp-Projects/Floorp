@@ -218,7 +218,7 @@ class SecurityPanel extends Component {
       };
     } else {
       object = {
-        [ERROR_LABEL]: securityInfo.errorMessage || NOT_AVAILABLE
+        [ERROR_LABEL]: securityInfo.errorMessage || NOT_AVAILABLE,
       };
     }
 

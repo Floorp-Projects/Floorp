@@ -25,15 +25,15 @@ define(function(require, exports, module) {
         // True if the header should be visible
         header: PropTypes.bool,
         // Array with column definition
-        columns: PropTypes.array
+        columns: PropTypes.array,
       };
     }
 
     static get defaultProps() {
       return {
         columns: [{
-          id: "default"
-        }]
+          id: "default",
+        }],
       };
     }
 
@@ -88,7 +88,7 @@ define(function(require, exports, module) {
           },
             visible ? div({
               className: "treeHeaderCellBox",
-              role: "presentation"
+              role: "presentation",
             }, col.title) : null
           )
         );
@@ -96,10 +96,10 @@ define(function(require, exports, module) {
 
       return (
         thead({
-          role: "presentation"
+          role: "presentation",
         }, tr({
           className: visible ? "treeHeaderRow" : "",
-          role: "presentation"
+          role: "presentation",
         }, cells))
       );
     }

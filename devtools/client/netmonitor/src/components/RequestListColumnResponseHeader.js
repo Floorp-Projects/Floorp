@@ -9,7 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   getResponseHeader,
-  fetchNetworkUpdatePacket
+  fetchNetworkUpdatePacket,
 } = require("../utils/request-utils");
 
 const { div } = dom;
@@ -48,7 +48,7 @@ class RequestListColumnResponseHeader extends Component {
     return (
       div({
         className: "requests-list-column requests-list-response-header",
-        title: header
+        title: header,
       },
         header
       )

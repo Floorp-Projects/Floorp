@@ -26,7 +26,7 @@ const MORE_INFO_URL = "https://developer.mozilla.org/docs/Tools" +
 class AddonsControls extends Component {
   static get propTypes() {
     return {
-      debugDisabled: PropTypes.bool
+      debugDisabled: PropTypes.bool,
     };
   }
 
@@ -87,7 +87,7 @@ class AddonsControls extends Component {
           dom.label({
             className: "addons-debugging-label",
             htmlFor: "enable-addon-debugging",
-            title: Strings.GetStringFromName("addonDebugging.tooltip")
+            title: Strings.GetStringFromName("addonDebugging.tooltip"),
           }, Strings.GetStringFromName("addonDebugging.label")),
           dom.a({ href: MORE_INFO_URL, target: "_blank" },
             Strings.GetStringFromName("addonDebugging.learnMore")

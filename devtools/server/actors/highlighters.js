@@ -422,7 +422,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
       this._isPicking = false;
       this._hoveredNode = null;
     }
-  }
+  },
 });
 
 /**
@@ -537,7 +537,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
       this._highlighterEnv.destroy();
       this._highlighterEnv = null;
     }
-  }
+  },
 });
 
 /**
@@ -579,7 +579,7 @@ HighlighterEnvironment.prototype = {
     this.listener = {
       QueryInterface: ChromeUtils.generateQI([
         Ci.nsIWebProgressListener,
-        Ci.nsISupportsWeakReference
+        Ci.nsISupportsWeakReference,
       ]),
 
       onStateChange: function(progress, request, flag) {
@@ -597,16 +597,16 @@ HighlighterEnvironment.prototype = {
           // in this window.
           self.emit("will-navigate", {
             window: win,
-            isTopLevel: true
+            isTopLevel: true,
           });
         }
         if (isWindow && isStop) {
           self.emit("navigate", {
             window: win,
-            isTopLevel: true
+            isTopLevel: true,
           });
         }
-      }
+      },
     };
 
     this.webProgress.addProgressListener(this.listener,
@@ -697,7 +697,7 @@ HighlighterEnvironment.prototype = {
 
     this._targetActor = null;
     this._win = null;
-  }
+  },
 };
 
 register("BoxModelHighlighter", "box-model");

@@ -19,7 +19,7 @@ loader.lazyRequireGetter(this, "Telemetry",
 
 const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/aboutdebugging/",
-  window
+  window,
 });
 
 const { createFactory } = require("devtools/client/shared/vendor/react");

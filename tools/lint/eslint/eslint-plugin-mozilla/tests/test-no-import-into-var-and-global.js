@@ -18,25 +18,25 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 
 const ExpectedError = {
   message: "Cu.import imports into variables and into global scope.",
-  type: "CallExpression"
+  type: "CallExpression",
 };
 
 ruleTester.run("no-import-into-var-and-global", rule, {
   valid: [
     "var foo = Cu.import('fake', {});",
-    "var foo = Components.utils.import('fake', {});"
+    "var foo = Components.utils.import('fake', {});",
   ],
   invalid: [{
     code: "var foo = Cu.import('fake', this);",
-    errors: [ExpectedError]
+    errors: [ExpectedError],
   }, {
     code: "var foo = Cu.import('fake');",
-    errors: [ExpectedError]
+    errors: [ExpectedError],
   }, {
     code: "var foo = Components.utils.import('fake');",
-    errors: [ExpectedError]
+    errors: [ExpectedError],
   }, {
     code: "var foo = ChromeUtils.import('fake');",
-    errors: [ExpectedError]
-  }]
+    errors: [ExpectedError],
+  }],
 });

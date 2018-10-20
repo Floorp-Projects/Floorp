@@ -84,7 +84,7 @@ ClassList.prototype = {
   },
   toString() {
     return this[_tokens].join(" ");
-  }
+  },
 };
 
 /**
@@ -442,7 +442,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
           };
         }
         return obj[name];
-      }
+      },
     });
 
     // Start at originalTarget, bubble through ancestors and call handlers when
@@ -496,9 +496,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
         return this.removeEventListenerForElement(id, type, handler);
       },
       computedStyle: {
-        getPropertyValue: property => this.getComputedStylePropertyValue(id, property)
+        getPropertyValue: property => this.getComputedStylePropertyValue(id, property),
       },
-      classList
+      classList,
     };
 
     this.elements.set(id, element);
@@ -554,7 +554,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     value += `position:absolute; width:${width}px;height:${height}px; overflow:hidden`;
 
     this.setAttributeForElement(id, "style", value);
-  }
+  },
 };
 exports.CanvasFrameAnonymousContentHelper = CanvasFrameAnonymousContentHelper;
 

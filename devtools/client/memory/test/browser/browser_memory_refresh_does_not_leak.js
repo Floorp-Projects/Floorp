@@ -26,7 +26,7 @@ async function getWindowsInSnapshot(front) {
       by: "objectClass",
       then: { by: "bucket" },
       other: { by: "count", count: true, bytes: false },
-    }
+    },
   });
   dumpn("Took census, window count = " + report.Window.count);
   return report.Window;
@@ -47,7 +47,7 @@ const DESCRIPTION = {
   other: {
     by: "internalType",
     then: { by: "count", count: true, bytes: false },
-  }
+  },
 };
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {

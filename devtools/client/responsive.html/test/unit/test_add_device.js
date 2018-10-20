@@ -22,7 +22,7 @@ add_task(async function() {
     "userAgent": "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
     "touch": true,
     "firefoxOS": true,
-    "os": "fxos"
+    "os": "fxos",
   };
 
   dispatch(addDeviceType("phones"));

@@ -23,7 +23,7 @@ const FORMATTERS = {
   PERCENT: (value) => L10N.getFormatStr("table.percentage3",
                                         L10N.numberWithDecimals(value, 2)),
   NUMBER: (value) => value || 0,
-  BYTESIZE: (value) => L10N.getFormatStr("table.bytes", (value || 0))
+  BYTESIZE: (value) => L10N.getFormatStr("table.bytes", (value || 0)),
 };
 
 /**
@@ -134,11 +134,11 @@ const DEFAULT_VISIBLE_CELLS = {
 function CallView({
   caller, frame, level, hidden, inverted,
   sortingPredicate, autoExpandDepth, visibleCells,
-  showOptimizationHint
+  showOptimizationHint,
 }) {
   AbstractTreeItem.call(this, {
     parent: caller,
-    level: level | 0 - (hidden ? 1 : 0)
+    level: level | 0 - (hidden ? 1 : 0),
   });
 
   if (sortingPredicate != null) {
@@ -229,7 +229,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
         caller: this,
         frame: newFrame,
         level: newLevel,
-        inverted: this.inverted
+        inverted: this.inverted,
       }));
     }
 
@@ -355,7 +355,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
 
     this._cachedDisplayedData = this.frame.getInfo({
       root: this.root.frame,
-      allocations: (this.visibleCells.count || this.visibleCells.selfCount)
+      allocations: (this.visibleCells.count || this.visibleCells.selfCount),
     });
 
     return this._cachedDisplayedData;

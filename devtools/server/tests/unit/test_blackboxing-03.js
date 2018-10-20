@@ -34,7 +34,7 @@ function test_black_box() {
   gClient.addOneTimeListener("paused", function(event, packet) {
     const source = gThreadClient.source(packet.frame.where.source);
     source.setBreakpoint({
-      line: 4
+      line: 4,
     }).then(function([response, bpClient]) {
       gBpClient = bpClient;
       gThreadClient.resume(test_black_box_dbg_statement);

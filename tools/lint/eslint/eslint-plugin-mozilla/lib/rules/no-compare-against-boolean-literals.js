@@ -25,6 +25,6 @@ module.exports = function(context) {
            ["true", "false"].includes(node.right.raw))) {
         context.report(node, "Don't compare for inexact equality against boolean literals");
       }
-    }
+    },
   };
 };

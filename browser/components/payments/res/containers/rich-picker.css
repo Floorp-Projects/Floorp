@@ -64,14 +64,20 @@ payment-method-picker.rich-picker {
   flex-grow: 1;
   grid-area: csc;
   margin: 10px 0; /* Has to be same as rich-select */
-  /* So the error outline appears above the adjacent dropdown */
-  z-index: 1;
 }
 
 .rich-picker .security-code {
   border: 1px solid #0C0C0D33;
-  /* Override the border from common.css */
-  border-inline-start: none !important;
+  /* Underlap the 1px border from common.css */
+  margin-inline-start: -1px;
   flex-grow: 1;
   padding: 8px;
+}
+
+.rich-picker .security-code:-moz-ui-invalid,
+.rich-picker .security-code:focus {
+  /* So the error outline and focus ring appear above the adjacent dropdown when appropriate. */
+  /* We don't want to always be on top or we will cover the error outline or focus outline from the
+     dropdown. */
+  z-index: 1;
 }

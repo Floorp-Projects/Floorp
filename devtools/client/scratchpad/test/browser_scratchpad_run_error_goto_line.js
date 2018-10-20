@@ -24,7 +24,7 @@ function runTests(sw) {
     "var re = /a bad /regexp/; // line 3 is an obvious syntax error!",
     "// line 4",
     "// line 5",
-    ""
+    "",
   ].join("\n"));
   sp.run().then(() => {
     // CodeMirror lines and columns are 0-based, Scratchpad UI and error

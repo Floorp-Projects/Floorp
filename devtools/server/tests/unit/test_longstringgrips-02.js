@@ -34,7 +34,7 @@ function test_longstring_grip() {
         type: "longString",
         length: 1000000,
         actor: "123fakeActor123",
-        initial: ""
+        initial: "",
       };
       const longStringClient = gThreadClient.pauseLongString(fakeLongStringGrip);
       longStringClient.substring(22, 28, function(response) {

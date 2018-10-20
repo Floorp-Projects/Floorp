@@ -7,7 +7,7 @@
 const {
   isNodeValid,
   addPseudoClassLock,
-  removePseudoClassLock
+  removePseudoClassLock,
 } = require("./utils/markup");
 
 const { loadSheet } = require("devtools/shared/layout/utils");
@@ -65,6 +65,6 @@ SimpleOutlineHighlighter.prototype = {
       removePseudoClassLock(this.currentNode, HIGHLIGHTED_PSEUDO_CLASS);
       this.currentNode = null;
     }
-  }
+  },
 };
 exports.SimpleOutlineHighlighter = SimpleOutlineHighlighter;

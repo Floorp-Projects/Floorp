@@ -992,6 +992,7 @@ describe("TelemetryFeed", () => {
         home_url_category: "other",
         newtab_url_category: "other",
       });
+      assert.validate(sendEvent.firstCall.args[0], UserEventPing);
     });
     it("should not send an event if neither about:{home,newtab} are set to custom URL", async () => {
       instance._prefs.set(TELEMETRY_PREF, true);

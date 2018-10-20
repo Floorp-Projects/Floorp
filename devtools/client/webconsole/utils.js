@@ -23,7 +23,7 @@ const CONSOLE_ENTRY_THRESHOLD = 5;
 exports.CONSOLE_WORKER_IDS = [
   "SharedWorker",
   "ServiceWorker",
-  "Worker"
+  "Worker",
 ];
 
 var WebConsoleUtils = {

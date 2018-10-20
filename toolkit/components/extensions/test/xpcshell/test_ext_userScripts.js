@@ -1,5 +1,7 @@
 "use strict";
 
+const PROCESS_COUNT_PREF = "dom.ipc.processCount";
+
 const {
   createAppInfo,
 } = AddonTestUtils;
@@ -14,6 +16,12 @@ server.registerDirectory("/data/", do_get_file("data"));
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 add_task(async function setup_test_environment() {
+  if (ExtensionTestUtils.remoteContentScripts) {
+    // Start with one content process so that we can increase the number
+    // later and test the behavior of a fresh content process.
+    Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
+  }
+
   // Grant the optional permissions requested.
   function permissionObserver(subject, topic, data) {
     if (topic == "webextension-optional-permission-prompt") {
@@ -157,20 +165,17 @@ add_task(async function test_userScripts_matches_denied() {
 });
 
 // Test that userScripts sandboxes:
-// - can be registered/unregistered from an extension page
+// - can be registered/unregistered from an extension page (and they are registered on both new and
+//   existing processes).
 // - have no WebExtensions APIs available
 // - are able to access the target window and document
-
-// Temporarily disabled due to bug 1498364
-/* eslint-disable indent */
-if (false) {
 add_task(async function test_userScripts_no_webext_apis() {
   async function background() {
-    const matches = ["http://localhost/*/file_sample.html"];
+    const matches = ["http://localhost/*/file_sample.html*"];
 
     const sharedCode = {code: "console.log(\"js code shared by multiple userScripts\");"};
 
-    let script = await browser.userScripts.register({
+    const userScriptOptions = {
       js: [sharedCode, {
         code: `
           window.addEventListener("load", () => {
@@ -187,30 +192,37 @@ add_task(async function test_userScripts_no_webext_apis() {
         objectProperty: {nestedProp: "nestedValue"},
         nullProperty: null,
       },
-    });
+    };
+
+    let script = await browser.userScripts.register(userScriptOptions);
 
     // Unregister and then register the same js code again, to verify that the last registered
     // userScript doesn't get assigned a revoked blob url (otherwise Extensioncontent.jsm
     // ScriptCache raises an error because it fails to compile the revoked blob url and the user
     // script will never be loaded).
     script.unregister();
-    script = await browser.userScripts.register({
-      js: [sharedCode, {
-        code: `
+    script = await browser.userScripts.register(userScriptOptions);
+
+    browser.test.onMessage.addListener(async msg => {
+      if (msg !== "register-new-script") {
+        return;
+      }
+
+      await script.unregister();
+      await browser.userScripts.register({
+        ...userScriptOptions,
+        scriptMetadata: {name: "test-new-script"},
+        js: [sharedCode, {
+          code: `
           window.addEventListener("load", () => {
             const webextAPINamespaces = this.browser ? Object.keys(this.browser) : undefined;
-            document.body.innerHTML = "userScript loaded - " + JSON.stringify(webextAPINamespaces);
+            document.body.innerHTML = "new userScript loaded - " + JSON.stringify(webextAPINamespaces);
           }, {once: true});
         `,
-      }],
-      runAt: "document_start",
-      matches,
-      scriptMetadata: {
-        name: "test-user-script",
-        arrayProperty: ["el1"],
-        objectProperty: {nestedProp: "nestedValue"},
-        nullProperty: null,
-      },
+        }],
+      });
+
+      browser.test.sendMessage("script-registered");
     });
 
     const scriptToRemove = await browser.userScripts.register({
@@ -253,11 +265,9 @@ add_task(async function test_userScripts_no_webext_apis() {
 
   await extension.awaitMessage("background-ready");
 
-  // Test in an existing process (where the registered userScripts has been received from the
-  // Extension:RegisterContentScript message sent to all the processes).
-  info("Test content script loaded in a process created before any registered userScript");
-  let url = `${BASE_URL}/file_sample.html#remote-false`;
-  let contentPage = await ExtensionTestUtils.loadContentPage(url, {remote: false});
+  let url = `${BASE_URL}/file_sample.html?testpage=1`;
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    url, ExtensionTestUtils.remoteContentScripts ? {remote: true} : undefined);
   let result = await contentPage.spawn(undefined, async () => {
     return {
       textContent: this.content.document.body.textContent,
@@ -270,15 +280,20 @@ add_task(async function test_userScripts_no_webext_apis() {
     url,
     readyState: "complete",
   }, "The userScript executed on the expected url and no access to the WebExtensions APIs");
-  await contentPage.close();
 
-  // Test in a new process (where the registered userScripts has to be retrieved from the extension
-  // representation from the shared memory data).
-  // NOTE: this part is currently skipped on Android, where e10s content is not yet supported and
-  // the xpcshell test crash when we create contentPage2 with `remote = true`.
+  // If the tests is running with "remote content process" mode, test that the userScript
+  // are being correctly registered in newly created processes (received as part of the sharedData).
   if (ExtensionTestUtils.remoteContentScripts) {
-    info("Test content script loaded in a process created after the userScript has been registered");
-    let url2 = `${BASE_URL}/file_sample.html#remote-true`;
+    info("Test content script are correctly created on a newly created process");
+
+    await extension.sendMessage("register-new-script");
+    await extension.awaitMessage("script-registered");
+
+    // Update the process count preference, so that we can test that the newly registered user script
+    // is propagated as expected into the newly created process.
+    Services.prefs.setIntPref(PROCESS_COUNT_PREF, 2);
+
+    const url2 = `${BASE_URL}/file_sample.html?testpage=2`;
     let contentPage2 = await ExtensionTestUtils.loadContentPage(url2, {remote: true});
     let result2 = await contentPage2.spawn(undefined, async () => {
       return {
@@ -288,16 +303,18 @@ add_task(async function test_userScripts_no_webext_apis() {
       };
     });
     Assert.deepEqual(result2, {
-      textContent: "userScript loaded - undefined",
+      textContent: "new userScript loaded - undefined",
       url: url2,
       readyState: "complete",
     }, "The userScript executed on the expected url and no access to the WebExtensions APIs");
+
     await contentPage2.close();
   }
 
+  await contentPage.close();
+
   await extension.unload();
 });
-}
 
 add_task(async function test_userScripts_exported_APIs() {
   async function background() {
@@ -308,9 +325,16 @@ add_task(async function test_userScripts_exported_APIs() {
     });
 
     async function userScript() {
-      // Explicitly retrieve the custom exported API methods
-      // to prevent eslint to raise a no-undef validation
-      // error for them.
+      // Redefine Promise and Error globals to verify that it doesn't break the WebExtensions internals
+      // that are going to use them.
+      const {Error} = this;
+      this.Promise.resolve = function() {
+        throw new Error("Promise poisoning");
+      };
+      this.Error = {};
+
+      // Explicitly retrieve the custom exported API methods to prevent eslint to raise a no-undef
+      // validation error for them.
       const {
         US_sync_api,
         US_async_api_with_callback,
@@ -318,7 +342,14 @@ add_task(async function test_userScripts_exported_APIs() {
       } = this;
       this.userScriptGlobalVar = "global-sandbox-value";
 
-      const syncAPIResult = US_sync_api("param1", "param2");
+      // Redefine the includes method on the Array prototype, to explicitly verify that the method
+      // redefined in the userScript is not used when accessing arrayParam.includes from the API script.
+      Array.prototype.includes = () => { // eslint-disable-line no-extend-native
+        throw new Error("Unexpected prototype leakage");
+      };
+      const arrayParam = new Array(1, 2, 3); // eslint-disable-line no-array-constructor
+
+      const syncAPIResult = US_sync_api("param1", "param2", arrayParam);
       const cb = (cbParam) => {
         return `callback param: ${JSON.stringify(cbParam)}`;
       };
@@ -362,7 +393,7 @@ add_task(async function test_userScripts_exported_APIs() {
     this.Error = {};
 
     browser.userScripts.setScriptAPIs({
-      US_sync_api([param1, param2], scriptMetadata, scriptGlobal) {
+      US_sync_api([param1, param2, arrayParam], scriptMetadata, scriptGlobal) {
         browser.test.assertEq("test-user-script-exported-apis", scriptMetadata.name,
                               "Got the expected value for a string scriptMetadata property");
         browser.test.assertEq(null, scriptMetadata.nullProperty,
@@ -377,6 +408,9 @@ add_task(async function test_userScripts_exported_APIs() {
 
         browser.test.assertEq("param1", param1, "Got the expected parameter value");
         browser.test.assertEq("param2", param2, "Got the expected parameter value");
+
+        browser.test.assertEq(3, arrayParam.length, "Got the expected lenght on the array param");
+        browser.test.assertTrue(arrayParam.includes(1), "Got the expected result when calling arrayParam.includes");
 
         browser.test.sendMessage("US_sync_api", {param1, param2});
 
@@ -565,7 +599,7 @@ add_task(async function test_userScripts_pref_disabled() {
       background,
       manifest: {
         permissions: ["http://*/*/file_sample.html"],
-        user_scripts: {},
+        user_scripts: {api_script: ""},
         content_scripts: [
           {
             matches:  ["http://*/*/file_sample.html"],
@@ -594,6 +628,40 @@ add_task(async function test_userScripts_pref_disabled() {
 
   await runWithPrefs([["extensions.webextensions.userScripts.enabled", false]],
                      run_userScript_on_pref_disabled_test);
+});
+
+// This test verify that userScripts.setScriptAPIs is not available without
+// a "user_scripts.api_script" property in the manifest.
+add_task(async function test_user_script_api_script_required() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          matches: ["http://localhost/*/file_sample.html"],
+          js: ["content_script.js"],
+          run_at: "document_start",
+        },
+      ],
+      user_scripts: {},
+    },
+    files: {
+      "content_script.js": function() {
+        browser.test.assertEq(undefined, browser.userScripts && browser.userScripts.setScriptAPIs,
+                              "Got an undefined setScriptAPIs as expected");
+        browser.test.sendMessage("no-setScriptAPIs:done");
+      },
+    },
+  });
+
+  await extension.startup();
+
+  let url = `${BASE_URL}/file_sample.html`;
+  let contentPage = await ExtensionTestUtils.loadContentPage(url);
+
+  await extension.awaitMessage("no-setScriptAPIs:done");
+
+  await extension.unload();
+  await contentPage.close();
 });
 
 add_task(async function test_scriptMetaData() {

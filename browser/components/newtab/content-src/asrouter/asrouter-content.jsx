@@ -6,17 +6,7 @@ import {LocalizationProvider} from "fluent-react";
 import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage";
 import React from "react";
 import ReactDOM from "react-dom";
-import {SendToDeviceSnippet} from "./templates/SendToDeviceSnippet/SendToDeviceSnippet";
-import {SimpleSnippet} from "./templates/SimpleSnippet/SimpleSnippet";
-import {SubmitFormSnippet} from "./templates/SubmitFormSnippet/SubmitFormSnippet";
-
-// Key names matching schema name of templates
-const SnippetComponents = {
-  simple_snippet: SimpleSnippet,
-  newsletter_snippet: props => <SubmitFormSnippet {...props} form_method="POST" />,
-  fxa_signup_snippet: props => <SubmitFormSnippet {...props} form_method="GET" />,
-  send_to_device_snippet: SendToDeviceSnippet,
-};
+import {SnippetsTemplates} from "./templates/template-manifest";
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
@@ -196,7 +186,7 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   renderSnippets() {
-    const SnippetComponent = SnippetComponents[this.state.message.template];
+    const SnippetComponent = SnippetsTemplates[this.state.message.template];
     const {content} = this.state.message;
 
     return (

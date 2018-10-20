@@ -10,7 +10,7 @@ const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants")
 const SHEET_TYPE = {
   "agent": "AGENT_SHEET",
   "user": "USER_SHEET",
-  "author": "AUTHOR_SHEET"
+  "author": "AUTHOR_SHEET",
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -206,7 +206,7 @@ function getAdjustedQuads(boundaryWindow, node, region, {ignoreZoom} = {}) {
 
   const quads = node.getBoxQuads({
     box: region,
-    relativeTo: boundaryWindow.document
+    relativeTo: boundaryWindow.document,
   });
 
   if (!quads.length) {
@@ -227,25 +227,25 @@ function getAdjustedQuads(boundaryWindow, node, region, {ignoreZoom} = {}) {
         w: quad.p1.w * scale,
         x: quad.p1.x * scale + xOffset,
         y: quad.p1.y * scale + yOffset,
-        z: quad.p1.z * scale
+        z: quad.p1.z * scale,
       },
       p2: {
         w: quad.p2.w * scale,
         x: quad.p2.x * scale + xOffset,
         y: quad.p2.y * scale + yOffset,
-        z: quad.p2.z * scale
+        z: quad.p2.z * scale,
       },
       p3: {
         w: quad.p3.w * scale,
         x: quad.p3.x * scale + xOffset,
         y: quad.p3.y * scale + yOffset,
-        z: quad.p3.z * scale
+        z: quad.p3.z * scale,
       },
       p4: {
         w: quad.p4.w * scale,
         x: quad.p4.x * scale + xOffset,
         y: quad.p4.y * scale + yOffset,
-        z: quad.p4.z * scale
+        z: quad.p4.z * scale,
       },
       bounds: {
         bottom: bounds.bottom * scale + yOffset,
@@ -255,8 +255,8 @@ function getAdjustedQuads(boundaryWindow, node, region, {ignoreZoom} = {}) {
         top: bounds.top * scale + yOffset,
         width: bounds.width * scale,
         x: bounds.x * scale + xOffset,
-        y: bounds.y * scale + yOffset
-      }
+        y: bounds.y * scale + yOffset,
+      },
     });
   }
 
@@ -294,7 +294,7 @@ function getRect(boundaryWindow, node, contentWindow) {
     top: clientRect.top + contentWindow.pageYOffset,
     left: clientRect.left + contentWindow.pageXOffset,
     width: clientRect.width,
-    height: clientRect.height
+    height: clientRect.height,
   };
 
   // We iterate through all the parent windows.
@@ -380,7 +380,7 @@ function getNodeBounds(boundaryWindow, node) {
     bottom: yOffset + height,
     left: xOffset,
     width,
-    height
+    height,
   };
 }
 exports.getNodeBounds = getNodeBounds;

@@ -28,8 +28,8 @@ window.onload = function() {
     "set": [
       // Always log packets when running tests.
       ["devtools.debugger.log", true],
-      ["dom.mozBrowserFramesEnabled", true]
-    ]
+      ["dom.mozBrowserFramesEnabled", true],
+    ],
   }, runTests);
 };
 
@@ -63,10 +63,10 @@ function runTests() {
       },
       hello: function() {
         return {msg: "world"};
-      }
+      },
     };
     TestActor.prototype.requestTypes = {
-      "hello": TestActor.prototype.hello
+      "hello": TestActor.prototype.hello,
     };
     ActorRegistry.addTargetScopedActor({
       constructorName: "TestActor",

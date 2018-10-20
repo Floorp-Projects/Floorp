@@ -18,8 +18,8 @@ function* testSteps()
     SpecialPowers.pushPrefEnv(
       {
         "set": [
-          ["dom.indexedDB.experimental", false]
-        ]
+          ["dom.indexedDB.experimental", false],
+        ],
       },
       continueToNextStep
     );

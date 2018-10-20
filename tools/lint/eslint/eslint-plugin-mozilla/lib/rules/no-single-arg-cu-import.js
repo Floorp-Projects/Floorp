@@ -32,6 +32,6 @@ module.exports = function(context) {
                                "globals to all modules");
         }
       }
-    }
+    },
   };
 };

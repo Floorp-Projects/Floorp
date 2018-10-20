@@ -200,7 +200,7 @@ class FirefoxDataProvider {
       requestPostData.postData.text = postData;
       payload.requestPostData = {
         ...requestPostData,
-        uploadHeaders: { headers, headersSize }
+        uploadHeaders: { headers, headersSize },
       };
     }
     return payload;
@@ -356,7 +356,7 @@ class FirefoxDataProvider {
     switch (updateType) {
       case "securityInfo":
         this.pushRequestToQueue(actor, {
-          securityState: networkInfo.securityState
+          securityState: networkInfo.securityState,
         });
         break;
       case "responseStart":
@@ -366,7 +366,7 @@ class FirefoxDataProvider {
           remotePort: networkInfo.response.remotePort,
           status: networkInfo.response.status,
           statusText: networkInfo.response.statusText,
-          headersSize: networkInfo.response.headersSize
+          headersSize: networkInfo.response.headersSize,
         });
         this.emit(EVENTS.STARTED_RECEIVING_RESPONSE, actor);
         break;
@@ -528,7 +528,7 @@ class FirefoxDataProvider {
    */
   async onRequestHeaders(response) {
     const payload = await this.updateRequest(response.from, {
-      requestHeaders: response
+      requestHeaders: response,
     });
     this.emit(EVENTS.RECEIVED_REQUEST_HEADERS, response.from);
     return payload.requestHeaders;
@@ -541,7 +541,7 @@ class FirefoxDataProvider {
    */
   async onResponseHeaders(response) {
     const payload = await this.updateRequest(response.from, {
-      responseHeaders: response
+      responseHeaders: response,
     });
     this.emit(EVENTS.RECEIVED_RESPONSE_HEADERS, response.from);
     return payload.responseHeaders;
@@ -554,7 +554,7 @@ class FirefoxDataProvider {
    */
   async onRequestCookies(response) {
     const payload = await this.updateRequest(response.from, {
-      requestCookies: response
+      requestCookies: response,
     });
     this.emit(EVENTS.RECEIVED_REQUEST_COOKIES, response.from);
     return payload.requestCookies;
@@ -567,7 +567,7 @@ class FirefoxDataProvider {
    */
   async onRequestPostData(response) {
     const payload = await this.updateRequest(response.from, {
-      requestPostData: response
+      requestPostData: response,
     });
     this.emit(EVENTS.RECEIVED_REQUEST_POST_DATA, response.from);
     return payload.requestPostData;
@@ -580,7 +580,7 @@ class FirefoxDataProvider {
    */
   async onSecurityInfo(response) {
     const payload = await this.updateRequest(response.from, {
-      securityInfo: response.securityInfo
+      securityInfo: response.securityInfo,
     });
     this.emit(EVENTS.RECEIVED_SECURITY_INFO, response.from);
     return payload.securityInfo;
@@ -593,7 +593,7 @@ class FirefoxDataProvider {
    */
   async onResponseCookies(response) {
     const payload = await this.updateRequest(response.from, {
-      responseCookies: response
+      responseCookies: response,
     });
     this.emit(EVENTS.RECEIVED_RESPONSE_COOKIES, response.from);
     return payload.responseCookies;
@@ -605,7 +605,7 @@ class FirefoxDataProvider {
    */
   async onResponseCache(response) {
     const payload = await this.updateRequest(response.from, {
-      responseCache: response
+      responseCache: response,
     });
     this.emit(EVENTS.RECEIVED_RESPONSE_CACHE, response.from);
     return payload.responseCache;
@@ -635,7 +635,7 @@ class FirefoxDataProvider {
    */
   async onEventTimings(response) {
     const payload = await this.updateRequest(response.from, {
-      eventTimings: response
+      eventTimings: response,
     });
     this.emit(EVENTS.RECEIVED_EVENT_TIMINGS, response.from);
     return payload.eventTimings;
@@ -648,7 +648,7 @@ class FirefoxDataProvider {
    */
   async onStackTrace(response) {
     const payload = await this.updateRequest(response.from, {
-      stacktrace: response.stacktrace
+      stacktrace: response.stacktrace,
     });
     this.emit(EVENTS.RECEIVED_EVENT_STACKTRACE, response.from);
     return payload.stacktrace;

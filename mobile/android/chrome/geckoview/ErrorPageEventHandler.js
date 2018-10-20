@@ -56,5 +56,5 @@ var ErrorPageEventHandler = {
         break;
       }
     }
-  }
+  },
 };

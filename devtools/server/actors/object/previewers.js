@@ -83,7 +83,7 @@ const previewers = {
       if (script) {
         grip.location = {
           url: script.url,
-          line: script.startLine
+          line: script.startLine,
         };
       }
     }
@@ -191,7 +191,7 @@ const previewers = {
 
     grip.preview = {
       kind: "ArrayLike",
-      length: enumEntries.size
+      length: enumEntries.size,
     };
 
     // Avoid recursive object grips.
@@ -241,7 +241,7 @@ const previewers = {
 
     grip.preview = {
       kind: "MapLike",
-      size: enumEntries.size
+      size: enumEntries.size,
     };
 
     if (objectActor.hooks.getGripDepth() > 1) {
@@ -298,7 +298,7 @@ const previewers = {
     grip.preview = {
       kind: "Object",
       ownProperties: Object.create(null),
-      ownPropertiesLength: 2 * hasTargetAndHandler
+      ownPropertiesLength: 2 * hasTargetAndHandler,
     };
 
     if (hooks.getGripDepth() > 1) {
@@ -421,7 +421,7 @@ function GenericObject(objectActor, grip, rawObj, specialStringBehavior = false)
     }
 
     preview.ownSymbols.push(Object.assign({
-      descriptor
+      descriptor,
     }, hooks.createValueGrip(symbol)));
 
     if (++i == OBJECT_PREVIEW_MAX_ITEMS) {

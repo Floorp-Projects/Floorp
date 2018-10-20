@@ -36,19 +36,19 @@
   var testframes = {
     samedom: {
       url: `http://example.com/${STSPATH}/verify.sjs`,
-      expected: {plain: "SECURE", subdom: "SECURE", nosts: "INSECURE"}
+      expected: {plain: "SECURE", subdom: "SECURE", nosts: "INSECURE"},
     },
     subdom: {
       url: `http://test1.example.com/${STSPATH}/verify.sjs`,
-      expected: {plain: "INSECURE", subdom: "SECURE", nosts: "INSECURE"}
+      expected: {plain: "INSECURE", subdom: "SECURE", nosts: "INSECURE"},
     },
     otherdom: {
       url: `http://example.org/${STSPATH}/verify.sjs`,
-      expected: {plain: "INSECURE", subdom: "INSECURE", nosts: "INSECURE"}
+      expected: {plain: "INSECURE", subdom: "INSECURE", nosts: "INSECURE"},
     },
     alreadysecure: {
       url: `https://test2.example.com/${STSPATH}/verify.sjs`,
-      expected: {plain: "SECURE", subdom: "SECURE", nosts: "SECURE"}
+      expected: {plain: "SECURE", subdom: "SECURE", nosts: "SECURE"},
     },
   };
 
@@ -248,7 +248,7 @@
   var tests = [
     test_sts_before_private_mode,
     test_sts_in_private_mode,
-    test_sts_after_exiting_private_mode
+    test_sts_after_exiting_private_mode,
   ];
 
   function finish() {

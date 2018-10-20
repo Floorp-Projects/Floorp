@@ -35,5 +35,5 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
     context.drawWindow(window, 0, 0, width, height, "rgb(255,255,255)", flags);
     const dataURL = canvas.toDataURL("image/png");
     return new LongStringActor(this.conn, dataURL);
-  }
+  },
 });

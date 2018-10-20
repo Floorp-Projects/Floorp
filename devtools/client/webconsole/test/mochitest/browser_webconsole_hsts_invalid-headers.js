@@ -18,42 +18,42 @@ add_task(async function() {
     url: SJS_URL + "?badSyntax",
     name: "Could not parse header error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that could " +
-          "not be parsed successfully."
+          "not be parsed successfully.",
   }, hud);
 
   await navigateAndCheckWarningMessage({
     url: SJS_URL + "?noMaxAge",
     name: "No max-age error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that did " +
-          "not include a \u2018max-age\u2019 directive."
+          "not include a \u2018max-age\u2019 directive.",
   }, hud);
 
   await navigateAndCheckWarningMessage({
     url: SJS_URL + "?invalidIncludeSubDomains",
     name: "Invalid includeSubDomains error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that " +
-          "included an invalid \u2018includeSubDomains\u2019 directive."
+          "included an invalid \u2018includeSubDomains\u2019 directive.",
   }, hud);
 
   await navigateAndCheckWarningMessage({
     url: SJS_URL + "?invalidMaxAge",
     name: "Invalid max-age error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that " +
-          "included an invalid \u2018max-age\u2019 directive."
+          "included an invalid \u2018max-age\u2019 directive.",
   }, hud);
 
   await navigateAndCheckWarningMessage({
     url: SJS_URL + "?multipleIncludeSubDomains",
     name: "Multiple includeSubDomains error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that " +
-          "included multiple \u2018includeSubDomains\u2019 directives."
+          "included multiple \u2018includeSubDomains\u2019 directives.",
   }, hud);
 
   await navigateAndCheckWarningMessage({
     url: SJS_URL + "?multipleMaxAge",
     name: "Multiple max-age error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that " +
-          "included multiple \u2018max-age\u2019 directives."
+          "included multiple \u2018max-age\u2019 directives.",
   }, hud);
 });
 

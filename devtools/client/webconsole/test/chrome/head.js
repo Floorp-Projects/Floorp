@@ -8,5 +8,5 @@ var { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/br
 
 var { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/webconsole/",
-  window
+  window,
 });

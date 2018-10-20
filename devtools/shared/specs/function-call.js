@@ -12,7 +12,7 @@ const { RetVal, generateActorSpec } = protocol;
 protocol.types.addDictType("call-stack-item", {
   name: "string",
   file: "string",
-  line: "number"
+  line: "number",
 });
 
 /**
@@ -21,7 +21,7 @@ protocol.types.addDictType("call-stack-item", {
 protocol.types.addDictType("call-details", {
   type: "number",
   name: "string",
-  stack: "array:call-stack-item"
+  stack: "array:call-stack-item",
 });
 
 const functionCallSpec = generateActorSpec({
@@ -29,7 +29,7 @@ const functionCallSpec = generateActorSpec({
 
   methods: {
     getDetails: {
-      response: { info: RetVal("call-details") }
+      response: { info: RetVal("call-details") },
     },
   },
 });
