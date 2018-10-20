@@ -42,8 +42,8 @@ class DefaultSessionStorageTest {
 
     @Test
     fun persistAndRestore() {
-        val session1 = Session("http://mozilla.org")
-        val session2 = Session("http://getpocket.com")
+        val session1 = Session("http://mozilla.org", id = "session1")
+        val session2 = Session("http://getpocket.com", id = "session2")
         val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
 
         val engineSession = mock(EngineSession::class.java)
@@ -54,9 +54,10 @@ class DefaultSessionStorageTest {
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
 
         // Engine session just for one of the sessions for simplicity.
-        val sessionsSnapshot = mutableListOf<SessionWithState>()
-        sessionsSnapshot.add(SessionWithState(session1, selected = true, engineSession = engineSession))
-        sessionsSnapshot.add(SessionWithState(session2, selected = false))
+        val sessionsSnapshot = SessionsSnapshot(
+            sessions = listOf(SessionWithState(session1, engineSession), SessionWithState(session2)),
+            selectedSessionIndex = 0
+        )
 
         // Persist the snapshot
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
@@ -66,34 +67,74 @@ class DefaultSessionStorageTest {
         // Read it back
         val restoredSnapshot = storage.read(engine)
         assertNotNull(restoredSnapshot)
-        assertEquals(2, restoredSnapshot!!.size)
+        assertEquals(2, restoredSnapshot!!.sessions.size)
+        assertEquals(0, restoredSnapshot.selectedSessionIndex)
 
-        assertEquals(session1, restoredSnapshot[0].session)
-        assertEquals(session1.url, restoredSnapshot[0].session.url)
-        assertEquals(true, restoredSnapshot[0].selected)
+        assertEquals(session1, restoredSnapshot.sessions[0].session)
+        assertEquals(session1.url, restoredSnapshot.sessions[0].session.url)
+        assertEquals(session1.id, restoredSnapshot.sessions[0].session.id)
 
-        assertEquals(session2, restoredSnapshot[1].session)
-        assertEquals(session2.url, restoredSnapshot[1].session.url)
-        assertEquals(false, restoredSnapshot[1].selected)
+        assertEquals(session2, restoredSnapshot.sessions[1].session)
+        assertEquals(session2.url, restoredSnapshot.sessions[1].session.url)
+        assertEquals(session2.id, restoredSnapshot.sessions[1].session.id)
 
-        val restoredEngineSession = restoredSnapshot[0].engineSession
+        val restoredEngineSession = restoredSnapshot.sessions[0].engineSession
         assertNotNull(restoredEngineSession)
         verify(restoredEngineSession)!!.restoreState(engineSessionState.filter { it.key != "k3" })
     }
 
     @Test
-    fun persistAndRestoreEmptySnapshot() {
+    fun persistAndClear() {
+        val session1 = Session("http://mozilla.org", id = "session1")
+        val session2 = Session("http://getpocket.com", id = "session2")
+
+        val engineSession = mock(EngineSession::class.java)
+
+        val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
+
+        // Engine session just for one of the sessions for simplicity.
+        val sessionsSnapshot = SessionsSnapshot(
+            sessions = listOf(SessionWithState(session1, engineSession), SessionWithState(session2)),
+            selectedSessionIndex = 0
+        )
+
+        // Persist the snapshot
+        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
+        val persisted = storage.persist(engine, sessionsSnapshot)
+        assertTrue(persisted)
+
+        storage.clear(engine)
+
+        // Read it back. Expect null, indicating empty.
+        val restoredSnapshot = storage.read(engine)
+        assertNull(restoredSnapshot)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun persistThrowsOnEmptySnapshot() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
-        // Persist empty snapshot
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
-        val persisted = storage.persist(engine, listOf())
-        assertTrue(persisted)
+        storage.persist(engine, SessionsSnapshot(sessions = listOf(), selectedSessionIndex = 0))
+    }
 
-        // Restore sessions using a fresh SessionManager
-        val restoredSnapshot = storage.read(engine)
-        assertEquals(0, restoredSnapshot!!.size)
+    @Test(expected = IllegalArgumentException::class)
+    fun persistThrowsOnIllegalSnapshot() {
+        val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+
+        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
+
+        val session = Session("http://mozilla.org")
+        val engineSession = mock(EngineSession::class.java)
+        val sessionsSnapshot = SessionsSnapshot(
+            sessions = listOf(SessionWithState(session, engineSession)),
+            selectedSessionIndex = 1
+        )
+        storage.persist(engine, sessionsSnapshot)
     }
 
     @Test
@@ -120,13 +161,16 @@ class DefaultSessionStorageTest {
         `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(engineSession)
 
-        val sessionsSnapshot = listOf(SessionWithState(session, true, engineSession))
+        val sessionsSnapshot = SessionsSnapshot(
+            sessions = listOf(SessionWithState(session, engineSession)),
+            selectedSessionIndex = 0
+        )
 
         val storage = spy(DefaultSessionStorage(RuntimeEnvironment.application))
         val persisted = storage.persist(engine, sessionsSnapshot)
         assertTrue(persisted)
 
-        doThrow(JSONException::class.java).`when`(storage).deserializeSession(anyString(), anyJson())
+        doThrow(JSONException::class.java).`when`(storage).deserializeSession(anyJson())
         assertNull(storage.read(engine))
     }
 
@@ -141,7 +185,10 @@ class DefaultSessionStorageTest {
         val storage = spy(DefaultSessionStorage(context))
         val file = mock(AtomicFile::class.java)
 
-        val sessionsSnapshot = listOf(SessionWithState(session, true, engineSession))
+        val sessionsSnapshot = SessionsSnapshot(
+            sessions = listOf(SessionWithState(session, engineSession)),
+            selectedSessionIndex = 0
+        )
 
         doReturn(file).`when`(storage).getFile(anyString())
         doThrow(IOException::class.java).`when`(file).startWrite()
@@ -160,7 +207,10 @@ class DefaultSessionStorageTest {
         val storage = spy(DefaultSessionStorage(context))
         val file = mock(AtomicFile::class.java)
 
-        val sessionsSnapshot = listOf(SessionWithState(session, true, engineSession))
+        val sessionsSnapshot = SessionsSnapshot(
+            sessions = listOf(SessionWithState(session, engineSession)),
+            selectedSessionIndex = 0
+        )
 
         doReturn(file).`when`(storage).getFile(anyString())
         doThrow(JSONException::class.java).`when`(storage).serializeSession(session)
@@ -211,14 +261,16 @@ class DefaultSessionStorageTest {
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
 
         val json = JSONObject()
+        json.put("uuid", "testId")
         json.put("url", "testUrl")
         json.put("source", Source.NEW_TAB.name)
-        assertEquals(Source.NEW_TAB, storage.deserializeSession("testId", json).source)
+        assertEquals(Source.NEW_TAB, storage.deserializeSession(json).source)
 
         val jsonInvalid = JSONObject()
+        jsonInvalid.put("uuid", "testId")
         jsonInvalid.put("url", "testUrl")
         jsonInvalid.put("source", "invalidSource")
-        assertEquals(Source.NONE, storage.deserializeSession("testId", jsonInvalid).source)
+        assertEquals(Source.NONE, storage.deserializeSession(jsonInvalid).source)
     }
 
     @Suppress("UNCHECKED_CAST")

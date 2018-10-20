@@ -52,6 +52,11 @@ class SessionFeature(
         presenter.stop()
 
         sessionStorage?.stop()
-        sessionStorage?.persist(sessionManager.engine, sessionManager.createSnapshot())
+        val snapshot = sessionManager.createSnapshot()
+        if (snapshot == null) {
+            sessionStorage?.clear(sessionManager.engine)
+        } else {
+            sessionStorage?.persist(sessionManager.engine, snapshot)
+        }
     }
 }

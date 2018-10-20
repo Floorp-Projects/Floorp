@@ -34,22 +34,54 @@ class SessionManager(
         get() = synchronized(values) { values.size }
 
     /**
-     * Returns a snapshot suitable for persisting for "session read" purposes.
+     * Produces a snapshot of this manager's state, suitable for restoring via [SessionManager.restore].
+     * Only regular sessions are included in the snapshot. Private and Custom Tab sessions are omitted.
+     *
+     * @return [SessionsSnapshot] or null if no sessions are present.
      */
-    fun createSnapshot(): SessionsSnapshot = synchronized(values) {
+    fun createSnapshot(): SessionsSnapshot? = synchronized(values) {
+        if (values.isEmpty()) {
+            return@synchronized null
+        }
+
         // Filter out CustomTab and private sessions.
         // We're using 'values' directly instead of 'sessions' to get benefits of a sequence.
-        values.asSequence()
+        val sessionStateTuples = values.asSequence()
                 .filter { !it.isCustomTabSession() }
                 .filter { !it.private }
-                .mapIndexed { index, session ->
+                .map { session ->
                     SessionWithState(
                             session,
-                            selectedIndex == index,
                             session.engineSessionHolder.engineSession
                     )
                 }
                 .toList()
+
+        // We might have some sessions (private, custom tab) but none we'd include in the snapshot.
+        if (sessionStateTuples.isEmpty()) {
+            return@synchronized null
+        }
+
+        // We need to find out the index of our selected session in the filtered list. If we have a
+        // mix of private, custom tab and regular sessions, global selectedIndex isn't good enough.
+        // We must have a selectedSession if there is at least one "regular" (non-CustomTabs) session
+        // present. Selected session might be private, in which case we reset our selection index to 0.
+        var selectedIndexAfterFiltering = 0
+        selectedSession?.takeIf { !it.private }?.let { selected ->
+            sessionStateTuples.find { it.session.id == selected.id }?.let { selectedTuple ->
+                selectedIndexAfterFiltering = sessionStateTuples.indexOf(selectedTuple)
+            }
+        }
+
+        // Sanity check to guard against producing invalid snapshots.
+        checkNotNull(sessionStateTuples.getOrNull(selectedIndexAfterFiltering)) {
+            "Selection index after filtering session must be valid"
+        }
+
+        SessionsSnapshot(
+            sessions = sessionStateTuples,
+            selectedSessionIndex = selectedIndexAfterFiltering
+        )
     }
 
     /**
@@ -128,40 +160,48 @@ class SessionManager(
 
         engineSession?.let { link(session, it) }
 
-        if (!viaRestore) {
-            notifyObservers { onSessionAdded(session) }
+        // If session is being added via restore, skip notification and auto-selection.
+        // Restore will handle these actions as appropriate.
+        if (viaRestore) {
+            return@synchronized
         }
 
-        // We're only auto-selecting session on empty selection index during a regular add (not via
-        // restore). That's because during a read, we know exactly which session will be the
-        // selected one. It does not make sense to go through selection twice in that case - when
-        // the first session was added, and then when the "selected" was added.
-        val autoSelect = !viaRestore && selectedIndex == NO_SELECTION && !session.isCustomTabSession()
-        if (selected || autoSelect) {
+        notifyObservers { onSessionAdded(session) }
+
+        // Auto-select incoming session if we don't have a currently selected one.
+        if (selected || selectedIndex == NO_SELECTION && !session.isCustomTabSession()) {
             select(session)
         }
     }
 
     /**
-     * Restores sessions from the provided snapshot.
+     * Restores sessions from the provided [SessionsSnapshot].
      * Notification behaviour is as follows:
      * - onSessionAdded notifications will not fire,
      * - onSessionSelected notification will fire exactly once if the snapshot isn't empty,
      * - once snapshot has been restored, and appropriate session has been selected, onSessionsRestored
      *   notification will fire.
-     * If a non-empty snapshot doesn't contain a selected session, first session will be selected.
+     *
+     * @param snapshot A [SessionsSnapshot] which may be produced by [createSnapshot].
+     * @throws IllegalArgumentException if an empty snapshot is passed in.
      */
-    fun restore(snapshot: SessionsSnapshot) {
-        snapshot.forEach {
-            addInternal(it.session,
-                    selected = it.selected, engineSession = it.engineSession, viaRestore = true
-            )
+    fun restore(snapshot: SessionsSnapshot) = synchronized(values) {
+        require(snapshot.sessions.isNotEmpty()) {
+            "Snapshot must contain session state tuples"
         }
 
-        // In case snapshot didn't contain a selected session, select the very first one.
-        if (selectedIndex == NO_SELECTION && snapshot.isNotEmpty()) {
-            select(snapshot[0].session)
+        // Let's be forgiving about incoming illegal selection indices, but strict about what we
+        // produce ourselves in `createSnapshot`.
+        val sessionTupleToSelect = snapshot.sessions.getOrElse(snapshot.selectedSessionIndex) {
+            // Default to the first session if we received an illegal selection index.
+            snapshot.sessions[0]
         }
+
+        snapshot.sessions.forEach {
+            addInternal(it.session, engineSession = it.engineSession, parent = null, viaRestore = true)
+        }
+
+        select(sessionTupleToSelect.session)
 
         notifyObservers { onSessionsRestored() }
     }
@@ -327,8 +367,8 @@ class SessionManager(
     fun select(session: Session) = synchronized(values) {
         val index = values.indexOf(session)
 
-        if (index == -1) {
-            throw IllegalArgumentException("Value to select is not in list")
+        require(index != -1) {
+            "Value to select is not in list"
         }
 
         selectedIndex = index

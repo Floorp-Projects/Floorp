@@ -11,24 +11,32 @@ import mozilla.components.concept.engine.EngineSession
 
 data class SessionWithState(
     val session: Session,
-    val selected: Boolean = false,
     val engineSession: EngineSession? = null
 )
-typealias SessionsSnapshot = List<SessionWithState>
+data class SessionsSnapshot(
+    val sessions: List<SessionWithState>,
+    val selectedSessionIndex: Int
+)
 
 /**
  * Storage component for browser and engine sessions.
  */
 interface SessionStorage {
+    /**
+     * Erases persisted [SessionsSnapshot] (if present) for a given [Engine].
+     */
+    fun clear(engine: Engine)
 
     /**
      * Persists the provided [SessionsSnapshot] for a given [Engine].
      * [SessionsSnapshot] may be obtained using [SessionManager.createSnapshot].
+     * Throws if snapshot is empty or otherwise incoherent.
      *
      * @param engine the engine in which context to persist a snapshot.
      * @param snapshot the snapshot of snapshot which are to be persisted.
      * @return true if the snapshot was persisted, otherwise false.
      */
+    @Throws(IllegalArgumentException::class)
     fun persist(engine: Engine, snapshot: SessionsSnapshot): Boolean
 
     /**
@@ -36,7 +44,7 @@ interface SessionStorage {
      * Resulting [SessionsSnapshot] may be restored via [SessionManager.restore].
      *
      * @param engine the engine for which to read the snapshot.
-     * @return snapshot of sessions to read, or null if they couldn't be read.
+     * @return snapshot of sessions to read, or null if it's empty or couldn't be read.
      */
     fun read(engine: Engine): SessionsSnapshot?
 

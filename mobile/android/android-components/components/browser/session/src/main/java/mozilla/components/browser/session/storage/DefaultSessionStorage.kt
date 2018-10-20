@@ -11,6 +11,7 @@ import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
@@ -21,9 +22,16 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-const val SELECTED_SESSION_KEY = "selectedSession"
+const val SELECTED_SESSION_INDEX_KEY = "selectedSessionIndex"
+const val SESSION_STATE_TUPLES_KEY = "sessionStateTuples"
+
+const val SESSION_SOURCE_KEY = "source"
+const val SESSION_URL_KEY = "url"
+const val SESSION_UUID_KEY = "uuid"
+
 const val SESSION_KEY = "session"
 const val ENGINE_SESSION_KEY = "engineSession"
+
 const val VERSION_KEY = "version"
 const val VERSION = 1
 const val FILE_NAME_FORMAT = "mozilla_components_session_storage_%s.json"
@@ -34,18 +42,18 @@ const val FILE_NAME_FORMAT = "mozilla_components_session_storage_%s.json"
  *
  * The JSON format used for persisting:
  * {
- *     "version": [version],
- *     "selectedSession": "[session-uuid]",
- *     "[session-uuid]": {
- *         "session": {}
- *         "engineSession": {}
- *     },
- *     "[session-uuid]": {
- *         "session": {}
- *         "engineSession": {}
- *     }
+ *     "version": Int,
+ *     "selectedSessionIndex": Int,
+ *     "sessionStateTuples": [
+ *         {
+ *             "session": {},
+ *             "engineSession": {}
+ *         },
+ *         ...
+ *     ]
  * }
  */
+@Suppress("TooManyFunctions")
 class DefaultSessionStorage(
     private val context: Context,
     private val savePeriodically: Boolean = true,
@@ -57,7 +65,7 @@ class DefaultSessionStorage(
     override fun start(sessionManager: SessionManager) {
         if (savePeriodically) {
             scheduledFuture = scheduler.scheduleAtFixedRate(
-                { persist(sessionManager.engine, sessionManager.createSnapshot()) },
+                { sessionManager.createSnapshot()?.let { persist(sessionManager.engine, it) } },
                 saveIntervalInSeconds,
                 saveIntervalInSeconds,
                 TimeUnit.SECONDS)
@@ -69,8 +77,15 @@ class DefaultSessionStorage(
     }
 
     @Synchronized
+    override fun clear(engine: Engine) {
+        getFile(engine.name()).delete()
+    }
+
+    @Synchronized
+    @SuppressWarnings("ReturnCount")
     override fun read(engine: Engine): SessionsSnapshot? {
-        val snapshot: MutableList<SessionWithState> = mutableListOf()
+        val tuples: MutableList<SessionWithState> = mutableListOf()
+        var selectedSessionIndex = 0
 
         try {
             getFile(engine.name()).openRead().use {
@@ -79,22 +94,16 @@ class DefaultSessionStorage(
                 }
 
                 val jsonRoot = JSONObject(json)
-                val selectedSessionId = jsonRoot.getString(SELECTED_SESSION_KEY)
-                jsonRoot.remove(SELECTED_SESSION_KEY)
-                // We don't need to consume the version for now
-                jsonRoot.remove(VERSION_KEY)
-                jsonRoot.keys().forEach {
-                    val jsonSession = jsonRoot.getJSONObject(it)
-                    val session = deserializeSession(it, jsonSession.getJSONObject(SESSION_KEY))
+                selectedSessionIndex = jsonRoot.getInt(SELECTED_SESSION_INDEX_KEY)
+                val sessionStateTuples = jsonRoot.getJSONArray(SESSION_STATE_TUPLES_KEY)
+                for (i in 0..(sessionStateTuples.length() - 1)) {
+                    val sessionStateTupleJson = sessionStateTuples.getJSONObject(i)
+                    val session = deserializeSession(sessionStateTupleJson.getJSONObject(SESSION_KEY))
                     val engineSession = deserializeEngineSession(
-                            engine,
-                            jsonSession.getJSONObject(ENGINE_SESSION_KEY))
-
-                    snapshot.add(SessionWithState(
-                            session,
-                            session.id == selectedSessionId,
-                            engineSession
-                    ))
+                        engine,
+                        sessionStateTupleJson.getJSONObject(ENGINE_SESSION_KEY)
+                    )
+                    tuples.add(SessionWithState(session, engineSession))
                 }
             }
         } catch (_: IOException) {
@@ -103,25 +112,46 @@ class DefaultSessionStorage(
             return null
         }
 
-        return snapshot
+        if (tuples.isEmpty()) {
+            return null
+        }
+
+        // If we see an illegal selected index on disk, reset it to 0.
+        if (tuples.getOrNull(selectedSessionIndex) == null) {
+            selectedSessionIndex = 0
+        }
+
+        return SessionsSnapshot(
+            sessions = tuples,
+            selectedSessionIndex = selectedSessionIndex
+        )
     }
 
     @Synchronized
     override fun persist(engine: Engine, snapshot: SessionsSnapshot): Boolean {
+        require(snapshot.sessions.isNotEmpty()) {
+            "SessionsSnapshot must not be empty"
+        }
+        requireNotNull(snapshot.sessions.getOrNull(snapshot.selectedSessionIndex)) {
+            "SessionSnapshot's selected index must be in bounds"
+        }
+
         var file: AtomicFile? = null
         var outputStream: FileOutputStream? = null
 
         return try {
             val json = JSONObject()
             json.put(VERSION_KEY, VERSION)
-            json.put(SELECTED_SESSION_KEY, snapshot.find { it.selected }?.session?.id ?: "")
+            json.put(SELECTED_SESSION_INDEX_KEY, snapshot.selectedSessionIndex)
 
-            snapshot.forEach {
+            val sessions = JSONArray()
+            snapshot.sessions.forEachIndexed { index, sessionWithState ->
                 val sessionJson = JSONObject()
-                sessionJson.put(SESSION_KEY, serializeSession(it.session))
-                sessionJson.put(ENGINE_SESSION_KEY, serializeEngineSession(it.engineSession))
-                json.put(it.session.id, sessionJson)
+                sessionJson.put(SESSION_KEY, serializeSession(sessionWithState.session))
+                sessionJson.put(ENGINE_SESSION_KEY, serializeEngineSession(sessionWithState.engineSession))
+                sessions.put(index, sessionJson)
             }
+            json.put(SESSION_STATE_TUPLES_KEY, sessions)
 
             file = getFile(engine.name())
             outputStream = file.startWrite()
@@ -144,19 +174,26 @@ class DefaultSessionStorage(
     @Throws(JSONException::class)
     internal fun serializeSession(session: Session): JSONObject {
         return JSONObject().apply {
-            put("url", session.url)
-            put("source", session.source.name)
+            put(SESSION_URL_KEY, session.url)
+            put(SESSION_SOURCE_KEY, session.source.name)
+            put(SESSION_UUID_KEY, session.id)
         }
     }
 
     @Throws(JSONException::class)
-    internal fun deserializeSession(id: String, json: JSONObject): Session {
+    internal fun deserializeSession(json: JSONObject): Session {
         val source = try {
-            Source.valueOf(json.getString("source"))
+            Source.valueOf(json.getString(SESSION_SOURCE_KEY))
         } catch (e: IllegalArgumentException) {
             Source.NONE
         }
-        return Session(json.getString("url"), false, source, id)
+        return Session(
+                json.getString(SESSION_URL_KEY),
+                // Currently, snapshot cannot contain private sessions.
+                false,
+                source,
+                json.getString(SESSION_UUID_KEY)
+        )
     }
 
     private fun serializeEngineSession(engineSession: EngineSession?): JSONObject {
