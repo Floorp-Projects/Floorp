@@ -16,8 +16,7 @@ interface WindowGlobalParent {
   readonly attribute unsigned long long innerWindowId;
   readonly attribute unsigned long long outerWindowId;
 
-  // XXX(nika): We would want to expose this, but |FrameLoader| isn't exposed on System.
-  // readonly attribute FrameLoader? rootFrameLoader; // Embedded (browser) only
+  readonly attribute FrameLoader? rootFrameLoader; // Embedded (browser) only
 
   readonly attribute WindowGlobalChild? childActor; // in-process only
 
