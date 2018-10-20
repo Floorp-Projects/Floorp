@@ -38,7 +38,7 @@ const actionTypes = {
   REVERSE_SEARCH_INPUT_CHANGE: "REVERSE_SEARCH_INPUT_CHANGE",
   REVERSE_SEARCH_NEXT: "REVERSE_SEARCH_NEXT",
   REVERSE_SEARCH_BACK: "REVERSE_SEARCH_BACK",
-  PAUSED_EXCECUTION_POINT: "PAUSED_EXCECUTION_POINT"
+  PAUSED_EXCECUTION_POINT: "PAUSED_EXCECUTION_POINT",
 };
 
 const prefs = {
@@ -69,8 +69,8 @@ const prefs = {
       SIDEBAR_TOGGLE: "devtools.webconsole.sidebarToggle",
       JSTERM_CODE_MIRROR: "devtools.webconsole.jsterm.codeMirror",
       JSTERM_REVERSE_SEARCH: "devtools.webconsole.jsterm.reverse-search",
-    }
-  }
+    },
+  },
 };
 
 const FILTERS = {
@@ -112,7 +112,7 @@ const chromeRDPEnums = {
     RENDERING: "rendering",
     SECURITY: "security",
     OTHER: "other",
-    DEPRECATION: "deprecation"
+    DEPRECATION: "deprecation",
   },
   MESSAGE_TYPE: {
     LOG: "log",
@@ -134,21 +134,21 @@ const chromeRDPEnums = {
     // Undocumented in Chrome RDP, but is used for messages that should not
     // output anything (e.g. `console.time()` calls).
     NULL_MESSAGE: "nullMessage",
-    NAVIGATION_MARKER: "navigationMarker"
+    NAVIGATION_MARKER: "navigationMarker",
   },
   MESSAGE_LEVEL: {
     LOG: "log",
     ERROR: "error",
     WARN: "warn",
     DEBUG: "debug",
-    INFO: "info"
-  }
+    INFO: "info",
+  },
 };
 
 const jstermCommands = {
   JSTERM_COMMANDS: {
-    INSPECT: "inspectObject"
-  }
+    INSPECT: "inspectObject",
+  },
 };
 
 // Constants used for defining the direction of JSTerm input history navigation.

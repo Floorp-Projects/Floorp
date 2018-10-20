@@ -754,7 +754,7 @@ var dateTimeFormatInternalProperties = {
         addSpecialMissingLanguageTags(locales);
         return (this._availableLocales = locales);
     },
-    relevantExtensionKeys: ["ca", "nu", "hc"]
+    relevantExtensionKeys: ["ca", "nu", "hc"],
 };
 
 function dateTimeFormatLocaleData() {
@@ -769,8 +769,8 @@ function dateTimeFormatLocaleData() {
             nu: intl_numberingSystem,
             hc: () => {
                 return null;
-            }
-        }
+            },
+        },
     };
 }
 
@@ -898,7 +898,7 @@ var icuPatternCharToComponent = {
     s: "second",
     z: "timeZoneName",
     v: "timeZoneName",
-    V: "timeZoneName"
+    V: "timeZoneName",
 };
 
 /**

@@ -139,7 +139,7 @@ describe("PageError component:", () => {
     let call = store.dispatch.getCall(0);
     expect(call.args[0]).toEqual({
       id: message.id,
-      type: MESSAGE_CLOSE
+      type: MESSAGE_CLOSE,
     });
 
     wrapper = mount(Provider({store},
@@ -154,7 +154,7 @@ describe("PageError component:", () => {
     call = store.dispatch.getCall(1);
     expect(call.args[0]).toEqual({
       id: message.id,
-      type: MESSAGE_OPEN
+      type: MESSAGE_OPEN,
     });
   });
 
@@ -163,7 +163,7 @@ describe("PageError component:", () => {
     const indent = 10;
     let wrapper = render(PageError({
       message: Object.assign({}, message, {indent}),
-      serviceContainer
+      serviceContainer,
     }));
     let indentEl = wrapper.find(".indent");
     expect(indentEl.prop("style").width).toBe(`${indent * INDENT_WIDTH}px`);
@@ -192,9 +192,9 @@ describe("PageError component:", () => {
         "frame": {
           "source": "http://example.com/test.js",
           "line": 2,
-          "column": 6
-        }
-      }]
+          "column": 6,
+        },
+      }],
     });
 
     const wrapper = render(PageError({ message, serviceContainer }));
@@ -220,25 +220,25 @@ describe("PageError component:", () => {
         "frame": {
           "source": "http://example.com/test1.js",
           "line": 2,
-          "column": 6
-        }
+          "column": 6,
+        },
       },
       {
         "messageBody": "test note 2",
         "frame": {
           "source": "http://example.com/test2.js",
           "line": 10,
-          "column": 18
-        }
+          "column": 18,
+        },
       },
       {
         "messageBody": "test note 3",
         "frame": {
           "source": "http://example.com/test3.js",
           "line": 9,
-          "column": 4
-        }
-      }]
+          "column": 4,
+        },
+      }],
     });
 
     const wrapper = render(PageError({ message, serviceContainer }));

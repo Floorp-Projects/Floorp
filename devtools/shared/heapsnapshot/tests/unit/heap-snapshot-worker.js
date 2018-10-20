@@ -33,7 +33,7 @@ function ok(val, msg) {
     type: "assertion",
     passed: !!val,
     msg,
-    stack: Error().stack
+    stack: Error().stack,
   });
 }
 
@@ -41,6 +41,6 @@ function ok(val, msg) {
 function done() {
   console.log("done()");
   self.postMessage({
-    type: "done"
+    type: "done",
   });
 }

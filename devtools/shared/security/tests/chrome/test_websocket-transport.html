@@ -41,7 +41,7 @@ window.onload = function() {
     const transport = await DebuggerClient.socketConnect({
       host: "127.0.0.1",
       port: listener.port,
-      webSocket: true
+      webSocket: true,
     });
     ok(transport, "Client transport created");
 

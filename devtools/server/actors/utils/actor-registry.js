@@ -75,7 +75,7 @@ const ActorRegistry = {
       constructorName: constructor,
       type,
       globalActor: type.global,
-      targetScopedActor: type.target
+      targetScopedActor: type.target,
     };
     gRegisteredModules[id] = mod;
     if (mod.targetScopedActor) {
@@ -116,27 +116,27 @@ const ActorRegistry = {
     this.registerModule("devtools/server/actors/preference", {
       prefix: "preference",
       constructor: "PreferenceActor",
-      type: { global: true }
+      type: { global: true },
     });
     this.registerModule("devtools/server/actors/actor-registry", {
       prefix: "actorRegistry",
       constructor: "ActorRegistryActor",
-      type: { global: true }
+      type: { global: true },
     });
     this.registerModule("devtools/server/actors/addon/addons", {
       prefix: "addons",
       constructor: "AddonsActor",
-      type: { global: true }
+      type: { global: true },
     });
     this.registerModule("devtools/server/actors/device", {
       prefix: "device",
       constructor: "DeviceActor",
-      type: { global: true }
+      type: { global: true },
     });
     this.registerModule("devtools/server/actors/heap-snapshot-file", {
       prefix: "heapSnapshotFile",
       constructor: "HeapSnapshotFileActor",
-      type: { global: true }
+      type: { global: true },
     });
     // Always register this as a global module, even while there is a pref turning
     // on and off the other performance actor. This actor shouldn't conflict with
@@ -145,7 +145,7 @@ const ActorRegistry = {
     this.registerModule("devtools/server/actors/perf", {
       prefix: "perf",
       constructor: "PerfActor",
-      type: { global: true }
+      type: { global: true },
     });
   },
 
@@ -156,105 +156,105 @@ const ActorRegistry = {
     this.registerModule("devtools/server/actors/webconsole", {
       prefix: "console",
       constructor: "WebConsoleActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/inspector/inspector", {
       prefix: "inspector",
       constructor: "InspectorActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/canvas", {
       prefix: "canvas",
       constructor: "CanvasActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/webgl", {
       prefix: "webgl",
       constructor: "WebGLActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/webaudio", {
       prefix: "webaudio",
       constructor: "WebAudioActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/stylesheets", {
       prefix: "styleSheets",
       constructor: "StyleSheetsActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/storage", {
       prefix: "storage",
       constructor: "StorageActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/memory", {
       prefix: "memory",
       constructor: "MemoryActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/framerate", {
       prefix: "framerate",
       constructor: "FramerateActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/reflow", {
       prefix: "reflow",
       constructor: "ReflowActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/css-properties", {
       prefix: "cssProperties",
       constructor: "CssPropertiesActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/csscoverage", {
       prefix: "cssUsage",
       constructor: "CSSUsageActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/timeline", {
       prefix: "timeline",
       constructor: "TimelineActor",
-      type: { target: true }
+      type: { target: true },
     });
     if ("nsIProfiler" in Ci &&
         !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)) {
       this.registerModule("devtools/server/actors/performance", {
         prefix: "performance",
         constructor: "PerformanceActor",
-        type: { target: true }
+        type: { target: true },
       });
     }
     this.registerModule("devtools/server/actors/animation", {
       prefix: "animations",
       constructor: "AnimationsActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/promises", {
       prefix: "promises",
       constructor: "PromisesActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/emulation", {
       prefix: "emulation",
       constructor: "EmulationActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/addon/webextension-inspected-window", {
       prefix: "webExtensionInspectedWindow",
       constructor: "WebExtensionInspectedWindowActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/accessibility", {
       prefix: "accessibility",
       constructor: "AccessibilityActor",
-      type: { target: true }
+      type: { target: true },
     });
     this.registerModule("devtools/server/actors/screenshot", {
       prefix: "screenshot",
       constructor: "ScreenshotActor",
-      type: { target: true }
+      type: { target: true },
     });
   },
 

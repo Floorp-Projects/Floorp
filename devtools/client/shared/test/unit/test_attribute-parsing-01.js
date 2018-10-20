@@ -18,40 +18,40 @@ const TEST_DATA = [{
     {value: " ", type: "string"},
     {value: "a"},
     {value: " ", type: "string"},
-    {value: "test"}
-  ]
+    {value: "test"},
+  ],
 }, {
   value: "/path/to/handler",
   splitChar: " ",
   expected: [
-    {value: "/path/to/handler"}
-  ]
+    {value: "/path/to/handler"},
+  ],
 }, {
   value: "test",
   splitChar: " ",
   expected: [
-    {value: "test"}
-  ]
+    {value: "test"},
+  ],
 }, {
   value: " test ",
   splitChar: " ",
   expected: [
     {value: " ", type: "string"},
     {value: "test"},
-    {value: " ", type: "string"}
-  ]
+    {value: " ", type: "string"},
+  ],
 }, {
   value: "",
   splitChar: " ",
-  expected: []
+  expected: [],
 }, {
   value: "   ",
   splitChar: " ",
   expected: [
     {value: " ", type: "string"},
     {value: " ", type: "string"},
-    {value: " ", type: "string"}
-  ]
+    {value: " ", type: "string"},
+  ],
 }];
 
 function run_test() {

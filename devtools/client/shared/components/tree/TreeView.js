@@ -24,7 +24,7 @@ define(function(require, exports, module) {
     "ArrowLeft",
     "ArrowRight",
     "End",
-    "Home"
+    "Home",
   ];
 
   const defaultProps = {
@@ -34,7 +34,7 @@ define(function(require, exports, module) {
     expandedNodes: new Set(),
     selected: null,
     expandableStrings: true,
-    columns: []
+    columns: [],
   };
 
   /**
@@ -125,8 +125,8 @@ define(function(require, exports, module) {
         columns: PropTypes.arrayOf(PropTypes.shape({
           id: PropTypes.string.isRequired,
           title: PropTypes.string,
-          width: PropTypes.string
-        }))
+          width: PropTypes.string,
+        })),
       };
     }
 
@@ -154,7 +154,7 @@ define(function(require, exports, module) {
       const queue = [{
         object: rootObj,
         level: 1,
-        path: ""
+        path: "",
       }];
       while (queue.length) {
         const {object, level, path} = queue.shift();
@@ -173,7 +173,7 @@ define(function(require, exports, module) {
             queue.push({
               object: object[key],
               level: level + 1,
-              path: nodePath
+              path: nodePath,
             });
           }
         }
@@ -188,7 +188,7 @@ define(function(require, exports, module) {
         expandedNodes: props.expandedNodes,
         columns: ensureDefaultColumn(props.columns),
         selected: props.selected,
-        lastSelectedIndex: 0
+        lastSelectedIndex: 0,
       };
 
       this.toggle = this.toggle.bind(this);
@@ -208,7 +208,7 @@ define(function(require, exports, module) {
       const { expandedNodes, selected } = nextProps;
       const state = {
         expandedNodes,
-        lastSelectedIndex: this.getSelectedRowIndex()
+        lastSelectedIndex: this.getSelectedRowIndex(),
       };
 
       if (selected) {
@@ -238,7 +238,7 @@ define(function(require, exports, module) {
 
       // Compute new state and update the tree.
       this.setState(Object.assign({}, this.state, {
-        expandedNodes: nodes
+        expandedNodes: nodes,
       }));
     }
 
@@ -297,7 +297,7 @@ define(function(require, exports, module) {
             // the table head. So we want to force the tree to scroll to the very top.
             this.selectRow(firstRow, {
               block: "end",
-              inline: "nearest"
+              inline: "nearest",
             });
           }
           break;
@@ -357,7 +357,7 @@ define(function(require, exports, module) {
       }
 
       this.setState(Object.assign({}, this.state, {
-        selected: row.id
+        selected: row.id,
       }));
 
       row.scrollIntoView(scrollOptions);
@@ -447,7 +447,7 @@ define(function(require, exports, module) {
           // True if the node is hidden (used for filtering)
           hidden: !this.onFilter(child),
           // True if the node is selected with keyboard
-          selected: this.isSelected(nodePath)
+          selected: this.isSelected(nodePath),
         };
       });
     }
@@ -480,7 +480,7 @@ define(function(require, exports, module) {
           columns: this.state.columns,
           id: member.path,
           ref: row => row && this.rows.push(row),
-          onClick: this.onClickRow.bind(this, member.path)
+          onClick: this.onClickRow.bind(this, member.path),
         });
 
         // Render single row.
@@ -529,7 +529,7 @@ define(function(require, exports, module) {
       }
 
       const props = Object.assign({}, this.props, {
-        columns: this.state.columns
+        columns: this.state.columns,
       });
 
       return (
@@ -548,7 +548,7 @@ define(function(require, exports, module) {
           TreeHeader(props),
           dom.tbody({
             role: "presentation",
-            tabIndex: -1
+            tabIndex: -1,
           }, rows)
         )
       );

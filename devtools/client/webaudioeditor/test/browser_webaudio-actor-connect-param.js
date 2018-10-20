@@ -12,7 +12,7 @@ add_task(async function() {
     once(front, "start-context"),
     getN(front, "create-node", 4),
     get2(front, "connect-node"),
-    once(front, "connect-param")
+    once(front, "connect-param"),
   ]);
 
   info(connectParam);

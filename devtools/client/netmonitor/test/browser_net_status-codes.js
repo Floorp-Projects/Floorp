@@ -37,8 +37,8 @@ add_task(async function() {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
-        time: true
-      }
+        time: true,
+      },
     },
     {
       // request #1
@@ -51,8 +51,8 @@ add_task(async function() {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
-        time: true
-      }
+        time: true,
+      },
     },
     {
       // request #2
@@ -65,8 +65,8 @@ add_task(async function() {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
-        time: true
-      }
+        time: true,
+      },
     },
     {
       // request #3
@@ -79,8 +79,8 @@ add_task(async function() {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
-        time: true
-      }
+        time: true,
+      },
     },
     {
       // request #4
@@ -93,9 +93,9 @@ add_task(async function() {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
-        time: true
-      }
-    }
+        time: true,
+      },
+    },
   ];
 
   // Execute requests.

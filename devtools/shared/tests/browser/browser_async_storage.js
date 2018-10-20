@@ -33,7 +33,7 @@ add_task(async function() {
   const object = {
     x: 1,
     y: "foo",
-    z: true
+    z: true,
   };
 
   await asyncStorage.setItem("myobj", object);

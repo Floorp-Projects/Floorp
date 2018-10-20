@@ -80,7 +80,7 @@ add_task(async function setup() {
     let certTreeItem = {
       hostPort: FAKE_HOST_PORT,
       cert,
-      QueryInterface: ChromeUtils.generateQI(["nsICertTreeItem"])
+      QueryInterface: ChromeUtils.generateQI(["nsICertTreeItem"]),
     };
     gCertArray.push(certTreeItem);
   }

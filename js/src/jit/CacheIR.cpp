@@ -3709,6 +3709,7 @@ SetPropIRGenerator::trackAttached(const char* name)
 {
 #ifdef JS_CACHEIR_SPEW
     if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+        sp.opcodeProperty("op", JSOp(*pc_));
         sp.valueProperty("base", lhsVal_);
         sp.valueProperty("property", idVal_);
         sp.valueProperty("value", rhsVal_);
@@ -4022,8 +4023,9 @@ SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId 
     uint32_t initLength = nobj->getDenseInitializedLength();
 
     // Optimize if we're adding an element at initLength or writing to a hole.
-    // Don't handle the adding case if the current accesss is in bounds, to
-    // ensure we always call noteArrayWriteHole.
+    //
+    // In the case where index > initLength, we need noteHasDenseAdd to be called
+    // to ensure Ion is aware that writes have occurred to-out-of-bound indexes before.
     bool isAdd = index == initLength;
     bool isHoleInBounds = index < initLength && !nobj->containsDenseElement(index);
     if (!isAdd && !isHoleInBounds) {

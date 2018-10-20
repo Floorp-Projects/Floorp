@@ -85,7 +85,7 @@ function NetworkEventMessage({
         e.stopPropagation();
         e.preventDefault();
         serviceContainer.openLink(statusCodeDocURL, e);
-      }
+      },
     }, status);
     statusInfo = dom.span(
       {className: "status-info"},

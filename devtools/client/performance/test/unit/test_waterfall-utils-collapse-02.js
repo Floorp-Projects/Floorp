@@ -14,7 +14,7 @@ add_task(function test() {
 
   WaterfallUtils.collapseMarkersIntoNode({
     rootNode: rootMarkerNode,
-    markersList: gTestMarkers
+    markersList: gTestMarkers,
   });
 
   function compare(marker, expected) {
@@ -57,13 +57,13 @@ const gTestMarkers = [
 const gExpectedOutput = {
   name: "(root)", submarkers: [
     { start: 2, end: 9, name: "Javascript", submarkers: [
-      { start: 3, end: 4, name: "Paint" }
+      { start: 3, end: 4, name: "Paint" },
     ]},
     { start: 5, end: 12, name: "ConsoleTime", causeName: "1" },
 
     { start: 15, end: 21, name: "ConsoleTime", causeName: "2" },
     { start: 18, end: 22, name: "Javascript", submarkers: [
-      { start: 19, end: 20, name: "Paint" }
+      { start: 19, end: 20, name: "Paint" },
     ]},
 
     { start: 30, end: 40, name: "ConsoleTime", causeName: "3" },

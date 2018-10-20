@@ -277,6 +277,12 @@ TransactionWrapper::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
   wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
 }
 
+void
+TransactionWrapper::UpdatePinchZoom(float aZoom)
+{
+  wr_transaction_pinch_zoom(mTxn, aZoom);
+}
+
 /*static*/ already_AddRefed<WebRenderAPI>
 WebRenderAPI::Create(layers::CompositorBridgeParent* aBridge,
                      RefPtr<widget::CompositorWidget>&& aWidget,

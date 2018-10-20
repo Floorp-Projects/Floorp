@@ -29,7 +29,7 @@ function test() {
         ok(param, "click is ok");
 
         teardown(ed, win);
-      }
+      },
     }, [ true ]);
 
     const env = win.document.querySelector("iframe").contentWindow;

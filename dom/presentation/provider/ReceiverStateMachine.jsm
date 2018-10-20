@@ -27,7 +27,7 @@ var handlers = [
     switch (command.type) {
       case CommandType.CONNECT:
         stateMachine._sendCommand({
-          type: CommandType.CONNECT_ACK
+          type: CommandType.CONNECT_ACK,
         });
         stateMachine.state = State.CONNECTED;
         stateMachine._notifyDeviceConnected(command.deviceId);
@@ -53,7 +53,7 @@ var handlers = [
                                    command.url);
         stateMachine._sendCommand({
           type: CommandType.LAUNCH_ACK,
-          presentationId: command.presentationId
+          presentationId: command.presentationId,
         });
         break;
       case CommandType.TERMINATE:
@@ -71,7 +71,7 @@ var handlers = [
                                       command.url);
         stateMachine._sendCommand({
           type: CommandType.RECONNECT_ACK,
-          presentationId: command.presentationId
+          presentationId: command.presentationId,
         });
         break;
       default:
@@ -173,7 +173,7 @@ ReceiverStateMachine.prototype = {
         } else {
           this._sendCommand({
             type: CommandType.DISCONNECT,
-            reason
+            reason,
           });
           this.state = State.CLOSING;
           this._closeReason = reason;

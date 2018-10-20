@@ -25,7 +25,7 @@ add_task(async function() {
 
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { gFront, EVENTS, $, PerformanceController, PerformanceView } = panel.panelWin;

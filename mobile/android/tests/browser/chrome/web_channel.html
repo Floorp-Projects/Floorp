@@ -30,8 +30,8 @@
           something: {
             nested: "hello",
           },
-        }
-      })
+        },
+      }),
     });
 
     window.dispatchEvent(event);
@@ -44,7 +44,7 @@
         message: {
           command: "one",
         },
-      })
+      }),
     });
 
     window.addEventListener("WebChannelMessageToContent", function(e) {
@@ -71,14 +71,14 @@
       detail: JSON.stringify({
         id: "wrongchannel",
         message: {},
-      })
+      }),
     });
 
     var event2 = new window.CustomEvent("WebChannelMessageToChrome", {
       detail: JSON.stringify({
         id: "multichannel",
         message: {},
-      })
+      }),
     });
 
     window.dispatchEvent(event1);

@@ -67,8 +67,8 @@ var gThread = synthesizeProfileForTest([{
     { location: "(root)" },
     { location: "http://content/A" },
     { location: "http://content/B" },
-    { location: "http://content/C" }
-  ]
+    { location: "http://content/C" },
+  ],
 }, {
   time: 5 + 6,
   frames: [
@@ -76,8 +76,8 @@ var gThread = synthesizeProfileForTest([{
     { location: "http://content/A" },
     { location: "http://content/B" },
     { location: "contentY", category: CATEGORY_INDEX("layout") },
-    { location: "http://content/D" }
-  ]
+    { location: "http://content/D" },
+  ],
 }, {
   time: 5 + 6 + 7,
   frames: [
@@ -87,18 +87,18 @@ var gThread = synthesizeProfileForTest([{
     { location: "http://content/E" },
     { location: "http://content/F" },
     { location: "contentY", category: CATEGORY_INDEX("js") },
-  ]
+  ],
 }, {
   time: 5 + 20,
   frames: [
     { location: "(root)" },
     { location: "contentX", category: CATEGORY_INDEX("js") },
-  ]
+  ],
 }, {
   time: 5 + 25,
   frames: [
     { location: "(root)" },
     { location: "http://content/A" },
     { location: "contentZ", category: CATEGORY_INDEX("gc") },
-  ]
+  ],
 }]);

@@ -14,7 +14,7 @@ function run_test() {
     then: {
       by: "objectClass",
       then: countBreakdown,
-      other: countBreakdown
+      other: countBreakdown,
     },
     noStack: countBreakdown,
   };
@@ -33,7 +33,7 @@ function run_test() {
     [stack, { Foo: { bytes: 10, count: 1 },
               Bar: { bytes: 20, count: 2 },
               Baz: { bytes: 30, count: 3 },
-              other: { bytes: 40, count: 4 }
+              other: { bytes: 40, count: 4 },
     }],
     ["noStack", { bytes: 50, count: 5 }],
   ]);
@@ -114,12 +114,12 @@ function run_test() {
                 id: 4,
                 parent: 3,
                 reportLeafIndex: undefined,
-              }
+              },
             ],
             id: 3,
             parent: 2,
             reportLeafIndex: undefined,
-          }
+          },
         ],
         id: 2,
         parent: 1,

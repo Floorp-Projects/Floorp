@@ -1143,6 +1143,23 @@ var TelemetrySendImpl = {
       }
 
       TelemetryHealthPing.recordSendFailure(failure);
+
+      if (this.fallbackHttp) {
+        // only one attempt
+        this.fallbackHttp = false;
+
+        request.channel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
+          .QueryInterface(Ci.nsISerializable);
+        if (request.channel.securityInfo.errorCodeString.startsWith("SEC_")) {
+          // re-open the request with the HTTP version of the URL
+          let fallbackUrl = new URL(url);
+          fallbackUrl.protocol = "http:";
+          // TODO encrypt payload
+          request.open("POST", fallbackUrl, true);
+          request.sendInputStream(this.payloadStream);
+        }
+      }
+
       Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").add(failure);
 
       this._log.error("_doPing - error making request to " + url + ": " + failure);
@@ -1215,6 +1232,8 @@ var TelemetrySendImpl = {
     const compressedPingSizeKB = Math.floor(payloadStream.data.length / 1024);
     Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(Utils.monotonicNow() - startTime);
     request.sendInputStream(payloadStream);
+
+    this.payloadStream = payloadStream;
 
     return deferred.promise;
   },

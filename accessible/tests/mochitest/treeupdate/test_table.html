@@ -27,19 +27,19 @@
       };
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, aTableID)
+        new invokerChecker(EVENT_REORDER, aTableID),
       ];
 
       this.finalCheck = function appendCaption_finalCheck() {
         var tree =
           { TABLE: [
             { CAPTION: [
-              { TEXT_LEAF: [] }
+              { TEXT_LEAF: [] },
             ] },
             { ROW: [
               { CELL: [ {TEXT_LEAF: [] }]},
-              { CELL: [ {TEXT_LEAF: [] }]}
-            ] }
+              { CELL: [ {TEXT_LEAF: [] }]},
+            ] },
           ] };
         testAccessibleTree(aTableID, tree);
       };

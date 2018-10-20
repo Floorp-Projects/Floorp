@@ -265,7 +265,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         break;
       case "responsiveDesignMode":
         ResponsiveUIManager.toggle(window, window.gBrowser.selectedTab, {
-          trigger: "shortcut"
+          trigger: "shortcut",
         });
         break;
       case "scratchpad":
@@ -397,7 +397,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       tooltiptext: "devtools-webide-button2.tooltiptext",
       onCommand(event) {
         gDevToolsBrowser.openWebIDE();
-      }
+      },
     });
   },
 
@@ -594,7 +594,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
   hasToolboxOpened(win) {
     const tab = win.gBrowser.selectedTab;
-    for (const [target, ] of gDevTools._toolboxes) {
+    for (const [target ] of gDevTools._toolboxes) {
       if (target.tab == tab) {
         return true;
       }

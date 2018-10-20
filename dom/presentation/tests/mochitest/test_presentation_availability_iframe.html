@@ -95,7 +95,7 @@ function testConsecutiveGetAvailability() {
     }),
     presRequest.getAvailability().then(function() {
       ok(firstAvailabilityResolved, "getAvailability() should be resolved in sequence");
-    })
+    }),
   ]).catch(function(aError) {
     ok(false, "Error occurred when getting availability: " + aError);
     teardown();

@@ -21,7 +21,7 @@ const {Arg, Option, RetVal, generateActorSpec} = protocol;
  */
 protocol.types.addType("array-buffer-view", {
   write: (v) => "[" + Array.join(v, ",") + "]",
-  read: (v) => JSON.parse(v)
+  read: (v) => JSON.parse(v),
 });
 
 /**
@@ -33,7 +33,7 @@ protocol.types.addDictType("snapshot-image", {
   height: "number",
   scaling: "number",
   flipped: "boolean",
-  pixels: "array-buffer-view"
+  pixels: "array-buffer-view",
 });
 
 /**
@@ -42,20 +42,20 @@ protocol.types.addDictType("snapshot-image", {
 protocol.types.addDictType("snapshot-overview", {
   calls: "array:function-call",
   thumbnails: "array:snapshot-image",
-  screenshot: "snapshot-image"
+  screenshot: "snapshot-image",
 });
 
 exports.CANVAS_CONTEXTS = [
   "CanvasRenderingContext2D",
-  "WebGLRenderingContext"
+  "WebGLRenderingContext",
 ];
 
 exports.ANIMATION_GENERATORS = [
-  "requestAnimationFrame"
+  "requestAnimationFrame",
 ];
 
 exports.LOOP_GENERATORS = [
-  "setTimeout"
+  "setTimeout",
 ];
 
 exports.DRAW_CALLS = [
@@ -74,7 +74,7 @@ exports.DRAW_CALLS = [
   "drawArrays",
   "drawElements",
   "finish",
-  "flush"
+  "flush",
 ];
 
 exports.INTERESTING_CALLS = [
@@ -83,7 +83,7 @@ exports.INTERESTING_CALLS = [
   "restore",
 
   // WebGL
-  "useProgram"
+  "useProgram",
 ];
 
 const frameSnapshotSpec = generateActorSpec({
@@ -91,11 +91,11 @@ const frameSnapshotSpec = generateActorSpec({
 
   methods: {
     getOverview: {
-      response: { overview: RetVal("snapshot-overview") }
+      response: { overview: RetVal("snapshot-overview") },
     },
     generateScreenshotFor: {
       request: { call: Arg(0, "function-call") },
-      response: { screenshot: RetVal("snapshot-image") }
+      response: { screenshot: RetVal("snapshot-image") },
     },
   },
 });
@@ -108,24 +108,24 @@ const canvasSpec = generateActorSpec({
   methods: {
     setup: {
       request: { reload: Option(0, "boolean") },
-      oneway: true
+      oneway: true,
     },
     finalize: {
-      oneway: true
+      oneway: true,
     },
     isInitialized: {
-      response: { initialized: RetVal("boolean") }
+      response: { initialized: RetVal("boolean") },
     },
     isRecording: {
-      response: { recording: RetVal("boolean") }
+      response: { recording: RetVal("boolean") },
     },
     recordAnimationFrame: {
-      response: { snapshot: RetVal("nullable:frame-snapshot") }
+      response: { snapshot: RetVal("nullable:frame-snapshot") },
     },
     stopRecordingAnimationFrame: {
-      oneway: true
+      oneway: true,
     },
-  }
+  },
 });
 
 exports.canvasSpec = canvasSpec;

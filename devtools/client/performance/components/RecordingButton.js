@@ -14,7 +14,7 @@ class RecordingButton extends Component {
     return {
       onRecordButtonClick: PropTypes.func.isRequired,
       isRecording: PropTypes.bool,
-      isLocked: PropTypes.bool
+      isLocked: PropTypes.bool,
     };
   }
 
@@ -22,7 +22,7 @@ class RecordingButton extends Component {
     const {
       onRecordButtonClick,
       isRecording,
-      isLocked
+      isLocked,
     } = this.props;
 
     const classList = ["devtools-button", "record-button"];
@@ -37,7 +37,7 @@ class RecordingButton extends Component {
         onClick: onRecordButtonClick,
         "data-standalone": "true",
         "data-text-only": "true",
-        disabled: isLocked
+        disabled: isLocked,
       },
       isRecording ? L10N.getStr("recordings.stop") : L10N.getStr("recordings.start")
     );

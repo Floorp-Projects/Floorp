@@ -31,17 +31,17 @@ const breakdown = {
 
 const description = {
   objects: {
-    other: { count: 1, bytes: 10 }
+    other: { count: 1, bytes: 10 },
   },
   strings: {},
   scripts: {},
   other: {},
-  domNode: {}
+  domNode: {},
 };
 
 const expected = [
   "objects",
-  "other"
+  "other",
 ];
 
 const shallowSize = 10;

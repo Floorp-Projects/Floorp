@@ -9,7 +9,7 @@ const breakpointSpec = generateActorSpec({
   typeName: "breakpoint",
 
   methods: {
-    delete: {}
+    delete: {},
   },
 });
 

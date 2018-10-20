@@ -40,7 +40,7 @@ WebInstallPrompt.prototype = {
       else
         install.cancel();
     });
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WebInstallPrompt]);

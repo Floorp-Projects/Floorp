@@ -138,7 +138,7 @@ class App extends Component {
 
     const {
       usageCount,
-      CONSOLE_ENTRY_THRESHOLD
+      CONSOLE_ENTRY_THRESHOLD,
     } = WebConsoleUtils;
 
     // Bail out if self-xss notification is suppressed.
@@ -227,9 +227,9 @@ class App extends Component {
           FilterBar({
             hidePersistLogsCheckbox: hud.isBrowserConsole,
             serviceContainer: {
-              attachRefToHud
+              attachRefToHud,
             },
-            closeSplitConsole
+            closeSplitConsole,
           }),
           ConsoleOutput({
             serviceContainer,

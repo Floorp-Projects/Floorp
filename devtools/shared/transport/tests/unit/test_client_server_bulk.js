@@ -38,7 +38,7 @@ TestBulkActor.prototype = {
     this.conn.startBulkSend({
       actor: actor,
       type: type,
-      length: length
+      length: length,
     }).then(({copyFrom}) => {
       // We'll just echo back the same thing
       const pipe = new Pipe(true, true, 0, 0, null);
@@ -55,11 +55,11 @@ TestBulkActor.prototype = {
     this.conn.startBulkSend({
       actor: to,
       type: type,
-      length: really_long().length
+      length: really_long().length,
     }).then(({copyFrom}) => {
       NetUtil.asyncFetch({
         uri: NetUtil.newURI(getTestTempFile("bulk-input")),
-        loadUsingSystemPrincipal: true
+        loadUsingSystemPrincipal: true,
       }, input => {
         copyFrom(input).then(() => {
           input.close();
@@ -82,14 +82,14 @@ TestBulkActor.prototype = {
     }).then(() => {
       return { allDone: true };
     }, do_throw);
-  }
+  },
 
 };
 
 TestBulkActor.prototype.requestTypes = {
   "bulkEcho": TestBulkActor.prototype.bulkEcho,
   "bulkReply": TestBulkActor.prototype.bulkReply,
-  "jsonReply": TestBulkActor.prototype.jsonReply
+  "jsonReply": TestBulkActor.prototype.jsonReply,
 };
 
 function add_test_bulk_actor() {
@@ -130,7 +130,7 @@ var replyHandlers = {
         });
       });
     });
-  }
+  },
 
 };
 
@@ -167,7 +167,7 @@ var test_bulk_request_cs = async function(transportFactory, actorType, replyType
   function bulkSendReadyCallback({copyFrom}) {
     NetUtil.asyncFetch({
       uri: NetUtil.newURI(getTestTempFile("bulk-input")),
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }, input => {
       copyFrom(input).then(() => {
         input.close();
@@ -180,7 +180,7 @@ var test_bulk_request_cs = async function(transportFactory, actorType, replyType
     const request = client.startBulkRequest({
       actor: response.testBulk,
       type: actorType,
-      length: really_long().length
+      length: really_long().length,
     });
 
     // Send bulk data to server
@@ -202,7 +202,7 @@ var test_bulk_request_cs = async function(transportFactory, actorType, replyType
   return Promise.all([
     clientDeferred,
     bulkCopyDeferred,
-    serverDeferred
+    serverDeferred,
   ]);
 };
 
@@ -232,7 +232,7 @@ var test_json_request_cs = async function(transportFactory, actorType, replyType
   clientDeferred.then(response => {
     const request = client.request({
       to: response.testBulk,
-      type: actorType
+      type: actorType,
     });
 
     // Set up reply handling for this type
@@ -250,7 +250,7 @@ var test_json_request_cs = async function(transportFactory, actorType, replyType
 
   return Promise.all([
     clientDeferred,
-    serverDeferred
+    serverDeferred,
   ]);
 };
 
@@ -269,7 +269,7 @@ function verify_files() {
   return new Promise((resolve) => {
     NetUtil.asyncFetch({
       uri: NetUtil.newURI(getTestTempFile("bulk-output")),
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }, input => {
       const outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
         // Avoid do_check_eq here so we don't log the contents

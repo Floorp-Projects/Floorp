@@ -68,7 +68,7 @@ function createController(ed) {
         "cmd_undo": "undo",
         "cmd_redo": "redo",
         "cmd_delete": "delCharAfter",
-        "cmd_findAgain": "findNext"
+        "cmd_findAgain": "findNext",
       };
 
       if (map[cmd]) {
@@ -81,7 +81,7 @@ function createController(ed) {
       }
     },
 
-    onEvent: function() {}
+    onEvent: function() {},
   };
 }
 

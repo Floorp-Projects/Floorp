@@ -54,7 +54,7 @@ async function testLinkNavigation({
   browser,
   url,
   urlText,
-  clickLabel = false
+  clickLabel = false,
 }) {
   const onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url);
 

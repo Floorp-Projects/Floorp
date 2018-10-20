@@ -31,6 +31,6 @@ module.exports = {
     RPMIsWindowPrivate: false,
     RPMSendAsyncMessage: false,
     RPMAddMessageListener: false,
-    RPMRemoveMessageListener: false
-  }
+    RPMRemoveMessageListener: false,
+  },
 };

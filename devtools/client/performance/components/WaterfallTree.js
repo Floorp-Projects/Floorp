@@ -57,7 +57,7 @@ class WaterfallTree extends Component {
 
     this.state = {
       focused: null,
-      expanded: new Set()
+      expanded: new Set(),
     };
 
     this._getRoots = this._getRoots.bind(this);
@@ -157,7 +157,7 @@ class WaterfallTree extends Component {
       focused,
       startTime,
       dataScale,
-      sidebarWidth
+      sidebarWidth,
     });
   }
 
@@ -174,7 +174,7 @@ class WaterfallTree extends Component {
       onFocus: this._onFocus,
       renderItem: this._renderItem,
       focused: this.state.focused,
-      itemHeight: WATERFALL_TREE_ROW_HEIGHT
+      itemHeight: WATERFALL_TREE_ROW_HEIGHT,
     });
   }
 }

@@ -154,23 +154,23 @@ var gRawSite1 = {
     typeset: [{
       keyedBy: uniqStr("constructor"),
       name: uniqStr("Foo"),
-      location: uniqStr("B (http://foo/bar:10)")
+      location: uniqStr("B (http://foo/bar:10)"),
     }, {
       keyedBy: uniqStr("primitive"),
-      location: uniqStr("self-hosted")
-    }]
+      location: uniqStr("self-hosted"),
+    }],
   }],
   attempts: {
     schema: {
       outcome: 0,
-      strategy: 1
+      strategy: 1,
     },
     data: [
       [uniqStr("Failure1"), uniqStr("SomeGetter1")],
       [uniqStr("Failure2"), uniqStr("SomeGetter2")],
-      [uniqStr("Inlined"), uniqStr("SomeGetter3")]
-    ]
-  }
+      [uniqStr("Inlined"), uniqStr("SomeGetter3")],
+    ],
+  },
 };
 
 function serialize(x) {

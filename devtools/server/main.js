@@ -331,7 +331,7 @@ var DebuggerServer = {
         childTransport = new ChildDebuggerTransport(mm, prefix);
         childTransport.hooks = {
           onPacket: connection.send.bind(connection),
-          onClosed() {}
+          onClosed() {},
         };
         childTransport.ready();
 
@@ -354,7 +354,7 @@ var DebuggerServer = {
       // Send a message to the content process server startup script to forward it the
       // prefix.
       mm.sendAsyncMessage("debug:init-content-server", {
-        prefix: prefix
+        prefix: prefix,
       });
 
       function onClose() {
@@ -432,17 +432,17 @@ var DebuggerServer = {
                 type: "rpc",
                 result: value,
                 error: null,
-                id: message.id
+                id: message.id,
               }));
             }, (reason) => {
               dbg.postMessage(JSON.stringify({
                 type: "rpc",
                 result: null,
                 error: reason,
-                id: message.id
+                id: message.id,
               }));
             });
-          }
+          },
         };
 
         dbg.addListener(listener);
@@ -510,7 +510,7 @@ var DebuggerServer = {
               // thread are forwarded to the client on the main thread, as if
               // they had been sent by the server on the main thread.
               connection.send(packet);
-            }
+            },
           };
 
           // Ensure that any packets received from the client on the main thread
@@ -521,9 +521,9 @@ var DebuggerServer = {
           resolve({
             threadActor: message.threadActor,
             consoleActor: message.consoleActor,
-            transport: transport
+            transport: transport,
           });
-        }
+        },
       };
       dbg.addListener(listener);
     });
@@ -712,7 +712,7 @@ var DebuggerServer = {
 
           mm.sendAsyncMessage("debug:spawn-actor-in-parent:actor", {
             prefix: connPrefix,
-            actorID: instance.actorID
+            actorID: instance.actorID,
           });
 
           parentActors.push(instance);
@@ -737,7 +737,7 @@ var DebuggerServer = {
           // Pipe all the messages from content process actors back to the client
           // through the parent process connection.
           onPacket: connection.send.bind(connection),
-          onClosed() {}
+          onClosed() {},
         };
         childTransport.ready();
 
@@ -1170,7 +1170,7 @@ DebuggerServerConnection.prototype = {
     return {
       from,
       error: "unknownError",
-      message: errorString
+      message: errorString,
     };
   },
 
@@ -1463,7 +1463,7 @@ DebuggerServerConnection.prototype = {
     return this.parentMessageManager.sendSyncMessage("debug:setup-in-parent", {
       prefix: this.prefix,
       module: module,
-      setupParent: setupParent
+      setupParent: setupParent,
     });
   },
 
@@ -1509,5 +1509,5 @@ DebuggerServerConnection.prototype = {
     });
 
     return onResponse;
-  }
+  },
 };

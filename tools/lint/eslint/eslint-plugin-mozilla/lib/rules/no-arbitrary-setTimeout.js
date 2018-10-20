@@ -15,16 +15,16 @@
 var helpers = require("../helpers");
 var testTypes = new Set([
   "browser",
-  "xpcshell"
+  "xpcshell",
 ]);
 
 module.exports = {
   meta: {
     docs: {
       description: "disallow setTimeout with non-zero values in tests",
-      category: "Best Practices"
+      category: "Best Practices",
     },
-    schema: []
+    schema: [],
   },
 
   // ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ module.exports = {
           context.report(node, "listen for events instead of setTimeout() " +
                                "with arbitrary delay");
         }
-      }
+      },
     };
-  }
+  },
 };

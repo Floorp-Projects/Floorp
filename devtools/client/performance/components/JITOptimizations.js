@@ -72,7 +72,7 @@ class JITOptimizations extends Component {
 
   static get defaultProps() {
     return {
-      autoExpandDepth: 0
+      autoExpandDepth: 0,
     };
   }
 
@@ -80,7 +80,7 @@ class JITOptimizations extends Component {
     super(props);
 
     this.state = {
-      expanded: new Set()
+      expanded: new Set(),
     };
 
     this._createHeader = this._createHeader.bind(this);
@@ -128,7 +128,7 @@ class JITOptimizations extends Component {
       autoExpandDepth,
       frameData,
       onViewSourceInDebugger,
-      optimizationSites: sites
+      optimizationSites: sites,
     } = this.props;
 
     const getSite = id => sites.find(site => site.id === id);

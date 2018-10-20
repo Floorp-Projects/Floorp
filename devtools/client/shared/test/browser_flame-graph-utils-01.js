@@ -47,64 +47,64 @@ function performTest() {
 
 var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
-    location: "M"
+    location: "M",
   }, {
     location: "N",
   }, {
-    location: "P"
+    location: "P",
   }],
   time: 50,
 }, {
   frames: [{
-    location: "A"
+    location: "A",
   }, {
     location: "B",
   }, {
-    location: "C"
+    location: "C",
   }],
   time: 100,
 }, {
   frames: [{
-    location: "A"
+    location: "A",
   }, {
     location: "B",
   }, {
-    location: "D"
+    location: "D",
   }],
   time: 210,
 }, {
   frames: [{
-    location: "A"
+    location: "A",
   }, {
     location: "E",
   }, {
-    location: "F"
+    location: "F",
   }],
   time: 330,
 }, {
   frames: [{
-    location: "A"
+    location: "A",
   }, {
     location: "B",
   }, {
-    location: "C"
+    location: "C",
   }],
   time: 460,
 }, {
   frames: [{
-    location: "X"
+    location: "X",
   }, {
     location: "Y",
   }, {
-    location: "Z"
+    location: "Z",
   }],
-  time: 500
+  time: 500,
 }]);
 
 var EXPECTED_OUTPUT = [{
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 50,
@@ -113,8 +113,8 @@ var EXPECTED_OUTPUT = [{
     y: 0,
     width: 410,
     height: 15,
-    text: "A"
-  }]
+    text: "A",
+  }],
 }, {
   blocks: [{
     startTime: 50,
@@ -123,7 +123,7 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 160,
     height: 15,
-    text: "B"
+    text: "B",
   }, {
     startTime: 330,
     frameKey: "B",
@@ -131,8 +131,8 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 130,
     height: 15,
-    text: "B"
-  }]
+    text: "B",
+  }],
 }, {
   blocks: [{
     startTime: 50,
@@ -141,7 +141,7 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 50,
     height: 15,
-    text: "C"
+    text: "C",
   }, {
     startTime: 330,
     frameKey: "C",
@@ -149,8 +149,8 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 130,
     height: 15,
-    text: "C"
-  }]
+    text: "C",
+  }],
 }, {
   blocks: [{
     startTime: 100,
@@ -159,7 +159,7 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 110,
     height: 15,
-    text: "D"
+    text: "D",
   }, {
     startTime: 460,
     frameKey: "X",
@@ -167,8 +167,8 @@ var EXPECTED_OUTPUT = [{
     y: 0,
     width: 40,
     height: 15,
-    text: "X"
-  }]
+    text: "X",
+  }],
 }, {
   blocks: [{
     startTime: 210,
@@ -177,7 +177,7 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 120,
     height: 15,
-    text: "E"
+    text: "E",
   }, {
     startTime: 460,
     frameKey: "Y",
@@ -185,8 +185,8 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 40,
     height: 15,
-    text: "Y"
-  }]
+    text: "Y",
+  }],
 }, {
   blocks: [{
     startTime: 210,
@@ -195,7 +195,7 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 120,
     height: 15,
-    text: "F"
+    text: "F",
   }, {
     startTime: 460,
     frameKey: "Z",
@@ -203,20 +203,20 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 40,
     height: 15,
-    text: "Z"
-  }]
+    text: "Z",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -225,8 +225,8 @@ var EXPECTED_OUTPUT = [{
     y: 0,
     width: 50,
     height: 15,
-    text: "M"
-  }]
+    text: "M",
+  }],
 }, {
   blocks: [{
     startTime: 0,
@@ -235,10 +235,10 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 50,
     height: 15,
-    text: "N"
-  }]
+    text: "N",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -247,10 +247,10 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 50,
     height: 15,
-    text: "P"
-  }]
+    text: "P",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }];

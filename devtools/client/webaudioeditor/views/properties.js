@@ -11,7 +11,7 @@ const GENERIC_VARIABLES_VIEW_SETTINGS = {
   editableNameTooltip: "",
   preventDisableOnChange: true,
   preventDescriptorModifiers: false,
-  eval: () => {}
+  eval: () => {},
 };
 
 /**
@@ -158,5 +158,5 @@ var PropertiesView = {
     } else {
       window.emit(EVENTS.UI_SET_PARAM_ERROR, node.id, propName, value);
     }
-  }
+  },
 };

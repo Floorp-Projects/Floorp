@@ -155,7 +155,9 @@ function readAltContent(request, buffer)
   cc.getOriginalInputStream({
     onInputStreamReady: function(aInputStream) {
       executeSoon(function() {
-        let originalData = read_stream(aInputStream, aInputStream.available());
+        // We expect the async stream length to match the expected content.
+        // If the test times out, it's probably because of this.
+        let originalData = read_stream(aInputStream, responseContent.length);
         Assert.equal(originalData, responseContent);
         requestAgain();
       });

@@ -51,7 +51,7 @@ exports.HeapSnapshotFileActor = protocol.ActorClassWithSpec(heapSnapshotFileSpec
     const bulkPromise = this.conn.startBulkSend({
       actor: this.actorID,
       type: "heap-snapshot",
-      length: size
+      length: size,
     });
 
     const [bulk, stream] = await Promise.all([bulkPromise, streamPromise]);

@@ -67,5 +67,5 @@ ShaderEditorPanel.prototype = {
       this.front.destroy();
       this.emit("destroyed");
     })());
-  }
+  },
 };

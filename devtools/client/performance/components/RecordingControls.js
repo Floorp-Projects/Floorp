@@ -16,7 +16,7 @@ class RecordingControls extends Component {
       onRecordButtonClick: PropTypes.func.isRequired,
       onImportButtonClick: PropTypes.func.isRequired,
       isRecording: PropTypes.bool,
-      isLocked: PropTypes.bool
+      isLocked: PropTypes.bool,
     };
   }
 
@@ -26,7 +26,7 @@ class RecordingControls extends Component {
       onRecordButtonClick,
       onImportButtonClick,
       isRecording,
-      isLocked
+      isLocked,
     } = this.props;
 
     const recordButtonClassList = ["devtools-button", "record-button"];
@@ -42,20 +42,20 @@ class RecordingControls extends Component {
             id: "clear-button",
             className: "devtools-button",
             title: L10N.getStr("recordings.clear.tooltip"),
-            onClick: onClearButtonClick
+            onClick: onClearButtonClick,
           }),
           button({
             id: "main-record-button",
             className: recordButtonClassList.join(" "),
             disabled: isLocked,
             title: L10N.getStr("recordings.start.tooltip"),
-            onClick: onRecordButtonClick
+            onClick: onRecordButtonClick,
           }),
           button({
             id: "import-button",
             className: "devtools-button",
             title: L10N.getStr("recordings.import.tooltip"),
-            onClick: onImportButtonClick
+            onClick: onImportButtonClick,
           })
         )
       )

@@ -26,7 +26,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequestItem);
 
   const {
-    getSelectedRequest
+    getSelectedRequest,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
   const firstRequest = getSelectedRequest(store.getState());
 

@@ -49,7 +49,7 @@ SourceClient.prototype = {
    * Black box this SourceClient's source.
    */
   blackBox: DebuggerClient.requester({
-    type: "blackbox"
+    type: "blackbox",
   }, {
     after: function(response) {
       if (!response.error) {
@@ -59,14 +59,14 @@ SourceClient.prototype = {
         }
       }
       return response;
-    }
+    },
   }),
 
   /**
    * Un-black box this SourceClient's source.
    */
   unblackBox: DebuggerClient.requester({
-    type: "unblackbox"
+    type: "unblackbox",
   }, {
     after: function(response) {
       if (!response.error) {
@@ -76,7 +76,7 @@ SourceClient.prototype = {
         }
       }
       return response;
-    }
+    },
   }),
 
   /**
@@ -85,7 +85,7 @@ SourceClient.prototype = {
   getExecutableLines: function(cb = noop) {
     const packet = {
       to: this._form.actor,
-      type: "getExecutableLines"
+      type: "getExecutableLines",
     };
 
     return this._client.request(packet).then(res => {
@@ -100,7 +100,7 @@ SourceClient.prototype = {
   source: function() {
     const packet = {
       to: this._form.actor,
-      type: "source"
+      type: "source",
     };
     return this._client.request(packet).then(response => {
       return this._onSourceResponse(response);
@@ -114,7 +114,7 @@ SourceClient.prototype = {
     const packet = {
       to: this._form.actor,
       type: "prettyPrint",
-      indent
+      indent,
     };
     return this._client.request(packet).then(response => {
       this._isPrettyPrinted = true;
@@ -130,7 +130,7 @@ SourceClient.prototype = {
   disablePrettyPrint: function() {
     const packet = {
       to: this._form.actor,
-      type: "disablePrettyPrint"
+      type: "disablePrettyPrint",
     };
     return this._client.request(packet).then(response => {
       this._isPrettyPrinted = false;
@@ -174,7 +174,7 @@ SourceClient.prototype = {
 
       const newResponse = {
         source: resp.substring,
-        contentType: contentType
+        contentType: contentType,
       };
       return newResponse;
     });
@@ -255,7 +255,7 @@ SourceClient.prototype = {
     const packet = {
       to: this._form.actor,
       type: "setPausePoints",
-      pausePoints
+      pausePoints,
     };
     return this._client.request(packet);
   },

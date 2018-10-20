@@ -186,7 +186,7 @@ exports.MarkerDOMUtils = {
         linkNode.setAttribute("data-action", JSON.stringify({
           url: url,
           line: line,
-          action: "view-source"
+          action: "view-source",
         }));
       }
 
@@ -230,7 +230,7 @@ exports.MarkerDOMUtils = {
       label.setAttribute("type", "show-allocations");
       label.setAttribute("data-action", JSON.stringify({
         endTime: marker.start,
-        action: "show-allocations"
+        action: "show-allocations",
       }));
 
       hbox.appendChild(label);

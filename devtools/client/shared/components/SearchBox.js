@@ -55,7 +55,7 @@ class SearchBox extends Component {
     }
 
     this.shortcuts = new KeyShortcuts({
-      window
+      window,
     });
     this.shortcuts.on(this.props.keyShortcut, event => {
       event.preventDefault();
@@ -199,7 +199,7 @@ class SearchBox extends Component {
       dom.button({
         className: "devtools-searchinput-clear",
         hidden: value == "",
-        onClick: this.onClearButtonClick
+        onClick: this.onClearButtonClick,
       }),
       learnMoreUrl && MDNLink({
         url: learnMoreUrl,
@@ -212,7 +212,7 @@ class SearchBox extends Component {
         onItemSelected: (itemValue) => {
           this.setState({ value: itemValue });
           this.onChange();
-        }
+        },
       })
     );
   }

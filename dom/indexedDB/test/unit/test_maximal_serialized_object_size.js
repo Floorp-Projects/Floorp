@@ -24,7 +24,7 @@ function* testSteps()
   if (this.window) {
     SpecialPowers.pushPrefEnv(
       { "set": [["dom.indexedDB.maxSerializedMsgSize",
-                 kMaxIpcMessageSize * megaBytes ]]
+                 kMaxIpcMessageSize * megaBytes ]],
       },
       continueToNextStep
     );

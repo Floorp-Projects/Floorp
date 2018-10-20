@@ -21,7 +21,7 @@ class LearnMoreLink extends Component {
       learnMoreStringKey: PropTypes.string.isRequired,
       l10n: PropTypes.object.isRequired,
       messageStringKey: PropTypes.string.isRequired,
-      onClick: PropTypes.func
+      onClick: PropTypes.func,
     };
   }
 
@@ -31,7 +31,7 @@ class LearnMoreLink extends Component {
       learnMoreStringKey: null,
       l10n: null,
       messageStringKey: null,
-      onClick: LearnMoreLink.openDocOnClick
+      onClick: LearnMoreLink.openDocOnClick,
     };
   }
 

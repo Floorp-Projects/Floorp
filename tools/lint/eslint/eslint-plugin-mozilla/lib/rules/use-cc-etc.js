@@ -16,7 +16,7 @@ const componentsMap = {
   classes: "Cc",
   interfaces: "Ci",
   results: "Cr",
-  utils: "Cu"
+  utils: "Cu",
 };
 
 module.exports = function(context) {
@@ -34,6 +34,6 @@ module.exports = function(context) {
         context.report(node,
           `Use ${componentsMap[node.property.name]} rather than Components.${node.property.name}`);
       }
-    }
+    },
   };
 };

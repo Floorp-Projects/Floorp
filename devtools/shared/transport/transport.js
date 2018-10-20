@@ -478,7 +478,7 @@ DebuggerTransport.prototype = {
     }
     this._incomingHeader = "";
     this._incoming = null;
-  }
+  },
 
 };
 

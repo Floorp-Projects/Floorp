@@ -177,5 +177,5 @@ TooltipToggle.prototype = {
 
   destroy: function() {
     this.stop();
-  }
+  },
 };

@@ -37,7 +37,7 @@ var RuntimePermissions = {
     let msg = {
       type: "RuntimePermissions:Check",
       permissions: permissions,
-      shouldPrompt: true
+      shouldPrompt: true,
     };
 
     return EventDispatcher.instance.sendRequestForResult(msg);
@@ -55,9 +55,9 @@ var RuntimePermissions = {
     let msg = {
       type: "RuntimePermissions:Check",
       permissions: permissions,
-      shouldPrompt: false
+      shouldPrompt: false,
     };
 
     return EventDispatcher.instance.sendRequestForResult(msg);
-  }
+  },
 };

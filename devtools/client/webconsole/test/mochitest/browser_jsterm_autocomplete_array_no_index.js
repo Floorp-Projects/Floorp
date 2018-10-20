@@ -28,7 +28,7 @@ async function performTests() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   const {
-    autocompletePopup: popup
+    autocompletePopup: popup,
   } = jsterm;
 
   const onPopUpOpen = popup.once("popup-opened");

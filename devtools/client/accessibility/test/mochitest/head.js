@@ -11,7 +11,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 var { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",
-  window
+  window,
 });
 
 window.EVENTS = {};

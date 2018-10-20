@@ -1844,6 +1844,11 @@ void wr_transaction_notify(Transaction *aTxn,
 WR_FUNC;
 
 WR_INLINE
+void wr_transaction_pinch_zoom(Transaction *aTxn,
+                               float aPinchZoom)
+WR_FUNC;
+
+WR_INLINE
 void wr_transaction_remove_pipeline(Transaction *aTxn,
                                     WrPipelineId aPipelineId)
 WR_FUNC;

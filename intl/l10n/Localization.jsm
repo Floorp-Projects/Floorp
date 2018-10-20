@@ -78,7 +78,7 @@ class CachedAsyncIterable extends CachedIterable {
           return {value: undefined, done: true};
         }
         return cached[cur++];
-      }
+      },
     };
   }
 
@@ -100,7 +100,7 @@ class CachedAsyncIterable extends CachedIterable {
           cached.push(cached.iterator.next());
         }
         return cached[cur++];
-      }
+      },
     };
   }
 
@@ -344,7 +344,7 @@ class Localization {
 }
 
 Localization.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsISupportsWeakReference
+  Ci.nsISupportsWeakReference,
 ]);
 
 /**

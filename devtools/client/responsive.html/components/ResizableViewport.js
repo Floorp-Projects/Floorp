@@ -110,7 +110,7 @@ class ResizableViewport extends PureComponent {
 
     this.setState({
       lastClientX,
-      lastClientY
+      lastClientY,
     });
   }
 

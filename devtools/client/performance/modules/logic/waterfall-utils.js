@@ -31,7 +31,7 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
   const {
     getCurrentParentNode,
     pushNode,
-    popParentNode
+    popParentNode,
   } = createParentNodeFactory(rootNode);
 
   for (let i = 0, len = markersList.length; i < len; i++) {
@@ -156,7 +156,7 @@ function createParentNodeFactory(root) {
       if (marker.submarkers) {
         parentMarkers.push(marker);
       }
-    }
+    },
   };
 
   return factory;

@@ -37,7 +37,7 @@ function runTests() {
          "run() does not change the editor content");
 
       is(pageResult, 2, "run() updated window.foobarBug636725");
-    }
+    },
   }, {
     method: "display",
     prepare: function() {},
@@ -51,7 +51,7 @@ function runTests() {
          "display() shows evaluation result in the textbox");
 
       is(sp.editor.getSelection(), "\n/*\n3\n*/", "getSelection is correct");
-    }
+    },
   }, {
     method: "run",
     prepare: function() {
@@ -71,7 +71,7 @@ function runTests() {
         return content.wrappedJSObject.foobarBug636725;
       });
       is(pageResult, "a", "run() worked for the selected range");
-    }
+    },
   }, {
     method: "display",
     prepare: function() {
@@ -92,7 +92,7 @@ function runTests() {
          "display() shows evaluation result in the textbox");
 
       is(sp.editor.getSelection(), "\n/*\na\n*/", "getSelection is correct");
-    }
+    },
   }];
 
   runAsyncCallbackTests(sp, tests).then(function() {

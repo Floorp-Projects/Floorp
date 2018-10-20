@@ -340,6 +340,36 @@ add_task(async function checkFrecentSites() {
   await clearHistoryAndBookmarks();
 });
 
+add_task(async function check_pinned_sites() {
+  const originalPin = JSON.stringify(NewTabUtils.pinnedLinks.links);
+  const sitesToPin = [
+    {url: "https://foo.com"},
+    {url: "https://floogle.com", searchTopSite: true},
+  ];
+  sitesToPin.forEach((site => NewTabUtils.pinnedLinks.pin(site, NewTabUtils.pinnedLinks.links.length)));
+
+  let message;
+
+  message = {id: "foo", targeting: "'https://foo.com' in pinnedSites|mapToProperty('url')"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "should select correct item by url in pinnedSites");
+
+  message = {id: "foo", targeting: "'foo.com' in pinnedSites|mapToProperty('host')"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "should select correct item by host in pinnedSites");
+
+  message = {id: "foo", targeting: "'floogle.com' in pinnedSites[.searchTopSite == true]|mapToProperty('host')"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "should select correct item by host and searchTopSite in pinnedSites");
+
+  // Cleanup
+  sitesToPin.forEach(site => NewTabUtils.pinnedLinks.unpin(site));
+
+  await clearHistoryAndBookmarks();
+  is(JSON.stringify(NewTabUtils.pinnedLinks.links), originalPin,
+    "should restore pinned sites to its original state");
+});
+
 add_task(async function check_firefox_version() {
   const message = {id: "foo", targeting: "firefoxVersion > 0"};
   is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
