@@ -122,19 +122,6 @@ var PaymentTestUtils = {
 
       handle.destruct();
     },
-
-    /**
-     * Add a rejection handler for the `showPromise` created by createAndShowRequest
-     * and stash details of any eventual exception or response in `rqResult`
-     */
-    catchShowPromiseRejection: () => {
-      content.rqResult = {};
-      content.showPromise.then(res => content.rqResult.response = res)
-                         .catch(ex => content.rqResult.showException = {
-                           name: ex.name,
-                           message: ex.message,
-                         });
-    },
   },
 
   DialogContentTasks: {
