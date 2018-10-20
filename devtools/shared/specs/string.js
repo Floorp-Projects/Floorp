@@ -14,7 +14,7 @@ const longStringSpec = generateActorSpec({
     substring: {
       request: {
         start: Arg(0),
-        end: Arg(1)
+        end: Arg(1),
       },
       response: { substring: RetVal() },
     },
@@ -82,5 +82,5 @@ protocol.types.addType("longstring", {
       return new SimpleStringFront(value);
     }
     return stringActorType.read(value, context, detail);
-  }
+  },
 });

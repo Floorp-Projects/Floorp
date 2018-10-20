@@ -16,7 +16,7 @@ add_task(async function() {
   const { panel } = await initPanelInNewTab({
     tool: "performance",
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { PerformanceController, PerformanceView } = panel.panelWin;

@@ -5,10 +5,9 @@ RUN mkdir /builds
 RUN groupadd -g 1000 worker
 RUN useradd -u 1000 -g 1000 -d /builds/worker -s /bin/bash -m worker
 
-RUN apt-get update
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
     build-essential \
-    git \
+    curl \
     libffi-dev \
     libfreetype6-dev \
     libpng12-dev \
@@ -17,15 +16,21 @@ RUN apt-get install -y \
     libxslt1-dev \
     pkg-config \
     python3-dev \
-    python3-setuptools
+    python3-pip \
+    python3-setuptools \
+    unzip
 
 WORKDIR /builds/worker/
-RUN git clone https://github.com/mozilla-releng/mozapkpublisher
-WORKDIR /builds/worker/mozapkpublisher
 # Change hash_for_given_tag to point to a newer tag. For more information, see
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1459980#c3
-RUN git checkout 50750fceb7c0d831cf61cb550af62b2c93e8e755
-RUN python3 setup.py develop
+RUN curl --location https://github.com/mozilla-releng/mozapkpublisher/archive/8051c7f98959e2f041ce63a1911ade88827c3a66.zip > mozapkpublisher.zip
+RUN unzip mozapkpublisher.zip
+RUN mv mozapkpublisher-8051c7f98959e2f041ce63a1911ade88827c3a66 mozapkpublisher
+
+WORKDIR /builds/worker/mozapkpublisher
+RUN pip3 install --upgrade pip
+RUN pip3 install --no-deps --require-hashes --requirement requirements.txt
+RUN pip3 install --no-deps --editable .
 
 RUN chown -R worker:worker /builds/worker
 

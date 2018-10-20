@@ -143,7 +143,7 @@ OptionsView.prototype = {
   _onPopupHidden: function() {
     this.button.removeAttribute("open");
     this.emit(OPTIONS_HIDDEN_EVENT);
-  }
+  },
 };
 
 /**
@@ -182,5 +182,5 @@ PrefObserver.prototype = {
   },
   observe: function(subject, topic, prefName) {
     this.emit(PREF_CHANGE_EVENT, prefName);
-  }
+  },
 };

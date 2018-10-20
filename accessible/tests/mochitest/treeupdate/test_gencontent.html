@@ -40,7 +40,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getFirstChild, this.container),
-        new invokerChecker(EVENT_REORDER, this.container)
+        new invokerChecker(EVENT_REORDER, this.container),
       ];
 
       this.invoke = function insertNodeHavingGenContent_invoke() {
@@ -56,8 +56,8 @@
             { SECTION: [ // inserted node
               { STATICTEXT: [] }, // :before
               { TEXT_LEAF: [] }, // primary text
-              { STATICTEXT: [] } // :after
-            ] }
+              { STATICTEXT: [] }, // :after
+            ] },
           ] };
         testAccessibleTree(this.container, accTree);
       };
@@ -77,7 +77,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, this.container.firstChild),
         new invokerChecker(EVENT_SHOW, getFirstChild, this.container),
-        new invokerChecker(EVENT_REORDER, this.container)
+        new invokerChecker(EVENT_REORDER, this.container),
       ];
 
       this.invoke = function addGenContent_invoke() {
@@ -90,8 +90,8 @@
             { SECTION: [ // inserted node
               { STATICTEXT: [] }, // :before
               { TEXT_LEAF: [] }, // primary text
-              { STATICTEXT: [] } // :after
-            ] }
+              { STATICTEXT: [] }, // :after
+            ] },
           ] };
         testAccessibleTree(this.container, accTree);
       };

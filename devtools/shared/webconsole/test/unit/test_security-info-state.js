@@ -14,7 +14,7 @@ Object.defineProperty(this, "NetworkHelper", {
   },
   configurable: true,
   writeable: false,
-  enumerable: true
+  enumerable: true,
 });
 
 const wpl = Ci.nsIWebProgressListener;

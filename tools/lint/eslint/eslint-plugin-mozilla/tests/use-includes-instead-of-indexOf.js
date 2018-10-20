@@ -25,7 +25,7 @@ ruleTester.run("use-includes-instead-of-indexOf", rule, {
   valid: [
     "let a = foo.includes(bar);",
     "let a = foo.indexOf(bar) > 0;",
-    "let a = foo.indexOf(bar) != 0;"
+    "let a = foo.indexOf(bar) != 0;",
   ],
   invalid: [
     invalidCode("let a = foo.indexOf(bar) >= 0;"),
@@ -33,6 +33,6 @@ ruleTester.run("use-includes-instead-of-indexOf", rule, {
     invalidCode("let a = foo.indexOf(bar) !== -1;"),
     invalidCode("let a = foo.indexOf(bar) == -1;"),
     invalidCode("let a = foo.indexOf(bar) === -1;"),
-    invalidCode("let a = foo.indexOf(bar) < 0;")
-  ]
+    invalidCode("let a = foo.indexOf(bar) < 0;"),
+  ],
 });

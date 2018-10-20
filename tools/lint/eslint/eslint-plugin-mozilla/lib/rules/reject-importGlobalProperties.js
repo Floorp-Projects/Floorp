@@ -30,6 +30,6 @@ module.exports = function(context) {
           context.report(node, "Unexpected call to Cu.importGlobalProperties");
         }
       }
-    }
+    },
   };
 };

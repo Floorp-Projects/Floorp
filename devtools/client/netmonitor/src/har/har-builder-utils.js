@@ -15,15 +15,15 @@ function buildHarLog(appInfo) {
       version: HAR_VERSION,
       creator: {
         name: appInfo.name,
-        version: appInfo.version
+        version: appInfo.version,
       },
       browser: {
         name: appInfo.name,
-        version: appInfo.version
+        version: appInfo.version,
       },
       pages: [],
       entries: [],
-    }
+    },
   };
 }
 

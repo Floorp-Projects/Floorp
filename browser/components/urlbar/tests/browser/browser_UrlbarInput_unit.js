@@ -74,6 +74,8 @@ add_task(async function setup() {
                     "", "chrome");
   await BrowserTestUtils.waitForEvent(win, "load");
 
+  win.gBrowser = {};
+
   registerCleanupFunction(async () => {
     await BrowserTestUtils.closeWindow(win);
     sandbox.restore();

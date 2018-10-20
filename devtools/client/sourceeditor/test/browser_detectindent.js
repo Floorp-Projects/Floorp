@@ -14,7 +14,7 @@ const TWO_SPACES_CODE = [
   "     ",
   "span {",
   "  padding-left: 10px;",
-  "}"
+  "}",
 ].join("\n");
 
 const FOUR_SPACES_CODE = [
@@ -39,7 +39,7 @@ const FOUR_SPACES_CODE = [
   "        var result = x - y;",
   "        result %= 2;",
   "    }",
-  "}"
+  "}",
 ].join("\n");
 
 const TABS_CODE = [
@@ -53,7 +53,7 @@ const TABS_CODE = [
   "",
   "span {",
   "\tpadding-left: 10px;",
-  "}"
+  "}",
 ].join("\n");
 
 const NONE_CODE = [
@@ -61,7 +61,7 @@ const NONE_CODE = [
   "           // stray thing",
   "var y = 9;",
   "    ",
-  ""
+  "",
 ].join("\n");
 
 function test() {

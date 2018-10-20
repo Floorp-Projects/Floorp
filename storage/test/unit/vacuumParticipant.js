@@ -102,7 +102,7 @@ vacuumParticipant.prototype =
   QueryInterface: ChromeUtils.generateQI([
     Ci.mozIStorageVacuumParticipant,
     Ci.nsIObserver,
-  ])
+  ]),
 };
 
 var gComponentsArray = [vacuumParticipant];

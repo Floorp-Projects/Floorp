@@ -14,12 +14,12 @@ add_task(async function test_snackbar_api() {
   Snackbars.show("This is a Snackbar", Snackbars.LENGTH_INDEFINITE, {
     action: {
       label: "Click me",
-      callback: function() {}
-    }
+      callback: function() {},
+    },
   });
 
   await EventDispatcher.instance.sendRequestForResult({
-    type: "Robocop:WaitOnUI"
+    type: "Robocop:WaitOnUI",
   });
 });
 

@@ -27,7 +27,7 @@ addMessageListener("content-task:spawn", function(msg) {
       id,
       condition: !err,
       name: err ? err.message : message,
-      stack: getStack(err ? err.stack : stack)
+      stack: getStack(err ? err.stack : stack),
     });
   });
 

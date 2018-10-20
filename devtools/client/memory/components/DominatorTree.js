@@ -43,13 +43,13 @@ class DominatorTreeSubtreeFetchingClass extends Component {
 
     return dom.div(
       {
-        className: `heap-tree-item subtree-fetching ${focused ? "focused" : ""}`
+        className: `heap-tree-item subtree-fetching ${focused ? "focused" : ""}`,
       },
       dom.span({ className: "heap-tree-item-field heap-tree-item-bytes" }),
       dom.span({ className: "heap-tree-item-field heap-tree-item-bytes" }),
       dom.span({
         className: "heap-tree-item-field heap-tree-item-name devtools-throbber",
-        style: { marginInlineStart: depth * TREE_ROW_HEIGHT }
+        style: { marginInlineStart: depth * TREE_ROW_HEIGHT },
       })
     );
   }
@@ -84,18 +84,18 @@ class DominatorTreeSiblingLinkClass extends Component {
 
     return dom.div(
       {
-        className: `heap-tree-item more-children ${focused ? "focused" : ""}`
+        className: `heap-tree-item more-children ${focused ? "focused" : ""}`,
       },
       dom.span({ className: "heap-tree-item-field heap-tree-item-bytes" }),
       dom.span({ className: "heap-tree-item-field heap-tree-item-bytes" }),
       dom.span(
         {
           className: "heap-tree-item-field heap-tree-item-name",
-          style: { marginInlineStart: depth * TREE_ROW_HEIGHT }
+          style: { marginInlineStart: depth * TREE_ROW_HEIGHT },
         },
         dom.a(
           {
-            onClick: () => onLoadMoreSiblings(item)
+            onClick: () => onLoadMoreSiblings(item),
           },
           L10N.getStr("tree-item.load-more")
         )

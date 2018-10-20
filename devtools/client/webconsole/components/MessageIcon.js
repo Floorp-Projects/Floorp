@@ -17,7 +17,7 @@ const CONSTANT_ICONS = {
   "warn": getIconElement("level.warn"),
   "info": getIconElement("level.info"),
   "log": getIconElement("level.log"),
-  "debug": getIconElement("level.debug")
+  "debug": getIconElement("level.debug"),
 };
 
 function getIconElement(level) {

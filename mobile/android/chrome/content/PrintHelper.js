@@ -64,5 +64,5 @@ var PrintHelper = {
         onSecurityChange: function() {},
       });
     });
-  }
+  },
 };

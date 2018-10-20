@@ -32,7 +32,7 @@ handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_END] = function(state, action) 
 
 const DEFAULT_ALLOCATIONS_STATE = {
   recording: false,
-  togglingInProgress: false
+  togglingInProgress: false,
 };
 
 module.exports = function(state = DEFAULT_ALLOCATIONS_STATE, action) {

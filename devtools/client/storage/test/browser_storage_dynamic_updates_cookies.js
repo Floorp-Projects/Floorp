@@ -18,21 +18,21 @@ add_task(async function() {
   // test that value is something initially
   const initialValue = [[
     {name: "c1", value: "1.2.3.4.5.6.7"},
-    {name: "c1.Path", value: "/browser"}
+    {name: "c1.Path", value: "/browser"},
   ], [
     {name: "c1", value: "Array"},
     {name: "c1.0", value: "1"},
-    {name: "c1.6", value: "7"}
+    {name: "c1.6", value: "7"},
   ]];
 
   // test that value is something initially
   const finalValue = [[
     {name: "c1", value: '{"foo": 4,"bar":6}'},
-    {name: "c1.Path", value: "/browser"}
+    {name: "c1.Path", value: "/browser"},
   ], [
     {name: "c1", value: "Object"},
     {name: "c1.foo", value: "4"},
-    {name: "c1.bar", value: "6"}
+    {name: "c1.bar", value: "6"},
   ]];
 
   // Check that sidebar shows correct initial value
@@ -46,8 +46,8 @@ add_task(async function() {
       ["cookies", "http://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
-        getCookieId("c2", "test1.example.org", "/browser")
-      ]
+        getCookieId("c2", "test1.example.org", "/browser"),
+      ],
     ],
   ]);
   checkCell(c1id, "value", "1.2.3.4.5.6.7");
@@ -63,8 +63,8 @@ add_task(async function() {
       ["cookies", "http://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
-        getCookieId("c2", "test1.example.org", "/browser")
-      ]
+        getCookieId("c2", "test1.example.org", "/browser"),
+      ],
     ],
   ]);
   checkCell(c1id, "value", '{"foo": 4,"bar":6}');
@@ -81,8 +81,8 @@ add_task(async function() {
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
         getCookieId("c3", "test1.example.org",
-                    "/browser/devtools/client/storage/test/")
-      ]
+                    "/browser/devtools/client/storage/test/"),
+      ],
     ],
   ]);
   const c3id = getCookieId("c3", "test1.example.org",
@@ -103,8 +103,8 @@ add_task(async function() {
         getCookieId("c3", "test1.example.org",
                     "/browser/devtools/client/storage/test/"),
         getCookieId("c4", "test1.example.org",
-                    "/browser/devtools/client/storage/test/")
-      ]
+                    "/browser/devtools/client/storage/test/"),
+      ],
     ],
   ]);
   const c4id = getCookieId("c4", "test1.example.org",
@@ -124,8 +124,8 @@ add_task(async function() {
         getCookieId("c3", "test1.example.org",
                     "/browser/devtools/client/storage/test/"),
         getCookieId("c4", "test1.example.org",
-                    "/browser/devtools/client/storage/test/")
-      ]
+                    "/browser/devtools/client/storage/test/"),
+      ],
     ],
   ]);
 
@@ -145,8 +145,8 @@ add_task(async function() {
       [
         getCookieId("c2", "test1.example.org", "/browser"),
         getCookieId("c4", "test1.example.org",
-                    "/browser/devtools/client/storage/test/")
-      ]
+                    "/browser/devtools/client/storage/test/"),
+      ],
     ],
   ]);
 
@@ -162,8 +162,8 @@ add_task(async function() {
       ["cookies", "http://test1.example.org"],
       [
         getCookieId("c4", "test1.example.org",
-                    "/browser/devtools/client/storage/test/")
-      ]
+                    "/browser/devtools/client/storage/test/"),
+      ],
     ],
   ]);
 

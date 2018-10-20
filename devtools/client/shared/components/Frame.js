@@ -115,7 +115,7 @@ class Frame extends Component {
       showAnonymousFunctionName,
       showHost,
       showEmptyPathAsHost,
-      showFullSourceUrl
+      showFullSourceUrl,
     } = this.props;
 
     if (this.state && this.state.isSourceMapped && this.state.frame) {
@@ -210,7 +210,7 @@ class Frame extends Component {
 
       sourceElements.push(dom.span({
         key: "line",
-        className: "frame-link-line"
+        className: "frame-link-line",
       }, lineInfo));
     }
 

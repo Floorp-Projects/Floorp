@@ -16,16 +16,16 @@ const inContentSpec = protocol.generateActorSpec({
     isInContent: {
       request: {},
       response: {
-        isInContent: protocol.RetVal("boolean")
-      }
+        isInContent: protocol.RetVal("boolean"),
+      },
     },
     spawnInParent: {
       request: {
-        url: protocol.Arg(0)
+        url: protocol.Arg(0),
       },
-      response: protocol.RetVal("json")
-    }
-  }
+      response: protocol.RetVal("json"),
+    },
+  },
 });
 
 exports.InContentActor = protocol.ActorClassWithSpec(inContentSpec, {
@@ -43,12 +43,12 @@ exports.InContentActor = protocol.ActorClassWithSpec(inContentSpec, {
       constructor: "InParentActor",
       // In the browser mochitest script, we are asserting these arguments passed to
       // InParentActor constructor
-      args: [1, 2, 3]
+      args: [1, 2, 3],
     });
     return {
-      inParentActor: actorID
+      inParentActor: actorID,
     };
-  }
+  },
 });
 
 exports.InContentFront = protocol.FrontClassWithSpec(inContentSpec, {
@@ -56,7 +56,7 @@ exports.InContentFront = protocol.FrontClassWithSpec(inContentSpec, {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.inContentActor;
     this.manage(this);
-  }
+  },
 });
 
 const inParentSpec = protocol.generateActorSpec({
@@ -65,9 +65,9 @@ const inParentSpec = protocol.generateActorSpec({
   methods: {
     test: {
       request: {},
-      response: protocol.RetVal("json")
-    }
-  }
+      response: protocol.RetVal("json"),
+    },
+  },
 });
 
 exports.InParentActor = protocol.ActorClassWithSpec(inParentSpec, {
@@ -86,9 +86,9 @@ exports.InParentActor = protocol.ActorClassWithSpec(inParentSpec, {
       conn: this.conn instanceof DebuggerServerConnection,
       // We don't have access to MessageListenerManager in Sandboxes,
       // so fallback to constructor name checks...
-      mm: Object.getPrototypeOf(this.mm).constructor.name
+      mm: Object.getPrototypeOf(this.mm).constructor.name,
     };
-  }
+  },
 });
 
 exports.InParentFront = protocol.FrontClassWithSpec(inParentSpec, {
@@ -96,5 +96,5 @@ exports.InParentFront = protocol.FrontClassWithSpec(inParentSpec, {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.inParentActor;
     this.manage(this);
-  }
+  },
 });

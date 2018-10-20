@@ -25,7 +25,7 @@ ruleTester.run("avoid-Date-timing", rule, {
     "new Date('2017-07-11');",
     "new Date(1499790192440);",
     "new Date(2017, 7, 11);",
-    "Date.UTC(2017, 7);"
+    "Date.UTC(2017, 7);",
   ],
   invalid: [
     invalidCode("Date.now();", "CallExpression",
@@ -33,7 +33,7 @@ ruleTester.run("avoid-Date-timing", rule, {
                 "for timing measurements"),
     invalidCode("new Date();", "NewExpression",
                 "use performance.now() instead of new Date() " +
-                "for timing measurements")
-  ]
+                "for timing measurements"),
+  ],
 });
 

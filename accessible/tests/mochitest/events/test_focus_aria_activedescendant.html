@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 
     function changeARIAActiveDescendant(aID, aItemID) {
       this.eventSeq = [
-        new focusChecker(aItemID)
+        new focusChecker(aItemID),
       ];
 
       this.invoke = function changeARIAActiveDescendant_invoke() {
@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 
     function clearARIAActiveDescendant(aID) {
       this.eventSeq = [
-        new focusChecker(aID)
+        new focusChecker(aID),
       ];
 
       this.invoke = function clearARIAActiveDescendant_invoke() {
@@ -60,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       }
 
       this.eventSeq = [
-        new focusChecker(aID)
+        new focusChecker(aID),
       ];
 
       this.invoke = function changeARIAActiveDescendant_invoke() {
@@ -75,7 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
     function insertItemNFocus(aID, aNewItemID) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, aNewItemID),
-        new focusChecker(aNewItemID)
+        new focusChecker(aNewItemID),
       ];
 
       this.invoke = function insertItemNFocus_invoke() {
@@ -107,7 +107,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
     */
     function moveARIAActiveDescendantID(aFromID, aToID) {
       this.eventSeq = [
-        new focusChecker(aToID)
+        new focusChecker(aToID),
       ];
 
       this.invoke = function moveARIAActiveDescendantID_invoke() {

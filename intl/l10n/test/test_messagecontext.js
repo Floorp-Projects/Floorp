@@ -18,7 +18,7 @@ function test_methods_presence(MessageContext) {
 
 function test_methods_calling(MessageContext) {
   const ctx = new MessageContext(["en-US", "pl"], {
-    useIsolating: false
+    useIsolating: false,
   });
   ctx.addMessages("key = Value");
 

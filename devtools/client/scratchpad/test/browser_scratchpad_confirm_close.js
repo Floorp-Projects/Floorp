@@ -33,7 +33,7 @@ function test() {
   Services.prompt = {
     confirmEx: function() {
       return promptButton;
-    }
+    },
   };
 
   testNew();
@@ -124,7 +124,7 @@ function testCancelAfterLoad() {
       called: false,
       preventDefault: function() {
         EventStub.called = true;
-      }
+      },
     };
 
     win.Scratchpad.onClose(EventStub, function() {

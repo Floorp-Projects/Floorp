@@ -20,11 +20,11 @@ var DetailsView = {
     "waterfall": {
       id: "waterfall-view",
       view: WaterfallView,
-      features: ["withMarkers"]
+      features: ["withMarkers"],
     },
     "js-calltree": {
       id: "js-profile-view",
-      view: JsCallTreeView
+      view: JsCallTreeView,
     },
     "js-flamegraph": {
       id: "js-flamegraph-view",
@@ -33,7 +33,7 @@ var DetailsView = {
     "memory-calltree": {
       id: "memory-calltree-view",
       view: MemoryCallTreeView,
-      features: ["withAllocations"]
+      features: ["withAllocations"],
     },
     "memory-flamegraph": {
       id: "memory-flamegraph-view",
@@ -254,7 +254,7 @@ var DetailsView = {
     this.selectView(e.target.getAttribute("data-view"));
   },
 
-  toString: () => "[object DetailsView]"
+  toString: () => "[object DetailsView]",
 };
 
 /**

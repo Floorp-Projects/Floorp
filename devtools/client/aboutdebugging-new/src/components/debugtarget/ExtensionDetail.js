@@ -56,7 +56,7 @@ class ExtensionDetail extends PureComponent {
           },
           "Manifest URL",
         )
-      )
+      ),
     ];
 
     const uuidName = this.props.getString("about-debugging-extension-uuid");

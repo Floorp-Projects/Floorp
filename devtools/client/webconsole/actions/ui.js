@@ -58,7 +58,7 @@ function selectNetworkMessageTab(id) {
 
 function initialize() {
   return {
-    type: INITIALIZE
+    type: INITIALIZE,
   };
 }
 
@@ -105,7 +105,7 @@ function showObjectInSidebar(grip) {
 
 function reverseSearchInputToggle() {
   return {
-    type: REVERSE_SEARCH_INPUT_TOGGLE
+    type: REVERSE_SEARCH_INPUT_TOGGLE,
   };
 }
 

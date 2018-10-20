@@ -35,7 +35,7 @@ function eventTelemetryMiddleware(telemetry, sessionId, store) {
         state,
         oldState,
         telemetry,
-        sessionId
+        sessionId,
       });
     }
 
@@ -73,7 +73,7 @@ function filterChange({action, state, oldState, telemetry, sessionId}) {
     "trigger": trigger,
     "active": activeFilters.join(","),
     "inactive": inactiveFilters.join(","),
-    "session_id": sessionId
+    "session_id": sessionId,
   });
 }
 

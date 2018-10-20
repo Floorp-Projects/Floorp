@@ -13,7 +13,7 @@ add_task(async function() {
 
   const events = Promise.all([
     get3(gFront, "create-node"),
-    waitForGraphRendered(panelWin, 3, 2)
+    waitForGraphRendered(panelWin, 3, 2),
   ]);
   reload(target);
   const [actors] = await events;
@@ -23,7 +23,7 @@ add_task(async function() {
   osc.disconnect();
   await Promise.all([
     waitForGraphRendered(panelWin, 3, 1),
-    once(gAudioNodes, "disconnect")
+    once(gAudioNodes, "disconnect"),
   ]);
   ok(true, "Oscillator disconnected, event emitted.");
 
@@ -31,7 +31,7 @@ add_task(async function() {
   osc.connectNode(gain);
   await Promise.all([
     waitForGraphRendered(panelWin, 3, 2),
-    once(gAudioNodes, "connect")
+    once(gAudioNodes, "connect"),
   ]);
   ok(true, "Oscillator reconnected.");
 

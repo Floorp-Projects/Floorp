@@ -11,7 +11,7 @@ types.addDictType("screenshot.args", {
   clipboard: "nullable:boolean",
   selector: "nullable:string",
   dpr: "nullable:string",
-  delay: "nullable:string"
+  delay: "nullable:string",
 });
 
 const screenshotSpec = generateActorSpec({
@@ -20,10 +20,10 @@ const screenshotSpec = generateActorSpec({
   methods: {
     capture: {
       request: {
-        args: Arg(0, "screenshot.args")
+        args: Arg(0, "screenshot.args"),
       },
       response: {
-        value: RetVal("json")}
+        value: RetVal("json")},
     },
   },
 });

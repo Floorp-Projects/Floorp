@@ -7,12 +7,12 @@ const {
   custom,
   Front,
   FrontClassWithSpec,
-  preEvent
+  preEvent,
 } = require("devtools/shared/protocol.js");
 const {
   accessibleSpec,
   accessibleWalkerSpec,
-  accessibilitySpec
+  accessibilitySpec,
 } = require("devtools/shared/specs/accessibility");
 const events = require("devtools/shared/event-emitter");
 
@@ -131,7 +131,7 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
 
   attributesChange: preEvent("attributes-change", function(attributes) {
     this._form.attributes = attributes;
-  })
+  }),
 });
 
 const AccessibleWalkerFront = FrontClassWithSpec(accessibleWalkerSpec, {
@@ -150,8 +150,8 @@ const AccessibleWalkerFront = FrontClassWithSpec(accessibleWalkerSpec, {
 
     return this._pick();
   }, {
-    impl: "_pick"
-  })
+    impl: "_pick",
+  }),
 });
 
 const AccessibilityFront = FrontClassWithSpec(accessibilitySpec, {
@@ -168,7 +168,7 @@ const AccessibilityFront = FrontClassWithSpec(accessibilitySpec, {
       this.canBeDisabled = state.canBeDisabled;
     });
   }, {
-    impl: "_bootstrap"
+    impl: "_bootstrap",
   }),
 
   init: preEvent("init", function() {
@@ -185,7 +185,7 @@ const AccessibilityFront = FrontClassWithSpec(accessibilitySpec, {
 
   canBeDisabled: preEvent("can-be-disabled-change", function(canBeDisabled) {
     this.canBeDisabled = canBeDisabled;
-  })
+  }),
 });
 
 exports.AccessibleFront = AccessibleFront;

@@ -65,7 +65,7 @@ const LoadURIDelegate = {
       uri: aUri && aUri.spec,
       error: aError,
       errorModule: aErrorModule,
-      errorClass
+      errorClass,
     };
 
     let errorPageURI = undefined;
@@ -85,5 +85,5 @@ const LoadURIDelegate = {
         aWindow.closed || errorPageURI !== undefined);
 
     return errorPageURI;
-  }
+  },
 };

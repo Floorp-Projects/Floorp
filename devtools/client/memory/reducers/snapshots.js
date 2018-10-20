@@ -60,7 +60,7 @@ handlers[actions.TAKE_CENSUS_START] = function(snapshots, { id, display, filter 
     report: null,
     display,
     filter,
-    state: censusState.SAVING
+    state: censusState.SAVING,
   };
 
   return snapshots.map(snapshot => {
@@ -81,7 +81,7 @@ handlers[actions.TAKE_CENSUS_END] = function(snapshots, { id,
     expanded: Immutable.Set(),
     display,
     filter,
-    state: censusState.SAVED
+    state: censusState.SAVED,
   };
 
   return snapshots.map(snapshot => {
@@ -112,7 +112,7 @@ handlers[actions.TAKE_TREE_MAP_START] = function(snapshots, { id, display }) {
   const treeMap = {
     report: null,
     display,
-    state: treeMapState.SAVING
+    state: treeMapState.SAVING,
   };
 
   return snapshots.map(snapshot => {
@@ -127,7 +127,7 @@ handlers[actions.TAKE_TREE_MAP_END] = function(snapshots, action) {
   const treeMap = {
     report,
     display,
-    state: treeMapState.SAVED
+    state: treeMapState.SAVED,
   };
 
   return snapshots.map(snapshot => {
@@ -218,7 +218,7 @@ handlers[actions.CHANGE_VIEW] = function(snapshots, { newViewState }) {
 
 handlers[actions.POP_VIEW] = function(snapshots, { previousView }) {
   return snapshots.map(s => immutableUpdate(s, {
-    selected: s.id === previousView.selected
+    selected: s.id === previousView.selected,
   }));
 };
 

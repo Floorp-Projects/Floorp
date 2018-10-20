@@ -1080,6 +1080,13 @@ public:
    */
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(AsyncTransformConsumer aMode) const;
 
+  /**
+   * Returns the "zoom" bits of the transform. This includes both the rasterized
+   * (layout device to layer scale) and async (layer scale to parent layer
+   * scale) components of the zoom.
+   */
+  LayoutDeviceToParentLayerScale GetCurrentPinchZoomScale(AsyncTransformConsumer aMode) const;
+
 private:
   /**
    * Samples the composited async transform, making the result of

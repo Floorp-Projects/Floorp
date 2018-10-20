@@ -40,7 +40,7 @@ function drawWaterfallBackground(doc, dataScale, waterfallWidth) {
   const tickInterval = findOptimalTickInterval({
     ticksMultiple: WATERFALL_BACKGROUND_TICKS_MULTIPLE,
     ticksSpacingMin: WATERFALL_BACKGROUND_TICKS_SPACING_MIN,
-    dataScale: dataScale
+    dataScale: dataScale,
   });
 
   // Insert one pixel for each division on each scale.

@@ -56,7 +56,7 @@ const Devices = {
 Object.defineProperty(this, "Devices", {
   value: Devices,
   enumerable: true,
-  writable: false
+  writable: false,
 });
 
 EventEmitter.decorate(Devices);

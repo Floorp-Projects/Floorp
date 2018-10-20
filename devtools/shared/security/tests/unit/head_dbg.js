@@ -73,7 +73,7 @@ var listener = {
     if (!(message.flags & Ci.nsIScriptError.strictFlag)) {
       info("head_dbg.js got console message: " + string + "\n");
     }
-  }
+  },
 };
 
 Services.console.registerListener(listener);

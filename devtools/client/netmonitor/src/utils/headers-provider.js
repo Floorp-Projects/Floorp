@@ -61,7 +61,7 @@ var HeadersProvider = {
       return "string";
     }
     return ObjectProvider.getType(object);
-  }
+  },
 };
 
 /**
@@ -83,5 +83,5 @@ function Header(name, value, key) {
 
 module.exports = {
   HeadersProvider,
-  HeaderList
+  HeaderList,
 };

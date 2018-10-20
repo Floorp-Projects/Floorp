@@ -49,7 +49,7 @@ class AccessibilityRow extends Component {
     return {
       ...TreeRow.propTypes,
       dispatch: PropTypes.func.isRequired,
-      walker: PropTypes.object
+      walker: PropTypes.object,
     };
   }
 
@@ -146,7 +146,7 @@ class AccessibilityRow extends Component {
     const { object } = this.props.member;
     const props = Object.assign({}, this.props, {
       onMouseOver: () => this.highlight(object),
-      onMouseOut: () => this.unhighlight()
+      onMouseOut: () => this.unhighlight(),
     });
 
     return (HighlightableTreeRow(props));
@@ -154,7 +154,7 @@ class AccessibilityRow extends Component {
 }
 
 const mapStateToProps = ({ ui }) => ({
-  supports: ui.supports
+  supports: ui.supports,
 });
 
 module.exports = connect(mapStateToProps)(AccessibilityRow);

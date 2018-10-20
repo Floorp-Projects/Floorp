@@ -8,15 +8,15 @@
 const {
   diffingState,
   snapshotState,
-  viewState
+  viewState,
 } = require("devtools/client/memory/constants");
 const {
   toggleDiffing,
-  selectSnapshotForDiffingAndRefresh
+  selectSnapshotForDiffingAndRefresh,
 } = require("devtools/client/memory/actions/diffing");
 const {
   takeSnapshot,
-  readSnapshot
+  readSnapshot,
 } = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 

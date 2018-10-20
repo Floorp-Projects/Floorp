@@ -929,7 +929,7 @@ function normalizeAccTreeObj(aObj) {
   if (roleName in nsIAccessibleRole) {
     return {
       role: nsIAccessibleRole[roleName],
-      children: aObj[key]
+      children: aObj[key],
     };
   }
   return aObj;

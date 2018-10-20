@@ -22,7 +22,7 @@ function run_test() {
     new Uint8Array(64),
     Promise.resolve(1),
     function f() {},
-    Object
+    Object,
   ];
 
   for (let obj of objects) {

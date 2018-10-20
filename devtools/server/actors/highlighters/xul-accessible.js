@@ -148,15 +148,15 @@ class XULWindowAccessibleHighlighter {
       parent: doc.body || doc.documentElement,
       attributes: {
         "class": "highlighter-container",
-        "aria-hidden": "true"
-      }
+        "aria-hidden": "true",
+      },
     });
 
     this.bounds = createNode(this.win, {
       parent: this.container,
       attributes: {
         "class": "accessible-bounds",
-      }
+      },
     });
 
     this.accessibleInfobar.buildMarkup(this.container);

@@ -8,7 +8,7 @@ const {
   Option,
   RetVal,
   generateActorSpec,
-  types
+  types,
 } = require("devtools/shared/protocol");
 
 // Predeclare the domstylerule actor type
@@ -32,30 +32,30 @@ types.addLifetime("walker", "walker");
 types.addDictType("appliedstyle", {
   rule: "domstylerule#actorid",
   inherited: "nullable:domnode#actorid",
-  keyframes: "nullable:domstylerule#actorid"
+  keyframes: "nullable:domstylerule#actorid",
 });
 
 types.addDictType("matchedselector", {
   rule: "domstylerule#actorid",
   selector: "string",
   value: "string",
-  status: "number"
+  status: "number",
 });
 
 types.addDictType("appliedStylesReturn", {
   entries: "array:appliedstyle",
   rules: "array:domstylerule",
-  sheets: "array:stylesheet"
+  sheets: "array:stylesheet",
 });
 
 types.addDictType("modifiedStylesReturn", {
   isMatching: RetVal("boolean"),
-  ruleProps: RetVal("nullable:appliedStylesReturn")
+  ruleProps: RetVal("nullable:appliedStylesReturn"),
 });
 
 types.addDictType("fontpreview", {
   data: "nullable:longstring",
-  size: "json"
+  size: "json",
 });
 
 types.addDictType("fontvariationaxis", {
@@ -63,17 +63,17 @@ types.addDictType("fontvariationaxis", {
   name: "string",
   minValue: "number",
   maxValue: "number",
-  defaultValue: "number"
+  defaultValue: "number",
 });
 
 types.addDictType("fontvariationinstancevalue", {
   axis: "string",
-  value: "number"
+  value: "number",
 });
 
 types.addDictType("fontvariationinstance", {
   name: "string",
-  values: "array:fontvariationinstancevalue"
+  values: "array:fontvariationinstancevalue",
 });
 
 types.addDictType("fontface", {
@@ -87,7 +87,7 @@ types.addDictType("fontface", {
   localName: "string",
   metadata: "string",
   variationAxes: "array:fontvariationaxis",
-  variationInstances: "array:fontvariationinstance"
+  variationInstances: "array:fontvariationinstance",
 });
 
 const pageStyleSpec = generateActorSpec({
@@ -96,8 +96,8 @@ const pageStyleSpec = generateActorSpec({
   events: {
     "stylesheet-updated": {
       type: "styleSheetUpdated",
-      styleSheet: Arg(0, "stylesheet")
-    }
+      styleSheet: Arg(0, "stylesheet"),
+    },
   },
 
   methods: {
@@ -110,8 +110,8 @@ const pageStyleSpec = generateActorSpec({
         filterProperties: Option(1, "nullable:array:string"),
       },
       response: {
-        computed: RetVal("json")
-      }
+        computed: RetVal("json"),
+      },
     },
     getAllUsedFontFaces: {
       request: {
@@ -119,11 +119,11 @@ const pageStyleSpec = generateActorSpec({
         includeVariations: Option(1, "boolean"),
         previewText: Option(0, "string"),
         previewFontSize: Option(0, "string"),
-        previewFillStyle: Option(0, "string")
+        previewFillStyle: Option(0, "string"),
       },
       response: {
-        fontFaces: RetVal("array:fontface")
-      }
+        fontFaces: RetVal("array:fontface"),
+      },
     },
     getUsedFontFaces: {
       request: {
@@ -132,23 +132,23 @@ const pageStyleSpec = generateActorSpec({
         includeVariations: Option(1, "boolean"),
         previewText: Option(1, "string"),
         previewFontSize: Option(1, "string"),
-        previewFillStyle: Option(1, "string")
+        previewFillStyle: Option(1, "string"),
       },
       response: {
-        fontFaces: RetVal("array:fontface")
-      }
+        fontFaces: RetVal("array:fontface"),
+      },
     },
     getMatchedSelectors: {
       request: {
         node: Arg(0, "domnode"),
         property: Arg(1, "string"),
-        filter: Option(2, "string")
+        filter: Option(2, "string"),
       },
       response: RetVal(types.addDictType("matchedselectorresponse", {
         rules: "array:domstylerule",
         sheets: "array:stylesheet",
-        matched: "array:matchedselector"
-      }))
+        matched: "array:matchedselector",
+      })),
     },
     getApplied: {
       request: {
@@ -156,30 +156,30 @@ const pageStyleSpec = generateActorSpec({
         inherited: Option(1, "boolean"),
         matchedSelectors: Option(1, "boolean"),
         skipPseudo: Option(1, "boolean"),
-        filter: Option(1, "string")
+        filter: Option(1, "string"),
       },
-      response: RetVal("appliedStylesReturn")
+      response: RetVal("appliedStylesReturn"),
     },
     isPositionEditable: {
       request: { node: Arg(0, "domnode")},
-      response: { value: RetVal("boolean") }
+      response: { value: RetVal("boolean") },
     },
     getLayout: {
       request: {
         node: Arg(0, "domnode"),
-        autoMargins: Option(1, "boolean")
+        autoMargins: Option(1, "boolean"),
       },
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     addNewRule: {
       request: {
         node: Arg(0, "domnode"),
         pseudoClasses: Arg(1, "nullable:array:string"),
-        editAuthored: Arg(2, "boolean")
+        editAuthored: Arg(2, "boolean"),
       },
-      response: RetVal("appliedStylesReturn")
-    }
-  }
+      response: RetVal("appliedStylesReturn"),
+    },
+  },
 });
 
 exports.pageStyleSpec = pageStyleSpec;
@@ -191,7 +191,7 @@ const styleRuleSpec = generateActorSpec({
     "location-changed": {
       type: "locationChanged",
       line: Arg(0, "number"),
-      column: Arg(1, "number")
+      column: Arg(1, "number"),
     },
   },
 
@@ -199,21 +199,21 @@ const styleRuleSpec = generateActorSpec({
     setRuleText: {
       request: {
         newText: Arg(0, "string"),
-        modifications: Arg(1, "array:json")
+        modifications: Arg(1, "array:json"),
       },
-      response: { rule: RetVal("domstylerule") }
+      response: { rule: RetVal("domstylerule") },
     },
     modifyProperties: {
       request: { modifications: Arg(0, "array:json") },
-      response: { rule: RetVal("domstylerule") }
+      response: { rule: RetVal("domstylerule") },
     },
     modifySelector: {
       request: {
         node: Arg(0, "domnode"),
         value: Arg(1, "string"),
-        editAuthored: Arg(2, "boolean")
+        editAuthored: Arg(2, "boolean"),
       },
-      response: RetVal("modifiedStylesReturn")
+      response: RetVal("modifiedStylesReturn"),
     },
     // Remove once Firefox 64 is no longer supported.
     // @See StyleRuleActor.modifySelector()
@@ -221,11 +221,11 @@ const styleRuleSpec = generateActorSpec({
       request: {
         node: Arg(0, "domnode"),
         value: Arg(1, "string"),
-        editAuthored: Arg(2, "boolean")
+        editAuthored: Arg(2, "boolean"),
       },
-      response: RetVal("modifiedStylesReturn")
-    }
-  }
+      response: RetVal("modifiedStylesReturn"),
+    },
+  },
 });
 
 exports.styleRuleSpec = styleRuleSpec;

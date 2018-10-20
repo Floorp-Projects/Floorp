@@ -24,19 +24,19 @@
   var testframes = {
     samedom: {
       url: `http://example.com/${STSPATH}/verify.sjs`,
-      expected: {plain: "SECURE", subdom: "SECURE"}
+      expected: {plain: "SECURE", subdom: "SECURE"},
     },
     subdom: {
       url: `http://test1.example.com/${STSPATH}/verify.sjs`,
-      expected: {plain: "INSECURE", subdom: "SECURE"}
+      expected: {plain: "INSECURE", subdom: "SECURE"},
     },
     otherdom: {
       url: `http://example.org/${STSPATH}/verify.sjs`,
-      expected: {plain: "INSECURE", subdom: "INSECURE"}
+      expected: {plain: "INSECURE", subdom: "INSECURE"},
     },
     alreadysecure: {
       url: `https://test2.example.com/${STSPATH}/verify.sjs`,
-      expected: {plain: "SECURE", subdom: "SECURE"}
+      expected: {plain: "SECURE", subdom: "SECURE"},
     },
   };
 

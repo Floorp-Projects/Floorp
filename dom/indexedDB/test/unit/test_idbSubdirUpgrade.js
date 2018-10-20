@@ -9,7 +9,7 @@ function* testSteps()
 {
   const openParams = [
     // This one lives in storage/default/http+++www.mozilla.org
-    { url: "http://www.mozilla.org", dbName: "dbB", dbVersion: 1 }
+    { url: "http://www.mozilla.org", dbName: "dbB", dbVersion: 1 },
   ];
 
   for (let i = 1; i <= 2; i++) {

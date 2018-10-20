@@ -10,15 +10,15 @@ const TEST_DATA = [
     color: "#f00",
     blocks: [
       { x: 0, y: 0, width: 50, height: 20, text: "FOO" },
-      { x: 50, y: 0, width: 100, height: 20, text: "BAR" }
-    ]
+      { x: 50, y: 0, width: 100, height: 20, text: "BAR" },
+    ],
   },
   {
     color: "#00f",
     blocks: [
-      { x: 0, y: 30, width: 30, height: 20, text: "BAZ" }
-    ]
-  }
+      { x: 0, y: 30, width: 30, height: 20, text: "BAZ" },
+    ],
+  },
 ];
 const TEST_BOUNDS = { startTime: 0, endTime: 150 };
 const TEST_WIDTH = 200;

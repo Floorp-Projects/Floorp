@@ -33,7 +33,7 @@
       if (!acc)
         return;
 
-      var [state, /* extraState */] = getStates(aAccOrElmOrID);
+      var [state /* extraState */] = getStates(aAccOrElmOrID);
       if (state & STATE_UNAVAILABLE) {
         var role = getRole(acc);
         if (role != ROLE_GROUPING) {

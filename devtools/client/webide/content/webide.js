@@ -39,7 +39,7 @@ const MIN_ZOOM = 0.6;
    Object.defineProperty(this, key, {
      value: value,
      enumerable: true,
-     writable: false
+     writable: false,
    });
  });
 
@@ -285,7 +285,7 @@ var UI = {
       accessKey: Strings.GetStringFromName("notification_showTroubleShooting_accesskey"),
       callback: function() {
         Cmds.showTroubleShooting();
-      }
+      },
     }];
 
     const nbox = document.querySelector("#notificationbox");
@@ -678,7 +678,7 @@ var UI = {
       AppManager.selectedProject = {
         type: "mainProcess",
         name: Strings.GetStringFromName("mainProcess_label"),
-        icon: AppManager.DEFAULT_PROJECT_ICON
+        icon: AppManager.DEFAULT_PROJECT_ICON,
       };
     } else if (type == "runtimeApp") {
       const app = AppManager.apps.get(project);
@@ -687,7 +687,7 @@ var UI = {
           type: "runtimeApp",
           app: app.manifest,
           icon: app.iconURL,
-          name: app.manifest.name
+          name: app.manifest.name,
         };
       }
     }
@@ -952,5 +952,5 @@ var Cmds = {
   resetZoom: function() {
     UI.contentViewer.fullZoom = 1;
     Services.prefs.setCharPref("devtools.webide.zoom", 1);
-  }
+  },
 };

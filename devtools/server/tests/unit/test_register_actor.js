@@ -29,7 +29,7 @@ function test_lazy_api() {
   ActorRegistry.registerModule("xpcshell-test/registertestactors-lazy", {
     prefix: "lazy",
     constructor: "LazyActor",
-    type: { global: true, target: true }
+    type: { global: true, target: true },
   });
   // The actor is immediatly registered, but not loaded
   Assert.ok(ActorRegistry.targetScopedActorFactories.hasOwnProperty("lazyActor"));

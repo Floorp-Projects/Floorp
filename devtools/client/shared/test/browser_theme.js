@@ -84,7 +84,7 @@ function testColorExistence() {
     "comment", "body-color", "body-color-alt", "content-color1", "content-color2",
     "content-color3", "highlight-green", "highlight-blue", "highlight-bluegrey",
     "highlight-purple", "highlight-lightorange", "highlight-orange", "highlight-red",
-    "highlight-pink"
+    "highlight-pink",
   ];
 
   for (const type of vars) {

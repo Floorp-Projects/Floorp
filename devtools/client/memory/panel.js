@@ -15,7 +15,7 @@ function MemoryPanel(iframeWindow, toolbox) {
   const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
   const browserRequire = BrowserLoader({
     baseURI: "resource://devtools/client/memory/",
-    window: this.panelWin
+    window: this.panelWin,
   }).require;
   this.initializer = browserRequire("devtools/client/memory/initializer");
 
@@ -69,7 +69,7 @@ MemoryPanel.prototype = {
     });
 
     return this._destroyer;
-  }
+  },
 };
 
 exports.MemoryPanel = MemoryPanel;

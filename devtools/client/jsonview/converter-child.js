@@ -43,7 +43,7 @@ Converter.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIStreamConverter,
     Ci.nsIStreamListener,
-    Ci.nsIRequestObserver
+    Ci.nsIRequestObserver,
   ]),
 
   get wrappedJSObject() {
@@ -139,7 +139,7 @@ Converter.prototype = {
     // Using `appendData` instead of `textContent +=` is important to avoid
     // repainting previous data.
     this.data.json.appendData(data);
-  }
+  },
 };
 
 // Lets "save as" save the original JSON, not the viewer.
@@ -171,7 +171,7 @@ function fixSave(request) {
 function getHttpHeaders(request) {
   const headers = {
     response: [],
-    request: []
+    request: [],
   };
   // The request doesn't have to be always nsIHttpChannel
   // (e.g. in case of data: URLs)
@@ -179,12 +179,12 @@ function getHttpHeaders(request) {
     request.visitResponseHeaders({
       visitHeader: function(name, value) {
         headers.response.push({name: name, value: value});
-      }
+      },
     });
     request.visitRequestHeaders({
       visitHeader: function(name, value) {
         headers.request.push({name: name, value: value});
-      }
+      },
     });
   }
   return headers;
@@ -206,7 +206,7 @@ function exportData(win, headers) {
           console.error(err);
           return undefined;
         }
-      }
+      },
     },
   }, win, {
     cloneFunctions: true,
@@ -253,7 +253,7 @@ function initialHTML(doc) {
     element("html", {
       "platform": os,
       "class": "theme-" + Services.prefs.getCharPref("devtools.theme"),
-      "dir": Services.locale.isAppLocaleRTL ? "rtl" : "ltr"
+      "dir": Services.locale.isAppLocaleRTL ? "rtl" : "ltr",
     }, [
       element("head", {}, [
         element("meta", {
@@ -268,7 +268,7 @@ function initialHTML(doc) {
       ]),
       element("body", {}, [
         element("div", {"id": "content"}, [
-          element("div", {"id": "json"})
+          element("div", {"id": "json"}),
         ]),
         element("script", {
           src: baseURI + "lib/require.js",

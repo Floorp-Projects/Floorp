@@ -17,7 +17,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
   rerenderPrefs: [
     "invert-flame-graph",
     "flatten-tree-recursion",
-    "show-idle-blocks"
+    "show-idle-blocks",
   ],
 
   /**
@@ -66,19 +66,19 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
       invertStack: PerformanceController.getOption("invert-flame-graph"),
       flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
       showIdleBlocks: PerformanceController.getOption("show-idle-blocks")
-                      && L10N.getStr("table.idle")
+                      && L10N.getStr("table.idle"),
     });
 
     this.graph.setData({
       data,
       bounds: {
         startTime: 0,
-        endTime: duration
+        endTime: duration,
       },
       visible: {
         startTime: interval.startTime || 0,
-        endTime: interval.endTime || duration
-      }
+        endTime: interval.endTime || duration,
+      },
     });
 
     this.emit(EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
@@ -116,7 +116,7 @@ var MemoryFlameGraphView = extend(DetailsSubview, {
     this.graph.refresh({ force: true });
   },
 
-  toString: () => "[object MemoryFlameGraphView]"
+  toString: () => "[object MemoryFlameGraphView]",
 });
 
 EventEmitter.decorate(MemoryFlameGraphView);

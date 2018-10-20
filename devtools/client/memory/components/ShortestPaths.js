@@ -13,7 +13,7 @@ const { L10N } = require("../utils");
 
 const GRAPH_DEFAULTS = {
   translate: [20, 20],
-  scale: 1
+  scale: 1,
 };
 
 const NO_STACK = "noStack";
@@ -114,7 +114,7 @@ class ShortestPaths extends Component {
 
     for (let i = 0; i < edges.length; i++) {
       graph.addEdge(null, edges[i].from, edges[i].to, {
-        label: edges[i].name
+        label: edges[i].name,
       });
     }
 
@@ -157,12 +157,12 @@ class ShortestPaths extends Component {
           flex: 1,
           height: "100%",
           width: "100%",
-        }
+        },
       });
     } else {
       contents = dom.div(
         {
-          id: "shortest-paths-select-node-msg"
+          id: "shortest-paths-select-node-msg",
         },
         L10N.getStr("shortest-paths.select-node")
       );

@@ -13,7 +13,7 @@ add_task(async function() {
 
   info("test state before delete");
   await checkState([
-    [["indexedDB", "http://test1.example.org"], ["idb (default)"]]
+    [["indexedDB", "http://test1.example.org"], ["idb (default)"]],
   ]);
 
   info("do the delete");
@@ -25,7 +25,7 @@ add_task(async function() {
 
   info("test state after blocked delete");
   await checkState([
-    [["indexedDB", "http://test1.example.org"], ["idb (default)"]]
+    [["indexedDB", "http://test1.example.org"], ["idb (default)"]],
   ]);
 
   const eventWait = gUI.once("store-objects-edit");
@@ -41,7 +41,7 @@ add_task(async function() {
 
   info("test state after real delete");
   await checkState([
-    [["indexedDB", "http://test1.example.org"], []]
+    [["indexedDB", "http://test1.example.org"], []],
   ]);
 
   info("try to delete database from nonexistent host");

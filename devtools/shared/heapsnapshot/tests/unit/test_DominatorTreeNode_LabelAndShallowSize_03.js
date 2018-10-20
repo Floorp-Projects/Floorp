@@ -31,19 +31,19 @@ const breakdown = {
 
 const description = {
   objects: {
-    other: { count: 0, bytes: 0 }
+    other: { count: 0, bytes: 0 },
   },
   strings: {
     "JSString": { count: 1, bytes: 42 },
   },
   scripts: {},
   other: {},
-  domNode: {}
+  domNode: {},
 };
 
 const expected = [
   "strings",
-  "JSString"
+  "JSString",
 ];
 
 const shallowSize = 42;

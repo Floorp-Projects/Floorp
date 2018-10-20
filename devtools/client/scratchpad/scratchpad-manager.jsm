@@ -135,7 +135,7 @@ this.ScratchpadManager = {
    */
   createUid: function SPM_createUid() {
     return JSON.stringify(this._nextUid++);
-  }
+  },
 };
 
 /**
@@ -163,5 +163,5 @@ var ShutdownObserver = {
 
   uninit() {
     Services.obs.removeObserver(this, "quit-application-granted");
-  }
+  },
 };

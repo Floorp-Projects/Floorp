@@ -567,7 +567,7 @@ class Marionette(object):
     CONTEXT_CHROME = "chrome"  # non-browser content: windows, dialogs, etc.
     CONTEXT_CONTENT = "content"  # browser content: iframes, divs, etc.
     DEFAULT_STARTUP_TIMEOUT = 120
-    DEFAULT_SHUTDOWN_TIMEOUT = 120  # Firefox will kill hanging threads after 60s
+    DEFAULT_SHUTDOWN_TIMEOUT = 70  # By default Firefox will kill hanging threads after 60s
 
     # Bug 1336953 - Until we can remove the socket timeout parameter it has to be
     # set a default value which is larger than the longest timeout as defined by the
@@ -625,6 +625,8 @@ class Marionette(object):
             self.startup_timeout = self.DEFAULT_STARTUP_TIMEOUT
         else:
             self.startup_timeout = int(startup_timeout)
+
+        self.shutdown_timeout = self.DEFAULT_SHUTDOWN_TIMEOUT
 
         if self.bin:
             self.instance = GeckoInstance.create(
@@ -816,7 +818,7 @@ class Marionette(object):
         else:
             # Somehow the socket disconnected. Give the application some time to shutdown
             # itself before killing the process.
-            returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
+            returncode = self.instance.runner.wait(timeout=self.shutdown_timeout)
 
             if returncode is None:
                 message = ('Process killed because the connection to Marionette server is '
@@ -1117,13 +1119,13 @@ class Marionette(object):
                 # which wants to reset the context but fails sending the message.
                 pass
 
-            returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
+            returncode = self.instance.runner.wait(timeout=self.shutdown_timeout)
             if returncode is None:
                 # The process did not shutdown itself, so force-closing it.
                 self.cleanup()
 
                 message = "Process still running {}s after quit request"
-                raise IOError(message.format(self.DEFAULT_SHUTDOWN_TIMEOUT))
+                raise IOError(message.format(self.shutdown_timeout))
 
             self.is_shutting_down = False
             self.delete_session(send_request=False)
@@ -1185,7 +1187,7 @@ class Marionette(object):
             try:
                 # Wait for a new Marionette connection to appear while the
                 # process restarts itself.
-                self.raise_for_port(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT,
+                self.raise_for_port(timeout=self.shutdown_timeout,
                                     check_process_status=False)
             except socket.timeout:
                 exc, val, tb = sys.exc_info()
@@ -1197,7 +1199,7 @@ class Marionette(object):
                     self._send_message("acceptConnections", {"value": True})
 
                     message = "Process still running {}s after restart request"
-                    reraise(exc, message.format(self.DEFAULT_SHUTDOWN_TIMEOUT), tb)
+                    reraise(exc, message.format(self.shutdown_timeout), tb)
 
                 else:
                     # The process shutdown but didn't start again.
@@ -1300,6 +1302,10 @@ class Marionette(object):
         # fallback to processId can be removed in Firefox 55
         self.process_id = self.session.get("moz:processID", self.session.get("processId"))
         self.profile = self.session.get("moz:profile")
+
+        timeout = self.session.get("moz:shutdownTimeout")
+        if timeout is not None:
+            self.shutdown_timeout = timeout / 1000 + 10
 
         return self.session
 

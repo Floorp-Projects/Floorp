@@ -20,7 +20,7 @@ function waitUntilScreenshot() {
           resolve(download.target.path);
           list.removeView(view);
         });
-      }
+      },
     };
 
     await list.addView(view);

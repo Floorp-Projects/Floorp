@@ -39,7 +39,7 @@ ExternalAppService.prototype = {
       uri: channel.URI.displaySpec,
       contentType: channel.contentType,
       contentLength: channel.contentLength,
-      filename: filename
+      filename: filename,
     });
 
     request.cancel(Cr.NS_ERROR_ABORT);
@@ -53,7 +53,7 @@ ExternalAppService.prototype = {
     // This doesn't matter for us right now because
     // we shouldn't end up reading the stream.
     return true;
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ExternalAppService]);

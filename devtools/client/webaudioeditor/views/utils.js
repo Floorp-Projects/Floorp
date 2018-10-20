@@ -83,7 +83,7 @@ var ToggleMixin = {
       visible: visible,
       animated: animated != null ? animated : !!this._animated,
       delayed: delayed != null ? delayed : !!this._delayed,
-      callback: () => window.emit(this._toggleEvent, visible)
+      callback: () => window.emit(this._toggleEvent, visible),
     };
 
     ViewHelpers.togglePane(flags, this.el);
@@ -99,5 +99,5 @@ var ToggleMixin = {
 
   _onToggle: function() {
     this._viewController({ visible: !this.isVisible() });
-  }
+  },
 };

@@ -109,5 +109,5 @@ SSLExceptions.prototype = {
   */
   addTemporaryException: function SSLE_addTemporaryException(aURI, aWindow) {
     this._addOverride(aURI, aWindow, true);
-  }
+  },
 };

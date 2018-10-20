@@ -614,17 +614,21 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
 
     ParentLayerPoint layerTranslation = apzc->GetCurrentAsyncTransform(
         AsyncPanZoomController::eForCompositing).mTranslation;
+    LayoutDeviceToParentLayerScale zoom;
+    if (apzc->Metrics().IsRootContent()) {
+      zoom = apzc->GetCurrentPinchZoomScale(AsyncPanZoomController::eForCompositing);
+      aTxn.UpdatePinchZoom(zoom.scale);
+    }
 
     // The positive translation means the painted content is supposed to
     // move down (or to the right), and that corresponds to a reduction in
     // the scroll offset. Since we are effectively giving WR the async
     // scroll delta here, we want to negate the translation.
-    ParentLayerPoint asyncScrollDelta = -layerTranslation;
-    // XXX figure out what zoom-related conversions need to happen here.
+    LayoutDevicePoint asyncScrollDelta = -layerTranslation / zoom;
     aTxn.UpdateScrollPosition(
         wr::AsPipelineId(apzc->GetGuid().mLayersId),
         apzc->GetGuid().mScrollId,
-        wr::ToRoundedLayoutPoint(LayoutDevicePoint::FromUnknownPoint(asyncScrollDelta.ToUnknownPoint())));
+        wr::ToRoundedLayoutPoint(asyncScrollDelta));
 
     apzc->ReportCheckerboard(aSampleTime);
   }

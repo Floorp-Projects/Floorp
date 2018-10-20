@@ -46,7 +46,7 @@ const AudioNodeFront = protocol.FrontClassWithSpec(audionodeSpec, {
     if (form) {
       this.manage(this);
     }
-  }
+  },
 });
 
 exports.AudioNodeFront = AudioNodeFront;

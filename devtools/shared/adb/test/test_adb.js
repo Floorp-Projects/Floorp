@@ -13,29 +13,29 @@ const { ADB } = require("devtools/shared/adb/adb");
 const ADB_JSON = {
   "Linux": {
     "x86": [
-      "linux/adb"
+      "linux/adb",
     ],
     "x86_64": [
-      "linux64/adb"
-    ]
+      "linux64/adb",
+    ],
   },
   "Darwin": {
     "x86_64": [
-      "mac64/adb"
-    ]
+      "mac64/adb",
+    ],
   },
   "WINNT": {
     "x86": [
       "win32/adb.exe",
       "win32/AdbWinApi.dll",
-      "win32/AdbWinUsbApi.dll"
+      "win32/AdbWinUsbApi.dll",
     ],
     "x86_64": [
       "win32/adb.exe",
       "win32/AdbWinApi.dll",
-      "win32/AdbWinUsbApi.dll"
-    ]
-  }
+      "win32/AdbWinUsbApi.dll",
+    ],
+  },
 };
 let extension_version = 1.0;
 
@@ -71,8 +71,8 @@ add_task(async function testNoAdbExtension() {
     manifest: {
       version: (extension_version++).toString(),
       applications: {
-        gecko: { id: "not-adb@mozilla.org" }
-      }
+        gecko: { id: "not-adb@mozilla.org" },
+      },
     },
   });
 
@@ -91,8 +91,8 @@ add_task(async function testNoAdbJSON() {
       applications: {
         // The extension id here and in later test cases should match the
         // corresponding prefrece value.
-        gecko: { id: "adb@mozilla.org" }
-      }
+        gecko: { id: "adb@mozilla.org" },
+      },
     },
   });
 
@@ -109,8 +109,8 @@ add_task(async function testNoTargetBinaries() {
     manifest: {
       version: (extension_version++).toString(),
       applications: {
-        gecko: { id: "adb@mozilla.org" }
-      }
+        gecko: { id: "adb@mozilla.org" },
+      },
     },
     files: {
       "adb.json": JSON.stringify(ADB_JSON),
@@ -130,8 +130,8 @@ add_task(async function testExtract() {
     manifest: {
       version: (extension_version++).toString(),
       applications: {
-        gecko: { id: "adb@mozilla.org" }
-      }
+        gecko: { id: "adb@mozilla.org" },
+      },
     },
     files: {
       "adb.json": JSON.stringify(ADB_JSON),
@@ -140,7 +140,7 @@ add_task(async function testExtract() {
       "mac64/adb": "adb",
       "win32/adb.exe": "adb.exe",
       "win32/AdbWinApi.dll": "AdbWinApi.dll",
-      "win32/AdbWinUsbApi.dll": "AdbWinUsbApi.dll"
+      "win32/AdbWinUsbApi.dll": "AdbWinUsbApi.dll",
     },
   });
 
@@ -153,14 +153,14 @@ add_task(async function testExtract() {
 });
 
 add_task({
-  skip_if: () => mozinfo.os == "win" // bug 1482008
+  skip_if: () => mozinfo.os == "win", // bug 1482008
 }, async function testStartAndStop() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: (extension_version++).toString(),
       applications: {
-        gecko: { id: "adb@mozilla.org" }
-      }
+        gecko: { id: "adb@mozilla.org" },
+      },
     },
     files: {
       "adb.json": JSON.stringify(ADB_JSON),
@@ -169,7 +169,7 @@ add_task({
       "mac64/adb": adbMock,
       "win32/adb.exe": adbMock,
       "win32/AdbWinApi.dll": "dummy",
-      "win32/AdbWinUsbApi.dll": "dummy"
+      "win32/AdbWinUsbApi.dll": "dummy",
     },
   });
 
@@ -187,14 +187,14 @@ add_task({
 });
 
 add_task({
-  skip_if: () => mozinfo.os == "win" // bug 1482008
+  skip_if: () => mozinfo.os == "win", // bug 1482008
 }, async function testTrackDevices() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: (extension_version++).toString(),
       applications: {
-        gecko: { id: "adb@mozilla.org" }
-      }
+        gecko: { id: "adb@mozilla.org" },
+      },
     },
     files: {
       "adb.json": JSON.stringify(ADB_JSON),
@@ -203,7 +203,7 @@ add_task({
       "mac64/adb": adbMock,
       "win32/adb.exe": adbMock,
       "win32/AdbWinApi.dll": "dummy",
-      "win32/AdbWinUsbApi.dll": "dummy"
+      "win32/AdbWinUsbApi.dll": "dummy",
     },
   });
 

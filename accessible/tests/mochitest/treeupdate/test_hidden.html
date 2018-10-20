@@ -28,14 +28,14 @@
      */
     function setHiddenAttr(aContainerID, aChildID) {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, getNode(aContainerID))
+        new invokerChecker(EVENT_REORDER, getNode(aContainerID)),
       ];
 
       this.invoke = function setHiddenAttr_invoke() {
         var tree =
           { SECTION: [
               { ENTRY: [
-              ] }
+              ] },
           ] };
         testAccessibleTree(aContainerID, tree);
 
@@ -59,7 +59,7 @@
      */
     function removeHiddenAttr(aContainerID, aChildID) {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, getNode(aContainerID))
+        new invokerChecker(EVENT_REORDER, getNode(aContainerID)),
       ];
 
       this.invoke = function removeHiddenAttr_invoke() {
@@ -75,7 +75,7 @@
         var tree =
           { SECTION: [
               { ENTRY: [
-              ] }
+              ] },
           ] };
         testAccessibleTree(aContainerID, tree);
       };

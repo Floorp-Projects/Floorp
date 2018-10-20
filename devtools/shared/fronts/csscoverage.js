@@ -16,7 +16,7 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
  * Allow: let foo = l10n.lookup("csscoverageFoo");
  */
 const l10n = exports.l10n = {
-  lookup: (msg) => L10N.getStr(msg)
+  lookup: (msg) => L10N.getStr(msg),
 };
 
 /**
@@ -81,7 +81,7 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
 
     return this._start(noreload);
   }, {
-    impl: "_start"
+    impl: "_start",
   }),
 
   /**
@@ -93,7 +93,7 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
 
     return this._toggle();
   }, {
-    impl: "_toggle"
+    impl: "_toggle",
   }),
 
   /**
@@ -101,7 +101,7 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
    */
   isRunning: function() {
     return isRunning;
-  }
+  },
 });
 
 exports.CSSUsageFront = CSSUsageFront;

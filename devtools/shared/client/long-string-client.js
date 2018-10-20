@@ -49,7 +49,7 @@ LongStringClient.prototype = {
   substring: DebuggerClient.requester({
     type: "substring",
     start: arg(0),
-    end: arg(1)
+    end: arg(1),
   }),
 };
 

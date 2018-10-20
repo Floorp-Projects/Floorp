@@ -288,8 +288,8 @@ describe("Message reducer:", () => {
         {
           actions,
           storeOptions: {
-            logLimit: 2
-          }
+            logLimit: 2,
+          },
         });
 
       // Check that we have the expected data.
@@ -321,7 +321,7 @@ describe("Message reducer:", () => {
       const { dispatch, getState } = setupStore([], {
         storeOptions: {
           logLimit,
-        }
+        },
       });
 
       const packet = clonePacket(stubPackets.get("console.log(undefined)"));
@@ -343,7 +343,7 @@ describe("Message reducer:", () => {
       const { dispatch, getState } = setupStore([], {
         storeOptions: {
           logLimit,
-        }
+        },
       });
 
       const packet = clonePacket(stubPackets.get("console.log(undefined)"));
@@ -529,7 +529,7 @@ describe("Message reducer:", () => {
 
       dispatch(actions.messagesAdd([
         stubPackets.get("console.group('bar')"),
-        stubPackets.get("console.log('foobar', 'test')")
+        stubPackets.get("console.log('foobar', 'test')"),
       ]));
 
       const messages = getAllMessagesById(getState());
@@ -597,7 +597,7 @@ describe("Message reducer:", () => {
     it("clears the messages UI list in response to MESSAGES_CLEAR action", () => {
       const { dispatch, getState } = setupStore([
         "console.log('foobar', 'test')",
-        "console.log(undefined)"
+        "console.log(undefined)",
       ]);
 
       const traceMessage = stubPackets.get("console.trace()");
@@ -614,8 +614,8 @@ describe("Message reducer:", () => {
         ["console.trace()", "console.log(undefined)", "console.trace()"],
         {
           storeOptions: {
-            logLimit: 3
-          }
+            logLimit: 3,
+          },
         }
       );
 
@@ -742,7 +742,7 @@ describe("Message reducer:", () => {
 
     it("resets the currentGroup to null in response to MESSAGES_CLEAR action", () => {
       const { dispatch, getState } = setupStore([
-        "console.group('bar')"
+        "console.group('bar')",
       ]);
 
       dispatch(actions.messagesClear());
@@ -803,8 +803,8 @@ describe("Message reducer:", () => {
         {
           actions,
           storeOptions: {
-            logLimit: 3
-          }
+            logLimit: 3,
+          },
         }
       );
 
@@ -878,7 +878,7 @@ describe("Message reducer:", () => {
 
     it("resets networkMessagesUpdateById in response to MESSAGES_CLEAR action", () => {
       const { dispatch, getState } = setupStore([
-        "XHR GET request"
+        "XHR GET request",
       ]);
 
       const updatePacket = stubPackets.get("XHR GET request update");
@@ -897,8 +897,8 @@ describe("Message reducer:", () => {
     it("cleans the networkMessagesUpdateById property when messages are pruned", () => {
       const { dispatch, getState } = setupStore([], {
         storeOptions: {
-          logLimit: 3
-        }
+          logLimit: 3,
+        },
       });
 
       // Add 3 network messages and their updates
@@ -927,14 +927,14 @@ describe("Message reducer:", () => {
       const [
         firstNetworkMessageId,
         secondNetworkMessageId,
-        thirdNetworkMessageId
+        thirdNetworkMessageId,
       ] = [...messages.keys()];
 
       let networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates)).toEqual([
         firstNetworkMessageId,
         secondNetworkMessageId,
-        thirdNetworkMessageId
+        thirdNetworkMessageId,
       ]);
 
       // This addition will remove the first network message.
@@ -944,7 +944,7 @@ describe("Message reducer:", () => {
       networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates)).toEqual([
         secondNetworkMessageId,
-        thirdNetworkMessageId
+        thirdNetworkMessageId,
       ]);
 
       // This addition will remove the second network message.
@@ -953,7 +953,7 @@ describe("Message reducer:", () => {
 
       networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates)).toEqual([
-        thirdNetworkMessageId
+        thirdNetworkMessageId,
       ]);
 
       // This addition will remove the last network message.
@@ -969,7 +969,7 @@ describe("Message reducer:", () => {
   describe("messagesTableDataById", () => {
     it("resets messagesTableDataById in response to MESSAGES_CLEAR action", () => {
       const { dispatch, getState } = setupStore([
-        "console.table(['a', 'b', 'c'])"
+        "console.table(['a', 'b', 'c'])",
       ]);
 
       const data = Symbol("tableData");
@@ -986,8 +986,8 @@ describe("Message reducer:", () => {
     it("cleans the messagesTableDataById property when messages are pruned", () => {
       const { dispatch, getState } = setupStore([], {
         storeOptions: {
-          logLimit: 2
-        }
+          logLimit: 2,
+        },
       });
 
       // Add 2 table message and their data.
@@ -1027,8 +1027,8 @@ describe("Message reducer:", () => {
       const key2 = "console.log(undefined)";
       const { dispatch, getState } = setupStore([key1, key2], {
         storeOptions: {
-          logLimit: 2
-        }
+          logLimit: 2,
+        },
       });
 
       // Then repeat the last one two times and log the first one again

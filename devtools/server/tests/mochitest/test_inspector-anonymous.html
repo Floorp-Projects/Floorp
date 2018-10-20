@@ -22,7 +22,7 @@ window.onload = function() {
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
   SpecialPowers.pushPrefEnv({"set": [
-    ["dom.webcomponents.shadowdom.enabled", true]
+    ["dom.webcomponents.shadowdom.enabled", true],
   ]});
   SimpleTest.waitForExplicitFinish();
 
@@ -79,7 +79,7 @@ window.onload = function() {
         whatToShow: nodeFilterConstants.SHOW_ALL,
         filter: () => {
           return nodeFilterConstants.FILTER_ACCEPT;
-        }
+        },
       }
     );
     const scrollbar = docwalker.lastChild();
