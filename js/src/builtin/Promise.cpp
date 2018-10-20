@@ -4350,12 +4350,23 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
         return true;
     }
 
-    RootedNativeObject reactions(cx, &reactionsVal.toObject().as<NativeObject>());
+    RootedObject reactionsObj(cx, &reactionsVal.toObject());
 
-    // If only a single reaction is pending, it's stored directly.
-    if (reactions->is<PromiseReactionRecord>()) {
+    // If only a single reaction exists, it's stored directly instead of in a
+    // list. In that case, `reactionsObj` might be a wrapper, which we can
+    // always safely unwrap.
+    if (IsProxy(reactionsObj)) {
+        reactionsObj = UncheckedUnwrap(reactionsObj);
+        if (JS_IsDeadWrapper(reactionsObj)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+            return false;
+        }
+        MOZ_RELEASE_ASSERT(reactionsObj->is<PromiseReactionRecord>());
+    }
+
+    if (reactionsObj->is<PromiseReactionRecord>()) {
         // Not all reactions have a Promise on them.
-        RootedObject promiseObj(cx, reactions->as<PromiseReactionRecord>().promise());
+        RootedObject promiseObj(cx, reactionsObj->as<PromiseReactionRecord>().promise());
         if (!promiseObj) {
             return true;
         }
@@ -4368,13 +4379,26 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
         return true;
     }
 
+    MOZ_RELEASE_ASSERT(reactionsObj->is<NativeObject>());
+    HandleNativeObject reactions = reactionsObj.as<NativeObject>();
+
     uint32_t len = reactions->getDenseInitializedLength();
     MOZ_ASSERT(len >= 2);
 
     uint32_t valuesIndex = 0;
+    Rooted<PromiseReactionRecord*> reaction(cx);
     for (uint32_t i = 0; i < len; i++) {
-        const Value& element = reactions->getDenseElement(i);
-        PromiseReactionRecord* reaction = &element.toObject().as<PromiseReactionRecord>();
+        JSObject* element = &reactions->getDenseElement(i).toObject();
+        if (IsProxy(element)) {
+            element = UncheckedUnwrap(element);
+            if (JS_IsDeadWrapper(element)) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+                return false;
+            }
+        }
+
+        MOZ_RELEASE_ASSERT(element->is<PromiseReactionRecord>());
+        reaction = &element->as<PromiseReactionRecord>();
 
         // Not all reactions have a Promise on them.
         RootedObject promiseObj(cx, reaction->promise());

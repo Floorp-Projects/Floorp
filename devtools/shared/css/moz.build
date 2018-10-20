@@ -11,6 +11,7 @@ DIRS += [
 DevToolsModules(
     'color-db.js',
     'color.js',
+    'constants.js',
     'lexer.js',
     'parsing-utils.js',
     'properties-db.js',

@@ -634,7 +634,6 @@ MessageChannel::MessageChannel(const char* aName,
     mPeerPidSet(false),
     mPeerPid(-1),
     mIsPostponingSends(false),
-    mInKillHardShutdown(false),
     mBuildIDsConfirmedMatch(false)
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
@@ -798,10 +797,7 @@ MessageChannel::Clear()
     // before mListener.  But just to be safe, mListener is a weak pointer.
 
 #if !defined(ANDROID)
-    // KillHard shutdowns can occur with the channel in connected state. We are
-    // already collecting crash dump data about KillHard shutdowns and we
-    // shouldn't intentionally crash here.
-    if (!Unsound_IsClosed() && !mInKillHardShutdown) {
+    if (!Unsound_IsClosed()) {
         CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::IPCFatalErrorProtocol, nsDependentCString(mName));
         switch (mChannelState) {

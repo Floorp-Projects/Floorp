@@ -8,8 +8,8 @@ const Services = require("Services");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {cssColors} = require("devtools/shared/css/color-db");
 
+loader.lazyRequireGetter(this, "CSS_ANGLEUNIT", "devtools/shared/css/constants", true);
 loader.lazyRequireGetter(this, "getAngleValueInDegrees", "devtools/shared/css/parsing-utils", true);
-loader.lazyRequireGetter(this, "CSS_ANGLEUNIT", "devtools/shared/css/properties-db", true);
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
