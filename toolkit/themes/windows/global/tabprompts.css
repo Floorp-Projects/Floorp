@@ -3,11 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Tab Modal Prompt boxes */
+.tabModalBackground,
 tabmodalprompt {
   background-color: hsla(0,0%,10%,.5);
+}
+
+tabmodalprompt {
   font-family: sans-serif; /* use content font not system UI font */
 }
 
+.paymentDialogContainerFrame,
 .tabmodalprompt-mainContainer {
   color: -moz-fieldText;
   background-color: -moz-field;
