@@ -74,7 +74,7 @@ HTMLIFrameElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   if (StaticPrefs::dom_security_featurePolicy_enabled()) {
-    RefreshFeaturePolicy();
+    RefreshFeaturePolicy(true /* parse the feature policy attribute */);
   }
   return NS_OK;
 }
@@ -190,13 +190,17 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         mFrameLoader->ApplySandboxFlags(GetSandboxFlags());
       }
     }
-    if ((aName == nsGkAtoms::allow ||
-         aName == nsGkAtoms::src ||
-         aName == nsGkAtoms::srcdoc ||
-         aName == nsGkAtoms::sandbox ||
-         aName == nsGkAtoms::allowpaymentrequest) &&
-        StaticPrefs::dom_security_featurePolicy_enabled()) {
-      RefreshFeaturePolicy();
+
+    if (StaticPrefs::dom_security_featurePolicy_enabled()) {
+      if (aName == nsGkAtoms::allow ||
+          aName == nsGkAtoms::src ||
+          aName == nsGkAtoms::srcdoc ||
+          aName == nsGkAtoms::sandbox) {
+        RefreshFeaturePolicy(true /* parse the feature policy attribute */);
+      } else if (aName == nsGkAtoms::allowfullscreen ||
+                 aName == nsGkAtoms::allowpaymentrequest) {
+        RefreshFeaturePolicy(false /* parse the feature policy attribute */);
+      }
     }
   }
   return nsGenericHTMLFrameElement::AfterSetAttr(aNameSpaceID, aName,
@@ -279,26 +283,29 @@ HTMLIFrameElement::GetFeaturePolicyDefaultOrigin() const
 }
 
 void
-HTMLIFrameElement::RefreshFeaturePolicy()
+HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute)
 {
   MOZ_ASSERT(StaticPrefs::dom_security_featurePolicy_enabled());
-  mFeaturePolicy->ResetDeclaredPolicy();
 
-  // The origin can change if 'src' and 'srcdoc' attributes change.
-  nsCOMPtr<nsIPrincipal> origin = GetFeaturePolicyDefaultOrigin();
-  MOZ_ASSERT(origin);
-  mFeaturePolicy->SetDefaultOrigin(origin);
+  if (aParseAllowAttribute) {
+    mFeaturePolicy->ResetDeclaredPolicy();
 
-  nsAutoString allow;
-  GetAttr(nsGkAtoms::allow, allow);
+    // The origin can change if 'src' and 'srcdoc' attributes change.
+    nsCOMPtr<nsIPrincipal> origin = GetFeaturePolicyDefaultOrigin();
+    MOZ_ASSERT(origin);
+    mFeaturePolicy->SetDefaultOrigin(origin);
 
-  if (!allow.IsEmpty()) {
-    // Set or reset the FeaturePolicy directives.
-    mFeaturePolicy->SetDeclaredPolicy(OwnerDoc(), allow, NodePrincipal(),
-                                      origin);
+    nsAutoString allow;
+    GetAttr(nsGkAtoms::allow, allow);
+
+    if (!allow.IsEmpty()) {
+      // Set or reset the FeaturePolicy directives.
+      mFeaturePolicy->SetDeclaredPolicy(OwnerDoc(), allow, NodePrincipal(),
+                                        origin);
+    }
+
+    mFeaturePolicy->InheritPolicy(OwnerDoc()->Policy());
   }
-
-  mFeaturePolicy->InheritPolicy(OwnerDoc()->Policy());
 
   if (AllowPaymentRequest()) {
     mFeaturePolicy->MaybeSetAllowedPolicy(NS_LITERAL_STRING("payment"));
@@ -307,9 +314,6 @@ HTMLIFrameElement::RefreshFeaturePolicy()
   if (AllowFullscreen()) {
     mFeaturePolicy->MaybeSetAllowedPolicy(NS_LITERAL_STRING("fullscreen"));
   }
-
-  // TODO: https://wicg.github.io/feature-policy/#process-feature-policy-attributes
-  // requires to check allowusermediarequest
 }
 
 } // namespace dom
