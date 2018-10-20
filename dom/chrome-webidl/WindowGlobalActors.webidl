@@ -13,6 +13,9 @@ interface WindowGlobalParent {
   readonly attribute boolean isInProcess;
   readonly attribute ChromeBrowsingContext browsingContext;
 
+  readonly attribute unsigned long long innerWindowId;
+  readonly attribute unsigned long long outerWindowId;
+
   // XXX(nika): We would want to expose this, but |FrameLoader| isn't exposed on System.
   // readonly attribute FrameLoader? rootFrameLoader; // Embedded (browser) only
 
@@ -21,6 +24,8 @@ interface WindowGlobalParent {
   // Information about the currently loaded document.
   readonly attribute Principal documentPrincipal;
   readonly attribute URI? documentURI;
+
+  static WindowGlobalParent? getByInnerWindowId(unsigned long long innerWindowId);
 };
 
 [Exposed=Window, ChromeOnly]
@@ -29,5 +34,10 @@ interface WindowGlobalChild {
   readonly attribute boolean isInProcess;
   readonly attribute BrowsingContext browsingContext;
 
+  readonly attribute unsigned long long innerWindowId;
+  readonly attribute unsigned long long outerWindowId;
+
   readonly attribute WindowGlobalParent? parentActor; // in-process only
+
+  static WindowGlobalChild? getByInnerWindowId(unsigned long long innerWIndowId);
 };
