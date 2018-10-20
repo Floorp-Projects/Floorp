@@ -189,6 +189,8 @@ struct WindowGlobalInit
 {
   nsIPrincipal principal;
   BrowsingContextId browsingContextId;
+  uint64_t innerWindowId;
+  uint64_t outerWindowId;
 };
 
 } // namespace dom
