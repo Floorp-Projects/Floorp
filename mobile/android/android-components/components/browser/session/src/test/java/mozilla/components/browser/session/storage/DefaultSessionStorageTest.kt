@@ -44,6 +44,9 @@ class DefaultSessionStorageTest {
     fun persistAndRestore() {
         val session1 = Session("http://mozilla.org", id = "session1")
         val session2 = Session("http://getpocket.com", id = "session2")
+        val session3 = Session("http://getpocket.com", id = "session3")
+        session3.parentId = "session1"
+
         val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
 
         val engineSession = mock(EngineSession::class.java)
@@ -55,7 +58,11 @@ class DefaultSessionStorageTest {
 
         // Engine session just for one of the sessions for simplicity.
         val sessionsSnapshot = SessionsSnapshot(
-            sessions = listOf(SessionWithState(session1, engineSession), SessionWithState(session2)),
+            sessions = listOf(
+                SessionWithState(session1, engineSession),
+                SessionWithState(session2),
+                SessionWithState(session3)
+            ),
             selectedSessionIndex = 0
         )
 
@@ -67,16 +74,23 @@ class DefaultSessionStorageTest {
         // Read it back
         val restoredSnapshot = storage.read(engine)
         assertNotNull(restoredSnapshot)
-        assertEquals(2, restoredSnapshot!!.sessions.size)
+        assertEquals(3, restoredSnapshot!!.sessions.size)
         assertEquals(0, restoredSnapshot.selectedSessionIndex)
 
         assertEquals(session1, restoredSnapshot.sessions[0].session)
         assertEquals(session1.url, restoredSnapshot.sessions[0].session.url)
         assertEquals(session1.id, restoredSnapshot.sessions[0].session.id)
+        assertNull(restoredSnapshot.sessions[0].session.parentId)
 
         assertEquals(session2, restoredSnapshot.sessions[1].session)
         assertEquals(session2.url, restoredSnapshot.sessions[1].session.url)
         assertEquals(session2.id, restoredSnapshot.sessions[1].session.id)
+        assertNull(restoredSnapshot.sessions[1].session.parentId)
+
+        assertEquals(session3, restoredSnapshot.sessions[2].session)
+        assertEquals(session3.url, restoredSnapshot.sessions[2].session.url)
+        assertEquals(session3.id, restoredSnapshot.sessions[2].session.id)
+        assertEquals("session1", restoredSnapshot.sessions[2].session.parentId)
 
         val restoredEngineSession = restoredSnapshot.sessions[0].engineSession
         assertNotNull(restoredEngineSession)
@@ -264,12 +278,14 @@ class DefaultSessionStorageTest {
         json.put("uuid", "testId")
         json.put("url", "testUrl")
         json.put("source", Source.NEW_TAB.name)
+        json.put("parentUuid", "")
         assertEquals(Source.NEW_TAB, storage.deserializeSession(json).source)
 
         val jsonInvalid = JSONObject()
         jsonInvalid.put("uuid", "testId")
         jsonInvalid.put("url", "testUrl")
         jsonInvalid.put("source", "invalidSource")
+        jsonInvalid.put("parentUuid", "")
         assertEquals(Source.NONE, storage.deserializeSession(jsonInvalid).source)
     }
 

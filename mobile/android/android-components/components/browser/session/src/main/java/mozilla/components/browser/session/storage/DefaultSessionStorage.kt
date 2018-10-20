@@ -28,6 +28,7 @@ const val SESSION_STATE_TUPLES_KEY = "sessionStateTuples"
 const val SESSION_SOURCE_KEY = "source"
 const val SESSION_URL_KEY = "url"
 const val SESSION_UUID_KEY = "uuid"
+const val SESSION_PARENT_UUID_KEY = "parentUuid"
 
 const val SESSION_KEY = "session"
 const val ENGINE_SESSION_KEY = "engineSession"
@@ -177,6 +178,7 @@ class DefaultSessionStorage(
             put(SESSION_URL_KEY, session.url)
             put(SESSION_SOURCE_KEY, session.source.name)
             put(SESSION_UUID_KEY, session.id)
+            put(SESSION_PARENT_UUID_KEY, session.parentId ?: "")
         }
     }
 
@@ -187,13 +189,15 @@ class DefaultSessionStorage(
         } catch (e: IllegalArgumentException) {
             Source.NONE
         }
-        return Session(
+        val session = Session(
                 json.getString(SESSION_URL_KEY),
                 // Currently, snapshot cannot contain private sessions.
                 false,
                 source,
                 json.getString(SESSION_UUID_KEY)
         )
+        session.parentId = json.getString(SESSION_PARENT_UUID_KEY).takeIf { it != "" }
+        return session
     }
 
     private fun serializeEngineSession(engineSession: EngineSession?): JSONObject {
