@@ -799,6 +799,18 @@ describe("ASRouter", () => {
       });
     });
 
+    describe("#onMessage: OPEN_PREFERENCES_PAGE", () => {
+      it("should call openPreferences with the correct params on OPEN_PREFERENCES_PAGE", async () => {
+        let [testMessage] = Router.state.messages;
+        testMessage.button_action = {type: "OPEN_PREFERENCES_PAGE", data: {category: "something", origin: "o"}};
+        const msg = fakeExecuteUserAction(testMessage.button_action);
+        await Router.onMessage(msg);
+
+        assert.calledOnce(msg.target.browser.ownerGlobal.openPreferences);
+        assert.calledWith(msg.target.browser.ownerGlobal.openPreferences, "something", {origin: "o"});
+      });
+    });
+
     describe("#onMessage: INSTALL_ADDON_FROM_URL", () => {
       it("should call installAddonFromURL with correct arguments", async () => {
         sandbox.stub(MessageLoaderUtils, "installAddonFromURL").resolves(null);
