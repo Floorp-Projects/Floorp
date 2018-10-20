@@ -9,14 +9,14 @@
   "use strict";
   const { DOMLocalization } =
     ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
-  const { MessageContext } =
-    ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+  const { FluentBundle } =
+    ChromeUtils.import("resource://gre/modules/Fluent.jsm", {});
 
   async function* mockGenerateMessages(locales, resourceIds) {
-    const mc = new MessageContext(locales);
-    mc.addMessages("title = Hello World");
-    mc.addMessages("subtitle = Welcome to Fluent");
-    yield mc;
+    const bundle = new FluentBundle(locales);
+    bundle.addMessages("title = Hello World");
+    bundle.addMessages("subtitle = Welcome to FluentBundle");
+    yield bundle;
   }
 
   window.onload = async function() {
@@ -33,7 +33,7 @@
 
     await domLoc.translateFragment(frag);
     is(h1.textContent, "Hello World");
-    is(p1.textContent, "Welcome to Fluent");
+    is(p1.textContent, "Welcome to FluentBundle");
 
     SimpleTest.finish();
   };

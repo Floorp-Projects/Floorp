@@ -6,9 +6,9 @@
 
 EXTRA_JS_MODULES += [
     'DOMLocalization.jsm',
+    'Fluent.jsm',
     'L10nRegistry.jsm',
     'Localization.jsm',
-    'MessageContext.jsm',
 ]
 
 XPIDL_SOURCES += [

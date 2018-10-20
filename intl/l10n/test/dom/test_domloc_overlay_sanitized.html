@@ -9,19 +9,19 @@
   "use strict";
   const { DOMLocalization } =
     ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
-  const { MessageContext } =
-    ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+  const { FluentBundle } =
+    ChromeUtils.import("resource://gre/modules/Fluent.jsm", {});
 
   async function* mockGenerateMessages(locales, resourceIds) {
-    const mc = new MessageContext(locales);
-    mc.addMessages(`
+    const bundle = new FluentBundle(locales);
+    bundle.addMessages(`
 key1 =
     .href = https://www.hacked.com
 
 key2 =
     .href = https://pl.wikipedia.org
 `);
-    yield mc;
+    yield bundle;
   }
 
   async function test() {
