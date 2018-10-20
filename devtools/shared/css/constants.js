@@ -11,7 +11,7 @@ exports.CSS_ANGLEUNIT = {
   "deg": "deg",
   "rad": "rad",
   "grad": "grad",
-  "turn": "turn"
+  "turn": "turn",
 };
 
 /**
