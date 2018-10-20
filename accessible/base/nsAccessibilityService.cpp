@@ -385,10 +385,7 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges)
       // handler.
       if (document && !document->HasAccessible(node) &&
           nsCoreUtils::HasClickListener(node)) {
-        nsIContent* parentEl = node->GetFlattenedTreeParent();
-        if (parentEl) {
-          document->ContentInserted(parentEl, node, node->GetNextSibling());
-        }
+        document->ContentInserted(node, node->GetNextSibling());
         break;
       }
     }
@@ -611,7 +608,7 @@ nsAccessibilityService::DeckPanelSwitched(nsIPresShell* aPresShell,
     }
 #endif
 
-    document->ContentInserted(aDeckNode, panelNode, panelNode->GetNextSibling());
+    document->ContentInserted(panelNode, panelNode->GetNextSibling());
   }
 }
 
@@ -635,7 +632,7 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
 #endif
 
   if (document) {
-    document->ContentInserted(aStartChild->GetParent(), aStartChild, aEndChild);
+    document->ContentInserted(aStartChild, aEndChild);
   }
 }
 
