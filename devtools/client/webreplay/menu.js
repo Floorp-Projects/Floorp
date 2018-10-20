@@ -21,6 +21,7 @@ ChromeUtils.defineModuleGetter(this, "Services",
 function RecordNewTab() {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
   gBrowser.selectedTab = gBrowser.addWebTab("about:blank", { recordExecution: "*" });
+  Services.telemetry.scalarAdd("devtools.webreplay.new_recording", 1);
 }
 
 function ReloadAndRecordTab() {
@@ -31,6 +32,7 @@ function ReloadAndRecordTab() {
   gBrowser.loadURI(url, {
     triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
   });
+  Services.telemetry.scalarAdd("devtools.webreplay.reload_recording", 1);
 }
 
 function ReloadAndStopRecordingTab() {
@@ -41,6 +43,7 @@ function ReloadAndStopRecordingTab() {
   gBrowser.loadURI(url, {
     triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
   });
+  Services.telemetry.scalarAdd("devtools.webreplay.stop_recording", 1);
 }
 
 function SaveRecording() {
@@ -56,6 +59,7 @@ function SaveRecording() {
       }
     }
   });
+  Services.telemetry.scalarAdd("devtools.webreplay.save_recording", 1);
 }
 
 function ReplayNewTab() {
@@ -68,6 +72,7 @@ function ReplayNewTab() {
       gBrowser.selectedTab = gBrowser.addWebTab(null, { replayExecution: fp.file.path });
     }
   });
+  Services.telemetry.scalarAdd("devtools.webreplay.load_recording", 1);
 }
 
 const menuItems = [
