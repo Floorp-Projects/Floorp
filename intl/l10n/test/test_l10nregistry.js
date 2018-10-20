@@ -17,7 +17,7 @@ L10nRegistry.load = async function(url) {
 };
 
 add_task(function test_methods_presence() {
-  equal(typeof L10nRegistry.generateContexts, "function");
+  equal(typeof L10nRegistry.generateBundles, "function");
   equal(typeof L10nRegistry.getAvailableLocales, "function");
   equal(typeof L10nRegistry.registerSource, "function");
   equal(typeof L10nRegistry.updateSource, "function");
@@ -32,9 +32,9 @@ add_task(async function test_empty_resourceids() {
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  const ctxs = L10nRegistry.generateContexts(["en-US"], []);
+  const bundles = L10nRegistry.generateBundles(["en-US"], []);
 
-  const done = (await ctxs.next()).done;
+  const done = (await bundles.next()).done;
 
   equal(done, true);
 
@@ -48,9 +48,9 @@ add_task(async function test_empty_resourceids() {
 add_task(async function test_empty_sources() {
   fs = {};
 
-  const ctxs = L10nRegistry.generateContexts(["en-US"], []);
+  const bundles = L10nRegistry.generateBundles(["en-US"], []);
 
-  const done = (await ctxs.next()).done;
+  const done = (await bundles.next()).done;
 
   equal(done, true);
 
@@ -70,11 +70,11 @@ add_task(async function test_methods_calling() {
   const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  const ctxs = L10nRegistry.generateContexts(["en-US"], ["/browser/menu.ftl"]);
+  const bundles = L10nRegistry.generateBundles(["en-US"], ["/browser/menu.ftl"]);
 
-  const ctx = (await ctxs.next()).value;
+  const bundle = (await bundles.next()).value;
 
-  equal(ctx.hasMessage("key"), true);
+  equal(bundle.hasMessage("key"), true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -100,18 +100,18 @@ add_task(async function test_has_one_source() {
 
   // returns a single context
 
-  let ctxs = L10nRegistry.generateContexts(["en-US"], ["test.ftl"]);
-  let ctx0 = (await ctxs.next()).value;
-  equal(ctx0.hasMessage("key"), true);
+  let bundles = L10nRegistry.generateBundles(["en-US"], ["test.ftl"]);
+  let bundle0 = (await bundles.next()).value;
+  equal(bundle0.hasMessage("key"), true);
 
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
 
   // returns no contexts for missing locale
 
-  ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
+  bundles = L10nRegistry.generateBundles(["pl"], ["test.ftl"]);
 
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -142,32 +142,32 @@ add_task(async function test_has_two_sources() {
 
   // returns correct contexts for en-US
 
-  let ctxs = L10nRegistry.generateContexts(["en-US"], ["test.ftl"]);
-  let ctx0 = (await ctxs.next()).value;
+  let bundles = L10nRegistry.generateBundles(["en-US"], ["test.ftl"]);
+  let bundle0 = (await bundles.next()).value;
 
-  equal(ctx0.hasMessage("key"), true);
-  let msg = ctx0.getMessage("key");
-  equal(ctx0.format(msg), "platform value");
+  equal(bundle0.hasMessage("key"), true);
+  let msg = bundle0.getMessage("key");
+  equal(bundle0.format(msg), "platform value");
 
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
 
   // returns correct contexts for [pl, en-US]
 
-  ctxs = L10nRegistry.generateContexts(["pl", "en-US"], ["test.ftl"]);
-  ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], "pl");
-  equal(ctx0.hasMessage("key"), true);
-  let msg0 = ctx0.getMessage("key");
-  equal(ctx0.format(msg0), "app value");
+  bundles = L10nRegistry.generateBundles(["pl", "en-US"], ["test.ftl"]);
+  bundle0 = (await bundles.next()).value;
+  equal(bundle0.locales[0], "pl");
+  equal(bundle0.hasMessage("key"), true);
+  let msg0 = bundle0.getMessage("key");
+  equal(bundle0.format(msg0), "app value");
 
-  let ctx1 = (await ctxs.next()).value;
-  equal(ctx1.locales[0], "en-US");
-  equal(ctx1.hasMessage("key"), true);
-  let msg1 = ctx1.getMessage("key");
-  equal(ctx1.format(msg1), "platform value");
+  let bundle1 = (await bundles.next()).value;
+  equal(bundle1.locales[0], "en-US");
+  equal(bundle1.hasMessage("key"), true);
+  let msg1 = bundle1.getMessage("key");
+  equal(bundle1.format(msg1), "platform value");
 
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -221,20 +221,20 @@ add_task(async function test_override() {
   equal(L10nRegistry.sources.size, 2);
   equal(L10nRegistry.sources.has("langpack-pl"), true);
 
-  let ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
-  let ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], "pl");
-  equal(ctx0.hasMessage("key"), true);
-  let msg0 = ctx0.getMessage("key");
-  equal(ctx0.format(msg0), "addon value");
+  let bundles = L10nRegistry.generateBundles(["pl"], ["test.ftl"]);
+  let bundle0 = (await bundles.next()).value;
+  equal(bundle0.locales[0], "pl");
+  equal(bundle0.hasMessage("key"), true);
+  let msg0 = bundle0.getMessage("key");
+  equal(bundle0.format(msg0), "addon value");
 
-  let ctx1 = (await ctxs.next()).value;
-  equal(ctx1.locales[0], "pl");
-  equal(ctx1.hasMessage("key"), true);
-  let msg1 = ctx1.getMessage("key");
-  equal(ctx1.format(msg1), "value");
+  let bundle1 = (await bundles.next()).value;
+  equal(bundle1.locales[0], "pl");
+  equal(bundle1.hasMessage("key"), true);
+  let msg1 = bundle1.getMessage("key");
+  equal(bundle1.format(msg1), "value");
 
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -253,12 +253,12 @@ add_task(async function test_updating() {
     "/data/locales/pl/test.ftl": "key = value",
   };
 
-  let ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
-  let ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], "pl");
-  equal(ctx0.hasMessage("key"), true);
-  let msg0 = ctx0.getMessage("key");
-  equal(ctx0.format(msg0), "value");
+  let bundles = L10nRegistry.generateBundles(["pl"], ["test.ftl"]);
+  let bundle0 = (await bundles.next()).value;
+  equal(bundle0.locales[0], "pl");
+  equal(bundle0.hasMessage("key"), true);
+  let msg0 = bundle0.getMessage("key");
+  equal(bundle0.format(msg0), "value");
 
 
   const newSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
@@ -268,10 +268,10 @@ add_task(async function test_updating() {
   L10nRegistry.updateSource(newSource);
 
   equal(L10nRegistry.sources.size, 1);
-  ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
-  ctx0 = (await ctxs.next()).value;
-  msg0 = ctx0.getMessage("key");
-  equal(ctx0.format(msg0), "new value");
+  bundles = L10nRegistry.generateBundles(["pl"], ["test.ftl"]);
+  bundle0 = (await bundles.next()).value;
+  msg0 = bundle0.getMessage("key");
+  equal(bundle0.format(msg0), "new value");
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -298,20 +298,20 @@ add_task(async function test_removing() {
   equal(L10nRegistry.sources.size, 2);
   equal(L10nRegistry.sources.has("langpack-pl"), true);
 
-  let ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
-  let ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], "pl");
-  equal(ctx0.hasMessage("key"), true);
-  let msg0 = ctx0.getMessage("key");
-  equal(ctx0.format(msg0), "addon value");
+  let bundles = L10nRegistry.generateBundles(["pl"], ["test.ftl"]);
+  let bundle0 = (await bundles.next()).value;
+  equal(bundle0.locales[0], "pl");
+  equal(bundle0.hasMessage("key"), true);
+  let msg0 = bundle0.getMessage("key");
+  equal(bundle0.format(msg0), "addon value");
 
-  let ctx1 = (await ctxs.next()).value;
-  equal(ctx1.locales[0], "pl");
-  equal(ctx1.hasMessage("key"), true);
-  let msg1 = ctx1.getMessage("key");
-  equal(ctx1.format(msg1), "value");
+  let bundle1 = (await bundles.next()).value;
+  equal(bundle1.locales[0], "pl");
+  equal(bundle1.hasMessage("key"), true);
+  let msg1 = bundle1.getMessage("key");
+  equal(bundle1.format(msg1), "value");
 
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
   // Remove langpack
 
@@ -320,14 +320,14 @@ add_task(async function test_removing() {
   equal(L10nRegistry.sources.size, 1);
   equal(L10nRegistry.sources.has("langpack-pl"), false);
 
-  ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
-  ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], "pl");
-  equal(ctx0.hasMessage("key"), true);
-  msg0 = ctx0.getMessage("key");
-  equal(ctx0.format(msg0), "value");
+  bundles = L10nRegistry.generateBundles(["pl"], ["test.ftl"]);
+  bundle0 = (await bundles.next()).value;
+  equal(bundle0.locales[0], "pl");
+  equal(bundle0.hasMessage("key"), true);
+  msg0 = bundle0.getMessage("key");
+  equal(bundle0.format(msg0), "value");
 
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
   // Remove app source
 
@@ -335,8 +335,8 @@ add_task(async function test_removing() {
 
   equal(L10nRegistry.sources.size, 0);
 
-  ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
-  equal((await ctxs.next()).done, true);
+  bundles = L10nRegistry.generateBundles(["pl"], ["test.ftl"]);
+  equal((await bundles.next()).done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -368,23 +368,23 @@ add_task(async function test_missing_file() {
 
   // returns a single context
 
-  let ctxs = L10nRegistry.generateContexts(["en-US"], ["test.ftl", "test2.ftl"]);
+  let bundles = L10nRegistry.generateBundles(["en-US"], ["test.ftl", "test2.ftl"]);
 
   // First permutation:
   //   [platform, platform] - both present
-  let ctx1 = (await ctxs.next());
-  equal(ctx1.value.hasMessage("key"), true);
+  let bundle1 = (await bundles.next());
+  equal(bundle1.value.hasMessage("key"), true);
 
   // Second permutation skipped:
   //   [platform, app] - second missing
   // Third permutation:
   //   [app, platform] - both present
-  let ctx2 = (await ctxs.next());
-  equal(ctx2.value.hasMessage("key"), true);
+  let bundle2 = (await bundles.next());
+  equal(bundle2.value.hasMessage("key"), true);
 
   // Fourth permutation skipped:
   //   [app, app] - second missing
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -432,19 +432,19 @@ add_task(async function test_parallel_io() {
 
   // returns a single context
 
-  let ctxs = L10nRegistry.generateContexts(["en-US"], ["slow-file.ftl", "test.ftl", "test2.ftl"]);
+  let bundles = L10nRegistry.generateBundles(["en-US"], ["slow-file.ftl", "test.ftl", "test2.ftl"]);
 
   equal(fetchIndex.size, 0);
 
-  let ctx0 = await ctxs.next();
+  let bundle0 = await bundles.next();
 
-  equal(ctx0.done, false);
+  equal(bundle0.done, false);
 
-  equal((await ctxs.next()).done, true);
+  equal((await bundles.next()).done, true);
 
   // When requested again, the cache should make the load operation not
   // increase the fetchedIndex count
-  L10nRegistry.generateContexts(["en-US"], ["test.ftl", "test2.ftl", "slow-file.ftl"]);
+  L10nRegistry.generateBundles(["en-US"], ["test.ftl", "test2.ftl", "slow-file.ftl"]);
 
   // cleanup
   L10nRegistry.sources.clear();

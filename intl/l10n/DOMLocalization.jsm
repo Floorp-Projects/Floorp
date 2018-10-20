@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-
-/* fluent-dom@cab517f (July 31, 2018) */
+/* fluent-dom@fa25466f (October 12, 2018) */
 
 const { Localization } =
   ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
@@ -176,7 +175,7 @@ function overlayAttributes(fromElement, toElement) {
   }
 
   // fromElement might be a {value, attributes} object as returned by
-  // Localization.messageFromContext. In which case attributes may be null to
+  // Localization.messageFromBundle. In which case attributes may be null to
   // save GC cycles.
   if (!fromElement.attributes) {
     return;
@@ -406,13 +405,13 @@ const L10N_ELEMENT_QUERY = `[${L10NID_ATTR_NAME}]`;
  */
 class DOMLocalization extends Localization {
   /**
-   * @param {Array<String>}    resourceIds      - List of resource IDs
-   * @param {Function}         generateMessages - Function that returns a
-   *                                              generator over MessageContexts
+   * @param {Array<String>}    resourceIds     - List of resource IDs
+   * @param {Function}         generateBundles - Function that returns a
+   *                                             generator over FluentBundles
    * @returns {DOMLocalization}
    */
-  constructor(resourceIds, generateMessages) {
-    super(resourceIds, generateMessages);
+  constructor(resourceIds, generateBundles) {
+    super(resourceIds, generateBundles);
 
     // A Set of DOM trees observed by the `MutationObserver`.
     this.roots = new Set();
