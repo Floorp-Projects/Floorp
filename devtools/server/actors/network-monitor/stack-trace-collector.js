@@ -45,7 +45,7 @@ StackTraceCollector.prototype = {
     for (const { messageManager } of this.netmonitors) {
       messageManager.sendAsyncMessage("debug:request-stack-available", {
         channelId: channel.channelId,
-        stacktrace: stacktrace && stacktrace.length > 0
+        stacktrace: stacktrace && stacktrace.length > 0,
       });
     }
     this.stacktracesById.set(channel.channelId, stacktrace);

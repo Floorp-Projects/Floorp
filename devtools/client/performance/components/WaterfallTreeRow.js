@@ -22,7 +22,7 @@ function buildMarkerSidebar(blueprint, props) {
   const bullet = dom.div({
     className: `waterfall-marker-bullet marker-color-${blueprint.colorName}`,
     style: { transform: `translateX(${level * LEVEL_INDENT}px)` },
-    "data-type": marker.name
+    "data-type": marker.name,
   });
 
   const label = MarkerBlueprintUtils.getMarkerLabel(marker);
@@ -30,12 +30,12 @@ function buildMarkerSidebar(blueprint, props) {
   const name = dom.div({
     className: "plain waterfall-marker-name",
     style: { transform: `translateX(${level * LEVEL_INDENT}px)` },
-    title: label
+    title: label,
   }, label);
 
   return dom.div({
     className: "waterfall-sidebar theme-sidebar",
-    style: { width: sidebarWidth + "px" }
+    style: { width: sidebarWidth + "px" },
   }, bullet, name);
 }
 
@@ -48,13 +48,13 @@ function buildMarkerTimebar(blueprint, props) {
   const bar = dom.div(
     {
       className: "waterfall-marker-wrap",
-      style: { transform: `translateX(${offset}px)` }
+      style: { transform: `translateX(${offset}px)` },
     },
     arrow,
     dom.div({
       className: `waterfall-marker-bar marker-color-${blueprint.colorName}`,
       style: { width: `${width}px` },
-      "data-type": marker.name
+      "data-type": marker.name,
     })
   );
 
@@ -70,7 +70,7 @@ function WaterfallTreeRow(props) {
 
   const attrs = {
     className: "waterfall-tree-item" + (focused ? " focused" : ""),
-    "data-otmt": marker.isOffMainThread
+    "data-otmt": marker.isOffMainThread,
   };
 
   // Don't render an expando-arrow for leaf nodes.

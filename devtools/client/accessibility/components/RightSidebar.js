@@ -15,7 +15,7 @@ const Accessible = createFactory(require("./Accessible"));
 class RightSidebar extends Component {
   static get propTypes() {
     return {
-      walker: PropTypes.object.isRequired
+      walker: PropTypes.object.isRequired,
     };
   }
 
@@ -29,16 +29,16 @@ class RightSidebar extends Component {
     return (
       div({
         className: "right-sidebar",
-        role: "presentation"
+        role: "presentation",
       },
         div({
           className: "_header",
           id: headerID,
-          role: "heading"
+          role: "heading",
         }, L10N.getStr("accessibility.properties")),
         div({
           className: "_content accessible",
-          role: "presentation"
+          role: "presentation",
         }, Accessible({ walker, labelledby: headerID }))
       )
     );

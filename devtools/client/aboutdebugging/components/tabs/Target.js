@@ -23,8 +23,8 @@ class TabTarget extends Component {
         icon: PropTypes.string,
         outerWindowID: PropTypes.number.isRequired,
         title: PropTypes.string,
-        url: PropTypes.string.isRequired
-      }).isRequired
+        url: PropTypes.string.isRequired,
+      }).isRequired,
     };
   }
 
@@ -50,7 +50,7 @@ class TabTarget extends Component {
       dom.img({
         className: "target-icon",
         role: "presentation",
-        src: target.icon
+        src: target.icon,
       }),
       dom.div({ className: "target" },
         // If the title is empty, display the url instead.

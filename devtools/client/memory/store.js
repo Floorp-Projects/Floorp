@@ -23,7 +23,7 @@ module.exports = function() {
 
   const store = createStore({
     log: shouldLog,
-    history
+    history,
   })(combineReducers(reducers), {});
 
   if (history) {

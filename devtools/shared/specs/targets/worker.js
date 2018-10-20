@@ -11,21 +11,21 @@ const workerTargetSpec = generateActorSpec({
   methods: {
     attach: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     detach: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     connect: {
       request: {
         options: Arg(0, "json"),
       },
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     push: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
   },
 
@@ -39,8 +39,8 @@ const workerTargetSpec = generateActorSpec({
     // i.e. WorkerTargetActor
     newSource: {
       type: "newSource",
-    }
-  }
+    },
+  },
 });
 
 exports.workerTargetSpec = workerTargetSpec;

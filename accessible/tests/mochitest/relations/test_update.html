@@ -51,7 +51,7 @@
     function insertRelated(aHostRelAttr, aDependentID, aInsertHostFirst,
                            aHostRelation, aDependentRelation) {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, document)
+        new invokerChecker(EVENT_REORDER, document),
       ];
 
       this.invoke = function insertRelated_invoke() {
@@ -94,7 +94,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, this.container),
-        new invokerChecker(EVENT_SHOW, this.containerNode)
+        new invokerChecker(EVENT_SHOW, this.containerNode),
       ];
 
       this.invoke = function recreateRelatives_invoke() {

@@ -497,7 +497,13 @@ class _ASRouter {
 
   _updateAdminState(target) {
     const channel = target || this.messageChannel;
-    channel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: this.state});
+    channel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+      type: "ADMIN_SET_STATE",
+      data: {
+        ...this.state,
+        providerPrefs: ASRouterPreferences.providers,
+      },
+    });
   }
 
   _handleTargetingError(type, error, message) {
@@ -995,6 +1001,15 @@ class _ASRouter {
         break;
       case "EXPIRE_QUERY_CACHE":
         QueryCache.expireAll();
+        break;
+      case "ENABLE_PROVIDER":
+        ASRouterPreferences.enableOrDisableProvider(action.data, true);
+        break;
+      case "DISABLE_PROVIDER":
+        ASRouterPreferences.enableOrDisableProvider(action.data, false);
+        break;
+      case "RESET_PROVIDER_PREF":
+        ASRouterPreferences.resetProviderPref();
         break;
     }
   }

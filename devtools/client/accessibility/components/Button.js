@@ -13,7 +13,7 @@ const defaultProps = {
   busy: false,
   title: null,
   children: null,
-  className: ""
+  className: "",
 };
 
 /**
@@ -29,7 +29,7 @@ class Button extends Component {
       busy: PropTypes.bool,
       title: PropTypes.string,
       children: PropTypes.string,
-      className: PropTypes.string
+      className: PropTypes.string,
     };
   }
 
@@ -40,11 +40,11 @@ class Button extends Component {
   render() {
     const className = [
       ...this.props.className.split(" "),
-      "devtools-button"
+      "devtools-button",
     ].join(" ");
     const props = Object.assign({}, this.props, {
       className,
-      "aria-busy": this.props.busy
+      "aria-busy": this.props.busy,
     });
 
     const classList = ["btn-content"];
@@ -54,7 +54,7 @@ class Button extends Component {
 
     return (button(props, span({
       className: classList.join(" "),
-      tabIndex: -1
+      tabIndex: -1,
     }, this.props.children)));
   }
 }

@@ -48,7 +48,7 @@ async function openOptions(toolbox) {
     // is a tool-registered or tool-undregistered event.
     get checkbox() {
       return panel.panelDoc.getElementById("accessibility");
-    }
+    },
   };
 }
 

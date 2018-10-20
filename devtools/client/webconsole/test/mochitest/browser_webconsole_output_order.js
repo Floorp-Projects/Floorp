@@ -18,7 +18,7 @@ add_task(async function() {
   const messages = ["console.log('foo', 'bar');", "foo bar", "undefined"];
   const onMessages = waitForMessages({
     hud,
-    messages: messages.map(text => ({text}))
+    messages: messages.map(text => ({text})),
   });
 
   hud.jsterm.execute("console.log('foo', 'bar');");

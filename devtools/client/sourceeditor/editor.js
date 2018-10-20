@@ -10,7 +10,7 @@ const {
   EXPAND_TAB,
   TAB_SIZE,
   DETECT_INDENT,
-  getIndentationFromIteration
+  getIndentationFromIteration,
 } = require("devtools/shared/indentation");
 
 const ENABLE_CODE_FOLDING = "devtools.editor.enableCodeFolding";
@@ -136,7 +136,7 @@ function Editor(config) {
     theme: "mozilla",
     themeSwitching: true,
     autocomplete: false,
-    autocompleteOpts: {}
+    autocompleteOpts: {},
   };
 
   // Additional shortcuts.
@@ -338,7 +338,7 @@ Editor.prototype = {
     const {
       propertyKeywords,
       colorKeywords,
-      valueKeywords
+      valueKeywords,
     } = getCSSKeywords(this.config.cssProperties);
 
     const cssSpec = win.CodeMirror.resolveMode("text/css");
@@ -778,7 +778,7 @@ Editor.prototype = {
     let topLine = {
       "center": Math.max(line - halfVisible, 0),
       "bottom": Math.max(line - linesVisible + offset, 0),
-      "top": Math.max(line - offset, 0)
+      "top": Math.max(line - offset, 0),
     }[align || "top"] || offset;
 
     // Bringing down the topLine to total lines in the editor if exceeding.
@@ -960,7 +960,7 @@ Editor.prototype = {
     const mark = cm.markText(from, to, { replacedWith: span });
     return {
       anchor: span,
-      clear: () => mark.clear()
+      clear: () => mark.clear(),
     };
   },
 
@@ -1192,7 +1192,7 @@ Editor.prototype = {
         posFrom: null,
         posTo: null,
         overlay: null,
-        query
+        query,
       };
     }
 
@@ -1414,13 +1414,13 @@ Editor.prototype = {
    */
   _initShortcuts: function(win) {
     const shortcuts = new KeyShortcuts({
-      window: win
+      window: win,
     });
     this._onShortcut = this._onShortcut.bind(this);
     const keys = [
       "find.key",
       "findNext.key",
-      "findPrev.key"
+      "findPrev.key",
     ];
 
     if (OS === "Darwin") {
@@ -1477,7 +1477,7 @@ Editor.prototype = {
   _isInputOrTextarea: function(element) {
     const name = element.tagName.toLowerCase();
     return name === "input" || name === "textarea";
-  }
+  },
 };
 
 // Since Editor is a thin layer over CodeMirror some methods
@@ -1552,7 +1552,7 @@ function getCSSKeywords(cssProperties) {
   return {
     propertyKeywords: keySet(propertyKeywords),
     colorKeywords: colorKeywords,
-    valueKeywords: valueKeywords
+    valueKeywords: valueKeywords,
   };
 }
 

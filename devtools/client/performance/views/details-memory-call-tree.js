@@ -12,7 +12,7 @@
 var MemoryCallTreeView = extend(DetailsSubview, {
 
   rerenderPrefs: [
-    "invert-call-tree"
+    "invert-call-tree",
   ],
 
   // Units are in milliseconds.
@@ -44,7 +44,7 @@ var MemoryCallTreeView = extend(DetailsSubview, {
    */
   render: function(interval = {}) {
     const options = {
-      invertTree: PerformanceController.getOption("invert-call-tree")
+      invertTree: PerformanceController.getOption("invert-call-tree"),
     };
     const recording = PerformanceController.getCurrentRecording();
     const allocations = recording.getAllocations();
@@ -106,8 +106,8 @@ var MemoryCallTreeView = extend(DetailsSubview, {
         countPercentage: true,
         selfSizePercentage: true,
         sizePercentage: true,
-        function: true
-      }
+        function: true,
+      },
     });
 
     // Bind events.
@@ -124,7 +124,7 @@ var MemoryCallTreeView = extend(DetailsSubview, {
     root.toggleCategories(false);
   },
 
-  toString: () => "[object MemoryCallTreeView]"
+  toString: () => "[object MemoryCallTreeView]",
 });
 
 EventEmitter.decorate(MemoryCallTreeView);

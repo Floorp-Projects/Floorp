@@ -27,7 +27,7 @@ const TEST_DATA = [
     chromeEnabled: true,
     debuggerRemoteEnable: true,
     expected: true,
-  }
+  },
 ];
 
 add_task(async function() {

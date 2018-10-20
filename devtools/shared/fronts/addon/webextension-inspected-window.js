@@ -17,10 +17,10 @@ const WebExtensionInspectedWindowFront = protocol.FrontClassWithSpec(
   {
     initialize: function(client, { webExtensionInspectedWindowActor }) {
       protocol.Front.prototype.initialize.call(this, client, {
-        actor: webExtensionInspectedWindowActor
+        actor: webExtensionInspectedWindowActor,
       });
       this.manage(this);
-    }
+    },
   }
 );
 

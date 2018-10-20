@@ -55,7 +55,7 @@ add_task(async function focus() {
   assertFooterVisible(true);
 
   // Check the Change Options link.
-  let changeOptionsLink = document.getElementById("search-suggestions-change-settings");
+  let changeOptionsLink = document.getAnonymousElementByAttribute(gURLBar.popup, "id", "search-suggestions-change-settings");
   let prefsPromise = BrowserTestUtils.waitForLocationChange(gBrowser, "about:preferences#search");
   changeOptionsLink.click();
   await prefsPromise;

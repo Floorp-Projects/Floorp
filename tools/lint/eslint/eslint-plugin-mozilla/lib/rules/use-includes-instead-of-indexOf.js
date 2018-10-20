@@ -37,6 +37,6 @@ module.exports = function(context) {
            node.right.value == 0)) {
         context.report(node, "use .includes instead of .indexOf");
       }
-    }
+    },
   };
 };

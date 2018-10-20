@@ -55,7 +55,7 @@ NewProcessSelector.prototype = {
 
   provideProcess() {
     return Ci.nsIContentProcessProvider.NEW_PROCESS;
-  }
+  },
 };
 
 let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
@@ -103,7 +103,7 @@ var BrowserTestUtils = {
     if (typeof(options) == "string") {
       options = {
         gBrowser: Services.wm.getMostRecentWindow("navigator:browser").gBrowser,
-        url: options
+        url: options,
       };
     }
     let tab = await BrowserTestUtils.openNewForegroundTab(options);
@@ -179,7 +179,7 @@ var BrowserTestUtils = {
 
     let { opening: opening,
           waitForLoad: aWaitForLoad,
-          waitForStateStop: aWaitForStateStop
+          waitForStateStop: aWaitForStateStop,
     } = options;
 
     let promises, tab;
@@ -202,7 +202,7 @@ var BrowserTestUtils = {
           } else {
             tabbrowser.selectedTab = tab = BrowserTestUtils.addTab(tabbrowser, opening);
           }
-        })
+        }),
       ];
 
       if (aWaitForLoad) {
@@ -1450,7 +1450,7 @@ var BrowserTestUtils = {
 
       mm.sendAsyncMessage("Test:SendChar", {
         char,
-        seq
+        seq,
       });
     });
   },
@@ -1770,5 +1770,5 @@ var BrowserTestUtils = {
       }, {once: true});
     }
     return tabbrowser.addTab(uri, params);
-  }
+  },
 };

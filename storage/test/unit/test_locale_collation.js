@@ -242,42 +242,42 @@ function setup() {
 var gTests = [
   {
     desc: "Case and accent sensitive UTF-8",
-    run:   () => runUtf8Test("locale_case_accent_sensitive")
+    run:   () => runUtf8Test("locale_case_accent_sensitive"),
   },
 
   {
     desc: "Case sensitive, accent insensitive UTF-8",
-    run:   () => runUtf8Test("locale_case_sensitive")
+    run:   () => runUtf8Test("locale_case_sensitive"),
   },
 
   {
     desc: "Case insensitive, accent sensitive UTF-8",
-    run:   () => runUtf8Test("locale_accent_sensitive")
+    run:   () => runUtf8Test("locale_accent_sensitive"),
   },
 
   {
     desc: "Case and accent insensitive UTF-8",
-    run:   () => runUtf8Test("locale")
+    run:   () => runUtf8Test("locale"),
   },
 
   {
     desc: "Case and accent sensitive UTF-16",
-    run:   () => runUtf16Test("locale_case_accent_sensitive")
+    run:   () => runUtf16Test("locale_case_accent_sensitive"),
   },
 
   {
     desc: "Case sensitive, accent insensitive UTF-16",
-    run:   () => runUtf16Test("locale_case_sensitive")
+    run:   () => runUtf16Test("locale_case_sensitive"),
   },
 
   {
     desc: "Case insensitive, accent sensitive UTF-16",
-    run:   () => runUtf16Test("locale_accent_sensitive")
+    run:   () => runUtf16Test("locale_accent_sensitive"),
   },
 
   {
     desc: "Case and accent insensitive UTF-16",
-    run:   () => runUtf16Test("locale")
+    run:   () => runUtf16Test("locale"),
   },
 ];
 

@@ -105,7 +105,7 @@ class CustomRequestPanel extends Component {
           requestHeaders: {
             customHeadersValue: val || "",
             // Parse text representation of multiple HTTP headers
-            headers: this.parseRequestText(val, "\\S+?", ":")
+            headers: this.parseRequestText(val, "\\S+?", ":"),
           },
         };
         break;
@@ -120,7 +120,7 @@ class CustomRequestPanel extends Component {
         data = {
           requestPostData: {
             postData: { text: val },
-          }
+          },
         };
         break;
       case "custom-query-value":
@@ -146,7 +146,7 @@ class CustomRequestPanel extends Component {
       case "custom-url-value":
         data = {
           customQueryValue: null,
-          url: val
+          url: val,
         };
         break;
       default:

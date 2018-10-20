@@ -36,5 +36,5 @@ function sortObjectKeys(object) {
 }
 
 module.exports = {
-  sortObjectKeys
+  sortObjectKeys,
 };

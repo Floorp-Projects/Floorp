@@ -19,7 +19,7 @@ const EVENTS = {
   // When the accessibility inspector has a new accessible front inspected.
   NEW_ACCESSIBLE_FRONT_INSPECTED: "Accessibility:NewAccessibleFrontInspected",
   // When the accessibility inspector is updated.
-  ACCESSIBILITY_INSPECTOR_UPDATED: "Accessibility:AccessibilityInspectorUpdated"
+  ACCESSIBILITY_INSPECTOR_UPDATED: "Accessibility:AccessibilityInspectorUpdated",
 };
 
 /**
@@ -165,7 +165,7 @@ AccessibilityPanel.prototype = {
     const event = new this.panelWin.MessageEvent("devtools/chrome/message", {
       bubbles: true,
       cancelable: true,
-      data: { type, args }
+      data: { type, args },
     });
 
     this.panelWin.dispatchEvent(event);
@@ -258,7 +258,7 @@ AccessibilityPanel.prototype = {
     this.emit("destroyed");
 
     resolver();
-  }
+  },
 };
 
 // Exports from this module

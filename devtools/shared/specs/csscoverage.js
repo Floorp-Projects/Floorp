@@ -11,30 +11,30 @@ const cssUsageSpec = generateActorSpec({
   events: {
     "state-change": {
       type: "stateChange",
-      stateChange: Arg(0, "json")
-    }
+      stateChange: Arg(0, "json"),
+    },
   },
 
   methods: {
     start: {
-      request: { url: Arg(0, "boolean") }
+      request: { url: Arg(0, "boolean") },
     },
     stop: {},
     toggle: {},
     oneshot: {},
     createEditorReport: {
       request: { url: Arg(0, "string") },
-      response: { reports: RetVal("array:json") }
+      response: { reports: RetVal("array:json") },
     },
     createEditorReportForSheet: {
       request: { url: Arg(0, "stylesheet") },
-      response: { reports: RetVal("array:json") }
+      response: { reports: RetVal("array:json") },
     },
     createPageReport: {
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     _testOnlyVisitedPages: {
-      response: { value: RetVal("array:string") }
+      response: { value: RetVal("array:string") },
     },
   },
 });

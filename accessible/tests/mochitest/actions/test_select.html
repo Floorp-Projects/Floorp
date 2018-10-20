@@ -30,8 +30,8 @@
           actionName: "select",
           events: CLICK_EVENTS,
           eventSeq: [
-            new focusChecker("lb_apple")
-          ]
+            new focusChecker("lb_apple"),
+          ],
         },
         {
           ID: "combobox",
@@ -39,8 +39,8 @@
           actionName: "open",
           events: CLICK_EVENTS,
           eventSeq: [
-            new focusChecker("cb_orange")
-          ]
+            new focusChecker("cb_orange"),
+          ],
         },
         {
           ID: "cb_apple",
@@ -48,8 +48,8 @@
           actionName: "select",
           events: CLICK_EVENTS,
           eventSeq: [
-            new focusChecker("combobox")
-          ]
+            new focusChecker("combobox"),
+          ],
         },
         {
           ID: "combobox",
@@ -57,8 +57,8 @@
           actionName: "open",
           events: CLICK_EVENTS,
           eventSeq: [
-            new focusChecker("cb_apple")
-          ]
+            new focusChecker("cb_apple"),
+          ],
         },
         {
           ID: "combobox",
@@ -66,9 +66,9 @@
           actionName: "close",
           events: CLICK_EVENTS,
           eventSeq: [
-            new focusChecker("combobox")
-          ]
-        }
+            new focusChecker("combobox"),
+          ],
+        },
       ];
 
       testActions(actionsArray);

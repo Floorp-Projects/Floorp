@@ -26,7 +26,7 @@ class TabsPanel extends Component {
     return {
       client: PropTypes.instanceOf(DebuggerClient).isRequired,
       connect: PropTypes.object,
-      id: PropTypes.string.isRequired
+      id: PropTypes.string.isRequired,
     };
   }
 
@@ -34,7 +34,7 @@ class TabsPanel extends Component {
     super(props);
 
     this.state = {
-      tabs: []
+      tabs: [],
     };
 
     this.update = this.update.bind(this);
@@ -77,11 +77,11 @@ class TabsPanel extends Component {
       id: id + "-panel",
       className: "panel",
       role: "tabpanel",
-      "aria-labelledby": id + "-header"
+      "aria-labelledby": id + "-header",
     },
     PanelHeader({
       id: id + "-header",
-      name: Strings.GetStringFromName("tabs")
+      name: Strings.GetStringFromName("tabs"),
     }),
     dom.div({},
       TargetList({
@@ -91,7 +91,7 @@ class TabsPanel extends Component {
         name: Strings.GetStringFromName("tabs"),
         sort: false,
         targetClass: TabTarget,
-        targets: tabs
+        targets: tabs,
       })
     ));
   }

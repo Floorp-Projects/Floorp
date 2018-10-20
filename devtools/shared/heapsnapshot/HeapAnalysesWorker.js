@@ -144,7 +144,7 @@ workerHelper.createTask(self, "takeCensusDiff", request => {
     firstSnapshotFilePath,
     secondSnapshotFilePath,
     censusOptions,
-    requestOptions
+    requestOptions,
   } = request;
 
   if (!snapshots[firstSnapshotFilePath]) {

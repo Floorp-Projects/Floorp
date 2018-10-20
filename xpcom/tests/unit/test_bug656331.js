@@ -16,7 +16,7 @@ const kConsoleListener = {
   observe: function listener_observe(message) {
     if (gMessageExpected.test(message.message))
       gFound = true;
-  }
+  },
 };
 
 function run_test() {

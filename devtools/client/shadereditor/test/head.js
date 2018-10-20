@@ -177,7 +177,7 @@ function teardown(aPanel) {
 
   return promise.all([
     once(aPanel, "destroyed"),
-    removeTab(aPanel.target.tab)
+    removeTab(aPanel.target.tab),
   ]);
 }
 

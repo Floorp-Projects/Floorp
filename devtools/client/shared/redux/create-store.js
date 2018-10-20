@@ -33,7 +33,7 @@ module.exports = (opts = {}) => {
     // operate on "already transformed" actions. Actions going through
     // them shouldn't have any special fields like promises, they
     // should just be normal JSON objects.
-    waitUntilService
+    waitUntilService,
   ];
 
   if (opts.history) {

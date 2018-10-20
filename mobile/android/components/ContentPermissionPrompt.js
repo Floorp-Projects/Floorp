@@ -110,7 +110,7 @@ ContentPermissionPrompt.prototype = {
           Services.perms.addFromPrincipal(request.principal, access, Ci.nsIPermissionManager.DENY_ACTION);
 
         callback(/* allow */ false);
-      }
+      },
     },
     {
       label: browserBundle.GetStringFromName(entityName + ".allow"),
@@ -125,7 +125,7 @@ ContentPermissionPrompt.prototype = {
 
         callback(/* allow */ true);
       },
-      positive: true
+      positive: true,
     }];
 
     let chromeWin = this.getChromeForRequest(request);
@@ -138,8 +138,8 @@ ContentPermissionPrompt.prototype = {
       options = {
         link: {
           label: browserBundle.GetStringFromName("doorhanger.learnMore"),
-          url: "https://www.mozilla.org/firefox/push/"
-        }
+          url: "https://www.mozilla.org/firefox/push/",
+        },
       };
     } else {
       options = { checkbox: browserBundle.GetStringFromName(entityName + ".dontAskAgain") };
@@ -152,7 +152,7 @@ ContentPermissionPrompt.prototype = {
     DoorHanger.show(request.window || request.element.ownerGlobal,
                     message, entityName + request.principal.URI.host,
                     buttons, options, entityName.toUpperCase());
-  }
+  },
 };
 
 

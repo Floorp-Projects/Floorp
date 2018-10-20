@@ -32,7 +32,7 @@ async function ifTestingSupported() {
     recordingFinished,
     callListPopulated,
     thumbnailsDisplayed,
-    screenshotDisplayed
+    screenshotDisplayed,
   ]);
 
   is(SnapshotsListView.itemCount, 1,

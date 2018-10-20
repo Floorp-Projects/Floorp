@@ -61,19 +61,19 @@ class SideBar extends Component {
     });
 
     const endPanel = dom.aside({
-      className: "sidebar-wrapper"
+      className: "sidebar-wrapper",
     },
       dom.header({
-        className: "devtools-toolbar webconsole-sidebar-toolbar"
+        className: "devtools-toolbar webconsole-sidebar-toolbar",
       },
         dom.button({
           className: "devtools-button sidebar-close-button",
           title: l10n.getStr("webconsole.closeSidebarButton.tooltip"),
-          onClick: this.onClickSidebarClose
+          onClick: this.onClickSidebarClose,
         })
       ),
       dom.aside({
-        className: "sidebar-contents"
+        className: "sidebar-contents",
       }, objectInspector)
     );
 

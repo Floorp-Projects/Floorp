@@ -158,7 +158,7 @@ ToolSidebar.prototype = {
     // sidebar
     for (const [id, tab] of this._tabs) {
       const item = this._addItemToAllTabsMenu(id, tab, {
-        selected: tab.hasAttribute("selected")
+        selected: tab.hasAttribute("selected"),
       });
       if (tab.hidden) {
         item.hidden = true;
@@ -599,5 +599,5 @@ ToolSidebar.prototype = {
     this._tabbox = null;
     this._panelDoc = null;
     this._toolPanel = null;
-  }
+  },
 };

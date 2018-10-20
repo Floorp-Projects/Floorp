@@ -225,7 +225,7 @@ var collatorInternalProperties = {
         addSpecialMissingLanguageTags(locales);
         return (this._availableLocales = locales);
     },
-    relevantExtensionKeys: ["co", "kn", "kf"]
+    relevantExtensionKeys: ["co", "kn", "kf"],
 };
 
 /**
@@ -286,7 +286,7 @@ function collatorSortLocaleData() {
                 return "false";
             },
             kf: collatorSortCaseFirstDefault,
-        }
+        },
     };
     /* eslint-enable object-shorthand */
 }
@@ -313,7 +313,7 @@ function collatorSearchLocaleData() {
             kf: function() {
                 return "false";
             },
-        }
+        },
     };
     /* eslint-enable object-shorthand */
 }

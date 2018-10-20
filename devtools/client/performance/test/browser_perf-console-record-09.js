@@ -17,7 +17,7 @@ const { idleWait } = require("devtools/client/performance/test/helpers/wait-util
 add_task(async function() {
   const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { panel } = await initPerformanceInTab({ tab: target.tab });

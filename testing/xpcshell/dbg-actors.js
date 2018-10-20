@@ -29,7 +29,7 @@ function createRootActor(connection) {
       // If the user never switches to the "debugger" tab we might get a
       // shutdown before we've attached.
       Services.obs.notifyObservers(null, "xpcshell-test-devtools-shutdown");
-    }
+    },
   };
   return new RootActor(connection, parameters);
 }

@@ -84,7 +84,7 @@ class RequestListHeader extends Component {
   drawBackground() {
     // The background component is theme dependent, so add the current theme to the props.
     const props = Object.assign({}, this.props, {
-      theme: getTheme()
+      theme: getTheme(),
     });
     this.background.draw(props);
   }
@@ -143,7 +143,7 @@ class RequestListHeader extends Component {
           key: labels.length,
           className: "requests-list-timings-division",
           "data-division-scale": divisionScale,
-          style: { width }
+          style: { width },
         },
         getFormattedTime(millisecondTime)
       ));
@@ -170,7 +170,7 @@ class RequestListHeader extends Component {
       div({ className: "devtools-toolbar requests-list-headers-wrapper" },
         div({
           className: "devtools-toolbar requests-list-headers",
-          onContextMenu: this.onContextMenu
+          onContextMenu: this.onContextMenu,
         },
           HEADERS.filter((header) => columns[header.name]).map((header) => {
             const name = header.name;

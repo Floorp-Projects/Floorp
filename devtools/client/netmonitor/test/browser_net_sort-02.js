@@ -32,19 +32,19 @@ add_task(async function() {
   loadFrameScriptUtils();
   const requests = [{
     url: "sjs_sorting-test-server.sjs?index=1&" + Math.random(),
-    method: "GET1"
+    method: "GET1",
   }, {
     url: "sjs_sorting-test-server.sjs?index=5&" + Math.random(),
-    method: "GET5"
+    method: "GET5",
   }, {
     url: "sjs_sorting-test-server.sjs?index=2&" + Math.random(),
-    method: "GET2"
+    method: "GET2",
   }, {
     url: "sjs_sorting-test-server.sjs?index=4&" + Math.random(),
-    method: "GET4"
+    method: "GET4",
   }, {
     url: "sjs_sorting-test-server.sjs?index=3&" + Math.random(),
-    method: "GET3"
+    method: "GET3",
   }];
 
   const wait = waitForNetworkEvents(monitor, 5);
@@ -259,7 +259,7 @@ add_task(async function() {
         fullMimeType: "text/1",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 198),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
-        time: true
+        time: true,
       });
     verifyRequestItemTarget(
       document,
@@ -273,7 +273,7 @@ add_task(async function() {
         fullMimeType: "text/2",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 217),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 19),
-        time: true
+        time: true,
       });
     verifyRequestItemTarget(
       document,
@@ -287,7 +287,7 @@ add_task(async function() {
         fullMimeType: "text/3",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 227),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
-        time: true
+        time: true,
       });
     verifyRequestItemTarget(
       document,
@@ -301,7 +301,7 @@ add_task(async function() {
         fullMimeType: "text/4",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 237),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 39),
-        time: true
+        time: true,
       });
     verifyRequestItemTarget(
       document,
@@ -315,7 +315,7 @@ add_task(async function() {
         fullMimeType: "text/5",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 247),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 49),
-        time: true
+        time: true,
       });
   }
 });

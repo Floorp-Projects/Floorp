@@ -97,7 +97,7 @@ function makeStateBroadcaster(stillAliveFunc) {
           enqueuedChanges = [];
         }
       });
-    }
+    },
   };
 }
 
@@ -149,5 +149,5 @@ function combineBroadcastingReducers(reducers, emitChange) {
 module.exports = {
   makeStateBroadcaster,
   enhanceStoreWithBroadcaster,
-  combineBroadcastingReducers
+  combineBroadcastingReducers,
 };

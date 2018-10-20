@@ -16,12 +16,12 @@ types.addDictType("console.traits", {
 types.addDictType("console.startlisteners", {
   startedListeners: "array:string",
   nativeConsoleAPI: "boolean",
-  traits: "console.traits"
+  traits: "console.traits",
 });
 
 types.addDictType("console.autocomplete", {
   matches: "array:string",
-  matchProp: "string"
+  matchProp: "string",
 });
 
 types.addDictType("console.evaluatejsasync", {
@@ -34,7 +34,7 @@ types.addDictType("console.cachedmessages", {
   error: "nullable:string",
   message: "longstring",
   _type: "nullable:string",
-  timeStamp: "nullable:string"
+  timeStamp: "nullable:string",
 });
 
 const webconsoleSpecPrototype = {
@@ -45,13 +45,13 @@ const webconsoleSpecPrototype = {
       request: {
         listeners: Option(0, "array:string"),
       },
-      response: RetVal("console.startlisteners")
+      response: RetVal("console.startlisteners"),
     },
     stopListeners: {
       request: {
         listeners: Option(0, "nullable:array:string"),
       },
-      response: RetVal("array:string")
+      response: RetVal("array:string"),
     },
     getCachedMessages: {
       request: {
@@ -60,7 +60,7 @@ const webconsoleSpecPrototype = {
       // the return value here has a field "string" which can either be a longStringActor
       // or a plain string. Since we do not have union types, we cannot fully type this
       // response
-      response: RetVal("console.cachedmessages")
+      response: RetVal("console.cachedmessages"),
     },
     evaluateJS: {
       request: {
@@ -71,7 +71,7 @@ const webconsoleSpecPrototype = {
         selectedNodeActor: Option(0, "string"),
         selectedObjectActor: Option(0, "string"),
       },
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     evaluateJSAsync: {
       request: {
@@ -82,39 +82,39 @@ const webconsoleSpecPrototype = {
         selectedNodeActor: Option(0, "string"),
         selectedObjectActor: Option(0, "string"),
       },
-      response: RetVal("console.evaluatejsasync")
+      response: RetVal("console.evaluatejsasync"),
     },
     autocomplete: {
       request: {
         frameActor: Option(0, "string"),
         text: Option(0, "string"),
-        cursor: Option(0, "number")
+        cursor: Option(0, "number"),
       },
-      response: RetVal("console.autocomplete")
+      response: RetVal("console.autocomplete"),
     },
     clearMessagesCache: {
       request: {},
-      response: {}
+      response: {},
     },
     getPreferences: {
       request: {
-        preferences: Option(0, "json")
+        preferences: Option(0, "json"),
       },
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     setPreferences: {
       request: {
-        preferences: Option(0, "json")
+        preferences: Option(0, "json"),
       },
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     sendHTTPRequest: {
       request: {
-        request: Option(0, "json")
+        request: Option(0, "json"),
       },
-      response: RetVal("json")
-    }
-  }
+      response: RetVal("json"),
+    },
+  },
 };
 
 const webconsoleSpec = generateActorSpec(webconsoleSpecPrototype);

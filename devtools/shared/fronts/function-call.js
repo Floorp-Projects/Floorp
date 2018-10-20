@@ -28,7 +28,7 @@ const FunctionCallFront = protocol.FrontClassWithSpec(functionCallSpec, {
     this.callerPreview = form.callerPreview;
     this.argsPreview = form.argsPreview;
     this.resultPreview = form.resultPreview;
-  }
+  },
 });
 
 exports.FunctionCallFront = FunctionCallFront;
@@ -42,7 +42,7 @@ exports.SETTER_FUNCTION = 2;
 
 const CanvasRenderingContext2D = {
   drawWindow: {
-    enums: new Set([6])
+    enums: new Set([6]),
   },
 };
 
@@ -204,7 +204,7 @@ const WebGLRenderingContext = {
     enums: args => args.length === 9 ? new Set([0, 6, 7]) : new Set([0, 4, 5]),
   },
   vertexAttribPointer: {
-    enums: new Set([2])
+    enums: new Set([2]),
   },
 };
 

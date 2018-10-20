@@ -62,7 +62,7 @@ function promiseEnabledExperiments() {
   log("Getting the locally enabled experiments");
 
   return EventDispatcher.instance.sendRequestForResult({
-    type: "Experiments:GetActive"
+    type: "Experiments:GetActive",
   }).then(experiments => {
     log("List of locally enabled experiments ready");
     return experiments;

@@ -10,20 +10,20 @@ const testCases = [
   {
     location: ["cookies", "https://sectest1.example.org"],
     sidebarHidden: true,
-    toggleButtonVisible: false
+    toggleButtonVisible: false,
   },
   {
     location: getCookieId("cs2", ".example.org", "/"),
     sidebarHidden: false,
-    toggleButtonVisible: true
+    toggleButtonVisible: true,
   },
   {
-    clickToggle: true
+    clickToggle: true,
   },
   {
     location: getCookieId("cs2", ".example.org", "/"),
-    sidebarHidden: true
-  }
+    sidebarHidden: true,
+  },
 ];
 
 add_task(async function() {

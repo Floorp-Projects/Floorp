@@ -29,7 +29,7 @@ const storeItems = [
   [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
    [1, 2, 3]],
   [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"],
-   [1]]
+   [1]],
 ];
 
 /**

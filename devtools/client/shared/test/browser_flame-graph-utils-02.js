@@ -16,7 +16,7 @@ add_task(async function() {
 
 function performTest() {
   const out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
-    flattenRecursion: true
+    flattenRecursion: true,
   });
 
   ok(out, "Some data was outputted properly");
@@ -48,25 +48,25 @@ function performTest() {
 
 var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
-    location: "A"
+    location: "A",
   }, {
-    location: "A"
+    location: "A",
   }, {
-    location: "A"
-  }, {
-    location: "B",
+    location: "A",
   }, {
     location: "B",
   }, {
-    location: "C"
+    location: "B",
+  }, {
+    location: "C",
   }],
   time: 50,
 }]);
 
 var EXPECTED_OUTPUT = [{
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -75,8 +75,8 @@ var EXPECTED_OUTPUT = [{
     y: 0,
     width: 50,
     height: 15,
-    text: "A"
-  }]
+    text: "A",
+  }],
 }, {
   blocks: [{
     startTime: 0,
@@ -85,8 +85,8 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 50,
     height: 15,
-    text: "B"
-  }]
+    text: "B",
+  }],
 }, {
   blocks: [{
     startTime: 0,
@@ -95,36 +95,36 @@ var EXPECTED_OUTPUT = [{
     y: 30,
     width: 50,
     height: 15,
-    text: "C"
-  }]
+    text: "C",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }];

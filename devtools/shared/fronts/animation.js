@@ -7,11 +7,11 @@ const {
   Front,
   FrontClassWithSpec,
   custom,
-  preEvent
+  preEvent,
 } = require("devtools/shared/protocol");
 const {
   animationPlayerSpec,
-  animationsSpec
+  animationsSpec,
 } = require("devtools/shared/specs/animation");
 
 const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
@@ -108,7 +108,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
       return state;
     });
   }, {
-    impl: "_getCurrentState"
+    impl: "_getCurrentState",
   }),
 
   reconstructState: function(data) {
@@ -211,7 +211,7 @@ const AnimationsFront = FrontClassWithSpec(animationsSpec, {
 
   destroy: function() {
     Front.prototype.destroy.call(this);
-  }
+  },
 });
 
 exports.AnimationsFront = AnimationsFront;

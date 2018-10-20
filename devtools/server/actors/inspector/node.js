@@ -166,7 +166,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       characterData: true,
       characterDataOldValue: true,
       childList: true,
-      subtree: true
+      subtree: true,
     });
     this.mutationObserver = observer;
   },
@@ -522,7 +522,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       capturing: typeof override.capturing !== "undefined" ?
                  override.capturing : capturing,
       hide: typeof override.hide !== "undefined" ? override.hide : hide,
-      native
+      native,
     };
 
     // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
@@ -607,7 +607,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return InspectorActorUtils.imageToImageData(this.rawNode, maxDim).then(imageData => {
       return {
         data: LongStringActor(this.conn, imageData.data),
-        size: imageData.size
+        size: imageData.size,
       };
     });
   },
@@ -674,7 +674,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     const options = {
       previewText: FONT_FAMILY_PREVIEW_TEXT,
       previewFontSize: FONT_FAMILY_PREVIEW_TEXT_SIZE,
-      fillStyle: fillStyle
+      fillStyle: fillStyle,
     };
     const { dataURL, size } = getFontPreviewData(font, doc, options);
 
@@ -704,7 +704,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       innerWidth: win.innerWidth,
       innerHeight: win.innerHeight,
     };
-  }
+  },
 });
 
 /**
@@ -742,7 +742,7 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
   form: function() {
     return {
       actor: this.actorID,
-      length: this.nodeList ? this.nodeList.length : 0
+      length: this.nodeList ? this.nodeList.length : 0,
     };
   },
 
@@ -762,7 +762,7 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
     return this.walker.attachElements(items);
   },
 
-  release: function() {}
+  release: function() {},
 });
 
 exports.NodeActor = NodeActor;

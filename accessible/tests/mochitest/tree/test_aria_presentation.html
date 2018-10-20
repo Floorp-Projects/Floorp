@@ -21,7 +21,7 @@
     var tree =
       { SECTION: [ // container
         { TEXT_LEAF: [ ] }, // child text of 'presentation' node
-        { TEXT_LEAF: [ ] } // child text of 'none' node
+        { TEXT_LEAF: [ ] }, // child text of 'none' node
       ] };
     testAccessibleTree("div_cnt", tree);
 
@@ -29,11 +29,11 @@
     tree =
       { SECTION: [ // container
         { PUSHBUTTON: [ // button having 'presentation' role
-          { TEXT_LEAF: [ ] }
+          { TEXT_LEAF: [ ] },
         ] },
         { PUSHBUTTON: [ // button having 'none' role
-          { TEXT_LEAF: [ ] }
-        ] }
+          { TEXT_LEAF: [ ] },
+        ] },
       ] };
     testAccessibleTree("btn_cnt", tree);
 
@@ -41,11 +41,11 @@
     tree =
       { SECTION: [ // container
         { TEXT_CONTAINER: [ // td generic accessible inside 'presentation' table
-          { TEXT_LEAF: [ ] } // cell text
+          { TEXT_LEAF: [ ] }, // cell text
         ] },
         { TEXT_CONTAINER: [ // td generic accessible inside 'none' table
-          { TEXT_LEAF: [ ] } // cell text
-        ] }
+          { TEXT_LEAF: [ ] }, // cell text
+        ] },
       ] };
     testAccessibleTree("tbl_cnt", tree);
 
@@ -55,17 +55,17 @@
         { TABLE: [ // table having 'presentation' role
           { ROW: [ // tr
             { CELL: [ // td
-              { TEXT_LEAF: [ ] }
-            ] }
-          ] }
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
         ] },
         { TABLE: [ // table having 'none' role
           { ROW: [ // tr
             { CELL: [ // td
-              { TEXT_LEAF: [ ] }
-            ] }
-          ] }
-        ] }
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+        ] },
       ] };
     testAccessibleTree("tblfocusable_cnt", tree);
 
@@ -73,11 +73,11 @@
     tree =
       { SECTION: [ // container
         { TEXT_CONTAINER: [ // li generic accessible inside 'presentation' role
-          { TEXT_LEAF: [ ] } // li text
+          { TEXT_LEAF: [ ] }, // li text
         ] },
         { TEXT_CONTAINER: [ // li generic accessible inside 'none' role
-          { TEXT_LEAF: [ ] } // li text
-        ] }
+          { TEXT_LEAF: [ ] }, // li text
+        ] },
       ] };
     testAccessibleTree("list_cnt", tree);
 
@@ -88,15 +88,15 @@
         { LABEL: [ // label, has aria-owns
           { TEXT_LEAF: [ ] },
           { LABEL: [ // label, referenced by aria-owns
-            { TEXT_LEAF: [ ] }
+            { TEXT_LEAF: [ ] },
           ] },
         ] },
         { LABEL: [ // label, has aria-owns
           { TEXT_LEAF: [ ] },
           { LABEL: [ // label, referenced by aria-owns
-            { TEXT_LEAF: [ ] }
-          ] }
-        ] }
+            { TEXT_LEAF: [ ] },
+          ] },
+        ] },
       ] };
     testAccessibleTree("airaglobalprop_cnt", tree);
 

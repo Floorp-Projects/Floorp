@@ -88,7 +88,7 @@ var ContextMenus = {
   uninstall: function(event) {
     Addons.uninstall(this.target.addon);
     this.target = null;
-  }
+  },
 };
 
 function sendEMPong() {
@@ -129,7 +129,7 @@ function openOptionsInTab(url) {
   BrowserApp.selectOrAddTab(url, {
     startsWith: true,
     selected: true,
-    parentId: BrowserApp.selectedTab.id
+    parentId: BrowserApp.selectedTab.id,
   });
 }
 
@@ -746,7 +746,7 @@ var Addons = {
   },
 
   onDownloadCancelled: function(aInstall) {
-  }
+  },
 };
 
 window.addEventListener("load", init);

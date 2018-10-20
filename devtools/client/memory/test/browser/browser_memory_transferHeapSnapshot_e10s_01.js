@@ -18,7 +18,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   const snapshotFilePath = await memoryFront.saveHeapSnapshot({
     // Force a copy so that we go through the HeapSnapshotFileActor's
     // transferHeapSnapshot request and exercise this code path on e10s.
-    forceCopy: true
+    forceCopy: true,
   });
 
   ok(!!(await OS.File.stat(snapshotFilePath)),

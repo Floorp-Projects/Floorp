@@ -15,7 +15,7 @@ function test() {
 
   const Prefs = new PrefsHelper("devtools.performance", {
     "float": ["Float", "memory.sample-probability"],
-    "json": ["Json", "timeline.hidden-markers"]
+    "json": ["Json", "timeline.hidden-markers"],
   });
 
   Prefs.registerObserver();

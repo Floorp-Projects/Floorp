@@ -13,7 +13,7 @@ Object.defineProperty(this, "NetworkHelper", {
   },
   configurable: true,
   writeable: false,
-  enumerable: true
+  enumerable: true,
 });
 
 const wpl = Ci.nsIWebProgressListener;
@@ -29,7 +29,7 @@ const MockCertificate = {
   validity: {
     notBeforeLocalDay: "yesterday",
     notAfterLocalDay: "tomorrow",
-  }
+  },
 };
 
 const MockSecurityInfo = {

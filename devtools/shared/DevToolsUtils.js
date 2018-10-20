@@ -62,7 +62,7 @@ exports.executeSoon = function(fn) {
       executor = fn;
     }
     Services.tm.dispatchToMainThread({
-      run: exports.makeInfallible(executor)
+      run: exports.makeInfallible(executor),
     });
   }
 };
@@ -164,11 +164,11 @@ exports.defineLazyPrototypeGetter = function(object, key, callback) {
       Object.defineProperty(this, key, {
         configurable: true,
         writable: true,
-        value: value
+        value: value,
       });
 
       return value;
-    }
+    },
   });
 };
 
@@ -399,7 +399,7 @@ exports.defineLazyGetter = function(object, name, lambda) {
       return object[name];
     },
     configurable: true,
-    enumerable: true
+    enumerable: true,
   });
 };
 
@@ -420,7 +420,7 @@ let assertionFailureCount = 0;
 Object.defineProperty(exports, "assertionFailureCount", {
   get() {
     return assertionFailureCount;
-  }
+  },
 });
 
 function reallyAssert(condition, message) {
@@ -609,7 +609,7 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
 
       deferred.resolve({
         content: unicodeSource,
-        contentType: request.contentType
+        contentType: request.contentType,
       });
     } catch (ex) {
       const uri = request.originalURI;
@@ -628,7 +628,7 @@ function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
           // and that failed already. This is the best we can do here.
           return {
             content,
-            contentType: "text/plain"
+            contentType: "text/plain",
           };
         });
 
@@ -671,7 +671,7 @@ function newChannelForURL(url, { policy, window, principal }) {
   const channelOptions = {
     contentPolicyType: policy,
     securityFlags: securityFlags,
-    uri: uri
+    uri: uri,
   };
 
   // Ensure that we have some contentPolicyType type set if one was
@@ -766,7 +766,7 @@ function errorOnFlag(exports, name) {
             `Use the "devtools/shared/flags" module instead`;
       console.error(msg);
       throw new Error(msg);
-    }
+    },
   });
 }
 

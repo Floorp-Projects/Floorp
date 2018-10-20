@@ -82,39 +82,39 @@
         { // before 'a'
           DOMPoint: [ getNode("p2", p2Doc).firstChild, 0 ],
           point: [ getNode("p2", p2Doc), 0 ],
-          pointList: [ [ p2Doc, 0 ] ]
+          pointList: [ [ p2Doc, 0 ] ],
         },
         { // after 'a' (before anchor)
           DOMPoint: [ getNode("p2", p2Doc).firstChild, 1 ],
           point: [ getNode("p2", p2Doc), 1 ],
-          pointList: [ [ p2Doc, 0 ] ]
+          pointList: [ [ p2Doc, 0 ] ],
         },
         { // before 'b' (inside anchor)
           DOMPoint: [ getNode("p2_a", p2Doc).firstChild, 0 ],
           point: [ getNode("p2_a", p2Doc), 0 ],
           pointList: [
             [ getNode("p2", p2Doc), 1 ],
-            [ p2Doc, 0 ]
-          ]
+            [ p2Doc, 0 ],
+          ],
         },
         { // after 'b' (inside anchor)
           DOMPoint: [ getNode("p2_a", p2Doc).firstChild, 1 ],
           point: [ getNode("p2_a", p2Doc), 1 ],
           pointList: [
             [ getNode("p2", p2Doc), 1 ],
-            [ p2Doc, 0 ]
-          ]
+            [ p2Doc, 0 ],
+          ],
         },
         { // before 'c' (after anchor)
           DOMPoint: [ getNode("p2", p2Doc).lastChild, 0 ],
           point: [ getNode("p2", p2Doc), 2 ],
-          pointList: [ [ p2Doc, 0 ] ]
+          pointList: [ [ p2Doc, 0 ] ],
         },
         { // after 'c'
           DOMPoint: [ getNode("p2", p2Doc).lastChild, 1 ],
           point: [ getNode("p2", p2Doc), 3 ],
-          pointList: [ [ p2Doc, 0 ] ]
-        }
+          pointList: [ [ p2Doc, 0 ] ],
+        },
       ];
       queueTraversalList(traversalList, getNode("p2", p2Doc));
 

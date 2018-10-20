@@ -46,10 +46,10 @@ Object.assign(proto, {
       return {
         error: "wrongState",
         message: this.constructor.name +
-          " actors can only be accessed while the thread is paused."
+          " actors can only be accessed while the thread is paused.",
       };
     };
-  }
+  },
 });
 
 const guardWithPaused = [

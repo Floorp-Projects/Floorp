@@ -20,8 +20,8 @@ add_task(async function() {
         getCookieId("test2", "test1.example.org", "/browser"),
         getCookieId("test3", ".test1.example.org", "/browser"),
         getCookieId("test4", "test1.example.org", "/browser"),
-        getCookieId("test5", ".test1.example.org", "/browser")
-      ]
+        getCookieId("test5", ".test1.example.org", "/browser"),
+      ],
     ],
   ]);
 

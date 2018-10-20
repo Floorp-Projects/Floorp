@@ -195,7 +195,7 @@ ReplayDebugger.prototype = {
   findScripts(query) {
     const data = this._sendRequest({
       type: "findScripts",
-      query: this._convertScriptQuery(query)
+      query: this._convertScriptQuery(query),
     });
     return data.map(script => this._addScript(script));
   },
@@ -504,7 +504,7 @@ ReplayDebuggerFrame.prototype = {
       type: "frameEvaluate",
       index: this._data.index,
       text,
-      options
+      options,
     });
     return this._dbg._convertCompletionValue(rv);
   },
@@ -648,7 +648,7 @@ ReplayDebuggerObject.prototype = {
     if (!this._properties) {
       const properties = this._dbg._sendRequestAllowDiverge({
         type: "getObjectProperties",
-        id: this._data.id
+        id: this._data.id,
       });
       this._properties = {};
       properties.forEach(({name, desc}) => { this._properties[name] = desc; });
@@ -719,7 +719,7 @@ ReplayDebuggerEnvironment.prototype = {
     if (!this._names) {
       const names = this._dbg._sendRequestAllowDiverge({
         type: "getEnvironmentNames",
-        id: this._data.id
+        id: this._data.id,
       });
       this._names = {};
       names.forEach(({ name, value }) => {

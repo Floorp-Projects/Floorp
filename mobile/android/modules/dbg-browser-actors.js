@@ -31,7 +31,7 @@ exports.createRootActor = function createRootActor(aConnection) {
     tabList: new MobileTabList(aConnection),
     addonList: new BrowserAddonList(aConnection),
     globalActorFactories: ActorRegistry.globalActorFactories,
-    onShutdown: sendShutdownEvent
+    onShutdown: sendShutdownEvent,
   };
   return new RootActor(aConnection, parameters);
 };
