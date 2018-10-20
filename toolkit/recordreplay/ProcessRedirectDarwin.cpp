@@ -291,6 +291,7 @@ namespace recordreplay {
   MACRO(CFRunLoopGetCurrent, RR_ScalarRval)                      \
   MACRO(CFRunLoopRemoveSource)                                   \
   MACRO(CFRunLoopSourceCreate, RR_ScalarRval, Preamble_CFRunLoopSourceCreate) \
+  MACRO(CFRunLoopSourceInvalidate)                               \
   MACRO(CFRunLoopSourceSignal)                                   \
   MACRO(CFRunLoopWakeUp)                                         \
   MACRO(CFStringAppendCharacters)                                \
@@ -589,6 +590,11 @@ namespace recordreplay {
   MACRO(ReleaseEvent, RR_ScalarRval)                             \
   MACRO(RemoveEventFromQueue, RR_ScalarRval)                     \
   MACRO(RetainEvent, RR_ScalarRval)                              \
+  MACRO(SCDynamicStoreCopyProxies, RR_ScalarRval)                \
+  MACRO(SCDynamicStoreCreate, RR_ScalarRval)                     \
+  MACRO(SCDynamicStoreCreateRunLoopSource, RR_ScalarRval)        \
+  MACRO(SCDynamicStoreKeyCreateProxies, RR_ScalarRval)           \
+  MACRO(SCDynamicStoreSetNotificationKeys, RR_ScalarRval)        \
   MACRO(SendEventToEventTarget, RR_ScalarRval)                   \
   /* These are not public APIs, but other redirected functions may be aliases for */ \
   /* these which are dynamically installed on the first call in a way that our */ \
