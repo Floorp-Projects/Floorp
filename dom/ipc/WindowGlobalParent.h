@@ -31,6 +31,14 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WindowGlobalParent)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WindowGlobalParent)
 
+  static already_AddRefed<WindowGlobalParent>
+  GetByInnerWindowId(uint64_t aInnerWindowId);
+
+  static already_AddRefed<WindowGlobalParent>
+  GetByInnerWindowId(const GlobalObject& aGlobal, uint64_t aInnerWindowId) {
+    return GetByInnerWindowId(aInnerWindowId);
+  }
+
   // Has this actor been shut down
   bool IsClosed() { return mIPCClosed; }
 
@@ -59,6 +67,10 @@ public:
   // The current URI which loaded in the document.
   nsIURI* GetDocumentURI() { return mDocumentURI; }
 
+  // Window IDs for inner/outer windows.
+  uint64_t OuterWindowId() { return mOuterWindowId; }
+  uint64_t InnerWindowId() { return mInnerWindowId; }
+
   // Create a WindowGlobalParent from over IPC. This method should not be called
   // from outside of the IPC constructors.
   WindowGlobalParent(const WindowGlobalInit& aInit, bool aInProcess);
@@ -86,6 +98,8 @@ private:
   nsCOMPtr<nsIURI> mDocumentURI;
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<ChromeBrowsingContext> mBrowsingContext;
+  uint64_t mInnerWindowId;
+  uint64_t mOuterWindowId;
   bool mInProcess;
   bool mIPCClosed;
 };
