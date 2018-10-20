@@ -545,7 +545,7 @@ PaintFromMainThread()
 void
 NotifyPaintComplete()
 {
-  MOZ_RELEASE_ASSERT(Thread::Current()->Id() == gCompositorThreadId);
+  MOZ_RELEASE_ASSERT(!gCompositorThreadId || Thread::Current()->Id() == gCompositorThreadId);
 
   // Notify the main thread in case it is waiting for this paint to complete.
   {
