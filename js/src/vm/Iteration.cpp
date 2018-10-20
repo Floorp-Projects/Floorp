@@ -99,33 +99,28 @@ NativeIterator::trace(JSTracer* trc)
                   });
 }
 
-typedef HashSet<jsid, DefaultHasher<jsid>> IdSet;
+using IdSet = GCHashSet<jsid, DefaultHasher<jsid>>;
 
 template <bool CheckForDuplicates>
 static inline bool
 Enumerate(JSContext* cx, HandleObject pobj, jsid id,
-          bool enumerable, unsigned flags, Maybe<IdSet>& ht, AutoIdVector* props)
+          bool enumerable, unsigned flags, MutableHandle<IdSet> visited, AutoIdVector* props)
 {
     if (CheckForDuplicates) {
-        if (!ht) {
-            // Most of the time there are only a handful of entries.
-            ht.emplace(cx, 5);
-        }
-
         // If we've already seen this, we definitely won't add it.
-        IdSet::AddPtr p = ht->lookupForAdd(id);
+        IdSet::AddPtr p = visited.lookupForAdd(id);
         if (MOZ_UNLIKELY(!!p)) {
             return true;
         }
 
-        // It's not necessary to add properties to the hash table at the end of
+        // It's not necessary to add properties to the hash set at the end of
         // the prototype chain, but custom enumeration behaviors might return
         // duplicated properties, so always add in such cases.
         if (pobj->is<ProxyObject>() ||
             pobj->staticPrototype() ||
             pobj->getClass()->getNewEnumerate())
         {
-            if (!ht->add(p, id)) {
+            if (!visited.add(p, id)) {
                 return false;
             }
         }
@@ -147,8 +142,8 @@ Enumerate(JSContext* cx, HandleObject pobj, jsid id,
 
 template <bool CheckForDuplicates>
 static bool
-EnumerateExtraProperties(JSContext* cx, HandleObject obj, unsigned flags, Maybe<IdSet>& ht,
-                         AutoIdVector* props)
+EnumerateExtraProperties(JSContext* cx, HandleObject obj, unsigned flags,
+                         MutableHandle<IdSet> visited, AutoIdVector* props)
 {
     MOZ_ASSERT(obj->getClass()->getNewEnumerate());
 
@@ -167,7 +162,7 @@ EnumerateExtraProperties(JSContext* cx, HandleObject obj, unsigned flags, Maybe<
         // `enumerableOnly` to the hook to filter out non-enumerable
         // properties, it doesn't really matter what we pass here.
         bool enumerable = true;
-        if (!Enumerate<CheckForDuplicates>(cx, obj, id, enumerable, flags, ht, props)) {
+        if (!Enumerate<CheckForDuplicates>(cx, obj, id, enumerable, flags, visited, props)) {
             return false;
         }
     }
@@ -187,8 +182,9 @@ SortComparatorIntegerIds(jsid a, jsid b, bool* lessOrEqualp)
 
 template <bool CheckForDuplicates>
 static bool
-EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags, Maybe<IdSet>& ht,
-                          AutoIdVector* props, Handle<UnboxedPlainObject*> unboxed = nullptr)
+EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags,
+                          MutableHandle<IdSet> visited, AutoIdVector* props,
+                          Handle<UnboxedPlainObject*> unboxed = nullptr)
 {
     bool enumerateSymbols;
     if (flags & JSITER_SYMBOLSONLY) {
@@ -205,7 +201,7 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
             } else {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
                 if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
-                                                   /* enumerable = */ true, flags, ht, props))
+                                                   /* enumerable = */ true, flags, visited, props))
                 {
                     return false;
                 }
@@ -217,7 +213,7 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
             size_t len = pobj->as<TypedArrayObject>().length();
             for (size_t i = 0; i < len; i++) {
                 if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
-                                                   /* enumerable = */ true, flags, ht, props))
+                                                   /* enumerable = */ true, flags, visited, props))
                 {
                     return false;
                 }
@@ -238,8 +234,8 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
                 jsid id = shape.propid();
                 uint32_t dummy;
                 if (IdIsIndex(id, &dummy)) {
-                    if (!Enumerate<CheckForDuplicates>(cx, pobj, id, shape.enumerable(), flags, ht,
-                                                       props))
+                    if (!Enumerate<CheckForDuplicates>(cx, pobj, id, shape.enumerable(), flags,
+                                                       visited, props))
                     {
                         return false;
                     }
@@ -268,7 +264,9 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
             // themselves here since they are all property names that were
             // given to the object before any of the expando's properties.
             MOZ_ASSERT(pobj->is<UnboxedExpandoObject>());
-            if (!EnumerateExtraProperties<CheckForDuplicates>(cx, unboxed, flags, ht, props)) {
+            if (!EnumerateExtraProperties<CheckForDuplicates>(cx, unboxed, flags, visited,
+                                                              props))
+            {
                 return false;
             }
         }
@@ -292,7 +290,9 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
                 continue;
             }
 
-            if (!Enumerate<CheckForDuplicates>(cx, pobj, id, shape.enumerable(), flags, ht, props)) {
+            if (!Enumerate<CheckForDuplicates>(cx, pobj, id, shape.enumerable(), flags, visited,
+                                               props))
+            {
                 return false;
             }
         }
@@ -310,8 +310,8 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
             Shape& shape = r.front();
             jsid id = shape.propid();
             if (JSID_IS_SYMBOL(id)) {
-                if (!Enumerate<CheckForDuplicates>(cx, pobj, id, shape.enumerable(), flags, ht,
-                                                   props))
+                if (!Enumerate<CheckForDuplicates>(cx, pobj, id, shape.enumerable(), flags,
+                                                   visited, props))
                 {
                     return false;
                 }
@@ -324,20 +324,20 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
 }
 
 static bool
-EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags, Maybe<IdSet>& ht,
-                          AutoIdVector* props, bool checkForDuplicates,
-                          Handle<UnboxedPlainObject*> unboxed = nullptr)
+EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags,
+                          MutableHandle<IdSet> visited, AutoIdVector* props,
+                          bool checkForDuplicates, Handle<UnboxedPlainObject*> unboxed = nullptr)
 {
     if (checkForDuplicates) {
-        return EnumerateNativeProperties<true>(cx, pobj, flags, ht, props, unboxed);
+        return EnumerateNativeProperties<true>(cx, pobj, flags, visited, props, unboxed);
     }
-    return EnumerateNativeProperties<false>(cx, pobj, flags, ht, props, unboxed);
+    return EnumerateNativeProperties<false>(cx, pobj, flags, visited, props, unboxed);
 }
 
 template <bool CheckForDuplicates>
 static bool
-EnumerateProxyProperties(JSContext* cx, HandleObject pobj, unsigned flags, Maybe<IdSet>& ht,
-                         AutoIdVector* props)
+EnumerateProxyProperties(JSContext* cx, HandleObject pobj, unsigned flags,
+                         MutableHandle<IdSet> visited, AutoIdVector* props)
 {
     MOZ_ASSERT(pobj->is<ProxyObject>());
 
@@ -363,7 +363,7 @@ EnumerateProxyProperties(JSContext* cx, HandleObject pobj, unsigned flags, Maybe
                 enumerable = desc.enumerable();
             }
 
-            if (!Enumerate<CheckForDuplicates>(cx, pobj, proxyProps[n], enumerable, flags, ht,
+            if (!Enumerate<CheckForDuplicates>(cx, pobj, proxyProps[n], enumerable, flags, visited,
                                                props))
             {
                 return false;
@@ -379,7 +379,7 @@ EnumerateProxyProperties(JSContext* cx, HandleObject pobj, unsigned flags, Maybe
     }
 
     for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-        if (!Enumerate<CheckForDuplicates>(cx, pobj, proxyProps[n], true, flags, ht, props)) {
+        if (!Enumerate<CheckForDuplicates>(cx, pobj, proxyProps[n], true, flags, visited, props)) {
             return false;
         }
     }
@@ -463,9 +463,7 @@ struct SortComparatorIds
 static bool
 Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
 {
-    // We initialize |ht| lazily (in Enumerate()) because it ends up unused
-    // anywhere from 67--99.9% of the time.
-    Maybe<IdSet> ht;
+    Rooted<IdSet> visited(cx, IdSet(cx));
     RootedObject pobj(cx, pobj_);
 
     // Don't check for duplicates if we're only interested in own properties.
@@ -483,8 +481,8 @@ Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
             if (pobj->is<UnboxedPlainObject>() && pobj->as<UnboxedPlainObject>().maybeExpando()) {
                 // Special case unboxed objects with an expando object.
                 RootedNativeObject expando(cx, pobj->as<UnboxedPlainObject>().maybeExpando());
-                if (!EnumerateNativeProperties(cx, expando, flags, ht, props, checkForDuplicates,
-                                               pobj.as<UnboxedPlainObject>()))
+                if (!EnumerateNativeProperties(cx, expando, flags, &visited, props,
+                                               checkForDuplicates, pobj.as<UnboxedPlainObject>()))
                 {
                     return false;
                 }
@@ -496,18 +494,18 @@ Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
                 }
 
                 if (checkForDuplicates) {
-                    if (!EnumerateExtraProperties<true>(cx, pobj, flags, ht, props)) {
+                    if (!EnumerateExtraProperties<true>(cx, pobj, flags, &visited, props)) {
                         return false;
                     }
                 } else {
-                    if (!EnumerateExtraProperties<false>(cx, pobj, flags, ht, props)) {
+                    if (!EnumerateExtraProperties<false>(cx, pobj, flags, &visited, props)) {
                         return false;
                     }
                 }
 
                 if (pobj->isNative()) {
-                    if (!EnumerateNativeProperties(cx, pobj.as<NativeObject>(), flags, ht, props,
-                                                   checkForDuplicates))
+                    if (!EnumerateNativeProperties(cx, pobj.as<NativeObject>(), flags, &visited,
+                                                   props, checkForDuplicates))
                     {
                         return false;
                     }
@@ -520,18 +518,18 @@ Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
                     return false;
                 }
             }
-            if (!EnumerateNativeProperties(cx, pobj.as<NativeObject>(), flags, ht, props,
+            if (!EnumerateNativeProperties(cx, pobj.as<NativeObject>(), flags, &visited, props,
                                            checkForDuplicates))
             {
                 return false;
             }
         } else if (pobj->is<ProxyObject>()) {
             if (checkForDuplicates) {
-                if (!EnumerateProxyProperties<true>(cx, pobj, flags, ht, props)) {
+                if (!EnumerateProxyProperties<true>(cx, pobj, flags, &visited, props)) {
                     return false;
                 }
             } else {
-                if (!EnumerateProxyProperties<false>(cx, pobj, flags, ht, props)) {
+                if (!EnumerateProxyProperties<false>(cx, pobj, flags, &visited, props)) {
                     return false;
                 }
             }
