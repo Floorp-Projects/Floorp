@@ -206,7 +206,6 @@ public:
   static nsHtml5AttributeName* ATTR_K4;
   static nsHtml5AttributeName* ATTR_XML_SPACE;
   static nsHtml5AttributeName* ATTR_XML_LANG;
-  static nsHtml5AttributeName* ATTR_XML_BASE;
   static nsHtml5AttributeName* ATTR_ARIA_GRAB;
   static nsHtml5AttributeName* ATTR_ARIA_VALUEMAX;
   static nsHtml5AttributeName* ATTR_ARIA_LABELLEDBY;
