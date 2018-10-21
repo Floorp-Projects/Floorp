@@ -14,8 +14,7 @@ use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState};
 use frame_builder::{PictureContext, PrimitiveContext};
 use gpu_cache::{GpuCacheHandle};
 use gpu_types::UvRectKind;
-use prim_store::{PrimitiveInstance, SpaceMapper};
-use prim_store::{PrimitiveMetadata, get_raster_rects};
+use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, get_raster_rects};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use scene::{FilterOpHelpers, SceneProperties};
@@ -242,6 +241,7 @@ impl PicturePrimitive {
 
     pub fn take_context(
         &mut self,
+        pic_index: PictureIndex,
         prim_context: &PrimitiveContext,
         surface_spatial_node_index: SpatialNodeIndex,
         raster_spatial_node_index: SpatialNodeIndex,
@@ -366,6 +366,7 @@ impl PicturePrimitive {
         };
 
         let context = PictureContext {
+            pic_index,
             pipeline_id: self.pipeline_id,
             apply_local_clip_rect: self.apply_local_clip_rect,
             inflation_factor,
@@ -439,8 +440,9 @@ impl PicturePrimitive {
 
     pub fn prepare_for_render(
         &mut self,
+        pic_index: PictureIndex,
         prim_instance: &PrimitiveInstance,
-        prim_metadata: &PrimitiveMetadata,
+        prim_local_rect: &LayoutRect,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
@@ -455,7 +457,7 @@ impl PicturePrimitive {
                     frame_context,
                 );
 
-                let pic_rect = PictureRect::from_untyped(&prim_metadata.local_rect.to_untyped());
+                let pic_rect = PictureRect::from_untyped(&prim_local_rect.to_untyped());
 
                 let (clipped, unclipped, transform) = match get_raster_rects(
                     pic_rect,
@@ -511,7 +513,7 @@ impl PicturePrimitive {
                             let picture_task = RenderTask::new_picture(
                                 RenderTaskLocation::Dynamic(None, device_rect.size),
                                 unclipped.size,
-                                prim_instance.prim_index,
+                                pic_index,
                                 device_rect.origin,
                                 pic_state_for_children.tasks,
                                 uv_rect_kind,
@@ -569,7 +571,7 @@ impl PicturePrimitive {
                                     let picture_task = RenderTask::new_picture(
                                         RenderTaskLocation::Dynamic(None, device_rect.size),
                                         unclipped.size,
-                                        prim_instance.prim_index,
+                                        pic_index,
                                         device_rect.origin,
                                         child_tasks,
                                         uv_rect_kind,
@@ -626,7 +628,7 @@ impl PicturePrimitive {
                         let mut picture_task = RenderTask::new_picture(
                             RenderTaskLocation::Dynamic(None, device_rect.size),
                             unclipped.size,
-                            prim_instance.prim_index,
+                            pic_index,
                             device_rect.origin,
                             pic_state_for_children.tasks,
                             uv_rect_kind,
@@ -669,14 +671,14 @@ impl PicturePrimitive {
                             // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
                             //  [brush specific data]
                             //  [segment_rect, segment data]
-                            let shadow_rect = prim_metadata.local_rect.translate(&offset);
+                            let shadow_rect = prim_local_rect.translate(&offset);
 
                             // ImageBrush colors
                             request.push(color.premultiplied());
                             request.push(PremultipliedColorF::WHITE);
                             request.push([
-                                prim_metadata.local_rect.size.width,
-                                prim_metadata.local_rect.size.height,
+                                prim_local_rect.size.width,
+                                prim_local_rect.size.height,
                                 0.0,
                                 0.0,
                             ]);
@@ -697,7 +699,7 @@ impl PicturePrimitive {
                         let picture_task = RenderTask::new_picture(
                             RenderTaskLocation::Dynamic(None, clipped.size),
                             unclipped.size,
-                            prim_instance.prim_index,
+                            pic_index,
                             clipped.origin,
                             pic_state_for_children.tasks,
                             uv_rect_kind,
@@ -734,7 +736,7 @@ impl PicturePrimitive {
                         let picture_task = RenderTask::new_picture(
                             RenderTaskLocation::Dynamic(None, clipped.size),
                             unclipped.size,
-                            prim_instance.prim_index,
+                            pic_index,
                             clipped.origin,
                             pic_state_for_children.tasks,
                             uv_rect_kind,
@@ -756,7 +758,7 @@ impl PicturePrimitive {
                         let picture_task = RenderTask::new_picture(
                             RenderTaskLocation::Dynamic(None, clipped.size),
                             unclipped.size,
-                            prim_instance.prim_index,
+                            pic_index,
                             clipped.origin,
                             pic_state_for_children.tasks,
                             uv_rect_kind,
