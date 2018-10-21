@@ -329,9 +329,9 @@ namespace recordreplay {
   MACRO(CFURLCreateWithString, RR_ScalarRval)                    \
   MACRO(CFURLGetFileSystemRepresentation, RR_Compose<RR_ScalarRval, RR_WriteBuffer<2, 3>>) \
   MACRO(CFURLGetFSRef, RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<1, sizeof(FSRef)>>) \
-  MACRO(CFUUIDCreate, RR_ScalarRval)                             \
+  MACRO(CFUUIDCreate, RR_ScalarRval, nullptr, Middleman_CreateCFTypeRval) \
   MACRO(CFUUIDCreateString, RR_ScalarRval)                       \
-  MACRO(CFUUIDGetUUIDBytes, RR_ComplexScalarRval)                \
+  MACRO(CFUUIDGetUUIDBytes, RR_ComplexScalarRval, nullptr, Middleman_CFTypeArg<0>) \
   MACRO(CGAffineTransformConcat, RR_OversizeRval<sizeof(CGAffineTransform)>) \
   MACRO(CGBitmapContextCreateImage, RR_ScalarRval)               \
   MACRO(CGBitmapContextCreateWithData,                           \
@@ -387,8 +387,9 @@ namespace recordreplay {
                           Middleman_StackArgumentData<sizeof(CGAffineTransform)>>) \
   MACRO(CGContextScaleCTM, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
   MACRO(CGContextTranslateCTM, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
-  MACRO(CGDataProviderCreateWithData, RR_Compose<RR_ScalarRval, RR_CGDataProviderCreateWithData>) \
-  MACRO(CGDataProviderRelease)                                   \
+  MACRO(CGDataProviderCreateWithData, RR_Compose<RR_ScalarRval, RR_CGDataProviderCreateWithData>, \
+        nullptr, Middleman_CGDataProviderCreateWithData)         \
+  MACRO(CGDataProviderRelease, nullptr, nullptr, nullptr, Preamble_Veto<0>) \
   MACRO(CGDisplayCopyColorSpace, RR_ScalarRval)                  \
   MACRO(CGDisplayIOServicePort, RR_ScalarRval)                   \
   MACRO(CGEventSourceCounterForEventType, RR_ScalarRval)         \
@@ -399,7 +400,8 @@ namespace recordreplay {
   MACRO(CGFontCopyVariations, RR_ScalarRval, nullptr,            \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
   MACRO(CGFontCreateCopyWithVariations, RR_ScalarRval)           \
-  MACRO(CGFontCreateWithDataProvider, RR_ScalarRval)             \
+  MACRO(CGFontCreateWithDataProvider, RR_ScalarRval, nullptr,    \
+        Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
   MACRO(CGFontCreateWithFontName, RR_ScalarRval, nullptr,        \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
   MACRO(CGFontCreateWithPlatformFont, RR_ScalarRval)             \
@@ -443,10 +445,14 @@ namespace recordreplay {
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
   MACRO(CTFontCopyTable, RR_ScalarRval, nullptr,                 \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
-  MACRO(CTFontCopyVariationAxes, RR_ScalarRval)                  \
+  MACRO(CTFontCopyVariationAxes, RR_ScalarRval, nullptr,         \
+        Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
   MACRO(CTFontCreateForString, RR_ScalarRval, nullptr,           \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CFTypeArg<1>, Middleman_CreateCFTypeRval>) \
-  MACRO(CTFontCreatePathForGlyph, RR_ScalarRval)                 \
+  MACRO(CTFontCreatePathForGlyph, RR_ScalarRval, nullptr,        \
+        Middleman_Compose<Middleman_CFTypeArg<0>,                \
+                          Middleman_BufferFixedSize<2, sizeof(CGAffineTransform)>, \
+                          Middleman_CreateCFTypeRval>)           \
   MACRO(CTFontCreateWithFontDescriptor, RR_ScalarRval, nullptr,  \
         Middleman_Compose<Middleman_CFTypeArg<0>,                \
                           Middleman_BufferFixedSize<1, sizeof(CGAffineTransform)>, \
@@ -1759,6 +1765,7 @@ Middleman_CFArrayGetValueAtIndex(MiddlemanCallContext& aCx)
   if (call) {
     switch (call->mCallId) {
     case CallEvent_CTLineGetGlyphRuns:
+    case CallEvent_CTFontCopyVariationAxes:
     case CallEvent_CTFontDescriptorCreateMatchingFontDescriptors:
       isCFTypeRval = true;
       break;
@@ -2051,6 +2058,39 @@ RR_CGDataProviderCreateWithData(Stream& aEvents, CallArguments* aArguments, Erro
 
   if (IsReplaying()) {
     // Immediately release the data, since there is no data provider to do it for us.
+    releaseData(info, data, size);
+  }
+}
+
+static void
+ReleaseDataCallback(void*, const void* aData, size_t)
+{
+  free((void*) aData);
+}
+
+static void
+Middleman_CGDataProviderCreateWithData(MiddlemanCallContext& aCx)
+{
+  Middleman_Buffer<1, 2>(aCx);
+  Middleman_CreateCFTypeRval(aCx);
+
+  auto& info = aCx.mArguments->Arg<0, void*>();
+  auto& data = aCx.mArguments->Arg<1, const void*>();
+  auto& size = aCx.mArguments->Arg<2, size_t>();
+  auto& releaseData = aCx.mArguments->Arg<3, CGDataProviderReleaseDataCallback>();
+
+  // Make a copy of the data that won't be released the next time middleman
+  // calls are reset, in case CoreGraphics decides to hang onto the data
+  // provider after that point.
+  if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
+    void* newData = malloc(size);
+    memcpy(newData, data, size);
+    data = newData;
+    releaseData = ReleaseDataCallback;
+  }
+
+  // Immediately release the data in the replaying process.
+  if (aCx.mPhase == MiddlemanCallPhase::ReplayInput) {
     releaseData(info, data, size);
   }
 }
