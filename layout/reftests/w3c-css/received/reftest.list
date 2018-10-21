@@ -101,7 +101,7 @@ fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) fails-if(webrender&&cocoaWi
 fails == css-multicol/multicol-height-block-child-001.xht css-multicol/multicol-height-block-child-001-ref.xht
 fuzzy(0-255,0-3762) == css-multicol/multicol-inherit-001.xht css-multicol/multicol-inherit-001-ref.xht
 fuzzy(0-135,0-1893) fails-if(webrender&&cocoaWidget) == css-multicol/multicol-inherit-002.xht css-multicol/multicol-inherit-002-ref.xht
-fails == css-multicol/multicol-inherit-003.xht css-multicol/multicol-inherit-3-ref.xht
+skip-if(cocoaWidget) fails-if(!cocoaWidget) == css-multicol/multicol-inherit-003.xht css-multicol/multicol-inherit-3-ref.xht # Bug 1432941
 fuzzy(0-97,0-264) == css-multicol/multicol-list-item-001.xht css-multicol/multicol-list-item-001-ref.xht
 fuzzy(0-73,0-1200) == css-multicol/multicol-margin-001.xht reference/ref-filled-green-100px-square.xht
 fuzzy(0-73,0-1200) == css-multicol/multicol-margin-002.xht reference/ref-filled-green-100px-square.xht
