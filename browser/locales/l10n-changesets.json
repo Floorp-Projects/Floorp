@@ -992,7 +992,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "6320e7727be6"
+        "revision": "a28ccf749cd0"
     },
     "my": {
         "platforms": [
@@ -1457,7 +1457,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "d61940aa9842"
+        "revision": "90279f2e8077"
     },
     "zh-TW": {
         "platforms": [
@@ -1472,6 +1472,6 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "c9030ae8e998"
+        "revision": "462030d321d0"
     }
 }
