@@ -695,25 +695,19 @@ ReplayInvokeCallback(size_t aCallbackId)
 // Middleman Call Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool
-TestObjCObjectClass(id aObj, const char* aName)
-{
-  Class cls = object_getClass(aObj);
-  while (cls) {
-    const char* className = class_getName(cls);
-    if (!strcmp(className, aName)) {
-      return true;
-    }
-    cls = class_getSuperclass(cls);
-  }
-  return false;
-}
-
 // Inputs that originate from static data in the replaying process itself
 // rather than from previous middleman calls.
 enum class ObjCInputKind {
   StaticClass,
   ConstantString,
+};
+
+// Internal layout of a constant compile time CFStringRef.
+struct CFConstantString {
+  Class mClass;
+  size_t mStuff;
+  char* mData;
+  size_t mLength;
 };
 
 // Capture an Objective C or CoreFoundation input to a call, which may come
@@ -759,22 +753,23 @@ Middleman_ObjCInput(MiddlemanCallContext& aCx, id* aThingPtr)
     }
 
     // Watch for constant compile time strings baked into the generated code or
-    // stored in system libraries. We can crash here if the object came from
-    // e.g. a replayed pointer from the recording, as can happen if not enough
-    // redirections have middleman call hooks. We could do better here to make
-    // sure the pointer looks like it could be a constant string, but it seems
-    // better and simpler to crash more reliably here than mask problems due to
-    // missing middleman call hooks.
-    if (TestObjCObjectClass(*aThingPtr, "NSString")) {
-      AutoPassThroughThreadEvents pt;
-      CFIndex len = CFStringGetLength((CFStringRef)*aThingPtr);
-      InfallibleVector<UniChar> buffer;
-      buffer.appendN(0, len);
-      CFStringGetCharacters((CFStringRef)*aThingPtr, { 0, len }, buffer.begin());
-      aCx.WriteInputScalar((size_t) ObjCInputKind::ConstantString);
-      aCx.WriteInputScalar(len);
-      aCx.WriteInputBytes(buffer.begin(), len * sizeof(UniChar));
-      return;
+    // stored in system libraries. Be careful when accessing the pointer as in
+    // the case where a middleman call hook for a function is missing the
+    // pointer could have originated from the recording and its address may not
+    // be mapped. In this case we would rather gracefully recover and fail to
+    // paint, instead of crashing.
+    if (MemoryRangeIsTracked(*aThingPtr, sizeof(CFConstantString))) {
+      CFConstantString* str = (CFConstantString*) *aThingPtr;
+      if (str->mClass == objc_lookUpClass("__NSCFConstantString") &&
+          str->mLength <= 4096 && // Sanity check.
+          MemoryRangeIsTracked(str->mData, str->mLength)) {
+        InfallibleVector<UniChar> buffer;
+        NS_ConvertUTF8toUTF16 converted(str->mData, str->mLength);
+        aCx.WriteInputScalar((size_t) ObjCInputKind::ConstantString);
+        aCx.WriteInputScalar(str->mLength);
+        aCx.WriteInputBytes(converted.get(), str->mLength * sizeof(UniChar));
+        return;
+      }
     }
 
     aCx.MarkAsFailed();
