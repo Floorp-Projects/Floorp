@@ -152,7 +152,7 @@ namespace recordreplay {
   MACRO(pthread_cond_wait, nullptr, Preamble_pthread_cond_wait)  \
   MACRO(pthread_cond_timedwait, nullptr, Preamble_pthread_cond_timedwait) \
   MACRO(pthread_cond_timedwait_relative_np, nullptr, Preamble_pthread_cond_timedwait_relative_np) \
-  MACRO(pthread_create, nullptr, Preamble_pthread_create, nullptr, Preamble_SetError) \
+  MACRO(pthread_create, nullptr, Preamble_pthread_create)        \
   MACRO(pthread_join, nullptr, Preamble_pthread_join)            \
   MACRO(pthread_mutex_init, nullptr, Preamble_pthread_mutex_init) \
   MACRO(pthread_mutex_destroy, nullptr, Preamble_pthread_mutex_destroy) \
@@ -1213,6 +1213,12 @@ Preamble_pthread_create(CallArguments* aArguments)
 
   *token = Thread::StartThread((Thread::Callback) start, startArg,
                                detachState == PTHREAD_CREATE_JOINABLE);
+  if (!*token) {
+    // Don't create new threads after diverging from the recording.
+    MOZ_RELEASE_ASSERT(HasDivergedFromRecording());
+    return Preamble_SetError(aArguments);
+  }
+
   aArguments->Rval<ssize_t>() = 0;
   return PreambleResult::Veto;
 }
