@@ -662,6 +662,17 @@ HandleDirtyMemoryFault(uint8_t* aAddress)
   return true;
 }
 
+bool
+MemoryRangeIsTracked(void* aAddress, size_t aSize)
+{
+  for (uint8_t* ptr = PageBase(aAddress); ptr < (uint8_t*) aAddress + aSize; ptr += PageSize) {
+    if (!IsTrackedAddress(ptr, nullptr)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void
 UnrecoverableSnapshotFailure()
 {
