@@ -902,7 +902,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "45df27a5a477"
+        "revision": "a6f7c1f3a660"
     },
     "lv": {
         "platforms": [
@@ -1052,7 +1052,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "e1b3348196f5"
+        "revision": "2046d7ff68e1"
     },
     "nn-NO": {
         "platforms": [
@@ -1472,6 +1472,6 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "608b0b284843"
+        "revision": "c9030ae8e998"
     }
 }
