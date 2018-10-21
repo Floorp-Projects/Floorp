@@ -921,7 +921,7 @@ win32-mingwclang/opt:
         - linux64-node
         - linux64-clang-trunk-mingw-x86
         - linux64-mingw32-nsis
-        - linux64-mingw32-fxc2
+        - linux64-mingw-fxc2-x86
 
 win32-mingwclang/debug:
     description: "Win32 MinGW-Clang Debug"
@@ -957,7 +957,7 @@ win32-mingwclang/debug:
         - linux64-node
         - linux64-clang-trunk-mingw-x86
         - linux64-mingw32-nsis
-        - linux64-mingw32-fxc2
+        - linux64-mingw-fxc2-x86
 
 win64-mingwclang/opt:
     description: "Win64 MinGW-Clang Opt"
@@ -992,7 +992,7 @@ win64-mingwclang/opt:
         - linux64-node
         - linux64-clang-trunk-mingw-x64
         - linux64-mingw32-nsis
-        - linux64-mingw32-fxc2
+        - linux64-mingw-fxc2-x86
 
 win64-mingwclang/debug:
     description: "Win64 MinGW-Clang Debug"
@@ -1028,4 +1028,4 @@ win64-mingwclang/debug:
         - linux64-node
         - linux64-clang-trunk-mingw-x64
         - linux64-mingw32-nsis
-        - linux64-mingw32-fxc2
+        - linux64-mingw-fxc2-x86
