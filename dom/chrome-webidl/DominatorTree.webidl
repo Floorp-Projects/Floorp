@@ -38,7 +38,7 @@ typedef unsigned long long NodeSize;
  *     its retained size is therefore significant (assuming no external
  *     references into the tree).
  */
-[ChromeOnly, Exposed=(Window,System,Worker)]
+[ChromeOnly, Exposed=(Window,Worker)]
 interface DominatorTree {
   /**
    * The `NodeId` for the root of the dominator tree. This is a "meta-root" in

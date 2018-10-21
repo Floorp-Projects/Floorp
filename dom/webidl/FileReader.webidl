@@ -11,7 +11,7 @@
  */
 
 [Constructor,
- Exposed=(Window,Worker,System)]
+ Exposed=(Window,Worker)]
 interface FileReader : EventTarget {
   // async read methods
   [Throws]
