@@ -237,8 +237,7 @@ Thread::StartThread(Callback aStart, void* aArgument, bool aNeedsJoin)
   Thread* thread = Thread::Current();
   RecordingEventSection res(thread);
   if (!res.CanAccessEvents()) {
-    EnsureNotDivergedFromRecording();
-    Unreachable();
+    return 0;
   }
 
   MonitorAutoLock lock(*gMonitor);
