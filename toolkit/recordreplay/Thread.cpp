@@ -364,24 +364,16 @@ RecordReplayInterface_InternalAreThreadEventsDisallowed()
 // Thread Coordination
 ///////////////////////////////////////////////////////////////////////////////
 
-// Whether all threads should attempt to idle.
-static Atomic<bool, SequentiallyConsistent, Behavior::DontPreserve> gThreadsShouldIdle;
-
-// Whether all threads are considered to be idle.
-static Atomic<bool, SequentiallyConsistent, Behavior::DontPreserve> gThreadsAreIdle;
-
 /* static */ void
 Thread::WaitForIdleThreads()
 {
   MOZ_RELEASE_ASSERT(CurrentIsMainThread());
 
-  MOZ_RELEASE_ASSERT(!gThreadsShouldIdle);
-  MOZ_RELEASE_ASSERT(!gThreadsAreIdle);
-  gThreadsShouldIdle = true;
-
   MonitorAutoLock lock(*gMonitor);
   for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
-    GetById(i)->mUnrecordedWaitNotified = false;
+    Thread* thread = GetById(i);
+    thread->mShouldIdle = true;
+    thread->mUnrecordedWaitNotified = false;
   }
   while (true) {
     bool done = true;
@@ -426,23 +418,21 @@ Thread::WaitForIdleThreads()
     MonitorAutoUnlock unlock(*gMonitor);
     WaitNoIdle();
   }
+}
 
-  gThreadsAreIdle = true;
+/* static */ void
+Thread::ResumeSingleIdleThread(size_t aId)
+{
+  GetById(aId)->mShouldIdle = false;
+  Notify(aId);
 }
 
 /* static */ void
 Thread::ResumeIdleThreads()
 {
   MOZ_RELEASE_ASSERT(CurrentIsMainThread());
-
-  MOZ_RELEASE_ASSERT(gThreadsAreIdle);
-  gThreadsAreIdle = false;
-
-  MOZ_RELEASE_ASSERT(gThreadsShouldIdle);
-  gThreadsShouldIdle = false;
-
   for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
-    Notify(i);
+    ResumeSingleIdleThread(i);
   }
 }
 
@@ -464,7 +454,7 @@ Thread::NotifyUnrecordedWait(const std::function<void()>& aCallback, bool aOnlyW
 
   // The main thread might be able to make progress now by calling the routine
   // if it is waiting for idle replay threads.
-  if (gThreadsShouldIdle) {
+  if (mShouldIdle) {
     Notify(MainThreadId);
   }
 }
@@ -473,7 +463,8 @@ Thread::NotifyUnrecordedWait(const std::function<void()>& aCallback, bool aOnlyW
 Thread::MaybeWaitForCheckpointSave()
 {
   MonitorAutoLock lock(*gMonitor);
-  while (gThreadsShouldIdle) {
+  Thread* thread = Thread::Current();
+  while (thread->mShouldIdle) {
     MonitorAutoUnlock unlock(*gMonitor);
     Wait();
   }
@@ -531,7 +522,7 @@ Thread::Wait()
   }
 
   thread->mIdle = true;
-  if (gThreadsShouldIdle) {
+  if (thread->mShouldIdle) {
     // Notify the main thread that we just became idle.
     Notify(MainThreadId);
   }
@@ -546,7 +537,7 @@ Thread::Wait()
       RestoreThreadStack(thread->Id());
       Unreachable();
     }
-  } while (gThreadsShouldIdle);
+  } while (thread->mShouldIdle);
 
   thread->mIdle = false;
   thread->SetPassThrough(false);
