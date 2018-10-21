@@ -50,6 +50,11 @@ void RegisterAllocatedMemory(void* aBaseAddress, size_t aSize, MemoryKind aKind)
 // been reached.
 void AddInitialUntrackedMemoryRegion(uint8_t* aBase, size_t aSize);
 
+// Return whether a range of memory is in a tracked region. This excludes
+// memory that was allocated after the last checkpoint and is not write
+// protected.
+bool MemoryRangeIsTracked(void* aAddress, size_t aSize);
+
 // Initialize the memory snapshots system.
 void InitializeMemorySnapshots();
 
