@@ -8,7 +8,7 @@
  * A holder for structured-clonable data which can itself be cloned with
  * little overhead, and deserialized into an arbitrary global.
  */
-[ChromeOnly, Exposed=(Window,System,Worker),
+[ChromeOnly, Exposed=(Window,Worker),
  /**
   * Serializes the given value to an opaque structured clone blob, and
   * returns the result.

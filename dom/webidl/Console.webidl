@@ -8,7 +8,7 @@
  * https://console.spec.whatwg.org/#console-namespace
  */
 
-[Exposed=(Window,Worker,WorkerDebugger,Worklet,System),
+[Exposed=(Window,Worker,WorkerDebugger,Worklet),
  ClassString="Console",
  ProtoObjectHack]
 namespace console {
@@ -146,7 +146,7 @@ dictionary ConsoleCounterError {
 };
 
 [ChromeOnly,
- Exposed=(Window,Worker,WorkerDebugger,Worklet,System)]
+ Exposed=(Window,Worker,WorkerDebugger,Worklet)]
 // This is basically a copy of the console namespace.
 interface ConsoleInstance {
   // Logging
