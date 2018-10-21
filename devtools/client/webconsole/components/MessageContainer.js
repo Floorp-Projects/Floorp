@@ -28,7 +28,7 @@ function isPaused({ getMessage, pausedExecutionPoint }) {
   const message = getMessage();
   return pausedExecutionPoint
   && message.executionPoint
-    && pausedExecutionPoint.checkpoint === message.executionPoint.checkpoint;
+    && pausedExecutionPoint.progress === message.executionPoint.progress;
 }
 
 class MessageContainer extends Component {
