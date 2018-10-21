@@ -8,7 +8,7 @@
  * Represents a pre-compiled JS script, which can be repeatedly executed in
  * different globals without being re-parsed.
  */
-[ChromeOnly, Exposed=(Window,System)]
+[ChromeOnly, Exposed=Window]
 interface PrecompiledScript {
   /**
    * Executes the script in the context of, and with the security principal
