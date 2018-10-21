@@ -1247,7 +1247,8 @@ moz_gtk_vpaned_paint(cairo_t *cr, GdkRectangle* rect,
 static gint
 moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
                     GtkWidgetState* state,
-                    GtkStyleContext* style)
+                    GtkStyleContext* style,
+                    WidgetNodeType widget)
 {
     gint x = rect->x, y = rect->y, width = rect->width, height = rect->height;
     int draw_focus_outline_only = state->depressed; // StyleAppearance::FocusOutline
@@ -1265,7 +1266,11 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
     } else {
         gtk_render_background(style, cr, x, y, width, height);
     }
-    gtk_render_frame(style, cr, x, y, width, height);
+
+    // Paint the border, except for 'menulist-textfield' that isn't focused:
+    if (widget != MOZ_GTK_DROPDOWN_ENTRY || state->focused) {
+      gtk_render_frame(style, cr, x, y, width, height);
+    }
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2415,8 +2420,9 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_ENTRY:
+    case MOZ_GTK_DROPDOWN_ENTRY:
         {
-            style = GetStyleContext(MOZ_GTK_ENTRY);
+            style = GetStyleContext(widget);
 
             // XXX: Subtract 1 pixel from the padding to account for the default
             // padding in forms.css. See bug 1187385.
@@ -2448,9 +2454,6 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
         }
     case MOZ_GTK_TREE_HEADER_SORTARROW:
         w = GetWidget(MOZ_GTK_TREE_HEADER_SORTARROW);
-        break;
-    case MOZ_GTK_DROPDOWN_ENTRY:
-        w = GetWidget(MOZ_GTK_COMBOBOX_ENTRY_TEXTAREA);
         break;
     case MOZ_GTK_DROPDOWN_ARROW:
         w = GetWidget(MOZ_GTK_COMBOBOX_ENTRY_BUTTON);
@@ -3307,7 +3310,7 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
             GtkStyleContext* style =
                 GetStyleContext(MOZ_GTK_SPINBUTTON_ENTRY, direction,
                                 GetStateFlagsFromGtkWidgetState(state));
-            gint ret = moz_gtk_entry_paint(cr, rect, state, style);
+            gint ret = moz_gtk_entry_paint(cr, rect, state, style, widget);
             return ret;
         }
         break;
@@ -3334,11 +3337,12 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
                                                (GtkExpanderStyle) flags, direction);
         break;
     case MOZ_GTK_ENTRY:
+    case MOZ_GTK_DROPDOWN_ENTRY:
         {
             GtkStyleContext* style =
-                GetStyleContext(MOZ_GTK_ENTRY, direction,
+                GetStyleContext(widget, direction,
                                 GetStateFlagsFromGtkWidgetState(state));
-            gint ret = moz_gtk_entry_paint(cr, rect, state, style);
+            gint ret = moz_gtk_entry_paint(cr, rect, state, style, widget);
             return ret;
         }
     case MOZ_GTK_TEXT_VIEW:
@@ -3350,15 +3354,6 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
     case MOZ_GTK_DROPDOWN_ARROW:
         return moz_gtk_combo_box_entry_button_paint(cr, rect,
                                                     state, flags, direction);
-        break;
-    case MOZ_GTK_DROPDOWN_ENTRY:
-        {
-            GtkStyleContext* style =
-                GetStyleContext(MOZ_GTK_COMBOBOX_ENTRY_TEXTAREA, direction,
-                                GetStateFlagsFromGtkWidgetState(state));
-            gint ret = moz_gtk_entry_paint(cr, rect, state, style);
-            return ret;
-        }
         break;
     case MOZ_GTK_CHECKBUTTON_CONTAINER:
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
