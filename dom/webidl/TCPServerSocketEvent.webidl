@@ -5,7 +5,7 @@
 
 [Constructor(DOMString type, optional TCPServerSocketEventInit eventInitDict),
  Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
- Exposed=(Window,System)]
+ Exposed=Window]
 interface TCPServerSocketEvent : Event {
   readonly attribute TCPSocket socket;
 };
