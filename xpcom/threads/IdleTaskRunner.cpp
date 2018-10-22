@@ -146,15 +146,16 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
       NS_IdleDispatchToCurrentThread(runnable.forget());
     } else {
       if (!mScheduleTimer) {
-        mScheduleTimer = NS_NewTimer();
+        nsIEventTarget* target = nullptr;
+        if (TaskCategory::Count != mTaskCategory) {
+          target = SystemGroup::EventTargetFor(mTaskCategory);
+        }
+        mScheduleTimer = NS_NewTimer(target);
         if (!mScheduleTimer) {
           return;
         }
       } else {
         mScheduleTimer->Cancel();
-      }
-      if (TaskCategory::Count != mTaskCategory) {
-        mScheduleTimer->SetTarget(SystemGroup::EventTargetFor(mTaskCategory));
       }
       // We weren't allowed to do idle dispatch immediately, do it after a
       // short timeout.
@@ -191,15 +192,16 @@ IdleTaskRunner::SetTimerInternal(uint32_t aDelay)
   }
 
   if (!mTimer) {
-    mTimer = NS_NewTimer();
+    nsIEventTarget* target = nullptr;
+    if (TaskCategory::Count != mTaskCategory) {
+      target = SystemGroup::EventTargetFor(mTaskCategory);
+    }
+    mTimer = NS_NewTimer(target);
   } else {
     mTimer->Cancel();
   }
 
   if (mTimer) {
-    if (TaskCategory::Count != mTaskCategory) {
-      mTimer->SetTarget(SystemGroup::EventTargetFor(mTaskCategory));
-    }
     mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
                                       nsITimer::TYPE_ONE_SHOT,
                                       mName);

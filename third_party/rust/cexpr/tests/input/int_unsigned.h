@@ -2,6 +2,7 @@
 #define Int_0 0
 #define Int_1 0b1
 #define Int_2 0x2
+#define Int_3 3L
 #define Int_63 077
 #define Int_123 123
 #define Int_124 124u

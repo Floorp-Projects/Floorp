@@ -477,6 +477,12 @@ private:
   nsresult
   MaybeRemoveOldDirectories();
 
+  template<typename Helper>
+  nsresult
+  UpgradeStorage(const int32_t aOldVersion,
+                 const int32_t aNewVersion,
+                 mozIStorageConnection* aConnection);
+
   nsresult
   UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection);
 

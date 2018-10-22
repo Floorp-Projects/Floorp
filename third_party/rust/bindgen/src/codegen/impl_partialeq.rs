@@ -88,7 +88,6 @@ fn gen_field(ctx: &BindgenContext, ty_item: &Item, name: &str) -> quote::Tokens 
         TypeKind::Enum(..) |
         TypeKind::TypeParam |
         TypeKind::UnresolvedTypeRef(..) |
-        TypeKind::BlockPointer |
         TypeKind::Reference(..) |
         TypeKind::ObjCInterface(..) |
         TypeKind::ObjCId |
@@ -125,7 +124,8 @@ fn gen_field(ctx: &BindgenContext, ty_item: &Item, name: &str) -> quote::Tokens 
 
         TypeKind::ResolvedTypeRef(t) |
         TypeKind::TemplateAlias(t, _) |
-        TypeKind::Alias(t) => {
+        TypeKind::Alias(t) |
+        TypeKind::BlockPointer(t) => {
             let inner_item = ctx.resolve_item(t);
             gen_field(ctx, inner_item, name)
         }

@@ -13,7 +13,7 @@ use super::function::{Function, FunctionKind};
 use super::item_kind::ItemKind;
 use super::layout::Opaque;
 use super::module::Module;
-use super::super::codegen::CONSTIFIED_ENUM_MODULE_REPR_NAME;
+use super::super::codegen::{CONSTIFIED_ENUM_MODULE_REPR_NAME, EnumVariation};
 use super::template::{AsTemplateParam, TemplateParameters};
 use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::{Type, TypeKind};
@@ -329,7 +329,7 @@ impl CanDeriveDefault for Item {
     }
 }
 
-impl<'a> CanDeriveCopy<'a> for Item {
+impl CanDeriveCopy for Item {
     fn can_derive_copy(&self, ctx: &BindgenContext) -> bool {
         self.id().can_derive_copy(ctx)
     }
@@ -637,6 +637,7 @@ impl Item {
 
         let path = self.canonical_path(ctx);
         let name = path[1..].join("::");
+        ctx.options().blacklisted_items.matches(&name) ||
         match self.kind {
             ItemKind::Type(..) => {
                 ctx.options().blacklisted_types.matches(&name) ||
@@ -928,7 +929,7 @@ impl Item {
 
         match *type_.kind() {
             TypeKind::Enum(ref enum_) => {
-                enum_.is_constified_enum_module(ctx, self)
+                enum_.computed_enum_variation(ctx, self) == EnumVariation::ModuleConsts
             }
             TypeKind::Alias(inner_id) => {
                 // TODO(emilio): Make this "hop through type aliases that aren't
