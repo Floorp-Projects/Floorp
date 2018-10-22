@@ -66,7 +66,7 @@ private:
   bool mRepeating;
   bool mTimerActive;
   MayStopProcessingCallbackType mMayStopProcessing;
-  TaskCategory mTaskCategory;
+  const TaskCategory mTaskCategory;
   const char* mName;
 };
 
