@@ -168,8 +168,8 @@ ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos)
         return false;
     }
 
-    if (!bce_->tryNoteList.append(JSTRY_FOR_IN, bce_->stackDepth, loopInfo_->headOffset(),
-                                  bce_->offset()))
+    if (!bce_->addTryNote(JSTRY_FOR_IN, bce_->stackDepth, loopInfo_->headOffset(),
+                          bce_->offset()))
     {
         return false;
     }
