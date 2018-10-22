@@ -13,28 +13,38 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.getContainingUClass
 import java.util.EnumSet
 
-private const val ANDROID_LOG_CLASS = "android.util.Log"
+internal const val ANDROID_LOG_CLASS = "android.util.Log"
+internal const val ERROR_MESSAGE = "Using Android Log instead of base component"
 
 /**
  * Custom lint checks related to logging.
  */
 class LintLogChecks : Detector(), Detector.UastScanner {
+    private val componentPackages = listOf("mozilla.components", "org.mozilla.telemetry", "org.mozilla.samples")
+
     override fun getApplicableMethodNames() = listOf("v", "d", "i", "w", "e")
 
     override fun visitMethod(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         if (context.evaluator.isMemberInClass(method, ANDROID_LOG_CLASS)) {
-            context.report(
-                ISSUE_LOG_USAGE,
-                node,
-                context.getLocation(node),
-                "Using Android Log instead of base component")
+            val inComponentPackage = componentPackages.any {
+                node.methodIdentifier?.getContainingUClass()?.qualifiedName?.startsWith(it) == true
+            }
+
+            if (inComponentPackage) {
+                context.report(
+                        ISSUE_LOG_USAGE,
+                        node,
+                        context.getLocation(node),
+                        ERROR_MESSAGE)
+            }
         }
     }
 
     companion object {
-        private val ISSUE_LOG_USAGE = Issue.create(
+        internal val ISSUE_LOG_USAGE = Issue.create(
             "LogUsage",
             "Log/Logger from base component should be used.",
             """The Log or Logger class from the base component should be used for logging instead of
