@@ -73,7 +73,7 @@ class WorkerDetail extends PureComponent {
       {},
       Localized(
         {
-          id: ftlId
+          id: ftlId,
         },
         dom.span(
           {

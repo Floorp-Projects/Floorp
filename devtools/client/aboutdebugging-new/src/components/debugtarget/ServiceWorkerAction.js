@@ -71,7 +71,7 @@ class ServiceWorkerAction extends PureComponent {
   render() {
     return dom.div(
       {
-        className: "toolbar"
+        className: "toolbar",
       },
       this._renderAction()
     );
