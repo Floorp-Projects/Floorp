@@ -41,6 +41,11 @@ protected:
 private:
   ~PaymentRequestParent() = default;
 
+  nsresult SerializeAddress(IPCPaymentAddress& ipcAddress,
+                            nsIPaymentAddress* aAddress);
+  nsresult SerializeResponseData(IPCPaymentResponseData& ipcData,
+                                 nsIPaymentResponseData* aData);
+
   bool mActorAlive;
   uint64_t mTabId;
   nsString mRequestId;
