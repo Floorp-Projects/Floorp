@@ -5220,7 +5220,7 @@ nsFrame::MarkIntrinsicISizesDirty()
   // (which likely depended on our now-stale intrinsic isize).
   auto* parentFrame = GetParent();
   if (parentFrame && parentFrame->IsFlexContainerFrame()) {
-    DeleteProperty(CachedFlexMeasuringReflow());
+    nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(this);
   }
 
   if (GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {

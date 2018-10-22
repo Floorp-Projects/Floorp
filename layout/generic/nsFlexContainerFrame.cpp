@@ -1818,6 +1818,12 @@ public:
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedFlexMeasuringReflow,
                                     CachedMeasuringReflowResult);
 
+void
+nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(nsIFrame* aItemFrame)
+{
+  aItemFrame->DeleteProperty(CachedFlexMeasuringReflow());
+}
+
 const CachedMeasuringReflowResult&
 nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
   FlexItem& aItem,
