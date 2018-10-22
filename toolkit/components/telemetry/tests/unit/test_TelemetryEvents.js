@@ -64,10 +64,10 @@ function checkRegistrationFailure(failureType) {
             "There should be at least one parent histogram when checking for registration failures.");
   Assert.ok("TELEMETRY_EVENT_REGISTRATION_ERROR" in snapshot.parent,
             "TELEMETRY_EVENT_REGISTRATION_ERROR should exist when checking for registration failures.");
-  let counts = snapshot.parent.TELEMETRY_EVENT_REGISTRATION_ERROR.counts;
-  Assert.ok(!!counts,
-            "TELEMETRY_EVENT_REGISTRATION_ERROR's counts should exist when checking for registration failures.");
-  Assert.equal(counts[failureType], 1, `Event registration ought to have failed due to type ${failureType}`);
+  let values = snapshot.parent.TELEMETRY_EVENT_REGISTRATION_ERROR.values;
+  Assert.ok(!!values,
+            "TELEMETRY_EVENT_REGISTRATION_ERROR's values should exist when checking for registration failures.");
+  Assert.equal(values[failureType], 1, `Event registration ought to have failed due to type ${failureType}`);
 }
 
 function checkRecordingFailure(failureType) {
@@ -76,10 +76,10 @@ function checkRecordingFailure(failureType) {
             "There should be at least one parent histogram when checking for recording failures.");
   Assert.ok("TELEMETRY_EVENT_RECORDING_ERROR" in snapshot.parent,
             "TELEMETRY_EVENT_RECORDING_ERROR should exist when checking for recording failures.");
-  let counts = snapshot.parent.TELEMETRY_EVENT_RECORDING_ERROR.counts;
-  Assert.ok(!!counts,
-            "TELEMETRY_EVENT_RECORDING_ERROR's counts should exist when checking for recording failures.");
-  Assert.equal(counts[failureType], 1, `Event recording ought to have failed due to type ${failureType}`);
+  let values = snapshot.parent.TELEMETRY_EVENT_RECORDING_ERROR.values;
+  Assert.ok(!!values,
+            "TELEMETRY_EVENT_RECORDING_ERROR's values should exist when checking for recording failures.");
+  Assert.equal(values[failureType], 1, `Event recording ought to have failed due to type ${failureType}`);
 }
 
 add_task(async function test_event_summary_limit() {
