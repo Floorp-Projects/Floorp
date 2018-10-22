@@ -13,7 +13,7 @@ add_task(async function() {
     once(front, "start-context"),
     // Should create dest, gain, and oscillator node and 10
     // disposable buffer nodes
-    getN(front, "create-node", 13)
+    getN(front, "create-node", 13),
   ]);
 
   const waitUntilDestroyed = getN(front, "destroy-node", 10);

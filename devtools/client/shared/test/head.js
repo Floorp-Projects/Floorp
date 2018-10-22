@@ -150,13 +150,13 @@ function synthesizeProfileForTest(samples) {
 
   samples.unshift({
     time: 0,
-    frames: []
+    frames: [],
   });
 
   const uniqueStacks = new RecordingUtils.UniqueStacks();
   return RecordingUtils.deflateThread({
     samples: samples,
-    markers: []
+    markers: [],
   }, uniqueStacks);
 }
 
@@ -210,7 +210,7 @@ async function(widget, name, value) {
 
   onRender = widget.once("render");
   widget._savePreset({
-    preventDefault: () => {}
+    preventDefault: () => {},
   });
 
   await onRender;

@@ -40,12 +40,12 @@ workerHelper.createTask(self, "pretty-print", ({ url, indent, source }) => {
   try {
     const prettified = prettyFast(source, {
       url: url,
-      indent: " ".repeat(indent)
+      indent: " ".repeat(indent),
     });
 
     return {
       code: prettified.code,
-      mappings: prettified.map._mappings
+      mappings: prettified.map._mappings,
     };
   } catch (e) {
     return new Error(e.message + "\n" + e.stack);

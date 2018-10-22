@@ -50,7 +50,7 @@ define(function(require, exports, module) {
         provider: PropTypes.object.isRequired,
         onClick: PropTypes.func.isRequired,
         onMouseOver: PropTypes.func,
-        onMouseOut: PropTypes.func
+        onMouseOut: PropTypes.func,
       };
     }
 
@@ -127,7 +127,7 @@ define(function(require, exports, module) {
         "aria-selected": !!member.selected,
         onClick: this.props.onClick,
         onMouseOver: this.props.onMouseOver,
-        onMouseOut: this.props.onMouseOut
+        onMouseOut: this.props.onMouseOut,
       };
 
       // Compute class name list for the <tr> element.
@@ -178,7 +178,7 @@ define(function(require, exports, module) {
         const cellProps = Object.assign({}, this.props, {
           key: col.id,
           id: col.id,
-          value: this.props.provider.getValue(member.object, col.id)
+          value: this.props.provider.getValue(member.object, col.id),
         });
 
         if (decorator && decorator.renderCell) {

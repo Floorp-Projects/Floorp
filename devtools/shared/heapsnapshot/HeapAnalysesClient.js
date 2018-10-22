@@ -21,7 +21,7 @@ var workerCounter = 0;
 const HeapAnalysesClient = module.exports = function() {
   this._worker = new DevToolsWorker(WORKER_URL, {
     name: `HeapAnalyses-${workerCounter++}`,
-    verbose: DevToolsUtils.dumpv.wantVerbose
+    verbose: DevToolsUtils.dumpv.wantVerbose,
   });
 };
 
@@ -198,7 +198,7 @@ HeapAnalysesClient.prototype.takeCensusDiff = function(firstSnapshotFilePath,
     firstSnapshotFilePath,
     secondSnapshotFilePath,
     censusOptions,
-    requestOptions
+    requestOptions,
   });
 };
 

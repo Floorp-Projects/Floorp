@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedUtterance: [[{"string": "link"}, "title"],
             ["title", {"string": "link"}]],
           expectedBraille: [[{"string": "linkAbbr"}, "title"],
-            ["title", {"string": "linkAbbr"}]]
+            ["title", {"string": "linkAbbr"}]],
         }, {
           accOrElmOrID: "anchor_titleandtext",
           expectedUtterance: [[{"string": "link"}, "goes to the tests",
@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedUtterance: [[{"string": "link"}, "Tests"],
             ["Tests", {"string": "link"}]],
           expectedBraille: [[{"string": "linkAbbr"}, "Tests"],
-            ["Tests", {"string": "linkAbbr"}]]
+            ["Tests", {"string": "linkAbbr"}]],
         }, {
           accOrElmOrID: "anchor_arialabelandtext",
           expectedUtterance: [[{"string": "link"}, "goes to the tests - Tests"],
@@ -61,42 +61,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             "Test heading"], ["Test heading",
             {"string": "headingLevel", "args": [1]}]],
           expectedBraille: [[{"string": "headingAbbr"}, "Test heading"],
-                            ["Test heading", {"string": "headingAbbr"}]]
+                            ["Test heading", {"string": "headingAbbr"}]],
         }, {
           accOrElmOrID: "list",
           expectedUtterance: [[{"string": "list"},
             {"string": "listItemsCount", "count": 1}, {"string": "listStart"},
             "1.", "list one"], ["1.", "list one", {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count": 1}]
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}],
           ],
           expectedBraille: [[{"string": "listAbbr"}, "list one"],
-            ["list one", {"string": "listAbbr"}]]
+            ["list one", {"string": "listAbbr"}]],
         }, {
           accOrElmOrID: "dlist",
           expectedUtterance: [[{"string": "definitionlist"},
             {"string": "listItemsCount", "count": 0.5}, "dd one"], ["dd one",
             {"string": "definitionlist"},
-            {"string": "listItemsCount", "count": 0.5}]
+            {"string": "listItemsCount", "count": 0.5}],
           ],
           expectedBraille: [[{"string": "definitionlistAbbr"}, "dd one"],
-                            ["dd one", {"string": "definitionlistAbbr"}]]
+                            ["dd one", {"string": "definitionlistAbbr"}]],
         }, {
           accOrElmOrID: "li_one",
           expectedUtterance: [[{"string": "list"},
             {"string": "listItemsCount", "count": 1}, {"string": "listStart"},
             "1.", "list one"], ["1.", "list one", {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count": 1}]
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}],
           ],
-          expectedBraille: [["1.", "list one"], ["1.", "list one"]]
+          expectedBraille: [["1.", "list one"], ["1.", "list one"]],
         },
         {
           accOrElmOrID: "li_two",
           expectedUtterance: [[{"string": "list"},
             {"string": "listItemsCount", "count": 1}, {"string": "listStart"},
             "list two"], ["list two", {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count": 1}]
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}],
           ],
-          expectedBraille: [["*", "list two"], ["*", "list two"]]
+          expectedBraille: [["*", "list two"], ["*", "list two"]],
         }, {
           accOrElmOrID: "cell",
           expectedUtterance: [[{"string": "table"},
@@ -123,7 +123,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "linkAbbr"}, "Bananas", {"string": "linkAbbr"},
             "Peaches", {"string": "linkAbbr"}, "Plums", {"string": "linkAbbr"},
             {"string": "listAbbr"},
-            {"string": "cellInfoAbbr", "args": [ 1, 1]}]]
+            {"string": "cellInfoAbbr", "args": [ 1, 1]}]],
         }, {
           accOrElmOrID: "email",
           expectedUtterance: [[{"string": "textInputType_email"},
@@ -131,7 +131,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "textInputType_email"}, {"string": "entry"}]],
           expectedBraille: [[{"string": "textInputType_email"},
             {"string": "entryAbbr"}, "test@example.com"], ["test@example.com",
-            {"string": "textInputType_email"}, {"string": "entryAbbr"}]]
+            {"string": "textInputType_email"}, {"string": "entryAbbr"}]],
         }, {
           accOrElmOrID: "search",
           expectedUtterance: [[{"string": "textInputType_search"},
@@ -139,7 +139,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "textInputType_search"}, {"string": "entry"}]],
           expectedBraille: [[{"string": "textInputType_search"},
             {"string": "entryAbbr"}, "This is a search"], ["This is a search",
-            {"string": "textInputType_search"}, {"string": "entryAbbr"}]]
+            {"string": "textInputType_search"}, {"string": "entryAbbr"}]],
         }, {
           accOrElmOrID: "tel",
           expectedUtterance: [[{"string": "textInputType_tel"},
@@ -147,7 +147,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "textInputType_tel"}, {"string": "entry"}]],
           expectedBraille: [[{"string": "textInputType_tel"},
             {"string": "entryAbbr"}, "555-5555"], ["555-5555",
-            {"string": "textInputType_tel"}, {"string": "entryAbbr"}]]
+            {"string": "textInputType_tel"}, {"string": "entryAbbr"}]],
         }, {
           accOrElmOrID: "url",
           expectedUtterance: [[{"string": "textInputType_url"},
@@ -156,13 +156,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedBraille: [[{"string": "textInputType_url"},
             {"string": "entryAbbr"}, "http://example.com"],
             ["http://example.com", {"string": "textInputType_url"},
-            {"string": "entryAbbr"}]]
+            {"string": "entryAbbr"}]],
         }, {
           accOrElmOrID: "textInput",
           expectedUtterance: [[{"string": "entry"}, "This is text."],
                               ["This is text.", {"string": "entry"}]],
           expectedBraille: [[{"string": "entryAbbr"}, "This is text."],
-                            ["This is text.", {"string": "entryAbbr"}]]
+                            ["This is text.", {"string": "entryAbbr"}]],
         }, {
           // Test pivot to list from li_one.
           accOrElmOrID: "list",
@@ -170,10 +170,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedUtterance: [[{"string": "list"},
             {"string": "listItemsCount", "count": 1}, {"string": "listStart"},
             "1.", "list one"], ["1.", "list one", {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count": 1}]
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}],
           ],
           expectedBraille: [[{"string": "listAbbr"}, "list one"],
-                            ["list one", {"string": "listAbbr"}]]
+                            ["list one", {"string": "listAbbr"}]],
         }, {
           // Test pivot to "apples" link from the table cell.
           accOrElmOrID: "apples",
@@ -182,10 +182,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "listItemsCount", "count": 4}, {"string": "listStart"},
             {"string": "link"}, "Apples"], ["Apples", {"string": "link"},
             {"string": "listStart"}, {"string": "list"},
-            {"string": "listItemsCount", "count": 4}]
+            {"string": "listItemsCount", "count": 4}],
           ],
           expectedBraille: [["*", {"string": "linkAbbr"}, "Apples"],
-                            ["*", "Apples", {"string": "linkAbbr"}]]
+                            ["*", "Apples", {"string": "linkAbbr"}]],
         }, {
           // Test pivot to "bananas" link from "apples" link.
           accOrElmOrID: "bananas",
@@ -193,7 +193,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedUtterance: [[{"string": "link"}, "Bananas"],
                               ["Bananas", {"string": "link"}]],
           expectedBraille: [["*", {"string": "linkAbbr"}, "Bananas"],
-                            ["*", "Bananas", {"string": "linkAbbr"}]]
+                            ["*", "Bananas", {"string": "linkAbbr"}]],
         }, {
           // test unavailable state utterance
           accOrElmOrID: "unavailableButton",
@@ -201,7 +201,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "pushbutton"}, "I am unavailable"], ["I am unavailable",
             {"string": "stateUnavailable"}, {"string": "pushbutton"}]],
           expectedBraille: [[{"string": "pushbuttonAbbr"}, "I am unavailable"],
-                            ["I am unavailable", {"string": "pushbuttonAbbr"}]]
+                            ["I am unavailable", {"string": "pushbuttonAbbr"}]],
         }, {
           // test expanded state utterance
           accOrElmOrID: "expandedButton",
@@ -209,7 +209,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "pushbutton"}, "I am expanded"], ["I am expanded",
             {"string": "stateExpanded"}, {"string": "pushbutton"}]],
           expectedBraille: [[{"string": "pushbuttonAbbr"}, "I am expanded"],
-                            ["I am expanded", {"string": "pushbuttonAbbr"}]]
+                            ["I am expanded", {"string": "pushbuttonAbbr"}]],
         }, {
           // test collapsed state utterance
           accOrElmOrID: "collapsedButton",
@@ -217,7 +217,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "pushbutton"}, "I am collapsed"], ["I am collapsed",
             {"string": "stateCollapsed"}, {"string": "pushbutton"}]],
           expectedBraille: [[{"string": "pushbuttonAbbr"}, "I am collapsed"],
-                            ["I am collapsed", {"string": "pushbuttonAbbr"}]]
+                            ["I am collapsed", {"string": "pushbuttonAbbr"}]],
         }, {
           // test required state utterance
           accOrElmOrID: "requiredInput",
@@ -225,7 +225,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             "I am required"], ["I am required", {"string": "stateRequired"},
             {"string": "entry"}]],
           expectedBraille: [[{"string": "entryAbbr"}, "I am required"],
-                            ["I am required", {"string": "entryAbbr"}]]
+                            ["I am required", {"string": "entryAbbr"}]],
         }, {
           // test unavailable state utterance on inputs
           accOrElmOrID: "readonlyInput",
@@ -233,7 +233,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             "No edits"], ["No edits", {"string": "stateReadonly"},
             {"string": "entry"}]],
           expectedBraille: [[{"string": "entryAbbr"}, "No edits"],
-                            ["No edits", {"string": "entryAbbr"}]]
+                            ["No edits", {"string": "entryAbbr"}]],
         }, {
           // test unavailable state utterance on textareas
           accOrElmOrID: "readonlyTextarea",
@@ -241,7 +241,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             "No editing"], ["No editing", {"string": "stateReadonly"},
             {"string": "textarea"}]],
           expectedBraille: [[{"string": "textareaAbbr"}, "No editing"],
-                            ["No editing", {"string": "textareaAbbr"}]]
+                            ["No editing", {"string": "textareaAbbr"}]],
         }, {
           // test has popup state utterance
           accOrElmOrID: "hasPopupButton",
@@ -249,19 +249,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "buttonmenu"}, "I have a popup"], ["I have a popup",
             {"string": "stateHasPopup"}, {"string": "buttonmenu"}]],
           expectedBraille: [[{"string": "buttonmenuAbbr"}, "I have a popup"],
-                            ["I have a popup", {"string": "buttonmenuAbbr"}]]
+                            ["I have a popup", {"string": "buttonmenuAbbr"}]],
         }, {
           // Test selected tab
           accOrElmOrID: "tab1",
           expectedUtterance: [[{"string": "pagetablist"}, {"string": "pagetab"},
             {"string": "objItemOfN", "args": [1, 2]}, "Account"], ["Account",
             {"string": "pagetab"}, {"string": "objItemOfN", "args": [1, 2]},
-            {"string": "pagetablist"}]
+            {"string": "pagetablist"}],
           ],
           expectedBraille: [[{"string": "pagetabAbbr"},
             {"string": "objItemOfN", "args": [1, 2]}, "Account"], ["Account",
             {"string": "pagetabAbbr"},
-            {"string": "objItemOfN", "args": [1, 2]}]]
+            {"string": "objItemOfN", "args": [1, 2]}]],
         }, {
           // Test unselected tab
           accOrElmOrID: "tab2",
@@ -272,13 +272,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedBraille: [[{"string": "pagetabAbbr"},
             {"string": "objItemOfN", "args": [2, 2]}, "Advanced"], ["Advanced",
             {"string": "pagetabAbbr"},
-            {"string": "objItemOfN", "args": [2, 2]}]]
+            {"string": "objItemOfN", "args": [2, 2]}]],
         }, {
           // Landing on this label should mimic landing on the checkbox.
           accOrElmOrID: "label1",
           expectedUtterance: [[{"string": "checkbutton"}, "Orange"], ["Orange",
             {"string": "checkbutton"}]],
-          expectedBraille: [["Orange"], ["Orange"]]
+          expectedBraille: [["Orange"], ["Orange"]],
         }, {
           // Here we get a top-level view of the form.
           accOrElmOrID: "form1",
@@ -288,100 +288,100 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "checkbutton"}, "Blue", {"string": "label"}]],
           expectedBraille: [[{"string": "labelAbbr"}, "Orange", "Orange", "Blue",
             {"string": "labelAbbr"}, "Blue"], ["Orange", "Orange",
-            {"string": "labelAbbr"}, "Blue", "Blue", {"string": "labelAbbr"}]]
+            {"string": "labelAbbr"}, "Blue", "Blue", {"string": "labelAbbr"}]],
         }, {
           // This is a non-nesting label.
           accOrElmOrID: "label2",
           expectedUtterance: [[{"string": "label"}, "Blue"],
                               ["Blue", {"string": "label"}]],
           expectedBraille: [[{"string": "labelAbbr"}, "Blue"],
-                            ["Blue", {"string": "labelAbbr"}]]
+                            ["Blue", {"string": "labelAbbr"}]],
         }, {
           // This is a distinct control.
           accOrElmOrID: "input2",
           expectedUtterance: [[ {"string": "checkbutton"}, "Blue"],
                               ["Blue", {"string": "checkbutton"}]],
-          expectedBraille: [["Blue"], ["Blue"]]
+          expectedBraille: [["Blue"], ["Blue"]],
         }, {
           // This is a nested control.
           accOrElmOrID: "input1",
           expectedUtterance: [[ {"string": "checkbutton"}, "Orange"], ["Orange",
             {"string": "checkbutton"}]],
-          expectedBraille: [["Orange"], ["Orange"]]
+          expectedBraille: [["Orange"], ["Orange"]],
         }, {
           // Landing on this label should mimic landing on the entry.
           accOrElmOrID: "label3",
           expectedUtterance: [[{"string": "entry"}, "Joe", "First name:"],
                              ["First name:", "Joe", {"string": "entry"}]],
           expectedBraille: [[{"string": "entryAbbr"}, "Joe", "First name:"],
-                            ["First name:", "Joe", {"string": "entryAbbr"}]]
+                            ["First name:", "Joe", {"string": "entryAbbr"}]],
         }, {
           // This is a nested control with a value.
           accOrElmOrID: "input3",
           expectedUtterance: [[{"string": "entry"}, "Joe", "First name:"],
                               ["First name:", "Joe", {"string": "entry"}]],
           expectedBraille: [[{"string": "entryAbbr"}, "Joe", "First name:"],
-                            ["First name:", "Joe", {"string": "entryAbbr"}]]
+                            ["First name:", "Joe", {"string": "entryAbbr"}]],
         }, {
           // This is a nested control with a value.
           accOrElmOrID: "input4",
           expectedUtterance: [[{"string": "slider"}, "3", "Points:"],
                               ["Points:", "3", {"string": "slider"}]],
           expectedBraille: [[{"string": "sliderAbbr"}, "3", "Points:"],
-                            ["Points:", "3", {"string": "sliderAbbr"}]]
+                            ["Points:", "3", {"string": "sliderAbbr"}]],
         }, {
           accOrElmOrID: "password",
           expectedUtterance: [[{"string": "passwordtext"}, "Secret Password"],
                               ["Secret Password", {"string": "passwordtext"}]],
           expectedBraille: [[{"string": "passwordtextAbbr"}, "Secret Password"],
-                            ["Secret Password", {"string": "passwordtextAbbr"}]]
+                            ["Secret Password", {"string": "passwordtextAbbr"}]],
         }, {
           accOrElmOrID: "input5",
           expectedUtterance: [[{"string": "checkbutton"}, "Boring label"],
                               ["Boring label", {"string": "checkbutton"}]],
-          expectedBraille: [["Boring label"], ["Boring label"]]
+          expectedBraille: [["Boring label"], ["Boring label"]],
         }, {
           accOrElmOrID: "radio_unselected",
           expectedUtterance: [[{"string": "radiobutton"}, "any old radio button"],
-                              ["any old radio button", {"string": "radiobutton"}]
+                              ["any old radio button", {"string": "radiobutton"}],
           ],
-          expectedBraille: [["any old radio button"], ["any old radio button"]]
+          expectedBraille: [["any old radio button"], ["any old radio button"]],
         }, {
           accOrElmOrID: "radio_selected",
           expectedUtterance: [[{"string": "radiobutton"}, "a unique radio button"],
                               ["a unique radio button", {"string": "radiobutton"}]],
-          expectedBraille: [["a unique radio button"], ["a unique radio button"]]
+          expectedBraille: [["a unique radio button"], ["a unique radio button"]],
         }, {
           accOrElmOrID: "togglebutton_notpressed",
           expectedUtterance: [[{"string": "togglebutton"}, "I am not pressed"],
                               ["I am not pressed", {"string": "togglebutton"}]],
           expectedBraille: [
             [{"string": "stateUnpressedAbbr"}, "I am not pressed"],
-            ["I am not pressed", {"string": "stateUnpressedAbbr"}]]
+            ["I am not pressed", {"string": "stateUnpressedAbbr"}]],
         }, {
           accOrElmOrID: "togglebutton_pressed",
           expectedUtterance: [[{"string": "statePressed"},
             {"string": "togglebutton"}, "I am pressed!"], ["I am pressed!",
             {"string": "statePressed"}, {"string": "togglebutton"}]],
           expectedBraille: [[{"string": "statePressedAbbr"}, "I am pressed!"],
-                            ["I am pressed!", {"string": "statePressedAbbr"}]]
+                            ["I am pressed!", {"string": "statePressedAbbr"}]],
         }, {
           accOrElmOrID: "listbox-option",
           expectedUtterance: [[{"string": "listbox"},
             {"string": "listboxoption"}, "Search suggestion"],
             ["Search suggestion", {"string": "listboxoption"},
-            {"string": "listbox"}]
+            {"string": "listbox"}],
           ],
           expectedBraille: [
             [{"string": "listboxoptionAbbr"}, "Search suggestion"],
-            ["Search suggestion", {"string": "listboxoptionAbbr"}]]
+            ["Search suggestion", {"string": "listboxoptionAbbr"}]],
         }, {
           accOrElmOrID: "listbox-option2",
           oldAccOrElmOrID: "listbox-option",
           expectedUtterance: [[{"string": "listboxoption"}, "555-12345"],
                               ["555-12345", {"string": "listboxoption"}]],
           expectedBraille: [[{"string": "listboxoptionAbbr"}, "555-12345"],
-                            ["555-12345", {"string": "listboxoptionAbbr"}]]
+                            ["555-12345", {"string": "listboxoptionAbbr"}]],
         }, {
           accOrElmOrID: "columnheader",
           oldAccOrElmOrID: "grid",
@@ -390,7 +390,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "columnInfo", "args": [1]},
             {"string": "rowInfo", "args": [1]}]],
           expectedBraille: [[{"string": "cellInfoAbbr", "args": [1, 1]},
-            "Sunday"], ["Sunday", {"string": "cellInfoAbbr", "args": [1, 1]}]]
+            "Sunday"], ["Sunday", {"string": "cellInfoAbbr", "args": [1, 1]}]],
         }, {
           accOrElmOrID: "rowheader",
           oldAccOrElmOrID: "grid",
@@ -400,17 +400,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "rowInfo", "args": [2]}, "Sunday"]],
           expectedBraille: [[{"string": "cellInfoAbbr", "args": [1, 2]},
             "Sunday", "Week 1"], ["Week 1",
-            {"string": "cellInfoAbbr", "args": [1, 2]}, "Sunday"]]
+            {"string": "cellInfoAbbr", "args": [1, 2]}, "Sunday"]],
         }, {
           accOrElmOrID: "gridcell1",
           oldAccOrElmOrID: "grid",
           expectedUtterance: [["3"], ["3"]],
-          expectedBraille: [["3"], ["3"]]
+          expectedBraille: [["3"], ["3"]],
         }, {
           accOrElmOrID: "gridcell2",
           oldAccOrElmOrID: "grid",
           expectedUtterance: [["4", "7"], ["4", "7"]],
-          expectedBraille: [["4", "7"], ["4", "7"]]
+          expectedBraille: [["4", "7"], ["4", "7"]],
         }, {
           accOrElmOrID: "gridcell3",
           oldAccOrElmOrID: "grid",
@@ -423,21 +423,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             "15 min", {"string": "stateCollapsed"}, {"string": "stateHasPopup"},
             {"string": "combobox"}]],
           expectedBraille: [[{"string": "comboboxAbbr"}, "15 min"], ["15 min",
-            {"string": "comboboxAbbr"}]]
+            {"string": "comboboxAbbr"}]],
         }, {
           accOrElmOrID: "selected-combobox-option",
           oldAccOrElmOrID: "frequency",
           expectedUtterance: [[{"string": "comboboxoption"}, "15 min"],
                               ["15 min", {"string": "comboboxoption"}]],
           expectedBraille: [[{"string": "comboboxoptionAbbr"}, "15 min"], [
-            "15 min", {"string": "comboboxoptionAbbr"}]]
+            "15 min", {"string": "comboboxoptionAbbr"}]],
         }, {
           accOrElmOrID: "combobox-option",
           oldAccOrElmOrID: "frequency",
           expectedUtterance: [[{"string": "comboboxoption"}, "30 min"], [
             "30 min", {"string": "comboboxoption"}]],
           expectedBraille: [[{"string": "comboboxoptionAbbr"}, "30 min"], [
-            "30 min", {"string": "comboboxoptionAbbr"}]]
+            "30 min", {"string": "comboboxoptionAbbr"}]],
         }, {
           accOrElmOrID: "labelled-combobox",
           expectedUtterance: [[{"string": "stateCollapsed"},
@@ -445,35 +445,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             "Intervals"], ["Intervals", "Never", {"string": "stateCollapsed"},
             {"string": "stateHasPopup"}, {"string": "combobox"}]],
           expectedBraille: [[{"string": "comboboxAbbr"}, "Never", "Intervals"],
-            ["Intervals", "Never", {"string": "comboboxAbbr"}]]
+            ["Intervals", "Never", {"string": "comboboxAbbr"}]],
         }, {
           accOrElmOrID: "statusbar-1",
           expectedUtterance: [["Last sync:", "2 days ago"],
                               ["Last sync:", "2 days ago"]],
           expectedBraille: [["Last sync:", "2 days ago"],
-                            ["Last sync:", "2 days ago"]]
+                            ["Last sync:", "2 days ago"]],
         }, {
           accOrElmOrID: "statusbar-2",
           expectedUtterance: [["Last sync: 30min ago"],
                               ["Last sync: 30min ago"]],
-          expectedBraille: [["Last sync: 30min ago"], ["Last sync: 30min ago"]]
+          expectedBraille: [["Last sync: 30min ago"], ["Last sync: 30min ago"]],
         }, {
           accOrElmOrID: "switch-1",
           expectedUtterance: [[{"string": "switch"}, "Simple switch"],
                               ["Simple switch", {"string": "switch"}]],
-          expectedBraille: [["Simple switch"], ["Simple switch"]]
+          expectedBraille: [["Simple switch"], ["Simple switch"]],
         }, {
           accOrElmOrID: "switch-2",
           expectedUtterance: [[{"string": "switch"}, "Another switch"],
                               ["Another switch", {"string": "switch"}]],
-          expectedBraille: [["Another switch"], ["Another switch"]]
+          expectedBraille: [["Another switch"], ["Another switch"]],
         }];
 
         // Test all possible utterance order preference values.
         function testOutputOrder(aOutputOrder) {
           return function() {
             SpecialPowers.pushPrefEnv({
-              "set": [[PREF_UTTERANCE_ORDER, aOutputOrder]]
+              "set": [[PREF_UTTERANCE_ORDER, aOutputOrder]],
             }, function() {
               tests.forEach(function run(test) {
                 testOutput(test.expectedUtterance[aOutputOrder], test.accOrElmOrID,

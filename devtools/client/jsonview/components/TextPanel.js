@@ -38,7 +38,7 @@ define(function(require, exports, module) {
         div({className: "textPanelBox tab-panel-inner"},
           TextToolbar({
             actions: this.props.actions,
-            isValidJson: this.props.isValidJson
+            isValidJson: this.props.isValidJson,
           }),
           div({className: "panelContent"},
             LiveText({data: this.props.data})

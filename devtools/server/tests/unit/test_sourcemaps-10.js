@@ -51,7 +51,7 @@ function define_code() {
     new SourceNode(3, 0, "c.js", "}\n"),
   ])).toStringWithSourceMap({
     file: "abc.js",
-    sourceRoot: "http://example.com/www/js/"
+    sourceRoot: "http://example.com/www/js/",
   });
 
   code += "//# sourceMappingURL=data:text/json," + map.toString();

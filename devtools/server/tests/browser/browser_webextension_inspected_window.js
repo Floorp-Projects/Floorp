@@ -11,7 +11,7 @@ async function setup(pageUrl) {
     background() {
       // This is just an empty extension used to ensure that the caller extension uuid
       // actually exists.
-    }
+    },
   });
 
   await extension.startup();
@@ -117,7 +117,7 @@ add_task(async function test_successfull_inspectedWindowEval_resultAsGrip() {
 
   let result = await inspectedWindowFront.eval(fakeExtCallerInfo, "window", {
     evalResultAsGrip: true,
-    toolboxConsoleActorID: form.consoleActor
+    toolboxConsoleActorID: form.consoleActor,
   });
 
   ok(result.valueGrip, "Got a result from inspectedWindow eval");

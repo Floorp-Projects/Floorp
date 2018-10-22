@@ -23,35 +23,35 @@
             children: [
               {
                 role: ROLE_STATICTEXT,
-                children: [ ]
+                children: [ ],
               },
               {
                 role: ROLE_OPTION,
                 children: [
                   {
-                    role: ROLE_TEXT_LEAF
-                  }
-                ]
+                    role: ROLE_TEXT_LEAF,
+                  },
+                ],
               },
               {
                 role: ROLE_OPTION,
                 children: [
                   {
-                    role: ROLE_TEXT_LEAF
-                  }
-                ]
-              }
-            ]
+                    role: ROLE_TEXT_LEAF,
+                  },
+                ],
+              },
+            ],
           },
           {
             role: ROLE_OPTION,
             children: [
               {
-                role: ROLE_TEXT_LEAF
-              }
-            ]
-          }
-        ]
+                role: ROLE_TEXT_LEAF,
+              },
+            ],
+          },
+        ],
       };
       testAccessibleTree("listbox", accTree);
 
@@ -66,37 +66,37 @@
                 children: [
                   {
                     role: ROLE_STATICTEXT,
-                    children: [ ]
+                    children: [ ],
                   },
                   {
                     role: ROLE_COMBOBOX_OPTION,
                     children: [
                       {
-                        role: ROLE_TEXT_LEAF
-                      }
-                    ]
+                        role: ROLE_TEXT_LEAF,
+                      },
+                    ],
                   },
                   {
                     role: ROLE_COMBOBOX_OPTION,
                     children: [
                       {
-                        role: ROLE_TEXT_LEAF
-                      }
-                    ]
+                        role: ROLE_TEXT_LEAF,
+                      },
+                    ],
                   },
-                ]
+                ],
               },
               {
                 role: ROLE_COMBOBOX_OPTION,
                 children: [
                   {
-                    role: ROLE_TEXT_LEAF
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                    role: ROLE_TEXT_LEAF,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
       testAccessibleTree("combobox", accTree);
 

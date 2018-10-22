@@ -25,7 +25,7 @@ exports.registerActor = function(sourceText, fileName, options) {
     module: "devtools/server/actors/utils/actor-registry-utils",
     setupChild: "registerActorInCurrentProcess",
     args: [sourceText, fileName, options],
-    waitForEval: true
+    waitForEval: true,
   });
 };
 
@@ -42,14 +42,14 @@ exports.registerActorInCurrentProcess = function(sourceText, fileName, options) 
   if (type.global && !ActorRegistry.globalActorFactories.hasOwnProperty(prefix)) {
     ActorRegistry.addGlobalActor({
       constructorName: constructor,
-      constructorFun: sandbox[constructor]
+      constructorFun: sandbox[constructor],
     }, prefix);
   }
 
   if (type.target && !ActorRegistry.targetScopedActorFactories.hasOwnProperty(prefix)) {
     ActorRegistry.addTargetScopedActor({
       constructorName: constructor,
-      constructorFun: sandbox[constructor]
+      constructorFun: sandbox[constructor],
     }, prefix);
   }
 };
@@ -61,7 +61,7 @@ exports.unregisterActor = function(options) {
   DebuggerServer.setupInChild({
     module: "devtools/server/actors/utils/actor-registry-utils",
     setupChild: "unregisterActorInCurrentProcess",
-    args: [options]
+    args: [options],
   });
 };
 

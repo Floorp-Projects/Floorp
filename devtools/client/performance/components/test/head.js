@@ -15,7 +15,7 @@ let { Toolbox } = require("devtools/client/framework/toolbox");
 
 let { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/performance/",
-  window
+  window,
 });
 
 const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -79,14 +79,14 @@ const OPTS_DATA_GENERAL = [{
         name: "MyView",
         location: "http://internet.com/file.js",
         line: "123",
-      }]
+      }],
     }, {
       id: 1,
       typeset: void 0,
       site: "Index",
       mirType: "Int32",
-    }]
-  }
+    }],
+  },
 }, {
   id: 2,
   propertyName: void 0,
@@ -95,7 +95,7 @@ const OPTS_DATA_GENERAL = [{
   samples: 100,
   data: {
     attempts: [
-      { id: 2, strategy: "Call_Inline", outcome: "CantInlineBigData" }
+      { id: 2, strategy: "Call_Inline", outcome: "CantInlineBigData" },
     ],
     types: [{
       id: 2,
@@ -107,8 +107,8 @@ const OPTS_DATA_GENERAL = [{
         { id: 2, keyedBy: "constructor", name: "C", location: "http://mypage.com/file.js", line: "3" },
         { id: 2, keyedBy: "constructor", name: "D", location: "http://mypage.com/file.js", line: "4" },
       ],
-    }]
-  }
+    }],
+  },
 }];
 
 OPTS_DATA_GENERAL.forEach(site => {

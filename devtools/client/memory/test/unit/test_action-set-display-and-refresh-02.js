@@ -19,8 +19,8 @@ const CUSTOM = {
   inverted: false,
   breakdown: {
     by: "internalType",
-    then: { by: "count", bytes: true, count: false }
-  }
+    then: { by: "count", bytes: true, count: false },
+  },
 };
 
 add_task(async function() {

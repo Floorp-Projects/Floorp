@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm"
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 GeckoViewUtils.initLogging("Console", this);
@@ -136,5 +136,5 @@ var GeckoViewConsole = {
       aSourceURL = aSourceURL.substring(slashIndex + 1);
 
     return aSourceURL;
-  }
+  },
 };

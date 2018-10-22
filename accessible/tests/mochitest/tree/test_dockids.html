@@ -24,18 +24,18 @@
        { TEXT_CONTAINER: [ // head
          { TEXT_CONTAINER: [ // link
            { STATICTEXT: [] }, // generated content
-           { STATICTEXT: [] } // generated content
-         ] }
+           { STATICTEXT: [] }, // generated content
+         ] },
        ] },
        { TEXT_LEAF: [ ] }, // body text
        { ENTRY: [ ] }, // input under document element
        { TEXT_CONTAINER: [ // link under document element
          { TEXT_LEAF: [ ] }, // link content
          { STATICTEXT: [ ] }, // generated content
-         { STATICTEXT: [ ] } // generated content
+         { STATICTEXT: [ ] }, // generated content
        ] },
        { LINK: [ // anchor under document element
-         { TEXT_LEAF: [ ] } // anchor content
+         { TEXT_LEAF: [ ] }, // anchor content
        ] },
      ] };
     testAccessibleTree(getNode("iframe").contentDocument, tree);

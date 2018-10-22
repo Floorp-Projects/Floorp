@@ -32,7 +32,7 @@ add_task(async function test_closed_conn() {
 add_task({
   // We use a timeout in the test that may be insufficient on Android emulators.
   // We don't really need the Android coverage, so skip on Android.
-  skip_if: () => AppConstants.platform == "android"
+  skip_if: () => AppConstants.platform == "android",
 }, async function test_async_conn() {
   let db = await openAsyncDatabase(getTestDB(), {readOnly: true});
   // This query is built to hang forever.
@@ -55,7 +55,7 @@ add_task({
       },
       handleCompletion(aReason) {
         resolve(aReason);
-      }
+      },
     };
     stmt.executeAsync(listener);
     stmt.finalize();

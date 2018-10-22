@@ -20,14 +20,14 @@ var comparisons = [
   "2.0",
   "2.1",
   "3.0.-1",
-  "3.0"
+  "3.0",
 ];
 
 // Every version in this list means the same version number
 var equality = [
   "1.1pre",
   "1.1pre0",
-  "1.0+"
+  "1.0+",
 ];
 
 function run_test() {

@@ -48,12 +48,12 @@ class WorkerList extends Component {
           a: a(
             {
               className: "aboutdebugging-plug__link",
-              onClick: () => openTrustedLink("about:debugging#workers")
+              onClick: () => openTrustedLink("about:debugging#workers"),
             }
-          )
+          ),
         },
         footer({ className: "aboutdebugging-plug" })
-      )
+      ),
     ];
   }
 }

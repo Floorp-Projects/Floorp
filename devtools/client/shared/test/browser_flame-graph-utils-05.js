@@ -32,17 +32,17 @@ function performTest() {
 
 var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
-    location: "A"
+    location: "A",
   }, {
-    location: "A"
+    location: "A",
   }, {
-    location: "A"
-  }, {
-    location: "B",
+    location: "A",
   }, {
     location: "B",
   }, {
-    location: "C"
+    location: "B",
+  }, {
+    location: "C",
   }],
   time: 50,
 }]);

@@ -1741,6 +1741,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     }
     break;
 #ifdef MOZ_WIDGET_GTK
+  case StyleAppearance::MenulistTextfield:
   case StyleAppearance::NumberInput:
   case StyleAppearance::Textfield:
     {
@@ -1927,7 +1928,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   // Combobox dropdowns don't support native theming in vertical mode.
   case StyleAppearance::Menulist:
   case StyleAppearance::MenulistText:
-  case StyleAppearance::MenulistTextfield:
     if (aFrame && aFrame->GetWritingMode().IsVertical()) {
       return false;
     }
@@ -1989,6 +1989,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case StyleAppearance::ScrollbartrackVertical:
   case StyleAppearance::ScrollbarthumbHorizontal:
   case StyleAppearance::ScrollbarthumbVertical:
+  case StyleAppearance::MenulistTextfield:
   case StyleAppearance::NumberInput:
   case StyleAppearance::Textfield:
   case StyleAppearance::TextfieldMultiline:

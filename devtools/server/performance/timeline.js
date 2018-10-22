@@ -324,7 +324,7 @@ Timeline.prototype = {
    * SpiderMonkey could not incrementally collect garbage.
    */
   _onGarbageCollection: function({
-    collections, gcCycleNumber, reason, nonincrementalReason
+    collections, gcCycleNumber, reason, nonincrementalReason,
   }) {
     const docShells = this.docShells;
     if (!this._isRecording || !docShells.length) {
@@ -334,7 +334,7 @@ Timeline.prototype = {
     const endTime = docShells[0].now();
 
     this.emit("markers", collections.map(({
-      startTimestamp: start, endTimestamp: end
+      startTimestamp: start, endTimestamp: end,
     }) => {
       return {
         name: "GarbageCollection",

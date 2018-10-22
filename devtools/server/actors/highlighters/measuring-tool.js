@@ -35,7 +35,7 @@ function MeasuringToolHighlighter(highlighterEnv) {
 
   this.coords = {
     x: 0,
-    y: 0
+    y: 0,
   };
 
   const { pageListenerTarget } = highlighterEnv;
@@ -57,7 +57,7 @@ MeasuringToolHighlighter.prototype = {
     const { window } = this.env;
 
     const container = createNode(window, {
-      attributes: {"class": "highlighter-container"}
+      attributes: {"class": "highlighter-container"},
     });
 
     const root = createNode(window, {
@@ -67,7 +67,7 @@ MeasuringToolHighlighter.prototype = {
         "class": "root",
         "hidden": "true",
       },
-      prefix
+      prefix,
     });
 
     const svg = createSVGNode(window, {
@@ -79,7 +79,7 @@ MeasuringToolHighlighter.prototype = {
         width: "100%",
         height: "100%",
       },
-      prefix
+      prefix,
     });
 
     createNode(window, {
@@ -87,10 +87,10 @@ MeasuringToolHighlighter.prototype = {
       attributes: {
         id: "label-size",
         "class": "label-size",
-        "hidden": "true"
+        "hidden": "true",
       },
       parent: root,
-      prefix
+      prefix,
     });
 
     createNode(window, {
@@ -98,10 +98,10 @@ MeasuringToolHighlighter.prototype = {
       attributes: {
         id: "label-position",
         "class": "label-position",
-        "hidden": "true"
+        "hidden": "true",
       },
       parent: root,
-      prefix
+      prefix,
     });
 
     // Creating a <g> element in order to group all the paths below, that
@@ -113,25 +113,25 @@ MeasuringToolHighlighter.prototype = {
         id: "tool",
       },
       parent: svg,
-      prefix
+      prefix,
     });
 
     createSVGNode(window, {
       nodeType: "path",
       attributes: {
-        id: "box-path"
+        id: "box-path",
       },
       parent: g,
-      prefix
+      prefix,
     });
 
     createSVGNode(window, {
       nodeType: "path",
       attributes: {
-        id: "diagonal-path"
+        id: "diagonal-path",
       },
       parent: g,
-      prefix
+      prefix,
     });
 
     for (const side of SIDES) {
@@ -141,9 +141,9 @@ MeasuringToolHighlighter.prototype = {
         attributes: {
           "class": `guide-${side}`,
           id: `guide-${side}`,
-          hidden: "true"
+          hidden: "true",
         },
-        prefix
+        prefix,
       });
     }
 
@@ -544,6 +544,6 @@ MeasuringToolHighlighter.prototype = {
         }
         break;
     }
-  }
+  },
 };
 exports.MeasuringToolHighlighter = MeasuringToolHighlighter;

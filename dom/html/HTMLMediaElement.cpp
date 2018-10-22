@@ -8333,7 +8333,7 @@ HTMLMediaElement::SetSinkId(const nsAString& aSinkId, ErrorResult& aRv)
            })
     ->Then(mAbstractMainThread, __func__,
            [promise, self = RefPtr<HTMLMediaElement>(this),
-           sinkId = std::move(sinkId)] (const SinkInfoPromise::ResolveOrRejectValue& aValue) {
+           sinkId] (const SinkInfoPromise::ResolveOrRejectValue& aValue) {
              if (aValue.IsResolve()) {
                self->mSink = MakePair(sinkId, aValue.ResolveValue());
                promise->MaybeResolveWithUndefined();

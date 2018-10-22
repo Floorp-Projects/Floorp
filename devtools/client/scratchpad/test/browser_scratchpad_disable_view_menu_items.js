@@ -6,7 +6,7 @@
 
 function test() {
   const options = {
-    tabContent: 'test if view menu items "Larger Font" and "Smaller Font" are enabled/disabled.'
+    tabContent: 'test if view menu items "Larger Font" and "Smaller Font" are enabled/disabled.',
   };
   openTabAndScratchpad(options)
     .then(runTests)

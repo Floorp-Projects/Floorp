@@ -94,7 +94,7 @@ JsonViewSniffer.prototype = {
     }
 
     return "";
-  }
+  },
 };
 
 /*
@@ -106,7 +106,7 @@ const JsonSnifferFactory = {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return new JsonViewSniffer().QueryInterface(iid);
-  }
+  },
 };
 
 /*
@@ -120,7 +120,7 @@ const JsonViewFactory = {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return JsonViewService.createInstance().QueryInterface(iid);
-  }
+  },
 };
 
 /**

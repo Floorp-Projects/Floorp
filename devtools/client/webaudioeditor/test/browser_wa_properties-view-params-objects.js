@@ -16,7 +16,7 @@ add_task(async function() {
 
   const events = Promise.all([
     getN(gFront, "create-node", 3),
-    waitForGraphRendered(panelWin, 3, 2)
+    waitForGraphRendered(panelWin, 3, 2),
   ]);
   reload(target);
   const [actors] = await events;
@@ -25,7 +25,7 @@ add_task(async function() {
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
   await waitForInspectorRender(panelWin, EVENTS);
   checkVariableView(gVars, 0, {
-    "curve": "Float32Array"
+    "curve": "Float32Array",
   }, "WaveShaper's `curve` is listed as an `Float32Array`.");
 
   let aVar = gVars.getScopeAtIndex(0).get("curve");
@@ -35,7 +35,7 @@ add_task(async function() {
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
   await waitForInspectorRender(panelWin, EVENTS);
   checkVariableView(gVars, 0, {
-    "buffer": "AudioBuffer"
+    "buffer": "AudioBuffer",
   }, "AudioBufferSourceNode's `buffer` is listed as an `AudioBuffer`.");
 
   aVar = gVars.getScopeAtIndex(0).get("buffer");

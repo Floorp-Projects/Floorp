@@ -159,7 +159,7 @@ class ReverseSearchInput extends Component {
         onClick: () => {
           dispatch(actions.showReverseSearchBack());
           this.inputNode.focus();
-        }
+        },
       }),
       dom.button({
         key: "search-result-button-next",
@@ -169,8 +169,8 @@ class ReverseSearchInput extends Component {
         onClick: () => {
           dispatch(actions.showReverseSearchNext());
           this.inputNode.focus();
-        }
-      })
+        },
+      }),
     ];
   }
 
@@ -199,7 +199,7 @@ class ReverseSearchInput extends Component {
         placeholder: l10n.getStr("webconsole.reverseSearch.input.placeHolder"),
         className: "reverse-search-input devtools-monospace",
         onKeyDown: this.onInputKeyDown,
-        onInput: ({target}) => dispatch(actions.reverseSearchInputChange(target.value))
+        onInput: ({target}) => dispatch(actions.reverseSearchInputChange(target.value)),
       }),
       this.renderSearchInformation(),
       this.renderNavigationButtons(),
@@ -209,7 +209,7 @@ class ReverseSearchInput extends Component {
           ["Esc" + (isMacOS ? " | Ctrl + C" : "")]),
         onClick: () => {
           dispatch(actions.reverseSearchInputToggle());
-        }
+        },
       })
     );
   }

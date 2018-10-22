@@ -36,7 +36,7 @@ function AddonTargetActor(connection, addon) {
 
   this.makeDebugger = makeDebugger.bind(null, {
     findDebuggees: this._findDebuggees.bind(this),
-    shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee
+    shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee,
   });
 
   AddonManager.addAddonListener(this);
@@ -240,12 +240,12 @@ AddonTargetActor.prototype = {
    */
   _findDebuggees: function(dbg) {
     return dbg.findAllGlobals().filter(this._shouldAddNewGlobalAsDebuggee);
-  }
+  },
 };
 
 AddonTargetActor.prototype.requestTypes = {
   "attach": AddonTargetActor.prototype.onAttach,
   "detach": AddonTargetActor.prototype.onDetach,
-  "reload": AddonTargetActor.prototype.onReload
+  "reload": AddonTargetActor.prototype.onReload,
 };
 

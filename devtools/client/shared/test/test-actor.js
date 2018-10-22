@@ -11,12 +11,12 @@
 const { Ci, Cu } = require("chrome");
 const Services = require("Services");
 const {
-  getRect, getAdjustedQuads, getWindowDimensions
+  getRect, getAdjustedQuads, getWindowDimensions,
 } = require("devtools/shared/layout/utils");
 const defer = require("devtools/shared/defer");
 const {
   isContentStylesheet,
-  getCSSStyleRules
+  getCSSStyleRules,
 } = require("devtools/shared/inspector/css-logic");
 const InspectorUtils = require("InspectorUtils");
 
@@ -64,180 +64,180 @@ var testSpec = protocol.generateActorSpec({
         selector: Arg(0, "string"),
       },
       response: {
-        value: RetVal("number")
-      }
+        value: RetVal("number"),
+      },
     },
     getHighlighterAttribute: {
       request: {
         nodeID: Arg(0, "string"),
         name: Arg(1, "string"),
-        actorID: Arg(2, "string")
+        actorID: Arg(2, "string"),
       },
       response: {
-        value: RetVal("string")
-      }
+        value: RetVal("string"),
+      },
     },
     getHighlighterNodeTextContent: {
       request: {
         nodeID: Arg(0, "string"),
-        actorID: Arg(1, "string")
+        actorID: Arg(1, "string"),
       },
       response: {
-        value: RetVal("string")
-      }
+        value: RetVal("string"),
+      },
     },
     getSelectorHighlighterBoxNb: {
       request: {
         highlighter: Arg(0, "string"),
       },
       response: {
-        value: RetVal("number")
-      }
+        value: RetVal("number"),
+      },
     },
     changeHighlightedNodeWaitForUpdate: {
       request: {
         name: Arg(0, "string"),
         value: Arg(1, "string"),
-        actorID: Arg(2, "string")
+        actorID: Arg(2, "string"),
       },
-      response: {}
+      response: {},
     },
     waitForHighlighterEvent: {
       request: {
         event: Arg(0, "string"),
-        actorID: Arg(1, "string")
+        actorID: Arg(1, "string"),
       },
-      response: {}
+      response: {},
     },
     waitForEventOnNode: {
       request: {
         eventName: Arg(0, "string"),
-        selector: Arg(1, "nullable:string")
+        selector: Arg(1, "nullable:string"),
       },
-      response: {}
+      response: {},
     },
     changeZoomLevel: {
       request: {
         level: Arg(0, "string"),
         actorID: Arg(1, "string"),
       },
-      response: {}
+      response: {},
     },
     getAllAdjustedQuads: {
       request: {
-        selector: Arg(0, "string")
+        selector: Arg(0, "string"),
       },
       response: {
-        value: RetVal("json")
-      }
+        value: RetVal("json"),
+      },
     },
     synthesizeMouse: {
       request: {
-        object: Arg(0, "json")
+        object: Arg(0, "json"),
       },
-      response: {}
+      response: {},
     },
     synthesizeKey: {
       request: {
-        args: Arg(0, "json")
+        args: Arg(0, "json"),
       },
-      response: {}
+      response: {},
     },
     scrollIntoView: {
       request: {
-        args: Arg(0, "string")
+        args: Arg(0, "string"),
       },
-      response: {}
+      response: {},
     },
     hasPseudoClassLock: {
       request: {
         selector: Arg(0, "string"),
-        pseudo: Arg(1, "string")
+        pseudo: Arg(1, "string"),
       },
       response: {
-        value: RetVal("boolean")
-      }
+        value: RetVal("boolean"),
+      },
     },
     loadAndWaitForCustomEvent: {
       request: {
-        url: Arg(0, "string")
+        url: Arg(0, "string"),
       },
-      response: {}
+      response: {},
     },
     hasNode: {
       request: {
-        selector: Arg(0, "string")
+        selector: Arg(0, "string"),
       },
       response: {
-        value: RetVal("boolean")
-      }
+        value: RetVal("boolean"),
+      },
     },
     getBoundingClientRect: {
       request: {
         selector: Arg(0, "string"),
       },
       response: {
-        value: RetVal("json")
-      }
+        value: RetVal("json"),
+      },
     },
     setProperty: {
       request: {
         selector: Arg(0, "string"),
         property: Arg(1, "string"),
-        value: Arg(2, "string")
+        value: Arg(2, "string"),
       },
-      response: {}
+      response: {},
     },
     getProperty: {
       request: {
         selector: Arg(0, "string"),
-        property: Arg(1, "string")
+        property: Arg(1, "string"),
       },
       response: {
-        value: RetVal("string")
-      }
+        value: RetVal("string"),
+      },
     },
     getAttribute: {
       request: {
         selector: Arg(0, "string"),
-        property: Arg(1, "string")
+        property: Arg(1, "string"),
       },
       response: {
-        value: RetVal("string")
-      }
+        value: RetVal("string"),
+      },
     },
     setAttribute: {
       request: {
         selector: Arg(0, "string"),
         property: Arg(1, "string"),
-        value: Arg(2, "string")
+        value: Arg(2, "string"),
       },
-      response: {}
+      response: {},
     },
     removeAttribute: {
       request: {
         selector: Arg(0, "string"),
-        property: Arg(1, "string")
+        property: Arg(1, "string"),
       },
-      response: {}
+      response: {},
     },
     reload: {
       request: {},
-      response: {}
+      response: {},
     },
     reloadFrame: {
       request: {
         selector: Arg(0, "string"),
       },
-      response: {}
+      response: {},
     },
     eval: {
       request: {
-        js: Arg(0, "string")
+        js: Arg(0, "string"),
       },
       response: {
-        value: RetVal("nullable:json")
-      }
+        value: RetVal("nullable:json"),
+      },
     },
     scrollWindow: {
       request: {
@@ -246,50 +246,50 @@ var testSpec = protocol.generateActorSpec({
         relative: Arg(2, "nullable:boolean"),
       },
       response: {
-        value: RetVal("json")
-      }
+        value: RetVal("json"),
+      },
     },
     reflow: {},
     getNodeRect: {
       request: {
-        selector: Arg(0, "string")
+        selector: Arg(0, "string"),
       },
       response: {
-        value: RetVal("json")
-      }
+        value: RetVal("json"),
+      },
     },
     getTextNodeRect: {
       request: {
         parentSelector: Arg(0, "string"),
-        childNodeIndex: Arg(1, "number")
+        childNodeIndex: Arg(1, "number"),
       },
       response: {
-        value: RetVal("json")
-      }
+        value: RetVal("json"),
+      },
     },
     getNodeInfo: {
       request: {
-        selector: Arg(0, "string")
+        selector: Arg(0, "string"),
       },
       response: {
-        value: RetVal("json")
-      }
+        value: RetVal("json"),
+      },
     },
     getStyleSheetsInfoForNode: {
       request: {
-        selector: Arg(0, "string")
+        selector: Arg(0, "string"),
       },
       response: {
-        value: RetVal("json")
-      }
+        value: RetVal("json"),
+      },
     },
     getWindowDimensions: {
       request: {},
       response: {
-        value: RetVal("json")
-      }
-    }
-  }
+        value: RetVal("json"),
+      },
+    },
+  },
 });
 
 var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
@@ -567,7 +567,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
       top: rect.top,
       right: rect.right,
       bottom: rect.bottom,
-      left: rect.left
+      left: rect.left,
     };
   },
 
@@ -747,7 +747,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
         }),
         outerHTML: node.outerHTML,
         innerHTML: node.innerHTML,
-        textContent: node.textContent
+        textContent: node.textContent,
       };
     }
 
@@ -773,7 +773,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
       const sheet = domRules[i].parentStyleSheet;
       sheets.push({
         href: sheet.href,
-        isContentSheet: isContentStylesheet(sheet)
+        isContentSheet: isContentStylesheet(sheet),
       });
     }
 
@@ -788,7 +788,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    */
   getWindowDimensions: function() {
     return getWindowDimensions(this.content);
-  }
+  },
 });
 
 var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSpec, {
@@ -816,7 +816,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       name, value, (highlighter || this.toolbox.highlighter).actorID
     );
   }, {
-    impl: "_changeHighlightedNodeWaitForUpdate"
+    impl: "_changeHighlightedNodeWaitForUpdate",
   }),
 
   /**
@@ -837,7 +837,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       nodeID, (highlighter || this.toolbox.highlighter).actorID
     );
   }, {
-    impl: "_getHighlighterNodeTextContent"
+    impl: "_getHighlighterNodeTextContent",
   }),
 
   /**
@@ -884,7 +884,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       top: p1.y,
       left: p1.x,
       width: p2.x - p1.x,
-      height: p4.y - p1.y
+      height: p4.y - p1.y,
     };
   },
 
@@ -896,7 +896,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     const isVisible = await this.isHighlighting();
 
     const ret = {
-      visible: isVisible
+      visible: isVisible,
     };
 
     for (const region of ["margin", "border", "padding", "content"]) {
@@ -987,20 +987,20 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     return {
       p1: {
         x: parseFloat(points[0][0]),
-        y: parseFloat(points[0][1])
+        y: parseFloat(points[0][1]),
       },
       p2: {
         x: parseFloat(points[1][0]),
-        y: parseFloat(points[1][1])
+        y: parseFloat(points[1][1]),
       },
       p3: {
         x: parseFloat(points[2][0]),
-        y: parseFloat(points[2][1])
+        y: parseFloat(points[2][1]),
       },
       p4: {
         x: parseFloat(points[3][0]),
-        y: parseFloat(points[3][1])
-      }
+        y: parseFloat(points[3][1]),
+      },
     };
   },
 
@@ -1027,7 +1027,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       x1: x1,
       y1: y1,
       x2: x2,
-      y2: y2
+      y2: y2,
     };
   },
 
@@ -1051,14 +1051,14 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
       p1: {x: lGuide.x1, y: tGuide.y1},
       p2: {x: +rGuide.x1 + 1, y: tGuide.y1},
       p3: {x: +rGuide.x1 + 1, y: +bGuide.y1 + 1},
-      p4: {x: lGuide.x1, y: +bGuide.y1 + 1}
+      p4: {x: lGuide.x1, y: +bGuide.y1 + 1},
     };
   },
 
   waitForHighlighterEvent: protocol.custom(function(event) {
     return this._waitForHighlighterEvent(event, this.toolbox.highlighter.actorID);
   }, {
-    impl: "_waitForHighlighterEvent"
+    impl: "_waitForHighlighterEvent",
   }),
 
   /**
@@ -1092,7 +1092,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     }
 
     return {d, points};
-  }
+  },
 });
 
 /**

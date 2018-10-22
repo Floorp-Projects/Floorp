@@ -13,7 +13,7 @@ async function ifWebGLSupported() {
   reload(target);
   const [[firstProgramActor, secondProgramActor]] = await promise.all([
     getPrograms(front, 2),
-    once(panel, EVENTS.SOURCES_SHOWN)
+    once(panel, EVENTS.SOURCES_SHOWN),
   ]);
 
   await ensurePixelIs(front, { x: 0, y: 0 }, { r: 127, g: 127, b: 127, a: 255 }, true);

@@ -18,7 +18,7 @@ const TEST_URI_NOWARNING = [
   `${TEST_PATH}test-ineffective-iframe-sandbox-warning2.html`,
   `${TEST_PATH}test-ineffective-iframe-sandbox-warning3.html`,
   `${TEST_PATH}test-ineffective-iframe-sandbox-warning4.html`,
-  `${TEST_PATH}test-ineffective-iframe-sandbox-warning5.html`
+  `${TEST_PATH}test-ineffective-iframe-sandbox-warning5.html`,
 ];
 
 const INEFFECTIVE_IFRAME_SANDBOXING_MSG = "An iframe which has both " +

@@ -32,20 +32,20 @@ class NetworkLocationsList extends PureComponent {
           },
           dom.span(
             {
-              className: "ellipsis-text js-network-location-value"
+              className: "ellipsis-text js-network-location-value",
             },
             location
           ),
           Localized(
             {
-              id: "about-debugging-network-locations-remove-button"
+              id: "about-debugging-network-locations-remove-button",
             },
             dom.button(
               {
                 className: "std-button js-network-location-remove-button",
                 onClick: () => {
                   this.props.dispatch(Actions.removeNetworkLocation(location));
-                }
+                },
               },
               "Remove"
             )
@@ -58,7 +58,7 @@ class NetworkLocationsList extends PureComponent {
   renderEmpty() {
     return Localized(
       {
-        id: "about-debugging-network-locations-empty-text"
+        id: "about-debugging-network-locations-empty-text",
       },
       dom.p(
         {},

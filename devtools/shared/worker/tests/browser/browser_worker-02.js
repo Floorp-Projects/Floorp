@@ -41,7 +41,7 @@ add_task(async function() {
     await worker.performTask("plotTimestampsGraph", {
       timestamps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
       interval: 1,
-      duration: 1
+      duration: 1,
     });
     ok(false, "DevToolsWorker rejects when performing a task on a destroyed worker");
   } catch (e) {

@@ -9,7 +9,7 @@ add_task(async function() {
   const { target, front } = await initBackend(SIMPLE_NODES_URL);
   const [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
-    getN(front, "create-node", 14)
+    getN(front, "create-node", 14),
   ]);
 
   const actualTypes = nodes.map(node => node.type);

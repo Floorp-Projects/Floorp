@@ -20,13 +20,13 @@ add_task(async function() {
 
   const myDataSrc = {
     label: "root",
-    children: []
+    children: [],
   };
 
   for (let i = 0; i < 1000; i++) {
     myDataSrc.children.push({
       label: "child-" + i,
-      children: []
+      children: [],
     });
   }
 

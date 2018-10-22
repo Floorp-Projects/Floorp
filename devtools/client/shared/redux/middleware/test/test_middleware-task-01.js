@@ -43,7 +43,7 @@ function fetch1(data) {
 function fetch2(data) {
   return {
     type: "fetch2",
-    data
+    data,
   };
 }
 

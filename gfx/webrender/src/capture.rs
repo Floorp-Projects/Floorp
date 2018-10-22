@@ -63,14 +63,16 @@ impl CaptureConfig {
 
         let mut string = String::new();
         let path = root
-            .join(name)
+            .join(name.as_ref())
             .with_extension("ron");
         File::open(path)
             .ok()?
             .read_to_string(&mut string)
             .unwrap();
-        Some(ron::de::from_str(&string)
-            .unwrap())
+        match ron::de::from_str(&string) {
+            Ok(out) => Some(out),
+            Err(e) => panic!("File {:?} deserialization failed: {:?}", name.as_ref(), e),
+        }
     }
 
     #[cfg(feature = "png")]

@@ -88,7 +88,7 @@ var PageActions = {
       title: aOptions.title,
       icon: resolveGeckoURI(aOptions.icon),
       important: "important" in aOptions ? aOptions.important : false,
-      useTint: "useTint" in aOptions ? aOptions.useTint : false
+      useTint: "useTint" in aOptions ? aOptions.useTint : false,
     });
 
     this._items[id] = {};
@@ -108,10 +108,10 @@ var PageActions = {
   remove: function(id) {
     EventDispatcher.instance.sendRequest({
       type: "PageActions:Remove",
-      id: id
+      id: id,
     });
 
     delete this._items[id];
     this._maybeUninitialize();
-  }
+  },
 };

@@ -9,7 +9,7 @@ const BrowserLoaderModule = {};
 ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
 const { require } = BrowserLoaderModule.BrowserLoader({
   baseURI: "resource://devtools/client/memory/",
-  window
+  window,
 });
 const Perf = require("devtools/client/performance-new/components/Perf");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
@@ -22,7 +22,7 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const {
   receiveProfile,
   getRecordingPreferences,
-  setRecordingPreferences
+  setRecordingPreferences,
 } = require("devtools/client/performance-new/browser");
 
 /**
@@ -52,7 +52,7 @@ async function gInit(perfFront, preferenceFront) {
     setRecordingPreferences: () => setRecordingPreferences(
       preferenceFront,
       selectors.getRecordingSettings(store.getState())
-    )
+    ),
   }));
 
   ReactDOM.render(

@@ -16,7 +16,7 @@ const {
   isLegacyTemporaryExtension,
   isTemporaryID,
   parseFileUri,
-  uninstallAddon
+  uninstallAddon,
 } = require("../../modules/addon");
 const Services = require("Services");
 
@@ -127,14 +127,14 @@ function warningMessages(target) {
   if (isLegacyTemporaryExtension(target.form)) {
     messages.push(dom.li(
       {
-        className: "addon-target-warning-message addon-target-message"
+        className: "addon-target-warning-message addon-target-message",
       },
       Strings.GetStringFromName("legacyExtensionWarning"),
       " ",
       dom.a(
         {
           href: LEGACY_WARNING_URL,
-          target: "_blank"
+          target: "_blank",
         },
         Strings.GetStringFromName("legacyExtensionWarning.learnMore"))
     ));
@@ -165,7 +165,7 @@ class AddonTarget extends Component {
         temporarilyInstalled: PropTypes.bool,
         url: PropTypes.string,
         warnings: PropTypes.array,
-      }).isRequired
+      }).isRequired,
     };
   }
 
@@ -197,7 +197,7 @@ class AddonTarget extends Component {
     try {
       await client.request({
         to: target.addonTargetActor,
-        type: "reload"
+        type: "reload",
       });
       AboutDebugging.emit("addon-reload");
     } catch (e) {
@@ -214,7 +214,7 @@ class AddonTarget extends Component {
         dom.img({
           className: "target-icon addon-target-icon",
           role: "presentation",
-          src: target.icon
+          src: target.icon,
         }),
         dom.span(
           { className: "target-name addon-target-name", title: target.name },

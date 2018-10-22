@@ -84,11 +84,11 @@ function testCrossOrigin() {
 let rp = {id: document.domain, name: "none", icon: "none"};
 let user = {
   id: crypto.getRandomValues(new Uint8Array(16)),
-  name: "none", icon: "none", displayName: "none"
+  name: "none", icon: "none", displayName: "none",
 };
 let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
 let makeCredentialOptions = {
-  rp, user, challenge: new Uint8Array(), pubKeyCredParams: [param]
+  rp, user, challenge: new Uint8Array(), pubKeyCredParams: [param],
 };
 
 if (document.domain == "example.com") {

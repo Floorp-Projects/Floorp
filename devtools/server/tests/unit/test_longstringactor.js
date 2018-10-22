@@ -20,8 +20,8 @@ function makeMockLongStringActor() {
   actor.actorID = "longString1";
   actor.registeredPool = {
     longStringActors: {
-      [string]: actor
-    }
+      [string]: actor,
+    },
   };
   return actor;
 }
@@ -52,7 +52,7 @@ function test_LSA_onSubstring() {
   // From the start
   response = actor.onSubstring({
     start: 0,
-    end: 4
+    end: 4,
   });
   Assert.equal(response.from, actor.actorID);
   Assert.equal(response.substring, TEST_STRING.substring(0, 4));
@@ -60,7 +60,7 @@ function test_LSA_onSubstring() {
   // In the middle
   response = actor.onSubstring({
     start: 5,
-    end: 8
+    end: 8,
   });
   Assert.equal(response.from, actor.actorID);
   Assert.equal(response.substring, TEST_STRING.substring(5, 8));
@@ -68,7 +68,7 @@ function test_LSA_onSubstring() {
   // Whole string
   response = actor.onSubstring({
     start: 0,
-    end: TEST_STRING.length
+    end: TEST_STRING.length,
   });
   Assert.equal(response.from, actor.actorID);
   Assert.equal(response.substring, TEST_STRING);
@@ -76,7 +76,7 @@ function test_LSA_onSubstring() {
   // Negative index
   response = actor.onSubstring({
     start: -5,
-    end: TEST_STRING.length
+    end: TEST_STRING.length,
   });
   Assert.equal(response.from, actor.actorID);
   Assert.equal(response.substring,
@@ -85,7 +85,7 @@ function test_LSA_onSubstring() {
   // Past the end
   response = actor.onSubstring({
     start: TEST_STRING.length - 5,
-    end: 100
+    end: 100,
   });
   Assert.equal(response.from, actor.actorID);
   Assert.equal(response.substring,

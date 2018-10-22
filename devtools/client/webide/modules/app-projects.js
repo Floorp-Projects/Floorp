@@ -126,7 +126,7 @@ const IDB = {
                this.error.name + " - " + this.error.message);
       };
     });
-  }
+  },
 };
 
 var loadDeferred = IDB.open().then(function(projects) {
@@ -158,7 +158,7 @@ const AppProjects = {
       // its manifest URL.
       // If the app ends up specifying an explicit origin in its manifest,
       // we will override this random UUID on app install.
-      packagedAppOrigin: generateUUID().toString().slice(1, -1)
+      packagedAppOrigin: generateUUID().toString().slice(1, -1),
     };
     return IDB.add(project).then(() => {
       this.projects.push(project);
@@ -173,7 +173,7 @@ const AppProjects = {
     }
     const project = {
       type: "hosted",
-      location: manifestURL
+      location: manifestURL,
     };
     return IDB.add(project).then(() => {
       this.projects.push(project);
@@ -214,7 +214,7 @@ const AppProjects = {
     return null;
   },
 
-  projects: []
+  projects: [],
 };
 
 EventEmitter.decorate(AppProjects);

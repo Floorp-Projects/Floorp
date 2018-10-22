@@ -14,7 +14,7 @@ const PREDEFINED = {
   "linear": [0, 0, 1, 1],
   "ease-in": [0.42, 0, 1, 1],
   "ease-out": [0, 0, 0.58, 1],
-  "ease-in-out": [0.42, 0, 0.58, 1]
+  "ease-in-out": [0.42, 0, 0.58, 1],
 };
 
 const PRESETS = {
@@ -28,7 +28,7 @@ const PRESETS = {
     "ease-in-quintic": [0.76, 0.05, 0.86, 0.06],
     "ease-in-exponential": [0.95, 0.05, 0.8, 0.04],
     "ease-in-circular": [0.6, 0.04, 0.98, 0.34],
-    "ease-in-backward": [0.6, -0.28, 0.74, 0.05]
+    "ease-in-backward": [0.6, -0.28, 0.74, 0.05],
   },
   "ease-out": {
     "ease-out-linear": [0, 0, 1, 1],
@@ -40,7 +40,7 @@ const PRESETS = {
     "ease-out-quintic": [0.23, 1, 0.32, 1],
     "ease-out-exponential": [0.19, 1, 0.22, 1],
     "ease-out-circular": [0.08, 0.82, 0.17, 1],
-    "ease-out-backward": [0.18, 0.89, 0.32, 1.28]
+    "ease-out-backward": [0.18, 0.89, 0.32, 1.28],
   },
   "ease-in-out": {
     "ease-in-out-linear": [0, 0, 1, 1],
@@ -53,8 +53,8 @@ const PRESETS = {
     "ease-in-out-quintic": [0.86, 0, 0.07, 1],
     "ease-in-out-exponential": [1, 0, 0, 1],
     "ease-in-out-circular": [0.79, 0.14, 0.15, 0.86],
-    "ease-in-out-backward": [0.68, -0.55, 0.27, 1.55]
-  }
+    "ease-in-out-backward": [0.68, -0.55, 0.27, 1.55],
+  },
 };
 
 const DEFAULT_PRESET_CATEGORY = Object.keys(PRESETS)[0];

@@ -117,7 +117,7 @@ addMessageListener("devtools:test:profiler", function({ data }) {
   const result = Services.profiler[method](...args);
   sendAsyncMessage("devtools:test:profiler:response", {
     data: result,
-    id: id
+    id: id,
   });
 });
 
@@ -125,7 +125,7 @@ addMessageListener("devtools:test:profiler", function({ data }) {
 addMessageListener("devtools:test:eval", function({ data }) {
   sendAsyncMessage("devtools:test:eval:response", {
     value: content.eval(data.script),
-    id: data.id
+    id: data.id,
   });
 });
 

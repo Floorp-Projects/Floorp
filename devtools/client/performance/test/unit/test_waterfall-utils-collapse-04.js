@@ -20,7 +20,7 @@ add_task(function test() {
     WaterfallUtils.collapseMarkersIntoNode({
       rootNode: rootMarkerNode,
       markersList: gTestMarkers,
-      filter
+      filter,
     });
 
     compare(rootMarkerNode, expected);
@@ -83,7 +83,7 @@ const gExpectedOutputNoDOMEvent = {
     ]},
     { start: 25, end: 30, name: "Javascript", submarkers: [
       { start: 26, end: 27, name: "Paint" },
-    ]}
+    ]},
   ]};
 
 const gExpectedOutputNoDOMEventOrJS = {

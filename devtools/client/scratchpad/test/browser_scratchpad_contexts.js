@@ -81,7 +81,7 @@ function runTests() {
 
       delete window.foobarBug636725;
       ok(!window.foobarBug636725, "no window.foobarBug636725");
-    }
+    },
   }, {
     method: "run",
     prepare: function() {
@@ -93,7 +93,7 @@ function runTests() {
     then: function([, , result]) {
       is(result.class, "Object",
          "chrome context has access to chrome objects");
-    }
+    },
   }, {
     method: "run",
     prepare: function() {
@@ -102,7 +102,7 @@ function runTests() {
     },
     then: function([, , result]) {
       is(result, "undefined", "global variable does not exist");
-    }
+    },
   }, {
     method: "run",
     prepare: function() {
@@ -112,7 +112,7 @@ function runTests() {
     then: function([, , result]) {
       is(result, "string",
          "global variable exists across two different executions");
-    }
+    },
   }, {
     method: "run",
     prepare: function() {
@@ -122,7 +122,7 @@ function runTests() {
     then: function([, , result]) {
       is(result, "string",
          "global variable exists across two different executions");
-    }
+    },
   }, {
     method: "run",
     prepare: function() {
@@ -136,7 +136,7 @@ function runTests() {
     then: function([, , result]) {
       is(result, "undefined",
          "global variable no longer exists after changing the context");
-    }
+    },
   }];
 
   runAsyncCallbackTests(sp, tests).then(() => {

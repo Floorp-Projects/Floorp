@@ -19,7 +19,7 @@
       // input@type="checkbox"
       var accTree = {
         role: ROLE_CHECKBUTTON,
-        children: [ ]
+        children: [ ],
       };
 
       testAccessibleTree("checkbox", accTree);
@@ -27,7 +27,7 @@
       // input@type="radio"
       accTree = {
         role: ROLE_RADIOBUTTON,
-        children: [ ]
+        children: [ ],
       };
 
       testAccessibleTree("radio", accTree);
@@ -38,9 +38,9 @@
         role: ROLE_PUSHBUTTON,
         children: [
           {
-            role: ROLE_TEXT_LEAF // XXX Bug 567203
-          }
-        ]
+            role: ROLE_TEXT_LEAF, // XXX Bug 567203
+          },
+        ],
       };
 
       testAccessibleTree("btn1", accTree);
@@ -52,9 +52,9 @@
         role: ROLE_PUSHBUTTON,
         children: [
           {
-            role: ROLE_STATICTEXT
-          }
-        ]
+            role: ROLE_STATICTEXT,
+          },
+        ],
       };
       testAccessibleTree("image_submit", accTree);
 
@@ -67,7 +67,7 @@
         { SPINBUTTON: [
           { ENTRY: [ ] },
           { PUSHBUTTON: [ ] },
-          { PUSHBUTTON: [ ] }
+          { PUSHBUTTON: [ ] },
         ] };
       testAccessibleTree("number", accTree);
 
@@ -76,9 +76,9 @@
         role: ROLE_SECTION,
         children: [
           {
-            role: ROLE_TEXT_LEAF
-          }
-        ]
+            role: ROLE_TEXT_LEAF,
+          },
+        ],
       };
       testAccessibleTree("output", accTree);
 

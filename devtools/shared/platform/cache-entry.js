@@ -107,11 +107,11 @@
              } else {
                onCacheDescriptorAvailable(null);
              }
-           }
+           },
          }
        );
      } else {
        onCacheDescriptorAvailable(null);
      }
-   }
+   },
  };

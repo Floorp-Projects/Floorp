@@ -56,7 +56,7 @@ function checkDiskCacheFor(host) {
       onCacheEntryVisitCompleted: function() {
         is(foundPrivateData, false, "web content present in disk cache");
         resolve();
-      }
+      },
     };
     function Visitor() {}
 

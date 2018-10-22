@@ -417,6 +417,12 @@ browsing-search-on-start-typing =
     .label = Search for text when you start typing
     .accesskey = x
 
+browsing-cfr-recommendations =
+    .label = Recommend extensions as you browse
+    .accesskey = R
+
+browsing-cfr-recommendations-learn-more = Learn More
+
 ## General Section - Proxy
 
 network-settings-title = Network Settings

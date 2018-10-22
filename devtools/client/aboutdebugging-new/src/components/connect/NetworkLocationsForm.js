@@ -23,7 +23,7 @@ class NetworkLocationsForm extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      value: ""
+      value: "",
     };
   }
 
@@ -38,11 +38,11 @@ class NetworkLocationsForm extends PureComponent {
             this.setState({ value: "" });
           }
           e.preventDefault();
-        }
+        },
       },
       Localized(
         {
-          id: "about-debugging-network-locations-host-input-label"
+          id: "about-debugging-network-locations-host-input-label",
         },
         dom.label(
           {
@@ -60,15 +60,15 @@ class NetworkLocationsForm extends PureComponent {
         onChange: (e) => {
           const value = e.target.value;
           this.setState({ value });
-        }
+        },
       }),
       Localized(
         {
-          id: "about-debugging-network-locations-add-button"
+          id: "about-debugging-network-locations-add-button",
         },
         dom.button(
           {
-            className: "std-button js-network-form-submit-button"
+            className: "std-button js-network-form-submit-button",
           },
           "Add"
         )

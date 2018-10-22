@@ -32,7 +32,7 @@
 
       this.eventSeq = [
         new invokerChecker(aAction === kShow ? EVENT_SHOW : EVENT_HIDE, this.DOMNode),
-        new invokerChecker(EVENT_REORDER, this.IFrameContainerDOMNode)
+        new invokerChecker(EVENT_REORDER, this.IFrameContainerDOMNode),
       ];
 
       this.invoke = () => {
@@ -51,10 +51,10 @@
               {
                 role: ROLE_INTERNAL_FRAME,
                 children: [
-                  { role: ROLE_DOCUMENT }
-                ]
-              }
-            ]
+                  { role: ROLE_DOCUMENT },
+                ],
+              },
+            ],
         });
 
       this.getID = () => {

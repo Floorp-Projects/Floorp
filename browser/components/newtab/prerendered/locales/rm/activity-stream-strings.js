@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Temas populars:",
   "pocket_read_even_more": "Mussar dapli artitgels",
   "pocket_more_reccommendations": "Dapli propostas",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Co ch'i funcziuna",
   "pocket_cta_button": "Obtegnair Pocket",
   "pocket_cta_text": "Memorisescha ils artitgels che ta plaschan en Pocket e procura per inspiraziun cuntinuanta cun lectura fascinanta.",
   "highlights_empty_state": "Cumenza a navigar e nus ta mussain qua artitgels, videos ed autras paginas che ti has visità dacurt u che ti has agiuntà dacurt sco segnapagina.",

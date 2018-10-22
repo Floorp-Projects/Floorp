@@ -29,7 +29,7 @@ function run_test() {
     domNode: {
       by: "descriptiveType",
       then: { by: "count", count: true, bytes: true },
-    }
+    },
   };
 
   const REPORT = {
@@ -46,7 +46,7 @@ function run_test() {
     other: {
       "js::Shape": { bytes: 80, count: 8 },
     },
-    domNode: { }
+    domNode: { },
   };
 
   const EXPECTED = {
@@ -80,12 +80,12 @@ function run_test() {
                 id: 15,
                 parent: 14,
                 reportLeafIndex: undefined,
-              }
+              },
             ],
             id: 14,
             parent: 13,
             reportLeafIndex: undefined,
-          }
+          },
         ],
         id: 13,
         parent: 12,
@@ -115,12 +115,12 @@ function run_test() {
                 id: 18,
                 parent: 17,
                 reportLeafIndex: undefined,
-              }
+              },
             ],
             id: 17,
             parent: 16,
             reportLeafIndex: undefined,
-          }
+          },
         ],
         id: 16,
         parent: 12,
@@ -150,12 +150,12 @@ function run_test() {
                 id: 21,
                 parent: 20,
                 reportLeafIndex: undefined,
-              }
+              },
             ],
             id: 20,
             parent: 19,
             reportLeafIndex: undefined,
-          }
+          },
         ],
         id: 19,
         parent: 12,
@@ -185,12 +185,12 @@ function run_test() {
                 id: 24,
                 parent: 23,
                 reportLeafIndex: undefined,
-              }
+              },
             ],
             id: 23,
             parent: 22,
             reportLeafIndex: undefined,
-          }
+          },
         ],
         id: 22,
         parent: 12,

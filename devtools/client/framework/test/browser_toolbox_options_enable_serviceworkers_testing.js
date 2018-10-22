@@ -24,7 +24,7 @@ function test() {
   SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", false]
+    ["dom.serviceWorkers.testing.enabled", false],
   ]}, init);
 }
 

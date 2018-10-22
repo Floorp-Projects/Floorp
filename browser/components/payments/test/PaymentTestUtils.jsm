@@ -112,6 +112,7 @@ var PaymentTestUtils = {
      * @param {PaymentMethodData[]} methodData
      * @param {PaymentDetailsInit} details
      * @param {PaymentOptions} options
+     * @returns {Object}
      */
     createAndShowRequest: ({methodData, details, options}) => {
       const rq = new content.PaymentRequest(Cu.cloneInto(methodData, content), details, options);
@@ -121,19 +122,9 @@ var PaymentTestUtils = {
       content.showPromise = rq.show();
 
       handle.destruct();
-    },
-
-    /**
-     * Add a rejection handler for the `showPromise` created by createAndShowRequest
-     * and stash details of any eventual exception or response in `rqResult`
-     */
-    catchShowPromiseRejection: () => {
-      content.rqResult = {};
-      content.showPromise.then(res => content.rqResult.response = res)
-                         .catch(ex => content.rqResult.showException = {
-                           name: ex.name,
-                           message: ex.message,
-                         });
+      return {
+        requestId: rq.id,
+      };
     },
   },
 

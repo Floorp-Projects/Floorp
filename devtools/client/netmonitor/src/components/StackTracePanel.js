@@ -55,7 +55,7 @@ class StackTracePanel extends Component {
     } = this.props;
 
     const {
-      stacktrace = []
+      stacktrace = [],
     } = request;
 
     return (

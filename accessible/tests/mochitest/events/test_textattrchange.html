@@ -30,7 +30,7 @@
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_TEXT_ATTRIBUTE_CHANGED, this.DOMNode)
+        new invokerChecker(EVENT_TEXT_ATTRIBUTE_CHANGED, this.DOMNode),
       ];
 
       this.invoke = function spelledTextInvoker_invoke() {
@@ -52,7 +52,7 @@
 
         var attrs = { };
         var misspelledAttrs = {
-          "invalid": "spelling"
+          "invalid": "spelling",
         };
 
         testTextAttrs(aID, 0, attrs, defAttrs, 0, 11);

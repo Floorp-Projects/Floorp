@@ -173,6 +173,21 @@ describe("SubmitFormSnippet", () => {
       assert.equal(wrapper.state().signupSubmitted, true);
       assert.notCalled(onBlockStub);
     });
+    it("should not block if do_not_autoblock is true", async () => {
+      sandbox.stub(window, "fetch").resolves(fetchOk);
+      wrapper = mountAndCheckProps({
+        scene1_text: "bar",
+        scene2_email_placeholder_text: "Email",
+        scene2_text: "signup",
+        do_not_autoblock: true,
+      });
+      wrapper.setState({expanded: true});
+      await wrapper.instance().handleSubmit({preventDefault: sandbox.stub()});
+
+      assert.equal(wrapper.state().signupSuccess, true);
+      assert.equal(wrapper.state().signupSubmitted, true);
+      assert.notCalled(onBlockStub);
+    });
     it("should send user telemetry if submission failed", async () => {
       sandbox.stub(window, "fetch").resolves(fetchFail);
       wrapper.setState({expanded: true});

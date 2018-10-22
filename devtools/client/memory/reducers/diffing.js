@@ -44,7 +44,7 @@ handlers[actions.SELECT_SNAPSHOT_FOR_DIFFING] = function(diffing, { snapshot }) 
 
   if (!diffing.firstSnapshotId) {
     return immutableUpdate(diffing, {
-      firstSnapshotId: snapshot.id
+      firstSnapshotId: snapshot.id,
     });
   }
 
@@ -58,7 +58,7 @@ handlers[actions.SELECT_SNAPSHOT_FOR_DIFFING] = function(diffing, { snapshot }) 
   }
 
   return immutableUpdate(diffing, {
-    secondSnapshotId: snapshot.id
+    secondSnapshotId: snapshot.id,
   });
 };
 
@@ -76,7 +76,7 @@ handlers[actions.TAKE_CENSUS_DIFF_START] = function(diffing, action) {
       inverted: action.inverted,
       filter: action.filter,
       display: action.display,
-    }
+    },
   });
 };
 
@@ -96,14 +96,14 @@ handlers[actions.TAKE_CENSUS_DIFF_END] = function(diffing, action) {
       inverted: action.inverted,
       filter: action.filter,
       display: action.display,
-    }
+    },
   });
 };
 
 handlers[actions.DIFFING_ERROR] = function(diffing, action) {
   return {
     state: diffingState.ERROR,
-    error: action.error
+    error: action.error,
   };
 };
 

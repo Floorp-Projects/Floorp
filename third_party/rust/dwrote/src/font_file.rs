@@ -11,6 +11,7 @@ use std::fs::File;
 use std::os::windows::ffi::{OsStrExt, OsStringExt};
 use std::os::windows::io::IntoRawHandle;
 use std::path::Path;
+use std::sync::Arc;
 
 use comptr::ComPtr;
 
@@ -27,6 +28,7 @@ use super::DWriteFactory;
 
 pub struct FontFile {
     native: UnsafeCell<ComPtr<IDWriteFontFile>>,
+    stream: UnsafeCell<Option<ComPtr<IDWriteFontFileStream>>>,
     data_key: usize,
     face_type: DWRITE_FONT_FACE_TYPE,
 }
@@ -47,34 +49,36 @@ impl FontFile {
 
             Some(FontFile {
                 native: UnsafeCell::new(font_file),
+                stream: UnsafeCell::new(None),
                 data_key: 0,
                 face_type: DWRITE_FONT_FACE_TYPE_UNKNOWN,
             })
         }
     }
 
-    pub fn new_from_data(data: &[u8]) -> Option<FontFile> {
-        let (font_file, key) = DataFontHelper::register_font_data(data);
+    pub fn new_from_data(data: Arc<Vec<u8>>) -> Option<FontFile> {
+        let (font_file, font_file_stream, key) = DataFontHelper::register_font_data(data);
 
         let mut ff = FontFile {
             native: UnsafeCell::new(font_file),
+            stream: UnsafeCell::new(Some(font_file_stream)),
             data_key: key,
             face_type: DWRITE_FONT_FACE_TYPE_UNKNOWN,
         };
 
         if ff.analyze() == 0 {
-            DataFontHelper::unregister_font_data(key);
-            return None;
+            None
+        } else {
+            Some(ff)
         }
-
-        Some(ff)
     }
 
-    pub fn analyze_data(data: &[u8]) -> u32 {
-        let (font_file, key) = DataFontHelper::register_font_data(data);
+    pub fn analyze_data(data: Arc<Vec<u8>>) -> u32 {
+        let (font_file, font_file_stream, key) = DataFontHelper::register_font_data(data);
 
         let mut ff = FontFile {
             native: UnsafeCell::new(font_file),
+            stream: UnsafeCell::new(Some(font_file_stream)),
             data_key: key,
             face_type: DWRITE_FONT_FACE_TYPE_UNKNOWN,
         };
@@ -104,6 +108,7 @@ impl FontFile {
     pub fn take(native: ComPtr<IDWriteFontFile>) -> FontFile {
         let mut ff = FontFile {
             native: UnsafeCell::new(native),
+            stream: UnsafeCell::new(None),
             data_key: 0,
             face_type: DWRITE_FONT_FACE_TYPE_UNKNOWN,
         };
@@ -216,6 +221,7 @@ impl Clone for FontFile {
         unsafe {
             FontFile {
                 native: UnsafeCell::new((*self.native.get()).clone()),
+                stream: UnsafeCell::new((*self.stream.get()).clone()),
                 data_key: self.data_key,
                 face_type: self.face_type,
             }

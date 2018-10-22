@@ -31,27 +31,27 @@ add_task(async function() {
   const expectedValues = [
     {
         key: "Response cookies",
-        value: ""
+        value: "",
     },
     {
         key: "foo",
-        value: ""
+        value: "",
     },
     {
         key: "samesite",
-        value: "Lax"
+        value: "Lax",
     },
     {
         key: "value",
-        value: "bar"
+        value: "bar",
     },
     {
         key: "Request cookies",
-        value: ""
+        value: "",
     },
     {
         key: "foo",
-        value: "bar"
+        value: "bar",
     },
   ];
   const labelCells = document.querySelectorAll(".treeLabelCell");

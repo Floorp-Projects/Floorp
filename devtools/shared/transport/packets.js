@@ -83,7 +83,7 @@ Packet.prototype = {
 
   destroy: function() {
     this._transport = null;
-  }
+  },
 
 };
 
@@ -147,7 +147,7 @@ Object.defineProperty(JSONPacket.prototype, "object", {
     const data = JSON.stringify(object);
     this._data = unicodeConverter.ConvertFromUnicode(data);
     this.length = this._data.length;
-  }
+  },
 });
 
 JSONPacket.prototype.read = function(stream, scriptableStream) {
@@ -203,7 +203,7 @@ JSONPacket.prototype.write = function(stream) {
 Object.defineProperty(JSONPacket.prototype, "done", {
   get: function() {
     return this._done;
-  }
+  },
 });
 
 JSONPacket.prototype.toString = function() {
@@ -259,7 +259,7 @@ BulkPacket.fromHeader = function(header, transport) {
   packet.header = {
     actor: match[1],
     type: match[2],
-    length: +match[3]
+    length: +match[3],
   };
   return packet;
 };
@@ -286,7 +286,7 @@ BulkPacket.prototype.read = function(stream) {
         return copying;
       },
       stream: stream,
-      done: resolve
+      done: resolve,
     });
     // Await the result of reading from the stream
   })
@@ -335,7 +335,7 @@ BulkPacket.prototype.write = function(stream) {
         return copying;
       },
       stream: stream,
-      done: resolve
+      done: resolve,
     });
     // Await the result of writing to the stream
   })
@@ -354,7 +354,7 @@ BulkPacket.prototype.write = function(stream) {
 Object.defineProperty(BulkPacket.prototype, "streamReadyForWriting", {
   get: function() {
     return this._readyForWriting;
-  }
+  },
 });
 
 Object.defineProperty(BulkPacket.prototype, "header", {
@@ -362,7 +362,7 @@ Object.defineProperty(BulkPacket.prototype, "header", {
     return {
       actor: this.actor,
       type: this.type,
-      length: this.length
+      length: this.length,
     };
   },
 
@@ -416,7 +416,7 @@ RawPacket.prototype.write = function(stream) {
 Object.defineProperty(RawPacket.prototype, "done", {
   get: function() {
     return this._done;
-  }
+  },
 });
 
 exports.RawPacket = RawPacket;

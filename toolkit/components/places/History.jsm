@@ -786,8 +786,8 @@ function convertForUpdatePlaces(pageInfo) {
  * Convert a list of strings or numbers to its SQL
  * representation as a string.
  */
-function sqlList(list) {
-  return list.map(JSON.stringify).join();
+function sqlList(list, prefix = "", suffix = "") {
+  return list.map(str => `${prefix}"${str}"${suffix}`).join();
 }
 
 /**
@@ -1352,7 +1352,7 @@ var remove = async function(db, {guids, urls}, onResult = null) {
     `SELECT id, url, url_hash, guid, foreign_count, title, frecency
      FROM moz_places
      WHERE guid IN (${ sqlList(guids) })
-        OR (url_hash IN (${ urls.map(u => "hash(" + JSON.stringify(u) + ")").join(",") })
+        OR (url_hash IN (${ sqlList(urls, "hash(", ")") })
             AND url IN (${ sqlList(urls) }))
     `;
 

@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>maximum-scale=2 in meta viewport</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="maximum-scale=2">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>maximum-scale=2</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function maximum_scale_2() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      // FIXME: Bug 1500314
+      // As of revision: 067a1c08f91d, width and height are 980 and 588
+      // respectively, that's because we are using
+      // gfxPrefs::DesktopViewportWidth for the case where neither width nor
+      // height is specified in viewport meta and no initial-scale is specified.
+      // That's odd, it should be fixed.
+      //
+      // From 'Resolve width value' in
+      // https://drafts.csswg.org/css-device-adapt/#resolve-width
+      //
+      // 1. If width and height are both auto, set width = initial-width
+      // 2. Otherwise, if width is auto, set
+      //    width = height * (initial-width / initial-height), or
+      //    width = initial-width if initial-height is 0.
+      //
+      // In this test case 1 should be applied.
+      todo_is(info.width, 800, "width should be the display width");
+      todo_is(info.height, 480, "height should be the display height");
+      is(info.maxZoom, 2, "maximum-scale should be 2");
+    });
+  </script>
+</body>
+</html>

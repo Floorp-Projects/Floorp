@@ -6,7 +6,7 @@
 const {
   getDevices,
   getDeviceString,
-  addDevice
+  addDevice,
 } = require("devtools/client/shared/devices");
 
 add_task(async function() {
@@ -31,7 +31,7 @@ add_task(async function() {
     pixelRatio: 2,
     userAgent: "Mozilla/5.0 (Mobile; rv:42.0)",
     touch: true,
-    firefoxOS: true
+    firefoxOS: true,
   };
   addDevice(device1, type1);
   devices = await getDevices();
@@ -47,7 +47,7 @@ add_task(async function() {
     pixelRatio: 5,
     userAgent: "Mozilla/5.0 (Appliance; rv:42.0)",
     touch: true,
-    firefoxOS: true
+    firefoxOS: true,
   };
   addDevice(device2, type2);
   devices = await getDevices();

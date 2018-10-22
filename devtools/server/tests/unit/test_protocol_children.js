@@ -31,18 +31,18 @@ const childSpec = protocol.generateActorSpec({
     "event1": {
       a: Arg(0),
       b: Arg(1),
-      c: Arg(2)
+      c: Arg(2),
     },
     "event2": {
       a: Arg(0),
       b: Arg(1),
-      c: Arg(2)
+      c: Arg(2),
     },
     "named-event": {
       type: "namedEvent",
       a: Arg(0),
       b: Arg(1),
-      c: Arg(2)
+      c: Arg(2),
     },
     "object-event": {
       type: "objectEvent",
@@ -51,7 +51,7 @@ const childSpec = protocol.generateActorSpec({
     "array-object-event": {
       type: "arrayObjectEvent",
       detail: Arg(0, "array:childActor#detail2"),
-    }
+    },
   },
 
   methods: {
@@ -69,24 +69,24 @@ const childSpec = protocol.generateActorSpec({
     },
     getIDDetail: {
       response: {
-        idDetail: RetVal("childActor#actorid")
-      }
+        idDetail: RetVal("childActor#actorid"),
+      },
     },
     getIntArray: {
       request: { inputArray: Arg(0, "array:number") },
-      response: RetVal("array:number")
+      response: RetVal("array:number"),
     },
     getSibling: {
       request: { id: Arg(0) },
-      response: { sibling: RetVal("childActor") }
+      response: { sibling: RetVal("childActor") },
     },
     emitEvents: {
       response: { value: RetVal("string") },
     },
     release: {
-      release: true
-    }
-  }
+      release: true,
+    },
+  },
 });
 
 var ChildActor = protocol.ActorClassWithSpec(childSpec, {
@@ -116,7 +116,7 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
     return {
       actor: this.actorID,
       childID: this.childID,
-      detail: detail
+      detail: detail,
     };
   },
 
@@ -227,14 +227,14 @@ const rootSpec = protocol.generateActorSpec({
       response: { children: RetVal("array:childActor") },
     },
     getManyChildren: {
-      response: RetVal("manyChildrenDict")
+      response: RetVal("manyChildrenDict"),
     },
     getTemporaryChild: {
       request: { id: Arg(0) },
-      response: { child: RetVal("temp:childActor") }
+      response: { child: RetVal("temp:childActor") },
     },
-    clearTemporaryChildren: {}
-  }
+    clearTemporaryChildren: {},
+  },
 });
 
 var rootActor = null;
@@ -279,7 +279,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
       // note that this isn't in the specialization array.
       foo: "bar",
       child5: this.getChild("child5"),
-      more: [ this.getChild("child6"), this.getChild("child7") ]
+      more: [ this.getChild("child6"), this.getChild("child7") ],
     };
   },
 
@@ -297,7 +297,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     }
     this._temporaryHolder.destroy();
     delete this._temporaryHolder;
-  }
+  },
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
@@ -319,7 +319,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
     }
     return this._getTemporaryChild(id);
   }, {
-    impl: "_getTemporaryChild"
+    impl: "_getTemporaryChild",
   }),
 
   clearTemporaryChildren: protocol.custom(function() {
@@ -330,8 +330,8 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
     delete this._temporaryHolder;
     return this._clearTemporaryChildren();
   }, {
-    impl: "_clearTemporaryChildren"
-  })
+    impl: "_clearTemporaryChildren",
+  }),
 });
 
 function run_test() {

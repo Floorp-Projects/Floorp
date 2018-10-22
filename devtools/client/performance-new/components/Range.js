@@ -41,7 +41,7 @@ class Range extends PureComponent {
         label(
           {
             className: "perf-settings-label",
-            htmlFor: id
+            htmlFor: id,
           },
           labelText
         ),

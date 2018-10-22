@@ -76,7 +76,7 @@ class MockRegistry {
           throw new Error("invalid registry path");
         }
         return this.values.get(name);
-      }
+      },
     };
 
     this.cid = MockRegistrar.register("@mozilla.org/windows-registry-key;1", MockWindowsRegKey);

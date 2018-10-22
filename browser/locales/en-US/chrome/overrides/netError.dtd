@@ -159,7 +159,9 @@ was trying to connect. -->
 <!ENTITY certerror.introPara2 "&brandShortName; detected a potential security threat and did not continue to <span class='hostname'/>. If you visit this site, attackers could try to steal information like your passwords, emails, or credit card details.">
 <!ENTITY certerror.sts.introPara "&brandShortName; detected a potential security threat and did not continue to <span class='hostname'/> because this website requires a secure connection.">
 
-<!ENTITY certerror.expiredCert.secondPara "This issue is most likely because your computer clock is set to the wrong time, which would prevent &brandShortName; from connecting securely.">
+<!ENTITY certerror.expiredCert.introPara "&brandShortName; detected an issue and did not continue to <span class='hostname'/>. The website is either misconfigured or your computer clock is set to the wrong time.">
+<!ENTITY certerror.expiredCert.secondPara2 "It’s likely the website’s certificate is expired, which prevents &brandShortName; from connecting securely. If you visit this site, attackers could try to steal information like your passwords, emails, or credit card details.">
+<!ENTITY certerror.expiredCert.sts.secondPara "It’s likely the website’s certificate is expired, which prevents &brandShortName; from connecting securely.">
 
 <!ENTITY certerror.whatCanYouDoAboutItTitle "What can you do about it?">
 
@@ -232,7 +234,7 @@ certificate.">
 
 <!ENTITY blockedByPolicy.title "Blocked Page">
 
-<!ENTITY clockSkewError.title "Your computer clock is wrong">
+<!ENTITY clockSkewError.title "Your Computer Clock is Wrong">
 <!ENTITY clockSkewError.longDesc "Your computer thinks it is <span id='wrongSystemTime_systemDate1'/>, which prevents &brandShortName; from connecting securely. To visit <span class='hostname'></span>, update your computer clock in your system settings to the current date, time, and time zone, and then refresh <span class='hostname'></span>.">
 
 <!ENTITY prefReset.longDesc "It looks like your network security settings might be causing this. Do you want the default settings to be restored?">

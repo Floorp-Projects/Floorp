@@ -56,14 +56,14 @@ class MainToolbar extends Component {
           className: "refresh devtools-button",
           id: "dom-refresh-button",
           title: l10n.getStr("dom.refresh"),
-          onClick: this.onRefresh
+          onClick: this.onRefresh,
         }),
         SearchBox({
           key: "filter",
           delay: 250,
           onChange: this.onSearch,
           placeholder: l10n.getStr("dom.filterDOMPanel"),
-          type: "filter"
+          type: "filter",
         })
       )
     );

@@ -89,7 +89,7 @@ WebConsoleOutputWrapper.prototype = {
         recordTelemetryEvent: (eventName, extra = {}) => {
           this.telemetry.recordEvent(eventName, "webconsole", null, {
             ...extra,
-            "session_id": this.toolbox && this.toolbox.sessionId || -1
+            "session_id": this.toolbox && this.toolbox.sessionId || -1,
           });
         },
         createObjectClient: (object) => {
@@ -106,7 +106,7 @@ WebConsoleOutputWrapper.prototype = {
           }
 
           return debuggerClient.release(actor);
-        }
+        },
       };
 
       // Set `openContextMenu` this way so, `serviceContainer` variable
@@ -222,7 +222,7 @@ WebConsoleOutputWrapper.prototype = {
             const onGripNodeToFront = this.toolbox.highlighterUtils.gripToNodeFront(grip);
             const [
               front,
-              inspector
+              inspector,
             ] = await Promise.all([onGripNodeToFront, onSelectInspector]);
 
             const onInspectorUpdated = inspector.once("inspector-updated");
@@ -232,7 +232,7 @@ WebConsoleOutputWrapper.prototype = {
             return Promise.all([onNodeFrontSet, onInspectorUpdated]);
           },
           jumpToExecutionPoint: executionPoint =>
-            this.toolbox.threadClient.timeWarp(executionPoint)
+            this.toolbox.threadClient.timeWarp(executionPoint),
         });
       }
 
@@ -240,7 +240,7 @@ WebConsoleOutputWrapper.prototype = {
         // We may not have access to the toolbox (e.g. in the browser console).
         sessionId: this.toolbox && this.toolbox.sessionId || -1,
         telemetry: this.telemetry,
-        services: serviceContainer
+        services: serviceContainer,
       });
 
       const {prefs} = store.getState();
@@ -496,7 +496,7 @@ WebConsoleOutputWrapper.prototype = {
   // Called by pushing close button.
   closeSplitConsole() {
     this.toolbox.closeSplitConsole();
-  }
+  },
 };
 
 // Exports from this module

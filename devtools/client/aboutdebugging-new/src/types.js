@@ -58,7 +58,7 @@ const runtimeExtra = {
   // parameter to connect to debugger server
   connectionParameters: PropTypes.oneOfType([
     PropTypes.shape(networkRuntimeConnectionParameter),
-    PropTypes.shape(usbRuntimeConnectionParameter)
+    PropTypes.shape(usbRuntimeConnectionParameter),
   ]).isRequired,
 
   // device name, only available on USB devices

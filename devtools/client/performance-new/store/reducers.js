@@ -131,7 +131,7 @@ function initializedValues(state = null, action) {
       return {
         perfFront: action.perfFront,
         receiveProfile: action.receiveProfile,
-        setRecordingPreferences: action.setRecordingPreferences
+        setRecordingPreferences: action.setRecordingPreferences,
       };
     default:
       return state;

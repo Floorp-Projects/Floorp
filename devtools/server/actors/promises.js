@@ -194,7 +194,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
     this._navigationLifetimePool.cleanup();
     this.dbg.removeAllDebuggees();
     this.dbg.addDebuggees();
-  })
+  }),
 });
 
 exports.PromisesActor = PromisesActor;

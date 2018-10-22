@@ -35,7 +35,7 @@ function testNonTrimmed(doc) {
       editor.input.value = changed;
       EventUtils.sendKey("return");
     },
-    done: onDone(changed, true, def)
+    done: onDone(changed, true, def),
   }, doc);
 
   return def.promise;
@@ -55,7 +55,7 @@ function testTrimmed(doc) {
       editor.input.value = changed;
       EventUtils.sendKey("return");
     },
-    done: onDone(changed.trim(), true, def)
+    done: onDone(changed.trim(), true, def),
   }, doc);
 
   return def.promise;

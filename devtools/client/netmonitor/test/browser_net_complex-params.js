@@ -99,7 +99,7 @@ add_task(async function() {
   await wait;
   testParamsTabGetWithArgs(new Map([
     ["a", ["b", "c"]],
-    ["d", "1"]
+    ["d", "1"],
   ]));
 
   await teardown(monitor);

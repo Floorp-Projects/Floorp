@@ -67,7 +67,7 @@ class HSplitBox extends Component {
     super(props);
 
     this.state = {
-      mouseDown: false
+      mouseDown: false,
     };
 
     this._onMouseDown = this._onMouseDown.bind(this);

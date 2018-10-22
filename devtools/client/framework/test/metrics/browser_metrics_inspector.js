@@ -29,7 +29,7 @@ add_task(async function() {
 
   const PERFHERDER_DATA = {
     framework: {
-      name: "devtools"
+      name: "devtools",
     },
     suites: [{
       name: "inspector-metrics",
@@ -37,22 +37,22 @@ add_task(async function() {
       subtests: [
         {
           name: "inspector-modules",
-          value: inspectorModulesCount
+          value: inspectorModulesCount,
         },
         {
           name: "inspector-chars",
-          value: inspectorModulesChars
+          value: inspectorModulesChars,
         },
         {
           name: "all-modules",
-          value: allModulesCount
+          value: allModulesCount,
         },
         {
           name: "all-chars",
-          value: allModulesChars
+          value: allModulesChars,
         },
       ],
-    }]
+    }],
   };
   info("PERFHERDER_DATA: " + JSON.stringify(PERFHERDER_DATA));
 

@@ -22,6 +22,6 @@ module.exports = function defer() {
   return {
     resolve: resolve,
     reject: reject,
-    promise: promise
+    promise: promise,
   };
 };

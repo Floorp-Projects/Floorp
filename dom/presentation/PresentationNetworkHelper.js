@@ -20,7 +20,7 @@ PresentationNetworkHelper.prototype = {
     EventDispatcher.instance.sendRequestForResult({type: "Wifi:GetIPAddress"})
              .then(result => aListener.onGetWifiIPAddress(result),
                    err => aListener.onError(err));
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PresentationNetworkHelper]);

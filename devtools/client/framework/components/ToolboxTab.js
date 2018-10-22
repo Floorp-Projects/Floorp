@@ -33,7 +33,7 @@ class ToolboxTab extends Component {
     }
     return [
       img({
-        src: icon
+        src: icon,
       }),
     ];
   }
@@ -48,7 +48,7 @@ class ToolboxTab extends Component {
       "devtools-tab",
       currentToolId === id ? "selected" : "",
       highlightedTools.has(id) ? "highlighted" : "",
-      iconOnly ? "devtools-tab-icon-only" : ""
+      iconOnly ? "devtools-tab-icon-only" : "",
     ].join(" ");
 
     return button(
@@ -71,7 +71,7 @@ class ToolboxTab extends Component {
       },
       span(
         {
-          className: "devtools-tab-line"
+          className: "devtools-tab-line",
         }
       ),
       ...this.renderIcon(panelDefinition, isHighlighted),
@@ -79,13 +79,13 @@ class ToolboxTab extends Component {
         null :
         span(
           {
-            className: "devtools-tab-label"
+            className: "devtools-tab-label",
           },
           label,
           badge && !isHighlighted ?
             span(
               {
-                className: "devtools-tab-badge"
+                className: "devtools-tab-badge",
               },
               badge
             ) :

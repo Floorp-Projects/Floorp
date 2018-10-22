@@ -9,7 +9,7 @@ Observer.prototype = {
     if (topic == "last-pb-context-exited") {
       run_next_test();
     }
-  }
+  },
 };
 
 var gObserver = new Observer();

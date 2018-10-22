@@ -23,7 +23,7 @@ add_task(async function() {
     front.setup({ reload: true }),
     once(front, "start-context"),
     get3(front, "create-node"),
-    get2(front, "connect-node")
+    get2(front, "connect-node"),
   ]);
 
   is(events.length, 4, "correct number of events fired");

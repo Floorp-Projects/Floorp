@@ -74,7 +74,7 @@ function runContents(result, contents) {
             summary() {
                 result += "Leaked " + Object.keys(this.windows).length + " out of " +
                           this.count + " DOM Windows\n";
-            }
+            },
         },
         "DOCUMENT": {
             count: 0,
@@ -118,7 +118,7 @@ function runContents(result, contents) {
             summary() {
                 result += "Leaked " + Object.keys(this.docs).length + " out of " +
                           this.count + " documents\n";
-            }
+            },
         },
         "DOCSHELL": {
             count: 0,
@@ -155,7 +155,7 @@ function runContents(result, contents) {
             summary() {
                 result += "Leaked " + Object.keys(this.shells).length + " out of " +
                           this.count + " docshells\n";
-            }
+            },
         },
         "NODEINFOMANAGER": {
             count: 0,
@@ -199,8 +199,8 @@ function runContents(result, contents) {
             summary() {
                 result += "Leaked content nodes in " + Object.keys(this.nims).length + " out of " +
                           this.count + " documents\n";
-            }
-        }
+            },
+        },
     };
 
     var lines = contents.split(/[\r\n]+/);

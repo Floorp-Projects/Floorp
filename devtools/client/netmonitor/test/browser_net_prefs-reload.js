@@ -38,7 +38,7 @@ add_task(async function() {
       // Predicate used to modify the frontend when setting the new pref value,
       // before trying to validate the changes.
       modifyFrontend: (value) => value.forEach(e =>
-        getStore().dispatch(Actions.toggleRequestFilterType(e)))
+        getStore().dispatch(Actions.toggleRequestFilterType(e))),
     },
     networkDetailsWidth: {
       newValue: ~~(Math.random() * 200 + 100),
@@ -47,7 +47,7 @@ add_task(async function() {
       modifyFrontend: function(value) {
         getDoc().querySelector(".monitor-panel .split-box .controlled")
                 .style.width = `${value}px`;
-      }
+      },
     },
     networkDetailsHeight: {
       newValue: ~~(Math.random() * 300 + 100),
@@ -56,8 +56,8 @@ add_task(async function() {
       modifyFrontend: function(value) {
         getDoc().querySelector(".monitor-panel .split-box .controlled")
                 .style.height = `${value}px`;
-      }
-    }
+      },
+    },
     /* add more prefs here... */
   };
 

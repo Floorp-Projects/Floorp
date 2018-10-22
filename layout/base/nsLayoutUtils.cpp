@@ -9171,7 +9171,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
                                      const nsRect& aViewport,
                                      const Maybe<nsRect>& aClipRect,
                                      bool aIsRootContent,
-                                     const ContainerLayerParameters& aContainerParameters)
+                                     const Maybe<ContainerLayerParameters>& aContainerParameters)
 {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
@@ -9333,8 +9333,13 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
   // content is actually rendered. It includes the pres shell resolutions of
   // all the pres shells from here up to the root, as well as any css-driven
   // resolution. We don't need to compute it as it's already stored in the
-  // container parameters.
-  metrics.SetCumulativeResolution(aContainerParameters.Scale());
+  // container parameters... except if we're in WebRender in which case we
+  // don't have a aContainerParameters. In that case we're also not rasterizing
+  // in Gecko anyway, so the only resolution we care about here is the presShell
+  // resolution which we need to propagate to WebRender.
+  metrics.SetCumulativeResolution(aContainerParameters
+      ? aContainerParameters->Scale()
+      : LayoutDeviceToLayerScale2D(LayoutDeviceToLayerScale(presShell->GetCumulativeResolution())));
 
   LayoutDeviceToScreenScale2D resolutionToScreen(
       presShell->GetCumulativeResolution()
@@ -9502,7 +9507,7 @@ nsLayoutUtils::GetRootMetadata(nsDisplayListBuilder* aBuilder,
                            rootScrollFrame, content,
                            aBuilder->FindReferenceFrameFor(frame),
                            aLayerManager, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
-                           isRootContent, aContainerParameters));
+                           isRootContent, Some(aContainerParameters)));
   }
 
   return Nothing();

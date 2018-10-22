@@ -19,7 +19,7 @@ add_task(async function() {
 
   info(`toggle "error" filter`);
   await setFilterState(hud, {
-    error: false
+    error: false,
   });
 
   filterState = await getFilterState(hud);
@@ -38,7 +38,7 @@ add_task(async function() {
 
   info(`toggle "error" filter in browser console`);
   await setFilterState(hud, {
-    error: false
+    error: false,
   });
 
   filterState = await getFilterState(hud);

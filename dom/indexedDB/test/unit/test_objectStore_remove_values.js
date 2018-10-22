@@ -33,7 +33,7 @@ function* testSteps()
       storedObject: {name: "Lincoln"},
       keyName: null,
       keyValue: 1,
-    }
+    },
   ];
 
   for (let i = 0; i < data.length; i++) {

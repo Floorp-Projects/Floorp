@@ -23,7 +23,7 @@ const TEST_DATA = [
   { delta: 3580, value: 39 }, { delta: 3680, value: 42 },
   { delta: 3780, value: 49 }, { delta: 3880, value: 55 },
   { delta: 3980, value: 60 }, { delta: 4080, value: 60 },
-  { delta: 4180, value: 60 }
+  { delta: 4180, value: 60 },
 ];
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 

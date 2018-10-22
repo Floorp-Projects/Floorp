@@ -35,8 +35,8 @@ ProtocolHandler.prototype =
   newChannel2() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },
   newChannel() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIProtocolHandler
-  ])
+    Ci.nsIProtocolHandler,
+  ]),
 };
 
 var testProtocols = [
@@ -45,26 +45,26 @@ var testProtocols = [
   {scheme: "moz-protocol-ui-resource",
    flags: Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE,
    CID: Components.ID("{d6dedc93-558f-44fe-90f4-3b4bba8a0b14}"),
-   shouldRegister: false
+   shouldRegister: false,
   },
   // It doesn't matter if it has this flag - the only flag we accept is
   // URI_IS_LOCAL_RESOURCE.
   {scheme: "moz-protocol-local-file",
    flags: Ci.nsIProtocolHandler.URI_IS_LOCAL_FILE,
    CID: Components.ID("{ee30d594-0a2d-4f47-89cc-d4cde320ab69}"),
-   shouldRegister: false
+   shouldRegister: false,
   },
   // This clearly is non-local
   {scheme: "moz-protocol-loadable-by-anyone",
    flags: Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE,
    CID: Components.ID("{c3735f23-3b0c-4a33-bfa0-79436dcd40b2}"),
-   shouldRegister: false
+   shouldRegister: false,
   },
   // This should always be last (unless we add more flags that are OK)
   {scheme: "moz-protocol-local-resource",
    flags: Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE,
    CID: Components.ID("{b79e977c-f840-469a-b413-0125cc1b62a5}"),
-   shouldRegister: true
+   shouldRegister: true,
   },
 ];
 function run_test() {
@@ -87,7 +87,7 @@ function run_test() {
       if (outer != null)
         throw Cr.NS_ERROR_NO_AGGREGATION;
       return XULAppInfo.QueryInterface(iid);
-    }
+    },
   };
 
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
@@ -105,7 +105,7 @@ function run_test() {
           throw Cr.NS_ERROR_NO_AGGREGATION;
         let handler = new ProtocolHandler(this.scheme, this.flags, this.CID);
         return handler.QueryInterface(aIID);
-      }
+      },
     };
   }
 

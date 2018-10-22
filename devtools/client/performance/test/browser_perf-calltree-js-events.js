@@ -16,7 +16,7 @@ const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-m
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, $, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;

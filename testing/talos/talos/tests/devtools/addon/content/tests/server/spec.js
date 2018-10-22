@@ -34,6 +34,6 @@ const dampTestSpec = protocol.generateActorSpec({
       },
       response: { value: RetVal("array:json") },
     },
-  }
+  },
 });
 exports.dampTestSpec = dampTestSpec;

@@ -42,20 +42,16 @@ namespace {
    *
    * @param aStart
    *        An iterator pointing to the first character position considered.
+   *        It will be updated by this function.
    * @param aEnd
    *        An interator pointing to past-the-end of the string.
-   *
-   * @return An iterator pointing to the first potential matching character
-   *         within the range [aStart, aEnd).
    */
   static
-  MOZ_ALWAYS_INLINE const_char_iterator
-  nextSearchCandidate(const_char_iterator aStart,
-                      const_char_iterator aEnd,
-                      uint32_t aSearchFor)
+  MOZ_ALWAYS_INLINE void
+  goToNextSearchCandidate(const_char_iterator& aStart,
+                          const const_char_iterator& aEnd,
+                          uint32_t aSearchFor)
   {
-    const_char_iterator cur = aStart;
-
     // If the character we search for is ASCII, then we can scan until we find
     // it or its ASCII uppercase character, modulo the special cases
     // U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE and U+212A KELVIN SIGN
@@ -82,18 +78,15 @@ namespace {
         special = (target == 'i' ? 0xc4 : 0xe2);
       }
 
-      while (cur < aEnd && (unsigned char)(*cur | 0x20) != target &&
-          (unsigned char)*cur != special) {
-        cur++;
+      while (aStart < aEnd && (unsigned char)(*aStart | 0x20) != target &&
+          (unsigned char)*aStart != special) {
+        aStart++;
       }
     } else {
-      const_char_iterator cur = aStart;
-      while (cur < aEnd && (unsigned char)(*cur) < 128) {
-        cur++;
+      while (aStart < aEnd && (unsigned char)(*aStart) < 128) {
+        aStart++;
       }
     }
-
-    return cur;
   }
 
   /**
@@ -210,7 +203,7 @@ namespace {
 
     for (;;) {
       // Scan forward to the next viable candidate (if any).
-      sourceCur = nextSearchCandidate(sourceCur, sourceEnd, tokenFirstChar);
+      goToNextSearchCandidate(sourceCur, sourceEnd, tokenFirstChar);
       if (sourceCur == sourceEnd) {
         break;
       }

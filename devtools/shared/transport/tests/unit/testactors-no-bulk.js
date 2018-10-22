@@ -10,11 +10,11 @@ const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry")
  */
 exports.createRootActor = function createRootActor(connection) {
   const root = new RootActor(connection, {
-    globalActorFactories: ActorRegistry.globalActorFactories
+    globalActorFactories: ActorRegistry.globalActorFactories,
   });
   root.applicationType = "xpcshell-tests";
   root.traits = {
-    bulk: false
+    bulk: false,
   };
   return root;
 };

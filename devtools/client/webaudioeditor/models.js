@@ -105,7 +105,7 @@ class AudioNodeModel extends EventEmitter {
       type: this.type,
       label: this.type.replace(/Node$/, ""),
       id: this.id,
-      bypassed: this._bypassed
+      bypassed: this._bypassed,
     });
   }
 
@@ -121,7 +121,7 @@ class AudioNodeModel extends EventEmitter {
     for (const edge of this.connections) {
       const options = {
         source: this.id,
-        target: edge.destination
+        target: edge.destination,
       };
 
       // Only add `label` if `param` specified, as this is an AudioParam
@@ -242,7 +242,7 @@ class AudioNodesCollection extends EventEmitter {
     const info = {
       nodes: this.length,
       edges: 0,
-      paramEdges: 0
+      paramEdges: 0,
     };
 
     this.models.forEach(node => {

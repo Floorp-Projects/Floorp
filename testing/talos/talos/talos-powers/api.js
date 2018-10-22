@@ -342,7 +342,7 @@ TalosPowersService.prototype = {
       let mm = msg.target.messageManager;
       mm.sendAsyncMessage("TalosPowers:ParentExec:ReplyMsg", {
         id: msg.data.id,
-        result
+        result,
       });
     }
 

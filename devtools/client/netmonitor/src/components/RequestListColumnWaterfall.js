@@ -131,7 +131,7 @@ class RequestListColumnWaterfall extends Component {
           if (!target.title) {
             target.title = this.timingTooltip();
           }
-        }
+        },
       },
         div({
           className: "requests-list-timings",

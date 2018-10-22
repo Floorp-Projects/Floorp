@@ -29,7 +29,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {
   PREDEFINED,
   PRESETS,
-  DEFAULT_PRESET_CATEGORY
+  DEFAULT_PRESET_CATEGORY,
 } = require("devtools/client/shared/widgets/CubicBezierPresets");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -78,7 +78,7 @@ CubicBezier.prototype = {
                                                        this.coordinates));
 
     return predefName || "cubic-bezier(" + this.coordinates + ")";
-  }
+  },
 };
 
 /**
@@ -115,11 +115,11 @@ BezierCanvas.prototype = {
     return [{
       left: w * (this.bezier.coordinates[0] * (1 - p[3] - p[1]) - p[3]) + "px",
       top: h * (1 - this.bezier.coordinates[1] * (1 - p[0] - p[2]) - p[0])
-           + "px"
+           + "px",
     }, {
       left: w * (this.bezier.coordinates[2] * (1 - p[3] - p[1]) - p[3]) + "px",
       top: h * (1 - this.bezier.coordinates[3] * (1 - p[0] - p[2]) - p[0])
-           + "px"
+           + "px",
     }];
   },
 
@@ -134,7 +134,7 @@ BezierCanvas.prototype = {
 
     return [
       (parseFloat(element.style.left) - p[3]) / (w + p[1] + p[3]),
-      (h - parseFloat(element.style.top) - p[2]) / (h - p[0] - p[2])
+      (h - parseFloat(element.style.top) - p[2]) / (h - p[0] - p[2]),
     ];
   },
 
@@ -149,7 +149,7 @@ BezierCanvas.prototype = {
       handleThickness: .008,
       bezierColor: "#4C9ED9",
       bezierThickness: .015,
-      drawHandles: true
+      drawHandles: true,
     };
 
     for (const setting in settings) {
@@ -198,7 +198,7 @@ BezierCanvas.prototype = {
     this.ctx.bezierCurveTo(xy[0], xy[1], xy[2], xy[3], 1, 1);
     this.ctx.stroke();
     this.ctx.closePath();
-  }
+  },
 };
 
 /**
@@ -281,7 +281,7 @@ CubicBezierWidget.prototype = {
     return {
       p1,
       p2,
-      curve
+      curve,
     };
   },
 
@@ -463,7 +463,7 @@ CubicBezierWidget.prototype = {
     this.presets.destroy();
 
     this.curve = this.p1 = this.p2 = null;
-  }
+  },
 };
 
 /**
@@ -546,7 +546,7 @@ CubicBezierPresetWidget.prototype = {
     return {
       presetPane: presetPane,
       presets: allPresets,
-      categories: allCategories
+      categories: allCategories,
     };
   },
 
@@ -598,7 +598,7 @@ CubicBezierPresetWidget.prototype = {
     preset.bezierCanvas = new BezierCanvas(curve, bezier, [0.15, 0]);
     preset.bezierCanvas.plot({
       drawHandles: false,
-      bezierThickness: 0.025
+      bezierThickness: 0.025,
     });
     preset.appendChild(curve);
 
@@ -711,7 +711,7 @@ CubicBezierPresetWidget.prototype = {
   destroy: function() {
     this._removeEvents();
     this.parent.querySelector(".preset-pane").remove();
-  }
+  },
 };
 
 /**
@@ -795,12 +795,12 @@ TimingFunctionPreviewWidget.prototype = {
       { left: "143px", opacity: .5, offset: .51 },
       { left: "143px", opacity: .5, offset: .7 },
       { left: "143px", opacity: 1, offset: .71, easing: timingFunction },
-      { left: "-7px", opacity: 1, offset: 1 }
+      { left: "-7px", opacity: 1, offset: 1 },
     ], {
       duration: this.PREVIEW_DURATION * 2,
-      iterations: Infinity
+      iterations: Infinity,
     });
-  }
+  },
 };
 
 // Helpers

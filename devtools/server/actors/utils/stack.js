@@ -170,7 +170,7 @@ class StackFrameCache {
         functionDisplayName: frame.functionDisplayName,
         parent: this._framesToIndices.get(frame.parent),
         asyncParent: this._framesToIndices.get(frame.asyncParent),
-        asyncCause: frame.asyncCause
+        asyncCause: frame.asyncCause,
       };
       this._createFrameForms(frame.parent);
       this._createFrameForms(frame.asyncParent);

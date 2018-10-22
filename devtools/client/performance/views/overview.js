@@ -15,13 +15,13 @@ const FRAMERATE_GRAPH_LOW_RES_INTERVAL = 100;
 const FRAMERATE_GRAPH_HIGH_RES_INTERVAL = 16;
 const GRAPH_REQUIREMENTS = {
   timeline: {
-    features: ["withMarkers"]
+    features: ["withMarkers"],
   },
   framerate: {
-    features: ["withTicks"]
+    features: ["withTicks"],
   },
   memory: {
-    features: ["withMemory"]
+    features: ["withMemory"],
   },
 };
 
@@ -359,7 +359,7 @@ var OverviewView = {
     this.graphs.setTheme({ theme, redraw: true });
   },
 
-  toString: () => "[object OverviewView]"
+  toString: () => "[object OverviewView]",
 };
 
 /**

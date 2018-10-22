@@ -50,7 +50,7 @@ function testIsItemSelected(aSelectAcc, aTraversedAcc, aIndexObj, aSelectedChild
   var childCount = aTraversedAcc.childCount;
   for (var idx = 0; idx < childCount; idx++) {
     var child = aTraversedAcc.getChildAt(idx);
-    var [state, /* extraState */] = getStates(child);
+    var [state /* extraState */] = getStates(child);
     if (state & STATE_SELECTABLE) {
       var isSelected = false;
       var len = aSelectedChildren.length;

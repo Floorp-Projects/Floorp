@@ -13,7 +13,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 add_task(async function() {
   const { target, toolbox, panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   ok(target, "Should have a target available.");

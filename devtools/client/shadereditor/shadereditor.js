@@ -31,7 +31,7 @@ const EVENTS = {
   UI_RESET: "ShaderEditor:UIReset",
 
   // When the editor's error markers are all removed
-  EDITOR_ERROR_MARKERS_REMOVED: "ShaderEditor:EditorCleaned"
+  EDITOR_ERROR_MARKERS_REMOVED: "ShaderEditor:EditorCleaned",
 };
 exports.EVENTS = EVENTS;
 
@@ -45,7 +45,7 @@ const GUTTER_ERROR_PANEL_DELAY = 100; // ms
 const DEFAULT_EDITOR_CONFIG = {
   gutters: ["errors"],
   lineNumbers: true,
-  showAnnotationRuler: true
+  showAnnotationRuler: true,
 };
 
 /**
@@ -180,7 +180,7 @@ class ShadersListView extends WidgetMethodsClass {
     this.shadersEditorsView = shadersEditorsView;
     this.widget = new SideMenuWidget(this._pane = $("#shaders-pane"), {
       showArrows: true,
-      showItemCheckboxes: true
+      showItemCheckboxes: true,
     });
 
     this._onProgramSelect = this._onProgramSelect.bind(this);
@@ -233,8 +233,8 @@ class ShadersListView extends WidgetMethodsClass {
         label: label,
         programActor: programActor,
         checkboxState: true,
-        checkboxTooltip: L10N.getStr("shadersList.blackboxLabel")
-      }
+        checkboxTooltip: L10N.getStr("shadersList.blackboxLabel"),
+      },
     });
 
     // Make sure there's always a selected item available.
@@ -275,19 +275,19 @@ class ShadersListView extends WidgetMethodsClass {
     function getShaders() {
       return promise.all([
         attachment.vs || (attachment.vs = attachment.programActor.getVertexShader()),
-        attachment.fs || (attachment.fs = attachment.programActor.getFragmentShader())
+        attachment.fs || (attachment.fs = attachment.programActor.getFragmentShader()),
       ]);
     }
     function getSources([vertexShaderActor, fragmentShaderActor]) {
       return promise.all([
         vertexShaderActor.getText(),
-        fragmentShaderActor.getText()
+        fragmentShaderActor.getText(),
       ]);
     }
     const showSources = ([vertexShaderText, fragmentShaderText]) => {
       return this.shadersEditorsView.setText({
         vs: vertexShaderText,
-        fs: fragmentShaderText
+        fs: fragmentShaderText,
       });
     };
 
@@ -357,7 +357,7 @@ class ShadersEditorsView {
 
     this._errors = {
       vs: [],
-      fs: []
+      fs: [],
     };
   }
 
@@ -394,7 +394,7 @@ class ShadersEditorsView {
       await view._toggleListeners("off");
       await promise.all([
         view._getEditor("vs").then(e => setTextAndClearHistory(e, sources.vs)),
-        view._getEditor("fs").then(e => setTextAndClearHistory(e, sources.fs))
+        view._getEditor("fs").then(e => setTextAndClearHistory(e, sources.fs)),
       ]);
       await view._toggleListeners("on");
     })().then(() => this.panel.emit(EVENTS.SOURCES_SHOWN, sources));
@@ -516,7 +516,7 @@ class ShadersEditorsView {
         // First number that is not equal to 0.
         lineMatch: string.match(/\d{2,}|[1-9]/),
         // The string after all the numbers, semicolons and spaces.
-        textMatch: string.match(/[^\s\d:][^\r\n|]*/)
+        textMatch: string.match(/[^\s\d:][^\r\n|]*/),
       };
     }
     function discardInvalidMatches(e) {
@@ -531,7 +531,7 @@ class ShadersEditorsView {
         line: e.lineMatch[0] > lineCount ? currentLine : e.lineMatch[0] - 1,
         // Trim whitespace from the beginning and the end of the message,
         // and replace all other occurences of double spaces to a single space.
-        text: e.textMatch[0].trim().replace(/\s{2,}/g, " ")
+        text: e.textMatch[0].trim().replace(/\s{2,}/g, " "),
       };
     }
     function sortByLine(first, second) {
@@ -544,7 +544,7 @@ class ShadersEditorsView {
       if (!previous || previous.line != current.line) {
         return [...accumulator, {
           line: current.line,
-          messages: [current.text]
+          messages: [current.text],
         }];
       }
       previous.messages.push(current.text);
@@ -580,7 +580,7 @@ class ShadersEditorsView {
 
     const tooltip = node._markerErrorsTooltip = new HTMLTooltip(document, {
       type: "arrow",
-      useXulWrapper: true
+      useXulWrapper: true,
     });
 
     const div = document.createElementNS(XHTML_NS, "div");
@@ -594,7 +594,7 @@ class ShadersEditorsView {
     tooltip.panel.appendChild(div);
 
     tooltip.startTogglingOnHover(node, () => true, {
-      toggleDelay: GUTTER_ERROR_PANEL_DELAY
+      toggleDelay: GUTTER_ERROR_PANEL_DELAY,
     });
   }
 

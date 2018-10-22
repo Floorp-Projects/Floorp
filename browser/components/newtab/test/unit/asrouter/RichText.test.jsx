@@ -1,4 +1,7 @@
-import {convertLinks} from "content-src/asrouter/components/RichText/RichText";
+import {convertLinks, RichText} from "content-src/asrouter/components/RichText/RichText";
+import {Localized} from "fluent-react";
+import {mount} from "enzyme";
+import React from "react";
 
 describe("convertLinks", () => {
   let sandbox;
@@ -39,5 +42,11 @@ describe("convertLinks", () => {
     assert.propertyVal(result.cta.props, "data-action", cta.action);
     assert.propertyVal(result.cta.props, "data-args", cta.args);
     assert.propertyVal(result.cta.props, "onClick", stub);
+  });
+  it("should allow for custom elements & styles", () => {
+    const wrapper = mount(<RichText customElements={{em: <em style={{color: "#f05"}} />}} text="<em>foo</em>" localization_id="text" />);
+
+    const localized = wrapper.find(Localized);
+    assert.propertyVal(localized.props().em.props.style, "color", "#f05");
   });
 });

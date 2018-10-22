@@ -22,64 +22,64 @@ const threadColumns = [
     {
       name: "GeckoMain",
       id: "gecko-main",
-      title: "The main processes for both the parent process, and content processes"
+      title: "The main processes for both the parent process, and content processes",
     },
     {
       name: "Compositor",
       id: "compositor",
-      title: "Composites together different painted elements on the page."
+      title: "Composites together different painted elements on the page.",
     },
     {
       name: "DOM Worker",
       id: "dom-worker",
-      title: "This handle both web workers and service workers"
+      title: "This handle both web workers and service workers",
     },
     {
       name: "Renderer",
       id: "renderer",
-      title: "When WebRender is enabled, the thread that executes OpenGL calls"
+      title: "When WebRender is enabled, the thread that executes OpenGL calls",
     },
   ],
   [
     {
       name: "RenderBackend",
       id: "render-backend",
-      title: "The WebRender RenderBackend thread"
+      title: "The WebRender RenderBackend thread",
     },
     {
       name: "PaintWorker",
       id: "paint-worker",
       title: "When off-main-thread painting is enabled, the thread on which " +
-        "painting happens"
+        "painting happens",
     },
     {
       name: "StyleThread",
       id: "style-thread",
-      title: "Style computation is split into multiple threads"
+      title: "Style computation is split into multiple threads",
     },
     {
       name: "Socket Thread",
       id: "socket-thread",
-      title: "The thread where networking code runs any blocking socket calls"
+      title: "The thread where networking code runs any blocking socket calls",
     },
   ],
   [
     {
       name: "StreamTrans",
       id: "stream-trans",
-      title: "TODO"
+      title: "TODO",
     },
     {
       name: "ImgDecoder",
       id: "img-decoder",
-      title: "Image decoding threads"
+      title: "Image decoding threads",
     },
     {
       name: "DNS Resolver",
       id: "dns-resolver",
-      title: "DNS resolution happens on this thread"
+      title: "DNS resolution happens on this thread",
     },
-  ]
+  ],
 ];
 
 const featureCheckboxes = [
@@ -87,61 +87,61 @@ const featureCheckboxes = [
     name: "Native Stacks",
     value: "stackwalk",
     title: "Record native stacks (C++ and Rust). This is not available on all platforms.",
-    recommended: true
+    recommended: true,
   },
   {
     name: "JavaScript",
     value: "js",
     title: "Record JavaScript stack information, and interleave it with native stacks.",
-    recommended: true
+    recommended: true,
   },
   {
     name: "Responsiveness",
     value: "responsiveness",
     title: "Collect thread responsiveness information.",
-    recommended: true
+    recommended: true,
   },
   {
     name: "Java",
     value: "java",
-    title: "Profile Java code (Android only)."
+    title: "Profile Java code (Android only).",
   },
   {
     name: "Native Leaf Stack",
     value: "leaf",
     title: "Record the native memory address of the leaf-most stack. This could be " +
-      "useful on platforms that do not support stack walking."
+      "useful on platforms that do not support stack walking.",
   },
   {
     name: "Main Thread IO",
     value: "mainthreadio",
-    title: "Record main thread I/O markers."
+    title: "Record main thread I/O markers.",
   },
   {
     name: "Memory",
     value: "memory",
     title: "Add memory measurements to the samples, this includes resident set size " +
-      "(RSS) and unique set size (USS)."
+      "(RSS) and unique set size (USS).",
   },
   {
     name: "Privacy",
     value: "privacy",
-    title: "Remove some potentially user-identifiable information."
+    title: "Remove some potentially user-identifiable information.",
   },
   {
     name: "Sequential Styling",
     value: "seqstyle",
-    title: "Disable parallel traversal in styling."
+    title: "Disable parallel traversal in styling.",
   },
   {
     name: "JIT Optimizations",
     value: "trackopts",
-    title: "Track JIT optimizations in the JS engine."
+    title: "Track JIT optimizations in the JS engine.",
   },
   {
     name: "TaskTracer",
     value: "tasktracer",
-    title: "Enable TaskTracer (Experimental, requires custom build.)"
+    title: "Enable TaskTracer (Experimental, requires custom build.)",
   },
 ];
 
@@ -170,7 +170,7 @@ class Settings extends PureComponent {
     super(props);
     this.state = {
       // Allow the textbox to have a temporary tracked value.
-      temporaryThreadText: null
+      temporaryThreadText: null,
     };
 
     this._handleThreadCheckboxChange = this._handleThreadCheckboxChange.bind(this);
@@ -203,7 +203,7 @@ class Settings extends PureComponent {
           key: i,
           className:
           `perf-settings-notch perf-settings-notch-${level} ` +
-            `perf-settings-notch-${active}`
+            `perf-settings-notch-${active}`,
         })
       );
     }
@@ -253,7 +253,7 @@ class Settings extends PureComponent {
         {
           className: "perf-settings-checkbox-label",
           key: name,
-          title
+          title,
         },
         input({
           className: "perf-settings-checkbox",
@@ -261,7 +261,7 @@ class Settings extends PureComponent {
           type: "checkbox",
           value: name,
           checked: threads.includes(name),
-          onChange: this._handleThreadCheckboxChange
+          onChange: this._handleThreadCheckboxChange,
         }),
         name
       ))
@@ -274,7 +274,7 @@ class Settings extends PureComponent {
       summary(
         {
           className: "perf-settings-summary",
-          id: "perf-settings-threads-summary"
+          id: "perf-settings-threads-summary",
         },
         "Threads:"
       ),
@@ -296,7 +296,7 @@ class Settings extends PureComponent {
                 title: "These thread names are a comma separated list that is used to " +
                   "enable profiling of the threads in the profiler. The name needs to " +
                   "be only a partial match of the thread name to be included. It " +
-                  "is whitespace sensitive."
+                  "is whitespace sensitive.",
               },
               div({}, "Add custom threads by name:"),
               input({
@@ -323,7 +323,7 @@ class Settings extends PureComponent {
       summary(
         {
           className: "perf-settings-summary",
-          id: "perf-settings-features-summary"
+          id: "perf-settings-features-summary",
         },
         "Features:"
       ),
@@ -342,7 +342,7 @@ class Settings extends PureComponent {
               type: "checkbox",
               value,
               checked: this.props.features.includes(value),
-              onChange: this._handleFeaturesCheckboxChange
+              onChange: this._handleFeaturesCheckboxChange,
             }),
             div({ className: "perf-settings-feature-name" }, name),
             div(
@@ -379,7 +379,7 @@ class Settings extends PureComponent {
         id: "perf-range-interval",
         scale: this._intervalExponentialScale,
         display: _intervalTextDisplay,
-        onChange: this.props.changeInterval
+        onChange: this.props.changeInterval,
       }),
       Range({
         label: "Buffer size:",

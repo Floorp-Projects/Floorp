@@ -32,7 +32,7 @@ window.onload = function() {
     const testProbability = async function(p, expected) {
       info("probability = " + p);
       await memory.startRecordingAllocations({
-        probability: p
+        probability: p,
       });
       allocator();
       const response = await memory.getAllocations();

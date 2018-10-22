@@ -27,7 +27,7 @@ const l10n = exports.l10n = {
       this._stringBundle = Services.strings.createBundle(this._URI);
     }
     return this._stringBundle.GetStringFromName(msg);
-  }
+  },
 };
 
 /**
@@ -114,7 +114,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
         }
       },
 
-      destroy: () => {}
+      destroy: () => {},
     };
 
     this._progress = this._targetActor.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -196,7 +196,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
       attributes: true,
       childList: true,
       characterData: false,
-      subtree: true
+      subtree: true,
     });
   },
 
@@ -232,7 +232,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
           isUsed: false,
           presentOn: new Set(),
           preLoadOn: new Set(),
-          isError: false
+          isError: false,
         };
         this._knownRules.set(ruleId, ruleData);
       }
@@ -315,7 +315,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
 
       const ruleReport = {
         selectorText: ruleData.selectorText,
-        start: { line: line, column: column }
+        start: { line: line, column: column },
       };
 
       if (ruleData.end) {
@@ -395,7 +395,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
         shortUrl: rule.url.split("/").slice(-1)[0],
         start: { line: rule.line, column: rule.column },
         selectorText: ruleData.selectorText,
-        formattedCssText: prettifyCSS(ruleData.cssText)
+        formattedCssText: prettifyCSS(ruleData.cssText),
       };
     };
 
@@ -423,7 +423,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
       unused.push({
         url: url,
         shortUrl: url.split("/").slice(-1),
-        rules: rules
+        rules: rules,
       });
     }
 
@@ -433,7 +433,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
       const page = {
         url: url,
         shortUrl: url.split("/").slice(-1),
-        rules: []
+        rules: [],
       };
 
       for (const [ruleId, ruleData] of this._knownRules) {
@@ -455,7 +455,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
     return {
       summary: summary,
       preload: preload,
-      unused: unused
+      unused: unused,
     };
   },
 
@@ -555,7 +555,7 @@ const deconstructRuleId = exports.deconstructRuleId = function(ruleId) {
   return {
     url: url,
     line: parseInt(line, 10),
-    column: parseInt(column, 10)
+    column: parseInt(column, 10),
   };
 };
 
@@ -589,7 +589,7 @@ const getURL = exports.getURL = function(document) {
 const SEL_EXTERNAL = [
   "active", "active-drop", "current", "dir", "focus", "future", "hover",
   "invalid-drop", "lang", "past", "placeholder-shown", "target", "valid-drop",
-  "visited"
+  "visited",
 ];
 
 /**
@@ -602,7 +602,7 @@ const SEL_EXTERNAL = [
  */
 const SEL_FORM = [
   "checked", "default", "disabled", "enabled", "fullscreen", "in-range",
-  "indeterminate", "invalid", "optional", "out-of-range", "required", "valid"
+  "indeterminate", "invalid", "optional", "out-of-range", "required", "valid",
 ];
 
 /**
@@ -613,7 +613,7 @@ const SEL_FORM = [
  * Action: Remove from selectors (including deprecated single colon versions)
  */
 const SEL_ELEMENT = [
-  "after", "before", "first-letter", "first-line", "selection"
+  "after", "before", "first-letter", "first-line", "selection",
 ];
 
 /**
@@ -626,7 +626,7 @@ const SEL_ELEMENT = [
 const SEL_STRUCTURAL = [
   "empty", "first-child", "first-of-type", "last-child", "last-of-type",
   "nth-column", "nth-last-column", "nth-child", "nth-last-child",
-  "nth-last-of-type", "nth-of-type", "only-child", "only-of-type", "root"
+  "nth-last-of-type", "nth-of-type", "only-child", "only-of-type", "root",
 ];
 
 /**
@@ -688,7 +688,7 @@ function getTestSelector(selector) {
  */
 exports.SEL_ALL = [
   SEL_EXTERNAL, SEL_FORM, SEL_ELEMENT, SEL_STRUCTURAL, SEL_SEMI,
-  SEL_COMBINING, SEL_MEDIA
+  SEL_COMBINING, SEL_MEDIA,
 ].reduce(function(prev, curr) {
   return prev.concat(curr);
 }, []);

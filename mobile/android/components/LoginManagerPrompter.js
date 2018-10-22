@@ -44,7 +44,7 @@ LoginManagerPrompter.prototype = {
     if (!this.__strBundle) {
       this.__strBundle = {
         pwmgr: Services.strings.createBundle("chrome://browser/locale/passwordmgr.properties"),
-        brand: Services.strings.createBundle("chrome://branding/locale/brand.properties")
+        brand: Services.strings.createBundle("chrome://branding/locale/brand.properties"),
       };
 
       if (!this.__strBundle)
@@ -131,7 +131,7 @@ LoginManagerPrompter.prototype = {
       text: aUsername,
       type: "EDIT",
       bundle: { username: aUsername,
-      password: aPassword }
+      password: aPassword },
     };
 
     // The page we're going to hasn't loaded yet, so we want to persist
@@ -144,7 +144,7 @@ LoginManagerPrompter.prototype = {
     let options = {
       persistWhileVisible: true,
       timeout: Date.now() + 10000,
-      actionText: actionText
+      actionText: actionText,
     };
 
     let win = (this._browser && this._browser.contentWindow) || this._window;
@@ -175,7 +175,7 @@ LoginManagerPrompter.prototype = {
         callback: function() {
           promptHistogram.add(PROMPT_NEVER);
           pwmgr.setLoginSavingEnabled(aLogin.hostname, false);
-        }
+        },
       },
       {
         label: this._getLocalizedString("rememberButton"),
@@ -187,8 +187,8 @@ LoginManagerPrompter.prototype = {
           pwmgr.addLogin(aLogin);
           promptHistogram.add(PROMPT_ADD);
         },
-        positive: true
-      }
+        positive: true,
+      },
     ];
 
     this._showLoginNotification(notificationText, buttons, aLogin.username, aLogin.password);
@@ -233,7 +233,7 @@ LoginManagerPrompter.prototype = {
         callback:  function() {
           promptHistogram.add(PROMPT_NOTNOW);
           // do nothing
-        }
+        },
       },
       {
         label: this._getLocalizedString("updateButton"),
@@ -243,8 +243,8 @@ LoginManagerPrompter.prototype = {
 
           promptHistogram.add(PROMPT_UPDATE);
         },
-        positive: true
-      }
+        positive: true,
+      },
     ];
 
     this._showLoginNotification(notificationText, buttons, aOldLogin.username, aNewPassword);

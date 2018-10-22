@@ -7184,7 +7184,7 @@ nsDisplaySubDocument::ComputeScrollMetadata(
                                          viewport,
                                          Nothing(),
                                          isRootContentDocument,
-                                         params));
+                                         Some(params)));
 }
 
 static bool
@@ -7875,7 +7875,7 @@ nsDisplayScrollInfoLayer::ComputeScrollMetadata(
                                          viewport,
                                          Nothing(),
                                          false,
-                                         aContainerParameters);
+                                         Some(aContainerParameters));
   metadata.GetMetrics().SetIsScrollInfoLayer(true);
 
   return UniquePtr<ScrollMetadata>(new ScrollMetadata(metadata));

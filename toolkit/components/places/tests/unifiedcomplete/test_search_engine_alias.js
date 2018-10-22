@@ -164,5 +164,45 @@ add_task(async function engineWithSuggestions() {
     });
   }
 
+  engine.alias = "";
+  await cleanup();
+});
+
+
+// When the search is simply "@", the results should be a list of all the "@"
+// alias engines.
+add_task(async function tokenAliasEngines() {
+  let tokenEngines = [];
+  for (let engine of Services.search.getEngines()) {
+    let aliases = [];
+    if (engine.alias) {
+      aliases.push(engine.alias);
+    }
+    aliases.push(...engine.wrappedJSObject._internalAliases);
+    let tokenAliases = aliases.filter(a => a.startsWith("@"));
+    if (tokenAliases.length) {
+      tokenEngines.push({ engine, tokenAliases });
+    }
+  }
+  if (!tokenEngines.length) {
+    Assert.ok(true, "No token alias engines, skipping task.");
+    return;
+  }
+  info("Got token alias engines: " +
+       tokenEngines.map(({ engine }) => engine.name));
+
+  await check_autocomplete({
+    search: "@",
+    searchParam: "enable-actions",
+    matches: tokenEngines.map(({ engine, tokenAliases }) => {
+      let alias = tokenAliases[0];
+      return makeSearchMatch(alias + " ", {
+        engineName: engine.name,
+        alias,
+        searchQuery: "",
+      });
+    }),
+  });
+
   await cleanup();
 });

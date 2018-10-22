@@ -36,7 +36,7 @@ class ToolboxController extends Component {
       buttonIds: [],
       checkedButtonsUpdated: () => {
         this.forceUpdate();
-      }
+      },
     };
 
     this.setFocusedButton = this.setFocusedButton.bind(this);
@@ -83,8 +83,8 @@ class ToolboxController extends Component {
         ...toolboxButtons.filter(btn => btn.isInStartContainer).map(({id}) => id),
         ...panelDefinitions.map(({id}) => id),
         ...toolboxButtons.filter(btn => !btn.isInStartContainer).map(({id}) => id),
-        canCloseToolbox ? "toolbox-close" : null
-      ].filter(id => id)
+        canCloseToolbox ? "toolbox-close" : null,
+      ].filter(id => id),
     });
 
     this.updateFocusedButton();
@@ -102,7 +102,7 @@ class ToolboxController extends Component {
         : buttonIds[0];
     if (this.state.focusedButton !== focusedButton) {
       this.setState({
-        focusedButton
+        focusedButton,
       });
     }
   }

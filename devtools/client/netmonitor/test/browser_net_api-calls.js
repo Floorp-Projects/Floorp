@@ -26,7 +26,7 @@ add_task(async function() {
     "http://example.com/api/file%E2%98%A2.xml",
     "http://example.com/api/ascii/get/",
     "http://example.com/api/unicode/%E2%98%A2/",
-    "http://example.com/api/search/?q=search%E2%98%A2"
+    "http://example.com/api/search/?q=search%E2%98%A2",
   ];
 
   // Execute requests.

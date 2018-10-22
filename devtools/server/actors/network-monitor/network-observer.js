@@ -157,14 +157,14 @@ NetworkObserver.prototype = {
     0x804b000a: "STATUS_WAITING_FOR",
     0x804b0006: "STATUS_RECEIVING_FROM",
     0x804b000c: "STATUS_TLS_STARTING",
-    0x804b000d: "STATUS_TLS_ENDING"
+    0x804b000d: "STATUS_TLS_ENDING",
   },
 
   httpDownloadActivities: [
     gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START,
     gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER,
     gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
-    gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+    gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE,
   ],
 
   // Network response bodies are piped through a buffer of the given size (in
@@ -286,7 +286,7 @@ NetworkObserver.prototype = {
           setCookieHeaders.push(value);
         }
         response.headers.push({ name: name, value: value });
-      }
+      },
     });
 
     if (!response.headers.length) {
@@ -326,7 +326,7 @@ NetworkObserver.prototype = {
       // expected events.
       const httpActivity = this._createNetworkEvent(channel, {
         fromCache: !fromServiceWorker,
-        fromServiceWorker: fromServiceWorker
+        fromServiceWorker: fromServiceWorker,
       });
       httpActivity.owner.addResponseStart({
         httpVersion: response.httpVersion,
@@ -479,7 +479,7 @@ NetworkObserver.prototype = {
     if (timestamp) {
       httpActivity.timings.REQUEST_HEADER = {
         first: timestamp,
-        last: timestamp
+        last: timestamp,
       };
     }
 
@@ -517,7 +517,7 @@ NetworkObserver.prototype = {
     event.cause = {
       type: causeTypeToString(causeType),
       loadingDocumentUri: causeUri,
-      stacktrace
+      stacktrace,
     };
 
     httpActivity.isXHR = event.isXHR =
@@ -547,7 +547,7 @@ NetworkObserver.prototype = {
           cookieHeader = value;
         }
         headers.push({ name: name, value: value });
-      }
+      },
     });
 
     if (cookieHeader) {
@@ -820,7 +820,7 @@ NetworkObserver.prototype = {
           connect: 0,
           send: 0,
           wait: 0,
-          receive: 0
+          receive: 0,
         },
         offsets: {
           blocked: 0,
@@ -829,8 +829,8 @@ NetworkObserver.prototype = {
           connect: 0,
           send: 0,
           wait: 0,
-          receive: 0
-        }
+          receive: 0,
+        },
       };
     }
 
@@ -1015,7 +1015,7 @@ NetworkObserver.prototype = {
     return {
       total: ot.total,
       timings: harTimings,
-      offsets: ot.offsets
+      offsets: ot.offsets,
     };
   },
 
@@ -1063,7 +1063,7 @@ NetworkObserver.prototype = {
 
     return {
       total: totalTime,
-      offsets: offsets
+      offsets: offsets,
     };
   },
 
@@ -1125,7 +1125,7 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_BEACON]: "beacon",
   [Ci.nsIContentPolicy.TYPE_FETCH]: "fetch",
   [Ci.nsIContentPolicy.TYPE_IMAGESET]: "imageset",
-  [Ci.nsIContentPolicy.TYPE_WEB_MANIFEST]: "webManifest"
+  [Ci.nsIContentPolicy.TYPE_WEB_MANIFEST]: "webManifest",
 };
 
 function causeTypeToString(causeType) {

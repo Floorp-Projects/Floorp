@@ -208,7 +208,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     return InspectorActorUtils.imageToImageData(img, maxDim).then(imageData => {
       return {
         data: LongStringActor(this.conn, imageData.data),
-        size: imageData.size
+        size: imageData.size,
       };
     });
   },
@@ -315,5 +315,5 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
 
   _onColorPickCanceled: function() {
     this.emit("color-pick-canceled");
-  }
+  },
 });

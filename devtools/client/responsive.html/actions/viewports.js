@@ -14,7 +14,7 @@ const {
   CHANGE_PIXEL_RATIO,
   REMOVE_DEVICE_ASSOCIATION,
   RESIZE_VIEWPORT,
-  ROTATE_VIEWPORT
+  ROTATE_VIEWPORT,
 } = require("./index");
 
 const { post } = require("../utils/message");

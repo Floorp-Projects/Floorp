@@ -41,7 +41,7 @@ add_task(async function() {
       type: "x-bigcorp-json",
       fullMimeType: "text/x-bigcorp-json; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 41),
-      time: true
+      time: true,
     });
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");

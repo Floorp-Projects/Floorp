@@ -47,7 +47,7 @@ class WorkerListEmpty extends Component {
       { className: "worker-list-empty" },
       Localized({
         id: "serviceworker-empty-intro",
-        a: a({ className: "external-link", onClick: () => this.openDocumentation() })
+        a: a({ className: "external-link", onClick: () => this.openDocumentation() }),
       },
         h1({ className: "worker-list-empty__title" })
       ),
@@ -59,13 +59,13 @@ class WorkerListEmpty extends Component {
         { className: "worker-list-empty__tips" },
         Localized({
           id: "serviceworker-empty-suggestions-console",
-          a: a({ className: "link", onClick: () => this.switchToConsole() })
+          a: a({ className: "link", onClick: () => this.switchToConsole() }),
         },
           li({ className: "worker-list-empty__tips__item" })
         ),
         Localized({
           id: "serviceworker-empty-suggestions-debugger",
-          a: a({ className: "link", onClick: () => this.switchToDebugger() })
+          a: a({ className: "link", onClick: () => this.switchToDebugger() }),
         },
           li({ className: "worker-list-empty__tips__item" })
         ),
@@ -73,7 +73,7 @@ class WorkerListEmpty extends Component {
           id: "serviceworker-empty-suggestions-aboutdebugging",
           a: a({
             className: "link js-trusted-link",
-            onClick: () => this.openAboutDebugging() })
+            onClick: () => this.openAboutDebugging() }),
         },
           li({ className: "worker-list-empty__tips__item" })
         ),

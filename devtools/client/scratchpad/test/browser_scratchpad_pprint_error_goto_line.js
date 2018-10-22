@@ -54,7 +54,7 @@ function runTests(sw, sp) {
     "var re = /a bad /regexp/; // line 3 is an obvious syntax error!",
     "// line 4",
     "// line 5",
-    ""
+    "",
   ].join("\n"));
 
   sp.prettyPrint().then(aFulfill => {

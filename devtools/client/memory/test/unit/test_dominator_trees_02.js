@@ -15,7 +15,7 @@ const {
   takeSnapshotAndCensus,
 } = require("devtools/client/memory/actions/snapshot");
 const {
-  changeViewAndRefresh
+  changeViewAndRefresh,
 } = require("devtools/client/memory/actions/view");
 
 add_task(async function() {

@@ -34,8 +34,8 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
   _buildMarkup() {
     const container = createNode(this.win, {
       attributes: {
-        "class": "highlighter-container"
-      }
+        "class": "highlighter-container",
+      },
     });
 
     // The root wrapper is used to unzoom the highlighter when needed.
@@ -43,9 +43,9 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       parent: container,
       attributes: {
         "id": "root",
-        "class": "root"
+        "class": "root",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const svg = createSVGNode(this.win, {
@@ -55,9 +55,9 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
         "id": "elements",
         "hidden": "true",
         "width": "100%",
-        "height": "100%"
+        "height": "100%",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Add a marker tag to the svg root for the arrow tip
@@ -74,22 +74,22 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
         "markerUnits": "strokeWidth",
         "refX": "10",
         "refY": "5",
-        "viewBox": "0 0 10 10"
+        "viewBox": "0 0 10 10",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createSVGNode(this.win, {
       nodeType: "path",
       parent: marker,
       attributes: {
         "d": "M 0 0 L 10 5 L 0 10 z",
-        "fill": "#08C"
-      }
+        "fill": "#08C",
+      },
     });
 
     const shapesGroup = createSVGNode(this.win, {
       nodeType: "g",
-      parent: svg
+      parent: svg,
     });
 
     // Create the 2 polygons (transformed and untransformed)
@@ -98,18 +98,18 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
       parent: shapesGroup,
       attributes: {
         "id": "untransformed",
-        "class": "untransformed"
+        "class": "untransformed",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createSVGNode(this.win, {
       nodeType: "polygon",
       parent: shapesGroup,
       attributes: {
         "id": "transformed",
-        "class": "transformed"
+        "class": "transformed",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Create the arrows
@@ -120,9 +120,9 @@ class CssTransformHighlighter extends AutoRefreshHighlighter {
         attributes: {
           "id": "line" + nb,
           "class": "line",
-          "marker-end": "url(#" + this.markerId + ")"
+          "marker-end": "url(#" + this.markerId + ")",
         },
-        prefix: this.ID_CLASS_PREFIX
+        prefix: this.ID_CLASS_PREFIX,
       });
     }
 

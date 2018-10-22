@@ -41,7 +41,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, this.img),
         new invokerChecker(EVENT_HIDE, this.text),
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.finalCheck = function textLeafUpdate_finalCheck() {
@@ -49,7 +49,7 @@
           { SECTION: [
             { GRAPHIC: [] },
             { TEXT_LEAF: [] },
-            { GRAPHIC: [] }
+            { GRAPHIC: [] },
           ] };
 
         testAccessibleTree(this.containerNode, tree);
@@ -62,7 +62,7 @@
             { TEXT_LEAF: [] },
             { GRAPHIC: [] },
             { TEXT_LEAF: [] },
-            { GRAPHIC: [] }
+            { GRAPHIC: [] },
           ] };
 
         testAccessibleTree(this.containerNode, tree);
@@ -99,7 +99,7 @@
         new asyncInvokerChecker(EVENT_SHOW, getAccessible, this.textNode),
         new asyncInvokerChecker(EVENT_SHOW, getAccessible, this.imgNode),
         new orderChecker(),
-        new invokerChecker(EVENT_REORDER, this.topNode)
+        new invokerChecker(EVENT_REORDER, this.topNode),
       ];
 
       this.invoke = function insertImg_invoke() {
@@ -107,8 +107,8 @@
           { SECTION: [
             { LINK: [] },
             { LINK: [
-              { GRAPHIC: [] }
-            ] }
+              { GRAPHIC: [] },
+            ] },
           ] };
 
         testAccessibleTree(this.topNode, tree);
@@ -120,12 +120,12 @@
         var tree =
           { SECTION: [
             { LINK: [
-              { GRAPHIC: [ ] }
+              { GRAPHIC: [ ] },
             ] },
             { TEXT_LEAF: [ ] },
             { LINK: [
-              { GRAPHIC: [ ] }
-            ] }
+              { GRAPHIC: [ ] },
+            ] },
           ] };
 
         testAccessibleTree(this.topNode, tree);

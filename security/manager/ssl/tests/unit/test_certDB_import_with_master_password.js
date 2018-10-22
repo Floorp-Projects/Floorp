@@ -33,7 +33,7 @@ const gCertificateDialogs = {
     ok(false, "getPKCS12FilePassword() should not have been called");
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs]),
 };
 
 var gMockPrompter = {
@@ -66,7 +66,7 @@ var gMockPrompter = {
     }
 
     throw new Error(Cr.NS_ERROR_NO_INTERFACE);
-  }
+  },
 };
 
 function getCertAsByteArray(certPath) {

@@ -39,7 +39,7 @@ function updateRequest(id, data, batch) {
  */
 function cloneSelectedRequest() {
   return {
-    type: CLONE_SELECTED_REQUEST
+    type: CLONE_SELECTED_REQUEST,
   };
 }
 
@@ -82,13 +82,13 @@ function sendCustomRequest(connector) {
  */
 function removeSelectedCustomRequest() {
   return {
-    type: REMOVE_SELECTED_CUSTOM_REQUEST
+    type: REMOVE_SELECTED_CUSTOM_REQUEST,
   };
 }
 
 function clearRequests() {
   return {
-    type: CLEAR_REQUESTS
+    type: CLEAR_REQUESTS,
   };
 }
 
@@ -97,7 +97,7 @@ function clearRequests() {
  */
 function toggleRecording() {
   return {
-    type: TOGGLE_RECORDING
+    type: TOGGLE_RECORDING,
   };
 }
 

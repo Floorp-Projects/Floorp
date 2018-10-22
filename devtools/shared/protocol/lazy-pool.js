@@ -226,6 +226,6 @@ LazyActor.prototype = {
     this._pool.manage(instance);
 
     return instance;
-  }
+  },
 };
 

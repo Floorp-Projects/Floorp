@@ -28,7 +28,7 @@ function runTests() {
     method: "display",
     code: message,
     result: message + openComment + "Hello World!" + closeComment,
-    label: "message display output"
+    label: "message display output",
   },
   {
       method: "display",

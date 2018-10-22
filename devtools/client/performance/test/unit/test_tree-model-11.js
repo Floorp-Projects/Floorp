@@ -26,8 +26,8 @@ add_task(function() {
     [ 100, 0, "(root)", [
       [ 100, 0, "A", [
         [ 100, 50, "B", [
-          [ 50, 50, "C"]
-        ]]
+          [ 50, 50, "C"],
+        ]],
       ]],
     ]],
   ].forEach(compareFrameInfo(thread));
@@ -57,16 +57,16 @@ var gThread = synthesizeProfileForTest([{
     { location: "B" },
     { location: "B" },
     { location: "B" },
-    { location: "C" }
-  ]
+    { location: "C" },
+  ],
 }, {
   time: 10,
   frames: [
     { location: "(root)" },
     { location: "A" },
     { location: "B" },
-    { location: "C" }
-  ]
+    { location: "C" },
+  ],
 }, {
   time: 15,
   frames: [
@@ -75,12 +75,12 @@ var gThread = synthesizeProfileForTest([{
     { location: "B" },
     { location: "B" },
     { location: "B" },
-  ]
+  ],
 }, {
   time: 20,
   frames: [
     { location: "(root)" },
     { location: "A" },
     { location: "B" },
-  ]
+  ],
 }]);

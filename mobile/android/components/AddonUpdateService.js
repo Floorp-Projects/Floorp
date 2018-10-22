@@ -53,7 +53,7 @@ AddonUpdateService.prototype = {
       trigger: interval,
       interval: interval,
     });
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AddonUpdateService]);

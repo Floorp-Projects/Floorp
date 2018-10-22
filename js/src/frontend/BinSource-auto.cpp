@@ -3235,9 +3235,13 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
     const auto syntax = FunctionSyntaxKind::Statement;
 
     BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
-
+    if (isAsync) {
+        return raiseError("Async function is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
-
+    if (isGenerator) {
+        return raiseError("Generator is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(name, parseBindingIdentifier());
 
     BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
@@ -3287,9 +3291,13 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, con
     const auto syntax = FunctionSyntaxKind::Expression;
 
     BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
-
+    if (isAsync) {
+        return raiseError("Async function is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
-
+    if (isGenerator) {
+        return raiseError("Generator is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(name, parseOptionalBindingIdentifier());
 
     BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
@@ -3389,9 +3397,13 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
     const auto accessorType = AccessorType::None;
 
     BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
-
+    if (isAsync) {
+        return raiseError("Async function is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
-
+    if (isGenerator) {
+        return raiseError("Generator is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(name, parsePropertyName());
 
     BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
@@ -4108,9 +4120,13 @@ BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(const size_t start, con
     const auto syntax = FunctionSyntaxKind::Statement;
 
     BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
-
+    if (isAsync) {
+        return raiseError("Async function is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
-
+    if (isGenerator) {
+        return raiseError("Generator is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(name, parseBindingIdentifier());
 
     BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
@@ -4162,9 +4178,13 @@ BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(const size_t start, cons
     const auto syntax = FunctionSyntaxKind::Expression;
 
     BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
-
+    if (isAsync) {
+        return raiseError("Async function is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
-
+    if (isGenerator) {
+        return raiseError("Generator is not supported in this preview release");
+    }
     BINJS_MOZ_TRY_DECL(name, parseOptionalBindingIdentifier());
 
     BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());

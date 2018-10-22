@@ -189,7 +189,7 @@ function reverseSearchBack(state) {
 
   return {
     ...state,
-    currentReverseSearchResultsPosition: nextPosition
+    currentReverseSearchResultsPosition: nextPosition,
   };
 }
 
@@ -201,7 +201,7 @@ function reverseSearchNext(state) {
 
   return {
     ...state,
-    currentReverseSearchResultsPosition: previousPosition
+    currentReverseSearchResultsPosition: previousPosition,
   };
 }
 

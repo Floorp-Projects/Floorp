@@ -109,7 +109,7 @@ async function checkTabDedicatedWorkerIDB(tab) {
     tab.linkedBrowser,
     {
       srcBlob: workerScriptBlob,
-      workerType: "dedicated"
+      workerType: "dedicated",
     },
     workerCheckDeployer);
 }
@@ -119,7 +119,7 @@ async function checkTabSharedWorkerIDB(tab) {
     tab.linkedBrowser,
     {
       srcBlob: workerScriptBlob,
-      workerType: "shared"
+      workerType: "shared",
     },
     workerCheckDeployer);
 }

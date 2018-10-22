@@ -17,7 +17,7 @@ add_task(async function() {
   const events = Promise.all([
     once(gAudioNodes, "add", 2),
     once(gAudioNodes, "disconnect"),
-    waitForGraphRendered(panelWin, 2, 0)
+    waitForGraphRendered(panelWin, 2, 0),
   ]);
   reload(target);
   await events;

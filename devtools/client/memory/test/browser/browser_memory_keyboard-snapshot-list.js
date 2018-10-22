@@ -6,10 +6,10 @@
 "use strict";
 
 const {
-  viewState
+  viewState,
 } = require("devtools/client/memory/constants");
 const {
-  takeSnapshotAndCensus
+  takeSnapshotAndCensus,
 } = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 

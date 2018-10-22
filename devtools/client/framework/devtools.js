@@ -755,7 +755,7 @@ DevTools.prototype = {
       }
     }
 
-    for (const [key, ] of this.getToolDefinitionMap()) {
+    for (const [key ] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
     }
 

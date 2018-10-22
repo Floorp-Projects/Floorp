@@ -14,30 +14,30 @@ Object.defineProperty(this, "NetworkHelper", {
   },
   configurable: true,
   writeable: false,
-  enumerable: true
+  enumerable: true,
 });
 
 const TEST_CASES = [
   {
     description: "TLS_VERSION_1",
     input: 1,
-    expected: "TLSv1"
+    expected: "TLSv1",
   }, {
     description: "TLS_VERSION_1.1",
     input: 2,
-    expected: "TLSv1.1"
+    expected: "TLSv1.1",
   }, {
     description: "TLS_VERSION_1.2",
     input: 3,
-    expected: "TLSv1.2"
+    expected: "TLSv1.2",
   }, {
     description: "TLS_VERSION_1.3",
     input: 4,
-    expected: "TLSv1.3"
+    expected: "TLSv1.3",
   }, {
     description: "invalid version",
     input: -1,
-    expected: "Unknown"
+    expected: "Unknown",
   },
 ];
 

@@ -15,8 +15,8 @@ const callWatcherSpec = generateActorSpec({
      */
     "call": {
       type: "call",
-      function: Arg(0, "function-call")
-    }
+      function: Arg(0, "function-call"),
+    },
   },
 
   methods: {
@@ -27,23 +27,23 @@ const callWatcherSpec = generateActorSpec({
         startRecording: Option(0, "boolean"),
         performReload: Option(0, "boolean"),
         holdWeak: Option(0, "boolean"),
-        storeCalls: Option(0, "boolean")
+        storeCalls: Option(0, "boolean"),
       },
-      oneway: true
+      oneway: true,
     },
     finalize: {
-      oneway: true
+      oneway: true,
     },
     isRecording: {
-      response: RetVal("boolean")
+      response: RetVal("boolean"),
     },
     initTimestampEpoch: {},
     resumeRecording: {},
     pauseRecording: {
-      response: { calls: RetVal("array:function-call") }
+      response: { calls: RetVal("array:function-call") },
     },
     eraseRecording: {},
-  }
+  },
 });
 
 exports.callWatcherSpec = callWatcherSpec;

@@ -60,7 +60,7 @@ function* testSteps()
     ok(true, "Filling database");
 
     let obj = {
-      name: "foo"
+      name: "foo",
     };
 
     if (!blobs) {

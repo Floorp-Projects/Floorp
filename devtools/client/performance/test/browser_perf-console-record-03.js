@@ -16,7 +16,7 @@ const { getSelectedRecording } = require("devtools/client/performance/test/helpe
 add_task(async function() {
   const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   await console.profile("rust");

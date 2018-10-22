@@ -72,7 +72,7 @@ add_task(async function() {
           ok(true, `${statusChangesExpected} status changes while loading`);
           resolve();
         }
-      }
+      },
     };
     gBrowser.addProgressListener(progressListener);
   });

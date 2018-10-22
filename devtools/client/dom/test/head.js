@@ -46,7 +46,7 @@ function addTestTab(url) {
           resolve({
             tab: tab,
             browser: tab.linkedBrowser,
-            panel: panel
+            panel: panel,
           });
         });
       });
@@ -126,7 +126,7 @@ function getAllRowsForLabel(panel, text) {
     if (level > rootObjectLevel) {
       result.push({
         name: normalizeTreeValue(node.textContent),
-        value: normalizeTreeValue(node.parentNode.nextElementSibling.textContent)
+        value: normalizeTreeValue(node.parentNode.nextElementSibling.textContent),
       });
     } else {
       break;
@@ -212,7 +212,7 @@ function _afterDispatchDone(store, type) {
       },
       run: (dispatch, getState, action) => {
         resolve(action);
-      }
+      },
     });
   });
 }

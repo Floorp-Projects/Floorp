@@ -14,7 +14,7 @@ this.WebConsoleOutput = function(parentNode, jsterm, toolbox, owner, serviceCont
   // privileges and runs entirely in content scope.
   const WebConsoleOutputWrapper = BrowserLoader({
     baseURI: "resource://devtools/client/webconsole/",
-    window
+    window,
   }).require("./webconsole-output-wrapper");
 
   return new WebConsoleOutputWrapper(

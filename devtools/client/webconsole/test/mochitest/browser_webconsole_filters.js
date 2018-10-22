@@ -34,7 +34,7 @@ add_task(async function() {
 
   // Check that messages are not shown when their filter is turned off.
   await setFilterState(hud, {
-    error: false
+    error: false,
   });
   await waitFor(() => findMessages(hud, "").length == 4);
   ok(true, "When a filter is turned off, its messages are not shown.");

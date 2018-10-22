@@ -2022,6 +2022,15 @@ nsNativeThemeCocoa::DrawTextBox(CGContextRef cgContext, const HIRect& inBoxRect,
   CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
   CGContextFillRect(cgContext, inBoxRect);
 
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
+  CGContextFillRect(cgContext, inBoxRect);
+#endif
+
+  if (aParams.borderless) {
+    return;
+  }
+
   HIThemeFrameDrawInfo fdi;
   fdi.version = 0;
   fdi.kind = kHIThemeFrameTextFieldSquare;
@@ -2041,11 +2050,6 @@ nsNativeThemeCocoa::DrawTextBox(CGContextRef cgContext, const HIRect& inBoxRect,
   drawRect.origin.y += frameOutset;
   drawRect.size.width -= frameOutset * 2;
   drawRect.size.height -= frameOutset * 2;
-
-#if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
-  CGContextFillRect(cgContext, inBoxRect);
-#endif
 
   HIThemeDrawFrame(&drawRect, &fdi, cgContext, HITHEME_ORIENTATION);
 
@@ -3334,15 +3338,14 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
     case StyleAppearance::Statusbar:
       return Some(WidgetInfo::StatusBar(IsActive(aFrame, YES)));
 
-    case StyleAppearance::Menulist:
-    case StyleAppearance::MenulistTextfield: {
+    case StyleAppearance::Menulist: {
       ControlParams controlParams = ComputeControlParams(aFrame, eventState);
       controlParams.focused = controlParams.focused || IsFocused(aFrame);
       controlParams.pressed = IsOpenButton(aFrame);
       DropdownParams params;
       params.controlParams = controlParams;
       params.pullsDown = false;
-      params.editable = aWidgetType == StyleAppearance::MenulistTextfield;
+      params.editable = false;
       return Some(WidgetInfo::Dropdown(params));
     }
 
@@ -3355,6 +3358,7 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
     case StyleAppearance::Groupbox:
       return Some(WidgetInfo::GroupBox());
 
+    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput: {
       bool isFocused = eventState.HasState(NS_EVENT_STATE_FOCUS);
@@ -3368,7 +3372,10 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
       }
 
       bool isDisabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
-      return Some(WidgetInfo::TextBox(TextBoxParams{isDisabled, isFocused}));
+      bool borderless =
+        (aWidgetType == StyleAppearance::MenulistTextfield && !isFocused);
+      return Some(WidgetInfo::TextBox(TextBoxParams{isDisabled, isFocused,
+                                                    borderless}));
     }
 
     case StyleAppearance::Searchfield:
@@ -4064,9 +4071,6 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
 
     case StyleAppearance::MenulistTextfield:
-      result = DirectionAwareMargin(kAquaComboboxBorder, aFrame);
-      break;
-
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     {
@@ -4330,6 +4334,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
+    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::TextfieldMultiline:
@@ -4645,7 +4650,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case StyleAppearance::MenulistButton:
     case StyleAppearance::MozMenulistButton:
     case StyleAppearance::MenulistText:
-    case StyleAppearance::MenulistTextfield:
       if (aFrame && aFrame->GetWritingMode().IsVertical()) {
         return false;
       }
@@ -4709,6 +4713,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case StyleAppearance::Treeheadersortarrow:
     case StyleAppearance::Treeitem:
     case StyleAppearance::Treeline:
+    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::MozMacSourceList:
     case StyleAppearance::MozMacSourceListSelection:
     case StyleAppearance::MozMacActiveSourceListSelection:
@@ -4803,7 +4808,6 @@ nsNativeThemeCocoa::ThemeDrawsFocusForWidget(WidgetType aWidgetType)
   }
 
   if (aWidgetType == StyleAppearance::Menulist ||
-      aWidgetType == StyleAppearance::MenulistTextfield ||
       aWidgetType == StyleAppearance::Button ||
       aWidgetType == StyleAppearance::MozMacHelpButton ||
       aWidgetType == StyleAppearance::MozMacDisclosureButtonOpen ||
@@ -4843,6 +4847,7 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(WidgetType aWidgetType)
     case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::Separator:
     case StyleAppearance::Toolbox:
+    case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Treeview:

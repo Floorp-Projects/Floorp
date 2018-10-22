@@ -66,7 +66,7 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
    "  <div class='devtools-toolbarbutton' label='true'>",
    "   <hbox class='toolbarbutton-menubutton-button'></hbox></div>",
    " </body>",
-   " </html>"
+   " </html>",
   ].join("\n"));
 
 let browser;

@@ -23,7 +23,7 @@ add_task(async function() {
   const pie = Chart.Pie(document, {
     data: [],
     width: 100,
-    height: 100
+    height: 100,
   });
 
   const node = pie.node;

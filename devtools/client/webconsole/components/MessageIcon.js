@@ -10,20 +10,34 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {l10n} = require("devtools/client/webconsole/utils/messages");
 
-// Store common icons so they can be used without recreating the element
-// during render.
-const CONSTANT_ICONS = {
-  "error": getIconElement("level.error"),
-  "warn": getIconElement("level.warn"),
-  "info": getIconElement("level.info"),
-  "log": getIconElement("level.log"),
-  "debug": getIconElement("level.debug")
+const l10nLevels = {
+  "error": "level.error",
+  "warn": "level.warn",
+  "info": "level.info",
+  "log": "level.log",
+  "debug": "level.debug",
 };
 
-function getIconElement(level) {
+// Store common icons so they can be used without recreating the element
+// during render.
+const CONSTANT_ICONS = Object.entries(l10nLevels).reduce((acc, [key, l10nLabel]) => {
+  acc[key] = getIconElement(l10nLabel);
+  return acc;
+}, {});
+
+function getIconElement(level, onRewindClick) {
+  let title = l10n.getStr(l10nLevels[level] || level);
+  const classnames = ["icon"];
+
+  if (onRewindClick) {
+    title = l10n.getFormatStr("webconsole.jumpButton.tooltip", [title]);
+    classnames.push("rewindable");
+  }
+
   return dom.span({
-    className: "icon",
-    title: l10n.getStr(level),
+    className: classnames.join(" "),
+    onClick: onRewindClick,
+    title,
     "aria-live": "off",
   });
 }
@@ -31,10 +45,15 @@ function getIconElement(level) {
 MessageIcon.displayName = "MessageIcon";
 MessageIcon.propTypes = {
   level: PropTypes.string.isRequired,
+  onRewindClick: PropTypes.function,
 };
+
 function MessageIcon(props) {
-  const { level } = props;
-  return CONSTANT_ICONS[level] || getIconElement(level);
+  const { level, onRewindClick } = props;
+
+  return onRewindClick
+    ? getIconElement(level, onRewindClick)
+    : CONSTANT_ICONS[level] || getIconElement(level);
 }
 
 module.exports = MessageIcon;

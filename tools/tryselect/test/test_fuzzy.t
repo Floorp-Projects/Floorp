@@ -10,10 +10,11 @@ Test fuzzy selector
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-    "tasks":[
-      "test/foo-debug",
-      "test/foo-opt"
-    ]
+      "tasks": [
+          "test/foo-debug",
+          "test/foo-opt"
+      ],
+      "version": 1
   }
   
   $ ./mach try fuzzy $testargs -q "'bar"
@@ -25,10 +26,11 @@ Test fuzzy selector
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-    "tasks":[
-      "test/bar-debug",
-      "test/bar-opt"
-    ]
+      "tasks": [
+          "test/bar-debug",
+          "test/bar-opt"
+      ],
+      "version": 1
   }
   
 
@@ -41,12 +43,13 @@ Test multiple selectors
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-    "tasks":[
-      "test/bar-debug",
-      "test/bar-opt",
-      "test/foo-debug",
-      "test/foo-opt"
-    ]
+      "tasks": [
+          "test/bar-debug",
+          "test/bar-opt",
+          "test/foo-debug",
+          "test/foo-opt"
+      ],
+      "version": 1
   }
   
 
@@ -59,15 +62,16 @@ Test templates
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-    "templates":{
-      "artifact":{
-        "enabled":"1"
-      }
-    },
-    "tasks":[
-      "test/foo-debug",
-      "test/foo-opt"
-    ]
+      "tasks": [
+          "test/foo-debug",
+          "test/foo-opt"
+      ],
+      "templates": {
+          "artifact": {
+              "enabled": "1"
+          }
+      },
+      "version": 1
   }
   
   $ ./mach try fuzzy $testargs --env FOO=1 --env BAR=baz -q "'foo"
@@ -77,15 +81,16 @@ Test templates
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
-    "templates":{
-      "env":{
-        "FOO":"1",
-        "BAR":"baz"
-      }
-    },
-    "tasks":[
-      "test/foo-debug",
-      "test/foo-opt"
-    ]
+      "tasks": [
+          "test/foo-debug",
+          "test/foo-opt"
+      ],
+      "templates": {
+          "env": {
+              "BAR": "baz",
+              "FOO": "1"
+          }
+      },
+      "version": 1
   }
   

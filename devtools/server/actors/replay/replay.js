@@ -388,7 +388,7 @@ function EnsurePositionHandler(position) {
           offset: position.offset,
           frameIndex: countScriptFrames() - 1,
         });
-      }
+      },
     });
     break;
   case "OnPop":
@@ -620,7 +620,7 @@ const gRequestHandlers = {
         name: "Unknown properties",
         desc: {
           value: "Recording divergence in getObjectProperties",
-          enumerable: true
+          enumerable: true,
         },
       }];
     }

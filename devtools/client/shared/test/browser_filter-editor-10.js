@@ -73,7 +73,7 @@ function triggerKey(key, modifier) {
     target: input,
     keyCode: key,
     [modifier]: true,
-    preventDefault: function() {}
+    preventDefault: function() {},
   });
 }
 

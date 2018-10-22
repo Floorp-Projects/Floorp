@@ -148,7 +148,7 @@ _Timer.prototype = {
     // undershoots.
     var newDelay = this._delay - elapsed;
     do_timeout(newDelay, this._func);
-  }
+  },
 };
 
 function _do_quit() {
@@ -224,7 +224,7 @@ function do_execute_soon(callback) {
       } finally {
         do_test_finished();
       }
-    }
+    },
   });
 }
 

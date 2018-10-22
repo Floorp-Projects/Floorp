@@ -179,7 +179,7 @@ CoverageCollector.prototype.recordTestCoverage = function(testName) {
       sourceFile: scriptName,
       methods: {},
       covered: [],
-      uncovered: []
+      uncovered: [],
     };
 
     if (typeof(methods[scriptName]) != "undefined" && methods[scriptName] != null) {

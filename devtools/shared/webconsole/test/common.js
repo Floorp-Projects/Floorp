@@ -217,7 +217,7 @@ function checkRawHeaders(text, expected) {
     }
     arr.push({
       name: header.substr(0, index),
-      value: header.substr(index + 2)
+      value: header.substr(index + 2),
     });
   }
 

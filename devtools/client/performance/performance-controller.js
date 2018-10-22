@@ -10,7 +10,7 @@ var BrowserLoaderModule = {};
 ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
 var { loader, require } = BrowserLoaderModule.BrowserLoader({
   baseURI: "resource://devtools/client/performance/",
-  window
+  window,
 });
 /* exported ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout */
 var { ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
@@ -26,7 +26,7 @@ var EVENTS = require("devtools/client/performance/events");
 Object.defineProperty(this, "EVENTS", {
   value: EVENTS,
   enumerable: true,
-  writable: false
+  writable: false,
 });
 
 /* exported React, ReactDOM, JITOptimizationsView, RecordingControls, RecordingButton,
@@ -277,7 +277,7 @@ var PerformanceController = {
       allocationsSampleProbability: this.getPref("memory-sample-probability"),
       allocationsMaxLogLength: this.getPref("memory-max-log-length"),
       bufferSize: this.getPref("profiler-buffer-size"),
-      sampleFrequency: this.getPref("profiler-sample-frequency")
+      sampleFrequency: this.getPref("profiler-sample-frequency"),
     };
 
     const recordingStarted = await gFront.startRecording(options);
@@ -570,7 +570,7 @@ var PerformanceController = {
     this.emit(EVENTS.UI_DETAILS_VIEW_SELECTED, ...data);
   },
 
-  toString: () => "[object PerformanceController]"
+  toString: () => "[object PerformanceController]",
 };
 
 /**

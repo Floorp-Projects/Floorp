@@ -16,12 +16,12 @@ function* testSteps()
 
   const indexData = [
     { name: "", keyPath: "name", options: { unique: true } },
-    { name: null, keyPath: "height", options: { } }
+    { name: null, keyPath: "height", options: { } },
   ];
 
   const data = [
     { ss: "237-23-7732", name: "Ann", height: 60 },
-    { ss: "237-23-7733", name: "Bob", height: 65 }
+    { ss: "237-23-7733", name: "Bob", height: 65 },
   ];
 
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);

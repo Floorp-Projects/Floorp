@@ -18,34 +18,34 @@ exports.synthesizeProfile = () => {
           { category: CATEGORY_INDEX("other"), location: "(root)" },
           { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
           { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_INDEX("js"), location: "C (http://foo/bar/baz:56)" }
-        ]
+          { category: CATEGORY_INDEX("js"), location: "C (http://foo/bar/baz:56)" },
+        ],
       }, {
         time: 1 + 1,
         frames: [
           { category: CATEGORY_INDEX("other"), location: "(root)" },
           { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
           { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_INDEX("gc"), location: "D (http://foo/bar/baz:78:9)" }
-        ]
+          { category: CATEGORY_INDEX("gc"), location: "D (http://foo/bar/baz:78:9)" },
+        ],
       }, {
         time: 1 + 1 + 2,
         frames: [
           { category: CATEGORY_INDEX("other"), location: "(root)" },
           { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
           { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_INDEX("gc"), location: "D (http://foo/bar/baz:78:9)" }
-        ]
+          { category: CATEGORY_INDEX("gc"), location: "D (http://foo/bar/baz:78:9)" },
+        ],
       }, {
         time: 1 + 1 + 2 + 3,
         frames: [
           { category: CATEGORY_INDEX("other"), location: "(root)" },
           { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
           { category: CATEGORY_INDEX("gc"), location: "E (http://foo/bar/baz:90)" },
-          { category: CATEGORY_INDEX("network"), location: "F (http://foo/bar/baz:99)" }
-        ]
-      }]
-    }]
+          { category: CATEGORY_INDEX("network"), location: "F (http://foo/bar/baz:99)" },
+        ],
+      }],
+    }],
   });
 };
 
@@ -74,24 +74,24 @@ exports.synthesizeCustomTreeClass = () => {
       for (const childDataSrc of this.itemDataSrc.children) {
         children.push(new MyCustomTreeItem(childDataSrc, {
           parent: this,
-          level: this.level + 1
+          level: this.level + 1,
         }));
       }
-    }
+    },
   });
 
   const myDataSrc = {
     label: "root",
     children: [{
       label: "foo",
-      children: []
+      children: [],
     }, {
       label: "bar",
       children: [{
         label: "baz",
-        children: []
-      }]
-    }]
+        children: [],
+      }],
+    }],
   };
 
   return { MyCustomTreeItem, myDataSrc };

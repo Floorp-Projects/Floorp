@@ -16,7 +16,7 @@ const { setSelectedRecording } = require("devtools/client/performance/test/helpe
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const {

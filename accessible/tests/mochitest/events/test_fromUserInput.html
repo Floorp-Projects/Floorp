@@ -25,7 +25,7 @@
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
-        new textChangeChecker(aID, aStart, aEnd, aText, false, aFromUser)
+        new textChangeChecker(aID, aStart, aEnd, aText, false, aFromUser),
       ];
 
       this.invoke = function removeTextFromInput_invoke() {
@@ -48,7 +48,7 @@
       this.DOMNode = getNode(aID);
 
       this.eventSeq = [
-        new textChangeChecker(aID, aStart, aEnd, aText, false, aFromUser)
+        new textChangeChecker(aID, aStart, aEnd, aText, false, aFromUser),
       ];
 
       this.invoke = function removeTextFromContentEditable_invoke() {

@@ -25,7 +25,7 @@
         [kColHeaderCell, kColHeaderCell, kColSpanned],
         [kRowSpanned,    kColHeaderCell, kColHeaderCell],
         [kDataCell,      kDataCell,      kDataCell],
-        [kColHeaderCell, kColHeaderCell, kColHeaderCell]
+        [kColHeaderCell, kColHeaderCell, kColHeaderCell],
       ];
 
       testTableStruct("table1", cellsArray);
@@ -36,7 +36,7 @@
       var cellsArray = [
         [kColHeaderCell, kColHeaderCell, kColHeaderCell],
         [kRowHeaderCell, kDataCell, kDataCell],
-        [kRowHeaderCell, kDataCell, kDataCell]
+        [kRowHeaderCell, kDataCell, kDataCell],
       ];
 
       testTableStruct("table2", cellsArray);
@@ -47,7 +47,7 @@
       cellsArray = [
         [kColHeaderCell, kColHeaderCell, kColHeaderCell, kColHeaderCell],
         [kRowHeaderCell, kDataCell,      kDataCell,      kDataCell],
-        [kRowHeaderCell, kDataCell,      kDataCell,      kDataCell]
+        [kRowHeaderCell, kDataCell,      kDataCell,      kDataCell],
       ];
 
       testTableStruct("table3", cellsArray, kNoColumnHeader,
@@ -61,7 +61,7 @@
         [kDataCell, kDataCell,   kDataCell,   kColSpanned, kDataCell, kDataCell,   kDataCell, kDataCell],
         [kDataCell, kDataCell,   kDataCell,   kDataCell,   kDataCell, kDataCell,   kDataCell, kRowSpanned],
         [kDataCell, kDataCell,   kColSpanned, kDataCell,   kDataCell, kDataCell,   kDataCell, kRowSpanned],
-        [kDataCell, kRowSpanned, kSpanned,    kDataCell,   kDataCell, kRowSpanned, kDataCell, kRowSpanned]
+        [kDataCell, kRowSpanned, kSpanned,    kDataCell,   kDataCell, kRowSpanned, kDataCell, kRowSpanned],
       ];
 
       testTableStruct("table4", cellsArray);
@@ -70,7 +70,7 @@
       // Table with a cell that has display: block; style
 
       cellsArray = [
-        [kRowHeaderCell, kDataCell]
+        [kRowHeaderCell, kDataCell],
       ];
 
       testTableStruct("table5", cellsArray);

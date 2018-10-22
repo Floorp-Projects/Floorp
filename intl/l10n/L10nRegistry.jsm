@@ -1,6 +1,6 @@
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { MessageContext, FluentResource } = ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+const { FluentBundle, FluentResource } = ChromeUtils.import("resource://gre/modules/Fluent.jsm", {});
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
  * It manages the list of resource sources provided with the app and allows
  * for additional sources to be added and updated.
  *
- * It's primary purpose is to allow for building an iterator over MessageContext objects
+ * It's primary purpose is to allow for building an iterator over FluentBundle objects
  * that will be utilized by a localization API.
  *
  * The generator creates all possible permutations of locales and sources to allow for
@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
  *     ]
  *
  * If the user will request:
- *   L10nRegistry.generateContexts(['de', 'en-US'], [
+ *   L10nRegistry.generateBundles(['de', 'en-US'], [
  *     '/browser/menu.ftl',
  *     '/platform/toolkit.ftl'
  *   ]);
@@ -69,7 +69,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
  *     ]
  *   }
  *
- * This allows the localization API to consume the MessageContext and lazily fallback
+ * This allows the localization API to consume the FluentBundle and lazily fallback
  * on the next in case of a missing string or error.
  *
  * If during the life-cycle of the app a new source is added, the generator can be called again
@@ -86,9 +86,9 @@ const L10nRegistry = {
    *
    * @param {Array} requestedLangs
    * @param {Array} resourceIds
-   * @returns {AsyncIterator<MessageContext>}
+   * @returns {AsyncIterator<FluentBundle>}
    */
-  async* generateContexts(requestedLangs, resourceIds) {
+  async* generateBundles(requestedLangs, resourceIds) {
     if (this.bootstrap !== null) {
       await this.bootstrap;
     }
@@ -96,7 +96,7 @@ const L10nRegistry = {
     const pseudoNameFromPref = Services.prefs.getStringPref("intl.l10n.pseudo", "");
     for (const locale of requestedLangs) {
       for await (const dataSets of generateResourceSetsForLocale(locale, sourcesOrder, resourceIds)) {
-        const ctx = new MessageContext(locale, {
+        const bundle = new FluentBundle(locale, {
           ...MSG_CONTEXT_OPTIONS,
           transform: PSEUDO_STRATEGIES[pseudoNameFromPref],
         });
@@ -104,9 +104,9 @@ const L10nRegistry = {
           if (data === null) {
             return;
           }
-          ctx.addResource(data);
+          bundle.addResource(data);
         }
-        yield ctx;
+        yield bundle;
       }
     }
   },
@@ -169,7 +169,7 @@ const L10nRegistry = {
 };
 
 /**
- * This function generates an iterator over MessageContexts for a single locale
+ * This function generates an iterator over FluentBundles for a single locale
  * for a given list of resourceIds for all possible combinations of sources.
  *
  * This function is called recursively to generate all possible permutations
@@ -180,7 +180,7 @@ const L10nRegistry = {
  * @param {Array} sourcesOrder
  * @param {Array} resourceIds
  * @param {Array} [resolvedOrder]
- * @returns {AsyncIterator<MessageContext>}
+ * @returns {AsyncIterator<FluentBundle>}
  */
 async function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds, resolvedOrder = []) {
   const resolvedLength = resolvedOrder.length;
@@ -251,8 +251,8 @@ const MSG_CONTEXT_OPTIONS = {
         default:
           return "other";
       }
-    }
-  }
+    },
+  },
 };
 
 /**
@@ -343,7 +343,7 @@ const PSEUDO_STRATEGIES = {
 };
 
 /**
- * Generates a single MessageContext by loading all resources
+ * Generates a single FluentBundle by loading all resources
  * from the listed sources for a given locale.
  *
  * The function casts all error cases into a Promise that resolves with
@@ -354,7 +354,7 @@ const PSEUDO_STRATEGIES = {
  * @param {String} locale
  * @param {Array} sourcesOrder
  * @param {Array} resourceIds
- * @returns {Promise<MessageContext>}
+ * @returns {Promise<FluentBundle>}
  */
 async function generateResourceSet(locale, sourcesOrder, resourceIds) {
   return Promise.all(resourceIds.map((resourceId, i) => {

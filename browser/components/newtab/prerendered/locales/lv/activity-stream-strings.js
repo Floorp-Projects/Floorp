@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populārās tēmas:",
   "pocket_read_even_more": "Parādīt vairāk lapas",
   "pocket_more_reccommendations": "Vairāk ieteikumu",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Kā tas strādā",
   "pocket_cta_button": "Izmēģiniet Pocket",
   "pocket_cta_text": "Saglabājiet interesantus stāstus Pocket un barojiet savu prātu ar interesantu lasāmvielu.",
   "highlights_empty_state": "Sāciet pārlūkošanu un mēs šeit parādīsim lieliskus rakstus, video un citas apmeklētās lapas.",

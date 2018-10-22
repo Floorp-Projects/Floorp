@@ -39,6 +39,6 @@ module.exports = function(context) {
                                 browserWindowEnv.globals[global]);
         }
       }
-    }
+    },
   };
 };

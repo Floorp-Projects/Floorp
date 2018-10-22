@@ -28,7 +28,7 @@ class GeckoViewScrollContent extends GeckoViewContentModule {
         this.eventDispatcher.sendRequest({
           type: "GeckoView:ScrollChanged",
           scrollX: Math.round(content.scrollX),
-          scrollY: Math.round(content.scrollY)
+          scrollY: Math.round(content.scrollY),
         });
         break;
     }

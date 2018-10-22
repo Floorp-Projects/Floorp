@@ -27,7 +27,7 @@ MozillaLogger.prototype = {
     dump(msg);
   },
 
-  close() {}
+  close() {},
 };
 
 
@@ -64,7 +64,7 @@ SpecialPowersLogger.prototype = {
 
   close() {
     SpecialPowers.closeLogFile();
-  }
+  },
 };
 
 
@@ -127,7 +127,7 @@ MozillaFileLogger.prototype = {
     this._foStream = null;
     this._converter = null;
     this._file = null;
-  }
+  },
 };
 
 this.MozillaLogger = MozillaLogger;

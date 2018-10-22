@@ -184,7 +184,7 @@ let listener = {
 
     do_check_eq(data.emptyObjectArray.length, 0);
     do_check_eq(data.nullObjectArray, null);
-  }
+  },
 };
 
 let callbackListener = {
@@ -199,7 +199,7 @@ let callbackListener = {
     } else {
       ok(false, "Response type should be valid: " + data.response);
     }
-  }
+  },
 };
 
 function register_js_events(scope, type, callbackType) {

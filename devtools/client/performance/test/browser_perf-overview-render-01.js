@@ -15,7 +15,7 @@ const { times } = require("devtools/client/performance/test/helpers/event-utils"
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, OverviewView } = panel.panelWin;
@@ -24,7 +24,7 @@ add_task(async function() {
 
   // Ensure overview keeps rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
-    expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
+    expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL],
   });
 
   ok(true, "Overview was rendered while recording.");

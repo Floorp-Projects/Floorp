@@ -66,7 +66,7 @@ var contextMenu = {
       // following menu item is a global action
       new ContextMenuItem("removeall",
                           () => downloadLists.finished.length > 0,
-                          () => downloadLists.removeFinished())
+                          () => downloadLists.removeFinished()),
     ];
   },
 
@@ -90,7 +90,7 @@ var contextMenu = {
     for (let item of this._items) {
       item.updateVisibility(target.download);
     }
-  }
+  },
 };
 
 function ContextMenuItem(name, isVisible, action) {
@@ -103,7 +103,7 @@ function ContextMenuItem(name, isVisible, action) {
 ContextMenuItem.prototype = {
   updateVisibility: function(download) {
     this.element.hidden = !this.isVisible(download);
-  }
+  },
 };
 
 function DownloadListView(type, listElementId) {
@@ -184,9 +184,9 @@ DownloadListView.prototype = {
 
     EventDispatcher.instance.sendRequest({
       type: "Download:Remove",
-      path: download.target.path
+      path: download.target.path,
     });
-  }
+  },
 };
 
 var downloadLists = {
@@ -218,7 +218,7 @@ var downloadLists = {
                  }
                }, Cu.reportError);
     }
-  }
+  },
 };
 
 function DownloadItem(download) {
@@ -238,7 +238,7 @@ const kDownloadStatePropertyNames = [
   "succeeded",
   "canceled",
   "error",
-  "startTime"
+  "startTime",
 ];
 
 DownloadItem.prototype = {
@@ -362,7 +362,7 @@ DownloadItem.prototype = {
       return strings.GetStringFromName(name);
     }
     return "";
-  }
+  },
 };
 
 window.addEventListener("DOMContentLoaded", event => {

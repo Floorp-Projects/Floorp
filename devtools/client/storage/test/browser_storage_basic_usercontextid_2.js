@@ -14,8 +14,8 @@ const testCasesUserContextId = [
       getCookieId("c1uc1", "test1.example.org", "/browser"),
       getCookieId("cs2uc1", ".example.org", "/"),
       getCookieId("c3uc1", "test1.example.org", "/"),
-      getCookieId("uc1uc1", ".example.org", "/")
-    ]
+      getCookieId("uc1uc1", ".example.org", "/"),
+    ],
   ],
   [
     ["cookies", "https://sectest1.example.org"],
@@ -23,8 +23,8 @@ const testCasesUserContextId = [
       getCookieId("uc1uc1", ".example.org", "/"),
       getCookieId("cs2uc1", ".example.org", "/"),
       getCookieId("sc1uc1", "sectest1.example.org",
-        "/browser/devtools/client/storage/test/")
-    ]
+        "/browser/devtools/client/storage/test/"),
+    ],
   ],
   [["localStorage", "http://test1.example.org"],
    ["ls1uc1", "ls2uc1"]],

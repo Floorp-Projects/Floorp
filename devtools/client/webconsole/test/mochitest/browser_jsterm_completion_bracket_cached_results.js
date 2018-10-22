@@ -56,24 +56,24 @@ async function performTests() {
       char: "-",
       expectedItems: [
         `"data-test"`,
-        `"DATA-TEST"`
+        `"DATA-TEST"`,
       ],
       expectedCompletionText: `test"]`,
     }, {
       char: "t",
       expectedItems: [
         `"data-test"`,
-        `"DATA-TEST"`
+        `"DATA-TEST"`,
       ],
       expectedCompletionText: `est"]`,
     }, {
       char: "e",
       expectedItems: [
         `"data-test"`,
-        `"DATA-TEST"`
+        `"DATA-TEST"`,
       ],
       expectedCompletionText: `st"]`,
-    }]
+    }],
   }, {
     description: "Test that it works if the user did type a quote",
     initialInput: `window.testObject['dat`,
@@ -95,24 +95,24 @@ async function performTests() {
       char: "-",
       expectedItems: [
         `'data-test'`,
-        `'DATA-TEST'`
+        `'DATA-TEST'`,
       ],
       expectedCompletionText: `test']`,
     }, {
       char: "t",
       expectedItems: [
         `'data-test'`,
-        `'DATA-TEST'`
+        `'DATA-TEST'`,
       ],
       expectedCompletionText: `est']`,
     }, {
       char: "e",
       expectedItems: [
         `'data-test'`,
-        `'DATA-TEST'`
+        `'DATA-TEST'`,
       ],
       expectedCompletionText: `st']`,
-    }]
+    }],
   }];
 
   for (const test of tests) {

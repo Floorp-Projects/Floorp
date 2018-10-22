@@ -32,7 +32,7 @@ define(function(require, exports, module) {
           PropTypes.object,
           PropTypes.array,
           PropTypes.bool,
-          PropTypes.number
+          PropTypes.number,
         ]),
         expandedNodes: PropTypes.instanceOf(Set),
       };
@@ -45,7 +45,7 @@ define(function(require, exports, module) {
         json: props.json,
         expandedNodes: props.expandedNodes,
         jsonText: props.jsonText,
-        tabActive: props.tabActive
+        tabActive: props.tabActive,
       };
 
       this.onTabChanged = this.onTabChanged.bind(this);
@@ -69,7 +69,7 @@ define(function(require, exports, module) {
               expandedNodes: this.state.expandedNodes,
               actions: this.props.actions,
               searchFilter: this.state.searchFilter,
-              dataSize: this.state.jsonText.length
+              dataSize: this.state.jsonText.length,
             })
           ),
           TabPanel({
@@ -80,7 +80,7 @@ define(function(require, exports, module) {
               isValidJson: !(this.state.json instanceof Error) &&
                            document.readyState != "loading",
               data: this.state.jsonText,
-              actions: this.props.actions
+              actions: this.props.actions,
             })
           ),
           TabPanel({
@@ -90,7 +90,7 @@ define(function(require, exports, module) {
             HeadersPanel({
               data: this.props.headers,
               actions: this.props.actions,
-              searchFilter: this.props.searchFilter
+              searchFilter: this.props.searchFilter,
             })
           )
         )

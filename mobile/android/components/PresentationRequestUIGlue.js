@@ -68,7 +68,7 @@ PresentationRequestUIGlue.prototype = {
       let data = {
         url: aURL,
         windowId: localDevice.windowId,
-        requestId: requestId
+        requestId: requestId,
       };
       Services.obs.notifyObservers(null,
                                    TOPIC_PRESENTATION_RECEIVER_LAUNCH,
@@ -77,7 +77,7 @@ PresentationRequestUIGlue.prototype = {
   },
 
   classID: Components.ID("9c550ef7-3ff6-4bd1-9ad1-5a3735b90d21"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationRequestUIGlue])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationRequestUIGlue]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PresentationRequestUIGlue]);

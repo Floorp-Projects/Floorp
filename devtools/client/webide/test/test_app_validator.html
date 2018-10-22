@@ -39,7 +39,7 @@
       httpserver.registerDirectory("/", nsFile(dirPath));
       return new AppValidator({
         type: "hosted",
-        location: fakeOrigin + manifestFile
+        location: fakeOrigin + manifestFile,
       });
     }
 
@@ -47,7 +47,7 @@
       const dirPath = getTestFilePath("validator/" + path);
       return new AppValidator({
         type: "packaged",
-        location: dirPath
+        location: dirPath,
       });
     }
 
@@ -180,7 +180,7 @@
 
           next();
         });
-      }
+      },
     ];
 
     function checkNoNameOrIcon(validator) {

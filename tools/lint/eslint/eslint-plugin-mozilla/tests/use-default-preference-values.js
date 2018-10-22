@@ -35,5 +35,5 @@ ruleTester.run("use-default-preference-values", rule, {
   invalid: [].concat(
     methods.map(m =>
       invalidCode("try { blah = branch." + m + "('blah'); } catch(e) {}"))
-  )
+  ),
 });

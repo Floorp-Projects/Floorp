@@ -33,7 +33,7 @@ window.onload = function() {
       ["dom.mozBrowserFramesEnabled", true],
       // Allows creating a branch new process when creation the iframe
       ["dom.ipc.processCount", 10],
-    ]
+    ],
   }, runTests);
 };
 
@@ -93,7 +93,7 @@ function runTests() {
         client.request({
           to: actor.consoleActor,
           type: "evaluateJS",
-          text: "var a = 42; a"
+          text: "var a = 42; a",
         }, function({result}) {
           ok(result, 42, "console.eval worked");
 

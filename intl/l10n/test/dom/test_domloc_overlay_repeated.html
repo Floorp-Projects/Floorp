@@ -9,13 +9,13 @@
   "use strict";
   const { DOMLocalization } =
     ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
-  const { MessageContext } =
-    ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+  const { FluentBundle } =
+    ChromeUtils.import("resource://gre/modules/Fluent.jsm", {});
 
   async function* mockGenerateMessages(locales, resourceIds) {
-    const mc = new MessageContext(locales);
-    mc.addMessages(`title = Visit <a data-l10n-name="mozilla-link">Mozilla</a> or <a data-l10n-name="firefox-link">Firefox</a> website!`);
-    yield mc;
+    const bundle = new FluentBundle(locales);
+    bundle.addMessages(`title = Visit <a data-l10n-name="mozilla-link">Mozilla</a> or <a data-l10n-name="firefox-link">Firefox</a> website!`);
+    yield bundle;
   }
 
   window.onload = async function() {

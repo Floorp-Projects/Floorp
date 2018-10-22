@@ -69,7 +69,7 @@ function saveRecordingToFile(recordingData, file) {
 function loadRecordingFromFile(file) {
   const channel = NetUtil.newChannel({
     uri: NetUtil.newURI(file),
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
 
   channel.contentType = "text/plain";
@@ -126,7 +126,7 @@ function loadRecordingFromFile(file) {
 function isValidSerializerVersion(version) {
   return !!~[
     PERF_TOOL_SERIALIZER_LEGACY_VERSION,
-    PERF_TOOL_SERIALIZER_CURRENT_VERSION
+    PERF_TOOL_SERIALIZER_CURRENT_VERSION,
   ].indexOf(version);
 }
 
@@ -158,7 +158,7 @@ function convertLegacyData(legacyData) {
       withTicks: !!ticksData.length,
       withMarkers: false,
       withMemory: false,
-      withAllocations: false
+      withAllocations: false,
     },
     systemHost: {},
     systemClient: {},

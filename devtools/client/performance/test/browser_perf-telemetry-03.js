@@ -17,14 +17,14 @@ add_task(async function() {
 
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const {
     EVENTS,
     DetailsView,
     JsCallTreeView,
-    JsFlameGraphView
+    JsFlameGraphView,
   } = panel.panelWin;
 
   await startRecording(panel);

@@ -28,7 +28,7 @@ add_task(async function() {
   const onSidebarShown = waitFor(() => hud.ui.document.querySelector(".sidebar"));
   EventUtils.sendMouseEvent({
     type: "click",
-    [isMacOS ? "metaKey" : "ctrlKey"]: true
+    [isMacOS ? "metaKey" : "ctrlKey"]: true,
   }, object, hud.ui.window);
   await onSidebarShown;
   const sidebarContents = hud.ui.document.querySelector(".sidebar-contents");

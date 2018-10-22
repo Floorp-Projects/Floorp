@@ -16,7 +16,7 @@
  */
 
 
-/* fluent-dom@cab517f (July 31, 2018) */
+/* fluent-dom@fa25466f (October 12, 2018) */
 
 /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 /* global console */
@@ -25,6 +25,9 @@ const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 
+/*
+ * Base CachedIterable class.
+ */
 class CachedIterable extends Array {
   /**
    * Create a `CachedIterable` instance from an iterable or, if another
@@ -43,6 +46,12 @@ class CachedIterable extends Array {
   }
 }
 
+/*
+ * CachedAsyncIterable caches the elements yielded by an async iterable.
+ *
+ * It can be used to iterate over an iterable many times without depleting the
+ * iterable.
+ */
 class CachedAsyncIterable extends CachedIterable {
   /**
    * Create an `CachedAsyncIterable` instance.
@@ -78,7 +87,7 @@ class CachedAsyncIterable extends CachedIterable {
           return {value: undefined, done: true};
         }
         return cached[cur++];
-      }
+      },
     };
   }
 
@@ -97,10 +106,10 @@ class CachedAsyncIterable extends CachedIterable {
     return {
       async next() {
         if (cached.length <= cur) {
-          cached.push(cached.iterator.next());
+          cached.push(await cached.iterator.next());
         }
         return cached[cur++];
-      }
+      },
     };
   }
 
@@ -114,10 +123,10 @@ class CachedAsyncIterable extends CachedIterable {
     let idx = 0;
     while (idx++ < count) {
       const last = this[this.length - 1];
-      if (last && await (last).done) {
+      if (last && last.done) {
         break;
       }
-      this.push(this.iterator.next());
+      this.push(await this.iterator.next());
     }
     // Return the last cached {value, done} object to allow the calling
     // code to decide if it needs to call touchNext again.
@@ -128,36 +137,36 @@ class CachedAsyncIterable extends CachedIterable {
 /**
  * The default localization strategy for Gecko. It comabines locales
  * available in L10nRegistry, with locales requested by the user to
- * generate the iterator over MessageContexts.
+ * generate the iterator over FluentBundles.
  *
  * In the future, we may want to allow certain modules to override this
  * with a different negotitation strategy to allow for the module to
  * be localized into a different language - for example DevTools.
  */
-function defaultGenerateMessages(resourceIds) {
+function defaultGenerateBundles(resourceIds) {
   const appLocales = Services.locale.appLocalesAsBCP47;
-  return L10nRegistry.generateContexts(appLocales, resourceIds);
+  return L10nRegistry.generateBundles(appLocales, resourceIds);
 }
 
 /**
  * The `Localization` class is a central high-level API for vanilla
  * JavaScript use of Fluent.
- * It combines language negotiation, MessageContext and I/O to
+ * It combines language negotiation, FluentBundle and I/O to
  * provide a scriptable API to format translations.
  */
 class Localization {
   /**
-   * @param {Array<String>} resourceIds      - List of resource IDs
-   * @param {Function}      generateMessages - Function that returns a
-   *                                           generator over MessageContexts
+   * @param {Array<String>} resourceIds     - List of resource IDs
+   * @param {Function}      generateBundles - Function that returns a
+   *                                          generator over FluentBundles
    *
    * @returns {Localization}
    */
-  constructor(resourceIds = [], generateMessages = defaultGenerateMessages) {
+  constructor(resourceIds = [], generateBundles = defaultGenerateBundles) {
     this.resourceIds = resourceIds;
-    this.generateMessages = generateMessages;
-    this.ctxs = CachedAsyncIterable.from(
-      this.generateMessages(this.resourceIds));
+    this.generateBundles = generateBundles;
+    this.bundles = CachedAsyncIterable.from(
+      this.generateBundles(this.resourceIds));
   }
 
   /**
@@ -180,7 +189,7 @@ class Localization {
   /**
    * Format translations and handle fallback if needed.
    *
-   * Format translations for `keys` from `MessageContext` instances on this
+   * Format translations for `keys` from `FluentBundle` instances on this
    * DOMLocalization. In case of errors, fetch the next context in the
    * fallback chain.
    *
@@ -192,15 +201,15 @@ class Localization {
   async formatWithFallback(keys, method) {
     const translations = [];
 
-    for await (const ctx of this.ctxs) {
-      const missingIds = keysFromContext(method, ctx, keys, translations);
+    for await (const bundle of this.bundles) {
+      const missingIds = keysFromBundle(method, bundle, keys, translations);
 
       if (missingIds.size === 0) {
         break;
       }
 
       if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
-        const locale = ctx.locales[0];
+        const locale = bundle.locales[0];
         const ids = Array.from(missingIds).join(", ");
         if (Cu.isInAutomation) {
           throw new Error(`Missing translations in ${locale}: ${ids}`);
@@ -226,7 +235,10 @@ class Localization {
    *
    *     // [
    *     //   { value: 'Hello, Mary!', attributes: null },
-   *     //   { value: 'Welcome!', attributes: { title: 'Hello' } }
+   *     //   {
+   *     //     value: 'Welcome!',
+   *     //     attributes: [ { name: "title", value: 'Hello' } ]
+   *     //   }
    *     // ]
    *
    * Returns a Promise resolving to an array of the translation strings.
@@ -236,7 +248,7 @@ class Localization {
    * @private
    */
   formatMessages(keys) {
-    return this.formatWithFallback(keys, messageFromContext);
+    return this.formatWithFallback(keys, messageFromBundle);
   }
 
   /**
@@ -259,7 +271,7 @@ class Localization {
    * @returns {Promise<Array<string>>}
    */
   formatValues(keys) {
-    return this.formatWithFallback(keys, valueFromContext);
+    return this.formatWithFallback(keys, valueFromBundle);
   }
 
   /**
@@ -327,8 +339,8 @@ class Localization {
    * @param {bool} eager - whether the I/O for new context should begin eagerly
    */
   onChange(eager = false) {
-    this.ctxs = CachedAsyncIterable.from(
-      this.generateMessages(this.resourceIds));
+    this.bundles = CachedAsyncIterable.from(
+      this.generateBundles(this.resourceIds));
     if (eager) {
       // If the first app locale is the same as last fallback
       // it means that we have all resources in this locale, and
@@ -338,43 +350,43 @@ class Localization {
       const appLocale = Services.locale.appLocaleAsBCP47;
       const lastFallback = Services.locale.lastFallbackLocale;
       const prefetchCount = appLocale === lastFallback ? 1 : 2;
-      this.ctxs.touchNext(prefetchCount);
+      this.bundles.touchNext(prefetchCount);
     }
   }
 }
 
 Localization.prototype.QueryInterface = ChromeUtils.generateQI([
-  Ci.nsISupportsWeakReference
+  Ci.nsISupportsWeakReference,
 ]);
 
 /**
  * Format the value of a message into a string.
  *
- * This function is passed as a method to `keysFromContext` and resolve
- * a value of a single L10n Entity using provided `MessageContext`.
+ * This function is passed as a method to `keysFromBundle` and resolve
+ * a value of a single L10n Entity using provided `FluentBundle`.
  *
  * If the function fails to retrieve the entity, it will return an ID of it.
  * If formatting fails, it will return a partially resolved entity.
  *
  * In both cases, an error is being added to the errors array.
  *
- * @param   {MessageContext} ctx
+ * @param   {FluentBundle} bundle
  * @param   {Array<Error>}   errors
  * @param   {string}         id
  * @param   {Object}         args
  * @returns {string}
  * @private
  */
-function valueFromContext(ctx, errors, id, args) {
-  const msg = ctx.getMessage(id);
-  return ctx.format(msg, args, errors);
+function valueFromBundle(bundle, errors, id, args) {
+  const msg = bundle.getMessage(id);
+  return bundle.format(msg, args, errors);
 }
 
 /**
  * Format all public values of a message into a {value, attributes} object.
  *
- * This function is passed as a method to `keysFromContext` and resolve
- * a single L10n Entity using provided `MessageContext`.
+ * This function is passed as a method to `keysFromBundle` and resolve
+ * a single L10n Entity using provided `FluentBundle`.
  *
  * The function will return an object with a value and attributes of the
  * entity.
@@ -385,25 +397,25 @@ function valueFromContext(ctx, errors, id, args) {
  *
  * In both cases, an error is being added to the errors array.
  *
- * @param   {MessageContext} ctx
+ * @param   {FluentBundle} bundle
  * @param   {Array<Error>}   errors
  * @param   {String}         id
  * @param   {Object}         args
  * @returns {Object}
  * @private
  */
-function messageFromContext(ctx, errors, id, args) {
-  const msg = ctx.getMessage(id);
+function messageFromBundle(bundle, errors, id, args) {
+  const msg = bundle.getMessage(id);
 
   const formatted = {
-    value: ctx.format(msg, args, errors),
+    value: bundle.format(msg, args, errors),
     attributes: null,
   };
 
   if (msg.attrs) {
     formatted.attributes = [];
     for (const [name, attr] of Object.entries(msg.attrs)) {
-      const value = ctx.format(attr, args, errors);
+      const value = bundle.format(attr, args, errors);
       if (value !== null) {
         formatted.attributes.push({name, value});
       }
@@ -416,12 +428,12 @@ function messageFromContext(ctx, errors, id, args) {
 /**
  * This function is an inner function for `Localization.formatWithFallback`.
  *
- * It takes a `MessageContext`, list of l10n-ids and a method to be used for
- * key resolution (either `valueFromContext` or `messageFromContext`) and
- * optionally a value returned from `keysFromContext` executed against
- * another `MessageContext`.
+ * It takes a `FluentBundle`, list of l10n-ids and a method to be used for
+ * key resolution (either `valueFromBundle` or `messageFromBundle`) and
+ * optionally a value returned from `keysFromBundle` executed against
+ * another `FluentBundle`.
  *
- * The idea here is that if the previous `MessageContext` did not resolve
+ * The idea here is that if the previous `FluentBundle` did not resolve
  * all keys, we're calling this function with the next context to resolve
  * the remaining ones.
  *
@@ -430,7 +442,7 @@ function messageFromContext(ctx, errors, id, args) {
  *
  * If it doesn't, it means that we have a good translation for this key and
  * we return it. If it does, we'll try to resolve the key using the passed
- * `MessageContext`.
+ * `FluentBundle`.
  *
  * In the end, we fill the translations array, and return the Set with
  * missing ids.
@@ -438,14 +450,14 @@ function messageFromContext(ctx, errors, id, args) {
  * See `Localization.formatWithFallback` for more info on how this is used.
  *
  * @param {Function}       method
- * @param {MessageContext} ctx
+ * @param {FluentBundle}   bundle
  * @param {Array<string>}  keys
  * @param {{Array<{value: string, attributes: Object}>}} translations
  *
  * @returns {Set<string>}
  * @private
  */
-function keysFromContext(method, ctx, keys, translations) {
+function keysFromBundle(method, bundle, keys, translations) {
   const messageErrors = [];
   const missingIds = new Set();
 
@@ -454,9 +466,9 @@ function keysFromContext(method, ctx, keys, translations) {
       return;
     }
 
-    if (ctx.hasMessage(id)) {
+    if (bundle.hasMessage(id)) {
       messageErrors.length = 0;
-      translations[i] = method(ctx, messageErrors, id, args);
+      translations[i] = method(bundle, messageErrors, id, args);
       // XXX: Report resolver errors
     } else {
       missingIds.add(id);

@@ -27,13 +27,13 @@ function testIndentifierGeneration(ui) {
   const fakeStyleSheetFile = {
     "href": "http://example.com/test.css",
     "nodeHref": "http://example.com/",
-    "styleSheetIndex": 1
+    "styleSheetIndex": 1,
   };
 
   const fakeInlineStyleSheet = {
     "href": null,
     "nodeHref": "http://example.com/",
-    "styleSheetIndex": 2
+    "styleSheetIndex": 2,
   };
 
   is(ui.getStyleSheetIdentifier(fakeStyleSheetFile),

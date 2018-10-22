@@ -132,14 +132,14 @@ function analyzeInputString(str) {
         } else if (OPEN_BODY.includes(c)) {
           bodyStack.push({
             token: c,
-            start
+            start,
           });
           start = i + 1;
         } else if (CLOSE_BODY.includes(c)) {
           const last = bodyStack.pop();
           if (!last || OPEN_CLOSE_BODY[last.token] != c) {
             return {
-              err: "syntax error"
+              err: "syntax error",
             };
           }
           if (c == "}") {
@@ -156,7 +156,7 @@ function analyzeInputString(str) {
           i++;
         } else if (c == "\n") {
           return {
-            err: "unterminated string literal"
+            err: "unterminated string literal",
           };
         } else if (c == '"') {
           state = STATE_NORMAL;
@@ -178,7 +178,7 @@ function analyzeInputString(str) {
           i++;
         } else if (c == "\n") {
           return {
-            err: "unterminated string literal"
+            err: "unterminated string literal",
           };
         } else if (c == "'") {
           state = STATE_NORMAL;
@@ -232,7 +232,7 @@ function JSPropertyProvider(dbgObject, anEnvironment, inputValue, cursor) {
     err,
     state,
     lastStatement,
-    isElementAccess
+    isElementAccess,
   } = analyzeInputString(inputValue);
 
   // There was an error analysing the string.
@@ -294,7 +294,7 @@ function JSPropertyProvider(dbgObject, anEnvironment, inputValue, cursor) {
         return {
           isElementAccess,
           matchProp,
-          matches: arrayProtoProps
+          matches: arrayProtoProps,
         };
       }
 
@@ -342,7 +342,7 @@ function JSPropertyProvider(dbgObject, anEnvironment, inputValue, cursor) {
     return {
       isElementAccess,
       matchProp,
-      matches: getMatchedPropsInEnvironment(env, search)
+      matches: getMatchedPropsInEnvironment(env, search),
     };
   }
 
@@ -391,7 +391,7 @@ function JSPropertyProvider(dbgObject, anEnvironment, inputValue, cursor) {
     return {
       isElementAccess,
       matchProp,
-      matches: getMatchedProps(obj, search)
+      matches: getMatchedProps(obj, search),
     };
   }
 

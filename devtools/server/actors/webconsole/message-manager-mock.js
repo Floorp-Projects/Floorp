@@ -41,7 +41,7 @@ MessageManagerMock.prototype = {
     }
     const message = {
       target: this,
-      data
+      data,
     };
     for (const listener of listeners) {
       if (typeof listener === "object" &&

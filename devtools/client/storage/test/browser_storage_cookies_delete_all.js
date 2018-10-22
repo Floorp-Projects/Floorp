@@ -58,8 +58,8 @@ add_task(async function() {
         getCookieId("cs2", ".example.org", "/"),
         getCookieId("c4", ".example.org", "/"),
         getCookieId("uc1", ".example.org", "/"),
-        getCookieId("uc2", ".example.org", "/")
-      ]
+        getCookieId("uc2", ".example.org", "/"),
+      ],
     ],
     [
       ["cookies", "https://sectest1.example.org"], [
@@ -70,8 +70,8 @@ add_task(async function() {
         getCookieId("sc2", "sectest1.example.org",
                     "/browser/devtools/client/storage/test/"),
         getCookieId("uc1", ".example.org", "/"),
-        getCookieId("uc2", ".example.org", "/")
-      ]
+        getCookieId("uc2", ".example.org", "/"),
+      ],
     ],
   ]);
 
@@ -89,8 +89,8 @@ add_task(async function() {
         getCookieId("cs2", ".example.org", "/"),
         getCookieId("c4", ".example.org", "/"),
         getCookieId("uc1", ".example.org", "/"),
-        getCookieId("uc2", ".example.org", "/")
-      ]
+        getCookieId("uc2", ".example.org", "/"),
+      ],
     ],
     [
       ["cookies", "https://sectest1.example.org"],
@@ -102,8 +102,8 @@ add_task(async function() {
         getCookieId("sc1", "sectest1.example.org",
                     "/browser/devtools/client/storage/test/"),
         getCookieId("sc2", "sectest1.example.org",
-                    "/browser/devtools/client/storage/test/")
-      ]
+                    "/browser/devtools/client/storage/test/"),
+      ],
     ],
   ]);
 
@@ -120,8 +120,8 @@ add_task(async function() {
       ["cookies", "http://test1.example.org"],
       [
         getCookieId("c4", ".example.org", "/"),
-        getCookieId("uc2", ".example.org", "/")
-      ]
+        getCookieId("uc2", ".example.org", "/"),
+      ],
     ],
     [
       ["cookies", "https://sectest1.example.org"],
@@ -129,8 +129,8 @@ add_task(async function() {
         getCookieId("c4", ".example.org", "/"),
         getCookieId("uc2", ".example.org", "/"),
         getCookieId("sc2", "sectest1.example.org",
-        "/browser/devtools/client/storage/test/")
-      ]
+        "/browser/devtools/client/storage/test/"),
+      ],
     ],
   ]);
 

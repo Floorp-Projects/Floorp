@@ -143,7 +143,7 @@ Connection.Events = {
   STATUS_CHANGED: "status-changed",
   HOST_CHANGED: "host-changed",
   PORT_CHANGED: "port-changed",
-  NEW_LOG: "new_log"
+  NEW_LOG: "new_log",
 };
 
 Connection.prototype = {
@@ -231,7 +231,7 @@ Connection.prototype = {
       host: this.host,
       port: this.port,
       encryption: this.encryption,
-      authenticator: this.authenticator
+      authenticator: this.authenticator,
     });
     return settings;
   },

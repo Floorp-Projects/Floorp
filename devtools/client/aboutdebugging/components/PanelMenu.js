@@ -16,10 +16,10 @@ class PanelMenu extends Component {
         id: PropTypes.string.isRequired,
         name: PropTypes.string.isRequired,
         icon: PropTypes.string.isRequired,
-        component: PropTypes.func.isRequired
+        component: PropTypes.func.isRequired,
       })).isRequired,
       selectPanel: PropTypes.func.isRequired,
-      selectedPanelId: PropTypes.string
+      selectedPanelId: PropTypes.string,
     };
   }
 
@@ -32,7 +32,7 @@ class PanelMenu extends Component {
         name,
         icon,
         selected,
-        selectPanel
+        selectPanel,
       });
     });
 

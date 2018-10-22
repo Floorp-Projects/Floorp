@@ -29,11 +29,11 @@
       };
 
       this.eventSeq = [
-        new focusChecker(this.DOMNode)
+        new focusChecker(this.DOMNode),
       ];
 
       this.unexpectedEventSeq = [
-        new invokerChecker(EVENT_FOCUS, this.DOMNode.ownerDocument)
+        new invokerChecker(EVENT_FOCUS, this.DOMNode.ownerDocument),
       ];
 
       this.getID = function focusElmWhileSubdocIsFocused_getID() {

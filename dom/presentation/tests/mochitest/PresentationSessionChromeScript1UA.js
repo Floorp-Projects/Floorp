@@ -203,7 +203,7 @@ const mockDevicePrompt = {
   },
   simulateCancel() {
     this._request.cancel();
-  }
+  },
 };
 
 const mockRequestUIGlue = {

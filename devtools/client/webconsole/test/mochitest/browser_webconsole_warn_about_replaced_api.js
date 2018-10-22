@@ -12,7 +12,7 @@ const TEST_URI_NOT_REPLACED =
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [
-    ["devtools.webconsole.persistlog", true]
+    ["devtools.webconsole.persistlog", true],
   ]});
 
   let hud = await openNewTabAndConsole(TEST_URI_NOT_REPLACED);

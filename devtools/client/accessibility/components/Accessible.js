@@ -39,7 +39,7 @@ class AccessiblePropertyClass extends Component {
       accessible: PropTypes.string,
       object: PropTypes.any,
       focused: PropTypes.bool,
-      children: PropTypes.func
+      children: PropTypes.func,
     };
   }
 
@@ -84,7 +84,7 @@ class Accessible extends Component {
       parents: PropTypes.object,
       relations: PropTypes.object,
       supports: PropTypes.object,
-      walker: PropTypes.object.isRequired
+      walker: PropTypes.object.isRequired,
     };
   }
 
@@ -93,7 +93,7 @@ class Accessible extends Component {
 
     this.state = {
       expanded: new Set(),
-      focused: null
+      focused: null,
     };
 
     this.onAccessibleInspected = this.onAccessibleInspected.bind(this);
@@ -245,7 +245,7 @@ class Accessible extends Component {
       object,
       mode: MODE.TINY,
       title: "Object",
-      openLink: this.openLink
+      openLink: this.openLink,
     };
 
     if (isNode(object)) {
@@ -283,13 +283,13 @@ class Accessible extends Component {
         style: {
           paddingInlineStart: depthPadding,
           "inline-size":
-            `calc(var(--accessibility-properties-item-width) - ${depthPadding}px)`
+            `calc(var(--accessibility-properties-item-width) - ${depthPadding}px)`,
         },
         onClick: e => {
           if (e.target.classList.contains("theme-twisty")) {
             this.setExpanded(item, !expanded);
           }
-        }
+        },
       },
         arrow,
         span({ className: "object-label" }, item.name),
@@ -332,7 +332,7 @@ class Accessible extends Component {
         },
         focused: findFocused(focused, items),
         renderItem: this.renderItem,
-        labelledby
+        labelledby,
       });
     }
 
@@ -410,13 +410,13 @@ const translateAccessibleFrontToGrip = accessibleFront => ({
     name: accessibleFront.name,
     role: accessibleFront.role,
     // All the grid containers are assumed to be in the Accessibility tree.
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 
 const translateNodeFrontToGripWrapper = nodeFront => ({
   ...translateNodeFrontToGrip(nodeFront),
-  typeName: nodeFront.typeName
+  typeName: nodeFront.typeName,
 });
 
 /**

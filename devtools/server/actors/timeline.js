@@ -84,8 +84,8 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
   isRecording: actorBridgeWithSpec("isRecording", {
     request: {},
     response: {
-      value: RetVal("boolean")
-    }
+      value: RetVal("boolean"),
+    },
   }),
 
   start: actorBridgeWithSpec("start", {
@@ -95,18 +95,18 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
       withMemory: Option(0, "boolean"),
       withFrames: Option(0, "boolean"),
       withGCEvents: Option(0, "boolean"),
-      withDocLoadingEvents: Option(0, "boolean")
+      withDocLoadingEvents: Option(0, "boolean"),
     },
     response: {
-      value: RetVal("number")
-    }
+      value: RetVal("number"),
+    },
   }),
 
   stop: actorBridgeWithSpec("stop", {
     response: {
       // Set as possibly nullable due to the end time possibly being
       // undefined during destruction
-      value: RetVal("nullable:number")
-    }
+      value: RetVal("nullable:number"),
+    },
   }),
 });

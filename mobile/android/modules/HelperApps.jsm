@@ -35,7 +35,7 @@ App.prototype = {
   launch: function(uri, callback) {
     HelperApps._launchApp(this, uri, callback);
     return false;
-  }
+  },
 };
 
 var HelperApps =  {
@@ -43,7 +43,7 @@ var HelperApps =  {
     delete this.defaultBrowsers;
     this.defaultBrowsers = this._getHandlers("http://www.example.com", {
       filterBrowsers: false,
-      filterHtml: false
+      filterHtml: false,
     });
     return this.defaultBrowsers;
   },
@@ -55,7 +55,7 @@ var HelperApps =  {
     delete this.defaultHtmlHandlers;
     return this.defaultHtmlHandlers = this._getHandlers("http://www.example.com/index.html", {
       filterBrowsers: false,
-      filterHtml: false
+      filterHtml: false,
     });
   },
 
@@ -196,7 +196,7 @@ var HelperApps =  {
       action: options.action || "", // empty action string defaults to android.intent.action.VIEW
       url: uri ? uri.displaySpec : "",
       packageName: options.packageName || "",
-      className: options.className || ""
+      className: options.className || "",
     };
   },
 
@@ -204,14 +204,14 @@ var HelperApps =  {
     if (callback) {
         let msg = this._getMessage("Intent:OpenForResult", uri, {
             packageName: app.packageName,
-            className: app.activityName
+            className: app.activityName,
         });
 
         EventDispatcher.instance.sendRequestForResult(msg).then(callback);
     } else {
         let msg = this._getMessage("Intent:Open", uri, {
             packageName: app.packageName,
-            className: app.activityName
+            className: app.activityName,
         });
 
         EventDispatcher.instance.sendRequest(msg);

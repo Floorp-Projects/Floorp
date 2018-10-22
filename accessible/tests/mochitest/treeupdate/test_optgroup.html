@@ -38,7 +38,7 @@
       };
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.selectList)
+        new invokerChecker(EVENT_REORDER, this.selectList),
       ];
 
       this.finalCheck = function addOptGroup_finalCheck() {
@@ -47,14 +47,14 @@
             { COMBOBOX_LIST: [
               { GROUPING: [
                 { COMBOBOX_OPTION: [
-                  { TEXT_LEAF: [] }
+                  { TEXT_LEAF: [] },
                 ] },
                 { COMBOBOX_OPTION: [
-                  { TEXT_LEAF: [] }
+                  { TEXT_LEAF: [] },
                 ] },
               ]},
-              { COMBOBOX_OPTION: [] }
-            ] }
+              { COMBOBOX_OPTION: [] },
+            ] },
           ] };
         testAccessibleTree(this.select, tree);
       };
@@ -75,15 +75,15 @@
       };
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.selectList)
+        new invokerChecker(EVENT_REORDER, this.selectList),
       ];
 
       this.finalCheck = function removeOptGroup_finalCheck() {
         var tree =
           { COMBOBOX: [
             { COMBOBOX_LIST: [
-              { COMBOBOX_OPTION: [] }
-            ] }
+              { COMBOBOX_OPTION: [] },
+            ] },
           ] };
         testAccessibleTree(this.select, tree);
         is(isAccessible(this.option1Node), false, "removed option shouldn't be accessible anymore!");

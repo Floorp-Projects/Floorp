@@ -72,7 +72,7 @@ const gNSURLStore = new Map();
 const COOKIE_SAMESITE = {
   LAX: "Lax",
   STRICT: "Strict",
-  UNSET: "Unset"
+  UNSET: "Unset",
 };
 
 /**
@@ -470,7 +470,7 @@ var NetworkHelper = {
     "application/x-json": "json",
     "application/json-rpc": "json",
     "application/x-web-app-manifest+json": "json",
-    "application/manifest+json": "json"
+    "application/manifest+json": "json",
   },
 
   /**
@@ -803,7 +803,7 @@ var NetworkHelper = {
         name: param[0] ?
           NetworkHelper.convertToUnicode(unescape(param[0])) : "",
         value: param[1] ?
-          NetworkHelper.convertToUnicode(unescape(param[1])) : ""
+          NetworkHelper.convertToUnicode(unescape(param[1])) : "",
       };
     });
 
@@ -821,7 +821,7 @@ var NetworkHelper = {
     const uri = Services.io.newURI(url).QueryInterface(Ci.nsIURL);
     store.set(url, uri);
     return uri;
-  }
+  },
 };
 
 for (const prop of Object.getOwnPropertyNames(NetworkHelper)) {

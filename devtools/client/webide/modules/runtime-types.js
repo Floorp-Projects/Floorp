@@ -11,7 +11,7 @@ const RuntimeTypes = {
   WIFI: "WIFI",
   REMOTE: "REMOTE",
   LOCAL: "LOCAL",
-  OTHER: "OTHER"
+  OTHER: "OTHER",
 };
 
 exports.RuntimeTypes = RuntimeTypes;

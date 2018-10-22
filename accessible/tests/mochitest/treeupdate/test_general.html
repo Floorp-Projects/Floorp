@@ -24,7 +24,7 @@
 
     function prependAppend(aContainer) {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, aContainer)
+        new invokerChecker(EVENT_REORDER, aContainer),
       ];
 
       this.invoke = function prependAppend_invoke() {
@@ -42,7 +42,7 @@
           { SECTION: [ // container
             { CHECKBUTTON: [ ] },
             { ENTRY: [ ] },
-            { PUSHBUTTON: [ ] }
+            { PUSHBUTTON: [ ] },
           ] };
         testAccessibleTree(aContainer, accTree);
       };
@@ -54,7 +54,7 @@
 
     function removeRemove(aContainer) {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, aContainer)
+        new invokerChecker(EVENT_REORDER, aContainer),
       ];
 
       this.invoke = function removeRemove_invoke() {
@@ -64,7 +64,7 @@
       this.finalCheck = function removeRemove_finalCheck() {
         var accTree =
           { SECTION: [ // container
-            { PUSHBUTTON: [ ] }
+            { PUSHBUTTON: [ ] },
           ] };
         testAccessibleTree(aContainer, accTree);
       };
@@ -76,7 +76,7 @@
 
     function insertInaccessibleAccessibleSiblings() {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, "c3")
+        new invokerChecker(EVENT_REORDER, "c3"),
       ];
 
       this.invoke = function insertInaccessibleAccessibleSiblings_invoke() {
@@ -88,9 +88,9 @@
         var accTree =
           { SECTION: [ // container
             { PUSHBUTTON: [
-              { TEXT_LEAF: [] }
+              { TEXT_LEAF: [] },
             ] },
-            { ENTRY: [ ] }
+            { ENTRY: [ ] },
           ] };
         testAccessibleTree("c3", accTree);
       };

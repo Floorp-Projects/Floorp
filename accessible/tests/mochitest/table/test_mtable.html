@@ -20,12 +20,12 @@
       // 'Simple' table
       var idxes = [
         [0, 1],
-        [2, 3]
+        [2, 3],
       ];
       testTableIndexes("simple", idxes);
       var cellsArray = [
         [kDataCell, kDataCell],
-        [kDataCell, kDataCell]
+        [kDataCell, kDataCell],
       ];
       var rowsArray = [ROLE_MATHML_TABLE_ROW, ROLE_MATHML_TABLE_ROW];
       testTableStruct("simple", cellsArray, kNoColumnHeader,
@@ -35,7 +35,7 @@
       idxes = [
         [0, 0, 0],
         [1, 1, 2],
-        [1, 1, 3]
+        [1, 1, 3],
       ];
       testTableIndexes("complex", idxes);
       cellsArray = [
@@ -46,7 +46,7 @@
       rowsArray = [
         ROLE_MATHML_TABLE_ROW,
         ROLE_MATHML_TABLE_ROW,
-        ROLE_MATHML_TABLE_ROW
+        ROLE_MATHML_TABLE_ROW,
       ];
       testTableStruct("complex", cellsArray, kNoColumnHeader,
                       "", "", kMathTable, rowsArray);

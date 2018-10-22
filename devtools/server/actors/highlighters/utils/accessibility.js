@@ -74,7 +74,7 @@ class Infobar {
         "class": "infobar-container",
         "id": "infobar-container",
         "aria-hidden": "true",
-        "hidden": "true"
+        "hidden": "true",
       },
       prefix: this.prefix,
     });
@@ -250,7 +250,7 @@ class XULWindowInfobar extends Infobar {
       left: boundsLeft,
       right: boundsRight,
       top: boundsTop,
-      bottom: boundsBottom
+      bottom: boundsBottom,
     } = this.bounds;
     const boundsMidPoint = (boundsLeft + boundsRight) / 2;
     container.style.left = `${boundsMidPoint}px`;
@@ -261,7 +261,7 @@ class XULWindowInfobar extends Infobar {
       height: viewportHeight,
     } = getViewportDimensions(this.win);
 
-    const { width, height, left, } = container.getBoundingClientRect();
+    const { width, height, left } = container.getBoundingClientRect();
 
     const containerHalfWidth = width / 2;
     const containerHeight = height;
@@ -378,7 +378,7 @@ class Audit {
     // A list of audit reports to be shown on the fly when highlighting an accessible
     // object.
     this.reports = [
-      new ContrastRatio(this)
+      new ContrastRatio(this),
     ];
   }
 

@@ -21,10 +21,10 @@ ErrorActor.prototype = {
 
   onError: function() {
     throw new Error("error");
-  }
+  },
 };
 
 ErrorActor.prototype.requestTypes = {
-  "error": ErrorActor.prototype.onError
+  "error": ErrorActor.prototype.onError,
 };
 exports.ErrorActor = ErrorActor;

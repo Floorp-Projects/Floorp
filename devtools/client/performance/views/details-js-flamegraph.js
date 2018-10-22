@@ -18,7 +18,7 @@ var JsFlameGraphView = extend(DetailsSubview, {
     "invert-flame-graph",
     "flatten-tree-recursion",
     "show-platform-data",
-    "show-idle-blocks"
+    "show-idle-blocks",
   ],
 
   /**
@@ -68,18 +68,18 @@ var JsFlameGraphView = extend(DetailsSubview, {
       flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
       contentOnly: !PerformanceController.getOption("show-platform-data"),
       showIdleBlocks: PerformanceController.getOption("show-idle-blocks")
-                      && L10N.getStr("table.idle")
+                      && L10N.getStr("table.idle"),
     });
 
     this.graph.setData({ data,
                          bounds: {
                            startTime: 0,
-                           endTime: duration
+                           endTime: duration,
                          },
                          visible: {
                            startTime: interval.startTime || 0,
-                           endTime: interval.endTime || duration
-                         }
+                           endTime: interval.endTime || duration,
+                         },
     });
 
     this.graph.focus();
@@ -119,7 +119,7 @@ var JsFlameGraphView = extend(DetailsSubview, {
     this.graph.refresh({ force: true });
   },
 
-  toString: () => "[object JsFlameGraphView]"
+  toString: () => "[object JsFlameGraphView]",
 });
 
 EventEmitter.decorate(JsFlameGraphView);

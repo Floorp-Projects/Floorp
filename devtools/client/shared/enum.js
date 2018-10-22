@@ -16,6 +16,6 @@ module.exports = {
       target[key] = key;
     }
     return target;
-  }
+  },
 
 };

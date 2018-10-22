@@ -65,7 +65,7 @@ class DomTree extends Component {
     } = this.props;
 
     const columns = [{
-      "id": "value"
+      "id": "value",
     }];
 
     // This is the integration point with Reps. The DomTree is using
@@ -96,7 +96,7 @@ class DomTree extends Component {
 const mapStateToProps = (state) => {
   return {
     grips: state.grips,
-    filter: state.filter
+    filter: state.filter,
   };
 };
 

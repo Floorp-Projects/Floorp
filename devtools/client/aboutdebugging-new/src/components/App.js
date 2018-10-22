@@ -27,7 +27,7 @@ class App extends PureComponent {
       // From that point, components are responsible for forwarding the dispatch
       // property to all components who need to dispatch actions.
       dispatch: PropTypes.func.isRequired,
-      messageContexts: PropTypes.arrayOf(PropTypes.object).isRequired,
+      fluentBundles: PropTypes.arrayOf(PropTypes.object).isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: PropTypes.string,
@@ -40,7 +40,7 @@ class App extends PureComponent {
       adbAddonStatus,
       dispatch,
       networkLocations,
-      selectedPage
+      selectedPage,
     } = this.props;
 
     if (!selectedPage) {
@@ -53,7 +53,7 @@ class App extends PureComponent {
         return ConnectPage({
           adbAddonStatus,
           dispatch,
-          networkLocations
+          networkLocations,
         });
       default:
         // All pages except for the CONNECT page are RUNTIME pages.
@@ -65,14 +65,14 @@ class App extends PureComponent {
     const {
       adbAddonStatus,
       dispatch,
-      messageContexts,
+      fluentBundles,
       networkRuntimes,
       selectedPage,
       usbRuntimes,
     } = this.props;
 
     return LocalizationProvider(
-      { messages: messageContexts },
+      { messages: fluentBundles },
       dom.div(
         { className: "app" },
         Sidebar(

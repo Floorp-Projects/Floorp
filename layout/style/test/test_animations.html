@@ -1379,13 +1379,13 @@ done_div();
 
 // Test that UA !important rules override animations.
 // This test depends on forms.css having a rule
-//   select { line-height: !important }
+//   option { line-height: !important }
 // If that rule changes, we should rewrite it to depend on a different rule.
-var select;
-[ select, cs ] = new_element("select", "");
+var option;
+[ option, cs ] = new_element("option", "");
 var default_line_height = cs.lineHeight;
 done_element();
-[ select, cs ] = new_element("select",
+[ option, cs ] = new_element("option",
                              "animation: uaoverride 2s linear infinite");
 is(cs.lineHeight, default_line_height,
    "animations should not override UA !important at 0ms");

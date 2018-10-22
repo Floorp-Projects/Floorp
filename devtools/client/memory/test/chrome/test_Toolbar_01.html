@@ -31,7 +31,7 @@ Test that the Toolbar component shows the view switcher only at the appropriate 
              }
 
              await renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
-               view: { state: viewState.DIFFING, },
+               view: { state: viewState.DIFFING },
              })), container);
 
              ok(!container.querySelector("#select-view"),

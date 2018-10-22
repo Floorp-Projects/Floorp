@@ -96,7 +96,7 @@ function testJSTermIsVisible(hud) {
 
 async function testObjectInspectorPropertiesAreSet(objInspector) {
   const onMutation = waitForNodeMutation(objInspector, {
-    childList: true
+    childList: true,
   });
 
   const arrow = objInspector.querySelector(".arrow");

@@ -257,7 +257,7 @@ var AccessFu = {
       bounds = bounds.scale(1 / devicePixelRatio, 1 / devicePixelRatio);
       bounds = bounds.translate(-mozInnerScreenX, -mozInnerScreenY);
       return bounds.expandToIntegers();
-    }
+    },
 };
 
 var Input = {
@@ -315,6 +315,6 @@ var Input = {
     winUtils.sendWheelEvent(p.x, p.y,
       horizontal ? page : 0, horizontal ? 0 : page, 0,
       win.WheelEvent.DOM_DELTA_PAGE, 0, 0, 0, 0);
-  }
+  },
 };
 AccessFu.Input = Input;

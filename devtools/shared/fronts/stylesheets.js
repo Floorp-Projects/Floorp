@@ -7,7 +7,7 @@ const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const {
   mediaRuleSpec,
   styleSheetSpec,
-  styleSheetsSpec
+  styleSheetsSpec,
 } = require("devtools/shared/specs/stylesheets");
 const promise = require("promise");
 
@@ -57,7 +57,7 @@ const MediaRuleFront = FrontClassWithSpec(mediaRuleSpec, {
   },
   get parentStyleSheet() {
     return this.conn.getActor(this._form.parentStyleSheet);
-  }
+  },
 });
 
 exports.MediaRuleFront = MediaRuleFront;
@@ -137,7 +137,7 @@ const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
 
       return indentWithTabs ? "\t" : " ".repeat(indentUnit);
     }.bind(this))();
-  }
+  },
 });
 
 exports.StyleSheetFront = StyleSheetFront;
@@ -150,7 +150,7 @@ const StyleSheetsFront = FrontClassWithSpec(styleSheetsSpec, {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleSheetsActor;
     this.manage(this);
-  }
+  },
 });
 
 exports.StyleSheetsFront = StyleSheetsFront;

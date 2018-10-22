@@ -42,7 +42,7 @@ window.onload = function() {
     memory.on("allocations", onAlloc);
 
     await memory.startRecordingAllocations({
-      drainAllocationsTimeout: 10
+      drainAllocationsTimeout: 10,
     });
 
     await waitUntil(() => eventsFired > 5);
@@ -56,7 +56,7 @@ window.onload = function() {
     const startTime = performance.now();
     const drainTimer = 1000000;
     await memory.startRecordingAllocations({
-      drainAllocationsTimeout: drainTimer
+      drainAllocationsTimeout: drainTimer,
     });
 
     startAllocating();

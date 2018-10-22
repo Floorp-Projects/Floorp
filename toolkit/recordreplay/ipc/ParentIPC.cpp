@@ -283,7 +283,7 @@ public:
 bool
 ActiveChildIsRecording()
 {
-  return gActiveChild->IsRecording();
+  return gActiveChild && gActiveChild->IsRecording();
 }
 
 ChildProcessInfo*
@@ -611,6 +611,12 @@ SwitchActiveChild(ChildProcessInfo* aChild, bool aRecoverPosition = true)
     oldActiveChild->RecoverToCheckpoint(oldActiveChild->MostRecentSavedCheckpoint());
     oldActiveChild->SetRole(MakeUnique<ChildRoleStandby>());
   }
+
+  // The graphics overlay is affected when we switch between recording and
+  // replaying children.
+  if (aChild->IsRecording() != oldActiveChild->IsRecording()) {
+    UpdateGraphicsOverlay();
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -855,6 +861,19 @@ MaybeSwitchToReplayingChild()
       OtherReplayingChild(ReplayingChildResponsibleForSavingCheckpoint(checkpoint));
     SwitchActiveChild(child);
   }
+}
+
+Maybe<double>
+GetRecordingPosition()
+{
+  if (gActiveChild->IsRecording()) {
+    return Nothing();
+  }
+
+  // Get the fraction of the recording that the active child has reached so far.
+  double fraction = (gActiveChild->MostRecentCheckpoint() - CheckpointId::First)
+                  / (double) (gCheckpointTimes.length() - CheckpointId::First);
+  return Some(fraction);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1167,6 +1186,10 @@ RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
 {
   UpdateCheckpointTimes(aMsg);
   MaybeUpdateGraphicsAtCheckpoint(aMsg.mCheckpointId);
+
+  if (!gActiveChild->IsRecording()) {
+    UpdateGraphicsOverlay();
+  }
 
   // Resume either forwards or backwards. Break the resume off into a separate
   // runnable, to avoid starving any code already on the stack and waiting for

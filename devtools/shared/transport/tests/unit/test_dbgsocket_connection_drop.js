@@ -58,7 +58,7 @@ var test_helper = async function(payload) {
 
   const transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
-    port: listener.port
+    port: listener.port,
   });
   return new Promise((resolve) => {
     transport.hooks = {

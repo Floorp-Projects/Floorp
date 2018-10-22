@@ -46,7 +46,7 @@ class MainFrame extends Component {
       div({className: "mainFrame"},
         MainToolbar({
           dispatch: this.props.dispatch,
-          object: this.props.object
+          object: this.props.object,
         }),
         div({className: "treeTableBox"},
           DomTree({
@@ -64,7 +64,7 @@ class MainFrame extends Component {
 // Note: use https://github.com/faassen/reselect for better performance.
 const mapStateToProps = (state) => {
   return {
-    filter: state.filter
+    filter: state.filter,
   };
 };
 

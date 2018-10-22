@@ -43,7 +43,7 @@ add_task(async function() {
       type: "xml",
       fullMimeType: "text/xml; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 42),
-      time: true
+      time: true,
     }
   );
   verifyRequestItemTarget(
@@ -58,7 +58,7 @@ add_task(async function() {
       type: "css",
       fullMimeType: "text/css; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 34),
-      time: true
+      time: true,
     }
   );
   verifyRequestItemTarget(
@@ -73,7 +73,7 @@ add_task(async function() {
       type: "js",
       fullMimeType: "application/javascript; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 34),
-      time: true
+      time: true,
     }
   );
   verifyRequestItemTarget(
@@ -88,7 +88,7 @@ add_task(async function() {
       type: "json",
       fullMimeType: "application/json; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
-      time: true
+      time: true,
     }
   );
   verifyRequestItemTarget(
@@ -103,7 +103,7 @@ add_task(async function() {
       type: "html",
       fullMimeType: "text/html; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 24),
-      time: true
+      time: true,
     }
   );
   verifyRequestItemTarget(
@@ -119,7 +119,7 @@ add_task(async function() {
       type: "png",
       fullMimeType: "image/png",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 580),
-      time: true
+      time: true,
     }
   );
   verifyRequestItemTarget(
@@ -135,7 +135,7 @@ add_task(async function() {
       fullMimeType: "text/plain",
       transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 324),
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 10.73),
-      time: true
+      time: true,
     }
   );
 

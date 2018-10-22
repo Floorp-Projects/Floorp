@@ -17,7 +17,7 @@ var rokuDevice = {
     return new RokuApp(aService);
   },
   types: ["video/mp4"],
-  extensions: ["mp4"]
+  extensions: ["mp4"],
 };
 
 var mediaPlayerDevice = {
@@ -57,7 +57,7 @@ var mediaPlayerDevice = {
       manufacturer: display.manufacturer,
       modelName: display.modelName,
     };
-  }
+  },
 };
 
 var CastingApps = {
@@ -334,7 +334,7 @@ var CastingApps = {
         uri: aURI,
         loadingNode: aElement,
         securityFlags: secFlags,
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_VIDEO
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_VIDEO,
       });
     } catch (e) {
      aCallback(null);
@@ -358,7 +358,7 @@ var CastingApps = {
         }
       },
       onStopRequest: function(request, context, statusCode) {},
-      onDataAvailable: function(request, context, stream, offset, count) {}
+      onDataAvailable: function(request, context, stream, offset, count) {},
     };
 
     if (channel) {
@@ -490,7 +490,7 @@ var CastingApps = {
       if (SimpleServiceDiscovery.services.length == 0)
         return false;
       return CastingApps.isVideoCastable(aElement, aX, aY);
-    }
+    },
   },
 
   pageAction: {
@@ -510,7 +510,7 @@ var CastingApps = {
           return;
         }
       }
-    }
+    },
   },
 
   _findCastableVideo: function _findCastableVideo(aBrowser) {
@@ -582,7 +582,7 @@ var CastingApps = {
         icon: "drawable://casting_active",
         clickCallback: this.pageAction.click,
         important: true,
-        useTint: false
+        useTint: false,
       });
     } else if (aVideo.mozAllowCasting) {
       this.pageAction.id = PageActions.add({
@@ -590,7 +590,7 @@ var CastingApps = {
         icon: "drawable://casting",
         clickCallback: this.pageAction.click,
         important: true,
-        useTint: true
+        useTint: true,
       });
     }
   },
@@ -601,7 +601,7 @@ var CastingApps = {
     SimpleServiceDiscovery.services.forEach(function(aService) {
       let item = {
         label: aService.friendlyName,
-        selected: false
+        selected: false,
       };
       if (!aFilterFunc || aFilterFunc(aService)) {
         filteredServices.push(aService);
@@ -615,7 +615,7 @@ var CastingApps = {
 
     let prompt = new Prompt({
       window: aWindow,
-      title: Strings.browser.GetStringFromName("casting.sendToDevice")
+      title: Strings.browser.GetStringFromName("casting.sendToDevice"),
     }).setSingleChoiceItems(items).show(function(data) {
       let selected = data.button;
       let service = selected == -1 ? null : filteredServices[selected];
@@ -682,9 +682,9 @@ var CastingApps = {
               data: {
                 title: aVideo.title,
                 source: aVideo.source,
-                poster: aVideo.poster
+                poster: aVideo.poster,
               },
-              videoRef: Cu.getWeakReference(aVideo.element)
+              videoRef: Cu.getWeakReference(aVideo.element),
             };
           }, this);
         });
@@ -757,5 +757,5 @@ var CastingApps = {
         this.closeExternal();
         break;
     }
-  }
+  },
 };

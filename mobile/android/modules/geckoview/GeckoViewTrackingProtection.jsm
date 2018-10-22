@@ -40,7 +40,7 @@ class GeckoViewTrackingProtection extends GeckoViewModule {
     let message = {
       type: "GeckoView:TrackingProtectionBlocked",
       src: uri,
-      matchedList: classChannel.matchedList
+      matchedList: classChannel.matchedList,
     };
 
     this.eventDispatcher.sendRequest(message);

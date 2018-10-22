@@ -76,7 +76,7 @@ UndoStack.prototype = {
         for (let i = batch.length - 1; i >= 0; i--) {
           batch[i].undo();
         }
-      }
+      },
     };
     this._stack.push(entry);
     this._index = this._stack.length;

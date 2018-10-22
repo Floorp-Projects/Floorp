@@ -167,7 +167,7 @@ console.groupEnd();
 
 consoleApi.set("console.dir({C, M, Y, K})", {
   keys: ["console.dir({C, M, Y, K})"],
-  code: "console.dir({cyan: 'C', magenta: 'M', yellow: 'Y', black: 'K'});"
+  code: "console.dir({cyan: 'C', magenta: 'M', yellow: 'Y', black: 'K'});",
 });
 
 consoleApi.set("console.count", {
@@ -218,7 +218,7 @@ const evaluationResultCommands = [
   "1 + @",
   "inspect({a: 1})",
   "cd(document)",
-  "undefined"
+  "undefined",
 ];
 
 const evaluationResult = new Map(evaluationResultCommands.map(cmd => [cmd, cmd]));

@@ -11,7 +11,7 @@ const EXPECTED = {
   sources: 14,
   file: "ga.js",
   sourceURL: COMPLICATED_URL,
-  text: "Math;function ga(a,b){return a.name=b}"
+  text: "Math;function ga(a,b){return a.name=b}",
 };
 
 module.exports = async function() {

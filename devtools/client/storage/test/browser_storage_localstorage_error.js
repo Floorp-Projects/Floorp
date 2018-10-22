@@ -12,7 +12,7 @@ add_task(async function() {
 
   const itemsToOpen = [
     ["localStorage", "about:home"],
-    ["sessionStorage", "about:home"]
+    ["sessionStorage", "about:home"],
   ];
 
   for (const item of itemsToOpen) {

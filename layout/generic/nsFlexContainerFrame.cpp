@@ -1818,6 +1818,12 @@ public:
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedFlexMeasuringReflow,
                                     CachedMeasuringReflowResult);
 
+void
+nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(nsIFrame* aItemFrame)
+{
+  aItemFrame->DeleteProperty(CachedFlexMeasuringReflow());
+}
+
 const CachedMeasuringReflowResult&
 nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
   FlexItem& aItem,
@@ -2534,13 +2540,7 @@ FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow,
     if (!item->IsFrozen()) {
       numUnfrozenItemsToBeSeen--;
       bool shouldFreeze = (0.0f == item->GetFlexFactor(aIsUsingFlexGrow));
-      // NOTE: We skip the "could flex but base size out of range"
-      // early-freezing if flex devtools are active, so that we can let the
-      // first run of the main flex layout loop compute how much this item
-      // wants to flex. (This skipping shouldn't impact results, because
-      // any affected items will just immediately be caught & frozen as min/max
-      // violations in that first loop, and that'll trigger another loop.)
-      if (!shouldFreeze && !aLineInfo) {
+      if (!shouldFreeze) {
         if (aIsUsingFlexGrow) {
           if (item->GetFlexBaseSize() > item->GetMainSize()) {
             shouldFreeze = true;

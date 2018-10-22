@@ -65,7 +65,7 @@ class DeviceModal extends PureComponent {
       return;
     }
     this.setState({
-      [target.value]: !this.state[target.value]
+      [target.value]: !this.state[target.value],
     });
   }
 
@@ -109,7 +109,7 @@ class DeviceModal extends PureComponent {
     // Escape keycode
     if (event.keyCode === 27) {
       const {
-        onUpdateDeviceModal
+        onUpdateDeviceModal,
       } = this.props;
       onUpdateDeviceModal(false);
     }

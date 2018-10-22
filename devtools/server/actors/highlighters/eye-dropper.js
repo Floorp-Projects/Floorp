@@ -61,7 +61,7 @@ EyeDropper.prototype = {
   _buildMarkup() {
     // Highlighter main container.
     const container = createNode(this.win, {
-      attributes: {"class": "highlighter-container"}
+      attributes: {"class": "highlighter-container"},
     });
 
     // Wrapper element.
@@ -70,9 +70,9 @@ EyeDropper.prototype = {
       attributes: {
         "id": "root",
         "class": "root",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // The magnifier canvas element.
@@ -83,28 +83,28 @@ EyeDropper.prototype = {
         "id": "canvas",
         "class": "canvas",
         "width": MAGNIFIER_WIDTH,
-        "height": MAGNIFIER_HEIGHT
+        "height": MAGNIFIER_HEIGHT,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // The color label element.
     const colorLabelContainer = createNode(this.win, {
       parent: wrapper,
       attributes: {"class": "color-container"},
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "div",
       parent: colorLabelContainer,
       attributes: {"id": "color-preview", "class": "color-preview"},
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "div",
       parent: colorLabelContainer,
       attributes: {"id": "color-value", "class": "color-value"},
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     return container;
@@ -465,7 +465,7 @@ EyeDropper.prototype = {
     return new Promise(resolve => {
       this._copyTimeout = setTimeout(resolve, CLOSE_DELAY);
     });
-  }
+  },
 };
 
 exports.EyeDropper = EyeDropper;

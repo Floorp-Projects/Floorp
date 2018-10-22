@@ -24,25 +24,25 @@ add_task(async function() {
     title: "Table title",
     data: [{
       size: 1,
-      label: 11.1
+      label: 11.1,
     }, {
       size: 2,
-      label: 12.2
+      label: 12.2,
     }, {
       size: 3,
-      label: 13.3
+      label: 13.3,
     }],
     strings: {
-      label2: (value, index) => value + ["foo", "bar", "baz"][index]
+      label2: (value, index) => value + ["foo", "bar", "baz"][index],
     },
     totals: {
       size: value => "Hello " + L10N.numberWithDecimals(value, 2),
-      label: value => "World " + L10N.numberWithDecimals(value, 2)
+      label: value => "World " + L10N.numberWithDecimals(value, 2),
     },
     header: {
       label1: "",
-      label2: ""
-    }
+      label2: "",
+    },
   });
 
   ok(chart.pie, "The pie chart proxy is accessible.");

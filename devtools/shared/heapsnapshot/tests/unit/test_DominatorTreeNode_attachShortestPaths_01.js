@@ -15,7 +15,7 @@ const shortestPaths = new Map([
     [pathEntry(1100, "c"), pathEntry(1300, "d")],
   ]],
   [2000, [
-    [pathEntry(2100, "e"), pathEntry(2200, "f"), pathEntry(2300, "g")]
+    [pathEntry(2100, "e"), pathEntry(2200, "f"), pathEntry(2300, "g")],
   ]],
   [3000, [
     [pathEntry(3100, "h")],
@@ -48,8 +48,8 @@ const expected = [
         { from: 1100, to: 1300, name: "c" },
         { from: 1200, to: 1000, name: "b" },
         { from: 1300, to: 1000, name: "d" },
-      ]
-    }
+      ],
+    },
   }),
 
   makeTestDominatorTreeNode({
@@ -65,8 +65,8 @@ const expected = [
         { from: 2100, to: 2200, name: "e" },
         { from: 2200, to: 2300, name: "f" },
         { from: 2300, to: 2000, name: "g" },
-      ]
-    }
+      ],
+    },
   }),
 
   makeTestDominatorTreeNode({
@@ -86,14 +86,14 @@ const expected = [
         { from: 3200, to: 3000, name: "k" },
         { from: 3300, to: 3000, name: "l" },
         { from: 3400, to: 3000, name: "m" },
-      ]
-    }
+      ],
+    },
   }),
 ];
 
 const breakdown = {
   by: "internalType",
-  then: { by: "count", count: true, bytes: true }
+  then: { by: "count", count: true, bytes: true },
 };
 
 const mockSnapshot = {
@@ -114,7 +114,7 @@ const mockSnapshot = {
       ["SomeType-" + nodeId]: {
         count: 1,
         bytes: 10,
-      }
+      },
     };
   },
 };

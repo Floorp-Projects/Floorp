@@ -24,7 +24,7 @@ add_task(async function() {
 
   const opened = waitForBrowserConsole();
   gDevTools.restoreDevToolsSession({
-    browserConsole: true
+    browserConsole: true,
   });
 
   info("Waiting for the console to open after session restore");

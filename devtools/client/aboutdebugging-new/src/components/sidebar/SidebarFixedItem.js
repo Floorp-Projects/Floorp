@@ -44,7 +44,7 @@ class SidebarFixedItem extends PureComponent {
         className: "sidebar-fixed-item",
         onSelect: () => {
           dispatch(Actions.selectPage(id, runtimeId));
-        }
+        },
       },
       dom.img(
         {

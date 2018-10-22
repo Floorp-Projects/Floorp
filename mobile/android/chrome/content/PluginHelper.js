@@ -37,7 +37,7 @@ var PluginHelper = {
             Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.DENY_ACTION);
 
           // Other than that, do nothing
-        }
+        },
       },
       {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.activate"),
@@ -48,8 +48,8 @@ var PluginHelper = {
 
           PluginHelper.playAllPlugins(aTab.browser.contentWindow);
         },
-        positive: true
-      }
+        positive: true,
+      },
     ];
 
     // Add a checkbox with a "Don't ask again" message if the uri contains a
@@ -222,5 +222,5 @@ var PluginHelper = {
         // Not all states map to a handler
         return null;
     }
-  }
+  },
 };

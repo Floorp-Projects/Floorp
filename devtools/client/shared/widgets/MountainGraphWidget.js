@@ -187,7 +187,7 @@ MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     ctx.stroke();
 
     return canvas;
-  }
+  },
 });
 
 module.exports = MountainGraphWidget;

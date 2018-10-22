@@ -29,7 +29,7 @@ function run_test() {
       if (outer != null)
         throw Cr.NS_ERROR_NO_AGGREGATION;
       return XULAppInfo.QueryInterface(iid);
-    }
+    },
   };
 
   // Add our XULAppInfo factory
@@ -53,7 +53,7 @@ function run_test() {
         dump(factory.scheme + " is already registered. Storing currently registered object for restoration later.");
         old_factories.push({
           CID: registrar.contractIDToCID(factory.contractID),
-          factory: Components.manager.getClassObject(Cc[factory.contractID], Ci.nsIFactory)
+          factory: Components.manager.getClassObject(Cc[factory.contractID], Ci.nsIFactory),
         });
         old_factories_inds.push(true);
         registrar.unregisterFactory(old_factories[i].CID, old_factories[i].factory);

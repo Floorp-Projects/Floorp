@@ -86,7 +86,7 @@ var RecordingsView = {
         isSelected: recording === selected,
         duration: recording.getDuration().toFixed(0),
         label: labels.get(recording),
-      }))
+      })),
     });
 
     ReactDOM.render(recordingList, this._listMount);
@@ -193,7 +193,7 @@ var RecordingsView = {
     const name = file.leafName.replace(/\..+$/, "");
     this._listState.labels.set(recording, name);
     this._renderList();
-  }
+  },
 };
 
 /**

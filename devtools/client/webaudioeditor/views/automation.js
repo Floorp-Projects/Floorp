@@ -155,5 +155,5 @@ var AutomationView = {
    */
   _onNodeSet: function(id) {
     this._setAudioNode(id != null ? gAudioNodes.get(id) : null);
-  }
+  },
 };

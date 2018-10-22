@@ -48,7 +48,7 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
 
     return this.transferHeapSnapshot(snapshotId);
   }, {
-    impl: "_saveHeapSnapshotImpl"
+    impl: "_saveHeapSnapshotImpl",
   }),
 
   /**
@@ -70,7 +70,7 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
       const request = this._client.request({
         to: this.heapSnapshotFileActorID,
         type: "transferHeapSnapshot",
-        snapshotId
+        snapshotId,
       });
 
       const outFilePath =
@@ -99,7 +99,7 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
       // Otherwise, rethrow the error
       throw e;
     }
-  })
+  }),
 });
 
 exports.MemoryFront = MemoryFront;

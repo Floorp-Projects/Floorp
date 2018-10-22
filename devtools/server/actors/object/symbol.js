@@ -65,7 +65,7 @@ const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
     if (this.registeredPool && this.registeredPool.symbolActors) {
       delete this.registeredPool.symbolActors[this.symbol];
     }
-  }
+  },
 });
 
 const symbolProtoToString = Symbol.prototype.toString;

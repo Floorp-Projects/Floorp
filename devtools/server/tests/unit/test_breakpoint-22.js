@@ -41,14 +41,14 @@ const test = async function() {
   const packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
   const source = gThreadClient.source(packet.frame.where.source);
   const location = {
-    line: gDebuggee.line0 + 2
+    line: gDebuggee.line0 + 2,
   };
 
-  const [res, ] = await setBreakpoint(source, location);
+  const [res ] = await setBreakpoint(source, location);
   ok(!res.error);
 
   const location2 = {
-    line: gDebuggee.line0 + 7
+    line: gDebuggee.line0 + 7,
   };
 
   await source.setBreakpoint(location2).then(() => {

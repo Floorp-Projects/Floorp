@@ -12,7 +12,7 @@ const ThreadStateTypes = {
   "paused": "paused",
   "resumed": "attached",
   "detached": "detached",
-  "running": "attached"
+  "running": "attached",
 };
 
 /**

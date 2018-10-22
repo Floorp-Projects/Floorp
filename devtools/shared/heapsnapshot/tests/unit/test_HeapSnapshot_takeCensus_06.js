@@ -50,7 +50,7 @@ function run_test() {
     Environment: { count: Pattern.NATURAL },
     Script: { count: Pattern.NATURAL },
     Memory: { count: Pattern.NATURAL },
-    Frame: { count: Pattern.NATURAL }
+    Frame: { count: Pattern.NATURAL },
   })
     .assert(saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "objectClass" } }));
 
@@ -58,7 +58,7 @@ function run_test() {
     objects: { count: Pattern.NATURAL },
     scripts: { count: Pattern.NATURAL },
     strings: { count: Pattern.NATURAL },
-    other: { count: Pattern.NATURAL }
+    other: { count: Pattern.NATURAL },
   })
     .assert(saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "coarseType" } }));
 
@@ -68,7 +68,7 @@ function run_test() {
     JSString: { count: Pattern.NATURAL },
     "js::Shape": { count: Pattern.NATURAL },
     JSObject: { count: Pattern.NATURAL },
-    JSScript: { count: Pattern.NATURAL }
+    JSScript: { count: Pattern.NATURAL },
   })
     .assert(saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "internalType" } }));
 
@@ -78,7 +78,7 @@ function run_test() {
     objects: { count: Pattern.NATURAL },
     scripts: { count: Pattern.NATURAL },
     strings: { count: Pattern.NATURAL },
-    other: { count: Pattern.NATURAL }
+    other: { count: Pattern.NATURAL },
   };
 
   Pattern({
@@ -89,8 +89,8 @@ function run_test() {
   })
     .assert(saveHeapSnapshotAndTakeCensus(dbg, {
       breakdown: { by: "internalType",
-                   then: { by: "coarseType" }
-      }
+                   then: { by: "coarseType" },
+      },
     }));
 
   Pattern({
@@ -98,21 +98,21 @@ function run_test() {
     Object: { count: Pattern.NATURAL },
     Debugger: { count: Pattern.NATURAL },
     Sandbox: { count: Pattern.NATURAL },
-    other: coarseTypePattern
+    other: coarseTypePattern,
   })
     .assert(saveHeapSnapshotAndTakeCensus(dbg, {
       breakdown: {
         by: "objectClass",
         then: { by: "count" },
-        other: { by: "coarseType" }
-      }
+        other: { by: "coarseType" },
+      },
     }));
 
   Pattern({
     objects: { count: Pattern.NATURAL, label: "object" },
     scripts: { count: Pattern.NATURAL, label: "scripts" },
     strings: { count: Pattern.NATURAL, label: "strings" },
-    other: { count: Pattern.NATURAL, label: "other" }
+    other: { count: Pattern.NATURAL, label: "other" },
   })
     .assert(saveHeapSnapshotAndTakeCensus(dbg, {
       breakdown: {
@@ -120,8 +120,8 @@ function run_test() {
         objects: { by: "count", label: "object" },
         scripts: { by: "count", label: "scripts" },
         strings: { by: "count", label: "strings" },
-        other: { by: "count", label: "other" }
-      }
+        other: { by: "count", label: "other" },
+      },
     }));
 
   do_test_finished();

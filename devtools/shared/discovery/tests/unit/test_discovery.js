@@ -60,7 +60,7 @@ TestTransport.prototype = {
     this.emit("message", object);
   },
 
-  onStopListening: function(socket, status) {}
+  onStopListening: function(socket, status) {},
 
 };
 
@@ -71,7 +71,7 @@ discovery._factories.Transport = TestTransport;
 Object.defineProperty(discovery.device, "name", {
   get: function() {
     return "test-device";
-  }
+  },
 });
 
 add_task(async function() {

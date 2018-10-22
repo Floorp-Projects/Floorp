@@ -42,12 +42,12 @@ function createDescriptorFromURL(url) {
   if (host && port) {
     descriptor = {
       type: TYPE.REMOTE,
-      params: {host, port}
+      params: {host, port},
     };
   } else {
     descriptor = {
       type: TYPE.LOCAL,
-      params: {}
+      params: {},
     };
   }
 

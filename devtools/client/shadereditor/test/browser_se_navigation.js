@@ -12,7 +12,7 @@ async function ifWebGLSupported() {
   reload(target);
   await promise.all([
     once(front, "program-linked"),
-    once(panel, EVENTS.SOURCES_SHOWN)
+    once(panel, EVENTS.SOURCES_SHOWN),
   ]);
 
   is($("#reload-notice").hidden, true,

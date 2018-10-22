@@ -45,13 +45,13 @@ TestTabList.prototype = {
   constructor: TestTabList,
   getList: function() {
     return Promise.resolve([...this._targetActors]);
-  }
+  },
 };
 
 exports.createRootActor = function createRootActor(connection) {
   const root = new RootActor(connection, {
     tabList: new TestTabList(connection),
-    globalActorFactories: ActorRegistry.globalActorFactories
+    globalActorFactories: ActorRegistry.globalActorFactories,
   });
   root.applicationType = "xpcshell-tests";
   return root;
@@ -106,10 +106,10 @@ TestTargetActor.prototype = {
       return { "error": "wrongState" };
     }
     return { type: "detached" };
-  }
+  },
 };
 
 TestTargetActor.prototype.requestTypes = {
   "attach": TestTargetActor.prototype.onAttach,
-  "detach": TestTargetActor.prototype.onDetach
+  "detach": TestTargetActor.prototype.onDetach,
 };

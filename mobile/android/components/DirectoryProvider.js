@@ -150,7 +150,7 @@ DirectoryProvider.prototype = {
     });
 
     return directories;
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DirectoryProvider]);

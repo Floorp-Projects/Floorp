@@ -10,43 +10,43 @@ var PermissionsHelper = {
     "password": {
       label: "password.logins",
       allowed: "password.save",
-      denied: "password.dontSave"
+      denied: "password.dontSave",
     },
     "geolocation": {
       label: "geolocation.location",
       allowed: "geolocation.allow",
-      denied: "geolocation.dontAllow"
+      denied: "geolocation.dontAllow",
     },
     "popup": {
       label: "blockPopups.label2",
       allowed: "popup.show",
-      denied: "popup.dontShow"
+      denied: "popup.dontShow",
     },
     "indexedDB": {
       label: "offlineApps.offlineData",
       allowed: "offlineApps.allow",
-      denied: "offlineApps.dontAllow2"
+      denied: "offlineApps.dontAllow2",
     },
     "offline-app": {
       label: "offlineApps.offlineData",
       allowed: "offlineApps.allow",
-      denied: "offlineApps.dontAllow2"
+      denied: "offlineApps.dontAllow2",
     },
     "desktop-notification": {
       label: "desktopNotification.notifications",
       allowed: "desktopNotification2.allow",
-      denied: "desktopNotification2.dontAllow"
+      denied: "desktopNotification2.dontAllow",
     },
     "plugins": {
       label: "clickToPlayPlugins.plugins",
       allowed: "clickToPlayPlugins.activate",
-      denied: "clickToPlayPlugins.dontActivate"
+      denied: "clickToPlayPlugins.dontActivate",
     },
     "native-intent": {
       label: "helperapps.openWithList2",
       allowed: "helperapps.always",
-      denied: "helperapps.never"
-    }
+      denied: "helperapps.never",
+    },
   },
 
   onEvent: function onEvent(event, data, callback) {
@@ -71,7 +71,7 @@ var PermissionsHelper = {
           if (check) {
             GlobalEventDispatcher.sendRequest({
               type: "Permissions:CheckResult",
-              hasPermissions: true
+              hasPermissions: true,
             });
             return;
           }
@@ -87,14 +87,14 @@ var PermissionsHelper = {
           permissions.push({
             type: type,
             setting: label,
-            value: valueString
+            value: valueString,
           });
         }
 
         if (check) {
           GlobalEventDispatcher.sendRequest({
             type: "Permissions:CheckResult",
-            hasPermissions: false
+            hasPermissions: false,
           });
           return;
         }
@@ -104,7 +104,7 @@ var PermissionsHelper = {
 
         WindowEventDispatcher.sendRequest({
           type: "Permissions:Data",
-          permissions: permissions
+          permissions: permissions,
         });
         break;
 
@@ -180,5 +180,5 @@ var PermissionsHelper = {
         .getService(Ci.nsIContentPrefService2)
         .removeByDomainAndName(aURI.spec, aType + ".request.remember", aContext);
     }
-  }
+  },
 };

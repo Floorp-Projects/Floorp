@@ -49,8 +49,8 @@ const SINGLE_LINE_DATA = {
   object: "webconsole",
   value: null,
   extra: {
-    lines: "1"
-  }
+    lines: "1",
+  },
 };
 
 const DATA = [
@@ -70,9 +70,9 @@ const DATA = [
     object: "webconsole",
     value: null,
     extra: {
-      lines: "3"
-    }
-  }
+      lines: "3",
+    },
+  },
 ];
 
 add_task(async function() {

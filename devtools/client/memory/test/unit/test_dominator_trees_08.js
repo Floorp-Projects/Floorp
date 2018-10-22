@@ -10,10 +10,10 @@ const {
   dominatorTreeState,
   viewState,
   labelDisplays,
-  treeMapState
+  treeMapState,
 } = require("devtools/client/memory/constants");
 const {
-  setLabelDisplayAndRefresh
+  setLabelDisplayAndRefresh,
 } = require("devtools/client/memory/actions/label-display");
 const {
   changeView,

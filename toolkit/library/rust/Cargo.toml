@@ -20,6 +20,7 @@ gecko_profiler_parse_elf = ["gkrust-shared/gecko_profiler_parse_elf"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }
+mozilla-central-workspace-hack = { path = "../../../build/workspace-hack" }
 
 [dev-dependencies]
 stylo_tests = { path = "../../../servo/ports/geckolib/tests/" }

@@ -43,6 +43,6 @@ module.exports = function(context) {
                  node.arguments[2].type == "Literal") {
         checkPath(node, node.arguments[2].value);
       }
-    }
+    },
   };
 };

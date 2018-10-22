@@ -222,7 +222,7 @@ async function uninstallAddon({document, id, name}) {
         AddonManager.removeAddonListener(listener);
 
         done();
-      }
+      },
     };
     AddonManager.addAddonListener(listener);
     addon.uninstall();
@@ -428,7 +428,7 @@ function promiseAddonEvent(event) {
       [event]: function(...args) {
         AddonManager.removeAddonListener(listener);
         resolve(args);
-      }
+      },
     };
 
     AddonManager.addAddonListener(listener);
@@ -449,7 +449,7 @@ function installAddonWithManager(filePath) {
       onDownloadCancelled: reject,
       onInstallFailed: reject,
       onInstallCancelled: reject,
-      onInstallEnded: resolve
+      onInstallEnded: resolve,
     });
     install.install();
   });

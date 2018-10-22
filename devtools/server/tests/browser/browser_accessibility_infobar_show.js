@@ -98,13 +98,13 @@ add_task(async function() {
         highlighter.show(node, {
           ...bounds,
           role: "button",
-          name: "Accessible Button"
+          name: "Accessible Button",
         });
 
         checkInfobar(infobar, {
           role: "button",
           name: "Accessible Button",
-          shouldBeHidden: false
+          shouldBeHidden: false,
         });
         highlighter.hide();
 
@@ -115,12 +115,12 @@ add_task(async function() {
         highlighter.show(node, {
           ...bounds,
           name: "Test link",
-          role: "link"
+          role: "link",
         });
         checkInfobar(infobar, {
           name: "Test link",
           role: "link",
-          shouldBeHidden: false
+          shouldBeHidden: false,
         });
         highlighter.hide();
       }

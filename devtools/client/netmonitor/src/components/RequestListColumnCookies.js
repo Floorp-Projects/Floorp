@@ -44,7 +44,7 @@ class RequestListColumnCookies extends Component {
     return (
       div({
         className: "requests-list-column requests-list-cookies",
-        title: requestCookiesLength
+        title: requestCookiesLength,
       }, requestCookiesLength)
     );
   }

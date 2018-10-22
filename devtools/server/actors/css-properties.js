@@ -4,14 +4,13 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "CSS_TYPES",
-  "devtools/shared/css/properties-db", true);
-
 const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { cssColors } = require("devtools/shared/css/color-db");
 const InspectorUtils = require("InspectorUtils");
+
+loader.lazyRequireGetter(this, "CSS_TYPES", "devtools/shared/css/constants", true);
 
 exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
   typeName: "cssProperties",
@@ -33,7 +32,7 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
     };
 
     return { properties, pseudoElements, supportedFeature };
-  }
+  },
 });
 
 /**

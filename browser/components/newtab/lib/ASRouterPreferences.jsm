@@ -18,6 +18,7 @@ const DEFAULT_STATE = {
 
 const USER_PREFERENCES = {
   snippets: "browser.newtabpage.activity-stream.feeds.snippets",
+  cfr: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr",
 };
 
 const TEST_PROVIDER = {
@@ -33,16 +34,19 @@ class _ASRouterPreferences {
     this._callbacks = new Set();
   }
 
+  _getProviderConfig() {
+    try {
+      return JSON.parse(Services.prefs.getStringPref(this._providerPref, ""));
+    } catch (e) {
+      Cu.reportError(`Could not parse ASRouter preference. Try resetting ${this._providerPref} in about:config.`);
+    }
+    return null;
+  }
+
   get providers() {
     if (!this._initialized || this._providers === null) {
-      let providers;
-      try {
-        const parsed = JSON.parse(Services.prefs.getStringPref(this._providerPref, ""));
-        providers = parsed.map(provider => Object.freeze(provider));
-      } catch (e) {
-        Cu.reportError("Problem parsing JSON message provider pref for ASRouter");
-        providers = [];
-      }
+      const config = this._getProviderConfig() || [];
+      const providers = config.map(provider => Object.freeze(provider));
       if (this.devtoolsEnabled) {
         providers.unshift(TEST_PROVIDER);
       }
@@ -50,6 +54,33 @@ class _ASRouterPreferences {
     }
 
     return this._providers;
+  }
+
+  enableOrDisableProvider(id, value) {
+    const providers = this._getProviderConfig();
+    if (!providers) {
+      Cu.reportError(`Cannot enable/disable providers if ${this._providerPref} is unparseable.`);
+      return;
+    }
+    if (!providers.find(p => p.id === id)) {
+      Cu.reportError(`Cannot set enabled state for '${id}' because it does not exist in ${this._providerPref}`);
+      return;
+    }
+
+    const newConfig = providers.map(provider => {
+      if (provider.id === id) {
+        return {...provider, enabled: value};
+      }
+      return provider;
+    });
+    Services.prefs.setStringPref(this._providerPref, JSON.stringify(newConfig));
+  }
+
+  resetProviderPref() {
+    Services.prefs.clearUserPref(this._providerPref);
+    for (const id of Object.keys(USER_PREFERENCES)) {
+      Services.prefs.clearUserPref(USER_PREFERENCES[id]);
+    }
   }
 
   get devtoolsEnabled() {

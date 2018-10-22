@@ -156,7 +156,7 @@ function removeAddon(addon) {
       }
       AddonManager.removeAddonListener(listener);
       deferred.resolve();
-    }
+    },
   };
   AddonManager.addAddonListener(listener);
   addon.uninstall();

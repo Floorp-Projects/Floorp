@@ -56,7 +56,7 @@ EventTooltip.prototype = {
       readOnly: true,
       styleActiveLine: true,
       extraKeys: {},
-      theme: "mozilla markup-view"
+      theme: "mozilla markup-view",
     };
 
     const doc = this._tooltip.doc;
@@ -120,7 +120,7 @@ EventTooltip.prototype = {
           this._subscriptions.push({
             url: location.url,
             line: location.line,
-            callback
+            callback,
           });
         }
       }
@@ -331,7 +331,7 @@ EventTooltip.prototype = {
     }
 
     this._eventListenerInfos = this._toolbox = this._tooltip = null;
-  }
+  },
 };
 
 module.exports.setEventTooltip = setEventTooltip;

@@ -10,7 +10,7 @@ function generateKey() {
     name: "RSASSA-PKCS1-v1_5",
     hash: "SHA-256",
     modulusLength: 1024,
-    publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
   };
 
   return crypto.subtle.generateKey(algorithm, true, ["sign", "verify"]);
@@ -48,7 +48,7 @@ function* testSteps()
     allData.push({
       id: 1,
       what: "crypto",
-      data: key
+      data: key,
     });
   } else {
     info("not storing crypto key");

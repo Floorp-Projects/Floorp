@@ -17,7 +17,7 @@ function loadPrivilegedScriptTest() {
       sendAsyncMessage(type, {"data": data});
     } else {
       port.postMessage({"type": type,
-                        "data": data
+                        "data": data,
                        });
     }
   }
@@ -77,7 +77,7 @@ function loadPrivilegedScriptTest() {
     },
     get dataChannelSDP() {
       return "test-sdp";
-    }
+    },
   };
 
   function setTimeout(callback, delay) {
@@ -156,7 +156,7 @@ function loadPrivilegedScriptTest() {
         this.simulateTransportReady();
         this._listener = null;
       }, 0);
-    }
+    },
   };
 
 
@@ -241,9 +241,9 @@ var contentScript = {
   },
   sendAsyncMessage(message, data) {
     port.postMessage({"type": message,
-                      "data": data
+                      "data": data,
                      });
-  }
+  },
 };
 
 if (!SpecialPowers.isMainProcess()) {

@@ -41,7 +41,7 @@
     function setAttr_recreate(aID, aAttr, aValue) {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getAccessible(aID)),
-        new invokerChecker(EVENT_SHOW, aID)
+        new invokerChecker(EVENT_SHOW, aID),
       ];
       this.invoke = function setAttr_recreate_invoke() {
         todo(false, "No accessible recreation should happen, just name change event");

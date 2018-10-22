@@ -560,7 +560,7 @@ const gStoragePressureObserver = {
       callback(notificationBar, button) {
         let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
         // This is a content URL, loaded from trusted UX.
-        gBrowser.selectedTab = gBrowser.addTrustedTab(learnMoreURL);
+        openTrustedLinkIn(learnMoreURL, "tab");
       },
     });
     if (usage < USAGE_THRESHOLD_BYTES) {

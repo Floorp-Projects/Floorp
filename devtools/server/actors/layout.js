@@ -164,7 +164,7 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
       "flex-shrink": "",
       [`min-${dimension}`]: "",
       [`max-${dimension}`]: "",
-      [dimension]: ""
+      [dimension]: "",
     };
 
     if (this.element.nodeType === this.element.ELEMENT_NODE) {

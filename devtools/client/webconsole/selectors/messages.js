@@ -65,5 +65,5 @@ module.exports = {
   getGroupsById,
   getMessage,
   getVisibleMessages,
-  getPausedExecutionPoint
+  getPausedExecutionPoint,
 };

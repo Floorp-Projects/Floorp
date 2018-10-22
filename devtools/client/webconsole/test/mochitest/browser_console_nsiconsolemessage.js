@@ -62,7 +62,7 @@ add_task(async function() {
 
   // Disable the log filter.
   await setFilterState(hud, {
-    log: false
+    log: false,
   });
 
   // And then checking that the log messages are hidden.

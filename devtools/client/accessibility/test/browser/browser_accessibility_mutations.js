@@ -33,16 +33,16 @@ const tests = [{
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "text leaf",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "paragraph",
-      name: `""`
+      name: `""`,
     }],
     sidebar: {
       name: null,
@@ -53,9 +53,9 @@ const tests = [{
       keyboardShortcut: "",
       childCount: 1,
       indexInParent: 1,
-      states: ["selectable text", "opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["selectable text", "opaque", "enabled", "sensitive"],
+    },
+  },
 }, {
   desc: "Remove a child from a document.",
   action: async ({ doc, browser }) => {
@@ -68,19 +68,19 @@ const tests = [{
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "text leaf",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }],
     sidebar: {
       name: "Top level header",
-      role: "text leaf"
-    }
-  }
+      role: "text leaf",
+    },
+  },
 }, {
   desc: "Update child's text content.",
   action: async ({ browser }) => {
@@ -91,23 +91,23 @@ const tests = [{
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"New Header"`
+      name: `"New Header"`,
     }, {
       role: "text leaf",
-      name: `"New Header"`
-    }]
-  }
+      name: `"New Header"`,
+    }],
+  },
 }, {
   desc: "Select third row in the tree.",
   action: ({ doc }) => selectRow(doc, 1),
   expected: {
     sidebar: {
-      name: "New Header"
-    }
-  }
+      name: "New Header",
+    },
+  },
 }];
 
 /**

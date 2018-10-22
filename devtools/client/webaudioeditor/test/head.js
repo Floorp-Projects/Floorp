@@ -286,7 +286,7 @@ function clickGraphNode(panelWin, el, waitForToggle = false) {
   const promises = [
     once(panelWin, panelWin.EVENTS.UI_INSPECTOR_NODE_SET),
     once(panelWin, panelWin.EVENTS.UI_PROPERTIES_TAB_RENDERED),
-    once(panelWin, panelWin.EVENTS.UI_AUTOMATION_TAB_RENDERED)
+    once(panelWin, panelWin.EVENTS.UI_AUTOMATION_TAB_RENDERED),
   ];
 
   if (waitForToggle) {
@@ -327,7 +327,7 @@ function getGripValue(value) {
 function countGraphObjects(win) {
   return {
     nodes: win.document.querySelectorAll(".nodes > .audionode").length,
-    edges: win.document.querySelectorAll(".edgePaths > .edgePath").length
+    edges: win.document.querySelectorAll(".edgePaths > .edgePath").length,
   };
 }
 
@@ -383,7 +383,7 @@ function checkAutomationValue(values, time, expected) {
 function waitForInspectorRender(panelWin, EVENTS) {
   return Promise.all([
     once(panelWin, EVENTS.UI_PROPERTIES_TAB_RENDERED),
-    once(panelWin, EVENTS.UI_AUTOMATION_TAB_RENDERED)
+    once(panelWin, EVENTS.UI_AUTOMATION_TAB_RENDERED),
   ]);
 }
 
@@ -436,5 +436,5 @@ const NODE_CONSTRUCTORS = {
   "ChannelMergerNode": "ChannelMerger",
   "DynamicsCompressorNode": "DynamicsCompressor",
   "OscillatorNode": "Oscillator",
-  "StereoPannerNode": "StereoPanner"
+  "StereoPannerNode": "StereoPanner",
 };

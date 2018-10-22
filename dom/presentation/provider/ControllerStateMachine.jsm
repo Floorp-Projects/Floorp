@@ -161,7 +161,7 @@ ControllerStateMachine.prototype = {
     if (this.state === State.INIT) {
       this._sendCommand({
         type: CommandType.CONNECT,
-        deviceId: this._deviceId
+        deviceId: this._deviceId,
       });
       this.state = State.CONNECTING;
     }
@@ -176,7 +176,7 @@ ControllerStateMachine.prototype = {
         } else {
           this._sendCommand({
             type: CommandType.DISCONNECT,
-            reason
+            reason,
           });
           this.state = State.CLOSING;
           this._closeReason = reason;

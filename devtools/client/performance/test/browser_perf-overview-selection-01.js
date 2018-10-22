@@ -15,7 +15,7 @@ const { dragStartCanvasGraph, dragStopCanvasGraph, clickCanvasGraph } = require(
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, PerformanceController, OverviewView } = panel.panelWin;

@@ -11,7 +11,7 @@ const {
 
 const {
   getExtensionUuid,
-  parseFileUri
+  parseFileUri,
 } = require("../modules/extensions-helper");
 
 /**

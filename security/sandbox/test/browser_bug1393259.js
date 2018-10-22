@@ -43,7 +43,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: kPageURL
+    url: kPageURL,
   }, async function(aBrowser) {
     function runProcess(aCmd, aArgs, blocking = true) {
       let cmdFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);

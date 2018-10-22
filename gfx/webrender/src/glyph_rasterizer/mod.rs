@@ -178,6 +178,7 @@ pub struct FontInstance {
     pub render_mode: FontRenderMode,
     pub flags: FontInstanceFlags,
     pub synthetic_italics: SyntheticItalics,
+    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(skip))]
     pub platform_options: Option<FontInstancePlatformOptions>,
     pub variations: Vec<FontVariation>,
     pub transform: FontTransform,

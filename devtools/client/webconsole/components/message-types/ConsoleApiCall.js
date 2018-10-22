@@ -39,7 +39,7 @@ function ConsoleApiCall(props) {
     serviceContainer,
     timestampsVisible,
     repeat,
-    isPaused
+    isPaused,
   } = props;
   const {
     id: messageId,
@@ -74,7 +74,7 @@ function ConsoleApiCall(props) {
 
     messageBody = [
       dom.span({className: "cm-variable"}, "console.trace()"),
-      ...traceParametersBody
+      ...traceParametersBody,
     ];
   } else if (type === "assert") {
     const reps = formatReps(messageBodyConfig);
@@ -86,7 +86,7 @@ function ConsoleApiCall(props) {
     messageBody = formatReps(messageBodyConfig);
     if (prefix) {
       messageBody.unshift(dom.span({
-        className: "console-message-prefix"
+        className: "console-message-prefix",
       }, `${prefix}: `));
     }
   } else {

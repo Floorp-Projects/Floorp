@@ -182,6 +182,7 @@ public:
   void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
                             const layers::FrameMetrics::ViewID& aScrollId,
                             const wr::LayoutPoint& aScrollPosition);
+  void UpdatePinchZoom(float aZoom);
 private:
   Transaction* mTxn;
 };

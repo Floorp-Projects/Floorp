@@ -55,7 +55,7 @@ module.exports = async function() {
         observer.disconnect();
       });
       observer.observe(tree, {
-        childList: true
+        childList: true,
       });
     });
   }

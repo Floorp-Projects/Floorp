@@ -26,7 +26,7 @@ var Utils = { // jshint ignore:line
     "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}": "b2g",
     "{d1bfe7d9-c01e-4237-998b-7b5f960a4314}": "graphene",
     "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}": "browser",
-    "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "mobile/android"
+    "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "mobile/android",
   },
 
   get AccService() {
@@ -129,7 +129,7 @@ var Utils = { // jshint ignore:line
         } finally {
           return str;
         }
-      }
+      },
     };
     return this.stringBundle;
   },
@@ -287,7 +287,7 @@ var Utils = { // jshint ignore:line
       "contentinfo",
       "main",
       "navigation",
-      "search"
+      "search",
     ]);
   },
 
@@ -304,7 +304,7 @@ var Utils = { // jshint ignore:line
       "root-index",
       "subscript",
       "superscript",
-      "underscript"
+      "underscript",
     ]);
   },
 
@@ -341,7 +341,7 @@ var Utils = { // jshint ignore:line
 
     return parent.role === Roles.LISTITEM && parent.childCount > 1 &&
       aStaticText.indexInParent === 0;
-  }
+  },
 };
 
 /**
@@ -366,7 +366,7 @@ State.prototype = {
       statesArray[i] = stateStrings.item(i);
     }
     return "[" + statesArray.join(", ") + "]";
-  }
+  },
 };
 
 var Logger = { // jshint ignore:line
@@ -513,7 +513,7 @@ var Logger = { // jshint ignore:line
         this._dumpTreeInternal(aLogLevel, aAccessible.getChildAt(i),
           aIndent + 1);
       }
-    }
+    },
 };
 
 /**
@@ -702,7 +702,7 @@ PivotContext.prototype = {
       } else if (aAccessible.actionCount > 0) {
         hints.push({
           string: Utils.AccService.getStringRole(
-            aAccessible.role).replace(/\s/g, "") + "-hint"
+            aAccessible.role).replace(/\s/g, "") + "-hint",
         });
       }
     });
@@ -741,7 +741,7 @@ PivotContext.prototype = {
             Roles.CELL,
             Roles.COLUMNHEADER,
             Roles.ROWHEADER,
-            Roles.MATHML_CELL
+            Roles.MATHML_CELL,
           ].includes(aAccessible.role)) {
           return null;
       }
@@ -829,7 +829,7 @@ PivotContext.prototype = {
     } catch (x) {
       return true;
     }
-  }
+  },
 };
 
 function PrefCache(aName, aCallback, aRunCallbackNow) { // jshint ignore:line
@@ -885,5 +885,5 @@ PrefCache.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                           Ci.nsISupportsWeakReference])
+                                           Ci.nsISupportsWeakReference]),
 };

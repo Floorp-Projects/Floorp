@@ -196,7 +196,7 @@ class Tabbar extends Component {
 
     const tabs = this.state.tabs.slice();
     tabs[index] = Object.assign({}, tabs[index], {
-      isVisible: isVisible
+      isVisible: isVisible,
     });
 
     this.setState(Object.assign({}, this.state, {
@@ -269,7 +269,7 @@ class Tabbar extends Component {
 
   onTabChanged(index) {
     this.setState({
-      activeTab: index
+      activeTab: index,
     }, () => {
       if (this.props.onSelect) {
         this.props.onSelect(this.state.tabs[index].id);

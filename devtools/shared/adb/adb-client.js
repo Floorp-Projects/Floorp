@@ -85,7 +85,7 @@ const client = {
   checkResponse,
   createRequest,
   connect,
-  close
+  close,
 };
 
 module.exports = client;

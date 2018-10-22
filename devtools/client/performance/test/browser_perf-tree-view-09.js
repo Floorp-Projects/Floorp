@@ -33,27 +33,27 @@ const gProfile = RecordingUtils.deflateProfile({
         { location: "(root)" },
         { location: "A" },
         { location: "B" },
-      ]
+      ],
     }, {
       time: 2,
       frames: [
         { location: "(root)" },
         { location: "A" },
-        { location: "B" }
-      ]
+        { location: "B" },
+      ],
     }, {
       time: 3,
       frames: [
         { location: "(root)" },
         { location: "A" },
         { location: "B" },
-      ]
+      ],
     }, {
       time: 4,
       frames: [
         { location: "(root)" },
-        { location: "A" }
-      ]
-    }]
-  }]
+        { location: "A" },
+      ],
+    }],
+  }],
 });

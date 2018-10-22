@@ -64,10 +64,10 @@ RulersHighlighter.prototype = {
       const g = createSVGNode(window, {
         nodeType: "g",
         attributes: {
-          id: `${axis}-axis`
+          id: `${axis}-axis`,
         },
         parent: svg,
-        prefix
+        prefix,
       });
 
       createSVGNode(window, {
@@ -75,18 +75,18 @@ RulersHighlighter.prototype = {
         attributes: {
           y: isHorizontal ? 0 : 16,
           width,
-          height
+          height,
         },
-        parent: g
+        parent: g,
       });
 
       const gRule = createSVGNode(window, {
         nodeType: "g",
         attributes: {
-          id: `${axis}-axis-ruler`
+          id: `${axis}-axis-ruler`,
         },
         parent: g,
-        prefix
+        prefix,
       });
 
       const pathGraduations = createSVGNode(window, {
@@ -94,10 +94,10 @@ RulersHighlighter.prototype = {
         attributes: {
           "class": "ruler-graduations",
           width,
-          height
+          height,
         },
         parent: gRule,
-        prefix
+        prefix,
       });
 
       const pathMarkers = createSVGNode(window, {
@@ -105,20 +105,20 @@ RulersHighlighter.prototype = {
         attributes: {
           "class": "ruler-markers",
           width,
-          height
+          height,
         },
         parent: gRule,
-        prefix
+        prefix,
       });
 
       const gText = createSVGNode(window, {
         nodeType: "g",
         attributes: {
           id: `${axis}-axis-text`,
-          "class": (isHorizontal ? "horizontal" : "vertical") + "-labels"
+          "class": (isHorizontal ? "horizontal" : "vertical") + "-labels",
         },
         parent: g,
-        prefix
+        prefix,
       });
 
       let dGraduations = "";
@@ -139,8 +139,8 @@ RulersHighlighter.prototype = {
             parent: gText,
             attributes: {
               x: isHorizontal ? 2 + i : -i - 1,
-              y: 5
-            }
+              y: 5,
+            },
           }).textContent = i;
         }
 
@@ -164,16 +164,16 @@ RulersHighlighter.prototype = {
     }
 
     const container = createNode(window, {
-      attributes: {"class": "highlighter-container"}
+      attributes: {"class": "highlighter-container"},
     });
 
     const root = createNode(window, {
       parent: container,
       attributes: {
         "id": "root",
-        "class": "root"
+        "class": "root",
       },
-      prefix
+      prefix,
     });
 
     const svg = createSVGNode(window, {
@@ -184,9 +184,9 @@ RulersHighlighter.prototype = {
         "class": "elements",
         width: "100%",
         height: "100%",
-        hidden: "true"
+        hidden: "true",
       },
-      prefix
+      prefix,
     });
 
     createRuler("x", RULERS_MAX_X_AXIS);
@@ -197,9 +197,9 @@ RulersHighlighter.prototype = {
       attributes: {
         "class": "viewport-infobar-container",
         "id": "viewport-infobar-container",
-        "position": "top"
+        "position": "top",
       },
-      prefix
+      prefix,
     });
 
     return container;
@@ -314,6 +314,6 @@ RulersHighlighter.prototype = {
       "hidden", "true");
 
     this._cancelUpdate();
-  }
+  },
 };
 exports.RulersHighlighter = RulersHighlighter;

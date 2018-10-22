@@ -26,7 +26,7 @@ add_task(async function() {
 
   const partialTree = await client.getDominatorTree({
     dominatorTreeId,
-    breakdown
+    breakdown,
   });
   ok(partialTree, "Should get a partial tree");
   equal(typeof partialTree, "object",

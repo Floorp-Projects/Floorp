@@ -28,7 +28,7 @@ function run_test() {
         pathEntry(d, "e4"),
         pathEntry(e, "e5"),
         pathEntry(f, "e6"),
-      ]
+      ],
     ],
     expectedNodes: [a, b, c, d, e, f, g],
     expectedEdges: [
@@ -38,7 +38,7 @@ function run_test() {
       edge(d, e, "e4"),
       edge(e, f, "e5"),
       edge(f, g, "e6"),
-    ]
+    ],
   });
 
   dumpn("Multiple edges from and to the same nodes");
@@ -54,7 +54,7 @@ function run_test() {
       edge(b, a, "x"),
       edge(b, a, "y"),
       edge(b, a, "z"),
-    ]
+    ],
   });
 
   dumpn("Multiple paths sharing some nodes and edges");
@@ -86,7 +86,7 @@ function run_test() {
       edge(c, g, "foo"),
       edge(d, g, "bar"),
       edge(e, g, "baz"),
-    ]
+    ],
   });
 
   dumpn("Second shortest path contains target itself");
@@ -108,6 +108,6 @@ function run_test() {
     expectedEdges: [
       edge(a, b, "a->b"),
       edge(b, g, "b->g"),
-    ]
+    ],
   });
 }

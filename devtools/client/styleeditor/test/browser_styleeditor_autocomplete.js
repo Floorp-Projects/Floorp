@@ -51,26 +51,26 @@ function getTestCases(cssProperties) {
     ["l", {total: getSuggestionNumberFor("background", "bl"), current: 0}],
     ["VK_TAB", {
       total: getSuggestionNumberFor("background", "bl"),
-      current: 0, inserted: 1
+      current: 0, inserted: 1,
     }],
     ["VK_DOWN", {
       total: getSuggestionNumberFor("background", "bl"),
-      current: 1, inserted: 1
+      current: 1, inserted: 1,
     }],
     ["VK_UP", {
       total: getSuggestionNumberFor("background", "bl"),
       current: 0,
-      inserted: 1
+      inserted: 1,
     }],
     ["VK_TAB", {
       total: getSuggestionNumberFor("background", "bl"),
       current: 1,
-      inserted: 1
+      inserted: 1,
     }],
     ["VK_TAB", {
       total: getSuggestionNumberFor("background", "bl"),
       current: 2,
-      inserted: 1
+      inserted: 1,
     }],
     [";"],
     ["VK_RETURN"],
@@ -209,7 +209,7 @@ function getCSSKeywords(cssProperties) {
   });
   return {
     CSSValues: props,
-    CSSProperties: propNames.sort()
+    CSSProperties: propNames.sort(),
   };
 }
 

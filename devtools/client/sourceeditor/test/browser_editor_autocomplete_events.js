@@ -20,7 +20,7 @@ async function runTests() {
   const {ed, win, edWin} = await setup(null, {
     autocomplete: true,
     mode: Editor.modes.css,
-    autocompleteOpts: {walker: walker, cssProperties: getClientCssProperties()}
+    autocompleteOpts: {walker: walker, cssProperties: getClientCssProperties()},
   });
   await testMouse(ed, edWin);
   await testKeyboard(ed, edWin);

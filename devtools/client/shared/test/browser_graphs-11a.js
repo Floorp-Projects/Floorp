@@ -10,7 +10,7 @@ const BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
 const CATEGORIES = [
   { color: "#46afe3", label: "Foo" },
   { color: "#eb5368", label: "Bar" },
-  { color: "#70bf53", label: "Baz" }
+  { color: "#70bf53", label: "Baz" },
 ];
 
 add_task(async function() {

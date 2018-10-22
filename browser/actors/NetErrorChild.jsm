@@ -39,8 +39,6 @@ const SEC_ERROR_UNKNOWN_ISSUER                     = SEC_ERROR_BASE + 13;
 const SEC_ERROR_UNTRUSTED_ISSUER                   = SEC_ERROR_BASE + 20;
 const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE         = SEC_ERROR_BASE + 30;
 const SEC_ERROR_CA_CERT_INVALID                    = SEC_ERROR_BASE + 36;
-const SEC_ERROR_OCSP_FUTURE_RESPONSE               = SEC_ERROR_BASE + 131;
-const SEC_ERROR_OCSP_OLD_RESPONSE                  = SEC_ERROR_BASE + 132;
 const SEC_ERROR_REUSED_ISSUER_AND_SERIAL           = SEC_ERROR_BASE + 138;
 const SEC_ERROR_OCSP_INVALID_SIGNING_CERT          = SEC_ERROR_BASE + 144;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED  = SEC_ERROR_BASE + 176;
@@ -160,7 +158,7 @@ class NetErrorChild extends ActorChild {
         // This error code currently only exists for the Symantec distrust, we may need to adjust
         // it to fit other distrusts later.
         case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
-          msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_Symantec", [hostString], 1) + "\n";
+          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_Symantec1") + "\n";
           break;
         default:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_Untrusted") + "\n";
@@ -178,7 +176,7 @@ class NetErrorChild extends ActorChild {
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
             let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix2", [brandName, hostString], 2) + " ";
+            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix3", [brandName, hostString], 2) + " ";
             msgPrefix += gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
           } else {
             msgPrefix = gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
@@ -252,7 +250,7 @@ class NetErrorChild extends ActorChild {
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
             let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msg = gPipNSSBundle.formatStringFromName("certErrorMismatchMultiple2", [brandName, hostString], 2) + " ";
+            msg = gPipNSSBundle.formatStringFromName("certErrorMismatchMultiple3", [brandName, hostString], 2) + " ";
           } else {
             msg = gPipNSSBundle.GetStringFromName("certErrorMismatchMultiple") + "\n";
           }
@@ -269,7 +267,7 @@ class NetErrorChild extends ActorChild {
         if (newErrorPagesEnabled) {
           technicalInfo.textContent = "";
           let brandName = gBrandBundle.GetStringFromName("brandShortName");
-          msg = gPipNSSBundle.formatStringFromName("certErrorMismatch2", [brandName, hostString], 2) + " ";
+          msg = gPipNSSBundle.formatStringFromName("certErrorMismatch3", [brandName, hostString], 2) + " ";
         } else {
           msg = gPipNSSBundle.formatStringFromName("certErrorMismatch",
                                                      [hostString], 1);
@@ -398,7 +396,7 @@ class NetErrorChild extends ActorChild {
       // without replicating the complex logic from certverifier code.
       case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
         let description = gPipNSSBundle.formatStringFromName(
-          "certErrorSymantecDistrustDescription", [doc.location.hostname], 1);
+          "certErrorSymantecDistrustDescription1", [doc.location.hostname], 1);
         let descriptionContainer = doc.getElementById("errorShortDescText2");
         descriptionContainer.textContent = description;
 
@@ -421,8 +419,6 @@ class NetErrorChild extends ActorChild {
       // and is not before the build date.
       case SEC_ERROR_EXPIRED_CERTIFICATE:
       case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-      case SEC_ERROR_OCSP_FUTURE_RESPONSE:
-      case SEC_ERROR_OCSP_OLD_RESPONSE:
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
 
@@ -507,23 +503,39 @@ class NetErrorChild extends ActorChild {
           let textContainer = doc.getElementById("text-container");
           errorPageContainer.style.backgroundPosition = `left top calc(50vh - ${textContainer.clientHeight / 2}px)`;
         } else {
-            doc.getElementById("wrongSystemTime_systemDate2").textContent = systemDate;
-            let errDesc = doc.getElementById("ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE");
-            let sd = doc.getElementById("errorShortDescText2");
-            if (sd) {
-              // eslint-disable-next-line no-unsanitized/property
-              sd.innerHTML = errDesc.innerHTML;
-            }
-            if (es) {
-              // eslint-disable-next-line no-unsanitized/property
-              es.innerHTML = errWhatToDo.innerHTML;
-            }
-            if (est) {
-              // eslint-disable-next-line no-unsanitized/property
-              est.textContent = errWhatToDoTitle.textContent;
-              est.style.fontWeight = "bold";
-            }
-            updateContainerPosition();
+          doc.getElementById("wrongSystemTime_systemDate2").textContent = systemDate;
+
+          let errDesc = doc.getElementById("ed_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE");
+          let sd = doc.getElementById("errorShortDescText");
+          // eslint-disable-next-line no-unsanitized/property
+          sd.innerHTML = errDesc.innerHTML;
+
+          let span = sd.querySelector(".hostname");
+          span.textContent = doc.location.hostname;
+
+          // The secondary description mentions expired certificates explicitly
+          // and should only be shown if the certificate has actually expired
+          // instead of being not yet valid.
+          if (msg.data.code == SEC_ERROR_EXPIRED_CERTIFICATE) {
+            let {cssClass} = this.getParams(doc);
+            let stsSuffix = cssClass == "badStsCert" ? "_sts" : "";
+            let errDesc2 = doc.getElementById(
+              `ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE${stsSuffix}`);
+            let sd2 = doc.getElementById("errorShortDescText2");
+            // eslint-disable-next-line no-unsanitized/property
+            sd2.innerHTML = errDesc2.innerHTML;
+          }
+
+          if (es) {
+            // eslint-disable-next-line no-unsanitized/property
+            es.innerHTML = errWhatToDo.innerHTML;
+          }
+          if (est) {
+            // eslint-disable-next-line no-unsanitized/property
+            est.textContent = errWhatToDoTitle.textContent;
+            est.style.fontWeight = "bold";
+          }
+          updateContainerPosition();
         }
         break;
     }

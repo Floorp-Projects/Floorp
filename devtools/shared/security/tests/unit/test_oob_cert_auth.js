@@ -62,8 +62,8 @@ add_task(async function() {
     encryption: true,
     authenticator: clientAuth,
     cert: {
-      sha256: serverCert.sha256Fingerprint
-    }
+      sha256: serverCert.sha256Fingerprint,
+    },
   });
   ok(transport, "Client transport created");
 
@@ -111,7 +111,7 @@ add_task(async function() {
   const transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port,
-    encryption: true
+    encryption: true,
     // authenticator: PROMPT is the default
   });
 
@@ -133,7 +133,7 @@ add_task(async function() {
     await client.request({
       to: "root",
       type: "echo",
-      message
+      message,
     });
   } catch (e) {
     ok(true, "Sending a message failed");
@@ -169,7 +169,7 @@ add_task(async function() {
     // Pass to server, skipping prompt for tests
     oobData.resolve({
       k: oob.k + 1,
-      sha256: oob.sha256
+      sha256: oob.sha256,
     });
   };
 
@@ -188,8 +188,8 @@ add_task(async function() {
       encryption: true,
       authenticator: clientAuth,
       cert: {
-        sha256: serverCert.sha256Fingerprint
-      }
+        sha256: serverCert.sha256Fingerprint,
+      },
     });
   } catch (e) {
     ok(true, "Client failed to connect as expected");
@@ -224,7 +224,7 @@ add_task(async function() {
     // Pass to server, skipping prompt for tests
     oobData.resolve({
       k: oob.k,
-      sha256: oob.sha256 + 1
+      sha256: oob.sha256 + 1,
     });
   };
 
@@ -243,8 +243,8 @@ add_task(async function() {
       encryption: true,
       authenticator: clientAuth,
       cert: {
-        sha256: serverCert.sha256Fingerprint
-      }
+        sha256: serverCert.sha256Fingerprint,
+      },
     });
   } catch (e) {
     ok(true, "Client failed to connect as expected");

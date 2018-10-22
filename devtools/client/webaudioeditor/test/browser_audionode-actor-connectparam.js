@@ -13,7 +13,7 @@ add_task(async function() {
 
   const events = Promise.all([
     get3(gFront, "create-node"),
-    waitForGraphRendered(panelWin, 3, 2)
+    waitForGraphRendered(panelWin, 3, 2),
   ]);
   reload(target);
   const [actors] = await events;
@@ -24,7 +24,7 @@ add_task(async function() {
   osc.connectParam(gain, "gain");
   await Promise.all([
     waitForGraphRendered(panelWin, 3, 1, 1),
-    once(gAudioNodes, "connect")
+    once(gAudioNodes, "connect"),
   ]);
   ok(true, "Oscillator connect to Gain's Gain AudioParam, event emitted.");
 

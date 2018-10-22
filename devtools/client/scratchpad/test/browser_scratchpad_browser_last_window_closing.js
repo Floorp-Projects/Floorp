@@ -25,7 +25,7 @@ function runTests({ Scratchpad }) {
   let button;
 
   Services.prompt = {
-    confirmEx: () => button
+    confirmEx: () => button,
   };
 
   Scratchpad.dirty = true;

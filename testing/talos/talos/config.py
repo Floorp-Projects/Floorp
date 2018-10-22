@@ -137,7 +137,7 @@ def set_webserver(config):
     port = sock.getsockname()[1]
     sock.close()
 
-    config['webserver'] = 'localhost:%d' % port
+    config['webserver'] = '127.0.0.1:%d' % port
 
 
 @validator

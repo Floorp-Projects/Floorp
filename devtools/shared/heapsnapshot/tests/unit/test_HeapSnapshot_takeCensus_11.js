@@ -20,7 +20,7 @@ function doLiveAndOfflineCensus(g, dbg, opts) {
 
   return {
     live: dbg.memory.takeCensus(opts),
-    offline: saveHeapSnapshotAndTakeCensus(dbg, opts)
+    offline: saveHeapSnapshotAndTakeCensus(dbg, opts),
   };
 }
 
@@ -40,7 +40,7 @@ function run_test() {
   for (let i = 0; i < 10; i++) {
     const { live, offline } = doLiveAndOfflineCensus(g, dbg, {
       breakdown: { by: "objectClass",
-                   then: { by: "count"} }
+                   then: { by: "count"} },
     });
 
     equal(live.AllocationMarker.count, offline.AllocationMarker.count);
@@ -57,7 +57,7 @@ function run_test() {
 
   const { live, offline } = doLiveAndOfflineCensus(g, dbg, {
     breakdown: { by: "objectClass",
-                 then: { by: "allocationStack"} }
+                 then: { by: "allocationStack"} },
   });
 
   equal(live.AllocationMarker.size, offline.AllocationMarker.size);

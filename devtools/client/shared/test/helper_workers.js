@@ -32,7 +32,7 @@ function jsonrpc(tab, method, params) {
     messageManager.sendAsyncMessage("jsonrpc", {
       method: method,
       params: params,
-      id: currentId
+      id: currentId,
     });
     messageManager.addMessageListener("jsonrpc", function listener(res) {
       const { data: { result, error, id } } = res;

@@ -21,9 +21,9 @@
         { MENUPOPUP: [ // menu
           { MENUITEM: [
             { STATICTEXT: [] }, // bullet
-            { TEXT_LEAF: [] }
-          ] }
-        ] }
+            { TEXT_LEAF: [] },
+          ] },
+        ] },
       ] };
     testAccessibleTree("menu", tree);
 
@@ -33,9 +33,9 @@
         { MENUPOPUP: [ // menu
           { MENUITEM: [
             { STATICTEXT: [] }, // bullet
-            { TEXT_LEAF: [] }
-          ] }
-        ] }
+            { TEXT_LEAF: [] },
+          ] },
+        ] },
       ] };
     testAccessibleTree("menu_nopopup", tree);
 
@@ -45,9 +45,9 @@
         { MENUPOPUP: [ // menu
           { PARENT_MENUITEM: [ // menuitem with aria-haspopup="true"
             { STATICTEXT: [] }, // bullet
-            { TEXT_LEAF: [] }
-          ] }
-        ] }
+            { TEXT_LEAF: [] },
+          ] },
+        ] },
       ] };
     testAccessibleTree("menu_popup", tree);
 

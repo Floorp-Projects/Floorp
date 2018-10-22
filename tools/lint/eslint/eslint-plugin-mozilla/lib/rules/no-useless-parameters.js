@@ -46,7 +46,7 @@ module.exports = function(context) {
           fix: fixer => {
             return fixer.removeRange(getRangeAfterArgToEnd(1, args));
           },
-          message: `${name}'s third parameter can be omitted when it's false.`
+          message: `${name}'s third parameter can be omitted when it's false.`,
         });
       }
 
@@ -56,7 +56,7 @@ module.exports = function(context) {
           fix: fixer => {
             return fixer.removeRange(getRangeAfterArgToEnd(0, args));
           },
-          message: `${name} takes only 1 parameter.`
+          message: `${name} takes only 1 parameter.`,
         });
       }
 
@@ -66,7 +66,7 @@ module.exports = function(context) {
           fix: fixer => {
             return fixer.removeRange(getRangeAfterArgToEnd(1, args));
           },
-          message: "removeObserver only takes 2 parameters."
+          message: "removeObserver only takes 2 parameters.",
         });
       }
 
@@ -76,7 +76,7 @@ module.exports = function(context) {
           fix: fixer => {
             return fixer.removeRange(getRangeAfterArgToEnd(0, args));
           },
-          message: `${name}'s second parameter can be omitted when it's false.`
+          message: `${name}'s second parameter can be omitted when it's false.`,
         });
       }
 
@@ -87,7 +87,7 @@ module.exports = function(context) {
           fix: fixer => {
             return fixer.removeRange(getRangeAfterArgToEnd(1, args));
           },
-          message: `${name}'s third parameter can be omitted.`
+          message: `${name}'s third parameter can be omitted.`,
         });
       }
 
@@ -98,7 +98,7 @@ module.exports = function(context) {
           fix: fixer => {
             return fixer.removeRange(getRangeAfterArgToEnd(0, args));
           },
-          message: "getComputedStyle's second parameter can be omitted."
+          message: "getComputedStyle's second parameter can be omitted.",
         });
       }
 
@@ -113,9 +113,9 @@ module.exports = function(context) {
 
             return fixer.removeRange(getRangeAfterArgToEnd(args.length - 2, args));
           },
-          message: "newURI's last parameters are optional."
+          message: "newURI's last parameters are optional.",
         });
       }
-    }
+    },
   };
 };

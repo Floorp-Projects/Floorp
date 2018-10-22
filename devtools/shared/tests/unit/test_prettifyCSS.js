@@ -15,16 +15,16 @@ const TESTS_TAB_INDENT = [
     expected: [
       "div {",
       "\tfont-family:'Arial Black', Arial, sans-serif;",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "whitespace before open brace. indent using tabs",
     input: "div{}",
     expected: [
       "div {",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "minified with trailing newline. indent using tabs",
@@ -39,8 +39,8 @@ const TESTS_TAB_INDENT = [
       "}",
       "span {",
       "\tcolor:green;",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "leading whitespace. indent using tabs",
@@ -48,8 +48,8 @@ const TESTS_TAB_INDENT = [
     expected: [
       "div {",
       "\tcolor: red;",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "CSS with extra closing brace. indent using tabs",
@@ -62,7 +62,7 @@ const TESTS_TAB_INDENT = [
       "div {",
       "\tcolor:red",
       "}",
-    ]
+    ],
   },
 ];
 
@@ -72,16 +72,16 @@ const TESTS_SPACE_INDENT = [
     expected: [
       "div {",
       " font-family:'Arial Black', Arial, sans-serif;",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "whitespace before open brace. indent using spaces",
     input: "div{}",
     expected: [
       "div {",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "minified with trailing newline. indent using spaces",
@@ -96,8 +96,8 @@ const TESTS_SPACE_INDENT = [
       "}",
       "span {",
       " color:green;",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "leading whitespace. indent using spaces",
@@ -105,8 +105,8 @@ const TESTS_SPACE_INDENT = [
     expected: [
       "div {",
       " color: red;",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "CSS with extra closing brace. indent using spaces",
@@ -119,7 +119,7 @@ const TESTS_SPACE_INDENT = [
       "div {",
       " color:red",
       "}",
-    ]
+    ],
   },
 
   { name: "HTML comments with some whitespace padding",
@@ -127,8 +127,8 @@ const TESTS_SPACE_INDENT = [
     expected: [
       "body {",
       " color:red",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   { name: "HTML comments without whitespace padding",
@@ -136,8 +136,8 @@ const TESTS_SPACE_INDENT = [
     expected: [
       "body {",
       " color:red",
-      "}"
-    ]
+      "}",
+    ],
   },
 ];
 

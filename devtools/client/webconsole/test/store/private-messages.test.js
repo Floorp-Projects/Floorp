@@ -175,9 +175,9 @@ describe("private messages", () => {
         proxy: {
           releaseActor: (actor) => {
             releasedActors.push(actor);
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // Add a log message.

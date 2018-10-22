@@ -117,7 +117,7 @@ function testSetAlpha() {
     ["hsl", "hsl(208, 100%, 97%)", 0.75, "rgba(240, 248, 255, 0.75)"],
     ["hsla", "hsla(208, 100%, 97%, 1)", 0.75, "rgba(240, 248, 255, 0.75)"],
     ["alphahex", "#f08f", 0.6, "rgba(255, 0, 136, 0.6)"],
-    ["longalphahex", "#00ff80ff", 0.2, "rgba(0, 255, 128, 0.2)"]
+    ["longalphahex", "#00ff80ff", 0.2, "rgba(0, 255, 128, 0.2)"],
   ];
   values.forEach(([type, value, alpha, expected]) => {
     is(colorUtils.setAlpha(value, alpha), expected,

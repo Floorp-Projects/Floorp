@@ -425,3 +425,57 @@ add_task(async function test_combined_name_fields_error() {
     doc.querySelector("#cancel").click();
   });
 });
+
+add_task(async function test_hiddenFieldNotSaved() {
+  await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
+    let doc = win.document;
+    doc.querySelector("#address-level2").focus();
+    EventUtils.synthesizeKey(TEST_ADDRESS_1["address-level2"], {}, win);
+    doc.querySelector("#address-level1").focus();
+    EventUtils.synthesizeKey(TEST_ADDRESS_1["address-level1"], {}, win);
+    doc.querySelector("#country").focus();
+    EventUtils.synthesizeKey("Germany", {}, win);
+    doc.querySelector("#save").focus();
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+  });
+  let addresses = await getAddresses();
+  is(addresses[0].country, "DE", "check country");
+  is(addresses[0]["address-level2"], TEST_ADDRESS_1["address-level2"], "check address-level2");
+  is(addresses[0]["address-level1"], undefined, "address-level1 should not be saved");
+
+  await removeAllRecords();
+});
+
+add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
+  let addresses = await getAddresses();
+  ok(!addresses.length, "no addresses at start of test");
+  await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
+    let doc = win.document;
+    doc.querySelector("#address-level2").focus();
+    EventUtils.synthesizeKey(TEST_ADDRESS_1["address-level2"], {}, win);
+    doc.querySelector("#address-level1").focus();
+    EventUtils.synthesizeKey(TEST_ADDRESS_1["address-level1"], {}, win);
+    doc.querySelector("#save").focus();
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+  });
+  addresses = await getAddresses();
+  is(addresses[0].country, "US", "check country");
+  is(addresses[0]["address-level2"], TEST_ADDRESS_1["address-level2"], "check address-level2");
+  is(addresses[0]["address-level1"], TEST_ADDRESS_1["address-level1"], "check address-level1");
+
+  await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
+    let doc = win.document;
+    doc.querySelector("#country").focus();
+    EventUtils.synthesizeKey("Germany", {}, win);
+    win.document.querySelector("#save").click();
+  }, {
+    record: addresses[0],
+  });
+  addresses = await getAddresses();
+
+  is(addresses.length, 1, "only one address is in storage");
+  is(addresses[0]["address-level2"], TEST_ADDRESS_1["address-level2"], "check address-level2");
+  is(addresses[0]["address-level1"], undefined, "address-level1 should be removed");
+  is(addresses[0].country, "DE", "country changed");
+  await removeAllRecords();
+});

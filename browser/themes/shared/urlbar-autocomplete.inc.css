@@ -152,7 +152,8 @@
   color: var(--panel-disabled-color);
 }
 
-.ac-url:not([selected=true]) {
+.ac-url:not([selected=true]),
+.autocomplete-richlistitem.aliasOffer > .ac-action:not([selected=true]) {
   color: var(--urlbar-popup-url-color);
 }
 

@@ -52,6 +52,6 @@ module.exports = function(context) {
                        "use {once: true} instead of removeEventListener as " +
                        "the first instruction of the listener");
       }
-    }
+    },
   };
 };

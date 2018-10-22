@@ -24,14 +24,14 @@ add_task(async function() {
     height: 100,
     data: [{
       size: 1,
-      label: "foo"
+      label: "foo",
     }, {
       size: 2,
-      label: "bar"
+      label: "bar",
     }, {
       size: 3,
-      label: "baz"
-    }]
+      label: "baz",
+    }],
   });
 
   const node = pie.node;

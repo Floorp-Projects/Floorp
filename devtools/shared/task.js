@@ -215,7 +215,7 @@ var Task = {
    */
   Result: function(value) {
     this.value = value;
-  }
+  },
 };
 
 function createAsyncFunction(task) {
@@ -450,7 +450,7 @@ TaskImpl.prototype = {
       }
     }
     return "";
-  }
+  },
 };
 
 Task.Debugging = {
@@ -508,7 +508,7 @@ Task.Debugging = {
     }
 
     return lines.join("\n");
-  }
+  },
 };
 
 exports.Task = Task;

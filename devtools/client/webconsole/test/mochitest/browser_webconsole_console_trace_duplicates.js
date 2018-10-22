@@ -29,23 +29,23 @@ add_task(async function testTraceMessages() {
       functionName: "foo3",
       filename: TEST_URI,
       line: 24,
-      column: 3
+      column: 3,
     }, {
       functionName: "foo2",
       filename: TEST_URI,
       line: 20,
-      column: 3
+      column: 3,
     }, {
       functionName: "foo1",
       filename: TEST_URI,
       line: 12,
-      column: 3
+      column: 3,
     }, {
       functionName: "<anonymous>",
       filename: TEST_URI,
       line: 27,
-      column: 1
-    }]
+      column: 1,
+    }],
   });
 });
 
@@ -82,7 +82,7 @@ function getStackInfo(message) {
     filename: message.querySelector(".frame-link-filename").textContent,
     line: lc.line,
     column: lc.column,
-    stack: []
+    stack: [],
   };
 
   const stack = message.querySelector(".stack-trace");
@@ -100,7 +100,7 @@ function getStackInfo(message) {
         functionName,
         filename,
         line: line,
-        column: column
+        column: column,
       });
     }
   }
@@ -164,6 +164,6 @@ function getLineAndColumn(node) {
 
   return {
     line: line * 1,
-    column: column * 1
+    column: column * 1,
   };
 }

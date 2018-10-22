@@ -21,7 +21,7 @@ const {
 
 const {
   getSortedRequests,
-  getRequestById
+  getRequestById,
 } = require("devtools/client/netmonitor/src/selectors/index");
 
 const {
@@ -810,7 +810,7 @@ function checkTelemetryEvent(expectedEvent, query) {
   const f = e => JSON.stringify(e, null, 2);
   is(f(event), f({
     ...expectedEvent,
-    "session_id": event.session_id
+    "session_id": event.session_id,
   }), "The event has the expected data");
 }
 

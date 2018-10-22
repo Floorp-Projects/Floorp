@@ -18,7 +18,7 @@ add_task(async function() {
 
   const events = Promise.all([
     getNSpread(gAudioNodes, "add", 13),
-    waitForGraphRendered(panelWin, 13, 2)
+    waitForGraphRendered(panelWin, 13, 2),
   ]);
   reload(target);
   const [created] = await events;

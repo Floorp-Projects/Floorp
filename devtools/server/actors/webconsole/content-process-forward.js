@@ -118,7 +118,7 @@ ContentProcessForward.prototype = {
     Services.obs.removeObserver(this, "xpcom-shutdown");
     Services.cpmm.removeMessageListener("DevTools:StopForwardingContentProcessMessage",
                                         this);
-  }
+  },
 };
 
 // loadProcessScript loads in all processes, including the parent,

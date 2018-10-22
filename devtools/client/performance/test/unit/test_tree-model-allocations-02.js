@@ -28,13 +28,13 @@ add_task(function() {
   [
     [700, 70, 1, 33, 700, 70, 1, 33, "z (C:5:6)", [
       [0, 0, 0, 0, 700, 70, 1, 33, "y (B:3:4)", [
-        [0, 0, 0, 0, 700, 70, 1, 33, "x (A:1:2)"]
-      ]]
+        [0, 0, 0, 0, 700, 70, 1, 33, "x (A:1:2)"],
+      ]],
     ]],
     [200, 20, 1, 33, 200, 20, 1, 33, "y (B:3:4)", [
-      [0, 0, 0, 0, 200, 20, 1, 33, "x (A:1:2)"]
+      [0, 0, 0, 0, 200, 20, 1, 33, "x (A:1:2)"],
     ]],
-    [100, 10, 1, 33, 100, 10, 1, 33, "x (A:1:2)"]
+    [100, 10, 1, 33, 100, 10, 1, 33, "x (A:1:2)"],
   ].forEach(compareFrameInfo(thread));
 });
 
@@ -42,7 +42,7 @@ function compareFrameInfo(root, parent) {
   parent = parent || root;
   const fields = [
     "selfSize", "selfSizePercentage", "selfCount", "selfCountPercentage",
-    "totalSize", "totalSizePercentage", "totalCount", "totalCountPercentage"
+    "totalSize", "totalSizePercentage", "totalCount", "totalCountPercentage",
   ];
 
   return function(def) {
@@ -77,25 +77,25 @@ var TEST_DATA = {
   timestamps: [0, 150, 200, 250],
   sizes: [0, 100, 200, 700],
   frames: [{
-    source: "(root)"
+    source: "(root)",
   }, {
     source: "A",
     line: 1,
     column: 2,
     functionDisplayName: "x",
-    parent: 0
+    parent: 0,
   }, {
     source: "B",
     line: 3,
     column: 4,
     functionDisplayName: "y",
-    parent: 1
+    parent: 1,
   }, {
     source: "C",
     line: 5,
     column: 6,
     functionDisplayName: "z",
-    parent: 2
-  }
-  ]
+    parent: 2,
+  },
+  ],
 };

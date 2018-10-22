@@ -17,6 +17,7 @@ nsWifiScannerDBus::nsWifiScannerDBus(nsCOMArray<nsWifiAccessPoint> *aAccessPoint
     already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SYSTEM, nullptr));
 
   if (mConnection) {
+    dbus_connection_setup_with_g_main(mConnection, nullptr);
     dbus_connection_set_exit_on_disconnect(mConnection, false);
   }
 

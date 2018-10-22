@@ -374,7 +374,7 @@ function getPointsFromDiagonal(x1, y1, x2, y2, matrix = identity()) {
     [x1, y1],
     [x2, y1],
     [x2, y2],
-    [x1, y2]
+    [x1, y2],
   ].map(point => {
     const transformedPoint = apply(matrix, point);
 

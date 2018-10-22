@@ -41,7 +41,7 @@ function test_black_box() {
     function runWithSource(packet) {
       const source = gThreadClient.source(packet.source);
       source.setBreakpoint({
-        line: 2
+        line: 2,
       }).then(test_black_box_paused);
     }
   });

@@ -7,7 +7,7 @@ var nameArray = [
  "\u65E5\u672C\u8A9E",                              // Japanese
  "\u4E2D\u6587",                                    // Chinese
  "\uD55C\uAD6D\uC5B4",                              // Korean
- "\uD801\uDC0F\uD801\uDC2D\uD801\uDC3B\uD801\uDC2B" // Deseret
+ "\uD801\uDC0F\uD801\uDC2D\uD801\uDC3B\uD801\uDC2B", // Deseret
 ];
 
 function getTempDir() {

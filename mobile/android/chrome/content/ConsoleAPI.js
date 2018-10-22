@@ -92,5 +92,5 @@ var ConsoleAPI = {
       aSourceURL = aSourceURL.substring(slashIndex + 1);
 
     return aSourceURL;
-  }
+  },
 };

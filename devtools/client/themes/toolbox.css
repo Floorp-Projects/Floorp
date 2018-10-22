@@ -22,7 +22,6 @@
   --command-pick-image: url(images/command-pick.svg);
   --command-pick-accessibility-image: url(images/command-pick-accessibility.svg);
   --command-frames-image: url(images/command-frames.svg);
-  --command-frames-active-image: url(images/command-frames.svg#filled);
   --command-rulers-image: url(images/command-rulers.svg);
   --command-measure-image: url(images/command-measure.svg);
   --command-chevron-image: url(images/command-chevron.svg);
@@ -273,6 +272,22 @@
   min-width: 32px;
 }
 
+#command-button-pick::before {
+  background-image: var(--command-pick-image);
+  -moz-context-properties: fill, stroke;
+  fill: var(--theme-toolbar-photon-icon-color);
+  stroke: none;
+}
+
+#command-button-pick.checked::before {
+  fill: var(--theme-toolbar-checked-color);
+  stroke: var(--theme-toolbar-checked-color);
+}
+
+#command-button-pick.accessibility::before {
+  background-image: var(--command-pick-accessibility-image);
+}
+
 /* Command button images */
 
 #command-button-paintflashing::before {
@@ -285,12 +300,14 @@
 
 #command-button-responsive::before {
   background-image: var(--command-responsive-image);
+  -moz-context-properties: fill, stroke;
   fill: var(--theme-toolbar-photon-icon-color);
-  -moz-context-properties: fill;
+  stroke: none;
 }
 
 #command-button-responsive.checked::before {
-  fill: currentColor;
+  fill: var(--theme-toolbar-checked-color);
+  stroke: var(--theme-toolbar-checked-color);
 }
 
 #command-button-stop-replay::before, #command-button-replay::before {
@@ -318,14 +335,6 @@
   background-image: var(--command-scratchpad-image);
 }
 
-#command-button-pick::before {
-  background-image: var(--command-pick-image);
-}
-
-#command-button-pick.accessibility::before {
-  background-image: var(--command-pick-accessibility-image);
-}
-
 #command-button-eyedropper::before {
   background-image: var(--command-eyedropper-image);
 }
@@ -340,12 +349,14 @@
 
 #command-button-frames::before {
   background-image: var(--command-frames-image);
+  -moz-context-properties: fill, stroke;
   fill: var(--theme-toolbar-photon-icon-color);
+  stroke: none;
 }
 
-#command-button-frames.command-button-checked::before {
-  background-image: var(--command-frames-active-image);
+#command-button-frames.checked::before {
   fill: var(--theme-toolbar-checked-color);
+  stroke: var(--theme-toolbar-checked-color);
 }
 
 /* Tooltip of frames menu  */

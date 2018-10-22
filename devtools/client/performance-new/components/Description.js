@@ -34,7 +34,7 @@ class Description extends PureComponent {
       {
         className: "perf-external-link",
         value: href,
-        onClick: this.handleLinkClick
+        onClick: this.handleLinkClick,
       },
       text
     );

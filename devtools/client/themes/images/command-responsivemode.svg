@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="context-fill #0b0b0b">
-  <path d="M1,4H6A1,1,0,0,1,7,5V15a1,1,0,0,1-1,1H1a1,1,0,0,1-1-1V5A1,1,0,0,1,1,4ZM1,6v8H6V6Z"/>
-  <path d="M10,16H9a1,1,0,0,1,0-2h4V2H5V3H3V1A1,1,0,0,1,4,0H14a1,1,0,0,1,1,1V15a1,1,0,0,1-1,1Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <path fill="context-stroke" fill-opacity=".15" d="M4 1h10v14H6V5H4z"/>
+  <g fill="context-fill #0b0b0b">
+    <path d="M10 16H9a1 1 0 0 1 0-2h4V2H5a1 1 0 0 1-1 1 1 1 0 0 1-1-1V1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4z"/>
+    <path d="M1 4h5a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm0 2v8h5V6H1z"/>
+  </g>
 </svg>

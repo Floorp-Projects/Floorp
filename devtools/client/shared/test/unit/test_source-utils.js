@@ -11,12 +11,12 @@ const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", 
 const sourceUtils = require("devtools/client/shared/source-utils");
 
 const CHROME_URLS = [
-  "chrome://foo", "resource://baz", "jar:file:///Users/root"
+  "chrome://foo", "resource://baz", "jar:file:///Users/root",
 ];
 
 const CONTENT_URLS = [
   "http://mozilla.org", "https://mozilla.org", "file:///Users/root", "app://fxosapp",
-  "blob:http://mozilla.org", "blob:https://mozilla.org"
+  "blob:http://mozilla.org", "blob:https://mozilla.org",
 ];
 
 // Test `sourceUtils.parseURL`

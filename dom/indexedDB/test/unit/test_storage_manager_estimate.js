@@ -57,6 +57,6 @@ function* testSteps()
 function setup()
 {
   SpecialPowers.pushPrefEnv({
-    "set": [["dom.storageManager.enabled", true]]
+    "set": [["dom.storageManager.enabled", true]],
   }, runTest);
 }

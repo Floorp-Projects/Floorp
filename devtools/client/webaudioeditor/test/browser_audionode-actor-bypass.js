@@ -9,7 +9,7 @@ add_task(async function() {
   const { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
   const [_, [destNode, oscNode, gainNode]] = await Promise.all([
     front.setup({ reload: true }),
-    get3(front, "create-node")
+    get3(front, "create-node"),
   ]);
 
   is((await gainNode.isBypassed()), false, "Nodes start off unbypassed.");

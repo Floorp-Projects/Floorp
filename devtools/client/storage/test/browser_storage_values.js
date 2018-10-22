@@ -46,24 +46,25 @@ const testCases = [
     getCookieId("c_encoded", "test1.example.org",
                 "/browser/devtools/client/storage/test/"),
     [
-      {name: "c_encoded", value: encodeURIComponent(JSON.stringify({foo: {foo1: "bar"}}))}
-    ]
+      {name: "c_encoded",
+       value: encodeURIComponent(JSON.stringify({foo: {foo1: "bar"}}))},
+    ],
   ],
   [null, [
     {name: "c_encoded", value: "Object"},
     {name: "c_encoded.foo", value: "Object"},
-    {name: "c_encoded.foo.foo1", value: "bar"}
+    {name: "c_encoded.foo.foo1", value: "bar"},
   ], true],
   [["localStorage", "http://test1.example.org"]],
   ["ls2", [
-    {name: "ls2", value: "foobar-2"}
+    {name: "ls2", value: "foobar-2"},
   ]],
   ["ls1", [
     {name: "ls1", value: JSON.stringify({
       es6: "for", the: "win", baz: [0, 2, 3, {
         deep: "down",
-        nobody: "cares"
-      }]})}
+        nobody: "cares",
+      }]})},
   ]],
   [null, [
     {name: "ls1", value: "Object"},
@@ -78,14 +79,14 @@ const testCases = [
     {name: "ls1.baz.3.nobody", value: "cares"},
   ], true],
   ["ls3", [
-    {name: "ls3", "value": "http://foobar.com/baz.php"}
+    {name: "ls3", "value": "http://foobar.com/baz.php"},
   ]],
   [null, [
-    {name: "ls3", "value": "http://foobar.com/baz.php", dontMatch: true}
+    {name: "ls3", "value": "http://foobar.com/baz.php", dontMatch: true},
   ], true],
   [["sessionStorage", "http://test1.example.org"]],
   ["ss1", [
-    {name: "ss1", value: "This#is#an#array"}
+    {name: "ss1", value: "This#is#an#array"},
   ]],
   [null, [
     {name: "ss1", value: "Array"},
@@ -126,7 +127,7 @@ const testCases = [
   ], true],
   [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"]],
   [1, [
-    {name: 1, value: JSON.stringify({id: 1, name: "foo", email: "foo@bar.com"})}
+    {name: 1, value: JSON.stringify({id: 1, name: "foo", email: "foo@bar.com"})},
   ]],
   [null, [
     {name: "1.id", value: "1"},
@@ -136,15 +137,15 @@ const testCases = [
   [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"]],
   [1, [
     {name: 1, value: JSON.stringify({
-      id2: 1, name: "foo", email: "foo@bar.com", extra: "baz"
-    })}
+      id2: 1, name: "foo", email: "foo@bar.com", extra: "baz",
+    })},
   ]],
   [null, [
     {name: "1.id2", value: "1"},
     {name: "1.name", value: "foo"},
     {name: "1.email", value: "foo@bar.com"},
     {name: "1.extra", value: "baz"},
-  ], true]
+  ], true],
 ];
 
 add_task(async function() {

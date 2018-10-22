@@ -29,4 +29,4 @@ core-foundation = "0.6"
 core-graphics = "0.17.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.5.1"
+dwrote = "0.5.2"

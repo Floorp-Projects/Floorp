@@ -148,9 +148,9 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
   async setDataFromTimestamps(timestamps, interval, duration) {
     const {
       plottedData,
-      plottedMinMaxSum
+      plottedMinMaxSum,
     } = await CanvasGraphUtils._performTaskInWorker("plotTimestampsGraph", {
-      timestamps, interval, duration
+      timestamps, interval, duration,
     });
 
     this._tempMinMaxSum = plottedMinMaxSum;
@@ -392,7 +392,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     this._container.appendChild(tooltip);
 
     return tooltip;
-  }
+  },
 });
 
 module.exports = LineGraphWidget;

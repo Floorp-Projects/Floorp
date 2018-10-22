@@ -25,7 +25,7 @@ add_task(async function() {
       multiline: true,
       maxWidth: MAX_WIDTH,
       start: testMaxWidth,
-      done: resolve
+      done: resolve,
     }, doc, START_TEXT);
   });
 

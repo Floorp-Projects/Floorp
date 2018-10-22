@@ -41,7 +41,7 @@ class RequestListColumnFile extends Component {
     return (
       div({
         className: "requests-list-column requests-list-file",
-        title: urlDetails.unicodeUrl
+        title: urlDetails.unicodeUrl,
       },
         div({
           className: iconClassList.join(" "),

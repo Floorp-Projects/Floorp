@@ -29,7 +29,7 @@ add_task(async function() {
   const onSidebarShown = waitFor(() => hud.ui.document.querySelector(".sidebar"));
   EventUtils.sendMouseEvent({
     type: "click",
-    [isMacOS ? "metaKey" : "ctrlKey"]: true
+    [isMacOS ? "metaKey" : "ctrlKey"]: true,
   }, object, hud.ui.window);
   await onSidebarShown;
   ok(true, "sidebar is displayed after user Ctrl+clicked on it");
@@ -60,7 +60,7 @@ add_task(async function() {
   info("Ctrl+click on the `c` property node to put it in the sidebar");
   EventUtils.sendMouseEvent({
     type: "click",
-    [isMacOS ? "metaKey" : "ctrlKey"]: true
+    [isMacOS ? "metaKey" : "ctrlKey"]: true,
   }, cNode, hud.ui.window);
 
   objectInspectors = [...sidebarContents.querySelectorAll(".tree")];

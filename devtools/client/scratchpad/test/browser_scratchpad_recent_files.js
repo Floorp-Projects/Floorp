@@ -292,7 +292,7 @@ var PreferenceObserver = {
 
   uninit: function PO_uninit() {
     this.branch.removeObserver("", this);
-  }
+  },
 };
 
 function test() {

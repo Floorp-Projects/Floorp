@@ -13,7 +13,7 @@ add_task(async function() {
     },
     strokeRect: (...args) => {
       strokeRectValues = args;
-    }
+    },
   };
   const node = {
     x: 20,
@@ -21,14 +21,14 @@ add_task(async function() {
     dx: 50,
     dy: 70,
     type: "other",
-    depth: 2
+    depth: 2,
   };
   const padding = [10, 10];
   const borderWidth = () => 1;
   const dragZoom = {
     offsetX: 0,
     offsetY: 0,
-    zoom: 0
+    zoom: 0,
   };
   drawBox(ctx, node, borderWidth, dragZoom, padding);
   ok(true, JSON.stringify([ctx, fillRectValues, strokeRectValues]));

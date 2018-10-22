@@ -16,14 +16,14 @@ const messageRepeatsTooltip = l10n.getStr("messageRepeats.tooltip2");
 MessageRepeat.displayName = "MessageRepeat";
 
 MessageRepeat.propTypes = {
-  repeat: PropTypes.number.isRequired
+  repeat: PropTypes.number.isRequired,
 };
 
 function MessageRepeat(props) {
   const { repeat } = props;
   return dom.span({
     className: "message-repeats",
-    title: PluralForm.get(repeat, messageRepeatsTooltip).replace("#1", repeat)
+    title: PluralForm.get(repeat, messageRepeatsTooltip).replace("#1", repeat),
   }, repeat);
 }
 

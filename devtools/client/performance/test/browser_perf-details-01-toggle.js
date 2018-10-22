@@ -15,7 +15,7 @@ const { command } = require("devtools/client/performance/test/helpers/input-util
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, $, DetailsView } = panel.panelWin;

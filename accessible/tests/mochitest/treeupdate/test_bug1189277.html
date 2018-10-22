@@ -23,7 +23,7 @@
         new invokerChecker(EVENT_HIDE, getNode("child")),
         new invokerChecker(EVENT_HIDE, getNode("childDoc")),
         new invokerChecker(EVENT_SHOW, "newChildDoc"),
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.invoke = function runTest_invoke() {

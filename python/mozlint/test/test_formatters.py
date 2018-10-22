@@ -87,8 +87,8 @@ def result(scope='module'):
             message="oh no bar",
             hint="try baz instead",
             level='warning',
-            lineno=4,
-            column=2,
+            lineno="4",
+            column="2",
             rule="bar-not-allowed",
         ),
         Issue(

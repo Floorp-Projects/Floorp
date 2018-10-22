@@ -43,7 +43,7 @@ const getNumberFormatter = function(decimals) {
     // Create and memoize a formatter for the provided decimals
     formatter = Intl.NumberFormat(undefined, {
       maximumFractionDigits: decimals,
-      minimumFractionDigits: decimals
+      minimumFractionDigits: decimals,
     });
     numberFormatters.set(decimals, formatter);
   }
@@ -173,7 +173,7 @@ LocalizationHelper.prototype = {
     }
 
     return localized;
-  }
+  },
 };
 
 function getPropertiesForNode(node) {
@@ -251,7 +251,7 @@ function MultiLocalizationHelper(...stringBundleNames) {
     .map(name => ({
       name: name,
       descriptor: Object.getOwnPropertyDescriptor(LocalizationHelper.prototype,
-                                                  name)
+                                                  name),
     }))
     .filter(({ descriptor }) => descriptor.value instanceof Function)
     .forEach(method => {

@@ -88,7 +88,7 @@ class RequestListContent extends Component {
     // Install event handler for displaying a tooltip
     this.tooltip.startTogglingOnHover(this.refs.contentEl, this.onHover, {
       toggleDelay: REQUESTS_TOOLTIP_TOGGLE_DELAY,
-      interactive: true
+      interactive: true,
     });
     // Install event handler to hide the tooltip on scroll
     this.refs.contentEl.addEventListener("scroll", this.onScroll, true);
@@ -282,7 +282,7 @@ class RequestListContent extends Component {
             className: "requests-list-contents",
             tabIndex: 0,
             onKeyDown: this.onKeyDown,
-            style: { "--timings-scale": scale, "--timings-rev-scale": 1 / scale }
+            style: { "--timings-scale": scale, "--timings-rev-scale": 1 / scale },
           },
             RequestListHeader(),
             displayedRequests.map((item, index) => RequestListItem({

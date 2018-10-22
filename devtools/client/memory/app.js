@@ -169,7 +169,7 @@ class MemoryApp extends Component {
     }, []);
 
     return [
-      treeMapDisplays.coarseType
+      treeMapDisplays.coarseType,
     ].concat(custom);
   }
 
@@ -199,7 +199,7 @@ class MemoryApp extends Component {
     return (
       dom.div(
         {
-          id: "memory-tool"
+          id: "memory-tool",
         },
 
         Toolbar({
@@ -232,7 +232,7 @@ class MemoryApp extends Component {
 
         dom.div(
           {
-            id: "memory-tool-container"
+            id: "memory-tool-container",
           },
 
           List({

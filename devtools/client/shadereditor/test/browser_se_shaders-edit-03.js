@@ -14,7 +14,7 @@ async function ifWebGLSupported() {
 
   await promise.all([
     once(front, "program-linked"),
-    once(front, "program-linked")
+    once(front, "program-linked"),
   ]);
 
   await once(panel, EVENTS.SOURCES_SHOWN);

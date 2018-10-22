@@ -11,20 +11,28 @@ const {getCSSLexer} = require("devtools/shared/css/lexer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {appendText} = require("devtools/client/inspector/shared/utils");
 
-loader.lazyRequireGetter(this, "ANGLE_TAKING_FUNCTIONS",
-  "devtools/shared/css/properties-db", true);
-loader.lazyRequireGetter(this, "BASIC_SHAPE_FUNCTIONS",
-  "devtools/shared/css/properties-db", true);
-loader.lazyRequireGetter(this, "BEZIER_KEYWORDS",
-  "devtools/shared/css/properties-db", true);
-loader.lazyRequireGetter(this, "COLOR_TAKING_FUNCTIONS",
-  "devtools/shared/css/properties-db", true);
-loader.lazyRequireGetter(this, "CSS_TYPES",
-  "devtools/shared/css/properties-db", true);
+loader.lazyRequireGetter(this, "CSS_TYPES", "devtools/shared/css/constants", true);
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
+
+// Functions that accept an angle argument.
+const ANGLE_TAKING_FUNCTIONS = ["linear-gradient", "-moz-linear-gradient",
+                                "repeating-linear-gradient",
+                                "-moz-repeating-linear-gradient", "rotate", "rotateX",
+                                "rotateY", "rotateZ", "rotate3d", "skew", "skewX",
+                                "skewY", "hue-rotate"];
+// All cubic-bezier CSS timing-function names.
+const BEZIER_KEYWORDS = ["linear", "ease-in-out", "ease-in", "ease-out", "ease"];
+// Functions that accept a color argument.
+const COLOR_TAKING_FUNCTIONS = ["linear-gradient", "-moz-linear-gradient",
+                                "repeating-linear-gradient",
+                                "-moz-repeating-linear-gradient", "radial-gradient",
+                                "-moz-radial-gradient", "repeating-radial-gradient",
+                                "-moz-repeating-radial-gradient", "drop-shadow"];
+// Functions that accept a shape argument.
+const BASIC_SHAPE_FUNCTIONS = ["polygon", "circle", "ellipse", "inset"];
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -552,18 +560,18 @@ OutputParser.prototype = {
    */
   _appendCubicBezier: function(bezier, options) {
     const container = this._createNode("span", {
-      "data-bezier": bezier
+      "data-bezier": bezier,
     });
 
     if (options.bezierSwatchClass) {
       const swatch = this._createNode("span", {
-        class: options.bezierSwatchClass
+        class: options.bezierSwatchClass,
       });
       container.appendChild(swatch);
     }
 
     const value = this._createNode("span", {
-      class: options.bezierClass
+      class: options.bezierClass,
     }, bezier);
 
     container.appendChild(value);
@@ -583,7 +591,7 @@ OutputParser.prototype = {
     const container = this._createNode("span", {});
 
     const toggle = this._createNode("span", {
-      class: className
+      class: className,
     });
 
     const value = this._createNode("span", {});
@@ -607,22 +615,22 @@ OutputParser.prototype = {
   _appendShape: function(shape, options) {
     const shapeTypes = [{
       prefix: "polygon(",
-      coordParser: this._addPolygonPointNodes.bind(this)
+      coordParser: this._addPolygonPointNodes.bind(this),
     }, {
       prefix: "circle(",
-      coordParser: this._addCirclePointNodes.bind(this)
+      coordParser: this._addCirclePointNodes.bind(this),
     }, {
       prefix: "ellipse(",
-      coordParser: this._addEllipsePointNodes.bind(this)
+      coordParser: this._addEllipsePointNodes.bind(this),
     }, {
       prefix: "inset(",
-      coordParser: this._addInsetPointNodes.bind(this)
+      coordParser: this._addInsetPointNodes.bind(this),
     }];
 
     const container = this._createNode("span", {});
 
     const toggle = this._createNode("span", {
-      class: options.shapeSwatchClass
+      class: options.shapeSwatchClass,
     });
 
     for (const { prefix, coordParser } of shapeTypes) {
@@ -630,7 +638,7 @@ OutputParser.prototype = {
         const coordsBegin = prefix.length;
         const coordsEnd = shape.lastIndexOf(")");
         let valContainer = this._createNode("span", {
-          class: options.shapeClass
+          class: options.shapeClass,
         });
 
         container.appendChild(toggle);
@@ -679,7 +687,7 @@ OutputParser.prototype = {
           const node = this._createNode("span", {
             class: "ruleview-shape-point",
             "data-point": `${i}`,
-            "data-pair": (isXCoord) ? "x" : "y"
+            "data-pair": (isXCoord) ? "x" : "y",
           }, coord);
           coordNode.appendChild(node);
           coord = "";
@@ -715,7 +723,7 @@ OutputParser.prototype = {
         const node = this._createNode("span", {
           class: "ruleview-shape-point",
           "data-point": `${i}`,
-          "data-pair": (isXCoord) ? "x" : "y"
+          "data-pair": (isXCoord) ? "x" : "y",
         }, coord);
         coordNode.appendChild(node);
         appendText(coordNode, coords.substring(token.startOffset, token.endOffset));
@@ -728,7 +736,7 @@ OutputParser.prototype = {
           const node = this._createNode("span", {
             class: "ruleview-shape-point",
             "data-point": `${i}`,
-            "data-pair": "x"
+            "data-pair": "x",
           }, coord);
           coordNode.appendChild(node);
           isXCoord = false;
@@ -755,7 +763,7 @@ OutputParser.prototype = {
       const node = this._createNode("span", {
         class: "ruleview-shape-point",
         "data-point": `${i}`,
-        "data-pair": (isXCoord) ? "x" : "y"
+        "data-pair": (isXCoord) ? "x" : "y",
       }, coord);
       coordNode.appendChild(node);
       container.appendChild(coordNode);
@@ -781,7 +789,7 @@ OutputParser.prototype = {
     let point = "radius";
     const centerNode = this._createNode("span", {
       class: "ruleview-shape-point",
-      "data-point": "center"
+      "data-point": "center",
     });
     while (token) {
       if (token.tokenType === "symbol" && token.text === "(") {
@@ -797,7 +805,7 @@ OutputParser.prototype = {
         // Whitespace signifying end of radius
         const node = this._createNode("span", {
           class: "ruleview-shape-point",
-          "data-point": "radius"
+          "data-point": "radius",
         }, coord);
         container.appendChild(node);
         appendText(container, coords.substring(token.startOffset, token.endOffset));
@@ -809,7 +817,7 @@ OutputParser.prototype = {
         const node = this._createNode("span", {
           class: "ruleview-shape-point",
           "data-point": "center",
-          "data-pair": (point === "cx") ? "x" : "y"
+          "data-pair": (point === "cx") ? "x" : "y",
         }, coord);
         centerNode.appendChild(node);
         appendText(centerNode, coords.substring(token.startOffset, token.endOffset));
@@ -821,7 +829,7 @@ OutputParser.prototype = {
         if (point === "radius" && coord) {
           const node = this._createNode("span", {
             class: "ruleview-shape-point",
-            "data-point": "radius"
+            "data-point": "radius",
           }, coord);
           container.appendChild(node);
         }
@@ -838,7 +846,7 @@ OutputParser.prototype = {
           const node = this._createNode("span", {
             class: "ruleview-shape-point",
             "data-point": "center",
-            "data-pair": "x"
+            "data-pair": "x",
           }, coord);
           centerNode.appendChild(node);
           point = "cy";
@@ -860,14 +868,14 @@ OutputParser.prototype = {
       if (point === "radius") {
         const node = this._createNode("span", {
           class: "ruleview-shape-point",
-          "data-point": "radius"
+          "data-point": "radius",
         }, coord);
         container.appendChild(node);
       } else {
         const node = this._createNode("span", {
           class: "ruleview-shape-point",
           "data-point": "center",
-          "data-pair": (point === "cx") ? "x" : "y"
+          "data-pair": (point === "cx") ? "x" : "y",
         }, coord);
         centerNode.appendChild(node);
       }
@@ -897,7 +905,7 @@ OutputParser.prototype = {
     let point = "rx";
     const centerNode = this._createNode("span", {
       class: "ruleview-shape-point",
-      "data-point": "center"
+      "data-point": "center",
     });
     while (token) {
       if (token.tokenType === "symbol" && token.text === "(") {
@@ -926,7 +934,7 @@ OutputParser.prototype = {
           const node = this._createNode("span", {
             class: "ruleview-shape-point",
             "data-point": "center",
-            "data-pair": (point === "cx") ? "x" : "y"
+            "data-pair": (point === "cx") ? "x" : "y",
           }, coord);
           centerNode.appendChild(node);
           appendText(centerNode, coords.substring(token.startOffset, token.endOffset));
@@ -939,7 +947,7 @@ OutputParser.prototype = {
         if (point === "ry" && coord) {
           const node = this._createNode("span", {
             class: "ruleview-shape-point",
-            "data-point": "ry"
+            "data-point": "ry",
           }, coord);
           container.appendChild(node);
         }
@@ -964,7 +972,7 @@ OutputParser.prototype = {
           const node = this._createNode("span", {
             class: "ruleview-shape-point",
             "data-point": "center",
-            "data-pair": "x"
+            "data-pair": "x",
           }, coord);
           centerNode.appendChild(node);
           point = "cy";
@@ -986,14 +994,14 @@ OutputParser.prototype = {
       if (point === "rx" || point === "ry") {
         const node = this._createNode("span", {
           class: "ruleview-shape-point",
-          "data-point": point
+          "data-point": point,
         }, coord);
         container.appendChild(node);
       } else {
         const node = this._createNode("span", {
           class: "ruleview-shape-point",
           "data-point": "center",
-          "data-pair": (point === "cx") ? "x" : "y"
+          "data-pair": (point === "cx") ? "x" : "y",
         }, coord);
         centerNode.appendChild(node);
       }
@@ -1045,7 +1053,7 @@ OutputParser.prototype = {
       } else if (token.tokenType === "whitespace" && depth === 0) {
         // Whitespace signifying end of coord; create node and push to nodes
         const node = this._createNode("span", {
-          class: "ruleview-shape-point"
+          class: "ruleview-shape-point",
         }, coord);
         nodes.push(node);
         i++;
@@ -1140,12 +1148,12 @@ OutputParser.prototype = {
   _appendAngle: function(angle, options) {
     const angleObj = new angleUtils.CssAngle(angle);
     const container = this._createNode("span", {
-      "data-angle": angle
+      "data-angle": angle,
     });
 
     if (options.angleSwatchClass) {
       const swatch = this._createNode("span", {
-        class: options.angleSwatchClass
+        class: options.angleSwatchClass,
       });
       this.angleSwatches.set(swatch, angleObj);
       swatch.addEventListener("mousedown", this._onAngleSwatchMouseDown);
@@ -1164,7 +1172,7 @@ OutputParser.prototype = {
     }
 
     const value = this._createNode("span", {
-      class: options.angleClass
+      class: options.angleClass,
     }, angle);
 
     container.appendChild(value);
@@ -1207,13 +1215,13 @@ OutputParser.prototype = {
 
     if (this._isValidColor(colorObj)) {
       const container = this._createNode("span", {
-        "data-color": color
+        "data-color": color,
       });
 
       if (options.colorSwatchClass) {
         const swatch = this._createNode("span", {
           class: options.colorSwatchClass,
-          style: "background-color:" + color
+          style: "background-color:" + color,
         });
         this.colorSwatches.set(swatch, colorObj);
         swatch.addEventListener("mousedown", this._onColorSwatchMouseDown);
@@ -1227,7 +1235,7 @@ OutputParser.prototype = {
       }
 
       const value = this._createNode("span", {
-        class: options.colorClass
+        class: options.colorClass,
       }, color);
 
       container.appendChild(value);
@@ -1252,18 +1260,18 @@ OutputParser.prototype = {
    */
   _wrapFilter: function(filters, options, nodes) {
     const container = this._createNode("span", {
-      "data-filters": filters
+      "data-filters": filters,
     });
 
     if (options.filterSwatchClass) {
       const swatch = this._createNode("span", {
-        class: options.filterSwatchClass
+        class: options.filterSwatchClass,
       });
       container.appendChild(swatch);
     }
 
     const value = this._createNode("span", {
-      class: options.filterClass
+      class: options.filterClass,
     });
     value.appendChild(nodes);
     container.appendChild(value);
@@ -1356,7 +1364,7 @@ OutputParser.prototype = {
       this._appendNode("a", {
         target: "_blank",
         class: options.urlClass,
-        href: href
+        href: href,
       }, body);
 
       this._appendTextNode(trailer);
@@ -1405,7 +1413,7 @@ OutputParser.prototype = {
     }
 
     this._appendNode("span", {
-      class: options.fontFamilyClass
+      class: options.fontFamilyClass,
     }, spanContents);
 
     if (quoteChar) {
@@ -1570,7 +1578,7 @@ OutputParser.prototype = {
       defaults[item] = overrides[item];
     }
     return defaults;
-  }
+  },
 };
 
 module.exports = OutputParser;

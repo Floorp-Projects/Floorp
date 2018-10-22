@@ -97,7 +97,7 @@ const clientListener = {
     if (serverTransport) {
       run_next_test();
     }
-  }
+  },
 };
 
 const serverListener = {
@@ -111,7 +111,7 @@ const serverListener = {
     if (clientTransport) {
       run_next_test();
     }
-  }
+  },
 };
 
 function TestServer() {
@@ -134,7 +134,7 @@ TestServer.prototype = {
       this.serverSocket.close();
       this.serverSocket = null;
     }
-  }
+  },
 };
 
 // Set up the transport connection and ensure |notifyTransportReady| triggered

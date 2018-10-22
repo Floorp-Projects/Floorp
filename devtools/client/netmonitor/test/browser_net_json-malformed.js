@@ -39,7 +39,7 @@ add_task(async function() {
       status: 200,
       statusText: "OK",
       type: "json",
-      fullMimeType: "text/json; charset=utf-8"
+      fullMimeType: "text/json; charset=utf-8",
     });
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");

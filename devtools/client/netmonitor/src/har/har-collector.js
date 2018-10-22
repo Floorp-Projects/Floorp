@@ -9,7 +9,7 @@ const Services = require("Services");
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
   log: function(...args) {
-  }
+  },
 };
 
 /**
@@ -184,7 +184,7 @@ HarCollector.prototype = {
       startedMillis: startTime,
       method: method,
       url: url,
-      isXHR: isXHR
+      isXHR: isXHR,
     };
 
     this.files.set(actor, file);
@@ -417,7 +417,7 @@ HarCollector.prototype = {
     const promise = this.webConsoleClient.getString(stringGrip);
     this.requests.push(promise);
     return promise;
-  }
+  },
 };
 
 // Helpers

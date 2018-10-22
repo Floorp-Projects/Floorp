@@ -55,7 +55,7 @@ Canvases.prototype = {
     this.removeHandlers();
     this.container.removeChild(this.main.canvas);
     this.container.removeChild(this.zoom.canvas);
-  }
+  },
 };
 
 module.exports = Canvases;
@@ -89,7 +89,7 @@ function createCanvas(container, className) {
   canvas.className = className;
 
   Object.assign(canvas.style, FULLSCREEN_STYLE, {
-    pointerEvents: "none"
+    pointerEvents: "none",
   });
 
   const ctx = canvas.getContext("2d");

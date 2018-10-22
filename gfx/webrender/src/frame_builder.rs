@@ -13,7 +13,7 @@ use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap};
 use picture::{PictureCompositeMode, PictureSurface, RasterConfig};
-use prim_store::{PrimitiveIndex, PrimitiveStore, SpaceMapper};
+use prim_store::{PrimitiveIndex, PrimitiveStore, SpaceMapper, PictureIndex};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::{FrameResources, FrameId};
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
@@ -58,7 +58,7 @@ pub struct FrameBuilder {
     background_color: Option<ColorF>,
     window_size: DeviceUintSize,
     scene_id: u64,
-    root_prim_index: PrimitiveIndex,
+    root_pic_index: PictureIndex,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub hit_testing_runs: Vec<HitTestingRun>,
@@ -88,6 +88,7 @@ pub struct FrameBuildingState<'a> {
 }
 
 pub struct PictureContext {
+    pub pic_index: PictureIndex,
     pub pipeline_id: PipelineId,
     pub apply_local_clip_rect: bool,
     pub inflation_factor: f32,
@@ -138,7 +139,7 @@ impl FrameBuilder {
             window_size: DeviceUintSize::zero(),
             background_color: None,
             scene_id: 0,
-            root_prim_index: PrimitiveIndex(0),
+            root_pic_index: PictureIndex(0),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
@@ -159,7 +160,7 @@ impl FrameBuilder {
             hit_testing_runs: flattener.hit_testing_runs,
             prim_store: flattener.prim_store,
             clip_store: flattener.clip_store,
-            root_prim_index: flattener.root_prim_index,
+            root_pic_index: flattener.root_pic_index,
             screen_rect,
             background_color,
             window_size,
@@ -228,8 +229,9 @@ impl FrameBuilder {
 
         let (pic_context, mut pic_state, mut instances) = self
             .prim_store
-            .get_pic_mut(self.root_prim_index)
+            .pictures[self.root_pic_index.0]
             .take_context(
+                self.root_pic_index,
                 &prim_context,
                 root_spatial_node_index,
                 root_spatial_node_index,
@@ -251,9 +253,7 @@ impl FrameBuilder {
             &mut pic_rect,
         );
 
-        let pic = self
-            .prim_store
-            .get_pic_mut(self.root_prim_index);
+        let pic = &mut self.prim_store.pictures[self.root_pic_index.0];
         pic.restore_context(
             instances,
             pic_context,
@@ -267,7 +267,7 @@ impl FrameBuilder {
         let root_render_task = RenderTask::new_picture(
             RenderTaskLocation::Fixed(self.screen_rect.to_i32()),
             self.screen_rect.size.to_f32(),
-            self.root_prim_index,
+            self.root_pic_index,
             DeviceIntPoint::zero(),
             pic_state.tasks,
             UvRectKind::Rect,

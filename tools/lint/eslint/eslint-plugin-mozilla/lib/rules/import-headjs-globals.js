@@ -43,6 +43,6 @@ module.exports = function(context) {
       for (let head of heads) {
         importHead(head, node);
       }
-    }
+    },
   };
 };

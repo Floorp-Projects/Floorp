@@ -55,7 +55,7 @@ function test_simple_source_map() {
     new SourceNode(1, 0, "c.js", "function c() { return 'c'; }\n"),
   ])).toStringWithSourceMap({
     file: "abc.js",
-    sourceRoot: "http://example.com/www/js/"
+    sourceRoot: "http://example.com/www/js/",
   });
 
   code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());

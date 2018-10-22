@@ -159,8 +159,8 @@ WebConsoleFrame.prototype = {
     this.consoleOutput.dispatchMessageAdd({
       helperResult: {
         type: "inspectObject",
-        object: objectActor
-      }
+        object: objectActor,
+      },
     }, true);
     return this.consoleOutput;
   },
@@ -285,7 +285,7 @@ WebConsoleFrame.prototype = {
 
   _initShortcuts: function() {
     const shortcuts = new KeyShortcuts({
-      window: this.window
+      window: this.window,
     });
 
     shortcuts.on(l10n.getStr("webconsole.find.key"),
@@ -407,7 +407,7 @@ WebConsoleFrame.prototype = {
     if (packet.url) {
       this.onLocationChange(packet.url, packet.title);
     }
-  }
+  },
 };
 
 /* This is the same as DevelopmentHelpers.quickRestart, but it runs in all

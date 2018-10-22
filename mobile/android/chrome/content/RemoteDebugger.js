@@ -104,7 +104,7 @@ var RemoteDebugger = {
         title: title,
         message: msg,
         buttons: [ allow, deny ],
-        priority: 1
+        priority: 1,
       });
 
       prompt.show(data => {
@@ -129,7 +129,7 @@ var RemoteDebugger = {
       let title = Strings.browser.GetStringFromName("remoteIncomingPromptTitle");
       let msg = Strings.browser.formatStringFromName("remoteIncomingPromptTCP", [
         session.client.host,
-        session.client.port
+        session.client.port,
       ], 2);
       let scan = Strings.browser.GetStringFromName("remoteIncomingPromptScan");
       let scanAndRemember = Strings.browser.GetStringFromName("remoteIncomingPromptScanAndRemember");
@@ -142,7 +142,7 @@ var RemoteDebugger = {
         title: title,
         message: msg,
         buttons: [ scan, scanAndRemember, deny ],
-        priority: 1
+        priority: 1,
       });
 
       prompt.show(data => {
@@ -177,7 +177,7 @@ var RemoteDebugger = {
     }
 
     this._receivingOOB = WindowEventDispatcher.sendRequestForResult({
-      type: "DevToolsAuth:Scan"
+      type: "DevToolsAuth:Scan",
     }).then(data => {
       return JSON.parse(data);
     }, () => {
@@ -190,7 +190,7 @@ var RemoteDebugger = {
         title: title,
         message: msg,
         buttons: [ ok ],
-        priority: 1
+        priority: 1,
       });
       prompt.show();
     });
@@ -211,7 +211,7 @@ var RemoteDebugger = {
     // Allow debugging of chrome for any process
     DebuggerServer.allowChromeProcess = true;
     DebuggerServer.chromeWindowType = this._windowType;
-  }
+  },
 };
 
 RemoteDebugger.allowConnection =
@@ -295,7 +295,7 @@ var USBRemoteDebugger = {
     } catch (e) {
       dump("Unable to stop USB debugger server: " + e);
     }
-  }
+  },
 
 };
 
@@ -373,6 +373,6 @@ var WiFiRemoteDebugger = {
     } catch (e) {
       dump("Unable to stop WiFi debugger server: " + e);
     }
-  }
+  },
 
 };

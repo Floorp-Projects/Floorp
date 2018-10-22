@@ -1817,11 +1817,11 @@
         var wX = window.screenX;
         // check if the drop point is horizontally within the window
         if (eX > wX && eX < (wX + window.outerWidth)) {
-          let bo = this.arrowScrollbox.boxObject;
           // also avoid detaching if the the tab was dropped too close to
           // the tabbar (half a tab)
-          let endScreenY = bo.screenY + 1.5 * bo.height;
-          if (eY < endScreenY && eY > window.screenY)
+          let rect = window.windowUtils.getBoundsWithoutFlushing(this.arrowScrollbox);
+          let detachTabThresholdY = window.screenY + rect.top + 1.5 * rect.height;
+          if (eY < detachTabThresholdY && eY > window.screenY)
             return;
         }
 

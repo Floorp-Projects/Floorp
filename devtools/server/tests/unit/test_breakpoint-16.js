@@ -41,7 +41,7 @@ function test_column_breakpoint() {
     const source = gThreadClient.source(packet.frame.where.source);
     const location = {
       line: gDebuggee.line0 + 1,
-      column: 55
+      column: 55,
     };
     let timesBreakpointHit = 0;
 

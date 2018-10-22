@@ -327,7 +327,7 @@ var ActionBarHandler = {
         x: this._boundingClientRect.x,
         y: this._boundingClientRect.y,
         width: this._boundingClientRect.width,
-        height: this._boundingClientRect.height
+        height: this._boundingClientRect.height,
       });
     }
 

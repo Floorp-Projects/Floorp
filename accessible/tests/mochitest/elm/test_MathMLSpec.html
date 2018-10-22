@@ -54,19 +54,19 @@
 
       obj = {
         role: ROLE_MATHML_OPERATOR,
-        attributes: { accent: "true", largeop: "true" }
+        attributes: { accent: "true", largeop: "true" },
       };
       testElm("mo", obj);
 
       obj = {
         role: ROLE_MATHML_OPERATOR,
-        attributes: { fence: "true" }
+        attributes: { fence: "true" },
       };
       testElm("mo_fence", obj);
 
       obj = {
         role: ROLE_MATHML_OPERATOR,
-        attributes: { separator: "true" }
+        attributes: { separator: "true" },
       };
       testElm("mo_separator", obj);
 
@@ -107,7 +107,7 @@
 
       obj = {
         role: ROLE_MATHML_FRACTION,
-        attributes: { bevelled: "true", linethickness: "thick" }
+        attributes: { bevelled: "true", linethickness: "thick" },
       };
       testElm("mfrac", obj);
 
@@ -125,18 +125,18 @@
       obj = {
         role: ROLE_MATHML_ROOT,
         relations: {
-          RELATION_NODE_PARENT_OF: ["mroot_index", "mroot_base"]
+          RELATION_NODE_PARENT_OF: ["mroot_index", "mroot_base"],
         },
         children: [
           {
             role: ROLE_MATHML_IDENTIFIER,
-            relations: { RELATION_NODE_CHILD_OF: "mroot" }
+            relations: { RELATION_NODE_CHILD_OF: "mroot" },
           },
           {
             role: ROLE_MATHML_NUMBER,
-            relations: { RELATION_NODE_CHILD_OF: "mroot" }
-          }
-        ]
+            relations: { RELATION_NODE_CHILD_OF: "mroot" },
+          },
+        ],
       };
       testElm("mroot", obj);
 
@@ -145,7 +145,7 @@
 
       obj = {
         role: ROLE_MATHML_FENCED,
-        attributes: { open: "]", close: "[", separators: "." }
+        attributes: { open: "]", close: "[", separators: "." },
       };
       testElm("mfenced", obj);
 
@@ -154,7 +154,7 @@
 
       obj = {
         role: ROLE_MATHML_ENCLOSED,
-        attributes: { notation: "circle" }
+        attributes: { notation: "circle" },
       };
       testElm("menclose", obj);
 
@@ -198,7 +198,7 @@
 
       obj = {
         role: ROLE_MATHML_UNDER,
-        attributes: { accentunder: "true", align: "center" }
+        attributes: { accentunder: "true", align: "center" },
       };
       testElm("munder", obj);
 
@@ -207,7 +207,7 @@
 
       obj = {
         role: ROLE_MATHML_OVER,
-        attributes: { accent: "true", align: "center" }
+        attributes: { accent: "true", align: "center" },
       };
       testElm("mover", obj);
 
@@ -233,7 +233,7 @@
 
       obj = {
         role: ROLE_MATHML_TABLE,
-        attributes: { align: "center", columnlines: "solid", rowlines: "solid" }
+        attributes: { align: "center", columnlines: "solid", rowlines: "solid" },
       };
       testElm("mtable", obj);
 
@@ -266,7 +266,7 @@
 
       obj = {
         role: ROLE_MATHML_ACTION,
-        attributes: { actiontype: "toggle", selection: "1" }
+        attributes: { actiontype: "toggle", selection: "1" },
       };
       testElm("maction", obj);
 
@@ -289,7 +289,7 @@
 
       obj = {
         role: ROLE_MATHML_STACK,
-        attributes: { align: "center" }
+        attributes: { align: "center" },
       };
       testElm("mstack", obj);
 
@@ -298,7 +298,7 @@
 
       obj = {
         role: ROLE_MATHML_LONG_DIVISION,
-        attributes: { longdivstyle: "stackedrightright" }
+        attributes: { longdivstyle: "stackedrightright" },
       };
       testElm("mlongdiv", obj);
 
@@ -307,7 +307,7 @@
 
       obj = {
         role: ROLE_MATHML_STACK_GROUP,
-        attributes: { position: "2", shift: "-1" }
+        attributes: { position: "2", shift: "-1" },
       };
       testElm("msgroup", obj);
 
@@ -316,7 +316,7 @@
 
       obj = {
         role: ROLE_MATHML_STACK_ROW,
-        attributes: { position: "1" }
+        attributes: { position: "1" },
       };
       testElm("msrow", obj);
 
@@ -325,7 +325,7 @@
 
       obj = {
         role: ROLE_MATHML_STACK_CARRIES,
-        attributes: { location: "nw", position: "1" }
+        attributes: { location: "nw", position: "1" },
       };
       testElm("mscarries", obj);
 
@@ -334,7 +334,7 @@
 
       obj = {
         role: ROLE_MATHML_STACK_CARRY,
-        attributes: { crossout: "updiagonalstrike" }
+        attributes: { crossout: "updiagonalstrike" },
       };
       testElm("mscarry", obj);
 
@@ -343,7 +343,7 @@
 
       obj = {
         role: ROLE_MATHML_STACK_LINE,
-        attributes: { position: "1" }
+        attributes: { position: "1" },
       };
       testElm("msline", obj);
 

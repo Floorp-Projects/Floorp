@@ -54,7 +54,7 @@ function openScratchpad(aReadyCallback, aOptions = {}) {
         } else {
           waitForFocus(aReadyCallback.bind(null, win, aScratchpad), win);
         }
-      }
+      },
     });
   };
 

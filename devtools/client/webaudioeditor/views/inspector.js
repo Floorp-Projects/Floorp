@@ -184,5 +184,5 @@ var InspectorView = {
         node.bypass(false);
       }
     }
-  }
+  },
 };

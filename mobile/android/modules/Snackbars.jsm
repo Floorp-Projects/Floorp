@@ -53,7 +53,7 @@ var Snackbars = {
     } else {
       EventDispatcher.instance.sendRequest(msg);
     }
-  }
+  },
 };
 
 function migrateToastIfNeeded(aDuration, aOptions) {

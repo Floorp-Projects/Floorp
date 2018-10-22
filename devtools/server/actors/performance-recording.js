@@ -70,7 +70,7 @@ Object.assign({
       allocationsSampleProbability: options.allocationsSampleProbability || 0,
       allocationsMaxLogLength: options.allocationsMaxLogLength || 0,
       bufferSize: options.bufferSize || 0,
-      sampleFrequency: options.sampleFrequency || 1
+      sampleFrequency: options.sampleFrequency || 1,
     };
 
     this._console = !!options.console;
@@ -87,7 +87,7 @@ Object.assign({
       this._startingBufferStatus = {
         position: meta.position,
         totalSize: meta.totalSize,
-        generation: meta.generation
+        generation: meta.generation,
       };
 
       this._recording = true;

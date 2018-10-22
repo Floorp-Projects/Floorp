@@ -15,7 +15,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, DetailsView, MemoryFlameGraphView } = panel.panelWin;
@@ -35,7 +35,7 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel, {
     expectedViewClass: "MemoryFlameGraphView",
-    expectedViewEvent: "UI_MEMORY_FLAMEGRAPH_RENDERED"
+    expectedViewEvent: "UI_MEMORY_FLAMEGRAPH_RENDERED",
   });
 
   ok(true,

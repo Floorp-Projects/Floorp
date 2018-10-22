@@ -15,7 +15,7 @@ exports.startRecording = function(panel, options = {}) {
 
   return Promise.all([
     controller.startRecording(),
-    exports.waitForRecordingStartedEvents(panel, options)
+    exports.waitForRecordingStartedEvents(panel, options),
   ]);
 };
 
@@ -28,7 +28,7 @@ exports.stopRecording = function(panel, options = {}) {
 
   return Promise.all([
     controller.stopRecording(),
-    exports.waitForRecordingStoppedEvents(panel, options)
+    exports.waitForRecordingStoppedEvents(panel, options),
   ]);
 };
 
@@ -50,17 +50,17 @@ exports.waitForRecordingStartedEvents = function(panel, options = {}) {
     options.skipWaitingForRecordingStarted
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: ["recording-started"]
+        expectedArgs: ["recording-started"],
       }),
     options.skipWaitingForViewState
       ? null
       : once(view, EVENTS.UI_STATE_CHANGED, {
-        expectedArgs: [options.expectedViewState]
+        expectedArgs: [options.expectedViewState],
       }),
     options.skipWaitingForOverview
       ? null
       : once(overview, EVENTS.UI_OVERVIEW_RENDERED, {
-        expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
+        expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL],
       }),
   ]);
 };
@@ -86,22 +86,22 @@ exports.waitForRecordingStoppedEvents = function(panel, options = {}) {
     options.skipWaitingForRecordingStop
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: ["recording-stopping"]
+        expectedArgs: ["recording-stopping"],
       }),
     options.skipWaitingForRecordingStop
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: ["recording-stopped"]
+        expectedArgs: ["recording-stopped"],
       }),
     options.skipWaitingForViewState
       ? null
       : once(view, EVENTS.UI_STATE_CHANGED, {
-        expectedArgs: [options.expectedViewState]
+        expectedArgs: [options.expectedViewState],
       }),
     options.skipWaitingForOverview
       ? null
       : once(overview, EVENTS.UI_OVERVIEW_RENDERED, {
-        expectedArgs: [Constants.FRAMERATE_GRAPH_HIGH_RES_INTERVAL]
+        expectedArgs: [Constants.FRAMERATE_GRAPH_HIGH_RES_INTERVAL],
       }),
     options.skipWaitingForSubview
       ? null
@@ -125,7 +125,7 @@ exports.waitForAllWidgetsRendered = (panel) => {
     once(panelWin.JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED),
     once(panelWin.JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED),
     once(panelWin.MemoryCallTreeView, EVENTS.UI_MEMORY_CALL_TREE_RENDERED),
-    once(panelWin.MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED)
+    once(panelWin.MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED),
   ]);
 };
 
@@ -138,7 +138,7 @@ exports.waitForOverviewRenderedWithMarkers = (panel, minTimes = 3, minMarkers = 
 
   return Promise.all([
     times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, minTimes, {
-      expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
+      expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL],
     }),
     waitUntil(() =>
       PerformanceController.getCurrentRecording().getMarkers().length >= minMarkers

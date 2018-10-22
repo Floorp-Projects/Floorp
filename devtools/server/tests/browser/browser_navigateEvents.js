@@ -137,26 +137,26 @@ add_task(async function() {
     EventEmitter.on(targetActor, "will-navigate", function(data) {
       sendSyncMessage("devtools-test:event", {
         event: "will-navigate",
-        data: { newURI: data.newURI }
+        data: { newURI: data.newURI },
       });
     });
     EventEmitter.on(targetActor, "navigate", function(data) {
       sendSyncMessage("devtools-test:event", {
         event: "navigate",
-        data: { readyState: content.document.readyState }
+        data: { readyState: content.document.readyState },
       });
     });
     // Forward DOMContentLoaded and load events
     addEventListener("DOMContentLoaded", function() {
       sendSyncMessage("devtools-test:event", {
         event: "DOMContentLoaded",
-        data: { readyState: content.document.readyState }
+        data: { readyState: content.document.readyState },
       });
     }, { capture: true });
     addEventListener("load", function() {
       sendSyncMessage("devtools-test:event", {
         event: "load",
-        data: { readyState: content.document.readyState }
+        data: { readyState: content.document.readyState },
       });
     }, { capture: true });
   });

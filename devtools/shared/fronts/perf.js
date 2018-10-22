@@ -11,5 +11,5 @@ exports.PerfFront = FrontClassWithSpec(perfSpec, {
     Front.prototype.initialize.call(this, client, form);
     this.actorID = form.perfActor;
     this.manage(this);
-  }
+  },
 });

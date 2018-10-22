@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Tab Modal Prompt boxes */
+.tabModalBackground,
 tabmodalprompt {
   width: 100%;
   height: 100%;
@@ -32,4 +33,35 @@ tabmodalprompt {
 
 tabmodalprompt label[value=""] {
   visibility: collapse;
+}
+
+/* Tab-Modal Payment Request widget */
+.paymentDialogContainer:not([hidden]) {
+  /* Center the .paymentDialogContainerFrame horizontally with flexbox. */
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+}
+
+.paymentDialogContainerFrame {
+  align-self: center;
+  box-sizing: border-box;
+  height: 500px;
+  /* By setting `left` & `right` to `auto` with `position: absolute`, the
+   * horizontal position from the `align-self: center` is used.
+   * See https://developer.mozilla.org/en-US/docs/Web/CSS/right#Values. */
+  left: auto;
+  /* Shrink the height for small browser window sizes so the dialog footer
+     remains visible.
+     Ideally this would be 100vh minus the #navigator-toolbox height. */
+  max-height: 75vh;
+  /* Leave a 16px border on each side when the normal dialog width can't fit in
+   * the browser window. This ensure that the dialog still looks like a dialog
+   * (with content showing beside) instead of a full-width overlay. */
+  max-width: calc(100vw - 16px - 16px);
+  position: absolute;
+  right: auto;
+  /* Vertically overlap the browser chrome. */
+  top: -3px;
+  width: 600px;
 }

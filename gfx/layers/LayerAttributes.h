@@ -347,7 +347,7 @@ public:
   }
 
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const {
-    return mFixedPositionData
+    return (mIsFixedPosition && mFixedPositionData)
            ? mFixedPositionData->mScrollId
            : FrameMetrics::NULL_SCROLL_ID;
   }

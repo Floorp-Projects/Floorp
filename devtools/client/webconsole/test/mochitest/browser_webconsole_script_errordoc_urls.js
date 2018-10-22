@@ -27,7 +27,7 @@ const TestData = [
     script: "function a() { return; 1 + 1; };",
     isException: false,
     expected: "unreachable code after return statement",
-  }
+  },
 ];
 
 add_task(async function() {

@@ -13,7 +13,7 @@ var FramerateFront = exports.FramerateFront = FrontClassWithSpec(framerateSpec, 
   initialize: function(client, { framerateActor }) {
     Front.prototype.initialize.call(this, client, { actor: framerateActor });
     this.manage(this);
-  }
+  },
 });
 
 exports.FramerateFront = FramerateFront;

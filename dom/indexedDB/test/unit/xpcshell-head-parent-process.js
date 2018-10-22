@@ -129,7 +129,7 @@ ExpectError.prototype = {
       event.stopPropagation();
     }
     grabEventAndContinueHandler(event);
-  }
+  },
 };
 
 function continueToNextStepSync()
@@ -223,7 +223,7 @@ function setTimeout(fun, timeout) {
   var event = {
     notify(timer) {
       fun();
-    }
+    },
   };
   timer.initWithCallback(event, timeout,
                          Ci.nsITimer.TYPE_ONE_SHOT);

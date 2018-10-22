@@ -44,7 +44,7 @@ async function testNetmonitor(toolbox) {
   const monitor = toolbox.getCurrentPanel();
   const { store, windowRequire } = monitor.panelWin;
   const {
-    getSortedRequests
+    getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   await waitUntil(() => store.getState().requests.requests.size > 0);

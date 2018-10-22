@@ -8,5 +8,5 @@ var ProjectPanel = {
   toggleSidebar: function() {
     document.querySelector("#project-listing-panel").setAttribute("sidebar-displayed", true);
     document.querySelector("#project-listing-splitter").setAttribute("sidebar-displayed", true);
-  }
+  },
 };

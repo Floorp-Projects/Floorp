@@ -12,5 +12,5 @@ const { uiReducer } = require("./ui-state");
 module.exports = combineReducers({
   debugTargets: debugTargetsReducer,
   runtimes: runtimesReducer,
-  ui: uiReducer
+  ui: uiReducer,
 });

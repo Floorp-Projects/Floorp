@@ -17,7 +17,7 @@ function run_test() {
     getHeadersURL,
     getHTTPStatusCodeURL,
     getNetMonitorTimingsURL,
-    getPerformanceAnalysisURL
+    getPerformanceAnalysisURL,
   } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 
   info("Checking for supported headers");

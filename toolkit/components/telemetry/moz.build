@@ -100,6 +100,7 @@ EXTRA_JS_MODULES += [
     'other/GCTelemetry.jsm',
     'other/MemoryTelemetry.jsm',
     'other/UITelemetry.jsm',
+    'pings/CoveragePing.jsm',
     'pings/EventPing.jsm',
     'pings/HealthPing.jsm',
     'pings/ModulesPing.jsm',

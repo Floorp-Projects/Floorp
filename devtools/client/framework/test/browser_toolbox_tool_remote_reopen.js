@@ -76,7 +76,7 @@ function getTarget(client) {
       const target = TargetFactory.forRemoteTab({
         client: client,
         form: tabList.tabs[tabList.selected],
-        chrome: false
+        chrome: false,
       });
       resolve(target);
     });

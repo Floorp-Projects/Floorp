@@ -20,13 +20,13 @@ class CensusHeader extends Component {
     let individualsCell;
     if (!this.props.diffing) {
       individualsCell = dom.span({
-        className: "heap-tree-item-field heap-tree-item-individuals"
+        className: "heap-tree-item-field heap-tree-item-individuals",
       });
     }
 
     return dom.div(
       {
-        className: "header"
+        className: "header",
       },
 
       dom.span(

@@ -47,8 +47,8 @@ function run_test() {
   const report = snapshot.takeCensus({
     breakdown: { by: "allocationStack",
                  then: { by: "count", bytes: true, count: true },
-                 noStack: { by: "count", bytes: true, count: true }
-    }
+                 noStack: { by: "count", bytes: true, count: true },
+    },
   });
 
   // Keep this synchronized with `HeapSnapshot::MAX_STACK_DEPTH`!

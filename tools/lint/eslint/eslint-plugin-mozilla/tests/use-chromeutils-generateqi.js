@@ -44,34 +44,34 @@ function QueryInterface(iid) {
 ruleTester.run("use-chromeutils-generateqi", rule, {
   valid: [
     `X.prototype.QueryInterface = ChromeUtils.generateQI(["nsIMeh"]);`,
-    `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh"]) }`
+    `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh"]) }`,
   ],
   invalid: [
     {
       code: `X.prototype.QueryInterface = XPCOMUtils.generateQI(["nsIMeh"]);`,
       output: `X.prototype.QueryInterface = ChromeUtils.generateQI(["nsIMeh"]);`,
-      errors: callError(MSG_NO_XPCOMUTILS_GENERATEQI)
+      errors: callError(MSG_NO_XPCOMUTILS_GENERATEQI),
     },
     {
       code: `X.prototype = { QueryInterface: XPCOMUtils.generateQI(["nsIMeh"]) };`,
       output: `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh"]) };`,
-      errors: callError(MSG_NO_XPCOMUTILS_GENERATEQI)
+      errors: callError(MSG_NO_XPCOMUTILS_GENERATEQI),
     },
     {
       code: `X.prototype = { QueryInterface: ${QueryInterface} };`,
       output: `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh", "nsIFlug", "amIFoo"]) };`,
-      errors: error(MSG_NO_JS_QUERY_INTERFACE, "Property")
+      errors: error(MSG_NO_JS_QUERY_INTERFACE, "Property"),
     },
     {
       code: `X.prototype = { ${String(QueryInterface).replace(/^function /, "")} };`,
       output: `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh", "nsIFlug", "amIFoo"]) };`,
-      errors: error(MSG_NO_JS_QUERY_INTERFACE, "Property")
+      errors: error(MSG_NO_JS_QUERY_INTERFACE, "Property"),
     },
     {
       code: `X.prototype.QueryInterface = ${QueryInterface};`,
       output: `X.prototype.QueryInterface = ChromeUtils.generateQI(["nsIMeh", "nsIFlug", "amIFoo"]);`,
-      errors: error(MSG_NO_JS_QUERY_INTERFACE, "AssignmentExpression")
-    }
-  ]
+      errors: error(MSG_NO_JS_QUERY_INTERFACE, "AssignmentExpression"),
+    },
+  ],
 });
 

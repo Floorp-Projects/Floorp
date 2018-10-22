@@ -18,7 +18,7 @@ const TEST_DEVICE = {
   "touch": true,
   "firefoxOS": false,
   "os": "ios",
-  "featured": true
+  "featured": true,
 };
 /* eslint-enable max-len */
 

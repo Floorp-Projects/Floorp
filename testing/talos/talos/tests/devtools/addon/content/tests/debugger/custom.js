@@ -14,7 +14,7 @@ const EXPECTED = {
   sources: 107,
   file: "App.js",
   sourceURL: `${PAGES_BASE_URL}custom/debugger/static/js/App.js`,
-  text: "import React, { Component } from 'react';"
+  text: "import React, { Component } from 'react';",
 };
 
 const EXPECTED_FUNCTION = "window.hitBreakpoint()";
@@ -69,16 +69,16 @@ async function stepDebuggerAndLog(tab, toolbox, testFunction) {
   const stepTests = [
     {
       location: { line: 10194, file: "step-in-test.js" },
-      key: "stepIn"
+      key: "stepIn",
     },
     {
       location: { line: 16, file: "step-over-test.js" },
-      key: "stepOver"
+      key: "stepOver",
     },
     {
       location: { line: 998, file: "step-out-test.js" },
-      key: "stepOut"
-    }
+      key: "stepOut",
+    },
   ];
 
   for (const stepTest of stepTests) {

@@ -41,7 +41,7 @@ add_task(async function() {
   const transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port,
-    encryption: true
+    encryption: true,
   });
   ok(transport, "Client transport created");
 
@@ -84,7 +84,7 @@ add_task(async function() {
   try {
     await DebuggerClient.socketConnect({
       host: "127.0.0.1",
-      port: listener.port
+      port: listener.port,
       // encryption: false is the default
     });
   } catch (e) {

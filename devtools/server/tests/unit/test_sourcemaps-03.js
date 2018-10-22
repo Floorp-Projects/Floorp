@@ -36,7 +36,7 @@ function testBreakpointMapping(name, callback) {
     response = await setBreakpoint(source, {
       // Setting the breakpoint on an empty line so that it is pushed down one
       // line and we can check the source mapped actualLocation later.
-      line: 3
+      line: 3,
     });
 
     // Should not slide breakpoints for sourcemapped sources
@@ -79,7 +79,7 @@ function test_simple_source_map() {
   const expectedSources = new Set([
     "http://example.com/www/js/a.js",
     "http://example.com/www/js/b.js",
-    "http://example.com/www/js/c.js"
+    "http://example.com/www/js/c.js",
   ]);
 
   gThreadClient.addListener("newSource", function _onNewSource(event, packet) {
@@ -106,7 +106,7 @@ function test_simple_source_map() {
     new SourceNode(3, 0, "a.js", "  // Empty line\n"),
     new SourceNode(4, 0, "a.js", "  ret = 'a';\n"),
     new SourceNode(5, 0, "a.js", "  return ret;\n"),
-    new SourceNode(6, 0, "a.js", "}\n")
+    new SourceNode(6, 0, "a.js", "}\n"),
   ]);
   const b = new SourceNode(null, null, null, [
     new SourceNode(1, 0, "b.js", "function b() {\n"),
@@ -114,7 +114,7 @@ function test_simple_source_map() {
     new SourceNode(3, 0, "b.js", "  // Empty line\n"),
     new SourceNode(4, 0, "b.js", "  ret = 'b';\n"),
     new SourceNode(5, 0, "b.js", "  return ret;\n"),
-    new SourceNode(6, 0, "b.js", "}\n")
+    new SourceNode(6, 0, "b.js", "}\n"),
   ]);
   const c = new SourceNode(null, null, null, [
     new SourceNode(1, 0, "c.js", "function c() {\n"),
@@ -122,14 +122,14 @@ function test_simple_source_map() {
     new SourceNode(3, 0, "c.js", "  // Empty line\n"),
     new SourceNode(4, 0, "c.js", "  ret = 'c';\n"),
     new SourceNode(5, 0, "c.js", "  return ret;\n"),
-    new SourceNode(6, 0, "c.js", "}\n")
+    new SourceNode(6, 0, "c.js", "}\n"),
   ]);
 
   let { code, map } = (new SourceNode(null, null, null, [
-    a, b, c
+    a, b, c,
   ])).toStringWithSourceMap({
     file: "http://example.com/www/js/abc.js",
-    sourceRoot: "http://example.com/www/js/"
+    sourceRoot: "http://example.com/www/js/",
   });
 
   code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());

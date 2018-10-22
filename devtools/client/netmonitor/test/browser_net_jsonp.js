@@ -45,7 +45,7 @@ add_task(async function() {
       type: "json",
       fullMimeType: "text/json; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 41),
-      time: true
+      time: true,
     });
   verifyRequestItemTarget(
     document,
@@ -59,7 +59,7 @@ add_task(async function() {
       type: "json",
       fullMimeType: "text/json; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 54),
-      time: true
+      time: true,
     });
 
   info("Testing first request");

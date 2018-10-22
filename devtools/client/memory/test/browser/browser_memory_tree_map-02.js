@@ -24,7 +24,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     height: "200px",
     position: "absolute",
     left: 0,
-    top: 0
+    top: 0,
   });
 
   const rafMock = createRAFMock();
@@ -45,7 +45,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
 
     canvases.container.dispatchEvent(new WheelEvent("wheel", {
       deltaY: -PIXEL_DELTA,
-      deltaMode: PIXEL_SCROLL_MODE
+      deltaMode: PIXEL_SCROLL_MODE,
     }));
 
     is(style.transform, "translate(0px, 0px) scale(1.05)",
@@ -101,7 +101,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   {
     canvases.container.dispatchEvent(new WheelEvent("wheel", {
       deltaY: -PIXEL_DELTA,
-      deltaMode: PIXEL_SCROLL_MODE
+      deltaMode: PIXEL_SCROLL_MODE,
     }));
     // Run through the RAF loop to zoom in towards that value.
     let lastCallCount;
@@ -130,7 +130,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
 
     canvases.container.dispatchEvent(new WheelEvent("wheel", {
       deltaY: -PIXEL_DELTA,
-      deltaMode: PIXEL_SCROLL_MODE
+      deltaMode: PIXEL_SCROLL_MODE,
     }));
 
     is(dragZoom.zoom, previousZoom,

@@ -167,7 +167,7 @@ BreakpointActorMap.prototype = {
         }
       }
     }
-  }
+  },
 };
 
 exports.BreakpointActorMap = BreakpointActorMap;

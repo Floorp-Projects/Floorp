@@ -25,7 +25,7 @@ const UNIT_MAPPING = {
   percentage: "%",
   length: "px",
   angle: "deg",
-  string: ""
+  string: "",
 };
 
 const FAST_VALUE_MULTIPLIER = 10;
@@ -39,58 +39,58 @@ const filterList = [
   {
     "name": "blur",
     "range": [0, Infinity],
-    "type": "length"
+    "type": "length",
   },
   {
     "name": "brightness",
     "range": [0, Infinity],
-    "type": "percentage"
+    "type": "percentage",
   },
   {
     "name": "contrast",
     "range": [0, Infinity],
-    "type": "percentage"
+    "type": "percentage",
   },
   {
     "name": "drop-shadow",
     "placeholder": L10N.getStr("dropShadowPlaceholder"),
-    "type": "string"
+    "type": "string",
   },
   {
     "name": "grayscale",
     "range": [0, 100],
-    "type": "percentage"
+    "type": "percentage",
   },
   {
     "name": "hue-rotate",
     "range": [0, Infinity],
-    "type": "angle"
+    "type": "angle",
   },
   {
     "name": "invert",
     "range": [0, 100],
-    "type": "percentage"
+    "type": "percentage",
   },
   {
     "name": "opacity",
     "range": [0, 100],
-    "type": "percentage"
+    "type": "percentage",
   },
   {
     "name": "saturate",
     "range": [0, Infinity],
-    "type": "percentage"
+    "type": "percentage",
   },
   {
     "name": "sepia",
     "range": [0, 100],
-    "type": "percentage"
+    "type": "percentage",
   },
   {
     "name": "url",
     "placeholder": "example.svg#c1",
-    "type": "string"
-  }
+    "type": "string",
+  },
 ];
 
 // Valid values that shouldn't be parsed for filters.
@@ -455,7 +455,7 @@ CSSFilterEditorWidget.prototype = {
 
       this._dragging = {
         index, label, input,
-        startX: e.pageX
+        startX: e.pageX,
       };
 
       this.isDraggingLabel = true;
@@ -993,7 +993,7 @@ CSSFilterEditorWidget.prototype = {
   setPresets: function(presets) {
     return asyncStorage.setItem("cssFilterPresets", presets)
       .catch(console.error);
-  }
+  },
 };
 
 // Fixes JavaScript's float precision
@@ -1107,6 +1107,6 @@ function getNeighbourNumber(string, index) {
   return {
     value: fixFloat(left + right, true),
     start: index - left.length,
-    end: index + right.length
+    end: index + right.length,
   };
 }

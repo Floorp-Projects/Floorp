@@ -47,7 +47,7 @@ add_task(async function() {
       fullMimeType: "text/json; charset=utf-8",
       size: L10N.getFormatStr("networkMenu.sizeKB",
         L10N.numberWithDecimals(85975 / 1024, 2)),
-      time: true
+      time: true,
     });
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");

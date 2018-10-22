@@ -97,8 +97,8 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
     text: "",
     selection: {
       start: {line: 0, ch: 0},
-      end: {line: 0, ch: 0}
-    }
+      end: {line: 0, ch: 0},
+    },
   };
 
   this._styleSheetFilePath = null;
@@ -441,7 +441,7 @@ StyleSheetEditor.prototype = {
       contextMenu: "sourceEditorContextMenu",
       autocomplete: Services.prefs.getBoolPref(AUTOCOMPLETION_PREF),
       autocompleteOpts: { walker: this.walker, cssProperties },
-      cssProperties
+      cssProperties,
     };
     const sourceEditor = this._sourceEditor = new Editor(config);
 
@@ -604,7 +604,7 @@ StyleSheetEditor.prototype = {
       selector: info.selector,
       hideInfoBar: true,
       showOnly: "border",
-      region: "border"
+      region: "border",
     });
 
     this.emit("node-highlighted");
@@ -796,7 +796,7 @@ StyleSheetEditor.prototype = {
     this.cssSheet.off("style-applied", this._onStyleApplied);
     this.styleSheet.off("error", this._onError);
     this._isDestroyed = true;
-  }
+  },
 };
 
 /**
@@ -871,13 +871,13 @@ function findUnsharedBranches(origUri, uri) {
     if (uri[i] != origUri[i]) {
       return {
         branch: uri.slice(i),
-        origBranch: origUri.slice(i)
+        origBranch: origUri.slice(i),
       };
     }
   }
   return {
     branch: uri,
-    origBranch: origUri
+    origBranch: origUri,
   };
 }
 

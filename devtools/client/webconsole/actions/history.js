@@ -75,7 +75,7 @@ function showReverseSearchNext() {
 
 function showReverseSearchBack() {
   return {
-    type: REVERSE_SEARCH_BACK
+    type: REVERSE_SEARCH_BACK,
   };
 }
 

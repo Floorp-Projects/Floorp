@@ -19,7 +19,7 @@ class Payload {
     const {
       headers,
       postData,
-      timing
+      timing,
     } = (request ? request : response) || {};
 
     const header = await this.mappingHeader(requestId, headers);
@@ -32,7 +32,7 @@ class Payload {
       {
         payload, response, postData,
         header, content, timing,
-        dataLength, encodedDataLength
+        dataLength, encodedDataLength,
       }
     );
     return data;
@@ -41,7 +41,7 @@ class Payload {
   log(reason, info) {
     this.updatePayload({
       type: reason,
-      log: info
+      log: info,
     });
   }
 
@@ -69,10 +69,10 @@ class Payload {
             this.mappingRequestPostData(requestId, postData, header),
             this.mappingResponseStatus(requestId, response, header),
             this.mappingTiming(requestId, timing),
-            this.mappingResponseContent(requestId, response, content)
+            this.mappingResponseContent(requestId, response, content),
           ]);
     this.updatePayload({
-      requests, headers, post, status, timings, responses, dataLength, encodedDataLength
+      requests, headers, post, status, timings, responses, dataLength, encodedDataLength,
     });
     return [ requests, headers, post, status, timings, responses ];
   }
@@ -128,5 +128,5 @@ class Payloads {
 }
 
 module.exports = {
-  Payload, Payloads
+  Payload, Payloads,
 };

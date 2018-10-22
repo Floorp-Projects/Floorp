@@ -13,5 +13,5 @@ exports.Prefs = new PrefsHelper("devtools.netmonitor", {
   networkDetailsWidth: ["Int", "panes-network-details-width"],
   networkDetailsHeight: ["Int", "panes-network-details-height"],
   visibleColumns: ["Json", "visibleColumns"],
-  filters: ["Json", "filters"]
+  filters: ["Json", "filters"],
 });

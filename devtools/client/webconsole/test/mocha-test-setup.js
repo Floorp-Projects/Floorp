@@ -33,7 +33,7 @@ global.loader = {
     if (path === "devtools/shared/async-storage") {
       global[name] = require("devtools/client/webconsole/test/fixtures/async-storage");
     }
-  }
+  },
 };
 
 // Point to vendored-in files and mocks when needed.

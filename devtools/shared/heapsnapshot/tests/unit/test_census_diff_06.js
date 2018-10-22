@@ -11,29 +11,29 @@ const BREAKDOWN = {
     then: {
       by: "objectClass",
       then: { by: "count", count: false, bytes: true },
-      other: { by: "count", count: false, bytes: true }
+      other: { by: "count", count: false, bytes: true },
     },
     noStack: {
       by: "objectClass",
       then: { by: "count", count: false, bytes: true },
-      other: { by: "count", count: false, bytes: true }
-    }
+      other: { by: "count", count: false, bytes: true },
+    },
   },
   strings: {
     by: "internalType",
-    then: { by: "count", count: false, bytes: true }
+    then: { by: "count", count: false, bytes: true },
   },
   scripts: {
     by: "internalType",
-    then: { by: "count", count: false, bytes: true }
+    then: { by: "count", count: false, bytes: true },
   },
   other: {
     by: "internalType",
-    then: { by: "count", count: false, bytes: true }
+    then: { by: "count", count: false, bytes: true },
   },
   domNode: {
     by: "internalType",
-    then: { by: "count", count: false, bytes: true }
+    then: { by: "count", count: false, bytes: true },
   },
 };
 
@@ -64,7 +64,7 @@ const REPORT1 = {
   other: {
     "mozilla::dom::Thing": { bytes: 1 },
   },
-  domNode: {}
+  domNode: {},
 };
 
 const REPORT2 = {
@@ -91,7 +91,7 @@ const REPORT2 = {
   other: {
     "mozilla::dom::OtherThing": { bytes: 1 },
   },
-  domNode: {}
+  domNode: {},
 };
 
 const EXPECTED = {
@@ -112,30 +112,30 @@ const EXPECTED = {
   ]),
   "scripts": {
     "JSScript": {
-      "bytes": 1
+      "bytes": 1,
     },
     "js::jit::JitCode": {
-      "bytes": -1
+      "bytes": -1,
     },
     "js::LazyScript": {
-      "bytes": 42
-    }
+      "bytes": 42,
+    },
   },
   "strings": {
     "JSAtom": {
-      "bytes": -5
+      "bytes": -5,
     },
     "JSLinearString": {
-      "bytes": 5
-    }
+      "bytes": 5,
+    },
   },
   "other": {
     "mozilla::dom::Thing": {
-      "bytes": -1
+      "bytes": -1,
     },
     "mozilla::dom::OtherThing": {
-      "bytes": 1
-    }
+      "bytes": 1,
+    },
   },
   "domNode": {},
 };

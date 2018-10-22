@@ -52,6 +52,7 @@ class UrlbarInput {
     this.valueIsTyped = false;
     this.userInitiatedFocus = false;
     this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.window);
+    this._untrimmedValue = "";
 
     // Forward textbox methods and properties.
     const METHODS = ["addEventListener", "removeEventListener",
@@ -245,10 +246,12 @@ class UrlbarInput {
   }
 
   get value() {
-    return this.inputField.value;
+    return this._untrimmedValue;
   }
 
   set value(val) {
+    this._untrimmedValue = val;
+
     val = this.trimValue(val);
 
     this.valueIsTyped = false;
@@ -427,11 +430,20 @@ class UrlbarInput {
   }
 
   _on_input(event) {
+    let value = event.target.value;
     this.valueIsTyped = true;
+    this._untrimmedValue = value;
+    this.window.gBrowser.userTypedValue = value;
+
+    if (value) {
+      this.setAttribute("usertyping", "true");
+    } else {
+      this.removeAttribute("usertyping");
+    }
 
     // XXX Fill in lastKey, and add anything else we need.
     this.controller.startQuery(new QueryContext({
-      searchString: event.target.value,
+      searchString: value,
       lastKey: "",
       maxResults: UrlbarPrefs.get("maxRichResults"),
       isPrivate: this.isPrivate,

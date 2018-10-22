@@ -84,7 +84,7 @@ var WindowListener = {
         WindowListener.setupWindow(win);
       }
     }, {once: true});
-  }
+  },
 };
 
 function loadMochitest(e) {

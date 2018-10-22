@@ -179,7 +179,7 @@ var FindHelper = {
     this._result = result;
 
     GlobalEventDispatcher.sendRequest(Object.assign({
-      type: "FindInPage:MatchesCountResult"
+      type: "FindInPage:MatchesCountResult",
     }, this._result));
   },
 
@@ -221,5 +221,5 @@ var FindHelper = {
       // ZoomHelper.zoomToRect(aData.rect);
       this._viewportChanged = true;
     }
-  }
+  },
 };

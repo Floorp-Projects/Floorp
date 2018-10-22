@@ -10,11 +10,11 @@ const shaderSpec = generateActorSpec({
 
   methods: {
     getText: {
-      response: { text: RetVal("string") }
+      response: { text: RetVal("string") },
     },
     compile: {
       request: { text: Arg(0, "string") },
-      response: { error: RetVal("nullable:json") }
+      response: { error: RetVal("nullable:json") },
     },
   },
 });
@@ -26,25 +26,25 @@ const programSpec = generateActorSpec({
 
   methods: {
     getVertexShader: {
-      response: { shader: RetVal("gl-shader") }
+      response: { shader: RetVal("gl-shader") },
     },
     getFragmentShader: {
-      response: { shader: RetVal("gl-shader") }
+      response: { shader: RetVal("gl-shader") },
     },
     highlight: {
       request: { tint: Arg(0, "array:number") },
-      oneway: true
+      oneway: true,
     },
     unhighlight: {
-      oneway: true
+      oneway: true,
     },
     blackbox: {
-      oneway: true
+      oneway: true,
     },
     unblackbox: {
-      oneway: true
+      oneway: true,
     },
-  }
+  },
 });
 
 exports.programSpec = programSpec;
@@ -59,43 +59,43 @@ const webGLSpec = generateActorSpec({
   events: {
     "program-linked": {
       type: "programLinked",
-      program: Arg(0, "gl-program")
+      program: Arg(0, "gl-program"),
     },
     "global-destroyed": {
       type: "globalDestroyed",
-      program: Arg(0, "number")
+      program: Arg(0, "number"),
     },
     "global-created": {
       type: "globalCreated",
-      program: Arg(0, "number")
-    }
+      program: Arg(0, "number"),
+    },
   },
 
   methods: {
     setup: {
       request: { reload: Option(0, "boolean") },
-      oneway: true
+      oneway: true,
     },
     finalize: {
-      oneway: true
+      oneway: true,
     },
     getPrograms: {
-      response: { programs: RetVal("array:gl-program") }
+      response: { programs: RetVal("array:gl-program") },
     },
     waitForFrame: {
-      response: { success: RetVal("nullable:json") }
+      response: { success: RetVal("nullable:json") },
     },
     getPixel: {
       request: {
         selector: Option(0, "string"),
-        position: Option(0, "json")
+        position: Option(0, "json"),
       },
-      response: { pixels: RetVal("json") }
+      response: { pixels: RetVal("json") },
     },
     _getAllPrograms: {
-      response: { programs: RetVal("array:gl-program") }
-    }
-  }
+      response: { programs: RetVal("array:gl-program") },
+    },
+  },
 });
 
 exports.webGLSpec = webGLSpec;

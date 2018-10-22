@@ -28,7 +28,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getAccessible, this.liNode),
-        new invokerChecker(EVENT_REORDER, this.listNode)
+        new invokerChecker(EVENT_REORDER, this.listNode),
       ];
 
       this.invoke = function addLi_invoke() {
@@ -45,15 +45,15 @@
                 {
                   role: ROLE_STATICTEXT,
                   name: "1. ",
-                  children: []
+                  children: [],
                 },
                 {
                   role: ROLE_TEXT_LEAF,
-                  children: []
-                }
-              ]
-            }
-          ]
+                  children: [],
+                },
+              ],
+            },
+          ],
         };
         testAccessibleTree(aID, tree);
       };

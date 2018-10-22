@@ -18,7 +18,7 @@ const { getSelectedRecordingIndex, setSelectedRecording } = require("devtools/cl
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, $, PerformanceController } = panel.panelWin;
@@ -33,10 +33,10 @@ add_task(async function() {
     "The recording-notice is shown while recording.");
 
   let recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopping"]
+    expectedArgs: ["recording-stopping"],
   });
   let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopped"]
+    expectedArgs: ["recording-stopped"],
   });
   let everythingStopped = stopRecording(panel);
 
@@ -57,10 +57,10 @@ add_task(async function() {
   await recordingSelected;
 
   recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopping"]
+    expectedArgs: ["recording-stopping"],
   });
   recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopped"]
+    expectedArgs: ["recording-stopped"],
   });
   everythingStopped = stopRecording(panel);
 

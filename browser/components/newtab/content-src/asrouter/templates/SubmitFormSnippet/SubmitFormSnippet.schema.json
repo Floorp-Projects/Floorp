@@ -103,6 +103,10 @@
       "type": "string",
       "description": "(send to device) Image to display above the form. 98x98px. SVG or PNG preferred."
     },
+    "scene2_newsletter": {
+      "type": "string",
+      "description": "Newsletter/basket id user is subscribing to. Must be a value from the 'Slug' column here: https://basket.mozilla.org/news/. Default 'mozilla-foundation'."
+    },
     "hidden_inputs": {
       "type": "object",
       "description": "Each entry represents a hidden input, key is used as value for the name property."
@@ -137,6 +141,14 @@
       "type": "string",
       "description": "(send to device) Newsletter/basket id representing the email message to be sent. Must be a value from the 'Slug' column here: https://basket.mozilla.org/news/."
     },
+    "utm_campaign": {
+      "type": "string",
+      "description": "(fxa) Value to pass through to GA as utm_campaign."
+    },
+    "utm_term": {
+      "type": "string",
+      "description": "(fxa) Value to pass through to GA as utm_term."
+    },
     "links": {
       "additionalProperties": {
         "url": {
@@ -153,7 +165,7 @@
     }
   },
   "additionalProperties": false,
-  "required": ["scene1_text", "form_action", "scene2_text", "hidden_inputs", "error_text", "success_text", "scene1_button_label"],
+  "required": ["scene1_text", "scene2_text", "scene1_button_label"],
   "dependencies": {
     "scene1_button_color": ["scene1_button_label"],
     "scene1_button_background_color": ["scene1_button_label"]

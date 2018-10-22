@@ -128,7 +128,7 @@ async function addTestTab(url) {
     win,
     toolbox: panel._toolbox,
     doc,
-    store
+    store,
   };
 }
 

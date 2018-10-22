@@ -11,9 +11,9 @@ const childSpec = protocol.generateActorSpec({
 
   methods: {
     getChild: {
-      response: RetVal("child")
-    }
-  }
+      response: RetVal("child"),
+    },
+  },
 });
 
 // The child actor doesn't provide a form description
@@ -25,13 +25,13 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   form(detail) {
     return {
       actor: this.actorID,
-      extra: "extra"
+      extra: "extra",
     };
   },
 
   getChild: function() {
     return this;
-  }
+  },
 });
 
 var ChildFront = protocol.FrontClassWithSpec(childSpec, {
@@ -41,7 +41,7 @@ var ChildFront = protocol.FrontClassWithSpec(childSpec, {
 
   form(v, ctx, detail) {
     this.extra = v.extra;
-  }
+  },
 });
 
 const rootSpec = protocol.generateActorSpec({
@@ -49,12 +49,12 @@ const rootSpec = protocol.generateActorSpec({
 
   // Basic form type, relies on implicit DictType creation
   formType: {
-    childActor: "child"
+    childActor: "child",
   },
 
   // This detail uses explicit DictType creation
   "formType#detail1": protocol.types.addDictType("RootActorFormTypeDetail1", {
-    detailItem: "child"
+    detailItem: "child",
   }),
 
   // This detail a string type.
@@ -62,20 +62,20 @@ const rootSpec = protocol.generateActorSpec({
 
   methods: {
     getDefault: {
-      response: RetVal("root")
+      response: RetVal("root"),
     },
     getDetail1: {
-      response: RetVal("root#detail1")
+      response: RetVal("root#detail1"),
     },
     getDetail2: {
       response: {
-        item: RetVal("root#actorid")
-      }
+        item: RetVal("root#actorid"),
+      },
     },
     getUnknownDetail: {
-      response: RetVal("root#unknownDetail")
-    }
-  }
+      response: RetVal("root#unknownDetail"),
+    },
+  },
 });
 
 // The root actor does provide a form description.
@@ -90,7 +90,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return {
       from: "root",
       applicationType: "xpcshell-tests",
-      traits: []
+      traits: [],
     };
   },
 
@@ -98,7 +98,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     if (detail === "detail1") {
       return {
         actor: this.actorID,
-        detailItem: this.child
+        detailItem: this.child,
       };
     } else if (detail === "actorid") {
       return this.actorID;
@@ -106,7 +106,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     return {
       actor: this.actorID,
-      childActor: this.child
+      childActor: this.child,
     };
   },
 
@@ -124,7 +124,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   getUnknownDetail: function() {
     return this;
-  }
+  },
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
@@ -138,7 +138,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
 
   form(v, ctx, detail) {
     this.lastForm = v;
-  }
+  },
 });
 
 const run_test = Test(async function() {

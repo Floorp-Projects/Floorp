@@ -206,7 +206,7 @@ BreadcrumbsWidget.prototype = {
   document: null,
   _parent: null,
   _list: null,
-  _selectedItem: null
+  _selectedItem: null,
 };
 
 /**
@@ -248,5 +248,5 @@ Breadcrumb.prototype = {
   window: null,
   document: null,
   ownerView: null,
-  _target: null
+  _target: null,
 };

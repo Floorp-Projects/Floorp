@@ -38,8 +38,8 @@ class AccessibilityParent {
       data: {
         enabled: this.enabled,
         canBeDisabled: this.canBeDisabled,
-        canBeEnabled: this.canBeEnabled
-      }
+        canBeEnabled: this.canBeEnabled,
+      },
     });
   }
 
@@ -103,7 +103,7 @@ class AccessibilityParent {
       const { PlatformAPI } = JSON.parse(data);
       this.messageManager.sendAsyncMessage(`${this._msgName}:event`, {
         topic: "can-be-disabled-change",
-        data: !PlatformAPI
+        data: !PlatformAPI,
       });
     } else if (!this.disabling && topic === "nsPref:changed" &&
                data === PREF_ACCESSIBILITY_FORCE_DISABLED) {
@@ -114,7 +114,7 @@ class AccessibilityParent {
       // we disable the accessibility inspector itself.
       this.messageManager.sendAsyncMessage(`${this._msgName}:event`, {
         topic: "can-be-enabled-change",
-        data: Services.prefs.getIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED) < 1
+        data: Services.prefs.getIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED) < 1,
       });
     }
   }
@@ -226,7 +226,7 @@ function setupParentProcess({ mm, prefix }) {
     onDisconnected: () => {
       accessibility.destroy();
       accessibility = null;
-    }
+    },
   };
 }
 

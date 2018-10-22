@@ -260,7 +260,7 @@ StyleEditorUI.prototype = {
       this._styleSheetToSelect = {
         stylesheet: href,
         line: line,
-        col: ch
+        col: ch,
       };
     }
 
@@ -402,7 +402,7 @@ StyleEditorUI.prototype = {
         uri: NetUtil.newURI(selectedFile),
         loadingNode: this._window.document,
         securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
       }, (stream, status) => {
         if (!Components.isSuccessCode(status)) {
           this.emit("error", { key: LOAD_ERROR, level: "warning" });
@@ -537,7 +537,7 @@ StyleEditorUI.prototype = {
     // add new sidebar item and editor to the UI
     this._view.appendTemplatedItem(STYLE_EDITOR_TEMPLATE, {
       data: {
-        editor: editor
+        editor: editor,
       },
       disableAnimations: this._alwaysDisableAnimations,
       ordinal: ordinal,
@@ -559,8 +559,8 @@ StyleEditorUI.prototype = {
               if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
                 this._view.activeSummary = summary;
               }
-            }
-          }
+            },
+          },
         });
 
         wire(summary, ".stylesheet-saveButton", function onSaveButton(event) {
@@ -658,7 +658,7 @@ StyleEditorUI.prototype = {
             }
           }
         }.bind(this))().catch(console.error);
-      }
+      },
     });
   },
 
@@ -900,7 +900,7 @@ StyleEditorUI.prototype = {
           line: line,
           column: column,
           source: editor.styleSheet.href,
-          styleSheet: parentStyleSheet
+          styleSheet: parentStyleSheet,
         };
         if (editor.styleSheet.isOriginalSource) {
           const styleSheet = editor.cssSheet;
@@ -1048,5 +1048,5 @@ StyleEditorUI.prototype = {
     this._prefObserver.destroy();
 
     this._debuggee.off("stylesheet-added", this._addStyleSheet);
-  }
+  },
 };

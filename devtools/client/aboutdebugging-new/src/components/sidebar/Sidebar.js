@@ -40,10 +40,10 @@ class Sidebar extends PureComponent {
                                               "about-debugging-sidebar-usb-disabled";
     return Localized(
       {
-        id: localizationId
+        id: localizationId,
       }, dom.aside(
         {
-          className: "sidebar__devices__message js-sidebar-usb-status"
+          className: "sidebar__devices__message js-sidebar-usb-status",
         },
         localizationId
       )
@@ -55,10 +55,10 @@ class Sidebar extends PureComponent {
     if (!networkRuntimes.length && !usbRuntimes.length) {
       return Localized(
         {
-          id: "about-debugging-sidebar-no-devices"
+          id: "about-debugging-sidebar-no-devices",
         }, dom.aside(
           {
-            className: "sidebar__devices__message js-sidebar-no-devices"
+            className: "sidebar__devices__message js-sidebar-no-devices",
           },
           "No devices discovered"
         )

@@ -53,6 +53,6 @@ module.exports = function(context) {
                          "global scope.");
         }
       }
-    }
+    },
   };
 };
