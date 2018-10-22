@@ -66,7 +66,8 @@ public:
 
   IMPL_EVENT_HANDLER(controllerchange)
   IMPL_EVENT_HANDLER(error)
-  
+  IMPL_EVENT_HANDLER(messageerror)
+
   // Almost a manual expansion of IMPL_EVENT_HANDLER(message), but
   // with the additional StartMessages() when setting the handler, as
   // required by the spec.
@@ -160,7 +161,8 @@ private:
   FillInMessageEventInit(JSContext* aCx,
                          nsIGlobalObject* aGlobal,
                          ReceivedMessage& aMessage,
-                         MessageEventInit& aInit);
+                         MessageEventInit& aInit,
+                         ErrorResult& aRv);
 
   RefPtr<Inner> mInner;
 

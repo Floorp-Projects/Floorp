@@ -342,6 +342,7 @@ public:
   IMPL_EVENT_HANDLER(activate)
   IMPL_EVENT_HANDLER(install)
   IMPL_EVENT_HANDLER(message)
+  IMPL_EVENT_HANDLER(messageerror)
 
   IMPL_EVENT_HANDLER(push)
   IMPL_EVENT_HANDLER(pushsubscriptionchange)
