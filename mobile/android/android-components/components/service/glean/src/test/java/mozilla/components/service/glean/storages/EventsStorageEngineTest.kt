@@ -35,13 +35,13 @@ class EventsStorageEngineTest {
         for (storeName in storeNames) {
             val snapshot = EventsStorageEngine.getSnapshot(storeName = storeName, clearStore = false)
             assertEquals(1, snapshot!!.size)
-            assertEquals("telemetry", snapshot!!.first().category)
-            assertEquals("test_event_no_optional", snapshot!!.first().name)
-            assertEquals("test_event_object", snapshot!!.first().objectId)
+            assertEquals("telemetry", snapshot.first().category)
+            assertEquals("test_event_no_optional", snapshot.first().name)
+            assertEquals("test_event_object", snapshot.first().objectId)
             assertNull("The 'value' must be null if not provided",
-                    snapshot!!.first().value)
+                    snapshot.first().value)
             assertNull("The 'extra' must be null if not provided",
-                    snapshot!!.first().extra)
+                    snapshot.first().extra)
         }
     }
 
@@ -63,11 +63,11 @@ class EventsStorageEngineTest {
         for (storeName in storeNames) {
             val snapshot = EventsStorageEngine.getSnapshot(storeName = storeName, clearStore = false)
             assertEquals(1, snapshot!!.size)
-            assertEquals("telemetry", snapshot!!.first().category)
-            assertEquals("test_event_with_optional", snapshot!!.first().name)
-            assertEquals("test_event_object", snapshot!!.first().objectId)
-            assertEquals("user_value", snapshot!!.first().value)
-            assertEquals(mapOf("key1" to "value1", "key2" to "value2"), snapshot!!.first().extra)
+            assertEquals("telemetry", snapshot.first().category)
+            assertEquals("test_event_with_optional", snapshot.first().name)
+            assertEquals("test_event_object", snapshot.first().objectId)
+            assertEquals("user_value", snapshot.first().value)
+            assertEquals(mapOf("key1" to "value1", "key2" to "value2"), snapshot.first().extra)
         }
     }
 
@@ -86,14 +86,14 @@ class EventsStorageEngineTest {
 
         val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot!!.size)
-        assertEquals("telemetry", snapshot!!.first().category)
-        assertEquals("test_event_time", snapshot!!.first().name)
-        assertEquals("test_event_object", snapshot!!.first().objectId)
+        assertEquals("telemetry", snapshot.first().category)
+        assertEquals("test_event_time", snapshot.first().name)
+        assertEquals("test_event_object", snapshot.first().objectId)
         assertNull("The 'value' must be null if not provided",
-                snapshot!!.first().value)
+                snapshot.first().value)
         assertNull("The 'extra' must be null if not provided",
-                snapshot!!.first().extra)
-        assertEquals(expectedTimeSinceStart, snapshot!!.first().msSinceStart)
+                snapshot.first().extra)
+        assertEquals(expectedTimeSinceStart, snapshot.first().msSinceStart)
     }
 
     @Test
@@ -125,13 +125,13 @@ class EventsStorageEngineTest {
         val snapshot2 = EventsStorageEngine.getSnapshot(storeName = "store2", clearStore = false)
         for (s in listOf(snapshot, snapshot2)) {
             assertEquals(1, s!!.size)
-            assertEquals("telemetry", s!!.first().category)
-            assertEquals("test_event_clear", s!!.first().name)
-            assertEquals("test_event_object", s!!.first().objectId)
+            assertEquals("telemetry", s.first().category)
+            assertEquals("test_event_clear", s.first().name)
+            assertEquals("test_event_object", s.first().objectId)
             assertNull("The 'value' must be null if not provided",
-                    s!!.first().value)
+                    s.first().value)
             assertNull("The 'extra' must be null if not provided",
-                    s!!.first().extra)
+                    s.first().extra)
         }
     }
 }
