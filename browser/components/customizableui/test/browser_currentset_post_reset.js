@@ -4,15 +4,16 @@
 "use strict";
 
 function checkSpacers() {
+  let bsPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
   let navbarWidgets = CustomizableUI.getWidgetIdsInArea("nav-bar");
-  let currentSetWidgets = document.getElementById("nav-bar").currentSet.split(",");
+  let currentSetWidgets = bsPass.CustomizableUIInternal._getCurrentWidgetsInContainer(document.getElementById("nav-bar"));
   navbarWidgets = navbarWidgets.filter(w => CustomizableUI.isSpecialWidget(w));
   currentSetWidgets = currentSetWidgets.filter(w => CustomizableUI.isSpecialWidget(w));
   Assert.deepEqual(navbarWidgets, currentSetWidgets, "Should have the same 'special' widgets in currentset and placements");
 }
 
 /**
- * Check that after a reset, the currentset property correctly deals with flexible spacers.
+ * Check that after a reset, CUI's internal bookkeeping correctly deals with flexible spacers.
  */
 add_task(async function() {
   await startCustomizing();
