@@ -39,18 +39,25 @@ pub enum Error {
     Partial,
 }
 
+impl From<u32> for Error {
+	fn from(_: u32) -> Self {
+		Error::InvalidLiteral
+	}
+}
+
 macro_rules! identity (
     ($i:expr,$e:expr) => ($e);
 );
 
 /// If the input result indicates a succesful parse, but there is data left,
 /// return an `Error::Partial` instead.
-pub fn assert_full_parse<I,O,E>(result: IResult<&[I],O,E>) -> IResult<&[I],O,::Error> {
+pub fn assert_full_parse<I,O,E>(result: IResult<&[I],O,E>) -> IResult<&[I],O,::Error>
+  where Error: From<E> {
 	match fix_error!((),::Error,identity!(result)) {
-		IResult::Done(rem,output) => if rem.len()==0 {
-			IResult::Done(rem, output)
+		Ok((rem,output)) => if rem.len()==0 {
+			Ok((rem, output))
 		} else {
-			IResult::Error(Err::Position(ErrorKind::Custom(::Error::Partial), rem))
+			Err(Err::Error(error_position!(rem, ErrorKind::Custom(::Error::Partial))))
 		},
 		r => r,
 	}

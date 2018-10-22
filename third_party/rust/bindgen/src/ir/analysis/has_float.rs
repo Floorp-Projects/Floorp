@@ -122,7 +122,6 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
             TypeKind::Function(..) |
             TypeKind::Enum(..) |
             TypeKind::Reference(..) |
-            TypeKind::BlockPointer |
             TypeKind::TypeParam |
             TypeKind::Opaque |
             TypeKind::Pointer(..) |
@@ -159,7 +158,8 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
 
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
-            TypeKind::Alias(t) => {
+            TypeKind::Alias(t) |
+            TypeKind::BlockPointer(t) => {
                 if self.has_float.contains(&t.into()) {
                     trace!("    aliases and type refs to T which have float \
                             also have float");

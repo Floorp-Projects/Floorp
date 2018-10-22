@@ -73,7 +73,7 @@ promise_test(() => {
 }, "Stray argument");
 
 promise_test(() => {
-  const buffer = new WasmModuleBuilder().toBuffer();
+  const buffer = new Uint8Array(new WasmModuleBuilder().toBuffer());
   assert_equals(buffer[0], 0);
   const promise = WebAssembly.compile(buffer);
   buffer[0] = 1;
