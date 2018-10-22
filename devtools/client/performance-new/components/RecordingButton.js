@@ -54,7 +54,7 @@ class RecordingButton extends PureComponent {
             className: "devtools-button perf-button",
             "data-standalone": true,
             disabled,
-            onClick
+            onClick,
           },
           label
         )
@@ -69,7 +69,7 @@ class RecordingButton extends PureComponent {
       stopProfilerAndDiscardProfile,
       recordingState,
       isSupportedPlatform,
-      recordingUnexpectedlyStopped
+      recordingUnexpectedlyStopped,
     } = this.props;
 
     if (!isSupportedPlatform) {
@@ -77,7 +77,7 @@ class RecordingButton extends PureComponent {
         label: "Start recording",
         disabled: true,
         additionalMessage: "Your platform is not supported. The Gecko Profiler only " +
-                           "supports Tier-1 platforms."
+                           "supports Tier-1 platforms.",
       });
     }
 
@@ -93,25 +93,25 @@ class RecordingButton extends PureComponent {
             null,
             img({
               className: "perf-button-image",
-              src: "chrome://devtools/skin/images/tool-profiler.svg"
+              src: "chrome://devtools/skin/images/tool-profiler.svg",
             }),
             "Start recording",
           ),
           additionalMessage: recordingUnexpectedlyStopped
             ? div(null, "The recording was stopped by another tool.")
-            : null
+            : null,
         });
 
       case REQUEST_TO_STOP_PROFILER:
         return this.renderButton({
           label: "Stopping the recording",
-          disabled: true
+          disabled: true,
         });
 
       case REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER:
         return this.renderButton({
           label: "Stopping the recording, and capturing the profile",
-          disabled: true
+          disabled: true,
         });
 
       case REQUEST_TO_START_RECORDING:
@@ -119,14 +119,14 @@ class RecordingButton extends PureComponent {
         return this.renderButton({
           label: "Stop and grab the recording",
           onClick: getProfileAndStopProfiler,
-          disabled: recordingState === REQUEST_TO_START_RECORDING
+          disabled: recordingState === REQUEST_TO_START_RECORDING,
         });
 
       case OTHER_IS_RECORDING:
         return this.renderButton({
           label: "Stop and discard the other recording",
           onClick: stopProfilerAndDiscardProfile,
-          additionalMessage: "Another tool is currently recording."
+          additionalMessage: "Another tool is currently recording.",
         });
 
       case LOCKED_BY_PRIVATE_BROWSING:
@@ -135,13 +135,13 @@ class RecordingButton extends PureComponent {
             null,
             img({
               className: "perf-button-image",
-              src: "chrome://devtools/skin/images/tool-profiler.svg"
+              src: "chrome://devtools/skin/images/tool-profiler.svg",
             }),
             "Start recording",
           ),
           disabled: true,
           additionalMessage: `The profiler is disabled when Private Browsing is enabled.
-                              Close all Private Windows to re-enable the profiler`
+                              Close all Private Windows to re-enable the profiler`,
         });
 
       default:

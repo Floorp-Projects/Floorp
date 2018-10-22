@@ -115,7 +115,7 @@ impl FontContext {
             return;
         }
 
-        if let Some(font_file) = dwrote::FontFile::new_from_data(&**data) {
+        if let Some(font_file) = dwrote::FontFile::new_from_data(data) {
             let face = font_file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE);
             self.fonts.insert(*font_key, face);
         } else {

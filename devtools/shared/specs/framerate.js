@@ -13,22 +13,22 @@ const framerateSpec = generateActorSpec({
     stopRecording: {
       request: {
         beginAt: Arg(0, "nullable:number"),
-        endAt: Arg(1, "nullable:number")
+        endAt: Arg(1, "nullable:number"),
       },
-      response: { ticks: RetVal("array:number") }
+      response: { ticks: RetVal("array:number") },
     },
     cancelRecording: {},
     isRecording: {
-      response: { recording: RetVal("boolean") }
+      response: { recording: RetVal("boolean") },
     },
     getPendingTicks: {
       request: {
         beginAt: Arg(0, "nullable:number"),
-        endAt: Arg(1, "nullable:number")
+        endAt: Arg(1, "nullable:number"),
       },
-      response: { ticks: RetVal("array:number") }
-    }
-  }
+      response: { ticks: RetVal("array:number") },
+    },
+  },
 });
 
 exports.framerateSpec = framerateSpec;

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.6.3 */
+/* Generated with cbindgen:0.6.6 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -16,10 +16,6 @@
 
 namespace mozilla {
 namespace wr {
-
-static const uint32_t MAX_CACHED_PROGRAM_COUNT = 15;
-
-static const uint64_t MAX_LOAD_TIME_MS = 400;
 
 // Whether a border should be antialiased.
 enum class AntialiasBorder {
@@ -1841,6 +1837,11 @@ WR_INLINE
 void wr_transaction_notify(Transaction *aTxn,
                            Checkpoint aWhen,
                            uintptr_t aEvent)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_pinch_zoom(Transaction *aTxn,
+                               float aPinchZoom)
 WR_FUNC;
 
 WR_INLINE

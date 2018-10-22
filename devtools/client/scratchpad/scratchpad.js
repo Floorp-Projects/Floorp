@@ -407,7 +407,7 @@ var Scratchpad = {
       filename: this.filename,
       text: this.getText(),
       executionContext: this.executionContext,
-      saved: !this.dirty
+      saved: !this.dirty,
     };
   },
 
@@ -637,7 +637,7 @@ var Scratchpad = {
     return this.prettyPrintWorker.performTask("pretty-print", {
       url: "(scratchpad)",
       indent: tabsize,
-      source: uglyText
+      source: uglyText,
     }).then(data => {
       this.editor.setText(data.code);
     }).catch(error => {
@@ -795,11 +795,11 @@ var Scratchpad = {
     // CodeMirror's are 0-based.
     const from = {
       line: funcStatement.loc.start.line - 1,
-      ch: funcStatement.loc.start.column
+      ch: funcStatement.loc.start.column,
     };
     const to = {
       line: funcStatement.loc.end.line - 1,
-      ch: funcStatement.loc.end.column
+      ch: funcStatement.loc.end.column,
     };
 
     const marker = this.editor.markText(from, to, "eval-text");
@@ -1080,7 +1080,7 @@ var Scratchpad = {
         uri: NetUtil.newURI(aFile),
         loadingNode: window.document,
         securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
       });
       channel.contentType = "application/javascript";
 
@@ -2023,7 +2023,7 @@ ScratchpadTab.prototype = {
         clearTimeout(connectTimer);
         resolve({
           webConsoleClient,
-          debuggerClient: client
+          debuggerClient: client,
         });
       } catch (error) {
         reportError("attachConsole", error);
@@ -2077,7 +2077,7 @@ ScratchpadWindow.prototype = extend(ScratchpadTab.prototype, {
     await client.connect();
     const response = await client.mainRoot.getProcess(0);
     return { form: response.form, client };
-  }
+  },
 });
 
 function ScratchpadTarget(aTarget) {
@@ -2092,7 +2092,7 @@ ScratchpadTarget.prototype = extend(ScratchpadTab.prototype, {
       return Promise.resolve(this._target);
     }
     return this._target.attach().then(() => this._target);
-  }
+  },
 });
 
 /**
@@ -2151,7 +2151,7 @@ ScratchpadSidebar.prototype = {
           this.variablesView = new VariablesView(container, {
             searchEnabled: true,
             searchPlaceholder: this._scratchpad.strings
-              .GetStringFromName("propertiesFilterPlaceholder")
+              .GetStringFromName("propertiesFilterPlaceholder"),
           });
 
           VariablesViewController.attach(this.variablesView, {
@@ -2166,7 +2166,7 @@ ScratchpadSidebar.prototype = {
             },
             releaseActor: actor => {
               this._scratchpad.debuggerClient.release(actor);
-            }
+            },
           });
         }
         this._update(obj).then(resolve);
@@ -2236,7 +2236,7 @@ ScratchpadSidebar.prototype = {
     view.onlyEnumVisible = onlyEnumVisible;
     view.empty();
     return view.controller.setSingleVariable(options).expanded;
-  }
+  },
 };
 
 /**
@@ -2288,7 +2288,7 @@ var PreferenceObserver = {
 
     this.branch.removeObserver("", this);
     this.branch = null;
-  }
+  },
 };
 
 /**

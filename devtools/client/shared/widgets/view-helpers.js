@@ -272,7 +272,7 @@ const ViewHelpers = exports.ViewHelpers = {
       if (flags.animated) {
         const options = {
           useCapture: false,
-          once: true
+          once: true,
         };
 
         pane.addEventListener("transitionend", () => {
@@ -307,7 +307,7 @@ const ViewHelpers = exports.ViewHelpers = {
     } else {
       doToggle();
     }
-  }
+  },
 };
 
 /**
@@ -448,7 +448,7 @@ Item.prototype = {
       value: this._value,
       target: this._target + "",
       prebuiltNode: this._prebuiltNode + "",
-      attachment: this.attachment
+      attachment: this.attachment,
     }, null, 2);
   },
 
@@ -456,7 +456,7 @@ Item.prototype = {
   _target: null,
   _prebuiltNode: null,
   finalize: null,
-  attachment: null
+  attachment: null,
 };
 
 /**
@@ -1590,7 +1590,7 @@ const WidgetMethods = exports.WidgetMethods = {
   _emptyText: "",
   _headerText: "",
   _preferredValue: "",
-  _cachedCommandDispatcher: null
+  _cachedCommandDispatcher: null,
 };
 
 /**

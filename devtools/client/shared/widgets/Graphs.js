@@ -333,7 +333,7 @@ AbstractCanvasGraph.prototype = {
     }
     this._regions = regions.map(e => ({
       start: e.start * this.dataScaleX,
-      end: e.end * this.dataScaleX
+      end: e.end * this.dataScaleX,
     }));
     this._bakeRegions(this._regions, this._cachedGraphImage);
     this._shouldRedraw = true;
@@ -787,7 +787,7 @@ AbstractCanvasGraph.prototype = {
     const pattern = AbstractCanvasGraph.getStripePattern({
       ownerDocument: this._document,
       backgroundColor: this.selectionBackgroundColor,
-      stripesColor: this.selectionStripesColor
+      stripesColor: this.selectionStripesColor,
     });
     ctx.fillStyle = pattern;
     const rectStart = Math.min(this._width, Math.max(0, start));
@@ -829,7 +829,7 @@ AbstractCanvasGraph.prototype = {
     const pattern = AbstractCanvasGraph.getStripePattern({
       ownerDocument: this._document,
       backgroundColor: this.regionBackgroundColor,
-      stripesColor: this.regionStripesColor
+      stripesColor: this.regionStripesColor,
     });
     ctx.fillStyle = pattern;
     ctx.strokeStyle = GRAPH_REGION_LINE_COLOR;
@@ -916,7 +916,7 @@ AbstractCanvasGraph.prototype = {
     if ("testX" in e && "testY" in e) {
       return {
         mouseX: e.testX * this._pixelRatio,
-        mouseY: e.testY * this._pixelRatio
+        mouseY: e.testY * this._pixelRatio,
       };
     }
 
@@ -1218,7 +1218,7 @@ AbstractCanvasGraph.prototype = {
       this._maybeDirtyBoundingBox = true;
       setNamedTimeout(this._uid, GRAPH_RESIZE_EVENTS_DRAIN, this.refresh);
     }
-  }
+  },
 };
 
 // Helper functions.
@@ -1376,7 +1376,7 @@ this.CanvasGraphUtils = {
   _performTaskInWorker: function(task, data) {
     const worker = this._graphUtilsWorker || new DevToolsWorker(WORKER_URL);
     return worker.performTask(task, data);
-  }
+  },
 };
 
 /**

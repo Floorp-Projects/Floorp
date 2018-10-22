@@ -26,9 +26,9 @@ add_task(function() {
   [
     [100, 10, 1, 33, 1000, 100, 3, 100, "x (A:1:2)", [
       [200, 20, 1, 33, 900, 90, 2, 66, "y (B:3:4)", [
-        [700, 70, 1, 33, 700, 70, 1, 33, "z (C:5:6)"]
-      ]]
-    ]]
+        [700, 70, 1, 33, 700, 70, 1, 33, "z (C:5:6)"],
+      ]],
+    ]],
   ].forEach(compareFrameInfo(thread));
 });
 
@@ -36,7 +36,7 @@ function compareFrameInfo(root, parent) {
   parent = parent || root;
   const fields = [
     "selfSize", "selfSizePercentage", "selfCount", "selfCountPercentage",
-    "totalSize", "totalSizePercentage", "totalCount", "totalCountPercentage"
+    "totalSize", "totalSizePercentage", "totalCount", "totalCountPercentage",
   ];
   return function(def) {
     let children;
@@ -73,19 +73,19 @@ var TEST_DATA = {
       line: 1,
       column: 2,
       functionDisplayName: "x",
-      parent: 0
+      parent: 0,
     }, {
       source: "B",
       line: 3,
       column: 4,
       functionDisplayName: "y",
-      parent: 1
+      parent: 1,
     }, {
       source: "C",
       line: 5,
       column: 6,
       functionDisplayName: "z",
-      parent: 2
-    }
-  ]
+      parent: 2,
+    },
+  ],
 };

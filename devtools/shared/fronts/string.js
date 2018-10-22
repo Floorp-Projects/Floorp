@@ -40,7 +40,7 @@ const LongStringFront = protocol.FrontClassWithSpec(longStringSpec, {
       this.strPromise = promiseRest(this.initial);
     }
     return this.strPromise;
-  }
+  },
 });
 
 exports.LongStringFront = LongStringFront;

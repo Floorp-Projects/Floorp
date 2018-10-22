@@ -277,8 +277,8 @@ PeerConnectionIdp.prototype = {
     let content = {
       fingerprint: [{
         algorithm,
-        digest
-      }]
+        digest,
+      }],
     };
 
     this._resetAssertion();
@@ -340,5 +340,5 @@ PeerConnectionIdp.prototype = {
           throw new this._win.DOMException("IdP timed out", "IdpError");
         });
     return this._win.Promise.race([ timeout, p ]);
-  }
+  },
 };

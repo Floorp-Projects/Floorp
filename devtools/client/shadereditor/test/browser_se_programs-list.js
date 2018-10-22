@@ -30,8 +30,8 @@ async function ifWebGLSupported() {
         checkSecondProgram();
       }
     }),
-    once(panel, EVENTS.SOURCES_SHOWN)
-  ]).then(([programs, ]) => programs);
+    once(panel, EVENTS.SOURCES_SHOWN),
+  ]).then(([programs ]) => programs);
 
   is(shadersListView.attachments[0].label, L10N.getFormatStr("shadersList.programLabel", 0),
     "The correct first label is shown in the shaders list.");

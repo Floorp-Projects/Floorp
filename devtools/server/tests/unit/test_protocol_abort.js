@@ -24,9 +24,9 @@ const rootSpec = protocol.generateActorSpec({
 
   methods: {
     simpleReturn: {
-      response: { value: RetVal() }
-    }
-  }
+      response: { value: RetVal() },
+    },
+  },
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
@@ -43,7 +43,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   simpleReturn: function() {
     return this.sequence++;
-  }
+  },
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
@@ -52,7 +52,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  }
+  },
 });
 
 function run_test() {

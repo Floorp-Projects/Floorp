@@ -47,14 +47,14 @@ ObjectClient.prototype = {
   }),
 
   getDefinitionSite: DebuggerClient.requester({
-    type: "definitionSite"
+    type: "definitionSite",
   }, {
     before: function(packet) {
       if (this._grip.class != "Function") {
         throw new Error("getDefinitionSite is only valid for function grips.");
       }
       return packet;
-    }
+    },
   }),
 
   /**
@@ -66,7 +66,7 @@ ObjectClient.prototype = {
    *        where each <parameterName> is the name of a parameter.
    */
   getParameterNames: DebuggerClient.requester({
-    type: "parameterNames"
+    type: "parameterNames",
   }, {
     before: function(packet) {
       if (this._grip.class !== "Function") {
@@ -83,7 +83,7 @@ ObjectClient.prototype = {
    * @param onResponse function Called with the request's response.
    */
   getOwnPropertyNames: DebuggerClient.requester({
-    type: "ownPropertyNames"
+    type: "ownPropertyNames",
   }),
 
   /**
@@ -92,7 +92,7 @@ ObjectClient.prototype = {
    * @param onResponse function Called with the request's response.
    */
   getPrototypeAndProperties: DebuggerClient.requester({
-    type: "prototypeAndProperties"
+    type: "prototypeAndProperties",
   }),
 
   /**
@@ -115,7 +115,7 @@ ObjectClient.prototype = {
    */
   enumProperties: DebuggerClient.requester({
     type: "enumProperties",
-    options: arg(0)
+    options: arg(0),
   }, {
     after: function(response) {
       if (response.iterator) {
@@ -132,7 +132,7 @@ ObjectClient.prototype = {
    * @param onResponse function Called with the request's response.
    */
   enumEntries: DebuggerClient.requester({
-    type: "enumEntries"
+    type: "enumEntries",
   }, {
     before: function(packet) {
       if (!["Map", "WeakMap", "Set", "WeakSet", "Storage"].includes(this._grip.class)) {
@@ -143,11 +143,11 @@ ObjectClient.prototype = {
     after: function(response) {
       if (response.iterator) {
         return {
-          iterator: new PropertyIteratorClient(this._client, response.iterator)
+          iterator: new PropertyIteratorClient(this._client, response.iterator),
         };
       }
       return response;
-    }
+    },
   }),
 
   /**
@@ -156,7 +156,7 @@ ObjectClient.prototype = {
    * @param onResponse function Called with the request's response.
    */
   enumSymbols: DebuggerClient.requester({
-    type: "enumSymbols"
+    type: "enumSymbols",
   }, {
     before: function(packet) {
       if (this._grip.type !== "object") {
@@ -167,11 +167,11 @@ ObjectClient.prototype = {
     after: function(response) {
       if (response.iterator) {
         return {
-          iterator: new SymbolIteratorClient(this._client, response.iterator)
+          iterator: new SymbolIteratorClient(this._client, response.iterator),
         };
       }
       return response;
-    }
+    },
   }),
 
   /**
@@ -182,7 +182,7 @@ ObjectClient.prototype = {
    */
   getProperty: DebuggerClient.requester({
     type: "property",
-    name: arg(0)
+    name: arg(0),
   }),
 
   /**
@@ -193,7 +193,7 @@ ObjectClient.prototype = {
    */
   getPropertyValue: DebuggerClient.requester({
     type: "propertyValue",
-    name: arg(0)
+    name: arg(0),
   }),
 
   /**
@@ -202,7 +202,7 @@ ObjectClient.prototype = {
    * @param onResponse function Called with the request's response.
    */
   getPrototype: DebuggerClient.requester({
-    type: "prototype"
+    type: "prototype",
   }),
 
   /**
@@ -224,7 +224,7 @@ ObjectClient.prototype = {
    * @param onResponse function Called with the request's response.
    */
   getDisplayString: DebuggerClient.requester({
-    type: "displayString"
+    type: "displayString",
   }),
 
   /**
@@ -233,7 +233,7 @@ ObjectClient.prototype = {
    * @param onResponse function Called with the request's response.
    */
   getScope: DebuggerClient.requester({
-    type: "scope"
+    type: "scope",
   }, {
     before: function(packet) {
       if (this._grip.class !== "Function") {
@@ -247,7 +247,7 @@ ObjectClient.prototype = {
    * Request the promises directly depending on the current promise.
    */
   getDependentPromises: DebuggerClient.requester({
-    type: "dependentPromises"
+    type: "dependentPromises",
   }, {
     before: function(packet) {
       if (this._grip.class !== "Promise") {
@@ -255,28 +255,28 @@ ObjectClient.prototype = {
           "grips.");
       }
       return packet;
-    }
+    },
   }),
 
   /**
    * Request the stack to the promise's allocation point.
    */
   getPromiseAllocationStack: DebuggerClient.requester({
-    type: "allocationStack"
+    type: "allocationStack",
   }, {
     before: function(packet) {
       if (this._grip.class !== "Promise") {
         throw new Error("getAllocationStack is only valid for promise grips.");
       }
       return packet;
-    }
+    },
   }),
 
   /**
    * Request the stack to the promise's fulfillment point.
    */
   getPromiseFulfillmentStack: DebuggerClient.requester({
-    type: "fulfillmentStack"
+    type: "fulfillmentStack",
   }, {
     before: function(packet) {
       if (this._grip.class !== "Promise") {
@@ -284,14 +284,14 @@ ObjectClient.prototype = {
           "promise grips.");
       }
       return packet;
-    }
+    },
   }),
 
   /**
    * Request the stack to the promise's rejection point.
    */
   getPromiseRejectionStack: DebuggerClient.requester({
-    type: "rejectionStack"
+    type: "rejectionStack",
   }, {
     before: function(packet) {
       if (this._grip.class !== "Promise") {
@@ -299,8 +299,8 @@ ObjectClient.prototype = {
           "promise grips.");
       }
       return packet;
-    }
-  })
+    },
+  }),
 };
 
 module.exports = ObjectClient;

@@ -39,7 +39,7 @@
         gTooltipElm.style.display = "block";
 
         elm.setAttribute("aria-describedby", "tooltip");
-      }
+      },
     };
 
     var gBlurHandler = {
@@ -49,7 +49,7 @@
         var elm = aEvent.target;
         if (elm.nodeType == Node.ELEMENT_NODE)
           elm.removeAttribute("aria-describedby");
-      }
+      },
     };
 
     /**

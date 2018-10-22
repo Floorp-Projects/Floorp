@@ -26,7 +26,7 @@ class RequestListColumnScheme extends Component {
     return (
       div({
         className: "requests-list-column requests-list-scheme",
-        title: urlDetails.scheme
+        title: urlDetails.scheme,
       },
         urlDetails.scheme
       )

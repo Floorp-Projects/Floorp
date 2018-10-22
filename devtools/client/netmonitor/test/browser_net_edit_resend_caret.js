@@ -42,7 +42,7 @@ add_task(async function() {
   const methodField = document.querySelector("#custom-method-value");
   const originalMethodValue = methodField.value;
   const {
-    getSelectedRequest
+    getSelectedRequest,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
   const request = getSelectedRequest(store.getState());
   const hostHeader = request.requestHeaders.headers[0];

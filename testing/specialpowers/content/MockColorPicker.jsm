@@ -25,7 +25,7 @@ var newFactory = function(window) {
     lockFactory(aLock) {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
   };
 };
 
@@ -66,7 +66,7 @@ var MockColorPicker = {
     if (oldClassID != "" && oldFactory != null) {
       registrar.registerFactory(oldClassID, "", CONTRACT_ID, oldFactory);
     }
-  }
+  },
 };
 
 function MockColorPickerInstance(window) {
@@ -107,5 +107,5 @@ MockColorPickerInstance.prototype = {
         aColorPickerShownCallback.done(result);
       }
     }, 0);
-  }
+  },
 };

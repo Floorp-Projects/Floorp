@@ -9,13 +9,13 @@ const defer = require("devtools/shared/defer");
 
 // Lazily require encoder and decoder in case only one is needed
 Object.defineProperty(this, "Encoder", {
-  get: () => require("./encoder/index").Encoder
+  get: () => require("./encoder/index").Encoder,
 });
 Object.defineProperty(this, "QRRSBlock", {
-  get: () => require("./encoder/index").QRRSBlock
+  get: () => require("./encoder/index").QRRSBlock,
 });
 Object.defineProperty(this, "QRErrorCorrectLevel", {
-  get: () => require("./encoder/index").QRErrorCorrectLevel
+  get: () => require("./encoder/index").QRErrorCorrectLevel,
 });
 Object.defineProperty(this, "decoder", {
   get: () => {
@@ -25,7 +25,7 @@ Object.defineProperty(this, "decoder", {
     } catch (e) {
       return null;
     }
-  }
+  },
 });
 
 /**

@@ -108,7 +108,7 @@ DebuggerClient.requester = function(packetSkeleton, config = {}) {
   const { before, after } = config;
   return DevToolsUtils.makeInfallible(function(...args) {
     let outgoingPacket = {
-      to: packetSkeleton.to || this.actor
+      to: packetSkeleton.to || this.actor,
     };
 
     let maxPosition = -1;
@@ -400,7 +400,7 @@ DebuggerClient.prototype = {
   attachAddon: function(addonTargetActor) {
     const packet = {
       to: addonTargetActor,
-      type: "attach"
+      type: "attach",
     };
     return this.request(packet).then(response => {
       const addonClient = new AddonClient(this, addonTargetActor);
@@ -489,7 +489,7 @@ DebuggerClient.prototype = {
    */
   release: DebuggerClient.requester({
     to: arg(0),
-    type: "release"
+    type: "release",
   }),
 
   /**

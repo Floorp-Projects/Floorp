@@ -46,7 +46,7 @@ const CssPropertiesFront = FrontClassWithSpec(cssPropertiesSpec, {
   initialize: function(client, { cssPropertiesActor }) {
     Front.prototype.initialize.call(this, client, {actor: cssPropertiesActor});
     this.manage(this);
-  }
+  },
 });
 
 /**
@@ -158,7 +158,7 @@ CssProperties.prototype = {
 
   /**
    * Checks if the property supports the given CSS type.
-   * CSS types should come from devtools/shared/css/properties-db.js' CSS_TYPES.
+   * CSS types should come from devtools/shared/css/constants.js' CSS_TYPES.
    *
    * @param {String} property The property to be checked.
    * @param {Number} type One of the type values from CSS_TYPES.

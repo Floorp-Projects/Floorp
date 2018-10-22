@@ -130,7 +130,7 @@ const TESTS = [
       observe: function VO_observe(aSubject, aTopic, aData) {
         this.gotNotification = true;
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
     };
     Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
 
@@ -174,7 +174,7 @@ const TESTS = [
       observe: function VO_observe(aSubject, aTopic, aData) {
         this.gotNotification = true;
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
     };
     Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
 
@@ -266,7 +266,7 @@ const TESTS = [
       observe: function VO_observe(aSubject, aTopic, aData) {
         this.gotNotification = true;
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
     };
     Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
 

@@ -17,8 +17,8 @@ const DATA = [
       width: "1300",
       start_state: "initial_panel",
       panel_name: "inspector",
-      cold: "true"
-    }
+      cold: "true",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -30,8 +30,8 @@ const DATA = [
       width: "1300",
       start_state: "toolbox_show",
       panel_name: "jsdebugger",
-      cold: "true"
-    }
+      cold: "true",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -43,8 +43,8 @@ const DATA = [
       width: "1300",
       start_state: "toolbox_show",
       panel_name: "styleeditor",
-      cold: "true"
-    }
+      cold: "true",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -56,8 +56,8 @@ const DATA = [
       width: "1300",
       start_state: "toolbox_show",
       panel_name: "netmonitor",
-      cold: "true"
-    }
+      cold: "true",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -69,8 +69,8 @@ const DATA = [
       width: "1300",
       start_state: "toolbox_show",
       panel_name: "storage",
-      cold: "true"
-    }
+      cold: "true",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -82,9 +82,9 @@ const DATA = [
       width: "1300",
       start_state: "toolbox_show",
       panel_name: "netmonitor",
-      cold: "false"
-    }
-  }
+      cold: "false",
+    },
+  },
 ];
 
 add_task(async function() {

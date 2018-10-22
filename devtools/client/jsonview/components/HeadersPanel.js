@@ -34,7 +34,7 @@ define(function(require, exports, module) {
       super(props);
 
       this.state = {
-        data: {}
+        data: {},
       };
     }
 

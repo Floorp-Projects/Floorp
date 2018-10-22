@@ -107,8 +107,8 @@ function loadImage(uri, expect, callback) {
 // Temporarily allow content to access all resource:// URIs.
 SpecialPowers.pushPrefEnv({
   set: [
-    ["security.all_resource_uri_content_accessible", true]
-  ]
+    ["security.all_resource_uri_content_accessible", true],
+  ],
 }, () => testScriptSrc(runImgTest));
 </script>
 </pre>

@@ -85,7 +85,7 @@ ResultsHeap.prototype =
       }
     }
     return new AutoCompleteResult(values, comments);
-  }
+  },
 };
 
 
@@ -124,7 +124,7 @@ AutoCompleteSearch.prototype =
   name: null,
 
   // Results heap.
-  allResults: null
+  allResults: null,
 };
 
 
@@ -185,5 +185,5 @@ AutoCompleteResult.prototype =
 
   // Data
   values: null,
-  comments: null
+  comments: null,
 };

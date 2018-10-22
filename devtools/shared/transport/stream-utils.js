@@ -151,7 +151,7 @@ StreamCopier.prototype = {
   _emitProgress: function() {
     this.emit("progress", {
       bytesSent: this._length - this._amountLeft,
-      totalBytes: this._length
+      totalBytes: this._length,
     });
   },
 
@@ -194,7 +194,7 @@ StreamCopier.prototype = {
     // Prefix logs with the copier ID, which makes logs much easier to
     // understand when several copiers are running simultaneously
     dumpv("Copier: " + this._id + " " + msg);
-  }
+  },
 
 };
 
@@ -248,5 +248,5 @@ function delimitedRead(stream, delimiter, count) {
 
 module.exports = {
   copyStream: copyStream,
-  delimitedRead: delimitedRead
+  delimitedRead: delimitedRead,
 };

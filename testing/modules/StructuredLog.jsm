@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = [
   "StructuredLogger",
-  "StructuredFormatter"
+  "StructuredFormatter",
 ];
 
 /**
@@ -187,7 +187,7 @@ StructuredLogger.prototype = {
       time: Date.now(),
       thread: null,
       pid: null,
-      source: this.name
+      source: this.name,
     };
 
     for (var field in data) {
@@ -262,6 +262,6 @@ StructuredFormatter.prototype = {
 
   suite_end(message) {
     return "SUITE-END | took " + message.time - this.suiteStartTime + "ms";
-  }
+  },
 };
 

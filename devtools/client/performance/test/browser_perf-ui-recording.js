@@ -15,7 +15,7 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   pmmLoadFrameScripts(gBrowser);

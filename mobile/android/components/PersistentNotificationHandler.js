@@ -46,7 +46,7 @@ PersistentNotificationHandler.prototype = {
             behavior
           );
           notificationStorage.delete(persistentInfo.origin, persistentInfo.id);
-        }
+        },
       });
     } else if (topic === "persistent-notification-close") {
       notificationStorage.getByID(persistentInfo.origin, persistentInfo.id, {
@@ -65,12 +65,12 @@ PersistentNotificationHandler.prototype = {
             behavior
           );
           notificationStorage.delete(persistentInfo.origin, persistentInfo.id);
-        }
+        },
       });
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  PersistentNotificationHandler
+  PersistentNotificationHandler,
 ]);

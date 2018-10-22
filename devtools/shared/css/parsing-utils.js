@@ -14,11 +14,10 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "CSS_ANGLEUNIT",
-  "devtools/shared/css/properties-db", true);
-
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
+
+loader.lazyRequireGetter(this, "CSS_ANGLEUNIT", "devtools/shared/css/constants", true);
 
 const SELECTOR_ATTRIBUTE = exports.SELECTOR_ATTRIBUTE = 1;
 const SELECTOR_ELEMENT = exports.SELECTOR_ELEMENT = 2;
@@ -93,7 +92,7 @@ function cssTokenizerWithLineColumn(string) {
     if (prevToken) {
       prevToken.loc.end = {
         line: lineNumber,
-        column: columnNumber
+        column: columnNumber,
       };
     }
 
@@ -107,7 +106,7 @@ function cssTokenizerWithLineColumn(string) {
     } else {
       const startLoc = {
         line: lineNumber,
-        column: columnNumber
+        column: columnNumber,
       };
       token.loc = {start: startLoc};
 
@@ -1267,7 +1266,7 @@ function parseSingleValue(isCssPropertyKnown, value) {
                                       "a: " + value + ";")[0];
   return {
     value: declaration ? declaration.value : "",
-    priority: declaration ? declaration.priority : ""
+    priority: declaration ? declaration.priority : "",
   };
 }
 

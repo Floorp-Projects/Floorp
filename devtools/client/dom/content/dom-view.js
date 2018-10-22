@@ -16,7 +16,7 @@ const MainFrame = React.createFactory(require("./components/MainFrame"));
 
 // Store
 const createStore = require("devtools/client/shared/redux/create-store")({
-  log: false
+  log: false,
 });
 
 const { reducers } = require("./reducers/index");
@@ -44,7 +44,7 @@ DomView.prototype = {
 
     // Render top level component
     const provider = React.createElement(Provider, {
-      store: this.store
+      store: this.store,
     }, mainFrame);
 
     this.mainFrame = ReactDOM.render(provider, content);

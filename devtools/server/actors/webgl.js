@@ -76,7 +76,7 @@ var ShaderActor = protocol.ActorClassWithSpec(shaderSpec, {
       return error;
     }
     return undefined;
-  }
+  },
 });
 
 /**
@@ -177,7 +177,7 @@ var ProgramActor = protocol.ActorClassWithSpec(programSpec, {
     const shaderActor = new ShaderActor(this.conn, this.program, shader, proxy);
     this._shaderActorsCache[type] = shaderActor;
     return this._shaderActorsCache[type];
-  }
+  },
 });
 
 /**
@@ -328,7 +328,7 @@ exports.WebGLActor = protocol.ActorClassWithSpec(webGLSpec, {
     const programActor = new ProgramActor(this.conn, args);
     this._programActorsCache.push(programActor);
     this.emit("program-linked", programActor);
-  }
+  },
 });
 
 /**
@@ -442,59 +442,59 @@ var WebGLInstrumenter = {
     // after
     timing: 1,
     functions: [
-      "linkProgram", "getAttribLocation", "getUniformLocation"
-    ]
+      "linkProgram", "getAttribLocation", "getUniformLocation",
+    ],
   }, {
     // before
     timing: -1,
     callback: [
-      "toggleVertexAttribArray"
+      "toggleVertexAttribArray",
     ],
     functions: [
-      "enableVertexAttribArray", "disableVertexAttribArray"
-    ]
+      "enableVertexAttribArray", "disableVertexAttribArray",
+    ],
   }, {
     // before
     timing: -1,
     callback: [
-      "attribute_"
+      "attribute_",
     ],
     functions: [
       "vertexAttrib1f", "vertexAttrib2f", "vertexAttrib3f", "vertexAttrib4f",
       "vertexAttrib1fv", "vertexAttrib2fv", "vertexAttrib3fv", "vertexAttrib4fv",
-      "vertexAttribPointer"
-    ]
+      "vertexAttribPointer",
+    ],
   }, {
     // before
     timing: -1,
     callback: [
-      "uniform_"
+      "uniform_",
     ],
     functions: [
       "uniform1i", "uniform2i", "uniform3i", "uniform4i",
       "uniform1f", "uniform2f", "uniform3f", "uniform4f",
       "uniform1iv", "uniform2iv", "uniform3iv", "uniform4iv",
       "uniform1fv", "uniform2fv", "uniform3fv", "uniform4fv",
-      "uniformMatrix2fv", "uniformMatrix3fv", "uniformMatrix4fv"
-    ]
+      "uniformMatrix2fv", "uniformMatrix3fv", "uniformMatrix4fv",
+    ],
   }, {
     // before
     timing: -1,
     functions: [
       "useProgram", "enable", "disable", "blendColor",
       "blendEquation", "blendEquationSeparate",
-      "blendFunc", "blendFuncSeparate"
-    ]
+      "blendFunc", "blendFuncSeparate",
+    ],
   }, {
     // before and after
     timing: 0,
     callback: [
-      "beforeDraw_", "afterDraw_"
+      "beforeDraw_", "afterDraw_",
     ],
     functions: [
-      "drawArrays", "drawElements"
-    ]
-  }]
+      "drawArrays", "drawElements",
+    ],
+  }],
   // TODO: It'd be a good idea to handle other functions as well:
   //   - getActiveUniform
   //   - getUniform
@@ -528,7 +528,7 @@ WebGLObserver.prototype = {
     this._contexts.set(context, {
       ownerWindow: id,
       cache: cache,
-      proxy: proxy
+      proxy: proxy,
     });
   },
 
@@ -817,7 +817,7 @@ WebGLObserver.prototype = {
     if (traits & PROGRAM_HIGHLIGHT_TRAIT) {
       proxy.disableHighlighting();
     }
-  }
+  },
 };
 
 /**
@@ -895,7 +895,7 @@ WebGLCache.prototype = {
       // keys are GLints (numbers)
       attributes: [],
       // keys are WebGLUniformLocations (objects)
-      uniforms: new Map()
+      uniforms: new Map(),
     });
   },
 
@@ -959,7 +959,7 @@ WebGLCache.prototype = {
   addAttribute: function(program, name, value) {
     this._programs.get(program).attributes[value] = {
       name: name,
-      value: value
+      value: value,
     };
   },
 
@@ -976,7 +976,7 @@ WebGLCache.prototype = {
   addUniform: function(program, name, value) {
     this._programs.get(program).uniforms.set(new XPCNativeWrapper(value), {
       name: name,
-      value: value
+      value: value,
     });
   },
 
@@ -1042,7 +1042,7 @@ WebGLCache.prototype = {
     const uniforms = this._currentUniformsMap;
     const currentInfo = uniforms ? uniforms.get(initialValue) : null;
     return currentInfo ? currentInfo.value : initialValue;
-  }
+  },
 };
 
 /**
@@ -1076,7 +1076,7 @@ function WebGLProxy(id, context, cache, observer) {
     "compileShader",
     "enableHighlighting",
     "disableHighlighting",
-    "readPixels"
+    "readPixels",
   ];
   exports.forEach(e => {
     this[e] = (...args) => this._call(e, args);
@@ -1195,7 +1195,7 @@ WebGLProxy.prototype = {
     const gl = this._gl;
     const shaderTypeEnum = {
       vertex: gl.VERTEX_SHADER,
-      fragment: gl.FRAGMENT_SHADER
+      fragment: gl.FRAGMENT_SHADER,
     }[type];
 
     for (const shader of shaders) {
@@ -1319,7 +1319,7 @@ WebGLProxy.prototype = {
     this._observer.suppressHandlers = prevState;
 
     return result;
-  }
+  },
 };
 
 // Utility functions.

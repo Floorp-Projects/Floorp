@@ -32,18 +32,18 @@ const tests = [{
       keyboardShortcut: "",
       childCount: 0,
       indexInParent: 0,
-      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"],
+    },
+  },
 }, {
   desc: "Mark document as disabled for accessibility.",
   action: async ({ browser }) => ContentTask.spawn(browser, {}, () =>
     content.document.body.setAttribute("aria-disabled", true)),
   expected: {
     sidebar: {
-      states: ["unavailable", "readonly", "focusable", "opaque"]
-    }
-  }
+      states: ["unavailable", "readonly", "focusable", "opaque"],
+    },
+  },
 }, {
   desc: "Append a new child to the document.",
   action: async ({ browser }) => ContentTask.spawn(browser, {}, () => {
@@ -54,9 +54,9 @@ const tests = [{
   }),
   expected: {
     sidebar: {
-      childCount: 1
-    }
-  }
+      childCount: 1,
+    },
+  },
 }];
 
 /**

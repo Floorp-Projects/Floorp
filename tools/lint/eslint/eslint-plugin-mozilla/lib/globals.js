@@ -46,7 +46,7 @@ function parseBooleanConfig(string, comment) {
 
     items[name] = {
       value: (value === "true"),
-      comment
+      comment,
     };
   });
 
@@ -105,7 +105,7 @@ GlobalsForNode.prototype = {
         for (let name of Object.keys(values)) {
           globals.push({
             name,
-            writable: values[name].value
+            writable: values[name].value,
           });
         }
         // We matched globals, so we won't match import-globals-from.
@@ -150,7 +150,7 @@ GlobalsForNode.prototype = {
     }
 
     return globals;
-  }
+  },
 };
 
 module.exports = {
@@ -193,7 +193,7 @@ module.exports = {
 
     let globals = Object.keys(globalScope.variables).map(v => ({
       name: globalScope.variables[v].name,
-      writable: true
+      writable: true,
     }));
 
     // Walk over the AST to find any of our custom globals
@@ -246,10 +246,10 @@ module.exports = {
         if (name === "script" && "src" in attribs) {
           scriptSrcs.push({
             src: attribs.src,
-            type: "type" in attribs ? attribs.type : "script"
+            type: "type" in attribs ? attribs.type : "script",
           });
         }
-      }
+      },
     });
 
     parser.parseComplete(content);
@@ -276,7 +276,7 @@ module.exports = {
       if (scriptName && fs.existsSync(scriptName)) {
         globals.push(...module.exports.getGlobalsForFile(scriptName, {
           ecmaVersion: helpers.getECMAVersion(),
-          sourceType: script.type
+          sourceType: script.type,
         }));
       }
     }
@@ -298,7 +298,7 @@ module.exports = {
     let parser = {
       Program(node) {
         globalScope = context.getScope();
-      }
+      },
     };
     let filename = context.getFilename();
 
@@ -322,5 +322,5 @@ module.exports = {
     }
 
     return parser;
-  }
+  },
 };

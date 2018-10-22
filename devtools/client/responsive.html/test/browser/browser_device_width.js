@@ -95,10 +95,10 @@ function grabContentInfo(ui) {
     return {
       screen: {
         width: content.screen.width,
-        height: content.screen.height
+        height: content.screen.height,
       },
       innerWidth: content.innerWidth,
-      matchesMedia: content.matchMedia("(max-device-width:100px)").matches
+      matchesMedia: content.matchMedia("(max-device-width:100px)").matches,
     };
   });
 }

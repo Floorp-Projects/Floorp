@@ -31,3 +31,6 @@ fi
 
 echo "Applying gecko.patch on top of $rev"
 patch -p3 < gecko.patch
+
+echo "Applying register-collection-not-supported.patch on top of $rev"
+patch -p3 < register-collection-not-supported.patch

@@ -63,7 +63,7 @@ var AuthenticationResult = exports.AuthenticationResult = createEnum({
    * connections from the same client.  This requires a trustable mechanism to
    * identify the client in the future, such as the cert used during OOB_CERT.
    */
-  ALLOW_PERSIST: null
+  ALLOW_PERSIST: null,
 
 });
 
@@ -207,7 +207,7 @@ Prompt.Server.prototype = {
     return this.allowConnection({
       authentication: this.mode,
       client,
-      server
+      server,
     });
   },
 
@@ -358,7 +358,7 @@ OOBCert.Client.prototype = {
               port,
               cert,
               authResult,
-              oob: oobData
+              oob: oobData,
             });
             break;
           case AuthenticationResult.ALLOW:
@@ -390,7 +390,7 @@ OOBCert.Client.prototype = {
         // Transport died before auth completed
         transport.hooks = null;
         deferred.reject(reason);
-      }
+      },
     };
     transport.ready();
     return deferred.promise;
@@ -404,7 +404,7 @@ OOBCert.Client.prototype = {
     const clientCert = await cert.local.getOrCreate();
     return {
       sha256: clientCert.sha256Fingerprint,
-      k: this._createRandom()
+      k: this._createRandom(),
     };
   },
 
@@ -532,7 +532,7 @@ OOBCert.Server.prototype = {
     // Server sees that ClientCert is from a unknown client
     // Tell client they are unknown and should display OOB client UX
     transport.send({
-      authResult: AuthenticationResult.PENDING
+      authResult: AuthenticationResult.PENDING,
     });
 
     // Step B.5
@@ -541,7 +541,7 @@ OOBCert.Server.prototype = {
     const authResult = await this.allowConnection({
       authentication: this.mode,
       client,
-      server
+      server,
     });
 
     switch (authResult) {
@@ -653,5 +653,5 @@ exports.Authenticators = {
       }
     }
     throw new Error("Unknown authenticator mode: " + mode);
-  }
+  },
 };

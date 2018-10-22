@@ -9,7 +9,7 @@
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {
   findMostRelevantIndex,
-  findMostRelevantCssPropertyIndex
+  findMostRelevantCssPropertyIndex,
 } = require("devtools/client/shared/suggestion-picker");
 
 /**
@@ -29,18 +29,18 @@ const TEST_DATA = [
     // Match in sortedItems array.
     items: ["chrome", "edge", "firefox"],
     sortedItems: ["firefox", "chrome", "edge"],
-    expectedIndex: 2
+    expectedIndex: 2,
   }, {
     // No match in sortedItems array.
     items: ["apple", "oranges", "banana"],
     sortedItems: ["kiwi", "pear", "peach"],
-    expectedIndex: 0
+    expectedIndex: 0,
   }, {
     // Empty items array.
     items: [],
     sortedItems: ["empty", "arrays", "can't", "have", "relevant", "indexes"],
-    expectedIndex: -1
-  }
+    expectedIndex: -1,
+  },
 ];
 
 function ensureMostRelevantIndexProvidedByHelperFunction() {
@@ -68,9 +68,9 @@ const CSS_TEST_DATA = [
       "background-image",
       "background-origin",
       "background-position",
-      "background-repeat"
+      "background-repeat",
     ],
-    expectedIndex: 1
+    expectedIndex: 1,
   },
   {
     items: [
@@ -83,17 +83,17 @@ const CSS_TEST_DATA = [
       "color-interpolation",
       "color-interpolation-filters",
       "content",
-      "counter-increment"
+      "counter-increment",
     ],
-    expectedIndex: 5
+    expectedIndex: 5,
   },
   {
     items: [
       "direction",
       "display",
-      "dominant-baseline"
+      "dominant-baseline",
     ],
-    expectedIndex: 1
+    expectedIndex: 1,
   },
   {
     items: [
@@ -106,9 +106,9 @@ const CSS_TEST_DATA = [
       "opacity",
       "order",
       "orphans",
-      "outline"
+      "outline",
     ],
-    expectedIndex: 6
+    expectedIndex: 6,
   },
   {
     items: [
@@ -119,10 +119,10 @@ const CSS_TEST_DATA = [
       "word-break",
       "word-spacing",
       "word-wrap",
-      "writing-mode"
+      "writing-mode",
     ],
-    expectedIndex: 2
-  }
+    expectedIndex: 2,
+  },
 ];
 
 function ensureMostRelevantIndexProvidedByClassMethod() {

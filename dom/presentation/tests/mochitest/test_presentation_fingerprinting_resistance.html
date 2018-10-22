@@ -27,8 +27,8 @@ let setup = async () => {
       ["dom.presentation.test.enabled", true],
       ["dom.presentation.test.stage", 0],
       ["dom.mozBrowserFramesEnabled", true],
-      ["network.disable.ipc.security", true]
-    ]
+      ["network.disable.ipc.security", true],
+    ],
   });
 
   gScript.addMessageListener("device-prompt", function devicePromptHandler() {
@@ -101,8 +101,8 @@ let enableResistFingerprinting = () => {
   SimpleTest.info(kPref + " = true");
   return SpecialPowers.pushPrefEnv({
     set: [
-      [kPref, true]
-    ]
+      [kPref, true],
+    ],
   });
 };
 

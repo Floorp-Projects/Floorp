@@ -14,7 +14,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const {
@@ -22,7 +22,7 @@ add_task(async function() {
     DetailsView,
     WaterfallView,
     JsCallTreeView,
-    JsFlameGraphView
+    JsFlameGraphView,
   } = panel.panelWin;
 
   await startRecording(panel);

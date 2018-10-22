@@ -44,7 +44,7 @@ add_task(async function() {
       fullMimeType: "text/plain",
       transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 60),
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 64),
-      time: true
+      time: true,
     });
 
   wait = waitForDOM(document, ".CodeMirror-code");

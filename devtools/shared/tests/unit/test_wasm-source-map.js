@@ -15,7 +15,7 @@ const testMap1 = {
   names: [],
   sources: ["one.js", "two.js"],
   sourceRoot: "/the/root",
-  mappings: "CAAC,IAAM,SACU,GAAC"
+  mappings: "CAAC,IAAM,SACU,GAAC",
 };
 const testMap1Entries = [
   { offset: 1, line: 1, column: 1 },
@@ -29,7 +29,7 @@ const testMap2 = {
   names: [],
   sources: ["zero.js"],
   mappings: "",
-  sourcesContent: ["//test"]
+  sourcesContent: ["//test"],
 };
 
 function run_test() {
@@ -60,7 +60,7 @@ function run_test() {
   const pos2 = remap1.generatedPositionFor({
     source: "/the/root/one.js",
     line: 2,
-    column: 18
+    column: 18,
   });
   equal(pos2.line, 17);
   equal(pos2.column, 0);
@@ -70,7 +70,7 @@ function run_test() {
   const pos3 = remap1.allGeneratedPositionsFor({
     source: "/the/root/one.js",
     line: 2,
-    column: 17
+    column: 17,
   });
   equal(pos3.length, 1);
   equal(pos3[0].line, 14);

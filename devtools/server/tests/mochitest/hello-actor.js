@@ -11,9 +11,9 @@ const helloSpec = protocol.generateActorSpec({
   methods: {
     count: {
       request: {},
-      response: {count: protocol.RetVal("number")}
-    }
-  }
+      response: {count: protocol.RetVal("number")},
+    },
+  },
 });
 
 var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
@@ -24,5 +24,5 @@ var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
 
   count: function() {
     return ++this.counter;
-  }
+  },
 });

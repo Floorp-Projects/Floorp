@@ -138,5 +138,5 @@ var BrowserActions = {
     delete this._browserActions[uuid];
     delete this._browserActionTitles[uuid];
     this._maybeUnregisterListeners();
-  }
+  },
 };

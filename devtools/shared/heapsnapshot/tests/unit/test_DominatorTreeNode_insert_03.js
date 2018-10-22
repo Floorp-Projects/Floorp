@@ -19,11 +19,11 @@ const path = [666];
 const newChildren = [
   makeTestDominatorTreeNode({
     nodeId: 777,
-    parentId: 666
+    parentId: 666,
   }),
   makeTestDominatorTreeNode({
     nodeId: 888,
-    parentId: 666
+    parentId: 666,
   }),
 ];
 
@@ -43,7 +43,7 @@ const expected = {
       retainedSize: 1,
       parentId: 666,
       moreChildrenAvailable: true,
-      children: undefined
+      children: undefined,
     },
     {
       nodeId: 4,
@@ -59,7 +59,7 @@ const expected = {
           retainedSize: 1,
           parentId: 4,
           moreChildrenAvailable: true,
-          children: undefined
+          children: undefined,
         },
         {
           nodeId: 2,
@@ -68,7 +68,7 @@ const expected = {
           retainedSize: 1,
           parentId: 4,
           moreChildrenAvailable: true,
-          children: undefined
+          children: undefined,
         },
         {
           nodeId: 3,
@@ -77,10 +77,10 @@ const expected = {
           retainedSize: 1,
           parentId: 4,
           moreChildrenAvailable: true,
-          children: undefined
-        }
+          children: undefined,
+        },
       ],
-      moreChildrenAvailable: true
+      moreChildrenAvailable: true,
     },
     {
       nodeId: 5,
@@ -89,7 +89,7 @@ const expected = {
       retainedSize: 1,
       parentId: 666,
       moreChildrenAvailable: true,
-      children: undefined
+      children: undefined,
     },
     {
       nodeId: 777,
@@ -98,7 +98,7 @@ const expected = {
       retainedSize: 1,
       parentId: 666,
       moreChildrenAvailable: true,
-      children: undefined
+      children: undefined,
     },
     {
       nodeId: 888,
@@ -107,10 +107,10 @@ const expected = {
       retainedSize: 1,
       parentId: 666,
       moreChildrenAvailable: true,
-      children: undefined
-    }
+      children: undefined,
+    },
   ],
-  moreChildrenAvailable: false
+  moreChildrenAvailable: false,
 };
 
 function run_test() {

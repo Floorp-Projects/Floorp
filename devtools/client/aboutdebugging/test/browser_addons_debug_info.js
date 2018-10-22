@@ -54,7 +54,7 @@ add_task(async function testWebExtension() {
     document,
     file: addonFile,
     name: addonName,
-    isWebExtension: true
+    isWebExtension: true,
   });
 
   const container = document.querySelector(`[data-addon-id="${addonId}"]`);
@@ -92,7 +92,7 @@ add_task(async function testTemporaryWebExtension() {
     document,
     file: addonFile,
     name: addonName,
-    isWebExtension: true
+    isWebExtension: true,
   });
 
   const addons =
@@ -126,7 +126,7 @@ add_task(async function testUnknownManifestProperty() {
         gecko: {id: addonId},
       },
       wrong_manifest_property_name: {
-      }
+      },
     },
   });
   registerCleanupFunction(() => addonFile.remove(false));
@@ -135,7 +135,7 @@ add_task(async function testUnknownManifestProperty() {
     document,
     file: addonFile,
     name: addonName,
-    isWebExtension: true
+    isWebExtension: true,
   });
 
   info("Wait until the addon appears in about:debugging");

@@ -64,13 +64,13 @@ class Message extends Component {
         messageBody: PropTypes.string.isRequired,
         frame: PropTypes.any,
       })),
-      isPaused: PropTypes.bool
+      isPaused: PropTypes.bool,
     };
   }
 
   static get defaultProps() {
     return {
-      indent: 0
+      indent: 0,
     };
   }
 
@@ -125,16 +125,12 @@ class Message extends Component {
   renderIcon() {
     const { level, messageId, executionPoint, serviceContainer } = this.props;
 
-    if (serviceContainer.canRewind()) {
-      return dom.span({
-        className: "icon",
-        title: "Jump",
-        "aria-live": "off",
-        onClick: () => serviceContainer.jumpToExecutionPoint(executionPoint, messageId)
-      });
-    }
-
-    return MessageIcon({ level });
+    return MessageIcon({
+      level,
+      onRewindClick: serviceContainer.canRewind()
+        ? () => serviceContainer.jumpToExecutionPoint(executionPoint, messageId)
+        : null,
+    });
   }
 
   render() {
@@ -155,7 +151,7 @@ class Message extends Component {
       exceptionDocURL,
       timeStamp = Date.now(),
       timestampsVisible,
-      notes
+      notes,
     } = this.props;
 
     topLevelClasses.push("message", source, type, level, isPaused ? "paused" : "");
@@ -166,7 +162,7 @@ class Message extends Component {
     let timestampEl;
     if (timestampsVisible === true) {
       timestampEl = dom.span({
-        className: "timestamp devtools-monospace"
+        className: "timestamp devtools-monospace",
       }, l10n.timestampString(timeStamp));
     }
 
@@ -179,7 +175,7 @@ class Message extends Component {
     } else if (stacktrace && open) {
       attachment = dom.div(
         {
-          className: "stacktrace devtools-monospace"
+          className: "stacktrace devtools-monospace",
         },
         StackTrace({
           stacktrace: stacktrace,
@@ -198,7 +194,7 @@ class Message extends Component {
       collapse = CollapseButton({
         open,
         title: collapseTitle,
-        onClick: this.toggleMessage
+        onClick: this.toggleMessage,
       });
     }
 
@@ -218,7 +214,7 @@ class Message extends Component {
             showEmptyPathAsHost: true,
             sourceMapService: serviceContainer
               ? serviceContainer.sourceMapService
-              : undefined
+              : undefined,
           }) : null
         )));
     } else {
@@ -250,7 +246,8 @@ class Message extends Component {
         frame,
         onClick: onFrameClick,
         showEmptyPathAsHost: true,
-        sourceMapService: serviceContainer ? serviceContainer.sourceMapService : undefined
+        sourceMapService:
+          serviceContainer ? serviceContainer.sourceMapService : undefined,
       }) : null
     );
 
@@ -271,7 +268,7 @@ class Message extends Component {
       ref: node => {
         this.messageNode = node;
       },
-      "aria-live": type === MESSAGE_TYPE.COMMAND ? "off" : "polite"
+      "aria-live": type === MESSAGE_TYPE.COMMAND ? "off" : "polite",
     },
       timestampEl,
       MessageIndent({indent}),

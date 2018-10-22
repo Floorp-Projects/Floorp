@@ -55,7 +55,7 @@ const MessageState = overrides => Object.freeze(Object.assign({
   // Map of the form {messageId : networkInformation}
   // `networkInformation` holds request, response, totalTime, ...
   networkMessagesUpdateById: {},
-  pausedExecutionPoint: null
+  pausedExecutionPoint: null,
 }, overrides));
 
 function cloneState(state) {
@@ -70,7 +70,7 @@ function cloneState(state) {
     removedActors: [...state.removedActors],
     repeatById: {...state.repeatById},
     networkMessagesUpdateById: {...state.networkMessagesUpdateById},
-    pausedExecutionPoint: state.pausedExecutionPoint
+    pausedExecutionPoint: state.pausedExecutionPoint,
   };
 }
 
@@ -128,7 +128,7 @@ function addMessage(state, filtersState, prefsState, newMessage) {
 
   const {
     visible,
-    cause
+    cause,
   } = getMessageVisibility(addedMessage, state, filtersState);
 
   if (visible) {
@@ -204,7 +204,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
         removedActors: [...state.messagesById.values()].reduce((res, msg) => {
           res.push(...getAllActorsInMessage(msg));
           return res;
-        }, [])
+        }, []),
       });
 
     case constants.PRIVATE_MESSAGES_CLEAR:
@@ -266,7 +266,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
         openState.messagesById = (new Map(messagesById)).set(
           action.id, {
             ...currMessage,
-            openedOnce: true
+            openedOnce: true,
           });
       }
       return openState;
@@ -293,7 +293,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
 
       return {
         ...state,
-        messagesTableDataById: (new Map(messagesTableDataById)).set(id, data)
+        messagesTableDataById: (new Map(messagesTableDataById)).set(id, data),
       };
 
     case constants.NETWORK_MESSAGE_UPDATE:
@@ -301,8 +301,8 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
         ...state,
         networkMessagesUpdateById: {
           ...networkMessagesUpdateById,
-          [action.message.id]: action.message
-        }
+          [action.message.id]: action.message,
+        },
       };
 
     case UPDATE_REQUEST:
@@ -319,8 +319,8 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
           [action.id]: {
             ...request,
             ...processNetworkUpdates(action.data, request),
-          }
-        }
+          },
+        },
       };
     }
 
@@ -340,7 +340,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
       messagesById.forEach((message, msgId) => {
         const {
           visible,
-          cause
+          cause,
         } = getMessageVisibility(message, state, filtersState);
         if (visible) {
           messagesToShow.push(msgId);
@@ -591,7 +591,7 @@ function getMessageVisibility(message, messagesState, filtersState, checkGroup =
   ) {
     return {
       visible: false,
-      cause: "closedGroup"
+      cause: "closedGroup",
     };
   }
 
@@ -599,14 +599,14 @@ function getMessageVisibility(message, messagesState, filtersState, checkGroup =
   // So, always return visible: true for those.
   if (isUnfilterable(message)) {
     return {
-      visible: true
+      visible: true,
     };
   }
 
   if (!passSearchFilters(message, filtersState)) {
     return {
       visible: false,
-      cause: FILTERS.TEXT
+      cause: FILTERS.TEXT,
     };
   }
 
@@ -615,33 +615,33 @@ function getMessageVisibility(message, messagesState, filtersState, checkGroup =
   if (!passLevelFilters(message, filtersState)) {
     return {
       visible: false,
-      cause: message.level
+      cause: message.level,
     };
   }
 
   if (!passCssFilters(message, filtersState)) {
     return {
       visible: false,
-      cause: FILTERS.CSS
+      cause: FILTERS.CSS,
     };
   }
 
   if (!passNetworkFilter(message, filtersState)) {
     return {
       visible: false,
-      cause: FILTERS.NET
+      cause: FILTERS.NET,
     };
   }
 
   if (!passXhrFilter(message, filtersState)) {
     return {
       visible: false,
-      cause: FILTERS.NETXHR
+      cause: FILTERS.NETXHR,
     };
   }
 
   return {
-    visible: true
+    visible: true,
   };
 }
 
@@ -784,7 +784,7 @@ function isTextInFrame(text, frame) {
     functionName,
     line,
     column,
-    source
+    source,
   } = frame;
   const { short } = getSourceNames(source);
   const unicodeShort = getUnicodeUrlPath(short);
@@ -839,7 +839,7 @@ function isTextInStackTrace(text, stacktrace) {
     functionName: frame.functionName || l10n.getStr("stacktrace.anonymousFunction"),
     source: frame.filename,
     lineNumber: frame.lineNumber,
-    columnNumber: frame.columnNumber
+    columnNumber: frame.columnNumber,
   }));
 }
 

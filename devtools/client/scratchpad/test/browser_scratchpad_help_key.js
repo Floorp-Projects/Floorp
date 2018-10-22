@@ -35,7 +35,7 @@ function runTest() {
     ctrlKey: modifiers.match("ctrl"),
     altKey: modifiers.match("alt"),
     metaKey: modifiers.match("meta"),
-    accelKey: modifiers.match("accel")
+    accelKey: modifiers.match("accel"),
   };
 
   info("check that the MDN page is opened on \"F1\"");

@@ -15,14 +15,14 @@ const PENDING = {
   "frozen": false,
   "sealed": false,
   "promiseState": {
-    "state": "pending"
+    "state": "pending",
   },
   "preview": {
     "kind": "Object",
     "ownProperties": {},
     "ownPropertiesLength": 0,
-    "safeGetterValues": {}
-  }
+    "safeGetterValues": {},
+  },
 };
 
 const FULFILLED = {
@@ -34,14 +34,14 @@ const FULFILLED = {
   "sealed": false,
   "promiseState": {
     "state": "fulfilled",
-    "value": 10
+    "value": 10,
   },
   "preview": {
     "kind": "Object",
     "ownProperties": {},
     "ownPropertiesLength": 0,
-    "safeGetterValues": {}
-  }
+    "safeGetterValues": {},
+  },
 };
 
 const REJECTED = {
@@ -53,14 +53,14 @@ const REJECTED = {
   "sealed": false,
   "promiseState": {
     "state": "rejected",
-    "reason": 10
+    "reason": 10,
   },
   "preview": {
     "kind": "Object",
     "ownProperties": {},
     "ownPropertiesLength": 0,
-    "safeGetterValues": {}
-  }
+    "safeGetterValues": {},
+  },
 };
 
 function run_test() {

@@ -233,3 +233,13 @@ add_task(async function test_orphans() {
                                       (SELECT count(*) FROM moz_icons_to_pages) AS count`);
   Assert.equal(rows[0].getResultByName("count"), 0, "Should not find orphans");
 });
+
+add_task(async function test_remove_backslash() {
+  // Backslash is an escape char in Sqlite, we must take care of that when
+  // removing a url containing a backslash.
+  const url = "https://www.mozilla.org/?test=\u005C";
+  await PlacesTestUtils.addVisits(url);
+  Assert.ok(await PlacesUtils.history.remove(url), "A page should be removed");
+  Assert.deepEqual(await PlacesUtils.history.fetch(url), null,
+                   "The page should not be found");
+});

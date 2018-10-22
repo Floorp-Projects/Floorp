@@ -48,7 +48,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
           tab = BrowserApp.addTab(HTTP_PATH + HTTP_ENDPOINT + "?generic");
         });
-      }
+      },
     },
     {
       desc: "WebChannel two way communication",
@@ -75,7 +75,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
           tab = BrowserApp.addTab(HTTP_PATH + HTTP_ENDPOINT + "?twoway");
         });
-      }
+      },
     },
     {
       desc: "WebChannel multichannel",
@@ -92,8 +92,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
           tab = BrowserApp.addTab(HTTP_PATH + HTTP_ENDPOINT + "?multichannel");
         });
-      }
-    }
+      },
+    },
   ]; // gTests
 
   add_task(async function run_all() {

@@ -46,8 +46,8 @@ var parsers = [
                 tags: "jQuery",
                 hide: {
                   capturing: true,
-                  dom0: true
-                }
+                  dom0: true,
+                },
               };
 
               handlers.push(eventInfo);
@@ -79,8 +79,8 @@ var parsers = [
               tags: "jQuery",
               hide: {
                 capturing: true,
-                dom0: true
-              }
+                dom0: true,
+              },
             };
 
             handlers.push(eventInfo);
@@ -89,7 +89,7 @@ var parsers = [
       }
 
       return handlers;
-    }
+    },
   },
   {
     id: "jQuery live events",
@@ -156,7 +156,7 @@ var parsers = [
       }
 
       return handlerDO;
-    }
+    },
   },
   {
     id: "DOM events",
@@ -203,14 +203,14 @@ var parsers = [
         const eventInfo = {
           capturing: listenerObj.capturing,
           type: listenerObj.type,
-          handler: listener
+          handler: listener,
         };
 
         handlers.push(eventInfo);
       }
 
       return handlers;
-    }
+    },
   },
 
   {
@@ -258,7 +258,7 @@ var parsers = [
       }
 
       return handlerDO;
-    }
+    },
   },
 ];
 
@@ -300,11 +300,11 @@ function reactGetListeners(node, boolOnEventFound) {
           handler: listener,
           tags: "React",
           hide: {
-            dom0: true
+            dom0: true,
           },
           override: {
-            capturing: name.endsWith("Capture")
-          }
+            capturing: name.endsWith("Capture"),
+          },
         };
 
         handlers.push(handler);
@@ -379,8 +379,8 @@ function jQueryLiveGetListeners(node, boolOnEventFound) {
             tags: "jQuery,Live",
             hide: {
               dom0: true,
-              capturing: true
-            }
+              capturing: true,
+            },
           };
 
           if (!eventInfo.type && event.data && event.data.live) {
@@ -482,7 +482,7 @@ EventParsers.prototype = {
     this._eventParsers.set(parserId, {
       getListeners: parserObj.getListeners,
       hasListeners: parserObj.hasListeners,
-      normalizeListener: parserObj.normalizeListener
+      normalizeListener: parserObj.normalizeListener,
     });
   },
 
@@ -503,5 +503,5 @@ EventParsers.prototype = {
     for (const [id] of this._eventParsers) {
       this.unregisterEventParser(id, true);
     }
-  }
+  },
 };

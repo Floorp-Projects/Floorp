@@ -11,7 +11,7 @@ add_task(async function() {
     front.setup({ reload: true }),
     once(front, "start-context"),
     get3(front, "create-node"),
-    get2(front, "connect-node")
+    get2(front, "connect-node"),
   ]);
 
   is(destNode.type, "AudioDestinationNode", "WebAudioActor:create-node returns AudioNodeActor for AudioDestination");

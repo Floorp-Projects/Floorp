@@ -63,7 +63,7 @@ function read(srcChromeURL) {
 
   const channel = NetUtil.newChannel({
     uri: srcChromeURL,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   const input = channel.open2();
   scriptableStream.init(input);

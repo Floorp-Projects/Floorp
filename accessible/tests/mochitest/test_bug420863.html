@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
       // register 'click' event handler
       gClickHandler = {
         handleEvent: function handleEvent(aEvent) {
-        }
+        },
       };
       td3Node.addEventListener("click", gClickHandler);
 
@@ -52,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
           ID: "td2", // "onclick" attribute
           actionName: "click",
           actionIndex: 0,
-          events: CLICK_EVENTS
+          events: CLICK_EVENTS,
         },
         {
           ID: td3Node,
@@ -66,8 +66,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
             // check actions
             is(getAccessible(this.ID).actionCount, 0,
                "td3 shouldn't have actions");
-          }
-        }
+          },
+        },
       ];
 
       testActions(actionsArray); // will call SimpleTest.finish()

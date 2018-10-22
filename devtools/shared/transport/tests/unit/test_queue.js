@@ -48,7 +48,7 @@ var test_transport = async function(transportFactory) {
   function write_data({copyFrom}) {
     NetUtil.asyncFetch({
       uri: NetUtil.newURI(getTestTempFile("bulk-input")),
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }, function(input, status) {
       copyFrom(input).then(() => {
         input.close();
@@ -86,13 +86,13 @@ var test_transport = async function(transportFactory) {
     // causing the transport to die.
     transport.send({
       actor: "root",
-      type: "explode"
+      type: "explode",
     });
 
     transport.startBulkSend({
       actor: "root",
       type: "file-stream",
-      length: reallyLong.length
+      length: reallyLong.length,
     }).then(write_data);
   }
 
@@ -136,7 +136,7 @@ var test_transport = async function(transportFactory) {
 
     onClosed: function() {
       do_throw("Transport closed before we expected");
-    }
+    },
   };
 
   transport.ready();
@@ -159,7 +159,7 @@ function verify() {
   return new Promise((resolve) => {
     NetUtil.asyncFetch({
       uri: NetUtil.newURI(getTestTempFile("bulk-output")),
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }, input => {
       const outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
       // Avoid do_check_eq here so we don't log the contents

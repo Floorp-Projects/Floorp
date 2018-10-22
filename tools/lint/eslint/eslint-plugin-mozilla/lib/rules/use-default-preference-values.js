@@ -40,6 +40,6 @@ module.exports = function(context) {
 
       let msg = "provide a default value instead of using a try/catch block";
       context.report(node, msg);
-    }
+    },
   };
 };

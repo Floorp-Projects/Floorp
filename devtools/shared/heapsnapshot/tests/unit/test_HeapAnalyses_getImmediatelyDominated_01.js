@@ -22,7 +22,7 @@ add_task(async function() {
 
   const partialTree = await client.getDominatorTree({
     dominatorTreeId,
-    breakdown
+    breakdown,
   });
   ok(partialTree.children.length > 0,
      "root should immediately dominate some nodes");
@@ -33,7 +33,7 @@ add_task(async function() {
     breakdown,
     nodeId: partialTree.nodeId,
     startIndex: 0,
-    maxCount: partialTree.children.length - 1
+    maxCount: partialTree.children.length - 1,
   });
 
   ok(Array.isArray(response.nodes));
@@ -57,7 +57,7 @@ add_task(async function() {
     breakdown,
     nodeId: partialTree.nodeId,
     startIndex: 0,
-    maxCount: Infinity
+    maxCount: Infinity,
   });
 
   ok(Array.isArray(secondResponse.nodes));

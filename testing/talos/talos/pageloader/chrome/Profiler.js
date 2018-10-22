@@ -168,6 +168,6 @@ var Profiler;
       if (_profiler) {
         _profiler.AddMarker(explicit ? marker : 'Profiler: "' + (marker || test_name) + '"');
       }
-    }
+    },
   };
 })();

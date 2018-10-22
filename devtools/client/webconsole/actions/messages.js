@@ -7,7 +7,7 @@
 "use strict";
 
 const {
-  prepareMessage
+  prepareMessage,
 } = require("devtools/client/webconsole/utils/messages");
 const { IdGenerator } = require("devtools/client/webconsole/utils/id-generator");
 const { batchActions } = require("devtools/client/shared/redux/middleware/debounce");
@@ -39,7 +39,7 @@ function messagesAdd(packets, idGenerator = null) {
         {
           type: MESSAGES_ADD,
           messages: messages.slice(i),
-        }
+        },
       ]);
     }
   }
@@ -48,40 +48,40 @@ function messagesAdd(packets, idGenerator = null) {
   // split up into batches
   return {
     type: MESSAGES_ADD,
-    messages
+    messages,
   };
 }
 
 function messagesClear() {
   return {
-    type: MESSAGES_CLEAR
+    type: MESSAGES_CLEAR,
   };
 }
 
 function setPauseExecutionPoint(executionPoint) {
   return {
     type: PAUSED_EXCECUTION_POINT,
-    executionPoint
+    executionPoint,
   };
 }
 
 function privateMessagesClear() {
   return {
-    type: PRIVATE_MESSAGES_CLEAR
+    type: PRIVATE_MESSAGES_CLEAR,
   };
 }
 
 function messageOpen(id) {
   return {
     type: MESSAGE_OPEN,
-    id
+    id,
   };
 }
 
 function messageClose(id) {
   return {
     type: MESSAGE_CLOSE,
-    id
+    id,
   };
 }
 
@@ -92,7 +92,7 @@ function messageTableDataGet(id, client, dataType) {
       fetchObjectActorData = (cb) => client.enumEntries(cb);
     } else {
       fetchObjectActorData = (cb) => client.enumProperties({
-        ignoreNonIndexedProperties: dataType === "Array"
+        ignoreNonIndexedProperties: dataType === "Array",
       }, cb);
     }
 
@@ -110,7 +110,7 @@ function messageTableDataReceive(id, data) {
   return {
     type: MESSAGE_TABLE_RECEIVE,
     id,
-    data
+    data,
   };
 }
 

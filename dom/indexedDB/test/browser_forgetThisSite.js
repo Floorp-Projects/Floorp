@@ -7,7 +7,7 @@ let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSi
 
 const domains = [
   "mochi.test:8888",
-  "www.example.com"
+  "www.example.com",
 ];
 
 const addPath = "/browser/dom/indexedDB/test/browser_forgetThisSiteAdd.html";

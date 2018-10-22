@@ -28,7 +28,7 @@ add_task(async function() {
       visibleOnNewEvent: false,
       visibleOnSecurityInfo: true,
       visibleOnceComplete: true,
-    }
+    },
   ];
 
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);

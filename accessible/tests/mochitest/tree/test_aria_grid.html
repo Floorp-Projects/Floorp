@@ -23,9 +23,9 @@
           { GROUPING: [
             { ROW: [
               { GRID_CELL: [
-                { TEXT_LEAF: [ ] }
-              ] }
-            ] }
+                { TEXT_LEAF: [ ] },
+              ] },
+            ] },
           ] },
         ] };
 
@@ -44,7 +44,7 @@
               { // caption text leaf
                 role: ROLE_TEXT_LEAF,
                 name: "caption",
-                children: [ ]
+                children: [ ],
               },
               { // th generic accessible
                 role: ROLE_TEXT_CONTAINER,
@@ -52,18 +52,18 @@
                   { // th text leaf
                     role: ROLE_TEXT_LEAF,
                     name: "header1",
-                    children: [ ]
-                  }
-                ]
+                    children: [ ],
+                  },
+                ],
               },
               { // td@role="columnheader"
                 role: ROLE_COLUMNHEADER,
                 name: "header2",
-                children: [ { TEXT_LEAF: [ ] } ]
-              }
-            ]
-          }
-        ]
+                children: [ { TEXT_LEAF: [ ] } ],
+              },
+            ],
+          },
+        ],
       };
       testAccessibleTree("crazy_grid1", accTree);
 
@@ -80,18 +80,18 @@
                   { // td text leaf
                     role: ROLE_TEXT_LEAF,
                     name: "cell1",
-                    children: [ ]
-                  }
-                ]
+                    children: [ ],
+                  },
+                ],
               },
               { // td@role="gridcell"
                 role: ROLE_GRID_CELL,
                 name: "cell2",
-                children: [ { TEXT_LEAF: [ ] } ]
-              }
-            ]
-          }
-        ]
+                children: [ { TEXT_LEAF: [ ] } ],
+              },
+            ],
+          },
+        ],
       };
       testAccessibleTree("crazy_grid2", accTree);
 
@@ -110,15 +110,15 @@
                       { // text leaf from presentational table
                         role: ROLE_TEXT_LEAF,
                         name: "cell3",
-                        children: [ ]
-                      }
-                    ]
+                        children: [ ],
+                      },
+                    ],
                   },
-                ]
-              }
-            ]
-          }
-        ]
+                ],
+              },
+            ],
+          },
+        ],
       };
       testAccessibleTree("crazy_grid3", accTree);
 
@@ -143,7 +143,7 @@
                               { // caption text leaf of presentational table
                                  role: ROLE_TEXT_LEAF,
                                  name: "caption",
-                                 children: [ ]
+                                 children: [ ],
                               },
                               { // td generic accessible
                                 role: ROLE_TEXT_CONTAINER,
@@ -151,21 +151,21 @@
                                   { // td text leaf of presentational table
                                     role: ROLE_TEXT_LEAF,
                                     name: "cell4",
-                                    children: [ ]
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                                    children: [ ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       testAccessibleTree("crazy_grid4", accTree);
@@ -177,14 +177,14 @@
         { TREE_TABLE: [
           { ROW: [
             { GRID_CELL: [
-              { TEXT_LEAF: [ ] }
+              { TEXT_LEAF: [ ] },
             ] },
             { GRID_CELL: [
-              { TEXT_LEAF: [ ] }
+              { TEXT_LEAF: [ ] },
             ] },
             { GRID_CELL: [
-              { TEXT_LEAF: [ ] }
-            ] }
+              { TEXT_LEAF: [ ] },
+            ] },
           ] },
         ] };
 

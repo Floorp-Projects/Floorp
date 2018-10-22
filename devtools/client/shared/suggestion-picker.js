@@ -159,7 +159,7 @@ const SORTED_CSS_PROPERTIES = [
   "font-variant",
   "filter",
   "quotes",
-  "word-spacing"
+  "word-spacing",
 ];
 
 /**

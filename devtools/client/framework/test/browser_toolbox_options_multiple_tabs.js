@@ -34,7 +34,7 @@ async function openToolboxOptionsInNewTab() {
     // is a tool-registered or tool-undregistered event.
     get checkbox() {
       return panel.panelDoc.getElementById(id);
-    }
+    },
   };
 }
 

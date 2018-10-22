@@ -87,13 +87,13 @@ class NotificationBox extends Component {
       })),*/
 
       // Message that should be shown when hovering over the close button
-      closeButtonTooltip: PropTypes.string
+      closeButtonTooltip: PropTypes.string,
     };
   }
 
   static get defaultProps() {
     return {
-      closeButtonTooltip: l10n.getStr("notificationBox.closeTooltip")
+      closeButtonTooltip: l10n.getStr("notificationBox.closeTooltip"),
     };
   }
 
@@ -101,7 +101,7 @@ class NotificationBox extends Component {
     super(props);
 
     this.state = {
-      notifications: new Immutable.OrderedMap()
+      notifications: new Immutable.OrderedMap(),
     };
 
     this.appendNotification = this.appendNotification.bind(this);
@@ -155,7 +155,7 @@ class NotificationBox extends Component {
     return Object.assign({}, notification, {
       close: () => {
         this.close(notification);
-      }
+      },
     });
   }
 
@@ -180,7 +180,7 @@ class NotificationBox extends Component {
     }
 
     this.setState({
-      notifications: this.state.notifications.remove(notification.value)
+      notifications: this.state.notifications.remove(notification.value),
     });
   }
 
@@ -275,7 +275,7 @@ function appendNotification(state, props) {
     image,
     priority,
     buttons,
-    eventCallback
+    eventCallback,
   } = props;
 
   // Priority level must be within expected interval
@@ -317,7 +317,7 @@ function appendNotification(state, props) {
   });
 
   return {
-    notifications: notifications
+    notifications: notifications,
   };
 }
 
@@ -327,7 +327,7 @@ function getNotificationWithValue(notifications, value) {
 
 function removeNotificationWithValue(notifications, value) {
   return {
-    notifications: notifications.remove(value)
+    notifications: notifications.remove(value),
   };
 }
 

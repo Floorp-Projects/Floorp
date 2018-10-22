@@ -19,7 +19,7 @@ function run_test() {
     invalidateCachesOnRestart: function invalidateCachesOnRestart() {
       // Do nothing
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIXULRuntime])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIXULRuntime]),
   };
 
   let xulRuntimeFactory = {
@@ -28,7 +28,7 @@ function run_test() {
         throw new Error(Cr.NS_ERROR_NO_AGGREGATION);
       }
       return xulRuntime.QueryInterface(iid);
-    }
+    },
   };
 
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);

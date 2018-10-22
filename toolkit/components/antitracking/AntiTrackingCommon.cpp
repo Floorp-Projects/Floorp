@@ -27,6 +27,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsIURI.h"
+#include "nsIURIFixup.h"
 #include "nsIURL.h"
 #include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
@@ -259,7 +260,15 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
 
   MOZ_ASSERT(message);
 
-  NS_ConvertUTF8toUTF16 spec(aURI->GetSpecOrDefault());
+  // Strip the URL of any possible username/password and make it ready to be
+  // presented in the UI.
+  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
+  NS_ENSURE_TRUE_VOID(urifixup);
+  nsCOMPtr<nsIURI> exposableURI;
+  nsresult rv = urifixup->CreateExposableURI(aURI, getter_AddRefs(exposableURI));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  NS_ConvertUTF8toUTF16 spec(exposableURI->GetSpecOrDefault());
   const char16_t* params[] = { spec.get() };
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,

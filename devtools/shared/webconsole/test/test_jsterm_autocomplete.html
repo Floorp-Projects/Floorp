@@ -105,6 +105,7 @@
       doElementAccessAutocomplete,
       doAutocompleteAfterOperator,
       dontAutocompleteAfterDeclaration,
+      doKeywordsAutocomplete,
     ];
 
     if (!isWorker) {
@@ -519,6 +520,27 @@
     matches = (await client.autocomplete("in var")).matches;
     ok(matches.includes("varify"),
       "autocompletion still happens with a property name starting with 'var'");
+}
+
+async function doKeywordsAutocomplete(client) {
+  info("test autocomplete for 'func'");
+  let matches = (await client.autocomplete("func")).matches;
+  ok(matches.includes("function"), "keywords are returned");
+
+  info("test autocomplete for ':func'");
+  matches = (await client.autocomplete(":func")).matches;
+  is(!matches.includes("function"), true,
+    "'function' is not returned when prefixed with ':'");
+
+  info("test autocomplete for 'window.func'");
+  matches = (await client.autocomplete("window.func")).matches;
+  ok(!matches.includes("function"),
+    "'function' is not returned when doing a property access");
+
+  info("test autocomplete for 'window[func'");
+  matches = (await client.autocomplete("window[func")).matches;
+  ok(!matches.includes("function"),
+    "'function' is not returned when doing an element access");
   }
 </script>
 </body>

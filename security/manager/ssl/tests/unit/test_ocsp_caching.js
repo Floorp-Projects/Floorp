@@ -235,7 +235,7 @@ function add_tests() {
         }
         // Pass on aProxy unmodified.
         aCallback.onProxyFilterResult(aProxy);
-      }
+      },
     };
     protocolProxyService.registerChannelFilter(proxyFilter, 0);
     // Return the stop() function:

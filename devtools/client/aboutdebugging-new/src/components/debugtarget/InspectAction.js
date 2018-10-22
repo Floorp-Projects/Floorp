@@ -32,7 +32,7 @@ class InspectAction extends PureComponent {
   render() {
     return Localized(
       {
-        id: "about-debugging-debug-target-inspect-button"
+        id: "about-debugging-debug-target-inspect-button",
       },
       dom.button(
         {

@@ -97,7 +97,7 @@ class ParamsPanel extends Component {
   render() {
     const {
       openLink,
-      request
+      request,
     } = this.props;
     const {
       formDataSections,

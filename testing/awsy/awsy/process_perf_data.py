@@ -82,10 +82,20 @@ def create_suite(name, node, data_path, checkpoints=CHECKPOINTS):
         'lowerIsBetter': True,
         'units': 'bytes'
     }
+
+    extra_opts = []
+    # The stylo attributes override each other.
     if 'STYLO_FORCE_ENABLED' in os.environ and os.environ['STYLO_FORCE_ENABLED']:
-        suite['extraOptions'] = ["stylo"]
+        extra_opts = ["stylo"]
     if 'STYLO_THREADS' in os.environ and os.environ['STYLO_THREADS'] == '1':
-        suite['extraOptions'] = ["stylo-sequential"]
+        extra_opts = ["stylo-sequential"]
+
+    if 'DMD' in os.environ and os.environ['DMD']:
+        extra_opts.append("dmd")
+
+    if extra_opts:
+        suite['extraOptions'] = extra_opts
+
     update_checkpoint_paths(glob.glob(os.path.join(data_path, "memory-report*")), checkpoints)
 
     total = 0

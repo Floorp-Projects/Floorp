@@ -7,7 +7,7 @@ var isOSX = Services.appinfo.OS === "Darwin";
 
 add_task(async function() {
   const shortcuts = new KeyShortcuts({
-    window
+    window,
   });
 
   await testSimple(shortcuts);
@@ -400,7 +400,7 @@ async function testTarget() {
 
   const shortcuts = new KeyShortcuts({
     window,
-    target
+    target,
   });
   const onKey = once(shortcuts, "0", event => {
     is(event.key, "0");
