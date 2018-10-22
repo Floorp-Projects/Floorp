@@ -125,16 +125,12 @@ class Message extends Component {
   renderIcon() {
     const { level, messageId, executionPoint, serviceContainer } = this.props;
 
-    if (serviceContainer.canRewind()) {
-      return dom.span({
-        className: "icon",
-        title: "Jump",
-        "aria-live": "off",
-        onClick: () => serviceContainer.jumpToExecutionPoint(executionPoint, messageId),
-      });
-    }
-
-    return MessageIcon({ level });
+    return MessageIcon({
+      level,
+      onRewindClick: serviceContainer.canRewind()
+        ? () => serviceContainer.jumpToExecutionPoint(executionPoint, messageId)
+        : null,
+    });
   }
 
   render() {

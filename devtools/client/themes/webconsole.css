@@ -217,15 +217,10 @@ a {
 }
 
 
-.message > span.icon[title="Jump"] {
+.message:hover > .icon.rewindable {
   background-image:var(--theme-console-jump-image);
   background-size: 14px 14px;
   cursor: pointer;
-  opacity: 0;
-}
-
-.message:hover span.icon[title="Jump"] {
-  opacity: 1;
 }
 
 .message > .message-body-wrapper {
