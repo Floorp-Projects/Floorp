@@ -299,17 +299,16 @@ function ModuleInstantiate()
     } catch (error) {
         for (let i = 0; i < stack.length; i++) {
             let m = stack[i];
-            if (m.status === MODULE_STATUS_INSTANTIATING) {
-                HandleModuleInstantiationFailure(m);
-            }
+            assert(m.status === MODULE_STATUS_INSTANTIATING,
+                   "Expected instantiating status during failed instantiation");
+            HandleModuleInstantiationFailure(m);
         }
 
         // Handle OOM when appending to the stack or over-recursion errors.
-        if (stack.length === 0 && module.status === MODULE_STATUS_INSTANTIATING) {
+        if (stack.length === 0)
             HandleModuleInstantiationFailure(module);
-        }
 
-        assert(module.status !== MODULE_STATUS_INSTANTIATING,
+        assert(module.status === MODULE_STATUS_UNINSTANTIATED,
                "Expected uninstantiated status after failed instantiation");
 
         throw error;
