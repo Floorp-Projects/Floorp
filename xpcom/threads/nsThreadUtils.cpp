@@ -336,7 +336,7 @@ NS_IdleDispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent)
   return rv;
 }
 
-class IdleRunnableWrapper : public IdleRunnable
+class IdleRunnableWrapper final : public IdleRunnable
 {
 public:
   explicit IdleRunnableWrapper(already_AddRefed<nsIRunnable>&& aEvent)
