@@ -11,6 +11,15 @@ Release date: TBD
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.27.0...master),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/30?closed=1)
 
+⚠️ **Note**: This and upcoming releases are **only** available from *maven.mozilla.org*.
+
+* Compiled against:
+  * Android (SDK: 27, Support Libraries: 27.1.1)
+  * Kotlin (Stdlib: 1.2.61, Coroutines: 0.23.4)
+  * GeckoView
+    * Nightly: 64.0.20181004100221
+    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
+    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
 * **concept-engine**
   * Added `HistoryTrackingDelegate` interface for integrating engine implementations with history storage backends. Intended to be used via engine settings.
 * **browser-engine**
@@ -19,12 +28,27 @@ Release date: TBD
   * Added support for `HistoryTrackingDelegate`, if it's specified in engine settings.
 * **browser-engine-servo**
   * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
+* **browser-session**:
+  * Sessions can have a parent `Session` now. A `Session` with a parent will be added *after* the parent `Session`. On removal of a selected `Session` the parent `Session` can be selected automatically if desired:
+  ```kotlin
+  val parent = Session("https://www.mozilla.org")
+  val session = Session("https://www.mozilla.org/en-US/firefox/")
+
+  sessionManager.add(parent)
+  sessionManager.add(session, parent = parent)
+
+  sessionManager.remove(session, selectParentIfExists = true)
+  ```
 * **browser-errorpages**
   * Added translation annotations to our error page strings. Translated strings will follow in a future release.
 * **service-glean**
   * A new client-side telemetry SDK for collecting metrics and sending them to Mozilla's telemetry service. This component is going to eventually replace `service-telemetry`. The SDK is currently in development and the component is not ready to be used yet.
-* **lib-jexl**:
-  * New component for for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
+* **lib-jexl**
+  * New component for for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).  
+* **lib-dataprotect**
+  * The `Keystore` class and its `encryptBytes()` and `decryptBytes()` methods are now open to simplify mocking in unit tests.
+* **ui-tabcounter**
+  * The `TabCounter` class is now open and can get extended.
 
 # 0.27.0
 
