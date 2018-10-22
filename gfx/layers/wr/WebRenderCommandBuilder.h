@@ -118,7 +118,7 @@ public:
   void RemoveUnusedAndResetWebRenderUserData();
   void ClearCachedResources();
 
-  bool ShouldDumpDisplayList();
+  bool ShouldDumpDisplayList(nsDisplayListBuilder* aBuilder);
   wr::usize GetBuilderDumpIndex() { return mBuilderDumpIndex; }
 
   bool GetContainsSVGGroup() { return mContainsSVGGroup; }
