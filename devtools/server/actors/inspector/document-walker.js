@@ -42,7 +42,7 @@ function DocumentWalker(node, rootWin,
     whatToShow = nodeFilterConstants.SHOW_ALL,
     filter = standardTreeWalkerFilter,
     skipTo = SKIP_TO_PARENT,
-    showAnonymousContent = true
+    showAnonymousContent = true,
   } = {}) {
   if (Cu.isDeadWrapper(rootWin) || !rootWin.location) {
     throw new Error("Got an invalid root window in DocumentWalker");

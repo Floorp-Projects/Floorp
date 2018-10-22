@@ -49,8 +49,8 @@ Test that we show a message when the census results are empty.
                          children: undefined,
                          id: 3,
                          parent: 1,
-                       }
-                     ]
+                       },
+                     ],
                    },
                    display: censusDisplays.allocationStack,
                  }),
@@ -93,7 +93,7 @@ Test that we show a message when the census results are empty.
              // Empty Diffing Report
 
              await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
-               view: { state: viewState.DIFFING, },
+               view: { state: viewState.DIFFING },
                diffing: {
                  firstSnapshotId: 1,
                  secondSnapshotId: 2,
@@ -113,7 +113,7 @@ Test that we show a message when the census results are empty.
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  census: immutableUpdate(
                    TEST_HEAP_PROPS.snapshot.census, immutableUpdate(emptyCensus, {
-                    filter: "zzzz"
+                    filter: "zzzz",
                    })),
                }),
              })), container);

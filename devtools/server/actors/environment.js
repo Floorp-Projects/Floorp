@@ -103,7 +103,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
       if (e instanceof Debugger.DebuggeeWouldRun) {
         const errorObject = {
           error: "threadWouldRun",
-          message: "Assigning a value would cause the debuggee to run"
+          message: "Assigning a value would cause the debuggee to run",
         };
         throw errorObject;
       } else {
@@ -143,13 +143,13 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
         value: value,
         configurable: false,
         writable: !(value && value.optimizedOut),
-        enumerable: true
+        enumerable: true,
       };
 
       // let desc = this.obj.getVariableDescriptor(name);
       const descForm = {
         enumerable: true,
-        configurable: desc.configurable
+        configurable: desc.configurable,
       };
       if ("value" in desc) {
         descForm.value = createValueGrip(desc.value,
@@ -183,13 +183,13 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
                     (value.optimizedOut ||
                      value.uninitialized ||
                      value.missingArguments)),
-        enumerable: true
+        enumerable: true,
       };
 
       // let desc = this.obj.getVariableDescriptor(name);
       const descForm = {
         enumerable: true,
-        configurable: desc.configurable
+        configurable: desc.configurable,
       };
       if ("value" in desc) {
         descForm.value = createValueGrip(desc.value,
@@ -205,7 +205,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     }
 
     return bindings;
-  }
+  },
 });
 
 exports.EnvironmentActor = EnvironmentActor;

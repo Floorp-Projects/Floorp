@@ -22,7 +22,7 @@ function FxAccountsPush() {
   Services.obs.addObserver(this, "FxAccountsPush:ReceivedPushMessageToDecode");
 
   EventDispatcher.instance.sendRequestForResult({
-    type: "FxAccountsPush:Initialized"
+    type: "FxAccountsPush:Initialized",
   });
 }
 
@@ -68,15 +68,15 @@ FxAccountsPush.prototype = {
         subscription: {
           pushCallback: subscription.endpoint,
           pushPublicKey: urlsafeBase64Encode(subscription.getKey("p256dh")),
-          pushAuthKey: urlsafeBase64Encode(subscription.getKey("auth"))
-        }
+          pushAuthKey: urlsafeBase64Encode(subscription.getKey("auth")),
+        },
       });
     })
     .catch(err => {
       Log.i("Error when registering FxA push endpoint " + err);
       EventDispatcher.instance.sendRequest({
         type: "FxAccountsPush:Subscribe:Response",
-        error: err.result.toString() // Convert to string because the GeckoBundle can't getLong();
+        error: err.result.toString(), // Convert to string because the GeckoBundle can't getLong();
       });
     });
   },
@@ -129,14 +129,14 @@ FxAccountsPush.prototype = {
       let decryptedMessage = plaintext ? _decoder.decode(plaintext) : "";
       EventDispatcher.instance.sendRequestForResult({
         type: "FxAccountsPush:ReceivedPushMessageToDecode:Response",
-        message: decryptedMessage
+        message: decryptedMessage,
       });
     })
     .catch(err => {
       Log.d("Error while decoding incoming message : " + err);
       EventDispatcher.instance.sendRequestForResult({
         type: "FxAccountsPush:ReceivedPushMessageToDecode:Response",
-        error: err.message || ""
+        error: err.message || "",
       });
     });
   },
@@ -165,7 +165,7 @@ FxAccountsPush.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
-  classID: Components.ID("{d1bbb0fd-1d47-4134-9c12-d7b1be20b721}")
+  classID: Components.ID("{d1bbb0fd-1d47-4134-9c12-d7b1be20b721}"),
 };
 
 function urlsafeBase64Encode(key) {

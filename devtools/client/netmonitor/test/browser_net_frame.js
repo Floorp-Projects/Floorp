@@ -18,35 +18,35 @@ const EXPECTED_REQUESTS_TOP = [
     url: TOP_URL,
     causeType: "document",
     causeUri: null,
-    stack: true
+    stack: true,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "stylesheet_request",
     causeType: "stylesheet",
     causeUri: TOP_URL,
-    stack: false
+    stack: false,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "img_request",
     causeType: "img",
     causeUri: TOP_URL,
-    stack: false
+    stack: false,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "xhr_request",
     causeType: "xhr",
     causeUri: TOP_URL,
-    stack: [{ fn: "performXhrRequest", file: TOP_FILE_NAME, line: 25 }]
+    stack: [{ fn: "performXhrRequest", file: TOP_FILE_NAME, line: 25 }],
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: TOP_URL,
-    stack: [{ fn: "performFetchRequest", file: TOP_FILE_NAME, line: 29 }]
+    stack: [{ fn: "performFetchRequest", file: TOP_FILE_NAME, line: 29 }],
   },
   {
     method: "GET",
@@ -56,7 +56,7 @@ const EXPECTED_REQUESTS_TOP = [
     stack: [
       { fn: "performPromiseFetchRequest", file: TOP_FILE_NAME, line: 41 },
       { fn: null, file: TOP_FILE_NAME, line: 40, asyncCause: "promise callback" },
-    ]
+    ],
   },
   {
     method: "GET",
@@ -67,14 +67,14 @@ const EXPECTED_REQUESTS_TOP = [
       { fn: "performTimeoutFetchRequest", file: TOP_FILE_NAME, line: 43 },
       { fn: "performPromiseFetchRequest", file: TOP_FILE_NAME, line: 42,
         asyncCause: "setTimeout handler" },
-    ]
+    ],
   },
   {
     method: "POST",
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: TOP_URL,
-    stack: [{ fn: "performBeaconRequest", file: TOP_FILE_NAME, line: 33 }]
+    stack: [{ fn: "performBeaconRequest", file: TOP_FILE_NAME, line: 33 }],
   },
 ];
 
@@ -84,35 +84,35 @@ const EXPECTED_REQUESTS_SUB = [
     url: SUB_URL,
     causeType: "subdocument",
     causeUri: TOP_URL,
-    stack: false
+    stack: false,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "stylesheet_request",
     causeType: "stylesheet",
     causeUri: SUB_URL,
-    stack: false
+    stack: false,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "img_request",
     causeType: "img",
     causeUri: SUB_URL,
-    stack: false
+    stack: false,
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "xhr_request",
     causeType: "xhr",
     causeUri: SUB_URL,
-    stack: [{ fn: "performXhrRequest", file: SUB_FILE_NAME, line: 24 }]
+    stack: [{ fn: "performXhrRequest", file: SUB_FILE_NAME, line: 24 }],
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: SUB_URL,
-    stack: [{ fn: "performFetchRequest", file: SUB_FILE_NAME, line: 28 }]
+    stack: [{ fn: "performFetchRequest", file: SUB_FILE_NAME, line: 28 }],
   },
   {
     method: "GET",
@@ -122,7 +122,7 @@ const EXPECTED_REQUESTS_SUB = [
     stack: [
       { fn: "performPromiseFetchRequest", file: SUB_FILE_NAME, line: 40 },
       { fn: null, file: SUB_FILE_NAME, line: 39, asyncCause: "promise callback" },
-    ]
+    ],
   },
   {
     method: "GET",
@@ -133,14 +133,14 @@ const EXPECTED_REQUESTS_SUB = [
       { fn: "performTimeoutFetchRequest", file: SUB_FILE_NAME, line: 42 },
       { fn: "performPromiseFetchRequest", file: SUB_FILE_NAME, line: 41,
         asyncCause: "setTimeout handler" },
-    ]
+    ],
   },
   {
     method: "POST",
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: SUB_URL,
-    stack: [{ fn: "performBeaconRequest", file: SUB_FILE_NAME, line: 32 }]
+    stack: [{ fn: "performBeaconRequest", file: SUB_FILE_NAME, line: 32 }],
   },
 ];
 

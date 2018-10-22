@@ -17,6 +17,19 @@ const MESSAGES = () => ([
     },
   },
   {
+    "id": "SIMPLE_TEST_TALL",
+    "template": "simple_snippet",
+    "content": {
+      "icon": TEST_ICON,
+      "text": "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
+      "links": {"syncLink": {"url": "https://www.mozilla.org/en-US/firefox/accounts"}},
+      "button_label": "Get one now!",
+      "button_url": "https://www.mozilla.org/en-US/firefox/accounts",
+      "block_button_text": "Block",
+      "tall": true,
+    },
+  },
+  {
     "id": "SIMPLE_TEST_BUTTON_URL_1",
     "template": "simple_snippet",
     "content": {
@@ -84,11 +97,6 @@ const MESSAGES = () => ([
       "scene2_button_label": "Continue",
       "scene2_dismiss_button_text": "Dismiss",
       "form_action": "https://basket.mozilla.org/subscribe.json",
-
-      // TODO: This should not be required
-      "success_text": "Check your inbox for the confirmation!",
-      "error_text": "Error!",
-      "hidden_inputs": {},
     },
   },
   {
@@ -121,10 +129,59 @@ const MESSAGES = () => ([
       success_title: "Your download link was sent.",
       success_text: "Check your device for the email message!",
       links: {"privacyLink": {"url": "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894"}},
-
-      // TODO: Not actually defined in the send to device schema
-      form_action: "https://basket.mozilla.org/subscribe.json",
-      hidden_inputs: {},
+    },
+  },
+  {
+    "id": "EOY_TEST_1",
+    "template": "eoy_snippet",
+    "content": {
+      "highlight_color": "#f05",
+      "selected_button": "donation_amount_first",
+      "icon": TEST_ICON,
+      "button_label": "Donate",
+      "monthly_checkbox_label_text": "Make my donation monthly",
+      "currency_code": "usd",
+      "donation_amount_first": 50,
+      "donation_amount_second": 25,
+      "donation_amount_third": 10,
+      "donation_amount_fourth": 5,
+      "donation_form_url": "https://donate.mozilla.org",
+      "text": "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
+    },
+  },
+  {
+    "id": "EOY_BOLD_TEST_1",
+    "template": "eoy_snippet",
+    "content": {
+      "icon": TEST_ICON,
+      "selected_button": "donation_amount_second",
+      "button_label": "Donate",
+      "monthly_checkbox_label_text": "Make my donation monthly",
+      "currency_code": "usd",
+      "donation_amount_first": 50,
+      "donation_amount_second": 25,
+      "donation_amount_third": 10,
+      "donation_amount_fourth": 5,
+      "donation_form_url": "https://donate.mozilla.org",
+      "text": "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
+      "test": "bold",
+    },
+  },
+  {
+    "id": "EOY_TAKEOVER_TEST_1",
+    "template": "eoy_snippet",
+    "content": {
+      "icon": TEST_ICON,
+      "button_label": "Donate",
+      "monthly_checkbox_label_text": "Make my donation monthly",
+      "currency_code": "usd",
+      "donation_amount_first": 50,
+      "donation_amount_second": 25,
+      "donation_amount_third": 10,
+      "donation_amount_fourth": 5,
+      "donation_form_url": "https://donate.mozilla.org",
+      "text": "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
+      "test": "takeover",
     },
   },
 ]);

@@ -19,7 +19,7 @@ add_task(async function() {
 
 function performTest() {
   const out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
-    flattenRecursion: true
+    flattenRecursion: true,
   });
 
   ok(out, "Some data was outputted properly");
@@ -51,21 +51,21 @@ function performTest() {
 
 var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
-    location: "A (http://path/to/file.js:10:5)"
+    location: "A (http://path/to/file.js:10:5)",
   }, {
-    location: `${MANGLED_FN} (http://path/to/file.js:100:5)`
+    location: `${MANGLED_FN} (http://path/to/file.js:100:5)`,
   }],
   time: 50,
 }]);
 
 var EXPECTED_OUTPUT = [{
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -74,12 +74,12 @@ var EXPECTED_OUTPUT = [{
     y: 0,
     width: 50,
     height: 15,
-    text: "A (file.js:10)"
-  }]
+    text: "A (file.js:10)",
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
   blocks: [{
     startTime: 0,
@@ -88,30 +88,30 @@ var EXPECTED_OUTPUT = [{
     y: 15,
     width: 50,
     height: 15,
-    text: `${UNMANGLED_FN} (file.js:100)`
-  }]
+    text: `${UNMANGLED_FN} (file.js:100)`,
+  }],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }, {
-  blocks: []
+  blocks: [],
 }];

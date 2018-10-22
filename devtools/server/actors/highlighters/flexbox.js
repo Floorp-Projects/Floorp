@@ -31,14 +31,14 @@ const {
 
 const FLEXBOX_LINES_PROPERTIES = {
   "edge": {
-    lineDash: [5, 3]
+    lineDash: [5, 3],
   },
   "item": {
-    lineDash: [0, 0]
+    lineDash: [0, 0],
   },
   "alignItems": {
-    lineDash: [0, 0]
-  }
+    lineDash: [0, 0],
+  },
 };
 
 const FLEXBOX_CONTAINER_PATTERN_LINE_DASH = [5, 3]; // px
@@ -87,7 +87,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     // Initialize the <canvas> position to the top left corner of the page
     this._canvasPosition = {
       x: 0,
-      y: 0
+      y: 0,
     };
 
     this._ignoreZoom = true;
@@ -101,17 +101,17 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   _buildMarkup() {
     const container = createNode(this.win, {
       attributes: {
-        "class": "highlighter-container"
-      }
+        "class": "highlighter-container",
+      },
     });
 
     const root = createNode(this.win, {
       parent: container,
       attributes: {
         "id": "root",
-        "class": "root"
+        "class": "root",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // We use a <canvas> element because there is an arbitrary number of items and texts
@@ -125,9 +125,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
         "class": "canvas",
         "hidden": "true",
         "width": CANVAS_SIZE,
-        "height": CANVAS_SIZE
+        "height": CANVAS_SIZE,
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     return container;
@@ -740,7 +740,7 @@ function getFlexData(flex, win) {
           };
         }),
       };
-    })
+    }),
   };
 }
 

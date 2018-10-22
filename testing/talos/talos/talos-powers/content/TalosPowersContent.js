@@ -116,7 +116,7 @@ var TalosPowersParent;
               data: arg,
             },
             listeningTo: replyEvent,
-          }
+          },
         })
       );
     },

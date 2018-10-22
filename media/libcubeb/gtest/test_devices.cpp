@@ -13,6 +13,9 @@
 #include <string.h>
 #include <memory>
 #include "cubeb/cubeb.h"
+
+//#define ENABLE_NORMAL_LOG
+//#define ENABLE_VERBOSE_LOG
 #include "common.h"
 
 long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)

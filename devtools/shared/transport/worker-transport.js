@@ -37,7 +37,7 @@ MainThreadWorkerDebuggerTransport.prototype = {
     this._dbg.postMessage(JSON.stringify({
       type: "message",
       id: this._id,
-      message: packet
+      message: packet,
     }));
   },
 
@@ -54,7 +54,7 @@ MainThreadWorkerDebuggerTransport.prototype = {
     if (this.hooks) {
       this.hooks.onPacket(packet.message);
     }
-  }
+  },
 };
 
 exports.MainThreadWorkerDebuggerTransport = MainThreadWorkerDebuggerTransport;
@@ -87,7 +87,7 @@ WorkerThreadWorkerDebuggerTransport.prototype = {
     this._scope.postMessage(JSON.stringify({
       type: "message",
       id: this._id,
-      message: packet
+      message: packet,
     }));
   },
 
@@ -104,7 +104,7 @@ WorkerThreadWorkerDebuggerTransport.prototype = {
     if (this.hooks) {
       this.hooks.onPacket(packet.message);
     }
-  }
+  },
 };
 
 exports.WorkerThreadWorkerDebuggerTransport = WorkerThreadWorkerDebuggerTransport;

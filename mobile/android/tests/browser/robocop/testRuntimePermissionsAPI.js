@@ -13,7 +13,7 @@ add_task(async function test_snackbar_api() {
   RuntimePermissions.waitForPermissions([
     RuntimePermissions.CAMERA,
     RuntimePermissions.RECORD_AUDIO,
-    RuntimePermissions.WRITE_EXTERNAL_STORAGE
+    RuntimePermissions.WRITE_EXTERNAL_STORAGE,
   ]);
 });
 

@@ -148,7 +148,7 @@ class FilterBar extends Component {
           FILTERS.ERROR
         ),
         filterKey: FILTERS.ERROR,
-        dispatch
+        dispatch,
       }),
       FilterButton({
         active: filter[FILTERS.WARN],
@@ -157,25 +157,25 @@ class FilterBar extends Component {
           FILTERS.WARN
         ),
         filterKey: FILTERS.WARN,
-        dispatch
+        dispatch,
       }),
       FilterButton({
         active: filter[FILTERS.LOG],
         label: getLabel(l10n.getStr("webconsole.logsFilterButton.label"), FILTERS.LOG),
         filterKey: FILTERS.LOG,
-        dispatch
+        dispatch,
       }),
       FilterButton({
         active: filter[FILTERS.INFO],
         label: getLabel(l10n.getStr("webconsole.infoFilterButton.label"), FILTERS.INFO),
         filterKey: FILTERS.INFO,
-        dispatch
+        dispatch,
       }),
       FilterButton({
         active: filter[FILTERS.DEBUG],
         label: getLabel(l10n.getStr("webconsole.debugFilterButton.label"), FILTERS.DEBUG),
         filterKey: FILTERS.DEBUG,
-        dispatch
+        dispatch,
       }),
       dom.div({
         className: "devtools-separator",
@@ -184,26 +184,26 @@ class FilterBar extends Component {
         active: filter[FILTERS.CSS],
         label: l10n.getStr("webconsole.cssFilterButton.label"),
         filterKey: FILTERS.CSS,
-        dispatch
+        dispatch,
       }),
       FilterButton({
         active: filter[FILTERS.NETXHR],
         label: l10n.getStr("webconsole.xhrFilterButton.label"),
         filterKey: FILTERS.NETXHR,
-        dispatch
+        dispatch,
       }),
       FilterButton({
         active: filter[FILTERS.NET],
         label: l10n.getStr("webconsole.requestsFilterButton.label"),
         filterKey: FILTERS.NET,
-        dispatch
+        dispatch,
       }),
     );
   }
 
   renderFilteredMessagesBar() {
     const {
-      filteredMessagesCount
+      filteredMessagesCount,
     } = this.props;
     const {
       global,
@@ -230,7 +230,7 @@ class FilterBar extends Component {
       }, label),
       dom.button({
         className: "devtools-button reset-filters-button",
-        onClick: this.onClickRemoveAllFilters
+        onClick: this.onClickRemoveAllFilters,
       }, l10n.getStr("webconsole.resetFiltersButton.label"))
     );
   }
@@ -253,7 +253,7 @@ class FilterBar extends Component {
         dom.button({
           className: "devtools-button devtools-clear-icon",
           title: l10n.getStr("webconsole.clearButton.tooltip"),
-          onClick: this.onClickMessagesClear
+          onClick: this.onClickMessagesClear,
         }),
         dom.div({
           className: "devtools-separator",
@@ -262,14 +262,14 @@ class FilterBar extends Component {
           className: "devtools-button devtools-filter-icon" + (
             filterBarVisible ? " checked" : ""),
           title: l10n.getStr("webconsole.toggleFilterButton.tooltip"),
-          onClick: this.onClickFilterBarToggle
+          onClick: this.onClickFilterBarToggle,
         }),
         dom.input({
           className: "devtools-plaininput text-filter",
           type: "search",
           value: filter.text,
           placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
-          onInput: this.onSearchInput
+          onInput: this.onSearchInput,
         }),
         !hidePersistLogsCheckbox && FilterCheckbox({
           label: l10n.getStr("webconsole.enablePersistentLogs.label"),
@@ -277,7 +277,7 @@ class FilterBar extends Component {
           onChange: this.onChangePersistToggle,
           checked: persistLogs,
         }),
-      )
+      ),
     ];
 
     if (filteredMessagesCount.global > 0) {
@@ -287,7 +287,7 @@ class FilterBar extends Component {
     if (this.props.closeButtonVisible) {
       children.push(dom.div(
         {
-          className: "devtools-toolbar split-console-close-button-wrapper"
+          className: "devtools-toolbar split-console-close-button-wrapper",
         },
         dom.button({
           id: "split-console-close-button",
@@ -310,7 +310,7 @@ class FilterBar extends Component {
         "aria-live": "off",
         ref: node => {
           this.wrapperNode = node;
-        }
+        },
       }, ...children
       )
     );

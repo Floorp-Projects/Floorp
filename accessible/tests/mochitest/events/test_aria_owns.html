@@ -42,7 +42,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.fc),
-        new unexpectedInvokerChecker(EVENT_SHOW, this.owns)
+        new unexpectedInvokerChecker(EVENT_SHOW, this.owns),
       ];
 
       this.invoke = function testAriaOwns_invoke() {
@@ -76,7 +76,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.fc),
         new invokerChecker(EVENT_SHOW, this.sc),
-        new unexpectedInvokerChecker(EVENT_SHOW, this.owns)
+        new unexpectedInvokerChecker(EVENT_SHOW, this.owns),
       ];
 
       this.invoke = function testAriaOwns_invoke() {

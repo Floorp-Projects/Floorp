@@ -32,7 +32,7 @@ var observer = {
       result += "add ";
     else if (topic == removedTopic)
       result += "remove ";
-  }
+  },
 };
 
 function run_test() {

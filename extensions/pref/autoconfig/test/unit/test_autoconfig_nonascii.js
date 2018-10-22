@@ -27,8 +27,8 @@ function run_test() {
         "_test.string.ASCII": "UTF-8",
         "_test.string.non-ASCII": "日本語",
         "_test.string.getPref": "日本語",
-        "_test.string.gIsUTF8": "true"
-      }
+        "_test.string.gIsUTF8": "true",
+      },
     }, {
       filename: "autoconfig-latin1.cfg",
       prefs: {
@@ -36,12 +36,12 @@ function run_test() {
         "_test.string.non-ASCII": "日本語",
         "_test.string.getPref": "日本語",
         "_test.string.gIsUTF8": "false",
-      }
+      },
     }, {
       filename: "autoconfig-chromecheck.cfg",
       prefs: {
         "_test.string.typeofComponents": "undefined",
-      }
+      },
     }];
 
     function testAutoConfig(test) {

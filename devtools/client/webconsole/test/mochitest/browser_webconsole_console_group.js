@@ -77,7 +77,7 @@ add_task(async function() {
     store,
     shouldBeOpen: false,
     visibleMessageIdsAfterExpand: ["1", "2", "3", "4", "6", "8", "9", "10", "12"],
-    visibleMessageIdsAfterCollapse: ["1", "2", "3", "4", "6", "8", "9", "12"]
+    visibleMessageIdsAfterCollapse: ["1", "2", "3", "4", "6", "8", "9", "12"],
   });
 
   info("Test a message at root level, after closing a collapsed group");
@@ -103,7 +103,7 @@ async function testGroupToggle({
   store,
   shouldBeOpen,
   visibleMessageIdsAfterExpand,
-  visibleMessageIdsAfterCollapse
+  visibleMessageIdsAfterCollapse,
 }) {
   const toggleArrow = node.querySelector(".collapse-button");
   const isOpen = node2 => node2.classList.contains("open");

@@ -83,7 +83,7 @@ GeckoViewStartup.prototype = {
             module: "resource://gre/modules/ContentCrashHandler.jsm",
             observers: [
               "ipc:content-shutdown",
-            ]
+            ],
           });
         }
         break;

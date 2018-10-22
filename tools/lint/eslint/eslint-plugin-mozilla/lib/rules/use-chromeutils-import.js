@@ -30,13 +30,13 @@ module.exports = {
         "type": "object",
         "properties": {
           "allowCu": {
-            "type": "boolean"
-          }
+            "type": "boolean",
+          },
         },
-        "additionalProperties": false
-      }
+        "additionalProperties": false,
+      },
     ],
-    fixable: "code"
+    fixable: "code",
   },
 
   create(context) {
@@ -58,7 +58,7 @@ module.exports = {
             message: "Please use ChromeUtils.import instead of Cu.import",
             fix(fixer) {
               return fixer.replaceText(callee, "ChromeUtils.import");
-            }
+            },
           });
         }
 
@@ -70,10 +70,10 @@ module.exports = {
                       "XPCOMUtils.defineLazyModuleGetter"),
             fix(fixer) {
               return fixer.replaceText(callee, "ChromeUtils.defineModuleGetter");
-            }
+            },
           });
         }
-      }
+      },
     };
-  }
+  },
 };

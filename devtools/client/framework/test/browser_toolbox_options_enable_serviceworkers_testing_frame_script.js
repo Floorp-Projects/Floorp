@@ -23,7 +23,7 @@ function addMessageForwarder(name) {
 const messages = [
   "devtools:sw-test:register",
   "devtools:sw-test:unregister",
-  "devtools:sw-test:iframe:register-and-unregister"
+  "devtools:sw-test:iframe:register-and-unregister",
 ];
 
 for (var msg of messages) {

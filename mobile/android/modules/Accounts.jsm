@@ -32,7 +32,7 @@ var Accounts = Object.freeze({
   _accountsExist: function(kind) {
     return EventDispatcher.instance.sendRequestForResult({
       type: "Accounts:Exist",
-      kind: kind
+      kind: kind,
     }).then(data => data.exists);
   },
 
@@ -57,7 +57,7 @@ var Accounts = Object.freeze({
   launchSetup: function(extras) {
     EventDispatcher.instance.sendRequest({
       type: "Accounts:Create",
-      extras: extras
+      extras: extras,
     });
   },
 
@@ -66,7 +66,7 @@ var Accounts = Object.freeze({
     let associations = {
       authServerEndpoint: "identity.fxaccounts.auth.uri",
       profileServerEndpoint: "identity.fxaccounts.remote.profile.uri",
-      tokenServerEndpoint: "identity.sync.tokenserver.uri"
+      tokenServerEndpoint: "identity.sync.tokenserver.uri",
     };
     for (let key in associations) {
       newData[key] = newData[key] || Services.urlFormatter.formatURLPref(associations[key]);
@@ -86,7 +86,7 @@ var Accounts = Object.freeze({
   createFirefoxAccountFromJSON: function(json) {
     return EventDispatcher.instance.sendRequestForResult({
       type: "Accounts:CreateFirefoxAccountFromJSON",
-      json: this._addDefaultEndpoints(json)
+      json: this._addDefaultEndpoints(json),
     });
   },
 
@@ -103,7 +103,7 @@ var Accounts = Object.freeze({
   updateFirefoxAccountFromJSON: function(json) {
     return EventDispatcher.instance.sendRequestForResult({
       type: "Accounts:UpdateFirefoxAccountFromJSON",
-      json: this._addDefaultEndpoints(json)
+      json: this._addDefaultEndpoints(json),
     });
   },
 
@@ -160,8 +160,8 @@ var Accounts = Object.freeze({
         throw new Error("Can't show Sync preferences of non-existent Firefox Account!");
       }
       return EventDispatcher.instance.sendRequestForResult({
-        type: "Accounts:ShowSyncPreferences"
+        type: "Accounts:ShowSyncPreferences",
       });
     });
-  }
+  },
 });

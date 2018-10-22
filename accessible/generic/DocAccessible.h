@@ -350,9 +350,7 @@ public:
   /**
    * Notify the document accessible that content was inserted.
    */
-  void ContentInserted(nsIContent* aContainerNode,
-                       nsIContent* aStartChildNode,
-                       nsIContent* aEndChildNode);
+  void ContentInserted(nsIContent* aStartChildNode, nsIContent* aEndChildNode);
 
   /**
    * Update the tree on content removal.

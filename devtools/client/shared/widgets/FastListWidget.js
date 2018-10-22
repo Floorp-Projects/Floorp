@@ -244,5 +244,5 @@ FastListWidget.prototype = {
   _orderedMenuElementsArray: null,
   _itemsByElement: null,
   _emptyTextNode: null,
-  _emptyTextValue: ""
+  _emptyTextValue: "",
 };

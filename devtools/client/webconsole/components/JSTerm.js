@@ -37,14 +37,14 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 // History Modules
 const {
   getHistory,
-  getHistoryValue
+  getHistoryValue,
 } = require("devtools/client/webconsole/selectors/history");
 const historyActions = require("devtools/client/webconsole/actions/history");
 
 // Constants used for defining the direction of JSTerm input history navigation.
 const {
   HISTORY_BACK,
-  HISTORY_FORWARD
+  HISTORY_FORWARD,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -144,7 +144,7 @@ class JSTerm extends Component {
       onClick: this.acceptProposedCompletion.bind(this),
       listId: "webConsole_autocompletePopupListBox",
       position: "bottom",
-      autoSelect: true
+      autoSelect: true,
     };
 
     const doc = this.hud.document;
@@ -365,7 +365,7 @@ class JSTerm extends Component {
             "Esc": false,
             "Cmd-F": false,
             "Ctrl-F": false,
-          }
+          },
         });
 
         this.editor.on("changes", this._inputEventHandler);
@@ -566,7 +566,7 @@ class JSTerm extends Component {
     const options = {
       frame: this.SELECTED_FRAME,
       selectedNodeActor,
-      mapped: mappedExpressionRes ? mappedExpressionRes.mapped : null
+      mapped: mappedExpressionRes ? mappedExpressionRes.mapped : null,
     };
 
     // Even if requestEvaluation rejects (because of webConsoleClient.evaluateJSAsync),
@@ -607,7 +607,7 @@ class JSTerm extends Component {
     // Send telemetry event. If we are in the browser toolbox we send -1 as the
     // toolbox session id.
     this.props.serviceContainer.recordTelemetryEvent("execute_js", {
-      "lines": str.split(/\n/).length
+      "lines": str.split(/\n/).length,
     });
 
     let frameActor = null;
@@ -716,7 +716,7 @@ class JSTerm extends Component {
           const lines = newValue.split("\n");
           this.editor.setCursor({
             line: lines.length - 1,
-            ch: lines[lines.length - 1].length
+            ch: lines[lines.length - 1].length,
           });
           this.editor.setAutoCompletionText();
         });
@@ -1452,7 +1452,7 @@ class JSTerm extends Component {
       // Set the cursor on the same line it was already at, after the autocompleted text
       this.editor.setCursor({
         line: editorCursor.line,
-        ch: editorCursor.ch + str.length - numberOfCharsToReplaceCharsBeforeCursor
+        ch: editorCursor.ch + str.length - numberOfCharsToReplaceCharsBeforeCursor,
       });
     }
   }
@@ -1636,7 +1636,7 @@ class JSTerm extends Component {
     }
 
     const {
-      onPaste
+      onPaste,
     } = this.props;
 
     return (

@@ -36,26 +36,26 @@ var gThread = synthesizeProfileForTest([{
     { location: "(root)" },
     { location: "A" },
     { location: "B" },
-  ]
+  ],
 }, {
   time: 10,
   frames: [
     { location: "(root)" },
     { location: "C" },
     { location: "B" },
-  ]
+  ],
 }, {
   time: 15,
   frames: [
     { location: "(root)" },
     { location: "B" },
-  ]
+  ],
 }, {
   time: 20,
   frames: [
     { location: "(root)" },
     { location: "A" },
-  ]
+  ],
 }, {
   time: 21,
   frames: [
@@ -63,7 +63,7 @@ var gThread = synthesizeProfileForTest([{
     { location: "Z" },
     { location: "Y" },
     { location: "X" },
-  ]
+  ],
 }, {
   time: 22,
   frames: [
@@ -71,12 +71,12 @@ var gThread = synthesizeProfileForTest([{
     { location: "W" },
     { location: "Y" },
     { location: "X" },
-  ]
+  ],
 }, {
   time: 23,
   frames: [
     { location: "(root)" },
     { location: "Y" },
     { location: "X" },
-  ]
+  ],
 }]);

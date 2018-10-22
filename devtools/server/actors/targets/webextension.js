@@ -98,7 +98,7 @@ webExtensionTargetPrototype.initialize = function(conn, chromeGlobal, prefix, ad
     configurable: true,
     get: () => {
       return this._chromeGlobal;
-    }
+    },
   });
 
   // Bind the _allowSource helper to this, it is used in the
@@ -142,7 +142,7 @@ webExtensionTargetPrototype.exit = function() {
     chromeGlobal.removeMessageListener("debug:webext_parent_exit", this._onParentExit);
 
     chromeGlobal.sendAsyncMessage("debug:webext_child_exit", {
-      actor: this.actorID
+      actor: this.actorID,
     });
   }
 

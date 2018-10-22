@@ -44,12 +44,12 @@ const code =
 
 const firstLocation = {
   line: 3,
-  column: 4
+  column: 4,
 };
 
 const secondLocation = {
   line: 3,
-  column: 18
+  column: 18,
 };
 
 function test_breakpoints_columns() {

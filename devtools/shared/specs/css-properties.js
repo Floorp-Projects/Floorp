@@ -13,8 +13,8 @@ const cssPropertiesSpec = generateActorSpec({
       request: {},
 
       response: RetVal("json"),
-    }
-  }
+    },
+  },
 });
 
 exports.cssPropertiesSpec = cssPropertiesSpec;

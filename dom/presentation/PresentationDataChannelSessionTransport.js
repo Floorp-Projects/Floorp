@@ -35,7 +35,7 @@ PresentationDataChannelDescription.prototype = {
   },
   get dataChannelSDP() {
     return this._dataChannelSDP;
-  }
+  },
 };
 
 function PresentationTransportBuilder() {

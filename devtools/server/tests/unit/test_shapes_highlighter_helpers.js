@@ -14,7 +14,7 @@ const {
   shapeModeToCssPropertyName,
   getCirclePath,
   getDecimalPrecision,
-  getUnit
+  getUnit,
 } = require("devtools/server/actors/highlighters/shapes");
 
 function run_test() {
@@ -32,11 +32,11 @@ function test_split_coords() {
   const tests = [{
     desc: "splitCoords for basic coordinate pair",
     expr: "30% 20%",
-    expected: ["30%", "20%"]
+    expected: ["30%", "20%"],
   }, {
     desc: "splitCoords for coord pair with calc()",
     expr: "calc(50px + 20%) 30%",
-    expected: ["calc(50px\u00a0+\u00a020%)", "30%"]
+    expected: ["calc(50px\u00a0+\u00a020%)", "30%"],
   }];
 
   for (const { desc, expr, expected } of tests) {
@@ -49,15 +49,15 @@ function test_coord_to_percent() {
   const tests = [{
     desc: "coordToPercent for percent value",
     expr: "50%",
-    expected: 50
+    expected: 50,
   }, {
     desc: "coordToPercent for px value",
     expr: "500px",
-    expected: 50
+    expected: 50,
   }, {
     desc: "coordToPercent for zero value",
     expr: "0",
-    expected: 0
+    expected: 0,
   }];
 
   for (const { desc, expr, expected } of tests) {
@@ -70,19 +70,19 @@ function test_eval_calc_expression() {
   const tests = [{
     desc: "evalCalcExpression with one value",
     expr: "50%",
-    expected: 50
+    expected: 50,
   }, {
     desc: "evalCalcExpression with percent and px values",
     expr: "50% + 100px",
-    expected: 60
+    expected: 60,
   }, {
     desc: "evalCalcExpression with a zero value",
     expr: "0 + 100px",
-    expected: 10
+    expected: 10,
   }, {
     desc: "evalCalcExpression with a negative value",
     expr: "-200px+50%",
-    expected: 30
+    expected: 30,
   }];
 
   for (const { desc, expr, expected } of tests) {
@@ -94,11 +94,11 @@ function test_shape_mode_to_css_property_name() {
   const tests = [{
     desc: "shapeModeToCssPropertyName for clip-path",
     expr: "cssClipPath",
-    expected: "clipPath"
+    expected: "clipPath",
   }, {
     desc: "shapeModeToCssPropertyName for shape-outside",
     expr: "cssShapeOutside",
-    expected: "shapeOutside"
+    expected: "shapeOutside",
   }];
 
   for (const { desc, expr, expected } of tests) {
@@ -110,19 +110,19 @@ function test_get_circle_path() {
   const tests = [{
     desc: "getCirclePath with size 5, no resizing, no zoom, 1:1 ratio",
     size: 5, cx: 0, cy: 0, width: 100, height: 100, zoom: 1,
-    expected: "M-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0"
+    expected: "M-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0",
   }, {
     desc: "getCirclePath with size 7, resizing, no zoom, 1:1 ratio",
     size: 7, cx: 0, cy: 0, width: 200, height: 200, zoom: 1,
-    expected: "M-3.5,0a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0"
+    expected: "M-3.5,0a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0",
   }, {
     desc: "getCirclePath with size 5, resizing, zoom, 1:1 ratio",
     size: 5, cx: 0, cy: 0, width: 200, height: 200, zoom: 2,
-    expected: "M-1.25,0a1.25,1.25 0 1,0 2.5,0a1.25,1.25 0 1,0 -2.5,0"
+    expected: "M-1.25,0a1.25,1.25 0 1,0 2.5,0a1.25,1.25 0 1,0 -2.5,0",
   }, {
     desc: "getCirclePath with size 5, resizing, zoom, non-square ratio",
     size: 5, cx: 0, cy: 0, width: 100, height: 200, zoom: 2,
-    expected: "M-2.5,0a2.5,1.25 0 1,0 5,0a2.5,1.25 0 1,0 -5,0"
+    expected: "M-2.5,0a2.5,1.25 0 1,0 5,0a2.5,1.25 0 1,0 -5,0",
   }];
 
   for (const { desc, size, cx, cy, width, height, zoom, expected } of tests) {
@@ -133,19 +133,19 @@ function test_get_circle_path() {
 function test_get_decimal_precision() {
   const tests = [{
     desc: "getDecimalPrecision with px",
-    expr: "px", expected: 0
+    expr: "px", expected: 0,
   }, {
     desc: "getDecimalPrecision with %",
-    expr: "%", expected: 2
+    expr: "%", expected: 2,
   }, {
     desc: "getDecimalPrecision with em",
-    expr: "em", expected: 2
+    expr: "em", expected: 2,
   }, {
     desc: "getDecimalPrecision with undefined",
-    expr: undefined, expected: 0
+    expr: undefined, expected: 0,
   }, {
     desc: "getDecimalPrecision with empty string",
-    expr: "", expected: 0
+    expr: "", expected: 0,
   }];
 
   for (const { desc, expr, expected } of tests) {
@@ -156,40 +156,40 @@ function test_get_decimal_precision() {
 function test_get_unit() {
   const tests = [{
     desc: "getUnit with %",
-    expr: "30%", expected: "%"
+    expr: "30%", expected: "%",
   }, {
     desc: "getUnit with px",
-    expr: "400px", expected: "px"
+    expr: "400px", expected: "px",
   }, {
     desc: "getUnit with em",
-    expr: "4em", expected: "em"
+    expr: "4em", expected: "em",
   }, {
     desc: "getUnit with 0",
-    expr: "0", expected: "px"
+    expr: "0", expected: "px",
   }, {
     desc: "getUnit with 0%",
-    expr: "0%", expected: "%"
+    expr: "0%", expected: "%",
   }, {
     desc: "getUnit with 0.00%",
-    expr: "0.00%", expected: "%"
+    expr: "0.00%", expected: "%",
   }, {
     desc: "getUnit with 0px",
-    expr: "0px", expected: "px"
+    expr: "0px", expected: "px",
   }, {
     desc: "getUnit with 0em",
-    expr: "0em", expected: "em"
+    expr: "0em", expected: "em",
   }, {
     desc: "getUnit with calc",
-    expr: "calc(30px + 5%)", expected: "px"
+    expr: "calc(30px + 5%)", expected: "px",
   }, {
     desc: "getUnit with var",
-    expr: "var(--variable)", expected: "px"
+    expr: "var(--variable)", expected: "px",
   }, {
     desc: "getUnit with closest-side",
-    expr: "closest-side", expected: "px"
+    expr: "closest-side", expected: "px",
   }, {
     desc: "getUnit with farthest-side",
-    expr: "farthest-side", expected: "px"
+    expr: "farthest-side", expected: "px",
   }];
 
   for (const { desc, expr, expected } of tests) {

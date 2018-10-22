@@ -213,7 +213,7 @@ function descriptor(descr) {
     configurable: false,
     writable: false,
     enumerable: false,
-    value: undefined
+    value: undefined,
   }, descr);
 }
 

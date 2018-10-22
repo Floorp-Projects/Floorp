@@ -12,21 +12,21 @@ const threadSpec = generateActorSpec({
     setXHRBreakpoint: {
       request: {
         path: Arg(0, "string"),
-        method: Arg(1, "string")
+        method: Arg(1, "string"),
       },
       response: {
-        value: RetVal("boolean")
-      }
+        value: RetVal("boolean"),
+      },
     },
     removeXHRBreakpoint: {
       request: {
         path: Arg(0, "string"),
-        method: Arg(1, "string")
+        method: Arg(1, "string"),
       },
       response: {
-        value: RetVal("boolean")
-      }
-    }
+        value: RetVal("boolean"),
+      },
+    },
   },
 });
 

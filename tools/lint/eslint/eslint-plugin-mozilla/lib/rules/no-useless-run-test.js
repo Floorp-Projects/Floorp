@@ -57,12 +57,12 @@ module.exports = function(context) {
               // there's a new line after that, so just advance past it. This
               // may be slightly not dodgy in some cases, but covers the existing
               // cases.
-              node.end + 1
+              node.end + 1,
             ]);
           },
-          message: "Useless run_test function - only contains run_next_test; whole function can be removed"
+          message: "Useless run_test function - only contains run_next_test; whole function can be removed",
         });
       }
-    }
+    },
   };
 };

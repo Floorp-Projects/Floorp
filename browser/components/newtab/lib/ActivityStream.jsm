@@ -198,6 +198,10 @@ const PREFS_CONFIG = new Map([
     title: "Are the asrouter devtools enabled?",
     value: false,
   }],
+  ["asrouter.userprefs.cfr", {
+    title: "Does the user allow CFR recommendations?",
+    value: true,
+  }],
   ["asrouter.messageProviders", {
     title: "Configuration for ASRouter message providers",
 

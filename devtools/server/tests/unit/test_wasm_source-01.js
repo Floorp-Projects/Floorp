@@ -31,7 +31,7 @@ function run_test() {
         gThreadClient = threadClient;
         gThreadClient.reconfigure({
           observeAsmJS: true,
-          wasmBinarySource: true
+          wasmBinarySource: true,
         }, function(response) {
           Assert.equal(!!response.error, false);
           test_source();
@@ -85,7 +85,7 @@ function test_source() {
     const m = new WebAssembly.Module(new Uint8Array([
       0,97,115,109,1,0,0,0,1,132,128,128,128,0,1,96,0,0,3,130,128,128,128,0,1,
       0,6,129,128,128,128,0,0,7,133,128,128,128,0,1,1,102,0,0,10,136,128,128,
-      128,0,1,130,128,128,128,0,0,11
+      128,0,1,130,128,128,128,0,0,11,
     ]));
     const i = new WebAssembly.Instance(m);
     debugger;

@@ -17,8 +17,8 @@ const DATA = [
       width: 1300,
       panel_name: "inspector",
       next_panel: "jsdebugger",
-      reason: "toolbox_show"
-    }
+      reason: "toolbox_show",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -30,8 +30,8 @@ const DATA = [
       width: 1300,
       panel_name: "jsdebugger",
       next_panel: "styleeditor",
-      reason: "toolbox_show"
-    }
+      reason: "toolbox_show",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -43,8 +43,8 @@ const DATA = [
       width: 1300,
       panel_name: "styleeditor",
       next_panel: "netmonitor",
-      reason: "toolbox_show"
-    }
+      reason: "toolbox_show",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -56,8 +56,8 @@ const DATA = [
       width: 1300,
       panel_name: "netmonitor",
       next_panel: "storage",
-      reason: "toolbox_show"
-    }
+      reason: "toolbox_show",
+    },
   }, {
     timestamp: null,
     category: "devtools.main",
@@ -69,9 +69,9 @@ const DATA = [
       width: 1300,
       panel_name: "storage",
       next_panel: "netmonitor",
-      reason: "toolbox_show"
-    }
-  }
+      reason: "toolbox_show",
+    },
+  },
 ];
 
 add_task(async function() {

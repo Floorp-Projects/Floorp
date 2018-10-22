@@ -10,57 +10,57 @@ const {
   parsePseudoClassesAndAttributes,
   SELECTOR_ATTRIBUTE,
   SELECTOR_ELEMENT,
-  SELECTOR_PSEUDO_CLASS
+  SELECTOR_PSEUDO_CLASS,
 } = require("devtools/shared/css/parsing-utils");
 
 const TEST_DATA = [
   // Test that a null input throws an exception
   {
     input: null,
-    throws: true
+    throws: true,
   },
   // Test that a undefined input throws an exception
   {
     input: undefined,
-    throws: true
+    throws: true,
   },
   {
     input: ":root",
     expected: [
-      { value: ":root", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":root", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: ".testclass",
     expected: [
-      { value: ".testclass", type: SELECTOR_ELEMENT }
-    ]
+      { value: ".testclass", type: SELECTOR_ELEMENT },
+    ],
   },
   {
     input: "div p",
     expected: [
-      { value: "div p", type: SELECTOR_ELEMENT }
-    ]
+      { value: "div p", type: SELECTOR_ELEMENT },
+    ],
   },
   {
     input: "div > p",
     expected: [
-      { value: "div > p", type: SELECTOR_ELEMENT }
-    ]
+      { value: "div > p", type: SELECTOR_ELEMENT },
+    ],
   },
   {
     input: "a[hidden]",
     expected: [
       { value: "a", type: SELECTOR_ELEMENT },
-      { value: "[hidden]", type: SELECTOR_ATTRIBUTE }
-    ]
+      { value: "[hidden]", type: SELECTOR_ATTRIBUTE },
+    ],
   },
   {
     input: "a[hidden=true]",
     expected: [
       { value: "a", type: SELECTOR_ELEMENT },
-      { value: "[hidden=true]", type: SELECTOR_ATTRIBUTE }
-    ]
+      { value: "[hidden=true]", type: SELECTOR_ATTRIBUTE },
+    ],
   },
   {
     input: "a[hidden=true] p:hover",
@@ -68,106 +68,106 @@ const TEST_DATA = [
       { value: "a", type: SELECTOR_ELEMENT },
       { value: "[hidden=true]", type: SELECTOR_ATTRIBUTE },
       { value: " p", type: SELECTOR_ELEMENT },
-      { value: ":hover", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":hover", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: "a[checked=\"true\"]",
     expected: [
       { value: "a", type: SELECTOR_ELEMENT },
-      { value: "[checked=\"true\"]", type: SELECTOR_ATTRIBUTE }
-    ]
+      { value: "[checked=\"true\"]", type: SELECTOR_ATTRIBUTE },
+    ],
   },
   {
     input: "a[title~=test]",
     expected: [
       { value: "a", type: SELECTOR_ELEMENT },
-      { value: "[title~=test]", type: SELECTOR_ATTRIBUTE }
-    ]
+      { value: "[title~=test]", type: SELECTOR_ATTRIBUTE },
+    ],
   },
   {
     input: "h1[hidden=\"true\"][title^=\"Important\"]",
     expected: [
       { value: "h1", type: SELECTOR_ELEMENT },
       { value: "[hidden=\"true\"]", type: SELECTOR_ATTRIBUTE },
-      { value: "[title^=\"Important\"]", type: SELECTOR_ATTRIBUTE}
-    ]
+      { value: "[title^=\"Important\"]", type: SELECTOR_ATTRIBUTE},
+    ],
   },
   {
     input: "p:hover",
     expected: [
       { value: "p", type: SELECTOR_ELEMENT },
-      { value: ":hover", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":hover", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: "p + .testclass:hover",
     expected: [
       { value: "p + .testclass", type: SELECTOR_ELEMENT },
-      { value: ":hover", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":hover", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: "p::before",
     expected: [
       { value: "p", type: SELECTOR_ELEMENT },
-      { value: "::before", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: "::before", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: "p:nth-child(2)",
     expected: [
       { value: "p", type: SELECTOR_ELEMENT },
-      { value: ":nth-child(2)", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":nth-child(2)", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: "p:not([title=\"test\"]) .testclass",
     expected: [
       { value: "p", type: SELECTOR_ELEMENT },
       { value: ":not([title=\"test\"])", type: SELECTOR_PSEUDO_CLASS },
-      { value: " .testclass", type: SELECTOR_ELEMENT }
-    ]
+      { value: " .testclass", type: SELECTOR_ELEMENT },
+    ],
   },
   {
     input: "a\\:hover",
     expected: [
-      { value: "a\\:hover", type: SELECTOR_ELEMENT }
-    ]
+      { value: "a\\:hover", type: SELECTOR_ELEMENT },
+    ],
   },
   {
     input: ":not(:lang(it))",
     expected: [
-      { value: ":not(:lang(it))", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":not(:lang(it))", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: "p:not(:lang(it))",
     expected: [
       { value: "p", type: SELECTOR_ELEMENT },
-      { value: ":not(:lang(it))", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":not(:lang(it))", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: "p:not(p:lang(it))",
     expected: [
       { value: "p", type: SELECTOR_ELEMENT },
-      { value: ":not(p:lang(it))", type: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":not(p:lang(it))", type: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     input: ":not(:lang(it)",
     expected: [
-      { value: ":not(:lang(it)", type: SELECTOR_ELEMENT }
-    ]
+      { value: ":not(:lang(it)", type: SELECTOR_ELEMENT },
+    ],
   },
   {
     input: ":not(:lang(it)))",
     expected: [
       { value: ":not(:lang(it))", type: SELECTOR_PSEUDO_CLASS },
-      { value: ")", type: SELECTOR_ELEMENT }
-    ]
-  }
+      { value: ")", type: SELECTOR_ELEMENT },
+    ],
+  },
 ];
 
 function run_test() {

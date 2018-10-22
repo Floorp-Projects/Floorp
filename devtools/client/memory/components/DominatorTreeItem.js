@@ -77,7 +77,7 @@ class DominatorTreeItem extends Component {
           key,
           onClick: () => onViewSourceInDebugger(piece),
           frame: piece,
-          showFunctionName: true
+          showFunctionName: true,
         });
       } else if (piece === "noStack") {
         label[i * 2] = dom.span({ key, className: "not-available" },
@@ -103,16 +103,16 @@ class DominatorTreeItem extends Component {
 
     return dom.div(
       {
-        className: `heap-tree-item ${focused ? "focused" : ""} node-${item.nodeId}`
+        className: `heap-tree-item ${focused ? "focused" : ""} node-${item.nodeId}`,
       },
 
       dom.span(
         {
-          className: "heap-tree-item-field heap-tree-item-bytes"
+          className: "heap-tree-item-field heap-tree-item-bytes",
         },
         dom.span(
           {
-            className: "heap-tree-number"
+            className: "heap-tree-number",
           },
           retainedSize
         ),
@@ -121,11 +121,11 @@ class DominatorTreeItem extends Component {
 
       dom.span(
         {
-          className: "heap-tree-item-field heap-tree-item-bytes"
+          className: "heap-tree-item-field heap-tree-item-bytes",
         },
         dom.span(
           {
-            className: "heap-tree-number"
+            className: "heap-tree-number",
           },
           shallowSize
         ),
@@ -135,7 +135,7 @@ class DominatorTreeItem extends Component {
       dom.span(
         {
           className: "heap-tree-item-field heap-tree-item-name",
-          style: { marginInlineStart: depth * TREE_ROW_HEIGHT }
+          style: { marginInlineStart: depth * TREE_ROW_HEIGHT },
         },
         arrow,
         label,

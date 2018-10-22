@@ -85,7 +85,7 @@ class GeckoViewContent extends GeckoViewModule {
         }
         var msgData = {
           active: aData.active,
-          suspendMedia: this.settings.suspendMediaWhenInactive
+          suspendMedia: this.settings.suspendMediaWhenInactive,
         };
         this.messageManager.sendAsyncMessage("GeckoView:SetActive", msgData);
         break;
@@ -172,7 +172,7 @@ class GeckoViewContent extends GeckoViewModule {
         }
 
         this.eventDispatcher.sendRequest({
-          type: "GeckoView:ContentCrash"
+          type: "GeckoView:ContentCrash",
         });
       }
       break;

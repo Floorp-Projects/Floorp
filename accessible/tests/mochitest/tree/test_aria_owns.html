@@ -29,7 +29,7 @@
         { SECTION: [ // t1_1
           { HEADING: [ // t1_2
             // no kids, no loop
-          ] }
+          ] },
         ] };
       testAccessibleTree("t1_1", tree);
 
@@ -38,8 +38,8 @@
           { GROUPING: [ // t2_2
             { HEADING: [ // t2_3
               // no kids, no loop
-            ] }
-          ] }
+            ] },
+          ] },
         ] };
       testAccessibleTree("t2_1", tree);
 
@@ -49,9 +49,9 @@
             { NOTE: [ // t3_2
               { HEADING: [ // DOM child of t3_2
                 // no kids, no loop
-              ] }
-            ] }
-          ] }
+              ] },
+            ] },
+          ] },
         ] };
       testAccessibleTree("t3_3", tree);
 
@@ -59,7 +59,7 @@
         { SECTION: [ // t4_1
           { GROUPING: [ // DOM child of t4_1, aria-owns ignored
             // no kids, no loop
-          ] }
+          ] },
         ] };
       testAccessibleTree("t4_1", tree);
 
@@ -71,11 +71,11 @@
                 { FORM: [ // t5_3
                   { TOOLTIP: [ // DOM child of t5_3
                     // no kids, no loop
-                  ]}
-                ]}
-              ]}
-            ] }
-          ] }
+                  ]},
+                ]},
+              ]},
+            ] },
+          ] },
         ] };
       testAccessibleTree("t5_1", tree);
 
@@ -91,8 +91,8 @@
         { SECTION: [ // ariaowns_container
           { SECTION: [ // ariaowns_self
             { SECTION: [ // ariaowns_uncle
-            ] }
-          ] }
+            ] },
+          ] },
         ] };
       testAccessibleTree("ariaowns_container", tree);
 
@@ -100,20 +100,20 @@
         { TABLE: [
           { ROW: [
             { GRID_CELL: [
-              { TEXT_LEAF: [] }
+              { TEXT_LEAF: [] },
             ] },
             { GRID_CELL: [
-              { TEXT_LEAF: [] }
-            ] }
+              { TEXT_LEAF: [] },
+            ] },
           ] },
           { ROW: [
             { GRID_CELL: [
-              { TEXT_LEAF: [] }
+              { TEXT_LEAF: [] },
             ] },
             { GRID_CELL: [
-              { TEXT_LEAF: [] }
-            ] }
-          ] }
+              { TEXT_LEAF: [] },
+            ] },
+          ] },
         ] };
       testAccessibleTree("grid", tree);
 

@@ -120,7 +120,7 @@ function test() {
         ["7",
          {line: 5, ch: 0}],
         ["7:2",
-         {line: 5, ch: 0}]
+         {line: 5, ch: 0}],
       ];
       testVectors.forEach(vector => {
         testJumpToLine(ed, vector[0], vector[1]);

@@ -119,7 +119,7 @@ function execAsync(aStmt, aOptions, aResults) {
                  " but got " + aReason, caller);
 
       completed = true;
-    }
+    },
   };
 
   let pending;
@@ -347,13 +347,13 @@ function test_partial_listener_works() {
   );
   stmt.bindByIndex(0, 0);
   stmt.executeAsync({
-    handleResult(aResultSet) {}
+    handleResult(aResultSet) {},
   });
   stmt.executeAsync({
-    handleError(aError) {}
+    handleError(aError) {},
   });
   stmt.executeAsync({
-    handleCompletion(aReason) {}
+    handleCompletion(aReason) {},
   });
   stmt.finalize();
 

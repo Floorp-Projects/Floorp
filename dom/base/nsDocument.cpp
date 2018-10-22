@@ -7228,6 +7228,69 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
   return adoptedNode;
 }
 
+void
+nsIDocument::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
+                                               const nsAString& aHeightString,
+                                               const nsAString& aScaleString)
+{
+  // The width and height properties
+  // https://drafts.csswg.org/css-device-adapt/#width-and-height-properties
+  //
+  // The width and height viewport <META> properties are translated into width
+  // and height descriptors, setting the min-width/min-height value to
+  // extend-to-zoom and the max-width/max-height value to the length from the
+  // viewport <META> property as follows:
+  //
+  // 1. Non-negative number values are translated to pixel lengths, clamped to
+  //    the range: [1px, 10000px]
+  // 2. Negative number values are dropped
+  // 3. device-width and device-height translate to 100vw and 100vh respectively
+  // 4. Other keywords and unknown values translate to 1px
+  mMinWidth = nsViewportInfo::Auto;
+  mMaxWidth = nsViewportInfo::Auto;
+  if (!aWidthString.IsEmpty()) {
+    mMinWidth = nsViewportInfo::ExtendToZoom;
+    if (aWidthString.EqualsLiteral("device-width")) {
+      mMaxWidth = nsViewportInfo::DeviceSize;
+    } else {
+      nsresult widthErrorCode;
+      mMaxWidth = aWidthString.ToInteger(&widthErrorCode);
+      if (NS_FAILED(widthErrorCode)) {
+        mMaxWidth = 1.0f;
+      } else if (mMaxWidth >= 0.0f) {
+        mMaxWidth = clamped(mMaxWidth, CSSCoord(1.0f), CSSCoord(10000.0f));
+      } else {
+        mMaxWidth = nsViewportInfo::Auto;
+      }
+    }
+  // FIXME: Check the scale is not 'auto' once we support auto value for it.
+  } else if (!aScaleString.IsEmpty()) {
+    if (aHeightString.IsEmpty()) {
+      mMinWidth = nsViewportInfo::ExtendToZoom;
+      mMaxWidth = nsViewportInfo::ExtendToZoom;
+    }
+  }
+
+  mMinHeight = nsViewportInfo::Auto;
+  mMaxHeight = nsViewportInfo::Auto;
+  if (!aHeightString.IsEmpty()) {
+    mMinHeight = nsViewportInfo::ExtendToZoom;
+    if (aHeightString.EqualsLiteral("device-height")) {
+      mMaxHeight = nsViewportInfo::DeviceSize;
+    } else {
+      nsresult heightErrorCode;
+      mMaxHeight = aHeightString.ToInteger(&heightErrorCode);
+      if (NS_FAILED(heightErrorCode)) {
+        mMaxHeight = 1.0f;
+      } else if (mMaxHeight >= 0.0f) {
+        mMaxHeight = clamped(mMaxHeight, CSSCoord(1.0f), CSSCoord(10000.0f));
+      } else {
+        mMaxHeight = nsViewportInfo::Auto;
+      }
+    }
+  }
+}
+
 nsViewportInfo
 nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 {
@@ -7352,27 +7415,25 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     GetHeaderData(nsGkAtoms::viewport_height, heightStr);
     GetHeaderData(nsGkAtoms::viewport_width, widthStr);
 
-    mAutoSize = false;
+    // Parse width and height properties
+    // This function sets m{Min,Max}{Width,Height}.
+    ParseWidthAndHeightInMetaViewport(widthStr, heightStr, scaleStr);
 
-    if (widthStr.EqualsLiteral("device-width")) {
+    mAutoSize = false;
+    if (mMaxWidth == nsViewportInfo::DeviceSize) {
       mAutoSize = true;
     }
-
     if (widthStr.IsEmpty() &&
-        (heightStr.EqualsLiteral("device-height") ||
+        (mMaxHeight == nsViewportInfo::DeviceSize ||
          (mScaleFloat.scale == 1.0)))
     {
       mAutoSize = true;
     }
 
-    nsresult widthErrorCode, heightErrorCode;
-    mViewportSize.width = widthStr.ToInteger(&widthErrorCode);
-    mViewportSize.height = heightStr.ToInteger(&heightErrorCode);
-
     // If width or height has not been set to a valid number by this point,
     // fall back to a default value.
-    mValidWidth = (!widthStr.IsEmpty() && NS_SUCCEEDED(widthErrorCode) && mViewportSize.width > 0);
-    mValidHeight = (!heightStr.IsEmpty() && NS_SUCCEEDED(heightErrorCode) && mViewportSize.height > 0);
+    mValidWidth = (!widthStr.IsEmpty() && mMaxWidth > 0);
+    mValidHeight = (!heightStr.IsEmpty() && mMaxHeight > 0);
 
     // If the width is set to some unrecognized value, and there is no
     // height set, treat it as if device-width were specified.
@@ -7419,35 +7480,118 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       effectiveAllowZoom = true;
     }
 
-    CSSSize size = mViewportSize;
+    // Returns extend-zoom value which is MIN(mScaleFloat, mScaleMaxFloat).
+    auto ComputeExtendZoom = [&]() -> float {
+      if (mValidScaleFloat && effectiveValidMaxScale) {
+        return std::min(mScaleFloat.scale, effectiveMaxScale.scale);
+      }
+      if (mValidScaleFloat) {
+        return mScaleFloat.scale;
+      }
+      if (effectiveValidMaxScale) {
+        return effectiveMaxScale.scale;
+      }
+      return nsViewportInfo::Auto;
+    };
 
-    if (!mValidWidth) {
-      if (mValidHeight && !aDisplaySize.IsEmpty()) {
-        size.width = size.height * aDisplaySize.width / aDisplaySize.height;
-      } else {
+    // Resolving 'extend-to-zoom'
+    // https://drafts.csswg.org/css-device-adapt/#resolve-extend-to-zoom
+    float extendZoom = ComputeExtendZoom();
+
+    CSSCoord minWidth = mMinWidth;
+    CSSCoord maxWidth = mMaxWidth;
+    CSSCoord minHeight = mMinHeight;
+    CSSCoord maxHeight = mMaxHeight;
+
+    // aDisplaySize is in screen pixels; convert them to CSS pixels for the
+    // viewport size.
+    CSSToScreenScale defaultPixelScale =
+      layoutDeviceScale * LayoutDeviceToScreenScale(1.0f);
+    CSSSize displaySize = ScreenSize(aDisplaySize) / defaultPixelScale;
+
+    // Resolve device-width and device-height first.
+    if (maxWidth == nsViewportInfo::DeviceSize) {
+      maxWidth = displaySize.width;
+    }
+    if (maxHeight == nsViewportInfo::DeviceSize) {
+      maxHeight = displaySize.height;
+    }
+    if (extendZoom == nsViewportInfo::Auto) {
+      if (maxWidth == nsViewportInfo::ExtendToZoom) {
+        maxWidth = nsViewportInfo::Auto;
+      }
+      if (maxHeight == nsViewportInfo::ExtendToZoom) {
+        maxHeight = nsViewportInfo::Auto;
+      }
+      if (minWidth == nsViewportInfo::ExtendToZoom) {
+        minWidth = maxWidth;
+      }
+      if (minHeight == nsViewportInfo::ExtendToZoom) {
+        minHeight = maxHeight;
+      }
+    } else {
+      CSSSize extendSize = displaySize / extendZoom;
+      if (maxWidth == nsViewportInfo::ExtendToZoom) {
+        maxWidth = extendSize.width;
+      }
+      if (maxHeight == nsViewportInfo::ExtendToZoom) {
+        maxHeight = extendSize.height;
+      }
+      if (minWidth == nsViewportInfo::ExtendToZoom) {
+        minWidth = nsViewportInfo::Max(extendSize.width, maxWidth);
+      }
+      if (minHeight == nsViewportInfo::ExtendToZoom) {
+        minHeight = nsViewportInfo::Max(extendSize.height, maxHeight);
+      }
+    }
+    // Resolve initial width and height from min/max descriptors
+    // https://drafts.csswg.org/css-device-adapt/#resolve-initial-width-height
+    CSSCoord width = nsViewportInfo::Auto;
+    if (minWidth != nsViewportInfo::Auto || maxWidth != nsViewportInfo::Auto) {
+      width =
+        nsViewportInfo::Max(minWidth,
+                            nsViewportInfo::Min(maxWidth, displaySize.width));
+    }
+    CSSCoord height = nsViewportInfo::Auto;
+    if (minHeight != nsViewportInfo::Auto || maxHeight != nsViewportInfo::Auto) {
+      height =
+        nsViewportInfo::Max(minHeight,
+                            nsViewportInfo::Min(maxHeight, displaySize.height));
+    }
+
+    // Resolve width value
+    // https://drafts.csswg.org/css-device-adapt/#resolve-width
+    if (width == nsViewportInfo::Auto) {
+      if (height == nsViewportInfo::Auto ||
+          aDisplaySize.height == 0) {
         // Stretch CSS pixel size of viewport to keep device pixel size
         // unchanged after full zoom applied.
         // See bug 974242.
-        size.width = gfxPrefs::DesktopViewportWidth() / fullZoom;
+        width = gfxPrefs::DesktopViewportWidth() / fullZoom;
+      } else {
+        width = height * aDisplaySize.width / aDisplaySize.height;
       }
     }
 
-    if (!mValidHeight) {
-      if (!aDisplaySize.IsEmpty()) {
-        size.height = size.width * aDisplaySize.height / aDisplaySize.width;
+    // Resolve height value
+    // https://drafts.csswg.org/css-device-adapt/#resolve-height
+    if (height == nsViewportInfo::Auto) {
+      if (aDisplaySize.width == 0) {
+        height = aDisplaySize.height;
       } else {
-        size.height = size.width;
+        height = width * aDisplaySize.height / aDisplaySize.width;
       }
     }
+    MOZ_ASSERT(width != nsViewportInfo::Auto && height != nsViewportInfo::Auto);
+
+    CSSSize size(width, height);
 
     CSSToScreenScale scaleFloat = mScaleFloat * layoutDeviceScale;
     CSSToScreenScale scaleMinFloat = effectiveMinScale * layoutDeviceScale;
     CSSToScreenScale scaleMaxFloat = effectiveMaxScale * layoutDeviceScale;
 
     if (mAutoSize) {
-      // aDisplaySize is in screen pixels; convert them to CSS pixels for the viewport size.
-      CSSToScreenScale defaultPixelScale = layoutDeviceScale * LayoutDeviceToScreenScale(1.0f);
-      size = ScreenSize(aDisplaySize) / defaultPixelScale;
+      size = displaySize;
     }
 
     size.width = clamped(size.width, float(kViewportMinSize.width), float(kViewportMaxSize.width));

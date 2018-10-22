@@ -60,5 +60,5 @@ var Feedback = {
     let uri = node.ownerDocument.documentURIObject;
     let feedbackURI = Services.io.newURI(this._feedbackURL);
     return uri.prePath === feedbackURI.prePath;
-  }
+  },
 };

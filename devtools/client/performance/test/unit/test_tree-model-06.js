@@ -56,15 +56,15 @@ var gThread = RecordingUtils.deflateThread({
   samples: [{
     time: 0,
     frames: [
-      { location: "(root)" }
-    ]
+      { location: "(root)" },
+    ],
   }, {
     time: 10,
     frames: [
       { location: "(root)" },
       { location: "A" },
-      { location: "B_LEAF_1" }
-    ]
+      { location: "B_LEAF_1" },
+    ],
   }, {
     time: 15,
     frames: [
@@ -72,23 +72,23 @@ var gThread = RecordingUtils.deflateThread({
       { location: "A" },
       { location: "B_NOTLEAF" },
       { location: "C" },
-    ]
+    ],
   }, {
     time: 20,
     frames: [
       { location: "(root)" },
       { location: "A" },
-      { location: "B_LEAF_2" }
-    ]
+      { location: "B_LEAF_2" },
+    ],
   }, {
     time: 25,
     frames: [
       { location: "(root)" },
       { location: "A" },
-      { location: "B_LEAF_2" }
-    ]
+      { location: "B_LEAF_2" },
+    ],
   }],
-  markers: []
+  markers: [],
 }, gUniqueStacks);
 
 var gRawSite1 = {
@@ -100,42 +100,42 @@ var gRawSite1 = {
     typeset: [{
       keyedBy: uniqStr("constructor"),
       name: uniqStr("Foo"),
-      location: uniqStr("B (http://foo/bar:10)")
+      location: uniqStr("B (http://foo/bar:10)"),
     }, {
       keyedBy: uniqStr("primitive"),
-      location: uniqStr("self-hosted")
-    }]
+      location: uniqStr("self-hosted"),
+    }],
   }],
   attempts: {
     schema: {
       outcome: 0,
-      strategy: 1
+      strategy: 1,
     },
     data: [
       [uniqStr("Failure1"), uniqStr("SomeGetter1")],
       [uniqStr("Failure2"), uniqStr("SomeGetter2")],
-      [uniqStr("Inlined"), uniqStr("SomeGetter3")]
-    ]
-  }
+      [uniqStr("Inlined"), uniqStr("SomeGetter3")],
+    ],
+  },
 };
 
 var gRawSite2 = {
   line: 22,
   types: [{
     mirType: uniqStr("Int32"),
-    site: uniqStr("Receiver")
+    site: uniqStr("Receiver"),
   }],
   attempts: {
     schema: {
       outcome: 0,
-      strategy: 1
+      strategy: 1,
     },
     data: [
       [uniqStr("Failure1"), uniqStr("SomeGetter1")],
       [uniqStr("Failure2"), uniqStr("SomeGetter2")],
-      [uniqStr("Failure3"), uniqStr("SomeGetter3")]
-    ]
-  }
+      [uniqStr("Failure3"), uniqStr("SomeGetter3")],
+    ],
+  },
 };
 
 function serialize(x) {

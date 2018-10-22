@@ -100,7 +100,7 @@ function initialize(ctx) {
 
   dbginfo.set(ed, {
     breakpoints: {},
-    debugLocation: null
+    debugLocation: null,
   });
 }
 
@@ -331,7 +331,7 @@ function findPrev(ctx, query) {
   initialize, hasBreakpoint, addBreakpoint, removeBreakpoint, moveBreakpoint,
   setBreakpointCondition, removeBreakpointCondition, getBreakpoints, removeBreakpoints,
   setDebugLocation, getDebugLocation, clearDebugLocation, find, findNext,
-  findPrev
+  findPrev,
 ].forEach(func => {
   module.exports[func.name] = func;
 });

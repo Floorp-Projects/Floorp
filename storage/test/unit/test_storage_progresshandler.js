@@ -27,7 +27,7 @@ var testProgressHandler = {
   onProgress(comm) {
     ++this.calls;
     return this.abort;
-  }
+  },
 };
 
 function test_handler_registration() {

@@ -26,7 +26,7 @@
       this.node = getNode(aID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.node.parentNode)
+        new invokerChecker(EVENT_REORDER, this.node.parentNode),
       ];
 
       this.finalCheck = function textLeafUpdate_finalCheck() {
@@ -69,7 +69,7 @@
       this.textNode = this.containerNode.firstChild;
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.invoke = function removeTextData_invoke() {
@@ -78,9 +78,9 @@
           children: [
             {
               role: ROLE_TEXT_LEAF,
-              name: "text"
-            }
-          ]
+              name: "text",
+            },
+          ],
         };
         testAccessibleTree(this.containerNode, tree);
 
@@ -90,7 +90,7 @@
       this.finalCheck = function removeTextData_finalCheck() {
         var tree = {
           role: aRole,
-          children: []
+          children: [],
         };
         testAccessibleTree(this.containerNode, tree);
       };

@@ -11,36 +11,36 @@ const preferenceSpec = generateActorSpec({
   methods: {
     getBoolPref: {
       request: { value: Arg(0) },
-      response: { value: RetVal("boolean") }
+      response: { value: RetVal("boolean") },
     },
     getCharPref: {
       request: { value: Arg(0) },
-      response: { value: RetVal("string") }
+      response: { value: RetVal("string") },
     },
     getIntPref: {
       request: { value: Arg(0) },
-      response: { value: RetVal("number") }
+      response: { value: RetVal("number") },
     },
     getAllPrefs: {
       request: {},
-      response: { value: RetVal("json") }
+      response: { value: RetVal("json") },
     },
     setBoolPref: {
       request: { name: Arg(0), value: Arg(1) },
-      response: {}
+      response: {},
     },
     setCharPref: {
       request: { name: Arg(0), value: Arg(1) },
-      response: {}
+      response: {},
     },
     setIntPref: {
       request: { name: Arg(0), value: Arg(1) },
-      response: {}
+      response: {},
     },
     clearUserPref: {
       request: { name: Arg(0) },
-      response: {}
-    }
+      response: {},
+    },
   },
 });
 

@@ -19,13 +19,13 @@ add_task(async function() {
       col1: "Column 1",
       col2: "Column 2",
       col3: "Column 3",
-      col4: "Column 4"
+      col4: "Column 4",
     },
     uniqueId: "col1",
     emptyText: "This is dummy empty text",
     highlightUpdated: true,
     removableColumns: true,
-    firstColumn: "col4"
+    firstColumn: "col4",
   });
 
   startTests(doc, table);
@@ -52,13 +52,13 @@ function populateTable(doc, table) {
     col1: "id1",
     col2: "value10",
     col3: "value20",
-    col4: "value30"
+    col4: "value30",
   });
   table.push({
     col1: "id2",
     col2: "value14",
     col3: "value29",
-    col4: "value32"
+    col4: "value32",
   });
   table.push({
     col1: "id3",
@@ -66,38 +66,38 @@ function populateTable(doc, table) {
     col3: "value21",
     col4: "value31",
     extraData: "foobar",
-    extraData2: 42
+    extraData2: 42,
   });
   table.push({
     col1: "id4",
     col2: "value12",
     col3: "value26",
-    col4: "value33"
+    col4: "value33",
   });
   table.push({
     col1: "id5",
     col2: "value19",
     col3: "value26",
-    col4: "value37"
+    col4: "value37",
   });
   table.push({
     col1: "id6",
     col2: "value15",
     col3: "value25",
-    col4: "value37"
+    col4: "value37",
   });
   table.push({
     col1: "id7",
     col2: "value18",
     col3: "value21",
     col4: "value36",
-    somethingExtra: "Hello World!"
+    somethingExtra: "Hello World!",
   });
   table.push({
     col1: "id8",
     col2: "value11",
     col3: "value27",
-    col4: "value34"
+    col4: "value34",
   });
 
   const span = doc.createElement("span");
@@ -107,7 +107,7 @@ function populateTable(doc, table) {
     col1: "id9",
     col2: "value11",
     col3: "value23",
-    col4: span
+    col4: span,
   });
 }
 
@@ -142,7 +142,7 @@ function testTreeItemInsertedCorrectly(doc, table) {
     col1: "Column 1",
     col2: "Column 2",
     col3: "Column 3",
-    col4: "Column 4"
+    col4: "Column 4",
   });
   populateTable(doc, table);
 
@@ -190,7 +190,7 @@ function testAPI(doc, table) {
     col2: "value18",
     col3: "value21",
     col4: "value36",
-    somethingExtra: "Hello World!"
+    somethingExtra: "Hello World!",
   }), "isSelected with json works");
 
   table.selectedRow = "id4";
@@ -243,7 +243,7 @@ function testAPI(doc, table) {
     col1: "id6",
     col2: "value15",
     col3: "value25",
-    col4: "value37"
+    col4: "value37",
   });
   ok(!doc.querySelector("[data-id='id6']"),
      "id6 row does not exist after removal through json");
@@ -252,13 +252,13 @@ function testAPI(doc, table) {
     col1: "id4",
     col2: "value12",
     col3: "value26",
-    col4: "value33"
+    col4: "value33",
   });
   table.push({
     col1: "id6",
     col2: "value15",
     col3: "value25",
-    col4: "value37"
+    col4: "value37",
   });
 
   // test if selectedIndex getter setter works
@@ -287,7 +287,7 @@ function testAPI(doc, table) {
   // testing if setColumns work
   table.setColumns({
     col1: "Foobar",
-    col2: "Testing"
+    col2: "Testing",
   });
 
   // double because splitters
@@ -304,7 +304,7 @@ function testAPI(doc, table) {
     col1: "Column 1",
     col2: "Column 2",
     col3: "Column 3",
-    col4: "Column 4"
+    col4: "Column 4",
   });
   // double because splitters
   is(table.tbody.children.length, 4 * 2,
@@ -319,7 +319,7 @@ function testAPI(doc, table) {
     col1: "id4",
     col2: "UPDATED",
     col3: "value26",
-    col4: "value33"
+    col4: "value33",
   });
   is(doc.querySelectorAll("[data-id='id4']")[1].value, "UPDATED",
      "Correct value after update");

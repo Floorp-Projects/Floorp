@@ -55,8 +55,8 @@ var gThread = synthesizeProfileForTest([{
     { location: "(root)" },
     { location: "http://A" },
     { location: "http://B" },
-    { location: "http://C" }
-  ]
+    { location: "http://C" },
+  ],
 }, {
   time: 5 + 6,
   frames: [
@@ -64,8 +64,8 @@ var gThread = synthesizeProfileForTest([{
     { location: "chrome://A" },
     { location: "resource://B" },
     { location: "jar:file://G" },
-    { location: "http://D" }
-  ]
+    { location: "http://D" },
+  ],
 }, {
   time: 5 + 6 + 7,
   frames: [
@@ -74,7 +74,7 @@ var gThread = synthesizeProfileForTest([{
     { location: "https://E" },
     { location: "file://F" },
     { location: "app://H" },
-  ]
+  ],
 }, {
   time: 5 + 6 + 7 + 8,
   frames: [
@@ -82,6 +82,6 @@ var gThread = synthesizeProfileForTest([{
     { location: "http://A" },
     { location: "http://B" },
     { location: "http://C" },
-    { location: "http://D" }
-  ]
+    { location: "http://D" },
+  ],
 }]);

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>negative height in meta viewport</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="height=-200">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>height=-200</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function negative_height() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      // See comments in test_meta_viewport_maximum_scale_2.html.
+      todo_is(info.width, 800, "width should be the display width");
+      todo_is(info.height, 480, "height should be the display height");
+    });
+  </script>
+</body>
+</html>

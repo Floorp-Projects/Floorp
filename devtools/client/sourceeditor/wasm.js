@@ -19,7 +19,7 @@ function getWasmText(subject, data) {
   const done = dis.disassembleChunk(parser);
   let result = dis.getResult();
   if (result.lines.length === 0) {
-    result = { lines: ["No luck with wast conversion"], offsets: [0], done, };
+    result = { lines: ["No luck with wast conversion"], offsets: [0], done };
   }
 
   const offsets = result.offsets, lines = [];
@@ -27,7 +27,7 @@ function getWasmText(subject, data) {
     lines[offsets[i]] = i;
   }
 
-  wasmStates.set(subject, { offsets, lines, });
+  wasmStates.set(subject, { offsets, lines });
 
   return { lines: result.lines, done: result.done };
 }

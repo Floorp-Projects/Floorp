@@ -25,8 +25,8 @@ add_task(async function() {
         getCookieId("c3", "test1.example.org", "/"),
         getCookieId("c4", ".example.org", "/"),
         getCookieId("uc1", ".example.org", "/"),
-        getCookieId("uc2", ".example.org", "/")
-      ]
+        getCookieId("uc2", ".example.org", "/"),
+      ],
     ],
     [["localStorage", "http://test1.example.org"], ["key", "ls1", "ls2"]],
     [["sessionStorage", "http://test1.example.org"], ["key", "ss1"]],

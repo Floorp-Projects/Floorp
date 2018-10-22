@@ -33,7 +33,7 @@ class AccessibilityTree extends Component {
       accessibles: PropTypes.object,
       expanded: PropTypes.object,
       selected: PropTypes.string,
-      highlighted: PropTypes.object
+      highlighted: PropTypes.object,
     };
   }
 
@@ -125,10 +125,10 @@ class AccessibilityTree extends Component {
   render() {
     const columns = [{
       "id": "default",
-      "title": L10N.getStr("accessibility.role")
+      "title": L10N.getStr("accessibility.role"),
     }, {
       "id": "value",
-      "title": L10N.getStr("accessibility.name")
+      "title": L10N.getStr("accessibility.name"),
     }];
 
     const {
@@ -137,7 +137,7 @@ class AccessibilityTree extends Component {
       expanded,
       selected,
       highlighted: highlightedItem,
-      walker
+      walker,
     } = this.props;
 
     const renderValue = props => {
@@ -156,8 +156,8 @@ class AccessibilityTree extends Component {
         decorator: {
           getRowClass: function() {
             return highlighted ? ["highlighted"] : [];
-          }
-        }
+          },
+        },
       }));
     };
 
@@ -179,7 +179,7 @@ class AccessibilityTree extends Component {
             this.toggle(nodePath);
           }
           this.selectRow(event.currentTarget);
-        }
+        },
       })
     );
   }
@@ -189,7 +189,7 @@ const mapStateToProps = ({ accessibles, ui }) => ({
   accessibles,
   expanded: ui.expanded,
   selected: ui.selected,
-  highlighted: ui.highlighted
+  highlighted: ui.highlighted,
 });
 // Exports from this module
 module.exports = connect(mapStateToProps)(AccessibilityTree);

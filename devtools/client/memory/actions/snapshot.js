@@ -156,7 +156,7 @@ TaskCache.declareCacheableTask({
 
     removeFromCache();
     dispatch({ type: actions.READ_SNAPSHOT_END, id, creationTime });
-  }
+  },
 });
 
 let takeCensusTaskCounter = 0;
@@ -222,7 +222,7 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
           type: beginAction,
           id,
           filter,
-          display
+          display,
         });
 
         const opts = display.inverted
@@ -253,9 +253,9 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
         display,
         filter,
         report,
-        parentMap
+        parentMap,
       });
-    }
+    },
   });
 }
 
@@ -531,7 +531,7 @@ TaskCache.declareCacheableTask({
     removeFromCache();
     dispatch({ type: actions.COMPUTE_DOMINATOR_TREE_END, id, dominatorTreeId });
     return dominatorTreeId;
-  }
+  },
 });
 
 /**
@@ -581,7 +581,7 @@ TaskCache.declareCacheableTask({
     removeFromCache();
     dispatch({ type: actions.FETCH_DOMINATOR_TREE_END, id, root });
     return root;
-  }
+  },
 });
 
 /**
@@ -639,7 +639,7 @@ exports.fetchImmediatelyDominated = TaskCache.declareCacheableTask({
       nodes: response.nodes,
       moreChildrenAvailable: response.moreChildrenAvailable,
     });
-  }
+  },
 });
 
 /**
@@ -672,7 +672,7 @@ TaskCache.declareCacheableTask({
     }
 
     return root;
-  }
+  },
 });
 
 /**
@@ -716,7 +716,7 @@ exports.refreshSelectedDominatorTree = function(heapWorker) {
 const selectSnapshot = exports.selectSnapshot = function(id) {
   return {
     type: actions.SELECT_SNAPSHOT,
-    id
+    id,
   };
 };
 

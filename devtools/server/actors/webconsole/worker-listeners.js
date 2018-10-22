@@ -32,7 +32,7 @@ ConsoleAPIListener.prototype = {
   },
   getCachedMessages: function() {
     return retrieveConsoleEvents();
-  }
+  },
 };
 
 exports.ConsoleAPIListener = ConsoleAPIListener;

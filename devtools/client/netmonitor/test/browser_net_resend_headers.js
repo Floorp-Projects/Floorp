@@ -27,7 +27,7 @@ add_task(async function() {
     { name: "Referer", value: "http://example.com/referrer" },
     { name: "Accept", value: "application/jarda"},
     { name: "Accept-Encoding", value: "compress, identity, funcoding" },
-    { name: "Accept-Language", value: "cs-CZ" }
+    { name: "Accept-Language", value: "cs-CZ" },
   ];
 
   const wait = waitForNetworkEvents(monitor, 1);
@@ -35,7 +35,7 @@ add_task(async function() {
     url: requestUrl,
     method: "POST",
     headers: requestHeaders,
-    body: "Hello"
+    body: "Hello",
   });
   await wait;
 

@@ -23,7 +23,7 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
  */
 exports.register = function(window) {
   const shortcuts = new KeyShortcuts({
-    window
+    window,
   });
   const docShell = window.docShell;
   const contViewer = docShell.contentViewer;

@@ -9,9 +9,9 @@ const Utils = {
   L10n,
   supportsString: function(s) {
     return s;
-  }
+  },
 };
 
 module.exports = {
-  Utils
+  Utils,
 };

@@ -12,6 +12,6 @@ if (/Mac OS X/.test(window.navigator.userAgent)) {
 
 module.exports = {
   AppConstants: {
-    platform
-  }
+    platform,
+  },
 };

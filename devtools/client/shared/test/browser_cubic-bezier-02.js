@@ -192,6 +192,6 @@ function getKeyEvent(target, keyCode, shift = false) {
     target: target,
     keyCode: keyCode,
     shiftKey: shift,
-    preventDefault: () => {}
+    preventDefault: () => {},
   };
 }

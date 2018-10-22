@@ -39,7 +39,7 @@ function getStringifiableFragment(fragment) {
   return {
     areas: getStringifiableAreas(fragment.areas),
     cols: getStringifiableDimension(fragment.cols),
-    rows: getStringifiableDimension(fragment.rows)
+    rows: getStringifiableDimension(fragment.rows),
   };
 }
 

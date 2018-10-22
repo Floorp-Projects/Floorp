@@ -9,7 +9,7 @@ function Quitter() {
 
 Quitter.prototype = {
   toString() { return "[Quitter]"; },
-  quit() { sendSyncMessage("Quitter.Quit", {}); }
+  quit() { sendSyncMessage("Quitter.Quit", {}); },
 };
 
 // This is a frame script, so it may be running in a content process.
@@ -27,9 +27,9 @@ QuitterManager.prototype = {
     var window = aEvent.target.defaultView;
     window.wrappedJSObject.Quitter = Cu.cloneInto({
       toString: quitter.toString.bind(quitter),
-      quit: quitter.quit.bind(quitter)
+      quit: quitter.quit.bind(quitter),
     }, window, {cloneFunctions: true});
-  }
+  },
 };
 
 var quittermanager = new QuitterManager();

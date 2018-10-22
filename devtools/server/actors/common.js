@@ -179,9 +179,9 @@ OriginalLocation.prototype = {
     return {
       source: this.originalSourceActor.form(),
       line: this.originalLine,
-      column: this.originalColumn
+      column: this.originalColumn,
     };
-  }
+  },
 };
 
 exports.OriginalLocation = OriginalLocation;
@@ -262,9 +262,9 @@ GeneratedLocation.prototype = {
       source: this.generatedSourceActor.form(),
       line: this.generatedLine,
       column: this.generatedColumn,
-      lastColumn: this.generatedLastColumn
+      lastColumn: this.generatedLastColumn,
     };
-  }
+  },
 };
 
 exports.GeneratedLocation = GeneratedLocation;

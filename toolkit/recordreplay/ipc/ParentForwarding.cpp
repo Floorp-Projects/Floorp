@@ -92,6 +92,14 @@ HandleMessageInMiddleman(ipc::Side aSide, const IPC::Message& aMessage)
     return true;
   }
 
+  // Send input events to the middleman when the active child is replaying,
+  // so that UI elements such as the replay overlay can be interacted with.
+  if (!ActiveChildIsRecording() && nsContentUtils::IsMessageInputEvent(aMessage)) {
+    ipc::IProtocol::Result r = dom::ContentChild::GetSingleton()->PContentChild::OnMessageReceived(aMessage);
+    MOZ_RELEASE_ASSERT(r == ipc::IProtocol::MsgProcessed);
+    return true;
+  }
+
   // The content process has its own compositor, so compositor messages from
   // the UI process should only be handled in the middleman.
   if (type >= layers::PCompositorBridge::PCompositorBridgeStart &&

@@ -41,38 +41,38 @@ add_task(async function() {
   await navigateResultsAndCheckState(hud, {
     direction: "previous",
     expectedInfoText: "2 of 3 results",
-    expectedJsTermInputValue: jstermHistory[1]
+    expectedJsTermInputValue: jstermHistory[1],
   });
 
   await navigateResultsAndCheckState(hud, {
     direction: "previous",
     expectedInfoText: "1 of 3 results",
-    expectedJsTermInputValue: jstermHistory[0]
+    expectedJsTermInputValue: jstermHistory[0],
   });
 
   info("Check that we go back to the last matching item if we were at the first");
   await navigateResultsAndCheckState(hud, {
     direction: "previous",
     expectedInfoText: "3 of 3 results",
-    expectedJsTermInputValue: jstermHistory[2]
+    expectedJsTermInputValue: jstermHistory[2],
   });
 
   await navigateResultsAndCheckState(hud, {
     direction: "next",
     expectedInfoText: "1 of 3 results",
-    expectedJsTermInputValue: jstermHistory[0]
+    expectedJsTermInputValue: jstermHistory[0],
   });
 
   await navigateResultsAndCheckState(hud, {
     direction: "next",
     expectedInfoText: "2 of 3 results",
-    expectedJsTermInputValue: jstermHistory[1]
+    expectedJsTermInputValue: jstermHistory[1],
   });
 
   await navigateResultsAndCheckState(hud, {
     direction: "next",
     expectedInfoText: "3 of 3 results",
-    expectedJsTermInputValue: jstermHistory[2]
+    expectedJsTermInputValue: jstermHistory[2],
   });
 
   info("Check that trying to navigate when there's only 1 result does not throw");

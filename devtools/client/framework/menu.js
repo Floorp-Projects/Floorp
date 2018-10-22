@@ -26,7 +26,7 @@ function Menu({ id = null } = {}) {
   Object.defineProperty(this, "items", {
     get() {
       return this.menuitems;
-    }
+    },
   });
 
   EventEmitter.decorate(this);

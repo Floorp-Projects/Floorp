@@ -37,7 +37,7 @@ async function logMessages(hud) {
 async function checkValues(oi, storageType) {
   info(`Expanding the ${storageType} object`);
   let onMapOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   oi.querySelector(".arrow").click();
@@ -54,7 +54,7 @@ async function checkValues(oi, storageType) {
   const entriesNode = nodes[3];
   is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
   onMapOiMutation = waitForNodeMutation(oi, {
-    childList: true
+    childList: true,
   });
 
   entriesNode.querySelector(".arrow").click();

@@ -194,7 +194,7 @@ class Telemetry {
     }
 
     return histogram || {
-      add: () => {}
+      add: () => {},
     };
   }
 
@@ -217,7 +217,7 @@ class Telemetry {
       }
     }
     return histogram || {
-      add: () => {}
+      add: () => {},
     };
   }
 
@@ -398,7 +398,7 @@ class Telemetry {
 
     const data = {
       extra: {},
-      expected: new Set(expected)
+      expected: new Set(expected),
     };
 
     PENDING_EVENTS.set(obj, sig, data);
@@ -448,7 +448,7 @@ class Telemetry {
         props[pendingPropName] = pendingPropValue;
       } else {
         PENDING_EVENT_PROPERTIES.set(obj, sig, {
-          [pendingPropName]: pendingPropValue
+          [pendingPropName]: pendingPropValue,
         });
       }
       return;
@@ -603,7 +603,7 @@ class Telemetry {
       this.preparePendingEvent(obj, "tool_timer", id, null, [
         "os",
         "time_open",
-        "session_id"
+        "session_id",
       ]);
       this.addEventProperty(obj, "tool_timer", id, null,
                             "time_open", this.msSystemNow());
@@ -654,7 +654,7 @@ class Telemetry {
       this.addEventProperties(obj, "tool_timer", id, null, {
         "time_open": time,
         "os": this.osNameAndVersion,
-        "session_id": sessionId
+        "session_id": sessionId,
       });
     }
 
@@ -746,7 +746,7 @@ function getChartsFromToolId(id) {
     useTimedEvent: useTimedEvent,
     timerHist: timerHist,
     countHist: countHist,
-    countScalar: countScalar
+    countScalar: countScalar,
   };
 }
 

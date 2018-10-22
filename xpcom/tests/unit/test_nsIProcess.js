@@ -120,7 +120,7 @@ function test_notify_blocking() {
       Assert.equal(topic, "process-finished");
       Assert.equal(process.exitValue, 42);
       test_notify_nonblocking();
-    }
+    },
   });
 }
 
@@ -138,7 +138,7 @@ function test_notify_nonblocking() {
       Assert.equal(topic, "process-finished");
       Assert.equal(process.exitValue, 0);
       test_notify_killed();
-    }
+    },
   });
 }
 
@@ -155,7 +155,7 @@ function test_notify_killed() {
       process = subject.QueryInterface(Ci.nsIProcess);
       Assert.equal(topic, "process-finished");
       do_test_finished();
-    }
+    },
   });
 
   process.kill();

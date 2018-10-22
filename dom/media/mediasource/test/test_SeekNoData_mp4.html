@@ -29,7 +29,7 @@ runWithMSE(async (ms, el) => {
   await Promise.all([
     fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4"),
     fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4"),
-    once(el, "loadedmetadata")
+    once(el, "loadedmetadata"),
   ]);
   const p = once(el, "seeking");
   el.play();
@@ -42,7 +42,7 @@ runWithMSE(async (ms, el) => {
   await Promise.all([
     once(el, "seeked"),
     fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(5, 9), ".m4s"),
-    fetchAndLoad(videosb, "bipbop/bipbop_video", range(6, 10), ".m4s")
+    fetchAndLoad(videosb, "bipbop/bipbop_video", range(6, 10), ".m4s"),
   ]);
   ok(true, "Got seeked event");
   ok(el.currentTime >= 5, "Time >= 5");

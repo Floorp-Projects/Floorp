@@ -18,7 +18,7 @@ class ConnectSteps extends PureComponent {
   render() {
     return dom.ul(
       {
-        className: "connect-page__step-list"
+        className: "connect-page__step-list",
       },
       this.props.steps.map(step => dom.li(
         {

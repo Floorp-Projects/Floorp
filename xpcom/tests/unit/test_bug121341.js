@@ -5,7 +5,7 @@ function run_test() {
   var dataFile = do_get_file("data/bug121341.properties");
   var channel = NetUtil.newChannel({
     uri: Services.io.newFileURI(dataFile, null, null),
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   var inp = channel.open2();
 
@@ -51,7 +51,7 @@ function run_test() {
 
   var channel2 = NetUtil.newChannel({
     uri: Services.io.newFileURI(dataFile, null, null),
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   inp = channel2.open2();
 

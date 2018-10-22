@@ -7,15 +7,15 @@
 
 const {
   takeSnapshotAndCensus,
-  clearSnapshots
+  clearSnapshots,
 } = require("devtools/client/memory/actions/snapshot");
 const {
   actions,
-  treeMapState
+  treeMapState,
 } = require("devtools/client/memory/constants");
 const {
   toggleDiffing,
-  selectSnapshotForDiffingAndRefresh
+  selectSnapshotForDiffingAndRefresh,
 } = require("devtools/client/memory/actions/diffing");
 
 add_task(async function() {
@@ -46,7 +46,7 @@ add_task(async function() {
   ok(true, "Dispatch clearSnapshots action");
   const deleteEvents = Promise.all([
     waitUntilAction(store, actions.DELETE_SNAPSHOTS_START),
-    waitUntilAction(store, actions.DELETE_SNAPSHOTS_END)
+    waitUntilAction(store, actions.DELETE_SNAPSHOTS_END),
   ]);
   dispatch(clearSnapshots(heapWorker));
   await deleteEvents;

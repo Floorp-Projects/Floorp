@@ -11,7 +11,7 @@
   background-position: left center;
 }
 
-body[dir="rtl"] #errorPageContainer {
+#errorPageContainer:dir(rtl) {
   background-position: right center;
 }
 

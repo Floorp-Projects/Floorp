@@ -44,7 +44,7 @@ this.Match = (function() {
       return false;
     },
 
-    toString: () => "[object Pattern]"
+    toString: () => "[object Pattern]",
   };
 
   Pattern.ANY = new Pattern();
@@ -73,7 +73,7 @@ this.Match = (function() {
   MatchError.prototype = {
     toString: function() {
       return "match error: " + this.message;
-    }
+    },
   };
 
   function isAtom(x) {

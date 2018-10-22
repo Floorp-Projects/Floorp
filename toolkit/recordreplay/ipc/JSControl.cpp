@@ -432,6 +432,21 @@ Middleman_HadRepaintFailure(JSContext* aCx, unsigned aArgc, Value* aVp)
   return true;
 }
 
+static bool
+Middleman_RecordingPosition(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  Maybe<double> recordingPosition = parent::GetRecordingPosition();
+
+  if (recordingPosition.isSome()) {
+    args.rval().setNumber(recordingPosition.ref());
+  } else {
+    args.rval().setUndefined();
+  }
+  return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Devtools Sandbox
 ///////////////////////////////////////////////////////////////////////////////
@@ -912,6 +927,7 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("maybeSwitchToReplayingChild", Middleman_MaybeSwitchToReplayingChild, 0, 0),
   JS_FN("hadRepaint", Middleman_HadRepaint, 2, 0),
   JS_FN("hadRepaintFailure", Middleman_HadRepaintFailure, 0, 0),
+  JS_FN("recordingPosition", Middleman_RecordingPosition, 0, 0),
   JS_FS_END
 };
 

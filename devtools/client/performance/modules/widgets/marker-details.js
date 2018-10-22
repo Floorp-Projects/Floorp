@@ -103,13 +103,13 @@ MarkerDetails.prototype = {
     if (marker.stack) {
       const type = marker.endStack ? "startStack" : "stack";
       elements.push(MarkerDOMUtils.buildStackTrace(this._document, {
-        frameIndex: marker.stack, frames, type
+        frameIndex: marker.stack, frames, type,
       }));
     }
     if (marker.endStack) {
       const type = "endStack";
       elements.push(MarkerDOMUtils.buildStackTrace(this._document, {
-        frameIndex: marker.endStack, frames, type
+        frameIndex: marker.endStack, frames, type,
       }));
     }
 
@@ -135,7 +135,7 @@ MarkerDetails.prototype = {
    */
   _onSplitterMouseUp: function() {
     this.emit("resize");
-  }
+  },
 };
 
 /**

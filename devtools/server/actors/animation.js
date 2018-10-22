@@ -36,7 +36,7 @@ const ANIMATION_TYPES = {
   CSS_ANIMATION: "cssanimation",
   CSS_TRANSITION: "csstransition",
   SCRIPT_ANIMATION: "scriptanimation",
-  UNKNOWN: "unknown"
+  UNKNOWN: "unknown",
 };
 exports.ANIMATION_TYPES = ANIMATION_TYPES;
 
@@ -285,7 +285,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       return {
         property: prop.property,
         runningOnCompositor: prop.runningOnCompositor,
-        warning: prop.warning
+        warning: prop.warning,
       };
     });
   },
@@ -523,7 +523,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       // 'auto' keyword and so on.
       return 0;
     }
-  }
+  },
 });
 
 exports.AnimationPlayerActor = AnimationPlayerActor;
@@ -605,7 +605,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     this.observer = new win.MutationObserver(this.onAnimationMutation);
     this.observer.observe(nodeActor.rawNode, {
       animations: true,
-      subtree: true
+      subtree: true,
     });
 
     return this.actors;
@@ -631,7 +631,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         if (index !== -1) {
           eventData.push({
             type: "removed",
-            player: this.actors[index]
+            player: this.actors[index],
           });
           this.actors.splice(index, 1);
         }
@@ -660,7 +660,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         if (index !== -1) {
           eventData.push({
             type: "removed",
-            player: this.actors[index]
+            player: this.actors[index],
           });
           this.actors.splice(index, 1);
         }
@@ -670,7 +670,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         this.actors.push(actor);
         eventData.push({
           type: "added",
-          player: actor
+          player: actor,
         });
         readyPromises.push(player.ready);
       }

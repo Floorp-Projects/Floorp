@@ -7,7 +7,7 @@
 
 const {
   diffingState,
-  treeMapState
+  treeMapState,
 } = require("devtools/client/memory/constants");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";

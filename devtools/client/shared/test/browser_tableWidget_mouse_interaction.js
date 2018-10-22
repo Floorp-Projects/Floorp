@@ -25,7 +25,7 @@ function test() {
           col1: "Column 1",
           col2: "Column 2",
           col3: "Column 3",
-          col4: "Column 4"
+          col4: "Column 4",
         },
         uniqueId: "col1",
         emptyText: "This is dummy empty text",
@@ -56,13 +56,13 @@ function populateTable() {
     col1: "id1",
     col2: "value10",
     col3: "value20",
-    col4: "value30"
+    col4: "value30",
   });
   table.push({
     col1: "id2",
     col2: "value14",
     col3: "value29",
-    col4: "value32"
+    col4: "value32",
   });
   table.push({
     col1: "id3",
@@ -70,44 +70,44 @@ function populateTable() {
     col3: "value21",
     col4: "value31",
     extraData: "foobar",
-    extraData2: 42
+    extraData2: 42,
   });
   table.push({
     col1: "id4",
     col2: "value12",
     col3: "value26",
-    col4: "value33"
+    col4: "value33",
   });
   table.push({
     col1: "id5",
     col2: "value19",
     col3: "value26",
-    col4: "value37"
+    col4: "value37",
   });
   table.push({
     col1: "id6",
     col2: "value15",
     col3: "value25",
-    col4: "value37"
+    col4: "value37",
   });
   table.push({
     col1: "id7",
     col2: "value18",
     col3: "value21",
     col4: "value36",
-    somethingExtra: "Hello World!"
+    somethingExtra: "Hello World!",
   });
   table.push({
     col1: "id8",
     col2: "value11",
     col3: "value27",
-    col4: "value34"
+    col4: "value34",
   });
   table.push({
     col1: "id9",
     col2: "value11",
     col3: "value23",
-    col4: "value38"
+    col4: "value38",
   });
 }
 
@@ -119,7 +119,7 @@ function click(node, button = 0) {
   } else {
     executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {
       button: button,
-      type: "contextmenu"
+      type: "contextmenu",
     }, doc.defaultView));
   }
 }

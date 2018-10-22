@@ -46,7 +46,7 @@ class SwatchBasedEditorTooltip {
     // By default, swatch-based editor tooltips revert value change on <esc> and
     // commit value change on <enter>
     this.shortcuts = new KeyShortcuts({
-      window: this.tooltip.topWindow
+      window: this.tooltip.topWindow,
     });
     this.shortcuts.on("Escape", event => {
       if (!this.tooltip.isVisible()) {
@@ -171,7 +171,7 @@ class SwatchBasedEditorTooltip {
     }
 
     this.swatches.set(swatchEl, {
-      callbacks: callbacks
+      callbacks: callbacks,
     });
     swatchEl.addEventListener("click", this._onSwatchClick);
   }

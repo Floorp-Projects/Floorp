@@ -22,7 +22,7 @@ const testToolDefinition = {
       destroy: () => {},
       panelDoc: iframeWindow.document,
     });
-  }
+  },
 };
 
 add_task(async function() {

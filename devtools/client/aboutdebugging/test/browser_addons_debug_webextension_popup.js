@@ -14,7 +14,7 @@ const ADDON_ID = "test-devtools-webextension@mozilla.org";
 const ADDON_NAME = "test-devtools-webextension";
 
 const {
-  BrowserToolboxProcess
+  BrowserToolboxProcess,
 } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 
 /**
@@ -97,7 +97,7 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
     function waitForExtensionTestMessage(expectedMessage) {
       return new Promise(done => {
         extension.on("test-message", function testLogListener(evt, ...args) {
-          const [message, ] = args;
+          const [message ] = args;
 
           if (message !== expectedMessage) {
             return;

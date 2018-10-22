@@ -22,7 +22,7 @@ function getCert() {
           return;
         }
         resolve(c);
-      }
+      },
     });
   });
 }

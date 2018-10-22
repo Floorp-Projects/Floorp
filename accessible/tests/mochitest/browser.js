@@ -97,7 +97,7 @@ var gBrowserContext =
 {
   browserWnd: null,
   testFunc: null,
-  startURL: ""
+  startURL: "",
 };
 
 function openBrowserWindowIntl() {

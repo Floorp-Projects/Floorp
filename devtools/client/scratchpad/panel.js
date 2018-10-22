@@ -21,7 +21,7 @@ function ScratchpadPanel(iframeWindow, toolbox) {
       onReady() {
         Scratchpad.removeObserver(this);
         resolve();
-      }
+      },
     });
   });
 
@@ -49,5 +49,5 @@ ScratchpadPanel.prototype = {
   destroy() {
     this.emit("destroyed");
     return Promise.resolve();
-  }
+  },
 };

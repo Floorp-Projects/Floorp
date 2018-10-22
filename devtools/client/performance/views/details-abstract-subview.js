@@ -190,5 +190,5 @@ var DetailsSubview = {
     } else {
       this.shouldUpdateWhenShown = true;
     }
-  }
+  },
 };

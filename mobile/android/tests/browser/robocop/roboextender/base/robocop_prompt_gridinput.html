@@ -17,7 +17,7 @@ function test1() {
   var p = new Prompt({
     title: "Prompt 1",
     buttons: [
-      "OK"
+      "OK",
     ],
   }).addIconGrid({
     items: [
@@ -32,7 +32,7 @@ function test1() {
       { iconUri: "drawable://icon", name: "Icon 9" },
       { iconUri: "drawable://icon", name: "Icon 10" },
       { iconUri: "drawable://icon", name: "Icon 11" },
-    ]
+    ],
   });
   p.show(function(data) {
     sendResult(data.icongrid0 == 10, "Got result " + data.icongrid0);

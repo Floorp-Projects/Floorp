@@ -16,7 +16,7 @@ add_task(async function() {
 
   let events = Promise.all([
     get3(gFront, "create-node"),
-    waitForGraphRendered(panelWin, 3, 2)
+    waitForGraphRendered(panelWin, 3, 2),
   ]);
   reload(target);
   let [actors] = await events;
@@ -36,7 +36,7 @@ add_task(async function() {
   // Width should be 500 after reloading
   events = Promise.all([
     get3(gFront, "create-node"),
-    waitForGraphRendered(panelWin, 3, 2)
+    waitForGraphRendered(panelWin, 3, 2),
   ]);
   reload(target);
   [actors] = await events;

@@ -52,7 +52,7 @@ old_history_path = os.path.join(get_state_dir()[0], 'history', 'try_task_configs
 def write_task_config(try_task_config):
     config_path = os.path.join(vcs.path, 'try_task_config.json')
     with open(config_path, 'w') as fh:
-        json.dump(try_task_config, fh, indent=4, separators=(',', ': '))
+        json.dump(try_task_config, fh, indent=4, separators=(',', ': '), sort_keys=True)
         fh.write('\n')
     return config_path
 

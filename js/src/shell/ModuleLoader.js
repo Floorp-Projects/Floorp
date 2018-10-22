@@ -138,7 +138,7 @@ const ReflectLoader = new class {
             ObjectDefineProperty(components, n++, {
                 __proto__: null,
                 value: part,
-                writable: true, enumerable: true, configurable: true
+                writable: true, enumerable: true, configurable: true,
             });
         }
 

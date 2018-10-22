@@ -57,7 +57,7 @@ const ADB = {
               reject();
               break;
           }
-        }
+        },
       }, false);
     });
   },
@@ -419,7 +419,7 @@ const ADB = {
         resolve(packet.data);
       };
     });
-  }
+  },
 };
 
 exports.ADB = ADB;

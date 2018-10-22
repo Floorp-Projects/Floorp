@@ -128,9 +128,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "root",
         "class": "root",
-        "role": "presentation"
+        "role": "presentation",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     // Building the SVG element with its polygons and lines
@@ -143,9 +143,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
         "width": "100%",
         "height": "100%",
         "hidden": "true",
-        "role": "presentation"
+        "role": "presentation",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const regions = createSVGNode(this.win, {
@@ -153,9 +153,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       parent: svg,
       attributes: {
         "class": "regions",
-        "role": "presentation"
+        "role": "presentation",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     for (const region of BOX_MODEL_REGIONS) {
@@ -165,9 +165,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
         attributes: {
           "class": region,
           "id": region,
-          "role": "presentation"
+          "role": "presentation",
         },
-        prefix: this.ID_CLASS_PREFIX
+        prefix: this.ID_CLASS_PREFIX,
       });
     }
 
@@ -179,9 +179,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
           "class": "guide-" + side,
           "id": "guide-" + side,
           "stroke-width": GUIDE_STROKE_WIDTH,
-          "role": "presentation"
+          "role": "presentation",
         },
-        prefix: this.ID_CLASS_PREFIX
+        prefix: this.ID_CLASS_PREFIX,
       });
     }
 
@@ -193,70 +193,70 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
         "class": "infobar-container",
         "id": "infobar-container",
         "position": "top",
-        "hidden": "true"
+        "hidden": "true",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const infobar = createNode(this.win, {
       parent: infobarContainer,
       attributes: {
-        "class": "infobar"
+        "class": "infobar",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     const texthbox = createNode(this.win, {
       parent: infobar,
       attributes: {
-        "class": "infobar-text"
+        "class": "infobar-text",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
         "class": "infobar-tagname",
-        "id": "infobar-tagname"
+        "id": "infobar-tagname",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
         "class": "infobar-id",
-        "id": "infobar-id"
+        "id": "infobar-id",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
         "class": "infobar-classes",
-        "id": "infobar-classes"
+        "id": "infobar-classes",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
         "class": "infobar-pseudo-classes",
-        "id": "infobar-pseudo-classes"
+        "id": "infobar-pseudo-classes",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
     createNode(this.win, {
       nodeType: "span",
       parent: texthbox,
       attributes: {
         "class": "infobar-dimensions",
-        "id": "infobar-dimensions"
+        "id": "infobar-dimensions",
       },
-      prefix: this.ID_CLASS_PREFIX
+      prefix: this.ID_CLASS_PREFIX,
     });
 
     return highlighterContainer;
@@ -431,7 +431,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
         width: 0,
         x: 0,
         y: 0,
-      }
+      },
     };
 
     for (const q of quads) {
@@ -585,7 +585,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       top: 0,
       width: 0,
       x: 0,
-      y: 0
+      y: 0,
     };
   }
 

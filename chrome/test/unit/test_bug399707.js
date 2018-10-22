@@ -4,7 +4,7 @@
  */
 
 var MANIFESTS = [
-  do_get_file("data/test_bug399707.manifest")
+  do_get_file("data/test_bug399707.manifest"),
 ];
 
 registerManifests(MANIFESTS);

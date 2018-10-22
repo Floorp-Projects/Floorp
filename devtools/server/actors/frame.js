@@ -101,7 +101,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
       form.where = {
         source: generatedLocation.generatedSourceActor.form(),
         line: generatedLocation.generatedLine,
-        column: generatedLocation.generatedColumn
+        column: generatedLocation.generatedColumn,
       };
     }
 
@@ -119,7 +119,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
 
     return this.frame.arguments.map(arg => createValueGrip(arg,
       this.threadActor._pausePool, this.threadActor.objectGrip));
-  }
+  },
 });
 
 exports.FrameActor = FrameActor;

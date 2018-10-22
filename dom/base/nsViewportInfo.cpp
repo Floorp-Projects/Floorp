@@ -26,3 +26,36 @@ nsViewportInfo::ConstrainViewportValues()
     mDefaultZoom = mMinZoom;
   }
 }
+
+static const float&
+MinOrMax(const float& aA, const float& aB,
+         const float& (*aMinOrMax)(const float&,
+                                   const float&))
+{
+  MOZ_ASSERT(aA != nsViewportInfo::ExtendToZoom &&
+             aA != nsViewportInfo::DeviceSize &&
+             aB != nsViewportInfo::ExtendToZoom &&
+             aB != nsViewportInfo::DeviceSize);
+  if (aA == nsViewportInfo::Auto) {
+    return aB;
+  }
+  if (aB == nsViewportInfo::Auto) {
+    return aA;
+  }
+  return aMinOrMax(aA, aB);
+}
+
+// static
+const float&
+nsViewportInfo::Min(const float& aA, const float& aB)
+{
+  return MinOrMax(aA, aB, std::min);
+}
+
+//static
+const float&
+nsViewportInfo::Max(const float& aA, const float& aB)
+{
+  return MinOrMax(aA, aB, std::max);
+}
+

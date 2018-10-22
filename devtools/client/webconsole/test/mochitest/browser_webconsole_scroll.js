@@ -35,7 +35,7 @@ add_task(async function() {
 
   info("Add a message to check that the scroll isn't impacted");
   let receievedMessages = waitForMessages({hud, messages: [{
-    text: "stay"
+    text: "stay",
   }]});
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log("stay");
@@ -46,7 +46,7 @@ add_task(async function() {
 
   info("Evaluate a command to check that the console scrolls to the bottom");
   receievedMessages = waitForMessages({hud, messages: [{
-    text: "42"
+    text: "42",
   }]});
   ui.jsterm.execute("21 + 21");
   await receievedMessages;
@@ -55,7 +55,7 @@ add_task(async function() {
 
   info("Add a message to check that the console do scroll since we're at the bottom");
   receievedMessages = waitForMessages({hud, messages: [{
-    text: "scroll"
+    text: "scroll",
   }]});
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log("scroll");

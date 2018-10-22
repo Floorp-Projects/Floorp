@@ -82,7 +82,7 @@
         [ kRemoval, "w", 0 ], // wqrema -> qrema
         [ kInsertion, "t", 0], // qrema -> tqrema
         [ kRemoval, "rema", 2 ], // tqrema -> tq
-        [ kInsertion, "b", 2] // tq -> tqb
+        [ kInsertion, "b", 2], // tq -> tqb
       ];
       gQueue.push(new changeText("p1", "tqb", events));
 
@@ -91,7 +91,7 @@
 
       events = [
         [ kRemoval, "b", 0 ], // b ->
-        [ kInsertion, "insa", 0] //  -> insa
+        [ kInsertion, "insa", 0], //  -> insa
       ];
       gQueue.push(new changeText("p2", "insa", events));
 
@@ -100,7 +100,7 @@
 
       events = [
         [ kRemoval, "abc", 0 ], // abc ->
-        [ kInsertion, "def", 0] //  -> def
+        [ kInsertion, "def", 0], //  -> def
       ];
       gQueue.push(new changeText("p3", "def", events));
 
@@ -108,7 +108,7 @@
       // abcabc -> abcDEFabc: coalesced insertions
 
       events = [
-        [ kInsertion, "DEF", 3] // abcabc -> abcDEFabc
+        [ kInsertion, "DEF", 3], // abcabc -> abcDEFabc
       ];
       gQueue.push(new changeText("p4", "abcDEFabc", events));
 
@@ -116,7 +116,7 @@
       // abc -> defabc: insertion into begin
 
       events = [
-        [ kInsertion, "def", 0] // abc -> defabc
+        [ kInsertion, "def", 0], // abc -> defabc
       ];
       gQueue.push(new changeText("p5", "defabc", events));
 
@@ -124,7 +124,7 @@
       // abc -> abcdef: insertion into end
 
       events = [
-        [ kInsertion, "def", 3] // abc -> abcdef
+        [ kInsertion, "def", 3], // abc -> abcdef
       ];
       gQueue.push(new changeText("p6", "abcdef", events));
 
@@ -132,7 +132,7 @@
       // defabc -> abc: removal from begin
 
       events = [
-        [ kRemoval, "def", 0] // defabc -> abc
+        [ kRemoval, "def", 0], // defabc -> abc
       ];
       gQueue.push(new changeText("p7", "abc", events));
 
@@ -140,7 +140,7 @@
       // abcdef -> abc: removal from the end
 
       events = [
-        [ kRemoval, "def", 3] // abcdef -> abc
+        [ kRemoval, "def", 3], // abcdef -> abc
       ];
       gQueue.push(new changeText("p8", "abc", events));
 
@@ -148,7 +148,7 @@
       // abcDEFabc -> abcabc: coalesced removals
 
       events = [
-        [ kRemoval, "DEF", 3] // abcDEFabc -> abcabc
+        [ kRemoval, "DEF", 3], // abcDEFabc -> abcabc
       ];
       gQueue.push(new changeText("p9", "abcabc", events));
 
@@ -187,7 +187,7 @@
       var newStr = "a" + longStr1 + "b", insStr = longStr1, rmStr = "";
       events = [
         [ kRemoval, rmStr, 1, kUnexpected ],
-        [ kInsertion, insStr, 1 ]
+        [ kInsertion, insStr, 1 ],
       ];
       gQueue.push(new changeText("p12", newStr, events));
 
@@ -196,7 +196,7 @@
       rmStr = longStr1;
       events = [
         [ kRemoval, rmStr, 1 ],
-        [ kInsertion, insStr, 1]
+        [ kInsertion, insStr, 1],
       ];
       gQueue.push(new changeText("p12", newStr, events));
 
@@ -205,7 +205,7 @@
       rmStr = longStr2;
       events = [
         [ kRemoval, rmStr, 1 ],
-        [ kInsertion, insStr, 1, kUnexpected ]
+        [ kInsertion, insStr, 1, kUnexpected ],
       ];
       gQueue.push(new changeText("p12", newStr, events));
 

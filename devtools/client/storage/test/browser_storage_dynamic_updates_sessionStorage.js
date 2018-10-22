@@ -16,7 +16,7 @@ add_task(async function() {
   await checkState([
     [
       ["sessionStorage", "http://test1.example.org"],
-      ["ss1", "ss2", "ss3"]
+      ["ss1", "ss2", "ss3"],
     ],
   ]);
 
@@ -27,7 +27,7 @@ add_task(async function() {
   await checkState([
     [
       ["sessionStorage", "http://test1.example.org"],
-      ["ss1", "ss2", "ss3", "ss4"]
+      ["ss1", "ss2", "ss3", "ss4"],
     ],
   ]);
 
@@ -44,7 +44,7 @@ add_task(async function() {
   await checkState([
     [
       ["sessionStorage", "http://test1.example.org"],
-      ["ss2", "ss4"]
+      ["ss2", "ss4"],
     ],
   ]);
 
@@ -73,7 +73,7 @@ add_task(async function() {
   await checkState([
     [
       ["sessionStorage", "http://test1.example.org"],
-      [ ]
+      [ ],
     ],
   ]);
 

@@ -35,7 +35,7 @@ add_task(async function() {
   ok(hud, "browser console opened");
 
   await setFilterState(hud, {
-    netxhr: true
+    netxhr: true,
   });
 
   await testMessages(hud);

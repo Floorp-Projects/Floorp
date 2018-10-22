@@ -42,7 +42,7 @@ function run_test() {
 
   // Ensure the correct failed cert chain is set on cert override
   let overrideStatus = {
-    failedCertChain: build_cert_chain(["expired-ee", "test-ca"])
+    failedCertChain: build_cert_chain(["expired-ee", "test-ca"]),
   };
   add_cert_override_test("expired.example.com",
                          Ci.nsICertOverrideService.ERROR_TIME,

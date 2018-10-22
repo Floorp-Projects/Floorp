@@ -14,7 +14,7 @@ Object.defineProperty(this, "NetworkHelper", {
   },
   configurable: true,
   writeable: false,
-  enumerable: true
+  enumerable: true,
 });
 
 const wpl = Ci.nsIWebProgressListener;
@@ -27,8 +27,8 @@ const MockSecurityInfo = {
   // TLS_VERSION_1_2
   protocolVersion: 3,
   serverCert: {
-    validity: {}
-  }
+    validity: {},
+  },
 };
 
 const MockHttpInfo = {

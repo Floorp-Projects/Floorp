@@ -30,12 +30,12 @@ const EVENTS = {
   ROW_UPDATED: "row-updated",
   TABLE_CLEARED: "table-cleared",
   TABLE_FILTERED: "table-filtered",
-  SCROLL_END: "scroll-end"
+  SCROLL_END: "scroll-end",
 };
 Object.defineProperty(this, "EVENTS", {
   value: EVENTS,
   enumerable: true,
-  writable: false
+  writable: false,
 });
 
 /**
@@ -267,7 +267,7 @@ TableWidget.prototype = {
       field: colName,
       oldValue: data.change.oldValue,
       newValue: data.change.newValue,
-      items: items
+      items: items,
     };
 
     // A rows position in the table can change as the result of an edit. In
@@ -594,7 +594,7 @@ TableWidget.prototype = {
         root: this.tbody,
         onTab: this.onEditorTab,
         onTriggerEvent: "dblclick",
-        selectors: selectors
+        selectors: selectors,
       });
 
       this._editableFieldsEngine.on("change", this.onChange);
@@ -1009,7 +1009,7 @@ TableWidget.prototype = {
     if (this.tbody.scrollTop >= 0.9 * maxScrollTop) {
       this.emit("scroll-end");
     }
-  }
+  },
 };
 
 TableWidget.EVENTS = EVENTS;
@@ -1674,7 +1674,7 @@ Cell.prototype = {
   destroy: function() {
     this.label.remove();
     this.label = null;
-  }
+  },
 };
 
 /**
@@ -1850,8 +1850,8 @@ EditableFieldsEngine.prototype = {
         change: {
           field: this.currentTarget,
           oldValue: oldValue,
-          newValue: newValue
-        }
+          newValue: newValue,
+        },
       };
 
       this.emit("change", data);
@@ -1905,7 +1905,7 @@ EditableFieldsEngine.prototype = {
       "marginBottom",
       "marginLeft",
       "marginInlineStart",
-      "marginInlineEnd"
+      "marginInlineEnd",
     ];
 
     for (const prop of props) {

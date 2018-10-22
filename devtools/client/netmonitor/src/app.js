@@ -57,7 +57,7 @@ NetMonitorApp.prototype = {
       connector,
       openLink,
       openSplitConsole,
-      sourceMapService
+      sourceMapService,
     });
 
     // Render the root Application component.
@@ -118,7 +118,7 @@ NetMonitorApp.prototype = {
         this.api.on(EVENTS.REQUEST_ADDED, inspector);
       }
     });
-  }
+  },
 };
 
 exports.NetMonitorApp = NetMonitorApp;

@@ -22,31 +22,31 @@ const screenshotCommandParams = [
     name: "clipboard",
     type: "boolean",
     description: L10N.getStr("screenshotClipboardDesc"),
-    manual: L10N.getStr("screenshotClipboardManual")
+    manual: L10N.getStr("screenshotClipboardManual"),
   },
   {
     name: "delay",
     type: "number",
     description: L10N.getStr("screenshotDelayDesc"),
-    manual: L10N.getStr("screenshotDelayManual")
+    manual: L10N.getStr("screenshotDelayManual"),
   },
   {
     name: "dpr",
     type: "number",
     description: L10N.getStr("screenshotDPRDesc"),
-    manual: L10N.getStr("screenshotDPRManual")
+    manual: L10N.getStr("screenshotDPRManual"),
   },
   {
     name: "fullpage",
     type: "boolean",
     description: L10N.getStr("screenshotFullPageDesc"),
-    manual: L10N.getStr("screenshotFullPageManual")
+    manual: L10N.getStr("screenshotFullPageManual"),
   },
   {
     name: "selector",
     type: "string",
     description: L10N.getStr("inspectNodeDesc"),
-    manual: L10N.getStr("inspectNodeManual")
+    manual: L10N.getStr("inspectNodeManual"),
   },
   {
     name: "file",
@@ -58,8 +58,8 @@ const screenshotCommandParams = [
     name: "filename",
     type: "string",
     description: L10N.getStr("screenshotFilenameDesc"),
-    manual: L10N.getStr("screenshotFilenameManual")
-  }
+    manual: L10N.getStr("screenshotFilenameManual"),
+  },
 ];
 
 /**
@@ -232,7 +232,7 @@ async function saveToFile(image) {
   try {
     const download = await Downloads.createDownload({
       source: sourceURI,
-      target: targetFile
+      target: targetFile,
     });
     const list = await Downloads.getList(Downloads.ALL);
     // add the download to the download list in the Downloads list in the Browser UI

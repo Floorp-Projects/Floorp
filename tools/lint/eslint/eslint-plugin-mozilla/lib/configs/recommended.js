@@ -10,11 +10,11 @@
 module.exports = {
   "env": {
     "browser": true,
-    "es6": true
+    "es6": true,
   },
 
   "extends": [
-    "eslint:recommended"
+    "eslint:recommended",
   ],
 
   "globals": {
@@ -78,7 +78,7 @@ module.exports = {
     // Specific to Firefox
     // eslint-disable-next-line max-len
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
-    "uneval": false
+    "uneval": false,
   },
 
   "overrides": [{
@@ -86,32 +86,32 @@ module.exports = {
     // working out the valid globals for those is difficult.
     "files": "**/*.xml",
     "rules": {
-      "mozilla/use-services": "off"
-    }
+      "mozilla/use-services": "off",
+    },
   }, {
     // Turn off browser env for all *.jsm files, and turn on the jsm environment.
     "env": {
       "browser": false,
-      "mozilla/jsm": true
+      "mozilla/jsm": true,
     },
     "files": "**/*.jsm",
     "rules": {
       "mozilla/mark-exported-symbols-as-used": "error",
       "no-unused-vars": ["error", {
         "args": "none",
-        "vars": "all"
-      }]
-    }
+        "vars": "all",
+      }],
+    },
   }],
 
   "parserOptions": {
-    "ecmaVersion": 9
+    "ecmaVersion": 9,
   },
 
   // When adding items to this file please check for effects on sub-directories.
   "plugins": [
     "mozilla",
-    "no-unsanitized"
+    "no-unsanitized",
   ],
 
   // When adding items to this file please check for effects on all of toolkit
@@ -180,7 +180,7 @@ module.exports = {
     "key-spacing": ["error", {
       "afterColon": true,
       "beforeColon": false,
-      "mode": "minimum"
+      "mode": "minimum",
     }],
 
     // Require spaces before and after keywords
@@ -280,7 +280,7 @@ module.exports = {
       "ArrayExpression": true,
       "AssignmentExpression": true,
       "ObjectExpression": true,
-      "VariableDeclarator": true
+      "VariableDeclarator": true,
     } }],
 
     // Nested ternary statements are confusing
@@ -324,7 +324,7 @@ module.exports = {
     // No declaring variables that are never used
     "no-unused-vars": ["error", {
       "args": "none",
-      "vars": "local"
+      "vars": "local",
     }],
 
     // No using variables before defined
@@ -357,7 +357,7 @@ module.exports = {
     // or template literals are used.
     "quotes": ["error", "double", {
       "allowTemplateLiterals": true,
-      "avoidEscape": true
+      "avoidEscape": true,
     }],
 
     // XXX Bug 1487642 - decide if we want to enable this or not.
@@ -377,7 +377,7 @@ module.exports = {
     "space-before-function-paren": ["error", {
       "anonymous": "never",
       "asyncArrow": "always",
-      "named": "never"
+      "named": "never",
     }],
 
     // No space padding in parentheses
@@ -390,12 +390,12 @@ module.exports = {
     "space-unary-ops": ["error", {
       "nonwords": false,
       "overrides": {
-        "typeof": false // We tend to use typeof as a function call
+        "typeof": false, // We tend to use typeof as a function call
       },
-      "words": true
+      "words": true,
     }],
 
     // Requires or disallows a whitespace (space or tab) beginning a comment
     "spaced-comment": "error",
-  }
+  },
 };

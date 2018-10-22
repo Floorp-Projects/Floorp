@@ -12,9 +12,9 @@ const lazySpec = generateActorSpec({
 
   methods: {
     hello: {
-      response: { str: RetVal("string") }
-    }
-  }
+      response: { str: RetVal("string") },
+    },
+  },
 });
 
 exports.LazyActor = ActorClassWithSpec(lazySpec, {
@@ -26,7 +26,7 @@ exports.LazyActor = ActorClassWithSpec(lazySpec, {
 
   hello: function(str) {
     return "world";
-  }
+  },
 });
 
 Services.obs.notifyObservers(null, "actor", "loaded");
@@ -38,5 +38,5 @@ exports.LazyFront = FrontClassWithSpec(lazySpec, {
 
     client.addActorPool(this);
     this.manage(this);
-  }
+  },
 });

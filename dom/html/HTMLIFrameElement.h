@@ -223,7 +223,7 @@ private:
 
   static const DOMTokenListSupportedToken sSupportedSandboxTokens[];
 
-  void RefreshFeaturePolicy();
+  void RefreshFeaturePolicy(bool aParseAllowAttribute);
 
   // If this iframe has a 'srcdoc' attribute, the document's origin will be
   // returned. Otherwise, if this iframe has a 'src' attribute, the origin will

@@ -19,7 +19,7 @@ add_task(async function() {
     hud,
     messages: [
       { text: "19" },
-    ]
+    ],
   });
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {

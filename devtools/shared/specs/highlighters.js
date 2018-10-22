@@ -7,7 +7,7 @@ const {
   Arg,
   Option,
   RetVal,
-  generateActorSpec
+  generateActorSpec,
 } = require("devtools/shared/protocol");
 
 const highlighterSpec = generateActorSpec({
@@ -21,16 +21,16 @@ const highlighterSpec = generateActorSpec({
         hideInfoBar: Option(1),
         hideGuides: Option(1),
         showOnly: Option(1),
-        onlyRegionArea: Option(1)
-      }
+        onlyRegionArea: Option(1),
+      },
     },
     hideBoxModel: {
-      request: {}
+      request: {},
     },
     pick: {},
     pickAndFocus: {},
-    cancelPick: {}
-  }
+    cancelPick: {},
+  },
 });
 
 exports.highlighterSpec = highlighterSpec;
@@ -41,30 +41,30 @@ const customHighlighterSpec = generateActorSpec({
   events: {
     "highlighter-event": {
       type: "highlighter-event",
-      data: Arg(0, "json")
-    }
+      data: Arg(0, "json"),
+    },
   },
 
   methods: {
     release: {
-      release: true
+      release: true,
     },
     show: {
       request: {
         node: Arg(0, "nullable:domnode"),
-        options: Arg(1, "nullable:json")
+        options: Arg(1, "nullable:json"),
       },
       response: {
-        value: RetVal("nullable:boolean")
-      }
+        value: RetVal("nullable:boolean"),
+      },
     },
     hide: {
-      request: {}
+      request: {},
     },
     finalize: {
-      oneway: true
-    }
-  }
+      oneway: true,
+    },
+  },
 });
 
 exports.customHighlighterSpec = customHighlighterSpec;

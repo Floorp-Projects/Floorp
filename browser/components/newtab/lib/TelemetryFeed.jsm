@@ -492,6 +492,7 @@ this.TelemetryFeed = class TelemetryFeed {
   async sendPageTakeoverData() {
     if (this.telemetryEnabled) {
       const value = {};
+      let page;
 
       // Check whether or not about:home and about:newtab are set to a custom URL.
       // If so, classify them.
@@ -499,21 +500,25 @@ this.TelemetryFeed = class TelemetryFeed {
           aboutNewTabService.overridden &&
           !aboutNewTabService.newTabURL.startsWith("moz-extension://")) {
         value.newtab_url_category = await this._classifySite(aboutNewTabService.newTabURL);
+        page = "about:newtab";
       }
 
       const homePageURL = HomePage.get();
       if (!["about:home", "about:blank"].includes(homePageURL) &&
           !homePageURL.startsWith("moz-extension://")) {
         value.home_url_category = await this._classifySite(homePageURL);
+        page = page ? "both" : "about:home";
       }
 
-      if (value.newtab_url_category || value.home_url_category) {
+      if (page) {
         const event = Object.assign(
           this.createPing(),
           {
             action: "activity_stream_user_event",
             event: "PAGE_TAKEOVER_DATA",
             value,
+            page,
+            session_id: "n/a",
           },
         );
         this.sendEvent(event);

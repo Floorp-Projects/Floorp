@@ -248,7 +248,7 @@ function createMochitestServer(serverBasePath) {
         });
         return file;
       },
-      QueryInterface(aIID) { return this; }
+      QueryInterface(aIID) { return this; },
     };
 
   server.setObjectState("SERVER_ROOT", serverRoot);

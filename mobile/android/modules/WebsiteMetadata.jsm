@@ -21,7 +21,7 @@ var WebsiteMetadata = {
       let metadata = getMetadata(doc, doc.location.href, {
         image_url: metadataRules.image_url,
         provider: metadataRules.provider,
-        description_length: metadataRules.description_length
+        description_length: metadataRules.description_length,
       });
 
       // No metadata was extracted, so don't bother sending it.
@@ -38,7 +38,7 @@ var WebsiteMetadata = {
 
       EventDispatcher.instance.sendRequest(msg);
     });
-  }
+  },
 };
 
 // #################################################################################################
@@ -98,14 +98,14 @@ const descriptionRules = [
 
 const metadataRules = {
   description: {
-    rules: descriptionRules
+    rules: descriptionRules,
   },
 
   description_length: {
     rules: descriptionRules,
     processors: [
-      (description) => description.length
-    ]
+      (description) => description.length,
+    ],
   },
 
   icon_url: {
@@ -119,8 +119,8 @@ const metadataRules = {
       ['link[rel="mask-icon"]', node => node.element.getAttribute("href")],
     ],
     processors: [
-      (icon_url, context) => makeUrlAbsolute(context, icon_url)
-    ]
+      (icon_url, context) => makeUrlAbsolute(context, icon_url),
+    ],
   },
 
   image_url: {
@@ -132,7 +132,7 @@ const metadataRules = {
       ['meta[name="thumbnail"]', node => node.element.getAttribute("content")],
     ],
     processors: [
-      (image_url, context) => makeUrlAbsolute(context, image_url)
+      (image_url, context) => makeUrlAbsolute(context, image_url),
     ],
   },
 
@@ -142,7 +142,7 @@ const metadataRules = {
     ],
     processors: [
       (keywords) => keywords.split(",").map((keyword) => keyword.trim()),
-    ]
+    ],
   },
 
   title: {
@@ -169,8 +169,8 @@ const metadataRules = {
 
   provider: {
     rules: [
-      ['meta[property="og:site_name"]', node => node.element.getAttribute("content")]
-    ]
+      ['meta[property="og:site_name"]', node => node.element.getAttribute("content")],
+    ],
   },
 };
 
@@ -323,7 +323,7 @@ function ruleset(...rules) {
                 }
             }
             return kb;
-        }
+        },
     };
 }
 
@@ -374,7 +374,7 @@ function knowledgebase() {
 
         nodesOfFlavor: function(flavor) {
             return getDefault(nodesByFlavor, flavor, () => []);
-        }
+        },
     };
 }
 
@@ -469,7 +469,7 @@ function dom(selector) {
     return {
         flavor: "dom",
         inputFlavor: "dom",
-        selector
+        selector,
     };
 }
 
@@ -478,7 +478,7 @@ function dom(selector) {
 function flavor(inputFlavor) {
     return {
         flavor: "flavor",
-        inputFlavor
+        inputFlavor,
     };
 }
 
@@ -486,6 +486,6 @@ function flavor(inputFlavor) {
 function rule(source, ranker) {
     return {
         source,
-        ranker
+        ranker,
     };
 }

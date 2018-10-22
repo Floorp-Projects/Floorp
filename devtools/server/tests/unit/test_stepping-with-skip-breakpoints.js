@@ -45,11 +45,11 @@ async function test_simple_stepping() {
   // Note: we intentionally ignore the second statement.
   source.setPausePoints([{
     location: {line: 3, column: 8},
-    types: {breakpoint: true, stepOver: true}
+    types: {breakpoint: true, stepOver: true},
   },
   {
     location: {line: 4, column: 14},
-    types: {breakpoint: true, stepOver: true}
+    types: {breakpoint: true, stepOver: true},
   }]);
 
   dumpn("Step Over to line 3");

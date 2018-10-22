@@ -8,7 +8,7 @@ const {
   DISABLE,
   RESET,
   UPDATE_CAN_BE_DISABLED,
-  UPDATE_CAN_BE_ENABLED
+  UPDATE_CAN_BE_ENABLED,
 } = require("../constants");
 
 /**

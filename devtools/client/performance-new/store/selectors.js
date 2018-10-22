@@ -47,5 +47,5 @@ module.exports = {
   getInitializedValues,
   getPerfFront,
   getReceiveProfileFn,
-  getSetRecordingPreferencesFn
+  getSetRecordingPreferencesFn,
 };

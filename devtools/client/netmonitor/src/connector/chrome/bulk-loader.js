@@ -122,5 +122,5 @@ const getBulkLoader = () => {
 
 module.exports = {
   getBulkLoader,
-  PriorityLevels
+  PriorityLevels,
 };

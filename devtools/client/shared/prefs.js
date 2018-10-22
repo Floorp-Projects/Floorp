@@ -108,21 +108,21 @@ function map(self, cache, accessorName, prefType, prefsRoot, prefName,
   if (prefType == "Json") {
     map(self, cache, accessorName, "Char", prefsRoot, prefName, {
       in: JSON.parse,
-      out: JSON.stringify
+      out: JSON.stringify,
     });
     return;
   }
   if (prefType == "Float") {
     map(self, cache, accessorName, "Char", prefsRoot, prefName, {
       in: Number.parseFloat,
-      out: (n) => n + ""
+      out: (n) => n + "",
     });
     return;
   }
 
   Object.defineProperty(self, accessorName, {
     get: () => serializer.in(get(cache, prefType, prefsRoot, prefName)),
-    set: (e) => set(cache, prefType, prefsRoot, prefName, serializer.out(e))
+    set: (e) => set(cache, prefType, prefsRoot, prefName, serializer.out(e)),
   });
 }
 
@@ -171,7 +171,7 @@ function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
       }
       cache.delete(prefName);
       self.emit("pref-changed", accessorName, self[accessorName]);
-    }
+    },
   };
 }
 

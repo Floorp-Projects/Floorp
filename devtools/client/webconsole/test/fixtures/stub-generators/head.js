@@ -50,7 +50,7 @@ function getCleanedPacket(key, packet) {
   if (stubPackets.has(safeKey)) {
     const existingPacket = stubPackets.get(safeKey);
     res = Object.assign({}, packet, {
-      from: existingPacket.from
+      from: existingPacket.from,
     });
 
     // Clean root timestamp.
@@ -448,7 +448,7 @@ async function generateNetworkEventStubs() {
             request: res.networkInfo.request,
             response: res.networkInfo.response,
             totalTime: res.networkInfo.totalTime,
-          }
+          },
         };
 
         stubs.packets.push(formatPacket(updateKey, packet));

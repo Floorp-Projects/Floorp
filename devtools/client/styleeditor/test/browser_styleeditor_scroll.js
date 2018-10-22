@@ -20,7 +20,7 @@ const DOCUMENT_WITH_LONG_SHEET = "data:text/html;charset=UTF-8," +
            '  <link rel="stylesheet" type="text/css" href="' + LONG + '">',
            " </head>",
            " <body>Editor scroll test page</body>",
-           "</html>"
+           "</html>",
           ].join("\n"));
 const LINE_TO_SELECT = 201;
 

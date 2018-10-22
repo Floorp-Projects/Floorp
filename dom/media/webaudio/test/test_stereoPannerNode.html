@@ -95,16 +95,14 @@ function expectedBufferNoop(gain) {
   return expectedBuffer;
 }
 
-function expectedBufferForStereo(gain) {
+function expectedBufferForStereo(panning, gain) {
   gain = gain || 1.0;
   var expectedBuffer = new AudioBuffer({ numberOfChannels: 2,
                                          length: BUF_SIZE,
                                          sampleRate: SR });
-  var gainPanning = gainForPanningStereoToStereo(PANNING);
-  gainPanning[0] *= gain;
-  gainPanning[1] *= gain;
+  var gainPanning = gainForPanningStereoToStereo(panning);
   for (var i = 0; i < BUF_SIZE; i++) {
-    var values = [ sine(i), sine(i) ];
+    var values = [ gain * sine(i), gain * sine(i) ];
     var processed = applyStereoToStereoPanning(values[0], values[1], gainPanning, PANNING);
     expectedBuffer.getChannelData(0)[i] = processed[0];
     expectedBuffer.getChannelData(1)[i] = processed[1];
@@ -112,12 +110,12 @@ function expectedBufferForStereo(gain) {
   return expectedBuffer;
 }
 
-function expectedBufferForMono(gain) {
+function expectedBufferForMono(panning, gain) {
   gain = gain || 1.0;
   var expectedBuffer = new AudioBuffer({ numberOfChannels: 2,
                                          length: BUF_SIZE,
                                          sampleRate: SR });
-  var gainPanning = gainForPanningMonoToStereo(PANNING);
+  var gainPanning = gainForPanningMonoToStereo(panning);
   gainPanning[0] *= gain;
   gainPanning[1] *= gain;
   for (var i = 0; i < BUF_SIZE; i++) {
@@ -136,7 +134,7 @@ var tests = [
     monoSource.connect(panner);
     monoSource.buffer = monoBuffer;
     monoSource.start(0);
-    return expectedBufferNoop();
+    return expectedBufferForMono(0);
   },
   function stereoPanningNoop(ctx, panner) {
     var stereoSource = ctx.createBufferSource();
@@ -153,7 +151,7 @@ var tests = [
     gain.connect(panner);
     monoSource.buffer = monoBuffer;
     monoSource.start(0);
-    return expectedBufferNoop(GAIN);
+    return expectedBufferForMono(0, GAIN);
   },
   function stereoPanningNoopWithGain(ctx, panner) {
     var stereoSource = ctx.createBufferSource();
@@ -171,7 +169,7 @@ var tests = [
     stereoSource.buffer = stereoBuffer;
     panner.pan.setValueAtTime(0.1, 0.0);
     stereoSource.start(0);
-    return expectedBufferForStereo();
+    return expectedBufferForStereo(PANNING);
   },
   function stereoPanning(ctx, panner) {
     var stereoSource = ctx.createBufferSource();
@@ -179,7 +177,7 @@ var tests = [
     stereoSource.connect(panner);
     panner.pan.value = 0.1;
     stereoSource.start(0);
-    return expectedBufferForStereo();
+    return expectedBufferForStereo(PANNING);
   },
   function monoPanningAutomation(ctx, panner) {
     var monoSource = ctx.createBufferSource();
@@ -187,7 +185,7 @@ var tests = [
     monoSource.buffer = monoBuffer;
     panner.pan.setValueAtTime(PANNING, 0.0);
     monoSource.start(0);
-    return expectedBufferForMono();
+    return expectedBufferForMono(PANNING);
   },
   function monoPanning(ctx, panner) {
     var monoSource = ctx.createBufferSource();
@@ -195,7 +193,7 @@ var tests = [
     monoSource.buffer = monoBuffer;
     panner.pan.value = 0.1;
     monoSource.start(0);
-    return expectedBufferForMono();
+    return expectedBufferForMono(PANNING);
   },
   function monoPanningWithGain(ctx, panner) {
     var monoSource = ctx.createBufferSource();
@@ -206,7 +204,7 @@ var tests = [
     monoSource.buffer = monoBuffer;
     panner.pan.value = 0.1;
     monoSource.start(0);
-    return expectedBufferForMono(GAIN);
+    return expectedBufferForMono(PANNING, GAIN);
   },
   function stereoPanningWithGain(ctx, panner) {
     var stereoSource = ctx.createBufferSource();
@@ -217,7 +215,7 @@ var tests = [
     stereoSource.buffer = stereoBuffer;
     panner.pan.value = 0.1;
     stereoSource.start(0);
-    return expectedBufferForStereo(GAIN);
+    return expectedBufferForStereo(PANNING, GAIN);
   },
   function monoPanningWithGainAndAutomation(ctx, panner) {
     var monoSource = ctx.createBufferSource();
@@ -228,7 +226,7 @@ var tests = [
     monoSource.buffer = monoBuffer;
     panner.pan.setValueAtTime(PANNING, 0);
     monoSource.start(0);
-    return expectedBufferForMono(GAIN);
+    return expectedBufferForMono(PANNING, GAIN);
   },
   function stereoPanningWithGainAndAutomation(ctx, panner) {
     var stereoSource = ctx.createBufferSource();
@@ -239,7 +237,7 @@ var tests = [
     stereoSource.buffer = stereoBuffer;
     panner.pan.setValueAtTime(PANNING, 0);
     stereoSource.start(0);
-    return expectedBufferForStereo(GAIN);
+    return expectedBufferForStereo(PANNING, GAIN);
   }
 ];
 

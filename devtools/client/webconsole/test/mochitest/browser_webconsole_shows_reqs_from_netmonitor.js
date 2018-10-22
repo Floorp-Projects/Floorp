@@ -29,7 +29,7 @@ add_task(async function task() {
     hud,
     messages: [{
       text: TEST_PATH,
-    }]
+    }],
   });
 
   await loadDocument(TEST_PATH);

@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348236
   <select id="eSelect" size="1" onchange="++this.onchangeCount">
     <option selected>1</option>
     <option>2</option>
-    <option>3</option>
+    <option id="option3">3</option>
   </select>
 </div>
 <pre id="test">
@@ -59,8 +59,10 @@ addLoadEvent(function test() {
         // This timeout and the following are necessary to let the sent events take effect.
         setTimeout(cont1, timeout)
         function cont1() {
-            // Move the mouse over option 3 (90 = 3 (rows) * 24 (row height) + 18).
-            WinUtils.sendMouseEvent("mousemove", 355, 92, 0, 0, 0, true)
+            // Move the mouse over option 3.
+            let option3 = document.getElementById("option3");
+            let rect = option3.getBoundingClientRect();
+            WinUtils.sendMouseEvent("mousemove", rect.left + 4, rect.top + 4, 0, 0, 0, true)
             setTimeout(cont2, timeout)
         }
         function cont2() {

@@ -17,16 +17,16 @@ exports.NODE_CREATION_METHODS = [
   "createGain", "createDelay", "createBiquadFilter", "createIIRFilter",
   "createWaveShaper", "createPanner", "createConvolver", "createChannelSplitter",
   "createChannelMerger", "createDynamicsCompressor", "createOscillator",
-  "createStereoPanner", "createConstantSource"
+  "createStereoPanner", "createConstantSource",
 ];
 
 exports.AUTOMATION_METHODS = [
   "setValueAtTime", "linearRampToValueAtTime", "exponentialRampToValueAtTime",
-  "setTargetAtTime", "setValueCurveAtTime", "cancelScheduledValues"
+  "setTargetAtTime", "setValueCurveAtTime", "cancelScheduledValues",
 ];
 
 exports.NODE_ROUTING_METHODS = [
-  "connect", "disconnect"
+  "connect", "disconnect",
 ];
 
 types.addActorType("audionode");
@@ -36,65 +36,65 @@ const audionodeSpec = generateActorSpec({
   methods: {
     getType: { response: { type: RetVal("string") }},
     isBypassed: {
-      response: { bypassed: RetVal("boolean") }
+      response: { bypassed: RetVal("boolean") },
     },
     bypass: {
       request: { enable: Arg(0, "boolean") },
-      response: { bypassed: RetVal("boolean") }
+      response: { bypassed: RetVal("boolean") },
     },
     setParam: {
       request: {
         param: Arg(0, "string"),
-        value: Arg(1, "nullable:primitive")
+        value: Arg(1, "nullable:primitive"),
       },
-      response: { error: RetVal("nullable:json") }
+      response: { error: RetVal("nullable:json") },
     },
     getParam: {
       request: {
-        param: Arg(0, "string")
+        param: Arg(0, "string"),
       },
-      response: { text: RetVal("nullable:primitive") }
+      response: { text: RetVal("nullable:primitive") },
     },
     getParamFlags: {
       request: { param: Arg(0, "string") },
-      response: { flags: RetVal("nullable:primitive") }
+      response: { flags: RetVal("nullable:primitive") },
     },
     getParams: {
-      response: { params: RetVal("json") }
+      response: { params: RetVal("json") },
     },
     connectParam: {
       request: {
         destActor: Arg(0, "audionode"),
         paramName: Arg(1, "string"),
-        output: Arg(2, "nullable:number")
+        output: Arg(2, "nullable:number"),
       },
-      response: { error: RetVal("nullable:json") }
+      response: { error: RetVal("nullable:json") },
     },
     connectNode: {
       request: {
         destActor: Arg(0, "audionode"),
         output: Arg(1, "nullable:number"),
-        input: Arg(2, "nullable:number")
+        input: Arg(2, "nullable:number"),
       },
-      response: { error: RetVal("nullable:json") }
+      response: { error: RetVal("nullable:json") },
     },
     disconnect: {
       request: { output: Arg(0, "nullable:number") },
-      response: { error: RetVal("nullable:json") }
+      response: { error: RetVal("nullable:json") },
     },
     getAutomationData: {
       request: { paramName: Arg(0, "string") },
-      response: { values: RetVal("nullable:json") }
+      response: { values: RetVal("nullable:json") },
     },
     addAutomationEvent: {
       request: {
         paramName: Arg(0, "string"),
         eventName: Arg(1, "string"),
-        args: Arg(2, "nullable:json")
+        args: Arg(2, "nullable:json"),
       },
-      response: { error: RetVal("nullable:json") }
+      response: { error: RetVal("nullable:json") },
     },
-  }
+  },
 });
 
 exports.audionodeSpec = audionodeSpec;
@@ -107,58 +107,58 @@ const webAudioSpec = generateActorSpec({
    */
   events: {
     "start-context": {
-      type: "startContext"
+      type: "startContext",
     },
     "connect-node": {
       type: "connectNode",
       source: Option(0, "audionode"),
-      dest: Option(0, "audionode")
+      dest: Option(0, "audionode"),
     },
     "disconnect-node": {
       type: "disconnectNode",
-      source: Arg(0, "audionode")
+      source: Arg(0, "audionode"),
     },
     "connect-param": {
       type: "connectParam",
       source: Option(0, "audionode"),
       dest: Option(0, "audionode"),
-      param: Option(0, "string")
+      param: Option(0, "string"),
     },
     "change-param": {
       type: "changeParam",
       source: Option(0, "audionode"),
       param: Option(0, "string"),
-      value: Option(0, "string")
+      value: Option(0, "string"),
     },
     "create-node": {
       type: "createNode",
-      source: Arg(0, "audionode")
+      source: Arg(0, "audionode"),
     },
     "destroy-node": {
       type: "destroyNode",
-      source: Arg(0, "audionode")
+      source: Arg(0, "audionode"),
     },
     "automation-event": {
       type: "automationEvent",
       node: Option(0, "audionode"),
       paramName: Option(0, "string"),
       eventName: Option(0, "string"),
-      args: Option(0, "json")
-    }
+      args: Option(0, "json"),
+    },
   },
 
   methods: {
     getDefinition: {
-      response: { definition: RetVal("json") }
+      response: { definition: RetVal("json") },
     },
     setup: {
       request: { reload: Option(0, "boolean") },
-      oneway: true
+      oneway: true,
     },
     finalize: {
-      oneway: true
-    }
-  }
+      oneway: true,
+    },
+  },
 });
 
 exports.webAudioSpec = webAudioSpec;

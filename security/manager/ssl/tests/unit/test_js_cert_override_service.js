@@ -35,7 +35,7 @@ const gCertOverrideService = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsICertOverrideService])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICertOverrideService]),
 };
 
 function run_test() {

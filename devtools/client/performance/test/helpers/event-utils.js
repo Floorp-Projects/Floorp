@@ -9,7 +9,7 @@ const Services = require("Services");
 const KNOWN_EE_APIS = [
   ["on", "off"],
   ["addEventListener", "removeEventListener"],
-  ["addListener", "removeListener"]
+  ["addListener", "removeListener"],
 ];
 
 /**

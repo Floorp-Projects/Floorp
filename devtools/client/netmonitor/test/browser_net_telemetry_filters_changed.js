@@ -43,7 +43,7 @@ add_task(async function() {
     active: "html",
     inactive: "all,css,js,xhr,fonts,images,media,ws,other",
   }, {
-    method: "filters_changed"
+    method: "filters_changed",
   });
 
   info("Click on the 'CSS' filter");
@@ -55,7 +55,7 @@ add_task(async function() {
     active: "html,css",
     inactive: "all,js,xhr,fonts,images,media,ws,other",
   }, {
-    method: "filters_changed"
+    method: "filters_changed",
   });
 
   info("Filter the output using the text filter input");
@@ -69,7 +69,7 @@ add_task(async function() {
     active: "html,css",
     inactive: "all,js,xhr,fonts,images,media,ws,other",
   }, {
-    method: "filters_changed"
+    method: "filters_changed",
   });
 
   return teardown(monitor);

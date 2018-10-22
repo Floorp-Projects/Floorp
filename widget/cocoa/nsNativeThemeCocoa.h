@@ -177,6 +177,7 @@ public:
   struct TextBoxParams {
     bool disabled = false;
     bool focused = false;
+    bool borderless = false;
   };
 
   struct SearchFieldParams {

@@ -290,7 +290,7 @@ function executeAsync(statement, onResult) {
       },
       handleCompletion(result) {
         resolve(result);
-      }
+      },
     });
   });
 }
@@ -308,7 +308,7 @@ function executeMultipleStatementsAsync(db, statements, onResult) {
       },
       handleCompletion(result) {
         resolve(result);
-      }
+      },
     });
   });
 }
@@ -328,7 +328,7 @@ function executeSimpleSQLAsync(db, query, onResult) {
       },
       handleCompletion(result) {
         resolve(result);
-      }
+      },
     });
   });
 }

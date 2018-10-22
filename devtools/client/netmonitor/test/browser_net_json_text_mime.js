@@ -42,7 +42,7 @@ add_task(async function() {
       type: "plain",
       fullMimeType: "text/plain; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 41),
-      time: true
+      time: true,
     });
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");

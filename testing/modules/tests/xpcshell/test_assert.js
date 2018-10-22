@@ -118,7 +118,7 @@ function run_test() {
   assert.deepEqual(a1, a2);
 
   let nbRoot = {
-    toString() { return this.first + " " + this.last; }
+    toString() { return this.first + " " + this.last; },
   };
 
   function nameBuilder(first, last) {
@@ -294,10 +294,10 @@ function run_test() {
     actual: {
       toJSON() {
         throw "bam!";
-      }
+      },
     },
     expected: "foo",
-    operator: "="
+    operator: "=",
   }).message, "[object Object] = \"foo\"");
 
   let message;

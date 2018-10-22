@@ -14,7 +14,7 @@ this.EXPORTED_SYMBOLS = [
   "log",
   "text",
   "wire",
-  "showFilePicker"
+  "showFilePicker",
 ];
 
 const PROPERTIES_URL = "chrome://devtools/locale/styleeditor.properties";

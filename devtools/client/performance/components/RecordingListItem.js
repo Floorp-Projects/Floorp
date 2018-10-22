@@ -18,7 +18,7 @@ class RecordingListItem extends Component {
       onSave: PropTypes.func.isRequired,
       isLoading: PropTypes.bool,
       isSelected: PropTypes.bool,
-      isRecording: PropTypes.bool
+      isRecording: PropTypes.bool,
     };
   }
 
@@ -30,7 +30,7 @@ class RecordingListItem extends Component {
       onSave,
       isLoading,
       isSelected,
-      isRecording
+      isRecording,
     } = this.props;
 
     const className = `recording-list-item ${isSelected ? "selected" : ""}`;

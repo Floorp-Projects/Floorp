@@ -234,7 +234,7 @@ ConfigView.prototype = {
         this._saveByType({
           id: id,
           type: inputType,
-          value: inputValue
+          value: inputValue,
         });
         this._doc.getElementById("btn-" + id).classList.remove("hide");
       }
@@ -353,7 +353,7 @@ ConfigView.prototype = {
       this._saveByType({
         id: customTextName,
         type: customValueType,
-        value: customText
+        value: customText,
       });
       customTextNameEl.value = "";
       this.clearNewFields();
@@ -364,5 +364,5 @@ ConfigView.prototype = {
     if (event.keyCode === 13) {
       this._doc.getElementById("custom-value").click();
     }
-  }
+  },
 };

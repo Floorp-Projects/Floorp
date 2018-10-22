@@ -132,7 +132,7 @@ var ShutdownObserver = {
 
   uninit() {
     Services.obs.removeObserver(this, "quit-application-granted");
-  }
+  },
 };
 
 module.exports = BrowserConsole;

@@ -355,7 +355,7 @@ SideMenuWidget.prototype = {
     }
 
     const group = new SideMenuGroup(this, aName, {
-      showCheckbox: this._showGroupCheckboxes
+      showCheckbox: this._showGroupCheckboxes,
     });
 
     this._groupsByName.set(aName, group);
@@ -378,7 +378,7 @@ SideMenuWidget.prototype = {
   _getMenuItemForGroup: function(aGroup, aContents, aAttachment) {
     return new SideMenuItem(aGroup, aContents, aAttachment, {
       showArrow: this._showArrows,
-      showCheckbox: this._showItemCheckboxes
+      showCheckbox: this._showItemCheckboxes,
     });
   },
 
@@ -433,7 +433,7 @@ SideMenuWidget.prototype = {
   _orderedMenuElementsArray: null,
   _itemsByElement: null,
   _emptyTextNode: null,
-  _emptyTextValue: ""
+  _emptyTextValue: "",
 };
 
 /**
@@ -476,7 +476,7 @@ function SideMenuGroup(aWidget, aName, aOptions = {}) {
     if (aOptions.showCheckbox) {
       const checkbox = this._checkbox = makeCheckbox(title, {
         description: aName,
-        checkboxTooltip: L10N.getStr("sideMenu.groupCheckbox.tooltip")
+        checkboxTooltip: L10N.getStr("sideMenu.groupCheckbox.tooltip"),
       });
       checkbox.className = "side-menu-widget-group-checkbox";
     }
@@ -550,7 +550,7 @@ SideMenuGroup.prototype = {
   _checkbox: null,
   _title: null,
   _name: null,
-  _list: null
+  _list: null,
 };
 
 /**
@@ -676,7 +676,7 @@ SideMenuItem.prototype = {
   _target: null,
   _container: null,
   _checkbox: null,
-  _arrow: null
+  _arrow: null,
 };
 
 /**
@@ -712,7 +712,7 @@ function makeCheckbox(aParentNode, aOptions) {
   checkbox.addEventListener("CheckboxStateChange", e => {
     ViewHelpers.dispatchEvent(checkbox, "check", {
       description: aOptions.description || "item",
-      checked: checkbox.checked
+      checked: checkbox.checked,
     });
   });
 

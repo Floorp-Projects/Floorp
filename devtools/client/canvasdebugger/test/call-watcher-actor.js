@@ -5,7 +5,7 @@
 
 const protocol = require("devtools/shared/protocol");
 const {
-  callWatcherSpec
+  callWatcherSpec,
 } = require("chrome://mochitests/content/browser/devtools/client/canvasdebugger/test/call-watcher-spec");
 const {CallWatcher} = require("devtools/server/actors/utils/call-watcher");
 

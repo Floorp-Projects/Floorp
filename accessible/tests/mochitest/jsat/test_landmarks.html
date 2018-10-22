@@ -21,13 +21,13 @@
         expectedUtterance: [[{"string": "navigation"}, "a nav"],
                             ["a nav", {"string": "navigation"}]],
         expectedBraille: [[{"string": "navigation"}, "a nav"],
-                          ["a nav", {"string": "navigation"}]]
+                          ["a nav", {"string": "navigation"}]],
       }, {
         accOrElmOrID: "main",
         expectedUtterance: [[{"string": "main"}, "a main area"],
                             ["a main area", {"string": "main"}]],
         expectedBraille: [[{"string": "main"}, "a main area"],
-                          ["a main area", {"string": "main"}]]
+                          ["a main area", {"string": "main"}]],
       }, {
         accOrElmOrID: "header",
         expectedUtterance: [
@@ -35,7 +35,7 @@
           ["a header", {"string": "header"}, {"string": "banner"}]],
         expectedBraille: [
           [{"string": "banner"}, {"string": "headerAbbr"}, "a header"],
-          ["a header", {"string": "headerAbbr"}, {"string": "banner"}]]
+          ["a header", {"string": "headerAbbr"}, {"string": "banner"}]],
       }, {
         accOrElmOrID: "footer",
         expectedUtterance: [
@@ -43,7 +43,7 @@
           ["a footer", {"string": "footer"}, {"string": "contentinfo"}]],
         expectedBraille: [
           [{"string": "contentinfo"}, {"string": "footerAbbr"}, "a footer"],
-          ["a footer", {"string": "footerAbbr"}, {"string": "contentinfo"}]]
+          ["a footer", {"string": "footerAbbr"}, {"string": "contentinfo"}]],
       }, {
         accOrElmOrID: "article_header",
         expectedUtterance: [
@@ -59,14 +59,14 @@
           ["a footer within an article"]],
         expectedBraille: [
           ["a footer within an article"],
-          ["a footer within an article"]]
+          ["a footer within an article"]],
       }, {
         accOrElmOrID: "section_header",
         expectedUtterance: [["a header within a section"],
                             ["a header within a section"]],
         expectedBraille: [
           ["a header within a section"],
-          ["a header within a section"]]
+          ["a header within a section"]],
       }, {
         accOrElmOrID: "section_footer",
         expectedUtterance: [
@@ -74,7 +74,7 @@
           ["a footer within a section"]],
         expectedBraille: [
           ["a footer within a section"],
-          ["a footer within a section"]]
+          ["a footer within a section"]],
       }, {
         accOrElmOrID: "aside",
         expectedUtterance: [
@@ -82,13 +82,13 @@
           ["by the way I am an aside", {"string": "complementary"}]],
         expectedBraille: [
           [{"string": "complementary"}, "by the way I am an aside"],
-          ["by the way I am an aside", {"string": "complementary"}]]
+          ["by the way I am an aside", {"string": "complementary"}]],
       }, {
         accOrElmOrID: "main_element",
         expectedUtterance: [[{"string": "main"}, "another main area"],
                             ["another main area", {"string": "main"}]],
         expectedBraille: [[{"string": "main"}, "another main area"],
-                          ["another main area", {"string": "main"}]]
+                          ["another main area", {"string": "main"}]],
       }, {
         accOrElmOrID: "complementary",
         expectedUtterance: [[{"string": "list"},
@@ -97,7 +97,7 @@
           {"string": "listStart"}, {"string": "complementary"},
           {"string": "list"}, {"string": "listItemsCount", "count": 1}]],
         expectedBraille: [["*", {"string": "complementary"}, "A complementary"],
-                          ["*", "A complementary", {"string": "complementary"}]]
+                          ["*", "A complementary", {"string": "complementary"}]],
       }, {
         accOrElmOrID: "parent_main",
         expectedUtterance: [[{"string": "main"}, "a parent main",
@@ -107,7 +107,7 @@
         expectedBraille: [[{"string": "main"}, "a parent main",
           {"string": "complementary"}, "a child complementary"],
           ["a parent main", "a child complementary",
-          {"string": "complementary"}, {"string": "main"}]]
+          {"string": "complementary"}, {"string": "main"}]],
       }, {
         accOrElmOrID: "child_complementary",
         expectedUtterance: [[{"string": "main"}, {"string": "complementary"},
@@ -115,14 +115,14 @@
           {"string": "complementary"}, {"string": "main"}]],
         expectedBraille: [[{"string": "complementary"},
           "a child complementary"], ["a child complementary",
-          {"string": "complementary"}]]
+          {"string": "complementary"}]],
       }];
 
       // Test outputs (utterance and braille) for landmarks.
       function testOutputOrder(aOutputOrder) {
         return function() {
           SpecialPowers.pushPrefEnv({
-            "set": [[PREF_UTTERANCE_ORDER, aOutputOrder]]
+            "set": [[PREF_UTTERANCE_ORDER, aOutputOrder]],
           }, function() {
             tests.forEach(function run(test) {
               testOutput(test.expectedUtterance[aOutputOrder], test.accOrElmOrID,

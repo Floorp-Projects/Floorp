@@ -25,41 +25,41 @@ const MESSAGE = "Don't compare for inexact equality against boolean literals";
 ruleTester.run("no-compare-against-boolean-literals", rule, {
   valid: [
     `if (!foo) {}`,
-    `if (!!foo) {}`
+    `if (!!foo) {}`,
   ],
   invalid: [
     {
       code: `if (foo == true) {}`,
-      errors: callError(MESSAGE)
+      errors: callError(MESSAGE),
     },
     {
       code: `if (foo != true) {}`,
-      errors: callError(MESSAGE)
+      errors: callError(MESSAGE),
     },
     {
       code: `if (foo == false) {}`,
-      errors: callError(MESSAGE)
+      errors: callError(MESSAGE),
     },
     {
       code: `if (foo != false) {}`,
-      errors: callError(MESSAGE)
+      errors: callError(MESSAGE),
     },
     {
       code: `if (true == foo) {}`,
-      errors: callError(MESSAGE)
+      errors: callError(MESSAGE),
     },
     {
       code: `if (true != foo) {}`,
-      errors: callError(MESSAGE)
+      errors: callError(MESSAGE),
     },
     {
       code: `if (false == foo) {}`,
-      errors: callError(MESSAGE)
+      errors: callError(MESSAGE),
     },
     {
       code: `if (false != foo) {}`,
-      errors: callError(MESSAGE)
-    }
-  ]
+      errors: callError(MESSAGE),
+    },
+  ],
 });
 

@@ -19,8 +19,8 @@ define(function(require, exports, module) {
       return {
         children: PropTypes.oneOfType([
           PropTypes.array,
-          PropTypes.element
-        ])
+          PropTypes.element,
+        ]),
       };
     }
 

@@ -8,7 +8,7 @@ const {
 const {
   setupActions,
   setupStore,
-  clonePacket
+  clonePacket,
 } = require("devtools/client/webconsole/test/helpers");
 const { stubPackets } = require("devtools/client/webconsole/test/fixtures/stubs/index");
 
@@ -41,11 +41,11 @@ describe("Network message reducer:", () => {
   describe("networkMessagesUpdateById", () => {
     it("adds fetched HTTP request headers", () => {
       const headers = {
-        headers: []
+        headers: [],
       };
 
       dispatch(actions.networkUpdateRequest("message1", {
-        requestHeaders: headers
+        requestHeaders: headers,
       }));
 
       const networkUpdates = getAllNetworkMessagesUpdateById(getState());
@@ -54,11 +54,11 @@ describe("Network message reducer:", () => {
 
     it("adds fetched HTTP security info", () => {
       const securityInfo = {
-        state: "insecure"
+        state: "insecure",
       };
 
       dispatch(actions.networkUpdateRequest("message1", {
-        securityInfo: securityInfo
+        securityInfo: securityInfo,
       }));
 
       const networkUpdates = getAllNetworkMessagesUpdateById(getState());
@@ -70,7 +70,7 @@ describe("Network message reducer:", () => {
       const uploadHeaders = Symbol();
       const requestPostData = {
         postData: {
-          text: ""
+          text: "",
         },
         uploadHeaders,
       };

@@ -31,7 +31,7 @@ ArrayBufferActor.prototype = {
     return {
       "type": "arrayBuffer",
       "length": this.bufferLength,
-      "actor": this.actorID
+      "actor": this.actorID,
     };
   },
 
@@ -50,7 +50,7 @@ ArrayBufferActor.prototype = {
       "from": this.actorID,
       "encoded": parts.join(""),
     };
-  }
+  },
 };
 
 ArrayBufferActor.prototype.requestTypes = {

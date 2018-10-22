@@ -16,13 +16,13 @@ function* testSteps()
     { key: "237-23-7734", value: { name: "fabio",      height: 73, weight: 180 } },
     { key: "237-23-7735", value: { name: "\u00F3scar", height: 58, weight: 130 } },
     { key: "237-23-7736", value: { name: "bob",        height: 65, weight: 150 } },
-    { key: "237-23-7737", value: { name: "\u00E9ason", height: 65 } }
+    { key: "237-23-7737", value: { name: "\u00E9ason", height: 65 } },
   ];
 
   const indexData = [
     { name: "name", keyPath: "name", options: { unique: true, locale: true } },
     { name: "height", keyPath: "height", options: { unique: false, locale: true } },
-    { name: "weight", keyPath: "weight", options: { unique: false, locale: true } }
+    { name: "weight", keyPath: "weight", options: { unique: false, locale: true } },
   ];
 
   const objectStoreDataHeightSort = [
@@ -31,7 +31,7 @@ function* testSteps()
     { key: "237-23-7732", value: { name: "\u00E1na",   height: 60, weight: 120 } },
     { key: "237-23-7736", value: { name: "bob",        height: 65, weight: 150 } },
     { key: "237-23-7737", value: { name: "\u00E9ason", height: 65 } },
-    { key: "237-23-7734", value: { name: "fabio",      height: 73, weight: 180 } }
+    { key: "237-23-7734", value: { name: "fabio",      height: 73, weight: 180 } },
   ];
 
   let request = indexedDB.open(name, 1);

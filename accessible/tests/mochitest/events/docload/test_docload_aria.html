@@ -26,7 +26,7 @@
       this.dialogNode = getNode(aID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, this.dialogNode)
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, this.dialogNode),
       ];
 
       this.invoke = function showARIADialog_invoke() {

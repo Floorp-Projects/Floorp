@@ -20,8 +20,8 @@ const reflowSpec = generateActorSpec({
      */
     reflows: {
       type: "reflows",
-      reflows: Arg(0, "array:json")
-    }
+      reflows: Arg(0, "array:json"),
+    },
   },
 
   methods: {

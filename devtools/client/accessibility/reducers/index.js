@@ -10,5 +10,5 @@ const { ui } = require("./ui");
 exports.reducers = {
   accessibles,
   details,
-  ui
+  ui,
 };

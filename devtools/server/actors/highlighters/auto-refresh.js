@@ -294,6 +294,6 @@ AutoRefreshHighlighter.prototype = {
 
     this.highlighterEnv = null;
     this.currentNode = null;
-  }
+  },
 };
 exports.AutoRefreshHighlighter = AutoRefreshHighlighter;

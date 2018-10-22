@@ -103,5 +103,5 @@ Linkifier.prototype = {
     };
 
     this._linkifyTimer = setTimeout(parseNode, LINKIFY_TIMEOUT);
-  }
+  },
 };

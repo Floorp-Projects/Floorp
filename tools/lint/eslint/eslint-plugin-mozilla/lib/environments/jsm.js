@@ -82,6 +82,6 @@ module.exports = {
     "File": false,
     "Headers": false,
     "XMLHttpRequest": false,
-    "URL": false
-  }
+    "URL": false,
+  },
 };

@@ -35,7 +35,7 @@ const FrameSnapshotFront = protocol.FrontClassWithSpec(frameSnapshotSpec, {
       return data;
     });
   }, {
-    impl: "_getOverview"
+    impl: "_getOverview",
   }),
 
   /**
@@ -55,8 +55,8 @@ const FrameSnapshotFront = protocol.FrontClassWithSpec(frameSnapshotSpec, {
     this._cachedScreenshots.set(functionCall, screenshot);
     return screenshot;
   }, {
-    impl: "_generateScreenshotFor"
-  })
+    impl: "_generateScreenshotFor",
+  }),
 });
 
 exports.FrameSnapshotFront = FrameSnapshotFront;
@@ -68,7 +68,7 @@ const CanvasFront = protocol.FrontClassWithSpec(canvasSpec, {
   initialize: function(client, { canvasActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: canvasActor });
     this.manage(this);
-  }
+  },
 });
 
 /**
@@ -85,7 +85,7 @@ CanvasFront.INVALID_SNAPSHOT_IMAGE = {
   index: -1,
   width: 0,
   height: 0,
-  pixels: []
+  pixels: [],
 };
 
 exports.CanvasFront = CanvasFront;

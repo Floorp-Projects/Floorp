@@ -12,19 +12,19 @@ const sourceSpec = generateActorSpec({
     getExecutableLines: { response: { lines: RetVal("json") } },
     onSource: {
       request: { type: "source" },
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     prettyPrint: {
       request: { indent: Arg(0, "number") },
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     disablePrettyPrint: {
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     setPausePoints: {
       request: {
         pausePoints: Arg(0, "json"),
-      }
+      },
     },
     blackbox: { response: { pausedInSource: RetVal("boolean") } },
     unblackbox: {},
@@ -32,12 +32,12 @@ const sourceSpec = generateActorSpec({
       request: {
         location: {
           line: Arg(0, "number"),
-          column: Arg(1, "nullable:number")
+          column: Arg(1, "nullable:number"),
         },
         condition: Arg(2, "nullable:string"),
-        noSliding: Arg(3, "nullable:boolean")
+        noSliding: Arg(3, "nullable:boolean"),
       },
-      response: RetVal("json")
+      response: RetVal("json"),
     },
   },
 });

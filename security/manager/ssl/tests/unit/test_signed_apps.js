@@ -460,7 +460,7 @@ add_signature_test(PKCS7WithSHA256,
 
 var cosePolicies = [
   COSEAndPKCS7WithSHA1OrSHA256,
-  COSERequiredAndPKCS7WithSHA1OrSHA256
+  COSERequiredAndPKCS7WithSHA1OrSHA256,
 ];
 
 // PS256 is not yet supported.

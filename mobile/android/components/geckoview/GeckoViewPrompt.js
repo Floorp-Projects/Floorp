@@ -283,7 +283,7 @@ PromptFactory.prototype = {
     let prompt = new PromptDelegate(aEvent.requestingWindow);
     prompt.asyncShowPrompt({
       type: "popup",
-      targetUri: popupWindowURISpec
+      targetUri: popupWindowURISpec,
     }, allowed => {
       if (allowed && dwi) {
         dwi.open(popupWindowURISpec, aEvent.popupWindowName, aEvent.popupWindowFeatures);
@@ -351,7 +351,7 @@ PromptFactory.prototype = {
   },
   asyncPromptAuth: function() {
     return this.callProxy("asyncPromptAuth", arguments);
-  }
+  },
 };
 
 function PromptDelegate(aDomWin) {
@@ -715,7 +715,7 @@ PromptDelegate.prototype = {
         }
         responded = true;
         aCallback.onAuthCancelled(aContext, /* userCancel */ false);
-      }
+      },
     };
   },
 

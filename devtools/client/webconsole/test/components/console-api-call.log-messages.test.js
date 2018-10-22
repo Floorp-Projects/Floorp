@@ -51,5 +51,5 @@ const logMessageStubPacket = {
   "from": "server1.conn0.consoleActor2",
   "type": "logMessage",
   "message": "foobar test",
-  "timeStamp": 1519052480060
+  "timeStamp": 1519052480060,
 };

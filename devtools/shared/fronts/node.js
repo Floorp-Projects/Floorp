@@ -7,7 +7,7 @@ const {
   Front,
   FrontClassWithSpec,
   custom,
-  types
+  types,
 } = require("devtools/shared/protocol.js");
 
 const {
@@ -49,7 +49,7 @@ const NodeListFront = FrontClassWithSpec(nodeListSpec, {
       return response.node;
     });
   }, {
-    impl: "_item"
+    impl: "_item",
   }),
 
   items: custom(function(start, end) {
@@ -57,8 +57,8 @@ const NodeListFront = FrontClassWithSpec(nodeListSpec, {
       return response.nodes;
     });
   }, {
-    impl: "_items"
-  })
+    impl: "_items",
+  }),
 });
 
 exports.NodeListFront = NodeListFront;
@@ -87,7 +87,7 @@ class AttributeModificationList {
     this.modifications.push({
       attributeNamespace: ns,
       attributeName: name,
-      newValue: value
+      newValue: value,
     });
   }
 
@@ -226,7 +226,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
         this.attributes.push({
           name: change.attributeName,
           namespace: change.attributeNamespace,
-          value: change.newValue
+          value: change.newValue,
         });
       }
     } else if (change.type === "characterData") {
@@ -392,7 +392,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     const str = this._form.nodeValue || "";
     return promise.resolve(new SimpleStringFront(str));
   }, {
-    impl: "_getNodeValue"
+    impl: "_getNodeValue",
   }),
 
   /**
@@ -490,7 +490,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
       return null;
     }
     return actor.rawNode;
-  }
+  },
 });
 
 exports.NodeFront = NodeFront;

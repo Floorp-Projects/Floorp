@@ -51,12 +51,12 @@ async function executeWindowTest(hud, iframeRole) {
   const onMessages = waitForMessages({
     hud,
     messages: [{
-      text: `${BASE_TEXT} ${iframeRole}`
+      text: `${BASE_TEXT} ${iframeRole}`,
     }, {
-      text: `p: ${BASE_TEXT} ${iframeRole}`
+      text: `p: ${BASE_TEXT} ${iframeRole}`,
     }, {
-      text: `obj: ${iframeRole}!`
-    }]
+      text: `obj: ${iframeRole}!`,
+    }],
   });
 
   hud.jsterm.execute(`document.title`);

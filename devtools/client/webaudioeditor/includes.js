@@ -67,7 +67,7 @@ const EVENTS = {
   UI_GRAPH_RENDERED: "WebAudioEditor:UIGraphRendered",
 
   // Called when the inspector splitter is moved and resized.
-  UI_INSPECTOR_RESIZE: "WebAudioEditor:UIInspectorResize"
+  UI_INSPECTOR_RESIZE: "WebAudioEditor:UIInspectorResize",
 };
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 

@@ -14,7 +14,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
@@ -31,7 +31,7 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel, {
     expectedViewClass: "JsFlameGraphView",
-    expectedViewEvent: "UI_JS_FLAMEGRAPH_RENDERED"
+    expectedViewEvent: "UI_JS_FLAMEGRAPH_RENDERED",
   });
 
   ok(true, "JsFlameGraphView rendered again after recording completed a second time.");

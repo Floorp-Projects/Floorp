@@ -72,7 +72,7 @@ var FeedHandler = {
       if (feeds.length > 1) {
         let p = new Prompt({
           window: browser.contentWindow,
-          title: Strings.browser.GetStringFromName("feedHandler.chooseFeed")
+          title: Strings.browser.GetStringFromName("feedHandler.chooseFeed"),
         }).setSingleChoiceItems(feeds.map(function(feed) {
           return { label: feed.title || feed.href };
         })).show(data => {
@@ -100,7 +100,7 @@ var FeedHandler = {
     // JSON for Prompt
     let p = new Prompt({
       window: aBrowser.contentWindow,
-      title: Strings.browser.GetStringFromName("feedHandler.subscribeWith")
+      title: Strings.browser.GetStringFromName("feedHandler.subscribeWith"),
     }).setSingleChoiceItems(handlers.map(function(handler) {
       return { label: handler.name };
     })).show(function(data) {
@@ -114,5 +114,5 @@ var FeedHandler = {
       // Open the resultant URL in a new tab
       BrowserApp.addTab(readerURL, { parentId: BrowserApp.selectedTab.id });
     });
-  }
+  },
 };

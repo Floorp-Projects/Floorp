@@ -407,7 +407,7 @@ impl RenderTarget for ColorRenderTarget {
 
             match task.kind {
                 RenderTaskKind::Picture(ref pic_task) => {
-                    let pic = ctx.prim_store.get_pic(pic_task.prim_index);
+                    let pic = &ctx.prim_store.pictures[pic_task.pic_index.0];
 
                     let (target_rect, _) = task.get_target_rect();
 
@@ -472,7 +472,7 @@ impl RenderTarget for ColorRenderTarget {
                 );
             }
             RenderTaskKind::Picture(ref task_info) => {
-                let pic = ctx.prim_store.get_pic(task_info.prim_index);
+                let pic = &ctx.prim_store.pictures[task_info.pic_index.0];
                 self.alpha_tasks.push(task_id);
 
                 // If this pipeline is registered as a frame output

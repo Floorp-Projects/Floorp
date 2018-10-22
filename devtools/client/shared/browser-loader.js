@@ -73,7 +73,7 @@ function BrowserLoader(options) {
   const browserLoaderBuilder = new BrowserLoaderBuilder(options);
   return {
     loader: browserLoaderBuilder.loader,
-    require: browserLoaderBuilder.require
+    require: browserLoaderBuilder.require,
   };
 }
 
@@ -169,7 +169,7 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared, commonLibRequire
         lazyServiceGetter: devtools.lazyServiceGetter,
         lazyRequireGetter: this.lazyRequireGetter.bind(this),
       },
-    }
+    },
   };
 
   const mainModule = loaders.Module(baseURI, joinURI(baseURI, "main.js"));
@@ -198,7 +198,7 @@ BrowserLoaderBuilder.prototype = {
           ? this.require(module)[property]
           : this.require(module || property);
     });
-  }
+  },
 };
 
 this.BrowserLoader = BrowserLoader;

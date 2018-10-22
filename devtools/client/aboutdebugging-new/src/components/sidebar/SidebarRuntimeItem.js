@@ -36,7 +36,7 @@ class SidebarRuntimeItem extends PureComponent {
   renderConnectButton() {
     return Localized(
       {
-        id: "about-debugging-sidebar-item-connect-button"
+        id: "about-debugging-sidebar-item-connect-button",
       },
       dom.button(
         {
@@ -44,7 +44,7 @@ class SidebarRuntimeItem extends PureComponent {
           onClick: () => {
             const { dispatch, runtimeId } = this.props;
             dispatch(Actions.connectRuntime(runtimeId));
-          }
+          },
         },
         "Connect"
       )
@@ -55,7 +55,7 @@ class SidebarRuntimeItem extends PureComponent {
     return dom.span(
       {
         className: "ellipsis-text",
-        title: `${name} (${device})`
+        title: `${name} (${device})`,
       },
       `${name}`,
       dom.br({}),
@@ -67,7 +67,7 @@ class SidebarRuntimeItem extends PureComponent {
     return dom.span(
       {
         className: "ellipsis-text",
-        title: name
+        title: name,
       },
       `${name}`
     );
@@ -97,7 +97,7 @@ class SidebarRuntimeItem extends PureComponent {
         className: "sidebar-runtime-item",
         onSelect: () => {
           dispatch(Actions.selectPage(id, runtimeId));
-        }
+        },
       },
       dom.img(
         {
@@ -105,7 +105,7 @@ class SidebarRuntimeItem extends PureComponent {
             `${isConnected ? "sidebar-runtime-item__icon--connected" : "" }`,
           src: icon,
           alt: connectionStatus,
-          title: connectionStatus
+          title: connectionStatus,
         }
       ),
       deviceName ? this.renderNameWithDevice(name, deviceName) : this.renderName(name),

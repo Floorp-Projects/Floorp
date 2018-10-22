@@ -11,7 +11,7 @@ const EXPECTED = {
   sources: 1,
   file: "simple.html",
   sourceURL: SIMPLE_URL,
-  text: "This is a simple page"
+  text: "This is a simple page",
 };
 
 module.exports = async function() {

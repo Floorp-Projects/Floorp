@@ -19,7 +19,7 @@ const { DebuggerServer } = require("devtools/server/main");
 const {
   getChildDocShells,
   BrowsingContextTargetActor,
-  browsingContextTargetPrototype
+  browsingContextTargetPrototype,
 } = require("devtools/server/actors/targets/browsing-context");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 
@@ -53,7 +53,7 @@ parentProcessTargetPrototype.initialize = function(connection, window) {
   // This creates a Debugger instance for chrome debugging all globals.
   this.makeDebugger = makeDebugger.bind(null, {
     findDebuggees: dbg => dbg.findAllGlobals(),
-    shouldAddNewGlobalAsDebuggee: () => true
+    shouldAddNewGlobalAsDebuggee: () => true,
   });
 
   // Ensure catching the creation of any new content docshell
@@ -78,7 +78,7 @@ parentProcessTargetPrototype.initialize = function(connection, window) {
 
   Object.defineProperty(this, "docShell", {
     value: window.docShell,
-    configurable: true
+    configurable: true,
   });
 };
 
@@ -97,7 +97,7 @@ Object.defineProperty(parentProcessTargetPrototype, "docShells", {
     }
 
     return docShells;
-  }
+  },
 });
 
 parentProcessTargetPrototype.observe = function(subject, topic, data) {

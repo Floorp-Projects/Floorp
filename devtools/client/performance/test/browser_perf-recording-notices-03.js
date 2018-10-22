@@ -27,7 +27,7 @@ add_task(async function() {
 
   const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { panel } = await initPerformanceInTab({ tab: target.tab });

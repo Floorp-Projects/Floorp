@@ -53,7 +53,7 @@ function* testSteps()
     ok(true, "Adding data until quota is reached");
 
     let obj = {
-      name: "foo"
+      name: "foo",
     };
 
     if (!blobs) {

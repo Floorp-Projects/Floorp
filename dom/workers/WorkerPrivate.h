@@ -26,6 +26,7 @@ class nsIConsoleReportCollector;
 class nsIThreadInternal;
 
 namespace mozilla {
+class ThrottledEventQueue;
 namespace dom {
 
 // If you change this, the corresponding list in nsIWorkerDebugger.idl needs

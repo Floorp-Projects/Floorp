@@ -22,7 +22,7 @@ var numberFormatInternalProperties = {
         addSpecialMissingLanguageTags(locales);
         return (this._availableLocales = locales);
     },
-    relevantExtensionKeys: ["nu"]
+    relevantExtensionKeys: ["nu"],
 };
 
 /**
@@ -381,7 +381,7 @@ function getNumberingSystems(locale) {
         "fullwide", "gujr", "guru", "hanidec", "khmr",
         "knda", "laoo", "latn", "limb", "mlym",
         "mong", "mymr", "orya", "tamldec", "telu",
-        "thai", "tibt"
+        "thai", "tibt",
     ];
 }
 
@@ -390,7 +390,7 @@ function numberFormatLocaleData() {
         nu: getNumberingSystems,
         default: {
             nu: intl_numberingSystem,
-        }
+        },
     };
 }
 
@@ -483,7 +483,7 @@ function Intl_NumberFormat_resolvedOptions() {
         minimumIntegerDigits: internals.minimumIntegerDigits,
         minimumFractionDigits: internals.minimumFractionDigits,
         maximumFractionDigits: internals.maximumFractionDigits,
-        useGrouping: internals.useGrouping
+        useGrouping: internals.useGrouping,
     };
 
     // currency and currencyDisplay are only present for currency formatters.

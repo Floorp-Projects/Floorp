@@ -15,7 +15,7 @@ const serviceContainer = require("devtools/client/webconsole/test/fixtures/servi
 const { setupStore } = require("devtools/client/webconsole/test/helpers");
 const {initialize} = require("devtools/client/webconsole/actions/ui");
 const {
-  getInitialMessageCountForViewport
+  getInitialMessageCountForViewport,
 } = require("devtools/client/webconsole/utils/messages.js");
 
 const MESSAGES_NUMBER = 100;

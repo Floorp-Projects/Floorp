@@ -21,7 +21,7 @@ add_task(async function() {
       ["devtools.browser-toolbox.allow-unsafe-script", true],
       // On debug test slave, it takes more than the default time (20s)
       // to get a initialized console
-      ["devtools.debugger.remote-timeout", 120000]
+      ["devtools.debugger.remote-timeout", 120000],
     ]};
     SpecialPowers.pushPrefEnv(options, done);
   });

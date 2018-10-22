@@ -30,7 +30,7 @@ const APP_MAP = {
   "{3550f703-e582-4d05-9a08-453d09bdfdc6}": "thunderbird",
   "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}": "seamonkey",
   "{718e30fb-e89b-41dd-9da7-e25a45638b28}": "sunbird",
-  "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "mobile/android"
+  "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "mobile/android",
 };
 
 var CACHED_INFO = null;

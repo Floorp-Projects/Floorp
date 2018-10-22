@@ -9,7 +9,7 @@
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.indexedDB.storageOption.enabled", true]]
+    set: [["dom.indexedDB.storageOption.enabled", true]],
   });
 
   const TESTPAGE = MAIN_DOMAIN + "storage-indexeddb-duplicate-names.html";
@@ -26,9 +26,9 @@ add_task(async function() {
         "idb1 (persistent)",
         "idb2 (default)",
         "idb2 (temporary)",
-        "idb2 (persistent)"
-      ]
-    ]
+        "idb2 (persistent)",
+      ],
+    ],
   ]);
 
   await finishTests();

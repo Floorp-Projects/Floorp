@@ -261,9 +261,11 @@ TableAccessible::CellInRowAt(Accessible* aRow, int32_t aColumn)
   int32_t colIdx = aColumn;
 
   AccIterator cellIter(aRow, filters::GetCell);
-  Accessible* cell = cellIter.Next();
-  while (colIdx != 0 && (cell = cellIter.Next())) {
-    colIdx--;
+  Accessible* cell = nullptr;
+  
+  while (colIdx >= 0 && (cell = cellIter.Next())) {
+    MOZ_ASSERT(cell->IsTableCell(), "No table or grid cell!");
+    colIdx -= cell->AsTableCell()->ColExtent();
   }
 
   return cell;

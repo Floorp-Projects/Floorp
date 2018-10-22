@@ -37,45 +37,45 @@ const tests = [{
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "paragraph",
-      name: `""`
+      name: `""`,
     }],
     sidebar: {
       name: "Accessibility Panel Test",
-      role: "document"
-    }
-  }
+      role: "document",
+    },
+  },
 }, {
   desc: "Reload the page.",
   action: async ({ panel }) => reload(panel.target),
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }],
     sidebar: {
       name: "Accessibility Panel Test",
-      role: "document"
-    }
-  }
+      role: "document",
+    },
+  },
 }, {
   desc: "Navigate to a new page.",
   action: async ({ panel }) => navigate(panel.target, buildURL(TEST_URI_2)),
   expected: {
     tree: [{
       role: "document",
-      name: `"Navigation Accessibility Panel"`
+      name: `"Navigation Accessibility Panel"`,
     }],
     sidebar: {
       name: "Navigation Accessibility Panel",
-      role: "document"
-    }
-  }
+      role: "document",
+    },
+  },
 }];
 
 /**

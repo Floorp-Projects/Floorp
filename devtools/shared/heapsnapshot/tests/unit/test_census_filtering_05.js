@@ -48,13 +48,13 @@ function run_test() {
   const REPORT = new Map(stacks.map((s, i) => {
     return [s, {
       count: i + 1,
-      bytes: (i + 1) * 10
+      bytes: (i + 1) * 10,
     }];
   }));
 
   const tree = censusReportToCensusTreeNode(BREAKDOWN, REPORT, {
     filter: "baz",
-    invert: true
+    invert: true,
   });
 
   dumpn("tree = " + JSON.stringify(tree, savedFrameReplacer, 4));

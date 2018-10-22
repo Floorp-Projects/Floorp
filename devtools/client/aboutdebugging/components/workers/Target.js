@@ -27,8 +27,8 @@ class WorkerTarget extends Component {
       target: PropTypes.shape({
         icon: PropTypes.string,
         name: PropTypes.string.isRequired,
-        workerTargetActor: PropTypes.string
-      }).isRequired
+        workerTargetActor: PropTypes.string,
+      }).isRequired,
     };
   }
 
@@ -49,7 +49,7 @@ class WorkerTarget extends Component {
       dom.img({
         className: "target-icon",
         role: "presentation",
-        src: target.icon
+        src: target.icon,
       }),
       dom.div({ className: "target" },
         dom.div({ className: "target-name", title: target.name }, target.name)
@@ -57,7 +57,7 @@ class WorkerTarget extends Component {
       dom.button({
         className: "debug-button",
         onClick: this.debug,
-        disabled: debugDisabled
+        disabled: debugDisabled,
       }, Strings.GetStringFromName("debug"))
     );
   }

@@ -166,7 +166,7 @@ function once(target, eventName, useCapture = false) {
     for (const [add, remove] of [
       ["addEventListener", "removeEventListener"],
       ["addListener", "removeListener"],
-      ["on", "off"]
+      ["on", "off"],
     ]) {
       if ((add in target) && (remove in target)) {
         target[add](eventName, function onEvent(...aArgs) {

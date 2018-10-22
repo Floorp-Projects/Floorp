@@ -93,6 +93,7 @@ add_task(async function test_backButton() {
       id: "basic-card-page",
     },
     "basic-card-page": {
+      selectedStateKey: "selectedPaymentCard",
     },
   });
   await form.promiseReady;
@@ -369,6 +370,7 @@ add_task(async function test_edit() {
     },
     "basic-card-page": {
       guid: card1.guid,
+      selectedStateKey: "selectedPaymentCard",
     },
     savedAddresses: {
       [address1.guid]: deepClone(address1),
@@ -422,6 +424,7 @@ add_task(async function test_edit() {
     },
     "basic-card-page": {
       guid: minimalCard.guid,
+      selectedStateKey: "selectedPaymentCard",
     },
     savedBasicCards: {
       [minimalCard.guid]: deepClone(minimalCard),
@@ -439,6 +442,7 @@ add_task(async function test_edit() {
     },
     "basic-card-page": {
       guid: null,
+      selectedStateKey: "selectedPaymentCard",
     },
   });
   await asyncElementRendered();
@@ -526,6 +530,7 @@ add_task(async function test_numberCustomValidityReset() {
       id: "basic-card-page",
     },
     "basic-card-page": {
+      selectedStateKey: "selectedPaymentCard",
     },
   });
 
@@ -551,6 +556,7 @@ add_task(async function test_noCardNetworkSelected() {
     },
     "basic-card-page": {
       guid: card1.guid,
+      selectedStateKey: "selectedPaymentCard",
     },
     savedBasicCards: {
       [card1.guid]: deepClone(card1),

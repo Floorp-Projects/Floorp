@@ -76,7 +76,7 @@ function getPixelColor(aCanvas, aX, aY) {
     r: pixel.data[0],
     g: pixel.data[1],
     b: pixel.data[2],
-    a: pixel.data[3]
+    a: pixel.data[3],
   };
 }
 

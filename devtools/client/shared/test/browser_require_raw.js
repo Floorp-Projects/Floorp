@@ -9,7 +9,7 @@ const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/
 
 const { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",
-  window
+  window,
 });
 
 const variableFileContents = browserRequire("raw!devtools/client/themes/variables.css");

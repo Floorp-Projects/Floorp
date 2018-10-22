@@ -33,7 +33,7 @@
     function rootContentReplaced(aID, aTextName, aRootContentRole) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
-        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+        new invokerChecker(EVENT_REORDER, getDocNode, aID),
       ];
 
       this.finalCheck = function rootContentReplaced_finalCheck() {
@@ -42,9 +42,9 @@
           children: [
             {
               role: ROLE_TEXT_LEAF,
-              name: aTextName
-            }
-          ]
+              name: aTextName,
+            },
+          ],
         };
         testAccessibleTree(getDocNode(aID), tree);
       };
@@ -53,7 +53,7 @@
     function rootContentRemoved(aID) {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, null),
-        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+        new invokerChecker(EVENT_REORDER, getDocNode, aID),
       ];
 
       this.preinvoke = function rootContentRemoved_preinvoke() {
@@ -65,7 +65,7 @@
       this.finalCheck = function rootContentRemoved_finalCheck() {
         var tree = {
           role: ROLE_DOCUMENT,
-          children: [ ]
+          children: [ ],
         };
         testAccessibleTree(getDocNode(aID), tree);
       };
@@ -74,7 +74,7 @@
     function rootContentInserted(aID, aTextName) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
-        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+        new invokerChecker(EVENT_REORDER, getDocNode, aID),
       ];
 
       this.finalCheck = function rootContentInserted_finalCheck() {
@@ -83,9 +83,9 @@
           children: [
             {
               role: ROLE_TEXT_LEAF,
-              name: aTextName
-            }
-          ]
+              name: aTextName,
+            },
+          ],
         };
         testAccessibleTree(getDocNode(aID), tree);
       };
@@ -118,7 +118,7 @@
     function replaceIFrameHTMLElm(aID) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
-        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+        new invokerChecker(EVENT_REORDER, getDocNode, aID),
       ];
 
       this.invoke = function replaceIFrameHTMLElm_invoke() {
@@ -137,11 +137,11 @@
               children: [
                 {
                   role: ROLE_TEXT_LEAF,
-                  name: "New Wave"
-                }
-              ]
-            }
-          ]
+                  name: "New Wave",
+                },
+              ],
+            },
+          ],
         };
         testAccessibleTree(getDocNode(aID), tree);
       };
@@ -290,7 +290,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getInputNode.bind(this)),
-        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+        new invokerChecker(EVENT_REORDER, getDocNode, aID),
       ];
 
       this.invoke = function invoke() {
@@ -302,7 +302,7 @@
       this.finalCheck = function finalCheck() {
         var tree =
           { DOCUMENT: [
-            { ENTRY: [ ] }
+            { ENTRY: [ ] },
           ] };
         testAccessibleTree(this.docNode, tree);
 
@@ -336,7 +336,7 @@
       this.containerNode = getNode(aID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.invoke = function changeSrc_invoke() {
@@ -347,8 +347,8 @@
         var tree =
           { INTERNAL_FRAME: [
             { DOCUMENT: [
-              { ENTRY: [ ] }
-            ] }
+              { ENTRY: [ ] },
+            ] },
           ] };
         testAccessibleTree(this.containerNode, tree);
       };

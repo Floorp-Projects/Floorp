@@ -19,7 +19,7 @@ add_task(async function() {
     const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
     const {
-      CanvasFrameAnonymousContentHelper
+      CanvasFrameAnonymousContentHelper,
     } = require("devtools/server/actors/highlighters/utils/markup");
     let doc = content.document;
 

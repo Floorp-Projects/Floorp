@@ -37,9 +37,9 @@ AboutDebugging.prototype = {
 
   getURIFlags: function(uri) {
     return nsIAboutModule.ALLOW_SCRIPT;
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  AboutDebugging
+  AboutDebugging,
 ]);

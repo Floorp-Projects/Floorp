@@ -19,8 +19,8 @@ function getIndentElement(indent) {
     "data-indent": indent,
     className: "indent",
     style: {
-      "width": indent * INDENT_WIDTH
-    }
+      "width": indent * INDENT_WIDTH,
+    },
   });
 }
 

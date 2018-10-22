@@ -135,7 +135,7 @@ exports.PerformanceRecordingCommon = {
       profile,
       configuration,
       systemHost,
-      systemClient
+      systemClient,
     };
   },
 };

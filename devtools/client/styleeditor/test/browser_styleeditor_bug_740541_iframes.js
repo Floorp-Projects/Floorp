@@ -45,7 +45,7 @@ add_task(async function() {
              " </head>",
              " <body>",
              " </body>",
-             " </html>"
+             " </html>",
             ].join("\n"));
 
   const FOUR = TEST_BASE_HTTP + "four.html";
@@ -63,7 +63,7 @@ add_task(async function() {
        [makeDocument([makeStylesheet(".c")],
                                 [])]),
      makeDocument([SIMPLE], []),
-     SIMPLE_DOCUMENT
+     SIMPLE_DOCUMENT,
     ]);
 
   const EXPECTED_STYLE_SHEET_COUNT = 12;

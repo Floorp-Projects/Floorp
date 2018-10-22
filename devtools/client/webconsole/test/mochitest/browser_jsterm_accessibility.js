@@ -39,7 +39,7 @@ add_task(async function() {
   input.addEventListener("blur", () => {
     wasBlurred = true;
   }, {
-    once: true
+    once: true,
   });
 
   let wasFocused = false;
@@ -47,7 +47,7 @@ add_task(async function() {
     ok(wasBlurred, "jsterm input received a blur event before received back the focus");
     wasFocused = true;
   }, {
-    once: true
+    once: true,
   });
 
   info("Close the autocomplete popup by simulating a TAB key event");

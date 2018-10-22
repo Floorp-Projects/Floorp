@@ -18,10 +18,10 @@ TestActor1.prototype = {
 
   onPing: function TA1_onPing() {
     return { pong: "pong" };
-  }
+  },
 };
 
 TestActor1.prototype.requestTypes = {
-  "ping": TestActor1.prototype.onPing
+  "ping": TestActor1.prototype.onPing,
 };
 exports.TestActor1 = TestActor1;

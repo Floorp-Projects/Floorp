@@ -44,7 +44,7 @@ function testIncomingSessionRequestReceiverLaunchUnknownContentType() {
         is(aReason, 0x80530020 /* NS_ERROR_DOM_OPERATION_ERR */, "The control channel is closed due to load failure.");
         aResolve();
       });
-    })
+    }),
   ]);
 
   gScript.sendAsyncMessage("trigger-incoming-session-request", receiverUrl);

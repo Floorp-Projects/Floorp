@@ -24,33 +24,33 @@
         {
           cell: "table_dc_1",
           rowHeaderCells: [ "table_rh_1" ],
-          columnHeaderCells: [ "table_ch_2" ]
+          columnHeaderCells: [ "table_ch_2" ],
         },
         {
           cell: "table_dc_2",
           rowHeaderCells: [ "table_rh_1" ],
-          columnHeaderCells: [ "table_ch_3" ]
+          columnHeaderCells: [ "table_ch_3" ],
         },
         {
           cell: "table_dc_3",
           rowHeaderCells: [ "table_rh_2" ],
-          columnHeaderCells: [ "table_ch_2" ]
+          columnHeaderCells: [ "table_ch_2" ],
         },
         {
           cell: "table_dc_4",
           rowHeaderCells: [ "table_rh_2" ],
-          columnHeaderCells: [ "table_ch_3" ]
+          columnHeaderCells: [ "table_ch_3" ],
         },
         {
           cell: "table_rh_1",
           rowHeaderCells: [],
-          columnHeaderCells: [ "table_ch_1" ]
+          columnHeaderCells: [ "table_ch_1" ],
         },
         {
           cell: "table_rh_2",
           rowHeaderCells: [],
-          columnHeaderCells: [ "table_ch_1" ]
-        }
+          columnHeaderCells: [ "table_ch_1" ],
+        },
       ];
 
       testHeaderCells(headerInfoMap);
@@ -64,14 +64,14 @@
           // not focusable cell (ARIAGridCellAccessible is used)
           cell: "table2_dc_1",
           rowHeaderCells: [],
-          columnHeaderCells: [ "table2_ch_1" ]
+          columnHeaderCells: [ "table2_ch_1" ],
         },
         {
           // focusable cell (ARIAGridCellAccessible is used)
           cell: "table2_dc_2",
           rowHeaderCells: [],
-          columnHeaderCells: [ "table2_ch_2" ]
-        }
+          columnHeaderCells: [ "table2_ch_2" ],
+        },
       ];
 
       testHeaderCells(headerInfoMap);
@@ -85,14 +85,14 @@
           // ARIAGridCellAccessible is used
           cell: "t3_dc_1",
           rowHeaderCells: [ "t3_rh_1" ],
-          columnHeaderCells: [ ]
+          columnHeaderCells: [ ],
         },
         {
           // ARIAGridCellAccessible is used (inside rowgroup)
           cell: "t3_dc_2",
           rowHeaderCells: [ "t3_rh_2" ],
-          columnHeaderCells: [ ]
-        }
+          columnHeaderCells: [ ],
+        },
       ];
 
       testHeaderCells(headerInfoMap);

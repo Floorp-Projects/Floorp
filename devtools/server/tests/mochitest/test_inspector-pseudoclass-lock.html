@@ -99,7 +99,7 @@ addTest(function testPseudoClassLock() {
       checkChange(mutations[0], {
         id: "b",
         nodeName: "DIV",
-        pseudos: [":active"]
+        pseudos: [":active"],
       });
     }).then(() => {
       // Now add :hover, this time with parents.
@@ -114,15 +114,15 @@ addTest(function testPseudoClassLock() {
       {
         id: "longlist",
         nodeName: "DIV",
-        pseudos: [":hover"]
+        pseudos: [":hover"],
       },
       {
         nodeName: "BODY",
-        pseudos: [":hover"]
+        pseudos: [":hover"],
       },
       {
         nodeName: "HTML",
-        pseudos: [":hover"]
+        pseudos: [":hover"],
       }];
       checkMutations(mutations, expectedMutations);
     }).then(() => {
@@ -134,20 +134,20 @@ addTest(function testPseudoClassLock() {
         id: "b",
         nodeName: "DIV",
         // Should still have :active on the original node.
-        pseudos: [":active"]
+        pseudos: [":active"],
       },
       {
         id: "longlist",
         nodeName: "DIV",
-        pseudos: []
+        pseudos: [],
       },
       {
         nodeName: "BODY",
-        pseudos: []
+        pseudos: [],
       },
       {
         nodeName: "HTML",
-        pseudos: []
+        pseudos: [],
       }];
       checkMutations(mutations, expectedMutations);
     }).then(() => {
@@ -160,7 +160,7 @@ addTest(function testPseudoClassLock() {
         id: "b",
         nodeName: "DIV",
         pseudos: [":hover", ":active"],
-        enabled: [false, true]
+        enabled: [false, true],
       });
     }).then(() => {
       // Now shut down the walker and make sure that clears up the remaining lock.

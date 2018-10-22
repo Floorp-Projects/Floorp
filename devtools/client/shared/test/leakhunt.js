@@ -74,7 +74,7 @@ leakHunt.noRecurse = [
   /^string$/, /^number$/, /^boolean$/, /^null/, /^undefined/,
   /^Window$/, /^Document$/,
   /^XULDocument$/, /^XULElement$/,
-  /^DOMWindow$/, /^HTMLDocument$/, /^HTML.*Element$/, /^ChromeWindow$/
+  /^DOMWindow$/, /^HTMLDocument$/, /^HTML.*Element$/, /^ChromeWindow$/,
 ];
 
 leakHunt.digProperty = function(prop, data, path, seen, direct, log) {

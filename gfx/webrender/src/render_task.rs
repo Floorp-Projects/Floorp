@@ -22,7 +22,7 @@ use internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
 use picture::PictureCacheKey;
-use prim_store::{PrimitiveIndex, ImageCacheKey, LineDecorationCacheKey};
+use prim_store::{PictureIndex, ImageCacheKey, LineDecorationCacheKey};
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
 use render_backend::FrameId;
@@ -222,7 +222,7 @@ pub struct ClipRegionTask {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureTask {
-    pub prim_index: PrimitiveIndex,
+    pub pic_index: PictureIndex,
     pub can_merge: bool,
     pub content_origin: DeviceIntPoint,
     pub uv_rect_handle: GpuCacheHandle,
@@ -384,7 +384,7 @@ impl RenderTask {
     pub fn new_picture(
         location: RenderTaskLocation,
         unclipped_size: DeviceSize,
-        prim_index: PrimitiveIndex,
+        pic_index: PictureIndex,
         content_origin: DeviceIntPoint,
         children: Vec<RenderTaskId>,
         uv_rect_kind: UvRectKind,
@@ -405,7 +405,7 @@ impl RenderTask {
             location,
             children,
             kind: RenderTaskKind::Picture(PictureTask {
-                prim_index,
+                pic_index,
                 content_origin,
                 can_merge,
                 uv_rect_handle: GpuCacheHandle::new(),
@@ -992,7 +992,7 @@ impl RenderTask {
     pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T, tree: &RenderTaskTree) -> bool {
         match self.kind {
             RenderTaskKind::Picture(ref task) => {
-                pt.new_level(format!("Picture of {:?}", task.prim_index));
+                pt.new_level(format!("Picture of {:?}", task.pic_index));
             }
             RenderTaskKind::CacheMask(ref task) => {
                 pt.new_level(format!("CacheMask with {} clips", task.clip_node_range.count));

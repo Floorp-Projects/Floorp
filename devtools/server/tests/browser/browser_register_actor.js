@@ -16,7 +16,7 @@ function test() {
       const options = {
         prefix: "helloActor",
         constructor: "HelloActor",
-        type: { target: true }
+        type: { target: true },
       };
 
       const registry = await gClient.mainRoot.getFront("actorRegistry");
@@ -46,7 +46,7 @@ function cleanupActor(actorFront) {
 function getCount(actor, callback) {
   return gClient.request({
     to: actor,
-    type: "count"
+    type: "count",
   }, callback);
 }
 

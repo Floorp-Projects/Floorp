@@ -25,7 +25,7 @@ add_task(async function() {
   const errorHeapWorker = {
     deleteHeapSnapshot: function() {
       return Promise.reject("_");
-    }
+    },
   };
 
   ok(true, "dispatch clearSnapshots action");

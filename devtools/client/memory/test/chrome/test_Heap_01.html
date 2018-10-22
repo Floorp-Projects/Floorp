@@ -25,13 +25,13 @@ Test that rendering a dominator tree error is handled correctly.
              const container = document.getElementById("container");
 
              const props = immutableUpdate(TEST_HEAP_PROPS, {
-               view: { state: viewState.DOMINATOR_TREE, },
+               view: { state: viewState.DOMINATOR_TREE },
                snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                  dominatorTree: {
                    error: new Error(errorMessage),
                    state: dominatorTreeState.ERROR,
-                 }
-               })
+                 },
+               }),
              });
 
              await renderComponent(Heap(props), container);

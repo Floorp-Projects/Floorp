@@ -38,7 +38,7 @@ add_task(async function() {
   testActor.synthesizeMouse({
     selector: "h1",
     center: true,
-    options: {}
+    options: {},
   });
 
   await onPickerStopped;

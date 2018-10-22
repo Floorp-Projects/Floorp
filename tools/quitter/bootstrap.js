@@ -27,7 +27,7 @@ const quitterObserver = {
         Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
         break;
     }
-  }
+  },
 };
 
 function startup(data, reason) {

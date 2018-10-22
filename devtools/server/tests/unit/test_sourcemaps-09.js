@@ -42,7 +42,7 @@ function test_minified() {
     Assert.equal(packet.why.type, "debuggerStatement");
 
     const location = {
-      line: 5
+      line: 5,
     };
 
     getSource(gThreadClient, "http://example.com/foo.js").then(source => {

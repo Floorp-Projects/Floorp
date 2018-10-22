@@ -17,7 +17,7 @@ const Telemetry = require("devtools/client/shared/telemetry");
 
 const {
   getDisplayedRequestById,
-  getSortedRequests
+  getSortedRequests,
 } = require("./selectors/index");
 
 /**

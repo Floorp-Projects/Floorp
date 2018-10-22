@@ -3684,6 +3684,10 @@ protected:
 private:
   void InitializeLocalization(nsTArray<nsString>& aResourceIds);
 
+  void ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
+                                         const nsAString& aHeightString,
+                                         const nsAString& aScaleString);
+
   nsTArray<nsString> mL10nResources;
 
 public:
@@ -4708,7 +4712,11 @@ protected:
   mozilla::LayoutDeviceToScreenScale mScaleMaxFloat;
   mozilla::LayoutDeviceToScreenScale mScaleFloat;
   mozilla::CSSToLayoutDeviceScale mPixelRatio;
-  mozilla::CSSSize mViewportSize;
+
+  mozilla::CSSCoord mMinWidth;
+  mozilla::CSSCoord mMaxWidth;
+  mozilla::CSSCoord mMinHeight;
+  mozilla::CSSCoord mMaxHeight;
 
   RefPtr<mozilla::EventListenerManager> mListenerManager;
 

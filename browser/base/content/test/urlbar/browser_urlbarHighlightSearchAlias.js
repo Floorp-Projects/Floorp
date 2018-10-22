@@ -22,14 +22,23 @@ add_task(async function init() {
   });
 });
 
+
+// Simple test that tries different variations of an alias, without reverting
+// the urlbar value in between.
 add_task(async function testNoRevert() {
-  await doTest(false);
+  await doSimpleTest(false);
 });
 
+
+// Simple test that tries different variations of an alias, reverting the urlbar
+// value in between.
 add_task(async function testRevert() {
-  await doTest(true);
+  await doSimpleTest(true);
 });
 
+
+// An alias should be recognized and highlighted even when there are spaces
+// before it.
 add_task(async function spacesBeforeAlias() {
   gURLBar.search("     " + ALIAS);
   await promiseSearchComplete();
@@ -40,6 +49,8 @@ add_task(async function spacesBeforeAlias() {
   await promisePopupHidden(gURLBar.popup);
 });
 
+
+// An alias in the middle of a string should not be recognized or highlighted.
 add_task(async function charsBeforeAlias() {
   gURLBar.search("not an alias " + ALIAS);
   await promiseSearchComplete();
@@ -49,6 +60,7 @@ add_task(async function charsBeforeAlias() {
   EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
 });
+
 
 // Aliases are case insensitive, and the alias in the result uses the case that
 // the user typed in the input.  Make sure that searching with an alias using a
@@ -64,6 +76,13 @@ add_task(async function aliasCase() {
   await promisePopupHidden(gURLBar.popup);
 });
 
+
+// Even when the heuristic result is a search engine result with an alias, if
+// the urlbar value does not match that result, then no alias substring in the
+// urlbar should be highlighted.  This is the case when the user uses an alias
+// to perform a search: The popup closes (preserving the results in it), the
+// urlbar value changes to the URL of the search results page, and the search
+// results page is loaded.
 add_task(async function inputDoesntMatchHeuristicResult() {
   // Do a search using the alias.
   let searchString = `${ALIAS} aaa`;
@@ -106,10 +125,64 @@ add_task(async function inputDoesntMatchHeuristicResult() {
   Assert.equal(gURLBar.value, value);
   Assert.ok(gURLBar.value.includes(ALIAS));
   assertHighlighted(false, ALIAS);
+
+  // Reset for the next test.
+  gURLBar.search("");
 });
 
 
-async function doTest(revertBetweenSteps) {
+// Selecting a non-heuristic (non-first) search engine result with an alias and
+// empty query should put the alias in the urlbar and highlight it.
+add_task(async function nonHeuristicAliases() {
+  // Get the list of token alias engines (those with aliases that start with
+  // "@").
+  let tokenEngines = [];
+  for (let engine of Services.search.getEngines()) {
+    let aliases = [];
+    if (engine.alias) {
+      aliases.push(engine.alias);
+    }
+    aliases.push(...engine.wrappedJSObject._internalAliases);
+    let tokenAliases = aliases.filter(a => a.startsWith("@"));
+    if (tokenAliases.length) {
+      tokenEngines.push({ engine, tokenAliases });
+    }
+  }
+  if (!tokenEngines.length) {
+    Assert.ok(true, "No token alias engines, skipping task.");
+    return;
+  }
+  info("Got token alias engines: " +
+       tokenEngines.map(({ engine }) => engine.name));
+
+  // Populate the results with the list of token alias engines by searching for
+  // "@".
+  gURLBar.search("@");
+  await promiseSearchComplete();
+  await waitForAutocompleteResultAt(tokenEngines.length - 1);
+
+  // Key down to select each result in turn.  The urlbar value should be set to
+  // each alias, and each should be highlighted.
+  for (let { tokenAliases } of tokenEngines) {
+    let alias = tokenAliases[0];
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    assertHighlighted(true, alias);
+  }
+
+  // Hide the popup.
+  EventUtils.synthesizeKey("KEY_Escape");
+  await promisePopupHidden(gURLBar.popup);
+});
+
+
+async function doSimpleTest(revertBetweenSteps) {
+  // When autofill is enabled, searching for "@tes" will autofill to "@test",
+  // which gets in the way of this test task, so temporarily disable it.
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.urlbar.autoFill");
+  });
+
   // "@tes" -- not an alias, no highlight
   gURLBar.search(ALIAS.substr(0, ALIAS.length - 1));
   await promiseSearchComplete();
@@ -162,6 +235,8 @@ async function doTest(revertBetweenSteps) {
 
   EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
+
+  Services.prefs.clearUserPref("browser.urlbar.autoFill");
 }
 
 function assertAlias(aliasPresent, expectedAlias = ALIAS) {
@@ -190,8 +265,11 @@ function assertHighlighted(highlighted, expectedAlias) {
     return;
   }
   Assert.equal(selection.rangeCount, 1);
-  let index = gURLBar.value.indexOf(expectedAlias);
-  Assert.ok(index >= 0);
+  let index = gURLBar.textValue.indexOf(expectedAlias);
+  Assert.ok(
+    index >= 0,
+    `gURLBar.textValue="${gURLBar.textValue}" expectedAlias="${expectedAlias}"`
+  );
   let range = selection.getRangeAt(0);
   Assert.ok(range);
   Assert.equal(range.startOffset, index);

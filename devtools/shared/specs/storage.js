@@ -15,18 +15,18 @@ function createStorageSpec(options) {
       request: {
         host: Arg(0),
         names: Arg(1, "nullable:array:string"),
-        options: Arg(2, "nullable:json")
+        options: Arg(2, "nullable:json"),
       },
-      response: RetVal(options.storeObjectType)
+      response: RetVal(options.storeObjectType),
     },
     getFields: {
       request: {
-        subType: Arg(0, "nullable:string")
+        subType: Arg(0, "nullable:string"),
       },
       response: {
-        value: RetVal("json")
-      }
-    }
+        value: RetVal("json"),
+      },
+    },
   };
 
   // extra methods specific for storage type
@@ -34,7 +34,7 @@ function createStorageSpec(options) {
 
   childSpecs[options.typeName] = protocol.generateActorSpec({
     typeName: options.typeName,
-    methods
+    methods,
   });
 }
 
@@ -50,14 +50,14 @@ types.addDictType("cookieobject", {
   isHttpOnly: "boolean",
   creationTime: "number",
   lastAccessed: "number",
-  expires: "number"
+  expires: "number",
 });
 
 // Array of cookie store objects
 types.addDictType("cookiestoreobject", {
   total: "number",
   offset: "number",
-  data: "array:nullable:cookieobject"
+  data: "array:nullable:cookieobject",
 });
 
 // Common methods for edit/remove
@@ -65,21 +65,21 @@ const editRemoveMethods = {
   getFields: {
     request: {},
     response: {
-      value: RetVal("json")
-    }
+      value: RetVal("json"),
+    },
   },
   editItem: {
     request: {
       data: Arg(0, "json"),
     },
-    response: {}
+    response: {},
   },
   removeItem: {
     request: {
       host: Arg(0, "string"),
       name: Arg(1, "string"),
     },
-    response: {}
+    response: {},
   },
 };
 
@@ -94,32 +94,32 @@ createStorageSpec({
         request: {
           guid: Arg(0, "string"),
         },
-        response: {}
-      }
+        response: {},
+      },
     }, {
       removeAll: {
         request: {
           host: Arg(0, "string"),
-          domain: Arg(1, "nullable:string")
+          domain: Arg(1, "nullable:string"),
         },
-        response: {}
-      }
+        response: {},
+      },
     }, {
       removeAllSessionCookies: {
         request: {
           host: Arg(0, "string"),
-          domain: Arg(1, "nullable:string")
+          domain: Arg(1, "nullable:string"),
         },
-        response: {}
-      }
+        response: {},
+      },
     }
-  )
+  ),
 });
 
 // Local Storage / Session Storage store object
 types.addDictType("storageobject", {
   name: "string",
-  value: "longstring"
+  value: "longstring",
 });
 
 // Common methods for local/session storage
@@ -129,18 +129,18 @@ const storageMethods = Object.assign({},
     addItem: {
       request: {
         guid: Arg(0, "string"),
-        host: Arg(1, "nullable:string")
+        host: Arg(1, "nullable:string"),
       },
-      response: {}
-    }
+      response: {},
+    },
   },
   {
     removeAll: {
       request: {
-        host: Arg(0, "string")
+        host: Arg(0, "string"),
       },
-      response: {}
-    }
+      response: {},
+    },
   }
 );
 
@@ -148,31 +148,31 @@ const storageMethods = Object.assign({},
 types.addDictType("storagestoreobject", {
   total: "number",
   offset: "number",
-  data: "array:nullable:storageobject"
+  data: "array:nullable:storageobject",
 });
 
 createStorageSpec({
   typeName: "localStorage",
   storeObjectType: "storagestoreobject",
-  methods: storageMethods
+  methods: storageMethods,
 });
 
 createStorageSpec({
   typeName: "sessionStorage",
   storeObjectType: "storagestoreobject",
-  methods: storageMethods
+  methods: storageMethods,
 });
 
 types.addDictType("cacheobject", {
   "url": "string",
-  "status": "string"
+  "status": "string",
 });
 
 // Array of Cache store objects
 types.addDictType("cachestoreobject", {
   total: "number",
   offset: "number",
-  data: "array:nullable:cacheobject"
+  data: "array:nullable:cacheobject",
 });
 
 // Cache storage spec
@@ -185,16 +185,16 @@ createStorageSpec({
         host: Arg(0, "string"),
         name: Arg(1, "string"),
       },
-      response: {}
+      response: {},
     },
     removeItem: {
       request: {
         host: Arg(0, "string"),
         name: Arg(1, "string"),
       },
-      response: {}
+      response: {},
     },
-  }
+  },
 });
 
 // Indexed DB store object
@@ -212,20 +212,20 @@ types.addDictType("idbobject", {
   keyPath: "nullable:string",
   autoIncrement: "nullable:boolean",
   indexes: "nullable:string",
-  value: "nullable:longstring"
+  value: "nullable:longstring",
 });
 
 // Array of Indexed DB store objects
 types.addDictType("idbstoreobject", {
   total: "number",
   offset: "number",
-  data: "array:nullable:idbobject"
+  data: "array:nullable:idbobject",
 });
 
 // Result of Indexed DB delete operation: can block or throw error
 types.addDictType("idbdeleteresult", {
   blocked: "nullable:boolean",
-  error: "nullable:string"
+  error: "nullable:string",
 });
 
 createStorageSpec({
@@ -237,30 +237,30 @@ createStorageSpec({
         host: Arg(0, "string"),
         name: Arg(1, "string"),
       },
-      response: RetVal("idbdeleteresult")
+      response: RetVal("idbdeleteresult"),
     },
     removeAll: {
       request: {
         host: Arg(0, "string"),
         name: Arg(1, "string"),
       },
-      response: {}
+      response: {},
     },
     removeItem: {
       request: {
         host: Arg(0, "string"),
         name: Arg(1, "string"),
       },
-      response: {}
+      response: {},
     },
-  }
+  },
 });
 
 // Update notification object
 types.addDictType("storeUpdateObject", {
   changed: "nullable:json",
   deleted: "nullable:json",
-  added: "nullable:json"
+  added: "nullable:json",
 });
 
 // Generate a type definition for an object with actors for all storage types.
@@ -285,22 +285,22 @@ exports.storageSpec = protocol.generateActorSpec({
   events: {
     "stores-update": {
       type: "storesUpdate",
-      data: Arg(0, "storeUpdateObject")
+      data: Arg(0, "storeUpdateObject"),
     },
     "stores-cleared": {
       type: "storesCleared",
-      data: Arg(0, "json")
+      data: Arg(0, "json"),
     },
     "stores-reloaded": {
       type: "storesReloaded",
-      data: Arg(0, "json")
-    }
+      data: Arg(0, "json"),
+    },
   },
 
   methods: {
     listStores: {
       request: {},
-      response: RetVal("storelist")
+      response: RetVal("storelist"),
     },
-  }
+  },
 });

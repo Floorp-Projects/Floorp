@@ -16,7 +16,7 @@ async function ifWebGLSupported() {
   reload(target);
   const [[firstProgramActor, secondProgramActor]] = await promise.all([
     getPrograms(front, 2),
-    once(panel, EVENTS.SOURCES_SHOWN)
+    once(panel, EVENTS.SOURCES_SHOWN),
   ]);
 
   const vsEditor = await shadersEditorsView._getEditor("vs");

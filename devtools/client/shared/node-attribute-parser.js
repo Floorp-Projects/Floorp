@@ -212,7 +212,7 @@ var parsers = {
   [TYPE_URI]: function(attributeValue) {
     return [{
       type: TYPE_URI,
-      value: attributeValue
+      value: attributeValue,
     }];
   },
   [TYPE_URI_LIST]: function(attributeValue) {
@@ -227,19 +227,19 @@ var parsers = {
   [TYPE_JS_RESOURCE_URI]: function(attributeValue) {
     return [{
       type: TYPE_JS_RESOURCE_URI,
-      value: attributeValue
+      value: attributeValue,
     }];
   },
   [TYPE_CSS_RESOURCE_URI]: function(attributeValue) {
     return [{
       type: TYPE_CSS_RESOURCE_URI,
-      value: attributeValue
+      value: attributeValue,
     }];
   },
   [TYPE_IDREF]: function(attributeValue) {
     return [{
       type: TYPE_IDREF,
-      value: attributeValue
+      value: attributeValue,
     }];
   },
   [TYPE_IDREF_LIST]: function(attributeValue) {
@@ -250,7 +250,7 @@ var parsers = {
       }
     }
     return data;
-  }
+  },
 };
 
 /**
@@ -280,7 +280,7 @@ function parseAttribute(namespaceURI, tagName, attributes, attributeName) {
   if (!type) {
     return [{
       type: TYPE_STRING,
-      value: getAttribute(attributes, attributeName)
+      value: getAttribute(attributes, attributeName),
     }];
   }
 
@@ -358,7 +358,7 @@ function splitBy(value, splitChar) {
       }
       data.push({
         type: TYPE_STRING,
-        value: splitChar
+        value: splitChar,
       });
       buffer = "";
     } else {

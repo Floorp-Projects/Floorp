@@ -14,7 +14,7 @@ function promiseAddonEvent(event) {
       [event]: function(...args) {
         AddonManager.removeAddonListener(listener);
         resolve(args);
-      }
+      },
     };
 
     AddonManager.addAddonListener(listener);

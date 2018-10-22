@@ -233,7 +233,7 @@ function run_test() {
     "6ob3l3gCTXrsMnOXMeht0kPP3wLfVgXbuuO135pQnsv0c-ltRMWLe56Cm4S4Z6E7WWKLPWaj" +
     "jhAcG5dZxjffP9g7tuPP4lTUJztyc4d1z_zQZakEG7R0vN7P5_CaX9MiMzP4R7nC3H4Ba6yi" +
     "yjlGvsZwJ_C5zDQzWWs95czUbMzbDScEZ_7AWnidw91jZn-fUK3xLb6m-Zb_b4GAqZ-vnXIf" +
-    "LpLB1Nzal42BQZn7i4rhAldYdcVvy7rOMlsTUb5Zz6vpVW9LCT9lMJ7Sq1xbU-0g=="
+    "LpLB1Nzal42BQZn7i4rhAldYdcVvy7rOMlsTUb5Zz6vpVW9LCT9lMJ7Sq1xbU-0g==",
     ];
   for (let badSig of bad_signatures) {
     throws(() => {

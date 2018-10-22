@@ -92,5 +92,5 @@ PerformancePanel.prototype = {
     } else {
       this.toolbox.unhighlightTool("performance");
     }
-  }
+  },
 };

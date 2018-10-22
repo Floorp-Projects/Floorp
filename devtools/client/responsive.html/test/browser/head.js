@@ -304,7 +304,7 @@ function testMenuItems(toolWindow, button, testFn) {
 
 const selectDevice = (ui, value) => Promise.all([
   once(ui, "device-changed"),
-  selectMenuItem(ui, "#device-selector", value)
+  selectMenuItem(ui, "#device-selector", value),
 ]);
 
 const selectDevicePixelRatio = (ui, value) =>
@@ -312,7 +312,7 @@ const selectDevicePixelRatio = (ui, value) =>
 
 const selectNetworkThrottling = (ui, value) => Promise.all([
   once(ui, "network-throttling-changed"),
-  selectMenuItem(ui, "#network-throttling-menu", value)
+  selectMenuItem(ui, "#network-throttling-menu", value),
 ]);
 
 function getSessionHistory(browser) {
@@ -328,7 +328,7 @@ function getSessionHistory(browser) {
 function getContentSize(ui) {
   return spawnViewportTask(ui, {}, () => ({
     width: content.screen.width,
-    height: content.screen.height
+    height: content.screen.height,
   }));
 }
 

@@ -16,7 +16,7 @@ const { scrollCanvasGraph, HORIZONTAL_AXIS } = require("devtools/client/performa
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const {
@@ -25,7 +25,7 @@ add_task(async function() {
     DetailsView,
     WaterfallView,
     JsCallTreeView,
-    JsFlameGraphView
+    JsFlameGraphView,
   } = panel.panelWin;
 
   await startRecording(panel);
@@ -61,7 +61,7 @@ add_task(async function() {
   scrollCanvasGraph(JsFlameGraphView.graph, {
     axis: HORIZONTAL_AXIS,
     wheel: 200,
-    x: 10
+    x: 10,
   });
 
   await overviewRangeSelected;

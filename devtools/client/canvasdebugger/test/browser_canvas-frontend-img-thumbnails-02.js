@@ -21,7 +21,7 @@ async function ifTestingSupported() {
     recordingFinished,
     callListPopulated,
     thumbnailsDisplayed,
-    screenshotDisplayed
+    screenshotDisplayed,
   ]);
 
   is($all(".filmstrip-thumbnail[highlighted]").length, 0,

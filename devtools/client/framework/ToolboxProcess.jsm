@@ -270,7 +270,7 @@ BrowserToolboxProcess.prototype = {
       "-no-remote",
       "-foreground",
       "-profile", this._dbgProfilePath,
-      "-chrome", DBG_XUL
+      "-chrome", DBG_XUL,
     ];
     const environment = {
       // Disable safe mode for the new process in case this was opened via the
@@ -378,7 +378,7 @@ BrowserToolboxProcess.prototype = {
     }
     this.loader = null;
     this._telemetry = null;
-  }
+  },
 };
 
 /**
@@ -396,12 +396,12 @@ var wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.addObserver("devtools.debugger.log", {
   observe: (...args) => {
     wantLogging = Services.prefs.getBoolPref(args.pop());
-  }
+  },
 });
 
 Services.prefs.addObserver("toolbox-update-addon-options", {
   observe: (subject) => {
     const {id, options} = subject.wrappedJSObject;
     BrowserToolboxProcess.setAddonOptions(id, options);
-  }
+  },
 });

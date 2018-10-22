@@ -24,7 +24,7 @@ define(function(require, exports, module) {
     headers: JSONView.headers,
     tabActive: 0,
     prettified: false,
-    expandedNodes: new Set()
+    expandedNodes: new Set(),
   };
 
   /**
@@ -95,7 +95,7 @@ define(function(require, exports, module) {
     onExpand: function(data) {
       input.expandedNodes = TreeViewClass.getExpandedNodes(input.json);
       theApp.setState({expandedNodes: input.expandedNodes});
-    }
+    },
   };
 
   /**
@@ -123,7 +123,7 @@ define(function(require, exports, module) {
       detail: {
         type,
         value,
-      }
+      },
     };
 
     const contentMessageEvent = new CustomEvent("contentMessage", data);

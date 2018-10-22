@@ -43,7 +43,7 @@ function setup_code() {
                             getFileUrl(TEMP_FILE_1, true),
                             "function temporary1() {}\n");
   let { code, map } = node.toStringWithSourceMap({
-    file: getFileUrl(TEMP_GENERATED_SOURCE, true)
+    file: getFileUrl(TEMP_GENERATED_SOURCE, true),
   });
 
   code += "//# sourceMappingURL=" + getFileUrl(MAP_FILE_NAME, true);
@@ -73,7 +73,7 @@ function setup_new_code() {
                             getFileUrl(TEMP_FILE_2, true),
                             "function temporary2() {}\n");
   let { code, map } = node.toStringWithSourceMap({
-    file: getFileUrl(TEMP_GENERATED_SOURCE, true)
+    file: getFileUrl(TEMP_GENERATED_SOURCE, true),
   });
 
   code += "\n//# sourceMappingURL=" + getFileUrl(MAP_FILE_NAME, true);

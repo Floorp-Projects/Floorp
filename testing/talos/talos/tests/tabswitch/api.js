@@ -337,8 +337,8 @@ this.tps = class extends ExtensionAPI {
             remotePage.destroy();
             AboutNewTabService.resetNewTabURL();
           };
-        }
-      }
+        },
+      },
     };
   }
 };

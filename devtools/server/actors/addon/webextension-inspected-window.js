@@ -44,7 +44,7 @@ function createExceptionInfoResult(props) {
 
       // Apply the passed properties.
       ...props,
-    }
+    },
   };
 }
 
@@ -187,7 +187,7 @@ CustomizedReload.prototype = {
 
     if (this.customizedReloadWindows.has(window)) {
       const {
-        apiErrorResult
+        apiErrorResult,
       } = this.inspectedWindowEval(this.callerInfo, this.injectedScript, {}, window);
 
       // Log only apiErrorResult, because no one is waiting for the
@@ -247,7 +247,7 @@ CustomizedReload.prototype = {
     }
 
     this.stopped = true;
-  }
+  },
 };
 
 var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
@@ -474,7 +474,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
           description: "Inspector protocol error: %s %s",
           details: [
             "Caller extension not found for",
-            callerInfo.url
+            callerInfo.url,
           ],
         });
       }
@@ -638,7 +638,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       }
 
       return {value: evalResult};
-    }
+    },
   }
 );
 

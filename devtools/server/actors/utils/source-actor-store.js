@@ -51,7 +51,7 @@ SourceActorStore.prototype = {
     }
 
     return getSourceURL(source);
-  }
+  },
 };
 
 exports.SourceActorStore = SourceActorStore;

@@ -216,6 +216,15 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+#ifdef JS_CODEGEN_ARM64
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "arm64", value)) {
+        return false;
+    }
+
 #ifdef JS_SIMULATOR_ARM64
     value = BooleanValue(true);
 #else

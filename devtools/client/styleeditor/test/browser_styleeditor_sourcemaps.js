@@ -19,14 +19,14 @@ const contents = {
     "",
     "span {",
     "  background-color: #EEE;",
-    "}"
+    "}",
   ].join("\n"),
   "contained.scss": [
     "$pink: #f06;",
     "",
     "#header {",
     "  color: $pink;",
-    "}"
+    "}",
   ].join("\n"),
   "sourcemaps.css": [
     "div {",
@@ -35,7 +35,7 @@ const contents = {
     "span {",
     "  background-color: #EEE; }",
     "",
-    "/*# sourceMappingURL=sourcemaps.css.map */"
+    "/*# sourceMappingURL=sourcemaps.css.map */",
   ].join("\n"),
   "contained.css": [
     "#header {",
@@ -44,7 +44,7 @@ const contents = {
     "/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJma" +
     "WxlIjoiIiwic291cmNlcyI6WyJzYXNzL2NvbnRhaW5lZC5zY3NzIl0sIm5hbWVzIjpbXSwi" +
     "bWFwcGluZ3MiOiJBQUVBO0VBQ0UsT0FISyIsInNvdXJjZXNDb250ZW50IjpbIiRwaW5rOiA" +
-    "jZjA2O1xuXG4jaGVhZGVyIHtcbiAgY29sb3I6ICRwaW5rO1xufSJdfQ==*/"
+    "jZjA2O1xuXG4jaGVhZGVyIHtcbiAgY29sb3I6ICRwaW5rO1xufSJdfQ==*/",
   ].join("\n"),
   "test-stylus.styl": [
     "paulrougetpink = #f06;",
@@ -54,7 +54,7 @@ const contents = {
     "",
     "span",
     "  background-color: #EEE",
-    ""
+    "",
   ].join("\n"),
   "test-stylus.css": [
     "div {",
@@ -68,8 +68,8 @@ const contents = {
     "RUE7RUFDRSxPQUFPLEtBQVA7O0FBRUY7RUFDRSxrQkFBa0IsS0FBbEIiLCJmaWxlIjoidGV" +
     "zdC1zdHlsdXMuY3NzIiwic291cmNlc0NvbnRlbnQiOlsicGF1bHJvdWdldHBpbmsgPSAjZj" +
     "A2O1xuXG5kaXZcbiAgY29sb3I6IHBhdWxyb3VnZXRwaW5rXG5cbnNwYW5cbiAgYmFja2dyb" +
-    "3VuZC1jb2xvcjogI0VFRVxuIl19 */"
-  ].join("\n")
+    "3VuZC1jb2xvcjogI0VFRVxuIl19 */",
+  ].join("\n"),
 };
 
 const cssNames = ["sourcemaps.css", "contained.css", "test-stylus.css"];

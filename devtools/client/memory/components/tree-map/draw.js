@@ -17,7 +17,7 @@ const colorCoarseType = require("./color-coarse-type");
 const {
   hslToStyle,
   formatAbbreviatedBytes,
-  L10N
+  L10N,
 } = require("devtools/client/memory/utils");
 
 // A constant fully zoomed out dragZoom object for the main canvas
@@ -26,7 +26,7 @@ const NO_SCROLL = {
   translateY: 0,
   zoom: 0,
   offsetX: 0,
-  offsetY: 0
+  offsetY: 0,
 };
 
 // Drawing constants
@@ -87,7 +87,7 @@ const configureD3Treemap = exports.configureD3Treemap = function(canvas) {
       // The d3 layout includes the padding around everything, add some
       // extra padding to the size to compensate for thi
       canvas.width + (PADDING[1] + PADDING[3]) * ratio,
-      canvas.height + (PADDING[0] + PADDING[2]) * ratio
+      canvas.height + (PADDING[0] + PADDING[2]) * ratio,
     ])
     .sticky(true)
     .padding([

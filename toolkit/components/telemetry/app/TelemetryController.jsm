@@ -52,6 +52,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ClientID: "resource://gre/modules/ClientID.jsm",
+  CoveragePing: "resource://gre/modules/CoveragePing.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
@@ -697,6 +698,9 @@ var Impl = {
         if (!this._shuttingDown) {
           // Report the modules loaded in the Firefox process.
           TelemetryModules.start();
+
+          // Send coverage ping.
+          await CoveragePing.startup();
         }
 
         TelemetryEventPing.startup();

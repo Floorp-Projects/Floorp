@@ -32,7 +32,7 @@ function PageError(props) {
     repeat,
     serviceContainer,
     timestampsVisible,
-    isPaused
+    isPaused,
   } = props;
   const {
     id: messageId,

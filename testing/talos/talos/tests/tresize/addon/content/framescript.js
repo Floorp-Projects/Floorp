@@ -14,7 +14,7 @@
 
     sendAsyncMessage(TRESIZE_PREFIX + "chrome-run-message", {
       id: uniqueMessageId,
-      locationSearch: e.detail.locationSearch
+      locationSearch: e.detail.locationSearch,
     });
   }, false);
 })();

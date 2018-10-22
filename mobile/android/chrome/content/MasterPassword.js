@@ -49,5 +49,5 @@ var MasterPassword = {
     }
     Snackbars.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), Snackbars.LENGTH_LONG);
     return false;
-  }
+  },
 };

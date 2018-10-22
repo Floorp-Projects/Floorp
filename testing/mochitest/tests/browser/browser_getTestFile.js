@@ -33,7 +33,7 @@ function test() {
     OS.File.read(getTestFilePath("./test-dir/test-file"))
       .then(function(array) {
         is(decoder.decode(array), "foo\n", "getTestFilePath can reach sub-folder files 2/2");
-      })
+      }),
 
   ]).then(function() {
     finish();

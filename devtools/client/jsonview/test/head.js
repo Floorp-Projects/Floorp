@@ -140,7 +140,7 @@ function getElementCount(selector) {
   info("Get element count: '" + selector + "'");
 
   const data = {
-    selector: selector
+    selector: selector,
   };
 
   return executeInContent("Test:JsonView:GetElementCount", data)
@@ -153,7 +153,7 @@ function getElementText(selector) {
   info("Get element text: '" + selector + "'");
 
   const data = {
-    selector: selector
+    selector: selector,
   };
 
   return executeInContent("Test:JsonView:GetElementText", data)
@@ -174,7 +174,7 @@ function focusElement(selector) {
   info("Focus element: '" + selector + "'");
 
   const data = {
-    selector: selector
+    selector: selector,
   };
 
   return executeInContent("Test:JsonView:FocusElement", data);
@@ -191,7 +191,7 @@ function sendString(str, selector) {
 
   const data = {
     selector: selector,
-    str: str
+    str: str,
   };
 
   return executeInContent("Test:JsonView:SendString", data);

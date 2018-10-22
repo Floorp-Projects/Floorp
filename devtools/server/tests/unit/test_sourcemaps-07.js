@@ -37,7 +37,7 @@ function test_cached_original_sources() {
                             getFileUrl("temp.js"),
                             "function funcFromTemp() {}\n");
   let { code, map } = node.toStringWithSourceMap({
-    file: "abc.js"
+    file: "abc.js",
   });
   code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());
 

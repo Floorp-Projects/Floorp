@@ -30,7 +30,7 @@ class TargetList extends Component {
       name: PropTypes.string,
       sort: PropTypes.bool,
       targetClass: PropTypes.func.isRequired,
-      targets: PropTypes.arrayOf(PropTypes.object).isRequired
+      targets: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
 
@@ -42,7 +42,7 @@ class TargetList extends Component {
       error,
       targetClass,
       targets,
-      sort
+      sort,
     } = this.props;
 
     if (sort) {

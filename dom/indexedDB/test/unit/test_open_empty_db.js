@@ -11,7 +11,7 @@ function* testSteps()
     // "",
     null,
     undefined,
-    this.window ? window.location.pathname : "Splendid Test"
+    this.window ? window.location.pathname : "Splendid Test",
   ];
 
   const version = 1;

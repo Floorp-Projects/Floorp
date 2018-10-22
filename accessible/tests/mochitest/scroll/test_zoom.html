@@ -21,7 +21,7 @@
     function testScrollToPoint() {
       // scrollToPoint relative screen
       var anchor = getAccessible("bottom1");
-      let [x, /* y */] = getPos(anchor);
+      let [x /* y */] = getPos(anchor);
       var [docX, docY] = getPos(document);
 
       anchor.scrollToPoint(COORDTYPE_SCREEN_RELATIVE, docX, docY);
@@ -29,7 +29,7 @@
 
       // scrollToPoint relative window
       anchor = getAccessible("bottom2");
-      [x, /* y */] = getPos(anchor);
+      [x /* y */] = getPos(anchor);
       var wnd = getRootAccessible().DOMDocument.defaultView;
       var [screenX, screenY] = CSSToDevicePixels(wnd, wnd.screenX, wnd.screenY);
       let scrollToX = docX - screenX, scrollToY = docY - screenY;
@@ -39,7 +39,7 @@
 
       // scrollToPoint relative parent
       anchor = getAccessible("bottom3");
-      [x, /* y */] = getPos(anchor);
+      [x /* y */] = getPos(anchor);
       var [parentX, parentY] = getPos(anchor.parent);
       scrollToX = parentX - docX;
       scrollToY = parentY - docY;

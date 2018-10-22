@@ -372,8 +372,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           // At this point, no events have been deferred for this search, and we
           // need to decide whether `event` is the first one that should be.
+          if (!this._keyCodesToDefer.has(event.keyCode) &&
+              !(/Mac/.test(navigator.platform) &&
+                event.ctrlKey &&
+                (event.key === "n" || event.key === "p") &&
+                this.popupOpen)) {
 
-          if (!this._keyCodesToDefer.has(event.keyCode)) {
             // Not a key that should trigger deferring.
             return false;
           }

@@ -379,7 +379,8 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
         BINJS_TRY_DECL(dotGen, factory_.newName(dotGenerator,
                                                 tokenizer_->pos(tokenizer_->offset()), cx_));
 
-        BINJS_TRY(factory_.prependInitialYield(&body->as<ListNode>(), dotGen));
+        ListNode* stmtList = &body->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
+        BINJS_TRY(factory_.prependInitialYield(stmtList, dotGen));
     }
 
     // Check all our bindings after maybe adding function metavars.

@@ -51,7 +51,7 @@ AboutPage.prototype = {
   unregister() {
     Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(
       this.classID, this);
-  }
+  },
 };
 
 const gRegisteredPages = new Map();

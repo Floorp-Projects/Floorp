@@ -244,7 +244,7 @@ class FirefoxConnector {
     const event = {
       name: marker.name == "document::DOMContentLoaded" ?
             "dom-interactive" : "dom-complete",
-      time: marker.unixTime / 1000
+      time: marker.unixTime / 1000,
     };
 
     if (this.actions) {

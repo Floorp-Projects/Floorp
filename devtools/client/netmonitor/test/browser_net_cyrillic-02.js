@@ -36,7 +36,7 @@ add_task(async function() {
     CYRILLIC_URL,
     {
       status: 200,
-      statusText: "OK"
+      statusText: "OK",
     });
 
   wait = waitForDOM(document, "#headers-panel");

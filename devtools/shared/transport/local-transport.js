@@ -106,7 +106,7 @@ LocalDebuggerTransport.prototype = {
             return copying;
           },
           stream: pipe.inputStream,
-          done: receiverResolve
+          done: receiverResolve,
         };
 
         this.other.hooks.onBulkPacket(packet);
@@ -129,7 +129,7 @@ LocalDebuggerTransport.prototype = {
               return copying;
             },
             stream: pipe.outputStream,
-            done: copyResolve
+            done: copyResolve,
           });
         })
         // Await the result of writing to the stream
@@ -179,7 +179,7 @@ LocalDebuggerTransport.prototype = {
         this._deepFreeze(object[prop]);
       }
     }
-  }
+  },
 };
 
 exports.LocalDebuggerTransport = LocalDebuggerTransport;

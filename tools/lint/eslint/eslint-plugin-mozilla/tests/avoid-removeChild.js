@@ -29,7 +29,7 @@ ruleTester.run("avoid-removeChild", rule, {
     "elt.remove();",
     "elt.parentNode.parentNode.removeChild(elt2.parentNode);",
     "elt.parentNode.removeChild(elt2);",
-    "elt.removeChild(elt2);"
+    "elt.removeChild(elt2);",
   ],
   invalid: [
     invalidCode("elt.parentNode.removeChild(elt);"),
@@ -38,6 +38,6 @@ ruleTester.run("avoid-removeChild", rule, {
     invalidCode("$('e').parentNode.removeChild($('e'));"),
     invalidCode("elt.removeChild(elt.firstChild);",
                 "use element.firstChild.remove() instead of " +
-                "element.removeChild(element.firstChild)")
-  ]
+                "element.removeChild(element.firstChild)"),
+  ],
 });

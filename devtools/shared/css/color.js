@@ -8,8 +8,8 @@ const Services = require("Services");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {cssColors} = require("devtools/shared/css/color-db");
 
+loader.lazyRequireGetter(this, "CSS_ANGLEUNIT", "devtools/shared/css/constants", true);
 loader.lazyRequireGetter(this, "getAngleValueInDegrees", "devtools/shared/css/parsing-utils", true);
-loader.lazyRequireGetter(this, "CSS_ANGLEUNIT", "devtools/shared/css/properties-db", true);
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
@@ -18,7 +18,7 @@ const SPECIALVALUES = new Set([
   "initial",
   "inherit",
   "transparent",
-  "unset"
+  "unset",
 ]);
 
 /**
@@ -85,7 +85,7 @@ CssColor.COLORUNIT = {
   "hex": "hex",
   "name": "name",
   "rgb": "rgb",
-  "hsl": "hsl"
+  "hsl": "hsl",
 };
 
 CssColor.prototype = {
@@ -417,7 +417,7 @@ CssColor.prototype = {
       h,
       s,
       l,
-      a: parseFloat(a.toFixed(1))
+      a: parseFloat(a.toFixed(1)),
     };
   },
 
@@ -1180,7 +1180,7 @@ function blendColors(foregroundColor, backgroundColor = [ 255, 255, 255, 1 ]) {
     (1 - fgA) * bgR + fgA * fgR,
     (1 - fgA) * bgG + fgA * fgG,
     (1 - fgA) * bgB + fgA * fgB,
-    fgA + bgA * (1 - fgA)
+    fgA + bgA * (1 - fgA),
   ];
 }
 

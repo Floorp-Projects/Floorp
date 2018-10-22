@@ -44,7 +44,7 @@ var searchDiscoveryTests = [
   { type: " application/opensearchdescription+xml ", text: "type may contain extra whitespace" },
   { type: "application/opensearchdescription+xml; charset=utf-8", text: "type may have optional parameters (RFC2046)" },
   { type: "aapplication/opensearchdescription+xml", pass: false, text: "type should not be loosely matched" },
-  { rel: "search search search", count: 1, text: "only one engine should be added" }
+  { rel: "search search search", count: 1, text: "only one engine should be added" },
 ];
 
 function execute_search_test(test) {
@@ -96,7 +96,7 @@ var feedDiscoveryTests = [
   { type: " application/atom+xml ", text: "type may contain extra whitespace" },
   { type: "application/atom+xml; charset=utf-8", text: "type may have optional parameters (RFC2046)" },
   { type: "aapplication/atom+xml", pass: false, text: "type should not be loosely matched" },
-  { rel: "alternate alternate alternate", count: 1, text: "only one feed should be added" }
+  { rel: "alternate alternate alternate", count: 1, text: "only one feed should be added" },
 ];
 
 function execute_feed_test(test) {

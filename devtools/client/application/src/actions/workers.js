@@ -11,7 +11,7 @@ const {
 function updateWorkers(workers) {
   return {
     type: UPDATE_WORKERS,
-    workers
+    workers,
   };
 }
 

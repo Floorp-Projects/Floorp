@@ -26,8 +26,8 @@ use internal_types::{FastHashMap, FastHashSet};
 use picture::{PictureCompositeMode, PictureIdGenerator, PicturePrimitive};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey};
-use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
-use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive};
+use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveStore};
+use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive, PictureIndex};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
@@ -159,9 +159,9 @@ pub struct DisplayListFlattener<'a> {
     /// The estimated count of primtives we expect to encounter during flattening.
     prim_count_estimate: usize,
 
-    /// The root primitive index for this flattener. This is the primitive
+    /// The root picture index for this flattener. This is the picture
     /// to start the culling phase from.
-    pub root_prim_index: PrimitiveIndex,
+    pub root_pic_index: PictureIndex,
 }
 
 impl<'a> DisplayListFlattener<'a> {
@@ -201,7 +201,7 @@ impl<'a> DisplayListFlattener<'a> {
             picture_id_generator,
             resources,
             prim_count_estimate: 0,
-            root_prim_index: PrimitiveIndex(0),
+            root_pic_index: PictureIndex(0),
         };
 
         flattener.push_root(
@@ -1064,9 +1064,10 @@ impl<'a> DisplayListFlattener<'a> {
             stacking_context.requested_raster_space,
             stacking_context.normal_primitives,
         );
+        let leaf_pic_index = self.prim_store.create_picture(leaf_picture);
 
         // Create a brush primitive that draws this picture.
-        let leaf_prim = BrushPrimitive::new_picture(leaf_picture);
+        let leaf_prim = BrushPrimitive::new_picture(leaf_pic_index);
 
         // Add the brush to the parent picture.
         let leaf_prim_index = self.prim_store.add_primitive(
@@ -1078,6 +1079,7 @@ impl<'a> DisplayListFlattener<'a> {
         // Create a chain of pictures based on presence of filters,
         // mix-blend-mode and/or 3d rendering context containers.
         let mut current_prim_index = leaf_prim_index;
+        let mut current_pic_index = leaf_pic_index;
 
         // For each filter, create a new image with that composite mode.
         for filter in &stacking_context.composite_ops.filters {
@@ -1100,8 +1102,10 @@ impl<'a> DisplayListFlattener<'a> {
                     ),
                 ],
             );
+            let filter_pic_index = self.prim_store.create_picture(filter_picture);
+            current_pic_index = filter_pic_index;
 
-            let filter_prim = BrushPrimitive::new_picture(filter_picture);
+            let filter_prim = BrushPrimitive::new_picture(filter_pic_index);
 
             current_prim_index = self.prim_store.add_primitive(
                 &LayoutRect::zero(),
@@ -1111,7 +1115,7 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Run the optimize pass on this picture, to see if we can
             // collapse opacity and avoid drawing to an off-screen surface.
-            self.prim_store.optimize_picture_if_possible(current_prim_index);
+            self.prim_store.optimize_picture_if_possible(current_pic_index);
         }
 
         // Same for mix-blend-mode.
@@ -1133,8 +1137,10 @@ impl<'a> DisplayListFlattener<'a> {
                     ),
                 ],
             );
+            let blend_pic_index = self.prim_store.create_picture(blend_picture);
+            current_pic_index = blend_pic_index;
 
-            let blend_prim = BrushPrimitive::new_picture(blend_picture);
+            let blend_prim = BrushPrimitive::new_picture(blend_pic_index);
 
             current_prim_index = self.prim_store.add_primitive(
                 &LayoutRect::zero(),
@@ -1167,8 +1173,10 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.requested_raster_space,
                 prims,
             );
+            let container_pic_index = self.prim_store.create_picture(container_picture);
+            current_pic_index = container_pic_index;
 
-            let container_prim = BrushPrimitive::new_picture(container_picture);
+            let container_prim = BrushPrimitive::new_picture(container_pic_index);
 
             current_prim_index = self.prim_store.add_primitive(
                 &LayoutRect::zero(),
@@ -1181,7 +1189,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         if self.sc_stack.is_empty() {
             // This must be the root stacking context
-            self.root_prim_index = current_prim_index;
+            self.root_pic_index = current_pic_index;
             return;
         }
 
@@ -1500,7 +1508,8 @@ impl<'a> DisplayListFlattener<'a> {
                         );
 
                         // Create the primitive to draw the shadow picture into the scene.
-                        let shadow_prim = BrushPrimitive::new_picture(shadow_pic);
+                        let shadow_pic_index = self.prim_store.create_picture(shadow_pic);
+                        let shadow_prim = BrushPrimitive::new_picture(shadow_pic_index);
                         let shadow_prim_index = self.prim_store.add_primitive(
                             &LayoutRect::zero(),
                             &max_clip,

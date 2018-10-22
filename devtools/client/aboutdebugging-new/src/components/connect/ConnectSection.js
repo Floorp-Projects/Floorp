@@ -25,12 +25,12 @@ class ConnectSection extends PureComponent {
       },
       dom.h2(
         {
-          className: "page__section__title"
+          className: "page__section__title",
         },
         dom.img(
           {
             className: "page__section__icon",
-            src: this.props.icon
+            src: this.props.icon,
           }
         ),
         this.props.title

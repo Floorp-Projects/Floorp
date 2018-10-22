@@ -33,14 +33,14 @@ var OfflineApps = {
       callback: function(aChecked) {
         if (aChecked)
           OfflineApps.disallowSite(aContentWindow.document);
-      }
+      },
     },
     {
       label: strings.GetStringFromName("offlineApps.allow"),
       callback: function() {
         OfflineApps.allowSite(aContentWindow.document);
       },
-      positive: true
+      positive: true,
     }];
 
     let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name + "'" : host;
@@ -73,5 +73,5 @@ var OfflineApps = {
     let manifestURI = Services.io.newURI(manifest, aDocument.characterSet, aDocument.documentURIObject);
     let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].getService(Ci.nsIOfflineCacheUpdateService);
     updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject, aDocument.nodePrincipal, window);
-  }
+  },
 };

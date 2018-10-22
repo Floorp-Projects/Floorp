@@ -165,7 +165,7 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     const dataScaleY = this.dataScaleY = height / this._calcMaxHeight({
       data: this._data,
       dataScaleX: dataScaleX,
-      minBarsWidth: minBarsWidth
+      minBarsWidth: minBarsWidth,
     }) * this.dampenValuesFactor;
 
     // Draw the graph.
@@ -214,7 +214,7 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
             start: prevRight,
             end: blockRight,
             top: bottom - averageHeight,
-            bottom: bottom
+            bottom: bottom,
           });
 
           if (prevHeight[tick] === undefined) {
@@ -283,7 +283,7 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     const pattern = AbstractCanvasGraph.getStripePattern({
       ownerDocument: this._document,
       backgroundColor: GRAPH_HIGHLIGHTS_MASK_BACKGROUND,
-      stripesColor: GRAPH_HIGHLIGHTS_MASK_STRIPES
+      stripesColor: GRAPH_HIGHLIGHTS_MASK_STRIPES,
     });
     ctx.fillStyle = pattern;
     ctx.fillRect(0, 0, width, height);
@@ -461,7 +461,7 @@ BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
   _onLegendMouseUp: function(e) {
     e.preventDefault();
     e.stopPropagation();
-  }
+  },
 });
 
 /**

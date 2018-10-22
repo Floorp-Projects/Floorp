@@ -156,7 +156,7 @@ var openStoragePanel = async function(cb) {
 
       return {
         toolbox: toolbox,
-        storage: storage
+        storage: storage,
       };
     }
   }
@@ -183,7 +183,7 @@ var openStoragePanel = async function(cb) {
 
   return {
     toolbox: toolbox,
-    storage: storage
+    storage: storage,
   };
 };
 
@@ -411,7 +411,7 @@ function findVariableViewProperties(ruleArray, parsed) {
 
       const expandOptions = {
         rootVariable: gUI.view.getScopeAtIndex(parsed ? 1 : 0),
-        expandTo: rule.name
+        expandTo: rule.name,
       };
 
       variablesViewExpandTo(expandOptions).then(function onSuccess(prop) {
@@ -562,7 +562,7 @@ function once(target, eventName, useCapture = false) {
     for (const [add, remove] of [
       ["addEventListener", "removeEventListener"],
       ["addListener", "removeListener"],
-      ["on", "off"]
+      ["on", "off"],
     ]) {
       if ((add in target) && (remove in target)) {
         target[add](eventName, function onEvent(...aArgs) {

@@ -176,7 +176,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     const actor = this.getNetworkEventActor(data.channelId);
     this.messageManager.sendAsyncMessage("debug:get-network-event-actor:response", {
       channelId: data.channelId,
-      actor: actor.form()
+      actor: actor.form(),
     });
   },
 
@@ -212,7 +212,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     const packet = {
       from: this.parentID,
       type: "networkEvent",
-      eventActor: actor.form()
+      eventActor: actor.form(),
     };
 
     this.conn.send(packet);

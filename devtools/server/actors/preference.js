@@ -55,7 +55,7 @@ var PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
         }
         prefs[name] = {
           value: value,
-          hasUserValue: Services.prefs.prefHasUserValue(name)
+          hasUserValue: Services.prefs.prefHasUserValue(name),
         };
       } catch (e) {
         // pref exists but has no user or default value

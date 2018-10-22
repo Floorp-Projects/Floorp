@@ -13,7 +13,7 @@ const { createValueGrip } = require("devtools/server/actors/object/utils");
 const AutomationTimeline = require("./utils/automation-timeline");
 const {
   audionodeSpec,
-  webAudioSpec
+  webAudioSpec,
 } = require("devtools/shared/specs/webaudio");
 const { WebAudioFront } = require("devtools/shared/fronts/webaudio");
 
@@ -25,7 +25,7 @@ const AUTOMATION_GRANULARITY = 2000;
 const AUTOMATION_GRANULARITY_MAX = 6000;
 
 const AUDIO_GLOBALS = [
-  "BaseAudioContext", "AudioContext", "AudioNode", "AudioParam"
+  "BaseAudioContext", "AudioContext", "AudioNode", "AudioParam",
 ];
 
 /**
@@ -393,7 +393,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
   _recordAutomationEvent: function(paramName, eventName, args) {
     const timeline = this.automation[paramName];
     timeline[eventName].apply(timeline, args);
-  }
+  },
 });
 
 /**
@@ -462,7 +462,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
       startRecording: true,
       performReload: reload,
       holdWeak: true,
-      storeCalls: false
+      storeCalls: false,
     });
     // Bind to `window-ready` so we can reenable recording on the
     // call watcher
@@ -540,7 +540,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
       node: nodeActor,
       paramName: wrappedParam._paramName,
       eventName: name,
-      args: args
+      args: args,
     });
   },
 
@@ -637,7 +637,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
 
     this.emit("connect-node", {
       source: sourceActor,
-      dest: destActor
+      dest: destActor,
     });
   },
 
@@ -650,7 +650,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     this.emit("connect-param", {
       source: sourceActor,
       dest: destActor,
-      param: param._paramName
+      param: param._paramName,
     });
   },
 
@@ -670,7 +670,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     this.emit("param-change", {
       source: actor,
       param: param,
-      value: value
+      value: value,
     });
   },
 
@@ -735,7 +735,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
       node: node,
       paramName: paramName,
       eventName: eventName,
-      args: args
+      args: args,
     });
   },
 
@@ -753,7 +753,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
       this._nativeToActorID.clear();
     }
     Services.obs.removeObserver(this, "webaudio-node-demise");
-  }
+  },
 });
 
 /**
@@ -779,7 +779,7 @@ function isAudioParam(node, prop) {
 function constructError(err) {
   return {
     message: err.message,
-    type: err.constructor.name
+    type: err.constructor.name,
   };
 }
 
@@ -792,14 +792,14 @@ function constructError(err) {
 function CollectedAudioNodeError() {
   return {
     message: "AudioNode has been garbage collected and can no longer be reached.",
-    type: "UnreachableAudioNode"
+    type: "UnreachableAudioNode",
   };
 }
 
 function InvalidCommandError() {
   return {
     message: "The command on AudioNode is invalid.",
-    type: "InvalidCommand"
+    type: "InvalidCommand",
   };
 }
 
@@ -824,9 +824,9 @@ function createObjectGrip(value) {
     type: "object",
     preview: {
       kind: "ObjectWithText",
-      text: ""
+      text: "",
     },
-    class: getConstructorName(value)
+    class: getConstructorName(value),
   };
 }
 

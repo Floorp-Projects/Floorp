@@ -42,7 +42,7 @@ function define_code() {
     new SourceNode(3, 0, "a.js", "}\n"),
   ])).toStringWithSourceMap({
     file: "abc.js",
-    sourceRoot: "http://example.com/"
+    sourceRoot: "http://example.com/",
   });
 
   code += "//# sourceMappingURL=data:text/json," + map.toString();

@@ -69,7 +69,7 @@ PresentationControlService.prototype = {
 
             self._serverSocketInit(serverSocketPort, aCert);
           }
-        }
+        },
       });
     } else {
       this._serverSocket = Cc["@mozilla.org/network/server-socket;1"]

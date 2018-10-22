@@ -111,7 +111,7 @@ Object.assign({
         const { delta, measurement } = data;
         this._memory.push({
           delta: delta - this._startTime,
-          value: measurement.total / 1024 / 1024
+          value: measurement.total / 1024 / 1024,
         });
         break;
       }
@@ -146,7 +146,7 @@ Object.assign({
     }
   },
 
-  toString: () => "[object PerformanceRecordingFront]"
+  toString: () => "[object PerformanceRecordingFront]",
 }, PerformanceRecordingCommon));
 
 exports.PerformanceRecordingFront = PerformanceRecordingFront;

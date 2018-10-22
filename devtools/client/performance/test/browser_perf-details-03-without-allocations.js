@@ -19,7 +19,7 @@ const { setSelectedRecording } = require("devtools/client/performance/test/helpe
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const {
@@ -28,7 +28,7 @@ add_task(async function() {
     DetailsView,
     WaterfallView,
     MemoryCallTreeView,
-    MemoryFlameGraphView
+    MemoryFlameGraphView,
   } = panel.panelWin;
 
   const flameBtn = $("toolbarbutton[data-view='memory-flamegraph']");

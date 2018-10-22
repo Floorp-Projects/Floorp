@@ -45,7 +45,7 @@ const PushSubscriptionActor = protocol.ActorClassWithSpec(pushSubscriptionSpec, 
       endpoint: subscription.endpoint,
       pushCount: subscription.pushCount,
       lastPush: subscription.lastPush,
-      quota: subscription.quota
+      quota: subscription.quota,
     };
   },
 
@@ -69,7 +69,7 @@ const ServiceWorkerActor = protocol.ActorClassWithSpec(serviceWorkerSpec, {
     return {
       url: this._worker.scriptSpec,
       state: this._worker.state,
-      fetch: this._worker.handlesFetchEvents
+      fetch: this._worker.handlesFetchEvents,
     };
   },
 
@@ -206,7 +206,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
       this._registration.principal);
 
     Services.ppmm.broadcastAsyncMessage("serviceWorkerRegistration:start", {
-      scope: this._registration.scope
+      scope: this._registration.scope,
     });
     return { type: "started" };
   },
@@ -219,7 +219,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
         console.error("Failed to unregister the service worker for " + scope);
       },
       QueryInterface: ChromeUtils.generateQI(
-        [Ci.nsIServiceWorkerUnregisterCallback])
+        [Ci.nsIServiceWorkerUnregisterCallback]),
     };
     swm.propagateUnregister(principal, unregisterCallback, scope);
 

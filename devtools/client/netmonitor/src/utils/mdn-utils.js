@@ -85,7 +85,7 @@ const SUPPORTED_HEADERS = [
   "X-Forwarded-Host",
   "X-Forwarded-Proto",
   "X-Frame-Options",
-  "X-XSS-Protection"
+  "X-XSS-Protection",
 ];
 
 /**
@@ -138,7 +138,7 @@ const SUPPORTED_HTTP_CODES = [
     "503",
     "504",
     "505",
-    "511"
+    "511",
 ];
 
 const MDN_URL = "https://developer.mozilla.org/docs/";

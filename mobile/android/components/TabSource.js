@@ -91,7 +91,7 @@ TabSource.prototype = {
         });
       }
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TabSource]);

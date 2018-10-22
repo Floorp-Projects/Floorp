@@ -84,7 +84,7 @@ NSSDialogs.prototype = {
                                   this.getString("downloadCert.message1"),
                                   [ this.getString("nssdialogs.ok.label"),
                                     this.getString("downloadCert.viewCert.label"),
-                                    this.getString("nssdialogs.cancel.label")
+                                    this.getString("nssdialogs.cancel.label"),
                                   ], aCtx);
 
       prompt.addCheckbox({ id: "trustSSL", label: this.getString("downloadCert.trustSSL"), checked: false })
@@ -116,7 +116,7 @@ NSSDialogs.prototype = {
     let prompt = this.getPrompt(this.getString("pkcs12.getpassword.title"),
                                 this.getString("pkcs12.getpassword.message"),
                                 [ this.getString("nssdialogs.ok.label"),
-                                  this.getString("nssdialogs.cancel.label")
+                                  this.getString("nssdialogs.cancel.label"),
                                 ], aCtx).addPassword({id: "pw"});
     let response = this.showPrompt(prompt);
     if (response.button != 0) {
@@ -250,7 +250,7 @@ NSSDialogs.prototype = {
       }).addCheckbox({
         id: "rememberBox",
         label: this.getString("clientAuthAsk.remember.label"),
-        checked: rememberSetting
+        checked: rememberSetting,
       });
       let response = this.showPrompt(prompt);
       selectedIndex.value = response.nicknames;
@@ -268,7 +268,7 @@ NSSDialogs.prototype = {
       }
       return false;
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NSSDialogs]);

@@ -266,7 +266,7 @@ var WiFiScanner = {
       return;
     }
     WiFiScanner.updateRegistration();
-  }
+  },
 
 };
 
@@ -287,7 +287,7 @@ var StaticScanner = {
       runtimes.push(gLocalRuntime);
     }
     return runtimes;
-  }
+  },
 };
 
 EventEmitter.decorate(StaticScanner);
@@ -395,9 +395,9 @@ WiFiRuntime.prototype = {
         }
         promptWindow.close();
         promptWindow = null;
-      }
+      },
     };
-  }
+  },
 };
 
 // For testing use only

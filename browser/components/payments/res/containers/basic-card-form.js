@@ -151,6 +151,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       return;
     }
 
+    if (!basicCardPage.selectedStateKey) {
+      throw new Error("A `selectedStateKey` is required");
+    }
+
     let editing = !!basicCardPage.guid;
     this.cancelButton.textContent = this.dataset.cancelButtonLabel;
     this.backButton.textContent = this.dataset.backButtonLabel;

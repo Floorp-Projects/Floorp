@@ -109,7 +109,7 @@ function resetColumns() {
 function resizeWaterfall(width) {
   return {
     type: WATERFALL_RESIZE,
-    width
+    width,
   };
 }
 

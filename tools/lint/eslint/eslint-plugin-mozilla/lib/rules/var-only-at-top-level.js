@@ -29,6 +29,6 @@ module.exports = function(context) {
 
         context.report(node, "Unexpected var, use let or const instead.");
       }
-    }
+    },
   };
 };

@@ -17,8 +17,8 @@ const DATA = [
     value: null,
     extra: {
       host: "right",
-      width: "1440"
-    }
+      width: "1440",
+    },
   },
   {
     timestamp: null,
@@ -28,9 +28,9 @@ const DATA = [
     value: null,
     extra: {
       host: "bottom",
-      width: "1440"
-    }
-  }
+      width: "1440",
+    },
+  },
 ];
 
 add_task(async function() {

@@ -20,7 +20,7 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 
 var { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",
-  window
+  window,
 });
 
 const React = browserRequire("devtools/client/shared/vendor/react");
@@ -132,7 +132,7 @@ var TEST_TREE = {
     L: [],
     M: ["N"],
     N: ["O"],
-    O: []
+    O: [],
   },
   parent: {
     A: null,
@@ -149,7 +149,7 @@ var TEST_TREE = {
     L: "E",
     M: null,
     N: "M",
-    O: "N"
+    O: "N",
   },
   expanded: new Set(),
 };
@@ -158,7 +158,7 @@ var TEST_TREE = {
  * Frame
  */
 function checkFrameString({
-  el, file, line, column, source, functionName, shouldLink, tooltip
+  el, file, line, column, source, functionName, shouldLink, tooltip,
 }) {
   const $ = selector => el.querySelector(selector);
 

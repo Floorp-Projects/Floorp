@@ -31,7 +31,7 @@ function enableActorReleaser(hud) {
 
         // Reset `removedActors` in message reducer.
         state = reducer(state, {
-          type: REMOVED_ACTORS_CLEAR
+          type: REMOVED_ACTORS_CLEAR,
         });
       }
 

@@ -23,7 +23,7 @@ const MovementGranularity = {
   CHARACTER: 1,
   WORD: 2,
   LINE: 4,
-  PARAGRAPH: 8
+  PARAGRAPH: 8,
 };
 
 var AccessFuTest = {
@@ -45,7 +45,7 @@ var AccessFuTest = {
           return;
         }
         aListenerFunc.apply(listener);
-      }
+      },
     };
     Services.console.registerListener(listener);
     return listener;
@@ -160,7 +160,7 @@ var AccessFuTest = {
         AccessFuTest.finish();
       }
     });
-  }
+  },
 };
 
 class AccessFuContentTestRunner {
@@ -275,8 +275,8 @@ class AccessFuContentTestRunner {
         data: {
           inputType: "gesture",
           origin: "top",
-          ...aArgs
-        }
+          ...aArgs,
+        },
       });
     }, ...aExpectedEvents);
   }
@@ -313,8 +313,8 @@ class AccessFuContentTestRunner {
       this.sendMessage({
         name: "AccessFu:ClearCursor",
         data: {
-          origin: "top"
-        }
+          origin: "top",
+        },
       });
     });
   }
@@ -324,8 +324,8 @@ class AccessFuContentTestRunner {
       this.sendMessage({
         name: "AccessFuTest:Focus",
         data: {
-          selector: aSelector
-        }
+          selector: aSelector,
+        },
       });
     }, ...aExpectedEvents);
   }
@@ -342,8 +342,8 @@ class AccessFuContentTestRunner {
         name: "AccessFu:Activate",
         data: {
           origin: "top",
-          offset: aOffset
-        }
+          offset: aOffset,
+        },
       });
     }, ...aExpectedEvents);
   }
@@ -370,14 +370,14 @@ class AccessFuContentTestRunner {
   androidScrollForward() {
     this.sendMessage({
       name: "AccessFu:AndroidScroll",
-      data: { origin: "top", direction: "forward" }
+      data: { origin: "top", direction: "forward" },
     });
   }
 
   androidScrollBackward() {
     this.sendMessage({
       name: "AccessFu:AndroidScroll",
-      data: { origin: "top", direction: "backward" }
+      data: { origin: "top", direction: "backward" },
     });
   }
 
@@ -387,8 +387,8 @@ class AccessFuContentTestRunner {
         name: "AccessFu:MoveByGranularity",
         data: {
           direction: aDirection,
-          granularity: aGranularity
-        }
+          granularity: aGranularity,
+        },
       });
     }, ...aExpectedEvents);
   }

@@ -20,9 +20,8 @@ add_task(async function test_openPreferences() {
       merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
     });
 
-    let prefsWindowPromise = BrowserTestUtils.waitForNewWindow({
-      url: "about:preferences#privacy",
-    });
+    let prefsTabPromise = BrowserTestUtils.waitForNewTab(gBrowser,
+                                                         "about:preferences#privacy-form-autofill");
 
     let prefsLoadedPromise = TestUtils.topicObserved("sync-pane-loaded");
 
@@ -49,11 +48,11 @@ add_task(async function test_openPreferences() {
       isMac: AppConstants.platform == "macosx",
     });
 
-    let browserWin = await prefsWindowPromise;
-    ok(browserWin, "Ensure a window was opened");
+    let prefsTab = await prefsTabPromise;
+    ok(prefsTab, "Ensure a tab was opened");
     await prefsLoadedPromise;
 
-    await BrowserTestUtils.closeWindow(browserWin);
+    await BrowserTestUtils.removeTab(prefsTab);
 
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");

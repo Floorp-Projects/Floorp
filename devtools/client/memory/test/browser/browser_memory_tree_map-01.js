@@ -19,7 +19,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   Object.assign(div.style, {
     width: "100px",
     height: "200px",
-    position: "absolute"
+    position: "absolute",
   });
 
   document.body.appendChild(div);

@@ -7,7 +7,7 @@ export const baseKeys = {
   addon_version: Joi.string().required(),
   locale: Joi.string().required(),
   session_id: Joi.string(),
-  page: Joi.valid(["about:home", "about:newtab", "about:welcome", "unknown"]),
+  page: Joi.valid(["about:home", "about:newtab", "about:welcome", "both", "unknown"]),
   user_prefs: Joi.number().integer().required(),
 };
 
@@ -24,12 +24,16 @@ export const eventsTelemetryExtraKeys = Joi.object().keys({
 export const UserEventPing = Joi.object().keys(Object.assign({}, baseKeys, {
   session_id: baseKeys.session_id.required(),
   page: baseKeys.page.required(),
-  source: Joi.string().required(),
+  source: Joi.string(),
   event: Joi.string().required(),
   action: Joi.valid("activity_stream_user_event").required(),
   metadata_source: Joi.string(),
   highlight_type: Joi.valid(["bookmarks", "recommendation", "history"]),
   recommender_type: Joi.string(),
+  value: Joi.object().keys({
+    newtab_url_category: Joi.string(),
+    home_url_category: Joi.string(),
+  }),
 }));
 
 export const UTUserEventPing = Joi.array().items(

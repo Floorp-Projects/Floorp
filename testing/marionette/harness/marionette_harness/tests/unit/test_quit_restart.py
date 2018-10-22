@@ -200,26 +200,19 @@ class TestQuitRestart(MarionetteTestCase):
 
     @unittest.skipIf(sys.platform.startswith("win"), "Bug 1493796")
     def test_in_app_restart_with_callback_but_process_quit(self):
-        timeout_shutdown = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
-        # Wait at least 70s for the hang monitor in case of a shutdown hang
-        self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 70
-
-        try:
-            with self.assertRaisesRegexp(IOError, "Process unexpectedly quit without restarting"):
-                self.marionette.restart(in_app=True, callback=lambda: self.shutdown(restart=False))
-        finally:
-            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout_shutdown
+        with self.assertRaisesRegexp(IOError, "Process unexpectedly quit without restarting"):
+            self.marionette.restart(in_app=True, callback=lambda: self.shutdown(restart=False))
 
     @unittest.skipIf(sys.platform.startswith("win"), "Bug 1493796")
     def test_in_app_restart_with_callback_missing_shutdown(self):
         try:
-            timeout_shutdown = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
-            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 5
+            timeout_shutdown = self.marionette.shutdown_timeout
+            self.marionette.shutdown_timeout = 5
 
             with self.assertRaisesRegexp(IOError, "the connection to Marionette server is lost"):
                 self.marionette.restart(in_app=True, callback=lambda: False)
         finally:
-            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout_shutdown
+            self.marionette.shutdown_timeout = timeout_shutdown
 
     @skip("Bug 1397612 - Hang of Marionette client after the restart")
     def test_in_app_restart_safe_mode(self):
@@ -275,13 +268,13 @@ class TestQuitRestart(MarionetteTestCase):
 
     def test_in_app_quit_with_callback_missing_shutdown(self):
         try:
-            timeout = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
-            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 5
+            timeout = self.marionette.shutdown_timeout
+            self.marionette.shutdown_timeout = 5
 
             with self.assertRaisesRegexp(IOError, "Process still running"):
                 self.marionette.quit(in_app=True, callback=lambda: False)
         finally:
-            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout
+            self.marionette.shutdown_timeout = timeout
 
     def test_in_app_quit_with_callback_not_callable(self):
         with self.assertRaisesRegexp(ValueError, "is not callable"):

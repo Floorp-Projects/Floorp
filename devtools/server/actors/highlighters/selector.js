@@ -78,6 +78,6 @@ SelectorHighlighter.prototype = {
   destroy: function() {
     this.hide();
     this.highlighterEnv = null;
-  }
+  },
 };
 exports.SelectorHighlighter = SelectorHighlighter;

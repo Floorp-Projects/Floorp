@@ -7,13 +7,13 @@ const {
   Arg,
   RetVal,
   generateActorSpec,
-  types
+  types,
 } = require("devtools/shared/protocol");
 
 // Teach protocol.js how to deal with legacy actor types
 types.addType("ObjectActor", {
   write: actor => actor.form(),
-  read: grip => grip
+  read: grip => grip,
 });
 
 const promisesSpec = generateActorSpec({
@@ -29,8 +29,8 @@ const promisesSpec = generateActorSpec({
     // Event emitted for promise settlements.
     "promises-settled": {
       type: "promises-settled",
-      data: Arg(0, "array:ObjectActor")
-    }
+      data: Arg(0, "array:ObjectActor"),
+    },
   },
 
   methods: {
@@ -49,8 +49,8 @@ const promisesSpec = generateActorSpec({
       response: {
         promises: RetVal("array:ObjectActor"),
       },
-    }
-  }
+    },
+  },
 });
 
 exports.promisesSpec = promisesSpec;

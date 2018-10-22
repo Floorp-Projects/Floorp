@@ -11,7 +11,7 @@ const AddonsFront = protocol.FrontClassWithSpec(addonsSpec, {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = addonsActor;
     this.manage(this);
-  }
+  },
 });
 
 exports.AddonsFront = AddonsFront;

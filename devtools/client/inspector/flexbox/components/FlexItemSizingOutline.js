@@ -78,6 +78,11 @@ class FlexItemSizingOutline extends PureComponent {
     mainFinalSize = Math.max(mainFinalSize, mainMinSize);
     mainFinalSize = Math.min(mainFinalSize, mainMaxSize);
 
+    // Just don't display anything if there isn't anything useful.
+    if (!mainFinalSize && !mainBaseSize && !mainDeltaSize) {
+      return null;
+    }
+
     // The max size is only interesting to show if it did clamp the item
     // TODO: replace this with the new clamping state that the API will return once bug
     // 1498273 is fixed.

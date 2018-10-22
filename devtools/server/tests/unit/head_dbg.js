@@ -80,7 +80,7 @@ function makeMemoryActorTest(testGeneratorFunction) {
       ActorRegistry.registerModule("devtools/server/actors/heap-snapshot-file", {
         prefix: "heapSnapshotFile",
         constructor: "HeapSnapshotFileActor",
-        type: { global: true }
+        type: { global: true },
       });
 
       getTestTab(client, TEST_GLOBAL_NAME, function(tabForm, rootForm) {
@@ -118,7 +118,7 @@ function makeFullRuntimeMemoryActorTest(testGeneratorFunction) {
       ActorRegistry.registerModule("devtools/server/actors/heap-snapshot-file", {
         prefix: "heapSnapshotFile",
         constructor: "HeapSnapshotFileActor",
-        type: { global: true }
+        type: { global: true },
       });
 
       getParentProcessActors(client).then(function(form) {
@@ -225,7 +225,7 @@ function waitForProperty(dbg, property) {
     Object.defineProperty(dbg, property, {
       set(newValue) {
         resolve(newValue);
-      }
+      },
     });
   });
 }
@@ -322,7 +322,7 @@ var listener = {
       // Swallow everything to avoid console reentrancy errors. We did our best
       // to log above, but apparently that didn't cut it.
     }
-  }
+  },
 };
 
 Services.console.registerListener(listener);
@@ -375,7 +375,7 @@ function attachTestThread(client, title, callback) {
     }
     targetFront.attachThread({
       useSourceMaps: true,
-      autoBlackBox: true
+      autoBlackBox: true,
     }).then(onAttach);
   });
 }
@@ -541,7 +541,7 @@ TracingTransport.prototype = {
   send: function(packet) {
     this.packets.push({
       type: "sent",
-      packet: this.normalize(packet)
+      packet: this.normalize(packet),
     });
     return this.child.send(packet);
   },
@@ -554,7 +554,7 @@ TracingTransport.prototype = {
   onPacket: function(packet) {
     this.packets.push({
       type: "received",
-      packet: this.normalize(packet)
+      packet: this.normalize(packet),
     });
     this.hooks.onPacket(packet);
   },
@@ -584,7 +584,7 @@ TracingTransport.prototype = {
         dumpn("trace.expectReceive(" + entry.packet + ");");
       }
     }
-  }
+  },
 };
 
 function StubTransport() { }

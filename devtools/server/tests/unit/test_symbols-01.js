@@ -47,7 +47,7 @@ async function testSymbols(client, debuggee) {
   const {
     symbolWithName,
     symbolWithoutName,
-    iteratorSymbol
+    iteratorSymbol,
   } = packet.frame.environment.bindings.variables;
 
   equal(symbolWithName.value.type, "symbol");

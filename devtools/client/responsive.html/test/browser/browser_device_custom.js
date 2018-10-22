@@ -93,7 +93,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const submitButton = document.getElementById("device-submit-button");
   const removed = Promise.all([
     waitUntilState(store, state => state.devices.custom.length == 0),
-    once(ui, "device-association-removed")
+    once(ui, "device-association-removed"),
   ]);
   deviceRemoveButton.click();
   await removed;

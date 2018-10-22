@@ -16,7 +16,7 @@ const { getSelectedRecording, getDurationLabelText } = require("devtools/client/
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, L10N, PerformanceController } = panel.panelWin;
@@ -28,10 +28,10 @@ add_task(async function() {
     "The duration node should show the 'recording' message while recording");
 
   const recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopping"]
+    expectedArgs: ["recording-stopping"],
   });
   const recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopped"]
+    expectedArgs: ["recording-stopped"],
   });
   const everythingStopped = stopRecording(panel);
 

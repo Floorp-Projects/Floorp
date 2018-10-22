@@ -13,7 +13,7 @@ const {
   getSnapshotTotals,
   getStatusText,
   snapshotIsDiffable,
-  getSavedCensus
+  getSavedCensus,
 } = require("../utils");
 const { diffingState } = require("../constants");
 const { snapshot: snapshotModel, app: appModel } = require("../models");
@@ -94,13 +94,13 @@ class SnapshotListItem extends Component {
     const deleteButton = !snapshot.path ? void 0 : dom.button({
       onClick: () => onDelete(snapshot),
       className: "delete",
-      title: L10N.getStr("snapshot.io.delete")
+      title: L10N.getStr("snapshot.io.delete"),
     });
 
     return (
       dom.li({ className, onClick },
         dom.span({
-          className: `snapshot-title ${wantThrobber ? " devtools-throbber" : ""}`
+          className: `snapshot-title ${wantThrobber ? " devtools-throbber" : ""}`,
         },
           checkbox,
           title,

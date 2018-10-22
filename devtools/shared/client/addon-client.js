@@ -28,7 +28,7 @@ AddonClient.prototype = {
    *        Called with the response packet.
    */
   detach: DebuggerClient.requester({
-    type: "detach"
+    type: "detach",
   }, {
     after: function(response) {
       if (this._client.activeAddon === this) {
@@ -37,7 +37,7 @@ AddonClient.prototype = {
       this._client.unregisterClient(this);
       return response;
     },
-  })
+  }),
 };
 
 module.exports = AddonClient;

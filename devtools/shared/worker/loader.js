@@ -109,7 +109,7 @@ function createModule(id) {
       configurable: false,
       enumerable: true,
       value: id,
-      writable: false
+      writable: false,
     },
 
     // CommonJS does not specify an exports property, so follow the NodeJS
@@ -118,8 +118,8 @@ function createModule(id) {
       configurable: false,
       enumerable: true,
       value: Object.create(null),
-      writable: true
-    }
+      writable: true,
+    },
   });
 }
 
@@ -140,7 +140,7 @@ function defineLazyGetter(object, prop, getter) {
     },
     set(value) {
       redefine(this, value);
-    }
+    },
   });
 }
 
@@ -401,7 +401,7 @@ var chrome = {
   Ci: undefined,
   Cu: undefined,
   Cr: undefined,
-  components: undefined
+  components: undefined,
 };
 
 var loader = {
@@ -413,7 +413,7 @@ var loader = {
         return object[name];
       },
       configurable: true,
-      enumerable: true
+      enumerable: true,
     });
   },
   lazyImporter: function() {
@@ -425,9 +425,9 @@ var loader = {
   lazyRequireGetter: function(obj, property, module, destructure) {
     Object.defineProperty(obj, property, {
       get: () => destructure ? worker.require(module)[property]
-                             : worker.require(module || property)
+                             : worker.require(module || property),
     });
-  }
+  },
 };
 
 // The following APIs are defined differently depending on whether we are on the
@@ -469,7 +469,7 @@ var {
         sandboxName: name,
         sandboxPrototype: prototype,
         wantComponents: false,
-        wantXrays: false
+        wantXrays: false,
       });
     };
 
@@ -503,7 +503,7 @@ var {
       loadSubScript,
       reportError,
       setImmediate,
-      xpcInspector
+      xpcInspector,
     };
   }
   // Worker thread
@@ -530,7 +530,7 @@ var {
       requestors.pop();
       scope.leaveEventLoop();
       return requestors.length;
-    }
+    },
   };
 
   return {
@@ -542,7 +542,7 @@ var {
     loadSubScript: this.loadSubScript,
     reportError: this.reportError,
     setImmediate: this.setImmediate,
-    xpcInspector: xpcInspector
+    xpcInspector: xpcInspector,
   };
 }).call(this);
 /* eslint-enable no-shadow */
@@ -570,7 +570,7 @@ this.worker = new WorkerDebuggerLoader({
     "Debugger": Debugger,
     "Services": Object.create(null),
     "chrome": chrome,
-    "xpcInspector": xpcInspector
+    "xpcInspector": xpcInspector,
   },
   paths: {
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
@@ -580,7 +580,7 @@ this.worker = new WorkerDebuggerLoader({
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "source-map": "resource://devtools/shared/sourcemap/source-map.js",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "xpcshell-test": "resource://test"
+    "xpcshell-test": "resource://test",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-  }
+  },
 });

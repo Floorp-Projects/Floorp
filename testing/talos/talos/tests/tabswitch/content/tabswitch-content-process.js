@@ -58,7 +58,7 @@ const TPSProcessScript = {
     if (msg.name == "TPS:Teardown") {
       this.teardown();
     }
-  }
+  },
 };
 
 TPSProcessScript.init();

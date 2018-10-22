@@ -64,7 +64,7 @@ describe("FilterBar component:", () => {
 
   it("displays the number of hidden messages when there are one hidden message", () => {
     const store = setupStore([
-      "console.log('foobar', 'test')"
+      "console.log('foobar', 'test')",
     ]);
     // Filter-out LOG messages
     store.dispatch(actions.filterToggle(FILTERS.LOG));
@@ -83,7 +83,7 @@ describe("FilterBar component:", () => {
 
   it("Reset filters when the Reset filters button is clicked.", () => {
     const store = setupStore([
-      "console.log('foobar', 'test')"
+      "console.log('foobar', 'test')",
     ]);
     // Filter-out LOG messages
     store.dispatch(actions.filterToggle(FILTERS.LOG));
@@ -197,7 +197,7 @@ describe("FilterBar component:", () => {
     const store = setupStore([
       "Unknown property ‘such-unknown-property’.  Declaration dropped.",
       "GET request",
-      "XHR GET request"
+      "XHR GET request",
     ]);
     const wrapper = mount(Provider({store}, FilterBar({
       serviceContainer,
@@ -236,7 +236,7 @@ describe("FilterBar component:", () => {
     const filterBtn = props => FilterButton(
       Object.assign({}, {
         active: true,
-        dispatch: store.dispatch
+        dispatch: store.dispatch,
       }, props)
     );
 
@@ -270,7 +270,7 @@ describe("FilterBar component:", () => {
     wrapper.find(".devtools-clear-icon").simulate("click");
     const call = store.dispatch.getCall(0);
     expect(call.args[0]).toEqual({
-      type: MESSAGES_CLEAR
+      type: MESSAGES_CLEAR,
     });
   });
 

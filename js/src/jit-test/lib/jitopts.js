@@ -12,7 +12,8 @@ function jitTogglesMatch(opts) {
 
   // ARM64 does not yet have an Ion code generator, so return false if
   // ion.enable is requested.
-  if (getBuildConfiguration()['arm64-simulator'] && opts['ion.enable'])
+  var conf = getBuildConfiguration();
+  if (conf['arm64'] && opts['ion.enable'])
     return false;
 
   return true;

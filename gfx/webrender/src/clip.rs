@@ -145,11 +145,14 @@ impl From<ClipItemKey> for ClipNode {
                 )
             }
             ClipItemKey::ImageMask(rect, image, repeat) => {
-                ClipItem::Image(ImageMask {
-                    image,
-                    rect: LayoutRect::from_au(rect),
-                    repeat,
-                })
+                ClipItem::Image(
+                    ImageMask {
+                        image,
+                        rect: LayoutRect::from_au(rect),
+                        repeat,
+                    },
+                    true,
+                )
             }
             ClipItemKey::BoxShadow(shadow_rect, shadow_radius, prim_shadow_rect, blur_radius, clip_mode) => {
                 ClipItem::new_box_shadow(
@@ -263,7 +266,7 @@ impl ClipNode {
     ) {
         if let Some(mut request) = gpu_cache.request(&mut self.gpu_cache_handle) {
             match self.item {
-                ClipItem::Image(ref mask) => {
+                ClipItem::Image(ref mask, ..) => {
                     let data = ImageMaskData { local_rect: mask.rect };
                     data.write_gpu_blocks(request);
                 }
@@ -294,15 +297,25 @@ impl ClipNode {
         }
 
         match self.item {
-            ClipItem::Image(ref mask) => {
-                resource_cache.request_image(
-                    ImageRequest {
-                        key: mask.image,
-                        rendering: ImageRendering::Auto,
-                        tile: None,
-                    },
-                    gpu_cache,
-                );
+            ClipItem::Image(ref mask, ref mut is_valid) => {
+                if let Some(properties) = resource_cache.get_image_properties(mask.image) {
+                    // Clip masks with tiled blob images are not currently supported.
+                    // This results in them being ignored, which is not ideal, but
+                    // is better than crashing in resource cache!
+                    // See https://github.com/servo/webrender/issues/2852.
+                    *is_valid = properties.tiling.is_none();
+                }
+
+                if *is_valid {
+                    resource_cache.request_image(
+                        ImageRequest {
+                            key: mask.image,
+                            rendering: ImageRendering::Auto,
+                            tile: None,
+                        },
+                        gpu_cache,
+                    );
+                }
             }
             ClipItem::BoxShadow(ref mut info) => {
                 // Quote from https://drafts.csswg.org/css-backgrounds-3/#shadow-blur
@@ -760,7 +773,9 @@ impl ClipItemKey {
 pub enum ClipItem {
     Rectangle(LayoutRect, ClipMode),
     RoundedRectangle(LayoutRect, BorderRadius, ClipMode),
-    Image(ImageMask),
+    /// The boolean below is a crash workaround for #2852, will be true unless
+    /// the mask is a tiled blob.
+    Image(ImageMask, bool),
     BoxShadow(BoxShadowClipSource),
 }
 
@@ -873,8 +888,8 @@ impl ClipItem {
             ClipItem::Rectangle(_, ClipMode::ClipOut) => None,
             ClipItem::RoundedRectangle(clip_rect, _, ClipMode::Clip) => Some(clip_rect),
             ClipItem::RoundedRectangle(_, _, ClipMode::ClipOut) => None,
-            ClipItem::Image(ref mask) if mask.repeat => None,
-            ClipItem::Image(ref mask) => Some(mask.rect),
+            ClipItem::Image(ref mask, ..) if mask.repeat => None,
+            ClipItem::Image(ref mask, ..) => Some(mask.rect),
             ClipItem::BoxShadow(..) => None,
         }
     }
@@ -1006,7 +1021,7 @@ impl ClipItem {
                     }
                 }
             }
-            ClipItem::Image(ref mask) => {
+            ClipItem::Image(ref mask, ..) => {
                 if mask.repeat {
                     ClipResult::Partial
                 } else {

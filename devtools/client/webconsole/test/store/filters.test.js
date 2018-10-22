@@ -175,7 +175,7 @@ describe("Filtering", () => {
         Object.assign({}, traceMessage.message, {
           filename: "search-location-test.js",
           lineNumber: 85,
-          columnNumber: 13
+          columnNumber: 13,
         });
 
       store.dispatch(messagesAdd([traceMessage]));
@@ -194,13 +194,13 @@ describe("Filtering", () => {
         "functionName": "initialize",
         "timeStamp": 1519311532912,
         "arguments": [
-          "Initializing"
+          "Initializing",
         ],
         "prefix": "MyNicePrefix",
         "workerType": "none",
         "styles": [],
         "category": "webdev",
-        "_type": "ConsoleAPI"
+        "_type": "ConsoleAPI",
       };
       store.dispatch(messagesAdd([stub]));
 

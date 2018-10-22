@@ -26,9 +26,9 @@ const REPORT = {
   "scripts": { bytes: 1, count: 1 },
   "other": {
     "js::Shape": { bytes: 30, count: 3 },
-    "js::Shape2": { bytes: 40, count: 4 }
+    "js::Shape2": { bytes: 40, count: 4 },
   },
-  "domNode": { bytes: 0, count: 0 }
+  "domNode": { bytes: 0, count: 0 },
 };
 
 const EXPECTED = {

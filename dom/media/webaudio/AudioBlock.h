@@ -46,7 +46,7 @@ public:
   using AudioChunk::SizeOfExcludingThisIfUnshared;
   using AudioChunk::SizeOfExcludingThis;
   // mDuration is not exposed.  Use GetDuration().
-  // mBuffer is not exposed.  Use SetBuffer().
+  // mBuffer is not exposed.  Use Get/SetBuffer().
   using AudioChunk::mChannelData;
   using AudioChunk::mVolume;
   using AudioChunk::mBufferFormat;
@@ -74,6 +74,7 @@ public:
     return static_cast<float*>(const_cast<void*>(mChannelData[aChannel]));
   }
 
+  ThreadSharedObject* GetBuffer() const { return mBuffer; }
   void SetBuffer(ThreadSharedObject* aNewBuffer);
   void SetNull(StreamTime aDuration) {
     MOZ_ASSERT(aDuration == WEBAUDIO_BLOCK_SIZE);

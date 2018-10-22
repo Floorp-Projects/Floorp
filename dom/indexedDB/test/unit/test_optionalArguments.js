@@ -18,7 +18,7 @@ function* testSteps()
     { ssn: "237-23-7736", name: "Joe", height: 65, weight: 150 },
     { ssn: "237-23-7737", name: "Pat", height: 65 },
     { ssn: "237-23-7738", name: "Mel", height: 66, weight: {} },
-    { ssn: "237-23-7739", name: "Tom", height: 62, weight: 130 }
+    { ssn: "237-23-7739", name: "Tom", height: 62, weight: 130 },
   ];
 
   const weightSort = [1, 0, 3, 7, 4, 2];

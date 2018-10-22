@@ -26,7 +26,7 @@ function onLoad() {
         if (topic == "operation-completed") {
           window.close();
         }
-      }
+      },
     };
 
     protectedAuthThread.login(obs);

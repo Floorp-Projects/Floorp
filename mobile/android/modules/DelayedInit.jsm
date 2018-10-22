@@ -177,5 +177,5 @@ var Impl = {
       configurable: true,
       enumerable: true,
     });
-  }
+  },
 };

@@ -9,20 +9,20 @@ const {escapeCSSComment, _unescapeCSSComment} = require("devtools/shared/css/par
 const TEST_DATA = [
   {
     input: "simple",
-    expected: "simple"
+    expected: "simple",
   },
   {
     input: "/* comment */",
-    expected: "/\\* comment *\\/"
+    expected: "/\\* comment *\\/",
   },
   {
     input: "/* two *//* comments */",
-    expected: "/\\* two *\\//\\* comments *\\/"
+    expected: "/\\* two *\\//\\* comments *\\/",
   },
   {
     input: "/* nested /\\* comment *\\/ */",
     expected: "/\\* nested /\\\\* comment *\\\\/ *\\/",
-  }
+  },
 ];
 
 function run_test() {

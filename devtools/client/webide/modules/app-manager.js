@@ -259,7 +259,7 @@ var AppManager = exports.AppManager = {
                      return TargetFactory.forRemoteTab({
                        form: aResponse.form,
                        client: this.connection.client,
-                       chrome: true
+                       chrome: true,
                      });
                    });
       }
@@ -602,7 +602,7 @@ var AppManager = exports.AppManager = {
         const appId = origin.host;
         const metadata = {
           origin: origin.spec,
-          manifestURL: project.location
+          manifestURL: project.location,
         };
         response = await self._appsFront.installHosted(appId,
                                             metadata,
@@ -650,7 +650,7 @@ var AppManager = exports.AppManager = {
       const validation = new AppValidator({
         type: project.type,
         // Build process may place the manifest in a non-root directory
-        location: packageDir
+        location: packageDir,
       });
 
       await validation.validate();
@@ -730,7 +730,7 @@ var AppManager = exports.AppManager = {
     this.runtimeList = {
       usb: [],
       wifi: [],
-      other: []
+      other: [],
     };
   },
 

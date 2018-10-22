@@ -16,7 +16,7 @@ if (!isWorker) {
 const CONSOLE_WORKER_IDS = exports.CONSOLE_WORKER_IDS = [
   "SharedWorker",
   "ServiceWorker",
-  "Worker"
+  "Worker",
 ];
 
 var WebConsoleUtils = {
@@ -350,7 +350,7 @@ WebConsoleCommands._registerOriginal("$$", function(owner, selector) {
 WebConsoleCommands._registerOriginal("$_", {
   get: function(owner) {
     return owner.consoleActor.getLastConsoleInputEvaluation();
-  }
+  },
 });
 
 /**
@@ -389,7 +389,7 @@ WebConsoleCommands._registerOriginal("$x", function(owner, xPath, context) {
 WebConsoleCommands._registerOriginal("$0", {
   get: function(owner) {
     return owner.makeDebuggeeValue(owner.selectedNode);
-  }
+  },
 });
 
 /**
@@ -476,7 +476,7 @@ WebConsoleCommands._registerOriginal("cd", function(owner, window) {
   if (!(window instanceof Ci.nsIDOMWindow)) {
     owner.helperResult = {
       type: "error",
-      message: "cdFunctionInvalidArgument"
+      message: "cdFunctionInvalidArgument",
     };
     return;
   }
@@ -609,7 +609,7 @@ WebConsoleCommands._registerOriginal("screenshot", function(owner, args = {}) {
       // pass args through to the client, so that the client can take care of copying
       // and saving the screenshot data on the client machine instead of on the
       // remote machine
-      args
+      args,
     };
   })();
 });
@@ -636,7 +636,7 @@ function addWebConsoleCommands(owner) {
         // We force the enumerability and the configurability (so the
         // WebConsoleActor can reconfigure the property).
         enumerable: true,
-        configurable: true
+        configurable: true,
       });
 
       if (typeof command.get === "function") {

@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(
 const beforeReload = {
   cookies: {
     "http://test1.example.org": ["c1", "cs2", "c3", "uc1"],
-    "http://sectest1.example.org": ["uc1", "cs2"]
+    "http://sectest1.example.org": ["uc1", "cs2"],
   },
   indexedDB: {
     "http://test1.example.org": [
@@ -22,16 +22,16 @@ const beforeReload = {
       JSON.stringify(["idb1", "obj2"]),
       JSON.stringify(["idb2", "obj3"]),
     ],
-    "http://sectest1.example.org": []
+    "http://sectest1.example.org": [],
   },
   localStorage: {
     "http://test1.example.org": ["ls1", "ls2"],
-    "http://sectest1.example.org": ["iframe-u-ls1"]
+    "http://sectest1.example.org": ["iframe-u-ls1"],
   },
   sessionStorage: {
     "http://test1.example.org": ["ss1"],
-    "http://sectest1.example.org": ["iframe-u-ss1", "iframe-u-ss2"]
-  }
+    "http://sectest1.example.org": ["iframe-u-ss1", "iframe-u-ss2"],
+  },
 };
 
 // afterIframeAdded references the items added when an iframe containing storage
@@ -41,40 +41,40 @@ const afterIframeAdded = {
     "https://sectest1.example.org": [
       getCookieId("cs2", ".example.org", "/"),
       getCookieId("sc1", "sectest1.example.org",
-                  "/browser/devtools/server/tests/browser/")
+                  "/browser/devtools/server/tests/browser/"),
     ],
     "http://sectest1.example.org": [
       getCookieId("sc1", "sectest1.example.org",
-                  "/browser/devtools/server/tests/browser/")
-    ]
+                  "/browser/devtools/server/tests/browser/"),
+    ],
   },
   indexedDB: {
     // empty because indexed db creation happens after the page load, so at
     // the time of window-ready, there was no indexed db present.
-    "https://sectest1.example.org": []
+    "https://sectest1.example.org": [],
   },
   localStorage: {
-    "https://sectest1.example.org": ["iframe-s-ls1"]
+    "https://sectest1.example.org": ["iframe-s-ls1"],
   },
   sessionStorage: {
-    "https://sectest1.example.org": ["iframe-s-ss1"]
-  }
+    "https://sectest1.example.org": ["iframe-s-ss1"],
+  },
 };
 
 // afterIframeRemoved references the items deleted when an iframe containing
 // storage items is removed from the page.
 const afterIframeRemoved = {
   cookies: {
-    "http://sectest1.example.org": []
+    "http://sectest1.example.org": [],
   },
   indexedDB: {
-    "http://sectest1.example.org": []
+    "http://sectest1.example.org": [],
   },
   localStorage: {
-    "http://sectest1.example.org": []
+    "http://sectest1.example.org": [],
   },
   sessionStorage: {
-    "http://sectest1.example.org": []
+    "http://sectest1.example.org": [],
   },
 };
 

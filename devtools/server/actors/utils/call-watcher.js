@@ -14,7 +14,7 @@ const {serializeStack, parseStack} = ChromeUtils.import("resource://devtools/sha
 const {
   METHOD_FUNCTION,
   GETTER_FUNCTION,
-  SETTER_FUNCTION
+  SETTER_FUNCTION,
 } = require("devtools/shared/fronts/function-call");
 
 const { FunctionCallActor } = require("devtools/server/actors/utils/function-call");
@@ -48,7 +48,7 @@ CallWatcher.prototype = {
    * aware of everything the content does with them.
    */
   setup: function({
-    tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak, storeCalls
+    tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak, storeCalls,
   }) {
     if (this._initialized) {
       return;
@@ -200,7 +200,7 @@ CallWatcher.prototype = {
       Object.defineProperty(target, name, {
         configurable: descriptor.configurable,
         enumerable: descriptor.enumerable,
-        writable: true
+        writable: true,
       });
     }
 
@@ -246,7 +246,7 @@ CallWatcher.prototype = {
           }
         },
         configurable: descriptor.configurable,
-        enumerable: descriptor.enumerable
+        enumerable: descriptor.enumerable,
       });
     }
 
@@ -338,7 +338,7 @@ CallWatcher.prototype = {
     } else {
       this.emit("call", functionCall);
     }
-  }
+  },
 };
 
 /**
@@ -371,7 +371,7 @@ function createContentError(e, win) {
       filename: { value: fileName },
       lineNumber: { value: lineNumber },
       result: { value: e.result },
-      stack: { value: serializeStack(parsedStack) }
+      stack: { value: serializeStack(parsedStack) },
     });
   } else {
     // Constructing an error here retains all the stack information,
@@ -379,7 +379,7 @@ function createContentError(e, win) {
     // need to manually add columnNumber.
     error = new constructor(message, fileName, lineNumber);
     Object.defineProperty(error, "columnNumber", {
-      value: columnNumber
+      value: columnNumber,
     });
   }
   return error;

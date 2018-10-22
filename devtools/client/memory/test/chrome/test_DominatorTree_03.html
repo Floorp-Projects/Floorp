@@ -56,7 +56,7 @@ Test that expanded DominatorTreeItems are correctly rendered and updated
                   dominatorTree: immutableUpdate(
                     TEST_DOMINATOR_TREE_PROPS.dominatorTree,
                     { expanded: new Set(), root }
-                  )
+                  ),
                 })), container);
 
             ok(true, "Dominator tree props updated to collapse all nodes");

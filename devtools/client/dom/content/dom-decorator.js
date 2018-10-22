@@ -43,7 +43,7 @@ DomDecorator.prototype = {
    * might depend on specified column.
    */
   getValueRep: function(value, colId) {
-  }
+  },
 };
 
 // Exports from this module

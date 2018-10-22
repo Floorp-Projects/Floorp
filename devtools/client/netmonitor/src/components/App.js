@@ -71,7 +71,7 @@ class App extends Component {
               openLink,
             })
           ) : StatisticsPanel({
-            connector
+            connector,
           }),
       )
     );

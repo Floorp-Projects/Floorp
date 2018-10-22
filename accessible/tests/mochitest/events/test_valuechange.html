@@ -30,7 +30,7 @@
       this.DOMNode = getNode(aNodeOrID);
       this.eventSeq = [ new invokerChecker(aValuetext ?
                                            EVENT_TEXT_VALUE_CHANGE :
-                                           EVENT_VALUE_CHANGE, this.DOMNode)
+                                           EVENT_VALUE_CHANGE, this.DOMNode),
         ];
 
       this.invoke = function changeARIAValue_invoke() {
@@ -64,7 +64,7 @@
     function changeValue(aID, aValue) {
       this.DOMNode = getNode(aID);
       this.eventSeq = [new invokerChecker(EVENT_TEXT_VALUE_CHANGE,
-                                          this.DOMNode)
+                                          this.DOMNode),
         ];
 
       this.invoke = function changeValue_invoke() {

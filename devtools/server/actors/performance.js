@@ -15,11 +15,11 @@ loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
 
 const PIPE_TO_FRONT_EVENTS = new Set([
   "recording-started", "recording-stopping", "recording-stopped",
-  "profiler-status", "timeline-data", "console-profile-start"
+  "profiler-status", "timeline-data", "console-profile-start",
 ]);
 
 const RECORDING_STATE_CHANGE_EVENTS = new Set([
-  "recording-started", "recording-stopping", "recording-stopped"
+  "recording-started", "recording-stopping", "recording-stopped",
 ]);
 
 /**

@@ -93,6 +93,18 @@ void print_log(const char * msg, ...)
  *  override. */
 int common_init(cubeb ** ctx, char const * ctx_name)
 {
+#ifdef ENABLE_NORMAL_LOG
+  if (cubeb_set_log_callback(CUBEB_LOG_NORMAL, print_log) != CUBEB_OK) {
+    fprintf(stderr, "Set normal log callback failed\n");
+  }
+#endif
+
+#ifdef ENABLE_VERBOSE_LOG
+  if (cubeb_set_log_callback(CUBEB_LOG_VERBOSE, print_log) != CUBEB_OK) {
+    fprintf(stderr, "Set verbose log callback failed\n");
+  }
+#endif
+
   int r;
   char const * backend;
   char const * ctx_backend;

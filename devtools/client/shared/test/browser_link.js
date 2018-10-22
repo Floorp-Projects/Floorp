@@ -21,11 +21,11 @@ add_task(async function() {
   is(gBrowser.selectedBrowser.currentURI.spec, TEST_URI,
     "openDocLink opened a tab with the expected url");
 
-  info("Open trusted link to about:debugging");
-  openTrustedLink("about:debugging");
+  info("Open trusted link to about:config");
+  openTrustedLink("about:config");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  is(gBrowser.selectedBrowser.currentURI.spec, "about:debugging",
+  is(gBrowser.selectedBrowser.currentURI.spec, "about:config",
     "openTrustedLink opened a tab with the expected url");
 
   await removeTab(gBrowser.selectedTab);

@@ -23,7 +23,7 @@ add_task(async function() {
 
   info("Add a couple of animation on the node");
   await node.modifyAttributes([
-    {attributeName: "class", newValue: "multiple-animations"}
+    {attributeName: "class", newValue: "multiple-animations"},
   ]);
   let changes = await onMutations;
 
@@ -44,7 +44,7 @@ add_task(async function() {
 
   info("Remove the animation css class on the node");
   await node.modifyAttributes([
-    {attributeName: "class", newValue: "not-animated"}
+    {attributeName: "class", newValue: "not-animated"},
   ]);
 
   changes = await onMutations;

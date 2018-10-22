@@ -38,43 +38,43 @@ ruleTester.run("use-chromeutils-import", rule, {
                                        undefined, preServicesLambda);`,
     {
       options: [{allowCu: true}],
-      code: `Cu.import("resource://gre/modules/Service.jsm");`
-    }
+      code: `Cu.import("resource://gre/modules/Service.jsm");`,
+    },
   ],
   invalid: [
     {
       code: `Cu.import("resource://gre/modules/Services.jsm");`,
       output: `ChromeUtils.import("resource://gre/modules/Services.jsm");`,
-      errors: callError(MESSAGE_IMPORT)
+      errors: callError(MESSAGE_IMPORT),
     },
     {
       code: `Cu.import("resource://gre/modules/Services.jsm", this);`,
       output: `ChromeUtils.import("resource://gre/modules/Services.jsm", this);`,
-      errors: callError(MESSAGE_IMPORT)
+      errors: callError(MESSAGE_IMPORT),
     },
     {
       code: `Components.utils.import("resource://gre/modules/Services.jsm");`,
       output: `ChromeUtils.import("resource://gre/modules/Services.jsm");`,
-      errors: callError(MESSAGE_IMPORT)
+      errors: callError(MESSAGE_IMPORT),
     },
     {
       code: `Components.utils.import("resource://gre/modules/Services.jsm");`,
       output: `ChromeUtils.import("resource://gre/modules/Services.jsm");`,
-      errors: callError(MESSAGE_IMPORT)
+      errors: callError(MESSAGE_IMPORT),
     },
     {
       options: [{allowCu: true}],
       code: `Components.utils.import("resource://gre/modules/Services.jsm", this);`,
       output: `ChromeUtils.import("resource://gre/modules/Services.jsm", this);`,
-      errors: callError(MESSAGE_IMPORT)
+      errors: callError(MESSAGE_IMPORT),
     },
     {
       code: `XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                                "resource://gre/modules/Services.jsm");`,
       output: `ChromeUtils.defineModuleGetter(this, "Services",
                                                "resource://gre/modules/Services.jsm");`,
-      errors: callError(MESSAGE_DEFINE)
-    }
-  ]
+      errors: callError(MESSAGE_DEFINE),
+    },
+  ],
 });
 

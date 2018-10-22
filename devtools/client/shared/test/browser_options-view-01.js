@@ -91,7 +91,7 @@ async function testOptionsView(win) {
 function createOptionsView(win) {
   return new OptionsView({
     branchName: BRANCH,
-    menupopup: win.document.querySelector("#options-menupopup")
+    menupopup: win.document.querySelector("#options-menupopup"),
   });
 }
 

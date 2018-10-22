@@ -48,7 +48,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
               data: arg,
             },
             listeningTo: replyEvent,
-          }
+          },
         })
       );
     },

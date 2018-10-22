@@ -28,8 +28,8 @@ add_task(async function() {
         ["0", "apples"],
         ["1", "oranges"],
         ["2", "bananas"],
-      ]
-    }
+      ],
+    },
   }, {
     info: "Testing when data argument is an object",
     input: new Person("John", "Smith"),
@@ -38,8 +38,8 @@ add_task(async function() {
       rows: [
         ["firstName", "John"],
         ["lastName", "Smith"],
-      ]
-    }
+      ],
+    },
   }, {
     info: "Testing when data argument is an array of arrays",
     input: [["Jane", "Doe"], ["Emily", "Jones"]],
@@ -48,8 +48,8 @@ add_task(async function() {
       rows: [
         ["0", "Jane", "Doe"],
         ["1", "Emily", "Jones"],
-      ]
-    }
+      ],
+    },
   }, {
     info: "Testing when data argument is an array of objects",
     input: [
@@ -63,8 +63,8 @@ add_task(async function() {
         ["0", "Jack", "Foo"],
         ["1", "Emma", "Bar"],
         ["2", "Michelle", "Rax"],
-      ]
-    }
+      ],
+    },
   }, {
     info: "Testing when data argument is an object whose properties are objects",
     input: {
@@ -78,8 +78,8 @@ add_task(async function() {
         ["father", "Darth", "Vader"],
         ["daughter", "Leia", "Organa"],
         ["son", "Luke", "Skywalker"],
-      ]
-    }
+      ],
+    },
   }, {
     info: "Testing when data argument is a Set",
     input: new Set(["a", "b", "c"]),
@@ -89,8 +89,8 @@ add_task(async function() {
         ["0", "a"],
         ["1", "b"],
         ["2", "c"],
-      ]
-    }
+      ],
+    },
   }, {
     info: "Testing when data argument is a Map",
     input: new Map([["key-a", "value-a"], ["key-b", "value-b"]]),
@@ -99,8 +99,8 @@ add_task(async function() {
       rows: [
         ["0", "key-a", "value-a"],
         ["1", "key-b", "value-b"],
-      ]
-    }
+      ],
+    },
   }, {
     info: "Testing restricting the columns displayed",
     input: [
@@ -113,21 +113,21 @@ add_task(async function() {
       rows: [
         ["0", "Sam"],
         ["1", "Elena"],
-      ]
-    }
+      ],
+    },
   }, {
     info: "Testing nested object with falsy values",
     input: [
       {a: null, b: false, c: undefined, d: 0},
-      {b: null, c: false, d: undefined, e: 0}
+      {b: null, c: false, d: undefined, e: 0},
     ],
     expected: {
       columns: ["(index)", "a", "b", "c", "d", "e"],
       rows: [
         ["0", "null", "false", "undefined", "0", "undefined"],
         ["1", "undefined", "null", "false", "undefined", "0"],
-      ]
-    }
+      ],
+    },
   }];
 
   await ContentTask.spawn(gBrowser.selectedBrowser, testCases, function(tests) {

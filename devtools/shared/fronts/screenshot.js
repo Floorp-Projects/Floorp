@@ -17,7 +17,7 @@ const ScreenshotFront = protocol.FrontClassWithSpec(screenshotSpec, {
   async captureAndSave(window, args) {
     const screenshot = await this.capture(args);
     return saveScreenshot(window, args, screenshot);
-  }
+  },
 });
 
 exports.ScreenshotFront = ScreenshotFront;

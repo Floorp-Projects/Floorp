@@ -16,27 +16,27 @@ const serviceWorkerRegistrationSpec = generateActorSpec({
 
   events: {
     "push-subscription-modified": {
-      type: "push-subscription-modified"
+      type: "push-subscription-modified",
     },
     "registration-changed": {
-      type: "registration-changed"
-    }
+      type: "registration-changed",
+    },
   },
 
   methods: {
     start: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     unregister: {
       request: {},
-      response: RetVal("json")
+      response: RetVal("json"),
     },
     getPushSubscription: {
       request: {},
       response: {
-        subscription: RetVal("nullable:pushSubscription")
-      }
+        subscription: RetVal("nullable:pushSubscription"),
+      },
     },
   },
 });

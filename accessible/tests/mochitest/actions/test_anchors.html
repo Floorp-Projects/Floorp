@@ -43,8 +43,8 @@
           actionIndex: 0,
           events: CLICK_EVENTS,
           eventSeq: [
-            new scrollingChecker(getAccessible("bottom1"))
-          ]
+            new scrollingChecker(getAccessible("bottom1")),
+          ],
         },
         { // jump again (test for bug 437607)
           ID: "anchor1",
@@ -52,8 +52,8 @@
           actionIndex: 0,
           events: CLICK_EVENTS,
           eventSeq: [
-            new scrollingChecker(getAccessible("bottom1"))
-          ]
+            new scrollingChecker(getAccessible("bottom1")),
+          ],
         },
         {
           ID: "anchor2",
@@ -61,9 +61,9 @@
           actionIndex: 0,
           events: CLICK_EVENTS,
           eventSeq: [
-            new scrollingChecker(getAccessible("bottom2"))
-          ]
-        }
+            new scrollingChecker(getAccessible("bottom2")),
+          ],
+        },
       ];
 
       testActions(actionsArray);

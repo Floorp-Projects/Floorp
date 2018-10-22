@@ -41,21 +41,21 @@
                            [ [ 0, 6, "", 0, 0 ] ]);
       testTextBeforeOffset(ids, BOUNDARY_WORD_END,
                            [ [ 0, 5, "", 0, 0 ],
-                             [ 6, 6, "hello", 0, 5 ]
+                             [ 6, 6, "hello", 0, 5 ],
                            ]);
 
       testTextAtOffset(ids, BOUNDARY_WORD_START,
                        [ [ 0, 6, "hello ", 0, 6 ] ]);
       testTextAtOffset(ids, BOUNDARY_WORD_END,
                        [ [ 0, 4, "hello", 0, 5 ],
-                         [ 5, 6, " ", 5, 6 ]
+                         [ 5, 6, " ", 5, 6 ],
                        ]);
 
       testTextAfterOffset(ids, BOUNDARY_WORD_START,
                           [ [ 0, 6, "", 6, 6 ] ]);
       testTextAfterOffset(ids, BOUNDARY_WORD_END,
                           [ [ 0, 5, " ", 5, 6 ],
-                            [ 6, 6, "", 6, 6 ]
+                            [ 6, 6, "", 6, 6 ],
                           ]);
 
       // "hello all"
@@ -176,8 +176,8 @@
                                  [ 9, "ml_edivbr1", kTodo, kOk, kTodo ] ] ],
                              [ 13, 18, "\n\ntwo", 7, 12 ],
                              [ 19, 19, " words", 12, 18,
-                               [ [ 19, "ml_divbr1", kTodo, kTodo, kTodo, ],
-                                 [ 19, "ml_edivbr1", kTodo, kTodo, kTodo, ] ] ]
+                               [ [ 19, "ml_divbr1", kTodo, kTodo, kTodo ],
+                                 [ 19, "ml_edivbr1", kTodo, kTodo, kTodo ] ] ],
                            ] );
 
       testTextAtOffset(ids, BOUNDARY_WORD_START,

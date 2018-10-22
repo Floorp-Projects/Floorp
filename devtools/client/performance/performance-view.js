@@ -22,94 +22,94 @@ var PerformanceView = {
       {
         sel: "#performance-view",
         opt: "selectedPanel",
-        val: () => $("#unavailable-notice")
+        val: () => $("#unavailable-notice"),
       },
       {
         sel: "#performance-view-content",
         opt: "hidden",
-        val: () => true
+        val: () => true,
       },
     ],
     "empty": [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
-        val: () => $("#empty-notice")
+        val: () => $("#empty-notice"),
       },
       {
         sel: "#performance-view-content",
         opt: "hidden",
-        val: () => true
+        val: () => true,
       },
     ],
     "recording": [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
-        val: () => $("#performance-view-content")
+        val: () => $("#performance-view-content"),
       },
       {
         sel: "#performance-view-content",
         opt: "hidden",
-        val: () => false
+        val: () => false,
       },
       {
         sel: "#details-pane-container",
         opt: "selectedPanel",
-        val: () => $("#recording-notice")
+        val: () => $("#recording-notice"),
       },
     ],
     "console-recording": [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
-        val: () => $("#performance-view-content")
+        val: () => $("#performance-view-content"),
       },
       {
         sel: "#performance-view-content",
         opt: "hidden",
-        val: () => false
+        val: () => false,
       },
       {
         sel: "#details-pane-container",
         opt: "selectedPanel",
-        val: () => $("#console-recording-notice")
+        val: () => $("#console-recording-notice"),
       },
     ],
     "recorded": [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
-        val: () => $("#performance-view-content")
+        val: () => $("#performance-view-content"),
       },
       {
         sel: "#performance-view-content",
         opt: "hidden",
-        val: () => false
+        val: () => false,
       },
       {
         sel: "#details-pane-container",
         opt: "selectedPanel",
-        val: () => $("#details-pane")
+        val: () => $("#details-pane"),
       },
     ],
     "loading": [
       {
         sel: "#performance-view",
         opt: "selectedPanel",
-        val: () => $("#performance-view-content")
+        val: () => $("#performance-view-content"),
       },
       {
         sel: "#performance-view-content",
         opt: "hidden",
-        val: () => false
+        val: () => false,
       },
       {
         sel: "#details-pane-container",
         opt: "selectedPanel",
-        val: () => $("#loading-notice")
+        val: () => $("#loading-notice"),
       },
-    ]
+    ],
   },
 
   /**
@@ -152,7 +152,7 @@ var PerformanceView = {
       onImportButtonClick: this._onImportButtonClick,
       onClearButtonClick: this._onClearButtonClick,
       isRecording: false,
-      isDisabled: false
+      isDisabled: false,
     };
     // Mount to an HTML element.
     const {createHtmlMount} = PerformanceUtils;
@@ -405,7 +405,7 @@ var PerformanceView = {
     this.updateBufferStatus();
   },
 
-  toString: () => "[object PerformanceView]"
+  toString: () => "[object PerformanceView]",
 };
 
 /**

@@ -1094,8 +1094,13 @@ window._gBrowser = {
     if (newBrowser.hasAttribute("tabmodalPromptShowing")) {
       let prompts = newBrowser.parentNode.getElementsByTagNameNS(this._XUL_NS, "tabmodalprompt");
       let prompt = prompts[prompts.length - 1];
-      prompt.Dialog.setDefaultFocus();
-      return;
+      // @tabmodalPromptShowing is also set for other tab modal prompts
+      // (e.g. the Payment Request dialog) so there may not be a <tabmodalprompt>.
+      // Bug 1492814 will implement this for the Payment Request dialog.
+      if (prompt) {
+        prompt.Dialog.setDefaultFocus();
+        return;
+      }
     }
 
     // Focus the location bar if it was previously focused for that tab.
@@ -2946,6 +2951,11 @@ window._gBrowser = {
     else
       TabBarVisibility.update();
 
+    // Splice this tab out of any lines of succession before any events are
+    // dispatched.
+    this.replaceInSuccession(aTab, aTab.successor);
+    this.setSuccessor(aTab, null);
+
     // We're committed to closing the tab now.
     // Dispatch a notification.
     // We dispatch it before any teardown so that event listeners can
@@ -3123,6 +3133,12 @@ window._gBrowser = {
   _findTabToBlurTo(aTab) {
     if (!aTab.selected) {
       return null;
+    }
+
+    // If this tab has a successor, it should be selectable, since
+    // hiding or closing a tab removes that tab as a successor.
+    if (aTab.successor) {
+      return aTab.successor;
     }
 
     if (aTab.owner &&
@@ -3514,6 +3530,11 @@ window._gBrowser = {
       this.tabContainer._updateHiddenTabsStatus();
 
       this.tabContainer._setPositionalAttributes();
+
+      // Splice this tab out of any lines of succession before any events are
+      // dispatched.
+      this.replaceInSuccession(aTab, aTab.successor);
+      this.setSuccessor(aTab, null);
 
       let event = document.createEvent("Events");
       event.initEvent("TabHide", true, false);
@@ -4708,6 +4729,40 @@ window._gBrowser = {
 
       Services.obs.notifyObservers(tab, "AudibleAutoplayMediaOccurred");
     });
+  },
+
+  setSuccessor(aTab, successorTab) {
+    if (aTab.ownerGlobal != window) {
+      throw new Error("Cannot set the successor of another window's tab");
+    }
+    if (successorTab == aTab) {
+      successorTab = null;
+    }
+    if (successorTab && successorTab.ownerGlobal != window) {
+      throw new Error("Cannot set the successor to another window's tab");
+    }
+    if (aTab.successor) {
+      aTab.successor.predecessors.delete(aTab);
+    }
+    aTab.successor = successorTab;
+    if (successorTab) {
+      if (!successorTab.predecessors) {
+        successorTab.predecessors = new Set();
+      }
+      successorTab.predecessors.add(aTab);
+    }
+  },
+
+  /**
+   * For all tabs with aTab as a successor, set the successor to aOtherTab
+   * instead.
+   */
+  replaceInSuccession(aTab, aOtherTab) {
+    if (aTab.predecessors) {
+      for (const predecessor of Array.from(aTab.predecessors)) {
+        this.setSuccessor(predecessor, aOtherTab);
+      }
+    }
   },
 };
 

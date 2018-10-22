@@ -23,7 +23,7 @@
 
 const kDebuggerPrefs = [
   "devtools.debugger.remote-enabled",
-  "devtools.chrome.enabled"
+  "devtools.chrome.enabled",
 ];
 
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
@@ -80,43 +80,43 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
     {
       id: "toggleToolbox",
       shortcut: KeyShortcutsBundle.GetStringFromName("toggleToolbox.commandkey"),
-      modifiers
+      modifiers,
     },
     // All locales are using F12
     {
       id: "toggleToolboxF12",
       shortcut: KeyShortcutsBundle.GetStringFromName("toggleToolboxF12.commandkey"),
-      modifiers: "" // F12 is the only one without modifiers
+      modifiers: "", // F12 is the only one without modifiers
     },
     // Open WebIDE window
     {
       id: "webide",
       shortcut: KeyShortcutsBundle.GetStringFromName("webide.commandkey"),
-      modifiers: "shift"
+      modifiers: "shift",
     },
     // Open the Browser Toolbox
     {
       id: "browserToolbox",
       shortcut: KeyShortcutsBundle.GetStringFromName("browserToolbox.commandkey"),
-      modifiers: "accel,alt,shift"
+      modifiers: "accel,alt,shift",
     },
     // Open the Browser Console
     {
       id: "browserConsole",
       shortcut: KeyShortcutsBundle.GetStringFromName("browserConsole.commandkey"),
-      modifiers: "accel,shift"
+      modifiers: "accel,shift",
     },
     // Toggle the Responsive Design Mode
     {
       id: "responsiveDesignMode",
       shortcut: KeyShortcutsBundle.GetStringFromName("responsiveDesignMode.commandkey"),
-      modifiers
+      modifiers,
     },
     // Open ScratchPad window
     {
       id: "scratchpad",
       shortcut: KeyShortcutsBundle.GetStringFromName("scratchpad.commandkey"),
-      modifiers: "shift"
+      modifiers: "shift",
     },
 
     // The following keys are also registered in /client/definitions.js
@@ -126,49 +126,49 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
     {
       toolId: "inspector",
       shortcut: KeyShortcutsBundle.GetStringFromName("inspector.commandkey"),
-      modifiers
+      modifiers,
     },
     // Key for opening the Web Console
     {
       toolId: "webconsole",
       shortcut: KeyShortcutsBundle.GetStringFromName("webconsole.commandkey"),
-      modifiers
+      modifiers,
     },
     // Key for opening the Debugger
     {
       toolId: "jsdebugger",
       shortcut: KeyShortcutsBundle.GetStringFromName("debugger.commandkey"),
-      modifiers
+      modifiers,
     },
     // Key for opening the Network Monitor
     {
       toolId: "netmonitor",
       shortcut: KeyShortcutsBundle.GetStringFromName("netmonitor.commandkey"),
-      modifiers
+      modifiers,
     },
     // Key for opening the Style Editor
     {
       toolId: "styleeditor",
       shortcut: KeyShortcutsBundle.GetStringFromName("styleeditor.commandkey"),
-      modifiers: "shift"
+      modifiers: "shift",
     },
     // Key for opening the Performance Panel
     {
       toolId: "performance",
       shortcut: KeyShortcutsBundle.GetStringFromName("performance.commandkey"),
-      modifiers: "shift"
+      modifiers: "shift",
     },
     // Key for opening the Storage Panel
     {
       toolId: "storage",
       shortcut: KeyShortcutsBundle.GetStringFromName("storage.commandkey"),
-      modifiers: "shift"
+      modifiers: "shift",
     },
     // Key for opening the DOM Panel
     {
       toolId: "dom",
       shortcut: KeyShortcutsBundle.GetStringFromName("dom.commandkey"),
-      modifiers
+      modifiers,
     },
   ];
 
@@ -178,7 +178,7 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
     shortcuts.push({
       id: "inspectorMac",
       shortcut: KeyShortcutsBundle.GetStringFromName("inspector.commandkey"),
-      modifiers: "accel,shift"
+      modifiers: "accel,shift",
     });
   }
 
@@ -447,7 +447,7 @@ DevToolsStartup.prototype = {
         panel.setAttribute("class", "panel-subview-body");
         view.appendChild(panel);
         doc.getElementById("PanelUI-multiView").appendChild(view);
-      }
+      },
     };
     CustomizableUI.createWidget(item);
     CustomizableWidgets.push(item);
@@ -1001,10 +1001,10 @@ const JsonView = {
         },
         onError(status) {
           throw new Error("JSON Viewer's onSave failed in startPersistence");
-        }
+        },
       });
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(

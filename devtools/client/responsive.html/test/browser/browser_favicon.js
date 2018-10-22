@@ -19,7 +19,7 @@ function waitForLinkAvailable(browser) {
 
       gBrowser.removeTabsProgressListener(listener);
       resolve(iconURI);
-    }
+    },
   };
 
   const promise = new Promise((res, rej) => {

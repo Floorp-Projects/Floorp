@@ -81,7 +81,7 @@ function run_test() {
                 id: 16,
                 parent: 14,
                 reportLeafIndex: 2,
-              }
+              },
             ],
             id: 14,
             parent: 13,
@@ -104,17 +104,17 @@ function run_test() {
                 id: 18,
                 parent: 17,
                 reportLeafIndex: 1,
-              }
+              },
             ],
             id: 17,
             parent: 13,
             reportLeafIndex: undefined,
-          }
+          },
         ],
         id: 13,
         parent: 12,
         reportLeafIndex: undefined,
-      }
+      },
     ],
     id: 12,
     parent: undefined,

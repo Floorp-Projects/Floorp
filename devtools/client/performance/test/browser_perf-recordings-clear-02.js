@@ -17,7 +17,7 @@ add_task(async function() {
   const { panel } = await initPanelInNewTab({
     tool: "performance",
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { EVENTS, PerformanceController, PerformanceView } = panel.panelWin;
@@ -43,7 +43,7 @@ add_task(async function() {
 
   const recordingDeleted = times(PerformanceController, EVENTS.RECORDING_DELETED, 2);
   const recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: ["recording-stopped"]
+    expectedArgs: ["recording-stopped"],
   });
 
   PerformanceController.clearRecordings();

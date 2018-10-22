@@ -20,7 +20,7 @@ function run_test() {
     functionDisplayName: "nobody",
     parent: null,
     asyncParent: null,
-    asyncCause: null
+    asyncCause: null,
   };
   cache.addFrame(baseFrame);
 
@@ -36,7 +36,7 @@ function run_test() {
     functionDisplayName: "still nobody",
     parent: null,
     asyncParent: baseFrame,
-    asyncCause: "async"
+    asyncCause: "async",
   });
 
   event = cache.makeEvent();

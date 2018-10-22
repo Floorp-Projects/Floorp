@@ -15,7 +15,7 @@ TestProcessDirective.prototype = {
   data: "main process",
   toString() {
     return this.data;
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestProcessDirective]);

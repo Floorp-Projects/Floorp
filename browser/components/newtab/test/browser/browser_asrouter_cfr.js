@@ -33,12 +33,22 @@ function trigger_cfr_panel(browser, trigger, action = {type: "FOO"}) { // a fake
               data: {url: action.url},
             },
           },
-          secondary: {
+          secondary: [{
             label: {
               value: "Cancel",
               attributes: {accesskey: "C"},
             },
-          },
+          }, {
+            label: {
+              value: "Cancel 1",
+              attributes: {accesskey: "A"},
+            },
+          }, {
+            label: {
+              value: "Cancel 2",
+              attributes: {accesskey: "B"},
+            },
+          }],
         },
       },
     },

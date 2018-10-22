@@ -57,6 +57,7 @@ add_task(async function test_initialSet() {
         "postal-code": "90210",
         "street-address": "123 Sesame Street,\nApt 40",
         "tel": "+1 519 555-5555",
+        timeLastUsed: 200,
       },
       "68gjdh354j": {
         "address-level1": "CA",
@@ -67,21 +68,23 @@ add_task(async function test_initialSet() {
         "postal-code": "94041",
         "street-address": "P.O. Box 123",
         "tel": "+1 650 555-5555",
+        timeLastUsed: 300,
       },
       "abcde12345": {
         "address-level2": "Mountain View",
         "country": "US",
         "guid": "abcde12345",
         "name": "Mrs. Fields",
+        timeLastUsed: 100,
       },
     },
   });
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 3, "Check dropdown has all addresses");
-  ok(options[0].textContent.includes("Mr. Foo"), "Check first address");
-  ok(options[1].textContent.includes("Mrs. Bar"), "Check second address");
-  ok(options[2].textContent.includes("Mrs. Fields"), "Check third address");
+  ok(options[0].textContent.includes("Mrs. Bar"), "Check first address based on timeLastUsed");
+  ok(options[1].textContent.includes("Mr. Foo"), "Check second address based on timeLastUsed");
+  ok(options[2].textContent.includes("Mrs. Fields"), "Check third address based on timeLastUsed");
 });
 
 add_task(async function test_update() {

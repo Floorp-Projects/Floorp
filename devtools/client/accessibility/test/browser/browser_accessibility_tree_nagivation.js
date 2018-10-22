@@ -28,7 +28,7 @@ const tests = [{
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }],
     sidebar: {
       name: "Accessibility Panel Test",
@@ -39,40 +39,40 @@ const tests = [{
       keyboardShortcut: "",
       childCount: 2,
       indexInParent: 0,
-      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"],
+    },
+  },
 }, {
   desc: "Expand first tree node.",
   action: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "paragraph",
-      name: `""`
-    } ]
-  }
+      name: `""`,
+    } ],
+  },
 }, {
   desc: "Expand second tree node.",
   action: async ({ doc }) => toggleRow(doc, 1),
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "text leaf",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "paragraph",
-      name: `""`
+      name: `""`,
     }],
     sidebar: {
       name: "Top level header",
@@ -83,9 +83,9 @@ const tests = [{
       keyboardShortcut: "",
       childCount: 1,
       indexInParent: 0,
-      states: ["selectable text", "opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["selectable text", "opaque", "enabled", "sensitive"],
+    },
+  },
 }, {
   desc: "Select third tree node.",
   action: ({ doc }) => selectRow(doc, 2),
@@ -99,16 +99,16 @@ const tests = [{
       keyboardShortcut: "",
       childCount: 0,
       indexInParent: 0,
-      states: ["opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["opaque", "enabled", "sensitive"],
+    },
+  },
 }, {
   desc: "Collapse first tree node.",
   action: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }],
     sidebar: {
       name: "Accessibility Panel Test",
@@ -119,27 +119,27 @@ const tests = [{
       keyboardShortcut: "",
       childCount: 2,
       indexInParent: 0,
-      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"]
-    }
-  }
+      states: ["readonly", "focusable", "opaque", "enabled", "sensitive"],
+    },
+  },
 }, {
   desc: "Expand first tree node again.",
   action: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",
-      name: `"Accessibility Panel Test"`
+      name: `"Accessibility Panel Test"`,
     }, {
       role: "heading",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "text leaf",
-      name: `"Top level header"`
+      name: `"Top level header"`,
     }, {
       role: "paragraph",
-      name: `""`
-    }]
-  }
+      name: `""`,
+    }],
+  },
 }];
 
 /**

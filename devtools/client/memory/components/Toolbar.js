@@ -75,7 +75,7 @@ class Toolbar extends Component {
     if (view.state == viewState.CENSUS || view.state === viewState.DIFFING) {
       viewToolbarOptions = dom.div(
         {
-          className: "toolbar-group"
+          className: "toolbar-group",
         },
 
         dom.label(
@@ -126,7 +126,7 @@ class Toolbar extends Component {
       viewToolbarOptions = treeMapDisplays.length > 1
         ? dom.div(
           {
-            className: "toolbar-group"
+            className: "toolbar-group",
           },
 
             dom.label(
@@ -162,7 +162,7 @@ class Toolbar extends Component {
 
       viewToolbarOptions = dom.div(
         {
-          className: "toolbar-group"
+          className: "toolbar-group",
         },
 
         dom.label(
@@ -235,12 +235,12 @@ class Toolbar extends Component {
     return (
       dom.div(
         {
-          className: "devtools-toolbar"
+          className: "devtools-toolbar",
         },
 
         dom.div(
           {
-            className: "toolbar-group"
+            className: "toolbar-group",
           },
 
           dom.button({
@@ -248,14 +248,14 @@ class Toolbar extends Component {
             className: "clear-snapshots devtools-button",
             disabled: !snapshots.length,
             onClick: onClearSnapshotsClick,
-            title: L10N.getStr("clear-snapshots.tooltip")
+            title: L10N.getStr("clear-snapshots.tooltip"),
           }),
 
           dom.button({
             id: "take-snapshot",
             className: "take-snapshot devtools-button",
             onClick: onTakeSnapshotClick,
-            title: L10N.getStr("take-snapshot")
+            title: L10N.getStr("take-snapshot"),
           }),
 
           dom.button(

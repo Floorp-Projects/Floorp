@@ -50,7 +50,7 @@ exports.menuitems = [
       }
     },
     keyId: "toggleToolbox",
-    checkbox: true
+    checkbox: true,
   },
   { id: "menu_devtools_separator",
     separator: true },
@@ -76,7 +76,7 @@ exports.menuitems = [
     oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
       gDevToolsBrowser.openContentProcessToolbox(window.gBrowser);
-    }
+    },
   },
   { id: "menu_browserConsole",
     l10nKey: "browserConsoleCmd",
@@ -91,11 +91,11 @@ exports.menuitems = [
     oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
       ResponsiveUIManager.toggle(window, window.gBrowser.selectedTab, {
-        trigger: "menu"
+        trigger: "menu",
       });
     },
     keyId: "responsiveDesignMode",
-    checkbox: true
+    checkbox: true,
   },
   { id: "menu_eyedropper",
     l10nKey: "eyedropper",
@@ -109,7 +109,7 @@ exports.menuitems = [
       const inspectorFront = await target.getInspector();
       inspectorFront.pickColorFromPage({copyOnSelect: true, fromMenu: true});
     },
-    checkbox: true
+    checkbox: true,
   },
   { id: "menu_scratchpad",
     l10nKey: "scratchpad",
@@ -124,7 +124,7 @@ exports.menuitems = [
     oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
       gDevToolsBrowser.openAboutDebugging(window.gBrowser, "workers");
-    }
+    },
   },
   { id: "menu_devtools_connect",
     l10nKey: "devtoolsConnect",
@@ -132,15 +132,15 @@ exports.menuitems = [
     oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
       gDevToolsBrowser.openConnectScreen(window.gBrowser);
-    }
+    },
   },
   { separator: true,
-    id: "devToolsEndSeparator"
+    id: "devToolsEndSeparator",
   },
   { id: "getMoreDevtools",
     l10nKey: "getMoreDevtoolsCmd",
     oncommand(event) {
       openDocLink("https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/");
-    }
+    },
   },
 ];

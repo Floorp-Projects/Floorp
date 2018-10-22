@@ -29,7 +29,7 @@ var newFactory = function(window) {
     lockFactory(aLock) {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
   };
 };
 
@@ -151,7 +151,7 @@ var MockFilePicker = {
       return this.returnData[0].nsIFile;
     }
     return null;
-  }
+  },
 };
 
 function MockFilePickerInstance(window) {
@@ -280,5 +280,5 @@ MockFilePickerInstance.prototype = {
         }
       });
     });
-  }
+  },
 };

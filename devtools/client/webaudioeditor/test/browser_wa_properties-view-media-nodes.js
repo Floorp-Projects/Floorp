@@ -45,7 +45,7 @@ add_task(async function() {
 
   const events = Promise.all([
     getN(gFront, "create-node", 4),
-    waitForGraphRendered(panelWin, 4, 0)
+    waitForGraphRendered(panelWin, 4, 0),
   ]);
   reload(target);
   const [actors] = await events;
@@ -53,7 +53,7 @@ add_task(async function() {
 
   const types = [
     "AudioDestinationNode", "MediaElementAudioSourceNode",
-    "MediaStreamAudioSourceNode", "MediaStreamAudioDestinationNode"
+    "MediaStreamAudioSourceNode", "MediaStreamAudioDestinationNode",
   ];
 
   const defaults = await Promise.all(types.map(type => nodeDefaultValues(type)));

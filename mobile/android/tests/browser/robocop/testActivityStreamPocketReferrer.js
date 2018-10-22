@@ -33,7 +33,7 @@ let listener = {
         } else {
             tabLoadContainsPocketReferrer = false;
         }
-    }
+    },
 };
 
 let win = Services.wm.getMostRecentWindow("navigator:browser");

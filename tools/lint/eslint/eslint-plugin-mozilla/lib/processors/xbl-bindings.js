@@ -25,7 +25,7 @@ function parseError(err) {
     fatal: true,
     message: matches[1],
     line: parseInt(matches[2]) + 1,
-    column: parseInt(matches[3])
+    column: parseInt(matches[3]),
   };
 }
 
@@ -45,7 +45,7 @@ function XMLParser(parser) {
     local: "#document",
     uri: null,
     children: [],
-    comments: []
+    comments: [],
   };
   this._currentNode = this.document;
 }
@@ -64,7 +64,7 @@ XMLParser.prototype = {
       textContent: "",
       textLine: this.parser.line,
       textColumn: this.parser.column,
-      textEndLine: this.parser.line
+      textEndLine: this.parser.line,
     };
 
     for (let attr of Object.keys(tag.attributes)) {
@@ -102,7 +102,7 @@ XMLParser.prototype = {
 
   onComment(text) {
     this._currentNode.comments.push(text);
-  }
+  },
 };
 
 // -----------------------------------------------------------------------------
@@ -189,7 +189,7 @@ function addNodeLines(node, reindent) {
       line = " ".repeat(indent) + line.substring(minIndent);
       lineMap[scriptLines.length] = {
         line: startLine,
-        offset: 1 + indent - minIndent
+        offset: 1 + indent - minIndent,
       };
     }
 
@@ -209,7 +209,7 @@ module.exports = {
     // Unfortunately it also throws away the case of tagnames and attributes
     let parser = sax.parser(false, {
       lowercase: true,
-      xmlns: true
+      xmlns: true,
     });
 
     parser.onerror = function(err) {
@@ -379,5 +379,5 @@ module.exports = {
     }
 
     return errors;
-  }
+  },
 };

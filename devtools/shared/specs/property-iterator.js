@@ -23,20 +23,20 @@ const propertyIteratorSpec = generateActorSpec({
       request: {
         indexes: Option(0, "array:number"),
       },
-      response: RetVal("array:string")
+      response: RetVal("array:string"),
     },
     slice: {
       request: {
         start: Option(0, "number"),
         count: Option(0, "number"),
       },
-      response: RetVal("propertyiterator.data")
+      response: RetVal("propertyiterator.data"),
     },
     all: {
       request: {},
-      response: RetVal("propertyiterator.data")
+      response: RetVal("propertyiterator.data"),
     },
-  }
+  },
 });
 
 exports.propertyIteratorSpec = propertyIteratorSpec;

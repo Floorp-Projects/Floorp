@@ -28,7 +28,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getInsertedArea, this),
-        new invokerChecker(EVENT_REORDER, this.imageMap)
+        new invokerChecker(EVENT_REORDER, this.imageMap),
       ];
 
       this.invoke = function insertArea_invoke() {
@@ -48,12 +48,12 @@
             {
               role: ROLE_LINK,
               name: "a",
-              children: [ ]
+              children: [ ],
             },
             {
               role: ROLE_LINK,
               name: "b",
-              children: [ ]
+              children: [ ],
             },
           ] };
         testAccessibleTree(this.imageMap, accTree);
@@ -74,7 +74,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getAppendedArea, this),
-        new invokerChecker(EVENT_REORDER, this.imageMap)
+        new invokerChecker(EVENT_REORDER, this.imageMap),
       ];
 
       this.invoke = function appendArea_invoke() {
@@ -94,18 +94,18 @@
             {
               role: ROLE_LINK,
               name: "a",
-              children: [ ]
+              children: [ ],
             },
             {
               role: ROLE_LINK,
               name: "b",
-              children: [ ]
+              children: [ ],
             },
             {
               role: ROLE_LINK,
               name: "c",
-              children: [ ]
-            }
+              children: [ ],
+            },
           ] };
         testAccessibleTree(this.imageMap, accTree);
       };
@@ -126,7 +126,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getRemovedArea, this),
-        new invokerChecker(EVENT_REORDER, this.imageMap)
+        new invokerChecker(EVENT_REORDER, this.imageMap),
       ];
 
       this.invoke = function removeArea_invoke() {
@@ -140,13 +140,13 @@
             {
               role: ROLE_LINK,
               name: "b",
-              children: [ ]
+              children: [ ],
             },
             {
               role: ROLE_LINK,
               name: "c",
-              children: [ ]
-            }
+              children: [ ],
+            },
           ] };
         testAccessibleTree(this.imageMap, accTree);
       };
@@ -166,7 +166,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, this.imageMap),
         new invokerChecker(EVENT_SHOW, this.imgNode),
-        new invokerChecker(EVENT_REORDER, this.container)
+        new invokerChecker(EVENT_REORDER, this.container),
       ];
 
       this.invoke = function removeNameOnMap_invoke() {
@@ -176,7 +176,7 @@
       this.finalCheck = function removeNameOnMap_finalCheck() {
         var accTree =
           { SECTION: [
-            { GRAPHIC: [ ] }
+            { GRAPHIC: [ ] },
           ] };
         testAccessibleTree(this.container, accTree);
       };
@@ -200,7 +200,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getImageMap, this),
         new invokerChecker(EVENT_SHOW, this.imgNode),
-        new invokerChecker(EVENT_REORDER, this.container)
+        new invokerChecker(EVENT_REORDER, this.container),
       ];
 
       this.invoke = function restoreNameOnMap_invoke() {
@@ -216,8 +216,8 @@
           { SECTION: [
             { IMAGE_MAP: [
               { LINK: [ ] },
-              { LINK: [ ] }
-            ] }
+              { LINK: [ ] },
+            ] },
           ] };
         testAccessibleTree(this.container, accTree);
       };
@@ -241,7 +241,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getImageMap, this),
         new invokerChecker(EVENT_SHOW, this.imgNode),
-        new invokerChecker(EVENT_REORDER, this.container)
+        new invokerChecker(EVENT_REORDER, this.container),
       ];
 
       this.invoke = function removeMap_invoke() {
@@ -252,7 +252,7 @@
       this.finalCheck = function removeMap_finalCheck() {
         var accTree =
           { SECTION: [
-            { GRAPHIC: [ ] }
+            { GRAPHIC: [ ] },
           ] };
         testAccessibleTree(this.container, accTree);
       };
@@ -275,7 +275,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getImage, this),
         new invokerChecker(EVENT_SHOW, this.imgMapNode),
-        new invokerChecker(EVENT_REORDER, this.container)
+        new invokerChecker(EVENT_REORDER, this.container),
       ];
 
       this.invoke = function insertMap_invoke() {
@@ -301,8 +301,8 @@
         var accTree =
           { SECTION: [
             { IMAGE_MAP: [
-              { LINK: [ ] }
-            ] }
+              { LINK: [ ] },
+            ] },
           ] };
         testAccessibleTree(this.container, accTree);
       };
@@ -323,7 +323,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getImageMap, this),
-        new invokerChecker(EVENT_REORDER, aContainerID)
+        new invokerChecker(EVENT_REORDER, aContainerID),
       ];
 
       this.invoke = function hideImageMap_invoke() {

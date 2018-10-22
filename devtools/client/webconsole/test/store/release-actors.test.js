@@ -29,9 +29,9 @@ describe("Release actor enhancer:", () => {
           proxy: {
             releaseActor: (actor) => {
               releasedActors.push(actor);
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       // Add a log message.
@@ -71,9 +71,9 @@ describe("Release actor enhancer:", () => {
           proxy: {
             releaseActor: (actor) => {
               releasedActors.push(actor);
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       // Add a log message.
@@ -119,9 +119,9 @@ describe("Release actor enhancer:", () => {
           proxy: {
             releaseActor: (actor) => {
               releasedActors.push(actor);
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       // Add a log message.

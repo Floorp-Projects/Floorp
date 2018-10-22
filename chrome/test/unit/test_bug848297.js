@@ -4,7 +4,7 @@
  */
 
 var MANIFESTS = [
-  do_get_file("data/test_bug848297.manifest")
+  do_get_file("data/test_bug848297.manifest"),
 ];
 
 // Stub in the locale service so we can control what gets returned as the OS locale setting

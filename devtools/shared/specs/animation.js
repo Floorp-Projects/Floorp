@@ -7,7 +7,7 @@ const {
   Arg,
   RetVal,
   generateActorSpec,
-  types
+  types,
 } = require("devtools/shared/protocol");
 
 /**
@@ -18,7 +18,7 @@ types.addDictType("animationMutationChange", {
   // The type of change ("added" or "removed").
   type: "string",
   // The changed AnimationPlayerActor.
-  player: "animationplayer"
+  player: "animationplayer",
 });
 
 const animationPlayerSpec = generateActorSpec({
@@ -27,8 +27,8 @@ const animationPlayerSpec = generateActorSpec({
   events: {
     "changed": {
       type: "changed",
-      state: Arg(0, "json")
-    }
+      state: Arg(0, "json"),
+    },
   },
 
   methods: {
@@ -36,24 +36,24 @@ const animationPlayerSpec = generateActorSpec({
     getCurrentState: {
       request: {},
       response: {
-        data: RetVal("json")
-      }
+        data: RetVal("json"),
+      },
     },
     getProperties: {
       request: {},
       response: {
-        properties: RetVal("array:json")
-      }
+        properties: RetVal("array:json"),
+      },
     },
     getAnimationTypes: {
       request: {
-        propertyNames: Arg(0, "array:string")
+        propertyNames: Arg(0, "array:string"),
       },
       response: {
-        animationTypes: RetVal("json")
-      }
-    }
-  }
+        animationTypes: RetVal("json"),
+      },
+    },
+  },
 });
 
 exports.animationPlayerSpec = animationPlayerSpec;
@@ -64,36 +64,36 @@ const animationsSpec = generateActorSpec({
   events: {
     "mutations": {
       type: "mutations",
-      changes: Arg(0, "array:animationMutationChange")
-    }
+      changes: Arg(0, "array:animationMutationChange"),
+    },
   },
 
   methods: {
     setWalkerActor: {
       request: {
-        walker: Arg(0, "domwalker")
+        walker: Arg(0, "domwalker"),
       },
-      response: {}
+      response: {},
     },
     getAnimationPlayersForNode: {
       request: {
-        actorID: Arg(0, "domnode")
+        actorID: Arg(0, "domnode"),
       },
       response: {
-        players: RetVal("array:animationplayer")
-      }
+        players: RetVal("array:animationplayer"),
+      },
     },
     pauseSome: {
       request: {
         players: Arg(0, "array:animationplayer"),
       },
-      response: {}
+      response: {},
     },
     playSome: {
       request: {
         players: Arg(0, "array:animationplayer"),
       },
-      response: {}
+      response: {},
     },
     setCurrentTimes: {
       request: {
@@ -101,16 +101,16 @@ const animationsSpec = generateActorSpec({
         time: Arg(1, "number"),
         shouldPause: Arg(2, "boolean"),
       },
-      response: {}
+      response: {},
     },
     setPlaybackRates: {
       request: {
         players: Arg(0, "array:animationplayer"),
-        rate: Arg(1, "number")
+        rate: Arg(1, "number"),
       },
-      response: {}
-    }
-  }
+      response: {},
+    },
+  },
 });
 
 exports.animationsSpec = animationsSpec;

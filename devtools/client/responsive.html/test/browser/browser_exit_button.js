@@ -20,7 +20,7 @@ add_task(async function() {
 
   const waitTabIsDetached = Promise.all([
     once(tab, "TabClose"),
-    once(tab.linkedBrowser, "SwapDocShells")
+    once(tab.linkedBrowser, "SwapDocShells"),
   ]);
 
   // Detach the tab with RDM open.

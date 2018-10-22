@@ -45,7 +45,7 @@ const typedArrayTypes = [
   "Uint32Array",
   "Uint8ClampedArray",
   "Float32Array",
-  "Float64Array"
+  "Float64Array",
 ];
 
 add_task(async function() {

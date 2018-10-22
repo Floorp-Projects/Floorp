@@ -45,6 +45,8 @@ add_task(async function test_dropdown() {
     }
     is(event.target.parentElement.id, expectedPopupID, "Checked menulist of opened popup");
 
+    event.target.hidePopup(true);
+
     info("clicking cancel");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
 

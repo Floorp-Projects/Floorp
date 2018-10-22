@@ -233,7 +233,7 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.divNode),
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.invoke = function test1_invoke() {
@@ -263,11 +263,11 @@
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.divNode),
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.unexpectedEventSeq = [
-        new invokerChecker(EVENT_REORDER, this.tmpContainerNode)
+        new invokerChecker(EVENT_REORDER, this.tmpContainerNode),
       ];
 
       this.invoke = function test2_invoke() {
@@ -294,7 +294,7 @@
       this.unexpectedEventSeq = [
         new invokerChecker(EVENT_SHOW, this.divNode),
         new invokerChecker(EVENT_HIDE, this.divNode),
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.invoke = function test3_invoke() {
@@ -314,7 +314,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.firstChild; }, this.containerNode),
         new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.lastChild; }, this.containerNode),
-        new invokerChecker(EVENT_REORDER, this.containerNode)
+        new invokerChecker(EVENT_REORDER, this.containerNode),
       ];
 
       this.invoke = function insertReferredElm_invoke() {
@@ -335,7 +335,7 @@
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode("c4_child")),
         new invokerChecker(EVENT_SHOW, getNode("c4_middle")),
-        new invokerChecker(EVENT_REORDER, getNode("c4"))
+        new invokerChecker(EVENT_REORDER, getNode("c4")),
       ];
 
       this.invoke = function showHiddenParentOfVisibleChild_invoke() {
@@ -350,7 +350,7 @@
     function hideNDestroyDoc() {
       this.txt = null;
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, () => { return this.txt; })
+        new invokerChecker(EVENT_HIDE, () => { return this.txt; }),
       ];
 
       this.invoke = function hideNDestroyDoc_invoke() {
@@ -370,7 +370,7 @@
     function hideHideNDestroyDoc() {
       this.target = null;
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, () => { return this.target; })
+        new invokerChecker(EVENT_HIDE, () => { return this.target; }),
       ];
 
       this.invoke = function hideHideNDestroyDoc_invoke() {

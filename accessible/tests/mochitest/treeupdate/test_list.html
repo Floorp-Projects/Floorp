@@ -28,13 +28,13 @@
         children: [
           {
             role: ROLE_STATICTEXT,
-            children: []
+            children: [],
           },
           {
             role: ROLE_TEXT_LEAF,
-            children: []
-          }
-        ]
+            children: [],
+          },
+        ],
       };
 
       testAccessibleTree("li", accTree);
@@ -89,8 +89,8 @@
         var tree = {
           LISTITEM: [
             { STATICTEXT: [] },
-            { TEXT_LEAF: [] }
-          ]
+            { TEXT_LEAF: [] },
+          ],
         };
         testAccessibleTree(this.liNode, tree);
         SimpleTest.finish();

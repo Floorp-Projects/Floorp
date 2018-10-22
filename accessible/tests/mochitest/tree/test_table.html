@@ -24,25 +24,25 @@
           { CAPTION: [
             {
               role: ROLE_TEXT_LEAF,
-              name: "caption"
-             }
+              name: "caption",
+             },
           ] },
           { ROW: [
             { COLUMNHEADER: [ { TEXT_LEAF: [ ] } ] },
-            { COLUMNHEADER: [ { TEXT_LEAF: [ ] } ] }
+            { COLUMNHEADER: [ { TEXT_LEAF: [ ] } ] },
           ] },
           { ROW: [
             { CELL: [ { TEXT_LEAF: [ ] } ] },
-            { CELL: [ { TEXT_LEAF: [ ] } ] }
+            { CELL: [ { TEXT_LEAF: [ ] } ] },
           ] },
           { ROW: [
             { CELL: [ { TEXT_LEAF: [ ] } ] },
-            { CELL: [ { TEXT_LEAF: [ ] } ] }
+            { CELL: [ { TEXT_LEAF: [ ] } ] },
           ] },
           { ROW: [
             { CELL: [ { TEXT_LEAF: [ ] } ] },
-            { CELL: [ { TEXT_LEAF: [ ] } ] }
-          ] }
+            { CELL: [ { TEXT_LEAF: [ ] } ] },
+          ] },
         ] };
 
       testAccessibleTree("table", accTree);
@@ -52,8 +52,8 @@
         { TABLE: [
           { ROW: [
             { CELL: [ { TEXT_LEAF: [ ] } ] },
-            { CELL: [ { TEXT_LEAF: [ ] } ] }
-          ] }
+            { CELL: [ { TEXT_LEAF: [ ] } ] },
+          ] },
         ] };
 
       testAccessibleTree("table_caption_empty", accTree);
@@ -63,8 +63,8 @@
         { TABLE: [
           { ROW: [
             { CELL: [ { TEXT_LEAF: [ ] } ] },
-            { CELL: [ { TEXT_LEAF: [ ] } ] }
-          ] }
+            { CELL: [ { TEXT_LEAF: [ ] } ] },
+          ] },
         ] };
 
       testAccessibleTree("table_caption_firstempty", accTree);
@@ -75,13 +75,13 @@
           { CAPTION: [
             {
               role: ROLE_TEXT_LEAF,
-              name: "caption"
-             }
+              name: "caption",
+             },
           ] },
           { ROW: [
             { CELL: [ { TEXT_LEAF: [ ] } ] },
-            { CELL: [ { TEXT_LEAF: [ ] } ] }
-          ] }
+            { CELL: [ { TEXT_LEAF: [ ] } ] },
+          ] },
         ] };
 
       testAccessibleTree("table_caption_intheend", accTree);
@@ -96,19 +96,19 @@
             role: ROLE_ROW,
             children: [
               {
-                role: ROLE_COLUMNHEADER
-              }
-            ]
+                role: ROLE_COLUMNHEADER,
+              },
+            ],
           },
           {
             role: ROLE_ROW,
             children: [
               {
-                role: ROLE_CELL
-              }
-            ]
-          }
-        ]
+                role: ROLE_CELL,
+              },
+            ],
+          },
+        ],
       };
 
       testAccessibleTree("table2", accTree);
@@ -123,14 +123,14 @@
             role: ROLE_ROW,
             children: [
               {
-                role: ROLE_ROWHEADER
+                role: ROLE_ROWHEADER,
               },
               {
-                role: ROLE_CELL
-              }
-            ]
-          }
-        ]
+                role: ROLE_CELL,
+              },
+            ],
+          },
+        ],
       };
 
       testAccessibleTree("table3", accTree);
@@ -141,9 +141,9 @@
         { TABLE: [
           { ROW: [
             { CELL: [
-              { TEXT_LEAF: [ ] }
-            ] }
-          ] } ]
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] } ],
         };
       testAccessibleTree("table4", accTree);
 
@@ -154,10 +154,10 @@
           { TEXT_CONTAINER: [
             { ROW: [
               { CELL: [
-                { TEXT_LEAF: [ ] }
-              ] }
-            ] }
-          ] } ]
+                { TEXT_LEAF: [ ] },
+              ] },
+            ] },
+          ] } ],
         };
       testAccessibleTree("table5", accTree);
 
@@ -167,9 +167,9 @@
         { TABLE: [
           { ROW: [
             { CELL: [
-              { TEXT_LEAF: [ ] }
-            ] }
-          ] }
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
         ] };
       testAccessibleTree("logtable", accTree);
 
@@ -179,9 +179,9 @@
         { TABLE: [
           { ROW: [
             { CELL: [
-              { TEXT_LEAF: [ ] }
-            ] }
-          ] }
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
         ] };
       testAccessibleTree("block_table", accTree);
 
@@ -191,12 +191,12 @@
         { TABLE: [
           { ROW: [
             { CELL: [
-              { TEXT_LEAF: [ ] }
+              { TEXT_LEAF: [ ] },
             ] },
             { CELL: [
-              { TEXT_LEAF: [ ] }
-            ] }
-          ] }
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
         ] };
       testAccessibleTree("inline_table1", accTree);
 
@@ -209,12 +209,12 @@
               { TABLE: [
                 { ROW: [
                   { CELL: [
-                    { TEXT_LEAF: [ ] }
-                  ] }
-                ] }
+                    { TEXT_LEAF: [ ] },
+                  ] },
+                ] },
               ] },
-            ] }
-          ] }
+            ] },
+          ] },
         ] };
       testAccessibleTree("table_containing_inlinetable", accTree);
 
@@ -224,12 +224,12 @@
         { TABLE: [
           { ROW: [
             { CELL: [
-              { TEXT_LEAF: [ ] }
+              { TEXT_LEAF: [ ] },
             ] },
             { CELL: [
-              { TEXT_LEAF: [ ] }
-            ] }
-          ] }
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
         ] };
       testAccessibleTree("table_containing_block_cell", accTree);
 

@@ -22,7 +22,7 @@ describe("Debounce Middleware", () => {
 
   it("should pass the intercepted action to next", () => {
     const fakeAction = {
-      type: "FAKE_ACTION"
+      type: "FAKE_ACTION",
     };
 
     debounceActions()(fakeStore)(fakeNext)(fakeAction);
@@ -35,8 +35,8 @@ describe("Debounce Middleware", () => {
     const fakeAction = {
       type: "FAKE_ACTION",
       meta: {
-        debounce: true
-      }
+        debounce: true,
+      },
     };
 
     const executed = debounceActions(1, 1)(fakeStore)(fakeNext)(fakeAction);
@@ -51,8 +51,8 @@ describe("Debounce Middleware", () => {
     const fakeAction = {
       type: "FAKE_ACTION",
       meta: {
-        debounce: true
-      }
+        debounce: true,
+      },
     };
 
     debounceActions()(fakeStore)(fakeNext)(fakeAction);

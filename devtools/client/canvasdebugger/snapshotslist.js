@@ -14,7 +14,7 @@ var SnapshotsListView = extend(WidgetMethods, {
    */
   initialize: function() {
     this.widget = new SideMenuWidget($("#snapshots-list"), {
-      showArrows: true
+      showArrows: true,
     });
 
     this._onSelect = this._onSelect.bind(this);
@@ -94,8 +94,8 @@ var SnapshotsListView = extend(WidgetMethods, {
         actor: null,
         calls: null,
         thumbnails: null,
-        screenshot: null
-      }
+        screenshot: null,
+      },
     });
   },
 
@@ -414,7 +414,7 @@ var SnapshotsListView = extend(WidgetMethods, {
         version: CALLS_LIST_SERIALIZER_VERSION,
         calls: [],
         thumbnails: [],
-        screenshot: null
+        screenshot: null,
       };
       const functionCalls = snapshotItem.attachment.calls;
       const thumbnails = snapshotItem.attachment.thumbnails;
@@ -432,7 +432,7 @@ var SnapshotsListView = extend(WidgetMethods, {
             stack: stack,
             timestamp: timestamp,
             argsPreview: argsPreview,
-            callerPreview: callerPreview
+            callerPreview: callerPreview,
           };
         });
       });
@@ -485,7 +485,7 @@ var SnapshotsListView = extend(WidgetMethods, {
         });
       });
     }});
-  }
+  },
 });
 
 function showNotification(toolbox, name, message) {

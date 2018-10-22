@@ -118,7 +118,7 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
         }
         return {
           result: true,
-          message: message
+          message: message,
         };
       } else if (completion.yield) {
         assert(false, "Shouldn't ever get yield completions from an eval");
@@ -143,7 +143,7 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
     const {
       originalSourceActor,
       originalLine,
-      originalColumn
+      originalColumn,
     } = this.threadActor.unsafeSynchronize(
       this.threadActor.sources.getOriginalLocation(generatedLocation));
     const url = originalSourceActor.url;
@@ -200,7 +200,7 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
     this.threadActor.threadLifetimePool.removeActor(this);
     // Remove the actual breakpoint from the associated scripts.
     this.removeScripts();
-  }
+  },
 });
 
 exports.BreakpointActor = BreakpointActor;

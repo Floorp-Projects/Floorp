@@ -38,8 +38,8 @@ const TESTDATA = {
       host: "test1.example.org",
       hostOnly: true,
       isSecure: false,
-    }
-  ]
+    },
+  ],
 };
 
 add_task(async function() {

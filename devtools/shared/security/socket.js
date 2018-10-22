@@ -87,7 +87,7 @@ DebuggerSocket.connect = async function(settings) {
     port,
     encryption,
     cert,
-    transport
+    transport,
   });
   transport.connectionSettings = settings;
   return transport;
@@ -217,7 +217,7 @@ var _attemptTransport = async function(settings) {
     port: settings.port,
     encryption: settings.encryption,
     cert: settings.cert,
-    socket: s
+    socket: s,
   });
 
   let transport;
@@ -291,7 +291,7 @@ var _attemptConnect = async function({ host, port, encryption }) {
         deferred.reject(e);
       }
       deferred.resolve({ s, input, output });
-    }
+    },
   }, Services.tm.currentThread);
 
   // openOutputStream may throw NS_ERROR_NOT_INITIALIZED if we hit some race
@@ -341,7 +341,7 @@ function _isInputAlive(input) {
           deferred.reject(e);
         }
       }
-    }
+    },
   }, 0, 0, Services.tm.currentThread);
   return deferred.promise;
 }
@@ -540,7 +540,7 @@ SocketListener.prototype = {
       return null;
     }
     return {
-      sha256: this._socket.serverCert.sha256Fingerprint
+      sha256: this._socket.serverCert.sha256Fingerprint,
     };
   },
 
@@ -553,7 +553,7 @@ SocketListener.prototype = {
 
   onStopListening: function(socket, status) {
     dumpn("onStopListening, status: " + status);
-  }
+  },
 
 };
 
@@ -593,7 +593,7 @@ ServerSocketConnection.prototype = {
       return null;
     }
     return {
-      sha256: this._clientCert.sha256Fingerprint
+      sha256: this._clientCert.sha256Fingerprint,
     };
   },
 
@@ -604,7 +604,7 @@ ServerSocketConnection.prototype = {
   get client() {
     const client = {
       host: this.host,
-      port: this.port
+      port: this.port,
     };
     if (this.cert) {
       client.cert = this.cert;
@@ -615,7 +615,7 @@ ServerSocketConnection.prototype = {
   get server() {
     const server = {
       host: this._listener.host,
-      port: this._listener.port
+      port: this._listener.port,
     };
     if (this._listener.cert) {
       server.cert = this._listener.cert;
@@ -659,7 +659,7 @@ ServerSocketConnection.prototype = {
     this._transport.hooks = {
       onClosed: reason => {
         this.deny(reason);
-      }
+      },
     };
     this._transport.ready();
   },
@@ -731,7 +731,7 @@ ServerSocketConnection.prototype = {
     const result = await this._listener.authenticator.authenticate({
       client: this.client,
       server: this.server,
-      transport: this._transport
+      transport: this._transport,
     });
     switch (result) {
       case AuthenticationResult.DISABLE_ALL:
@@ -786,7 +786,7 @@ ServerSocketConnection.prototype = {
     this._socketTransport = null;
     this._transport = null;
     this._clientCert = null;
-  }
+  },
 
 };
 

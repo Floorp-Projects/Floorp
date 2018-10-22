@@ -21,7 +21,7 @@ describe("getRepeatId:", () => {
   it("returns different repeatIds for different values", () => {
     const message1 = stubPreparedMessages.get("console.log('foobar', 'test')");
     const message2 = Object.assign({}, message1, {
-      "parameters": ["funny", "monkey"]
+      "parameters": ["funny", "monkey"],
     });
     expect(getRepeatId(message1)).toNotEqual(getRepeatId(message2));
   });

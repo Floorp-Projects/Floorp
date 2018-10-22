@@ -11,27 +11,27 @@ function run_test() {
     by: "filename",
     then: {
       by: "internalType",
-      then: { by: "count", count: true, bytes: true }
+      then: { by: "count", count: true, bytes: true },
     },
     noFilename: {
       by: "internalType",
-      then: { by: "count", count: true, bytes: true }
+      then: { by: "count", count: true, bytes: true },
     },
   };
 
   const REPORT = {
     "http://example.com/app.js": {
-      JSScript: { count: 10, bytes: 100 }
+      JSScript: { count: 10, bytes: 100 },
     },
     "http://example.com/ads.js": {
-      "js::LazyScript": { count: 20, bytes: 200 }
+      "js::LazyScript": { count: 20, bytes: 200 },
     },
     "http://example.com/trackers.js": {
-      JSScript: { count: 30, bytes: 300 }
+      JSScript: { count: 30, bytes: 300 },
     },
     noFilename: {
-      "js::jit::JitCode": { count: 40, bytes: 400 }
-    }
+      "js::jit::JitCode": { count: 40, bytes: 400 },
+    },
   };
 
   const EXPECTED = {
@@ -58,7 +58,7 @@ function run_test() {
             id: 9,
             parent: 8,
             reportLeafIndex: 8,
-          }
+          },
         ],
         id: 8,
         parent: 1,
@@ -81,7 +81,7 @@ function run_test() {
             id: 7,
             parent: 6,
             reportLeafIndex: 6,
-          }
+          },
         ],
         id: 6,
         parent: 1,
@@ -104,7 +104,7 @@ function run_test() {
             id: 5,
             parent: 4,
             reportLeafIndex: 4,
-          }
+          },
         ],
         id: 4,
         parent: 1,
@@ -127,12 +127,12 @@ function run_test() {
             id: 3,
             parent: 2,
             reportLeafIndex: 2,
-          }
+          },
         ],
         id: 2,
         parent: 1,
         reportLeafIndex: undefined,
-      }
+      },
     ],
     id: 1,
     parent: undefined,

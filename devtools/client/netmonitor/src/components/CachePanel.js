@@ -58,7 +58,7 @@
         input({
           className: "tabpanel-summary-value textbox-input devtools-monospace",
           readOnly: true,
-          value
+          value,
         }),
       )
      );
@@ -108,8 +108,8 @@
           [DATA_SIZE]: cache.dataSize || NOT_AVAILABLE,
           [LAST_MODIFIED]: this.getDate(cache.lastModified) || NOT_AVAILABLE,
           [EXPIRES]: this.getDate(cache.expires) || NOT_AVAILABLE,
-          [DEVICE]: cache.device || NOT_AVAILABLE
-        }
+          [DEVICE]: cache.device || NOT_AVAILABLE,
+        },
        };
      } else {
        return div({ className: "empty-notice" },

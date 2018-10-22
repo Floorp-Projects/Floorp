@@ -1519,6 +1519,11 @@ pref("browser.contentblocking.global-toggle.enabled", true);
 pref("browser.contentblocking.global-toggle.enabled", false);
 #endif
 
+#ifdef NIGHTLY_BUILD
+// Enable the Storage Access API in Nightly
+pref("dom.storage_access.enabled", true);
+#endif
+
 // Disable the UI for FastBlock in product.
 pref("browser.contentblocking.fastblock.ui.enabled", false);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", false);
@@ -1771,6 +1776,9 @@ pref("prio.publicKeyA", "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8
 pref("prio.publicKeyB", "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
 #endif
 
+// Coverage ping is disabled by default.
+pref("toolkit.coverage.enabled", false);
+pref("toolkit.coverage.endpoint.base", "https://coverage.mozilla.org");
 // Whether or not Prio-encoded Telemetry will be sent along with the main ping.
 #if defined(NIGHTLY_BUILD) && defined(MOZ_LIBPRIO)
 pref("prio.enabled", true);

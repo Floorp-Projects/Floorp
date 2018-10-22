@@ -21,7 +21,7 @@ dump("DEVTOOLS_CSS_DB_DELIMITER");
 dump(JSON.stringify({
   cssProperties: cssProperties(),
   preferences: preferences(),
-  pseudoElements: pseudoElements()
+  pseudoElements: pseudoElements(),
 }));
 
 dump("DEVTOOLS_CSS_DB_DELIMITER");

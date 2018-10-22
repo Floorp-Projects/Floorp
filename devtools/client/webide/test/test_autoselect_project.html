@@ -90,7 +90,7 @@
           // so that no `project` event would fire.
           const oldProject = win.AppManager.selectedProject;
           win.AppManager.selectedProject = {
-            type: "mainProcess"
+            type: "mainProcess",
           };
           is(win.AppManager.selectedProject, oldProject, "AppManager.selectedProject shouldn't be updated if we selected the same project");
 

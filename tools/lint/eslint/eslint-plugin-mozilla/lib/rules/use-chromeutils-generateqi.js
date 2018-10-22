@@ -50,7 +50,7 @@ function funcToGenerateQI(context, node) {
 
 module.exports = {
   meta: {
-    fixable: "code"
+    fixable: "code",
   },
 
   create(context) {
@@ -63,7 +63,7 @@ module.exports = {
             message: MSG_NO_XPCOMUTILS_GENERATEQI,
             fix(fixer) {
               return fixer.replaceText(callee, "ChromeUtils.generateQI");
-            }
+            },
           });
         }
       },
@@ -76,7 +76,7 @@ module.exports = {
             message: MSG_NO_JS_QUERY_INTERFACE,
             fix(fixer) {
               return fixer.replaceText(right, funcToGenerateQI(context, right));
-            }
+            },
           });
         }
       },
@@ -88,10 +88,10 @@ module.exports = {
           fix(fixer) {
             let generateQI = funcToGenerateQI(context, node.value);
             return fixer.replaceText(node, `QueryInterface: ${generateQI}`);
-          }
+          },
         });
-      }
+      },
     };
-  }
+  },
 };
 

@@ -21,8 +21,8 @@
       var accTree =
         { LIST: [
           { LISTITEM: [
-            { TEXT_LEAF: [ ] }
-          ] }
+            { TEXT_LEAF: [ ] },
+          ] },
         ] };
 
       testAccessibleTree("list", accTree);
@@ -39,9 +39,9 @@
               { // li text leaf
                 role: ROLE_TEXT_LEAF,
                 name: "item1",
-                children: [ ]
-              }
-            ]
+                children: [ ],
+              },
+            ],
           },
           { // li@role="listitem"
             role: ROLE_LISTITEM,
@@ -49,11 +49,11 @@
               { // text leaf
                 role: ROLE_TEXT_LEAF,
                 name: "item2",
-                children: [ ]
-              }
-            ]
-          }
-        ]
+                children: [ ],
+              },
+            ],
+          },
+        ],
       };
 
       testAccessibleTree("crazy_list", accTree);

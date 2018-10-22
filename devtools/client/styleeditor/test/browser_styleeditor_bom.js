@@ -15,7 +15,7 @@ const DOCUMENT = "data:text/html;charset=UTF-8," +
            " </head>",
            " <body>",
            " </body>",
-           "</html>"
+           "</html>",
           ].join("\n"));
 
 const CONTENTS = "// Note that this file must be utf-16 with a " +

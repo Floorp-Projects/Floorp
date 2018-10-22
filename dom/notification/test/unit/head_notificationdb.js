@@ -12,7 +12,7 @@ function getNotificationObject(app, id, tag) {
     lang: "",
     body: app + " notification body",
     tag: tag || "",
-    icon: "icon.png"
+    icon: "icon.png",
   };
 }
 
@@ -38,7 +38,7 @@ function addAndSend(msg, reply, callback, payload, runNext = true) {
           run_next_test();
         }
       }
-    }
+    },
   };
   Services.cpmm.addMessageListener(reply, handler);
   Services.cpmm.sendAsyncMessage(msg, payload);

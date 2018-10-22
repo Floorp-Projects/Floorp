@@ -49,6 +49,14 @@ html|option {
   -moz-user-select: none;
 }
 
+/* Buttons get a default min-width in XUL. When they also have flex, they will
+ * be large enough anyway, and we don't want them to become smaller than their inner
+ * text which would then overflow the button. Set min-width back to auto for that:
+ */
+button[flex] {
+  min-width: auto;
+}
+
 description,
 label {
   line-height: 1.8em;

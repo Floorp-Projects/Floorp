@@ -37,7 +37,7 @@ async function readFromExtension(fileUri) {
   return new Promise(resolve => {
     NetUtil.asyncFetch({
       uri: fileUri,
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }, (input) => {
       try {
         const string = NetUtil.readInputStreamToString(input, input.available());
@@ -69,7 +69,7 @@ async function unpackFile(file) {
   await new Promise((resolve, reject) => {
     NetUtil.asyncFetch({
       uri: policy.getURL(file),
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }, (input) => {
       try {
         // Since we have to use NetUtil to read, probably it's okay to use for

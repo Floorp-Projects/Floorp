@@ -15,7 +15,7 @@ add_task(async function() {
   const [host,, doc] = await createHost("bottom", TEST_URI);
 
   const tree = new TreeWidget(doc.querySelector("div"), {
-    defaultType: "store"
+    defaultType: "store",
   });
 
   populateTree(tree, doc);
@@ -32,40 +32,40 @@ add_task(async function() {
 function populateTree(tree, doc) {
   tree.add([{
     id: "level1",
-    label: "Level 1"
+    label: "Level 1",
   }, {
     id: "level2-1",
-    label: "Level 2"
+    label: "Level 2",
   }, {
     id: "level3-1",
     label: "Level 3 - Child 1",
-    type: "dir"
+    type: "dir",
   }]);
   tree.add(["level1", "level2-1", {
     id: "level3-2",
-    label: "Level 3 - Child 2"
+    label: "Level 3 - Child 2",
   }]);
   tree.add(["level1", "level2-1", {
     id: "level3-3",
-    label: "Level 3 - Child 3"
+    label: "Level 3 - Child 3",
   }]);
   tree.add(["level1", {
     id: "level2-2",
-    label: "Level 2.1"
+    label: "Level 2.1",
   }, {
     id: "level3-1",
-    label: "Level 3.1"
+    label: "Level 3.1",
   }]);
   tree.add([{
     id: "level1",
-    label: "Level 1"
+    label: "Level 1",
   }, {
     id: "level2",
-    label: "Level 2"
+    label: "Level 2",
   }, {
     id: "level3",
     label: "Level 3",
-    type: "js"
+    type: "js",
   }]);
   tree.add(["level1.1", "level2", {id: "level3", type: "url"}]);
 }
@@ -103,8 +103,8 @@ function testTreeItemInsertedCorrectly(tree, doc) {
     id: "level1.2",
     node: node,
     attachment: {
-      foo: "bar"
-    }
+      foo: "bar",
+    },
   }]);
 
   is(tree.root.children.children.length, 3,
@@ -248,14 +248,14 @@ function testAPI(tree, doc) {
 
   tree.add([{
     id: "level1",
-    label: "Level 1"
+    label: "Level 1",
   }, {
     id: "level2",
-    label: "Level 2"
+    label: "Level 2",
   }, {
     id: "level3",
     label: "Level 3",
-    type: "js"
+    type: "js",
   }]);
 
   // test if clearing the tree works

@@ -33,7 +33,7 @@ module.exports = function(context) {
       if (param.name && isPrefixed(param.name)) {
         var errorObj = {
           name: param.name,
-          suggestion: deHungarianize(param.name)
+          suggestion: deHungarianize(param.name),
         };
         context.report(param,
                        "Parameter '{{name}}' uses Hungarian Notation, " +
@@ -50,6 +50,6 @@ module.exports = function(context) {
   return {
     "FunctionDeclaration": checkFunction,
     "ArrowFunctionExpression": checkFunction,
-    "FunctionExpression": checkFunction
+    "FunctionExpression": checkFunction,
   };
 };

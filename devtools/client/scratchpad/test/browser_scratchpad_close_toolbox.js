@@ -8,7 +8,7 @@ var {TargetFactory} = require("devtools/client/framework/target");
 
 function test() {
   const options = {
-    tabContent: "test closing toolbox and then reusing scratchpad"
+    tabContent: "test closing toolbox and then reusing scratchpad",
   };
   openTabAndScratchpad(options)
     .then(runTests)

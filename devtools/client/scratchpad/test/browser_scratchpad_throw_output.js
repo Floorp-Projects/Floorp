@@ -23,7 +23,7 @@ function testThrowOutput() {
       method: "display",
       code: "throw " + value + ";",
       result: "throw " + value + ";\n/*\nException: " + value + "\n*/",
-      label: "Correct exception message for '" + value + "' is shown"
+      label: "Correct exception message for '" + value + "' is shown",
     });
   });
 
@@ -39,7 +39,7 @@ function testThrowOutput() {
     code: "throw (new Array(" + longLength + ").join('a'));",
     result: "throw (new Array(" + longLength + ").join('a'));\n" +
             "/*\nException: " + shortedString + "\n*/",
-    label: "Correct exception message for a longString is shown"
+    label: "Correct exception message for a longString is shown",
   });
 
   runAsyncTests(scratchpad, tests).then(function() {

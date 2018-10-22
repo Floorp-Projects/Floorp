@@ -638,7 +638,19 @@ HTMLTableAccessible::CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx)
   if (!tableFrame)
     return -1;
 
-  return tableFrame->GetIndexByRowAndColumn(aRowIdx, aColIdx);
+  int32_t cellIndex = tableFrame->GetIndexByRowAndColumn(aRowIdx, aColIdx);
+  if (cellIndex == -1) {
+    // Sometimes, the accessible returned here is a row accessible instead of
+    // a cell accessible, for example when a cell has CSS display:block; set.
+    // In such cases, iterate through the cells in this row differently to find it.
+    nsIContent* cellContent = tableFrame->GetCellAt(aRowIdx, aColIdx);
+    Accessible* cell = mDoc->GetAccessible(cellContent);
+    if (cell && cell->IsTableRow()) {
+      return TableAccessible::CellIndexAt(aRowIdx, aColIdx);
+    }
+  }
+
+  return cellIndex;
 }
 
 int32_t
@@ -650,6 +662,14 @@ HTMLTableAccessible::ColIndexAt(uint32_t aCellIdx)
 
   int32_t rowIdx = -1, colIdx = -1;
   tableFrame->GetRowAndColumnByIndex(aCellIdx, &rowIdx, &colIdx);
+
+  if (colIdx == -1) {
+    // Sometimes, the index returned indicates that this is not a regular
+    // cell, for example when a cell has CSS display:block; set.
+    // In such cases, try the super class method to find it.
+    return TableAccessible::ColIndexAt(aCellIdx);
+  }
+
   return colIdx;
 }
 
@@ -662,6 +682,14 @@ HTMLTableAccessible::RowIndexAt(uint32_t aCellIdx)
 
   int32_t rowIdx = -1, colIdx = -1;
   tableFrame->GetRowAndColumnByIndex(aCellIdx, &rowIdx, &colIdx);
+
+  if (rowIdx == -1) {
+    // Sometimes, the index returned indicates that this is not a regular
+    // cell, for example when a cell has CSS display:block; set.
+    // In such cases, try the super class method to find it.
+    return TableAccessible::RowIndexAt(aCellIdx);
+  }
+
   return rowIdx;
 }
 
@@ -670,8 +698,15 @@ HTMLTableAccessible::RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
                                         int32_t* aColIdx)
 {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (tableFrame)
+  if (tableFrame) {
     tableFrame->GetRowAndColumnByIndex(aCellIdx, aRowIdx, aColIdx);
+    if (*aRowIdx == -1 || *aColIdx == -1) {
+      // Sometimes, the index returned indicates that this is not a regular
+      // cell, for example when a cell has CSS display:block; set.
+      // In such cases, try the super class method to find it.
+      TableAccessible::RowAndColIndicesAt(aCellIdx, aRowIdx, aColIdx);
+    }
+  }
 }
 
 uint32_t
@@ -681,7 +716,16 @@ HTMLTableAccessible::ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx)
   if (!tableFrame)
     return 0;
 
-  return tableFrame->GetEffectiveColSpanAt(aRowIdx, aColIdx);
+  uint32_t colExtent = tableFrame->GetEffectiveColSpanAt(aRowIdx, aColIdx);
+  if (colExtent == 0) {
+    nsIContent* cellContent = tableFrame->GetCellAt(aRowIdx, aColIdx);
+    Accessible* cell = mDoc->GetAccessible(cellContent);
+    if (cell && cell->IsTableRow()) {
+      return TableAccessible::ColExtentAt(aRowIdx, aColIdx);
+    }
+  }
+
+  return colExtent;
 }
 
 uint32_t

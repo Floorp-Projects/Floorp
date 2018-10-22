@@ -152,7 +152,7 @@ class ToolboxToolbar extends Component {
     const {
       focusedButton,
       toolboxButtons,
-      focusButton
+      focusButton,
     } = this.props;
     const visibleButtons = toolboxButtons.filter(command => {
       const {isVisible, isInStartContainer} = command;
@@ -181,7 +181,7 @@ class ToolboxToolbar extends Component {
           onClick,
           isChecked,
           className: buttonClass,
-          onKeyDown
+          onKeyDown,
         } = command;
 
         // If button is frame button, create menu button in order to
@@ -206,7 +206,7 @@ class ToolboxToolbar extends Component {
           tabIndex: id === focusedButton ? "0" : "-1",
           onKeyDown: (event) => {
             onKeyDown(event);
-          }
+          },
         });
       });
 
@@ -234,7 +234,7 @@ class ToolboxToolbar extends Component {
       id,
       isChecked,
       disabled,
-      description
+      description,
     } = command;
 
     const { toolbox } = this.props;
@@ -245,9 +245,7 @@ class ToolboxToolbar extends Component {
         disabled,
         menuId: id + "-panel",
         doc: toolbox.doc,
-        className: `devtools-button command-button ${
-          isChecked ? "command-button-checked " : ""
-        }`,
+        className: `devtools-button command-button ${isChecked ? "checked" : ""}`,
         ref: "frameMenuButton",
         title: description,
         onCloseButton: toolbox.highlighterUtils.unhighlight,
@@ -286,14 +284,14 @@ class ToolboxToolbar extends Component {
         key: "toolbox-frame-key-" + frame.id,
         label,
         checked: frame.id === toolbox.selectedFrameId,
-        onClick: this.clickFrameButton
+        onClick: this.clickFrameButton,
       }));
     });
 
     return MenuList(
       {
         id: "toolbox-frame-menu",
-        onHighlightedChildChange: this.highlightFrame
+        onHighlightedChildChange: this.highlightFrame,
       },
       items);
   }
@@ -428,7 +426,7 @@ class ToolboxToolbar extends Component {
       ? (
         div(
           {
-            className: classnames.join(" ")
+            className: classnames.join(" "),
           },
           startButtons,
           ToolboxTabs(this.props),

@@ -18,7 +18,7 @@ function throttlingReducer(state = INITIAL_STATE, action) {
     case CHANGE_NETWORK_THROTTLING: {
       return {
         enabled: action.enabled,
-        profile: action.profile
+        profile: action.profile,
       };
     }
     default:

@@ -6,5 +6,5 @@
 const LocalizationHelper = require("devtools/client/webconsole/test/fixtures/L10n");
 
 module.exports = {
-  LocalizationHelper
+  LocalizationHelper,
 };

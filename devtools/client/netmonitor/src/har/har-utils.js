@@ -20,7 +20,7 @@ const OPEN_FLAGS = {
   CREATE_FILE: parseInt("0x08", 16),
   APPEND: parseInt("0x10", 16),
   TRUNCATE: parseInt("0x20", 16),
-  EXCL: parseInt("0x80", 16)
+  EXCL: parseInt("0x80", 16),
 };
 
 function formatDate(date) {

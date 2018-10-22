@@ -270,7 +270,7 @@ impl ContextOps for ClientContext {
         _user_ptr: *mut c_void,
     ) -> Result<()> {
         assert_not_in_callback();
-        Ok(())
+        Err(Error::not_supported())
     }
 }
 

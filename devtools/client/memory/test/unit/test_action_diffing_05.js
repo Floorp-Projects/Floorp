@@ -64,18 +64,18 @@ add_task(async function() {
       name: "toggling inversion",
       func: () => dispatch(setCensusDisplayAndRefresh(
         heapWorker,
-        censusDisplays.invertedAllocationStack))
+        censusDisplays.invertedAllocationStack)),
     },
     {
       name: "filtering",
-      func: () => dispatch(setFilterStringAndRefresh("scr", heapWorker))
+      func: () => dispatch(setFilterStringAndRefresh("scr", heapWorker)),
     },
     {
       name: "changing displays",
       func: () =>
         dispatch(setCensusDisplayAndRefresh(heapWorker,
-                                            censusDisplays.coarseType))
-    }
+                                            censusDisplays.coarseType)),
+    },
   ];
 
   for (const { name, func } of shouldTriggerRecompute) {

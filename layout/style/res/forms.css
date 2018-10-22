@@ -225,13 +225,7 @@ select {
   background-color: -moz-Combobox;
   color: -moz-ComboboxText;
   font: -moz-list;
-  /*
-   * Note that the "UA !important" tests in
-   * layout/style/test/test_animations.html depend on this rule, because
-   * they need some UA !important rule to test.  If this changes, use a
-   * different one there.
-   */
-  line-height: normal !important;
+  line-height: initial;
   white-space: nowrap !important;
   word-wrap: normal !important;
   text-align: start;
@@ -318,10 +312,6 @@ select > button[orientation="right"]:active {
   background-image: url("arrowd-right.gif") !important;
 }
 
-select:empty {
-  inline-size: 2.5em;
-}
-
 *|*::-moz-display-comboboxcontrol-frame {
   overflow: -moz-hidden-unscrollable;
   /* This block-start/end padding plus the combobox block-start/end border need to
@@ -345,6 +335,12 @@ option {
   float: none !important;
   position: static !important;
   min-block-size: 1em;
+  /*
+   * Note that the "UA !important" tests in
+   * layout/style/test/test_animations.html depend on this rule, because
+   * they need some UA !important rule to test.  If this changes, use a
+   * different one there.
+   */
   line-height: normal !important;
   -moz-user-select: none;
   text-indent: 0;

@@ -10,7 +10,7 @@ add_task(async function() {
   // Now open the scratchpad as window.
   info("Test existence of menu bar of scratchpad.");
   const options = {
-    tabContent: "Sanity test for scratchpad panel."
+    tabContent: "Sanity test for scratchpad panel.",
   };
 
   info("Open scratchpad.");

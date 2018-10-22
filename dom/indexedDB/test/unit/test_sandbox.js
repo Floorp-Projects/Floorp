@@ -42,7 +42,7 @@ function exerciseInterface() {
         var store = tx.objectStore(this.store);
         return this._result(tx, store.add(v, k));
       });
-    }
+    },
   };
 
   var db = new DB("data", "base");

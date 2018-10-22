@@ -24,14 +24,14 @@ const TESTS = [
             getCookieId("c1", "test1.example.org",
                         "/browser/devtools/server/tests/browser/"),
             getCookieId("c2", "test1.example.org",
-                        "/browser/devtools/server/tests/browser/")
-          ]
+                        "/browser/devtools/server/tests/browser/"),
+          ],
         },
         localStorage: {
-          "http://test1.example.org": ["l1"]
-        }
-      }
-    }
+          "http://test1.example.org": ["l1"],
+        },
+      },
+    },
   },
 
   // index 1
@@ -49,15 +49,15 @@ const TESTS = [
           "http://test1.example.org": [
             getCookieId("c1", "test1.example.org",
                         "/browser/devtools/server/tests/browser/"),
-          ]
-        }
+          ],
+        },
       },
       added: {
         localStorage: {
-          "http://test1.example.org": ["l2"]
-        }
-      }
-    }
+          "http://test1.example.org": ["l2"],
+        },
+      },
+    },
   },
 
   // index 2
@@ -78,18 +78,18 @@ const TESTS = [
           "http://test1.example.org": [
             getCookieId("c2", "test1.example.org",
                         "/browser/devtools/server/tests/browser/"),
-          ]
+          ],
         },
         localStorage: {
-          "http://test1.example.org": ["l1"]
-        }
+          "http://test1.example.org": ["l1"],
+        },
       },
       added: {
         localStorage: {
-          "http://test1.example.org": ["l3"]
-        }
-      }
-    }
+          "http://test1.example.org": ["l3"],
+        },
+      },
+    },
   },
 
   // index 3
@@ -119,29 +119,29 @@ const TESTS = [
           "http://test1.example.org": [
             getCookieId("c3", "test1.example.org",
                         "/browser/devtools/server/tests/browser/"),
-          ]
+          ],
         },
         sessionStorage: {
-          "http://test1.example.org": ["s1", "s2"]
-        }
+          "http://test1.example.org": ["s1", "s2"],
+        },
       },
       changed: {
         localStorage: {
-          "http://test1.example.org": ["l3"]
-        }
+          "http://test1.example.org": ["l3"],
+        },
       },
       deleted: {
         cookies: {
           "http://test1.example.org": [
             getCookieId("c1", "test1.example.org",
                         "/browser/devtools/server/tests/browser/"),
-          ]
+          ],
         },
         localStorage: {
-          "http://test1.example.org": ["l2"]
-        }
-      }
-    }
+          "http://test1.example.org": ["l2"],
+        },
+      },
+    },
   },
 
   // index 4
@@ -153,10 +153,10 @@ const TESTS = [
     expected: {
       deleted: {
         sessionStorage: {
-          "http://test1.example.org": ["s1"]
-        }
-      }
-    }
+          "http://test1.example.org": ["s1"],
+        },
+      },
+    },
   },
 
   // index 5
@@ -171,11 +171,11 @@ const TESTS = [
           "http://test1.example.org": [
             getCookieId("c3", "test1.example.org",
                         "/browser/devtools/server/tests/browser/"),
-          ]
-        }
-      }
-    }
-  }
+          ],
+        },
+      },
+    },
+  },
 ];
 
 add_task(async function() {

@@ -44,7 +44,7 @@ TestStreamListener.prototype = {
       this._deferred = defer();
     }
     return this._deferred.promise;
-  }
+  },
 };
 
 function TestChannel() {

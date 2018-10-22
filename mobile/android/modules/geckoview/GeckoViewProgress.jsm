@@ -131,7 +131,7 @@ var IdentityHandler = {
         mixed_display: mixedDisplay,
         mixed_active: mixedActive,
         tracking: trackingMode,
-      }
+      },
     };
 
     if (aBrowser.contentPrincipal) {
@@ -245,7 +245,7 @@ class GeckoViewProgress extends GeckoViewModule {
 
       let message = {
         type: "GeckoView:PageStop",
-        success: isSuccess
+        success: isSuccess,
       };
 
       this.eventDispatcher.sendRequest(message);
@@ -268,7 +268,7 @@ class GeckoViewProgress extends GeckoViewModule {
 
     let message = {
       type: "GeckoView:SecurityChanged",
-      identity: identity
+      identity: identity,
     };
 
     this.eventDispatcher.sendRequest(message);
@@ -294,7 +294,7 @@ class GeckoViewProgress extends GeckoViewModule {
 
         this.eventDispatcher.sendRequest({
           type: "GeckoView:PageStop",
-          success: false
+          success: false,
         });
       }
     }

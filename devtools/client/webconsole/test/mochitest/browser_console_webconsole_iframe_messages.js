@@ -15,7 +15,7 @@ const expectedMessages = [
   "main file",
   "blah",
   "iframe 2",
-  "iframe 3"
+  "iframe 3",
 ];
 
 const expectedDupedMessage = "iframe 1";

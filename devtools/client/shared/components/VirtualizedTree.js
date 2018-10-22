@@ -243,7 +243,7 @@ class Tree extends Component {
       scroll: 0,
       height: window.innerHeight,
       seen: new Set(),
-      mouseDown: false
+      mouseDown: false,
     };
 
     this._onExpand = oncePerAnimationFrame(this._onExpand).bind(this);
@@ -482,7 +482,7 @@ class Tree extends Component {
   _onScroll(e) {
     this.setState({
       scroll: Math.max(this.refs.tree.scrollTop, 0),
-      height: this.refs.tree.clientHeight
+      height: this.refs.tree.clientHeight,
     });
   }
 
@@ -662,9 +662,9 @@ class Tree extends Component {
         style: {
           padding: 0,
           margin: 0,
-          height: topSpacerHeight + "px"
-        }
-      })
+          height: topSpacerHeight + "px",
+        },
+      }),
     ];
 
     for (let i = 0; i < toRender.length; i++) {
@@ -697,8 +697,8 @@ class Tree extends Component {
       style: {
         padding: 0,
         margin: 0,
-        height: bottomSpacerHeight + "px"
-      }
+        height: bottomSpacerHeight + "px",
+      },
     }));
 
     return dom.div(
@@ -732,8 +732,8 @@ class Tree extends Component {
         "aria-activedescendant": focused && this.props.getKey(focused),
         style: {
           padding: 0,
-          margin: 0
-        }
+          margin: 0,
+        },
       },
       nodes
     );
@@ -766,7 +766,7 @@ class ArrowExpanderClass extends Component {
       className: "arrow theme-twisty",
       onClick: this.props.expanded
         ? () => this.props.onCollapse(this.props.item)
-        : e => this.props.onExpand(this.props.item, e.altKey)
+        : e => this.props.onExpand(this.props.item, e.altKey),
     };
 
     if (this.props.expanded) {
@@ -775,7 +775,7 @@ class ArrowExpanderClass extends Component {
 
     if (!this.props.visible) {
       attrs.style = {
-        visibility: "hidden"
+        visibility: "hidden",
       };
     }
 
@@ -842,8 +842,8 @@ class TreeNodeClass extends Component {
         "data-depth": this.props.depth,
         style: {
           padding: 0,
-          margin: 0
-        }
+          margin: 0,
+        },
       },
 
       this.props.renderItem(this.props.item,

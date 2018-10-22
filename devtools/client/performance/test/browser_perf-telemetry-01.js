@@ -18,7 +18,7 @@ add_task(async function() {
 
   const { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, false);

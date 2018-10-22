@@ -125,7 +125,7 @@ DelayedTask.prototype = {
     if (this.runTask) {
       this.runTask();
     }
-  }
+  },
 };
 
 module.exports = batchingMiddleware;

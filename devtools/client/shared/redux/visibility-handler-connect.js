@@ -24,5 +24,5 @@ function visibilityHandlerConnect() {
 }
 
 module.exports = {
-  connect: visibilityHandlerConnect
+  connect: visibilityHandlerConnect,
 };

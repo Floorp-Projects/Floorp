@@ -34,35 +34,35 @@ function test_display_string() {
   const testCases = [
     {
       input: "new Boolean(true)",
-      output: "true"
+      output: "true",
     },
     {
       input: "new Number(5)",
-      output: "5"
+      output: "5",
     },
     {
       input: "new String('foo')",
-      output: "foo"
+      output: "foo",
     },
     {
       input: "new Map()",
-      output: "[object Map]"
+      output: "[object Map]",
     },
     {
       input: "[,,,,,,,]",
-      output: ",,,,,,"
+      output: ",,,,,,",
     },
     {
       input: "[1, 2, 3]",
-      output: "1,2,3"
+      output: "1,2,3",
     },
     {
       input: "[undefined, null, true, 'foo', 5]",
-      output: ",,true,foo,5"
+      output: ",,true,foo,5",
     },
     {
       input: "[{},{}]",
-      output: "[object Object],[object Object]"
+      output: "[object Object],[object Object]",
     },
     {
       input: "(" + function() {
@@ -70,27 +70,27 @@ function test_display_string() {
         arr.push(arr);
         return arr;
       } + ")()",
-      output: "1,"
+      output: "1,",
     },
     {
       input: "{}",
-      output: "[object Object]"
+      output: "[object Object]",
     },
     {
       input: "Object.create(null)",
-      output: "[object Object]"
+      output: "[object Object]",
     },
     {
       input: "new Error('foo')",
-      output: "Error: foo"
+      output: "Error: foo",
     },
     {
       input: "new SyntaxError()",
-      output: "SyntaxError"
+      output: "SyntaxError",
     },
     {
       input: "new ReferenceError('')",
-      output: "ReferenceError"
+      output: "ReferenceError",
     },
     {
       input: "(" + function() {
@@ -98,45 +98,45 @@ function test_display_string() {
         err.name = "foo";
         return err;
       } + ")()",
-      output: "foo: bar"
+      output: "foo: bar",
     },
     {
       input: "() => {}",
-      output: "() => {}"
+      output: "() => {}",
     },
     {
       input: "function (foo, bar) {}",
-      output: "function (foo, bar) {}"
+      output: "function (foo, bar) {}",
     },
     {
       input: "function foo(bar) {}",
-      output: "function foo(bar) {}"
+      output: "function foo(bar) {}",
     },
     {
       input: "Array",
-      output: Array + ""
+      output: Array + "",
     },
     {
       input: "/foo[bar]/g",
-      output: "/foo[bar]/g"
+      output: "/foo[bar]/g",
     },
     {
       input: "new Proxy({}, {})",
-      output: "<proxy>"
+      output: "<proxy>",
     },
     {
       input: "Promise.resolve(5)",
-      output: "Promise (fulfilled: 5)"
+      output: "Promise (fulfilled: 5)",
     },
     {
       // This rejection is left uncaught, see expectUncaughtRejection below.
       input: "Promise.reject(new Error())",
-      output: "Promise (rejected: Error)"
+      output: "Promise (rejected: Error)",
     },
     {
       input: "new Promise(function () {})",
-      output: "Promise (pending)"
-    }
+      output: "Promise (pending)",
+    },
   ];
 
   PromiseTestUtils.expectUncaughtRejection(/Error/);

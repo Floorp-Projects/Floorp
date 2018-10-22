@@ -25,7 +25,7 @@
         new invokerChecker(EVENT_REORDER, () => {
           let doc = getNode("iframe").contentDocument;
           return doc && doc.getElementById("c1");
-        })
+        }),
       ];
 
       this.invoke = function runTest_invoke() {
@@ -33,10 +33,10 @@
           SECTION: [ // c1
             { TEXT_LEAF: [] }, // Some text
             { TEXT_CONTAINER: [
-              { TEXT_LEAF: [] } // something with ..
+              { TEXT_LEAF: [] }, // something with ..
             ] },
-            { TEXT_LEAF: [] } // More text
-          ]
+            { TEXT_LEAF: [] }, // More text
+          ],
         };
         testAccessibleTree(iframe.contentDocument.getElementById("c1"), tree);
 
@@ -47,8 +47,8 @@
         var tree = {
           SECTION: [ // c1
             { TEXT_LEAF: [] }, // Some text
-            { TEXT_LEAF: [] } // More text
-          ]
+            { TEXT_LEAF: [] }, // More text
+          ],
         };
         testAccessibleTree(iframe.contentDocument.getElementById("c1"), tree);
       };
@@ -64,7 +64,7 @@
         new invokerChecker(EVENT_REORDER, () => {
           let doc = getNode("iframe").contentDocument;
           return doc && doc.getElementById("c2");
-        })
+        }),
       ];
 
       this.invoke = function runShadowTest_invoke() {
@@ -72,23 +72,27 @@
           SECTION: [ // c2
             { TEXT_LEAF: [] }, // Some text
             { TEXT_CONTAINER: [
-              { TEXT_LEAF: [] } // something with ..
+              { TEXT_LEAF: [] }, // something with ..
             ] },
-            { TEXT_LEAF: [] } // More text
-          ]
+            { TEXT_LEAF: [] }, // More text
+          ],
         };
         testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
 
         var shadowRoot = iframe.contentDocument.getElementById("c2_c").shadowRoot;
         shadowRoot.firstElementChild.querySelector("span").remove();
+        // bug 1487312
+        shadowRoot.firstElementChild.offsetTop;
+        shadowRoot.appendChild(document.createElement("button"));
       };
 
       this.finalCheck = function runShadowTest_finalCheck() {
         var tree = {
           SECTION: [ // c2
             { TEXT_LEAF: [] }, // Some text
-            { TEXT_LEAF: [] } // More text
-          ]
+            { TEXT_LEAF: [] }, // More text
+            { PUSHBUTTON: [] }, // The button we appended.
+          ],
         };
         testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
       };
@@ -112,8 +116,8 @@
     SimpleTest.waitForExplicitFinish();
     SpecialPowers.pushPrefEnv({
       set: [
-        ["dom.webcomponents.shadowdom.enabled", true]
-      ]
+        ["dom.webcomponents.shadowdom.enabled", true],
+      ],
     }, function() {
       // This test loads in an iframe, to ensure that the element instance is
       // loaded with the correct value of the preference.

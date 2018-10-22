@@ -4,7 +4,7 @@
 "use strict";
 
 const {
-  callWatcherSpec
+  callWatcherSpec,
 } = require("chrome://mochitests/content/browser/devtools/client/canvasdebugger/test/call-watcher-spec");
 const protocol = require("devtools/shared/protocol");
 
@@ -17,5 +17,5 @@ protocol.FrontClassWithSpec(callWatcherSpec, {
   initialize: function(client, { callWatcherActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: callWatcherActor });
     this.manage(this);
-  }
+  },
 });

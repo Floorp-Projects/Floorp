@@ -23,7 +23,7 @@ const testToolDefinition = {
       destroy: () => {},
       panelDoc: iframeWindow.document,
     };
-  }
+  },
 };
 
 add_task(async function() {
@@ -38,7 +38,7 @@ add_task(async function() {
 
   info("Creating the sidebar widget");
   const sidebar = new ToolSidebar(tabbox, toolPanel, "bug1101569", {
-    showAllTabsMenu: true
+    showAllTabsMenu: true,
   });
 
   const allTabsMenu = toolPanel.panelDoc.querySelector(".devtools-sidebar-alltabs");

@@ -25,21 +25,21 @@ var TEST_DATA = {
       line: 1,
       column: 2,
       functionDisplayName: "x",
-      parent: 0
+      parent: 0,
     }, {
       source: "B",
       line: 3,
       column: 4,
       functionDisplayName: "y",
-      parent: 1
+      parent: 1,
     }, {
       source: "C",
       line: 5,
       column: 6,
       functionDisplayName: null,
-      parent: 2
-    }
-  ]
+      parent: 2,
+    },
+  ],
 };
 
 var EXPECTED_OUTPUT = {
@@ -53,13 +53,13 @@ var EXPECTED_OUTPUT = {
     data: [
       [ 1, 150, 100 ],
       [ 2, 200, 200 ],
-      [ 3, 250, 300 ]
-    ]
+      [ 3, 250, 300 ],
+    ],
   },
   stackTable: {
     "schema": {
       "prefix": 0,
-      "frame": 1
+      "frame": 1,
     },
     "data": [
       null,
@@ -71,8 +71,8 @@ var EXPECTED_OUTPUT = {
       [ 1, 2 ],
 
       // x (A:1:2) > y (B:3:4) > C:5:6
-      [ 2, 3 ]
-    ]
+      [ 2, 3 ],
+    ],
   },
   frameTable: {
     "schema": {
@@ -80,18 +80,18 @@ var EXPECTED_OUTPUT = {
       "implementation": 1,
       "optimizations": 2,
       "line": 3,
-      "category": 4
+      "category": 4,
     },
     data: [
       null,
       [ 0 ],
       [ 1 ],
-      [ 2 ]
-    ]
+      [ 2 ],
+    ],
   },
   "stringTable": [
     "x (A:1:2)",
     "y (B:3:4)",
-    "C:5:6"
+    "C:5:6",
   ],
 };

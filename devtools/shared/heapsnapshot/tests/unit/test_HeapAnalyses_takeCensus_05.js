@@ -7,7 +7,7 @@
 
 const BREAKDOWN = {
   by: "internalType",
-  then: { by: "count", count: true, bytes: true }
+  then: { by: "count", count: true, bytes: true },
 };
 
 add_task(async function() {
@@ -18,13 +18,13 @@ add_task(async function() {
   ok(true, "Should have read the heap snapshot");
 
   const { report } = await client.takeCensus(snapshotFilePath, {
-    breakdown: BREAKDOWN
+    breakdown: BREAKDOWN,
   });
 
   const { report: treeNode } = await client.takeCensus(snapshotFilePath, {
-    breakdown: BREAKDOWN
+    breakdown: BREAKDOWN,
   }, {
-    asTreeNode: true
+    asTreeNode: true,
   });
 
   ok(treeNode.children.length > 0, "treeNode has children");

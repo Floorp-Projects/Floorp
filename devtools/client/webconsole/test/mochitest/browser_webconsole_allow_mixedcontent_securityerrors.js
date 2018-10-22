@@ -56,6 +56,6 @@ add_task(async function() {
   checkLink({
     ...linkSimulation,
     expectedLink: LEARN_MORE_URI,
-    expectedTab: "tab"
+    expectedTab: "tab",
   });
 });

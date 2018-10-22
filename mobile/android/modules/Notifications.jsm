@@ -121,7 +121,7 @@ Notification.prototype = {
         let obj = {
           buttonId: button.buttonId,
           title: button.title,
-          icon: button.icon
+          icon: button.icon,
         };
         msg.actions.push(obj);
       }
@@ -144,7 +144,7 @@ Notification.prototype = {
       cookie: JSON.stringify(this._cookie),
     };
     EventDispatcher.instance.dispatch("Notification:Hide", msg);
-  }
+  },
 };
 
 var Notifications = {

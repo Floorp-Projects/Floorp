@@ -33,7 +33,7 @@ add_task(async function() {
 
   onRender = widget.once("render");
   widget._presetClick({
-    target: preset
+    target: preset,
   });
 
   await onRender;

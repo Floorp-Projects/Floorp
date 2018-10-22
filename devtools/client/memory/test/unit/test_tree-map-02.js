@@ -12,7 +12,7 @@ add_task(async function() {
     measureText: (text) => {
       const width = text ? text.length * 10 : 0;
       return { width };
-    }
+    },
   };
   const node = {
     x: 20,
@@ -21,14 +21,14 @@ add_task(async function() {
     dy: 70,
     name: "Example Node",
     totalBytes: 1200,
-    totalCount: 100
+    totalCount: 100,
   };
   const ratio = 0;
   const borderWidth = () => 1;
   const dragZoom = {
     offsetX: 0,
     offsetY: 0,
-    zoom: 0
+    zoom: 0,
   };
   let fillTextValues = [];
   const padding = [10, 10];

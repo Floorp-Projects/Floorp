@@ -93,7 +93,7 @@ PerformanceGraph.prototype = extend(LineGraphWidget.prototype, {
     this.maximumLineColor = colorUtils.setAlpha(mainColor, 0.4);
     this.averageLineColor = colorUtils.setAlpha(mainColor, 0.7);
     this.minimumLineColor = colorUtils.setAlpha(mainColor, 0.9);
-  }
+  },
 });
 
 /**
@@ -111,7 +111,7 @@ FramerateGraph.prototype = extend(PerformanceGraph.prototype, {
   setPerformanceData: function({ duration, ticks }, resolution) {
     this.dataDuration = duration;
     return this.setDataFromTimestamps(ticks, resolution, duration);
-  }
+  },
 });
 
 /**
@@ -129,7 +129,7 @@ MemoryGraph.prototype = extend(PerformanceGraph.prototype, {
   setPerformanceData: function({ duration, memory }) {
     this.dataDuration = duration;
     return this.setData(memory);
-  }
+  },
 });
 
 function TimelineGraph(parent, filter) {
@@ -140,7 +140,7 @@ TimelineGraph.prototype = extend(MarkersOverview.prototype, {
   headerHeight: MARKERS_GRAPH_HEADER_HEIGHT,
   rowHeight: MARKERS_GRAPH_ROW_HEIGHT,
   groupPadding: MARKERS_GROUP_VERTICAL_PADDING,
-  setPerformanceData: MarkersOverview.prototype.setData
+  setPerformanceData: MarkersOverview.prototype.setData,
 });
 
 /**
@@ -160,8 +160,8 @@ const GRAPH_DEFINITIONS = {
   timeline: {
     constructor: TimelineGraph,
     selector: "#markers-overview",
-    primaryLink: true
-  }
+    primaryLink: true,
+  },
 };
 
 /**
@@ -499,7 +499,7 @@ OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
     ];
 
     this.backgroundColor = getColor("sidebar-background", theme);
-  }
+  },
 });
 
 exports.OptimizationsGraph = OptimizationsGraph;

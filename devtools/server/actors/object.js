@@ -60,7 +60,7 @@ const proto = {
     getGripDepth,
     incrementGripDepth,
     decrementGripDepth,
-    getGlobalDebugObject
+    getGlobalDebugObject,
   }, conn) {
     assert(!obj.optimizedOut,
           "Should not create object actors for optimized out values!");
@@ -75,7 +75,7 @@ const proto = {
       getGripDepth,
       incrementGripDepth,
       decrementGripDepth,
-      getGlobalDebugObject
+      getGlobalDebugObject,
     };
   },
 
@@ -220,7 +220,7 @@ const proto = {
       return {
         source: originalLocation.originalSourceActor,
         line: originalLocation.originalLine,
-        column: originalLocation.originalColumn
+        column: originalLocation.originalColumn,
       };
     });
   },
@@ -307,7 +307,7 @@ const proto = {
     for (const sym of symbols) {
       ownSymbols.push({
         name: sym.toString(),
-        descriptor: this._propertyDescriptor(sym)
+        descriptor: this._propertyDescriptor(sym),
       });
     }
 
@@ -315,7 +315,7 @@ const proto = {
       prototype: this.hooks.createValueGrip(objProto),
       ownProperties,
       ownSymbols,
-      safeGetterValues: this._findSafeGetterValues(names)
+      safeGetterValues: this._findSafeGetterValues(names),
     };
   },
 
@@ -637,7 +637,7 @@ const proto = {
         configurable: false,
         writable: false,
         enumerable: false,
-        value: e.name
+        value: e.name,
       };
     }
 
@@ -649,7 +649,7 @@ const proto = {
         configurable: true,
         writable: true,
         enumerable: true,
-        value: name
+        value: name,
       };
     }
 
@@ -659,7 +659,7 @@ const proto = {
 
     const retval = {
       configurable: desc.configurable,
-      enumerable: desc.enumerable
+      enumerable: desc.enumerable,
     };
 
     if ("value" in desc) {
@@ -720,7 +720,7 @@ const proto = {
     }
 
     return {
-      scope: envActor
+      scope: envActor,
     };
   },
 
@@ -854,7 +854,7 @@ const proto = {
         source: originalLocation.originalSourceActor,
         line: originalLocation.originalLine,
         column: originalLocation.originalColumn,
-        functionDisplayName: stack.functionDisplayName
+        functionDisplayName: stack.functionDisplayName,
       };
     });
   },
@@ -863,7 +863,7 @@ const proto = {
    * Release the actor, when it isn't needed anymore.
    * Protocol.js uses this release method to call the destroy method.
    */
-  release: function() {}
+  release: function() {},
 };
 
 exports.ObjectActor = protocol.ActorClassWithSpec(objectSpec, proto);

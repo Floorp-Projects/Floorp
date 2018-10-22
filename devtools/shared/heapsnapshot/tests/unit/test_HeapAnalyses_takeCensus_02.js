@@ -13,7 +13,7 @@ add_task(async function() {
   ok(true, "Should have read the heap snapshot");
 
   const { report } = await client.takeCensus(snapshotFilePath, {
-    breakdown: { by: "count", count: true, bytes: true }
+    breakdown: { by: "count", count: true, bytes: true },
   });
 
   ok(report, "Should get a report");

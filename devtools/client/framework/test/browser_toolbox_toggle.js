@@ -24,7 +24,7 @@ add_task(async function() {
   await testToggle("I", {
     accelKey: true,
     shiftKey: !navigator.userAgent.match(/Mac/),
-    altKey: navigator.userAgent.match(/Mac/)
+    altKey: navigator.userAgent.match(/Mac/),
   });
 
   // Test with F12 ; no modifiers

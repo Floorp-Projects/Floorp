@@ -16,7 +16,7 @@ class DominatorTreeHeader extends Component {
   render() {
     return dom.div(
       {
-        className: "header"
+        className: "header",
       },
 
       dom.span(

@@ -15,7 +15,7 @@ const ADDON_ID = "test-devtools-webextension@mozilla.org";
 const ADDON_NAME = "test-devtools-webextension";
 
 const {
-  BrowserToolboxProcess
+  BrowserToolboxProcess,
 } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 
 /**

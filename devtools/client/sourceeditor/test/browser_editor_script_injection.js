@@ -18,7 +18,7 @@ async function runTest() {
   const {ed, win} = await setup(null, {
     mode: "ruby",
     externalScripts: [`${baseURL}/cm_script_injection_test.js`,
-                      `${baseURL}/cm_mode_ruby.js`]
+                      `${baseURL}/cm_mode_ruby.js`],
   });
 
   is(ed.getText(), injectedText, "The text has been injected");

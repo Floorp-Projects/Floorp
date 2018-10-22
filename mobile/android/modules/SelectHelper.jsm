@@ -74,12 +74,12 @@ var SelectHelper = {
   show: function(element) {
     let list = this.getListForElement(element);
     let p = new Prompt({
-      window: element.ownerGlobal
+      window: element.ownerGlobal,
     });
 
     if (element.multiple) {
       p.addButton({
-        label: this.strings().GetStringFromName("selectHelper.closeMultipleSelectDialog")
+        label: this.strings().GetStringFromName("selectHelper.closeMultipleSelectDialog"),
       }).setMultiChoiceItems(list);
     } else {
       p.setSingleChoiceItems(list);
@@ -177,5 +177,5 @@ var SelectHelper = {
       currentElement = currentElement.parentElement;
     }
     return false;
-  }
+  },
 };

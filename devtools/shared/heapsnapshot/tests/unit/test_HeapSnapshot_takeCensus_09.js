@@ -41,10 +41,10 @@ function run_test() {
         then: { by: "count", label: "haz stack"},
         noStack: {
           by: "count",
-          label: "no haz stack"
-        }
-      }
-    }
+          label: "no haz stack",
+        },
+      },
+    },
     });
 
   const map = census.AllocationMarker;

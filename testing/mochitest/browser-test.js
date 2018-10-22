@@ -126,7 +126,7 @@ function testInit() {
 function takeInstrumentation() {
 
   let instrumentData = {
-    elements: {}
+    elements: {},
   };
 
   function pad(str, length) {
@@ -1192,7 +1192,7 @@ Tester.prototype = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"])
+  QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
 };
 
 /**
@@ -1322,7 +1322,7 @@ function testScope(aTester, aTest, expected) {
     Services.tm.dispatchToMainThread({
       run() {
         func();
-      }
+      },
     });
   };
 
@@ -1451,7 +1451,7 @@ testScope.prototype = {
           },
           set: (value) => {
             this[prop] = value;
-          }
+          },
         });
       }
     }
@@ -1503,5 +1503,5 @@ testScope.prototype = {
   destroy: function test_destroy() {
     for (let prop in this)
       delete this[prop];
-  }
+  },
 };

@@ -26,8 +26,8 @@ const rootSpec = protocol.generateActorSpec({
     "oneway": { a: Arg(0) },
     "falsyOptions": {
       zero: Option(0),
-      farce: Option(0)
-    }
+      farce: Option(0),
+    },
   },
 
   methods: {
@@ -42,30 +42,30 @@ const rootSpec = protocol.generateActorSpec({
         firstArg: Arg(0),
         secondArg: Arg(1),
       },
-      response: RetVal()
+      response: RetVal(),
     },
     optionArgs: {
       request: {
         option1: Option(0),
-        option2: Option(0)
+        option2: Option(0),
       },
-      response: RetVal()
+      response: RetVal(),
     },
     optionalArgs: {
       request: {
         a: Arg(0),
-        b: Arg(1, "nullable:number")
+        b: Arg(1, "nullable:number"),
       },
       response: {
-        value: RetVal("number")
+        value: RetVal("number"),
       },
     },
     arrayArgs: {
       request: {
-        a: Arg(0, "array:number")
+        a: Arg(0, "array:number"),
       },
       response: {
-        arrayReturn: RetVal("array:number")
+        arrayReturn: RetVal("array:number"),
       },
     },
     nestedArrayArgs: {
@@ -78,17 +78,17 @@ const rootSpec = protocol.generateActorSpec({
         a: Arg(0),
       },
       response: {
-        value: RetVal("string")
+        value: RetVal("string"),
       },
     },
     testOneWay: {
       request: { a: Arg(0) },
-      oneway: true
+      oneway: true,
     },
     emitFalsyOptions: {
-      oneway: true
-    }
-  }
+      oneway: true,
+    },
+  },
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
@@ -147,7 +147,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   emitFalsyOptions: function() {
     EventEmitter.emit(this, "falsyOptions", { zero: 0, farce: false });
-  }
+  },
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
@@ -156,7 +156,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
     this.manage(this);
-  }
+  },
 });
 
 function run_test() {
@@ -168,7 +168,7 @@ function run_test() {
   Assert.throws(() => {
     const badActor = protocol.ActorClassWithSpec({}, {
       missing: protocol.preEvent("missing-event", function() {
-      })
+      }),
     });
     void badActor;
   }, /Actor specification must have a typeName member/);
@@ -223,7 +223,7 @@ function run_test() {
     }).then(() => {
       return rootClient.optionArgs({
         "option1": 5,
-        "option2": 10
+        "option2": 10,
       });
     }).then(ret => {
       trace.expectSend({"type": "optionArgs",

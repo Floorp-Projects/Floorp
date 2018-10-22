@@ -13,7 +13,7 @@ ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 // Helper function for sending commands to Java.
 function send(type, data, callback) {
   let msg = {
-    type: type
+    type: type,
   };
 
   for (let i in data) {
@@ -154,5 +154,5 @@ RemoteMedia.prototype = {
   _send: function(msg, data, callback) {
     data.id = this._id;
     send(msg, data, callback);
-  }
+  },
 };

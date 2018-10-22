@@ -20,49 +20,49 @@ const TEST_DATA = [
   {input: "blue ! important", expected: {value: "blue", priority: "important"}},
   {
     input: "blue !  important",
-    expected: {value: "blue", priority: "important"}
+    expected: {value: "blue", priority: "important"},
   },
   {input: "blue !", expected: {value: "blue !", priority: ""}},
   {input: "blue !mportant", expected: {value: "blue !mportant", priority: ""}},
   {
     input: "  blue   !important ",
-    expected: {value: "blue", priority: "important"}
+    expected: {value: "blue", priority: "important"},
   },
   {
     input: "url(\"http://url.com/whyWouldYouDoThat!important.png\") !important",
     expected: {
       value: "url(\"http://url.com/whyWouldYouDoThat!important.png\")",
-      priority: "important"
-    }
+      priority: "important",
+    },
   },
   {
     input: "url(\"http://url.com/whyWouldYouDoThat!important.png\")",
     expected: {
       value: "url(\"http://url.com/whyWouldYouDoThat!important.png\")",
-      priority: ""
-    }
+      priority: "",
+    },
   },
   {
     input: "\"content!important\" !important",
     expected: {
       value: "\"content!important\"",
-      priority: "important"
-    }
+      priority: "important",
+    },
   },
   {
     input: "\"content!important\"",
     expected: {
       value: "\"content!important\"",
-      priority: ""
-    }
+      priority: "",
+    },
   },
   {
     input: "\"all the \\\"'\\\\ special characters\"",
     expected: {
       value: "\"all the \\\"'\\\\ special characters\"",
-      priority: ""
-    }
-  }
+      priority: "",
+    },
+  },
 ];
 
 function run_test() {

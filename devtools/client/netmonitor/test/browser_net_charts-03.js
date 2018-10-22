@@ -24,25 +24,25 @@ add_task(async function() {
     title: "Table title",
     data: [{
       label1: 1,
-      label2: 11.1
+      label2: 11.1,
     }, {
       label1: 2,
-      label2: 12.2
+      label2: 12.2,
     }, {
       label1: 3,
-      label2: 13.3
+      label2: 13.3,
     }],
     strings: {
-      label2: (value, index) => value + ["foo", "bar", "baz"][index]
+      label2: (value, index) => value + ["foo", "bar", "baz"][index],
     },
     totals: {
       label1: value => "Hello " + L10N.numberWithDecimals(value, 2),
-      label2: value => "World " + L10N.numberWithDecimals(value, 2)
+      label2: value => "World " + L10N.numberWithDecimals(value, 2),
     },
     header: {
       label1: "label1header",
       label2: "label2header",
-    }
+    },
   });
 
   const node = table.node;

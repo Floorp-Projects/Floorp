@@ -149,7 +149,7 @@ const kImpliedEOFCharacters = [
   QUOTATION_MARK,
   APOSTROPHE,
   RIGHT_PARENTHESIS,
-  0
+  0,
 ];
 
 /**

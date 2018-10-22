@@ -6,7 +6,7 @@
 
 const BREAKDOWN = {
   by: "internalType",
-  then: { by: "count", count: true, bytes: true }
+  then: { by: "count", count: true, bytes: true },
 };
 
 const REPORT1 = {

@@ -45,7 +45,7 @@ add_task(async function() {
     "end",
     "response",
     "duration",
-    "latency"
+    "latency",
   ];
 
   for (const t of types) {

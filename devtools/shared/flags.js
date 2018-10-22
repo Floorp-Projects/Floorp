@@ -40,7 +40,7 @@ function makePrefTrackedFlag(exports, name, pref) {
   Object.defineProperty(exports, name, {
     get: function() {
       return flag;
-    }
+    },
   });
 }
 

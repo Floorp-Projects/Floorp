@@ -159,7 +159,7 @@ class MenuButton extends PureComponent {
 
   async showMenu(anchor) {
     this.setState({
-      expanded: true
+      expanded: true,
     });
 
     if (!this.tooltip) {
@@ -174,7 +174,7 @@ class MenuButton extends PureComponent {
 
   async hideMenu() {
     this.setState({
-      expanded: false
+      expanded: false,
     });
 
     if (!this.tooltip) {

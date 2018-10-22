@@ -106,9 +106,9 @@ add_task(async function reloadButtonRefreshesMetadata() {
     "version": "1.0",
     "applications": {
       "gecko": {
-        "id": ADDON_ID
-      }
-    }
+        "id": ADDON_ID,
+      },
+    },
   };
 
   const tempExt = new TempWebExt(ADDON_ID);

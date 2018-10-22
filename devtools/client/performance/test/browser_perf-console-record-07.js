@@ -17,7 +17,7 @@ const { getSelectedRecording } = require("devtools/client/performance/test/helpe
 add_task(async function() {
   const { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
-    win: window
+    win: window,
   });
 
   const { panel } = await initPerformanceInTab({ tab: target.tab });
@@ -25,7 +25,7 @@ add_task(async function() {
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
-    skipWaitingForBackendReady: true
+    skipWaitingForBackendReady: true,
   });
   await console.profile();
   await started;
@@ -141,7 +141,7 @@ add_task(async function() {
 
   stopped = waitForRecordingStoppedEvents(panel, {
     // only emitted for manual recordings
-    skipWaitingForBackendReady: true
+    skipWaitingForBackendReady: true,
   });
   await console.profileEnd();
   await stopped;
