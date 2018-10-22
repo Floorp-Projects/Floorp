@@ -527,12 +527,32 @@ public class Tokenizer implements Locator {
     public Tokenizer(TokenHandler tokenHandler, boolean newAttributesEachTime) {
         this.tokenHandler = tokenHandler;
         this.encodingDeclarationHandler = null;
+        this.lastCR = false;
+        this.stateSave = 0;
+        this.returnStateSave = 0;
+        this.index = 0;
+        this.forceQuirks = false;
+        this.additional = '\u0000';
+        this.entCol = 0;
+        this.firstCharKey = 0;
+        this.lo = 0;
+        this.hi = 0;
+        this.candidate = 0;
+        this.charRefBufMark = 0;
+        this.value = 0;
+        this.seenDigits = false;
+        this.cstart = 0;
+        this.strBufLen = 0;
         this.newAttributesEachTime = newAttributesEachTime;
         // &CounterClockwiseContourIntegral; is the longest valid char ref and
         // the semicolon never gets appended to the buffer.
         this.charRefBuf = new char[32];
+        this.charRefBufLen = 0;
         this.bmpChar = new char[1];
         this.astralChar = new char[2];
+        this.endTagExpectation = null;
+        this.endTagExpectationAsArray = new char[0];
+        this.endTag = false;
         this.containsHyphen = false;
         this.tagName = null;
         this.nonInternedTagName = new ElementName();
@@ -542,6 +562,11 @@ public class Tokenizer implements Locator {
         this.publicIdentifier = null;
         this.systemIdentifier = null;
         this.attributes = null;
+        this.shouldSuspend = false;
+        this.confident = false;
+        this.line = 0;
+        this.attributeLine = 0;
+        this.interner = null;
     }
 
     // ]NOCPP]
@@ -560,11 +585,31 @@ public class Tokenizer implements Locator {
         // [NOCPP[
         this.newAttributesEachTime = false;
         // ]NOCPP]
+        this.lastCR = false;
+        this.stateSave = 0;
+        this.returnStateSave = 0;
+        this.index = 0;
+        this.forceQuirks = false;
+        this.additional = '\u0000';
+        this.entCol = 0;
+        this.firstCharKey = 0;
+        this.lo = 0;
+        this.hi = 0;
+        this.candidate = 0;
+        this.charRefBufMark = 0;
+        this.value = 0;
+        this.seenDigits = false;
+        this.cstart = 0;
+        this.strBufLen = 0;
         // &CounterClockwiseContourIntegral; is the longest valid char ref and
         // the semicolon never gets appended to the buffer.
         this.charRefBuf = new char[32];
+        this.charRefBufLen = 0;
         this.bmpChar = new char[1];
         this.astralChar = new char[2];
+        this.endTagExpectation = null;
+        this.endTagExpectationAsArray = new char[0];
+        this.endTag = false;
         this.containsHyphen = false;
         this.tagName = null;
         this.nonInternedTagName = new ElementName();
@@ -578,6 +623,11 @@ public class Tokenizer implements Locator {
         // ]NOCPP]
         // CPPONLY: this.attributes = tokenHandler.HasBuilder() ? new HtmlAttributes(mappingLangToXmlLang) : null;
         // CPPONLY: this.newAttributesEachTime = !tokenHandler.HasBuilder();
+        this.shouldSuspend = false;
+        this.confident = false;
+        this.line = 0;
+        this.attributeLine = 0;
+        this.interner = null;
         // CPPONLY: this.viewingXmlSource = viewingXmlSource;
     }
 
