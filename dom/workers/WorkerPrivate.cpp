@@ -933,13 +933,13 @@ PRThreadFromThread(nsIThread* aThread)
 
 // A runnable to cancel the worker from the parent thread when self.close() is
 // called. This runnable is executed on the parent process in order to cancel
-// the current runnable. It uses a normal WorkerRunnable in order to be sure
-// that all the pending WorkerRunnables are executed before this.
-class CancelingOnParentRunnable final : public WorkerRunnable
+// the current runnable. It uses a normal WorkerDebuggeeRunnable in order to be sure
+// that all the pending WorkerDebuggeeRunnables are executed before this.
+class CancelingOnParentRunnable final : public WorkerDebuggeeRunnable
 {
 public:
   explicit CancelingOnParentRunnable(WorkerPrivate* aWorkerPrivate)
-    : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount)
+    : WorkerDebuggeeRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount)
   {}
 
   bool
