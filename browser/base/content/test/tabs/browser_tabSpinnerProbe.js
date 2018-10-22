@@ -50,7 +50,10 @@ function hangContentProcess(browser, aMs) {
 async function testProbe(aProbe) {
   info(`Testing probe: ${aProbe}`);
   let histogram = Services.telemetry.getHistogramById(aProbe);
-  let delayTime = MIN_HANG_TIME + 1; // Pick a bucket arbitrarily
+  let buckets = histogram.snapshot().ranges.filter(function(value) {
+    return (value > MIN_HANG_TIME && value < MAX_HANG_TIME);
+  });
+  let delayTime = buckets[0]; // Pick a bucket arbitrarily
 
   // The tab spinner does not show up instantly. We need to hang for a little
   // bit of extra time to account for the tab spinner delay.
@@ -75,7 +78,7 @@ async function testProbe(aProbe) {
   // Now we should have a hang in our histogram.
   let snapshot = histogram.snapshot();
   BrowserTestUtils.removeTab(hangTab);
-  ok(sum(Object.values(snapshot.values)) > 0,
+  ok(sum(snapshot.counts) > 0,
    `Spinner probe should now have a value in some bucket`);
 }
 

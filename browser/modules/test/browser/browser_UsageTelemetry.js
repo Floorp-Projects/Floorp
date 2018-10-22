@@ -137,19 +137,20 @@ add_task(async function test_subsessionSplit() {
 });
 
 function checkTabCountHistogram(result, expected, message) {
-  Assert.deepEqual(result.values, expected, message);
+  let expectedPadded = result.counts.map((val, idx) => idx < expected.length ? expected[idx] : 0);
+  Assert.deepEqual(result.counts, expectedPadded, message);
 }
 
 add_task(async function test_tabsHistogram() {
   let openedTabs = [];
   let tabCountHist = getAndClearHistogram("TAB_COUNT");
 
-  checkTabCountHistogram(tabCountHist.snapshot(), {}, "TAB_COUNT telemetry - initial tab counts");
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0], "TAB_COUNT telemetry - initial tab counts");
 
   // Add a new tab and check that the count is right.
   BrowserUsageTelemetry._lastRecordTabCount = 0;
   openedTabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"));
-  checkTabCountHistogram(tabCountHist.snapshot(), {1: 0, 2: 1, 3: 0}, "TAB_COUNT telemetry - opening tabs");
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1], "TAB_COUNT telemetry - opening tabs");
 
   // Open a different page and check the counts.
   BrowserUsageTelemetry._lastRecordTabCount = 0;
@@ -158,24 +159,24 @@ add_task(async function test_tabsHistogram() {
   BrowserUsageTelemetry._lastRecordTabCount = 0;
   await BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  checkTabCountHistogram(tabCountHist.snapshot(), {1: 0, 2: 1, 3: 2, 4: 0}, "TAB_COUNT telemetry - loading page");
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2], "TAB_COUNT telemetry - loading page");
 
   // Open another tab
   BrowserUsageTelemetry._lastRecordTabCount = 0;
   openedTabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank"));
-  checkTabCountHistogram(tabCountHist.snapshot(), {1: 0, 2: 1, 3: 2, 4: 1, 5: 0}, "TAB_COUNT telemetry - opening more tabs");
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1], "TAB_COUNT telemetry - opening more tabs");
 
   // Add a new window and then some tabs in it. A new window starts with one tab.
   BrowserUsageTelemetry._lastRecordTabCount = 0;
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  checkTabCountHistogram(tabCountHist.snapshot(), {1: 0, 2: 1, 3: 2, 4: 1, 5: 1, 6: 0}, "TAB_COUNT telemetry - opening window");
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1, 1], "TAB_COUNT telemetry - opening window");
 
   // Do not trigger a recount if _lastRecordTabCount is recent on new tab
   BrowserUsageTelemetry._lastRecordTabCount = Date.now() - (MINIMUM_TAB_COUNT_INTERVAL_MS / 2);
   {
     let oldLastRecordTabCount = BrowserUsageTelemetry._lastRecordTabCount;
     openedTabs.push(await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank"));
-    checkTabCountHistogram(tabCountHist.snapshot(), {1: 0, 2: 1, 3: 2, 4: 1, 5: 1, 6: 0}, "TAB_COUNT telemetry - new tab, recount event ignored");
+    checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1, 1, 0], "TAB_COUNT telemetry - new tab, recount event ignored");
     ok(BrowserUsageTelemetry._lastRecordTabCount == oldLastRecordTabCount, "TAB_COUNT telemetry - _lastRecordTabCount unchanged");
   }
 
@@ -184,7 +185,7 @@ add_task(async function test_tabsHistogram() {
   {
     let oldLastRecordTabCount = BrowserUsageTelemetry._lastRecordTabCount;
     openedTabs.push(await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank"));
-    checkTabCountHistogram(tabCountHist.snapshot(), {1: 0, 2: 1, 3: 2, 4: 1, 5: 1, 7: 1, 8: 0}, "TAB_COUNT telemetry - new tab, recount event included");
+    checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1, 1, 0, 1], "TAB_COUNT telemetry - new tab, recount event included");
     ok(BrowserUsageTelemetry._lastRecordTabCount != oldLastRecordTabCount, "TAB_COUNT telemetry - _lastRecordTabCount updated");
     ok(BrowserUsageTelemetry._lastRecordTabCount > Date.now() - MINIMUM_TAB_COUNT_INTERVAL_MS, "TAB_COUNT telemetry - _lastRecordTabCount invariant");
   }
@@ -195,7 +196,7 @@ add_task(async function test_tabsHistogram() {
     let oldLastRecordTabCount = BrowserUsageTelemetry._lastRecordTabCount;
     await BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/");
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    checkTabCountHistogram(tabCountHist.snapshot(), {1: 0, 2: 1, 3: 2, 4: 1, 5: 1, 7: 1, 8: 0}, "TAB_COUNT telemetry - page load, recount event ignored");
+    checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1, 1, 0, 1], "TAB_COUNT telemetry - page load, recount event ignored");
     ok(BrowserUsageTelemetry._lastRecordTabCount == oldLastRecordTabCount, "TAB_COUNT telemetry - _lastRecordTabCount unchanged");
   }
 
@@ -205,7 +206,7 @@ add_task(async function test_tabsHistogram() {
     let oldLastRecordTabCount = BrowserUsageTelemetry._lastRecordTabCount;
     await BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/");
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    checkTabCountHistogram(tabCountHist.snapshot(), {1: 0, 2: 1, 3: 2, 4: 1, 5: 1, 7: 2, 8: 0}, "TAB_COUNT telemetry - page load, recount event included");
+    checkTabCountHistogram(tabCountHist.snapshot(), [0, 0, 1, 2, 1, 1, 0, 2], "TAB_COUNT telemetry - page load, recount event included");
     ok(BrowserUsageTelemetry._lastRecordTabCount != oldLastRecordTabCount, "TAB_COUNT telemetry - _lastRecordTabCount updated");
     ok(BrowserUsageTelemetry._lastRecordTabCount > Date.now() - MINIMUM_TAB_COUNT_INTERVAL_MS, "TAB_COUNT telemetry - _lastRecordTabCount invariant");
   }
