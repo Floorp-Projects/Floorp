@@ -124,8 +124,10 @@ text {
 }
 
 .web-audio-inspector .error {
-  background-image: url(images/alerticon-warning.png);
-  background-size: 13px 12px;
+  background-image: url(chrome://devtools/skin/images/alert.svg);
+  background-size: 12px 12px;
+  -moz-context-properties: fill;
+  fill: var(--yellow-60);
   -moz-appearance: none;
   opacity: 0;
   transition: opacity .5s ease-out 0s;
@@ -159,12 +161,6 @@ text {
 #automation-graph {
   overflow: hidden;
   -moz-box-flex: 1;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .web-audio-inspector .error {
-    background-image: url(images/alerticon-warning@2x.png);
-  }
 }
 
 /**

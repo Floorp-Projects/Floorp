@@ -323,18 +323,14 @@
 }
 
 .ruleview-warning {
-  background-image: url(images/alerticon-warning.png);
-  background-size: 13px 12px;
-  margin-inline-start: 5px;
   display: inline-block;
-  width: 13px;
+  width: 12px;
   height: 12px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .ruleview-warning {
-    background-image: url(images/alerticon-warning@2x.png);
-  }
+  margin-inline-start: 5px;
+  background-image: url(chrome://devtools/skin/images/alert.svg);
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: var(--yellow-60);
 }
 
 .ruleview-rule:not(:hover) .ruleview-enableproperty {
