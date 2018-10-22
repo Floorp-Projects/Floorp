@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<bindings id="htmlBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="inputFields" bindToUntrustedContent="true">
+    <handlers>
+#include ../input-fields-base.inc
+      <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
+
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_wordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control" command="cmd_wordNext"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,control" command="cmd_selectWordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,control" command="cmd_selectWordNext"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_beginLine"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_endLine"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,alt" command="cmd_selectBeginLine"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,alt" command="cmd_selectEndLine"/>
+
+      <handler event="keypress" keycode="VK_HOME" command="cmd_beginLine"/>
+      <handler event="keypress" keycode="VK_END" command="cmd_endLine"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_selectBeginLine" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
+
+      <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteToBeginningOfLine"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteToEndOfLine"/>
+    </handlers>
+  </binding>
+
+  <binding id="textAreas" bindToUntrustedContent="true">
+    <handlers>
+#include ../textareas-base.inc
+      <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
+
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_wordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control" command="cmd_wordNext"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,control" command="cmd_selectWordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,control" command="cmd_selectWordNext"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_beginLine"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_endLine"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,alt" command="cmd_selectBeginLine"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,alt" command="cmd_selectEndLine"/>
+
+      <handler event="keypress" keycode="VK_UP" modifiers="alt" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="alt" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_UP" modifiers="shift,alt" command="cmd_selectTop"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift,alt" command="cmd_selectBottom"/>
+
+      <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift" command="cmd_selectPageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="alt" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="alt" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift,alt" command="cmd_selectTop"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift,alt" command="cmd_selectBottom"/>
+
+      <handler event="keypress" keycode="VK_HOME" command="cmd_beginLine"/>
+      <handler event="keypress" keycode="VK_END" command="cmd_endLine"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_selectBeginLine" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
+      <handler event="keypress" keycode="VK_HOME" modifiers="control" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_END" modifiers="control" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift,control" command="cmd_selectTop" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift,control" command="cmd_selectBottom" />
+
+      <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteToBeginningOfLine"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteToEndOfLine"/>
+    </handlers>
+  </binding>
+
+  <binding id="browser">
+    <handlers>
+#include ../browser-base.inc
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift" command="cmd_selectCharPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift" command="cmd_selectCharNext" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_wordPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control" command="cmd_wordNext" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control,shift" command="cmd_selectWordPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control,shift" command="cmd_selectWordNext" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_beginLine"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_endLine"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,alt" command="cmd_selectBeginLine"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,alt" command="cmd_selectEndLine"/>
+
+      <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectLinePrevious" />
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectLineNext" />
+      <handler event="keypress" keycode="VK_UP" modifiers="alt" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="alt" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_UP" modifiers="shift,alt" command="cmd_selectTop"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift,alt" command="cmd_selectBottom"/>
+
+      <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift" command="cmd_selectPageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="alt" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="alt" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift,alt" command="cmd_selectTop"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift,alt" command="cmd_selectBottom"/>
+
+      <handler event="keypress" keycode="VK_HOME" command="cmd_beginLine"/>
+      <handler event="keypress" keycode="VK_END" command="cmd_endLine"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_selectBeginLine" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
+      <handler event="keypress" keycode="VK_HOME" modifiers="control" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_END" modifiers="control" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift,control" command="cmd_selectTop" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift,control" command="cmd_selectBottom" />
+
+      <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteToBeginningOfLine"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteToEndOfLine"/>
+    </handlers>
+  </binding>
+
+  <binding id="editor">
+    <handlers>
+#include ../editor-base.inc
+      <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
+
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_wordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control" command="cmd_wordNext"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,control" command="cmd_selectWordPrevious"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,control" command="cmd_selectWordNext"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_beginLine"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_endLine"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,alt" command="cmd_selectBeginLine"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,alt" command="cmd_selectEndLine"/>
+
+      <handler event="keypress" keycode="VK_UP" modifiers="alt" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="alt" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_UP" modifiers="shift,alt" command="cmd_selectTop"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift,alt" command="cmd_selectBottom"/>
+
+      <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift" command="cmd_selectPageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="alt" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="alt" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift,alt" command="cmd_selectTop"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift,alt" command="cmd_selectBottom"/>
+
+      <handler event="keypress" keycode="VK_HOME" command="cmd_beginLine"/>
+      <handler event="keypress" keycode="VK_END" command="cmd_endLine"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_selectBeginLine" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
+      <handler event="keypress" keycode="VK_HOME" modifiers="control" command="cmd_moveTop"/>
+      <handler event="keypress" keycode="VK_END" modifiers="control" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift,control" command="cmd_selectTop" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift,control" command="cmd_selectBottom" />
+
+      <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteToBeginningOfLine"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteToEndOfLine"/>
+    </handlers>
+  </binding>
+</bindings>

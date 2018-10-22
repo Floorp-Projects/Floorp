@@ -102,6 +102,7 @@ input {
   word-spacing: normal;
   letter-spacing: normal;
   cursor: text;
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
   text-indent: 0;
   -moz-user-select: text;
   text-shadow: none;
@@ -133,6 +134,7 @@ textarea {
   vertical-align: text-bottom;
   cursor: text;
   resize: both;
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield-multiline;
   text-indent: 0;
   -moz-user-select: text;
@@ -446,6 +448,7 @@ input[type="hidden"] {
   border: 0;
   cursor: auto;
   -moz-user-focus: ignore;
+  -moz-binding: none;
 }
 
 /* image buttons */
@@ -457,6 +460,7 @@ input[type="image"] {
   font-family: sans-serif;
   font-size: small;
   cursor: pointer;
+  -moz-binding: none;
 }
 
 input[type="image"]:disabled {
@@ -478,6 +482,7 @@ input[type="file"] {
 
   /* Revert rules which apply on all inputs. */
   -moz-appearance: none;
+  -moz-binding: none;
   cursor: default;
 
   border: none;
@@ -547,6 +552,7 @@ input[type="checkbox"] {
   cursor: default;
   /* unset some values from the general 'input' rule above: */
   padding: unset;
+  -moz-binding: unset;
   border: unset;
   background-color: unset;
   color: unset;
@@ -602,6 +608,7 @@ input[type="submit"] {
   cursor: default;
   box-sizing: border-box;
   -moz-user-select: none;
+  -moz-binding: none;
 }
 
 /* Text-related properties for buttons: these ones are not shared with
@@ -886,6 +893,7 @@ input[type=range] {
   cursor: default;
   background: none;
   border: none;
+  -moz-binding: none; /* we don't want any of platformHTMLBindings.xml#inputFields */
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
   -moz-user-select: none ! important;
 }
@@ -1007,6 +1015,7 @@ input[type=range]::-moz-range-thumb {
 input[type="number"] {
   -moz-appearance: number-input;
   /* Has to revert some properties applied by the generic input rule. */
+  -moz-binding: none;
   inline-size: 20ch; /* It'd be nice if this matched the default inline-size
                         of <input type=text>, but that's not easy to achieve
                         due to platform differences. */
