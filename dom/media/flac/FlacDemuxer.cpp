@@ -261,6 +261,8 @@ public:
   {
     static const int BUFFER_SIZE = 4096;
 
+    uint32_t previousBlocksize = Header().mBlocksize;
+
     Reset();
 
     nsTArray<char> buffer;
@@ -283,7 +285,7 @@ public:
 
       if (foundOffset >= 0) {
         SetOffset(aResource, foundOffset + offset);
-        SetIndex();
+        SetIndex(previousBlocksize);
         return true;
       }
 
@@ -365,14 +367,20 @@ private:
     aResource.Seek(SEEK_SET, mOffset);
   }
 
-  void SetIndex()
+  void SetIndex(uint32_t aPreviousBlocksize)
   {
     // Make sure the header has been parsed.
     MOZ_ASSERT(Header().mBlocksize);
 
+    // If the blocksize is fixed, the frame's starting sample number will be
+    // the frame number times the blocksize. However, the last block may be
+    // shorter than the stream blocksize. Its starting sample number will be
+    // calculated as the frame number times the previous frame's blocksize,
+    // or zero if it is the first frame(mFrameOrSampleNum is 0 in that case).
     mIndex = Header().mVariableBlockSize
       ? Header().mFrameOrSampleNum
-      : Header().mFrameOrSampleNum * Header().mBlocksize;
+      : Header().mFrameOrSampleNum * std::max(Header().mBlocksize,
+                                              aPreviousBlocksize);
   }
 
   // The index in samples from start.
@@ -385,7 +393,6 @@ private:
 
   // The currently parsed frame header.
   FrameHeader mHeader;
-
 };
 
 class FrameParser
