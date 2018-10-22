@@ -17,7 +17,6 @@ var EXPORTED_SYMBOLS = [
 
 const PR_UINT32_MAX = 0xffffffff;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
@@ -193,10 +192,10 @@ var NetUtil = {
         }
 
         if (aTarget instanceof Ci.nsIFile) {
-            return this.ioService.newFileURI(aTarget);
+            return Services.io.newFileURI(aTarget);
         }
 
-        return this.ioService.newURI(aTarget, aOriginCharset, aBaseURI);
+        return Services.io.newURI(aTarget, aOriginCharset, aBaseURI);
     },
 
     /**
@@ -316,12 +315,12 @@ var NetUtil = {
             contentPolicyType = Ci.nsIContentPolicy.TYPE_OTHER;
         }
 
-        return this.ioService.newChannelFromURI2(uri,
-                                                 loadingNode || null,
-                                                 loadingPrincipal || null,
-                                                 triggeringPrincipal || null,
-                                                 securityFlags,
-                                                 contentPolicyType);
+        return Services.io.newChannelFromURI2(uri,
+                                              loadingNode || null,
+                                              loadingPrincipal || null,
+                                              triggeringPrincipal || null,
+                                              securityFlags,
+                                              contentPolicyType);
     },
 
     /**
@@ -440,16 +439,5 @@ var NetUtil = {
         let result = new ArrayBuffer(aCount);
         stream.readArrayBuffer(result.byteLength, result);
         return result;
-    },
-
-    /**
-     * Returns a reference to nsIIOService.
-     *
-     * @return a reference to nsIIOService.
-     */
-    get ioService() {
-        delete this.ioService;
-        return this.ioService = Cc["@mozilla.org/network/io-service;1"].
-                                getService(Ci.nsIIOService);
     },
 };
