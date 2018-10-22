@@ -3477,6 +3477,23 @@ js::GetModuleObjectForScript(JSScript* script)
     return nullptr;
 }
 
+Value
+js::FindScriptOrModulePrivateForScript(JSScript* script)
+{
+    while (script) {
+        ScriptSourceObject* sso = &script->scriptSourceUnwrap();
+        Value value = sso->getPrivate();
+        if (!value.isUndefined()) {
+            return value;
+        }
+
+        MOZ_ASSERT(sso->introductionScript() != script);
+        script = sso->introductionScript();
+    }
+
+    return UndefinedValue();
+}
+
 bool
 js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
                                              MutableHandleValue res)
