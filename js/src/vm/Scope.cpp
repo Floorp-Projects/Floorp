@@ -1223,12 +1223,6 @@ ModuleScope::getEmptyEnvironmentShape(JSContext* cx)
     return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), ModuleScopeEnvShapeFlags);
 }
 
-JSScript*
-ModuleScope::script() const
-{
-    return module()->script();
-}
-
 static const uint32_t WasmInstanceEnvShapeFlags =
     BaseShape::NOT_EXTENSIBLE | BaseShape::DELEGATE;
 

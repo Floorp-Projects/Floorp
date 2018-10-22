@@ -1201,6 +1201,8 @@ BaselineCompiler::emitBody()
             // Intentionally not implemented.
           case JSOP_SETINTRINSIC:
             // Run-once opcode during self-hosting initialization.
+          case JSOP_DYNAMIC_IMPORT:
+            // Dynamic module import.
           case JSOP_UNUSED126:
           case JSOP_UNUSED206:
           case JSOP_LIMIT:
