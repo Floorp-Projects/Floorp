@@ -1338,19 +1338,26 @@ protected:
 NS_IMPL_FRAMEARENA_HELPERS(nsComboboxDisplayFrame)
 
 void
-nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
-                               ReflowOutput&     aDesiredSize,
+nsComboboxDisplayFrame::Reflow(nsPresContext*     aPresContext,
+                               ReflowOutput&      aDesiredSize,
                                const ReflowInput& aReflowInput,
-                               nsReflowStatus&          aStatus)
+                               nsReflowStatus&    aStatus)
 {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   ReflowInput state(aReflowInput);
   if (state.ComputedBSize() == NS_INTRINSICSIZE) {
-    // Note that the only way we can have a computed block size here is
-    // if the combobox had a specified block size.  If it didn't, size
-    // based on what our rows look like, for lack of anything better.
-    state.SetComputedBSize(mComboBox->mListControlFrame->GetBSizeOfARow());
+    float inflation = nsLayoutUtils::FontSizeInflationFor(mComboBox);
+    // We intentionally use the combobox frame's style here, which has
+    // the 'line-height' specified by the author, if any.
+    // (This frame has 'line-height: -moz-block-height' in the UA
+    // sheet which is suitable when there's a specified block-size.)
+    auto lh = ReflowInput::CalcLineHeight(mComboBox->GetContent(),
+                                          mComboBox->Style(),
+                                          aPresContext,
+                                          NS_UNCONSTRAINEDSIZE,
+                                          inflation);
+    state.SetComputedBSize(lh);
   }
   WritingMode wm = aReflowInput.GetWritingMode();
   nscoord computedISize = mComboBox->mDisplayISize -
