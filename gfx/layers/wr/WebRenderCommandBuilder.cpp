@@ -1314,7 +1314,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
 
   {
     StackingContextHelper pageRootSc(sc, aBuilder, aFilters);
-    if (ShouldDumpDisplayList()) {
+    if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex = aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
     }
     CreateWebRenderCommandsFromDisplayList(aDisplayList, nullptr, aDisplayListBuilder,
@@ -1346,10 +1346,11 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
 }
 
 bool
-WebRenderCommandBuilder::ShouldDumpDisplayList()
+WebRenderCommandBuilder::ShouldDumpDisplayList(nsDisplayListBuilder* aBuilder)
 {
-  return (XRE_IsParentProcess() && gfxPrefs::WebRenderDLDumpParent()) ||
-         (XRE_IsContentProcess() && gfxPrefs::WebRenderDLDumpContent());
+  return aBuilder != nullptr && aBuilder->IsInActiveDocShell() &&
+         ((XRE_IsParentProcess() && gfxPrefs::WebRenderDLDumpParent()) ||
+          (XRE_IsContentProcess() && gfxPrefs::WebRenderDLDumpContent()));
 }
 
 void
@@ -1367,7 +1368,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
     return;
   }
 
-  bool dumpEnabled = ShouldDumpDisplayList();
+  bool dumpEnabled = ShouldDumpDisplayList(aDisplayListBuilder);
   if (dumpEnabled) {
     // If we're inside a nested display list, print the WR DL items from the
     // wrapper item before we start processing the nested items.
