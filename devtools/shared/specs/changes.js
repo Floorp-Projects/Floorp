@@ -5,12 +5,27 @@
 "use strict";
 
 const {
+  Arg,
   generateActorSpec,
   RetVal,
 } = require("devtools/shared/protocol");
 
 const changesSpec = generateActorSpec({
   typeName: "changes",
+
+  events: {
+    "add-change": {
+      type: "addChange",
+      change: Arg(0, "json"),
+    },
+    "remove-change": {
+      type: "removeChange",
+      change: Arg(0, "json"),
+    },
+    "clear-changes": {
+      type: "clearChanges",
+    },
+  },
 
   methods: {
     "allChanges": {
