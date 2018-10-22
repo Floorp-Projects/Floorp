@@ -20,7 +20,7 @@ import android.widget.ProgressBar
 /**
  * An animated progress bar following the Photon Design System.
  */
-class AnimatedProgressBar @JvmOverloads constructor(
+open class AnimatedProgressBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
