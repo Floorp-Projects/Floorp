@@ -436,7 +436,7 @@ talos-tp6:
     description: "Talos tp6"
     try-name: tp6
     treeherder-symbol: T(tp6)
-    run-on-projects: ['mozilla-beta', 'trunk', 'try']
+    run-on-projects: ['trunk', 'try']
     max-run-time: 1200
     mozharness:
         extra-options:
