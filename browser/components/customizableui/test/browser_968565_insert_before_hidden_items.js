@@ -38,8 +38,8 @@ add_task(async function() {
   hidden1.hidden = hidden2.hidden = true;
 
   // Make sure we have some hidden items at the end of the nav-bar.
-  navbar.insertItem(hidden1.id);
-  navbar.insertItem(hidden2.id);
+  CustomizableUI.addWidgetToArea(kHidden1Id, "nav-bar");
+  CustomizableUI.addWidgetToArea(kHidden2Id, "nav-bar");
 
   // Drag an item and drop it onto the nav-bar customization target, but
   // not over a particular item.
