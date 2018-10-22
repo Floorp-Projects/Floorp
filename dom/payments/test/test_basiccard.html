@@ -241,24 +241,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
     });
   }
 
-  function testSpecialAddressResponse() {
-    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-    gScript.sendAsyncMessage("set-special-address-ui-service");
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      payRequest.show().then(response => {
-        ok(response.details, "BasiccardResponse should exist.");
-        ok(response.details.billingAddress,
-           "BasiccardResponse.billingAddress should exist.");
-        is(response.details.billingAddress.addressLine[0], ":$%@&*",
-           "AddressLine should be ':$%@&*'");
-        response.complete("success").then(()=>{
-          resolve();
-        });
-      }).finally(handler.destruct);
-    });
-  }
-
   function testBasicCardErrorResponse() {
     return new Promise((resolve, reject) => {
       gScript.addMessageListener("error-response-complete",
@@ -290,7 +272,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
     .then(testCanMakePaymentWithBasicCardRequest)
     .then(testBasicCardSimpleResponse)
     .then(testBasicCardDetailedResponse)
-    .then(testSpecialAddressResponse)
     .then(testBasicCardErrorResponse)
     .then(teardown)
     .catch( e => {
