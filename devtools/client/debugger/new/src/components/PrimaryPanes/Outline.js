@@ -13,6 +13,8 @@ var _devtoolsContextmenu = require("devtools/client/debugger/new/dist/vendors").
 
 var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
+var _fuzzaldrinPlus = require("devtools/client/debugger/new/dist/vendors").vendored["fuzzaldrin-plus"];
+
 var _clipboard = require("../../utils/clipboard");
 
 var _function = require("../../utils/function");
@@ -22,6 +24,10 @@ var _actions = require("../../actions/index");
 var _actions2 = _interopRequireDefault(_actions);
 
 var _selectors = require("../../selectors/index");
+
+var _OutlineFilter = require("./OutlineFilter");
+
+var _OutlineFilter2 = _interopRequireDefault(_OutlineFilter);
 
 var _PreviewFunction = require("../shared/PreviewFunction");
 
@@ -34,7 +40,35 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * Check whether the name argument matches the fuzzy filter argument
+ */
+const filterOutlineItem = (name, filter) => {
+  // Set higher to make the fuzzaldrin filter more specific
+  const FUZZALDRIN_FILTER_THRESHOLD = 15000;
+
+  if (!filter) {
+    return true;
+  }
+
+  if (filter.length === 1) {
+    // when filter is a single char just check if it starts with the char
+    return filter.toLowerCase() === name.toLowerCase()[0];
+  }
+
+  return (0, _fuzzaldrinPlus.score)(name, filter) > FUZZALDRIN_FILTER_THRESHOLD;
+};
+
 class Outline extends _react.Component {
+  constructor(props) {
+    super(props);
+    this.updateFilter = this.updateFilter.bind(this);
+    this.state = {
+      filter: ""
+    };
+  }
+
   selectItem(location) {
     const {
       selectedSource,
@@ -87,6 +121,12 @@ class Outline extends _react.Component {
     };
     const menuOptions = [copyFunctionItem];
     (0, _devtoolsContextmenu.showMenu)(event, menuOptions);
+  }
+
+  updateFilter(filter) {
+    this.setState({
+      filter: filter.trim()
+    });
   }
 
   renderPlaceholder() {
@@ -145,9 +185,12 @@ class Outline extends _react.Component {
   }
 
   renderFunctions(functions) {
+    const {
+      filter
+    } = this.state;
     let classes = (0, _lodash.uniq)(functions.map(func => func.klass));
-    let namedFunctions = functions.filter(func => func.name != "anonymous" && !func.klass && !classes.includes(func.name));
-    let classFunctions = functions.filter(func => func.name != "anonymous" && !!func.klass);
+    let namedFunctions = functions.filter(func => filterOutlineItem(func.name, filter) && !func.klass && !classes.includes(func.name));
+    let classFunctions = functions.filter(func => filterOutlineItem(func.name, filter) && !!func.klass);
 
     if (this.props.alphabetizeOutline) {
       namedFunctions = (0, _lodash.sortBy)(namedFunctions, "name");
@@ -155,16 +198,18 @@ class Outline extends _react.Component {
       classFunctions = (0, _lodash.sortBy)(classFunctions, "name");
     }
 
-    return _react2.default.createElement("div", null, _react2.default.createElement("ul", {
+    return _react2.default.createElement("ul", {
       className: "outline-list"
-    }, namedFunctions.map(func => this.renderFunction(func)), classes.map(klass => this.renderClassFunctions(klass, classFunctions))), _react2.default.createElement("div", {
+    }, namedFunctions.map(func => this.renderFunction(func)), classes.map(klass => this.renderClassFunctions(klass, classFunctions)));
+  }
+
+  renderFooter() {
+    return _react2.default.createElement("div", {
       className: "outline-footer bottom"
     }, _react2.default.createElement("button", {
-      onClick: () => {
-        this.props.onAlphabetizeClick();
-      },
+      onClick: this.props.onAlphabetizeClick,
       className: this.props.alphabetizeOutline ? "active" : ""
-    }, L10N.getStr("outline.sortLabel"))));
+    }, L10N.getStr("outline.sortLabel")));
   }
 
   render() {
@@ -172,6 +217,9 @@ class Outline extends _react.Component {
       symbols,
       selectedSource
     } = this.props;
+    const {
+      filter
+    } = this.state;
 
     if (!selectedSource) {
       return this.renderPlaceholder();
@@ -182,9 +230,17 @@ class Outline extends _react.Component {
     }
 
     const symbolsToDisplay = symbols.functions.filter(func => func.name != "anonymous");
+
+    if (symbolsToDisplay.length === 0) {
+      return this.renderPlaceholder();
+    }
+
     return _react2.default.createElement("div", {
       className: "outline"
-    }, symbolsToDisplay.length > 0 ? this.renderFunctions(symbols.functions) : this.renderPlaceholder());
+    }, _react2.default.createElement("div", null, _react2.default.createElement(_OutlineFilter2.default, {
+      filter: filter,
+      updateFilter: this.updateFilter
+    }), this.renderFunctions(symbolsToDisplay), this.renderFooter()));
   }
 
 }

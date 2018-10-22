@@ -101,14 +101,15 @@ class Tab extends _react.PureComponent {
       }
     }, {
       item: { ...tabMenuItems.copySourceUri2,
+        disabled: !selectedSource.url,
         click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(sourceTab.url))
       }
-    }];
-    items.push({
+    }, {
       item: { ...tabMenuItems.showSource,
+        disabled: !selectedSource.url,
         click: () => showSource(tab)
       }
-    });
+    }];
 
     if (!isPrettySource) {
       items.push({

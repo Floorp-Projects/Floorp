@@ -2,25 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test keyboard arrow behaviour
-
-async function waitForNodeToGainFocus(dbg, index) {
-  await waitUntil(() => {
-    const element = findElement(dbg, "sourceNode", index);
-
-    if (element) {
-      return element.classList.contains("focused");
-    }
-
-    return false;
-  }, `waiting for source node ${index} to be focused`);
-}
-
-async function assertNodeIsFocused(dbg, index) {
-  await waitForNodeToGainFocus(dbg, index);
-  const node = findElement(dbg, "sourceNode", index);
-  ok(node.classList.contains("focused"), `node ${index} is focused`);
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html");
   await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
