@@ -1607,6 +1607,7 @@ static bool
 DoToBoolFallback(JSContext* cx, BaselineFrame* frame, ICToBool_Fallback* stub, HandleValue arg,
                  MutableHandleValue ret)
 {
+    stub->incrementEnteredCount();
     FallbackICSpew(cx, stub, "ToBool");
 
     MOZ_ASSERT(!arg.isBoolean());
@@ -1647,6 +1648,7 @@ ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 static bool
 DoToNumberFallback(JSContext* cx, ICToNumber_Fallback* stub, HandleValue arg, MutableHandleValue ret)
 {
+    stub->incrementEnteredCount();
     FallbackICSpew(cx, stub, "ToNumber");
     ret.set(arg);
     return ToNumber(cx, ret);
@@ -1708,6 +1710,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICGetElem_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(frame->script());
@@ -1800,6 +1803,7 @@ DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* 
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICGetElem_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(frame->script());
@@ -1939,6 +1943,7 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICSetElem_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     RootedScript outerScript(cx, script);
@@ -2237,6 +2242,7 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICIn_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     FallbackICSpew(cx, stub, "In");
 
@@ -2290,6 +2296,7 @@ DoHasOwnFallback(JSContext* cx, BaselineFrame* frame, ICHasOwn_Fallback* stub_,
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICIn_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     FallbackICSpew(cx, stub, "HasOwn");
 
@@ -2340,6 +2347,7 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICGetName_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
@@ -2407,6 +2415,8 @@ static bool
 DoBindNameFallback(JSContext* cx, BaselineFrame* frame, ICBindName_Fallback* stub,
                    HandleObject envChain, MutableHandleValue res)
 {
+    stub->incrementEnteredCount();
+
     jsbytecode* pc = stub->icEntry()->pc(frame->script());
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "BindName(%s)", CodeName[JSOp(*pc)]);
@@ -2455,6 +2465,7 @@ DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame, ICGetIntrinsic_Fallb
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICGetIntrinsic_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
@@ -2542,6 +2553,7 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICGetProp_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub_->icEntry()->pc(script);
@@ -2614,6 +2626,7 @@ DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* 
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICGetProp_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub_->icEntry()->pc(script);
@@ -2761,6 +2774,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICSetProp_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
@@ -3593,6 +3607,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICCall_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
@@ -3731,6 +3746,7 @@ DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICCall_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
@@ -5264,6 +5280,7 @@ static bool
 DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame, ICGetIterator_Fallback* stub,
                       HandleValue value, MutableHandleValue res)
 {
+    stub->incrementEnteredCount();
     FallbackICSpew(cx, stub, "GetIterator");
 
     TryAttachStub<GetIteratorIRGenerator>("GetIterator", cx, frame, stub, BaselineCacheIRStubKind::Regular, value);
@@ -5308,6 +5325,7 @@ DoIteratorMoreFallback(JSContext* cx, BaselineFrame* frame, ICIteratorMore_Fallb
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICIteratorMore_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     FallbackICSpew(cx, stub, "IteratorMore");
 
@@ -5441,6 +5459,7 @@ DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback*
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICInstanceOf_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     FallbackICSpew(cx, stub, "InstanceOf");
 
@@ -5509,6 +5528,7 @@ static bool
 DoTypeOfFallback(JSContext* cx, BaselineFrame* frame, ICTypeOf_Fallback* stub, HandleValue val,
                  MutableHandleValue res)
 {
+    stub->incrementEnteredCount();
     FallbackICSpew(cx, stub, "TypeOf");
 
     TryAttachStub<TypeOfIRGenerator>("TypeOf", cx, frame, stub, BaselineCacheIRStubKind::Regular, val);
@@ -5540,6 +5560,7 @@ static bool
 DoRetSubFallback(JSContext* cx, BaselineFrame* frame, ICRetSub_Fallback* stub,
                  HandleValue val, uint8_t** resumeAddr)
 {
+    stub->incrementEnteredCount();
     FallbackICSpew(cx, stub, "RetSub");
 
     // |val| is the bytecode offset where we should resume.
@@ -5817,6 +5838,7 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICUnaryArith_Fallback*> debug_stub(frame, stub);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
@@ -5891,6 +5913,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICBinaryArith_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
@@ -6026,6 +6049,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICCompare_Fallback*> stub(frame, stub_);
+    stub->incrementEnteredCount();
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
@@ -6136,6 +6160,7 @@ static bool
 DoNewArray(JSContext* cx, BaselineFrame* frame, ICNewArray_Fallback* stub, uint32_t length,
            MutableHandleValue res)
 {
+    stub->incrementEnteredCount();
     FallbackICSpew(cx, stub, "NewArray");
 
     RootedObject obj(cx);
@@ -6190,6 +6215,7 @@ ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 static bool
 DoNewObject(JSContext* cx, BaselineFrame* frame, ICNewObject_Fallback* stub, MutableHandleValue res)
 {
+    stub->incrementEnteredCount();
     FallbackICSpew(cx, stub, "NewObject");
 
     RootedObject obj(cx);

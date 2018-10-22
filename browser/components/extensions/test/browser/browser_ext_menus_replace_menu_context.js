@@ -20,6 +20,7 @@ function checkIsDefaultMenuItemVisible(visibleMenuItemIds) {
 add_task(async function overrideContext_with_context() {
   // Background script of the main test extension and the auxilary other extension.
   function background() {
+    const HTTP_URL = "http://example.com/?SomeTab";
     browser.test.onMessage.addListener(async (msg, tabId) => {
       browser.test.assertEq("testTabAccess", msg, `Expected message in ${browser.runtime.id}`);
       let tab = await browser.tabs.get(tabId);
@@ -31,7 +32,7 @@ add_task(async function overrideContext_with_context() {
         let [url] = await browser.tabs.executeScript(tabId, {
           code: "document.URL",
         });
-        browser.test.assertEq("http://example.com/?SomeTab", url, "Expected successful executeScript");
+        browser.test.assertEq(HTTP_URL, url, "Expected successful executeScript");
         browser.test.sendMessage("testTabAccessDone", "executeScript_ok");
         return;
       } catch (e) {
@@ -41,23 +42,56 @@ add_task(async function overrideContext_with_context() {
     });
     browser.menus.onShown.addListener((info, tab) => {
       browser.test.assertEq("tab", info.viewType, "Expected viewType at onShown");
+      browser.test.assertEq(undefined, info.linkUrl, "Expected linkUrl at onShown");
+      browser.test.assertEq(undefined, info.srckUrl, "Expected srcUrl at onShown");
       browser.test.sendMessage("onShown", {
-        menuIds: info.menuIds,
+        menuIds: info.menuIds.sort(),
         contexts: info.contexts,
         bookmarkId: info.bookmarkId,
+        pageUrl: info.pageUrl,
+        frameUrl: info.frameUrl,
         tabId: tab && tab.id,
       });
     });
     browser.menus.onClicked.addListener((info, tab) => {
       browser.test.assertEq("tab", info.viewType, "Expected viewType at onClicked");
+      browser.test.assertEq(undefined, info.linkUrl, "Expected linkUrl at onClicked");
+      browser.test.assertEq(undefined, info.srckUrl, "Expected srcUrl at onClicked");
       browser.test.sendMessage("onClicked", {
         menuItemId: info.menuItemId,
         bookmarkId: info.bookmarkId,
+        pageUrl: info.pageUrl,
+        frameUrl: info.frameUrl,
         tabId: tab && tab.id,
       });
     });
+
+    // Minimal properties to define menu items for a specific context.
     browser.menus.create({id: "tab_context", title: "tab_context", contexts: ["tab"]});
     browser.menus.create({id: "bookmark_context", title: "bookmark_context", contexts: ["bookmark"]});
+
+    // documentUrlPatterns in the tab context applies to the tab's URL.
+    browser.menus.create({id: "tab_context_http", title: "tab_context_http",
+                          contexts: ["tab"], documentUrlPatterns: [HTTP_URL]});
+    browser.menus.create({id: "tab_context_moz_unexpected", title: "tab_context_moz",
+                          contexts: ["tab"], documentUrlPatterns: ["moz-extension://*/tab.html"]});
+    // When viewTypes is present, the document's URL is matched instead.
+    browser.menus.create({id: "tab_context_viewType_http_unexpected", title: "tab_context_viewType_http",
+                          contexts: ["tab"], viewTypes: ["tab"], documentUrlPatterns: [HTTP_URL]});
+    browser.menus.create({id: "tab_context_viewType_moz", title: "tab_context_viewType_moz",
+                          contexts: ["tab"], viewTypes: ["tab"], documentUrlPatterns: ["moz-extension://*/tab.html"]});
+
+    // documentUrlPatterns is not restricting bookmark menu items.
+    browser.menus.create({id: "bookmark_context_http", title: "bookmark_context_http",
+                          contexts: ["bookmark"], documentUrlPatterns: [HTTP_URL]});
+    browser.menus.create({id: "bookmark_context_moz", title: "bookmark_context_moz",
+                          contexts: ["bookmark"], documentUrlPatterns: ["moz-extension://*/tab.html"]});
+    // When viewTypes is present, the document's URL is matched instead.
+    browser.menus.create({id: "bookmark_context_viewType_http_unexpected", title: "bookmark_context_viewType_http",
+                          contexts: ["bookmark"], viewTypes: ["tab"], documentUrlPatterns: [HTTP_URL]});
+    browser.menus.create({id: "bookmark_context_viewType_moz", title: "bookmark_context_viewType_moz",
+                          contexts: ["bookmark"], viewTypes: ["tab"], documentUrlPatterns: ["moz-extension://*/tab.html"]});
+
     browser.menus.create({id: "link_context", title: "link_context"}, () => {
       browser.test.sendMessage("menu_items_registered");
     });
@@ -109,6 +143,8 @@ add_task(async function overrideContext_with_context() {
         browser.test.sendMessage("setup_ready", {
           bookmarkId: bookmark.id,
           tabId: tab.id,
+          httpUrl: tab.url,
+          extensionUrl: document.URL,
         });
       },
     },
@@ -130,7 +166,7 @@ add_task(async function overrideContext_with_context() {
   await extension.startup();
   await extension.awaitMessage("menu_items_registered");
 
-  let {bookmarkId, tabId} = await extension.awaitMessage("setup_ready");
+  let {bookmarkId, tabId, httpUrl, extensionUrl} = await extension.awaitMessage("setup_ready");
   info(`Set up test with tabId=${tabId} and bookmarkId=${bookmarkId}.`);
 
   {
@@ -140,17 +176,37 @@ add_task(async function overrideContext_with_context() {
     for (let ext of [extension, otherExtension]) {
       info(`Testing menu from ${ext.id} after changing context to tab`);
       Assert.deepEqual(await ext.awaitMessage("onShown"), {
-        menuIds: ["tab_context"],
+        menuIds: [
+          "tab_context",
+          "tab_context_http",
+          "tab_context_viewType_moz",
+        ],
         contexts: ["tab"],
         bookmarkId: undefined,
+        pageUrl: undefined, // because extension has no host permissions.
+        frameUrl: extensionUrl,
         tabId,
       }, "Expected onShown details after changing context to tab");
     }
+    let topLevels = menu.getElementsByAttribute("ext-type", "top-level-menu");
+    is(topLevels.length, 1, "Expected top-level menu for otherExtension");
+
     Assert.deepEqual(getVisibleChildrenIds(menu), [
       `${makeWidgetId(extension.id)}-menuitem-_tab_context`,
+      `${makeWidgetId(extension.id)}-menuitem-_tab_context_http`,
+      `${makeWidgetId(extension.id)}-menuitem-_tab_context_viewType_moz`,
       `menuseparator`,
-      `${makeWidgetId(otherExtension.id)}-menuitem-_tab_context`,
+      topLevels[0].id,
     ], "Expected menu items after changing context to tab");
+
+    let submenu = await openSubmenu(topLevels[0]);
+    is(submenu, topLevels[0].firstElementChild, "Correct submenu opened");
+
+    Assert.deepEqual(getVisibleChildrenIds(submenu), [
+      `${makeWidgetId(otherExtension.id)}-menuitem-_tab_context`,
+      `${makeWidgetId(otherExtension.id)}-menuitem-_tab_context_http`,
+      `${makeWidgetId(otherExtension.id)}-menuitem-_tab_context_viewType_moz`,
+    ], "Expected menu items in submenu after changing context to tab");
 
     extension.sendMessage("testTabAccess", tabId);
     is(await extension.awaitMessage("testTabAccessDone"),
@@ -170,6 +226,8 @@ add_task(async function overrideContext_with_context() {
     Assert.deepEqual(await otherExtension.awaitMessage("onClicked"), {
       menuItemId: "tab_context",
       bookmarkId: undefined,
+      pageUrl: httpUrl,
+      frameUrl: extensionUrl,
       tabId,
     }, "Expected onClicked details after changing context to tab");
 
@@ -200,6 +258,8 @@ add_task(async function overrideContext_with_context() {
     Assert.deepEqual(await extension.awaitMessage("onClicked"), {
       menuItemId: "tab_context",
       bookmarkId: undefined,
+      pageUrl: httpUrl,
+      frameUrl: extensionUrl,
       tabId,
     }, "Expected onClicked details after changing context to tab");
 
@@ -217,17 +277,40 @@ add_task(async function overrideContext_with_context() {
       info(`Testing menu from ${ext.id} after changing context to bookmark`);
       let shownInfo = await ext.awaitMessage("onShown");
       Assert.deepEqual(shownInfo, {
-        menuIds: ["bookmark_context"],
+        menuIds: [
+          "bookmark_context",
+          "bookmark_context_http",
+          "bookmark_context_moz",
+          "bookmark_context_viewType_moz",
+        ],
         contexts: ["bookmark"],
         bookmarkId,
+        pageUrl: undefined,
+        frameUrl: extensionUrl,
         tabId: undefined,
       }, "Expected onShown details after changing context to bookmark");
     }
+    let topLevels = menu.getElementsByAttribute("ext-type", "top-level-menu");
+    is(topLevels.length, 1, "Expected top-level menu for otherExtension");
+
     Assert.deepEqual(getVisibleChildrenIds(menu), [
       `${makeWidgetId(extension.id)}-menuitem-_bookmark_context`,
+      `${makeWidgetId(extension.id)}-menuitem-_bookmark_context_http`,
+      `${makeWidgetId(extension.id)}-menuitem-_bookmark_context_moz`,
+      `${makeWidgetId(extension.id)}-menuitem-_bookmark_context_viewType_moz`,
       `menuseparator`,
-      `${makeWidgetId(otherExtension.id)}-menuitem-_bookmark_context`,
+      topLevels[0].id,
     ], "Expected menu items after changing context to bookmark");
+
+    let submenu = await openSubmenu(topLevels[0]);
+    is(submenu, topLevels[0].firstElementChild, "Correct submenu opened");
+
+    Assert.deepEqual(getVisibleChildrenIds(submenu), [
+      `${makeWidgetId(otherExtension.id)}-menuitem-_bookmark_context`,
+      `${makeWidgetId(otherExtension.id)}-menuitem-_bookmark_context_http`,
+      `${makeWidgetId(otherExtension.id)}-menuitem-_bookmark_context_moz`,
+      `${makeWidgetId(otherExtension.id)}-menuitem-_bookmark_context_viewType_moz`,
+    ], "Expected menu items in submenu after changing context to bookmark");
     await closeContextMenu(menu);
   }
 

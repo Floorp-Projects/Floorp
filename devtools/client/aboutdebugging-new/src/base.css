@@ -1,0 +1,250 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  /* Colors from common.css */
+  --bg-color: #f9f9fa; /* --in-content-background-color */
+  --text-color: #0c0c0d; /* --in-content-text-color */
+
+  --border-color: #d7d7db; /* --in-content-border-color */
+
+  --box-background: #fff;
+  --box-background-hover: #ebebeb;
+  --box-border-color: #d7d7db;
+
+  --category-background-hover: rgba(12,12,13,0.1);
+  --category-text: rgba(12,12,13);
+  --category-text-selected: #0a84ff;
+
+  --link-color: #0a8dff;
+  --link-color-active: #003eaa;
+  --link-color-hover: #0060df;
+
+  /* Colors from Photon */
+  --success-50: #30e60b;
+  --warning-50: #ffe900;
+  --error-50: #ff0039;
+  --highlight-50: #0a84ff;
+  --grey-30: #d7d7db; /* for ui, no special semantic */
+
+  /* Global layout vars */
+  --page-width: 664px;
+  --base-distance: 4px;
+
+  /* Global styles */
+  --base-font-style: message-box;
+  --base-font-size: 15px; /* root font of 11px * 1.36em = 15px */
+  --base-line-height: 1.8;
+  --micro-font-size: 11px;
+
+  /*
+  * Variables particular to about:debugging
+  */
+  --alt-heading-icon-size: calc(var(--base-distance) * 6);
+  --alt-heading-icon-gap: var(--base-distance);
+}
+
+/*
+* Reset some tags
+*/
+
+html {
+  font: var(--base-font-style);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+  font-size: var(--base-font-size);
+  background: var(--bg-color);
+}
+
+dd {
+  margin: 0;
+  padding: 0;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--link-color-hover);
+}
+a:active {
+  color: var(--link-color-active);
+}
+
+
+/*
+* Utils
+*/
+
+/* text that needs to be cut with … */
+.ellipsis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+* Typography
+*/
+
+/* Main style for heading (i.e. h1) */
+.main-heading {
+  font-size: 2.5em;
+  font-weight: lighter;
+  line-height: 1.2;
+  color: var(--in-content-text-color);
+  margin: 0;
+  margin-bottom: .5em;
+}
+
+/* Main style for a subheading (i.e. h2) */
+.main-subheading {
+  line-height: 1.4em;
+  font-weight: 600;
+}
+
+/* Alternative style for a heading (i.e. h1) */
+.alt-heading {
+  font-weight: 300;
+  font-size: 1.46em;
+  line-height: 1.2; /* odd value - from common.inc.css */
+
+  margin-block-start: 0;
+  margin-block-end: calc(var(--base-distance) * 4);
+}
+
+/* Alternative style for a subheading (i.e. h2). It features an icon */
+/* +--------+-------------+
+*  | [Icon] | Lorem ipsum |
+*  +--------+-------------+
+*/
+.alt-subheading {
+  margin-block-start: calc(var(--base-distance) * 4);
+  font-weight: 600;
+  font-size: 1.14em;
+  line-height: 1.4em; /* odd value - from common.inc.css */
+
+  display: grid;
+  grid-template-columns: var(--alt-heading-icon-size) 1fr;
+  grid-column-gap: var(--alt-heading-icon-gap);
+  align-items: center;
+}
+
+.alt-subheading__icon {
+  width: 100%;
+  fill: currentColor;
+  -moz-context-properties: fill;
+}
+
+
+/*
+* Layout elements
+*/
+
+/* for horizontal rules / separators */
+.separator {
+  border-style: solid none none none;
+  border-color: var(--border-color);
+}
+
+/* adds breathing space to the separator */
+.separator--breathe {
+  margin: calc(var(--base-distance) * 4) 0;
+}
+
+/* a series of button-like elements, layed out horizontally */
+.toolbar {
+  display: flex;
+  column-gap: var(--base-distance);
+}
+
+/*
+Form controls
+*/
+.default-button, .default-input {
+  box-sizing: border-box;
+  font-size: 1em;
+}
+
+/* standard, normal button */
+.default-button, .default-select {
+  -moz-appearance: none;
+  font-size: 1em;
+  color: var(--text-color);
+  background-color: var(--page-background);
+
+  margin: 0;
+  height: calc(var(--base-distance) * 8); /* Note: this is from Photon, not common.css */
+  padding-inline-start: calc(var(--base-distance) * 5);
+  padding-inline-end: calc(var(--base-distance) * 5);
+
+  border: 1px solid var(--box-border-color);
+  border-radius: calc(var(--base-distance) / 2);
+}
+
+.default-button:enabled:hover {
+  background: var(--box-background-hover)
+}
+
+/* smaller size for a default button */
+.default-button--micro {
+  padding-inline-start: calc(2 * var(--base-distance));
+  padding-inline-end: calc(2 * var(--base-distance));
+  font-size: var(--micro-font-size);
+  height: calc(var(--base-distance) * 6);
+}
+
+/* standard inputs */
+.default-input {
+  line-height: unset;
+  padding: 0 calc(var(--base-distance) * 2);
+  height: 100%;
+
+  border: 1px solid var(--box-border-color);
+  border-radius: 2px;
+  color: var(--text-color);
+  background-color: var(--box-background);
+}
+
+/*
+* Other UI components
+*/
+
+/*
+* A small, colored badge.
+* NOTE: styles borrowed from Photon's micro buttons (there aren't badges)
+*/
+.badge {
+  font-size: var(--micro-font-size);
+  background: var(--grey-30);
+  border-radius: calc(var(--base-distance) / 2);
+  padding: var(--base-distance) calc(2 * var(--base-distance));
+}
+
+.badge--info {
+  background: var(--highlight-50);
+}
+
+.badge--success {
+  background: var(--success-50);
+}
+
+.badge--warning {
+  background: var(--warning-50);
+}
+
+.badge--error {
+  background: var(--error-50);
+}

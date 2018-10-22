@@ -13,6 +13,7 @@
 #include "nsPrintfCString.h"
 
 #include <dlfcn.h>
+#include <dbus/dbus-glib-lowlevel.h>
 
 using mozilla::LogLevel;
 static mozilla::LazyLogModule sRemoteLm("DBusRemoteClient");
