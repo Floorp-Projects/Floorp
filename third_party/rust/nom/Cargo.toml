@@ -12,39 +12,107 @@
 
 [package]
 name = "nom"
-version = "3.2.1"
+version = "4.1.1"
 authors = ["contact@geoffroycouprie.com"]
 include = ["CHANGELOG.md", "LICENSE", ".gitignore", ".travis.yml", "Cargo.toml", "src/*.rs", "tests/*.rs"]
 description = "A byte-oriented, zero-copy, parser combinators library"
-documentation = "http://rust.unhandledexpression.com/nom/"
+documentation = "https://docs.rs/nom"
 readme = "README.md"
 keywords = ["parser", "parser-combinators", "parsing", "streaming", "bit"]
 categories = ["parsing"]
 license = "MIT"
 repository = "https://github.com/Geal/nom"
+[package.metadata.docs.rs]
+all-features = true
+features = ["alloc", "std", "regexp", "regexp_macros", "verbose-errors"]
+
+[[test]]
+name = "arithmetic"
+
+[[test]]
+name = "arithmetic_ast"
+required-features = ["alloc"]
+
+[[test]]
+name = "blockbuf-arithmetic"
+
+[[test]]
+name = "complete_arithmetic"
+
+[[test]]
+name = "complete_float"
+
+[[test]]
+name = "css"
+
+[[test]]
+name = "custom_errors"
+
+[[test]]
+name = "float"
+
+[[test]]
+name = "inference"
+
+[[test]]
+name = "ini"
+required-features = ["alloc"]
+
+[[test]]
+name = "ini_str"
+required-features = ["alloc"]
+
+[[test]]
+name = "issues"
+required-features = ["alloc", "regexp_macros"]
+
+[[test]]
+name = "json"
+
+[[test]]
+name = "mp4"
+
+[[test]]
+name = "multiline"
+required-features = ["alloc"]
+
+[[test]]
+name = "named_args"
+
+[[test]]
+name = "overflow"
+
+[[test]]
+name = "reborrow_fold"
+
+[[test]]
+name = "test1"
+[dependencies.lazy_static]
+version = "^1.0"
+optional = true
+
 [dependencies.memchr]
-version = "^1.0.1"
+version = "^2.0"
 default-features = false
 
-[dependencies.compiler_error]
-version = "0.1.1"
-optional = true
-
 [dependencies.regex]
-version = "^0.2"
-optional = true
-
-[dependencies.lazy_static]
-version = "^0.2.2"
+version = "^1.0"
 optional = true
 
 [features]
-default = ["std", "stream"]
+alloc = []
+default = ["std"]
 regexp = ["regex"]
-verbose-errors = []
-stream = []
-nightly = ["compiler_error"]
 regexp_macros = ["regexp", "lazy_static"]
-std = ["memchr/use_std"]
+std = ["alloc", "memchr/use_std"]
+verbose-errors = ["alloc"]
+[badges.coveralls]
+branch = "master"
+repository = "Geal/nom"
+service = "github"
+
+[badges.maintenance]
+status = "actively-developed"
+
 [badges.travis-ci]
 repository = "Geal/nom"

@@ -12,7 +12,7 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::hash::Hash;
 use std::hash::Hasher;
-use std::os::raw::{c_char, c_int, c_uint, c_ulong};
+use std::os::raw::{c_char, c_int, c_uint, c_ulong, c_longlong, c_ulonglong};
 
 /// A cursor into the Clang AST, pointing to an AST node.
 ///
@@ -940,6 +940,7 @@ impl Type {
             CXType_RValueReference |
             CXType_LValueReference |
             CXType_MemberPointer |
+            CXType_BlockPointer |
             CXType_ObjCObjectPointer => {
                 let ret = Type {
                     x: unsafe { clang_getPointeeType(self.x) },
@@ -1786,13 +1787,34 @@ impl EvalResult {
     }
 
     /// Try to get back the result as an integer.
-    pub fn as_int(&self) -> Option<i32> {
-        match self.kind() {
-            CXEval_Int => {
-                Some(unsafe { clang_EvalResult_getAsInt(self.x) } as i32)
-            }
-            _ => None,
+    pub fn as_int(&self) -> Option<i64> {
+        if self.kind() != CXEval_Int {
+            return None;
         }
+
+        if !clang_EvalResult_isUnsignedInt::is_loaded() {
+            // FIXME(emilio): There's no way to detect underflow here, and clang
+            // will just happily give us a value.
+            return Some(unsafe { clang_EvalResult_getAsInt(self.x) } as i64)
+        }
+
+        if unsafe { clang_EvalResult_isUnsignedInt(self.x) } != 0 {
+            let value = unsafe { clang_EvalResult_getAsUnsigned(self.x) };
+            if value > i64::max_value() as c_ulonglong {
+                return None;
+            }
+
+            return Some(value as i64)
+        }
+
+        let value = unsafe { clang_EvalResult_getAsLongLong(self.x) };
+        if value > i64::max_value() as c_longlong {
+            return None;
+        }
+        if value < i64::min_value() as c_longlong {
+            return None;
+        }
+        Some(value as i64)
     }
 
     /// Evaluates the expression as a literal string, that may or may not be

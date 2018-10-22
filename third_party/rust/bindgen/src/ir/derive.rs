@@ -30,15 +30,15 @@ pub trait CanDeriveDebug {
 pub trait CanTriviallyDeriveDebug {
     /// Return `true` if `Debug` can trivially be derived for this thing,
     /// `false` otherwise.
-    fn can_trivially_derive_debug(&self) -> bool;
+    fn can_trivially_derive_debug(&self, ctx: &BindgenContext) -> bool;
 }
 
 /// A trait that encapsulates the logic for whether or not we can derive `Copy`
 /// for a given thing.
-pub trait CanDeriveCopy<'a> {
+pub trait CanDeriveCopy {
     /// Return `true` if `Copy` can be derived for this thing, `false`
     /// otherwise.
-    fn can_derive_copy(&'a self, ctx: &'a BindgenContext) -> bool;
+    fn can_derive_copy(&self, ctx: &BindgenContext) -> bool;
 }
 
 /// A trait that encapsulates the logic for whether or not we can trivially
@@ -47,7 +47,7 @@ pub trait CanDeriveCopy<'a> {
 pub trait CanTriviallyDeriveCopy {
     /// Return `true` if `Copy` can be trivially derived for this thing, `false`
     /// otherwise.
-    fn can_trivially_derive_copy(&self) -> bool;
+    fn can_trivially_derive_copy(&self, ctx: &BindgenContext) -> bool;
 }
 
 /// A trait that encapsulates the logic for whether or not we can derive
@@ -64,7 +64,7 @@ pub trait CanDeriveDefault {
 pub trait CanTriviallyDeriveDefault {
     /// Return `true` if `Default` can trivially derived for this thing, `false`
     /// otherwise.
-    fn can_trivially_derive_default(&self) -> bool;
+    fn can_trivially_derive_default(&self, ctx: &BindgenContext) -> bool;
 }
 
 /// A trait that encapsulates the logic for whether or not we can derive `Hash`
@@ -111,7 +111,7 @@ pub trait CanDeriveOrd {
 pub trait CanTriviallyDeriveHash {
     /// Return `true` if `Hash` can trivially be derived for this thing, `false`
     /// otherwise.
-    fn can_trivially_derive_hash(&self) -> bool;
+    fn can_trivially_derive_hash(&self, ctx: &BindgenContext) -> bool;
 }
 
 /// A trait that encapsulates the logic for whether or not we can trivially
@@ -120,11 +120,11 @@ pub trait CanTriviallyDeriveHash {
 pub trait CanTriviallyDerivePartialEqOrPartialOrd {
     /// Return `Yes` if `PartialEq` or `PartialOrd` can trivially be derived
     /// for this thing.
-    fn can_trivially_derive_partialeq_or_partialord(&self) -> CanDerive;
+    fn can_trivially_derive_partialeq_or_partialord(&self, ctx: &BindgenContext) -> CanDerive;
 }
 
 /// Whether it is possible or not to automatically derive trait for an item.
-/// 
+///
 /// ```ignore
 ///         No
 ///          ^
@@ -134,7 +134,7 @@ pub trait CanTriviallyDerivePartialEqOrPartialOrd {
 ///          |
 ///         Yes
 /// ```
-/// 
+///
 /// Initially we assume that we can derive trait for all types and then
 /// update our understanding as we learn more about each type.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord)]
@@ -144,7 +144,7 @@ pub enum CanDerive {
 
     /// The only thing that stops us from automatically deriving is that
     /// array with more than maximum number of elements is used.
-    /// 
+    ///
     /// This means we probably can "manually" implement such trait.
     ArrayTooLarge,
 

@@ -42,8 +42,10 @@ pub fn gen_debug_impl(
     format_string.push_str(" }}");
     tokens.insert(0, quote! { #format_string });
 
+    let prefix = ctx.trait_prefix();
+
     quote! {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        fn fmt(&self, f: &mut ::#prefix::fmt::Formatter<'_>) -> ::#prefix ::fmt::Result {
             write!(f, #( #tokens ),*)
         }
     }
@@ -154,7 +156,6 @@ impl<'a> ImplDebug<'a> for Item {
             TypeKind::Function(..) |
             TypeKind::Enum(..) |
             TypeKind::Reference(..) |
-            TypeKind::BlockPointer |
             TypeKind::UnresolvedTypeRef(..) |
             TypeKind::ObjCInterface(..) |
             TypeKind::ObjCId |
@@ -184,32 +185,49 @@ impl<'a> ImplDebug<'a> for Item {
                     // The simple case
                     debug_print(name, quote! { #name_ident })
                 } else {
-                    // Let's implement our own print function
-                    Some((
-                        format!("{}: [{{}}]", name),
-                        vec![quote! {
-                            self.#name_ident
-                                .iter()
-                                .enumerate()
-                                .map(|(i, v)| format!("{}{:?}", if i > 0 { ", " } else { "" }, v))
-                                .collect::<String>()
-                        }],
-                    ))
+                    if ctx.options().use_core {
+                        // There is no String in core; reducing field visibility to avoid breaking
+                        // no_std setups.
+                        Some((
+                            format!("{}: [...]", name), vec![]
+                        ))
+                    } else {
+                        // Let's implement our own print function
+                        Some((
+                            format!("{}: [{{}}]", name),
+                            vec![quote! {
+                                self.#name_ident
+                                    .iter()
+                                    .enumerate()
+                                    .map(|(i, v)| format!("{}{:?}", if i > 0 { ", " } else { "" }, v))
+                                    .collect::<String>()
+                            }],
+                        ))
+                    }
                 }
             }
             TypeKind::Vector(_, len) => {
-                let self_ids = 0..len;
-                Some((
-                    format!("{}({{}})", name),
-                    vec![quote! {
-                        #(format!("{:?}", self.#self_ids)),*
-                    }]
-                ))
+                if ctx.options().use_core {
+                    // There is no format! in core; reducing field visibility to avoid breaking
+                    // no_std setups.
+                    Some((
+                        format!("{}(...)", name), vec![]
+                    ))
+                } else {
+                    let self_ids = 0..len;
+                    Some((
+                        format!("{}({{}})", name),
+                        vec![quote! {
+                            #(format!("{:?}", self.#self_ids)),*
+                        }]
+                    ))
+                }
             }
 
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
-            TypeKind::Alias(t) => {
+            TypeKind::Alias(t) |
+            TypeKind::BlockPointer(t) => {
                 // We follow the aliases
                 ctx.resolve_item(t).impl_debug(ctx, name)
             }
@@ -218,7 +236,7 @@ impl<'a> ImplDebug<'a> for Item {
                 let inner_type = ctx.resolve_type(inner).canonical_type(ctx);
                 match *inner_type.kind() {
                     TypeKind::Function(ref sig)
-                        if !sig.can_trivially_derive_debug() => {
+                        if !sig.can_trivially_derive_debug(ctx) => {
                             Some((format!("{}: FunctionPointer", name), vec![]))
                     }
                     _ => debug_print(name, quote! { #name_ident }),

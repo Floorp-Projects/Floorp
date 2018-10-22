@@ -96,6 +96,8 @@ macro_rules! rust_target_base {
             => Stable_1_21 => 1.21;
             /// Rust stable 1.25
             => Stable_1_25 => 1.25;
+            /// Rust stable 1.26
+            => Stable_1_26 => 1.26;
             /// Nightly rust
             => Nightly => nightly;
         );
@@ -171,6 +173,10 @@ rust_feature_def!(
     Stable_1_25 {
         /// repr(align) ([PR](https://github.com/rust-lang/rust/pull/47006))
         => repr_align;
+    }
+    Stable_1_26 {
+        /// [i128 / u128 support](https://doc.rust-lang.org/std/primitive.i128.html)
+        => i128_and_u128;
     }
     Nightly {
         /// `thiscall` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/42202))

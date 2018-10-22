@@ -149,7 +149,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveCopy<'ctx> {
 
         if item.is_opaque(self.ctx, &()) {
             let layout_can_derive = ty.layout(self.ctx).map_or(true, |l| {
-                l.opaque().can_trivially_derive_copy()
+                l.opaque().can_trivially_derive_copy(self.ctx)
             });
             return if layout_can_derive {
                 trace!("    we can trivially derive Copy for the layout");
@@ -173,7 +173,6 @@ impl<'ctx> MonotoneFramework for CannotDeriveCopy<'ctx> {
             TypeKind::Enum(..) |
             TypeKind::Reference(..) |
             TypeKind::TypeParam |
-            TypeKind::BlockPointer |
             TypeKind::Pointer(..) |
             TypeKind::UnresolvedTypeRef(..) |
             TypeKind::ObjCInterface(..) |
@@ -204,7 +203,8 @@ impl<'ctx> MonotoneFramework for CannotDeriveCopy<'ctx> {
 
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
-            TypeKind::Alias(t) => {
+            TypeKind::Alias(t) |
+            TypeKind::BlockPointer(t) => {
                 let cant_derive_copy = self.is_not_copy(t);
                 if cant_derive_copy {
                     trace!(

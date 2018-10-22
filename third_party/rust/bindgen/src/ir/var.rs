@@ -265,8 +265,7 @@ impl ClangSubItemParser for Var {
 
                     let mut val = cursor
                         .evaluate()
-                        .and_then(|v| v.as_int())
-                        .map(|val| val as i64);
+                        .and_then(|v| v.as_int());
                     if val.is_none() || !kind.signedness_matches(val.unwrap()) {
                         let tu = ctx.translation_unit();
                         val = get_integer_literal_from_cursor(&cursor, tu);
@@ -305,14 +304,14 @@ fn parse_macro(
     ctx: &BindgenContext,
     cursor: &clang::Cursor,
 ) -> Option<(Vec<u8>, cexpr::expr::EvalResult)> {
-    use cexpr::{expr, nom};
+    use cexpr::expr;
 
     let mut cexpr_tokens = cursor.cexpr_tokens()?;
 
     let parser = expr::IdentifierParser::new(ctx.parsed_macros());
 
     match parser.macro_definition(&cexpr_tokens) {
-        nom::IResult::Done(_, (id, val)) => {
+        Ok((_, (id, val))) => {
             return Some((id.into(), val));
         }
         _ => {}
@@ -327,20 +326,20 @@ fn parse_macro(
     cexpr_tokens.pop()?;
 
     match parser.macro_definition(&cexpr_tokens) {
-        nom::IResult::Done(_, (id, val)) => Some((id.into(), val)),
+        Ok((_, (id, val))) => Some((id.into(), val)),
         _ => None,
     }
 }
 
 fn parse_int_literal_tokens(cursor: &clang::Cursor) -> Option<i64> {
-    use cexpr::{expr, nom};
+    use cexpr::expr;
     use cexpr::expr::EvalResult;
 
     let cexpr_tokens = cursor.cexpr_tokens()?;
 
     // TODO(emilio): We can try to parse other kinds of literals.
     match expr::expr(&cexpr_tokens) {
-        nom::IResult::Done(_, EvalResult::Int(Wrapping(val))) => Some(val),
+        Ok((_, EvalResult::Int(Wrapping(val)))) => Some(val),
         _ => None,
     }
 }

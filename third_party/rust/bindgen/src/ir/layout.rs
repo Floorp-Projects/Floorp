@@ -36,8 +36,12 @@ fn test_layout_for_size() {
 
 impl Layout {
     /// Gets the integer type name for a given known size.
-    pub fn known_type_for_size(size: usize) -> Option<&'static str> {
+    pub fn known_type_for_size(
+        ctx: &BindgenContext,
+        size: usize,
+    ) -> Option<&'static str> {
         Some(match size {
+            16 if ctx.options().rust_features.i128_and_u128 => "u128",
             8 => "u64",
             4 => "u32",
             2 => "u16",
@@ -105,14 +109,14 @@ impl Opaque {
 
     /// Return the known rust type we should use to create a correctly-aligned
     /// field with this layout.
-    pub fn known_rust_type_for_array(&self) -> Option<&'static str> {
-        Layout::known_type_for_size(self.0.align)
+    pub fn known_rust_type_for_array(&self,ctx: &BindgenContext) -> Option<&'static str> {
+        Layout::known_type_for_size(ctx, self.0.align)
     }
 
     /// Return the array size that an opaque type for this layout should have if
     /// we know the correct type for it, or `None` otherwise.
-    pub fn array_size(&self) -> Option<usize> {
-        if self.known_rust_type_for_array().is_some() {
+    pub fn array_size(&self, ctx: &BindgenContext) -> Option<usize> {
+        if self.known_rust_type_for_array(ctx).is_some() {
             Some(self.0.size / cmp::max(self.0.align, 1))
         } else {
             None
@@ -122,45 +126,45 @@ impl Opaque {
     /// Return `true` if this opaque layout's array size will fit within the
     /// maximum number of array elements that Rust allows deriving traits
     /// with. Return `false` otherwise.
-    pub fn array_size_within_derive_limit(&self) -> bool {
-        self.array_size().map_or(false, |size| {
+    pub fn array_size_within_derive_limit(&self, ctx: &BindgenContext) -> bool {
+        self.array_size(ctx).map_or(false, |size| {
             size <= RUST_DERIVE_IN_ARRAY_LIMIT
         })
     }
 }
 
 impl CanTriviallyDeriveDebug for Opaque {
-    fn can_trivially_derive_debug(&self) -> bool {
-        self.array_size_within_derive_limit()
+    fn can_trivially_derive_debug(&self, ctx: &BindgenContext) -> bool {
+        self.array_size_within_derive_limit(ctx)
     }
 }
 
 impl CanTriviallyDeriveDefault for Opaque {
-    fn can_trivially_derive_default(&self) -> bool {
-        self.array_size_within_derive_limit()
+    fn can_trivially_derive_default(&self, ctx: &BindgenContext) -> bool {
+        self.array_size_within_derive_limit(ctx)
     }
 }
 
 impl CanTriviallyDeriveCopy for Opaque {
-    fn can_trivially_derive_copy(&self) -> bool {
-        self.array_size_within_derive_limit()
+    fn can_trivially_derive_copy(&self, ctx: &BindgenContext) -> bool {
+        self.array_size_within_derive_limit(ctx)
     }
 }
 
 impl CanTriviallyDeriveHash for Opaque {
-    fn can_trivially_derive_hash(&self) -> bool {
-        self.array_size_within_derive_limit()
+    fn can_trivially_derive_hash(&self, ctx: &BindgenContext) -> bool {
+        self.array_size_within_derive_limit(ctx)
     }
 }
 
 impl CanTriviallyDerivePartialEqOrPartialOrd for Opaque {
-    fn can_trivially_derive_partialeq_or_partialord(&self) -> CanDerive {
-        self.array_size().map_or(CanDerive::No, |size| {
-            if size <= RUST_DERIVE_IN_ARRAY_LIMIT {
-                CanDerive::Yes
-            } else {
-                CanDerive::ArrayTooLarge
-            }
-        })
+    fn can_trivially_derive_partialeq_or_partialord(&self, ctx: &BindgenContext) -> CanDerive {
+        // TODO(emilio): This is inconsistent with the rest of the
+        // CanTriviallyDerive* traits.
+        if self.array_size_within_derive_limit(ctx) {
+            CanDerive::Yes
+        } else {
+            CanDerive::ArrayTooLarge
+        }
     }
 }
