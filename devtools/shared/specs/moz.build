@@ -16,6 +16,7 @@ DevToolsModules(
     'animation.js',
     'breakpoint.js',
     'canvas.js',
+    'changes.js',
     'css-properties.js',
     'csscoverage.js',
     'device.js',
