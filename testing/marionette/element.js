@@ -1140,35 +1140,52 @@ element.isObscured = function(el) {
 // TODO(ato): Only used by deprecated action API
 // https://bugzil.la/1354578
 /**
- * Calculate the in-view centre point of the area of the given DOM client
- * rectangle that is inside the viewport.
+ * Calculates the in-view centre point of an element's client rect.
+ *
+ * The portion of an element that is said to be _in view_, is the
+ * intersection of two squares: the first square being the initial
+ * viewport, and the second a DOM element.  From this square we
+ * calculate the in-view _centre point_ and convert it into CSS pixels.
+ *
+ * Although Gecko's system internals allow click points to be
+ * given in floating point precision, the DOM operates in CSS pixels.
+ * When the in-view centre point is later used to retrieve a coordinate's
+ * paint tree, we need to ensure to operate in the same language.
+ *
+ * As a word of warning, there appears to be inconsistencies between
+ * how `DOMElement.elementsFromPoint` and `DOMWindowUtils.sendMouseEvent`
+ * internally rounds (ceils/floors) coordinates.
  *
  * @param {DOMRect} rect
  *     Element off a DOMRect sequence produced by calling
- *     <code>getClientRects</code> on an {@link Element}.
+ *     `getClientRects` on an {@link Element}.
  * @param {WindowProxy} win
  *     Current window global.
  *
  * @return {Map.<string, number>}
  *     X and Y coordinates that denotes the in-view centre point of
- *     <var>rect</var>.
+ *     `rect`.
  */
 element.getInViewCentrePoint = function(rect, win) {
-  const {max, min} = Math;
+  const {floor, max, min} = Math;
 
-  let x = {
+  // calculate the intersection of the rect that is inside the viewport
+  let visible = {
     left: max(0, min(rect.x, rect.x + rect.width)),
     right: min(win.innerWidth, max(rect.x, rect.x + rect.width)),
-  };
-  let y = {
     top: max(0, min(rect.y, rect.y + rect.height)),
     bottom: min(win.innerHeight, max(rect.y, rect.y + rect.height)),
   };
 
-  return {
-    x: (x.left + x.right) / 2,
-    y: (y.top + y.bottom) / 2,
-  };
+  // arrive at the centre point of the visible rectangle
+  let x = (visible.left + visible.right) / 2.0;
+  let y = (visible.top + visible.bottom) / 2.0;
+
+  // convert to CSS pixels, as centre point can be float
+  x = floor(x);
+  y = floor(y);
+
+  return {x, y};
 };
 
 /**
