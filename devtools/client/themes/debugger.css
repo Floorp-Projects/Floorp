@@ -37,11 +37,11 @@
   margin-inline-start: -15px;
   margin-top: 3px;
   /* show warning icon */
-  background-image: var(--theme-console-alert-image);
+  background-image: url(chrome://devtools/skin/images/alert.svg);
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill;
-  fill: #ec8633;
+  fill: var(--yellow-60);
 }
 
 .dbg-breakpoint-line {
@@ -286,7 +286,7 @@
 }
 
 .dbg-expression-arrow {
-  background-image: var(--theme-console-input-image);
+  background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
   width: 12px;
   height: 12px;
   margin: 4px;
