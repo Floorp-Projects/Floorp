@@ -13730,6 +13730,15 @@ class CGGlobalNames(CGGeneric):
 
             entries.append((name, nativeEntry))
 
+        # Unfortunately, when running tests, we may have no entries.
+        # PerfectHash will assert if we give it an empty set of entries, so we
+        # just generate a dummy value.
+        if len(entries) == 0:
+            CGGeneric.__init__(self, define=dedent('''
+                static_assert(false, "No WebIDL global name entries!");
+                '''))
+            return
+
         # Build the perfect hash function.
         phf = PerfectHash(entries, GLOBAL_NAMES_PHF_SIZE)
 
