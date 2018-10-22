@@ -100,6 +100,40 @@
       };
     }
 
+    // Test for bug 1500416.
+    function displayContentsInsertion() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, "c4")
+      ];
+
+      this.invoke = function displayContentsInsertion_invoke() {
+        document.body.offsetTop; // Flush layout.
+
+        let list = document.createElement("ul");
+        list.style.display = "contents";
+        list.appendChild(document.createElement("li"));
+        list.firstChild.appendChild(document.createTextNode("Text"));
+        getNode("c4").appendChild(list);
+      };
+
+      this.finalCheck = function displayContentsInsertion_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { LIST: [
+              { LISTITEM: [
+                { STATICTEXT: [] },
+                { TEXT_LEAF: [] }
+              ] }
+            ] },
+          ] };
+        testAccessibleTree("c4", accTree);
+      };
+
+      this.getID = function displayContentsInsertion_getID() {
+        return "insert accessible display: contents element.";
+      };
+    }
+
     // //////////////////////////////////////////////////////////////////////////
     // Do tests
     // //////////////////////////////////////////////////////////////////////////
@@ -114,6 +148,7 @@
       gQueue.push(new prependAppend("c1"));
       gQueue.push(new removeRemove("c2"));
       gQueue.push(new insertInaccessibleAccessibleSiblings());
+      gQueue.push(new displayContentsInsertion());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -133,5 +168,6 @@
   <div id="c2"><span><input type="checkbox"><input></span><input type="button"></div>
 
   <div id="c3"><input type="button" value="button"></div>
+  <div id="c4"></div>
 </body>
 </html>
