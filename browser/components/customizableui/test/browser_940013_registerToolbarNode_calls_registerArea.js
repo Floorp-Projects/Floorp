@@ -8,27 +8,6 @@ const kToolbarId = "test-registerToolbarNode-toolbar";
 const kButtonId = "test-registerToolbarNode-button";
 registerCleanupFunction(cleanup);
 
-// Registering a toolbar with defaultset attribute should work
-add_task(async function() {
-  ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
-  let btn = createDummyXULButton(kButtonId);
-  let toolbar = document.createXULElement("toolbar");
-  toolbar.id = kToolbarId;
-  toolbar.setAttribute("customizable", true);
-  toolbar.setAttribute("defaultset", kButtonId);
-  gNavToolbox.appendChild(toolbar);
-  ok(CustomizableUI.areas.includes(kToolbarId),
-     "Toolbar should have been registered automatically.");
-  is(CustomizableUI.getAreaType(kToolbarId), CustomizableUI.TYPE_TOOLBAR,
-     "Area should be registered as toolbar");
-  assertAreaPlacements(kToolbarId, [kButtonId]);
-  ok(!CustomizableUI.inDefaultState, "No longer in default state after toolbar is registered and visible.");
-  CustomizableUI.unregisterArea(kToolbarId, true);
-  toolbar.remove();
-  ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
-  btn.remove();
-});
-
 // Registering a toolbar without a defaultset attribute should
 // wait for the registerArea call
 add_task(async function() {

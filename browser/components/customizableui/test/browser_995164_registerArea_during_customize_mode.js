@@ -48,7 +48,7 @@ add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Now that the toolbar is no longer registered, should be in default state.");
   ok(!gCustomizeMode.areas.has(toolbar), "Toolbar shouldn't be known to customize mode.");
 
-  CustomizableUI.registerArea(TOOLBARID, {legacy: true, defaultPlacements: []});
+  CustomizableUI.registerArea(TOOLBARID, {defaultPlacements: []});
   CustomizableUI.registerToolbarNode(toolbar, []);
   ok(!CustomizableUI.inDefaultState, "Now that the toolbar is registered again, should no longer be in default state.");
   ok(gCustomizeMode.areas.has(toolbar), "Toolbar should be known to customize mode again.");

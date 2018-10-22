@@ -209,7 +209,6 @@ var CustomizableUIInternal = {
     }
 
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
-      legacy: true,
       type: CustomizableUI.TYPE_TOOLBAR,
       overflowable: true,
       defaultPlacements: navbarPlacements,
@@ -218,7 +217,6 @@ var CustomizableUIInternal = {
 
     if (AppConstants.MENUBAR_CAN_AUTOHIDE) {
       this.registerArea(CustomizableUI.AREA_MENUBAR, {
-        legacy: true,
         type: CustomizableUI.TYPE_TOOLBAR,
         defaultPlacements: [
           "menubar-items",
@@ -228,7 +226,6 @@ var CustomizableUIInternal = {
     }
 
     this.registerArea(CustomizableUI.AREA_TABSTRIP, {
-      legacy: true,
       type: CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: [
         "tabbrowser-tabs",
@@ -238,7 +235,6 @@ var CustomizableUIInternal = {
       defaultCollapsed: null,
     }, true);
     this.registerArea(CustomizableUI.AREA_BOOKMARKS, {
-      legacy: true,
       type: CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: [
         "personal-bookmarks",
@@ -590,7 +586,7 @@ var CustomizableUIInternal = {
 
     let areaIsKnown = gAreas.has(aName);
     let props = areaIsKnown ? gAreas.get(aName) : new Map();
-    const kImmutableProperties = new Set(["type", "legacy", "overflowable"]);
+    const kImmutableProperties = new Set(["type", "overflowable"]);
     for (let key in aProperties) {
       if (areaIsKnown && kImmutableProperties.has(key) &&
           props.get(key) != aProperties[key]) {
@@ -635,7 +631,7 @@ var CustomizableUIInternal = {
       // Reconcile new default widgets. Have to do this before we start restoring things.
       this._placeNewDefaultWidgetsInArea(aName);
 
-      if (props.get("legacy") && !gPlacements.has(aName)) {
+      if (props.get("type") == CustomizableUI.TYPE_TOOLBAR && !gPlacements.has(aName)) {
         // Guarantee this area exists in gFuturePlacements, to avoid checking it in
         // various places elsewhere.
         if (!gFuturePlacements.has(aName)) {
@@ -707,34 +703,19 @@ var CustomizableUIInternal = {
 
     // If this area is not registered, try to do it automatically:
     if (!areaProperties) {
-      // If there's no default set attribute at all, we assume that we should
-      // wait for registerArea to be called:
-      if (!aToolbar.hasAttribute("defaultset")) {
-        if (!gPendingBuildAreas.has(area)) {
-          gPendingBuildAreas.set(area, new Map());
-        }
-        let pendingNodes = gPendingBuildAreas.get(area);
-        pendingNodes.set(aToolbar, aExistingChildren);
-        return;
+      if (!gPendingBuildAreas.has(area)) {
+        gPendingBuildAreas.set(area, new Map());
       }
-      let props = {type: CustomizableUI.TYPE_TOOLBAR, legacy: true};
-      let defaultsetAttribute = aToolbar.getAttribute("defaultset") || "";
-      props.defaultPlacements = defaultsetAttribute.split(",").filter(s => s);
-      this.registerArea(area, props);
-      areaProperties = gAreas.get(area);
+      let pendingNodes = gPendingBuildAreas.get(area);
+      pendingNodes.set(aToolbar, aExistingChildren);
+      return;
     }
 
     this.beginBatchUpdate();
     try {
       let placements = gPlacements.get(area);
-      if (!placements && areaProperties.has("legacy")) {
-        let legacyState = aToolbar.getAttribute("currentset");
-        if (legacyState) {
-          legacyState = legacyState.split(",").filter(s => s);
-        }
-
-        // Manually restore the state here, so the legacy state can be converted.
-        this.restoreStateForArea(area, legacyState);
+      if (!placements && areaProperties.get("type") == CustomizableUI.TYPE_TOOLBAR) {
+        this.restoreStateForArea(area);
         placements = gPlacements.get(area);
       }
 
@@ -763,7 +744,6 @@ var CustomizableUIInternal = {
         this.buildArea(area, placements, aToolbar);
       }
       this.notifyListeners("onAreaNodeRegistered", area, aToolbar.customizationTarget);
-      aToolbar.setAttribute("currentset", placements.join(","));
     } finally {
       this.endBatchUpdate();
     }
@@ -1074,10 +1054,6 @@ var CustomizableUIInternal = {
       }
       this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container, true);
 
-      if (isToolbar) {
-        areaNode.setAttribute("currentset", gPlacements.get(aArea).join(","));
-      }
-
       let windowCache = gSingleWrapperCache.get(window);
       if (windowCache) {
         windowCache.delete(aWidgetId);
@@ -1242,10 +1218,6 @@ var CustomizableUIInternal = {
 
     let [insertionContainer, nextNode] = this.findInsertionPoints(widgetNode, aAreaNode);
     this.insertWidgetBefore(widgetNode, nextNode, insertionContainer, areaId);
-
-    if (gAreas.get(areaId).get("type") == CustomizableUI.TYPE_TOOLBAR) {
-      aAreaNode.setAttribute("currentset", gPlacements.get(areaId).join(","));
-    }
   },
 
   findInsertionPoints(aNode, aAreaNode) {
@@ -2022,10 +1994,8 @@ var CustomizableUIInternal = {
                          oldPlacement.position, aPosition);
   },
 
-  // Note that this does not populate gPlacements, which is done lazily so that
-  // the legacy state can be migrated, which is only available once a browser
-  // window is openned.
-  // The panel area is an exception here, since it has no legacy state.
+  // Note that this does not populate gPlacements, which is done lazily.
+  // The panel area is an exception here.
   loadSavedState() {
     let state = Services.prefs.getCharPref(kPrefCustomizationState, "");
     if (!state) {
@@ -2057,7 +2027,7 @@ var CustomizableUIInternal = {
     gNewElementCount = gSavedState.newElementCount || 0;
   },
 
-  restoreStateForArea(aArea, aLegacyState) {
+  restoreStateForArea(aArea) {
     let placementsPreexisted = gPlacements.has(aArea);
 
     this.beginBatchUpdate();
@@ -2082,15 +2052,6 @@ var CustomizableUIInternal = {
         for (let id of placements)
           this.addWidgetToArea(id, aArea);
         gDirty = false;
-        restored = true;
-      }
-
-      if (!restored && aLegacyState) {
-        log.debug("Restoring " + aArea + " from legacy state");
-        for (let id of aLegacyState)
-          this.addWidgetToArea(id, aArea);
-        // Don't override dirty state, to ensure legacy state is saved here and
-        // therefore only used once.
         restored = true;
       }
 
@@ -2382,7 +2343,7 @@ var CustomizableUIInternal = {
     if (gPlacements.has(aArea)) {
       return false;
     }
-    return gAreas.get(aArea).has("legacy");
+    return gAreas.get(aArea).get("type") == CustomizableUI.TYPE_TOOLBAR;
   },
 
   // XXXunf Log some warnings here, when the data provided isn't up to scratch.
@@ -2812,14 +2773,33 @@ var CustomizableUIInternal = {
     return true;
   },
 
+  _getCurrentWidgetsInContainer(container) {
+    // Get a list of all the widget IDs in this container, including any that
+    // are overflown.
+    let currentWidgets = new Set();
+    function addUnskippedChildren(parent) {
+      for (let node of parent.children) {
+        let realNode = node.localName == "toolbarpaletteitem" ? node.firstElementChild : node;
+        if (realNode.getAttribute("skipintoolbarset") != "true") {
+          currentWidgets.add(realNode.id);
+        }
+      }
+    }
+    addUnskippedChildren(container.customizationTarget);
+    if (container.getAttribute("overflowing") == "true") {
+      let overflowTarget = container.getAttribute("overflowtarget");
+      addUnskippedChildren(container.ownerDocument.getElementById(overflowTarget));
+    }
+    // Then get the sorted list of placements, and filter based on the nodes
+    // that are present. This avoids including items that don't exist (e.g. ids
+    // of add-on items that the user has uninstalled).
+    let orderedPlacements = CustomizableUI.getWidgetIdsInArea(container.id);
+    return orderedPlacements.filter(w => currentWidgets.has(w));
+  },
+
   get inDefaultState() {
     for (let [areaId, props] of gAreas) {
       let defaultPlacements = props.get("defaultPlacements");
-      // Areas without default placements (like legacy ones?) get skipped
-      if (!defaultPlacements) {
-        continue;
-      }
-
       let currentPlacements = gPlacements.get(areaId);
       // We're excluding all of the placement IDs for items that do not exist,
       // and items that have removable="false",
@@ -2836,15 +2816,12 @@ var CustomizableUIInternal = {
           let isInDefault = defaultPlacements.includes(item);
           return isRemovable || isInDefault;
         };
-        // Toolbars have a currentSet property which also deals correctly with overflown
-        // widgets (if any) - use that instead:
+        // Toolbars need to deal with overflown widgets (if any) - so
+        // specialcase them:
         if (props.get("type") == CustomizableUI.TYPE_TOOLBAR) {
-          let currentSet = container.currentSet;
-          currentPlacements = currentSet ? currentSet.split(",") : [];
-          currentPlacements = currentPlacements.filter(removableOrDefault);
+          currentPlacements =
+            this._getCurrentWidgetsInContainer(container).filter(removableOrDefault);
         } else {
-          // Clone the array so we don't modify the actual placements...
-          currentPlacements = [...currentPlacements];
           currentPlacements = currentPlacements.filter((item) => {
             let itemNode = container.getElementsByAttribute("id", item)[0];
             return itemNode && removableOrDefault(itemNode || item);
@@ -2856,7 +2833,8 @@ var CustomizableUIInternal = {
           let collapsed = container.getAttribute(attribute) == "true";
           let defaultCollapsed = props.get("defaultCollapsed");
           if (defaultCollapsed !== null && collapsed != defaultCollapsed) {
-            log.debug("Found " + areaId + " had non-default toolbar visibility (expected " + defaultCollapsed + ", was " + collapsed + ")");
+            log.debug("Found " + areaId + " had non-default toolbar visibility" +
+                      "(expected " + defaultCollapsed + ", was " + collapsed + ")");
             return false;
           }
         }
@@ -3118,8 +3096,6 @@ var CustomizableUI = {
    *                          TYPE_MENU_PANEL;
    *                - anchor: for a menu panel or overflowable toolbar, the
    *                          anchoring node for the panel.
-   *                - legacy: set to true if you want customizableui to
-   *                          automatically migrate the currentset attribute
    *                - overflowable: set to true if your toolbar is overflowable.
    *                                This requires an anchor, and only has an
    *                                effect for toolbars.
@@ -3142,9 +3118,7 @@ var CustomizableUI = {
    * Note that ideally, you should register your toolbar using registerArea
    * before any of the toolbars have their XBL bindings constructed (which
    * will happen when they're added to the DOM and are not hidden). If you
-   * don't, and your toolbar has a defaultset attribute, CustomizableUI will
-   * register it automatically. If your toolbar does not have a defaultset
-   * attribute, the node will be saved for processing when you call
+   * don't, the node will be saved for processing when you call
    * registerArea. Note that CustomizableUI won't restore state in the area,
    * allow the user to customize it in customize mode, or otherwise deal
    * with it, until the area has been registered.
@@ -3189,8 +3163,6 @@ var CustomizableUI = {
    * Add a widget to an area.
    * If the area to which you try to add is not known to CustomizableUI,
    * this will throw.
-   * If the area to which you try to add has not yet been restored from its
-   * legacy state, this will postpone the addition.
    * If the area to which you try to add is the same as the area in which
    * the widget is currently placed, this will do the same as
    * moveWidgetWithinArea.
@@ -3470,9 +3442,8 @@ var CustomizableUI = {
     );
   },
   /**
-   * Get an array of all the widget IDs placed in an area. This is roughly
-   * equivalent to fetching the currentset attribute and splitting by commas
-   * in the legacy APIs. Modifying the array will not affect CustomizableUI.
+   * Get an array of all the widget IDs placed in an area.
+   * Modifying the array will not affect CustomizableUI.
    *
    * @param aArea the ID of the area whose placements you want to obtain.
    * @return an array containing the widget IDs that are in the area.
@@ -3495,9 +3466,8 @@ var CustomizableUI = {
    * Get an array of widget wrappers for all the widgets in an area. This is
    * the same as calling getWidgetIdsInArea and .map() ing the result through
    * CustomizableUI.getWidget. Careful: this means that if there are IDs in there
-   * which don't have corresponding DOM nodes (like in the old-style currentset
-   * attribute), there might be nulls in this array, or items for which
-   * wrapper.forWindow(win) will return null.
+   * which don't have corresponding DOM nodes, there might be nulls in this array,
+   * or items for which wrapper.forWindow(win) will return null.
    *
    * @param aArea the ID of the area whose widgets you want to obtain.
    * @return an array of widget wrappers and/or null values for the widget IDs
