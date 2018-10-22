@@ -1684,6 +1684,40 @@ AttemptToRenameBothPKCS11ModuleDBVersions(const nsACString& profilePath)
   return AttemptToRenamePKCS11ModuleDB(profilePath, sqlModuleDBFilename);
 }
 
+// Helper function to take a path and a file name and create a handle for the
+// file in that location, if it exists.
+static nsresult
+GetFileIfExists(const nsACString& path, const nsACString& filename,
+                /* out */ nsIFile** result)
+{
+  MOZ_ASSERT(result);
+  if (!result) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *result = nullptr;
+  nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+  if (!file) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = file->InitWithNativePath(path);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = file->AppendNative(filename);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  bool exists;
+  rv = file->Exists(&exists);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (exists) {
+    file.forget(result);
+  }
+  return NS_OK;
+}
+
 // When we changed from the old dbm database format to the newer sqlite
 // implementation, the upgrade process left behind the existing files. Suppose a
 // user had not set a password for the old key3.db (which is about 99% of
@@ -1711,22 +1745,32 @@ MaybeCleanUpOldNSSFiles(const nsACString& profilePath)
   if (!hasPassword) {
     return;
   }
-  nsCOMPtr<nsIFile> dbFile = do_CreateInstance("@mozilla.org/file/local;1");
-  if (!dbFile) {
-    return;
-  }
-  nsresult rv = dbFile->InitWithNativePath(profilePath);
+  NS_NAMED_LITERAL_CSTRING(newKeyDBFilename, "key4.db");
+  nsCOMPtr<nsIFile> newDBFile;
+  nsresult rv = GetFileIfExists(profilePath, newKeyDBFilename,
+                                getter_AddRefs(newDBFile));
   if (NS_FAILED(rv)) {
     return;
   }
-  NS_NAMED_LITERAL_CSTRING(keyDBFilename, "key3.db");
-  rv = dbFile->AppendNative(keyDBFilename);
+  // If the new key DB file doesn't exist, we don't want to remove the old DB
+  // file. This can happen if the system is configured to use the old DB format
+  // even though we're a version of Firefox that expects to use the new format.
+  if (!newDBFile) {
+    return;
+  }
+  NS_NAMED_LITERAL_CSTRING(oldKeyDBFilename, "key3.db");
+  nsCOMPtr<nsIFile> oldDBFile;
+  rv = GetFileIfExists(profilePath, oldKeyDBFilename,
+                       getter_AddRefs(oldDBFile));
   if (NS_FAILED(rv)) {
+    return;
+  }
+  if (!oldDBFile) {
     return;
   }
   // Since this isn't a directory, the `recursive` argument to `Remove` is
   // irrelevant.
-  Unused << dbFile->Remove(false);
+  Unused << oldDBFile->Remove(false);
 }
 #endif // ifndef ANDROID
 
