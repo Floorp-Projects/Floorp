@@ -225,6 +225,8 @@ OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
 MOZ_MUST_USE JSObject*
 PromiseResolve(JSContext* cx, HandleObject constructor, HandleValue value);
 
+MOZ_MUST_USE bool
+RejectPromiseWithPendingError(JSContext* cx, Handle<PromiseObject*> promise);
 
 /**
  * Create the promise object which will be used as the return value of an async

@@ -78,6 +78,13 @@ where
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("blacklist-item")
+                .long("blacklist-item")
+                .help("Mark <item> as hidden.")
+                .value_name("item")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
             Arg::with_name("no-layout-tests")
                 .long("no-layout-tests")
                 .help("Avoid generating layout tests for any type."),
@@ -132,6 +139,12 @@ where
             Arg::with_name("objc-extern-crate")
                 .long("objc-extern-crate")
                 .help("Use extern crate instead of use for objc."),
+            Arg::with_name("generate-block")
+                .long("generate-block")
+                .help("Generate block signatures instead of void pointers."),
+            Arg::with_name("block-extern-crate")
+                .long("block-extern-crate")
+                .help("Use extern crate instead of use for block."),
             Arg::with_name("distrust-clang-mangling")
                 .long("distrust-clang-mangling")
                 .help("Do not trust the libclang-provided mangling"),
@@ -150,6 +163,7 @@ where
                 .help("Time the different bindgen phases and print to stderr"),
             // All positional arguments after the end of options marker, `--`
             Arg::with_name("clang-args")
+                .last(true)
                 .multiple(true),
             Arg::with_name("emit-clang-ast")
                 .long("emit-clang-ast")
@@ -363,6 +377,12 @@ where
         }
     }
 
+    if let Some(hidden_identifiers) = matches.values_of("blacklist-item") {
+        for id in hidden_identifiers {
+            builder = builder.blacklist_item(id);
+        }
+    }
+
     if matches.is_present("builtins") {
         builder = builder.emit_builtins();
     }
@@ -490,6 +510,14 @@ where
 
     if matches.is_present("objc-extern-crate") {
         builder = builder.objc_extern_crate(true);
+    }
+
+    if matches.is_present("generate-block") {
+        builder = builder.generate_block(true);
+    }
+
+    if matches.is_present("block-extern-crate") {
+        builder = builder.block_extern_crate(true);
     }
 
     if let Some(opaque_types) = matches.values_of("opaque-type") {

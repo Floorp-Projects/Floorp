@@ -572,6 +572,9 @@ task_description_schema = Schema({
         Required('implementation'): 'bouncer-locations',
         Required('bouncer-products'): [basestring],
     }, {
+        Required('implementation'): 'bouncer-locations-breakpoint',
+        Required('payload'): object,
+    }, {
         Required('implementation'): 'bouncer-submission',
         Required('locales'): [basestring],
         Required('entries'): object,
@@ -1213,6 +1216,11 @@ def build_bouncer_locations_payload(config, task, task_def):
         'bouncer_products': worker['bouncer-products'],
         'version': release_config['version'],
     }
+
+
+@payload_builder('bouncer-locations-breakpoint')
+def build_bouncer_locations_breakpoint_payload(config, task, task_def):
+    task_def['payload'] = task['worker']['payload']
 
 
 @payload_builder('bouncer-submission')

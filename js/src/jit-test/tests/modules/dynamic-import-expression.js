@@ -77,9 +77,3 @@ assertParseThrowsSyntaxError("x = import(");
 assertParseThrowsSyntaxError("x = import(1,");
 assertParseThrowsSyntaxError("x = import(1, 2");
 assertParseThrowsSyntaxError("x = import(1, 2)");
-
-// import() is not implemented.
-assertThrowsInstanceOf(() => eval("import('foo')"),
-                       SyntaxError);
-assertThrowsInstanceOf(() => parseModule("import('foo')"),
-                       SyntaxError);

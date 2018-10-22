@@ -90,6 +90,14 @@ impl Type {
         self.name.as_ref().map(|name| &**name)
     }
 
+    /// Whether this is a block pointer type.
+    pub fn is_block_pointer(&self) -> bool {
+        match self.kind {
+            TypeKind::BlockPointer(..) => true,
+            _ => false,
+        }
+    }
+
     /// Is this a compound type?
     pub fn is_comp(&self) -> bool {
         match self.kind {
@@ -155,7 +163,6 @@ impl Type {
             TypeKind::Array(..) |
             TypeKind::Reference(..) |
             TypeKind::Pointer(..) |
-            TypeKind::BlockPointer |
             TypeKind::Int(..) |
             TypeKind::Float(..) |
             TypeKind::TypeParam => true,
@@ -244,8 +251,7 @@ impl Type {
                 TypeKind::Comp(ref ci) => ci.layout(ctx),
                 // FIXME(emilio): This is a hack for anonymous union templates.
                 // Use the actual pointer size!
-                TypeKind::Pointer(..) |
-                TypeKind::BlockPointer => {
+                TypeKind::Pointer(..) => {
                     Some(Layout::new(
                         ctx.target_pointer_size(),
                         ctx.target_pointer_size(),
@@ -339,7 +345,6 @@ impl Type {
             TypeKind::Reference(..) |
             TypeKind::Void |
             TypeKind::NullPtr |
-            TypeKind::BlockPointer |
             TypeKind::Pointer(..) |
             TypeKind::ObjCId |
             TypeKind::ObjCSel |
@@ -347,6 +352,7 @@ impl Type {
 
             TypeKind::ResolvedTypeRef(inner) |
             TypeKind::Alias(inner) |
+            TypeKind::BlockPointer(inner) |
             TypeKind::TemplateAlias(inner, _) => {
                 ctx.resolve_type(inner).safe_canonical_type(ctx)
             }
@@ -485,7 +491,7 @@ impl TypeKind {
             TypeKind::Function(..) => "Function",
             TypeKind::Enum(..) => "Enum",
             TypeKind::Pointer(..) => "Pointer",
-            TypeKind::BlockPointer => "BlockPointer",
+            TypeKind::BlockPointer(..) => "BlockPointer",
             TypeKind::Reference(..) => "Reference",
             TypeKind::TemplateInstantiation(..) => "TemplateInstantiation",
             TypeKind::UnresolvedTypeRef(..) => "UnresolvedTypeRef",
@@ -579,7 +585,7 @@ impl TemplateParameters for TypeKind {
             TypeKind::Function(_) |
             TypeKind::Enum(_) |
             TypeKind::Pointer(_) |
-            TypeKind::BlockPointer |
+            TypeKind::BlockPointer(_) |
             TypeKind::Reference(_) |
             TypeKind::UnresolvedTypeRef(..) |
             TypeKind::TypeParam |
@@ -655,7 +661,7 @@ pub enum TypeKind {
     Pointer(TypeId),
 
     /// A pointer to an Apple block.
-    BlockPointer,
+    BlockPointer(TypeId),
 
     /// A reference to a type, as in: int& foo().
     Reference(TypeId),
@@ -1056,37 +1062,17 @@ impl Type {
                 CXType_ObjCObjectPointer |
                 CXType_MemberPointer |
                 CXType_Pointer => {
-                    // Fun fact: the canonical type of a pointer type may sometimes
-                    // contain information we need but isn't present in the concrete
-                    // type (yeah, I'm equally wat'd).
-                    //
-                    // Yet we still have trouble if we unconditionally trust the
-                    // canonical type, like too-much desugaring (sigh).
-                    //
-                    // See tests/headers/call-conv-field.h for an example.
-                    //
-                    // Since for now the only identifier cause of breakage is the
-                    // ABI for function pointers, and different ABI mixed with
-                    // problematic stuff like that one is _extremely_ unlikely and
-                    // can be bypassed via blacklisting, we do the check explicitly
-                    // (as hacky as it is).
-                    //
-                    // Yet we should probably (somehow) get the best of both worlds,
-                    // presumably special-casing function pointers as a whole, yet
-                    // someone is going to need to care about typedef'd function
-                    // pointers, etc, which isn't trivial given function pointers
-                    // are mostly unexposed. I don't have the time for it right now.
-                    let mut pointee = ty.pointee_type().unwrap();
-                    let canonical_pointee =
-                        canonical_ty.pointee_type().unwrap();
-                    if pointee.call_conv() != canonical_pointee.call_conv() {
-                        pointee = canonical_pointee;
-                    }
+                    let pointee = ty.pointee_type().unwrap();
                     let inner =
                         Item::from_ty_or_ref(pointee, location, None, ctx);
                     TypeKind::Pointer(inner)
                 }
-                CXType_BlockPointer => TypeKind::BlockPointer,
+                CXType_BlockPointer => {
+                    let pointee = ty.pointee_type().expect("Not valid Type?");
+                    let inner =
+                        Item::from_ty_or_ref(pointee, location, None, ctx);
+                    TypeKind::BlockPointer(inner)
+                },
                 // XXX: RValueReference is most likely wrong, but I don't think we
                 // can even add bindings for that, so huh.
                 CXType_RValueReference |
@@ -1232,6 +1218,7 @@ impl Trace for Type {
             TypeKind::Reference(inner) |
             TypeKind::Array(inner, _) |
             TypeKind::Vector(inner, _) |
+            TypeKind::BlockPointer(inner) |
             TypeKind::Alias(inner) |
             TypeKind::ResolvedTypeRef(inner) => {
                 tracer.visit_kind(inner.into(), EdgeKind::TypeReference);
@@ -1273,8 +1260,7 @@ impl Trace for Type {
             TypeKind::Float(_) |
             TypeKind::Complex(_) |
             TypeKind::ObjCId |
-            TypeKind::ObjCSel |
-            TypeKind::BlockPointer => {}
+            TypeKind::ObjCSel => {}
         }
     }
 }
