@@ -373,7 +373,7 @@ AccessibleWrap::WrapperRangeInfo(double* aCurVal, double* aMinVal,
 }
 
 mozilla::java::GeckoBundle::LocalRef
-AccessibleWrap::ToBundle()
+AccessibleWrap::ToBundle(bool aMinimal)
 {
   if (!IsProxy() && IsDefunct()) {
     return nullptr;
@@ -390,16 +390,6 @@ AccessibleWrap::ToBundle()
   uint64_t state = State();
   uint64_t flags = GetFlags(role, state);
   GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
-
-  nsAutoString geckoRole;
-  nsAutoString roleDescription;
-  if (VirtualViewID() != kNoID) {
-    GetRoleDescription(role, geckoRole, roleDescription);
-  }
-
-  GECKOBUNDLE_PUT(
-    nodeInfo, "roleDescription", jni::StringParam(roleDescription));
-  GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
   GECKOBUNDLE_PUT(nodeInfo, "className", java::sdk::Integer::ValueOf(AndroidClass()));
 
   nsAutoString text;
@@ -415,6 +405,25 @@ AccessibleWrap::ToBundle()
     Name(text);
   }
   GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(text));
+
+  if (aMinimal) {
+    GECKOBUNDLE_FINISH(nodeInfo);
+    return nodeInfo;
+  }
+
+  nsAutoString geckoRole;
+  nsAutoString roleDescription;
+  if (VirtualViewID() != kNoID) {
+    GetRoleDescription(role, geckoRole, roleDescription);
+  }
+
+  GECKOBUNDLE_PUT(
+    nodeInfo, "roleDescription", jni::StringParam(roleDescription));
+  GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
+
+  GECKOBUNDLE_PUT(
+    nodeInfo, "roleDescription", jni::StringParam(roleDescription));
+  GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
 
   nsAutoString viewIdResourceName;
   WrapperDOMNodeID(viewIdResourceName);
