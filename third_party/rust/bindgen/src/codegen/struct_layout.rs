@@ -287,18 +287,23 @@ impl<'a> StructLayoutTracker<'a> {
     }
 
     pub fn requires_explicit_align(&self, layout: Layout) -> bool {
+        let repr_align = self.ctx.options().rust_features().repr_align;
+
+        // Always force explicit repr(align) for stuff more than 16-byte aligned
+        // to work-around https://github.com/rust-lang/rust/issues/54341.
+        //
+        // Worst-case this just generates redundant alignment attributes.
+        if repr_align && self.max_field_align >= 16 {
+            return true;
+        }
+
         if self.max_field_align >= layout.align {
             return false;
-        }
-        // At this point we require explicit alignment, but we may not be able
-        // to generate the right bits, let's double check.
-        if self.ctx.options().rust_features().repr_align {
-            return true;
         }
 
         // We can only generate up-to a word of alignment unless we support
         // repr(align).
-        layout.align <= self.ctx.target_pointer_size()
+        repr_align || layout.align <= self.ctx.target_pointer_size()
     }
 
     fn padding_bytes(&self, layout: Layout) -> usize {
@@ -306,7 +311,7 @@ impl<'a> StructLayoutTracker<'a> {
     }
 
     fn padding_field(&mut self, layout: Layout) -> quote::Tokens {
-        let ty = helpers::blob(layout);
+        let ty = helpers::blob(self.ctx, layout);
         let padding_count = self.padding_count;
 
         self.padding_count += 1;

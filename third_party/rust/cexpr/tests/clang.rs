@@ -68,7 +68,7 @@ fn test_definition(ident: Vec<u8>, tokens: &[Token], idents: &mut HashMap<Vec<u8
 		let mut fnidents;
 		let expr_tokens;
 		match fn_macro_declaration(&tokens) {
-			cexpr::nom::IResult::Done(rest,(_,args)) => {
+			Ok((rest,(_,args))) => {
 				fnidents=idents.clone();
 				expr_tokens=rest;
 				for arg in args {
@@ -87,11 +87,11 @@ fn test_definition(ident: Vec<u8>, tokens: &[Token], idents: &mut HashMap<Vec<u8
 		}
 		assert_full_parse(IdentifierParser::new(&fnidents).expr(&expr_tokens))
 	} else {
-		IdentifierParser::new(idents).macro_definition(&tokens).map(|(_,val)|val)
+		IdentifierParser::new(idents).macro_definition(&tokens).map(|(i, (_,val))|(i, val))
 	};
 
 	match result {
-		cexpr::nom::IResult::Done(_,val) => {
+		Ok((_,val)) => {
 			if val==test {
 				if let Some(_)=idents.insert(ident,val) {
 					panic!("Duplicate definition for testcase: {}",display_name);
@@ -149,11 +149,11 @@ unsafe fn visit_children<F>(cursor: CXCursor, mut f: F)
 
 unsafe fn location_in_scope(r: CXSourceRange) -> bool {
 	let start=clang_getRangeStart(r);
-	let mut file=CXFile(ptr::null_mut());
+	let mut file=ptr::null_mut();
 	clang_getSpellingLocation(start,&mut file,ptr::null_mut(),ptr::null_mut(),ptr::null_mut());
 	clang_Location_isFromMainFile(start)!=0
 		&& clang_Location_isInSystemHeader(start)==0
-		&& file.0!=ptr::null_mut()
+		&& file!=ptr::null_mut()
 }
 
 /// tokenize_range_adjust can be used to work around LLVM bug 9069

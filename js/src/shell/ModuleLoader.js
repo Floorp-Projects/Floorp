@@ -5,8 +5,12 @@
 
 /* global getModuleLoadPath setModuleLoadHook setModuleResolveHook setModuleMetadataHook */
 /* global getModulePrivate setModulePrivate parseModule os */
+/* global setModuleDynamicImportHook finishDynamicModuleImport abortDynamicModuleImport */
 
 // A basic synchronous module loader for testing the shell.
+//
+// Supports loading files and 'javascript:' URLs that embed JS source text.
+
 {
 // Save standard built-ins before scripts can modify them.
 const ArrayPrototypeJoin = Array.prototype.join;
@@ -21,16 +25,22 @@ const StringPrototypeStartsWith = String.prototype.startsWith;
 const StringPrototypeSubstring = String.prototype.substring;
 const ErrorClass = Error;
 
+const JAVASCRIPT_SCHEME = "javascript:";
+
 const ReflectLoader = new class {
     constructor() {
         this.registry = new Map();
-        this.modulePaths = new Map();
         this.loadPath = getModuleLoadPath();
     }
 
+    isJavascriptURL(name) {
+        return ReflectApply(StringPrototypeStartsWith, name, [JAVASCRIPT_SCHEME]);
+    }
+
     resolve(name, referencingInfo) {
-        if (os.path.isAbsolute(name))
+        if (this.isJavascriptURL(name) || os.path.isAbsolute(name)) {
             return name;
+        }
 
         let loadPath = this.loadPath;
 
@@ -67,6 +77,10 @@ const ReflectLoader = new class {
     }
 
     normalize(path) {
+        if (this.isJavascriptURL(path)) {
+            return path;
+        }
+
 #ifdef XP_WIN
         // Replace all forward slashes with backward slashes.
         // NB: It may be tempting to replace this loop with a call to
@@ -150,6 +164,10 @@ const ReflectLoader = new class {
     }
 
     fetch(path) {
+        if (this.isJavascriptURL(path)) {
+            return ReflectApply(StringPrototypeSubstring, path, [JAVASCRIPT_SCHEME.length]);
+        }
+
         return os.file.readFile(path);
     }
 
@@ -176,7 +194,7 @@ const ReflectLoader = new class {
         return this.loadAndExecute(path);
     }
 
-    ["import"](name, referrer) {
+    ["import"](name, referencingInfo) {
         let path = this.resolve(name, null);
         return this.loadAndExecute(path);
     }
@@ -196,8 +214,8 @@ const ReflectLoader = new class {
 
 setModuleLoadHook((path) => ReflectLoader.importRoot(path));
 
-setModuleResolveHook((module, requestName) => {
-    let path = ReflectLoader.resolve(requestName, module);
+setModuleResolveHook((referencingInfo, requestName) => {
+    let path = ReflectLoader.resolve(requestName, referencingInfo);
     return ReflectLoader.loadAndParse(path);
 });
 
@@ -205,5 +223,14 @@ setModuleMetadataHook((module, metaObject) => {
     ReflectLoader.populateImportMeta(module, metaObject);
 });
 
-}
+setModuleDynamicImportHook((referencingInfo, specifier, promise) => {
+    try {
+        let path = ReflectLoader.resolve(specifier, referencingInfo);
+        ReflectLoader.loadAndExecute(path);
+        finishDynamicModuleImport(referencingInfo, specifier, promise);
+    } catch (err) {
+        abortDynamicModuleImport(referencingInfo, specifier, promise, err);
+    }
+});
 
+}

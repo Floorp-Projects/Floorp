@@ -1027,8 +1027,6 @@ class ModuleScope : public Scope
         return data().module;
     }
 
-    JSScript* script() const;
-
     static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 

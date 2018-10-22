@@ -442,7 +442,16 @@ impl FunctionSig {
             ty.ret_type().ok_or(ParseError::Continue)?
         };
         let ret = Item::from_ty_or_ref(ty_ret_type, cursor, None, ctx);
-        let call_conv = ty.call_conv();
+
+        // Clang plays with us at "find the calling convention", see #549 and
+        // co. This seems to be a better fix than that commit.
+        let mut call_conv = ty.call_conv();
+        if let Some(ty) = cursor.cur_type().canonical_type().pointee_type() {
+            let cursor_call_conv = ty.call_conv();
+            if cursor_call_conv != CXCallingConv_Invalid {
+                call_conv = cursor_call_conv;
+            }
+        }
         let abi = get_abi(call_conv);
 
         if abi.is_unknown() {
@@ -581,26 +590,23 @@ impl Trace for FunctionSig {
 }
 
 impl CanTriviallyDeriveDebug for FunctionSig {
-    fn can_trivially_derive_debug(&self) -> bool {
+    fn can_trivially_derive_debug(&self, _: &BindgenContext) -> bool {
         self.function_pointers_can_derive()
     }
 }
 
 impl CanTriviallyDeriveHash for FunctionSig {
-    fn can_trivially_derive_hash(&self) -> bool {
+    fn can_trivially_derive_hash(&self, _: &BindgenContext) -> bool {
         self.function_pointers_can_derive()
     }
 }
 
 impl CanTriviallyDerivePartialEqOrPartialOrd for FunctionSig {
-    fn can_trivially_derive_partialeq_or_partialord(&self) -> CanDerive {
-        if self.argument_types.len() > RUST_DERIVE_FUNPTR_LIMIT {
-            return CanDerive::No;
-        }
-
-        match self.abi {
-            Abi::C | Abi::Unknown(..) => CanDerive::Yes,
-            _ => CanDerive::No,
+    fn can_trivially_derive_partialeq_or_partialord(&self, _: &BindgenContext) -> CanDerive {
+        if self.function_pointers_can_derive() {
+            CanDerive::Yes
+        } else {
+            CanDerive::No
         }
     }
 }

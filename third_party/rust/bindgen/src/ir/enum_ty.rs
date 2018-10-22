@@ -2,6 +2,7 @@
 
 use super::context::{BindgenContext, TypeId};
 use super::item::Item;
+use super::super::codegen::EnumVariation;
 use super::ty::TypeKind;
 use clang;
 use ir::annotations::Annotations;
@@ -142,32 +143,33 @@ impl Enum {
         let path = item.canonical_path(ctx);
         let enum_ty = item.expect_type();
 
-        let path_matches = enums.matches(&path[1..].join("::"));
-        let enum_is_anon = enum_ty.name().is_none();
-        let a_variant_matches = self.variants().iter().any(|v| {
-            enums.matches(&v.name())
-        });
-        path_matches || (enum_is_anon && a_variant_matches)
+        if enums.matches(&path[1..].join("::")) {
+            return true;
+        }
+
+        // Test the variants if the enum is anonymous.
+        if enum_ty.name().is_some() {
+            return false;
+        }
+
+        self.variants().iter().any(|v| enums.matches(&v.name()))
     }
 
-    /// Whether the enum should be a bitfield
-    pub fn is_bitfield(&self, ctx: &BindgenContext, item: &Item) -> bool {
-        self.is_matching_enum(ctx, &ctx.options().bitfield_enums, item)
-    }
-
-    /// Whether the enum should be an constified enum module
-    pub fn is_constified_enum_module(&self, ctx: &BindgenContext, item: &Item) -> bool {
-        self.is_matching_enum(ctx, &ctx.options().constified_enum_modules, item)
-    }
-
-    /// Whether the enum should be an set of constants
-    pub fn is_constified_enum(&self, ctx: &BindgenContext, item: &Item) -> bool {
-        self.is_matching_enum(ctx, &ctx.options().constified_enums, item)
-    }
-
-    /// Whether the enum should be a Rust enum
-    pub fn is_rustified_enum(&self, ctx: &BindgenContext, item: &Item) -> bool {
-        self.is_matching_enum(ctx, &ctx.options().rustified_enums, item)
+    /// Returns the final representation of the enum.
+    pub fn computed_enum_variation(&self, ctx: &BindgenContext, item: &Item) -> EnumVariation {
+        // ModuleConsts has higher precedence before Rust in order to avoid
+        // problems with overlapping match patterns.
+        if self.is_matching_enum(ctx, &ctx.options().constified_enum_modules, item) {
+            EnumVariation::ModuleConsts
+        } else if self.is_matching_enum(ctx, &ctx.options().bitfield_enums, item) {
+            EnumVariation::Bitfield
+        } else if self.is_matching_enum(ctx, &ctx.options().rustified_enums, item) {
+            EnumVariation::Rust
+        } else if self.is_matching_enum(ctx, &ctx.options().constified_enums, item) {
+            EnumVariation::Consts
+        } else {
+            ctx.options().default_enum_style
+        }
     }
 }
 

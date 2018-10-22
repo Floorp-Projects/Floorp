@@ -8,6 +8,7 @@
 
 #include "mozilla/EnumSet.h"
 
+#include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
@@ -1804,4 +1805,89 @@ js::GetOrCreateModuleMetaObject(JSContext* cx, HandleObject moduleArg)
     module->setMetaObject(metaObject);
 
     return metaObject;
+}
+
+JSObject*
+js::CallModuleResolveHook(JSContext* cx, HandleValue referencingPrivate, HandleString specifier)
+{
+    JS::ModuleResolveHook moduleResolveHook = cx->runtime()->moduleResolveHook;
+    if (!moduleResolveHook) {
+        JS_ReportErrorASCII(cx, "Module resolve hook not set");
+        return nullptr;
+    }
+
+    RootedObject result(cx, moduleResolveHook(cx, referencingPrivate, specifier));
+    if (!result) {
+        return nullptr;
+    }
+
+    if (!result->is<ModuleObject>()) {
+        JS_ReportErrorASCII(cx, "Module resolve hook did not return Module object");
+        return nullptr;
+    }
+
+    return result;
+}
+
+JSObject*
+js::StartDynamicModuleImport(JSContext* cx, HandleValue referencingPrivate, HandleValue specifierArg)
+{
+    RootedObject promiseConstructor(cx, JS::GetPromiseConstructor(cx));
+    if (!promiseConstructor) {
+        return nullptr;
+    }
+
+    RootedObject promiseObject(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!promiseObject) {
+        return nullptr;
+    }
+
+    Handle<PromiseObject*> promise = promiseObject.as<PromiseObject>();
+
+    RootedString specifier(cx, ToString(cx, specifierArg));
+    if (!specifier) {
+        if (!RejectPromiseWithPendingError(cx, promise))
+            return nullptr;
+        return promise;
+    }
+
+    JS::ModuleDynamicImportHook importHook = cx->runtime()->moduleDynamicImportHook;
+    MOZ_ASSERT(importHook);
+    if (!importHook(cx, referencingPrivate, specifier, promise)) {
+        if (!RejectPromiseWithPendingError(cx, promise))
+            return nullptr;
+        return promise;
+    }
+
+    return promise;
+}
+
+bool
+js::FinishDynamicModuleImport(JSContext* cx, HandleValue referencingPrivate, HandleString specifier,
+                              HandleObject promiseArg)
+{
+    Handle<PromiseObject*> promise = promiseArg.as<PromiseObject>();
+
+    if (cx->isExceptionPending()) {
+        return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    RootedObject result(cx, CallModuleResolveHook(cx, referencingPrivate, specifier));
+    if (!result) {
+        return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    RootedModuleObject module(cx, &result->as<ModuleObject>());
+    if (module->status() != MODULE_STATUS_EVALUATED) {
+        JS_ReportErrorASCII(cx, "Unevaluated or errored module returned by module resolve hook");
+        return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    RootedObject ns(cx, ModuleObject::GetOrCreateModuleNamespace(cx, module));
+    if (!ns) {
+        return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    RootedValue value(cx, ObjectValue(*ns));
+    return PromiseObject::resolve(cx, promise, value);
 }
