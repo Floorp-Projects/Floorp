@@ -206,154 +206,6 @@ AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset) {
   return false;
 }
 
-mozilla::java::GeckoBundle::LocalRef
-AccessibleWrap::CreateBundle(int32_t aParentID,
-                             role aRole,
-                             uint64_t aState,
-                             const nsString& aName,
-                             const nsString& aTextValue,
-                             const nsString& aDOMNodeID,
-                             const nsIntRect& aBounds,
-                             double aCurVal,
-                             double aMinVal,
-                             double aMaxVal,
-                             double aStep,
-                             nsIPersistentProperties* aAttributes,
-                             const nsTArray<int32_t>& aChildren) const
-{
-  GECKOBUNDLE_START(nodeInfo);
-  GECKOBUNDLE_PUT(nodeInfo, "id", java::sdk::Integer::ValueOf(VirtualViewID()));
-  GECKOBUNDLE_PUT(nodeInfo, "parentId", java::sdk::Integer::ValueOf(aParentID));
-  uint64_t flags = GetFlags(aRole, aState);
-  GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
-
-  nsAutoString geckoRole;
-  nsAutoString roleDescription;
-  int32_t androidClass = java::SessionAccessibility::CLASSNAME_VIEW;
-  if (VirtualViewID() == kNoID) {
-    androidClass = java::SessionAccessibility::CLASSNAME_WEBVIEW;
-  } else {
-    GetRoleDescription(aRole, geckoRole, roleDescription);
-    androidClass = GetAndroidClass(aRole);
-  }
-
-  GECKOBUNDLE_PUT(
-    nodeInfo, "roleDescription", jni::StringParam(roleDescription));
-  GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
-  GECKOBUNDLE_PUT(nodeInfo, "className", java::sdk::Integer::ValueOf(androidClass));
-
-  if (!aTextValue.IsEmpty() &&
-      (flags & java::SessionAccessibility::FLAG_EDITABLE)) {
-    GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(aName));
-    GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aTextValue));
-  } else {
-    GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aName));
-  }
-
-  if (!aDOMNodeID.IsEmpty()) {
-    GECKOBUNDLE_PUT(
-      nodeInfo, "viewIdResourceName", jni::StringParam(aDOMNodeID));
-  }
-
-  const int32_t data[4] = {
-    aBounds.x, aBounds.y, aBounds.x + aBounds.width, aBounds.y + aBounds.height
-  };
-  GECKOBUNDLE_PUT(nodeInfo, "bounds", jni::IntArray::New(data, 4));
-
-  if (HasNumericValue()) {
-    GECKOBUNDLE_START(rangeInfo);
-    if (aMaxVal == 1 && aMinVal == 0) {
-      GECKOBUNDLE_PUT(
-        rangeInfo, "type", java::sdk::Integer::ValueOf(2)); // percent
-    } else if (std::round(aStep) != aStep) {
-      GECKOBUNDLE_PUT(
-        rangeInfo, "type", java::sdk::Integer::ValueOf(1)); // float
-    } else {
-      GECKOBUNDLE_PUT(
-        rangeInfo, "type", java::sdk::Integer::ValueOf(0)); // integer
-    }
-
-    if (!IsNaN(aCurVal)) {
-      GECKOBUNDLE_PUT(rangeInfo, "current", java::sdk::Double::New(aCurVal));
-    }
-    if (!IsNaN(aMinVal)) {
-      GECKOBUNDLE_PUT(rangeInfo, "min", java::sdk::Double::New(aMinVal));
-    }
-    if (!IsNaN(aMaxVal)) {
-      GECKOBUNDLE_PUT(rangeInfo, "max", java::sdk::Double::New(aMaxVal));
-    }
-
-    GECKOBUNDLE_FINISH(rangeInfo);
-    GECKOBUNDLE_PUT(nodeInfo, "rangeInfo", rangeInfo);
-  }
-
-  nsString inputTypeAttr;
-  nsAccUtils::GetAccAttr(aAttributes, nsGkAtoms::textInputType, inputTypeAttr);
-  int32_t inputType = GetInputType(inputTypeAttr);
-  if (inputType) {
-    GECKOBUNDLE_PUT(nodeInfo, "inputType", java::sdk::Integer::ValueOf(inputType));
-  }
-
-  nsString posinset;
-  nsresult rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("posinset"), posinset);
-  if (NS_SUCCEEDED(rv)) {
-    int32_t rowIndex;
-    if (sscanf(NS_ConvertUTF16toUTF8(posinset).get(), "%d", &rowIndex) > 0) {
-      GECKOBUNDLE_START(collectionItemInfo);
-      GECKOBUNDLE_PUT(
-        collectionItemInfo, "rowIndex", java::sdk::Integer::ValueOf(rowIndex));
-      GECKOBUNDLE_PUT(
-        collectionItemInfo, "columnIndex", java::sdk::Integer::ValueOf(0));
-      GECKOBUNDLE_PUT(
-        collectionItemInfo, "rowSpan", java::sdk::Integer::ValueOf(1));
-      GECKOBUNDLE_PUT(
-        collectionItemInfo, "columnSpan", java::sdk::Integer::ValueOf(1));
-      GECKOBUNDLE_FINISH(collectionItemInfo);
-
-      GECKOBUNDLE_PUT(nodeInfo, "collectionItemInfo", collectionItemInfo);
-    }
-  }
-
-  nsString colSize;
-  rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("child-item-count"),
-                                      colSize);
-  if (NS_SUCCEEDED(rv)) {
-    int32_t rowCount;
-    if (sscanf(NS_ConvertUTF16toUTF8(colSize).get(), "%d", &rowCount) > 0) {
-      GECKOBUNDLE_START(collectionInfo);
-      GECKOBUNDLE_PUT(
-        collectionInfo, "rowCount", java::sdk::Integer::ValueOf(rowCount));
-      GECKOBUNDLE_PUT(
-        collectionInfo, "columnCount", java::sdk::Integer::ValueOf(1));
-
-      nsString unused;
-      rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("hierarchical"),
-                                          unused);
-      if (NS_SUCCEEDED(rv)) {
-        GECKOBUNDLE_PUT(
-          collectionInfo, "isHierarchical", java::sdk::Boolean::TRUE());
-      }
-
-      if (IsSelect()) {
-        int32_t selectionMode = (aState & states::MULTISELECTABLE) ? 2 : 1;
-        GECKOBUNDLE_PUT(collectionInfo,
-                        "selectionMode",
-                        java::sdk::Integer::ValueOf(selectionMode));
-      }
-      GECKOBUNDLE_FINISH(collectionInfo);
-
-      GECKOBUNDLE_PUT(nodeInfo, "collectionInfo", collectionInfo);
-    }
-  }
-
-  GECKOBUNDLE_PUT(nodeInfo,
-                  "children",
-                  jni::IntArray::New(aChildren.Elements(), aChildren.Length()));
-  GECKOBUNDLE_FINISH(nodeInfo);
-
-  return nodeInfo;
-}
-
 uint64_t
 AccessibleWrap::GetFlags(role aRole, uint64_t aState)
 {
@@ -495,7 +347,7 @@ AccessibleWrap::GetInputType(const nsString& aInputTypeAttr)
 }
 
 void
-AccessibleWrap::DOMNodeID(nsString& aDOMNodeID)
+AccessibleWrap::WrapperDOMNodeID(nsString& aDOMNodeID)
 {
   if (mContent) {
     nsAtom* id = mContent->GetID();
@@ -505,24 +357,169 @@ AccessibleWrap::DOMNodeID(nsString& aDOMNodeID)
   }
 }
 
+bool
+AccessibleWrap::WrapperRangeInfo(double* aCurVal, double* aMinVal,
+                             double* aMaxVal, double* aStep)
+{
+  if (HasNumericValue()) {
+    *aCurVal = CurValue();
+    *aMinVal = MinValue();
+    *aMaxVal = MaxValue();
+    *aStep = Step();
+    return true;
+  }
+
+  return false;
+}
+
 mozilla::java::GeckoBundle::LocalRef
 AccessibleWrap::ToBundle()
 {
-  if (IsDefunct()) {
+  if (!IsProxy() && IsDefunct()) {
     return nullptr;
   }
 
-  AccessibleWrap* parent = static_cast<AccessibleWrap*>(Parent());
-  nsAutoString name;
-  Name(name);
+  GECKOBUNDLE_START(nodeInfo);
+  GECKOBUNDLE_PUT(nodeInfo, "id", java::sdk::Integer::ValueOf(VirtualViewID()));
 
-  nsAutoString value;
-  Value(value);
+  AccessibleWrap* parent = WrapperParent();
+  GECKOBUNDLE_PUT(nodeInfo, "parentId",
+    java::sdk::Integer::ValueOf(parent ? parent->VirtualViewID() : 0));
+
+  role role = WrapperRole();
+  uint64_t state = State();
+  uint64_t flags = GetFlags(role, state);
+  GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
+
+  nsAutoString geckoRole;
+  nsAutoString roleDescription;
+  if (VirtualViewID() != kNoID) {
+    GetRoleDescription(role, geckoRole, roleDescription);
+  }
+
+  GECKOBUNDLE_PUT(
+    nodeInfo, "roleDescription", jni::StringParam(roleDescription));
+  GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
+  GECKOBUNDLE_PUT(nodeInfo, "className", java::sdk::Integer::ValueOf(AndroidClass()));
+
+  nsAutoString text;
+  if (state & states::EDITABLE) {
+    Value(text);
+  }
+
+  if (!text.IsEmpty()) {
+    nsAutoString hint;
+    Name(hint);
+    GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(hint));
+  } else {
+    Name(text);
+  }
+  GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(text));
 
   nsAutoString viewIdResourceName;
-  DOMNodeID(viewIdResourceName);
+  WrapperDOMNodeID(viewIdResourceName);
+  if (!viewIdResourceName.IsEmpty()) {
+    GECKOBUNDLE_PUT(
+      nodeInfo, "viewIdResourceName", jni::StringParam(viewIdResourceName));
+  }
+
+  nsIntRect bounds = Bounds();
+  const int32_t data[4] = {
+    bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height
+  };
+  GECKOBUNDLE_PUT(nodeInfo, "bounds", jni::IntArray::New(data, 4));
+
+  double curValue = 0;
+  double minValue = 0;
+  double maxValue = 0;
+  double step = 0;
+  if (WrapperRangeInfo(&curValue, &minValue, &maxValue, &step)) {
+    GECKOBUNDLE_START(rangeInfo);
+    if (maxValue == 1 && minValue == 0) {
+      GECKOBUNDLE_PUT(
+        rangeInfo, "type", java::sdk::Integer::ValueOf(2)); // percent
+    } else if (std::round(step) != step) {
+      GECKOBUNDLE_PUT(
+        rangeInfo, "type", java::sdk::Integer::ValueOf(1)); // float
+    } else {
+      GECKOBUNDLE_PUT(
+        rangeInfo, "type", java::sdk::Integer::ValueOf(0)); // integer
+    }
+
+    if (!IsNaN(curValue)) {
+      GECKOBUNDLE_PUT(rangeInfo, "current", java::sdk::Double::New(curValue));
+    }
+    if (!IsNaN(minValue)) {
+      GECKOBUNDLE_PUT(rangeInfo, "min", java::sdk::Double::New(minValue));
+    }
+    if (!IsNaN(maxValue)) {
+      GECKOBUNDLE_PUT(rangeInfo, "max", java::sdk::Double::New(maxValue));
+    }
+
+    GECKOBUNDLE_FINISH(rangeInfo);
+    GECKOBUNDLE_PUT(nodeInfo, "rangeInfo", rangeInfo);
+  }
 
   nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
+
+  nsString inputTypeAttr;
+  nsAccUtils::GetAccAttr(attributes, nsGkAtoms::textInputType, inputTypeAttr);
+  int32_t inputType = GetInputType(inputTypeAttr);
+  if (inputType) {
+    GECKOBUNDLE_PUT(nodeInfo, "inputType", java::sdk::Integer::ValueOf(inputType));
+  }
+
+  nsString posinset;
+  nsresult rv = attributes->GetStringProperty(NS_LITERAL_CSTRING("posinset"), posinset);
+  if (NS_SUCCEEDED(rv)) {
+    int32_t rowIndex;
+    if (sscanf(NS_ConvertUTF16toUTF8(posinset).get(), "%d", &rowIndex) > 0) {
+      GECKOBUNDLE_START(collectionItemInfo);
+      GECKOBUNDLE_PUT(
+        collectionItemInfo, "rowIndex", java::sdk::Integer::ValueOf(rowIndex));
+      GECKOBUNDLE_PUT(
+        collectionItemInfo, "columnIndex", java::sdk::Integer::ValueOf(0));
+      GECKOBUNDLE_PUT(
+        collectionItemInfo, "rowSpan", java::sdk::Integer::ValueOf(1));
+      GECKOBUNDLE_PUT(
+        collectionItemInfo, "columnSpan", java::sdk::Integer::ValueOf(1));
+      GECKOBUNDLE_FINISH(collectionItemInfo);
+
+      GECKOBUNDLE_PUT(nodeInfo, "collectionItemInfo", collectionItemInfo);
+    }
+  }
+
+  nsString colSize;
+  rv = attributes->GetStringProperty(NS_LITERAL_CSTRING("child-item-count"),
+                                      colSize);
+  if (NS_SUCCEEDED(rv)) {
+    int32_t rowCount;
+    if (sscanf(NS_ConvertUTF16toUTF8(colSize).get(), "%d", &rowCount) > 0) {
+      GECKOBUNDLE_START(collectionInfo);
+      GECKOBUNDLE_PUT(
+        collectionInfo, "rowCount", java::sdk::Integer::ValueOf(rowCount));
+      GECKOBUNDLE_PUT(
+        collectionInfo, "columnCount", java::sdk::Integer::ValueOf(1));
+
+      nsString unused;
+      rv = attributes->GetStringProperty(NS_LITERAL_CSTRING("hierarchical"),
+                                          unused);
+      if (NS_SUCCEEDED(rv)) {
+        GECKOBUNDLE_PUT(
+          collectionInfo, "isHierarchical", java::sdk::Boolean::TRUE());
+      }
+
+      if (IsSelect()) {
+        int32_t selectionMode = (state & states::MULTISELECTABLE) ? 2 : 1;
+        GECKOBUNDLE_PUT(collectionInfo,
+                        "selectionMode",
+                        java::sdk::Integer::ValueOf(selectionMode));
+      }
+      GECKOBUNDLE_FINISH(collectionInfo);
+
+      GECKOBUNDLE_PUT(nodeInfo, "collectionInfo", collectionInfo);
+    }
+  }
 
   auto childCount = ChildCount();
   nsTArray<int32_t> children(childCount);
@@ -531,17 +528,10 @@ AccessibleWrap::ToBundle()
     children.AppendElement(child->VirtualViewID());
   }
 
-  return CreateBundle(parent ? parent->VirtualViewID() : 0,
-                      Role(),
-                      State(),
-                      name,
-                      value,
-                      viewIdResourceName,
-                      Bounds(),
-                      CurValue(),
-                      MinValue(),
-                      MaxValue(),
-                      Step(),
-                      attributes,
-                      children);
+  GECKOBUNDLE_PUT(nodeInfo,
+                  "children",
+                  jni::IntArray::New(children.Elements(), children.Length()));
+  GECKOBUNDLE_FINISH(nodeInfo);
+
+  return nodeInfo;
 }
