@@ -51,6 +51,14 @@ const DATA = [
 ];
 
 add_task(async function() {
+  // See Bug 1500141: this test frequently fails on beta because some highlighter
+  // requests made by the BoxModel component in the layout view come back when the
+  // connection between the client and the server has been destroyed. We are forcing
+  // the computed view here to avoid the failures but ideally we should have an event
+  // or a promise on the inspector we can wait for to be sure the initialization is over.
+  // Logged Bug 1500918 to investigate this.
+  await pushPref("devtools.inspector.activeSidebar", "computedview");
+
   // Let's reset the counts.
   Services.telemetry.clearEvents();
 
