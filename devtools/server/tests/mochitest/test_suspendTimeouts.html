@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1426467
+
+When we use windowUtils.resumeTimeouts to resume timeouts in a window, that call
+should not immediately dispatch `onmessage` handlers for messages from workers.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug 1426467</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src='test_suspendTimeouts.js'></script>
+</pre>
+</body>
+</html>
