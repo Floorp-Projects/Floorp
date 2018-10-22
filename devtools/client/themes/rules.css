@@ -463,7 +463,7 @@
 }
 
 .ruleview-bezierswatch {
-  background: url("chrome://devtools/skin/images/cubic-bezier-swatch.png");
+  background: url("chrome://devtools/skin/images/cubic-bezier-swatch.svg");
   background-size: 1em;
 }
 
@@ -486,13 +486,6 @@
   box-shadow: none;
   width: 1.45em;
   height: 1.45em;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .ruleview-bezierswatch {
-    background: url("chrome://devtools/skin/images/cubic-bezier-swatch@2x.png");
-    background-size: 1em;
-  }
 }
 
 .ruleview-overridden {
