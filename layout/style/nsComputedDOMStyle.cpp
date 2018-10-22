@@ -2692,15 +2692,6 @@ nsComputedDOMStyle::DoGetVerticalAlign()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetTextAlign()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(
-      StyleText()->mTextAlign, nsCSSProps::kTextAlignKTable));
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetTextDecoration()
 {
   const nsStyleTextReset* textReset = StyleTextReset();
