@@ -16,7 +16,7 @@ var gNoAnimHistogram = Services.telemetry
 function snapshotCount(snapshot) {
   // Use Array.prototype.reduce to sum up all of the
   // snapshot.count entries
-  return Object.values(snapshot.values).reduce((a, b) => a + b, 0);
+  return snapshot.counts.reduce((a, b) => a + b);
 }
 
 /**

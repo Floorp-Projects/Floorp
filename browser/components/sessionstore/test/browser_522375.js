@@ -7,7 +7,7 @@ function test() {
   var snapshot = Services.telemetry.getHistogramById("STARTUP_MEASUREMENT_ERRORS")
                                    .snapshot();
 
-  if (snapshot.values[0] == 0)
+  if (snapshot.counts[0] == 0)
     ok(startup_info.process <= startup_info.main, "process created before main is run " + uneval(startup_info));
   else
     todo(false, "An error occurred while recording the process creation timestamp, skipping this test");

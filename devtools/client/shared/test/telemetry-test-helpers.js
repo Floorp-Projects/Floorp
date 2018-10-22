@@ -103,13 +103,13 @@ class TelemetryHelpers {
         const result = keyedHistogram[key];
 
         if (result) {
-          actual = result.values;
+          actual = result.counts;
         } else {
           ok(false, `${histId}[${key}] exists`);
           return;
         }
       } else {
-        actual = Services.telemetry.getHistogramById(histId).snapshot().values;
+        actual = Services.telemetry.getHistogramById(histId).snapshot().counts;
       }
     }
 
@@ -119,7 +119,7 @@ class TelemetryHelpers {
         is(JSON.stringify(actual), JSON.stringify(expected), msg);
         break;
       case "hasentries":
-        const hasEntry = Object.values(actual).some(num => num > 0);
+        const hasEntry = actual.some(num => num > 0);
         if (key) {
           ok(hasEntry, `${histId}["${key}"] has at least one entry.`);
         } else {

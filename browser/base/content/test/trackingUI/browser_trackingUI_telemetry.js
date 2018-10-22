@@ -22,7 +22,7 @@ function getShieldHistogram() {
 }
 
 function getShieldCounts() {
-  return getShieldHistogram().snapshot().values;
+  return getShieldHistogram().snapshot().counts;
 }
 
 add_task(async function setup() {
@@ -33,7 +33,7 @@ add_task(async function setup() {
   ok(!TrackingProtection.enabled, "TP is not enabled");
 
   let enabledCounts =
-    Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").snapshot().values;
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").snapshot().counts;
   is(enabledCounts[0], 1, "TP was not enabled on start up");
 
   let scalars = Services.telemetry.snapshotScalars(

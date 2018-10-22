@@ -37,35 +37,69 @@ function expect_success(f) {
   Assert.ok(succeeded);
 }
 
+function compareHistograms(h1, h2) {
+  let s1 = h1.snapshot();
+  let s2 = h2.snapshot();
+
+  Assert.equal(s1.histogram_type, s2.histogram_type);
+  Assert.equal(s1.min, s2.min);
+  Assert.equal(s1.max, s2.max);
+  Assert.equal(s1.sum, s2.sum);
+
+  Assert.equal(s1.counts.length, s2.counts.length);
+  for (let i = 0; i < s1.counts.length; i++)
+    Assert.equal(s1.counts[i], s2.counts[i]);
+
+  Assert.equal(s1.ranges.length, s2.ranges.length);
+  for (let i = 0; i < s1.ranges.length; i++)
+    Assert.equal(s1.ranges[i], s2.ranges[i]);
+}
+
 function check_histogram(histogram_type, name, min, max, bucket_count) {
   var h = Telemetry.getHistogramById(name);
-  h.add(0);
+  var r = h.snapshot().ranges;
+  var sum = 0;
+  for (let i = 0;i < r.length;i++) {
+    var v = r[i];
+    sum += v;
+    h.add(v);
+  }
   var s = h.snapshot();
-  Assert.equal(0, s.sum);
+  // verify properties
+  Assert.equal(sum, s.sum);
 
+  // there should be exactly one element per bucket
+  for (let i of s.counts) {
+    Assert.equal(i, 1);
+  }
   var hgrams = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                             false).parent;
   let gh = hgrams[name];
   Assert.equal(gh.histogram_type, histogram_type);
 
-  Assert.deepEqual(gh.range, [min, max]);
+  Assert.equal(gh.min, min);
+  Assert.equal(gh.max, max);
 
   // Check that booleans work with nonboolean histograms
   h.add(false);
   h.add(true);
-  s = Object.values(h.snapshot().values);
-  Assert.deepEqual(s, [2, 1, 0]);
+  s = h.snapshot().counts;
+  Assert.equal(s[0], 2);
+  Assert.equal(s[1], 2);
 
   // Check that clearing works.
   h.clear();
   s = h.snapshot();
-  Assert.deepEqual(s.values, {});
+  for (var i of s.counts) {
+    Assert.equal(i, 0);
+  }
   Assert.equal(s.sum, 0);
 
   h.add(0);
   h.add(1);
-  var c = Object.values(h.snapshot().values);
-  Assert.deepEqual(c, [1, 1, 0]);
+  var c = h.snapshot().counts;
+  Assert.equal(c[0], 1);
+  Assert.equal(c[1], 1);
 }
 
 // This MUST be the very first test of this file.
@@ -147,43 +181,44 @@ add_task(async function test_noSerialization() {
 
 add_task(async function test_boolean_histogram() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_BOOLEAN");
-  var r = h.snapshot().range;
+  var r = h.snapshot().ranges;
   // boolean histograms ignore numeric parameters
-  Assert.deepEqual(r, [1, 2]);
-  h.add(0);
-  h.add(1);
-  h.add(2);
-
+  Assert.equal(uneval(r), uneval([0, 1, 2]));
+  for (var i = 0;i < r.length;i++) {
+    var v = r[i];
+    h.add(v);
+  }
   h.add(true);
   h.add(false);
   var s = h.snapshot();
   Assert.equal(s.histogram_type, Telemetry.HISTOGRAM_BOOLEAN);
   // last bucket should always be 0 since .add parameters are normalized to either 0 or 1
-  Assert.deepEqual(s.values, {0: 2, 1: 3, 2: 0});
+  Assert.equal(s.counts[2], 0);
   Assert.equal(s.sum, 3);
+  Assert.equal(s.counts[0], 2);
 });
 
 add_task(async function test_flag_histogram() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
-  var r = h.snapshot().range;
+  var r = h.snapshot().ranges;
   // Flag histograms ignore numeric parameters.
-  Assert.deepEqual(r, [1, 2]);
+  Assert.equal(uneval(r), uneval([0, 1, 2]));
   // Should already have a 0 counted.
-  var v = h.snapshot().values;
+  var c = h.snapshot().counts;
   var s = h.snapshot().sum;
-  Assert.deepEqual(v, {0: 1, 1: 0});
+  Assert.equal(uneval(c), uneval([1, 0, 0]));
   Assert.equal(s, 0);
   // Should switch counts.
   h.add(1);
-  var v2 = h.snapshot().values;
+  var c2 = h.snapshot().counts;
   var s2 = h.snapshot().sum;
-  Assert.deepEqual(v2, {0: 0, 1: 1, 2: 0});
+  Assert.equal(uneval(c2), uneval([0, 1, 0]));
   Assert.equal(s2, 1);
   // Should only switch counts once.
   h.add(1);
-  var v3 = h.snapshot().values;
+  var c3 = h.snapshot().counts;
   var s3 = h.snapshot().sum;
-  Assert.deepEqual(v3, {0: 0, 1: 1, 2: 0});
+  Assert.equal(uneval(c3), uneval([0, 1, 0]));
   Assert.equal(s3, 1);
   Assert.equal(h.snapshot().histogram_type, Telemetry.HISTOGRAM_FLAG);
 });
@@ -191,16 +226,16 @@ add_task(async function test_flag_histogram() {
 add_task(async function test_count_histogram() {
   let h = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT2");
   let s = h.snapshot();
-  Assert.deepEqual(s.range, [1, 2]);
-  Assert.deepEqual(s.values, {});
+  Assert.equal(uneval(s.ranges), uneval([0, 1, 2]));
+  Assert.equal(uneval(s.counts), uneval([0, 0, 0]));
   Assert.equal(s.sum, 0);
   h.add();
   s = h.snapshot();
-  Assert.deepEqual(s.values, {0: 1, 1: 0});
+  Assert.equal(uneval(s.counts), uneval([1, 0, 0]));
   Assert.equal(s.sum, 1);
   h.add();
   s = h.snapshot();
-  Assert.deepEqual(s.values, {0: 2, 1: 0});
+  Assert.equal(uneval(s.counts), uneval([2, 0, 0]));
   Assert.equal(s.sum, 2);
 });
 
@@ -215,10 +250,16 @@ add_task(async function test_categorical_histogram() {
     h1.add(s);
   }
 
+  // Categorical histograms default to 50 linear buckets.
+  let expectedRanges = [];
+  for (let i = 0; i < 51; ++i) {
+    expectedRanges.push(i);
+  }
+
   let snapshot = h1.snapshot();
   Assert.equal(snapshot.sum, 6);
-  Assert.deepEqual(snapshot.range, [1, 50]);
-  Assert.deepEqual(snapshot.values, {0: 3, 1: 2, 2: 2, 3: 0});
+  Assert.deepEqual(snapshot.ranges, expectedRanges);
+  Assert.deepEqual(snapshot.counts.slice(0, 4), [3, 2, 2, 0]);
 
   let h2 = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL_OPTOUT");
   for (let v of ["CommonLabel", "CommonLabel", "Label4", "Label5", "Label6", 0, 1]) {
@@ -232,8 +273,8 @@ add_task(async function test_categorical_histogram() {
 
   snapshot = h2.snapshot();
   Assert.equal(snapshot.sum, 7);
-  Assert.deepEqual(snapshot.range, [1, 50]);
-  Assert.deepEqual(snapshot.values, {0: 3, 1: 2, 2: 1, 3: 1, 4: 0});
+  Assert.deepEqual(snapshot.ranges, expectedRanges);
+  Assert.deepEqual(snapshot.counts.slice(0, 5), [3, 2, 1, 1, 0]);
 
   // This histogram overrides the default of 50 values to 70.
   let h3 = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL_NVALUES");
@@ -241,10 +282,16 @@ add_task(async function test_categorical_histogram() {
     h3.add(v);
   }
 
+  expectedRanges = [];
+  for (let i = 0; i < 71; ++i) {
+    expectedRanges.push(i);
+  }
+
   snapshot = h3.snapshot();
   Assert.equal(snapshot.sum, 3);
-  Assert.deepEqual(snapshot.range, [1, 70]);
-  Assert.deepEqual(snapshot.values, {0: 1, 1: 1, 2: 1, 3: 0});
+  Assert.equal(snapshot.ranges.length, expectedRanges.length);
+  Assert.deepEqual(snapshot.ranges, expectedRanges);
+  Assert.deepEqual(snapshot.counts.slice(0, 4), [1, 1, 1, 0]);
 });
 
 add_task(async function test_add_error_behaviour() {
@@ -306,7 +353,8 @@ add_task(async function test_getHistogramById() {
   var h = Telemetry.getHistogramById("CYCLE_COLLECTOR");
   var s = h.snapshot();
   Assert.equal(s.histogram_type, Telemetry.HISTOGRAM_EXPONENTIAL);
-  Assert.deepEqual(s.range, [1, 10000]);
+  Assert.equal(s.min, 1);
+  Assert.equal(s.max, 10000);
 });
 
 add_task(async function test_getSlowSQL() {
@@ -327,10 +375,10 @@ add_task(async function test_privateMode() {
   var orig = h.snapshot();
   Telemetry.canRecordExtended = false;
   h.add(1);
-  Assert.deepEqual(orig, h.snapshot());
+  Assert.equal(uneval(orig), uneval(h.snapshot()));
   Telemetry.canRecordExtended = true;
   h.add(1);
-  Assert.notDeepEqual(orig, h.snapshot());
+  Assert.notEqual(uneval(orig), uneval(h.snapshot()));
 });
 
 // Check that telemetry records only when it is suppose to.
@@ -442,11 +490,12 @@ add_task(async function test_keyed_boolean_histogram() {
   let KEYS = numberRange(0, 2).map(i => "key" + (i + 1));
   KEYS.push("漢語");
   let histogramBase = {
-    "range": [1, 2],
-    "bucket_count": 3,
+    "min": 1,
+    "max": 2,
     "histogram_type": 2,
     "sum": 1,
-    "values": {0: 0, 1: 1, 2: 0},
+    "ranges": [0, 1, 2],
+    "counts": [0, 1, 0],
   };
   let testHistograms = numberRange(0, 3).map(i => JSON.parse(JSON.stringify(histogramBase)));
   let testKeys = [];
@@ -472,7 +521,7 @@ add_task(async function test_keyed_boolean_histogram() {
   testKeys.push(key);
   testSnapShot[key] = testHistograms[2];
   testSnapShot[key].sum = 0;
-  testSnapShot[key].values = {0: 1, 1: 0};
+  testSnapShot[key].counts = [1, 0, 0];
   Assert.deepEqual(h.keys().sort(), testKeys);
   Assert.deepEqual(h.snapshot(), testSnapShot);
 
@@ -489,11 +538,12 @@ add_task(async function test_keyed_count_histogram() {
   const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
   const KEYS = numberRange(0, 5).map(i => "key" + (i + 1));
   let histogramBase = {
-    "range": [1, 2],
-    "bucket_count": 3,
+    "min": 1,
+    "max": 2,
     "histogram_type": 4,
     "sum": 0,
-    "values": {0: 1, 1: 0},
+    "ranges": [0, 1, 2],
+    "counts": [1, 0, 0],
   };
   let testHistograms = numberRange(0, 5).map(i => JSON.parse(JSON.stringify(histogramBase)));
   let testKeys = [];
@@ -508,7 +558,7 @@ add_task(async function test_keyed_count_histogram() {
     for (let k = 0; k < value; ++k) {
       h.add(key);
     }
-    testHistograms[i].values[0] = value;
+    testHistograms[i].counts[0] = value;
     testHistograms[i].sum = value;
     testSnapShot[key] = testHistograms[i];
     testKeys.push(key);
@@ -525,7 +575,7 @@ add_task(async function test_keyed_count_histogram() {
   let key = KEYS[4];
   h.add(key);
   testKeys.push(key);
-  testHistograms[4].values[0] = 1;
+  testHistograms[4].counts[0] = 1;
   testHistograms[4].sum = 1;
   testSnapShot[key] = testHistograms[4];
 
@@ -565,6 +615,12 @@ add_task(async function test_keyed_categorical_histogram() {
     }
   }
 
+  // Categorical histograms default to 50 linear buckets.
+  let expectedRanges = [];
+  for (let i = 0; i < 51; ++i) {
+    expectedRanges.push(i);
+  }
+
   // Check that the set of keys in the snapshot is what we expect.
   let snapshot = h.snapshot();
   let snapshotKeys = Object.keys(snapshot);
@@ -575,8 +631,8 @@ add_task(async function test_keyed_categorical_histogram() {
   for (let k of KEYS) {
     Assert.ok(k in snapshot);
     Assert.equal(snapshot[k].sum, 6);
-    Assert.deepEqual(snapshot[k].range, [1, 50]);
-    Assert.deepEqual(snapshot[k].values, {0: 3, 1: 2, 2: 2, 3: 0});
+    Assert.deepEqual(snapshot[k].ranges, expectedRanges);
+    Assert.deepEqual(snapshot[k].counts.slice(0, 4), [3, 2, 2, 0]);
   }
 });
 
@@ -589,11 +645,12 @@ add_task(async function test_keyed_flag_histogram() {
 
   let testSnapshot = {};
   testSnapshot[KEY] = {
-    "range": [1, 2],
-    "bucket_count": 3,
+    "min": 1,
+    "max": 2,
     "histogram_type": 3,
     "sum": 1,
-    "values": {0: 0, 1: 1, 2: 0},
+    "ranges": [0, 1, 2],
+    "counts": [0, 1, 0],
   };
 
   Assert.deepEqual(h.keys().sort(), [KEY]);
@@ -803,9 +860,9 @@ add_task(async function test_keyed_keys() {
   Assert.equal(Object.keys(snap).length, 2, "Only 2 keys must be recorded.");
   Assert.ok("testkey" in snap, "'testkey' must be recorded.");
   Assert.ok("thirdKey" in snap, "'thirdKey' must be recorded.");
-  Assert.deepEqual(snap.testkey.values, {0: 0, 1: 1, 2: 0},
+  Assert.deepEqual(snap.testkey.counts, [0, 1, 0],
                    "'testkey' must contain the correct value.");
-  Assert.deepEqual(snap.thirdKey.values, {0: 1, 1: 0},
+  Assert.deepEqual(snap.thirdKey.counts, [1, 0, 0],
                    "'thirdKey' must contain the correct value.");
 
   // Keys that are not allowed must not be recorded.
@@ -837,11 +894,11 @@ add_task(async function test_count_multiple_samples() {
   Assert.equal(s1.sum, 0);
   // Ensure that no accumulations of 0-like values took place.
   // These accumulations won't increase the sum.
-  Assert.deepEqual({}, s1.values);
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
 
   h.add(valid);
   let s2 = h.snapshot();
-  Assert.deepEqual(s2.values, {0: 4, 1: 0});
+  Assert.equal(uneval(s2.counts), uneval([4, 0, 0]));
   Assert.equal(s2.sum, 5);
 });
 
@@ -856,12 +913,12 @@ add_task(async function test_categorical_multiple_samples() {
   h.add(valid.concat(invalid));
   let s1 = h.snapshot();
   Assert.equal(s1.sum, 0);
-  Assert.deepEqual({}, s1.values);
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
 
   h.add(valid);
   let snapshot = h.snapshot();
   Assert.equal(snapshot.sum, 6);
-  Assert.deepEqual(snapshot.values, {0: 3, 1: 2, 2: 2, 3: 0});
+  Assert.deepEqual(snapshot.counts.slice(0, 4), [3, 2, 2, 0]);
 });
 
 add_task(async function test_boolean_multiple_samples() {
@@ -876,11 +933,11 @@ add_task(async function test_boolean_multiple_samples() {
   h.add(valid.concat(invalid));
   let s1 = h.snapshot();
   Assert.equal(s1.sum, 0);
-  Assert.deepEqual({}, s1.values);
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
 
   h.add(valid);
   let s = h.snapshot();
-  Assert.deepEqual(s.values, {0: 2, 1: 3, 2: 0});
+  Assert.deepEqual(s.counts, [2, 3, 0]);
   Assert.equal(s.sum, 3);
 });
 
@@ -898,13 +955,14 @@ add_task(async function test_linear_multiple_samples() {
    h.add(valid.concat(invalid));
    let s1 = h.snapshot();
    Assert.equal(s1.sum, 0);
-   Assert.deepEqual({}, s1.values);
+   Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
 
   h.add(valid);
   let s2 = h.snapshot();
   // Values >= INT32_MAX are accumulated as INT32_MAX - 1
   Assert.equal(s2.sum, valid.reduce((acc, cur) => acc + cur) - 3);
-  Assert.deepEqual(Object.values(s2.values), [1, 3, 2, 1]);
+  Assert.equal(s2.counts[9], 1);
+  Assert.deepEqual(s2.counts.slice(0, 3), [1, 3, 2]);
 });
 
 add_task(async function test_keyed_no_arguments() {
@@ -946,11 +1004,11 @@ add_task(async function test_keyed_count_multiple_samples() {
   Assert.equal(s1.sum, 0);
   // Ensure that no accumulations of 0-like values took place.
   // These accumulations won't increase the sum.
-  Assert.deepEqual({}, s1.values);
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
 
   h.add(key, valid);
   let s2 = h.snapshot(key);
-  Assert.deepEqual(s2.values, {0: 4, 1: 0});
+  Assert.equal(uneval(s2.counts), uneval([4, 0, 0]));
   Assert.equal(s2.sum, 5);
 });
 
@@ -966,12 +1024,12 @@ add_task(async function test_keyed_categorical_multiple_samples() {
   h.add(key, valid.concat(invalid));
   let s1 = h.snapshot(key);
   Assert.equal(s1.sum, 0);
-  Assert.deepEqual({}, s1.values);
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
 
   h.add(key, valid);
   let snapshot = h.snapshot(key);
   Assert.equal(snapshot.sum, 6);
-  Assert.deepEqual(Object.values(snapshot.values), [3, 2, 2, 0]);
+  Assert.deepEqual(snapshot.counts.slice(0, 4), [3, 2, 2, 0]);
 });
 
 add_task(async function test_keyed_boolean_multiple_samples() {
@@ -987,11 +1045,11 @@ add_task(async function test_keyed_boolean_multiple_samples() {
   h.add(key, valid.concat(invalid));
   let s1 = h.snapshot(key);
   Assert.equal(s1.sum, 0);
-  Assert.deepEqual({}, s1.values);
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
 
   h.add(key, valid);
   let s = h.snapshot(key);
-  Assert.deepEqual(s.values, {0: 2, 1: 3, 2: 0});
+  Assert.deepEqual(s.counts, [2, 3, 0]);
   Assert.equal(s.sum, 3);
 });
 
@@ -1010,14 +1068,14 @@ add_task(async function test_keyed_linear_multiple_samples() {
    h.add(key, valid.concat(invalid));
    let s1 = h.snapshot(key);
    Assert.equal(s1.sum, 0);
-   Assert.deepEqual({}, s1.values);
+   Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
 
   h.add(key, valid);
   let s2 = h.snapshot(key);
   // Values >= INT32_MAX are accumulated as INT32_MAX - 1
   Assert.equal(s2.sum, valid.reduce((acc, cur) => acc + cur) - 3);
-  Assert.deepEqual(s2.range, [1, 250000]);
-  Assert.deepEqual(s2.values, {0: 1, 1: 3, 250000: 3});
+  Assert.equal(s2.counts[9], 3);
+  Assert.deepEqual(s2.counts.slice(0, 3), [1, 3, 0]);
 });
 
 add_task(async function test_non_array_non_string_obj() {

@@ -16,15 +16,15 @@ var originalCount1, originalCount2, originalCount3;
 function run_test() {
   let histogram = Telemetry.getHistogramById(HIST_NAME);
   let snapshot = histogram.snapshot();
-  originalCount1 = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  originalCount1 = snapshot.counts.reduce((a, b) => a += b);
 
   histogram = Telemetry.getHistogramById(HIST_NAME2);
   snapshot = histogram.snapshot();
-  originalCount2 = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  originalCount2 = snapshot.counts.reduce((a, b) => a += b);
 
   histogram = Telemetry.getKeyedHistogramById(KEYED_HIST.id);
   snapshot = histogram.snapshot(KEYED_HIST.key);
-  originalCount3 = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  originalCount3 = snapshot.counts.reduce((a, b) => a += b);
 
   Assert.ok(!TelemetryStopwatch.start(3));
   Assert.ok(!TelemetryStopwatch.start({}));
@@ -177,19 +177,19 @@ function run_test() {
 function finishTest() {
   let histogram = Telemetry.getHistogramById(HIST_NAME);
   let snapshot = histogram.snapshot();
-  let newCount = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  let newCount = snapshot.counts.reduce((a, b) => a += b);
 
   Assert.equal(newCount - originalCount1, 5, "The correct number of histograms were added for histogram 1.");
 
   histogram = Telemetry.getHistogramById(HIST_NAME2);
   snapshot = histogram.snapshot();
-  newCount = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  newCount = snapshot.counts.reduce((a, b) => a += b);
 
   Assert.equal(newCount - originalCount2, 3, "The correct number of histograms were added for histogram 2.");
 
   histogram = Telemetry.getKeyedHistogramById(KEYED_HIST.id);
   snapshot = histogram.snapshot(KEYED_HIST.key);
-  newCount = Object.values(snapshot.values).reduce((a, b) => a += b, 0);
+  newCount = snapshot.counts.reduce((a, b) => a += b);
 
   Assert.equal(newCount - originalCount3, 2, "The correct number of histograms were added for histogram 3.");
 }

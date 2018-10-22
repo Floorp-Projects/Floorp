@@ -747,25 +747,16 @@ internal_GetHistogramAndSamples(const StaticMutexAutoLock& aLock,
   return NS_OK;
 }
 
-/**
- * Reflect a histogram snapshot into a JavaScript object.
- * The returned histogram object will have the following properties:
- *
- *   bucket_count - Number of buckets of this histogram
- *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN,
- *                    HISTOGRAM_FLAG, HISTOGRAM_COUNT, or HISTOGRAM_CATEGORICAL
- *   sum - sum of the bucket contents
- *   range - A 2-item array of minimum and maximum bucket size
- *   values - Map from bucket start to the bucket's count
- */
 nsresult
 internal_ReflectHistogramAndSamples(JSContext *cx,
                                     JS::Handle<JSObject*> obj,
                                     const HistogramInfo& aHistogramInfo,
                                     const HistogramSnapshotData& aSnapshot)
 {
-  if (!(JS_DefineProperty(cx, obj, "bucket_count",
-                             aHistogramInfo.bucketCount, JSPROP_ENUMERATE)
+  if (!(JS_DefineProperty(cx, obj, "min",
+                          aHistogramInfo.min, JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "max",
+                             aHistogramInfo.max, JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "histogram_type",
                              aHistogramInfo.histogramType, JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "sum",
@@ -780,54 +771,29 @@ internal_ReflectHistogramAndSamples(JSContext *cx,
   MOZ_ASSERT(count == aSnapshot.mBucketRanges.Length(),
              "The number of buckets and the number of counts must match.");
 
-  // Create the "range" property and add it to the final object.
-  JS::Rooted<JSObject*> rarray(cx, JS_NewArrayObject(cx, 2));
-  if (rarray == nullptr
-      || !JS_DefineProperty(cx, obj, "range", rarray, JSPROP_ENUMERATE)) {
-    return NS_ERROR_FAILURE;
-  }
-  // Add [min, max] into the range array
-  if (!JS_DefineElement(cx, rarray, 0, aHistogramInfo.min, JSPROP_ENUMERATE)) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!JS_DefineElement(cx, rarray, 1, aHistogramInfo.max, JSPROP_ENUMERATE)) {
+  // Create the "ranges" property and add it to the final object.
+  JS::Rooted<JSObject*> rarray(cx, JS_NewArrayObject(cx, count));
+  if (!rarray
+      || !JS_DefineProperty(cx, obj, "ranges", rarray, JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
   }
 
-  JS::Rooted<JSObject*> values(cx, JS_NewPlainObject(cx));
-  if (values == nullptr
-      || !JS_DefineProperty(cx, obj, "values", values, JSPROP_ENUMERATE)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool first = true;
-  size_t last = 0;
-
+  // Fill the "ranges" property.
   for (size_t i = 0; i < count; i++) {
-    auto value = aSnapshot.mBucketCounts[i];
-    if (value == 0) {
-      continue;
-    }
-
-    if (i > 0 && first) {
-      auto range = aSnapshot.mBucketRanges[i - 1];
-      if (!JS_DefineProperty(cx, values, nsPrintfCString("%d", range).get(), 0, JSPROP_ENUMERATE)) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    first = false;
-    last = i + 1;
-
-    auto range = aSnapshot.mBucketRanges[i];
-    if (!JS_DefineProperty(cx, values, nsPrintfCString("%d", range).get(), value, JSPROP_ENUMERATE)) {
+    if (!JS_DefineElement(cx, rarray, i, aSnapshot.mBucketRanges[i], JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
   }
 
-  if (last > 0 && last < count) {
-    auto range = aSnapshot.mBucketRanges[last];
-    if (!JS_DefineProperty(cx, values, nsPrintfCString("%d", range).get(), 0, JSPROP_ENUMERATE)) {
+  JS::Rooted<JSObject*> counts_array(cx, JS_NewArrayObject(cx, count));
+  if (!counts_array
+      || !JS_DefineProperty(cx, obj, "counts", counts_array, JSPROP_ENUMERATE)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Fill the "counts" property.
+  for (size_t i = 0; i < count; i++) {
+    if (!JS_DefineElement(cx, counts_array, i, aSnapshot.mBucketCounts[i], JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
   }

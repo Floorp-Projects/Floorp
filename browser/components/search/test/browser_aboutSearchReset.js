@@ -20,13 +20,13 @@ const kStatusPref = "browser.search.reset.status";
 function checkTelemetryRecords(expectedValue) {
   let histogram = Services.telemetry.getHistogramById("SEARCH_RESET_RESULT");
   let snapshot = histogram.snapshot();
+  // The probe is declared with 5 values, but we get 6 back from .counts
+  let expectedCounts = [0, 0, 0, 0, 0, 0];
   if (expectedValue != null) {
-    Assert.deepEqual(snapshot.values[expectedValue], 1,
-                     "histogram has expected content");
-  } else {
-    Assert.deepEqual(!!snapshot.values[expectedValue], false,
-                     "histogram has expected content");
+    expectedCounts[expectedValue] = 1;
   }
+  Assert.deepEqual(snapshot.counts, expectedCounts,
+                   "histogram has expected content");
   histogram.clear();
 }
 

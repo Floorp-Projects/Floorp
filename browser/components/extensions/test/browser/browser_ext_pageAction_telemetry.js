@@ -9,7 +9,7 @@ const EXTENSION_ID1 = "@test-extension1";
 const EXTENSION_ID2 = "@test-extension2";
 
 function snapshotCountsSum(snapshot) {
-  return Object.values(snapshot.values).reduce((a, b) => a + b, 0);
+  return snapshot.counts.reduce((a, b) => a + b, 0);
 }
 
 function histogramCountsSum(histogram) {

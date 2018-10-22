@@ -20,9 +20,9 @@ add_task(async function() {
 function checkResults() {
   // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
   // here.
-  checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_COUNT", "", {0: 1, 1: 0}, "array");
-  checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_COUNT", "", {0: 1, 1: 0}, "array");
-  checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_COUNT", "", {0: 1, 1: 0}, "array");
+  checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_COUNT", "", [1, 0, 0], "array");
+  checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_COUNT", "", [1, 0, 0], "array");
+  checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_COUNT", "", [1, 0, 0], "array");
   checkTelemetry("DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_RULEVIEW_TIME_ACTIVE_SECONDS", "", null, "hasentries");
