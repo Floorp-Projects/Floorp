@@ -10,6 +10,7 @@ DIRS += [
 DevToolsModules(
     'index.js',
     'Outline.js',
+    'OutlineFilter.js',
     'SourcesTree.js',
     'SourcesTreeItem.js',
 )
