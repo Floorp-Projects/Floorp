@@ -16,10 +16,9 @@ this.clipboard = class extends ExtensionAPI {
           if (AppConstants.platform == "android") {
             return Promise.reject({message: "Writing images to the clipboard is not supported on Android"});
           }
-          let mimeType = `image/${imageType}`;
           let img;
           try {
-            img = imgTools.decodeImageFromArrayBuffer(imageData, mimeType);
+            img = imgTools.decodeImageFromArrayBuffer(imageData, `image/${imageType}`);
           } catch (e) {
             return Promise.reject({message: `Data is not a valid ${imageType} image`});
           }
@@ -38,7 +37,8 @@ this.clipboard = class extends ExtensionAPI {
           // Below we create a nsITransferable in the above format.
           let transferable = new Transferable();
           transferable.init(null);
-          transferable.addDataFlavor(mimeType);
+          const kNativeImageMime = "application/x-moz-nativeimage";
+          transferable.addDataFlavor(kNativeImageMime);
 
           // Internal consumers expect the image data to be stored as a
           // nsIInputStream. On Linux and Windows, pasted data is directly
@@ -47,23 +47,17 @@ this.clipboard = class extends ExtensionAPI {
           //
           // On macOS, nsClipboard::GetNativeClipboardData (nsClipboard.mm) uses
           // a cached copy of nsITransferable if available, e.g. when the copy
-          // was initiated by the same browser instance. Consequently, the
-          // transferable still holds a imgIContainer pointer
-          // instead of a nsIInputStream, and logic that assumes the data to be
-          // a nsIInputStream instance fails.
-          // For example HTMLEditor::InsertObject (HTMLEditorDataTransfer.cpp)
-          // and DataTransferItem::FillInExternalData (DataTransferItem.cpp).
-          //
-          // As a work-around, we force nsClipboard::GetNativeClipboardData to
-          // ignore the cached image data, by passing zero as the length
-          // parameter to transferable.setTransferData. When the length is zero,
-          // nsITransferable::GetTransferData will return NS_ERROR_FAILURE and
-          // conveniently nsClipboard::GetNativeClipboardData will then fall
-          // back to retrieving the data directly from the system's clipboard.
-          //
-          // Note that the length itself is not really used if the data is not
-          // a string type, so the actual value does not matter.
-          transferable.setTransferData(mimeType, img, 0);
+          // was initiated by the same browser instance. To make sure that a
+          // nsIInputStream is returned instead of the cached imgIContainer,
+          // the image is exported as as `kNativeImageMime`. Data associated
+          // with this type is converted to a platform-specific image format
+          // when written to the clipboard. The type is not used when images
+          // are read from the clipboard (on all platforms, not just macOS).
+          // This forces nsClipboard::GetNativeClipboardData to fall back to
+          // the native clipboard, and return the image as a nsITransferable.
+
+          // The length should not be zero. (Bug 1493292)
+          transferable.setTransferData(kNativeImageMime, img, 1);
 
           Services.clipboard.setData(
             transferable, null, Services.clipboard.kGlobalClipboard);

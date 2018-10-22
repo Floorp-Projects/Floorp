@@ -859,7 +859,7 @@ TypeScript::SetThis(JSContext* cx, JSScript* script, const js::Value& value)
 /* static */ inline void
 TypeScript::SetArgument(JSContext* cx, JSScript* script, unsigned arg, TypeSet::Type type)
 {
-    cx->check(script, type);
+    cx->check(script->compartment(), type);
 
     AutoSweepTypeScript sweep(script);
     StackTypeSet* types = ArgTypes(script, arg);

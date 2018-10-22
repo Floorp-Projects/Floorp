@@ -72,6 +72,7 @@ var gMenuBuilder = {
       menu: contextData.menu,
       // eslint-disable-next-line no-use-before-define
       originalViewType: getContextViewType(contextData),
+      originalViewUrl: contextData.inFrame ? contextData.frameUrl : contextData.pageUrl,
       webExtContextData,
     };
     if (webExtContextData.overrideContext === "bookmark") {
@@ -608,6 +609,12 @@ function addMenuEventInfo(info, contextData, extension, includeSensitiveData) {
       info.selectionText = contextData.selectionText;
     }
   }
+  // If the context was overridden, then frameUrl should be the URL of the
+  // document in which the menu was opened (instead of undefined, even if that
+  // document is not in a frame).
+  if (contextData.originalViewUrl) {
+    info.frameUrl = contextData.originalViewUrl;
+  }
 }
 
 function MenuItem(extension, createProperties, isRoot = false) {
@@ -805,11 +812,23 @@ MenuItem.prototype = {
       return false;
     }
 
+    let docPattern = this.documentUrlMatchPattern;
+    // When viewTypes is specified, the menu item is expected to be restricted
+    // to documents. So let documentUrlPatterns always apply to the URL of the
+    // document in which the menu was opened. When maybeOverrideContextData
+    // changes the context, contextData.pageUrl does not reflect that URL any
+    // more, so use contextData.originalViewUrl instead.
+    if (docPattern && this.viewTypes && contextData.originalViewUrl) {
+      if (!docPattern.matches(Services.io.newURI(contextData.originalViewUrl))) {
+        return false;
+      }
+      docPattern = null; // Null it so that it won't be used with pageURI below.
+    }
+
     if (contextData.onBookmark) {
       return this.extension.hasPermission("bookmarks");
     }
 
-    let docPattern = this.documentUrlMatchPattern;
     let pageURI = Services.io.newURI(contextData[contextData.inFrame ? "frameUrl" : "pageUrl"]);
     if (docPattern && !docPattern.matches(pageURI)) {
       return false;

@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .sidebar-item {
-  /* Import css variables from common.css */
-  --sidebar-text-color: var(--in-content-category-text);
-  --sidebar-selected-color: var(--in-content-category-text-selected);
-  --sidebar-background-hover: var(--in-content-category-background-hover);
+  --sidebar-text-color: var(--category-text);
+  --sidebar-selected-color: var(--category-text-selected);
+  --sidebar-background-hover: var(--category-background-hover);
 }
 
 .sidebar-item {

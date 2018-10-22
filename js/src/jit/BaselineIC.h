@@ -709,8 +709,14 @@ class ICFallbackStub : public ICStub
     // The IC entry for this linked list of stubs.
     ICEntry* icEntry_;
 
-    // The number of stubs kept in the IC entry.
+    // The state of this IC
     ICState state_;
+
+    // Counts the number of times the stub was entered
+    //
+    // See Bug 1494473 comment 6 for a mechanism to handle overflow if overflow
+    // becomes a concern.
+    uint32_t enteredCount_;
 
     // A pointer to the location stub pointer that needs to be
     // changed to add a new "last" stub immediately before the fallback
@@ -723,12 +729,14 @@ class ICFallbackStub : public ICStub
       : ICStub(kind, ICStub::Fallback, stubCode),
         icEntry_(nullptr),
         state_(),
+        enteredCount_(0),
         lastStubPtrAddr_(nullptr) {}
 
     ICFallbackStub(Kind kind, Trait trait, JitCode* stubCode)
       : ICStub(kind, trait, stubCode),
         icEntry_(nullptr),
         state_(),
+        enteredCount_(0),
         lastStubPtrAddr_(nullptr)
     {
         MOZ_ASSERT(trait == ICStub::Fallback ||
@@ -809,6 +817,11 @@ class ICFallbackStub : public ICStub
 
     void unlinkStub(Zone* zone, ICStub* prev, ICStub* stub);
     void unlinkStubsWithKind(JSContext* cx, ICStub::Kind kind);
+
+    // Return the number of times this stub has successfully provided a value to the
+    // caller.
+    uint32_t enteredCount() const { return enteredCount_; }
+    inline void incrementEnteredCount() { enteredCount_++; }
 };
 
 // Base class for Trait::Regular CacheIR stubs
@@ -816,10 +829,17 @@ class ICCacheIR_Regular : public ICStub
 {
     const CacheIRStubInfo* stubInfo_;
 
+    // Counts the number of times the stub was entered
+    //
+    // See Bug 1494473 comment 6 for a mechanism to handle overflow if overflow
+    // becomes a concern.
+    uint32_t enteredCount_;
+
   public:
     ICCacheIR_Regular(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
       : ICStub(ICStub::CacheIR_Regular, stubCode),
-        stubInfo_(stubInfo)
+        stubInfo_(stubInfo),
+        enteredCount_(0)
     {}
 
     static ICCacheIR_Regular* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
@@ -837,6 +857,11 @@ class ICCacheIR_Regular : public ICStub
     }
 
     uint8_t* stubDataStart();
+
+    // Return the number of times this stub has successfully provided a value to the
+    // caller.
+    uint32_t enteredCount() const { return enteredCount_; }
+    static size_t offsetOfEnteredCount() { return offsetof(ICCacheIR_Regular, enteredCount_); }
 };
 
 // Monitored stubs are IC stubs that feed a single resulting value out to a
