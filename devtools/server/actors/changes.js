@@ -56,14 +56,18 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
 
   pushChange: function(change) {
     this.changes.push(change);
+    this.emit("add-change", change);
   },
 
   popChange: function() {
-    return this.changes.pop();
+    const change = this.changes.pop();
+    this.emit("remove-change", change);
+    return change;
   },
 
   clearChanges: function() {
     this.changes.length = 0;
+    this.emit("clear-changes");
   },
 });
 
