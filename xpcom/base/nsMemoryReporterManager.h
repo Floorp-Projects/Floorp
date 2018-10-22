@@ -206,7 +206,7 @@ private:
   static void TimeoutCallback(nsITimer* aTimer, void* aData);
   // Note: this timeout needs to be long enough to allow for the
   // possibility of DMD reports and/or running on a low-end phone.
-  static const uint32_t kTimeoutLengthMS = 50000;
+  static const uint32_t kTimeoutLengthMS = 180000;
 
   mozilla::Mutex mMutex;
   bool mIsRegistrationBlocked;
