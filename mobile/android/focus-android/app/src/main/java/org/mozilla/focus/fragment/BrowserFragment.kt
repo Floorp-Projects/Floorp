@@ -977,7 +977,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
                 val intent = Intent(context, MainActivity::class.java)
                 intent.action = Intent.ACTION_MAIN
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 startActivity(intent)
 
                 TelemetryWrapper.openFullBrowser()
