@@ -23,6 +23,7 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.session.Session
 import mozilla.components.support.ktx.android.util.Base64
+import mozilla.components.support.utils.ThreadUtils
 import org.json.JSONException
 import org.mozilla.focus.IO
 import org.mozilla.focus.R
@@ -33,6 +34,7 @@ import org.mozilla.focus.gecko.NestedGeckoView
 import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
+import org.mozilla.focus.utils.FileUtils
 import org.mozilla.focus.utils.IntentUtils
 import org.mozilla.focus.utils.MobileMetricsPingStorage
 import org.mozilla.focus.utils.Settings
@@ -72,7 +74,9 @@ class GeckoWebViewProvider : IWebViewProvider {
     }
 
     override fun performCleanup(context: Context) {
-        // Nothing: does Gecko need extra private mode cleanup?
+        ThreadUtils.postToBackgroundThread(Runnable {
+            FileUtils.truncateCacheDirectory(context)
+        })
     }
 
     override fun performNewBrowserSessionCleanup() {

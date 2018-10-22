@@ -28,13 +28,10 @@
 <script type="text/javascript">
         // Add a key value pair to local storage. This is required by WebViewDataTest which asserts
         // that the local storage directory should exist
-        localStorage.setItem('focusLocalStorageTest', 'testValue');
+        var script = document.createElement('script');
+        script.src = "service-worker.js";
 
-        navigator.serviceWorker.register('service-worker.js', {scope: './'}).then(function(registration) {
-            document.querySelector('#status').textContent = 'Service worker installed';
-        }).catch(function(error) {
-            document.querySelector('#status').textContent = error;
-        });
+        document.head.appendChild(script); //or something of the likes
     </script>
 
 </body>
