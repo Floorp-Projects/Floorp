@@ -8,7 +8,6 @@ const SOURCE_MAP_WORKER = "resource://devtools/client/shared/source-map/worker.j
 const SOURCE_MAP_WORKER_ASSETS = "resource://devtools/client/shared/source-map/assets/";
 
 const MAX_ORDINAL = 99;
-const SHOW_ALL_ANONYMOUS_CONTENT_PREF = "devtools.inspector.showAllAnonymousContent";
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
@@ -1689,7 +1688,7 @@ Toolbox.prototype = {
    */
   loadTool: function(id) {
     if (id === "inspector" && !this._inspector) {
-      this.initInspector();
+      return this.initInspector().then(() => this.loadTool(id));
     }
 
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
@@ -1733,11 +1732,7 @@ Toolbox.prototype = {
         vbox.visibility = "visible";
       }
 
-      const onLoad = async () => {
-        if (id === "inspector") {
-          await this._initInspector;
-        }
-
+      const onLoad = () => {
         // Prevent flicker while loading by waiting to make visible until now.
         iframe.style.visibility = "visible";
 
@@ -2679,31 +2674,20 @@ Toolbox.prototype = {
         // than most other fronts because it is closely related to the toolbox.
         // TODO: replace with getFront once inspector is separated from the toolbox
         this._inspector = this.target.getInspector();
-
-        await Promise.all([
-          this._getWalker(),
-          this._getHighlighter(),
-        ]);
-
+        const pref = "devtools.inspector.showAllAnonymousContent";
+        const showAllAnonymousContent = Services.prefs.getBoolPref(pref);
+        this._walker = await this._inspector.getWalker({ showAllAnonymousContent });
         this._selection = new Selection(this._walker);
-
         this._selection.on("new-node-front", this._onNewSelectedNodeFront);
+
         this.walker.on("highlighter-ready", this._highlighterReady);
         this.walker.on("highlighter-hide", this._highlighterHidden);
+
+        const autohide = !flags.testing;
+        this._highlighter = await this._inspector.getHighlighter(autohide);
       }.bind(this))();
     }
     return this._initInspector;
-  },
-
-  _getWalker: async function() {
-    const showAllAnonymousContent = Services.prefs.getBoolPref(
-      SHOW_ALL_ANONYMOUS_CONTENT_PREF);
-    this._walker = await this._inspector.getWalker({ showAllAnonymousContent });
-  },
-
-  _getHighlighter: async function() {
-    const autohide = !flags.testing;
-    this._highlighter = await this._inspector.getHighlighter(autohide);
   },
 
   _onNewSelectedNodeFront: function() {
