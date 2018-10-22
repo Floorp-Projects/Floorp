@@ -524,16 +524,6 @@ ReportArgTypeError(JSContext* cx, const char* funName, const char* expectedType,
 }
 
 static MOZ_MUST_USE bool
-RejectWithPendingError(JSContext* cx, Handle<PromiseObject*> promise) {
-    // Not much we can do about uncatchable exceptions, just bail.
-    RootedValue exn(cx);
-    if (!GetAndClearException(cx, &exn)) {
-        return false;
-    }
-    return PromiseObject::reject(cx, promise, exn);
-}
-
-static MOZ_MUST_USE bool
 ReturnPromiseRejectedWithPendingError(JSContext* cx, const CallArgs& args)
 {
     JSObject* promise = PromiseRejectedWithPendingError(cx);
@@ -1461,7 +1451,7 @@ ReadableStreamTee_Cancel(JSContext* cx, Handle<TeeState*> teeState,
         {
             AutoRealm ar(cx, promise);
             if (!cancelResult) {
-                if (!RejectWithPendingError(cx, promise)) {
+                if (!RejectPromiseWithPendingError(cx, promise)) {
                     return nullptr;
                 }
             } else {
