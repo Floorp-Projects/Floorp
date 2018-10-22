@@ -39,8 +39,6 @@ logger = logging.getLogger(__name__)
     ],
 )
 def retrigger_decision_action(parameters, graph_config, input, task_group_id, task_id, task):
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
-        parameters, graph_config)
     """For a single task, we try to just run exactly the same task once more.
     It's quite possible that we don't have the scopes to do so (especially for
     an action), but this is best-effort."""
