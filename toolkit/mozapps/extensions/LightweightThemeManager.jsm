@@ -110,6 +110,13 @@ var LightweightThemeManager = {
     return themes;
   },
 
+  /*
+   * Returns the currently active theme, but doesn't take a potentially
+   * available fallback theme into account.
+   *
+   * This will always return the original theme data and not make use of
+   * locally persisted resources.
+   */
   get currentTheme() {
     let selectedThemeID = _prefs.getStringPref("selectedThemeID", DEFAULT_THEME_ID);
 
@@ -120,8 +127,29 @@ var LightweightThemeManager = {
     return data;
   },
 
-  get currentThemeForDisplay() {
-    var data = _substituteDefaultThemeIfNeeded(this.currentTheme);
+  /*
+   * Returns the currently active theme, taking the fallback theme into account
+   * if we'd be using the default theme otherwise.
+   *
+   * This will always return the original theme data and not make use of
+   * locally persisted resources.
+   */
+  get currentThemeWithFallback() {
+    return _substituteDefaultThemeIfNeeded(this.currentTheme);
+  },
+
+  /*
+   * Returns the currently active theme, taking the fallback theme into account
+   * if we'd be using the default theme otherwise.
+   *
+   * This will rewrite the theme data to use locally persisted resources if
+   * available.
+   *
+   * Unless you have any special requirements, this is what you normally want
+   * to use in order to retrieve the currently active theme for use in the UI.
+   */
+  get currentThemeWithPersistedData() {
+    let data = this.currentThemeWithFallback;
 
     if (data && LightweightThemePersister.persistEnabled) {
       data = LightweightThemePersister.getPersistedData(data);
@@ -226,7 +254,7 @@ var LightweightThemeManager = {
     if (_previewTimer) {
       _previewTimer.cancel();
       _previewTimer = null;
-      _notifyWindows(this.currentThemeForDisplay);
+      _notifyWindows(this.currentThemeWithPersistedData);
     }
   },
 
@@ -371,7 +399,7 @@ var LightweightThemeManager = {
       if (LightweightThemePersister.persistEnabled) {
         LightweightThemeImageOptimizer.purge();
         _persistImages(themeToSwitchTo, () => {
-          _notifyWindows(this.currentThemeForDisplay);
+          _notifyWindows(this.currentThemeWithPersistedData);
         });
       }
     }
@@ -476,7 +504,7 @@ var LightweightThemeManager = {
       if (LightweightThemePersister.persistEnabled) {
         LightweightThemeImageOptimizer.purge();
         _persistImages(themeToSwitchTo, () => {
-          _notifyWindows(this.currentThemeForDisplay);
+          _notifyWindows(this.currentThemeWithPersistedData);
         });
       }
     }
