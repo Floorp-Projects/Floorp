@@ -1,9 +1,0 @@
-language: rust
-rust: nightly
-sudo: false
-env:
-    matrix:
-        - FEATURES=
-        - FEATURES="serde"
-script:
-    - cargo test -v --features "$FEATURES"
