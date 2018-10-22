@@ -2049,8 +2049,14 @@ nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify)
 // latter case it may be null.
 //
 // If aRv is a failure after this call, the insertion should not happen.
+//
+// This implements the parts of
+// https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity and
+// the checks in https://dom.spec.whatwg.org/#concept-node-replace that
+// depend on the child nodes or come after steps that depend on the child nodes
+// (steps 2-6 in both cases).
 static
-void EnsureAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
+void EnsureAllowedAsChild(nsINode* aNewChild, nsINode* aParent,
                           bool aIsReplace, nsINode* aRefChild,
                           ErrorResult& aRv)
 {
@@ -2063,6 +2069,7 @@ void EnsureAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
              "Nodes that are not documents, document fragments or elements "
              "can't be parents!");
 
+  // Step 2.
   // A common case is that aNewChild has no kids, in which case
   // aParent can't be a descendant of aNewChild unless they're
   // actually equal to each other.  Fast-path that case, since aParent
@@ -2073,13 +2080,26 @@ void EnsureAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         // to be checked to ensure that they are not inserted into
         // the hosted content.
         aNewChild->NodeInfo()->NameAtom() == nsGkAtoms::_template ||
-        aNewChild->GetShadowRoot()) &&
+        (aNewChild->IsElement() && aNewChild->AsElement()->GetShadowRoot())) &&
        nsContentUtils::ContentIsHostIncludingDescendantOf(aParent,
                                                           aNewChild))) {
     aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
     return;
   }
 
+  // Step 3.
+  if (aRefChild && aRefChild->GetParentNode() != aParent) {
+    aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
+    return;
+  }
+
+  // Step 4.
+  if (!aNewChild->IsContent()) {
+    aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+    return;
+  }
+
+  // Steps 5 and 6 combined.
   // The allowed child nodes differ for documents and elements
   switch (aNewChild->NodeType()) {
   case nsINode::COMMENT_NODE :
@@ -2226,23 +2246,26 @@ void EnsureAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
   aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 }
 
+// Implements https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
 void
 nsINode::EnsurePreInsertionValidity(nsINode& aNewChild, nsINode* aRefChild,
                                     ErrorResult& aError)
 {
-  EnsurePreInsertionValidity1(aNewChild, aRefChild, aError);
+  EnsurePreInsertionValidity1(aError);
   if (aError.Failed()) {
     return;
   }
   EnsurePreInsertionValidity2(false, aNewChild, aRefChild, aError);
 }
 
+// Implements the parts of
+// https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity and
+// the checks in https://dom.spec.whatwg.org/#concept-node-replace that can be
+// evaluated before ever looking at the child nodes (step 1 in both cases).
 void
-nsINode::EnsurePreInsertionValidity1(nsINode& aNewChild, nsINode* aRefChild,
-                                     ErrorResult& aError)
+nsINode::EnsurePreInsertionValidity1(ErrorResult& aError)
 {
-  if ((!IsDocument() && !IsDocumentFragment() && !IsElement()) ||
-      !aNewChild.IsContent()) {
+  if (!IsDocument() && !IsDocumentFragment() && !IsElement()) {
     aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
     return;
   }
@@ -2252,8 +2275,8 @@ void
 nsINode::EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
                                      nsINode* aRefChild, ErrorResult& aError)
 {
-  nsIContent* newContent = aNewChild.AsContent();
-  if (newContent->IsRootOfAnonymousSubtree()) {
+  if (aNewChild.IsContent() &&
+      aNewChild.AsContent()->IsRootOfAnonymousSubtree()) {
     // This is anonymous content.  Don't allow its insertion
     // anywhere, since it might have UnbindFromTree calls coming
     // its way.
@@ -2262,7 +2285,7 @@ nsINode::EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
   }
 
   // Make sure that the inserted node is allowed as a child of its new parent.
-  EnsureAllowedAsChild(newContent, this, aReplace, aRefChild, aError);
+  EnsureAllowedAsChild(&aNewChild, this, aReplace, aRefChild, aError);
 }
 
 nsINode*
@@ -2276,7 +2299,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // the bad XBL cases.
   MOZ_ASSERT_IF(aReplace, aRefChild);
 
-  EnsurePreInsertionValidity1(*aNewChild, aRefChild, aError);
+  EnsurePreInsertionValidity1(aError);
   if (aError.Failed()) {
     return nullptr;
   }
@@ -2317,11 +2340,6 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     // fragment
     if (nodeType == DOCUMENT_FRAGMENT_NODE) {
       static_cast<FragmentOrElement*>(aNewChild)->FireNodeRemovedForChildren();
-    }
-    // Verify that our aRefChild is still sensible
-    if (aRefChild && aRefChild->GetParentNode() != this) {
-      aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
-      return nullptr;
     }
   }
 
@@ -2376,13 +2394,6 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     if (guard.Mutated(1)) {
       // XBL destructors, yuck.
 
-      // Verify that nodeToInsertBefore, if non-null, is still our child.  If
-      // it's not, there's no way we can do this insert sanely; just bail out.
-      if (nodeToInsertBefore && nodeToInsertBefore->GetParent() != this) {
-        aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-        return nullptr;
-      }
-
       // Verify that newContent has no parent.
       if (newContent->GetParentNode()) {
         aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
@@ -2398,10 +2409,6 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
           return nullptr;
         }
       } else {
-        if (aRefChild && aRefChild->GetParent() != this) {
-          aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-          return nullptr;
-        }
         EnsureAllowedAsChild(newContent, this, aReplace, aRefChild, aError);
         if (aError.Failed()) {
           return nullptr;
