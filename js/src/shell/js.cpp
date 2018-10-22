@@ -3102,10 +3102,9 @@ TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
     }
 
     for (const JSTryNote& tn : script->trynotes()) {
-        uint32_t startOff = script->pcToOffset(script->main()) + tn.start;
         if (!sp->jsprintf(" %-16s %6u %8u %8u\n",
                           TryNoteName(static_cast<JSTryNoteKind>(tn.kind)),
-                          tn.stackDepth, startOff, startOff + tn.length))
+                          tn.stackDepth, tn.start, tn.start + tn.length))
         {
             return false;
         }
