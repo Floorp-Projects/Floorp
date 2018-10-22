@@ -45,8 +45,10 @@ public:
 
   LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) override;
   LookupStatus CompleteLookupByType(nsHostRecord *, nsresult, const nsTArray<nsCString> *, uint32_t, bool pb) override;
-  void TRRBlacklist(const nsACString &host, bool privateBrowsing, bool aParentsToo);
-  bool IsTRRBlacklisted(const nsACString &host, bool privateBrowsing, bool fullhost);
+  void TRRBlacklist(const nsACString &host, const nsACString &originSuffix,
+                    bool privateBrowsing, bool aParentsToo);
+  bool IsTRRBlacklisted(const nsACString &aHost, const nsACString &aOriginSuffix,
+                        bool aPrivateBrowsing, bool aParentsToo);
 
   bool MaybeBootstrap(const nsACString &possible, nsACString &result);
   enum TrrOkay {
