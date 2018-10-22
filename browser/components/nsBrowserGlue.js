@@ -1782,7 +1782,7 @@ BrowserGlue.prototype = {
       tabSubstring = PluralForm.get(pagecount, tabSubstring).replace(/#1/, pagecount);
       let windowString = gTabbrowserBundle.GetStringFromName("tabs.closeWarningMultipleWindows");
       windowString = PluralForm.get(windowcount, windowString).replace(/#1/, windowcount);
-      windowString = windowString.replace(/%(?:1$)?S/i, tabSubstring);
+      windowString = windowString.replace(/%(?:1\$)?S/i, tabSubstring);
       aCancelQuit.data =
         !win.gBrowser.warnAboutClosingTabs(pagecount, win.gBrowser.closingTabsEnum.ALL, windowString);
     }
