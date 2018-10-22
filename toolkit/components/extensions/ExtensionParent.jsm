@@ -981,6 +981,23 @@ ParentAPIManager = {
     let handlingUserInput = false;
     let lowPriority = data.path.startsWith("webRequest.");
 
+    let reply = result => {
+      if (!context.parentMessageManager) {
+        Services.console.logStringMessage("Cannot send function call " +
+        "result: other side closed connection " +
+        `(call data: ${uneval({path: data.path, args: data.args})})`);
+        return;
+      }
+
+      context.parentMessageManager.sendAsyncMessage(
+        "API:AddListenerResult",
+        Object.assign({
+          childId: data.childId,
+          listenerId: data.listenerId,
+          path: data.path,
+        }, result));
+    };
+
     function listener(...listenerArgs) {
       return context.sendMessage(
         context.parentMessageManager,
@@ -1021,7 +1038,14 @@ ParentAPIManager = {
     if (handler.setUserInput) {
       handlingUserInput = true;
     }
-    handler.addListener(listener, ...args);
+
+    try {
+      handler.addListener(listener, ...args);
+    } catch (e) {
+      context.listenerProxies.delete(data.listenerId);
+      const error = context.normalizeError(e);
+      reply({error: {message: error.message}});
+    }
   },
 
   async removeListener(data) {
