@@ -10,12 +10,23 @@ this.toSource();
 
 y = undefined;
 
+// The exact error message varies nondeterministically. Accept several
+// variations on the theme.
+var variations = [
+    `y is undefined; can't access its "length" property`,
+    `can't access property "length" of undefined` ,
+    `undefined has no properties`,
+];
+
+var hits = 0;
 for (var i = 0; i < 3; i++) {
     try {
-	x.toString();
-	assertEq(0, 1);
+        x.toString();
     } catch (e) {
-	assertEq(e.message === `y is undefined; can't access its "length" property` ||
-		 e.message === `can't access property "length" of undefined`, true);
+        assertEq(e.constructor.name, 'TypeError');
+        if (!variations.includes(e.message))
+            throw new Error(`expected one of ${uneval(variations)}; got ${uneval(e.message)}`);
+        hits++;
     }
 }
+assertEq(hits, 3);

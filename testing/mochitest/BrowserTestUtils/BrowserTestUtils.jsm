@@ -589,6 +589,8 @@ var BrowserTestUtils = {
         let promises = [
           TestUtils.topicObserved("browser-delayed-startup-finished",
                                   subject => subject == win),
+          this.waitForEvent(win, "focus"),
+          this.waitForEvent(win, "activate"),
         ];
 
         if (url) {
