@@ -55,11 +55,10 @@ class TypedArrayObject : public ArrayBufferViewObject
 
         // Shared buffers.
         if (a->isSharedMemory() && b->isSharedMemory()) {
-            return (a->bufferObject()->as<SharedArrayBufferObject>().globalID() ==
-                    b->bufferObject()->as<SharedArrayBufferObject>().globalID());
+            return a->bufferShared()->globalID() == b->bufferShared()->globalID();
         }
 
-        return a->bufferObject() == b->bufferObject();
+        return a->bufferEither() == b->bufferEither();
     }
 
     static const Class classes[Scalar::MaxTypedArrayViewType];

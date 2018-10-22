@@ -103,13 +103,10 @@ class ArrayBufferViewObject : public NativeObject
     bool hasBuffer() const {
         return bufferValue(this).isObject();
     }
-    JSObject* bufferObject() const {
-        return bufferValue(this).toObjectOrNull();
-    }
 
     ArrayBufferObject* bufferUnshared() const {
         MOZ_ASSERT(!isSharedMemory());
-        JSObject* obj = bufferObject();
+        ArrayBufferObjectMaybeShared* obj = bufferEither();
         if (!obj) {
             return nullptr;
         }
@@ -117,21 +114,21 @@ class ArrayBufferViewObject : public NativeObject
     }
     SharedArrayBufferObject* bufferShared() const {
         MOZ_ASSERT(isSharedMemory());
-        JSObject* obj = bufferObject();
+        ArrayBufferObjectMaybeShared* obj = bufferEither();
         if (!obj) {
             return nullptr;
         }
         return &obj->as<SharedArrayBufferObject>();
     }
     ArrayBufferObjectMaybeShared* bufferEither() const {
-        JSObject* obj = bufferObject();
+        JSObject* obj = bufferValue(this).toObjectOrNull();
         if (!obj) {
             return nullptr;
         }
-        if (isSharedMemory()) {
-            return &obj->as<SharedArrayBufferObject>();
-        }
-        return &obj->as<ArrayBufferObject>();
+        MOZ_ASSERT(isSharedMemory()
+                   ? obj->is<SharedArrayBufferObject>()
+                   : obj->is<ArrayBufferObject>());
+        return &obj->as<ArrayBufferObjectMaybeShared>();
     }
 
     bool hasDetachedBuffer() const {

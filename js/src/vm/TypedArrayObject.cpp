@@ -1113,7 +1113,7 @@ GetBufferSpeciesConstructor(JSContext* cx, Handle<TypedArrayObject*> typedArray,
         return defaultCtor;
     }
 
-    RootedObject obj(cx, typedArray->bufferObject());
+    RootedObject obj(cx, typedArray->bufferEither());
     if (!obj) {
         MOZ_ASSERT(!isWrapped);
 
@@ -1146,7 +1146,7 @@ GetBufferSpeciesConstructor(JSContext* cx, Handle<TypedArrayObject*> typedArray,
             return nullptr;
         }
 
-        obj.set(typedArray->bufferObject());
+        obj.set(typedArray->bufferEither());
     } else {
         if (isWrapped && !cx->compartment()->wrap(cx, &obj)) {
             return nullptr;
