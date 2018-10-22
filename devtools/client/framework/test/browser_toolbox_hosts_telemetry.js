@@ -41,5 +41,5 @@ function checkResults() {
   //   - 2 "left" entries.
   //   - 3 "right" entries.
   //   - 2 "window" entries.
-  checkTelemetry("DEVTOOLS_TOOLBOX_HOST", "", [3, 3, 2, 0, 2, 0, 0, 0, 0, 0], "array");
+  checkTelemetry("DEVTOOLS_TOOLBOX_HOST", "", {0: 3, 1: 3, 2: 2, 4: 2, 5: 0}, "array");
 }
