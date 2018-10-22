@@ -103,7 +103,7 @@
     // Test for bug 1500416.
     function displayContentsInsertion() {
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, "c4")
+        new invokerChecker(EVENT_REORDER, "c4"),
       ];
 
       this.invoke = function displayContentsInsertion_invoke() {
@@ -122,8 +122,8 @@
             { LIST: [
               { LISTITEM: [
                 { STATICTEXT: [] },
-                { TEXT_LEAF: [] }
-              ] }
+                { TEXT_LEAF: [] },
+              ] },
             ] },
           ] };
         testAccessibleTree("c4", accTree);
