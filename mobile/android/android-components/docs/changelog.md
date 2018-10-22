@@ -28,7 +28,7 @@ Release date: TBD
   * Added support for `HistoryTrackingDelegate`, if it's specified in engine settings.
 * **browser-engine-servo**
   * Added a new experimental *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
-* **browser-session**:
+* **browser-session** - basic session hierarchy:
   * Sessions can have a parent `Session` now. A `Session` with a parent will be added *after* the parent `Session`. On removal of a selected `Session` the parent `Session` can be selected automatically if desired:
   ```kotlin
   val parent = Session("https://www.mozilla.org")
@@ -39,6 +39,17 @@ Release date: TBD
 
   sessionManager.remove(session, selectParentIfExists = true)
   ```
+* **browser-session** - obtaining an restoring a SessionsSnapshot:
+  * It's now possible to request a SessionsSnapshot from the `SessionManager`, which encapsulates currently active sessions, their order and state, and which session is the selected one. Private and Custom Tab sessions are omitted from the snapshot. A new public `restore` method allows restoring a `SessionsSnapshot`.
+  ```kotlin
+  val snapshot = sessionManager.createSnapshot()
+  // ... persist snapshot somewhere, perhaps using the DefaultSessionStorage
+  sessionManager.restore(snapshot)
+  ```
+  * `restore` follows a different observer notification pattern from regular `add` flow. See method documentation for details. A new `onSessionsRestored` notification is now available.
+* **browser-session** - new SessionStorage API, new DefaultSessionStorage data format:
+  * Coupled with the `SessionManager` changes, the SessionStorage API has been changed to operate over `SessionsSnapshot`. New API no longer operates over a SessionManager, and instead reads/writes snapshots which may used together with the SessionManager (see above). An explicit `clear` method is provided for wiping SessionStorage.
+  * `DefaultSessionStorage` now uses a new storage format internally, which allows maintaining session ordering and preserves session parent information.
 * **browser-errorpages**
   * Added translation annotations to our error page strings. Translated strings will follow in a future release.
 * **service-glean**
