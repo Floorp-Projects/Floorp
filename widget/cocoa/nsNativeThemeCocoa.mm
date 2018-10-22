@@ -2721,21 +2721,6 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static nscolor
-GetAutoScrollbarTrackColor(ComputedStyle* aStyle)
-{
-  // Use the default scrollbar color. XXX Can we get it from the system?
-  return NS_RGB(0xFA, 0xFA, 0xFA);
-}
-
-static nscolor
-GetAutoScrollbarFaceColor(ComputedStyle* aStyle)
-{
-  // Use the default scrollbar color. We may want to derive from track
-  // color at some point.
-  return NS_RGB(0xC1, 0xC1, 0xC1);
-}
-
 static bool
 IsSmallScrollbar(nsIFrame* aFrame)
 {
@@ -2766,12 +2751,11 @@ nsNativeThemeCocoa::ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal)
   // generally good enough for use cases of custom scrollbars.
   if (!params.overlay) {
     ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-    if (style->StyleUI()->HasCustomScrollbars()) {
+    const nsStyleUI* ui = style->StyleUI();
+    if (ui->HasCustomScrollbars()) {
       params.custom = true;
-      params.trackColor =
-        GetScrollbarTrackColor(style, &GetAutoScrollbarTrackColor);
-      params.faceColor =
-        GetScrollbarFaceColor(style, &GetAutoScrollbarFaceColor);
+      params.trackColor = ui->mScrollbarTrackColor.CalcColor(style);
+      params.faceColor = ui->mScrollbarFaceColor.CalcColor(style);
     }
   }
   return params;
@@ -4010,6 +3994,31 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
   }
 }
 
+
+nscolor
+nsNativeThemeCocoa::GetWidgetAutoColor(mozilla::ComputedStyle* aStyle,
+                                       WidgetType aWidgetType)
+{
+  switch (aWidgetType) {
+    case StyleAppearance::Scrollbar:
+    case StyleAppearance::ScrollbarSmall:
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarHorizontal:
+    case StyleAppearance::ScrollbarbuttonUp:
+    case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonLeft:
+    case StyleAppearance::ScrollbarbuttonRight:
+      return NS_RGB(0xFA, 0xFA, 0xFA);
+
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
+      return NS_RGB(0xC1, 0xC1, 0xC1);
+
+    default:
+      return nsITheme::GetWidgetAutoColor(aStyle, aWidgetType);
+  }
+}
+
 LayoutDeviceIntMargin
 nsNativeThemeCocoa::DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
                                          nsIFrame* aFrame)
@@ -4962,8 +4971,14 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetTy
 
   case StyleAppearance::ScrollbarSmall:
   case StyleAppearance::Scrollbar:
-  case StyleAppearance::Scrollcorner:
+  case StyleAppearance::Scrollcorner: {
+    const nsStyleUI* ui = nsLayoutUtils::StyleForScrollbar(aFrame)->StyleUI();
+    StyleComplexColor trackColor = ui->mScrollbarTrackColor;
+    if (!trackColor.IsAuto()) {
+      return trackColor.MaybeTransparent() ? eTransparent : eOpaque;
+    }
     return nsLookAndFeel::UseOverlayScrollbars() ? eTransparent : eOpaque;
+  }
 
   case StyleAppearance::Statusbar:
     // Knowing that scrollbars and statusbars are opaque improves
