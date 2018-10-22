@@ -166,7 +166,7 @@ class ConnectPage extends PureComponent {
           title: "Via Network Location",
         },
         NetworkLocationsList({ dispatch, networkLocations }),
-        dom.hr({ className: "separator" }),
+        dom.hr({ className: "separator separator--breathe" }),
         NetworkLocationsForm({ dispatch }),
       )
     );
@@ -183,7 +183,7 @@ class ConnectPage extends PureComponent {
         },
         dom.h1(
           {
-            className: "page__title",
+            className: "alt-heading",
           },
           "Connect a Device"
         )

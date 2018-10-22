@@ -233,7 +233,8 @@ add_task(async function test_tabContextMenu() {
       permissions: ["menus"],
     },
     background() {
-      browser.menus.create({title: "gamma", contexts: ["tab"]}, () => {
+      browser.menus.create({title: "invisible", contexts: ["tab"], documentUrlPatterns: ["http://does/not/match"]});
+      browser.menus.create({title: "gamma", contexts: ["tab"], documentUrlPatterns: ["http://example.com/"]}, () => {
         browser.test.sendMessage("ready");
       });
     },

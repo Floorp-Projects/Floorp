@@ -636,8 +636,11 @@ LogPrincipal(nsIPrincipal* aPrincipal, const nsAString& aPrincipalName) {
       return;
     }
     if (aPrincipal->GetIsExpandedPrincipal()) {
-      MOZ_LOG(sCSMLog, LogLevel::Debug, ("  %s: Expanded Principal\n",
-        NS_ConvertUTF16toUTF8(aPrincipalName).get()));
+      nsAutoCString origin;
+      aPrincipal->GetOrigin(origin);
+      MOZ_LOG(sCSMLog, LogLevel::Debug, ("  %s: %s\n",
+        NS_ConvertUTF16toUTF8(aPrincipalName).get(),
+        origin.get()));
       return;
     }
     nsCOMPtr<nsIURI> principalURI;

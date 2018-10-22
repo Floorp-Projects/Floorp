@@ -42,7 +42,7 @@ class NetworkLocationsList extends PureComponent {
             },
             dom.button(
               {
-                className: "std-button js-network-location-remove-button",
+                className: "default-button js-network-location-remove-button",
                 onClick: () => {
                   this.props.dispatch(Actions.removeNetworkLocation(location));
                 },

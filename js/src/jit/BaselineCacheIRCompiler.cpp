@@ -38,6 +38,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
 
     bool inStubFrame_;
     bool makesGCCalls_;
+    BaselineCacheIRStubKind kind_;
 
     MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
     MOZ_MUST_USE bool tailCallVM(MacroAssembler& masm, const VMFunction& fun);
@@ -52,10 +53,11 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     friend class AutoStubFrame;
 
     BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer,
-                            uint32_t stubDataOffset)
+                            uint32_t stubDataOffset, BaselineCacheIRStubKind stubKind)
       : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Baseline, StubFieldPolicy::Address),
         inStubFrame_(false),
-        makesGCCalls_(false)
+        makesGCCalls_(false),
+        kind_(stubKind)
     {}
 
     MOZ_MUST_USE bool init(CacheKind kind);
@@ -173,6 +175,12 @@ BaselineCacheIRCompiler::compile()
 #ifdef JS_CODEGEN_ARM
     masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif
+    // Count stub entries: We count entries rather than successes as it much easier to
+    // ensure ICStubReg is valid at entry than at exit.
+    if (kind_ == BaselineCacheIRStubKind::Regular) {
+        Address enteredCount(ICStubReg, ICCacheIR_Regular::offsetOfEnteredCount());
+        masm.add32(Imm32(1), enteredCount);
+    }
 
     do {
         switch (reader.readOp()) {
@@ -2179,7 +2187,7 @@ js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     if (!code) {
         // We have to generate stub code.
         JitContext jctx(cx, nullptr);
-        BaselineCacheIRCompiler comp(cx, writer, stubDataOffset);
+        BaselineCacheIRCompiler comp(cx, writer, stubDataOffset, stubKind);
         if (!comp.init(kind)) {
             return nullptr;
         }
