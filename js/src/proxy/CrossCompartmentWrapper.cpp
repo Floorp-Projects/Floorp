@@ -659,9 +659,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
         // Now, because we need to maintain object identity, we do a brain
         // transplant on the old object so that it contains the contents of the
         // new one.
-        if (!JSObject::swap(cx, wobj, tobj)) {
-            MOZ_CRASH();
-        }
+        JSObject::swap(cx, wobj, tobj);
     }
 
     // Before swapping, this wrapper came out of wrap(), which enforces the
