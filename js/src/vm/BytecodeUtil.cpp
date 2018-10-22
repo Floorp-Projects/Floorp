@@ -947,8 +947,9 @@ BytecodeParser::parse()
             // exception but is not caught by a later handler in the same function:
             // no more code will execute, and it does not matter what is defined.
             for (const JSTryNote& tn : script_->trynotes()) {
-                if (tn.start == offset + 1) {
-                    uint32_t catchOffset = tn.start + tn.length;
+                uint32_t startOffset = script_->mainOffset() + tn.start;
+                if (startOffset == offset + 1) {
+                    uint32_t catchOffset = startOffset + tn.length;
                     if (tn.kind == JSTRY_CATCH) {
                         if (!addJump(catchOffset, &nextOffset, stackDepth, offsetStack,
                                      pc, JumpKind::TryCatch))
@@ -1455,7 +1456,7 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
           if (op == JSOP_TRY) {
               size_t mainOffset = script->mainOffset();
               for (const JSTryNote& tn : script->trynotes()) {
-                  if (tn.kind == JSTRY_CATCH && tn.start == loc + 1) {
+                  if (tn.kind == JSTRY_CATCH && tn.start + mainOffset == loc + 1) {
                       if (!sp->jsprintf(" %u (%+d)",
                                         unsigned(loc + tn.length + 1),
                                         int(tn.length + 1)))

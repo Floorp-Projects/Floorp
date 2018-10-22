@@ -393,7 +393,7 @@ class MOZ_STACK_CLASS TryNoteIter
     TryNoteIter(JSContext* cx, JSScript* script, jsbytecode* pc,
                 StackDepthOp getStackDepth)
       : script_(cx, script),
-        pcOffset_(script->pcToOffset(pc)),
+        pcOffset_(pc - script->main()),
         getStackDepth_(getStackDepth)
     {
         if (script->hasTrynotes()) {

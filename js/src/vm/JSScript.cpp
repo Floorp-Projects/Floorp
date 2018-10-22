@@ -3522,7 +3522,7 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::Byt
         bce->scopeList.finish(script->scopes());
     }
     if (bce->tryNoteList.length() != 0) {
-        bce->tryNoteList.finish(script->trynotes(), prologueLength);
+        bce->tryNoteList.finish(script->trynotes());
     }
     if (bce->scopeNoteList.length() != 0) {
         bce->scopeNoteList.finish(script->scopeNotes(), prologueLength);
@@ -3608,7 +3608,7 @@ JSScript::assertValidJumpTargets() const
     // Check catch/finally blocks as jump targets.
     if (hasTrynotes()) {
         for (const JSTryNote& tn : trynotes()) {
-            jsbytecode* tryStart = offsetToPC(tn.start);
+            jsbytecode* tryStart = mainEntry + tn.start;
             jsbytecode* tryPc = tryStart - 1;
             if (tn.kind != JSTRY_CATCH && tn.kind != JSTRY_FINALLY) {
                 continue;
