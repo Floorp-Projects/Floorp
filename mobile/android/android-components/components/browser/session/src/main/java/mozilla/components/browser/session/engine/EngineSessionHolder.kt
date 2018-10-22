@@ -7,6 +7,6 @@ package mozilla.components.browser.session.engine
 import mozilla.components.concept.engine.EngineSession
 
 internal class EngineSessionHolder {
-    var engineSession: EngineSession? = null
-    var engineObserver: EngineObserver? = null
+    @Volatile var engineSession: EngineSession? = null
+    @Volatile var engineObserver: EngineObserver? = null
 }
