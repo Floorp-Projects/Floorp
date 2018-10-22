@@ -2299,7 +2299,14 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // the bad XBL cases.
   MOZ_ASSERT_IF(aReplace, aRefChild);
 
+  // Before firing DOMNodeRemoved events, make sure this is actually an insert
+  // we plan to do.
   EnsurePreInsertionValidity1(aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  EnsurePreInsertionValidity2(aReplace, *aNewChild, aRefChild, aError);
   if (aError.Failed()) {
     return nullptr;
   }
@@ -2312,16 +2319,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // Scope firing mutation events so that we don't carry any state that
   // might be stale
   {
-    // This check happens again further down (though then using
-    // ComputeIndexOf).
-    // We're only checking this here to avoid firing mutation events when
-    // none should be fired.
-    // It's ok that we do the check twice in the case when firing mutation
-    // events as we need to recheck after running script anyway.
-    if (aRefChild && aRefChild->GetParentNode() != this) {
-      aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
-      return nullptr;
-    }
+    nsMutationGuard guard;
 
     // If we're replacing, fire for node-to-be-replaced.
     // If aRefChild == aNewChild then we'll fire for it in check below
@@ -2341,11 +2339,15 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     if (nodeType == DOCUMENT_FRAGMENT_NODE) {
       static_cast<FragmentOrElement*>(aNewChild)->FireNodeRemovedForChildren();
     }
-  }
 
-  EnsurePreInsertionValidity2(aReplace, *aNewChild, aRefChild, aError);
-  if (aError.Failed()) {
-    return nullptr;
+    if (guard.Mutated(0)) {
+      // Re-check the parts of our pre-insertion validity that might depend on
+      // the tree shape.
+      EnsurePreInsertionValidity2(aReplace, *aNewChild, aRefChild, aError);
+      if (aError.Failed()) {
+        return nullptr;
+      }
+    }
   }
 
   // Record the node to insert before, if any
