@@ -3606,6 +3606,12 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     builder.IgnorePaintSuppression();
   }
 
+  if (nsIDocShell* doc = presContext->GetDocShell()) {
+    bool isActive = false;
+    doc->GetIsActive(&isActive);
+    builder.SetInActiveDocShell(isActive);
+  }
+
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   if (rootScrollFrame && !aFrame->GetParent()) {
     nsIScrollableFrame* rootScrollableFrame = presShell->GetRootScrollFrameAsScrollable();
