@@ -1,12 +1,14 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 do_get_profile();
-const dirSvc = Services.dirsvc;
+const dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+               getService(Ci.nsIProperties);
 
 let dbFile = dirSvc.get("ProfD", Ci.nsIFile);
 dbFile.append("cookies.sqlite");
 
-let storage = Services.storage;
+let storage = Cc["@mozilla.org/storage/service;1"].
+              getService(Ci.mozIStorageService);
 let properties = Cc["@mozilla.org/hash-property-bag;1"].
                  createInstance(Ci.nsIWritablePropertyBag);
 properties.setProperty("shared", true);
@@ -47,7 +49,8 @@ conn.executeSimpleSQL("INSERT INTO moz_cookies(" +
 
 // Now start the cookie service, and then check the fields in the table.
 // Get sessionEnumerator to wait for the initialization in cookie thread
-const enumerator = Services.cookies.sessionEnumerator;
+const enumerator = Cc["@mozilla.org/cookieService;1"].
+                   getService(Ci.nsICookieManager).sessionEnumerator;
 
 Assert.equal(conn.schemaVersion, 9);
 let stmt = conn.createStatement("SELECT sql FROM sqlite_master " +
