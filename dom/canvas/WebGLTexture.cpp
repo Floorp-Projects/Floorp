@@ -155,7 +155,7 @@ ZeroTextureData(const WebGLContext* webgl, GLuint tex,
                 uint32_t depth);
 
 bool
-WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel,
+WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel, const bool ensureInit,
                                    bool* const out_initFailed) const
 {
     *out_initFailed = false;
@@ -187,7 +187,7 @@ WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel,
                 return false;
             }
 
-            if (MOZ_UNLIKELY( !cur.mHasData )) {
+            if (MOZ_UNLIKELY( ensureInit && !cur.mHasData )) {
                 auto imageTarget = mTarget.get();
                 if (imageTarget == LOCAL_GL_TEXTURE_CUBE_MAP) {
                     imageTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
@@ -213,7 +213,7 @@ WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel,
 }
 
 Maybe<const WebGLTexture::CompletenessInfo>
-WebGLTexture::CalcCompletenessInfo() const
+WebGLTexture::CalcCompletenessInfo(const bool ensureInit, const bool skipMips) const
 {
     Maybe<CompletenessInfo> ret = Some(CompletenessInfo());
 
@@ -243,7 +243,7 @@ WebGLTexture::CalcCompletenessInfo() const
 
     // "* The texture is a cube map texture, and is not cube complete."
     bool initFailed = false;
-    if (!IsMipAndCubeComplete(mBaseMipmapLevel, &initFailed)) {
+    if (!IsMipAndCubeComplete(mBaseMipmapLevel, ensureInit, &initFailed)) {
         if (initFailed)
             return {};
 
@@ -279,7 +279,10 @@ WebGLTexture::CalcCompletenessInfo() const
         return ret;
     }
 
-    if (!IsMipAndCubeComplete(maxLevel, &initFailed)) {
+    if (skipMips)
+        return ret;
+
+    if (!IsMipAndCubeComplete(maxLevel, ensureInit, &initFailed)) {
         if (initFailed)
             return {};
 
@@ -299,7 +302,8 @@ WebGLTexture::CalcSampleableInfo(const WebGLSampler* const sampler) const
 {
     Maybe<webgl::SampleableInfo> ret = Some(webgl::SampleableInfo());
 
-    const auto completeness = CalcCompletenessInfo();
+    const bool ensureInit = true;
+    const auto completeness = CalcCompletenessInfo(ensureInit);
     if (!completeness)
         return {};
 
@@ -577,8 +581,9 @@ ZeroTextureData(const WebGLContext* webgl, GLuint tex,
     // We have no sympathy for any of these cases.
 
     // "Doctor, it hurts when I do this!" "Well don't do that!"
-    webgl->GenerateWarning("This operation requires zeroing texture data. This is"
-                           " slow.");
+    const auto targetStr = EnumString(target.get());
+    webgl->GeneratePerfWarning("Tex image %s level %u is incurring lazy initialization.",
+                               targetStr.c_str(), level);
 
     gl::GLContext* gl = webgl->GL();
 
@@ -737,7 +742,10 @@ WebGLTexture::GenerateMipmap()
     //  derived from the level base array, regardless of their previous contents. All
     //  other mipmap arrays, including the level base array, are left unchanged by this
     //  computation."
-    const auto completeness = CalcCompletenessInfo();
+    // But only check and init the base level.
+    const bool ensureInit = true;
+    const bool skipMips = true;
+    const auto completeness = CalcCompletenessInfo(ensureInit, skipMips);
     if (!completeness || !completeness->levels) {
         mContext->ErrorInvalidOperation("The texture's base level must be complete.");
         return;

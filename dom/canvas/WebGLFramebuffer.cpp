@@ -131,7 +131,8 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
         // We need to check immutable textures though, because checking completeness is
         // also when we zero invalidated/no-data tex images.
         const bool complete = [&]() {
-            const auto texCompleteness = tex->CalcCompletenessInfo();
+            const bool ensureInit = false;
+            const auto texCompleteness = tex->CalcCompletenessInfo(ensureInit);
             if (!texCompleteness) // OOM
                 return false;
             if (!texCompleteness->levels)
