@@ -145,12 +145,6 @@ interface nsITransferable : nsISupports
   void getAnyTransferData ( out ACString aFlavor, out nsISupports aData,
                             out unsigned long aDataLen ) ;
 
-  /**
-    * Returns true if the data is large.
-    */
-  boolean isLargeDataSet ( ) ;
-  
-
     ///////////////////////////////
     // Setter part of interface 
     ///////////////////////////////
