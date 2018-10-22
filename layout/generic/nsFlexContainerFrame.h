@@ -232,6 +232,11 @@ public:
   static bool IsUsedFlexBasisContent(const nsStyleCoord* aFlexBasis,
                                      const nsStyleCoord* aMainSize);
 
+  /**
+   * Callback for nsFrame::MarkIntrinsicISizesDirty() on a flex item.
+   */
+  static void MarkCachedFlexMeasurementsDirty(nsIFrame* aItemFrame);
+
 protected:
   // Protected constructor & destructor
   explicit nsFlexContainerFrame(ComputedStyle* aStyle)
