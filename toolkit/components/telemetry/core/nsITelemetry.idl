@@ -56,15 +56,13 @@ interface nsITelemetry : nsISupports
    * The returned structure looks like:
    *   { "process": { "name1": histogramData1, "name2": histogramData2 }, ... }
    *
-   * Where histogramDataN has the following properties:
-   *   min - minimum bucket size
-   *   max - maximum bucket size
+   * Each histogram is represented in a packed format and has the following properties:
+   *   bucket_count - Number of buckets of this histogram
    *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN,
    *                    HISTOGRAM_FLAG, HISTOGRAM_COUNT, or HISTOGRAM_CATEGORICAL
-   *   counts - array representing contents of the buckets in the histogram
-   *   ranges - array with calculated bucket sizes
    *   sum - sum of the bucket contents
-   * TODO(bug 1468761): Return packed histograms.
+   *   range - A 2-item array of minimum and maximum bucket size
+   *   values - Map from bucket to the bucket's count
    *
    * @param aStoreName The name of the store to snapshot. Ignored at the moment.
    * @param aClearStore Whether to clear out the histograms in the named store after snapshotting.
@@ -108,16 +106,15 @@ interface nsITelemetry : nsISupports
   /**
    * Serializes the histograms from the given dataset to a JSON-style object.
    * The returned structure looks like:
-   *   { process1: {name1: {histogramData1}, name2:{histogramData2}...}}
+   *   { "process": { "name1": histogramData1, "name2": histogramData2 }, ... }
    *
-   * Where histogramDataN has the following properties:
-   *   min - minimum bucket size
-   *   max - maximum bucket size
+   * Each histogram is represented in a packed format and has the following properties:
+   *   bucket_count - Number of buckets of this histogram
    *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN,
    *                    HISTOGRAM_FLAG, HISTOGRAM_COUNT, or HISTOGRAM_CATEGORICAL
-   *   counts - array representing contents of the buckets in the histogram
-   *   ranges - array with calculated bucket sizes
    *   sum - sum of the bucket contents
+   *   range - A 2-item array of minimum and maximum bucket size
+   *   values - Map from bucket to the bucket's count
    *
    * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
    * @param aClear Whether to clear out the histograms after snapshotting
