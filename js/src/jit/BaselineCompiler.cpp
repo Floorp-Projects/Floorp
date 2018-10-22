@@ -1201,8 +1201,6 @@ BaselineCompiler::emitBody()
             // Intentionally not implemented.
           case JSOP_SETINTRINSIC:
             // Run-once opcode during self-hosting initialization.
-          case JSOP_DYNAMIC_IMPORT:
-            // Dynamic module import.
           case JSOP_UNUSED126:
           case JSOP_UNUSED206:
           case JSOP_LIMIT:
@@ -5439,6 +5437,31 @@ BaselineCompiler::emit_JSOP_IMPORTMETA()
     prepareVMCall();
     pushArg(ImmGCPtr(module));
     if (!callVM(GetOrCreateModuleMetaObjectInfo)) {
+        return false;
+    }
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
+    return true;
+}
+
+typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleValue, HandleValue);
+static const VMFunction StartDynamicModuleImportInfo =
+    FunctionInfo<StartDynamicModuleImportFn>(js::StartDynamicModuleImport,
+                                                "StartDynamicModuleImport");
+
+bool
+BaselineCompiler::emit_JSOP_DYNAMIC_IMPORT()
+{
+    RootedValue referencingPrivate(cx, FindScriptOrModulePrivateForScript(script));
+
+    // Put specifier value in R0.
+    frame.popRegsAndSync(1);
+
+    prepareVMCall();
+    pushArg(R0);
+    pushArg(referencingPrivate);
+    if (!callVM(StartDynamicModuleImportInfo)) {
         return false;
     }
 
