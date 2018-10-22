@@ -63,6 +63,9 @@ class ArrayBufferViewObject : public NativeObject
     }
 
   public:
+    MOZ_MUST_USE bool init(JSContext* cx, ArrayBufferObjectMaybeShared* buffer,
+                           uint32_t byteOffset, uint32_t length, uint32_t bytesPerElement);
+
     static ArrayBufferObjectMaybeShared* bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*> obj);
 
     void notifyBufferDetached(JSContext* cx, void* newData);
