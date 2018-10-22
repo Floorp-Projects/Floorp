@@ -7,6 +7,7 @@ const TEST_LINK = "https://example.com/";
 const RESOURCE_LINK = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "test_contextmenu_links.html";
 
 async function activateContextAndWaitFor(selector, where) {
+  info("Starting test for " + where);
   let contextMenuItem = "openlink";
   let openPromise;
   let closeMethod;
@@ -54,7 +55,9 @@ async function activateContextAndWaitFor(selector, where) {
   contextMenu.hidePopup();
   await awaitPopupHidden;
 
+  info("Waiting for the link to open");
   let openedThing = await openPromise;
+  info("Waiting for the opened window/tab to close");
   await closeMethod(openedThing);
 }
 
