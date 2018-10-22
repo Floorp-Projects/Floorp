@@ -114,13 +114,22 @@ macro_rules! link {
         /// * a `libclang` shared library could not be found
         /// * the `libclang` shared library could not be opened
         pub fn load_manually() -> Result<SharedLibrary, String> {
-            #[path="../build.rs"]
-            mod build;
+            mod build {
+                pub mod common { include!(concat!(env!("OUT_DIR"), "/common.rs")); }
+                pub mod dynamic { include!(concat!(env!("OUT_DIR"), "/dynamic.rs")); }
+            }
 
-            let file = try!(build::find_shared_library());
-            let library = libloading::Library::new(&file).map_err(|e| {
-                format!("the `libclang` shared library at {} could not be opened: {}", file.display(), e)
+            let (directory, filename) = try!(build::dynamic::find(true));
+            let path = directory.join(filename);
+
+            let library = libloading::Library::new(&path).map_err(|e| {
+                format!(
+                    "the `libclang` shared library at {} could not be opened: {}",
+                    path.display(),
+                    e,
+                )
             });
+
             let mut library = SharedLibrary::new(try!(library));
             $(load::$name(&mut library);)+
             Ok(library)
