@@ -45,13 +45,16 @@ class AudioSinkWrapper : public MediaSink {
 
 public:
   template <typename Function>
-  AudioSinkWrapper(AbstractThread* aOwnerThread, const Function& aFunc)
+  AudioSinkWrapper(AbstractThread* aOwnerThread,
+                   const MediaQueue<AudioData>& aAudioQueue,
+                   const Function& aFunc)
     : mOwnerThread(aOwnerThread)
     , mCreator(new CreatorImpl<Function>(aFunc))
     , mIsStarted(false)
     // Give an invalid value to facilitate debug if used before playback starts.
     , mPlayDuration(TimeUnit::Invalid())
     , mAudioEnded(true)
+    , mAudioQueue(aAudioQueue)
   {}
 
   const PlaybackParams& GetPlaybackParams() const override;
@@ -87,9 +90,12 @@ private:
 
   void OnAudioEnded();
 
+  bool IsAudioSourceEnded(const MediaInfo& aInfo) const;
+
   const RefPtr<AbstractThread> mOwnerThread;
   UniquePtr<Creator> mCreator;
   UniquePtr<AudioSink> mAudioSink;
+  // Will only exist when media has an audio track.
   RefPtr<GenericPromise> mEndPromise;
 
   bool mIsStarted;
@@ -100,6 +106,7 @@ private:
 
   bool mAudioEnded;
   MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;
+  const MediaQueue<AudioData>& mAudioQueue;
 };
 
 } // namespace media

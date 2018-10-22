@@ -2787,7 +2787,7 @@ MediaDecoderStateMachine::CreateAudioSink()
       &MediaDecoderStateMachine::AudioAudibleChanged);
     return audioSink;
   };
-  return new AudioSinkWrapper(mTaskQueue, audioSinkCreator);
+  return new AudioSinkWrapper(mTaskQueue, mAudioQueue, audioSinkCreator);
 }
 
 already_AddRefed<media::MediaSink>

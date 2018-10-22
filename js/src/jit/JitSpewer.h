@@ -106,7 +106,9 @@ namespace jit {
     /* Debug info about snapshots */        \
     _(IonSnapshots)                         \
     /* Generated inline cache stubs */      \
-    _(IonIC)
+    _(IonIC)                                \
+    /* Baseline IC Statistic information */ \
+    _(BaselineIC_Statistics)
 
 enum JitSpewChannel {
 #define JITSPEW_CHANNEL(name) JitSpew_##name,

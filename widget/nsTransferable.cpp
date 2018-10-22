@@ -262,17 +262,18 @@ nsTransferable::GetTransferData(const char* aFlavor,
       nsCOMPtr<nsISupports> dataBytes;
       uint32_t len;
       data.GetData(getter_AddRefs(dataBytes), &len);
-      if (len == kFlavorHasDataProvider && dataBytes) {
-        // do we have a data provider?
-        nsCOMPtr<nsIFlavorDataProvider> dataProvider =
-          do_QueryInterface(dataBytes);
-        if (dataProvider) {
-          rv = dataProvider->GetFlavorData(
-            this, aFlavor, getter_AddRefs(dataBytes), &len);
-          if (NS_FAILED(rv))
-            break; // the provider failed. fall into the converter code below.
+
+      // Do we have a (lazy) data provider?
+      if (nsCOMPtr<nsIFlavorDataProvider> dataProvider =
+            do_QueryInterface(dataBytes)) {
+        rv = dataProvider->GetFlavorData(this, aFlavor,
+                                         getter_AddRefs(dataBytes), &len);
+        if (NS_FAILED(rv)) {
+          // The provider failed, fall into the converter code below.
+          break;
         }
       }
+
       if (dataBytes && len > 0) { // XXXmats why is zero length not ok?
         *aDataLen = len;
         dataBytes.forget(aData);
@@ -295,17 +296,18 @@ nsTransferable::GetTransferData(const char* aFlavor,
         nsCOMPtr<nsISupports> dataBytes;
         uint32_t len;
         data.GetData(getter_AddRefs(dataBytes), &len);
-        if (len == kFlavorHasDataProvider && dataBytes) {
-          // do we have a data provider?
-          nsCOMPtr<nsIFlavorDataProvider> dataProvider =
-            do_QueryInterface(dataBytes);
-          if (dataProvider) {
-            rv = dataProvider->GetFlavorData(
-              this, aFlavor, getter_AddRefs(dataBytes), &len);
-            if (NS_FAILED(rv))
-              break; // give up
+
+        // Do we have a (lazy) data provider?
+        if (nsCOMPtr<nsIFlavorDataProvider> dataProvider =
+              do_QueryInterface(dataBytes)) {
+          rv = dataProvider->GetFlavorData(this, aFlavor,
+                                           getter_AddRefs(dataBytes), &len);
+          if (NS_FAILED(rv)) {
+            // Give up.
+            break;
           }
         }
+
         mFormatConv->Convert(
           data.GetFlavor().get(), dataBytes, len, aFlavor, aData, aDataLen);
         found = true;

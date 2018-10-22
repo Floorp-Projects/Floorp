@@ -36,6 +36,11 @@ add_task(async function() {
     method: "POST",
     headers: requestHeaders,
     body: "Hello",
+    cause: {
+      loadingDocumentUri: "http://example.com",
+      stacktraceAvailable: true,
+      type: "xhr",
+    },
   });
   await wait;
 

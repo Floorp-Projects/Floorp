@@ -1157,10 +1157,9 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
 
     nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(data);
     if (fdp) {
-      // for flavour data providers, use kFlavorHasDataProvider (which has the
-      // value 0) as the length.
+      // For flavour data providers, use 0 as the length.
       fdp.forget(aSupports);
-      *aLength = nsITransferable::kFlavorHasDataProvider;
+      *aLength = 0;
     } else {
       data.forget(aSupports);
       *aLength = sizeof(nsISupports *);
