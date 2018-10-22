@@ -711,6 +711,16 @@ EagerFunctionExpression:
     init: |
         const auto syntax = FunctionSyntaxKind::Expression;
     fields:
+        isGenerator:
+            after: |
+                if (isGenerator) {
+                    return raiseError("Generator is not supported in this preview release");
+                }
+        isAsync:
+            after: |
+                if (isAsync) {
+                    return raiseError("Async function is not supported in this preview release");
+                }
         contents:
             before: |
                 BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
@@ -747,6 +757,16 @@ LazyFunctionExpression:
     init: |
         const auto syntax = FunctionSyntaxKind::Expression;
     fields:
+        isGenerator:
+            after: |
+                if (isGenerator) {
+                    return raiseError("Generator is not supported in this preview release");
+                }
+        isAsync:
+            after: |
+                if (isAsync) {
+                    return raiseError("Async function is not supported in this preview release");
+                }
         contents:
             block:
                 replace:
