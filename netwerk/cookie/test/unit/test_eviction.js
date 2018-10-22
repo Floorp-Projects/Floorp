@@ -7,7 +7,6 @@ const cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 const cm = cs.QueryInterface(Ci.nsICookieManager);
 
 function run_test() {
-    var tests = [];
     Services.prefs.setIntPref("network.cookie.staleThreshold", 0);
     add_task(async function() {
         await test_basic_eviction("example.org");

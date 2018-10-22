@@ -41,25 +41,25 @@ function run_test() {
 }
 
 function setCookie(value, expected) {
-  function setCookieInternal(value, expected = null) {
+  function setCookieInternal(valueInternal, expectedInternal = null) {
     function observer(subject, topic, data) {
-      if (!expected) {
+      if (!expectedInternal) {
         do_throw("no notification expected");
         return;
       }
 
       // Check we saw the right notification.
-      Assert.equal(data, expected.type);
+      Assert.equal(data, expectedInternal.type);
 
       // Check cookie details.
       let cookie = subject.QueryInterface(Ci.nsICookie2);
-      Assert.equal(cookie.isSession, expected.isSession);
-      Assert.equal(cookie.isSecure, expected.isSecure);
-      Assert.equal(cookie.isHttpOnly, expected.isHttpOnly);
+      Assert.equal(cookie.isSession, expectedInternal.isSession);
+      Assert.equal(cookie.isSecure, expectedInternal.isSecure);
+      Assert.equal(cookie.isHttpOnly, expectedInternal.isHttpOnly);
     }
 
     Services.obs.addObserver(observer, "cookie-changed");
-    cs.setCookieStringFromHttp(URI, null, null, value, null, null);
+    cs.setCookieStringFromHttp(URI, null, null, valueInternal, null, null);
     Services.obs.removeObserver(observer, "cookie-changed");
   }
 
