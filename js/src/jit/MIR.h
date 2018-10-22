@@ -7819,6 +7819,22 @@ class MModuleMetadata : public MNullaryInstruction
     }
 };
 
+class MDynamicImport : public MBinaryInstruction,
+                       public BoxInputsPolicy::Data
+{
+    explicit MDynamicImport(MDefinition* referencingPrivate, MDefinition* specifier)
+      : MBinaryInstruction(classOpcode, referencingPrivate, specifier)
+    {
+        setResultType(MIRType::Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(DynamicImport)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, referencingPrivate))
+    NAMED_OPERANDS((1, specifier))
+};
+
 struct LambdaFunctionInfo
 {
     // The functions used in lambdas are the canonical original function in

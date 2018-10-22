@@ -2603,6 +2603,15 @@ LIRGenerator::visitModuleMetadata(MModuleMetadata* ins)
 }
 
 void
+LIRGenerator::visitDynamicImport(MDynamicImport* ins)
+{
+    LDynamicImport* lir = new(alloc()) LDynamicImport(useBoxAtStart(ins->referencingPrivate()),
+                                                      useBoxAtStart(ins->specifier()));
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitLambda(MLambda* ins)
 {
     if (ins->info().singletonType || ins->info().useSingletonForClone) {
