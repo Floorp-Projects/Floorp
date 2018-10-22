@@ -1758,7 +1758,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   case DisplayItemType::TYPE_FILTER:
     {
       context->SetMatrix(context->CurrentMatrix().PreScale(aScale.width, aScale.height).PreTranslate(-aOffset.x, -aOffset.y));
-      isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, aScale, [&]() {
+      isInvalidated = PaintByLayer(aItem, aDisplayListBuilder, aManager, context, { 1, 1 }, [&]() {
         static_cast<nsDisplayFilters*>(aItem)->PaintAsLayer(aDisplayListBuilder,
                                                             context, aManager);
       });
