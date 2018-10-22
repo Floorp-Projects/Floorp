@@ -63,7 +63,6 @@ linux64-nightly/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - awsy
-        - linux-talos-profiling
         - raptor-chrome
 linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
@@ -209,7 +208,6 @@ windows10-64-nightly/opt:
         - desktop-screenshot-capture
         - desktop-instrumentation
         - windows-tests
-        - windows-talos-profiling
         - raptor-chrome
 
 windows10-64-devedition/opt:
@@ -258,7 +256,6 @@ macosx64-nightly/opt:
     build-platform: macosx64-nightly/opt
     test-sets:
         - macosx64-tests
-        - macosx64-talos-profiling
         - awsy
         - raptor-chrome
 
