@@ -345,9 +345,9 @@
   margin-left: -6px;
 }
 
-.ruleview-rule .ruleview-expander.theme-twisty:dir(rtl) {
+.ruleview-expander.theme-twisty:dir(rtl):not([open]) {
   /* for preventing .theme-twisty's wrong direction in rtl; Bug 1296648 */
-  transform: none;
+  transform: rotate(-90deg);
 }
 
 .ruleview-newproperty {
