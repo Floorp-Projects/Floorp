@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<bindings id="htmlBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="inputFields" bindToUntrustedContent="true">
+    <handlers>
+      <handler event="keypress" key="c" modifiers="accel" command="cmd_copy"/>
+      <handler event="keypress" key="x" modifiers="accel" command="cmd_cut"/>
+      <handler event="keypress" key="v" modifiers="accel" command="cmd_paste"/>
+      <handler event="keypress" key="z" modifiers="accel" command="cmd_undo"/>
+      <handler event="keypress" key="z" modifiers="accel,shift" command="cmd_redo"/>
+      <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
+    </handlers>
+  </binding>
+
+  <binding id="textAreas" bindToUntrustedContent="true">
+    <handlers>
+      <handler event="keypress" key="c" modifiers="accel" command="cmd_copy"/>
+      <handler event="keypress" key="x" modifiers="accel" command="cmd_cut"/>
+      <handler event="keypress" key="v" modifiers="accel" command="cmd_paste"/>
+      <handler event="keypress" key="z" modifiers="accel" command="cmd_undo"/>
+      <handler event="keypress" key="z" modifiers="accel,shift" command="cmd_redo"/>
+      <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
+    </handlers>
+  </binding>
+
+  <binding id="browser">
+    <handlers>
+#include ../browser-base.inc
+      <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_scrollPageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown"/>
+      <handler event="keypress" keycode="VK_HOME" command="cmd_scrollTop" /> 
+      <handler event="keypress" keycode="VK_END"  command="cmd_scrollBottom" /> 
+
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_moveLeft2" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_moveRight2" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt,shift" command="cmd_selectLeft2" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt,shift" command="cmd_selectRight2" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift" command="cmd_selectLeft" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift" command="cmd_selectRight" />
+      <handler event="keypress" keycode="VK_UP" modifiers="alt,shift" command="cmd_selectUp2" />
+      <handler event="keypress" keycode="VK_DOWN" modifiers="alt,shift" command="cmd_selectDown2" />
+      <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectUp" />
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectDown" />
+      <handler event="keypress" keycode="VK_UP" modifiers="accel" command="cmd_moveUp2"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="accel" command="cmd_moveDown2"/>
+    </handlers>
+  </binding>
+
+  <binding id="editor">
+    <handlers>
+      <handler event="keypress" key=" " modifiers="shift" command="cmd_scrollPageUp" />
+      <handler event="keypress" key=" " command="cmd_scrollPageDown" />
+
+      <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
+      <handler event="keypress" key="z" command="cmd_redo" modifiers="accel,shift" />
+      <handler event="keypress" key="x" command="cmd_cut" modifiers="accel"/>
+      <handler event="keypress" key="c" command="cmd_copy" modifiers="accel"/>
+      <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
+      <handler event="keypress" key="v" command="cmd_pasteNoFormatting" modifiers="accel,shift"/>
+      <handler event="keypress" key="a" command="cmd_selectAll" modifiers="accel"/>
+      <handler event="keypress" key="v" command="cmd_pasteNoFormatting" modifiers="accel,alt,shift"/>
+    </handlers>
+  </binding>
+
+</bindings>

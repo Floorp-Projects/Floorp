@@ -12,7 +12,6 @@ DIRS += ['builtin']
 EXPORTS += [
     'nsBindingManager.h',
     'nsXBLBinding.h',
-    'nsXBLPrototypeHandler.h',
     'nsXBLService.h',
     'nsXBLWindowKeyHandler.h',
 ]
