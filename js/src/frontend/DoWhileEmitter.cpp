@@ -82,8 +82,8 @@ DoWhileEmitter::emitEnd()
         return false;
     }
 
-    if (!bce_->addTryNote(JSTRY_LOOP, bce_->stackDepth, loopInfo_->headOffset(),
-                          loopInfo_->breakTargetOffset()))
+    if (!bce_->tryNoteList.append(JSTRY_LOOP, bce_->stackDepth, loopInfo_->headOffset(),
+                                  loopInfo_->breakTargetOffset()))
     {
         return false;
     }
