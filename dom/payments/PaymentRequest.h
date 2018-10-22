@@ -23,7 +23,6 @@ class EventHandlerNonNull;
 class PaymentAddress;
 class PaymentRequestChild;
 class PaymentResponse;
-class ResponseData;
 
 class PaymentRequest final
   : public DOMEventTargetHelper
@@ -97,7 +96,7 @@ public:
     const Optional<OwningNonNull<Promise>>& detailsPromise,
     ErrorResult& aRv);
   void RespondShowPayment(const nsAString& aMethodName,
-                          const ResponseData& aDetails,
+                          const nsAString& aDetails,
                           const nsAString& aPayerName,
                           const nsAString& aPayerEmail,
                           const nsAString& aPayerPhone,
