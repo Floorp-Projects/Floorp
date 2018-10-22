@@ -88,6 +88,21 @@ public:
     return mCanceled != 0;
   }
 
+  // True if this runnable is handled by running JavaScript in some global that
+  // could possibly be a debuggee, and thus needs to be deferred when the target
+  // is paused in the debugger, until the JavaScript invocation in progress has
+  // run to completion. Examples are MessageEventRunnable and
+  // ReportErrorRunnable. These runnables are segregated into separate
+  // ThrottledEventQueues, which the debugger pauses.
+  //
+  // Note that debugger runnables do not fall in this category, since we don't
+  // support debugging the debugger server at the moment.
+  virtual bool
+  IsDebuggeeRunnable() const
+  {
+    return false;
+  }
+
   static WorkerRunnable*
   FromRunnable(nsIRunnable* aRunnable);
 
@@ -496,6 +511,44 @@ private:
 
   bool
   DispatchInternal() final;
+};
+
+// Runnables handled by content JavaScript (MessageEventRunnable, JavaScript
+// error reports, and so on) must not be delivered while that content is in the
+// midst of being debugged; the debuggee must be allowed to complete its current
+// JavaScript invocation and return to its own event loop. Only then is it
+// prepared for messages sent from the worker.
+//
+// Runnables that need to be deferred in this way should inherit from this
+// class. They will be routed to mMainThreadDebuggeeEventTarget, which is paused
+// while the window is suspended, as it is whenever the debugger spins its
+// nested event loop. When the debugger leaves its nested event loop, it resumes
+// the window, so that mMainThreadDebuggeeEventTarget will resume delivering
+// runnables from the worker when control returns to the main event loop.
+//
+// When a page enters the bfcache, it freezes all its workers. Since a frozen
+// worker processes only control runnables, it doesn't take any special
+// consideration to prevent WorkerDebuggeeRunnables sent from child to parent
+// workers from running; they'll never run anyway. But WorkerDebuggeeRunnables
+// from a top-level frozen worker to its parent window must not be delivered
+// either, even as the main thread event loop continues to spin. Thus, freezing
+// a top-level worker also pauses mMainThreadDebuggeeEventTarget.
+class WorkerDebuggeeRunnable : public WorkerRunnable
+{
+ protected:
+  WorkerDebuggeeRunnable(WorkerPrivate* aWorkerPrivate,
+                         TargetAndBusyBehavior aBehavior = ParentThreadUnchangedBusyCount)
+    : WorkerRunnable(aWorkerPrivate, aBehavior)
+  { }
+
+ private:
+  // This override is deliberately private: it doesn't make sense to call it if
+  // we know statically that we are a WorkerDebuggeeRunnable.
+  bool
+  IsDebuggeeRunnable() const override
+  {
+    return true;
+  }
 };
 
 } // dom namespace
