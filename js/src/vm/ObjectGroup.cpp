@@ -238,14 +238,17 @@ ObjectGroup::useSingletonForAllocationSite(JSScript* script, jsbytecode* pc, JSP
         return SingletonObject;
     }
 
-    uint32_t offset = script->pcToOffset(pc);
+    unsigned offset = script->pcToOffset(pc);
 
     for (const JSTryNote& tn : script->trynotes()) {
         if (tn.kind != JSTRY_FOR_IN && tn.kind != JSTRY_FOR_OF && tn.kind != JSTRY_LOOP) {
             continue;
         }
 
-        if (tn.start <= offset && offset < tn.start + tn.length) {
+        unsigned startOffset = script->mainOffset() + tn.start;
+        unsigned endOffset = startOffset + tn.length;
+
+        if (offset >= startOffset && offset < endOffset) {
             return GenericObject;
         }
     }

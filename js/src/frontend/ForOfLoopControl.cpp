@@ -139,7 +139,7 @@ ForOfLoopControl::emitIteratorCloseInScope(BytecodeEmitter* bce,
         return false;
     }
     ptrdiff_t end = bce->offset();
-    return bce->addTryNote(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
+    return bce->tryNoteList.append(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
 }
 
 // Since we're in the middle of emitting code that will leave

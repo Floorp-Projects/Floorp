@@ -234,7 +234,7 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
             }
 
             MOZ_ASSERT_IF(tn->kind == JSTRY_FOR_IN,
-                          JSOp(*(script->offsetToPC(tn->start + tn->length))) == JSOP_ENDITER);
+                          JSOp(*(script->main() + tn->start + tn->length)) == JSOP_ENDITER);
             CloseLiveIteratorIon(cx, frame, tn);
             break;
 
@@ -262,7 +262,7 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
                 script->resetWarmUpCounter();
 
                 // Bailout at the start of the catch block.
-                jsbytecode* catchPC = script->offsetToPC(tn->start + tn->length);
+                jsbytecode* catchPC = script->main() + tn->start + tn->length;
                 ExceptionBailoutInfo excInfo(frame.frameNo(), catchPC, tn->stackDepth);
                 uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, excInfo, overrecursed);
                 if (retval == BAILOUT_RETURN_OK) {
@@ -329,7 +329,7 @@ SettleOnTryNote(JSContext* cx, const JSTryNote* tn, const JSJitFrameIter& frame,
     BaselineFrameAndStackPointersFromTryNote(tn, frame, &rfe->framePointer, &rfe->stackPointer);
 
     // Compute the pc.
-    *pc = script->offsetToPC(tn->start + tn->length);
+    *pc = script->main() + tn->start + tn->length;
 }
 
 struct AutoBaselineHandlingException

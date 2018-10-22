@@ -1316,7 +1316,7 @@ js::UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei)
 jsbytecode*
 js::UnwindEnvironmentToTryPc(JSScript* script, const JSTryNote* tn)
 {
-    jsbytecode* pc = script->offsetToPC(tn->start);
+    jsbytecode* pc = script->main() + tn->start;
     if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
         pc -= JSOP_TRY_LENGTH;
         MOZ_ASSERT(*pc == JSOP_TRY);
@@ -1345,7 +1345,7 @@ SettleOnTryNote(JSContext* cx, const JSTryNote* tn, EnvironmentIter& ei, Interpr
 
     // Set pc to the first bytecode after the the try note to point
     // to the beginning of catch or finally.
-    regs.pc = regs.fp()->script()->offsetToPC(tn->start + tn->length);
+    regs.pc = regs.fp()->script()->main() + tn->start + tn->length;
     regs.sp = regs.spForStackDepth(tn->stackDepth);
 }
 
@@ -1468,7 +1468,7 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
             }
 
             /* This is similar to JSOP_ENDITER in the interpreter loop. */
-            DebugOnly<jsbytecode*> pc = regs.fp()->script()->offsetToPC(tn->start + tn->length);
+            DebugOnly<jsbytecode*> pc = regs.fp()->script()->main() + tn->start + tn->length;
             MOZ_ASSERT(JSOp(*pc) == JSOP_ENDITER);
             Value* sp = regs.spForStackDepth(tn->stackDepth);
             JSObject* obj = &sp[-1].toObject();
