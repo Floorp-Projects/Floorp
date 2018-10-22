@@ -21,6 +21,5 @@ DevToolsModules(
     'source-actor-store.js',
     'stack.js',
     'TabSources.js',
-    'track-change-emitter.js',
     'walker-search.js',
 )
