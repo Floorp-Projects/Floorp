@@ -131,7 +131,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         // If needed show the first run tour on top of the browser or url input fragment.
         if (Settings.getInstance(this@MainActivity).shouldShowFirstrun() && !isCustomTabMode) {
-            showFirstrun()
+            showFirstrun(components.sessionManager.selectedSession)
         }
     }
 
