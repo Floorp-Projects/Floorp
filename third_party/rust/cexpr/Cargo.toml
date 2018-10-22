@@ -12,7 +12,7 @@
 
 [package]
 name = "cexpr"
-version = "0.2.3"
+version = "0.3.3"
 authors = ["Jethro Beekman <jethro@jbeekman.nl>"]
 description = "A C expression parser and evaluator"
 documentation = "https://docs.rs/cexpr/"
@@ -20,7 +20,7 @@ keywords = ["C", "expression", "parser"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/jethrogb/rust-cexpr"
 [dependencies.nom]
-version = "^3"
+version = "^4"
 features = ["verbose-errors"]
 [dev-dependencies.clang-sys]
-version = "0.11.0"
+version = ">= 0.13.0, < 0.27.0"

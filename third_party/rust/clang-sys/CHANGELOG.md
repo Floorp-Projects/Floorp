@@ -1,3 +1,26 @@
+## [0.26.1] - 2018-10-10
+
+### Fixed
+- Fixed support for finding libraries in `bin` directories on Windows
+
+## [0.26.0] - 2018-10-07
+
+### Changed
+- Added support for finding libraries with version suffixes on Linux when using runtime linking (e.g., `libclang.so.1`)
+
+## [0.25.0] - 2018-10-06
+
+### Changed
+- Added support for versioned libraries on BSDs
+
+## [0.24.0] - 2018-09-15
+
+### Changed
+- Reworked finding of libraries (see `README.md` for details)
+
+### Added
+- Added support for `clang` 7.0.x
+
 ## [0.23.0] - 2018-06-16
 
 ### Changed
