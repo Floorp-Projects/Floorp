@@ -122,7 +122,7 @@ class Sidebar extends PureComponent {
             name: "Connect",
           })
         ),
-        dom.hr(),
+        dom.hr({ className: "separator" }),
         this.renderAdbAddonStatus(),
         this.renderDevices()
       )
