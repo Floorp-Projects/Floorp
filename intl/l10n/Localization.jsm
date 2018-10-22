@@ -72,26 +72,6 @@ class CachedAsyncIterable extends CachedIterable {
   }
 
   /**
-   * Synchronous iterator over the cached elements.
-   *
-   * Return a generator object implementing the iterator protocol over the
-   * cached elements of the original (async or sync) iterable.
-   */
-  [Symbol.iterator]() {
-    const cached = this;
-    let cur = 0;
-
-    return {
-      next() {
-        if (cached.length === cur) {
-          return {value: undefined, done: true};
-        }
-        return cached[cur++];
-      },
-    };
-  }
-
-  /**
    * Asynchronous iterator caching the yielded elements.
    *
    * Elements yielded by the original iterable will be cached and available
@@ -106,7 +86,7 @@ class CachedAsyncIterable extends CachedIterable {
     return {
       async next() {
         if (cached.length <= cur) {
-          cached.push(await cached.iterator.next());
+          cached.push(cached.iterator.next());
         }
         return cached[cur++];
       },
@@ -123,10 +103,10 @@ class CachedAsyncIterable extends CachedIterable {
     let idx = 0;
     while (idx++ < count) {
       const last = this[this.length - 1];
-      if (last && last.done) {
+      if (last && (await last).done) {
         break;
       }
-      this.push(await this.iterator.next());
+      this.push(this.iterator.next());
     }
     // Return the last cached {value, done} object to allow the calling
     // code to decide if it needs to call touchNext again.
