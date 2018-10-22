@@ -63,7 +63,7 @@ telemetry-tests-client:
     treeherder-symbol: tt(c)
     max-run-time: 5400
     checkout: true
-    tier: 2
+    tier: 3
     mozharness:
         script: telemetry/telemetry_client.py
         config:
