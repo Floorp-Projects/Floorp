@@ -7,7 +7,6 @@
 const { Ci } = require("chrome");
 const promise = require("promise");
 const Services = require("Services");
-const asyncStorage = require("devtools/shared/async-storage");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
@@ -24,6 +23,7 @@ loader.lazyRequireGetter(this, "PriorityLevels", "devtools/client/shared/compone
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
+loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 
 const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 
