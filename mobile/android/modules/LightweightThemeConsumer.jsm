@@ -17,7 +17,7 @@ function LightweightThemeConsumer(aDocument) {
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
   Services.obs.addObserver(this, "lightweight-theme-apply");
 
-  this._update(LightweightThemeManager.currentThemeForDisplay);
+  this._update(LightweightThemeManager.currentThemeWithPersistedData);
 }
 
 LightweightThemeConsumer.prototype = {
@@ -29,7 +29,7 @@ LightweightThemeConsumer.prototype = {
       }
       this._update(parsedData.theme);
     } else if (aTopic == "lightweight-theme-apply") {
-      this._update(LightweightThemeManager.currentThemeForDisplay);
+      this._update(LightweightThemeManager.currentThemeWithPersistedData);
     }
   },
 
