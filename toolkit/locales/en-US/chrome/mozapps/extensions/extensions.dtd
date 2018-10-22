@@ -197,6 +197,11 @@
 
 <!ENTITY addon.createdBy.label                "By ">
 
+<!ENTITY eula.title                           "End-User License Agreement">
+<!ENTITY eula.width                           "560px">
+<!ENTITY eula.height                          "400px">
+<!ENTITY eula.accept                          "Accept and Install…">
+
 <!ENTITY settings.path.button.label           "Browse…">
 
 <!ENTITY setting.learnmore "Learn More…">

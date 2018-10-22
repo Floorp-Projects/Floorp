@@ -15,6 +15,8 @@ toolkit.jar:
   content/mozapps/extensions/blocklist.js                       (content/blocklist.js)
   content/mozapps/extensions/blocklist.css                      (content/blocklist.css)
   content/mozapps/extensions/blocklist.xml                      (content/blocklist.xml)
+  content/mozapps/extensions/eula.xul                           (content/eula.xul)
+  content/mozapps/extensions/eula.js                            (content/eula.js)
   content/mozapps/extensions/pluginPrefs.xul                    (content/pluginPrefs.xul)
   content/mozapps/extensions/pluginPrefs.js                     (content/pluginPrefs.js)
   content/mozapps/extensions/OpenH264-license.txt               (content/OpenH264-license.txt)
