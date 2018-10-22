@@ -258,9 +258,12 @@ def archive_type(path: pathlib.Path):
 def extract_archive(path, dest_dir, typ):
     """Extract an archive to a destination directory."""
 
+    # Resolve paths to absolute variants.
+    path = path.resolve()
+    dest_dir = dest_dir.resolve()
+
     # We pipe input to the decompressor program so that we can apply
     # custom decompressors that the program may not know about.
-
     if typ == 'tar':
         if path.suffix == '.bz2':
             ifh = bz2.open(str(path), 'rb')
