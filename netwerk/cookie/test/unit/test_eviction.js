@@ -30,50 +30,50 @@ async function test_basic_eviction(base_host) {
     await setCookie("session_foo_path_3", null, "/foo", null, FOO_PATH);
     await setCookie("session_foo_path_4", null, "/foo", null, FOO_PATH);
     await setCookie("session_foo_path_5", null, "/foo", null, FOO_PATH);
-    verifyCookies(['session_foo_path_1',
-                   'session_foo_path_2',
-                   'session_foo_path_3',
-                   'session_foo_path_4',
-                   'session_foo_path_5'], BASE_URI);
+    verifyCookies(["session_foo_path_1",
+                   "session_foo_path_2",
+                   "session_foo_path_3",
+                   "session_foo_path_4",
+                   "session_foo_path_5"], BASE_URI);
 
     // Check if cookies are evicted by creation time.
     await setCookie("session_foo_path_6", null, "/foo", null, FOO_PATH);
-    verifyCookies(['session_foo_path_4',
-                   'session_foo_path_5',
-                   'session_foo_path_6'], BASE_URI);
+    verifyCookies(["session_foo_path_4",
+                   "session_foo_path_5",
+                   "session_foo_path_6"], BASE_URI);
 
     await setCookie("session_bar_path_1", null, "/bar", null, BAR_PATH);
     await setCookie("session_bar_path_2", null, "/bar", null, BAR_PATH);
 
-    verifyCookies(['session_foo_path_4',
-                   'session_foo_path_5',
-                   'session_foo_path_6',
-                   'session_bar_path_1',
-                   'session_bar_path_2'], BASE_URI);
+    verifyCookies(["session_foo_path_4",
+                   "session_foo_path_5",
+                   "session_foo_path_6",
+                   "session_bar_path_1",
+                   "session_bar_path_2"], BASE_URI);
 
     // Check if cookies are evicted by last accessed time.
     cs.getCookieString(FOO_PATH, null);
     await setCookie("session_foo_path_7", null, "/foo", null, FOO_PATH);
-    verifyCookies(['session_foo_path_5',
-                   'session_foo_path_6',
-                   'session_foo_path_7'], BASE_URI);
+    verifyCookies(["session_foo_path_5",
+                   "session_foo_path_6",
+                   "session_foo_path_7"], BASE_URI);
 
     const EXPIRED_TIME = 3;
 
     await setCookie("non_session_expired_foo_path_1", null, "/foo", EXPIRED_TIME, FOO_PATH);
     await setCookie("non_session_expired_foo_path_2", null, "/foo", EXPIRED_TIME, FOO_PATH);
-    verifyCookies(['session_foo_path_5',
-                   'session_foo_path_6',
-                   'session_foo_path_7',
-                   'non_session_expired_foo_path_1',
-                   'non_session_expired_foo_path_2'], BASE_URI);
+    verifyCookies(["session_foo_path_5",
+                   "session_foo_path_6",
+                   "session_foo_path_7",
+                   "non_session_expired_foo_path_1",
+                   "non_session_expired_foo_path_2"], BASE_URI);
 
     // Check if expired cookies are evicted first.
     await new Promise(resolve => do_timeout(EXPIRED_TIME * 1000, resolve));
     await setCookie("session_foo_path_8", null, "/foo", null, FOO_PATH);
-    verifyCookies(['session_foo_path_6',
-                   'session_foo_path_7',
-                   'session_foo_path_8'], BASE_URI);
+    verifyCookies(["session_foo_path_6",
+                   "session_foo_path_7",
+                   "session_foo_path_8"], BASE_URI);
 }
 
 // Verify that the given cookie names exist, and are ordered from least to most recently accessed
@@ -93,7 +93,7 @@ function verifyCookies(names, uri) {
             return names.findIndex(function(n) {
                 return c.name == n;
             }) == -1;
-        }).map(function(c) { return c.name });
+        }).map(function(c) { return c.name; });
         if (left.length) {
             info("unexpected cookies: " + left);
         }
@@ -111,29 +111,29 @@ function verifyCookies(names, uri) {
     });
     for (var i = 0; i < names.length; i++) {
         Assert.equal(names[i], actual_cookies[i].name);
-        Assert.equal(names[i].startsWith('session'), actual_cookies[i].isSession);
+        Assert.equal(names[i].startsWith("session"), actual_cookies[i].isSession);
     }
 }
 
-var lastValue = 0
+var lastValue = 0;
 function setCookie(name, domain, path, maxAge, url) {
     let value = name + "=" + ++lastValue;
-    var s = 'setting cookie ' + value;
+    var s = "setting cookie " + value;
     if (domain) {
         value += "; Domain=" + domain;
-        s += ' (d=' + domain + ')';
+        s += " (d=" + domain + ")";
     }
     if (path) {
         value += "; Path=" + path;
-        s += ' (p=' + path + ')';
+        s += " (p=" + path + ")";
     }
     if (maxAge) {
         value += "; Max-Age=" + maxAge;
-        s += ' (non-session)';
+        s += " (non-session)";
     } else {
-        s += ' (session)';
+        s += " (session)";
     }
-    s += ' for ' + url.spec;
+    s += " for " + url.spec;
     info(s);
     cs.setCookieStringFromHttp(url, null, null, value, null, null);
     return new Promise(function(resolve) {
@@ -141,5 +141,5 @@ function setCookie(name, domain, path, maxAge, url) {
         // algorithm to produce different results from other platforms. We work around
         // this by ensuring that there's a clear gap between each cookie update.
         do_timeout(10, resolve);
-    })
+    });
 }
