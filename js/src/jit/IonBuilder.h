@@ -593,6 +593,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_pushcallobj();
     AbortReasonOr<Ok> jsop_implicitthis(PropertyName* name);
     AbortReasonOr<Ok> jsop_importmeta();
+    AbortReasonOr<Ok> jsop_dynamic_import();
 
     /* Inlining. */
 

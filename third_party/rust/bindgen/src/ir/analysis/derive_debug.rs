@@ -146,7 +146,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
 
         if item.is_opaque(self.ctx, &()) {
             let layout_can_derive = ty.layout(self.ctx).map_or(true, |l| {
-                l.opaque().can_trivially_derive_debug()
+                l.opaque().can_trivially_derive_debug(self.ctx)
             });
             return if layout_can_derive &&
                       !(ty.is_union() &&
@@ -183,7 +183,6 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
             TypeKind::Enum(..) |
             TypeKind::Reference(..) |
             TypeKind::Vector(..) |
-            TypeKind::BlockPointer |
             TypeKind::TypeParam |
             TypeKind::UnresolvedTypeRef(..) |
             TypeKind::ObjCInterface(..) |
@@ -213,7 +212,8 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
 
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
-            TypeKind::Alias(t) => {
+            TypeKind::Alias(t) |
+            TypeKind::BlockPointer(t) => {
                 if self.is_not_debug(t) {
                     trace!(
                         "    aliases and type refs to T which cannot derive \
@@ -242,7 +242,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
                     }
 
                     if ty.layout(self.ctx).map_or(true, |l| {
-                        l.opaque().can_trivially_derive_debug()
+                        l.opaque().can_trivially_derive_debug(self.ctx)
                     })
                     {
                         trace!("    union layout can trivially derive Debug");
@@ -299,7 +299,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
                 let inner_type =
                     self.ctx.resolve_type(inner).canonical_type(self.ctx);
                 if let TypeKind::Function(ref sig) = *inner_type.kind() {
-                    if !sig.can_trivially_derive_debug() {
+                    if !sig.can_trivially_derive_debug(self.ctx) {
                         trace!(
                             "    function pointer that can't trivially derive Debug"
                         );

@@ -133,7 +133,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
 
         if item.is_opaque(self.ctx, &()) {
             let layout_can_derive = ty.layout(self.ctx).map_or(true, |l| {
-                l.opaque().can_trivially_derive_hash()
+                l.opaque().can_trivially_derive_hash(self.ctx)
             });
             return if layout_can_derive &&
                 !(ty.is_union() &&
@@ -167,7 +167,6 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
             TypeKind::Enum(..) |
             TypeKind::TypeParam |
             TypeKind::UnresolvedTypeRef(..) |
-            TypeKind::BlockPointer |
             TypeKind::Reference(..) |
             TypeKind::ObjCInterface(..) |
             TypeKind::ObjCId |
@@ -219,7 +218,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
                 let inner_type =
                     self.ctx.resolve_type(inner).canonical_type(self.ctx);
                 if let TypeKind::Function(ref sig) = *inner_type.kind() {
-                    if !sig.can_trivially_derive_hash() {
+                    if !sig.can_trivially_derive_hash(self.ctx) {
                         trace!(
                             "    function pointer that can't trivially derive Hash"
                         );
@@ -231,7 +230,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
             }
 
             TypeKind::Function(ref sig) => {
-                if !sig.can_trivially_derive_hash() {
+                if !sig.can_trivially_derive_hash(self.ctx) {
                     trace!("    function that can't trivially derive Hash");
                     return self.insert(id);
                 }
@@ -241,7 +240,8 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
 
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
-            TypeKind::Alias(t) => {
+            TypeKind::Alias(t) |
+            TypeKind::BlockPointer(t) => {
                 if self.cannot_derive_hash.contains(&t.into()) {
                     trace!(
                         "    aliases and type refs to T which cannot derive \
@@ -275,7 +275,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
                     }
 
                     if ty.layout(self.ctx).map_or(true, |l| {
-                        l.opaque().can_trivially_derive_hash()
+                        l.opaque().can_trivially_derive_hash(self.ctx)
                     })
                     {
                         trace!("    union layout can trivially derive Hash");

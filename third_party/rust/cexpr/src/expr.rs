@@ -35,7 +35,7 @@ pub struct IdentifierParser<'ident> {
 #[derive(Copy,Clone)]
 struct PRef<'a>(&'a IdentifierParser<'a>);
 
-pub type CResult<'a,R:'a> = IResult<&'a [Token],R,::Error>;
+pub type CResult<'a,R> = IResult<&'a [Token],R,::Error>;
 
 /// The result of parsing a literal or evaluating an expression.
 #[derive(Debug,Clone,PartialEq)]
@@ -87,13 +87,13 @@ impl From<Vec<u8>> for EvalResult {
 macro_rules! exact_token (
 	($i:expr, $k:ident, $c:expr) => ({
 		if $i.is_empty() {
-			let res: CResult<&[u8]> = IResult::Incomplete(Needed::Size($c.len()));
+			let res: CResult<&[u8]> = Err(::nom_crate::Err::Incomplete(Needed::Size($c.len())));
 			res
 		} else {
 			if $i[0].kind==TokenKind::$k && &$i[0].raw[..]==$c {
-				IResult::Done(&$i[1..], &$i[0].raw[..])
+				Ok((&$i[1..], &$i[0].raw[..]))
 			} else {
-				IResult::Error(Err::Position(ErrorKind::Custom(::Error::ExactToken(TokenKind::$k,$c)), $i))
+				Err(::nom_crate::Err::Error(error_position!($i, ErrorKind::Custom(::Error::ExactToken(TokenKind::$k,$c)))))
 			}
 		}
 	});
@@ -102,13 +102,13 @@ macro_rules! exact_token (
 macro_rules! typed_token (
 	($i:expr, $k:ident) => ({
 		if $i.is_empty() {
-			let res: CResult<&[u8]> = IResult::Incomplete(Needed::Size(1));
+			let res: CResult<&[u8]> = Err(::nom_crate::Err::Incomplete(Needed::Size(1)));
 			res
 		} else {
 			if $i[0].kind==TokenKind::$k {
-				IResult::Done(&$i[1..], &$i[0].raw[..])
+				Ok((&$i[1..], &$i[0].raw[..]))
 			} else {
-				IResult::Error(Err::Position(ErrorKind::Custom(::Error::TypedToken(TokenKind::$k)), $i))
+				Err(Err::Error(error_position!($i, ErrorKind::Custom(::Error::TypedToken(TokenKind::$k)))))
 			}
 		}
 	});
@@ -118,10 +118,10 @@ macro_rules! typed_token (
 macro_rules! any_token (
 	($i:expr,) => ({
 		if $i.is_empty() {
-			let res: CResult<&Token> = IResult::Incomplete(Needed::Size(1));
+			let res: CResult<&Token> = Err(::nom_crate::Err::Incomplete(Needed::Size(1)));
 			res
 		} else {
-			IResult::Done(&$i[1..], &$i[0])
+			Ok((&$i[1..], &$i[0]))
 		}
 	});
 );
@@ -134,17 +134,39 @@ macro_rules! one_of_punctuation (
 	($i:expr, $c:expr) => ({
 		if $i.is_empty() {
 			let min = $c.iter().map(|opt|opt.len()).min().expect("at least one option");
-			let res: CResult<&[u8]> = IResult::Incomplete(Needed::Size(min));
+			let res: CResult<&[u8]> = Err(::nom_crate::Err::Incomplete(Needed::Size(min)));
 			res
 		} else {
 			if $i[0].kind==TokenKind::Punctuation && $c.iter().any(|opt|opt.as_bytes()==&$i[0].raw[..]) {
-				IResult::Done(&$i[1..], &$i[0].raw[..])
+				Ok((&$i[1..], &$i[0].raw[..]))
 			} else {
-				const VAILD_VALUES: &'static [&'static str] = &$c;
-				IResult::Error(Err::Position(ErrorKind::Custom(::Error::ExactTokens(TokenKind::Punctuation,VAILD_VALUES)), $i))
+				const VALID_VALUES: &'static [&'static str] = &$c;
+				Err(Err::Error(error_position!($i, ErrorKind::Custom(::Error::ExactTokens(TokenKind::Punctuation,VALID_VALUES)))))
 			}
 		}
 	});
+);
+
+/// equivalent to nom's complete! macro, but adds the custom error type
+#[macro_export]
+macro_rules! comp (
+	($i:expr, $submac:ident!( $($args:tt)* )) => (
+		{
+			use ::nom_crate::lib::std::result::Result::*;
+			use ::nom_crate::{Err,ErrorKind};
+
+			let i_ = $i.clone();
+			match $submac!(i_, $($args)*) {
+				Err(Err::Incomplete(_)) =>  {
+					Err(Err::Error(error_position!($i, ErrorKind::Complete::<::Error>)))
+				},
+				rest => rest
+			}
+		}
+	);
+	($i:expr, $f:expr) => (
+		comp!($i, call!($f));
+	);
 );
 
 // ==================================================
@@ -290,7 +312,7 @@ impl<'a> PRef<'a> {
 		do_parse!(
 			acc: call_m!(self.unary) >>
 			res: fold_many0!(
-				pair!(one_of_punctuation!(["*", "/", "%"]), call_m!(self.unary)),
+				pair!(comp!(one_of_punctuation!(["*", "/", "%"])), call_m!(self.unary)),
 				acc,
 				|mut acc, (op, val): (&[u8], EvalResult)| {
 					 match op[0] as char {
@@ -309,7 +331,7 @@ impl<'a> PRef<'a> {
 		do_parse!(
 			acc: call_m!(self.mul_div_rem) >>
 			res: fold_many0!(
-				pair!(one_of_punctuation!(["+", "-"]), call_m!(self.mul_div_rem)),
+				pair!(comp!(one_of_punctuation!(["+", "-"])), call_m!(self.mul_div_rem)),
 				acc,
 				|mut acc, (op, val): (&[u8], EvalResult)| {
 					match op[0] as char {
@@ -327,7 +349,7 @@ impl<'a> PRef<'a> {
 		numeric!(do_parse!(
 			acc: call_m!(self.add_sub) >>
 			res: fold_many0!(
-				pair!(one_of_punctuation!(["<<", ">>"]), call_m!(self.add_sub)),
+				pair!(comp!(one_of_punctuation!(["<<", ">>"])), call_m!(self.add_sub)),
 				acc,
 				|mut acc, (op, val): (&[u8], EvalResult)| {
 					match op {
@@ -345,7 +367,7 @@ impl<'a> PRef<'a> {
 		numeric!(do_parse!(
 			acc: call_m!(self.shl_shr) >>
 			res: fold_many0!(
-				preceded!(p!("&"), call_m!(self.shl_shr)),
+				preceded!(comp!(p!("&")), call_m!(self.shl_shr)),
 				acc,
 				|mut acc, val: EvalResult| {
 					acc &= &val;
@@ -359,7 +381,7 @@ impl<'a> PRef<'a> {
 		numeric!(do_parse!(
 			acc: call_m!(self.and) >>
 			res: fold_many0!(
-				preceded!(p!("^"), call_m!(self.and)),
+				preceded!(comp!(p!("^")), call_m!(self.and)),
 				acc,
 				|mut acc, val: EvalResult| {
 					acc ^= &val;
@@ -373,7 +395,7 @@ impl<'a> PRef<'a> {
 		numeric!(do_parse!(
 			acc: call_m!(self.xor) >>
 			res: fold_many0!(
-				preceded!(p!("|"), call_m!(self.xor)),
+				preceded!(comp!(p!("|")), call_m!(self.xor)),
 				acc,
 				|mut acc, val: EvalResult| {
 					acc |= &val;
@@ -397,30 +419,32 @@ impl<'a> PRef<'a> {
 	fn identifier(self, input: &[Token]) -> (Self,CResult<EvalResult>) {
 		(self,match input.split_first() {
 			None =>
-				IResult::Incomplete(Needed::Size(1)),
+				Err(Err::Incomplete(Needed::Size(1))),
 			Some((&Token{kind:TokenKind::Identifier,ref raw},rest)) => {
 				if let Some(r) = self.identifiers.get(&raw[..]) {
-					IResult::Done(rest, r.clone())
+					Ok((rest, r.clone()))
 				} else {
-					IResult::Error(Err::Position(ErrorKind::Custom(::Error::UnknownIdentifier), input))
+					Err(Err::Error(error_position!(input, ErrorKind::Custom(::Error::UnknownIdentifier))))
 				}
 			},
 			Some(_) =>
-				IResult::Error(Err::Position(ErrorKind::Custom(::Error::TypedToken(TokenKind::Identifier)), input)),
+				Err(Err::Error(error_position!(input, ErrorKind::Custom(::Error::TypedToken(TokenKind::Identifier))))),
 		})
 	}
 
 	fn literal(self, input: &[Token]) -> (Self,CResult<EvalResult>) {
 		(self,match input.split_first() {
 			None =>
-				IResult::Incomplete(Needed::Size(1)),
+				Err(Err::Incomplete(Needed::Size(1))),
 			Some((&Token{kind:TokenKind::Literal,ref raw},rest)) =>
 				match literal::parse(raw) {
-					IResult::Done(_,result) => IResult::Done(rest, result),
-					_ => IResult::Error(Err::Position(ErrorKind::Custom(::Error::InvalidLiteral), input))
+					Ok((_,result)) => Ok((rest, result)),
+					_ => {
+            Err(Err::Error(error_position!(input, ErrorKind::Custom(::Error::InvalidLiteral))))
+          },
 				},
 			Some(_) =>
-				IResult::Error(Err::Position(ErrorKind::Custom(::Error::TypedToken(TokenKind::Literal)), input)),
+				Err(Err::Error(error_position!(input, ErrorKind::Custom(::Error::TypedToken(TokenKind::Literal))))),
 		})
 	}
 
@@ -434,7 +458,7 @@ impl<'a> PRef<'a> {
 	// "string1" "string2" etc...
 	method!(concat_str<PRef<'a>,&[Token],EvalResult,::Error>, mut self,
 		map!(
-			pair!(call_m!(self.string),many0!(call_m!(self.string))),
+			pair!(call_m!(self.string),many0!(comp!(call_m!(self.string)))),
 			|(first,v)| Vec::into_iter(v).fold(first,|mut s,elem|{Vec::extend_from_slice(&mut s,Vec::<u8>::as_slice(&elem));s}).into()
 		)
 	);
@@ -495,7 +519,7 @@ impl<'ident> IdentifierParser<'ident> {
 	/// identifier, and the macro otherwise parses as an expression, it will
 	/// return a result even on function-like macros.
 	///
-	/// ```ignore
+	/// ```c
 	/// // will evaluate into IDENTIFIER
 	/// #define DELETE(IDENTIFIER)
 	/// // will evaluate into IDENTIFIER-3

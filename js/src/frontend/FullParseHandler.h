@@ -573,7 +573,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
 
     BinaryNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
-        return new_<BinaryNode>(ParseNodeKind::CallImport, JSOP_NOP, importHolder, singleArg);
+        return new_<BinaryNode>(ParseNodeKind::CallImport, JSOP_DYNAMIC_IMPORT, importHolder, singleArg);
     }
 
     UnaryNodeType newExprStatement(Node expr, uint32_t end) {
