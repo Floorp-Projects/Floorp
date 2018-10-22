@@ -57,7 +57,11 @@ public:
 private:
   ~BasicCardResponseData() = default;
 
-  nsString mData;
+  nsString mCardholderName;
+  nsString mCardNumber;
+  nsString mExpiryMonth;
+  nsString mExpiryYear;
+  nsString mCardSecurityCode;
   nsCOMPtr<nsIPaymentAddress> mBillingAddress;
 };
 
@@ -107,7 +111,7 @@ private:
 
   uint32_t mAcceptStatus;
   nsString mMethodName;
-  nsString mData;
+  nsCOMPtr<nsIPaymentResponseData> mData;
   nsString mPayerName;
   nsString mPayerEmail;
   nsString mPayerPhone;
