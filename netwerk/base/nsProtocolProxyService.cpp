@@ -2547,5 +2547,17 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
     LOG(("nsProtocolProxyService::PruneProxyInfo LEAVE list=%p", *list));
 }
 
+NS_IMETHODIMP
+nsProtocolProxyService::GetIsPACLoading(bool *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    *aResult = false;
+    if (mPACMan && mPACMan->IsLoading()) {
+        *aResult = true;
+    }
+    return NS_OK;
+}
+
 } // namespace net
 } // namespace mozilla

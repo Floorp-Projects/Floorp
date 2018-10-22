@@ -282,4 +282,9 @@ interface nsIProtocolProxyService : nsISupports
       * This attribute specifies the current type of proxy configuration.
       */
      readonly attribute unsigned long proxyConfigType;
+
+     /**
+      * True if there is a PAC download in progress.
+      */
+    [noscript] readonly attribute boolean isPACLoading;
 };
