@@ -116,7 +116,7 @@ function LightweightThemeConsumer(aDocument) {
 
   var temp = {};
   ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
-  this._update(temp.LightweightThemeManager.currentThemeForDisplay);
+  this._update(temp.LightweightThemeManager.currentThemeWithPersistedData);
 
   this._win.addEventListener("resolutionchange", this);
   this._win.addEventListener("unload", this, { once: true });
