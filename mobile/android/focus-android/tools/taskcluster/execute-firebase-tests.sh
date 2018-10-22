@@ -38,7 +38,7 @@ set +e
 
 URL_FLANK_BIN=`curl -s https://api.github.com/repos/TestArmada/flank/releases/latest | grep "browser_download_url*" | cut -d '"' -f 4`
 JAVA_BIN="/usr/bin/java"
-PATH_TEST="../../app/src/androidTest/java/org/mozilla/focus/activity"
+PATH_TEST="/opt/focus-android/app/src/androidTest/java/org/mozilla/focus/activity"
 PACKAGE="org.mozilla.focus.activity"
 FLANK_BIN="flank.jar"
 FLANK_CONF="flank.yml"
