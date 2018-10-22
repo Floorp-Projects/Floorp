@@ -5,6 +5,7 @@
 
 /* global getModuleLoadPath setModuleLoadHook setModuleResolveHook setModuleMetadataHook */
 /* global getModulePrivate setModulePrivate parseModule os */
+/* global setModuleDynamicImportHook finishDynamicModuleImport abortDynamicModuleImport */
 
 // A basic synchronous module loader for testing the shell.
 {
@@ -24,7 +25,6 @@ const ErrorClass = Error;
 const ReflectLoader = new class {
     constructor() {
         this.registry = new Map();
-        this.modulePaths = new Map();
         this.loadPath = getModuleLoadPath();
     }
 
@@ -176,7 +176,7 @@ const ReflectLoader = new class {
         return this.loadAndExecute(path);
     }
 
-    ["import"](name, referrer) {
+    ["import"](name, referencingInfo) {
         let path = this.resolve(name, null);
         return this.loadAndExecute(path);
     }
@@ -196,8 +196,8 @@ const ReflectLoader = new class {
 
 setModuleLoadHook((path) => ReflectLoader.importRoot(path));
 
-setModuleResolveHook((module, requestName) => {
-    let path = ReflectLoader.resolve(requestName, module);
+setModuleResolveHook((referencingInfo, requestName) => {
+    let path = ReflectLoader.resolve(requestName, referencingInfo);
     return ReflectLoader.loadAndParse(path);
 });
 
@@ -205,5 +205,14 @@ setModuleMetadataHook((module, metaObject) => {
     ReflectLoader.populateImportMeta(module, metaObject);
 });
 
-}
+setModuleDynamicImportHook((referencingInfo, specifier, promise) => {
+    try {
+        let path = ReflectLoader.resolve(specifier, referencingInfo);
+        ReflectLoader.loadAndExecute(path);
+        finishDynamicModuleImport(referencingInfo, specifier, promise);
+    } catch (err) {
+        abortDynamicModuleImport(referencingInfo, specifier, promise, err);
+    }
+});
 
+}

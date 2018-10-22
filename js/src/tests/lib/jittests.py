@@ -372,8 +372,8 @@ class JitTest:
             cmd += ['-f', libdir + inc]
         if self.skip_if_cond:
             cmd += ['-e', "if ({}) quit({})".format(self.skip_if_cond, self.SKIPPED_EXIT_STATUS)]
+        cmd += ['--module-load-path', moduledir]
         if self.is_module:
-            cmd += ['--module-load-path', moduledir]
             cmd += ['--module', path]
         elif self.is_binast:
             # In builds with BinAST, this will run the test file. In builds without,
