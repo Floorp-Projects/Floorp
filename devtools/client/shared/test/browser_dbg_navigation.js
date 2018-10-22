@@ -47,7 +47,6 @@ function testNavigate(targetFront) {
       "Got a tab navigation notification.");
 
     info(JSON.stringify(packet));
-    info(JSON.stringify(event));
 
     if (packet.state == "start") {
       ok(true, "Tab started to navigate.");
