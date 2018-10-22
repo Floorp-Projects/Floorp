@@ -35,7 +35,7 @@ tasks:
           - queue:scheduler-id:${scheduler_id}
         payload:
           maxRunTime: 3600
-          image: mozillamobile/android-components:1.5
+          image: mozillamobile/android-components:1.7
           env:
             TASK_ID: ${decision_task_id}
             SCHEDULER_ID: ${scheduler_id}
@@ -86,7 +86,7 @@ tasks:
           - queue:scheduler-id:${scheduler_id}
         payload:
           maxRunTime: 3600
-          image: mozillamobile/android-components:1.5
+          image: mozillamobile/android-components:1.7
           env:
             TASK_ID: ${decision_task_id}
             SCHEDULER_ID: ${scheduler_id}
@@ -142,7 +142,7 @@ tasks:
           - queue:scheduler-id:${scheduler_id}
         payload:
           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
-          image: 'mozillamobile/android-components:1.5'
+          image: 'mozillamobile/android-components:1.7'
           env:
             TASK_ID: ${decision_task_id}
             SCHEDULER_ID: ${scheduler_id}

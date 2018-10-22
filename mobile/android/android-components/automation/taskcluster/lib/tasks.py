@@ -47,7 +47,7 @@ class TaskBuilder(object):
             "payload": {
                 "features": features,
                 "maxRunTime": 7200,
-                "image": "mozillamobile/android-components:1.5",
+                "image": "mozillamobile/android-components:1.7",
                 "command": [
                     "/bin/bash",
                     "--login",
@@ -64,7 +64,6 @@ class TaskBuilder(object):
                 "source": self.source
             }
         }
-
 
     def beetmover_task(self, name, description, version, artifact_id,
                        dependencies=[], upstreamArtifacts=[], scopes=[]):
