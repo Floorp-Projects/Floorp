@@ -139,6 +139,27 @@ const TESTS_SPACE_INDENT = [
       "}",
     ],
   },
+
+  { name: "Breaking after commas in selectors",
+    input: "@media screen, print {div, span, input {color: red;}}" +
+           "div, div, input, pre, table {color: blue;}",
+    expected: [
+      "@media screen, print {",
+      " div,",
+      " span,",
+      " input {",
+      "  color: red;",
+      " }",
+      "}",
+      "div,",
+      "div,",
+      "input,",
+      "pre,",
+      "table {",
+      " color: blue;",
+      "}",
+    ],
+  },
 ];
 
 function run_test() {
