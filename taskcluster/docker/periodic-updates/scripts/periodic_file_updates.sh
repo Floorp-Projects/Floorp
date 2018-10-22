@@ -80,13 +80,20 @@ REMOTE_SETTINGS_OUTPUT="${DATADIR}/remote-settings.out"
 REMOTE_SETTINGS_DIR="/services/settings/dumps"
 REMOTE_SETTINGS_UPDATED=false
 
+DO_SUFFIX_LIST=false
+GITHUB_SUFFIX_URL="https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat"
+GITHUB_SUFFIX_LOCAL="public_suffix_list.dat"
+HG_SUFFIX_LOCAL="effective_tld_names.dat"
+HG_SUFFIX_PATH="/netwerk/dns/${HG_SUFFIX_LOCAL}"
+SUFFIX_LIST_UPDATED=false
+
 ARTIFACTS_DIR="${ARTIFACTS_DIR:-.}"
 # Defaults
 HSTS_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${HSTS_DIFF_ARTIFACT:-"nsSTSPreloadList.diff"}"
 HPKP_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${HPKP_DIFF_ARTIFACT:-"StaticHPKPins.h.diff"}"
 BLOCKLIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${BLOCKLIST_DIFF_ARTIFACT:-"blocklist.diff"}"
 REMOTE_SETTINGS_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${REMOTE_SETTINGS_DIFF_ARTIFACT:-"remote-settings.diff"}"
-
+SUFFIX_LIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${SUFFIX_LIST_DIFF_ARTIFACT:-"effective_tld_names.diff"}"
 
 # Get the current in-tree version for a code branch.
 function get_version {
@@ -275,6 +282,28 @@ function is_valid_xml {
   ${XMLLINT} --nonet --noout "${xmlfile}"
 }
 
+# Downloads the public suffix list
+function compare_suffix_lists {
+  HG_SUFFIX_URL="${HGREPO}/raw-file/default/${HG_SUFFIX_PATH}"
+  cd "${BASEDIR}"
+
+  echo "INFO: ${WGET} -O ${GITHUB_SUFFIX_LOCAL} ${GITHUB_SUFFIX_URL}"
+  rm -f "${GITHUB_SUFFIX_LOCAL}"
+  ${WGET} -O "${GITHUB_SUFFIX_LOCAL}" "${GITHUB_SUFFIX_URL}"
+
+  echo "INFO: ${WGET} -O ${HG_SUFFIX_LOCAL} ${HG_SUFFIX_URL}"
+  rm -f "${HG_SUFFIX_LOCAL}"
+  ${WGET} -O "${HG_SUFFIX_LOCAL}" "${HG_SUFFIX_URL}"
+
+  echo "INFO: diffing in-tree blocklist against the blocklist from AMO..."
+  ${DIFF} ${GITHUB_SUFFIX_LOCAL} ${HG_SUFFIX_LOCAL} | tee "${SUFFIX_LIST_DIFF_ARTIFACT}"
+  if [ -s "${SUFFIX_LIST_DIFF_ARTIFACT}" ]
+  then
+    return 0
+  fi
+  return 1
+}
+
 # Downloads the current in-tree blocklist file.
 # Downloads the current blocklist file from AMO.
 # Compares the AMO blocklist with the in-tree blocklist to determine whether we need to update.
@@ -383,6 +412,11 @@ function stage_remote_settings_files {
   cp -a "${REMOTE_SETTINGS_OUTPUT}"/* "${REPODIR}${REMOTE_SETTINGS_DIR}"
 }
 
+function stage_tld_suffix_files {
+  cd "${BASEDIR}"
+  cp -a "${GITHUB_SUFFIX_LOCAL}" "${REPODIR}/${HG_SUFFIX_PATH}"
+}
+
 # Push all pending commits to Phabricator
 function push_repo {
   cd "${REPODIR}"
@@ -430,6 +464,7 @@ while [ $# -gt 0 ]; do
     --hpkp) DO_HPKP=true ;;
     --blocklist) DO_BLOCKLIST=true ;;
     --remote-settings) DO_REMOTE_SETTINGS=true ;;
+    --suffix-list) DO_SUFFIX_LIST=true ;;
     -r) REPODIR="$2"; shift ;;
     --use-mozilla-central) USE_MC=true ;;
     --use-ftp-builds) USE_TC=false ;;
@@ -448,7 +483,7 @@ if [ "${BRANCH}" == "" ]; then
 fi
 
 # Must choose at least one update action.
-if [ "$DO_HSTS" == "false" ] && [ "$DO_HPKP" == "false" ] && [ "$DO_BLOCKLIST" == "false" ] && [ "$DO_REMOTE_SETTINGS" == "false" ]
+if [ "$DO_HSTS" == "false" ] && [ "$DO_HPKP" == "false" ] && [ "$DO_BLOCKLIST" == "false" ] && [ "$DO_REMOTE_SETTINGS" == "false" ] && [ "$DO_SUFFIX_LIST" == "false" ]
 then
   echo "Error: you must specify at least one action from: --hsts, --hpkp, --blocklist, --remote-settings" >&2
   usage
@@ -545,8 +580,15 @@ if [ "${DO_REMOTE_SETTINGS}" == "true" ]; then
     REMOTE_SETTINGS_UPDATED=true
   fi
 fi
+if [ "${DO_SUFFIX_LIST}" == "true" ]; then
+  if compare_suffix_lists
+  then
+    SUFFIX_LIST_UPDATED=true
+  fi
+fi
 
-if [ "${HSTS_UPDATED}" == "false" ] && [ "${HPKP_UPDATED}" == "false" ] && [ "${BLOCKLIST_UPDATED}" == "false" ] && [ "${REMOTE_SETTINGS_UPDATED}" == "false" ]; then
+
+if [ "${HSTS_UPDATED}" == "false" ] && [ "${HPKP_UPDATED}" == "false" ] && [ "${BLOCKLIST_UPDATED}" == "false" ] && [ "${REMOTE_SETTINGS_UPDATED}" == "false" ] && [ "${SUFFIX_LIST_UPDATED}" == "false" ]; then
   echo "INFO: no updates required. Exiting."
   exit 0
 else
@@ -585,6 +627,13 @@ then
   stage_remote_settings_files
   COMMIT_MESSAGE="${COMMIT_MESSAGE} remote-settings"
 fi
+
+if [ "${SUFFIX_LIST_UPDATED}" == "true" ]
+then
+  stage_tld_suffix_files
+  COMMIT_MESSAGE="${COMMIT_MESSAGE} tld-suffixes"
+fi
+
 
 if [ ${DONTBUILD} == true ]; then
   COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
