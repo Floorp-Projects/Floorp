@@ -764,6 +764,7 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
         fp_ = ((uint8_t*) stubFrame->reverseSavedFramePtr())
                 + jit::BaselineFrame::FramePointerOffset;
         type_ = FrameType::BaselineJS;
+        fixBaselineReturnAddress();
         return;
     }
 
@@ -785,6 +786,7 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
             fp_ = ((uint8_t*) stubFrame->reverseSavedFramePtr())
                     + jit::BaselineFrame::FramePointerOffset;
             type_ = FrameType::BaselineJS;
+            fixBaselineReturnAddress();
             return;
         }
 
