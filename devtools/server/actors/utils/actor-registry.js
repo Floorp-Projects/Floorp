@@ -256,11 +256,6 @@ const ActorRegistry = {
       constructor: "ScreenshotActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/changes", {
-      prefix: "changes",
-      constructor: "ChangesActor",
-      type: { target: true },
-    });
   },
 
   /**
