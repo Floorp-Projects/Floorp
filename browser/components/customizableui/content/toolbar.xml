@@ -36,35 +36,6 @@
           CustomizableUI.registerToolbarNode(this, children);
       ]]></constructor>
 
-      <method name="insertItem">
-        <parameter name="aId"/>
-        <parameter name="aBeforeElt"/>
-        <parameter name="aWrapper"/>
-        <body><![CDATA[
-          if (aWrapper) {
-            Cu.reportError("Can't insert " + aId + ": using insertItem " +
-                           "no longer supports wrapper elements.");
-            return null;
-          }
-
-          // Hack, the customizable UI code makes this be the last position
-          let pos = null;
-          if (aBeforeElt) {
-            let beforeInfo = CustomizableUI.getPlacementOfWidget(aBeforeElt.id);
-            if (beforeInfo.area != this.id) {
-              Cu.reportError("Can't insert " + aId + " before " +
-                             aBeforeElt.id + " which isn't in this area (" +
-                             this.id + ").");
-              return null;
-            }
-            pos = beforeInfo.position;
-          }
-
-          CustomizableUI.addWidgetToArea(aId, this.id, pos);
-          return this.ownerDocument.getElementById(aId);
-        ]]></body>
-      </method>
-
       <property name="customizationTarget" readonly="true">
         <getter><![CDATA[
           if (this._customizationTarget)
@@ -74,9 +45,7 @@
           if (id)
             this._customizationTarget = document.getElementById(id);
 
-          if (this._customizationTarget)
-            this._customizationTarget.insertItem = this.insertItem.bind(this);
-          else
+          if (!this._customizationTarget)
             this._customizationTarget = this;
 
           return this._customizationTarget;
@@ -153,11 +122,6 @@
           return this.getAttribute("defaultset");
         ]]></getter>
       </property>
-      <method name="insertItem">
-        <body><![CDATA[
-          return null;
-        ]]></body>
-      </method>
     </implementation>
   </binding>
 
