@@ -1019,6 +1019,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   , mInInvalidSubtree(false)
   , mDisablePartialUpdates(false)
   , mPartialBuildFailed(false)
+  , mIsInActiveDocShell(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
