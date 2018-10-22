@@ -26,7 +26,9 @@ image/**
 layout/**
 memory/replace/dmd/test/**
 modules/**
+netwerk/base/NetUtil.jsm
 netwerk/cookie/test/browser/**
+netwerk/cookie/test/unit/**
 netwerk/protocol/**
 netwerk/dns/**
 netwerk/test/browser/**
