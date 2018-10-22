@@ -28,6 +28,7 @@ DevToolsModules(
     'array-buffer.js',
     'breakpoint.js',
     'canvas.js',
+    'changes.js',
     'common.js',
     'css-properties.js',
     'csscoverage.js',
