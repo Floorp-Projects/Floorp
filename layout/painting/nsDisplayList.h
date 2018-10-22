@@ -929,6 +929,9 @@ public:
   void SetPartialBuildFailed(bool aFailed) { mPartialBuildFailed = aFailed; }
   bool PartialBuildFailed() { return mPartialBuildFailed; }
 
+  bool IsInActiveDocShell() { return mIsInActiveDocShell; }
+  void SetInActiveDocShell(bool aActive) { mIsInActiveDocShell = aActive; }
+
   /**
    * Return true if we're currently building a display list for the presshell
    * of a chrome document, or if we're building the display list for a popup.
@@ -2203,6 +2206,7 @@ private:
   bool mLessEventRegionItems;
   bool mDisablePartialUpdates;
   bool mPartialBuildFailed;
+  bool mIsInActiveDocShell;
 };
 
 class nsDisplayItem;
