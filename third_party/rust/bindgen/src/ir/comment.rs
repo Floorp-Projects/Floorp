@@ -35,7 +35,6 @@ fn kind(comment: &str) -> Option<Kind> {
 
 fn make_indent(indent: usize) -> String {
     const RUST_INDENTATION: usize = 4;
-
     iter::repeat(' ').take(indent * RUST_INDENTATION).collect()
 }
 
@@ -49,12 +48,11 @@ fn preprocess_single_lines(comment: &str, indent: usize) -> String {
     let mut is_first = true;
     let lines: Vec<_> = comment
         .lines()
-        .map(|l| l.trim_left_matches('/').trim())
+        .map(|l| l.trim().trim_left_matches('/'))
         .map(|l| {
             let indent = if is_first { "" } else { &*indent };
             is_first = false;
-            let maybe_space = if l.is_empty() { "" } else { " " };
-            format!("{}///{}{}", indent, maybe_space, l)
+            format!("{}///{}", indent, l)
         })
         .collect();
     lines.join("\n")
@@ -63,30 +61,24 @@ fn preprocess_single_lines(comment: &str, indent: usize) -> String {
 fn preprocess_multi_line(comment: &str, indent: usize) -> String {
     let comment = comment
         .trim_left_matches('/')
-        .trim_left_matches('*')
-        .trim_left_matches('!')
         .trim_right_matches('/')
-        .trim_right_matches('*')
-        .trim();
+        .trim_right_matches('*');
 
     let indent = make_indent(indent);
     // Strip any potential `*` characters preceding each line.
     let mut is_first = true;
     let mut lines: Vec<_> = comment.lines()
-        .map(|line| line.trim().trim_left_matches('*').trim())
-        .skip_while(|line| line.is_empty()) // Skip the first empty lines.
+        .map(|line| line.trim().trim_left_matches('*').trim_left_matches('!'))
+        .skip_while(|line| line.trim().is_empty()) // Skip the first empty lines.
         .map(|line| {
             let indent = if is_first { "" } else { &*indent };
             is_first = false;
-            let maybe_space = if line.is_empty() { "" } else { " " };
-            format!("{}///{}{}", indent, maybe_space, line)
+            format!("{}///{}", indent, line)
         })
         .collect();
 
     // Remove the trailing line corresponding to the `*/`.
-    let last_line_is_empty = lines.last().map_or(false, |l| l.is_empty());
-
-    if last_line_is_empty {
+    if lines.last().map_or(false, |l| l.trim().is_empty() || l.trim() == "///") {
         lines.pop();
     }
 
@@ -107,6 +99,7 @@ mod test {
     fn processes_single_lines_correctly() {
         assert_eq!(preprocess("/// hello", 0), "/// hello");
         assert_eq!(preprocess("// hello", 0), "/// hello");
+        assert_eq!(preprocess("//    hello", 0), "///    hello");
     }
 
     #[test]
@@ -118,7 +111,7 @@ mod test {
 
         assert_eq!(
             preprocess("/**\nhello\n*world\n*foo\n*/", 0),
-            "/// hello\n/// world\n/// foo"
+            "///hello\n///world\n///foo"
         );
     }
 }

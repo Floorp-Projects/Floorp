@@ -10913,7 +10913,7 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling)
 
         MUST_MATCH_TOKEN_MOD(TokenKind::RightParen, TokenStream::Operand, JSMSG_PAREN_AFTER_ARGS);
 
-        if (!abortIfSyntaxParser()) {
+        if (!context->runtime()->moduleDynamicImportHook && !abortIfSyntaxParser()) {
             return null();
         }
 

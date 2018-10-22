@@ -7,7 +7,7 @@ pub mod struct_layout;
 #[cfg(test)]
 #[allow(warnings)]
 pub(crate) mod bitfield_unit;
-#[cfg(test)]
+#[cfg(all(test, target_endian = "little"))]
 mod bitfield_unit_tests;
 
 use self::helpers::attributes;
@@ -103,6 +103,9 @@ struct CodegenResult<'a> {
     /// Whether Objective C types have been seen at least once.
     saw_objc: bool,
 
+    /// Whether Apple block types have been seen at least once.
+    saw_block: bool,
+
     /// Whether a bitfield allocation unit has been seen at least once.
     saw_bitfield_unit: bool,
 
@@ -140,6 +143,7 @@ impl<'a> CodegenResult<'a> {
             saw_bindgen_union: false,
             saw_incomplete_array: false,
             saw_objc: false,
+            saw_block: false,
             saw_bitfield_unit: false,
             codegen_id: codegen_id,
             items_seen: Default::default(),
@@ -164,6 +168,10 @@ impl<'a> CodegenResult<'a> {
 
     fn saw_objc(&mut self) {
         self.saw_objc = true;
+    }
+
+    fn saw_block(&mut self) {
+        self.saw_block = true;
     }
 
     fn saw_bitfield_unit(&mut self) {
@@ -215,6 +223,7 @@ impl<'a> CodegenResult<'a> {
         self.saw_union |= new.saw_union;
         self.saw_incomplete_array |= new.saw_incomplete_array;
         self.saw_objc |= new.saw_objc;
+        self.saw_block |= new.saw_block;
         self.saw_bitfield_unit |= new.saw_bitfield_unit;
 
         new.items
@@ -293,7 +302,6 @@ impl AppendImplicitTemplateParams for quote::Tokens {
             TypeKind::Opaque |
             TypeKind::Function(..) |
             TypeKind::Enum(..) |
-            TypeKind::BlockPointer |
             TypeKind::ObjCId |
             TypeKind::ObjCSel |
             TypeKind::TemplateInstantiation(..) => return,
@@ -394,6 +402,9 @@ impl CodeGenerator for Module {
             }
 
             if item.id() == ctx.root_module() {
+                if result.saw_block {
+                    utils::prepend_block_header(ctx, &mut *result);
+                }
                 if result.saw_bindgen_union {
                     utils::prepend_union_types(ctx, &mut *result);
                 }
@@ -564,10 +575,16 @@ impl CodeGenerator for Var {
                 attrs.push(attributes::link_name(self.name()));
             }
 
+            let maybe_mut = if self.is_const() {
+                quote! { }
+            } else {
+                quote! { mut }
+            };
+
             let mut tokens = quote!(
                 extern "C" {
                     #(#attrs)*
-                    pub static mut #canonical_ident: #ty;
+                    pub static #maybe_mut #canonical_ident: #ty;
                 }
             );
 
@@ -597,7 +614,6 @@ impl CodeGenerator for Type {
             TypeKind::Array(..) |
             TypeKind::Vector(..) |
             TypeKind::Pointer(..) |
-            TypeKind::BlockPointer |
             TypeKind::Reference(..) |
             TypeKind::Function(..) |
             TypeKind::ResolvedTypeRef(..) |
@@ -609,6 +625,39 @@ impl CodeGenerator for Type {
             }
             TypeKind::TemplateInstantiation(ref inst) => {
                 inst.codegen(ctx, result, item)
+            }
+            TypeKind::BlockPointer(inner) => {
+                if !ctx.options().generate_block {
+                    return;
+                }
+
+                let inner_item = inner.into_resolver()
+                    .through_type_refs()
+                    .resolve(ctx);
+                let name = item.canonical_name(ctx);
+
+                let inner_rust_type = {
+                    if let TypeKind::Function(fnsig) = inner_item.kind().expect_type().kind() {
+                        utils::fnsig_block(ctx, fnsig)
+                    } else {
+                        panic!("invalid block typedef: {:?}", inner_item)
+                    }
+                };
+
+                let rust_name = ctx.rust_ident(&name);
+
+                let mut tokens = if let Some(comment) = item.comment(ctx) {
+                    attributes::doc(comment)
+                } else {
+                    quote! {}
+                };
+
+                tokens.append_all(quote! {
+                    pub type #rust_name = #inner_rust_type ;
+                });
+
+                result.push(tokens);
+                result.saw_block();
             }
             TypeKind::Comp(ref ci) => ci.codegen(ctx, result, item),
             TypeKind::TemplateAlias(inner, _) |
@@ -1146,7 +1195,7 @@ impl Bitfield {
         let bitfield_ty_layout = bitfield_ty.layout(ctx).expect(
             "Bitfield without layout? Gah!",
         );
-        let bitfield_int_ty = helpers::blob(bitfield_ty_layout);
+        let bitfield_int_ty = helpers::blob(ctx, bitfield_ty_layout);
 
         let offset = self.offset_into_unit();
         let width = self.width() as u8;
@@ -1328,7 +1377,7 @@ impl<'a> FieldCodegen<'a> for Bitfield {
         let bitfield_ty_layout = bitfield_ty.layout(ctx).expect(
             "Bitfield without layout? Gah!",
         );
-        let bitfield_int_ty = match helpers::integer_type(bitfield_ty_layout) {
+        let bitfield_int_ty = match helpers::integer_type(ctx, bitfield_ty_layout) {
             Some(int_ty) => {
                 *bitfield_representable_as_int = true;
                 int_ty
@@ -1501,27 +1550,6 @@ impl CodeGenerator for CompInfo {
 
         let is_union = self.kind() == CompKind::Union;
         let layout = item.kind().expect_type().layout(ctx);
-        if is_union && !is_opaque && !self.is_forward_declaration() {
-            result.saw_union();
-            if !self.can_be_rust_union(ctx) {
-                result.saw_bindgen_union();
-            }
-
-            let layout = layout.expect("Unable to get layout information?");
-            let ty = helpers::blob(layout);
-
-            fields.push(if self.can_be_rust_union(ctx) {
-                quote! {
-                    _bindgen_union_align: #ty ,
-                }
-            } else {
-                struct_layout.saw_union(layout);
-
-                quote! {
-                    pub bindgen_union_field: #ty ,
-                }
-            });
-        }
 
         let mut explicit_align = None;
         if is_opaque {
@@ -1533,7 +1561,7 @@ impl CodeGenerator for CompInfo {
                 Some(l) => {
                     explicit_align = Some(l.align);
 
-                    let ty = helpers::blob(l);
+                    let ty = helpers::blob(ctx, l);
                     fields.push(quote! {
                         pub _bindgen_opaque_blob: #ty ,
                     });
@@ -1556,7 +1584,7 @@ impl CodeGenerator for CompInfo {
                     } else {
                         explicit_align = Some(layout.align);
                         if !ctx.options().rust_features.repr_align {
-                            let ty = helpers::blob(Layout::new(0, layout.align));
+                            let ty = helpers::blob(ctx, Layout::new(0, layout.align));
                             fields.push(quote! {
                                 pub __bindgen_align: #ty ,
                             });
@@ -1564,6 +1592,32 @@ impl CodeGenerator for CompInfo {
                     }
                 }
             }
+        } else if is_union && !self.is_forward_declaration() {
+            result.saw_union();
+            if !self.can_be_rust_union(ctx) {
+                result.saw_bindgen_union();
+            }
+
+            // TODO(emilio): It'd be nice to unify this with the struct path
+            // above somehow.
+            let layout = layout.expect("Unable to get layout information?");
+
+            if struct_layout.requires_explicit_align(layout) {
+                explicit_align = Some(layout.align);
+            }
+
+            let ty = helpers::blob(ctx, layout);
+            fields.push(if self.can_be_rust_union(ctx) {
+                quote! {
+                    _bindgen_union_align: #ty ,
+                }
+            } else {
+                struct_layout.saw_union(layout);
+
+                quote! {
+                    pub bindgen_union_field: #ty ,
+                }
+            });
         }
 
         // C++ requires every struct to be addressable, so what C++ compilers do
@@ -1590,7 +1644,7 @@ impl CodeGenerator for CompInfo {
             };
 
             if has_address {
-                let ty = helpers::blob(Layout::new(1, 1));
+                let ty = helpers::blob(ctx, Layout::new(1, 1));
                 fields.push(quote! {
                     pub _address: #ty,
                 });
@@ -1747,7 +1801,7 @@ impl CodeGenerator for CompInfo {
         // all the tests to shit when parsing things like max_align_t.
         if self.found_unknown_attr() {
             warn!(
-                "Type {} has an unkown attribute that may affect layout",
+                "Type {} has an unknown attribute that may affect layout",
                 canonical_ident.as_str()
             );
         }
@@ -1920,8 +1974,10 @@ impl CodeGenerator for CompInfo {
                 self.kind(),
             );
 
+            let prefix = ctx.trait_prefix();
+
             result.push(quote! {
-                impl #generics ::std::fmt::Debug for #ty_for_impl {
+                impl #generics ::#prefix::fmt::Debug for #ty_for_impl {
                     #impl_
                 }
             });
@@ -2516,21 +2572,9 @@ impl CodeGenerator for Enum {
             }
         };
 
-        // ModuleConsts has higher precedence before Rust in order to avoid problems with
-        // overlapping match patterns
-        let variation = if self.is_constified_enum_module(ctx, item) {
-            EnumVariation::ModuleConsts
-        } else if self.is_bitfield(ctx, item) {
-            EnumVariation::Bitfield
-        } else if self.is_rustified_enum(ctx, item) {
-            EnumVariation::Rust
-        } else if self.is_constified_enum(ctx, item) {
-            EnumVariation::Consts
-        } else {
-            ctx.options().default_enum_style
-        };
-
         let mut attrs = vec![];
+
+        let variation = self.computed_enum_variation(ctx, item);
 
         // TODO(emilio): Delegate this to the builders?
         if variation.is_rust() {
@@ -2544,9 +2588,17 @@ impl CodeGenerator for Enum {
         }
 
         if !variation.is_const() {
-            attrs.push(attributes::derives(
-                &["Debug", "Copy", "Clone", "PartialEq", "Eq", "Hash"],
-            ));
+            let mut derives = vec!["Debug", "Copy", "Clone", "PartialEq", "Eq", "Hash"];
+
+            if item.can_derive_partialord(ctx) {
+                derives.push("PartialOrd");
+            }
+
+            if item.can_derive_ord(ctx) {
+                derives.push("Ord");
+            }
+
+            attrs.push(attributes::derives(&derives));
         }
 
         fn add_constant<'a>(
@@ -2759,7 +2811,7 @@ trait TryToOpaque {
         extra: &Self::Extra,
     ) -> error::Result<quote::Tokens> {
         self.try_get_layout(ctx, extra).map(|layout| {
-            helpers::blob(layout)
+            helpers::blob(ctx, layout)
         })
     }
 }
@@ -2786,7 +2838,7 @@ trait ToOpaque: TryToOpaque {
         extra: &Self::Extra,
     ) -> quote::Tokens {
         let layout = self.get_layout(ctx, extra);
-        helpers::blob(layout)
+        helpers::blob(ctx, layout)
     }
 }
 
@@ -2844,7 +2896,7 @@ where
             |_| if let Ok(layout) =
                 self.try_get_layout(ctx, extra)
             {
-                Ok(helpers::blob(layout))
+                Ok(helpers::blob(ctx, layout))
             } else {
                 Err(error::Error::NoLayoutForOpaqueBlob)
             },
@@ -2996,7 +3048,7 @@ impl TryToRustTy for Type {
                     IntKind::LongLong => Ok(raw_type(ctx, "c_longlong")),
                     IntKind::ULongLong => Ok(raw_type(ctx, "c_ulonglong")),
                     IntKind::WChar { size } => {
-                        let ty = Layout::known_type_for_size(size)
+                        let ty = Layout::known_type_for_size(ctx, size)
                             .expect("Non-representable wchar_t?");
                         let ident = ctx.rust_ident_raw(ty);
                         Ok(quote! { #ident })
@@ -3018,17 +3070,27 @@ impl TryToRustTy for Type {
                             #ident
                         })
                     }
-                    // FIXME: This doesn't generate the proper alignment, but we
-                    // can't do better right now. We should be able to use
-                    // i128/u128 when they're available.
-                    IntKind::U128 | IntKind::I128 => {
-                        Ok(quote! { [u64; 2] })
+                    IntKind::U128 => {
+                        Ok(if ctx.options().rust_features.i128_and_u128 {
+                            quote! { u128 }
+                        } else {
+                            // Best effort thing, but wrong alignment
+                            // unfortunately.
+                            quote! { [u64; 2] }
+                        })
+                    }
+                    IntKind::I128 => {
+                        Ok(if ctx.options().rust_features.i128_and_u128 {
+                            quote! { i128 }
+                        } else {
+                            quote! { [u64; 2] }
+                        })
                     }
                 }
             }
-            TypeKind::Float(fk) => Ok(float_kind_rust_type(ctx, fk)),
+            TypeKind::Float(fk) => Ok(float_kind_rust_type(ctx, fk, self.layout(ctx))),
             TypeKind::Complex(fk) => {
-                let float_path = float_kind_rust_type(ctx, fk);
+                let float_path = float_kind_rust_type(ctx, fk, self.layout(ctx));
 
                 ctx.generated_bindgen_complex();
                 Ok(if ctx.options().enable_cxx_namespaces {
@@ -3069,20 +3131,20 @@ impl TryToRustTy for Type {
             }
             TypeKind::ResolvedTypeRef(inner) => inner.try_to_rust_ty(ctx, &()),
             TypeKind::TemplateAlias(..) |
-            TypeKind::Alias(..) => {
+            TypeKind::Alias(..) |
+            TypeKind::BlockPointer(..) => {
+                if self.is_block_pointer() && !ctx.options().generate_block {
+                    let void = raw_type(ctx, "c_void");
+                    return Ok(void.to_ptr(/* is_const = */ false));
+                }
                 let template_params = item.used_template_params(ctx)
                     .into_iter()
                     .filter(|param| param.is_template_param(ctx, &()))
                     .collect::<Vec<_>>();
 
-                let spelling = self.name().expect("Unnamed alias?");
                 if item.is_opaque(ctx, &()) && !template_params.is_empty() {
                     self.try_to_opaque(ctx, item)
-                } else if let Some(ty) = utils::type_from_named(
-                    ctx,
-                    spelling,
-                )
-                {
+                } else if let Some(ty) = self.name().and_then(|name| utils::type_from_named(ctx, name)) {
                     Ok(ty)
                 } else {
                     utils::build_path(item, ctx)
@@ -3099,13 +3161,6 @@ impl TryToRustTy for Type {
                 utils::build_path(item, ctx)
             }
             TypeKind::Opaque => self.try_to_opaque(ctx, item),
-            TypeKind::BlockPointer => {
-                let void = raw_type(ctx, "c_void");
-                Ok(void.to_ptr(
-                    /* is_const = */
-                    false
-                ))
-            }
             TypeKind::Pointer(inner) |
             TypeKind::Reference(inner) => {
                 let is_const = ctx.resolve_type(inner).is_const();
@@ -3558,6 +3613,25 @@ mod utils {
         result.extend(old_items.into_iter());
     }
 
+    pub fn prepend_block_header(
+        ctx: &BindgenContext,
+        result: &mut Vec<quote::Tokens>,
+    ) {
+        let use_block = if ctx.options().block_extern_crate {
+            quote! {
+                extern crate block;
+            }
+        } else {
+            quote! {
+                use block;
+            }
+        };
+
+        let items = vec![use_block];
+        let old_items = mem::replace(result, items);
+        result.extend(old_items.into_iter());
+    }
+
     pub fn prepend_union_types(
         ctx: &BindgenContext,
         result: &mut Vec<quote::Tokens>,
@@ -3614,7 +3688,7 @@ mod utils {
 
         let union_field_debug_impl = quote! {
             impl<T> ::#prefix::fmt::Debug for __BindgenUnionField<T> {
-                fn fmt(&self, fmt: &mut ::#prefix::fmt::Formatter)
+                fn fmt(&self, fmt: &mut ::#prefix::fmt::Formatter<'_>)
                        -> ::#prefix::fmt::Result {
                     fmt.write_str("__BindgenUnionField")
                 }
@@ -3701,7 +3775,7 @@ mod utils {
 
         let incomplete_array_debug_impl = quote! {
             impl<T> ::#prefix::fmt::Debug for __IncompleteArrayField<T> {
-                fn fmt(&self, fmt: &mut ::#prefix::fmt::Formatter)
+                fn fmt(&self, fmt: &mut ::#prefix::fmt::Formatter<'_>)
                        -> ::#prefix::fmt::Result {
                     fmt.write_str("__IncompleteArrayField")
                 }
@@ -3868,5 +3942,27 @@ mod utils {
         }
 
         args
+    }
+
+    pub fn fnsig_block(
+        ctx: &BindgenContext,
+        sig: &FunctionSig,
+    ) -> quote::Tokens {
+        let args = sig.argument_types().iter().map(|&(_, ty)| {
+            let arg_item = ctx.resolve_item(ty);
+
+            arg_item.to_rust_ty_or_opaque(ctx, &())
+        });
+
+        let return_item = ctx.resolve_item(sig.return_type());
+        let ret_ty = if let TypeKind::Void = *return_item.kind().expect_type().kind() {
+            quote! { () }
+        } else {
+            return_item.to_rust_ty_or_opaque(ctx, &())
+        };
+
+        quote! {
+            *const ::block::Block<(#(#args),*), #ret_ty>
+        }
     }
 }

@@ -112,6 +112,10 @@ cargo_extra_outputs = {
         'bzip2-1.0.6/randtable.o',
         'libbz2.a',
     ],
+    'clang-sys': [
+        'common.rs',
+        'dynamic.rs',
+    ],
     'cranelift-codegen': [
         'binemit-arm32.rs',
         'binemit-arm64.rs',

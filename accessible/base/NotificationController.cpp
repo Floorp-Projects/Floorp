@@ -439,11 +439,10 @@ NotificationController::ScheduleContentInsertion(nsIContent* aStartChildNode,
        node = node->GetNextSibling()) {
     MOZ_ASSERT(parent == node->GetFlattenedTreeParentNode());
     // Notification triggers for content insertion even if no content was
-    // actually inserted, check if the given content has a frame to discard
+    // actually inserted (like if the content is display: none). Try to catch
     // this case early.
-    //
-    // TODO(emilio): Should this handle display: contents?
-    if (node->GetPrimaryFrame()) {
+    if (node->GetPrimaryFrame() ||
+        (node->IsElement() && node->AsElement()->IsDisplayContents())) {
       list.AppendElement(node);
     }
   }
