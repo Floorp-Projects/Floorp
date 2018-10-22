@@ -20,6 +20,14 @@
 using namespace js;
 using namespace js::jit;
 
+// All registers to save and restore. This includes the stack pointer, since we
+// use the ability to reference register values on the stack by index.
+// TODO: This is almost certainly incorrect.
+// TODO: All uses need auditing.
+static const LiveRegisterSet AllRegs =
+    LiveRegisterSet(GeneralRegisterSet(Registers::AllMask & ~(1 << 31 | 1 << 30 | 1 << 29| 1 << 28)),
+                    FloatRegisterSet(FloatRegisters::AllMask));
+
 /* This method generates a trampoline on ARM64 for a c++ function with
  * the following signature:
  *   bool blah(void* code, int argc, Value* argv, JSObject* scopeChain, Value* vp)
@@ -271,47 +279,14 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
     masm.SetStackPointer64(PseudoStackPointer64);
 }
 
-static void
-PushRegisterDump(MacroAssembler& masm)
-{
-    const LiveRegisterSet First28GeneralRegisters =
-        LiveRegisterSet(GeneralRegisterSet(
-                            Registers::AllMask & ~(1 << 31 | 1 << 30 | 1 << 29 | 1 << 28)),
-                        FloatRegisterSet(FloatRegisters::NoneMask));
-
-    const LiveRegisterSet AllFloatRegisters =
-        LiveRegisterSet(GeneralRegisterSet(Registers::NoneMask),
-                        FloatRegisterSet(FloatRegisters::AllMask));
-
-    // Push all general-purpose registers.
-    //
-    // The ARM64 ABI does not treat SP as a normal register that can
-    // be pushed. So pushing happens in two phases.
-    //
-    // Registers are pushed in reverse order of code.
-
-    // First, push the last four registers, passing zero for sp.
-    // Zero is pushed for x28 and x31: the pseudo-SP and SP, respectively.
-    masm.asVIXL().Push(xzr, x30, x29, xzr);
-
-    // Second, push the first 28 registers that serve no special purpose.
-    masm.PushRegsInMask(First28GeneralRegisters);
-
-    // Finally, push all floating-point registers, completing the RegisterDump.
-    masm.PushRegsInMask(AllFloatRegisters);
-}
-
 void
 JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail)
 {
     invalidatorOffset_ = startTrampolineCode(masm);
 
-    // The InvalidationBailoutStack saved in r0 must be:
-    // - osiPointReturnAddress_
-    // - ionScript_  (pushed by CodeGeneratorARM64::generateInvalidateEpilogue())
-    // - regs_  (pushed here)
-    // - fpregs_  (pushed here) [=r0]
-    PushRegisterDump(masm);
+    masm.push(r0, r1, r2, r3);
+
+    masm.PushRegsInMask(AllRegs);
     masm.moveStackPtrTo(r0);
 
     masm.Sub(x1, masm.GetStackPointer64(), Operand(sizeof(size_t)));
@@ -444,12 +419,38 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
 static void
 PushBailoutFrame(MacroAssembler& masm, Register spArg)
 {
+    const LiveRegisterSet First28GeneralRegisters =
+        LiveRegisterSet(GeneralRegisterSet(
+                            Registers::AllMask & ~(1 << 31 | 1 << 30 | 1 << 29 | 1 << 28)),
+                        FloatRegisterSet(FloatRegisters::NoneMask));
+
+    const LiveRegisterSet AllFloatRegisters =
+        LiveRegisterSet(GeneralRegisterSet(Registers::NoneMask),
+                        FloatRegisterSet(FloatRegisters::AllMask));
+
+    // Push all general-purpose registers.
+    //
+    // The bailout frame expects all registers to be present, including SP.
+    // But the ARM64 ABI does not treat SP as a normal register that can
+    // be pushed. So pushing happens in two phases.
+    //
+    // Registers are pushed in reverse order of code.
+
+    // First, push the last four registers, passing zero for sp.
+    // Zero is pushed for x28 and x31: the pseudo-SP and SP, respectively.
+    masm.asVIXL().Push(xzr, x30, x29, xzr);
+
+    // Second, push the first 28 registers that serve no special purpose.
+    masm.PushRegsInMask(First28GeneralRegisters);
+
+    // Finally, push all floating-point registers, completing the BailoutStack.
+    masm.PushRegsInMask(AllFloatRegisters);
+
     // The stack saved in spArg must be (higher entries have higher memory addresses):
     // - snapshotOffset_
     // - frameSize_
     // - regs_
     // - fpregs_ (spArg + 0)
-    PushRegisterDump(masm);
     masm.moveStackPtrTo(spArg);
 }
 
