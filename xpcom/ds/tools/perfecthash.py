@@ -35,6 +35,7 @@ class PerfectHash(object):
     tables will consume less space on disk."""
 
     # 32-bit FNV offset basis and prime value.
+    # NOTE: Must match values in |PerfectHash.h|
     FNV_OFFSET_BASIS = 0x811C9DC5
     FNV_PRIME = 16777619
     U32_MAX = 0xffffffff
@@ -144,6 +145,10 @@ class PerfectHash(object):
     def _indent(text, amount=1):
         return text.replace('\n', '\n' + ('  ' * amount))
 
+    def codegen(self, name, entry_type):
+        """Create a helper for codegening PHF logic"""
+        return CGHelper(self, name, entry_type)
+
     def cxx_codegen(self, name, entry_type, lower_entry, entries_name=None,
                     return_type=None, return_entry='return entry;',
                     key_type='const char*', key_bytes='aKey',
@@ -169,72 +174,156 @@ class PerfectHash(object):
         @param key_bytes    'const char*' expression to get bytes for 'aKey'
         @param key_length   'size_t' expression to get length of 'aKey'"""
 
-        if return_type is None:
-            return_type = 'const %s&' % entry_type
         if entries_name is None:
             entries_name = 's%sEntries' % name
 
-        # Write out 16 bases per line.
-        bases = ''
-        for idx, base in enumerate(self.table):
-            if idx and idx % 16 == 0:
-                bases += '\n'
-            bases += '%4d,' % base
+        cg = self.codegen(entries_name, entry_type)
+        entries = cg.gen_entries(lower_entry)
+        getter = cg.gen_getter(name, return_type, return_entry,
+                               key_type, key_bytes, key_length)
 
-        # Determine how big of an integer is needed for bases table.
-        max_base = max(self.table)
+        return "%s\n\n%s" % (entries, getter)
+
+
+class CGHelper(object):
+    """Helper object for generating C++ code for a PerfectHash.
+    Created using PerfectHash.codegen()."""
+
+    def __init__(self, phf, entries_name, entry_type):
+        self.phf = phf
+        self.entries_name = entries_name
+        self.entry_type = entry_type
+
+    @staticmethod
+    def _indent(text, amount=1):
+        return text.replace('\n', '\n' + ('  ' * amount))
+
+    def basis_ty(self):
+        """Determine how big of an integer is needed for bases table."""
+        max_base = max(self.phf.table)
         if max_base <= 0xff:
-            basis_type = 'uint8_t'
+            return 'uint8_t'
         elif max_base <= 0xffff:
-            basis_type = 'uint16_t'
-        else:
-            basis_type = 'uint32_t'
+            return 'uint16_t'
+        return 'uint32_t'
 
-        # Lower each entry to C++ code
-        entries = ',\n'.join(lower_entry(entry) for entry in self.entries)
+    def basis_table(self, name='BASES'):
+        """Generate code for a static basis table"""
+        bases = ''
+        for idx, base in enumerate(self.phf.table):
+            if idx and idx % 16 == 0:  # 16 bases per line
+                bases += '\n  '
+            bases += '%4d,' % base
+        return textwrap.dedent("""\
+            static const %s %s[] = {
+              %s
+            };
+            """) % (self.basis_ty(), name, bases)
+
+    def gen_entries(self, lower_entry):
+        """Generate code for an entries table"""
+        entries = self._indent(',\n'.join(lower_entry(entry).rstrip()
+                                          for entry in self.phf.entries))
+        return textwrap.dedent("""\
+            const %s %s[] = {
+              %s
+            };
+            """) % (self.entry_type, self.entries_name, entries)
+
+    def gen_getter(self, name, return_type=None, return_entry='return entry;',
+                   key_type='const char*', key_bytes='aKey',
+                   key_length='strlen(aKey)'):
+        """Generate the code for a C++ getter.
+
+        @param name         Name for the entry getter function.
+        @param return_type  C++ return type, default: 'const entry_type&'
+        @param return_entry Override the default behaviour for returning the
+                            found entry. 'entry' is a reference to the found
+                            entry, and 'aKey' is the lookup key. 'return_entry'
+                            can be used for additional checks, e.g. for keys
+                            not in the table.
+
+        @param key_type     C++ key type, default: 'const char*'
+        @param key_bytes    'const char*' expression to get bytes for 'aKey'
+        @param key_length   'size_t' expression to get length of 'aKey'"""
+
+        if return_type is None:
+            return_type = 'const %s&' % self.entry_type
 
         return textwrap.dedent("""
-            const %(entry_type)s %(entries_name)s[] = {
-              %(entries)s
-            };
-
             %(return_type)s
             %(name)s(%(key_type)s aKey)
             {
+              %(basis_table)s
+
               const char* bytes = %(key_bytes)s;
               size_t length = %(key_length)s;
-              auto hash = [&] (uint32_t basis) -> uint32_t {
-                for (size_t i = 0; i < length; ++i) {
-                  basis = (basis ^ uint8_t(bytes[i])) * %(fnv_prime)d;
-                }
-                return basis;
-              };
-
-              static const %(basis_type)s BASES[] = {
-                %(bases)s
-              };
-
-              %(basis_type)s basis = BASES[hash(%(fnv_basis)d) %% %(nbases)d];
-              auto& entry = %(entries_name)s[hash(basis) %% %(nentries)d];
+              auto& entry = mozilla::perfecthash::Lookup(bytes, length, BASES,
+                                                         %(entries_name)s);
               %(return_entry)s
             }
             """) % {
                 'name': name,
-                'fnv_basis': self.FNV_OFFSET_BASIS,
-                'fnv_prime': self.FNV_PRIME,
+                'basis_table': self._indent(self.basis_table()),
+                'entries_name': self.entries_name,
 
-                'entry_type': entry_type,
-                'entries_name': entries_name,
-                'entries': self._indent(entries),
-                'nentries': len(self.entries),
-                'return_entry': self._indent(return_entry),
                 'return_type': return_type,
-
-                'basis_type': basis_type,
-                'bases': self._indent(bases, 2),
-                'nbases': len(self.table),
+                'return_entry': self._indent(return_entry),
 
                 'key_type': key_type,
                 'key_bytes': key_bytes,
                 'key_length': key_length,
+            }
+
+    def gen_jsflatstr_getter(self, name, return_type=None,
+                             return_entry='return entry;'):
+        """Generate code for a specialized getter taking JSFlatStrings.
+        This getter avoids copying the JS string, but only supports ASCII keys.
+
+        @param name         Name for the entry getter function.
+        @param return_type  C++ return type, default: 'const entry_type&'
+        @param return_entry Override the default behaviour for returning the
+                            found entry. 'entry' is a reference to the found
+                            entry, and 'aKey' is the lookup key. 'return_entry'
+                            can be used for additional checks, e.g. for keys
+                            not in the table."""
+
+        assert all(ord(b) <= 0x7f
+                   for e in self.phf.entries
+                   for b in self.phf.key(e)), "non-ASCII key"
+
+        if return_type is None:
+            return_type = 'const %s&' % self.entry_type
+
+        return textwrap.dedent("""
+            %(return_type)s
+            %(name)s(JSFlatString* aKey)
+            {
+              %(basis_table)s
+
+              size_t length = js::GetFlatStringLength(aKey);
+              JSLinearString* jsString = js::FlatStringToLinearString(aKey);
+
+              JS::AutoCheckCannotGC nogc;
+              if (js::LinearStringHasLatin1Chars(jsString)) {
+                auto& entry = mozilla::perfecthash::Lookup(
+                  js::GetLatin1LinearStringChars(nogc, jsString),
+                  length, BASES, %(entries_name)s);
+
+                %(return_entry)s
+              } else {
+                auto& entry = mozilla::perfecthash::Lookup(
+                  js::GetTwoByteLinearStringChars(nogc, jsString),
+                  length, BASES, %(entries_name)s);
+
+                %(return_entry)s
+              }
+            }
+            """) % {
+                'name': name,
+                'basis_table': self._indent(self.basis_table()),
+                'entries_name': self.entries_name,
+
+                'return_type': return_type,
+                'return_entry': self._indent(return_entry, 2),
             }
