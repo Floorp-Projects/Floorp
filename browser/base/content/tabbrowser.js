@@ -2580,7 +2580,7 @@ window._gBrowser = {
 
   moveTabsToStart(contextTab) {
     let tabs = contextTab.multiselected ?
-      this.selectedTabs :
+      gBrowser.selectedTabs :
       [contextTab];
     // Walk the array in reverse order so the tabs are kept in order.
     for (let i = tabs.length - 1; i >= 0; i--) {
@@ -2593,7 +2593,7 @@ window._gBrowser = {
 
   moveTabsToEnd(contextTab) {
     let tabs = contextTab.multiselected ?
-      this.selectedTabs :
+      gBrowser.selectedTabs :
       [contextTab];
     for (let tab of tabs) {
       if (tab._tPos < this.tabs.length - 1) {
