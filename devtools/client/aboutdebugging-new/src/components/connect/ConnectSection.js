@@ -30,7 +30,7 @@ class ConnectSection extends PureComponent {
         dom.img(
           {
             className: "alt-subheading__icon",
-            src: this.props.icon
+            src: this.props.icon,
           }
         ),
         this.props.title
