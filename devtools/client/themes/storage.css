@@ -14,12 +14,6 @@
   background: var(--theme-sidebar-background);
 }
 
-#storage-tree .tree-widget-item[type="store"]:after {
-  background-image: url(chrome://devtools/skin/images/tool-storage.svg);
-  background-size: 18px 18px;
-  background-position: -1px 0;
-}
-
 /* Columns with date should have a min width so that date is visible */
 #expires, #lastAccessed, #creationTime {
   min-width: 150px;

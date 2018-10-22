@@ -213,7 +213,7 @@ a {
 
 .message.navigationMarker > .icon {
   color: var(--object-color);
-  background-image: url(chrome://devtools/skin/images/webconsole/globe.svg);
+  background-image: url(chrome://devtools/skin/images/globe.svg);
 }
 
 .message:hover > .icon.rewindable {

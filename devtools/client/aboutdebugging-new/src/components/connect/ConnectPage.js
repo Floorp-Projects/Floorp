@@ -26,7 +26,7 @@ const NetworkLocationsList = createFactory(require("./NetworkLocationsList"));
 
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
-const GLOBE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
+const GLOBE_ICON_SRC = "chrome://devtools/skin/images/globe.svg";
 
 class ConnectPage extends PureComponent {
   static get propTypes() {
