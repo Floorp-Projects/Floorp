@@ -132,6 +132,7 @@ function requestsReducer(state = Requests(), action) {
 
       const newRequest = {
         id: clonedRequest.id + "-clone",
+        cause: clonedRequest.cause,
         method: clonedRequest.method,
         url: clonedRequest.url,
         urlDetails: clonedRequest.urlDetails,
