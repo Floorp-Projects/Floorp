@@ -33,7 +33,7 @@ jobs:
                 PERFHERDER_EXTRA_OPTIONS: artifact
         run:
             using: mozharness
-            actions: [get-secrets build]
+            actions: [get-secrets, build]
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_artifact.py

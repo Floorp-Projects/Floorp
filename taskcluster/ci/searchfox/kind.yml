@@ -68,7 +68,7 @@ jobs:
                 MOZSEARCH_PLATFORM: "macosx"
         run:
             using: mozharness
-            actions: [get-secrets build]
+            actions: [get-secrets, build]
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_base_mac_64_cross_builds.py
