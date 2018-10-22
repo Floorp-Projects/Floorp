@@ -393,7 +393,7 @@ add_task(async function test_archiveCleanup() {
   h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED").snapshot();
   Assert.equal(h.sum, 1, "Telemetry must report 1 oversized ping in the archive.");
   h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB").snapshot();
-  Assert.equal(h.values[archivedPingSizeMB], 1,
+  Assert.equal(h.counts[archivedPingSizeMB], 1,
                "Telemetry must report the correct size for the oversized ping.");
 });
 

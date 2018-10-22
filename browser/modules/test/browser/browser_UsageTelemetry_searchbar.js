@@ -9,12 +9,12 @@ ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
 function checkHistogramResults(resultIndexes, expected, histogram) {
-  for (let [i, val] of Object.entries(resultIndexes.values)) {
+  for (let i = 0; i < resultIndexes.counts.length; i++) {
     if (i == expected) {
-      Assert.equal(val, 1,
+      Assert.equal(resultIndexes.counts[i], 1,
         `expected counts should match for ${histogram} index ${i}`);
     } else {
-      Assert.equal(!!val, false,
+      Assert.equal(resultIndexes.counts[i], 0,
         `unexpected counts should be zero for ${histogram} index ${i}`);
     }
   }
