@@ -549,7 +549,7 @@ AddrHostRecord::ResolveComplete()
     }
 
     if (mTRRUsed && !mTRRSuccess && mNativeSuccess && gTRRService) {
-        gTRRService->TRRBlacklist(nsCString(host), pb, true);
+        gTRRService->TRRBlacklist(nsCString(host), originSuffix, pb, true);
     }
 }
 

@@ -177,7 +177,9 @@ TRR::SendHTTPRequest()
 
   if ((mType == TRRTYPE_A) || (mType == TRRTYPE_AAAA)) {
     // let NS resolves skip the blacklist check
-    if (gTRRService->IsTRRBlacklisted(mHost, mPB, true)) {
+    MOZ_ASSERT(mRec);
+
+    if (gTRRService->IsTRRBlacklisted(mHost, mRec->originSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
         // count only blacklist for A records to avoid double counts
         Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, true);
