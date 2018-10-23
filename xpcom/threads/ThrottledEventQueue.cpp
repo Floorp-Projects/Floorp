@@ -46,6 +46,18 @@ namespace {
 // live for as long as the executor exists - that is, until the Inner's queue is
 // empty.
 //
+// A Paused ThrottledEventQueue does not enqueue an executor when new events are
+// added. Any executor previously queued on the base event target draws no
+// events from a Paused ThrottledEventQueue, and returns without re-enqueueing
+// itself. Since there is no executor keeping the Inner object alive until its
+// queue is empty, dropping a Paused ThrottledEventQueue may drop the Inner
+// while it still owns events. This is the correct behavior: if there are no
+// references to it, it will never be Resumed, and thus it will never dispatch
+// events again.
+//
+// Resuming a ThrottledEventQueue must dispatch an executor, so calls to Resume
+// are fallible for the same reasons as calls to Dispatch.
+//
 // The xpcom shutdown process drains the main thread's event queue several
 // times, so if a ThrottledEventQueue is being driven by the main thread, it
 // should get emptied out by the time we reach the "eventq shutdown" phase.
@@ -86,22 +98,31 @@ class ThrottledEventQueue::Inner final : public nsISupports
   mutable CondVar mIdleCondVar;
 
   // As-of-yet unexecuted runnables queued on this ThrottledEventQueue.
-  // (Used from any thread, protected by mMutex.)
+  //
+  // Used from any thread; protected by mMutex. Signals mIdleCondVar when
+  // emptied.
   EventQueue mEventQueue;
 
   // The event target we dispatch our events (actually, just our Executor) to.
-  // (Written during construction on main thread; read by any thread.)
+  //
+  // Written only during construction. Readable by any thread without locking.
   nsCOMPtr<nsISerialEventTarget> mBaseTarget;
 
   // The Executor that we dispatch to mBaseTarget to draw runnables from our
   // queue. mExecutor->mInner points to this Inner, forming a reference loop.
-  // (Used from any thread, protected by mMutex.)
+  //
+  // Used from any thread; protected by mMutex.
   nsCOMPtr<nsIRunnable> mExecutor;
+
+  // True if this queue is currently paused.
+  // Used from any thread; protected by mMutex.
+  bool mIsPaused;
 
   explicit Inner(nsISerialEventTarget* aBaseTarget)
     : mMutex("ThrottledEventQueue")
     , mIdleCondVar(mMutex, "ThrottledEventQueue:Idle")
     , mBaseTarget(aBaseTarget)
+    , mIsPaused(false)
   {
   }
 
@@ -109,9 +130,38 @@ class ThrottledEventQueue::Inner final : public nsISupports
   {
 #ifdef DEBUG
     MutexAutoLock lock(mMutex);
+
+    // As long as an executor exists, it had better keep us alive, since it's
+    // going to call ExecuteRunnable on us.
     MOZ_ASSERT(!mExecutor);
-    MOZ_ASSERT(mEventQueue.IsEmpty(lock));
+
+    // If we have any events in our queue, there should be an executor queued
+    // for them, and that should have kept us alive. The exception is that, if
+    // we're paused, we don't enqueue an executor.
+    MOZ_ASSERT(mEventQueue.IsEmpty(lock) || IsPaused(lock));
+
+    // Some runnables are only safe to drop on the main thread, so if our queue
+    // isn't empty, we'd better be on the main thread.
+    MOZ_ASSERT_IF(!mEventQueue.IsEmpty(lock), NS_IsMainThread());
 #endif
+  }
+
+  // Make sure an executor has been queued on our base target. If we already
+  // have one, do nothing; otherwise, create and dispatch it.
+  nsresult EnsureExecutor(MutexAutoLock& lock) {
+    if (mExecutor)
+      return NS_OK;
+
+    // Note, this creates a ref cycle keeping the inner alive
+    // until the queue is drained.
+    mExecutor = new Executor(this);
+    nsresult rv = mBaseTarget->Dispatch(mExecutor, NS_DISPATCH_NORMAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mExecutor = nullptr;
+      return rv;
+    }
+
+    return NS_OK;
   }
 
   nsresult
@@ -157,6 +207,17 @@ class ThrottledEventQueue::Inner final : public nsISupports
 
     {
       MutexAutoLock lock(mMutex);
+
+      // Normally, a paused queue doesn't dispatch any executor, but we might
+      // have been paused after the executor was already in flight. There's no
+      // way to yank the executor out of the base event target, so we just check
+      // for a paused queue here and return without running anything. We'll
+      // create a new executor when we're resumed.
+      if (IsPaused(lock)) {
+        // Note, this breaks a ref cycle.
+        mExecutor = nullptr;
+        return;
+      }
 
       // We only dispatch an executor runnable when we know there is something
       // in the queue, so this should never fail.
@@ -228,9 +289,41 @@ public:
 #endif
 
     MutexAutoLock lock(mMutex);
-    while (mExecutor) {
+    while (mExecutor || IsPaused(lock)) {
       mIdleCondVar.Wait();
     }
+  }
+
+  bool
+  IsPaused() const
+  {
+    MutexAutoLock lock(mMutex);
+    return IsPaused(lock);
+  }
+
+  bool
+  IsPaused(const MutexAutoLock& aProofOfLock) const
+  {
+    return mIsPaused;
+  }
+
+  nsresult
+  SetIsPaused(bool aIsPaused)
+  {
+    MutexAutoLock lock(mMutex);
+
+    // If we will be unpaused, and we have events in our queue, make sure we
+    // have an executor queued on the base event target to run them. Do this
+    // before we actually change mIsPaused, since this is fallible.
+    if (!aIsPaused && !mEventQueue.IsEmpty(lock)) {
+      nsresult rv = EnsureExecutor(lock);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+
+    mIsPaused = aIsPaused;
+    return NS_OK;
   }
 
   nsresult
@@ -250,19 +343,13 @@ public:
     // Any thread
     MutexAutoLock lock(mMutex);
 
-    // We are not currently processing events, so we must start
-    // operating on our base target.  This is fallible, so do
-    // it first.  Our lock will prevent the executor from accessing
-    // the event queue before we add the event below.
-    if (!mExecutor) {
-      // Note, this creates a ref cycle keeping the inner alive
-      // until the queue is drained.
-      mExecutor = new Executor(this);
-      nsresult rv = mBaseTarget->Dispatch(mExecutor, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        mExecutor = nullptr;
+    if (!IsPaused(lock)) {
+      // Make sure we have an executor in flight to process events. This is
+      // fallible, so do it first. Our lock will prevent the executor from
+      // accessing the event queue before we add the event below.
+      nsresult rv = EnsureExecutor(lock);
+      if (NS_FAILED(rv))
         return rv;
-      }
     }
 
     // Only add the event to the underlying queue if are able to
@@ -330,6 +417,18 @@ void
 ThrottledEventQueue::AwaitIdle() const
 {
   return mInner->AwaitIdle();
+}
+
+nsresult
+ThrottledEventQueue::SetIsPaused(bool aIsPaused)
+{
+  return mInner->SetIsPaused(aIsPaused);
+}
+
+bool
+ThrottledEventQueue::IsPaused() const
+{
+  return mInner->IsPaused();
 }
 
 NS_IMETHODIMP
