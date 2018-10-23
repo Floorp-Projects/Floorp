@@ -489,7 +489,7 @@ HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
         return false;
     }
 
-    uint32_t pcOffset = uint32_t(pc - script->main());
+    uint32_t pcOffset = script->pcToOffset(pc);
 
     for (const JSTryNote& tn : script->trynotes()) {
         if (pcOffset < tn.start) {

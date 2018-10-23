@@ -6449,9 +6449,8 @@ class FlowGraphSummary {
                 // because we only report offsets of entry points which have
                 // valid incoming edges.
                 for (const JSTryNote& tn : script->trynotes()) {
-                    uint32_t startOffset = script->mainOffset() + tn.start;
-                    if (startOffset == r.frontOffset() + 1) {
-                        uint32_t catchOffset = startOffset + tn.length;
+                    if (tn.start == r.frontOffset() + 1) {
+                        uint32_t catchOffset = tn.start + tn.length;
                         if (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY) {
                             addEdge(lineno, column, catchOffset);
                         }
@@ -7467,14 +7466,10 @@ class DebuggerScriptIsInCatchScopeMatcher
             return false;
         }
 
-        // Try note ranges are relative to the mainOffset of the script, so adjust
-        // offset accordingly.
-        size_t offset = offset_ - script->mainOffset();
-
         if (script->hasTrynotes()) {
             for (const JSTryNote& tn : script->trynotes()) {
-                if (tn.start <= offset &&
-                    offset <= tn.start + tn.length &&
+                if (tn.start <= offset_ &&
+                    offset_ < tn.start + tn.length &&
                     tn.kind == JSTRY_CATCH)
                 {
                     isInCatch_ = true;

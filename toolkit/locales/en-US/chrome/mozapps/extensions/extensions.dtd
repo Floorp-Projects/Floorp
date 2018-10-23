@@ -1,29 +1,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!ENTITY addons.windowTitle                   "Add-ons Manager">
-
-<!ENTITY search.placeholder3                  "Search addons.mozilla.org">
-<!ENTITY search.buttonlabel                   "Search">
-<!-- LOCALIZATION NOTE (search.commandkey):
-     The search command key should match findOnCmd.commandkey from browser.dtd -->
-<!ENTITY search.commandkey                    "f">
-
-<!ENTITY loading.label                        "Loading…">
-<!ENTITY listEmpty.installed.label            "You don’t have any add-ons of this type installed">
-<!ENTITY listEmpty.availableUpdates.label     "No updates found">
-<!ENTITY listEmpty.recentUpdates.label        "You haven’t recently updated any add-ons">
-<!ENTITY listEmpty.findUpdates.label          "Check For Updates">
-<!ENTITY listEmpty.button.label               "Learn more about add-ons">
-<!ENTITY installAddonFromFile.label           "Install Add-on From File…">
-<!ENTITY installAddonFromFile.accesskey       "I">
-<!ENTITY toolsMenu.tooltip                    "Tools for all add-ons">
-
-
-<!ENTITY showUnsignedExtensions.button.label  "Some extensions could not be verified">
-<!ENTITY showAllExtensions.button.label       "Show all extensions">
-<!ENTITY debugAddons.label                    "Debug Add-ons">
-<!ENTITY debugAddons.accesskey                "B">
 
 <!-- global warnings -->
 <!ENTITY warning.safemode.label                    "All add-ons have been disabled by safe mode.">
@@ -38,10 +15,6 @@
 <!ENTITY view.discover.label                  "Get Add-ons">
 <!ENTITY view.recentUpdates.label             "Recent Updates">
 <!ENTITY view.availableUpdates.label          "Available Updates">
-
-<!ENTITY helpButton.label                      "Add-ons Support">
-<!ENTITY preferencesWin.label                  "&brandShortName; Options">
-<!ENTITY preferencesUnix.label                 "&brandShortName; Preferences">
 
 <!-- addon updates -->
 <!ENTITY updates.checkForUpdates.label        "Check for Updates">
@@ -73,23 +46,23 @@
 <!ENTITY updates.updateSelected.tooltip       "Install available updates in this list">
 
 <!-- addon actions -->
-<!ENTITY cmd.showDetails.label                "Show More Information">
-<!ENTITY cmd.showDetails.accesskey            "S">
-<!ENTITY cmd.findUpdates.label                "Find Updates">
-<!ENTITY cmd.findUpdates.accesskey            "F">
-<!ENTITY cmd.preferencesWin.label             "Options">
-<!ENTITY cmd.preferencesWin.accesskey         "O">
-<!ENTITY cmd.preferencesUnix.label            "Preferences">
-<!ENTITY cmd.preferencesUnix.accesskey        "P">
+
+
+
+
+
+
+
+
 
 <!ENTITY cmd.enableAddon.label                "Enable">
 <!ENTITY cmd.enableAddon.accesskey            "E">
 <!ENTITY cmd.disableAddon.label               "Disable">
 <!ENTITY cmd.disableAddon.accesskey           "D">
-<!ENTITY cmd.enableTheme.label                "Wear Theme">
-<!ENTITY cmd.enableTheme.accesskey            "W">
-<!ENTITY cmd.disableTheme.label               "Stop Wearing Theme">
-<!ENTITY cmd.disableTheme.accesskey           "W">
+
+
+
+
 <!ENTITY cmd.askToActivate.label              "Ask to Activate">
 <!ENTITY cmd.askToActivate.tooltip            "Ask to use this add-on each time">
 <!ENTITY cmd.alwaysActivate.label             "Always Activate">
@@ -97,17 +70,17 @@
 <!ENTITY cmd.neverActivate.label              "Never Activate">
 <!ENTITY cmd.neverActivate.tooltip            "Never use this add-on">
 <!ENTITY cmd.stateMenu.tooltip                "Change when this add-on runs">
-<!ENTITY cmd.installAddon.label               "Install">
-<!ENTITY cmd.installAddon.accesskey           "I">
+
+
 <!ENTITY cmd.uninstallAddon.label             "Remove">
 <!ENTITY cmd.uninstallAddon.accesskey         "R">
 <!ENTITY cmd.showPreferencesWin.label         "Options">
 <!ENTITY cmd.showPreferencesWin.tooltip       "Change this add-on’s options">
 <!ENTITY cmd.showPreferencesUnix.label        "Preferences">
 <!ENTITY cmd.showPreferencesUnix.tooltip      "Change this add-on’s preferences">
-<!ENTITY cmd.contribute.label                 "Contribute">
-<!ENTITY cmd.contribute.accesskey             "C">
-<!ENTITY cmd.contribute.tooltip               "Contribute to the development of this add-on">
+
+
+
 
 <!ENTITY cmd.showReleaseNotes.label           "Show Release Notes">
 <!ENTITY cmd.showReleaseNotes.tooltip         "Show the release notes for this update">
@@ -115,54 +88,12 @@
 <!ENTITY cmd.hideReleaseNotes.tooltip         "Hide the release notes for this update">
 <!ENTITY cmd.findReplacement.label            "Find a Replacement">
 
-<!-- discovery view -->
-<!-- LOCALIZATION NOTE (discover.title,discover.description,discover.footer):
-     Displayed in the center of the Get Add-ons view, see bug 601143 for mockups. -->
-<!ENTITY discover.title                       "What are Add-ons?">
-<!ENTITY discover.description2                "Add-ons are applications that let you personalize &brandShortName; with
-  extra functionality or style. Try a time-saving sidebar, a weather notifier, or a themed look to make &brandShortName;
-  your own.">
-<!ENTITY discover.footer                      "When you’re connected to the internet, this pane will feature
-  some of the best and most popular add-ons for you to try out.">
-
-<!-- detail view -->
-<!ENTITY detail.version.label                 "Version">
-<!ENTITY detail.lastupdated.label             "Last Updated">
-<!ENTITY detail.creator.label                 "Developer">
-<!ENTITY detail.homepage.label                "Homepage">
-
-<!ENTITY detail.contributions.description     "The developer of this add-on asks that you help support its continued development by making a small contribution.">
-
-<!ENTITY detail.updateType                    "Automatic Updates">
-<!ENTITY detail.updateDefault.label           "Default">
-<!ENTITY detail.updateDefault.tooltip         "Automatically install updates only if that’s the default">
-<!ENTITY detail.updateAutomatic.label         "On">
-<!ENTITY detail.updateAutomatic.tooltip       "Automatically install updates">
-<!ENTITY detail.updateManual.label            "Off">
-<!ENTITY detail.updateManual.tooltip          "Don’t automatically install updates">
-<!ENTITY detail.home                          "Homepage">
-<!ENTITY detail.repository                    "Add-on Profile">
-<!ENTITY detail.size                          "Size">
-
-<!ENTITY detail.checkForUpdates.label         "Check for Updates">
-<!ENTITY detail.checkForUpdates.accesskey     "F">
-<!ENTITY detail.checkForUpdates.tooltip       "Check for updates for this add-on">
-<!ENTITY detail.showPreferencesWin.label      "Options">
-<!ENTITY detail.showPreferencesWin.accesskey  "O">
-<!ENTITY detail.showPreferencesWin.tooltip    "Change this add-on’s options">
-<!ENTITY detail.showPreferencesUnix.label     "Preferences">
-<!ENTITY detail.showPreferencesUnix.accesskey "P">
-<!ENTITY detail.showPreferencesUnix.tooltip   "Change this add-on’s preferences">
-
-
-<!-- ratings -->
-<!ENTITY rating2.label                        "Rating">
 
 <!-- download/install progress -->
-<!ENTITY progress.pause.tooltip               "Pause">
+
 <!ENTITY progress.cancel.tooltip              "Cancel">
 
-<!ENTITY addon.homepage                       "Homepage">
+
 <!ENTITY addon.details.label                  "More">
 <!ENTITY addon.details.tooltip                "Show more details about this add-on">
 <!ENTITY addon.unknownDate                    "Unknown">
@@ -183,7 +114,7 @@
 <!ENTITY addon.undoAction.tooltip             "Undo this action">
 <!ENTITY addon.undoRemove.label               "Undo">
 <!ENTITY addon.undoRemove.tooltip             "Keep this add-on installed">
-<!ENTITY addon.restartNow.label               "Restart now">
+
 <!ENTITY addon.install.label                  "Install">
 <!ENTITY addon.install.tooltip                "Install this add-on">
 <!ENTITY addon.updateNow.label                "Update Now">
@@ -205,26 +136,3 @@
 <!ENTITY settings.path.button.label           "Browse…">
 
 <!ENTITY setting.learnmore "Learn More…">
-
-<!ENTITY disabledUnsigned.heading "Some add-ons have been disabled">
-<!-- LOCALIZATION NOTE (disabledUnsigned.description.start, disabledUnsigned.description.findAddonsLink, disabledUnsigned.description.end):
-     These entities form a sentence, with
-     disabledUnsigned.description.findAddonsLink being a link to an external site. -->
-<!ENTITY disabledUnsigned.description.start "The following add-ons have not been verified for use in &brandShortName;. You can ">
-<!ENTITY disabledUnsigned.description.findAddonsLink "find replacements">
-<!ENTITY disabledUnsigned.description.end " or ask the developer to get them verified.">
-<!ENTITY disabledUnsigned.learnMore "Learn more about our efforts to help keep you safe online.">
-<!-- LOCALIZATION NOTE (disabledUnsigned.devInfo.start, disabledUnsigned.devInfo.linkToManual, disabledUnsigned.devInfo.end):
-     These entities form a sentence, with disabledUnsigned.devInfo.linkToManual
-     being a link to an external site. -->
-<!ENTITY disabledUnsigned.devInfo.start "Developers interested in getting their add-ons verified can continue by reading our ">
-<!ENTITY disabledUnsigned.devInfo.linkToManual "manual">
-<!ENTITY disabledUnsigned.devInfo.end ".">
-
-<!ENTITY pluginDeprecation.description "Missing something? Some plugins are no longer supported by &brandShortName;.">
-<!ENTITY pluginDeprecation.learnMore "Learn More.">
-
-<!ENTITY legacyWarning.showLegacy "Show legacy extensions">
-<!ENTITY legacyExtensions.title "Legacy Extensions">
-<!ENTITY legacyExtensions.description "These extensions do not meet current &brandShortName; standards so they have been deactivated.">
-<!ENTITY legacyExtensions.learnMore "Learn about the changes to add-ons">

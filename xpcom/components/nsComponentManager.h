@@ -19,7 +19,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
-#include "mozilla/ModuleLoader.h"
 #include "mozilla/Mutex.h"
 #include "nsXULAppAPI.h"
 #include "nsIFactory.h"
@@ -40,7 +39,6 @@
 #include "mozilla/Attributes.h"
 
 struct nsFactoryEntry;
-class nsIServiceManager;
 struct PRThread;
 
 #define NS_COMPONENTMANAGER_CID                      \
@@ -51,17 +49,6 @@ struct PRThread;
     {0x92, 0xfb, 0x00, 0xe0, 0x98, 0x05, 0x57, 0x0f} \
 }
 
-/* keys for registry use */
-extern const char xpcomKeyName[];
-extern const char xpcomComponentsKeyName[];
-extern const char lastModValueName[];
-extern const char fileSizeValueName[];
-extern const char nativeComponentType[];
-extern const char staticComponentType[];
-
-#ifdef DEBUG
-#define XPCOM_CHECK_PENDING_CIDS
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 extern const mozilla::Module kXPCOMModule;
@@ -154,9 +141,6 @@ public:
 
   nsresult FreeServices();
 
-  already_AddRefed<mozilla::ModuleLoader> LoaderForExtension(const nsACString& aExt);
-  nsInterfaceHashtable<nsCStringHashKey, mozilla::ModuleLoader> mLoaderMap;
-
   already_AddRefed<nsIFactory> FindFactory(const nsCID& aClass);
   already_AddRefed<nsIFactory> FindFactory(const char* aContractID,
                                            uint32_t aContractIDLen);
@@ -198,14 +182,6 @@ public:
     /**
      * Static or binary module.
      */
-    KnownModule(const mozilla::Module* aModule, mozilla::FileLocation& aFile)
-      : mModule(aModule)
-      , mFile(aFile)
-      , mLoaded(false)
-      , mFailed(false)
-    {
-    }
-
     explicit KnownModule(const mozilla::Module* aModule)
       : mModule(aModule)
       , mLoaded(false)
@@ -216,7 +192,6 @@ public:
     explicit KnownModule(mozilla::FileLocation& aFile)
       : mModule(nullptr)
       , mFile(aFile)
-      , mLoader(nullptr)
       , mLoaded(false)
       , mFailed(false)
     {
@@ -229,7 +204,6 @@ public:
       }
     }
 
-    bool EnsureLoader();
     bool Load();
 
     const mozilla::Module* Module() const { return mModule; }
@@ -243,7 +217,6 @@ public:
   private:
     const mozilla::Module* mModule;
     mozilla::FileLocation mFile;
-    nsCOMPtr<mozilla::ModuleLoader> mLoader;
     bool mLoaded;
     bool mFailed;
   };
@@ -255,8 +228,7 @@ public:
   nsClassHashtable<nsCStringHashKey, KnownModule> mKnownModules;
 
   // Mutex not held
-  void RegisterModule(const mozilla::Module* aModule,
-                      mozilla::FileLocation* aFile);
+  void RegisterModule(const mozilla::Module* aModule);
 
 
   // Mutex held

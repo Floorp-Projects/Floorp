@@ -32,12 +32,6 @@ NSSKeyStore::NSSKeyStore()
 }
 NSSKeyStore::~NSSKeyStore() {}
 
-bool
-NSSKeyStore::IsNSSKeyStore()
-{
-  return true;
-}
-
 nsresult
 NSSKeyStore::InitToken()
 {

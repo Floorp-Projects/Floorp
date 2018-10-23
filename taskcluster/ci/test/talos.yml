@@ -42,24 +42,6 @@ talos-bcv:
         extra-options:
             - --suite=bcv
 
-talos-bcv-profiling:
-    description: "Talos profiling basic compositor video"
-    try-name: bcv-profiling
-    treeherder-symbol: T-P(bcv)
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: []  # this test is not useful with webrender
-            default: ['mozilla-central', 'try']
-    tier:
-        by-test-platform:
-            .*-qr/.*: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
-            default: default
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --suite=bcv
-            - --geckoProfile
-
 talos-chrome:
     description: "Talos chrome"
     try-name: chromez
@@ -69,17 +51,6 @@ talos-chrome:
     mozharness:
         extra-options:
             - --suite=chromez
-
-talos-chrome-profiling:
-    description: "Talos profiling chrome"
-    try-name: chromez-profiling
-    treeherder-symbol: T-P(c)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1200
-    mozharness:
-        extra-options:
-            - --suite=chromez
-            - --geckoProfile
 
 talos-damp:
     description: "Talos devtools (damp)"
@@ -94,17 +65,6 @@ talos-damp:
         extra-options:
             - --suite=damp
 
-talos-damp-profiling:
-    description: "Talos profiling devtools"
-    try-name: damp-profiling
-    treeherder-symbol: T-P(damp)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1200
-    mozharness:
-        extra-options:
-            - --suite=damp
-            - --geckoProfile
-
 talos-dromaeojs:
     description: "Talos dromaeojs"
     try-name: dromaeojs
@@ -114,17 +74,6 @@ talos-dromaeojs:
     mozharness:
         extra-options:
             - --suite=dromaeojs
-
-talos-dromaeojs-profiling:
-    description: "Talos profiling dromaeojs"
-    try-name: dromaeojs-profiling
-    treeherder-symbol: T-P(d)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 2100
-    mozharness:
-        extra-options:
-            - --suite=dromaeojs
-            - --geckoProfile
 
 talos-flex:
     description: "Talos XUL flexbox emulation enabled"
@@ -150,20 +99,6 @@ talos-g1:
         extra-options:
             - --suite=g1
 
-talos-g1-profiling:
-    description: "Talos profiling g1"
-    try-name: g1-profiling
-    treeherder-symbol: T-P(g1)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time:
-        by-test-platform:
-            linux64.*: 3600
-            default: 7200
-    mozharness:
-        extra-options:
-            - --suite=g1
-            - --geckoProfile
-
 talos-g3:
     description: "Talos g3"
     try-name: g3
@@ -173,17 +108,6 @@ talos-g3:
     mozharness:
         extra-options:
             - --suite=g3
-
-talos-g3-profiling:
-    description: "Talos profiling g3"
-    try-name: g3-profiling
-    treeherder-symbol: T-P(g3)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 900
-    mozharness:
-        extra-options:
-            - --suite=g3
-            - --geckoProfile
 
 talos-g4:
     description: "Talos g4"
@@ -198,20 +122,6 @@ talos-g4:
         extra-options:
             - --suite=g4
 
-talos-g4-profiling:
-    description: "Talos profiling g4"
-    try-name: g4-profiling
-    treeherder-symbol: T-P(g4)
-    run-on-projects: ['mozilla-central', 'try']
-    mozharness:
-        extra-options:
-            - --suite=g4
-            - --geckoProfile
-    max-run-time:
-        by-test-platform:
-            linux64.*: 1500
-            default: 1800
-
 talos-g5:
     description: "Talos g5"
     try-name: g5
@@ -220,20 +130,6 @@ talos-g5:
     mozharness:
         extra-options:
             - --suite=g5
-    max-run-time:
-        by-test-platform:
-            linux64.*: 1200
-            default: 1800
-
-talos-g5-profiling:
-    description: "Talos profiling g5"
-    try-name: g5-profiling
-    treeherder-symbol: T-P(g5)
-    run-on-projects: ['mozilla-central', 'try']
-    mozharness:
-        extra-options:
-            - --suite=g5
-            - --geckoProfile
     max-run-time:
         by-test-platform:
             linux64.*: 1200
@@ -280,22 +176,6 @@ talos-motionmark:
         extra-options:
             - --suite=motionmark
 
-talos-motionmark-profiling:
-    description: "Talos profiling motionmark"
-    try-name: motionmark-profiling
-    treeherder-symbol: T-P(mm)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 3600
-    tier:
-        by-test-platform:
-            windows10-64-ccov/.*: 3
-            linux64-ccov/.*: 3
-            default: 2
-    mozharness:
-        extra-options:
-            - --suite=motionmark
-            - --geckoProfile
-
 talos-other:
     description: "Talos other"
     try-name: other
@@ -316,17 +196,6 @@ talos-sessionrestore-many-windows:
         extra-options:
             - --suite=sessionrestore-many-windows
 
-talos-other-profiling:
-    description: "Talos profiling other"
-    try-name: other-profiling
-    treeherder-symbol: T-P(o)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1500
-    mozharness:
-        extra-options:
-            - --suite=other
-            - --geckoProfile
-
 talos-perf-reftest:
     description: "Talos perf-reftest"
     try-name: perf-reftest
@@ -336,17 +205,6 @@ talos-perf-reftest:
     mozharness:
         extra-options:
             - --suite=perf-reftest
-
-talos-perf-reftest-profiling:
-    description: "Talos profiling perf-reftest"
-    try-name: perf-reftest-profiling
-    treeherder-symbol: T-P(p)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1200
-    mozharness:
-        extra-options:
-            - --suite=perf-reftest
-            - --geckoProfile
 
 talos-perf-reftest-singletons:
     description: "Talos perf-reftest singletons"
@@ -358,17 +216,6 @@ talos-perf-reftest-singletons:
         extra-options:
             - --suite=perf-reftest-singletons
 
-talos-perf-reftest-singletons-profiling:
-    description: "Talos profiling perf-reftest singletons"
-    try-name: perf-reftest-singletons-profiling
-    treeherder-symbol: T-P(ps)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1200
-    mozharness:
-        extra-options:
-            - --suite=perf-reftest-singletons
-            - --geckoProfile
-
 talos-speedometer:
     description: "Talos speedometer"
     try-name: speedometer
@@ -378,17 +225,6 @@ talos-speedometer:
     mozharness:
         extra-options:
             - --suite=speedometer
-
-talos-speedometer-profiling:
-    description: "Talos profiling speedometer"
-    try-name: speedometer-profiling
-    treeherder-symbol: T-P(sp)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1500
-    mozharness:
-        extra-options:
-            - --suite=speedometer
-            - --geckoProfile
 
 talos-svgr:
     description: "Talos svgr"
@@ -400,17 +236,6 @@ talos-svgr:
         extra-options:
             - --suite=svgr
 
-talos-svgr-profiling:
-    description: "Talos profiling svgr"
-    try-name: svgr-profiling
-    treeherder-symbol: T-P(s)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --suite=svgr
-            - --geckoProfile
-
 talos-tp5o:
     description: "Talos tp5o"
     try-name: tp5o
@@ -421,17 +246,6 @@ talos-tp5o:
         extra-options:
             - --suite=tp5o
 
-talos-tp5o-profiling:
-    description: "Talos profiling tp5o"
-    try-name: tp5o-profiling
-    treeherder-symbol: T-P(tp)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --suite=tp5o
-            - --geckoProfile
-
 talos-tp6:
     description: "Talos tp6"
     try-name: tp6
@@ -441,17 +255,6 @@ talos-tp6:
     mozharness:
         extra-options:
             - --suite=tp6
-
-talos-tp6-profiling:
-    description: "Talos profiling tp6"
-    try-name: tp6-profiling
-    treeherder-symbol: T-P(tp6)
-    run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1200
-    mozharness:
-        extra-options:
-            - --suite=tp6
-            - --geckoProfile
 
 talos-tp6-stylo-threads:
     description: "Talos Stylo sequential tp6"
@@ -478,17 +281,6 @@ talos-tps:
     mozharness:
         extra-options:
             - --suite=tps
-
-talos-tps-profiling:
-    description: "Talos page scroll profiling (tps)"
-    try-name: tps-profiling
-    treeherder-symbol: T-P(tps)
-    max-run-time: 900
-    run-on-projects: ['mozilla-central', 'try']
-    mozharness:
-        extra-options:
-            - --suite=tps
-            - --geckoProfile
 
 talos-xperf:
     description: "Talos xperf"

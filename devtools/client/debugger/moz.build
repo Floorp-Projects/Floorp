@@ -4,18 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'content',
     'new'
 ]
 
-DevToolsModules(
-    'panel.js'
-)
-
 BROWSER_CHROME_MANIFESTS += [
   'new/test/mochitest/browser.ini',
-  'test/mochitest/browser.ini',
-  'test/mochitest/browser2.ini'
+  'test/mochitest/browser.ini'
 ]
 
 with Files('**'):

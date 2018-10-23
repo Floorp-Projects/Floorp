@@ -5177,16 +5177,23 @@ BaselineCompiler::emit_JSOP_RESUME()
 
         TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(GeneratorThrowOrReturnInfo);
 
-        // Create the frame descriptor.
+        // Create and push the frame descriptor.
         masm.subStackPtrFrom(scratch1);
         masm.makeFrameDescriptor(scratch1, FrameType::BaselineJS, ExitFrameLayout::Size());
-
-        // Push the frame descriptor and a dummy return address (it doesn't
-        // matter what we push here, frame iterators will use the frame pc
-        // set in jit::GeneratorThrowOrReturn).
         masm.push(scratch1);
 
-        // On ARM64, the callee will push the return address.
+        // We have created a baseline frame as if we were the
+        // callee. However, if we just did a regular call at this
+        // point, our return address would be bogus: it would point at
+        // self-hosted code, instead of the generator code that we are
+        // pretending we are already executing. Instead, we push a
+        // dummy return address. In jit::GeneratorThrowOrReturn,
+        // we will set the baseline frame's overridePc. Frame iterators
+        // will use the override pc instead of relying on the return
+        // address.
+
+        // On ARM64, the callee will push a bogus return address. On
+        // other architectures, we push a null return address.
 #ifndef JS_CODEGEN_ARM64
         masm.push(ImmWord(0));
 #endif
