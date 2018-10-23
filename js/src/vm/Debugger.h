@@ -789,7 +789,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static const JSFunctionSpec methods[];
     static const JSFunctionSpec static_methods[];
 
-    static void removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx, AbstractFramePtr frame);
+    static void removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx, AbstractFramePtr frame,
+                                                         bool suspending = false);
     static bool updateExecutionObservabilityOfFrames(JSContext* cx, const ExecutionObservableSet& obs,
                                                      IsObserving observing);
     static bool updateExecutionObservabilityOfScripts(JSContext* cx, const ExecutionObservableSet& obs,
