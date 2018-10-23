@@ -500,7 +500,7 @@ BuildAnimation(nsPresContext* aPresContext,
 
   bool isStylePaused =
     aStyleDisplay.GetAnimationPlayState(animIdx) ==
-      NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
+      StyleAnimationPlayState::Paused;
 
   // Find the matching animation with animation name in the old list
   // of animations and remove the matched animation from the list.

@@ -702,6 +702,12 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
     NS_ADDREF(*aResult = nsComponentManagerImpl::gComponentManager);
   }
 
+  // Ensure that XPConnect etc. is started up before we might call
+  // into JS. For instance, on Android nsIDirectoryServiceProvider is
+  // written in JS.
+  nsCOMPtr<nsISupports> componentLoader =
+    do_GetService("@mozilla.org/moz/jsloader;1");
+
   // After autoreg, but before we actually instantiate any components,
   // add any services listed in the "xpcom-directory-providers" category
   // to the directory service.
@@ -709,11 +715,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   // Init SharedThreadPool (which needs the service manager).
   SharedThreadPool::InitStatics();
-
-  // Force layout to spin up so that nsContentUtils is available for cx stack
-  // munging.
-  nsCOMPtr<nsISupports> componentLoader =
-    do_GetService("@mozilla.org/moz/jsloader;1");
 
   mozilla::ScriptPreloader::GetSingleton();
   mozilla::scache::StartupCache::GetSingleton();

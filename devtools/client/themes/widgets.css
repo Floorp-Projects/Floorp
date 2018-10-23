@@ -926,12 +926,12 @@
 /* Tree Item */
 
 .tree-widget-container .tree-widget-item {
-  padding: 2px 0px 4px;
+  padding: 4px 0px;
   /* OSX has line-height 14px by default, which causes weird alignment issues
    * because of 20px high icons. thus making line-height consistent with that of
    * windows.
    */
-  line-height: 17px !important;
+  line-height: 16px;
   display: inline-block;
   width: 100%;
   word-break: keep-all; /* To prevent long urls like http://foo.com/bar from
@@ -951,24 +951,24 @@
 /* Twisties */
 .tree-widget-item::before {
   content: "";
-  width: 14px;
-  height: 14px;
-  float: left;
-  margin: 3px 2px -3px;
+  width: 16px;
+  height: 16px;
+  float: inline-start;
+  margin: 0 1px;
+  background-image: url("chrome://devtools/skin/images/devtools-components/arrow.svg");
+  background-position: 50% 50%;
   background-repeat: no-repeat;
-  background-image: url("chrome://devtools/skin/images/controls.png");
-  background-size: 56px 28px;
+  background-size: 10px 10px;
+  -moz-context-properties: fill;
+  fill: currentColor;
   cursor: pointer;
-  background-position: -28px -14px;
+  opacity: 0.5;
+  transition: transform 125ms ease;
+  transform: rotate(-90deg);
 }
 
 .tree-widget-item:-moz-locale-dir(rtl)::before {
-  float: right;
-  transform: scaleX(-1);
-}
-
-.theme-light .tree-widget-item:not(.theme-selected)::before {
-  background-position: 0 -14px;
+  transform: rotate(90deg);
 }
 
 .tree-widget-item[empty]::before {
@@ -976,11 +976,11 @@
 }
 
 .tree-widget-item[expanded]::before {
-  background-position: -42px -14px;
+  transform: none;
 }
 
-.theme-light .tree-widget-item:not(.theme-selected)[expanded]:before {
-  background-position: -14px -14px;
+.tree-widget-item.theme-selected::before {
+  opacity: 1;
 }
 
 .tree-widget-item + ul {
@@ -1009,12 +1009,6 @@
   }
   to {
     max-height: 500px;
-  }
-}
-
-@media (min-resolution: 1.1dppx) {
-  .tree-widget-item:before {
-    background-image: url("chrome://devtools/skin/images/controls@2x.png");
   }
 }
 
@@ -1059,43 +1053,24 @@
 
 .tree-widget-item[type]::after {
   content: "";
-  float: left;
+  float: inline-start;
   width: 16px;
-  height: 17px;
+  height: 16px;
   margin-inline-end: 4px;
   background-repeat: no-repeat;
-  background-size: 20px auto;
-  background-position: 0 0;
-  background-size: auto 20px;
-  opacity: 0.75;
-}
-
-.tree-widget-item.theme-selected[type]::after {
-  opacity: 1;
-}
-
-.tree-widget-item:-moz-locale-dir(rtl)::after {
-  float: right;
-}
-
-.theme-light .tree-widget-item.theme-selected[type]::after,
-.theme-dark .tree-widget-item[type]::after {
-  filter: invert(1);
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .tree-widget-item[type="dir"]::after {
-  background-image: url(chrome://devtools/skin/images/filetypes/dir-close.svg);
-  background-position: 2px 0;
-  background-size: auto 16px;
-  width: 20px;
-}
-
-.tree-widget-item[type="dir"][expanded]:not([empty])::after {
-  background-image: url(chrome://devtools/skin/images/filetypes/dir-open.svg);
+  background-image: url(chrome://devtools/skin/images/folder.svg);
 }
 
 .tree-widget-item[type="url"]::after {
-  background-image: url(chrome://devtools/skin/images/filetypes/globe.svg);
-  background-size: auto 18px;
-  width: 18px;
+  background-image: url(chrome://devtools/skin/images/globe.svg);
+}
+
+.tree-widget-item[type="store"]::after {
+  background-image: url(chrome://devtools/skin/images/datastore.svg);
 }

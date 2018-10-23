@@ -3185,7 +3185,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * output even if the element being filtered wouldn't otherwise do so.
    */
   if (usingSVGEffects) {
-    MOZ_ASSERT(usingFilter ||usingMask,
+    MOZ_ASSERT(usingFilter || usingMask,
                "Beside filter & mask/clip-path, what else effect do we have?");
 
     if (clipCapturedBy == ContainerItemType::eFilter) {
@@ -3209,7 +3209,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       // an item always needs to have finite bounds with respect to its ASR.
       // If we weren't able to compute a clip for the mask, we fall back to
       // using containerItemASR, which is the lowest common ancestor clip of
-      // the mask's contents. That's not entirely crrect, but it satisfies
+      // the mask's contents. That's not entirely correct, but it satisfies
       // the base requirement of the ASR system (that items have finite bounds
       // wrt. their ASR).
       const ActiveScrolledRoot* maskASR = clipForMask.isSome()

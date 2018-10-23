@@ -587,25 +587,9 @@ DisplayItemClip::ToComplexClipRegions(
   const layers::StackingContextHelper& aSc,
   nsTArray<wr::ComplexClipRegion>& aOutArray) const
 {
-  for (uint32_t i = 0; i < mRoundedClipRects.Length(); i++) {
-    wr::ComplexClipRegion* region = aOutArray.AppendElement();
-    region->rect = wr::ToRoundedLayoutRect(LayoutDeviceRect::FromAppUnits(
-      mRoundedClipRects[i].mRect, aAppUnitsPerDevPixel));
-    const nscoord* radii = mRoundedClipRects[i].mRadii;
-    region->radii = wr::ToBorderRadius(
-      LayoutDeviceSize::FromAppUnits(
-        nsSize(radii[eCornerTopLeftX], radii[eCornerTopLeftY]),
-        aAppUnitsPerDevPixel),
-      LayoutDeviceSize::FromAppUnits(
-        nsSize(radii[eCornerTopRightX], radii[eCornerTopRightY]),
-        aAppUnitsPerDevPixel),
-      LayoutDeviceSize::FromAppUnits(
-        nsSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]),
-        aAppUnitsPerDevPixel),
-      LayoutDeviceSize::FromAppUnits(
-        nsSize(radii[eCornerBottomRightX], radii[eCornerBottomRightY]),
-        aAppUnitsPerDevPixel));
-    region->mode = wr::ClipMode::Clip;
+  for (const auto& clipRect : mRoundedClipRects) {
+    aOutArray.AppendElement(wr::ToComplexClipRegion(
+      clipRect.mRect, clipRect.mRadii, aAppUnitsPerDevPixel));
   }
 }
 

@@ -84,6 +84,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'ole32.dll',
     ]
 
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'Darwin':
+    USE_LIBS += [
+        'mozsandbox',
+    ]
+
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     # For sandbox includes and the include dependencies those have
     LOCAL_INCLUDES += [

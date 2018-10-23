@@ -223,13 +223,7 @@ HTMLHeaderOrFooterAccessible::NativeRole() const
 
   // No sectioning or sectioning root elements found.
   if (!parent) {
-    if (mContent->IsHTMLElement(nsGkAtoms::header)) {
-      return roles::HEADER;
-    }
-
-    if (mContent->IsHTMLElement(nsGkAtoms::footer)) {
-      return roles::FOOTER;
-    }
+    return roles::LANDMARK;
   }
 
   return roles::SECTION;
@@ -242,12 +236,14 @@ HTMLHeaderOrFooterAccessible::LandmarkRole() const
     return nullptr;
 
   a11y::role r = const_cast<HTMLHeaderOrFooterAccessible*>(this)->Role();
-  if (r == roles::HEADER) {
-    return nsGkAtoms::banner;
-  }
+  if (r == roles::LANDMARK) {
+    if (mContent->IsHTMLElement(nsGkAtoms::header)) {
+      return nsGkAtoms::banner;
+    }
 
-  if (r == roles::FOOTER) {
-    return nsGkAtoms::contentinfo;
+    if (mContent->IsHTMLElement(nsGkAtoms::footer)) {
+      return nsGkAtoms::contentinfo;
+    }
   }
 
   return nullptr;

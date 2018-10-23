@@ -286,7 +286,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
   bool containsSVGGroup = false;
-  bool dumpEnabled = mWebRenderCommandBuilder.ShouldDumpDisplayList();
+  bool dumpEnabled = mWebRenderCommandBuilder.ShouldDumpDisplayList(aDisplayListBuilder);
   if (dumpEnabled) {
     printf_stderr("-- WebRender display list build --\n");
   }

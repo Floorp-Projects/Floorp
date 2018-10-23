@@ -181,7 +181,7 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
 bool
 nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(const nsIFrame* aFrame)
 {
-  const nsStyleSVGReset *style = aFrame->StyleSVGReset();
+  const nsStyleSVGReset* style = aFrame->StyleSVGReset();
   return style->HasClipPath() || style->HasMask();
 }
 

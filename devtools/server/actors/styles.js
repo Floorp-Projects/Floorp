@@ -9,6 +9,7 @@ const protocol = require("devtools/shared/protocol");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {LongStringActor} = require("devtools/server/actors/string");
 const InspectorUtils = require("InspectorUtils");
+const TrackChangeEmitter = require("devtools/server/actors/utils/track-change-emitter");
 
 // This will also add the "stylesheet" actor type for protocol.js to recognize
 
@@ -1520,7 +1521,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       return;
     }
 
-    this.emit("track-change", data);
+    TrackChangeEmitter.trackChange(data);
   },
 
   /**

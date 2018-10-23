@@ -188,37 +188,36 @@ a {
 
 .message.command > .icon {
   color: var(--console-output-icon-input);
-  background-image: var(--theme-console-input-image);
+  background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
 }
 
 .message.result > .icon {
   color: var(--console-output-icon-info);
-  background-image: var(--theme-console-return-image);
+  background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
 }
 
 .message.info > .icon {
   color: var(--console-output-icon-info);
-  background-image: var(--theme-console-info-image);
+  background-image: url(chrome://devtools/skin/images/webconsole/info.svg);
 }
 
 .message.error > .icon {
   color: var(--console-output-icon-error);
-  background-image: var(--theme-console-alert-image);
+  background-image: url(chrome://devtools/skin/images/alert.svg);
 }
 
 .message.warn > .icon {
   color: var(--console-output-icon-warning);
-  background-image: var(--theme-console-alert-image);
+  background-image: url(chrome://devtools/skin/images/alert.svg);
 }
 
 .message.navigationMarker > .icon {
   color: var(--object-color);
-  background-image: var(--theme-console-navigation-image);
+  background-image: url(chrome://devtools/skin/images/globe.svg);
 }
 
-
 .message:hover > .icon.rewindable {
-  background-image:var(--theme-console-jump-image);
+  background-image: url(chrome://devtools/skin/images/webconsole/jump.svg);
   background-size: 14px 14px;
   cursor: pointer;
 }
@@ -382,7 +381,7 @@ html #webconsole-notificationbox {
   min-height: 100%;
   color: var(--theme-content-color1);
   /* input icon */
-  background-image: var(--theme-console-input-image);
+  background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
   background-position-x: calc(10px + var(--console-icon-horizontal-offset));
   background-position-y: 7px;
   background-repeat: no-repeat;
@@ -437,7 +436,7 @@ textarea.jsterm-input-node:focus {
   /* aim for a 32px left space (a descendent has 4px padding) */
   padding-inline-start: calc(var(--console-inline-start-gutter) - 4px);
   /* input icon */
-  background-image: var(--theme-console-input-image);
+  background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
   background-position-x: calc(10px + var(--console-icon-horizontal-offset));
   background-position-y: 5px;
   background-repeat: no-repeat;

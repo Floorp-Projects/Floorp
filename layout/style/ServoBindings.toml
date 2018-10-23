@@ -104,6 +104,7 @@ rusty-enums = [
     "mozilla::StyleFloatEdge",
     "mozilla::StyleShapeRadius",
     "mozilla::StyleWindowDragging",
+    "mozilla::StyleAnimationPlayState",
     "mozilla::StyleOrient",
     "mozilla::StyleBoxSizing",
     "mozilla::StyleClear",

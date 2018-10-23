@@ -90,18 +90,6 @@ add_task(function() {
 add_task(function() {
   let exceptionThrown;
   try {
-    CustomizableUI.registerArea("area-996899-3", { legacy: true });
-    CustomizableUI.registerArea("area-996899-3", { legacy: false });
-  } catch (ex) {
-    exceptionThrown = ex;
-  }
-  ok(exceptionThrown, "Changing 'legacy' should throw an exception: " + (exceptionThrown ? exceptionThrown : "[no exception]"));
-  CustomizableUI.unregisterArea("area-996899-3", true);
-});
-
-add_task(function() {
-  let exceptionThrown;
-  try {
     CustomizableUI.registerArea("area-996899-4", { overflowable: true });
     CustomizableUI.registerArea("area-996899-4", { overflowable: false });
   } catch (ex) {

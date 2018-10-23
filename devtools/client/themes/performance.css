@@ -767,7 +767,7 @@ menuitem.experimental-option::before {
   max-height: 12px;
   margin-top: 2px;
   margin-inline-end: 5px;
-  background-image: var(--theme-console-alert-image);
+  background-image: url(chrome://devtools/skin/images/alert.svg);
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill;

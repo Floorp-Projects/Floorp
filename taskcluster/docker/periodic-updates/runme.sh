@@ -42,6 +42,12 @@ then
   PARAMS="${PARAMS} --remote-settings"
 fi
 
+if [ ! -z "${DO_SUFFIX_LIST}" ]
+then
+  PARAMS="${PARAMS} --suffix-list"
+fi
+
+
 export ARTIFACTS_DIR="/home/worker/artifacts"
 mkdir -p "$ARTIFACTS_DIR"
 

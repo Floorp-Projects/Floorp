@@ -8,13 +8,13 @@
 #define mozJSComponentLoader_h
 
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ModuleLoader.h"
+#include "mozilla/Module.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIObserver.h"
 #include "nsIURI.h"
-#include "xpcIJSModuleLoader.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "jsapi.h"
@@ -41,19 +41,20 @@ namespace mozilla {
 #define STARTUP_RECORDER_ENABLED
 #endif
 
-class mozJSComponentLoader final : public mozilla::ModuleLoader,
-                                   public xpcIJSModuleLoader,
-                                   public nsIObserver
+class mozJSComponentLoader final : public nsIObserver
 {
  public:
     NS_DECL_ISUPPORTS
-    NS_DECL_XPCIJSMODULELOADER
     NS_DECL_NSIOBSERVER
 
     mozJSComponentLoader();
 
-    // ModuleLoader
-    const mozilla::Module* LoadModule(mozilla::FileLocation& aFile) override;
+    void LoadedModules(uint32_t* aLength, char*** aModules);
+    void LoadedComponents(uint32_t* aLength, char*** aComponents);
+    nsresult GetModuleImportStack(const nsACString& aLocation, nsACString& aRetval);
+    nsresult GetComponentLoadStack(const nsACString& aLocation, nsACString& aRetval);
+
+    const mozilla::Module* LoadModule(mozilla::FileLocation& aFile);
 
     void FindTargetObject(JSContext* aCx,
                           JS::MutableHandleObject aTargetObject);

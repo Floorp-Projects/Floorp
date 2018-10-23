@@ -1696,10 +1696,6 @@ GetPropIRGenerator::tryAttachUnboxed(HandleObject obj, ObjOperandId objId, Handl
         return false;
     }
 
-    if (!cx_->runtime()->jitSupportsFloatingPoint) {
-        return false;
-    }
-
     maybeEmitIdGuard(id);
     writer.guardGroupForLayout(objId, obj->group());
     writer.loadUnboxedPropertyResult(objId, property->type,
@@ -1763,7 +1759,7 @@ GetPropIRGenerator::tryAttachTypedObject(HandleObject obj, ObjOperandId objId, H
         return false;
     }
 
-    if (!cx_->runtime()->jitSupportsFloatingPoint || cx_->zone()->detachedTypedObjects) {
+    if (cx_->zone()->detachedTypedObjects) {
         return false;
     }
 
@@ -2245,24 +2241,11 @@ TypedThingElementType(JSObject* obj)
            : PrimitiveArrayTypedObjectType(obj);
 }
 
-static bool
-TypedThingRequiresFloatingPoint(JSObject* obj)
-{
-    Scalar::Type type = TypedThingElementType(obj);
-    return type == Scalar::Uint32 ||
-           type == Scalar::Float32 ||
-           type == Scalar::Float64;
-}
-
 bool
 GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
                                           uint32_t index, Int32OperandId indexId)
 {
     if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj)) {
-        return false;
-    }
-
-    if (!cx_->runtime()->jitSupportsFloatingPoint && TypedThingRequiresFloatingPoint(obj)) {
         return false;
     }
 
@@ -3325,9 +3308,6 @@ IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
             if (!mozilla::NumberEqualsInt32(index.toDouble(), &indexSigned)) {
                 return false;
             }
-            if (!cx_->runtime()->jitSupportsFloatingPoint) {
-                return false;
-            }
         }
 
         if (indexSigned < 0) {
@@ -3613,10 +3593,6 @@ SetPropIRGenerator::tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objI
         return false;
     }
 
-    if (!cx_->runtime()->jitSupportsFloatingPoint) {
-        return false;
-    }
-
     const UnboxedLayout::Property* property = obj->as<UnboxedPlainObject>().layout().lookup(id);
     if (!property) {
         return false;
@@ -3645,7 +3621,7 @@ SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId 
         return false;
     }
 
-    if (!cx_->runtime()->jitSupportsFloatingPoint || cx_->zone()->detachedTypedObjects) {
+    if (cx_->zone()->detachedTypedObjects) {
         return false;
     }
 
@@ -4078,10 +4054,6 @@ SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj, ObjOperandId objI
     }
 
     if (!rhsVal_.isNumber()) {
-        return false;
-    }
-
-    if (!cx_->runtime()->jitSupportsFloatingPoint && TypedThingRequiresFloatingPoint(obj)) {
         return false;
     }
 
@@ -5287,10 +5259,6 @@ CompareIRGenerator::tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId)
 bool
 CompareIRGenerator::tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId)
 {
-    if (!cx_->runtime()->jitSupportsFloatingPoint) {
-        return false;
-    }
-
     if (!lhsVal_.isNumber() || !rhsVal_.isNumber()) {
         return false;
     }
@@ -5618,7 +5586,7 @@ ToBoolIRGenerator::tryAttachInt32()
 bool
 ToBoolIRGenerator::tryAttachDouble()
 {
-    if (!val_.isDouble() || !cx_->runtime()->jitSupportsFloatingPoint) {
+    if (!val_.isDouble()) {
         return false;
     }
 
@@ -5780,7 +5748,7 @@ UnaryArithIRGenerator::tryAttachInt32()
 bool
 UnaryArithIRGenerator::tryAttachNumber()
 {
-    if (!val_.isNumber() || !res_.isNumber() || !cx_->runtime()->jitSupportsFloatingPoint) {
+    if (!val_.isNumber() || !res_.isNumber()) {
         return false;
     }
 
@@ -5950,10 +5918,6 @@ BinaryArithIRGenerator::tryAttachDouble()
 
     // Check guard conditions
     if (!lhs_.isNumber() || !rhs_.isNumber()) {
-        return false;
-    }
-
-    if (!cx_->runtime()->jitSupportsFloatingPoint) {
         return false;
     }
 

@@ -29,6 +29,7 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
 
   // The event.source of these MessageEvents are instances of Client
   attribute EventHandler onmessage;
+  attribute EventHandler onmessageerror;
 };
 
 // These are from w3c.github.io/push-api/
