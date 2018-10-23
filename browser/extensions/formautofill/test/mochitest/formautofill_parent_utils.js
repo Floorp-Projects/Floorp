@@ -4,8 +4,11 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/OSKeyStore.jsm");
+ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm");
 
 let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
 
@@ -114,9 +117,15 @@ var ParentUtils = {
     await this.operateCreditCard("remove", {guids}, "FormAutofillTest:CreditCardsCleanedUp");
   },
 
+  setup() {
+    OSKeyStoreTestUtils.setup();
+  },
+
   async cleanup() {
     await this.cleanUpAddresses();
     await this.cleanUpCreditCards();
+    await OSKeyStoreTestUtils.cleanup();
+
     Services.obs.removeObserver(this, "formautofill-storage-changed");
   },
 
@@ -215,8 +224,23 @@ addMessageListener("FormAutofillTest:CleanUpCreditCards", (msg) => {
   ParentUtils.cleanUpCreditCards();
 });
 
-addMessageListener("cleanup", () => {
-  ParentUtils.cleanup().then(() => {
-    sendAsyncMessage("cleanup-finished", {});
-  });
+addMessageListener("FormAutofillTest:CanTestOSKeyStoreLogin", (msg) => {
+  sendAsyncMessage("FormAutofillTest:CanTestOSKeyStoreLoginResult",
+    {canTest: OSKeyStore.isNSSKeyStore || !AppConstants.MOZILLA_OFFICIAL});
+});
+
+addMessageListener("FormAutofillTest:OSKeyStoreLogin", async (msg) => {
+  await OSKeyStoreTestUtils.waitForOSKeyStoreLogin(msg.login);
+  sendAsyncMessage("FormAutofillTest:OSKeyStoreLoggedIn");
+});
+
+addMessageListener("setup", async () => {
+  ParentUtils.setup();
+  sendAsyncMessage("setup-finished", {});
+});
+
+addMessageListener("cleanup", async () => {
+  await ParentUtils.cleanup();
+
+  sendAsyncMessage("cleanup-finished", {});
 });
