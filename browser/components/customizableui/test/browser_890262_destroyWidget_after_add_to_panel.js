@@ -10,7 +10,7 @@ const kWidget2Id  = "test-890262-widget2";
 
 setupArea();
 
-// Destroying a widget after defaulting it to a non-legacy area should work.
+// Destroying a widget after defaulting it to a lazy area should work.
 add_task(function() {
   CustomizableUI.createWidget({
     id: kWidget1Id,
@@ -27,7 +27,7 @@ add_task(function() {
   ok(noError, "Shouldn't throw an exception for a widget that was created in a not-yet-constructed area");
 });
 
-// Destroying a widget after moving it to a non-legacy area should work.
+// Destroying a widget after moving it to a lazy area should work.
 add_task(function() {
   CustomizableUI.createWidget({
     id: kWidget2Id,

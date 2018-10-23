@@ -19,7 +19,7 @@ const SidebarFixedItem = createFactory(require("./SidebarFixedItem"));
 const SidebarRuntimeItem = createFactory(require("./SidebarRuntimeItem"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
-const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
+const GLOBE_ICON = "chrome://devtools/skin/images/globe.svg";
 const USB_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 
 class Sidebar extends PureComponent {

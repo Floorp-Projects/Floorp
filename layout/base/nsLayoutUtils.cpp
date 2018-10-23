@@ -3606,6 +3606,12 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     builder.IgnorePaintSuppression();
   }
 
+  if (nsIDocShell* doc = presContext->GetDocShell()) {
+    bool isActive = false;
+    doc->GetIsActive(&isActive);
+    builder.SetInActiveDocShell(isActive);
+  }
+
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   if (rootScrollFrame && !aFrame->GetParent()) {
     nsIScrollableFrame* rootScrollableFrame = presShell->GetRootScrollFrameAsScrollable();
@@ -3809,7 +3815,9 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_DISPLAYLIST_TIME,
                                  startBuildDisplayList);
 
-  bool consoleNeedsDisplayList = gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint();
+  bool consoleNeedsDisplayList =
+      (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) &&
+      builder.IsInActiveDocShell();
 #ifdef MOZ_DUMP_PAINTING
   FILE* savedDumpFile = gfxUtils::sDumpPaintFile;
 #endif

@@ -12,7 +12,7 @@
 
 [package]
 name = "rkv"
-version = "0.4.1"
+version = "0.5.1"
 authors = ["Richard Newman <rnewman@twinql.com>"]
 description = "a simple, humane, typed Rust interface to LMDB"
 homepage = "https://github.com/mozilla/rkv"
@@ -38,7 +38,7 @@ version = "1.0"
 [dependencies.lmdb-rkv]
 version = "0.8"
 
-[dependencies.new-ordered-float]
+[dependencies.ordered-float]
 version = "1.0"
 
 [dependencies.serde]
@@ -48,7 +48,7 @@ version = "1.0"
 version = "1.7.0"
 
 [dependencies.uuid]
-version = "0.5"
+version = "0.6"
 [dev-dependencies.byteorder]
 version = "1"
 

@@ -1020,7 +1020,14 @@ Preamble_getpid(CallArguments* aArguments)
 static PreambleResult
 Preamble_fcntl(CallArguments* aArguments)
 {
-  // Make sure fcntl is only used with a limited set of commands.
+  // We don't record any outputs for fcntl other than its return value, but
+  // some commands have an output parameter they write additional data to.
+  // Handle this by only allowing a limited set of commands to be used when
+  // events are not passed through and we are recording/replaying the outputs.
+  if (AreThreadEventsPassedThrough()) {
+    return PreambleResult::Redirect;
+  }
+
   auto& cmd = aArguments->Arg<1, size_t>();
   switch (cmd) {
   case F_GETFL:

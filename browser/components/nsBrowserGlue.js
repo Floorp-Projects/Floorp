@@ -2187,7 +2187,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 76;
+    const UI_VERSION = 77;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2545,6 +2545,14 @@ BrowserGlue.prototype = {
         for (let item of onboardingPrefsArray) {
           Services.prefs.clearUserPref("browser.onboarding." + item);
         }
+      }
+    }
+
+    if (currentUIVersion < 77) {
+      // Remove currentset from all the toolbars
+      let toolbars = ["nav-bar", "PersonalToolbar", "TabsToolbar", "toolbar-menubar"];
+      for (let toolbarId of toolbars) {
+        xulStore.removeValue(BROWSER_DOCURL, toolbarId, "currentset");
       }
     }
 

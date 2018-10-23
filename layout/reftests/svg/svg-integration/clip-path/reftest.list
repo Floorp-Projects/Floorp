@@ -51,10 +51,10 @@ fuzzy-if(webrender,64-64,1106-1106) == clip-path-ellipse-008.html clip-path-elli
 == clip-path-inset-001b.html clip-path-inset-001-ref.html
 == clip-path-inset-001c.html clip-path-inset-001-ref.html
 # Anti-aliasing behavior for masking and borders is different
-fuzzy(0-64,0-146) fuzzy-if(webrender,90-90,132-132) == clip-path-inset-002a.html clip-path-inset-002-ref.html
-fuzzy(0-64,0-146) fuzzy-if(webrender,90-90,132-132) == clip-path-inset-002b.html clip-path-inset-002-ref.html
-fuzzy(0-64,0-146) fuzzy-if(webrender,90-90,132-132) == clip-path-inset-002c.html clip-path-inset-002-ref.html
-fuzzy(0-64,0-340) fuzzy-if(webrender,104-104,311-311) == clip-path-inset-003.html clip-path-inset-003-ref.html
+fuzzy-if(!webrender,0-64,0-146) == clip-path-inset-002a.html clip-path-inset-002-ref.html
+fuzzy-if(!webrender,0-64,0-146) == clip-path-inset-002b.html clip-path-inset-002-ref.html
+fuzzy-if(!webrender,0-64,0-146) == clip-path-inset-002c.html clip-path-inset-002-ref.html
+fuzzy-if(!webrender,0-64,0-340) == clip-path-inset-003.html clip-path-inset-003-ref.html
 
 == clip-path-stroke-001.html clip-path-stroke-001-ref.html
 

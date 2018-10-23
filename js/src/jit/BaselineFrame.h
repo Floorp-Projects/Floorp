@@ -65,7 +65,9 @@ class BaselineFrame
         // environment chain unwound to a pc during exception handling that is
         // different from its current pc.
         //
-        // This flag should never be set when we're executing JIT code.
+        // This flag should never be set on the top frame while we're
+        // executing JIT code. In debug mode, it is checked before and
+        // after VM calls.
         HAS_OVERRIDE_PC = 1 << 11,
 
         // If set, we're handling an exception for this frame. This is set for

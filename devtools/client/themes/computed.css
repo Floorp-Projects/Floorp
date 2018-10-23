@@ -92,22 +92,22 @@
   outline: 0 !important;
 }
 
-.computed-other-property-value {
-  background-image: url(images/arrow-e.png);
+.computed-other-property-value::before {
+  content: "";
+  display: inline-block;
+  vertical-align: -0.5px;
+  width: 8px;
+  height: 8px;
+  margin: 0 1px;
+  background-image: url(images/arrow-e.svg);
   background-repeat: no-repeat;
-  background-size: 5px 8px;
-  background-position: left center;
-  padding-inline-start: 8px;
+  background-size: contain;
+  -moz-context-properties: fill;
+  fill: var(--theme-body-color-inactive);
 }
 
-.computed-other-property-value:dir(rtl) {
-  background-position-x: right;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .computed-other-property-value {
-    background-image: url(images/arrow-e@2x.png);
-  }
+.computed-other-property-value:dir(rtl)::before {
+  transform: scaleX(-1);
 }
 
 .computed-property-value {

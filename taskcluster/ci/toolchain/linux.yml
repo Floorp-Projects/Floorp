@@ -525,7 +525,7 @@ linux64-rust-1.29:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.29.0',
+            '--channel', '1.29.2',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -572,7 +572,7 @@ linux64-rust-macos-1.29:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.29.0',
+            '--channel', '1.29.2',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -596,7 +596,7 @@ linux64-rust-android-1.29:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.29.0',
+            '--channel', '1.29.2',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'armv7-linux-androideabi',

@@ -48,59 +48,9 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
         return nullptr;
     }
 
-    MOZ_ASSERT(byteOffset <= INT32_MAX);
-    MOZ_ASSERT(byteLength <= INT32_MAX);
-    MOZ_ASSERT(byteOffset + byteLength < UINT32_MAX);
-
     DataViewObject* obj = NewObjectWithClassProto<DataViewObject>(cx, proto);
-    if (!obj) {
+    if (!obj || !obj->init(cx, arrayBuffer, byteOffset, byteLength, /* bytesPerElement = */ 1)) {
         return nullptr;
-    }
-
-    // Caller should have established these preconditions, and no
-    // (non-self-hosted) JS code has had an opportunity to run so nothing can
-    // have invalidated them.
-    MOZ_ASSERT(byteOffset <= arrayBuffer->byteLength());
-    MOZ_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
-
-    // The isSharedMemory property is invariant.  Self-hosting code that sets
-    // BUFFER_SLOT or the private slot (if it does) must maintain it by always
-    // setting those to reference shared memory.
-    bool isSharedMemory = IsSharedArrayBuffer(arrayBuffer.get());
-    if (isSharedMemory) {
-        obj->setIsSharedMemory();
-    }
-
-    obj->setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
-    obj->setFixedSlot(LENGTH_SLOT, Int32Value(byteLength));
-    obj->setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
-
-    SharedMem<uint8_t*> ptr = arrayBuffer->dataPointerEither();
-    obj->initDataPointer(ptr + byteOffset);
-
-    // Include a barrier if the data view's data pointer is in the nursery, as
-    // is done for typed arrays.
-    if (!IsInsideNursery(obj) && cx->nursery().isInside(ptr)) {
-        // Shared buffer data should never be nursery-allocated, so we
-        // need to fail here if isSharedMemory.  However, mmap() can
-        // place a SharedArrayRawBuffer up against the bottom end of a
-        // nursery chunk, and a zero-length buffer will erroneously be
-        // perceived as being inside the nursery; sidestep that.
-        if (isSharedMemory) {
-            MOZ_ASSERT(arrayBuffer->byteLength() == 0 &&
-                       (uintptr_t(ptr.unwrapValue()) & gc::ChunkMask) == 0);
-        } else {
-            cx->runtime()->gc.storeBuffer().putWholeCell(obj);
-        }
-    }
-
-    // Verify that the private slot is at the expected place
-    MOZ_ASSERT(obj->numFixedSlots() == DATA_SLOT);
-
-    if (arrayBuffer->is<ArrayBufferObject>()) {
-        if (!arrayBuffer->as<ArrayBufferObject>().addView(cx, obj)) {
-            return nullptr;
-        }
     }
 
     return obj;

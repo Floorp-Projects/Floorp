@@ -431,7 +431,8 @@ TRRService::MaybeBootstrap(const nsACString &aPossible, nsACString &aResult)
 // When running in TRR-only mode, the blacklist is not used and it will also
 // try resolving the localhost / .local names.
 bool
-TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
+TRRService::IsTRRBlacklisted(const nsACString &aHost, const nsACString &aOriginSuffix,
+                             bool aPrivateBrowsing,
                              bool aParentsToo) // false if domain
 {
   if (mMode == MODE_TRRONLY) {
@@ -472,7 +473,7 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
     nsAutoCString check(domain);
 
     // recursively check the domain part of this name
-    if (IsTRRBlacklisted(check, privateBrowsing, false)) {
+    if (IsTRRBlacklisted(check, aOriginSuffix, aPrivateBrowsing, false)) {
       // the domain name of this name is already TRR blacklisted
       return true;
     }
@@ -480,8 +481,8 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
 
   MutexAutoLock lock(mLock);
   // use a unified casing for the hashkey
-  nsAutoCString hashkey(aHost);
-  nsCString val(mTRRBLStorage->Get(hashkey, privateBrowsing ?
+  nsAutoCString hashkey(aHost + aOriginSuffix);
+  nsCString val(mTRRBLStorage->Get(hashkey, aPrivateBrowsing ?
                                    DataStorage_Private : DataStorage_Persistent));
 
   if (!val.IsEmpty()) {
@@ -496,8 +497,8 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
     RefPtr<DataStorage> storage = mTRRBLStorage;
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableFunction("proxyStorageRemove",
-                              [storage, hashkey, privateBrowsing]() {
-                                storage->Remove(hashkey, privateBrowsing ?
+                              [storage, hashkey, aPrivateBrowsing]() {
+                                storage->Remove(hashkey, aPrivateBrowsing ?
                                                 DataStorage_Private :
                                                 DataStorage_Persistent);
                               });
@@ -513,14 +514,20 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
 class ProxyBlacklist : public Runnable
 {
 public:
-  ProxyBlacklist(TRRService *service, const nsACString &aHost, bool pb, bool aParentsToo)
+  ProxyBlacklist(TRRService *service, const nsACString &aHost,
+                 const nsACString &aOriginSuffix,
+                 bool pb, bool aParentsToo)
     : mozilla::Runnable("proxyBlackList")
-    , mService(service), mHost(aHost), mPB(pb), mParentsToo(aParentsToo)
+    , mService(service)
+    , mHost(aHost)
+    , mOriginSuffix(aOriginSuffix)
+    , mPB(pb)
+    , mParentsToo(aParentsToo)
   { }
 
   NS_IMETHOD Run() override
   {
-    mService->TRRBlacklist(mHost, mPB, mParentsToo);
+    mService->TRRBlacklist(mHost, mOriginSuffix, mPB, mParentsToo);
     mService = nullptr;
     return NS_OK;
   }
@@ -528,25 +535,27 @@ public:
 private:
   RefPtr<TRRService> mService;
   nsCString mHost;
+  nsCString mOriginSuffix;
   bool      mPB;
   bool      mParentsToo;
 };
 
 void
-TRRService::TRRBlacklist(const nsACString &aHost, bool privateBrowsing, bool aParentsToo)
+TRRService::TRRBlacklist(const nsACString &aHost, const nsACString &aOriginSuffix,
+                         bool privateBrowsing, bool aParentsToo)
 {
   if (!mTRRBLStorage) {
     return;
   }
 
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(new ProxyBlacklist(this, aHost,
+    NS_DispatchToMainThread(new ProxyBlacklist(this, aHost, aOriginSuffix,
                                                privateBrowsing, aParentsToo));
     return;
   }
 
   LOG(("TRR blacklist %s\n", nsCString(aHost).get()));
-  nsAutoCString hashkey(aHost);
+  nsAutoCString hashkey(aHost + aOriginSuffix);
   nsAutoCString val;
   val.AppendInt( NowInSeconds() ); // creation time
 
@@ -565,7 +574,7 @@ TRRService::TRRBlacklist(const nsACString &aHost, bool privateBrowsing, bool aPa
       dot++;
       nsDependentCSubstring domain = Substring(aHost, dot, aHost.Length() - dot);
       nsAutoCString check(domain);
-      if (IsTRRBlacklisted(check, privateBrowsing, false)) {
+      if (IsTRRBlacklisted(check, aOriginSuffix, privateBrowsing, false)) {
         // the domain part is already blacklisted, no need to add this entry
         return;
       }
@@ -667,7 +676,7 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
     LOG(("TRR verified %s to be fine!\n", newRRSet->mHostName.get()));
   } else {
     LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->mHostName.get()));
-    TRRBlacklist(newRRSet->mHostName, pb, false);
+    TRRBlacklist(newRRSet->mHostName, rec->originSuffix, pb, false);
   }
   return LOOKUP_OK;
 }

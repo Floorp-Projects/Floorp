@@ -66,9 +66,12 @@ struct CGTryNoteList {
     Vector<JSTryNote> list;
     explicit CGTryNoteList(JSContext* cx) : list(cx) {}
 
+    // Start/end offset are relative to main section and will be patch in
+    // finish().
+
     MOZ_MUST_USE bool append(JSTryNoteKind kind, uint32_t stackDepth, size_t start, size_t end);
     size_t length() const { return list.length(); }
-    void finish(mozilla::Span<JSTryNote> array);
+    void finish(mozilla::Span<JSTryNote> array, uint32_t prologueLength);
 };
 
 struct CGScopeNote : public ScopeNote
@@ -431,6 +434,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 #ifdef DEBUG
     MOZ_MUST_USE bool checkStrictOrSloppy(JSOp op);
 #endif
+
+    // Add TryNote to the tryNoteList array. The start and end offset are
+    // relative to current section.
+    MOZ_MUST_USE bool addTryNote(JSTryNoteKind kind, uint32_t stackDepth, size_t start, size_t end);
 
     // Append a new source note of the given type (and therefore size) to the
     // notes dynamic array, updating noteCount. Return the new note's index

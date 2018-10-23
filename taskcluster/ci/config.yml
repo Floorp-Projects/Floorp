@@ -34,7 +34,6 @@ treeherder:
         'T-e10s': 'Talos performance tests with e10s'
         'Tsd-e10s': 'Talos performance tests with e10s, Stylo disabled'
         'Tss-e10s': 'Talos performance tests with e10s, Stylo sequential'
-        'T-P-e10s': 'Talos performance tests with e10s and gecko profiling'
         'tt': 'Telemetry tests'
         'tt-e10s': 'Telemetry tests with e10s'
         'SY-e10s': 'Are we slim yet tests by TaskCluster with e10s'

@@ -1,0 +1,6 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">
+  <path stroke="context-fill #0b0b0b" stroke-width="1.5" d="M2.5 1.2l3 2.8-3 2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -30,15 +30,11 @@ const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci
 promise = require("devtools/shared/deprecated-sync-thenables");
 
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/debugger/test/mochitest/";
-const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
+const FRAME_SCRIPT_URL = "chrome://mochitests/content/browser/devtools/client/shared/test/code_frame-script.js";
 const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/";
 const CHROME_URI = Services.io.newURI(CHROME_URL);
 
-Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-
 registerCleanupFunction(async function() {
-  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
-
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
 

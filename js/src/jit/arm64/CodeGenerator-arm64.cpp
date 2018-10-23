@@ -568,13 +568,82 @@ CodeGenerator::visitBitOpI(LBitOpI* ins)
 void
 CodeGenerator::visitShiftI(LShiftI* ins)
 {
-    MOZ_CRASH("visitShiftI");
+    const ARMRegister lhs = toWRegister(ins->lhs());
+    const LAllocation* rhs = ins->rhs();
+    const ARMRegister dest = toWRegister(ins->output());
+
+    if (rhs->isConstant()) {
+        int32_t shift = ToInt32(rhs) & 0x1F;
+        switch (ins->bitop()) {
+          case JSOP_LSH:
+            masm.Lsl(dest, lhs, shift);
+            break;
+          case JSOP_RSH:
+            masm.Asr(dest, lhs, shift);
+            break;
+          case JSOP_URSH:
+            if (shift) {
+                masm.Lsr(dest, lhs, shift);
+            } else if (ins->mir()->toUrsh()->fallible()) {
+                // x >>> 0 can overflow.
+                masm.Ands(dest, lhs, Operand(0xFFFFFFFF));
+                bailoutIf(Assembler::Signed, ins->snapshot());
+            } else {
+                masm.Mov(dest, lhs);
+            }
+            break;
+          default:
+            MOZ_CRASH("Unexpected shift op");
+        }
+    } else {
+        const ARMRegister rhsreg = toWRegister(rhs);
+        switch (ins->bitop()) {
+          case JSOP_LSH:
+            masm.Lsl(dest, lhs, rhsreg);
+            break;
+          case JSOP_RSH:
+            masm.Asr(dest, lhs, rhsreg);
+            break;
+          case JSOP_URSH:
+            masm.Lsr(dest, lhs, rhsreg);
+            if (ins->mir()->toUrsh()->fallible()) {
+                /// x >>> 0 can overflow.
+                Label nonzero;
+                masm.Cbnz(rhsreg, &nonzero);
+                masm.Cmp(dest, Operand(0));
+                bailoutIf(Assembler::LessThan, ins->snapshot());
+                masm.bind(&nonzero);
+            }
+            break;
+          default:
+            MOZ_CRASH("Unexpected shift op");
+        }
+    }
 }
 
 void
 CodeGenerator::visitUrshD(LUrshD* ins)
 {
-    MOZ_CRASH("visitUrshD");
+    const ARMRegister lhs = toWRegister(ins->lhs());
+    const LAllocation* rhs = ins->rhs();
+    const FloatRegister out = ToFloatRegister(ins->output());
+
+    const Register temp = ToRegister(ins->temp());
+    const ARMRegister temp32 = toWRegister(ins->temp());
+
+    if (rhs->isConstant()) {
+        int32_t shift = ToInt32(rhs) & 0x1F;
+        if (shift) {
+            masm.Lsr(temp32, lhs, shift);
+            masm.convertUInt32ToDouble(temp, out);
+        } else {
+            masm.convertUInt32ToDouble(ToRegister(ins->lhs()), out);
+        }
+    } else {
+        masm.And(temp32, toWRegister(rhs), Operand(0x1F));
+        masm.Lsr(temp32, lhs, temp32);
+        masm.convertUInt32ToDouble(temp, out);
+    }
 }
 
 void
@@ -954,13 +1023,30 @@ CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir)
 void
 CodeGenerator::visitCompareBitwise(LCompareBitwise* lir)
 {
-    MOZ_CRASH("visitCompareBitwise");
+    MCompare* mir = lir->mir();
+    Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
+    const ValueOperand lhs = ToValue(lir, LCompareBitwise::LhsInput);
+    const ValueOperand rhs = ToValue(lir, LCompareBitwise::RhsInput);
+    const Register output = ToRegister(lir->output());
+
+    MOZ_ASSERT(IsEqualityOp(mir->jsop()));
+
+    masm.cmpPtrSet(cond, lhs.valueReg(), rhs.valueReg(), output);
 }
 
 void
 CodeGenerator::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 {
-    MOZ_CRASH("visitCompareBitwiseAndBranch");
+    MCompare* mir = lir->cmpMir();
+    Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
+    const ValueOperand lhs = ToValue(lir, LCompareBitwiseAndBranch::LhsInput);
+    const ValueOperand rhs = ToValue(lir, LCompareBitwiseAndBranch::RhsInput);
+
+    MOZ_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+               mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
+
+    masm.cmpPtr(lhs.valueReg(), rhs.valueReg());
+    emitBranch(cond, lir->ifTrue(), lir->ifFalse());
 }
 
 void
@@ -1022,6 +1108,9 @@ CodeGeneratorARM64::generateInvalidateEpilogue()
     }
 
     masm.bind(&invalidate_);
+
+    // Push the return address of the point that we bailout out onto the stack.
+    masm.push(lr);
 
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));

@@ -963,6 +963,19 @@ WindowsVersionToOperatingSystem(int32_t aWindowsVersion)
     }
 }
 
+static bool
+OnlyAllowFeatureOnWhitelistedVendor(int32_t aFeature)
+{
+  switch(aFeature) {
+    // The GPU process doesn't need hardware acceleration and can run on
+    // devices that we normally block from not being on our whitelist.
+    case nsIGfxInfo::FEATURE_GPU_PROCESS:
+      return false;
+    default:
+      return true;
+  }
+}
+
 // Return true if the CPU supports AVX, but the operating system does not.
 #if defined(_M_X64)
 static inline bool
@@ -1483,7 +1496,8 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       return NS_OK;
     }
 
-    if (!adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorIntel), nsCaseInsensitiveStringComparator()) &&
+    if (OnlyAllowFeatureOnWhitelistedVendor(aFeature) &&
+        !adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorIntel), nsCaseInsensitiveStringComparator()) &&
         !adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), nsCaseInsensitiveStringComparator()) &&
         !adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorAMD), nsCaseInsensitiveStringComparator()) &&
         !adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorATI), nsCaseInsensitiveStringComparator()) &&

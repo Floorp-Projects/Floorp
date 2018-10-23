@@ -16,12 +16,16 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
-      id="addons-page" title="&addons.windowTitle;"
+      id="addons-page" data-l10n-id="addons-window"
       role="application" windowtype="Addons:Manager"
       disablefastfind="true">
 
   <xhtml:link rel="shortcut icon"
               href="chrome://mozapps/skin/extensions/extensionGeneric-16.svg"/>
+  <linkset>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
+  </linkset>
 
   <script type="application/javascript"
           src="chrome://mozapps/content/extensions/extensions.js"/>
@@ -32,8 +36,7 @@
     <!-- menu for an addon item -->
     <menupopup id="addonitem-popup">
       <menuitem id="menuitem_showDetails" command="cmd_showItemDetails"
-                default="true" label="&cmd.showDetails.label;"
-                accesskey="&cmd.showDetails.accesskey;"/>
+                default="true" data-l10n-id="cmd-show-details"/>
       <menuitem id="menuitem_enableItem" command="cmd_enableItem"
                 label="&cmd.enableAddon.label;"
                 accesskey="&cmd.enableAddon.accesskey;"/>
@@ -41,29 +44,19 @@
                 label="&cmd.disableAddon.label;"
                 accesskey="&cmd.disableAddon.accesskey;"/>
       <menuitem id="menuitem_enableTheme" command="cmd_enableItem"
-                label="&cmd.enableTheme.label;"
-                accesskey="&cmd.enableTheme.accesskey;"/>
+                data-l10n-id="cmd-enable-theme"/>
       <menuitem id="menuitem_disableTheme" command="cmd_disableItem"
-                label="&cmd.disableTheme.label;"
-                accesskey="&cmd.disableTheme.accesskey;"/>
+                data-l10n-id="cmd-disable-theme"/>
       <menuitem id="menuitem_installItem" command="cmd_installItem"
-                label="&cmd.installAddon.label;"
-                accesskey="&cmd.installAddon.accesskey;"/>
+                data-l10n-id="cmd-install-addon"/>
       <menuitem id="menuitem_uninstallItem" command="cmd_uninstallItem"
                 label="&cmd.uninstallAddon.label;"
                 accesskey="&cmd.uninstallAddon.accesskey;"/>
       <menuseparator id="addonitem-menuseparator" />
       <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
-#ifdef XP_WIN
-                label="&cmd.preferencesWin.label;"
-                accesskey="&cmd.preferencesWin.accesskey;"/>
-#else
-                label="&cmd.preferencesUnix.label;"
-                accesskey="&cmd.preferencesUnix.accesskey;"/>
-#endif
+                data-l10n-id="cmd-preferences"/>
       <menuitem id="menuitem_findUpdates" command="cmd_findItemUpdates"
-                label="&cmd.findUpdates.label;"
-                accesskey="&cmd.findUpdates.accesskey;"/>
+                data-l10n-id="cmd-find-updates"/>
     </menupopup>
 
     <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
@@ -127,8 +120,8 @@
   </commandset>
 
   <keyset>
-    <key id="focusSearch" key="&search.commandkey;" modifiers="accel"
-         command="cmd_focusSearch"/>
+    <key id="focusSearch" data-l10n-id="search-header-shortcut"
+         modifiers="accel" command="cmd_focusSearch"/>
   </keyset>
   <hbox flex="1">
     <vbox id="category-box">
@@ -158,13 +151,7 @@
         <label id="preferencesButton" class="text-link">
           <hbox align="center">
             <image class="sidebar-footer-icon preferences-icon"/>
-            <label class="sidebar-footer-label" flex="1">
-#ifdef XP_WIN
-                &preferencesWin.label;
-#else
-                &preferencesUnix.label;
-#endif
-            </label>
+            <label class="sidebar-footer-label" data-l10n-id="preferences" flex="1"/>
           </hbox>
         </label>
       </hbox>
@@ -173,7 +160,7 @@
         <label id="helpButton" class="text-link">
           <hbox align="center">
             <image class="sidebar-footer-icon help-icon"/>
-            <label class="sidebar-footer-label" flex="1">&helpButton.label;</label>
+            <label class="sidebar-footer-label" data-l10n-id="help-button" flex="1"/>
           </hbox>
         </label>
       </hbox>
@@ -188,7 +175,7 @@
             <spacer class="alert-spacer-before"/>
             <hbox class="alert loading" align="center">
               <image/>
-              <label value="&loading.label;"/>
+              <label data-l10n-id="loading-label"/>
             </hbox>
             <spacer class="alert-spacer-after"/>
           </vbox>
@@ -199,9 +186,9 @@
               <vbox class="alert" align="center">
                 <image class="discover-logo"/>
                 <vbox flex="1" align="stretch">
-                  <label class="discover-title">&discover.title;</label>
-                  <description class="discover-description">&discover.description2;</description>
-                  <description class="discover-footer">&discover.footer;</description>
+                  <label class="discover-title" data-l10n-id="discover-title"></label>
+                  <description class="discover-description" data-l10n-id="discover-description"></description>
+                  <description class="discover-footer" data-l10n-id="discover-footer"></description>
                 </vbox>
               </vbox>
               <spacer class="discover-spacer-after"/>
@@ -219,17 +206,16 @@
           <hbox id="header">
             <hbox id="header-inner" align="center">
               <button id="show-all-extensions" hidden="true"
-                      label="&showAllExtensions.button.label;"
+                      data-l10n-id="show-all-extensions-button"
                       command="cmd_showAllExtensions"/>
               <spacer flex="1"/>
               <button id="show-disabled-unsigned-extensions" hidden="true"
-                      class="warning"
-                      label="&showUnsignedExtensions.button.label;"
+                      class="warning" data-l10n-id="show-unsigned-extensions-button"
                       command="cmd_showUnsignedExtensions"/>
               <label id="search-label" control="header-search"/>
               <textbox id="header-search" type="search" searchbutton="true"
-                       searchbuttonlabel="&search.buttonlabel;"
-                       placeholder="&search.placeholder3;" maxlength="100"/>
+                       data-l10n-id="search-header"
+                       data-l10n-attrs="searchbuttonlabel" maxlength="100"/>
             </hbox>
           </hbox>
 
@@ -259,7 +245,7 @@
                   </hbox>
 
                   <toolbarbutton id="header-utils-btn" class="header-button" type="menu"
-                                 tooltiptext="&toolsMenu.tooltip;">
+                           data-l10n-id="tools-menu">
                     <menupopup id="utils-menu">
                       <menuitem id="utils-updateNow"
                                 label="&updates.checkForUpdates.label;"
@@ -271,12 +257,10 @@
                                 command="cmd_goToRecentUpdates"/>
                       <menuseparator id="utils-installFromFile-separator"/>
                       <menuitem id="utils-installFromFile"
-                                label="&installAddonFromFile.label;"
-                                accesskey="&installAddonFromFile.accesskey;"
+                          data-l10n-id="install-addon-from-file"
                                 command="cmd_installFromFile"/>
                       <menuitem id="utils-debugAddons"
-                                label="&debugAddons.label;"
-                                accesskey="&debugAddons.accesskey;"
+                          data-l10n-id="debug-addons"
                                 command="cmd_debugAddons"/>
                       <menuseparator/>
                       <menuitem id="utils-autoUpdateDefault"
@@ -299,28 +283,27 @@
 
               <!-- info UI for add-ons that have been disabled for being unsigned -->
               <vbox id="disabled-unsigned-addons-info" hidden="true">
-                <label id="disabled-unsigned-addons-heading" value="&disabledUnsigned.heading;"/>
-                <description>
-                  &disabledUnsigned.description.start;<label class="text-link plain" id="find-alternative-addons">&disabledUnsigned.description.findAddonsLink;</label>&disabledUnsigned.description.end;
+                <label id="disabled-unsigned-addons-heading" data-l10n-id="disabled-unsigned-heading"/>
+                <description data-l10n-id="disabled-unsigned-description">
+                  <label class="text-link plain" id="find-alternative-addons" data-l10n-name="find-addons"/>
                 </description>
-                <hbox pack="start"><label class="text-link" id="signing-learn-more">&disabledUnsigned.learnMore;</label></hbox>
-                <description id="signing-dev-info">
-                  &disabledUnsigned.devInfo.start;<label class="text-link plain" id="signing-dev-manual-link">&disabledUnsigned.devInfo.linkToManual;</label>&disabledUnsigned.devInfo.end;
+                <hbox pack="start"><label class="text-link" id="signing-learn-more" data-l10n-id="disabled-unsigned-learn-more"></label></hbox>
+                <description id="signing-dev-info" data-l10n-id="disabled-unsigned-devinfo">
+                  <label class="text-link plain" id="signing-dev-manual-link" data-l10n-name="learn-more"/>
                 </description>
               </vbox>
               <vbox id="legacy-extensions-notice" class="alert-container" hidden="true">
                 <vbox class="alert">
                   <description id="legacy-extensions-description">
-                    <label class="text-link plain" id="legacy-extensions-learnmore-link">&legacyWarning.showLegacy;</label>
+                    <label class="text-link plain" id="legacy-extensions-learnmore-link" data-l10n-id="legacy-warning-show-legacy"/>
                   </description>
                 </vbox>
               </vbox>
               <vbox id="plugindeprecation-notice" class="list-view-notice" align="start">
                 <hbox class="message-bar">
                   <image class="message-bar-icon"/>
-                  <description class="message-bar-description">
-                    &pluginDeprecation.description;
-                    <label class="text-link plain" id="plugindeprecation-learnmore-link">&pluginDeprecation.learnMore;</label>
+                  <description class="message-bar-description" data-l10n-id="plugin-deprecation-description">
+                    <label class="text-link plain" id="plugindeprecation-learnmore-link" data-l10n-name="learn-more"></label>
                   </description>
                 </hbox>
               </vbox>
@@ -360,10 +343,10 @@
                     flex="1" hidden="true">
                 <spacer class="alert-spacer-before"/>
                 <vbox class="alert">
-                  <label value="&listEmpty.installed.label;"/>
+                  <label data-l10n-id="list-empty-installed"/>
                   <button class="discover-button"
                           id="discover-button-install"
-                          label="&listEmpty.button.label;"
+                          data-l10n-id="list-empty-button"
                           command="cmd_goToDiscoverPane"/>
                 </vbox>
                 <spacer class="alert-spacer-after"/>
@@ -374,10 +357,9 @@
             <!-- legacy extensions view -->
             <vbox id="legacy-view" flex="1" class="view-pane" align="stretch" tabindex="0">
               <vbox id="legacy-extensions-info">
-                <label id="legacy-extensions-heading" value="&legacyExtensions.title;"/>
-                <description>
-                  &legacyExtensions.description;
-                  <label class="text-link plain" id="legacy-learnmore">&legacyExtensions.learnMore;</label>
+                <label id="legacy-extensions-heading" data-l10n-id="legacy-extensions"/>
+                <description data-l10n-id="legacy-extensions-description">
+                  <label class="text-link plain" id="legacy-learnmore" data-l10n-name="legacy-learn-more"></label>
                 </description>
               </vbox>
               <richlistbox id="legacy-list" class="list" flex="1"/>
@@ -421,9 +403,9 @@
                     flex="1" hidden="true">
                 <spacer class="alert-spacer-before"/>
                 <vbox class="alert">
-                  <label id="empty-availableUpdates-msg" value="&listEmpty.availableUpdates.label;"/>
-                  <label id="empty-recentUpdates-msg" value="&listEmpty.recentUpdates.label;"/>
-                  <button label="&listEmpty.findUpdates.label;"
+                  <label id="empty-availableUpdates-msg" data-l10n-id="list-empty-available-updates"/>
+                  <label id="empty-recentUpdates-msg" data-l10n-id="list-empty-recent-updates"/>
+                  <button data-l10n-id="list-empty-find-updates"
                           command="cmd_findAllUpdates"/>
                 </vbox>
                 <spacer class="alert-spacer-after"/>
@@ -475,7 +457,7 @@
                   <spacer class="alert-spacer-before"/>
                   <hbox class="alert loading">
                     <image/>
-                    <label value="&loading.label;"/>
+                    <label data-l10n-id="loading-label"/>
                   </hbox>
                   <spacer class="alert-spacer-after"/>
                 </vbox>
@@ -498,7 +480,7 @@
                       <image class="pending-icon"/>
                       <label id="detail-pending" flex="1"/>
                       <button id="detail-restart-btn" class="button-link"
-                              label="&addon.restartNow.label;"
+                              data-l10n-id="addon-restart-now"
                               command="cmd_restartApp"/>
                       <button id="detail-undo-btn" class="button-link"
                               label="&addon.undoAction.label;"
@@ -531,15 +513,11 @@
                         <description id="detail-fulldesc"/>
                       </vbox>
                       <vbox id="detail-contributions">
-                        <description id="detail-contrib-description">
-                          &detail.contributions.description;
-                        </description>
+                        <description id="detail-contrib-description" data-l10n-id="detail-contributions-description"/>
                         <hbox align="center">
                           <spacer flex="1"/>
                           <button id="detail-contrib-btn"
-                                  label="&cmd.contribute.label;"
-                                  accesskey="&cmd.contribute.accesskey;"
-                                  tooltiptext="&cmd.contribute.tooltip;"
+                                  data-l10n-id="cmd-contribute"
                                   command="cmd_contribute"/>
                         </hbox>
                       </vbox>
@@ -550,40 +528,35 @@
                         </columns>
                         <rows id="detail-rows">
                           <row class="detail-row-complex" id="detail-updates-row">
-                            <label class="detail-row-label" value="&detail.updateType;"/>
+                            <label class="detail-row-label" data-l10n-id="detail-update-type"/>
                             <hbox align="center">
                               <radiogroup id="detail-autoUpdate" orient="horizontal">
                                 <!-- The values here need to match the values of
                                      AddonManager.AUTOUPDATE_* -->
-                                <radio label="&detail.updateDefault.label;"
-                                       tooltiptext="&detail.updateDefault.tooltip;"
+                                <radio data-l10n-id="detail-update-default"
                                        value="1"/>
-                                <radio label="&detail.updateAutomatic.label;"
-                                       tooltiptext="&detail.updateAutomatic.tooltip;"
+                                <radio data-l10n-id="detail-update-automatic"
                                        value="2"/>
-                                <radio label="&detail.updateManual.label;"
-                                       tooltiptext="&detail.updateManual.tooltip;"
+                                <radio data-l10n-id="detail-update-manual"
                                        value="0"/>
                               </radiogroup>
                               <button id="detail-findUpdates-btn" class="button-link"
-                                      label="&detail.checkForUpdates.label;"
-                                      accesskey="&detail.checkForUpdates.accesskey;"
-                                      tooltiptext="&detail.checkForUpdates.tooltip;"
+                                      data-l10n-id="detail-check-for-updates"
                                       command="cmd_findItemUpdates"/>
                             </hbox>
                           </row>
-                          <row class="detail-row" id="detail-version" label="&detail.version.label;"/>
-                          <row class="detail-row" id="detail-dateUpdated" label="&detail.lastupdated.label;"/>
-                          <row class="detail-row-complex" id="detail-homepage-row" label="&detail.home;">
-                            <label class="detail-row-label" value="&detail.home;"/>
+                          <row class="detail-row" id="detail-version" data-l10n-id="detail-version"/>
+                          <row class="detail-row" id="detail-dateUpdated" data-l10n-id="detail-last-updated"/>
+                          <row class="detail-row-complex" id="detail-homepage-row" data-l10n-id="detail-home">
+                            <label class="detail-row-label" data-l10n-id="detail-home-value"/>
                             <label id="detail-homepage" class="detail-row-value text-link" crop="end"/>
                           </row>
-                          <row class="detail-row-complex" id="detail-repository-row" label="&detail.repository;">
-                            <label class="detail-row-label" value="&detail.repository;"/>
+                          <row class="detail-row-complex" id="detail-repository-row" data-l10n-id="detail-repository">
+                            <label class="detail-row-label" data-l10n-id="detail-repository-value"/>
                             <label id="detail-repository" class="detail-row-value text-link"/>
                           </row>
                           <row class="detail-row-complex" id="detail-rating-row">
-                            <label class="detail-row-label" value="&rating2.label;"/>
+                            <label class="detail-row-label" data-l10n-id="detail-rating"/>
                             <hbox>
                               <label id="detail-rating" class="meta-value meta-rating"
                                      showrating="average"/>
@@ -594,15 +567,7 @@
                       </grid>
                       <hbox id="detail-controls">
                         <button id="detail-prefs-btn" class="addon-control preferences"
-#ifdef XP_WIN
-                                label="&detail.showPreferencesWin.label;"
-                                accesskey="&detail.showPreferencesWin.accesskey;"
-                                tooltiptext="&detail.showPreferencesWin.tooltip;"
-#else
-                                label="&detail.showPreferencesUnix.label;"
-                                accesskey="&detail.showPreferencesUnix.accesskey;"
-                                tooltiptext="&detail.showPreferencesUnix.tooltip;"
-#endif
+                                data-l10n-id="detail-show-preferences"
                                 command="cmd_showItemPreferences"/>
                         <spacer flex="1"/>
                         <button id="detail-enable-btn" class="addon-control enable"
@@ -618,8 +583,7 @@
                                 accesskey="&cmd.uninstallAddon.accesskey;"
                                 command="cmd_uninstallItem"/>
                         <button id="detail-install-btn" class="addon-control install"
-                                label="&cmd.installAddon.label;"
-                                accesskey="&cmd.installAddon.accesskey;"
+                                data-l10n-id="cmd-install-addon"
                                 command="cmd_installItem"/>
                         <menulist id="detail-state-menulist"
                                   crop="none" sizetopopup="always"

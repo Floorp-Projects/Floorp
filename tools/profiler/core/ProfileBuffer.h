@@ -13,9 +13,10 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 
-// A fixed-capacity circular buffer.
-// This class is used as a queue of entries which, after construction, never
-// allocates. This makes it safe to use in the profiler's "critical section".
+// A resizeable circular buffer.
+// This class is used as a queue of entries which, outside of construction and
+// calls to SetCapacity, never allocates. This makes it safe to use in the
+// profiler's "critical section".
 // Entries are appended at the end. Once the queue capacity has been reached,
 // adding a new entry will evict an old entry from the start of the queue.
 // Positions in the queue are represented as 64-bit unsigned integers which
@@ -30,11 +31,24 @@ class ProfileBuffer final
 {
 public:
   // ProfileBuffer constructor
-  // @param aEntrySize The minimum capacity of the buffer. The actual buffer
+  // @param aCapacity The minimum capacity of the buffer. The actual buffer
   //                   capacity will be rounded up to the next power of two.
-  explicit ProfileBuffer(uint32_t aEntrySize);
+  explicit ProfileBuffer(uint32_t aCapacity);
 
   ~ProfileBuffer();
+
+  uint32_t Length() { return mRangeEnd - mRangeStart; }
+
+  // Set the buffer capacity to at least aMinCapacity. aMinCapacity must not be
+  // zero and at least Length(). Otherwise, it triggers abort. This method
+  // allocates. The allocation is fallible and the return value indicates success.
+  bool SetMinCapacity(uint32_t aMinCapacity);
+
+  // Set the buffer capacity to exactly aNewCapacity. aNewCapacity must be a
+  // power of two, non-zero, and at least Length(). Otherwise, it triggers abort.
+  // This method allocates. The allocation is fallible and the return value
+  // indicates success.
+  bool SetCapacityPow2(uint32_t aNewCapacity);
 
   // Add |aEntry| to the buffer, ignoring what kind of entry it is.
   void AddEntry(const ProfileBufferEntry& aEntry);
@@ -106,25 +120,25 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
-  // The storage that backs our buffer. Holds mEntrySize entries.
+  // The storage that backs our buffer. Holds mCapacity entries.
   // All accesses to entries in mEntries need to go through GetEntry(), which
   // translates the given buffer position from the near-infinite uint64_t space
   // into the entry storage space.
   mozilla::UniquePtr<ProfileBufferEntry[]> mEntries;
 
-  // A mask such that pos & mEntryIndexMask == pos % mEntrySize.
+  // A mask such that pos & mEntryIndexMask == pos % mCapacity.
   uint32_t mEntryIndexMask;
 
 public:
   // mRangeStart and mRangeEnd are uint64_t values that strictly advance and
   // never wrap around. mRangeEnd is always greater than or equal to
-  // mRangeStart, but never gets more than mEntrySize steps ahead of
+  // mRangeStart, but never gets more than mCapacity steps ahead of
   // mRangeStart, because we can only store a fixed number of entries in the
   // buffer. Once the entire buffer is in use, adding a new entry will evict an
   // entry from the front of the buffer (and increase mRangeStart).
   // In other words, the following conditions hold true at all times:
   //  (1) mRangeStart <= mRangeEnd
-  //  (2) mRangeEnd - mRangeStart <= mEntrySize
+  //  (2) mRangeEnd - mRangeStart <= mCapacity
   //
   // If there are no live entries, then mRangeStart == mRangeEnd.
   // Otherwise, mRangeStart is the first live entry and mRangeEnd is one past
@@ -135,7 +149,7 @@ public:
   uint64_t mRangeEnd;
 
   // The number of entries in our buffer. Always a power of two.
-  uint32_t mEntrySize;
+  uint32_t mCapacity;
 
   // Markers that marker entries in the buffer might refer to.
   ProfilerMarkerLinkedList mStoredMarkers;

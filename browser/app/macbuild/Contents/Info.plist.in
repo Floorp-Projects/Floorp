@@ -221,6 +221,10 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>%MAC_BUNDLE_VERSION%</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>NSUserActivityTypeBrowsingWeb</string>
+	</array>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>LSApplicationCategoryType</key>
