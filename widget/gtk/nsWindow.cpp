@@ -57,6 +57,7 @@
 
 #if defined(MOZ_WAYLAND)
 #include <gdk/gdkwayland.h>
+#include "nsView.h"
 #endif
 
 #include "nsGkAtoms.h"
@@ -839,6 +840,37 @@ nsWindow::GetDesktopToDeviceScale()
 
     // In Gtk/X11, we manage windows using device pixels.
     return DesktopToLayoutDeviceScale(1.0);
+}
+
+DesktopToLayoutDeviceScale
+nsWindow::GetDesktopToDeviceScaleByScreen()
+{
+#ifdef MOZ_WAYLAND
+    GdkDisplay* gdkDisplay = gdk_display_get_default();
+    // In Wayland there's no way to get absolute position of the window and use it to
+    // determine the screen factor of the monitor on which the window is placed.
+    // The window is notified of the current scale factor but not at this point,
+    // so the GdkScaleFactor can return wrong value which can lead to wrong popup
+    // placement.
+    // We need to use parent's window scale factor for the new one.
+    if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+        nsView* view = nsView::GetViewFor(this);
+        if (view) {
+            nsView* parentView = view->GetParent();
+            if (parentView) {
+                nsIWidget* parentWidget = parentView->GetNearestWidget(nullptr);
+                if (parentWidget) {
+                    return DesktopToLayoutDeviceScale(parentWidget->RoundsWidgetCoordinatesTo());
+                } else {
+                    NS_WARNING("Widget has no parent");
+                }
+            }
+        } else {
+            NS_WARNING("Cannot find widget view");
+        }
+    }
+#endif
+    return nsBaseWidget::GetDesktopToDeviceScale();
 }
 
 void
