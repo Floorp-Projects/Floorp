@@ -2118,7 +2118,11 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
     SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
                                               ? SourceBufferHolder::GiveOwnership
                                               : SourceBufferHolder::NoOwnership;
-    SourceBufferHolder srcBuf(chars.begin().get(), chars.length(), ownership);
+    SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, chars.begin().get(), chars.length(), ownership)) {
+        return false;
+    }
+
     if (isAsync) {
         if (isGenerator) {
             if (!CompileStandaloneAsyncGenerator(cx, &fun, options, srcBuf, parameterListEnd)) {

@@ -1951,12 +1951,28 @@ ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
     }
 
     memcpy(chars.get(), inlineData.get(), nbytes);
-    return Some(SourceBufferHolder(std::move(chars), inlineData.Length()));
+
+    SourceBufferHolder srcBuf;
+    if (!srcBuf.init(aCx, std::move(chars), inlineData.Length())) {
+      return Nothing();
+    }
+
+    return Some(SourceBufferHolder(std::move(srcBuf)));
   }
 
   size_t length = aRequest->ScriptText().length();
   JS::UniqueTwoByteChars chars(aRequest->ScriptText().extractOrCopyRawBuffer());
-  return Some(SourceBufferHolder(std::move(chars), length));
+  if (!chars) {
+    JS_ReportOutOfMemory(aCx);
+    return Nothing();
+  }
+
+  SourceBufferHolder srcBuf;
+  if (!srcBuf.init(aCx, std::move(chars), length)) {
+    return Nothing();
+  }
+
+  return Some(SourceBufferHolder(std::move(srcBuf)));
 }
 
 nsresult

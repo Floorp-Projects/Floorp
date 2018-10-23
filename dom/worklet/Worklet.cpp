@@ -401,10 +401,10 @@ ExecutionRunnable::RunOnWorkletThread()
 
   JSAutoRealm ar(cx, globalObj);
 
-  JS::SourceBufferHolder buffer(mScriptBuffer.release(), mScriptLength,
-                                JS::SourceBufferHolder::GiveOwnership);
   JS::Rooted<JS::Value> unused(cx);
-  if (!JS::Evaluate(cx, compileOptions, buffer, &unused)) {
+  JS::SourceBufferHolder buffer;
+  if (!buffer.init(cx, std::move(mScriptBuffer), mScriptLength) ||
+      !JS::Evaluate(cx, compileOptions, buffer, &unused)) {
     ErrorResult error;
     error.MightThrowJSException();
     error.StealExceptionFromJSContext(cx);

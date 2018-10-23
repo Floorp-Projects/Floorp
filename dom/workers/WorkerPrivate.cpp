@@ -4902,12 +4902,15 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
       JS::Rooted<JS::Value> unused(aes.cx());
 
-      JS::SourceBufferHolder srcBuf(script.BeginReading(), script.Length(),
-                                    JS::SourceBufferHolder::NoOwnership);
-      if (!JS::Evaluate(aes.cx(), options, srcBuf, &unused) &&
-          !JS_IsExceptionPending(aCx)) {
-        retval = false;
-        break;
+      JS::SourceBufferHolder srcBuf;
+      if (!srcBuf.init(aes.cx(), script.BeginReading(), script.Length(),
+                       JS::SourceBufferHolder::NoOwnership) ||
+          !JS::Evaluate(aes.cx(), options, srcBuf, &unused))
+      {
+        if (!JS_IsExceptionPending(aCx)) {
+          retval = false;
+          break;
+        }
       }
     } else {
       ErrorResult rv;

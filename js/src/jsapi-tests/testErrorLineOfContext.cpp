@@ -42,8 +42,11 @@ eval(const char16_t* chars, size_t len, JS::MutableHandleValue rval)
     CHECK(global);
 
     JSAutoRealm ar(cx, global);
+
+    JS::SourceBufferHolder srcBuf;
+    CHECK(srcBuf.init(cx, chars, len, JS::SourceBufferHolder::NoOwnership));
+
     JS::CompileOptions options(cx);
-    JS::SourceBufferHolder srcBuf(chars, len, JS::SourceBufferHolder::NoOwnership);
     return JS::Evaluate(cx, options, srcBuf, rval);
 }
 

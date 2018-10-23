@@ -1924,9 +1924,12 @@ xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg, const nsAString& sour
         JS::CompileOptions options(sandcx);
         options.setFileAndLine(filenameBuf.get(), lineNo);
         MOZ_ASSERT(JS_IsGlobalObject(sandbox));
-        JS::SourceBufferHolder buffer(PromiseFlatString(source).get(), source.Length(),
-                                      JS::SourceBufferHolder::NoOwnership);
-        ok = JS::Evaluate(sandcx, options, buffer, &v);
+
+        const nsPromiseFlatString& flat = PromiseFlatString(source);
+
+        JS::SourceBufferHolder buffer;
+        ok = buffer.init(sandcx, flat.get(), flat.Length(), JS::SourceBufferHolder::NoOwnership) &&
+             JS::Evaluate(sandcx, options, buffer, &v);
 
         // If the sandbox threw an exception, grab it off the context.
         if (aes.HasException()) {

@@ -6716,11 +6716,16 @@ HandleInstantiationFailure(JSContext* cx, CallArgs args, const AsmJSMetadata& me
         return false;
     }
 
+    SourceBufferHolder srcBuf;
+
     const char16_t* chars = stableChars.twoByteRange().begin().get();
     SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
                                               ? SourceBufferHolder::GiveOwnership
                                               : SourceBufferHolder::NoOwnership;
-    SourceBufferHolder srcBuf(chars, end - begin, ownership);
+    if (!srcBuf.init(cx, chars, end - begin, ownership)) {
+        return false;
+    }
+
     if (!frontend::CompileStandaloneFunction(cx, &fun, options, srcBuf, Nothing())) {
         return false;
     }

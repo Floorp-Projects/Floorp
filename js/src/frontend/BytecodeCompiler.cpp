@@ -112,7 +112,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
     }
 
     JSScript* compileScript(HandleObject environment, SharedContext* sc);
-    bool checkLength();
     bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
     bool canLazilyParse();
     bool createParser(ParseGoal goal);
@@ -203,28 +202,8 @@ BytecodeCompiler::BytecodeCompiler(JSContext* cx,
 }
 
 bool
-BytecodeCompiler::checkLength()
-{
-    // Note this limit is simply so we can store sourceStart and sourceEnd in
-    // JSScript as 32-bits. It could be lifted fairly easily, since the compiler
-    // is using size_t internally already.
-    if (sourceBuffer.length() > UINT32_MAX) {
-        if (!cx->helperThread()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                      JSMSG_SOURCE_TOO_LONG);
-        }
-        return false;
-    }
-    return true;
-}
-
-bool
 BytecodeCompiler::createScriptSource(const Maybe<uint32_t>& parameterListEnd)
 {
-    if (!checkLength()) {
-        return false;
-    }
-
     sourceObject = CreateScriptSourceObject(cx, options, parameterListEnd);
     if (!sourceObject) {
         return false;
