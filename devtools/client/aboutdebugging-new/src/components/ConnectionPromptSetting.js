@@ -11,11 +11,19 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const Actions = require("../actions/index");
+
 class ConnectionPromptSetting extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       connectionPromptEnabled: PropTypes.bool.isRequired,
     };
+  }
+
+  onToggleClick() {
+    const { connectionPromptEnabled, dispatch } = this.props;
+    dispatch(Actions.updateConnectionPromptSetting(!connectionPromptEnabled));
   }
 
   render() {
@@ -32,6 +40,7 @@ class ConnectionPromptSetting extends PureComponent {
       dom.button(
         {
           className: "default-button",
+          onClick: () => this.onToggleClick(),
         },
         localizedState
       )

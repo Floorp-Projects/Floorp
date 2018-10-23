@@ -48,13 +48,13 @@ class RuntimePage extends PureComponent {
   }
 
   renderConnectionPromptSetting() {
-    const { connectionPromptEnabled } = this.props;
+    const { connectionPromptEnabled, dispatch } = this.props;
 
     return dom.div(
       {
         className: "connection-prompt-setting",
       },
-      ConnectionPromptSetting({ connectionPromptEnabled }),
+      ConnectionPromptSetting({ connectionPromptEnabled, dispatch }),
     );
   }
 
