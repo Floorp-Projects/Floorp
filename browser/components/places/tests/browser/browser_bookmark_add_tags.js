@@ -23,6 +23,20 @@ async function hideBookmarksPanel(callback) {
   await hiddenPromise;
 }
 
+add_task(function setup() {
+  let oldTimeout = StarUI._autoCloseTimeout;
+
+  bookmarkPanel.setAttribute("animate", false);
+
+  StarUI._autoCloseTimeout = 1000;
+
+  registerCleanupFunction(async () => {
+    StarUI._autoCloseTimeout = oldTimeout;
+    bookmarkPanel.removeAttribute("animate");
+    await PlacesUtils.bookmarks.eraseEverything();
+  });
+});
+
 add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
   const TEST_URL = "about:robots";
 

@@ -1082,7 +1082,7 @@ impl ResourceCache {
                     }
                 }
 
-                for_each_tile_in_range(&tiles, &mut|tile| {
+                for_each_tile_in_range(&tiles, |tile| {
                     let descriptor = BlobImageDescriptor {
                         offset: DevicePoint::new(
                             tile.x as f32 * tile_size as f32,
