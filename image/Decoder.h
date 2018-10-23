@@ -91,6 +91,26 @@ struct DecoderTelemetry final
   const TimeDuration mDecodeTime;
 };
 
+/**
+ * Interface which owners of an animated Decoder object must implement in order
+ * to use recycling. It allows the decoder to get a handle to the recycled
+ * frames.
+ */
+class IDecoderFrameRecycler
+{
+public:
+  /**
+   * Request the next available recycled imgFrame from the recycler.
+   *
+   * @param aRecycleRect  If a frame is returned, this must be set to the
+   *                      accumulated dirty rect between the frame being
+   *                      recycled, and the frame being generated.
+   *
+   * @returns The recycled frame, if any is available.
+   */
+  virtual RawAccessFrameRef RecycleFrame(gfx::IntRect& aRecycleRect) = 0;
+};
+
 class Decoder
 {
 public:
@@ -425,7 +445,6 @@ public:
    */
   imgFrame* GetCurrentFrame()
   {
-    MOZ_ASSERT(ShouldBlendAnimation());
     return mCurrentFrame.get();
   }
 
@@ -445,10 +464,27 @@ public:
     return mRestoreDirtyRect;
   }
 
+  const gfx::IntRect& GetRecycleRect() const
+  {
+    MOZ_ASSERT(ShouldBlendAnimation());
+    return mRecycleRect;
+  }
+
+  const gfx::IntRect& GetFirstFrameRefreshArea() const
+  {
+    return mFirstFrameRefreshArea;
+  }
+
   bool HasFrameToTake() const { return mHasFrameToTake; }
   void ClearHasFrameToTake() {
     MOZ_ASSERT(mHasFrameToTake);
     mHasFrameToTake = false;
+  }
+
+  IDecoderFrameRecycler* GetFrameRecycler() const { return mFrameRecycler; }
+  void SetFrameRecycler(IDecoderFrameRecycler* aFrameRecycler)
+  {
+    mFrameRecycler = aFrameRecycler;
   }
 
 protected:
@@ -593,6 +629,7 @@ protected:
 private:
   RefPtr<RasterImage> mImage;
   Maybe<SourceBufferIterator> mIterator;
+  IDecoderFrameRecycler* mFrameRecycler;
 
   // The current frame the decoder is producing.
   RawAccessFrameRef mCurrentFrame;
@@ -606,6 +643,8 @@ private:
   gfx::IntRect mInvalidRect; // Tracks new rows as the current frame is decoded.
   gfx::IntRect mRestoreDirtyRect; // Tracks an invalidation region between the
                                   // restore frame and the previous frame.
+  gfx::IntRect mRecycleRect; // Tracks an invalidation region between the recycled
+                             // frame and the current frame.
   Maybe<gfx::IntSize> mOutputSize;  // The size of our output surface.
   Maybe<gfx::IntSize> mExpectedSize; // The expected size of the image.
   Progress mProgress;

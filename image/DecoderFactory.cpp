@@ -246,6 +246,7 @@ DecoderFactory::CloneAnimationDecoder(Decoder* aDecoder)
   decoder->SetIterator(aDecoder->GetSourceBuffer()->Iterator());
   decoder->SetDecoderFlags(aDecoder->GetDecoderFlags());
   decoder->SetSurfaceFlags(aDecoder->GetSurfaceFlags());
+  decoder->SetFrameRecycler(aDecoder->GetFrameRecycler());
 
   if (NS_FAILED(decoder->Init())) {
     return nullptr;

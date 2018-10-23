@@ -364,6 +364,17 @@ public:
   BlendAnimationFilter()
     : mRow(0)
     , mRowLength(0)
+    , mRecycleRow(0)
+    , mRecycleRowMost(0)
+    , mRecycleRowOffset(0)
+    , mRecycleRowLength(0)
+    , mClearRow(0)
+    , mClearRowMost(0)
+    , mClearPrefixLength(0)
+    , mClearInfixOffset(0)
+    , mClearInfixLength(0)
+    , mClearPostfixOffset(0)
+    , mClearPostfixLength(0)
     , mOverProc(nullptr)
     , mBaseFrameStartPtr(nullptr)
     , mBaseFrameRowPtr(nullptr)
@@ -430,6 +441,7 @@ public:
     // is a full frame and uses source blending, there is no need to consider
     // the disposal method of the previous frame.
     gfx::IntRect dirtyRect(outputRect);
+    gfx::IntRect clearRect;
     if (!fullFrame || blendMethod != BlendMethod::SOURCE) {
       const RawAccessFrameRef& restoreFrame =
         aConfig.mDecoder->GetRestoreFrameRef();
@@ -458,21 +470,55 @@ public:
             // us to combine old data and new.
             if (!mFrameRect.Contains(restoreBlendRect) ||
                 blendMethod == BlendMethod::OVER) {
-              mClearRect = restoreBlendRect;
+              clearRect = restoreBlendRect;
             }
 
             // If we are clearing the whole frame, we do not need to retain a
             // reference to the base frame buffer.
-            if (outputRect.IsEqualEdges(mClearRect)) {
+            if (outputRect.IsEqualEdges(clearRect)) {
               mBaseFrameStartPtr = nullptr;
             } else {
-              dirtyRect = mFrameRect.Union(restoreDirtyRect).Union(mClearRect);
+              dirtyRect = mFrameRect.Union(restoreDirtyRect).Union(clearRect);
             }
             break;
         }
       } else if (!fullFrame) {
         // This must be the first frame, clear everything.
-        mClearRect = outputRect;
+        clearRect = outputRect;
+      }
+    }
+
+    // We may be able to reuse parts of our underlying buffer that we are
+    // writing the new frame to. The recycle rect gives us the invalidation
+    // region which needs to be copied from the restore frame.
+    const gfx::IntRect& recycleRect = aConfig.mDecoder->GetRecycleRect();
+    mRecycleRow = recycleRect.y;
+    mRecycleRowMost = recycleRect.YMost();
+    mRecycleRowOffset = recycleRect.x * sizeof(uint32_t);
+    mRecycleRowLength = recycleRect.width * sizeof(uint32_t);
+
+    if (!clearRect.IsEmpty()) {
+      // The clear rect interacts with the recycle rect because we need to copy
+      // the prefix and postfix data from the base frame. The one thing we do
+      // know is that the infix area is always cleared explicitly.
+      mClearRow = clearRect.y;
+      mClearRowMost = clearRect.YMost();
+      mClearInfixOffset = clearRect.x * sizeof(uint32_t);
+      mClearInfixLength = clearRect.width * sizeof(uint32_t);
+
+      // The recycle row offset is where we need to begin copying base frame
+      // data for a row. If this offset begins after or at the clear infix
+      // offset, then there is no prefix data at all.
+      if (mClearInfixOffset > mRecycleRowOffset) {
+        mClearPrefixLength = mClearInfixOffset - mRecycleRowOffset;
+      }
+
+      // Similar to the prefix, if the postfix offset begins outside the recycle
+      // rect, then we know we already have all the data we need.
+      mClearPostfixOffset = mClearInfixOffset + mClearInfixLength;
+      size_t recycleRowEndOffset = mRecycleRowOffset + mRecycleRowLength;
+      if (mClearPostfixOffset < recycleRowEndOffset) {
+        mClearPostfixLength = recycleRowEndOffset - mClearPostfixOffset;
       }
     }
 
@@ -628,24 +674,32 @@ private:
       return;
     }
 
+    // No need to copy pixels from the base frame for rows that will not change
+    // between the recycled frame and the new frame.
+    bool needBaseFrame = mRow >= mRecycleRow &&
+                         mRow < mRecycleRowMost;
+
     if (!mBaseFrameRowPtr) {
       // No base frame, so we are clearing everything.
-      memset(dest, 0, mRowLength);
-    } else if (mClearRect.height > 0 &&
-               mClearRect.y <= mRow &&
-               mClearRect.YMost() > mRow) {
+      if (needBaseFrame) {
+        memset(dest + mRecycleRowOffset, 0, mRecycleRowLength);
+      }
+    } else if (mClearRow <= mRow && mClearRowMost > mRow) {
       // We have a base frame, but we are inside the area to be cleared.
       // Only copy the data we need from the source.
-      size_t prefixLength = mClearRect.x * sizeof(uint32_t);
-      size_t clearLength = mClearRect.width * sizeof(uint32_t);
-      size_t postfixOffset = prefixLength + clearLength;
-      size_t postfixLength = mRowLength - postfixOffset;
-      MOZ_ASSERT(prefixLength + clearLength + postfixLength == mRowLength);
-      memcpy(dest, mBaseFrameRowPtr, prefixLength);
-      memset(dest + prefixLength, 0, clearLength);
-      memcpy(dest + postfixOffset, mBaseFrameRowPtr + postfixOffset, postfixLength);
-    } else {
-      memcpy(dest, mBaseFrameRowPtr, mRowLength);
+      if (needBaseFrame) {
+        memcpy(dest + mRecycleRowOffset,
+               mBaseFrameRowPtr + mRecycleRowOffset,
+               mClearPrefixLength);
+        memcpy(dest + mClearPostfixOffset,
+               mBaseFrameRowPtr + mClearPostfixOffset,
+               mClearPostfixLength);
+      }
+      memset(dest + mClearInfixOffset, 0, mClearInfixLength);
+    } else if (needBaseFrame) {
+      memcpy(dest + mRecycleRowOffset,
+             mBaseFrameRowPtr + mRecycleRowOffset,
+             mRecycleRowLength);
     }
   }
 
@@ -694,13 +748,25 @@ private:
                                        /// that we're currently writing.
   size_t mRowLength;                   /// Length in bytes of a row that is the input
                                        /// for the next filter.
+  int32_t mRecycleRow;                 /// The starting row of the recycle rect.
+  int32_t mRecycleRowMost;             /// The ending row of the recycle rect.
+  size_t mRecycleRowOffset;            /// Row offset in bytes of the recycle rect.
+  size_t mRecycleRowLength;            /// Row length in bytes of the recycle rect.
+
+  /// The frame area to clear before blending the current frame.
+  int32_t mClearRow;                   /// The starting row of the clear rect.
+  int32_t mClearRowMost;               /// The ending row of the clear rect.
+  size_t mClearPrefixLength;           /// Row length in bytes of clear prefix.
+  size_t mClearInfixOffset;            /// Row offset in bytes of clear area.
+  size_t mClearInfixLength;            /// Row length in bytes of clear area.
+  size_t mClearPostfixOffset;          /// Row offset in bytes of clear postfix.
+  size_t mClearPostfixLength;          /// Row length in bytes of clear postfix.
+
   SkBlitRow::Proc32 mOverProc;         /// Function pointer to perform over blending.
   const uint8_t* mBaseFrameStartPtr;   /// Starting row pointer to the base frame
                                        /// data from which we copy pixel data from.
   const uint8_t* mBaseFrameRowPtr;     /// Current row pointer to the base frame
                                        /// data.
-  gfx::IntRect mClearRect;             /// The frame area to clear before blending
-                                       /// the current frame.
 };
 
 //////////////////////////////////////////////////////////////////////////////

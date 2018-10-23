@@ -1970,8 +1970,7 @@ protected:
   virtual void CheckNotNativeAnonymous() const;
 #endif
 
-  void EnsurePreInsertionValidity1(nsINode& aNewChild, nsINode* aRefChild,
-                                   mozilla::ErrorResult& aError);
+  void EnsurePreInsertionValidity1(mozilla::ErrorResult& aError);
   void EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
                                    nsINode* aRefChild,
                                    mozilla::ErrorResult& aError);
