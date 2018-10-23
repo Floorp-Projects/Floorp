@@ -160,7 +160,9 @@ is_power_of_two(int v)
 static void
 DestroySurface(const EGLSurface surf)
 {
-    MOZ_ASSERT(surf);
+    if (!surf)
+        return;
+
     const auto& egl = gl::GLLibraryEGL::Get();
 
     // TODO: This breaks TLS MakeCurrent caching.
@@ -323,12 +325,9 @@ GLContextEGL::~GLContextEGL()
 #endif
 
     mEgl->fDestroyContext(EGL_DISPLAY(), mContext);
-    if (mSurface) {
-        DestroySurface(mSurface);
-    }
-    if (mFallbackSurface) {
-        DestroySurface(mFallbackSurface);
-    }
+    DestroySurface(mSurface);
+    MOZ_ASSERT(!mFallbackSurface || mFallbackSurface != mSurface);
+    DestroySurface(mFallbackSurface);
 }
 
 bool
@@ -488,7 +487,7 @@ GLContextEGL::ReleaseSurface()
     if (!mOwnsContext)
         return;
 
-    mozilla::gl::DestroySurface(mSurface);
+    DestroySurface(mSurface);
     mSurface = nullptr;
 }
 
