@@ -28,10 +28,8 @@
 #include "nsPK11TokenDB.h"
 #include "nsPKCS11Slot.h"
 #include "nsRandomGenerator.h"
-#include "nsSSLSocketProvider.h"
 #include "nsSecureBrowserUIImpl.h"
 #include "nsSiteSecurityService.h"
-#include "nsTLSSocketProvider.h"
 #include "nsXULAppAPI.h"
 #include "OSKeyStore.h"
 #include "OSReauthenticator.h"
@@ -133,8 +131,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
 
 NS_DEFINE_NAMED_CID(NS_NSSCOMPONENT_CID);
-NS_DEFINE_NAMED_CID(NS_SSLSOCKETPROVIDER_CID);
-NS_DEFINE_NAMED_CID(NS_STARTTLSSOCKETPROVIDER_CID);
 NS_DEFINE_NAMED_CID(NS_SECRETDECODERRING_CID);
 NS_DEFINE_NAMED_CID(NS_PK11TOKENDB_CID);
 NS_DEFINE_NAMED_CID(NS_PKCS11MODULEDB_CID);
@@ -169,10 +165,6 @@ NS_DEFINE_NAMED_CID(NS_OSREAUTHENTICATOR_CID);
 // new component with ThreadRestriction::MainThreadOnly is added.
 static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_NSSCOMPONENT_CID, false, nullptr, nsNSSComponentConstructor },
-  { &kNS_SSLSOCKETPROVIDER_CID, false, nullptr,
-    Constructor<nsSSLSocketProvider> },
-  { &kNS_STARTTLSSOCKETPROVIDER_CID, false, nullptr,
-    Constructor<nsTLSSocketProvider> },
   { &kNS_SECRETDECODERRING_CID, false, nullptr,
     Constructor<SecretDecoderRing> },
   { &kNS_PK11TOKENDB_CID, false, nullptr, Constructor<nsPK11TokenDB> },
@@ -234,8 +226,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { PSM_COMPONENT_CONTRACTID, &kNS_NSSCOMPONENT_CID },
   { NS_NSS_ERRORS_SERVICE_CONTRACTID, &kNS_NSSERRORSSERVICE_CID },
   { NS_NSSVERSION_CONTRACTID, &kNS_NSSVERSION_CID },
-  { NS_SSLSOCKETPROVIDER_CONTRACTID, &kNS_SSLSOCKETPROVIDER_CID },
-  { NS_STARTTLSSOCKETPROVIDER_CONTRACTID, &kNS_STARTTLSSOCKETPROVIDER_CID },
   { NS_SECRETDECODERRING_CONTRACTID, &kNS_SECRETDECODERRING_CID },
   { NS_PK11TOKENDB_CONTRACTID, &kNS_PK11TOKENDB_CID },
   { NS_PKCS11MODULEDB_CONTRACTID, &kNS_PKCS11MODULEDB_CID },
