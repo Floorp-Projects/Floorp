@@ -403,7 +403,7 @@ this.tabs = class extends ExtensionAPI {
           name: "tabs.onCreated",
           register: fire => {
             let listener = (eventName, event) => {
-              fire.async(tabManager.convert(event.nativeTab, event.currentTab));
+              fire.async(tabManager.convert(event.nativeTab, event.currentTabSize));
             };
 
             tabTracker.on("tab-created", listener);
@@ -564,7 +564,12 @@ this.tabs = class extends ExtensionAPI {
             }
 
             tabListener.initTabReady();
-            let currentTab = window.gBrowser.selectedTab;
+            const currentTab = window.gBrowser.selectedTab;
+            const {frameLoader} = currentTab.linkedBrowser;
+            const currentTabSize = {
+              width: frameLoader.lazyWidth,
+              height: frameLoader.lazyHeight,
+            };
 
             if (createProperties.openerTabId !== null) {
               options.ownerTab = tabTracker.getTab(createProperties.openerTabId);
@@ -631,7 +636,7 @@ this.tabs = class extends ExtensionAPI {
               tabListener.initializingTabs.add(nativeTab);
             }
 
-            return tabManager.convert(nativeTab, currentTab);
+            return tabManager.convert(nativeTab, currentTabSize);
           });
         },
 
