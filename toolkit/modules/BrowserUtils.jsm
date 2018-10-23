@@ -311,31 +311,16 @@ var BrowserUtils = {
   },
 
   /**
-   * Return true if we can FAYT for this window (could be CPOW):
+   * Returns true if we can show a find bar, including FAYT, for the specified
+   * document location. The location must not be in a blacklist of specific
+   * "about:" pages for which find is disabled.
    *
-   * @param win
-   *        The top level window that is focused
-   *
+   * This can be called from the parent process or from content processes.
    */
-  canFastFind(win) {
-    if (!win)
-      return false;
-
-    if (!this.mimeTypeIsTextBased(win.document.contentType))
-      return false;
-
-    // disable FAYT in about:blank to prevent FAYT opening unexpectedly.
-    let loc = win.location;
-    if (loc.href == "about:blank")
-      return false;
-
-    // disable FAYT in documents that ask for it to be disabled.
-    if ((loc.protocol == "about:" || loc.protocol == "chrome:") &&
-        (win.document.documentElement &&
-         win.document.documentElement.getAttribute("disablefastfind") == "true"))
-      return false;
-
-    return true;
+  canFindInPage(location) {
+    return !location.startsWith("about:addons") &&
+           !location.startsWith("about:config") &&
+           !location.startsWith("about:preferences");
   },
 
   _visibleToolbarsMap: new WeakMap(),
