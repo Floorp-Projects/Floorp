@@ -65,6 +65,16 @@ js::Debugger::onEnterFrame(JSContext* cx, AbstractFramePtr frame)
 }
 
 /* static */ js::ResumeMode
+js::Debugger::onResumeFrame(JSContext* cx, AbstractFramePtr frame)
+{
+    MOZ_ASSERT_IF(frame.hasScript() && frame.script()->isDebuggee(), frame.isDebuggee());
+    if (!frame.isDebuggee()) {
+        return ResumeMode::Continue;
+    }
+    return slowPathOnResumeFrame(cx, frame);
+}
+
+/* static */ js::ResumeMode
 js::Debugger::onDebuggerStatement(JSContext* cx, AbstractFramePtr frame)
 {
     if (!cx->realm()->isDebuggee()) {

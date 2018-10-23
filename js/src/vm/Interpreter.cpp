@@ -4576,7 +4576,7 @@ CASE(JSOP_RESUME)
         TraceLogStartEvent(logger, scriptEvent);
         TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
-        switch (Debugger::onEnterFrame(cx, REGS.fp())) {
+        switch (Debugger::onResumeFrame(cx, REGS.fp())) {
           case ResumeMode::Continue:
             break;
           case ResumeMode::Throw:
