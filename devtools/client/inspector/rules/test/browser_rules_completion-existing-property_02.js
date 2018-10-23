@@ -34,7 +34,7 @@ var testData = [
   ["d", {}, "display", OPEN, SELECTED, !CHANGE],
   ["VK_TAB", {}, "blue", !OPEN, !SELECTED, CHANGE],
   ["n", {}, "none", !OPEN, !SELECTED, CHANGE],
-  ["VK_RETURN", {}, null, !OPEN, !SELECTED, CHANGE]
+  ["VK_RETURN", {}, null, !OPEN, !SELECTED, CHANGE],
 ];
 
 const TEST_URI = "<h1 style='color: red'>Header</h1>";

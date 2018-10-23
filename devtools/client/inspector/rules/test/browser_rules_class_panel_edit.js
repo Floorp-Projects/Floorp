@@ -17,7 +17,7 @@ add_task(async function() {
   await toggleClassPanelCheckBox(view, "class1");
   checkClassPanelContent(view, [
     {name: "class1", state: false},
-    {name: "class2", state: true}
+    {name: "class2", state: true},
   ]);
   let newClassName = await testActor.getAttribute("body", "class");
   is(newClassName, "class2", "The class attribute has been updated in the DOM");
@@ -26,7 +26,7 @@ add_task(async function() {
   await toggleClassPanelCheckBox(view, "class2");
   checkClassPanelContent(view, [
     {name: "class1", state: false},
-    {name: "class2", state: false}
+    {name: "class2", state: false},
   ]);
   newClassName = await testActor.getAttribute("body", "class");
   is(newClassName, "", "The class attribute has been updated in the DOM");
@@ -35,7 +35,7 @@ add_task(async function() {
   await toggleClassPanelCheckBox(view, "class2");
   checkClassPanelContent(view, [
     {name: "class1", state: false},
-    {name: "class2", state: true}
+    {name: "class2", state: true},
   ]);
   newClassName = await testActor.getAttribute("body", "class");
   is(newClassName, "class2", "The class attribute has been updated in the DOM");
@@ -44,7 +44,7 @@ add_task(async function() {
   await toggleClassPanelCheckBox(view, "class1");
   checkClassPanelContent(view, [
     {name: "class1", state: true},
-    {name: "class2", state: true}
+    {name: "class2", state: true},
   ]);
   newClassName = await testActor.getAttribute("body", "class");
   is(newClassName, "class1 class2", "The class attribute has been updated in the DOM");

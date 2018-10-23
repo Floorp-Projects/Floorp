@@ -18,7 +18,7 @@ const PASTE_MENU_ITEMS = [
 
 const ACTIVE_ON_DOCTYPE_ITEMS = [
   "node-menu-showdomproperties",
-  "node-menu-useinconsole"
+  "node-menu-useinconsole",
 ];
 
 const ALL_MENU_ITEMS = [
@@ -39,7 +39,7 @@ const ALL_MENU_ITEMS = [
   "node-menu-add-attribute",
   "node-menu-copy-attribute",
   "node-menu-edit-attribute",
-  "node-menu-remove-attribute"
+  "node-menu-remove-attribute",
 ].concat(PASTE_MENU_ITEMS, ACTIVE_ON_DOCTYPE_ITEMS);
 
 const INACTIVE_ON_DOCTYPE_ITEMS =
@@ -75,7 +75,7 @@ const TEST_CASES = [
       "node-menu-copyimagedatauri",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
     ],
     selector: "#sensitivity",
   },
@@ -93,7 +93,7 @@ const TEST_CASES = [
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
       "node-menu-remove-attribute",
-      "node-menu-delete"
+      "node-menu-delete",
     ],
   },
   {
@@ -107,8 +107,8 @@ const TEST_CASES = [
       "node-menu-pasteafter",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
-    ]
+      "node-menu-remove-attribute",
+    ],
   },
   {
     desc: "<img> with HTML on clipboard",
@@ -118,8 +118,8 @@ const TEST_CASES = [
     disabled: [
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
-    ]
+      "node-menu-remove-attribute",
+    ],
   },
   {
     desc: "<head> with HTML on clipboard",
@@ -133,7 +133,7 @@ const TEST_CASES = [
       "node-menu-screenshotnode",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
     ],
   },
   {
@@ -144,7 +144,7 @@ const TEST_CASES = [
       "node-menu-screenshotnode",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
     ]),
   },
   {
@@ -156,8 +156,8 @@ const TEST_CASES = [
       "node-menu-copyimagedatauri",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
-    ]
+      "node-menu-remove-attribute",
+    ],
   },
   {
     desc: "<element> with base64 encoded image data uri on clipboard",
@@ -170,7 +170,7 @@ const TEST_CASES = [
       "node-menu-copyimagedatauri",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
     ]),
   },
   {
@@ -182,7 +182,7 @@ const TEST_CASES = [
       "node-menu-copyimagedatauri",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
     ]),
   },
   {
@@ -194,7 +194,7 @@ const TEST_CASES = [
       "node-menu-copyimagedatauri",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
     ]),
   },
   {
@@ -205,7 +205,7 @@ const TEST_CASES = [
       "node-menu-screenshotnode",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
     ]),
   },
   {
@@ -216,15 +216,15 @@ const TEST_CASES = [
       "node-menu-screenshotnode",
       "node-menu-copy-attribute",
       "node-menu-edit-attribute",
-      "node-menu-remove-attribute"
+      "node-menu-remove-attribute",
     ]),
   },
   {
     desc: "<element> with context menu triggered on attribute, empty clipboard",
     selector: "#attributes",
     disabled: PASTE_MENU_ITEMS.concat(["node-menu-copyimagedatauri"]),
-    attributeTrigger: "data-edit"
-  }
+    attributeTrigger: "data-edit",
+  },
 ];
 
 var clipboard = require("devtools/shared/platform/clipboard");

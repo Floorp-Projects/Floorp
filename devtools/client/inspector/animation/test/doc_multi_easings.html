@@ -20,7 +20,7 @@
 
       const effect = {
         duration: 100000,
-        fill: "forwards"
+        fill: "forwards",
       };
 
       if (effectEasing) {
@@ -50,7 +50,7 @@
     createAnimation(
       "keyframe-easing",
       [
-        { opacity: 1, easing: "steps(2)", },
+        { opacity: 1, easing: "steps(2)" },
         { opacity: 0 },
       ]
     );
@@ -58,8 +58,8 @@
     createAnimation(
       "both-easing",
       [
-        { offset: 0, opacity: 1, easing: "steps(2)", },
-        { offset: 0, marginLeft: "0px", easing: "steps(1)", },
+        { offset: 0, opacity: 1, easing: "steps(2)" },
+        { offset: 0, marginLeft: "0px", easing: "steps(1)" },
         { marginLeft: "100px", opacity: 0 },
       ],
       "steps(10)"
@@ -68,9 +68,9 @@
     createAnimation(
       "narrow-keyframes",
       [
-        { opacity: 0, },
-        { offset: 0.1, opacity: 1, easing: "steps(1)", },
-        { offset: 0.13, opacity: 0, },
+        { opacity: 0 },
+        { offset: 0.1, opacity: 1, easing: "steps(1)" },
+        { offset: 0.13, opacity: 0 },
       ]
     );
 
@@ -78,18 +78,18 @@
       "duplicate-keyframes",
       [
         { opacity: 0 },
-        { offset: 0.5, opacity: 1, },
-        { offset: 0.5, opacity: 0, easing: "steps(1)", },
-        { opacity: 1, },
+        { offset: 0.5, opacity: 1 },
+        { offset: 0.5, opacity: 0, easing: "steps(1)" },
+        { opacity: 1 },
       ]
     );
 
     createAnimation(
       "color-keyframes",
       [
-        { color: "red", easing: "ease-in", },
-        { offset: 0.4, color: "blue", easing: "ease-out", },
-        { color: "lime", },
+        { color: "red", easing: "ease-in" },
+        { offset: 0.4, color: "blue", easing: "ease-out" },
+        { color: "lime" },
       ]
     );
     </script>

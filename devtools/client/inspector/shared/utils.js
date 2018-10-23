@@ -122,7 +122,7 @@ function getSelectorFromGrip(grip) {
     attributes,
     nodeName,
     isAfterPseudoElement,
-    isBeforePseudoElement
+    isBeforePseudoElement,
   } = grip.preview;
 
   if (isAfterPseudoElement || isBeforePseudoElement) {
@@ -189,7 +189,7 @@ function translateNodeFrontToGrip(nodeFront) {
       // nodeName is already lowerCased in Node grips
       nodeName: nodeFront.nodeName.toLowerCase(),
       nodeType: nodeFront.nodeType,
-    }
+    },
   };
 }
 

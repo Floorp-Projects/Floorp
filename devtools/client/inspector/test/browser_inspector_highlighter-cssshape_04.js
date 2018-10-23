@@ -116,7 +116,7 @@ async function testPolygonAddPoint(config) {
     x: newPointX,
     y: newPointY,
     center: false,
-    options: {clickCount: 2}
+    options: {clickCount: 2},
   };
 
   const onRuleViewChanged = view.once("ruleview-changed");
@@ -156,7 +156,7 @@ async function testPolygonRemovePoint(config) {
     x: left + width * x / 100,
     y: top + height * y / 100,
     center: false,
-    options: {clickCount: 2}
+    options: {clickCount: 2},
   };
 
   info("Move mouse over first point in highlighter");

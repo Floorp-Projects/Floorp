@@ -25,7 +25,7 @@ add_task(async function() {
   markup._onMouseMove({
     preventDefault: () => {},
     target: markup.doc.body,
-    pageY: viewHeight + markup.doc.defaultView.scrollY
+    pageY: viewHeight + markup.doc.defaultView.scrollY,
   });
 
   const bottomScrollPos = await waitForScrollStop(markup.doc);
@@ -35,7 +35,7 @@ add_task(async function() {
   markup._onMouseMove({
     preventDefault: () => {},
     target: markup.doc.body,
-    pageY: markup.doc.defaultView.scrollY
+    pageY: markup.doc.defaultView.scrollY,
   });
 
   const topScrollPos = await waitForScrollStop(markup.doc);

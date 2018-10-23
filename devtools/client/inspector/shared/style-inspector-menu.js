@@ -478,5 +478,5 @@ StyleInspectorMenu.prototype = {
     this.inspector = null;
     this.styleDocument = null;
     this.styleWindow = null;
-  }
+  },
 };

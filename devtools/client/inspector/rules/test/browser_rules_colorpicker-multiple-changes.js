@@ -50,13 +50,13 @@ async function testSimpleMultipleColorChanges(inspector, ruleView) {
   const colors = [
     {rgba: [0, 0, 0, 1], computed: "rgb(0, 0, 0)"},
     {rgba: [100, 100, 100, 1], computed: "rgb(100, 100, 100)"},
-    {rgba: [200, 200, 200, 1], computed: "rgb(200, 200, 200)"}
+    {rgba: [200, 200, 200, 1], computed: "rgb(200, 200, 200)"},
   ];
   for (const {rgba, computed} of colors) {
     await simulateColorPickerChange(ruleView, picker, rgba, {
       selector: "p",
       name: "color",
-      value: computed
+      value: computed,
     });
   }
 
@@ -81,13 +81,13 @@ async function testComplexMultipleColorChanges(inspector, ruleView) {
   const colors = [
     {rgba: [0, 0, 0, 1], computed: "rgb(0, 0, 0)"},
     {rgba: [100, 100, 100, 1], computed: "rgb(100, 100, 100)"},
-    {rgba: [200, 200, 200, 1], computed: "rgb(200, 200, 200)"}
+    {rgba: [200, 200, 200, 1], computed: "rgb(200, 200, 200)"},
   ];
   for (const {rgba, computed} of colors) {
     await simulateColorPickerChange(ruleView, picker, rgba, {
       selector: "body",
       name: "background-color",
-      value: computed
+      value: computed,
     });
   }
 

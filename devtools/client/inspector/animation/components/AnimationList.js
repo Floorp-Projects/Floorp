@@ -44,7 +44,7 @@ class AnimationList extends PureComponent {
 
     return dom.ul(
       {
-        className: "animation-list"
+        className: "animation-list",
       },
       animations.map(animation =>
         AnimationItem(

@@ -120,7 +120,7 @@ function assertTreeView(panelDoc, expectedContent) {
   const {
     expectedTreeTables,
     expectedStringCells,
-    expectedNumberCells
+    expectedNumberCells,
   } = expectedContent;
 
   if (expectedTreeTables) {

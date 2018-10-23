@@ -26,11 +26,11 @@ add_task(async function() {
   const testData = [
     {
       selector: "svg",
-      tag: "svg:svg"
+      tag: "svg:svg",
     },
     {
       selector: "circle",
-      tag: "svg:circle"
+      tag: "svg:circle",
     },
   ];
 

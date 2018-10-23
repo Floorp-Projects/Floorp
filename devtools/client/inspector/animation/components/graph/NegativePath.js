@@ -39,7 +39,7 @@ class NegativePath extends PureComponent {
     const { state } = animation;
     const effectTiming = Object.assign({}, state, {
       fill: "both",
-      iterations: state.iterationCount ? state.iterationCount : Infinity
+      iterations: state.iterationCount ? state.iterationCount : Infinity,
     });
 
     // Create new keyframes for opacity as computed style.
@@ -50,7 +50,7 @@ class NegativePath extends PureComponent {
       return {
         opacity: keyframe.offset,
         offset: keyframe.offset,
-        easing: keyframe.easing
+        easing: keyframe.easing,
       };
     });
 
@@ -82,7 +82,7 @@ class NegativePath extends PureComponent {
     return dom.g(
       {
         className: this.getClassName(),
-        transform: `translate(${ offset })`
+        transform: `translate(${ offset })`,
       },
       this.renderGraph(state, helper)
     );

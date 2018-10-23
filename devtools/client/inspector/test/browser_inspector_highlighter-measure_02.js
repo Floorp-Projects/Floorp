@@ -50,7 +50,7 @@ async function hasNoLabelsWhenStarts({isElementHidden, synthesizeMouse}) {
     selector: ":root",
     options: {type: "mousedown"},
     x: X,
-    y: Y
+    y: Y,
   });
 
   let hidden = await isElementHidden("label-size");
@@ -76,7 +76,7 @@ async function hasSizeLabelWhenMoved({isElementHidden, synthesizeMouse}) {
     selector: ":root",
     options: {type: "mousemove"},
     x: X + WIDTH,
-    y: Y + HEIGHT
+    y: Y + HEIGHT,
   });
 
   let hidden = await isElementHidden("label-size");
@@ -102,7 +102,7 @@ async function hasSizeLabelAndGuidesWhenStops({isElementHidden, synthesizeMouse}
     selector: ":root",
     options: {type: "mouseup"},
     x: X + WIDTH,
-    y: Y + HEIGHT
+    y: Y + HEIGHT,
   });
 
   let hidden = await isElementHidden("label-size");

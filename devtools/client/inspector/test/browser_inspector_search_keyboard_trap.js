@@ -25,9 +25,9 @@ const TEST_DATA = [
     keys: [
       {
         key: "VK_TAB",
-        options: { }
-      }
-    ]
+        options: { },
+      },
+    ],
   },
   {
     desc: "Move focus back to searchbox",
@@ -35,9 +35,9 @@ const TEST_DATA = [
     keys: [
       {
         key: "VK_TAB",
-        options: { shiftKey: true }
-      }
-    ]
+        options: { shiftKey: true },
+      },
+    ],
   },
   {
     desc: "Open popup and then tab away (2 times) to the a next focusable " +
@@ -46,17 +46,17 @@ const TEST_DATA = [
     keys: [
       {
         key: "d",
-        options: { }
+        options: { },
       },
       {
         key: "VK_TAB",
-        options: { }
+        options: { },
       },
       {
         key: "VK_TAB",
-        options: { }
-      }
-    ]
+        options: { },
+      },
+    ],
   },
   {
     desc: "Move focus back to searchbox",
@@ -64,10 +64,10 @@ const TEST_DATA = [
     keys: [
       {
         key: "VK_TAB",
-        options: { shiftKey: true }
-      }
-    ]
-  }
+        options: { shiftKey: true },
+      },
+    ],
+  },
 ];
 
 add_task(async function() {

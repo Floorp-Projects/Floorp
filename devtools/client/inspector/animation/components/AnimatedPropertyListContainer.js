@@ -46,7 +46,7 @@ class AnimatedPropertyListContainer extends PureComponent {
 
     return dom.div(
       {
-        className: `animated-property-list-container ${ animation.state.type }`
+        className: `animated-property-list-container ${ animation.state.type }`,
       },
       ProgressInspectionPanel(
         {
@@ -72,7 +72,7 @@ class AnimatedPropertyListContainer extends PureComponent {
           ticks: [0, 50, 100].map(position => {
             const label = getFormatStr("detail.propertiesHeader.percentage", position);
             return { position, label };
-          })
+          }),
         }
       )
     );

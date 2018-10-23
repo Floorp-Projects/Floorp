@@ -18,6 +18,6 @@ createEnum([
   "EXTENSION_SIDEBAR_PAGE_UPDATE",
 
   // Remove an extension sidebar from the inspector store.
-  "EXTENSION_SIDEBAR_REMOVE"
+  "EXTENSION_SIDEBAR_REMOVE",
 
 ], module.exports);

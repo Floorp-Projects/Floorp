@@ -10,7 +10,7 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   VIEW_NODE_VALUE_TYPE,
-  VIEW_NODE_SHAPE_POINT_TYPE
+  VIEW_NODE_SHAPE_POINT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 
 const DEFAULT_GRID_COLOR = "#4B0082";
@@ -979,7 +979,7 @@ class HighlightersOverlay {
 
       this.toggleShapesHighlighter(this.inspector.selection.nodeFront, {
         mode: event.target.dataset.mode,
-        transformMode: event.metaKey || event.ctrlKey
+        transformMode: event.metaKey || event.ctrlKey,
       }, nodeInfo.value.textProperty);
     }
   }

@@ -25,7 +25,7 @@ const TEST_DATA = [
       `);
       is(textNodeName, "#text", "Sibling is a text element");
       is(textNodeData, " hanging", "New text node has expected text content");
-    }
+    },
   },
   {
     selector: "#badMarkup2",
@@ -43,7 +43,7 @@ const TEST_DATA = [
       `);
       is(textNodeName, "#text", "Sibling is a text element");
       is(textNodeData, " hanging", "New text node has expected text content");
-    }
+    },
   },
   {
     selector: "#badMarkup3",
@@ -58,7 +58,7 @@ const TEST_DATA = [
                                                    "textContent");
       is(emText, "Emphasized  and strong", "<em> was auto created");
       is(strongText, " and strong", "<strong> was auto created");
-    }
+    },
   },
   {
     selector: "#badMarkup4",
@@ -77,7 +77,7 @@ const TEST_DATA = [
       is(divTag, "DIV", "did not change to <p> tag");
       is(pText, "", "The <p> tag has no children");
       is(pTag, "P", "Created an empty <p> tag");
-    }
+    },
   },
   {
     selector: "#badMarkup5",
@@ -100,8 +100,8 @@ const TEST_DATA = [
       is(pTag, "P", "Did not change to a <div> tag");
       is(divText, "with a nested div", "textContent is correct");
       is(divTag, "DIV", "Did not change to <p> tag");
-    }
-  }
+    },
+  },
 ];
 
 const TEST_URL = "data:text/html," +
