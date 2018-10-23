@@ -163,7 +163,8 @@ this.AboutPreferences = class AboutPreferences {
     contentsGroup.id = "homeContentsGroup";
     contentsGroup.setAttribute("data-subcategory", "contents");
     const caption = createAppend("caption", contentsGroup);
-    caption.setAttribute("label", formatString("prefs_home_header"));
+    const captionLabel = createAppend("label", caption);
+    captionLabel.setAttribute("value", formatString("prefs_home_header"));
     const description = createAppend("description", contentsGroup);
     description.textContent = formatString("prefs_home_description");
 

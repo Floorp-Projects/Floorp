@@ -1364,7 +1364,8 @@ html .toggle-button.end.vertical svg {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .search-shadow {
-  border: 1px solid transparent;
+  border: 1px solid var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .search-shadow.focused {
@@ -1595,6 +1596,8 @@ html .toggle-button.end.vertical svg {
   display: flex;
   align-self: stretch;
   flex-grow: 1;
+  width: 100%;
+  border-bottom: none;
 }
 
 .project-text-search .search-field .close-btn.big {
@@ -2000,6 +2003,30 @@ menuseparator {
   height: 100%;
   z-index: 999;
 }
+.outline-filter {
+  margin: 5px 0 0 0;
+  padding: 0px 10px;
+}
+
+.outline-filter-input {
+  padding: 0.5em 1.6em;
+  width: 100%;
+  border: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-sidebar-background);
+  color: var(--theme-body-color);
+  font-size: 12px;
+  -moz-user-select: text;
+  user-select: text;
+}
+
+.outline-filter-input.focused {
+  border: 1px solid var(--theme-highlight-blue);
+}
+
+.outline-filter-input::placeholder {
+  font-style: italic;
+  color: var(--theme-comment);
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2014,32 +2041,32 @@ menuseparator {
 }
 
 .outline-pane-info {
+  padding: 0.5em;
   width: 100%;
   font-style: italic;
   text-align: center;
-  padding: 0.5em;
   user-select: none;
   font-size: 12px;
   overflow: hidden;
 }
 
 .outline-list {
-  list-style-type: none;
-  padding: 4px 0;
   margin: 0;
+  padding: 0 0 4px 0;
+  position: absolute;
+  top: 38px;
+  bottom: 25px;
+  left: 0;
+  right: 0;
+  list-style-type: none;
   font-family: var(--monospace-font-family);
   overflow: auto;
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  bottom: 25px;
 }
 
 .outline-list__class-list {
-  list-style: none;
   margin: 0;
   padding: 0;
+  list-style: none;
 }
 
 .outline-list__class-list .function-signature .function-name {
@@ -2051,9 +2078,9 @@ menuseparator {
 }
 
 .outline-list h2 {
+  margin: 10px 0 10px 10px;
   font-weight: normal;
   font-size: 1em;
-  margin: 10px 0 10px 10px;
   color: var(--blue-55);
 }
 
@@ -2085,19 +2112,19 @@ menuseparator {
 }
 
 .outline-footer {
-  background: var(--theme-body-background);
-  border-top: 1px solid var(--theme-splitter-color);
+  display: flex;
+  box-sizing: border-box;
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
+  height: 25px;
+  background: var(--theme-body-background);
+  border-top: 1px solid var(--theme-splitter-color);
   opacity: 1;
   z-index: 1;
   -moz-user-select: none;
   user-select: none;
-  height: 25px;
-  box-sizing: border-box;
-  display: flex;
 }
 
 .theme-dark .outline-footer button {
@@ -2298,6 +2325,7 @@ menuseparator {
 
 .search-bar .search-shadow {
   flex-grow: 1;
+  border-bottom: none;
 }
 
 .search-bar .search-shadow.focused {

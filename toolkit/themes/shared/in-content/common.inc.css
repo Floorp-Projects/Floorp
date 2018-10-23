@@ -89,47 +89,14 @@ html|hr {
   border-color: var(--in-content-border-color);
 }
 
-xul|caption {
-  -moz-appearance: none;
-  font-size: 1.14em;
-  margin: 0;
-}
-
-html|h2,
-xul|caption xul|checkbox,
-xul|caption xul|label {
+html|h2 {
   font-weight: 600;
   line-height: 1.4em;
-}
-
-xul|caption xul|checkbox,
-xul|caption xul|label {
-  margin: 0 !important;
 }
 
 *|*.main-content {
   padding: 40px 28px;
   overflow: auto;
-}
-
-/* groupboxes */
-
-xul|groupbox {
-  -moz-appearance: none;
-  border: none;
-  margin: 0 0 32px;
-  padding: 0;
-}
-
-xul|groupbox > xul|caption {
-  padding: 4px 0;
-}
-
-xul|groupbox xul|label:not(.menu-accel):not(.menu-iconic-accel):not(.menu-text):not(.menu-iconic-text):not(.menulist-label):not(.indent):not(.learnMore):not(.tail-with-learn-more),
-xul|groupbox xul|description {
-  /* !important needed to override toolkit !important rule */
-  margin-inline-start: 0 !important;
-  margin-inline-end: 0 !important;
 }
 
 /* tabpanels and tabs */

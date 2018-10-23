@@ -3,7 +3,7 @@ job-defaults:
     require-build: true
     worker-type:
         by-platform:
-            linux64.*: releng-hardware/gecko-t-linux-talos-tw
+            linux64.*: releng-hardware/gecko-t-linux-talos
     worker:
         by-platform:
             linux64.*:

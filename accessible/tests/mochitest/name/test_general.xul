@@ -174,9 +174,8 @@
       testName("li_labelledby", "Show an Alert The moment the event starts");
 
       //////////////////////////////////////////////////////////////////////////
-      // groupbox labeling from caption label or its sub tree
+      // groupbox labeling from caption sub tree
       testName("groupbox", "Some caption");
-      testName("groupbox2", "Some caption");
 
       SimpleTest.finish();
     }
@@ -347,12 +346,8 @@
       <description style="display:none">i am hidden</description>
     </hbox>
 
-    <!-- Name from label or sub tree -->
+    <!-- Name from caption sub tree -->
     <groupbox id="groupbox">
-      <caption label="Some caption" />
-      <checkbox label="some checkbox label" />
-    </groupbox>
-    <groupbox id="groupbox2">
       <caption><label>Some caption</label></caption>
       <checkbox label="some checkbox label" />
     </groupbox>

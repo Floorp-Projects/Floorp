@@ -4,8 +4,7 @@
 
 %include ../../../shared/incontentprefs/dialog.inc.css
 
-.prefwindow,
-.windowDialog {
+window {
   font: message-box !important;
 }
 

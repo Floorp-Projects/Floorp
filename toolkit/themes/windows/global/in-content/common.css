@@ -8,10 +8,6 @@
   --in-content-box-background-odd: transparent;
 }
 
-xul|caption {
-  background-color: transparent;
-}
-
 xul|*.menulist-dropmarker {
   margin-top: 1px;
   margin-bottom: 1px;

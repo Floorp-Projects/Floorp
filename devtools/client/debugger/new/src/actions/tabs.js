@@ -27,26 +27,30 @@ var _selectors = require("../selectors/index");
  */
 function updateTab(source, framework) {
   const {
-    url
+    url,
+    id: sourceId
   } = source;
   const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
   return {
     type: "UPDATE_TAB",
     url,
     framework,
-    isOriginal
+    isOriginal,
+    sourceId
   };
 }
 
 function addTab(source) {
   const {
-    url
+    url,
+    id: sourceId
   } = source;
   const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
   return {
     type: "ADD_TAB",
     url,
-    isOriginal
+    isOriginal,
+    sourceId
   };
 }
 

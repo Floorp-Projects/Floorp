@@ -7,51 +7,12 @@
 
 %include ../../../../toolkit/themes/osx/global/shared.inc
 
-.windowDialog {
-  padding: 12px;
+window {
   font: -moz-dialog;
-}
-
-.prefwindow {
-  padding: 0;
-}
-
-.prefwindow[type="child"] {
-  padding-top: 18px;
-  padding-bottom: 15px;
-  padding-inline-start: 18px;
-  padding-inline-end: 20px;
-}
-
-description {
-  margin-bottom: 4px !important;
-}
-
-.prefpane {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  padding-inline-start: 0;
-  padding-inline-end: 12px;
-}
-
-.prefwindow[type="child"] > .prefpane {
-  padding: 0;
-}
-
-.prefpane .groupbox-body,
-.prefpane .groupbox-body {
-  -moz-appearance: none;
-  padding: 8px 4px 4px 4px;
 }
 
 tabpanels {
   padding: 20px 7px 7px;
-}
-
-caption {
-  padding-inline-start: 5px;
-  padding-top: 4px;
-  padding-bottom: 2px;
 }
 
 #popupPolicyRow {
@@ -108,14 +69,6 @@ caption {
 .updateControls {
   margin-inline-start: 10px;
 }
-
-/**
- * Clear Private Data
- */
-#SanitizeDialogPane > groupbox {
-  margin-top: 0;
-}
-
 
 /* ----- SYNC PANE ----- */
 

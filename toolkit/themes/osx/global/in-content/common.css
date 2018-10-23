@@ -21,14 +21,6 @@ xul|button[dlgtype="help"] {
   width: auto;
 }
 
-xul|caption {
-  padding-inline-start: 0;
-}
-
-xul|groupbox > xul|*.groupbox-body {
-  padding: 0;
-}
-
 xul|menulist > xul|menupopup > xul|menuitem[checked="true"]::before,
 xul|menulist > xul|menupopup > xul|menuitem[selected="true"]::before {
   display: none;

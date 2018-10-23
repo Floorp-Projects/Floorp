@@ -29,10 +29,6 @@ xul|*.help-button > xul|*.button-box > xul|*.button-icon {
   margin-inline-end: 0;
 }
 
-xul|*.groupbox-body {
-  padding-inline-start: 0;
-}
-
 xul|menulist {
   font-size: inherit;
 }

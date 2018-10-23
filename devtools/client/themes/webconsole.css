@@ -26,7 +26,7 @@
   --console-output-icon-error: hsl(0, 100%, 65%);
   --console-output-icon-warning: hsl(36, 100%, 60%);
   --console-output-indent-border-color: var(--theme-highlight-blue);
-  --error-color: hsl(0, 100%, 79%);
+  --error-color: var(--red-20);
   --error-background-color: hsl(352, 79%, 62%, 0.17);
   --warning-color: hsl(43, 94%, 81%);
   --warning-background-color: hsl(42, 37%, 19%);

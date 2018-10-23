@@ -1159,8 +1159,10 @@ class Shape : public gc::TenuredCell
     void fixupGetterSetterForBarrier(JSTracer* trc);
     void updateBaseShapeAfterMovingGC();
 
-#ifdef DEBUG
     // For JIT usage.
+    static inline size_t offsetOfBaseShape() { return offsetof(Shape, base_); }
+
+#ifdef DEBUG
     static inline size_t offsetOfImmutableFlags() { return offsetof(Shape, immutableFlags); }
     static inline uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
 #endif

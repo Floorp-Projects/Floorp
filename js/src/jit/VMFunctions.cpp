@@ -2072,5 +2072,10 @@ typedef bool (*NativeGetElementFn)(JSContext*, HandleNativeObject, HandleValue, 
 const VMFunction NativeGetElementInfo =
     FunctionInfo<NativeGetElementFn>(NativeGetElement, "NativeGetProperty");
 
+typedef bool (*AddOrUpdateSparseElementHelperFn)(JSContext* cx, HandleArrayObject obj,
+                                                 int32_t int_id, HandleValue v, bool strict);
+const VMFunction AddOrUpdateSparseElementHelperInfo =
+    FunctionInfo<AddOrUpdateSparseElementHelperFn>(AddOrUpdateSparseElementHelper, "AddOrUpdateSparseElementHelper");
+
 } // namespace jit
 } // namespace js

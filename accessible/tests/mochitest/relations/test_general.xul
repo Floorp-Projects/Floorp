@@ -211,7 +211,7 @@
     <button id="submit" default="true" label="Default"/>
 
     <groupbox id="groupbox">
-      <caption label="caption"/>
+      <caption><label id="groupboxlabel" value="caption"/></caption>
     </groupbox>
 
     <tabbox>
