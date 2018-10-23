@@ -31,12 +31,10 @@ config = {
     ### release branches
     "mozilla-central": {
         "repo_path": 'mozilla-central',
-        "update_channel": "nightly",
     },
     'mozilla-release': {
         'enable_release_promotion': True,
         'repo_path': 'releases/mozilla-release',
-        'update_channel': 'release',
         'branch_uses_per_checkin_strategy': True,
         'platform_overrides': {
             'linux': {
@@ -59,7 +57,6 @@ config = {
     'mozilla-esr60': {
         'enable_release_promotion': True,
         'repo_path': 'releases/mozilla-esr60',
-        'update_channel': 'esr',
         'branch_uses_per_checkin_strategy': True,
         'platform_overrides': {
             'linux': {
@@ -85,7 +82,6 @@ config = {
     'mozilla-beta': {
         'enable_release_promotion': 1,
         'repo_path': 'releases/mozilla-beta',
-        'update_channel': 'beta',
         'branch_uses_per_checkin_strategy': True,
         'platform_overrides': {
             'linux': {
@@ -103,27 +99,7 @@ config = {
             'win64': {
                 'mozconfig_variant': 'beta',
             },
-            'linux-devedition': {
-                "update_channel": "aurora",
-            },
-            'linux64-devedition': {
-                "update_channel": "aurora",
-            },
-            'macosx64-devedition': {
-                "update_channel": "aurora",
-            },
-            'win32-devedition': {
-                "update_channel": "aurora",
-            },
-            'win64-devedition': {
-                "update_channel": "aurora",
-            },
         },
-    },
-    'mozilla-aurora': {
-        'repo_path': 'releases/mozilla-aurora',
-        'update_channel': 'aurora',
-        'branch_uses_per_checkin_strategy': True,
     },
     'try': {
         'repo_path': 'try',
@@ -158,7 +134,6 @@ config = {
     'graphics': {},
     # 'holly': {},
     'jamun': {
-        'update_channel': 'beta',
         'enable_release_promotion': 1,
         'platform_overrides': {
             'linux': {
@@ -175,21 +150,6 @@ config = {
             },
             'win64': {
                 'mozconfig_variant': 'release',
-            },
-            'linux-devedition': {
-                "update_channel": "aurora",
-            },
-            'linux64-devedition': {
-                "update_channel": "aurora",
-            },
-            'macosx64-devedition': {
-                "update_channel": "aurora",
-            },
-            'win32-devedition': {
-                "update_channel": "aurora",
-            },
-            'win64-devedition': {
-                "update_channel": "aurora",
             },
         },
     },
