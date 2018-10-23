@@ -8,12 +8,8 @@ var EXPORTED_SYMBOLS = ["ContentRestore"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "DocShellCapabilities",
-  "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 ChromeUtils.defineModuleGetter(this, "FormData",
   "resource://gre/modules/FormData.jsm");
-ChromeUtils.defineModuleGetter(this, "ScrollPosition",
-  "resource://gre/modules/ScrollPosition.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionStorage",
@@ -168,8 +164,7 @@ ContentRestoreInternal.prototype = {
 
     // Make sure to reset the capabilities and attributes in case this tab gets
     // reused.
-    let disallow = new Set(tabData.disallow && tabData.disallow.split(","));
-    DocShellCapabilities.restore(this.docShell, disallow);
+    ssu.restoreDocShellCapabilities(this.docShell, tabData.disallow);
 
     if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
       SessionStorage.restore(this.docShell, tabData.storage);
@@ -327,7 +322,7 @@ ContentRestoreInternal.prototype = {
     // Restore scroll data.
     restoreFrameTreeData(window, scrollPositions, (frame, data) => {
       if (data.scroll) {
-        ScrollPosition.restore(frame, data.scroll);
+        ssu.restoreScrollPosition(frame, data.scroll);
       }
     });
   },
