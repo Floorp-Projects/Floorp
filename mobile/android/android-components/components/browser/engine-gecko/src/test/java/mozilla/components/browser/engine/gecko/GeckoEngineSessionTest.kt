@@ -662,6 +662,7 @@ class GeckoEngineSessionTest {
         assertTrue(clearMatchesReceived)
     }
 
+    @Test
     fun `toggle fullscreen mode triggers exit event`() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         val geckoSession = Mockito.spy(engineSession.geckoSession)

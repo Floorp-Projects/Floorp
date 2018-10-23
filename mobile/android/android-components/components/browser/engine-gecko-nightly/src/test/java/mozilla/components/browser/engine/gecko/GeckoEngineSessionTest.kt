@@ -929,6 +929,7 @@ class GeckoEngineSessionTest {
         verify(geckoSession).exitFullScreen()
     }
 
+    @Test
     fun clearData() {
         val runtime = mock(GeckoRuntime::class.java)
         val engineSession = GeckoEngineSession(runtime)
