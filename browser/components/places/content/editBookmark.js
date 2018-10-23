@@ -440,6 +440,7 @@ var gEditItemOverlay = {
 
     if (this._observersAdded) {
       PlacesUtils.bookmarks.removeObserver(this);
+      window.removeEventListener("unload", this);
       this._observersAdded = false;
     }
 
