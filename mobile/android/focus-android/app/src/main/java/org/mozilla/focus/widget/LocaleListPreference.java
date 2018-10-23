@@ -202,8 +202,8 @@ public class LocaleListPreference extends ListPreference {
 
             if (languageCodeToNameMap.containsKey(locale.getLanguage())) {
                 displayName = languageCodeToNameMap.get(locale.getLanguage());
-            } else if (localeToNameMap.containsKey(locale.getCountry())) {
-                displayName = localeToNameMap.get(locale.getCountry());
+            } else if (localeToNameMap.containsKey(locale.toLanguageTag())) {
+                displayName = localeToNameMap.get(locale.toLanguageTag());
             } else {
                 displayName = locale.getDisplayName(locale);
             }
