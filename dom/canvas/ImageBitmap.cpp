@@ -482,7 +482,7 @@ GetSurfaceFromElement(nsIGlobalObject* aGlobal, HTMLElementType& aElement, Error
   RefPtr<SourceSurface> surface = res.GetSourceSurface();
 
   if (NS_WARN_IF(!surface)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
