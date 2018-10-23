@@ -70,24 +70,7 @@ static LazyLogModule nsComponentManagerLog("nsComponentManager");
  #define SHOW_CI_ON_EXISTING_SERVICE
 #endif
 
-// Bloated registry buffer size to improve startup performance -- needs to
-// be big enough to fit the entire file into memory or it'll thrash.
-// 512K is big enough to allow for some future growth in the registry.
-#define BIG_REGISTRY_BUFLEN   (512*1024)
-
-// Common Key Names
-const char xpcomComponentsKeyName[] = "software/mozilla/XPCOM/components";
-const char xpcomKeyName[] = "software/mozilla/XPCOM";
-
-// Common Value Names
-const char fileSizeValueName[] = "FileSize";
-const char lastModValueName[] = "LastModTimeStamp";
-const char nativeComponentType[] = "application/x-mozilla-native";
-const char staticComponentType[] = "application/x-mozilla-static";
-
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
-
-#define UID_STRING_LENGTH 39
 
 nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID,
