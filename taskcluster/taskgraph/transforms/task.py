@@ -308,7 +308,7 @@ task_description_schema = Schema({
         Optional('skip-artifacts'): bool,
     }, {
         Required('implementation'): 'generic-worker',
-        Required('os'): Any('windows', 'macosx'),
+        Required('os'): Any('windows', 'macosx', 'linux'),
         # see http://schemas.taskcluster.net/generic-worker/v1/payload.json
         # and https://docs.taskcluster.net/reference/workers/generic-worker/payload
 
@@ -1028,9 +1028,14 @@ def build_generic_worker_payload(config, task, task_def):
     for mount in mounts:
         if 'cache-name' in mount:
             mount['cacheName'] = mount.pop('cache-name')
+            task_def['scopes'].append('generic-worker:cache:{}'.format(mount['cacheName']))
         if 'content' in mount:
             if 'task-id' in mount['content']:
                 mount['content']['taskId'] = mount['content'].pop('task-id')
+            if 'artifact' in mount['content']:
+                if not mount['content']['artifact'].startswith('public/'):
+                    task_def['scopes'].append(
+                        'queue:get-artifact:{}'.format(mount['content']['artifact']))
 
     if mounts:
         task_def['payload']['mounts'] = mounts
