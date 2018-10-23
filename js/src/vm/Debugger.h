@@ -23,6 +23,7 @@
 #include "js/HashTable.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
+#include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
@@ -120,9 +121,11 @@ CheckDebuggeeThing(JSObject* obj, bool invisibleOk);
  * created.
  *
  * Also note that keys in these weakmaps can be in any compartment, debuggee or
- * not, because they cannot be deleted when a compartment is no longer a
+ * not, because they are not deleted when a compartment is no longer a
  * debuggee: the values need to maintain object identity across add/remove/add
- * transitions.
+ * transitions. (Frames are an exception to the rule. Existing Debugger.Frame
+ * objects are killed when debugging is disabled for their compartment, and if
+ * it's re-enabled later, new Frame objects are created.)
  */
 template <class UnbarrieredKey, bool InvisibleKeysOk=false>
 class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObject*>>
@@ -161,6 +164,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
     /* Expose WeakMap public interface */
 
     using Base::lookupForAdd;
+    using Base::remove;
     using Base::all;
     using Base::trace;
 
@@ -181,10 +185,27 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
         return ok;
     }
 
+    template <typename KeyInput>
+    bool has(const KeyInput& k) const {
+        return !!this->lookup(k);
+    }
+
     void remove(const Lookup& l) {
         MOZ_ASSERT(Base::has(l));
         Base::remove(l);
         decZoneCount(l->zone());
+    }
+
+    // Remove entries whose keys satisfy the given predicate.
+    template <typename Predicate>
+    void removeIf(Predicate test) {
+        for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
+            JSObject* key = e.front().key();
+            if (test(key)) {
+                decZoneCount(key->zoneFromAnyThread());
+                e.removeFront();
+            }
+        }
     }
 
   public:
@@ -533,6 +554,29 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                     ZoneAllocPolicy> FrameMap;
     FrameMap frames;
 
+    /*
+     * Map from generator objects to their Debugger.Frame instances.
+     *
+     * When a Debugger.Frame is created for a generator frame, it is added to
+     * this map and remains there for the lifetime of the generator, whether
+     * that frame is on the stack at the moment or not.  This is in addition to
+     * the entry in `frames` that exists as long as the generator frame is on
+     * the stack.
+     *
+     * We need to keep the Debugger.Frame object alive to deliver it to the
+     * onEnterFrame handler on resume, and to retain onStep and onPop hooks.
+     *
+     * An entry is present in this table when:
+     * -   both the debuggee generator object and the Debugger.Frame object exist
+     * -   the Debugger.Frame's owner is still an enabled debugger of
+     *     the debuggee compartment
+     * regardless of whether the frame is currently suspended. (This list is
+     * meant to explain why we update the table in the particular places where
+     * we do so.)
+     */
+    typedef DebuggerWeakMap<JSObject*> GeneratorWeakMap;
+    GeneratorWeakMap generatorFrames;
+
     /* An ephemeral map from JSScript* to Debugger.Script instances. */
     typedef DebuggerWeakMap<JSScript*> ScriptWeakMap;
     ScriptWeakMap scripts;
@@ -806,6 +850,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static ResumeMode slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame);
     static MOZ_MUST_USE bool slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
                                                   jsbytecode* pc, bool ok);
+    static MOZ_MUST_USE bool slowPathOnNewGenerator(JSContext* cx, AbstractFramePtr frame,
+                                                    Handle<GeneratorObject*> genObj);
     static ResumeMode slowPathOnDebuggerStatement(JSContext* cx, AbstractFramePtr frame);
     static ResumeMode slowPathOnExceptionUnwind(JSContext* cx, AbstractFramePtr frame);
     static void slowPathOnNewScript(JSContext* cx, HandleScript script);
@@ -965,6 +1011,15 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      */
     static inline MOZ_MUST_USE bool onLeaveFrame(JSContext* cx, AbstractFramePtr frame,
                                                  jsbytecode* pc, bool ok);
+
+    /*
+     * Announce to the debugger that a generator object has been created,
+     * via JSOP_GENERATOR.
+     *
+     * This does not fire user hooks, but it's needed for debugger bookkeeping.
+     */
+    static inline MOZ_MUST_USE bool onNewGenerator(JSContext* cx, AbstractFramePtr frame,
+                                                   Handle<GeneratorObject*> genObj);
 
     static inline void onNewScript(JSContext* cx, HandleScript script);
     static inline void onNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
@@ -1149,6 +1204,23 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * debuggee realm.
      */
     JSObject* wrapWasmSource(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
+
+    /*
+     * Add a link between the given generator object and a Debugger.Frame
+     * object.  This link is used to make sure the same Debugger.Frame stays
+     * associated with a given generator object (or async function activation),
+     * even while it is suspended and removed from the stack.
+     *
+     * The context `cx` and `frameObj` must be in the debugger realm, and
+     * `genObj` must be in a debuggee realm.
+     *
+     * `frameObj` must be this `Debugger`'s debug wrapper for the generator or
+     * async function call associated with `genObj`. This activation may
+     * or may not actually be on the stack right now.
+     */
+    MOZ_MUST_USE bool addGeneratorFrame(JSContext* cx,
+                                        Handle<GeneratorObject*> genObj,
+                                        HandleDebuggerFrame frameObj);
 
   private:
     Debugger(const Debugger&) = delete;

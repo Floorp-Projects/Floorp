@@ -93,6 +93,75 @@ Pushing a `"debugger"` frame makes this continuation explicit, and makes it
 easier to find the extent of the stack created for the invocation.
 
 
+## <span id='suspended'>Suspended</span> Frames
+
+Some frames can be *suspended*.
+
+When a generator `yield`s a value, or when an async function `await`s a
+value, the current frame is suspended and removed from the stack, and
+other JS code has a chance to run. Later (if the `await`ed promise
+becomes resolved, for example), SpiderMonkey will *resume* the frame. It
+will be put back onto the stack, and execution will continue where it
+left off. Only generator and async function call frames can be suspended
+and resumed.
+
+Currently, a frame's `live` property is `false` while it's suspended
+([bug 1448880](https://bugzilla.mozilla.org/show_bug.cgi?id=1448880)).
+
+SpiderMonkey uses the same `Debugger.Frame` object each time a generator
+or async function call is put back onto the stack. This means that the
+`onStep` handler can be used to step over `yield` and `await`.
+
+The `frame.onPop` handler is called each time a frame is suspended, and
+the `Debugger.onEnterFrame` handler is called each time a frame is
+resumed. (This means these events can fire multiple times for the same
+`Frame` object, which is odd, but accurately conveys what's happening.)
+
+
+## Stepping Into Generators: The "Initial Yield"
+
+When a debuggee generator is called, something weird happens. The
+`.onEnterFrame` hook fires, as though we're stepping into the generator.
+But the code inside the generator doesn't run. Instead it immediately
+returns. Then we sometimes get *another* `.onEnterFrame` event for the
+same generator. What's going on?
+
+To explain this, we first have to describe how generator calls work,
+according to the ECMAScript language specification. Note that except for
+step 3, it's exactly like a regular function call.
+
+1.  An "execution context" (what we call a `Frame`) is pushed to the stack.
+2.  An environment is created (for arguments and local variables).
+    Argument-default-value-expressions, if any, are evaluated.
+3.  A generator object is created, initially suspended at the start of the generator body.
+4.  The stack frame is popped, and the generator object is returned to the caller.
+
+The JavaScript engine actually carries out these steps, in this order.
+So when a debuggee generator is called, here's what you'll observe:
+
+1.  The `debugger.onEnterFrame` hook fires.
+2.  The debugger can step through the argument-default-value code, if any.
+3.  The body of the generator does not run yet. Instead, a generator object
+    is created and suspended (which does not fire any debugger events).
+4.  The `frame.onPop` hook fires, with a completion value of
+    `{return:` *(the new generator object)* `}`.
+
+In SpiderMonkey, this process of suspending and returning a new
+generator object is called the "initial yield".
+
+If the caller then uses the generator's `.next()` method, which may or
+may not happen right away depending on the debuggee code, the suspended
+generator will be resumed, firing `.onEnterFrame` again.
+
+**Stepping into async functions** — SpiderMonkey also performs an
+initial yield for async functions. This is not so easy to defend by
+citing the spec; we're just exposing internal SpiderMonkey
+implementation details. When the initial yield happens, you'll observe
+an extra `.onPop` returning a generator object that SpiderMonkey will
+use internally, followed immediately by a second `.onEnterFrame` event
+for the same frame.
+
+
 ## Accessor Properties of the Debugger.Frame Prototype Object
 
 A `Debugger.Frame` instance inherits the following accessor properties from
@@ -263,6 +332,11 @@ the compartment to which the handler method belongs.
     This handler is not called on `"debugger"` frames. It is also not called
     when unwinding a frame due to an over-recursion or out-of-memory
     exception.
+
+    The `onPop` handler is typically called only once for a given frame,
+    after which the frame becomes inactive. However, in the case of
+    [generators and async functions](suspended), `onPop` fires each time
+    the frame is suspended.
 
 
 ## Function Properties of the Debugger.Frame Prototype Object

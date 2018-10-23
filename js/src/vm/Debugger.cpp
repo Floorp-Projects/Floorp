@@ -702,6 +702,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     maxAllocationsLogLength(DEFAULT_MAX_LOG_LENGTH),
     allocationsLogOverflowed(false),
     frames(cx->zone()),
+    generatorFrames(cx),
     scripts(cx),
     lazyScripts(cx),
     sources(cx),
@@ -801,26 +802,105 @@ Debugger::getFrame(JSContext* cx, const FrameIter& iter, MutableHandleDebuggerFr
 
     FrameMap::AddPtr p = frames.lookupForAdd(referent);
     if (!p) {
-        // Create and populate the Debugger.Frame object.
-        RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
-        RootedNativeObject debugger(cx, object);
+        RootedDebuggerFrame frame(cx);
 
-        RootedDebuggerFrame frame(cx, DebuggerFrame::create(cx, proto, iter, debugger));
-        if (!frame) {
-            return false;
+        // If this is a generator frame, there may be an existing
+        // Debugger.Frame object that isn't in `frames` because the generator
+        // was suspended, popping the stack frame, and later resumed.
+        Rooted<GeneratorObject*> genObj(cx);
+        GeneratorWeakMap::AddPtr gp;
+        if (referent.isFunctionFrame() && (referent.callee()->isGenerator() ||
+                                           referent.callee()->isAsync()))
+        {
+            {
+                AutoRealm ar(cx, referent.callee());
+                genObj = GetGeneratorObjectForFrame(cx, referent);
+            }
+            if (genObj) {
+                gp = generatorFrames.lookupForAdd(genObj);
+                if (gp) {
+                    frame = &gp->value()->as<DebuggerFrame>();
+
+                    // We have found an existing Debugger.Frame object. But
+                    // since it was previously popped (see comment above), it
+                    // is not currently "live". We must revive it.
+                    MOZ_ASSERT(!frame->isLive());
+                    FrameIter::Data* data = iter.copyData();
+                    if (!data) {
+                        return false;
+                    }
+                    frame->setPrivate(data);
+
+                    if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
+                        return false;
+                    }
+
+                    RootedValue onStep(cx, frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER));
+                    if (!onStep.isUndefined()) {
+                        AutoRealm ar(cx, genObj);
+                        if (!referent.script()->incrementStepModeCount(cx)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            // If no GeneratorObject exists yet, we create a Debugger.Frame
+            // below anyway, and Debugger::onNewGenerator() will associate it
+            // with the GeneratorObject later when we hit JSOP_GENERATOR.
         }
 
-        if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
-            return false;
+        if (!frame) {
+            // Create and populate the Debugger.Frame object.
+            RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
+            RootedNativeObject debugger(cx, object);
+
+            frame = DebuggerFrame::create(cx, proto, iter, debugger);
+            if (!frame) {
+                return false;
+            }
+
+            if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
+                return false;
+            }
+
+            if (genObj) {
+                DebuggerFrame* frameObj = frame;
+                if (!generatorFrames.relookupOrAdd(gp, genObj, frameObj)) {
+                    ReportOutOfMemory(cx);
+                    return false;
+                }
+            }
         }
 
         if (!frames.add(p, referent, frame)) {
+            NukeDebuggerWrapper(frame);
+            if (genObj) {
+                generatorFrames.remove(genObj);
+            }
             ReportOutOfMemory(cx);
             return false;
         }
     }
 
     result.set(&p->value()->as<DebuggerFrame>());
+    return true;
+}
+
+bool
+Debugger::addGeneratorFrame(JSContext* cx,
+                            Handle<GeneratorObject*> genObj,
+                            HandleDebuggerFrame frameObj)
+{
+    GeneratorWeakMap::AddPtr p = generatorFrames.lookupForAdd(genObj);
+    if (p) {
+        MOZ_ASSERT(p->value() == frameObj);
+    } else {
+        if (!generatorFrames.relookupOrAdd(p, genObj, frameObj)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+    }
     return true;
 }
 
@@ -950,13 +1030,14 @@ class MOZ_RAII AutoSetGeneratorRunning
         genObj_(cx, genObj)
     {
         if (genObj) {
-            if (!genObj->isBeforeInitialYield() && !genObj->isClosed() && genObj->isSuspended()) {
+            if (!genObj->isClosed() && genObj->isSuspended()) {
+                // Yielding or awaiting.
                 yieldAwaitIndex_ =
                     genObj->getFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT).toInt32();
                 genObj->setRunning();
             } else {
-                // We're returning or throwing, not yielding or awaiting. The
-                // generator is already closed, if it was ever exposed at all.
+                // Returning or throwing. The generator is already closed, if
+                // it was ever exposed at all.
                 genObj_ = nullptr;
             }
         }
@@ -1075,6 +1156,35 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
       default:
         MOZ_CRASH("bad final onLeaveFrame resume mode");
     }
+}
+
+/* static */ bool
+Debugger::slowPathOnNewGenerator(JSContext* cx, AbstractFramePtr frame,
+                                 Handle<GeneratorObject*> genObj)
+{
+    // This is called from JSOP_GENERATOR, after default parameter expressions
+    // are evaluated and well after onEnterFrame, so Debugger.Frame objects for
+    // `frame` may already have been exposed to debugger code. The
+    // GeneratorObject for this generator call, though, has just been
+    // created. It must be associated with any existing Debugger.Frames.
+    bool ok = true;
+    forEachDebuggerFrame(frame, [&] (DebuggerFrame* frameObjPtr) {
+        if (!ok) {
+            return;
+        }
+
+        RootedDebuggerFrame frameObj(cx, frameObjPtr);
+        Debugger* dbg = Debugger::fromChildJSObject(frameObj);
+        if (!dbg->addGeneratorFrame(cx, genObj, frameObj)) {
+            ReportOutOfMemory(cx);
+
+            // This leaves `genObj` and `frameObj` unassociated. It's OK
+            // because we won't pause again with this generator on the stack:
+            // the caller will immediately discard `genObj` and unwind `frame`.
+            ok = false;
+        }
+    });
+    return ok;
 }
 
 /* static */ ResumeMode
@@ -3157,6 +3267,7 @@ Debugger::removeAllocationsTrackingForAllDebuggees()
 void
 Debugger::traceCrossCompartmentEdges(JSTracer* trc)
 {
+    generatorFrames.traceCrossCompartmentEdges<DebuggerFrame_trace>(trc);
     objects.traceCrossCompartmentEdges<DebuggerObject_trace>(trc);
     environments.traceCrossCompartmentEdges<DebuggerEnv_trace>(trc);
     scripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
@@ -3343,9 +3454,8 @@ Debugger::trace(JSTracer* trc)
     // Mark Debugger.Frame objects. These are all reachable from JS, because the
     // corresponding JS frames are still on the stack.
     //
-    // (Once we support generator frames properly, we will need
-    // weakly-referenced Debugger.Frame objects as well, for suspended generator
-    // frames.)
+    // (We have weakly-referenced Debugger.Frame objects as well, for suspended
+    // generator frames; these are traced via generatorFrames just below.)
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
         HeapPtr<DebuggerFrame*>& frameobj = r.front().value();
         TraceEdge(trc, &frameobj, "live Debugger.Frame");
@@ -3354,25 +3464,13 @@ Debugger::trace(JSTracer* trc)
 
     allocationsLog.trace(trc);
 
-    // Trace the weak map from JSScript instances to Debugger.Script objects.
+    generatorFrames.trace(trc);
     scripts.trace(trc);
-
-    // Trace the weak map from LazyScript instances to Debugger.Script objects.
     lazyScripts.trace(trc);
-
-    // Trace the referent -> Debugger.Source weak map
     sources.trace(trc);
-
-    // Trace the referent -> Debugger.Object weak map.
     objects.trace(trc);
-
-    // Trace the referent -> Debugger.Environment weak map.
     environments.trace(trc);
-
-    // Trace the WasmInstanceObject -> synthesized Debugger.Script weak map.
     wasmInstanceScripts.trace(trc);
-
-    // Trace the WasmInstanceObject -> synthesized Debugger.Source weak map.
     wasmInstanceSources.trace(trc);
 }
 
@@ -3439,6 +3537,7 @@ Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
             // Compartment::findOutgoingEdges and above. This ensure that
             // debuggers and their debuggees are finalized in the same group.
             if (dbg->debuggeeZones.has(zone) ||
+                dbg->generatorFrames.hasKeyInZone(zone) ||
                 dbg->scripts.hasKeyInZone(zone) ||
                 dbg->lazyScripts.hasKeyInZone(zone) ||
                 dbg->sources.hasKeyInZone(zone) ||
@@ -4351,6 +4450,21 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
             DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame, frameobj);
             e.removeFront();
         }
+    }
+
+    // Clear this global's generators from generatorFrames as well.
+    //
+    // This method can be called either from script (dbg.removeDebuggee) or
+    // from an awkward time during GC sweeping. In the latter case, skip this
+    // loop to avoid touching dead objects. It's correct because, when we're
+    // called from GC, all `global`'s generators are guaranteed to be dying:
+    // live generators would keep the global alive and we wouldn't be here. GC
+    // will sweep dead keys from the weakmap.
+    if (!global->zone()->isGCSweeping()) {
+        generatorFrames.removeIf([global](JSObject* key) {
+            GeneratorObject& genObj = key->as<GeneratorObject>();
+            return genObj.isClosed() || &genObj.callee().global() == global;
+        });
     }
 
     auto *globalDebuggersVector = global->getDebuggers();
