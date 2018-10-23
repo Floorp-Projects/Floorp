@@ -5,10 +5,10 @@
 
 //! Various async helpers modelled after futures-rs and tokio-io.
 
-use {RecvMsg, SendMsg};
 use bytes::{Buf, BufMut};
 use futures::{Async, Poll};
 use iovec::IoVec;
+use msg::{RecvMsg, SendMsg};
 use std::io;
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_uds::UnixStream;
@@ -139,7 +139,7 @@ impl AsyncSendMsg for UnixStream {
             static DUMMY: &[u8] = &[0];
             let nom = <&IoVec>::from(DUMMY);
             let mut bufs = [
-                nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom
+                nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom,
             ];
             let n = buf.bytes_vec(&mut bufs);
             self.send_msg(&bufs[..n], cmsg.bytes())
