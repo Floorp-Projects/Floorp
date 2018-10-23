@@ -1067,8 +1067,8 @@ class FunctionCompiler
         return true;
     }
 
-    bool callIndirect(uint32_t funcTypeIndex, MDefinition* index, const CallCompileState& call,
-                      MDefinition** def)
+    bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex, MDefinition* index,
+                      const CallCompileState& call, MDefinition** def)
     {
         if (inDeadCode()) {
             *def = nullptr;
@@ -1079,10 +1079,10 @@ class FunctionCompiler
 
         CalleeDesc callee;
         if (env_.isAsmJS()) {
+            MOZ_ASSERT(tableIndex == 0);
             MOZ_ASSERT(funcType.id.kind() == FuncTypeIdDescKind::None);
             const TableDesc& table = env_.tables[env_.asmJSSigToTableIndex[funcTypeIndex]];
             MOZ_ASSERT(IsPowerOfTwo(table.limits.initial));
-            MOZ_ASSERT(!table.external);
 
             MConstant* mask = MConstant::New(alloc(), Int32Value(table.limits.initial - 1));
             curBlock_->add(mask);
@@ -1093,8 +1093,7 @@ class FunctionCompiler
             callee = CalleeDesc::asmJSTable(table);
         } else {
             MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDescKind::None);
-            MOZ_ASSERT(env_.tables.length() == 1);
-            const TableDesc& table = env_.tables[0];
+            const TableDesc& table = env_.tables[tableIndex];
             callee = CalleeDesc::wasmTable(table, funcType.id);
         }
 
@@ -2104,14 +2103,16 @@ EmitCallIndirect(FunctionCompiler& f, bool oldStyle)
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
     uint32_t funcTypeIndex;
+    uint32_t tableIndex;
     MDefinition* callee;
     DefVector args;
     if (oldStyle) {
+        tableIndex = 0;
         if (!f.iter().readOldCallIndirect(&funcTypeIndex, &callee, &args)) {
             return false;
         }
     } else {
-        if (!f.iter().readCallIndirect(&funcTypeIndex, &callee, &args)) {
+        if (!f.iter().readCallIndirect(&funcTypeIndex, &tableIndex, &callee, &args)) {
             return false;
         }
     }
@@ -2128,7 +2129,7 @@ EmitCallIndirect(FunctionCompiler& f, bool oldStyle)
     }
 
     MDefinition* def;
-    if (!f.callIndirect(funcTypeIndex, callee, call, &def)) {
+    if (!f.callIndirect(funcTypeIndex, tableIndex, callee, call, &def)) {
         return false;
     }
 
@@ -2986,7 +2987,9 @@ static bool
 EmitMemOrTableCopy(FunctionCompiler& f, bool isMem)
 {
     MDefinition* dst, *src, *len;
-    if (!f.iter().readMemOrTableCopy(isMem, &dst, &src, &len)) {
+    uint32_t dstTableIndex;
+    uint32_t srcTableIndex;
+    if (!f.iter().readMemOrTableCopy(isMem, &dstTableIndex, &dst, &srcTableIndex, &src, &len)) {
         return false;
     }
 
@@ -3014,7 +3017,22 @@ EmitMemOrTableCopy(FunctionCompiler& f, bool isMem)
     if (!f.passArg(len, ValType::I32, &args)) {
         return false;
     }
-
+    if (!isMem) {
+        MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
+        if (!dti) {
+            return false;
+        }
+        if (!f.passArg(dti, ValType::I32, &args)) {
+            return false;
+        }
+        MDefinition* sti = f.constant(Int32Value(srcTableIndex), MIRType::Int32);
+        if (!sti) {
+            return false;
+        }
+        if (!f.passArg(sti, ValType::I32, &args)) {
+            return false;
+        }
+    }
     if (!f.finishCall(&args)) {
         return false;
     }
@@ -3131,9 +3149,9 @@ EmitMemFill(FunctionCompiler& f)
 static bool
 EmitMemOrTableInit(FunctionCompiler& f, bool isMem)
 {
-    uint32_t segIndexVal = 0;
+    uint32_t segIndexVal = 0, dstTableIndex = 0;
     MDefinition* dstOff, *srcOff, *len;
-    if (!f.iter().readMemOrTableInit(isMem, &segIndexVal, &dstOff, &srcOff, &len)) {
+    if (!f.iter().readMemOrTableInit(isMem, &segIndexVal, &dstTableIndex, &dstOff, &srcOff, &len)) {
         return false;
     }
 
@@ -3166,7 +3184,15 @@ EmitMemOrTableInit(FunctionCompiler& f, bool isMem)
     if (!f.passArg(segIndex, ValType::I32, &args)) {
         return false;
     }
-
+    if (!isMem) {
+        MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
+        if (!dti) {
+            return false;
+        }
+        if (!f.passArg(dti, ValType::I32, &args)) {
+            return false;
+        }
+    }
     if (!f.finishCall(&args)) {
         return false;
     }
@@ -3197,8 +3223,9 @@ EmitMemOrTableInit(FunctionCompiler& f, bool isMem)
 static bool
 EmitTableGet(FunctionCompiler& f)
 {
+    uint32_t tableIndex;
     MDefinition* index;
-    if (!f.iter().readTableGet(&index)) {
+    if (!f.iter().readTableGet(&tableIndex, &index)) {
         return false;
     }
 
@@ -3208,9 +3235,10 @@ EmitTableGet(FunctionCompiler& f)
 static bool
 EmitTableGrow(FunctionCompiler& f)
 {
+    uint32_t tableIndex;
     MDefinition* delta;
     MDefinition* initValue;
-    if (!f.iter().readTableGrow(&delta, &initValue)) {
+    if (!f.iter().readTableGrow(&tableIndex, &delta, &initValue)) {
         return false;
     }
 
@@ -3220,9 +3248,10 @@ EmitTableGrow(FunctionCompiler& f)
 static bool
 EmitTableSet(FunctionCompiler& f)
 {
+    uint32_t tableIndex;
     MDefinition* index;
     MDefinition* value;
-    if (!f.iter().readTableSet(&index, &value)) {
+    if (!f.iter().readTableSet(&tableIndex, &index, &value)) {
         return false;
     }
 
@@ -3232,7 +3261,8 @@ EmitTableSet(FunctionCompiler& f)
 static bool
 EmitTableSize(FunctionCompiler& f)
 {
-    if (!f.iter().readTableSize()) {
+    uint32_t tableIndex;
+    if (!f.iter().readTableSize(&tableIndex)) {
         return false;
     }
 
@@ -3248,6 +3278,14 @@ EmitTableSize(FunctionCompiler& f)
     }
 
     if (!f.passInstance(&args)) {
+        return false;
+    }
+
+    MDefinition* tableIndexArg = f.constant(Int32Value(tableIndex), MIRType::Int32);
+    if (!tableIndexArg) {
+        return false;
+    }
+    if (!f.passArg(tableIndexArg, ValType::I32, &args)) {
         return false;
     }
 

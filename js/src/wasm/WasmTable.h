@@ -29,14 +29,10 @@ namespace wasm {
 // stateful objects exposed to WebAssembly. asm.js also uses Tables to represent
 // its homogeneous function-pointer tables.
 //
-// A table of AnyFunction holds either ExternalTableElems, which are
-// (instance*,index) pairs, where the instance must be traced, or raw code
-// pointers which need not be traced.
+// A table of AnyFunction holds FunctionTableElems, which are (instance*,index)
+// pairs, where the instance must be traced.
 //
 // A table of AnyRef holds JSObject pointers, which must be traced.
-//
-// `external_` is true only for a table of AnyFunction with ExternalTableElems.
-// To distinguish other cases, look at `kind_`.
 
 typedef GCVector<JS::Heap<JSObject*>, 0, SystemAllocPolicy> TableAnyRefVector;
 
@@ -45,20 +41,19 @@ class Table : public ShareableBase<Table>
     using InstanceSet = JS::WeakCache<GCHashSet<ReadBarrieredWasmInstanceObject,
                                                 MovableCellHasher<ReadBarrieredWasmInstanceObject>,
                                                 SystemAllocPolicy>>;
-    using UniqueByteArray = UniquePtr<uint8_t[], JS::FreePolicy>;
+    using UniqueAnyFuncArray = UniquePtr<FunctionTableElem[], JS::FreePolicy>;
 
     ReadBarrieredWasmTableObject maybeObject_;
     InstanceSet                  observers_;
-    UniqueByteArray              array_;     // either array_ has data
+    UniqueAnyFuncArray           functions_; // either functions_ has data
     TableAnyRefVector            objects_;   //   or objects_, but not both
     const TableKind              kind_;
     uint32_t                     length_;
     const Maybe<uint32_t>        maximum_;
-    const bool                   external_;
 
     template <class> friend struct js::MallocProvider;
     Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
-          UniqueByteArray array);
+          UniqueAnyFuncArray functions);
     Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
           TableAnyRefVector&& objects);
 
@@ -70,7 +65,6 @@ class Table : public ShareableBase<Table>
                                 HandleWasmTableObject maybeObject);
     void trace(JSTracer* trc);
 
-    bool external() const { return external_; }
     TableKind kind() const { return kind_; }
     bool isTypedFunction() const { return kind_ == TableKind::TypedFunction; }
     bool isFunction() const {
@@ -82,28 +76,22 @@ class Table : public ShareableBase<Table>
     // Only for function values.  Raw pointer to the table.
     uint8_t* functionBase() const;
 
-    // Only for non-external function values
-    void** internalArray() const;
-
-    // Only for external function values
-    ExternalTableElem* externalArray() const;
-
-    // Only for non-function values
-    TableAnyRefVector& objectArray();
-
-    const TableAnyRefVector& objectArray() const;
-
-    // All table updates must go through setAnyFunc(), setAnyRef(), or setNull().
-    // setAnyFunc is allowed only on table-of-anyfunc.
-    // setAnyRef is allowed only on table-of-anyref.
-
+    // get/setAnyFunc is allowed only on table-of-anyfunc.
+    // get/setAnyRef is allowed only on table-of-anyref.
+    // setNull is allowed on either.
+    const FunctionTableElem& getAnyFunc(uint32_t index) const;
     void setAnyFunc(uint32_t index, void* code, const Instance* instance);
-    void setAnyRef(uint32_t index, HandleObject obj);
+
+    JSObject* getAnyRef(uint32_t index) const;
+    void setAnyRef(uint32_t index, JSObject* obj);
+
     void setNull(uint32_t index);
 
-    // Copy entry at |srcIndex| to |dstIndex|.  Used by table.copy.
-    void copy(uint32_t dstIndex, uint32_t srcIndex);
+    // Copy entry from |srcTable| at |srcIndex| to this table at |dstIndex|.
+    // Used by table.copy.
+    void copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex);
 
+    // grow() returns (uint32_t)-1 if it could not grow.
     uint32_t grow(uint32_t delta, JSContext* cx);
     bool movingGrowable() const;
     bool addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance);

@@ -301,10 +301,10 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     }
 
     // Accumulate all exported functions, whether by explicit export or
-    // implicitly by being an element of an external (imported or exported)
-    // table or by being the start function. The FuncExportVector stored in
-    // Metadata needs to be sorted (to allow O(log(n)) lookup at runtime) and
-    // deduplicated, so use an intermediate vector to sort and de-duplicate.
+    // implicitly by being an element of a function table or by being the start
+    // function. The FuncExportVector stored in Metadata needs to be sorted (to
+    // allow O(log(n)) lookup at runtime) and deduplicated, so use an
+    // intermediate vector to sort and de-duplicate.
 
     static_assert((uint64_t(MaxFuncs) << 1) < uint64_t(UINT32_MAX), "bit packing won't work");
 
@@ -329,13 +329,21 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     }
 
     for (const ElemSegment* seg : env_->elemSegments) {
-        if (env_->tables[seg->tableIndex].external) {
+        TableKind kind = !seg->active() ? TableKind::AnyFunction : env_->tables[seg->tableIndex].kind;
+        switch (kind) {
+          case TableKind::AnyFunction:
             if (!exportedFuncs.reserve(exportedFuncs.length() + seg->length())) {
                 return false;
             }
             for (uint32_t funcIndex : seg->elemFuncIndices) {
                 exportedFuncs.infallibleEmplaceBack(funcIndex, false);
             }
+            break;
+          case TableKind::TypedFunction:
+            // asm.js functions are not exported.
+            break;
+          case TableKind::AnyRef:
+            break;
         }
     }
 

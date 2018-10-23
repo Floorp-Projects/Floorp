@@ -240,7 +240,7 @@ GetImports(JSContext* cx,
            const Module& module,
            HandleObject importObj,
            MutableHandle<FunctionVector> funcImports,
-           MutableHandleWasmTableObject tableImport,
+           WasmTableObjectVector& tableImports,
            MutableHandleWasmMemoryObject memoryImport,
            WasmGlobalObjectVector& globalObjs,
            MutableHandleValVector globalImportValues)
@@ -297,8 +297,9 @@ GetImports(JSContext* cx,
                 return false;
             }
 
-            MOZ_ASSERT(!tableImport);
-            tableImport.set(obj);
+            if (!tableImports.append(obj)) {
+                return false;
+            }
             break;
           }
           case DefinitionKind::Memory: {
@@ -438,16 +439,16 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     }
 
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
-    RootedWasmTableObject table(cx);
+    Rooted<WasmTableObjectVector> tables(cx);
     RootedWasmMemoryObject memory(cx);
     Rooted<WasmGlobalObjectVector> globalObjs(cx);
 
     RootedValVector globals(cx);
-    if (!GetImports(cx, *module, importObj, &funcs, &table, &memory, globalObjs.get(), &globals)) {
+    if (!GetImports(cx, *module, importObj, &funcs, tables.get(), &memory, globalObjs.get(), &globals)) {
         return false;
     }
 
-    return module->instantiate(cx, funcs, table, memory, globals, globalObjs.get(), nullptr,
+    return module->instantiate(cx, funcs, tables.get(), memory, globals, globalObjs.get(), nullptr,
                                instanceObj);
 }
 
@@ -1344,16 +1345,16 @@ Instantiate(JSContext* cx, const Module& module, HandleObject importObj,
     RootedObject instanceProto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
 
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
-    RootedWasmTableObject table(cx);
+    Rooted<WasmTableObjectVector> tables(cx);
     RootedWasmMemoryObject memory(cx);
     Rooted<WasmGlobalObjectVector> globalObjs(cx);
 
     RootedValVector globals(cx);
-    if (!GetImports(cx, module, importObj, &funcs, &table, &memory, globalObjs.get(), &globals)) {
+    if (!GetImports(cx, module, importObj, &funcs, tables.get(), &memory, globalObjs.get(), &globals)) {
         return false;
     }
 
-    return module.instantiate(cx, funcs, table, memory, globals, globalObjs.get(), instanceProto,
+    return module.instantiate(cx, funcs, tables.get(), memory, globals, globalObjs.get(), instanceProto,
                               instanceObj);
 }
 
@@ -2086,11 +2087,7 @@ WasmTableObject::create(JSContext* cx, const Limits& limits, TableKind tableKind
 
     MOZ_ASSERT(obj->isNewborn());
 
-    TableDesc td(tableKind, limits);
-    td.external = tableKind == TableKind::AnyFunction;
-#ifdef WASM_PRIVATE_REFTYPES
-    td.importedOrExported = true;
-#endif
+    TableDesc td(tableKind, limits, /*importedOrExported=*/true);
 
     SharedTable table = Table::create(cx, td, obj);
     if (!table) {
@@ -2236,8 +2233,9 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
         return false;
     }
 
-    if (table.kind() == TableKind::AnyFunction) {
-        ExternalTableElem& elem = table.externalArray()[index];
+    switch (table.kind()) {
+      case TableKind::AnyFunction: {
+        const FunctionTableElem& elem = table.getAnyFunc(index);
         if (!elem.code) {
             args.rval().setNull();
             return true;
@@ -2253,10 +2251,15 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
         }
 
         args.rval().setObject(*fun);
-    } else if (table.kind() == TableKind::AnyRef) {
-        args.rval().setObjectOrNull(table.objectArray()[index]);
-    } else {
+        break;
+      }
+      case TableKind::AnyRef: {
+        args.rval().setObjectOrNull(table.getAnyRef(index));
+        break;
+      }
+      default: {
         MOZ_CRASH("Unexpected table kind");
+      }
     }
     return true;
 }
@@ -2320,7 +2323,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
             if (!value) {
                 return false;
             }
-            table.setAnyRef(index, value);
+            table.setAnyRef(index, value.get());
         }
         break;
       }
