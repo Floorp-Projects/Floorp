@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1174521
   });
 
   onmessage = function(e) {
-    ok(e.data.msg, "DONE", "We should be able to click the link");
+    is(e.data.msg, "DONE", "We should be able to click the link");
     SimpleTest.finish();
   };
 

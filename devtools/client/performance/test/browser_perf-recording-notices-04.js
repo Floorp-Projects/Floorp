@@ -50,8 +50,8 @@ add_task(async function() {
 
   const bufferUsage = PerformanceController.getBufferUsageForRecording(
     PerformanceController.getCurrentRecording());
-  ok(bufferUsage, 1, "Buffer is full for this recording.");
-  ok(DETAILS_CONTAINER.getAttribute("buffer-status"), "full",
+  is(bufferUsage, 1, "Buffer is full for this recording.");
+  is(DETAILS_CONTAINER.getAttribute("buffer-status"), "full",
     "Container has [buffer-status=full].");
   ok(NORMAL_BUFFER_STATUS_MESSAGE.value.includes(gPercent + "%"),
     "Buffer status text has correct percentage.");

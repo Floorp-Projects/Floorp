@@ -163,7 +163,7 @@ function testCloseConnection() {
 function testReconnectAConnectedConnection() {
   return new Promise(function(aResolve, aReject) {
     info("--- testReconnectAConnectedConnection ---");
-    ok(connection.state, "connected", "Make sure the state is connected.");
+    is(connection.state, "connected", "Make sure the state is connected.");
 
     request.reconnect(connection.id).then(
       function(aConnection) {

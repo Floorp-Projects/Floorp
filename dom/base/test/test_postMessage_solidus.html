@@ -57,7 +57,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=949488
     function iframeLoaded() {
       addEventListener('message', receiveMessage);
       function receiveMessage(evt) {
-        ok(evt.data, 3, "Message received");
+        is(evt.data, 3, "Message received");
         removeEventListener('message', receiveMessage);
         runTest();
       }

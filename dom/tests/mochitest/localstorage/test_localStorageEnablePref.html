@@ -44,7 +44,7 @@ function test2() {
 function test3() {
   is(typeof(window.localStorage), "object", "Storage is present again");
   storage.setItem("test", "value");
-  ok(storage.getItem("test"), "value", "value can be set");
+  is(storage.getItem("test"), "value", "value can be set");
   window.localStorage.clear();
   SimpleTest.finish();
 }

@@ -413,7 +413,7 @@ add_task(async function test_shipping_address_picker() {
       let selector = "address-picker[selected-state-key='selectedShippingAddress']";
       let picker = content.document.querySelector(selector);
       let option = Cu.waiveXrays(picker).dropdown.popupBox.children[0];
-      ok(option.textContent,
+      is(option.textContent,
          FormAutofillUtils.getAddressLabel(savedAddress, null),
          "Shows correct shipping option label");
     });
@@ -455,7 +455,7 @@ add_task(async function test_payer_address_picker() {
       let option = Cu.waiveXrays(picker).dropdown.popupBox.children[0];
       is(option.textContent.includes("32 Vassar Street"), false,
          "Payer option label does not contain street address");
-      ok(option.textContent,
+      is(option.textContent,
          FormAutofillUtils.getAddressLabel(savedAddress, "name tel email"),
          "Shows correct payer option label");
     });
