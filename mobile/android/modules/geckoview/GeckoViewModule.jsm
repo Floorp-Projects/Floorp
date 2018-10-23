@@ -29,27 +29,34 @@ class GeckoViewModule {
   }
 
   get window() {
-    return this._info.manager.window;
+    return this.moduleManager.window;
   }
 
   get browser() {
-    return this._info.manager.browser;
+    return this.moduleManager.browser;
   }
 
   get messageManager() {
-    return this._info.manager.messageManager;
+    return this.moduleManager.messageManager;
   }
 
   get eventDispatcher() {
-    return this._info.manager.eventDispatcher;
+    return this.moduleManager.eventDispatcher;
   }
 
   get settings() {
-    return this._info.manager.settings;
+    return this.moduleManager.settings;
+  }
+
+  get moduleManager() {
+    return this._info.manager;
   }
 
   // Override to initialize the browser before it is bound to the window.
   onInitBrowser() {}
+
+  // Override to cleanup when the browser is destroyed.
+  onDestroyBrowser() {}
 
   // Override to initialize module.
   onInit() {}
