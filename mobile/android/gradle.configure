@@ -294,8 +294,8 @@ set_config('GRADLE_FLAGS', gradle_flags)
 # Local developer default is (jcenter, maven.google.com).
 option(env='GRADLE_MAVEN_REPOSITORIES',
        nargs='+',
-       default=('https://jcenter.bintray.com/',
-                'https://maven.google.com/',
+       default=('https://maven.google.com/',
+                'https://jcenter.bintray.com/',
        ),
        help='Comma-separated URLs of Maven repositories containing Gradle dependencies.')
 
