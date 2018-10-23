@@ -10,9 +10,9 @@ use codec::Codec;
 use futures::{AsyncSink, Poll, Sink, StartSend, Stream};
 use libc;
 use messages::AssocRawFd;
-use std::{fmt, io, mem};
 use std::collections::VecDeque;
 use std::os::unix::io::RawFd;
+use std::{fmt, io, mem};
 
 const INITIAL_CAPACITY: usize = 1024;
 const BACKPRESSURE_THRESHOLD: usize = 4 * INITIAL_CAPACITY;
@@ -34,7 +34,8 @@ impl IncomingFds {
 
     pub fn take_fds(&mut self) -> Option<[RawFd; 3]> {
         loop {
-            let fds = self.recv_fds
+            let fds = self
+                .recv_fds
                 .as_mut()
                 .and_then(|recv_fds| recv_fds.next())
                 .and_then(|fds| Some(clone_into_array(&fds)));
@@ -291,10 +292,6 @@ pub fn framed_with_fds<A, C>(io: A, codec: C) -> FramedWithFds<A, C> {
             FDS_CAPACITY * cmsg::space(mem::size_of::<[RawFd; 3]>()),
         ),
     }
-}
-
-fn write_zero() -> io::Error {
-    io::Error::new(io::ErrorKind::WriteZero, "failed to write frame to io")
 }
 
 fn clone_into_array<A, T>(slice: &[T]) -> A
