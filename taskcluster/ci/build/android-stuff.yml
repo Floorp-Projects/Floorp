@@ -1,7 +1,3 @@
-job-defaults:
-    run:
-        mozconfig-variant: null
-
 android-test/opt:
     description: "Android armv7 unit tests"
     index:
