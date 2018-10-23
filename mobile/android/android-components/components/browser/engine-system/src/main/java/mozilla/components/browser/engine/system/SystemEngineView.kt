@@ -38,6 +38,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.support.ktx.android.content.isOSOnLowMemory
 import mozilla.components.support.utils.DownloadUtils
 import java.lang.ref.WeakReference
@@ -113,7 +114,7 @@ class SystemEngineView @JvmOverloads constructor(
         return webView
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "NestedBlockDepth")
     private fun createWebViewClient() = object : WebViewClient() {
         override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
             // TODO private browsing not supported for SystemEngine
@@ -152,7 +153,7 @@ class SystemEngineView @JvmOverloads constructor(
             }
         }
 
-        @Suppress("ReturnCount")
+        @Suppress("ReturnCount", "NestedBlockDepth")
         override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
             if (session?.webFontsEnabled == false && UrlMatcher.isWebFont(request.url)) {
                 return WebResourceResponse(null, null, null)
@@ -191,7 +192,14 @@ class SystemEngineView @JvmOverloads constructor(
                     interceptor.onLoadRequest(
                         session, request.url.toString()
                     )?.apply {
-                        return WebResourceResponse(mimeType, encoding, data.byteInputStream())
+                        return when (this) {
+                            is InterceptionResponse.Content ->
+                                WebResourceResponse(mimeType, encoding, data.byteInputStream())
+                            is InterceptionResponse.Url -> {
+                                view.post { view.loadUrl(url) }
+                                super.shouldInterceptRequest(view, request)
+                            }
+                        }
                     }
                 }
             }

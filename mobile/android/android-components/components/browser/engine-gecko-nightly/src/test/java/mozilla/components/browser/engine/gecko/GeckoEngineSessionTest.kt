@@ -481,13 +481,13 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun settingRequestInterceptor() {
+    fun settingInterceptorToProvideAlternativeContent() {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
             override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
-                return RequestInterceptor.InterceptionResponse("<h1>Hello World</h1>")
+                return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
             }
         }
 
@@ -497,10 +497,33 @@ class GeckoEngineSessionTest {
         engineSession.geckoSession = spy(engineSession.geckoSession)
 
         engineSession.geckoSession.navigationDelegate.onLoadRequest(
-            engineSession.geckoSession, mockLoadRequest("sample:about"))
+                engineSession.geckoSession, mockLoadRequest("sample:about"))
 
-        assertEquals("sample:about", interceptorCalledWithUri!!)
+        assertEquals("sample:about", interceptorCalledWithUri)
         verify(engineSession.geckoSession).loadString("<h1>Hello World</h1>", "text/html")
+    }
+
+    @Test
+    fun settingInterceptorToProvideAlternativeUrl() {
+        var interceptorCalledWithUri: String? = null
+
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                interceptorCalledWithUri = uri
+                return RequestInterceptor.InterceptionResponse.Url("https://mozilla.org")
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        engineSession.geckoSession = spy(engineSession.geckoSession)
+
+        engineSession.geckoSession.navigationDelegate.onLoadRequest(
+                engineSession.geckoSession, mockLoadRequest("sample:about"))
+
+        assertEquals("sample:about", interceptorCalledWithUri)
+        verify(engineSession.geckoSession).loadUri("https://mozilla.org")
     }
 
     @Test

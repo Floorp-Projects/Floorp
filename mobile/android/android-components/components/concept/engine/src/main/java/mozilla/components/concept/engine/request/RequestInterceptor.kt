@@ -14,11 +14,15 @@ interface RequestInterceptor {
     /**
      * An alternative response for an intercepted request.
      */
-    data class InterceptionResponse(
-        val data: String,
-        val mimeType: String = "text/html",
-        val encoding: String = "UTF-8"
-    )
+    sealed class InterceptionResponse {
+        data class Content(
+            val data: String,
+            val mimeType: String = "text/html",
+            val encoding: String = "UTF-8"
+        ) : InterceptionResponse()
+
+        data class Url(val url: String) : InterceptionResponse()
+    }
 
     /**
      * An alternative response for an error request.
@@ -31,11 +35,13 @@ interface RequestInterceptor {
     )
 
     /**
-     * A request to open an URI. This is called before each page load to allow custom behavior implementation.
+     * A request to open an URI. This is called before each page load to allow
+     * providing custom behavior.
      *
      * @param session The engine session that initiated the callback.
-     * @return An InterceptionResponse object containing alternative content if the request should be intercepted.
-     *         <code>null</code> otherwise.
+     * @return An [InterceptionResponse] object containing alternative content
+     * or an alternative URL. Null if the original request should continue to
+     * be loaded.
      */
     fun onLoadRequest(session: EngineSession, uri: String): InterceptionResponse? = null
 
@@ -43,10 +49,11 @@ interface RequestInterceptor {
      * A request that the engine wasn't able to handle that resulted in an error.
      *
      * @param session The engine session that initiated the callback.
-     * @param errorType The error that was provided by the engine related to the type of error caused.
+     * @param errorType The error that was provided by the engine related to the
+     * type of error caused.
      * @param uri The uri that resulted in the error.
-     * @return An ErrorResponse object containing alternative content if the request caused an error.
-     *         <code>null</code> otherwise.
+     * @return An [ErrorResponse] object containing content to display for the
+     * provided error type.
      */
     fun onErrorRequest(session: EngineSession, errorType: ErrorType, uri: String?): ErrorResponse? = null
 }

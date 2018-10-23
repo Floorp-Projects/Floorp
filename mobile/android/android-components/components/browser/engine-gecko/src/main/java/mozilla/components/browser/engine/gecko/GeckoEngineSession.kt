@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.ktx.android.util.Base64
+import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
@@ -262,7 +263,10 @@ class GeckoEngineSession(
                 this@GeckoEngineSession,
                 uri
             )?.apply {
-                loadData(data, mimeType, encoding)
+                when (this) {
+                    is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
+                    is InterceptionResponse.Url -> loadUrl(url)
+                }
             }
 
             return GeckoResult.fromValue(response != null)

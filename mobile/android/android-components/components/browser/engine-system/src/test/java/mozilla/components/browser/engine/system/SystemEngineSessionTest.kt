@@ -394,13 +394,13 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun settingRequestInterceptor() {
+    fun settingInterceptorToProvideAlternativeContent() {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
             override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
                 interceptorCalledWithUri = uri
-                return RequestInterceptor.InterceptionResponse("<h1>Hello World</h1>")
+                return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
             }
         }
 
@@ -425,6 +425,36 @@ class SystemEngineSessionTest {
         assertEquals("<h1>Hello World</h1>", response.data.bufferedReader().use { it.readText() })
         assertEquals("text/html", response.mimeType)
         assertEquals("UTF-8", response.encoding)
+    }
+
+    @Test
+    fun settingInterceptorToProvideAlternativeUrl() {
+        var interceptorCalledWithUri: String? = null
+
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                interceptorCalledWithUri = uri
+                return RequestInterceptor.InterceptionResponse.Url("https://mozilla.org")
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = SystemEngineSession(defaultSettings)
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.currentWebView = spy(engineView.currentWebView)
+        engineView.render(engineSession)
+
+        val request: WebResourceRequest = mock()
+        doReturn(Uri.parse("sample:about")).`when`(request).url
+
+        val response = engineView.currentWebView.webViewClient.shouldInterceptRequest(
+                engineView.currentWebView,
+                request)
+
+        assertNull(response)
+        assertEquals("sample:about", interceptorCalledWithUri)
+        assertEquals("https://mozilla.org", engineView.currentWebView.url)
     }
 
     @Test
