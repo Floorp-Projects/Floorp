@@ -9,41 +9,12 @@
 namespace mozilla {
 namespace image {
 
-AnimationFrameBuffer::AnimationFrameBuffer()
-  : mThreshold(0)
-  , mBatch(0)
-  , mPending(0)
-  , mAdvance(0)
-  , mInsertIndex(0)
-  , mGetIndex(0)
-  , mSizeKnown(false)
-  , mRedecodeError(false)
-{ }
-
-void
-AnimationFrameBuffer::Initialize(size_t aThreshold,
-                                 size_t aBatch,
-                                 size_t aStartFrame)
+AnimationFrameRetainedBuffer::AnimationFrameRetainedBuffer(size_t aThreshold,
+                                                           size_t aBatch,
+                                                           size_t aStartFrame)
+  : AnimationFrameBuffer(aBatch, aStartFrame)
+  , mThreshold(aThreshold)
 {
-  MOZ_ASSERT(mThreshold == 0);
-  MOZ_ASSERT(mBatch == 0);
-  MOZ_ASSERT(mPending == 0);
-  MOZ_ASSERT(mAdvance == 0);
-  MOZ_ASSERT(mFrames.IsEmpty());
-
-  mThreshold = aThreshold;
-  mBatch = aBatch;
-  mAdvance = aStartFrame;
-
-  if (mBatch > SIZE_MAX/4) {
-    // Batch size is so big, we will just end up decoding the whole animation.
-    mBatch = SIZE_MAX/4;
-  } else if (mBatch < 1) {
-    // Never permit a batch size smaller than 1. We always want to be asking for
-    // at least one frame to start.
-    mBatch = 1;
-  }
-
   // To simplify the code, we have the assumption that the threshold for
   // entering discard-after-display mode is at least twice the batch size (since
   // that is the most frames-pending-decode we will request) + 1 for the current
@@ -62,122 +33,75 @@ AnimationFrameBuffer::Initialize(size_t aThreshold,
 }
 
 bool
-AnimationFrameBuffer::Insert(RawAccessFrameRef&& aFrame)
+AnimationFrameRetainedBuffer::InsertInternal(RefPtr<imgFrame>&& aFrame)
 {
   // We should only insert new frames if we actually asked for them.
-  MOZ_ASSERT(mPending > 0);
+  MOZ_ASSERT(!mSizeKnown);
+  MOZ_ASSERT(mFrames.Length() < mThreshold);
 
-  if (mSizeKnown) {
-    // We only insert after the size is known if we are repeating the animation
-    // and we did not keep all of the frames. Replace whatever is there
-    // (probably an empty frame) with the new frame.
-    MOZ_ASSERT(MayDiscard());
-
-    // The first decode produced fewer frames than the redecodes, presumably
-    // because it hit an out-of-memory error which later attempts avoided. Just
-    // stop the animation because we can't tell the image that we have more
-    // frames now.
-    if (mInsertIndex >= mFrames.Length()) {
-      mRedecodeError = true;
-      mPending = 0;
-      return false;
-    }
-
-    if (mInsertIndex > 0) {
-      MOZ_ASSERT(!mFrames[mInsertIndex]);
-      mFrames[mInsertIndex] = std::move(aFrame);
-    }
-  } else if (mInsertIndex == mFrames.Length()) {
-    // We are still on the first pass of the animation decoding, so this is
-    // the first time we have seen this frame.
-    mFrames.AppendElement(std::move(aFrame));
-
-    if (mInsertIndex == mThreshold) {
-      // We just tripped over the threshold for the first time. This is our
-      // chance to do any clearing of already displayed frames. After this,
-      // we only need to release as we advance or force a restart.
-      MOZ_ASSERT(MayDiscard());
-      MOZ_ASSERT(mGetIndex < mInsertIndex);
-      for (size_t i = 1; i < mGetIndex; ++i) {
-        RawAccessFrameRef discard = std::move(mFrames[i]);
-      }
-    }
-  } else if (mInsertIndex > 0) {
-    // We were forced to restart an animation before we decoded the last
-    // frame. If we were discarding frames, then we tossed what we had
-    // except for the first frame.
-    MOZ_ASSERT(mInsertIndex < mFrames.Length());
-    MOZ_ASSERT(!mFrames[mInsertIndex]);
-    MOZ_ASSERT(MayDiscard());
-    mFrames[mInsertIndex] = std::move(aFrame);
-  } else { // mInsertIndex == 0
-    // We were forced to restart an animation before we decoded the last
-    // frame. We don't need the redecoded first frame because we always keep
-    // the original.
-    MOZ_ASSERT(MayDiscard());
-  }
-
-  MOZ_ASSERT(mFrames[mInsertIndex]);
-  ++mInsertIndex;
-
-  // Ensure we only request more decoded frames if we actually need them. If we
-  // need to advance to a certain point in the animation on behalf of the owner,
-  // then do so. This ensures we keep decoding. If the batch size is really
-  // small (i.e. 1), it is possible advancing will request the decoder to
-  // "restart", but we haven't told it to stop yet. Note that we skip the first
-  // insert because we actually start "advanced" to the first frame anyways.
-  bool continueDecoding = --mPending > 0;
-  if (mAdvance > 0 && mInsertIndex > 1) {
-    continueDecoding |= AdvanceInternal();
-    --mAdvance;
-  }
-  return continueDecoding;
+  mFrames.AppendElement(std::move(aFrame));
+  MOZ_ASSERT(mSize == mFrames.Length());
+  return mSize < mThreshold;
 }
 
 bool
-AnimationFrameBuffer::MarkComplete()
+AnimationFrameRetainedBuffer::ResetInternal()
 {
-  // We may have stopped decoding at a different point in the animation than we
-  // did previously. That means the decoder likely hit a new error, e.g. OOM.
-  // This will prevent us from advancing as well, because we are missing the
-  // required frames to blend.
-  //
-  // XXX(aosmond): In an ideal world, we would be generating full frames, and
-  // the consumer of our data doesn't care about our internal state. It simply
-  // knows about the first frame, the current frame, and how long to display the
-  // current frame.
-  if (NS_WARN_IF(mInsertIndex != mFrames.Length())) {
-    MOZ_ASSERT(mSizeKnown);
-    mRedecodeError = true;
-    mPending = 0;
+  // If we haven't crossed the threshold, then we know by definition we have
+  // not discarded any frames. If we previously requested more frames, but
+  // it would have been more than we would have buffered otherwise, we can
+  // stop the decoding after one more frame.
+  if (mPending > 1 && mSize >= mBatch * 2 + 1) {
+    MOZ_ASSERT(!mSizeKnown);
+    mPending = 1;
   }
 
-  // We reached the end of the animation, the next frame we get, if we get
-  // another, will be the first frame again.
-  mInsertIndex = 0;
+  // Either the decoder is still running, or we have enough frames already.
+  // No need for us to restart it.
+  return false;
+}
 
-  // Since we only request advancing when we want to resume at a certain point
-  // in the animation, we should never exceed the number of frames.
-  MOZ_ASSERT(mAdvance == 0);
+bool
+AnimationFrameRetainedBuffer::MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea)
+{
+  MOZ_ASSERT(!mSizeKnown);
+  mSizeKnown = true;
+  mPending = 0;
+  mFrames.Compact();
+  return false;
+}
+
+void
+AnimationFrameRetainedBuffer::AdvanceInternal()
+{
+  // We should not have advanced if we never inserted.
+  MOZ_ASSERT(!mFrames.IsEmpty());
+  // We only want to change the current frame index if we have advanced. This
+  // means either a higher frame index, or going back to the beginning.
+  size_t framesLength = mFrames.Length();
+  // We should never have advanced beyond the frame buffer.
+  MOZ_ASSERT(mGetIndex < framesLength);
+  // We should never advance if the current frame is null -- it needs to know
+  // the timeout from it at least to know when to advance.
+  MOZ_ASSERT_IF(mGetIndex > 0, mFrames[mGetIndex - 1]);
+  MOZ_ASSERT_IF(mGetIndex == 0, mFrames[framesLength - 1]);
+  // The owner should have already accessed the next frame, so it should also
+  // be available.
+  MOZ_ASSERT(mFrames[mGetIndex]);
 
   if (!mSizeKnown) {
-    // We just received the last frame in the animation. Compact the frame array
-    // because we know we won't need to grow beyond here.
-    mSizeKnown = true;
-    mFrames.Compact();
-
-    if (!MayDiscard()) {
-      // If we did not meet the threshold, then we know we want to keep all of the
-      // frames. If we also hit the last frame, we don't want to ask for more.
-      mPending = 0;
+    // Calculate how many frames we have requested ahead of the current frame.
+    size_t buffered = mPending + framesLength - mGetIndex - 1;
+    if (buffered < mBatch) {
+      // If we have fewer frames than the batch size, then ask for more. If we
+      // do not have any pending, then we know that there is no active decoding.
+      mPending += mBatch;
     }
   }
-
-  return mPending > 0;
 }
 
 imgFrame*
-AnimationFrameBuffer::Get(size_t aFrame)
+AnimationFrameRetainedBuffer::Get(size_t aFrame, bool aForDisplay)
 {
   // We should not have asked for a frame if we never inserted.
   if (mFrames.IsEmpty()) {
@@ -190,11 +114,9 @@ AnimationFrameBuffer::Get(size_t aFrame)
     return nullptr;
   }
 
-  // We've got the requested frame because we are not discarding frames. While
-  // we typically should have not run out of frames since we ask for more before
-  // we want them, it is possible the decoder is behind.
+  // If we have space for the frame, it should always be available.
   if (!mFrames[aFrame]) {
-    MOZ_ASSERT(MayDiscard());
+    MOZ_ASSERT_UNREACHABLE("Calling Get() when frame is unavailable");
     return nullptr;
   }
 
@@ -205,119 +127,305 @@ AnimationFrameBuffer::Get(size_t aFrame)
 }
 
 bool
-AnimationFrameBuffer::AdvanceTo(size_t aExpectedFrame)
+AnimationFrameRetainedBuffer::IsFirstFrameFinished() const
 {
-  // The owner should only be advancing once it has reached the requested frame
-  // in the animation.
-  MOZ_ASSERT(mAdvance == 0);
-  bool restartDecoder = AdvanceInternal();
-  // Advancing should always be successful, as it should only happen after the
-  // owner has accessed the next (now current) frame.
-  MOZ_ASSERT(mGetIndex == aExpectedFrame);
-  return restartDecoder;
+  return !mFrames.IsEmpty() && mFrames[0]->IsFinished();
 }
 
 bool
-AnimationFrameBuffer::AdvanceInternal()
+AnimationFrameRetainedBuffer::IsLastInsertedFrame(imgFrame* aFrame) const
 {
-  // We should not have advanced if we never inserted.
-  if (mFrames.IsEmpty()) {
-    MOZ_ASSERT_UNREACHABLE("Calling Advance() when we have no frames");
-    return false;
+  return !mFrames.IsEmpty() && mFrames.LastElement().get() == aFrame;
+}
+
+void
+AnimationFrameRetainedBuffer::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                                     const AddSizeOfCb& aCallback)
+{
+  size_t i = 0;
+  for (const RefPtr<imgFrame>& frame : mFrames) {
+    ++i;
+    frame->AddSizeOfExcludingThis(aMallocSizeOf,
+      [&](AddSizeOfCbData& aMetadata) {
+        aMetadata.index = i;
+        aCallback(aMetadata);
+      }
+    );
   }
+}
 
-  // We only want to change the current frame index if we have advanced. This
-  // means either a higher frame index, or going back to the beginning.
-  size_t framesLength = mFrames.Length();
-  // We should never have advanced beyond the frame buffer.
-  MOZ_ASSERT(mGetIndex < framesLength);
-  // We should never advance if the current frame is null -- it needs to know
-  // the timeout from it at least to know when to advance.
-  MOZ_ASSERT(mFrames[mGetIndex]);
-  if (++mGetIndex == framesLength) {
-    MOZ_ASSERT(mSizeKnown);
-    mGetIndex = 0;
+AnimationFrameDiscardingQueue::AnimationFrameDiscardingQueue(AnimationFrameRetainedBuffer&& aQueue)
+  : AnimationFrameBuffer(aQueue)
+  , mInsertIndex(aQueue.mFrames.Length())
+  , mFirstFrame(std::move(aQueue.mFrames[0]))
+{
+  MOZ_ASSERT(!mSizeKnown);
+  MOZ_ASSERT(!mRedecodeError);
+  MOZ_ASSERT(mInsertIndex > 0);
+  MOZ_ASSERT(mGetIndex > 0);
+  mMayDiscard = true;
+
+  for (size_t i = aQueue.mGetIndex; i < mInsertIndex; ++i) {
+    MOZ_ASSERT(aQueue.mFrames[i]);
+    mDisplay.push_back(std::move(aQueue.mFrames[i]));
   }
-  // The owner should have already accessed the next frame, so it should also
-  // be available.
-  MOZ_ASSERT(mFrames[mGetIndex]);
-
-  // If we moved forward, that means we can remove the previous frame, assuming
-  // that frame is not the first frame. If we looped and are back at the first
-  // frame, we can remove the last frame.
-  if (MayDiscard()) {
-    RawAccessFrameRef discard;
-    if (mGetIndex > 1) {
-      discard = std::move(mFrames[mGetIndex - 1]);
-    } else if (mGetIndex == 0) {
-      MOZ_ASSERT(mSizeKnown && framesLength > 1);
-      discard = std::move(mFrames[framesLength - 1]);
-    }
-  }
-
-  if (!mRedecodeError && (!mSizeKnown || MayDiscard())) {
-    // Calculate how many frames we have requested ahead of the current frame.
-    size_t buffered = mPending;
-    if (mGetIndex > mInsertIndex) {
-      // It wrapped around and we are decoding the beginning again before the
-      // the display has finished the loop.
-      MOZ_ASSERT(mSizeKnown);
-      buffered += mInsertIndex + framesLength - mGetIndex - 1;
-    } else {
-      buffered += mInsertIndex - mGetIndex - 1;
-    }
-
-    if (buffered < mBatch) {
-      // If we have fewer frames than the batch size, then ask for more. If we
-      // do not have any pending, then we know that there is no active decoding.
-      mPending += mBatch;
-      return mPending == mBatch;
-    }
-  }
-
-  return false;
 }
 
 bool
-AnimationFrameBuffer::Reset()
+AnimationFrameDiscardingQueue::InsertInternal(RefPtr<imgFrame>&& aFrame)
 {
-  // The animation needs to start back at the beginning.
-  mGetIndex = 0;
-  mAdvance = 0;
+  // Even though we don't use redecoded first frames for display purposes, we
+  // will still use them for recycling, so we still need to insert it.
+  mDisplay.push_back(std::move(aFrame));
+  ++mInsertIndex;
+  MOZ_ASSERT(mInsertIndex <= mSize);
+  return true;
+}
 
-  if (!MayDiscard()) {
-    // If we haven't crossed the threshold, then we know by definition we have
-    // not discarded any frames. If we previously requested more frames, but
-    // it would have been more than we would have buffered otherwise, we can
-    // stop the decoding after one more frame.
-    if (mPending > 1 && mInsertIndex - 1 >= mBatch * 2) {
-      MOZ_ASSERT(!mSizeKnown);
-      mPending = 1;
-    }
-
-    // Either the decoder is still running, or we have enough frames already.
-    // No need for us to restart it.
-    return false;
-  }
-
-  // Discard all frames besides the first, because the decoder always expects
-  // that when it re-inserts a frame, it is not present. (It doesn't re-insert
-  // the first frame.)
-  for (size_t i = 1; i < mFrames.Length(); ++i) {
-    RawAccessFrameRef discard = std::move(mFrames[i]);
-  }
-
+bool
+AnimationFrameDiscardingQueue::ResetInternal()
+{
+  mDisplay.clear();
   mInsertIndex = 0;
-
-  // If we hit an error after redecoding, we never want to restart decoding.
-  if (mRedecodeError) {
-    MOZ_ASSERT(mPending == 0);
-    return false;
-  }
 
   bool restartDecoder = mPending == 0;
   mPending = 2 * mBatch;
   return restartDecoder;
+}
+
+bool
+AnimationFrameDiscardingQueue::MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea)
+{
+  if (NS_WARN_IF(mInsertIndex != mSize)) {
+    MOZ_ASSERT(mSizeKnown);
+    mRedecodeError = true;
+    mPending = 0;
+  }
+
+  // We reached the end of the animation, the next frame we get, if we get
+  // another, will be the first frame again.
+  mInsertIndex = 0;
+  mSizeKnown = true;
+
+  // Since we only request advancing when we want to resume at a certain point
+  // in the animation, we should never exceed the number of frames.
+  MOZ_ASSERT(mAdvance == 0);
+  return mPending > 0;
+}
+
+void
+AnimationFrameDiscardingQueue::AdvanceInternal()
+{
+  // We only want to change the current frame index if we have advanced. This
+  // means either a higher frame index, or going back to the beginning.
+  // We should never have advanced beyond the frame buffer.
+  MOZ_ASSERT(mGetIndex < mSize);
+
+  // Unless we are recycling, we should have the current frame still in the
+  // display queue. Either way, we should at least have an entry in the queue
+  // which we need to consume.
+  MOZ_ASSERT(mRecycling || bool(mDisplay.front()));
+  MOZ_ASSERT(!mDisplay.empty());
+  mDisplay.pop_front();
+  MOZ_ASSERT(!mDisplay.empty());
+  MOZ_ASSERT(mDisplay.front());
+
+  if (mDisplay.size() + mPending - 1 < mBatch) {
+    // If we have fewer frames than the batch size, then ask for more. If we
+    // do not have any pending, then we know that there is no active decoding.
+    mPending += mBatch;
+  }
+}
+
+imgFrame*
+AnimationFrameDiscardingQueue::Get(size_t aFrame, bool aForDisplay)
+{
+  // If we are advancing on behalf of the animation, we don't expect it to be
+  // getting any frames (besides the first) until we get the desired frame.
+  MOZ_ASSERT(aFrame == 0 || mAdvance == 0);
+
+  // The first frame is stored separately. If we only need the frame for
+  // display purposes, we can return it right away. If we need it for advancing
+  // the animation, we want to verify the recreated first frame is available
+  // before allowing it continue.
+  if (aForDisplay && aFrame == 0) {
+    return mFirstFrame.get();
+  }
+
+  // If we don't have that frame, return an empty frame ref.
+  if (aFrame >= mSize) {
+    return nullptr;
+  }
+
+  size_t offset;
+  if (aFrame >= mGetIndex) {
+    offset = aFrame - mGetIndex;
+  } else if (!mSizeKnown) {
+    MOZ_ASSERT_UNREACHABLE("Requesting previous frame after we have advanced!");
+    return nullptr;
+  } else {
+    offset = mSize - mGetIndex + aFrame;
+  }
+
+  if (offset >= mDisplay.size()) {
+    return nullptr;
+  }
+
+  // If we have space for the frame, it should always be available.
+  MOZ_ASSERT(mDisplay[offset]);
+  return mDisplay[offset].get();
+}
+
+bool
+AnimationFrameDiscardingQueue::IsFirstFrameFinished() const
+{
+  MOZ_ASSERT(mFirstFrame);
+  MOZ_ASSERT(mFirstFrame->IsFinished());
+  return true;
+}
+
+bool
+AnimationFrameDiscardingQueue::IsLastInsertedFrame(imgFrame* aFrame) const
+{
+  return !mDisplay.empty() && mDisplay.back().get() == aFrame;
+}
+
+void
+AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                                      const AddSizeOfCb& aCallback)
+{
+  mFirstFrame->AddSizeOfExcludingThis(aMallocSizeOf,
+    [&](AddSizeOfCbData& aMetadata) {
+      aMetadata.index = 1;
+      aCallback(aMetadata);
+    }
+  );
+
+  size_t i = mGetIndex;
+  for (const RefPtr<imgFrame>& frame : mDisplay) {
+    ++i;
+    if (mSize < i) {
+      // First frame again, we already covered it above.
+      MOZ_ASSERT(mFirstFrame.get() == frame.get());
+      i = 1;
+      continue;
+    }
+
+    frame->AddSizeOfExcludingThis(aMallocSizeOf,
+      [&](AddSizeOfCbData& aMetadata) {
+        aMetadata.index = i;
+        aCallback(aMetadata);
+      }
+    );
+  }
+}
+
+AnimationFrameRecyclingQueue::AnimationFrameRecyclingQueue(AnimationFrameRetainedBuffer&& aQueue)
+  : AnimationFrameDiscardingQueue(std::move(aQueue))
+{
+  // In an ideal world, we would always save the already displayed frames for
+  // recycling but none of the frames were marked as recyclable. We will incur
+  // the extra allocation cost for a few more frames.
+  mRecycling = true;
+}
+
+void
+AnimationFrameRecyclingQueue::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                                     const AddSizeOfCb& aCallback)
+{
+  AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(aMallocSizeOf,
+                                                        aCallback);
+
+  for (const RecycleEntry& entry : mRecycle) {
+    if (entry.mFrame) {
+      entry.mFrame->AddSizeOfExcludingThis(aMallocSizeOf,
+        [&](AddSizeOfCbData& aMetadata) {
+          aMetadata.index = 0; // Frame is not applicable
+          aCallback(aMetadata);
+        }
+      );
+    }
+  }
+}
+
+void
+AnimationFrameRecyclingQueue::AdvanceInternal()
+{
+  MOZ_ASSERT(!mDisplay.empty());
+  MOZ_ASSERT(mDisplay.front());
+
+  RefPtr<imgFrame>& front = mDisplay.front();
+
+  // The first frame should always have a dirty rect that matches the frame
+  // rect. As such, we should use mFirstFrameRefreshArea instead for recycle
+  // rect calculations.
+  MOZ_ASSERT_IF(mGetIndex == 1,
+                front->GetRect().IsEqualEdges(front->GetDirtyRect()));
+
+  RecycleEntry newEntry(mGetIndex == 1 ? mFirstFrameRefreshArea
+                                       : front->GetDirtyRect());
+
+  // If we are allowed to recycle the frame, then we should save it before the
+  // base class's AdvanceInternal discards it.
+  if (front->ShouldRecycle()) {
+    // Calculate the recycle rect for the recycled frame. This is the cumulative
+    // dirty rect of all of the frames ahead of us to be displayed, and to be
+    // used for recycling. Or in other words, the dirty rect between the
+    // recycled frame and the decoded frame which reuses the buffer.
+    for (const RefPtr<imgFrame>& frame : mDisplay) {
+      newEntry.mRecycleRect = newEntry.mRecycleRect.Union(frame->GetDirtyRect());
+    }
+    for (const RecycleEntry& entry : mRecycle) {
+      newEntry.mRecycleRect = newEntry.mRecycleRect.Union(entry.mDirtyRect);
+    }
+
+    newEntry.mFrame = std::move(front);
+  }
+
+  // Even if the frame itself isn't saved, we want the dirty rect to calculate
+  // the recycle rect for future recycled frames.
+  mRecycle.push_back(std::move(newEntry));
+  AnimationFrameDiscardingQueue::AdvanceInternal();
+}
+
+bool
+AnimationFrameRecyclingQueue::ResetInternal()
+{
+  mRecycle.clear();
+  return AnimationFrameDiscardingQueue::ResetInternal();
+}
+
+RawAccessFrameRef
+AnimationFrameRecyclingQueue::RecycleFrame(gfx::IntRect& aRecycleRect)
+{
+  if (mRecycle.empty()) {
+    return RawAccessFrameRef();
+  }
+
+  RawAccessFrameRef frame;
+  if (mRecycle.front().mFrame) {
+    frame = mRecycle.front().mFrame->RawAccessRef();
+    if (frame) {
+      aRecycleRect = mRecycle.front().mRecycleRect;
+    }
+  }
+
+  mRecycle.pop_front();
+  return frame;
+}
+
+bool
+AnimationFrameRecyclingQueue::MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea)
+{
+  bool continueDecoding =
+    AnimationFrameDiscardingQueue::MarkComplete(aFirstFrameRefreshArea);
+
+  MOZ_ASSERT_IF(!mRedecodeError,
+                mFirstFrameRefreshArea.IsEmpty() ||
+                mFirstFrameRefreshArea.IsEqualEdges(aFirstFrameRefreshArea));
+
+  mFirstFrameRefreshArea = aFirstFrameRefreshArea;
+  return continueDecoding;
 }
 
 } // namespace image

@@ -830,6 +830,9 @@ class BacktrackingAllocator : protected RegisterAllocator
         return addMove(moves, from, to, type);
     }
 
+    MOZ_MUST_USE bool moveAtEdge(LBlock* predecessor, LBlock* successor, LiveRange* from,
+                                 LiveRange* to, LDefinition::Type type);
+
     // Debugging methods.
     void dumpAllocations();
 
