@@ -43,7 +43,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Setting.List(Setting(key = Setting.Key.USE_PRIVATE_MODE, value = "true"),
-                  Setting(key = Setting.Key.DISPLAY_MODE, value = "DISPLAY_MODE_MINIMAL_UI"))
+                  Setting(key = Setting.Key.DISPLAY_MODE, value = "DISPLAY_MODE_MINIMAL_UI"),
+                  Setting(key = Setting.Key.JAVASCRIPT_ALLOWED, value = "false"))
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
     @Test fun settingsApplied() {
         assertThat("USE_PRIVATE_MODE should be set",
@@ -57,6 +58,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    sessionRule.session.settings.getBoolean(
                            GeckoSessionSettings.USE_TRACKING_PROTECTION),
                    equalTo(true))
+        assertThat("JAVASCRIPT_ALLOWED should be set",
+                sessionRule.session.settings.getBoolean(
+                        GeckoSessionSettings.JAVASCRIPT_ALLOWED),
+                equalTo(false))
     }
 
     @Test(expected = UiThreadUtils.TimeoutException::class)
