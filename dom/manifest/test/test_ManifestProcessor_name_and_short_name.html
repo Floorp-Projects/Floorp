@@ -48,7 +48,7 @@ props.forEach((prop) => {
     obj[prop] = type;
     data.jsonText = JSON.stringify(obj);
     var result = processor.process(data);
-    SimpleTest.ok(result[prop] === undefined, true, expected);
+    SimpleTest.ok(result[prop] === undefined, expected);
   });
 });
 

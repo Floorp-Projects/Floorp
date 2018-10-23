@@ -19,17 +19,17 @@ function testInner () {
 
     try {
       div.innerHTML = "some \u00A0 &amp;nbsp; text";
-      ok(false, "innerHTML in xhtml", "test failed, no exception by the parser when giving an unexpected entity"+e);
+      ok(false, "innerHTML in xhtml test failed, no exception by the parser when giving an unexpected entity"+e);
     } catch (e) {
-      ok (true, "innerHTML in xhtml", "test ok");
+      ok (true, "innerHTML in xhtml test ok");
     }
 
     try {
       div.innerHTML = "some \u00A0 text";
       div.innerHTML += "!";
-      ok (true, "innerHTML in xhtml", "test ok");
+      ok (true, "innerHTML in xhtml test ok");
     } catch (e) {
-      ok(false, "innerHTML in xhtml", "test failed, unexpected exception "+e);
+      ok(false, "innerHTML in xhtml test failed, unexpected exception "+e);
     }
 
   SimpleTest.finish();
