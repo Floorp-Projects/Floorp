@@ -645,12 +645,7 @@ const proto = {
       if (name === "length") {
         return undefined;
       }
-      return {
-        configurable: true,
-        writable: true,
-        enumerable: true,
-        value: name,
-      };
+      return desc;
     }
 
     if (!desc || onlyEnumerable && !desc.enumerable) {
