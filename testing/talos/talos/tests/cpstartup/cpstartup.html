@@ -1,0 +1,43 @@
+<html>
+<head>
+<script>
+
+function init() {
+  window.addEventListener("CPStartup:FinalResults", function onResults(event) {
+    let results = event.detail;
+    tpRecordTime(results, 0, "content-process-startup");
+  }, {once: true});
+
+  async function tryPing() {
+    let pingPromise = new Promise(resolve => {
+      window.addEventListener("CPStartup:Pong", resolve, {once: true});
+      dispatchEvent(new CustomEvent("CPStartup:Ping", {bubbles: true}));
+    });
+    let timeoutPromise = new Promise((resolve, reject) => setTimeout(reject, 500));
+
+    try {
+      await Promise.race([pingPromise, timeoutPromise]);
+    } catch (e) {
+      return tryPing();
+    }
+    return null;
+  }
+
+  let target = document.location.href.replace(/cpstartup.html$/, "target.html");
+  tryPing().then(() => {
+    dispatchEvent(new CustomEvent("CPStartup:Go", {
+      bubbles: true,
+      detail: {target},
+    }));
+  });
+}
+
+</script>
+</head>
+
+<body onload="init();">
+  Hello, Talos!
+
+  <a href="#" id="target" target="_blank">I'll open a new tab</a>
+</body>
+</html>

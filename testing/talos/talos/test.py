@@ -285,14 +285,13 @@ class cpstartup(PageloaderTest):
     initialize it to the point where it can start processing incoming URLs
     to load.
     """
-    extensions = ['${talos}/tests/cpstartup', '${talos}/pageloader']
+    extensions = ['${talos}/pageloader', '${talos}/tests/cpstartup/extension']
     tpmanifest = '${talos}/tests/cpstartup/cpstartup.manifest'
     tppagecycles = 20
     gecko_profile_entries = 1000000
     tploadnocache = True
     unit = 'ms'
     preferences = {
-        'addon.test.cpstartup.webserver': '${webserver}',
         # By default, Talos is configured to open links from
         # content in new windows. We're overriding them so that
         # they open in new tabs instead.
