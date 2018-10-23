@@ -335,9 +335,13 @@ static void
 NotifyDidRender(layers::CompositorBridgeParent* aBridge,
                 wr::WrPipelineInfo aInfo,
                 TimeStamp aStart,
-                TimeStamp aEnd)
+                TimeStamp aEnd,
+                bool aRender)
 {
-  if (aBridge->GetWrBridge()) {
+  if (aRender && aBridge->GetWrBridge()) {
+    // We call this here to mimic the behavior in LayerManagerComposite, as to
+    // not change what Talos measures. That is, we do not record an empty frame
+    // as a frame.
     aBridge->GetWrBridge()->RecordFrame();
   }
 
@@ -376,6 +380,8 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
   } else {
     renderer->Update();
   }
+  // Check graphics reset status even when rendering is skipped.
+  renderer->CheckGraphicsResetStatus();
 
   TimeStamp end = TimeStamp::Now();
 
@@ -395,7 +401,8 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
     &NotifyDidRender,
     renderer->GetCompositorBridge(),
     info,
-    aStartTime, end
+    aStartTime, end,
+    aRender
   ));
 }
 

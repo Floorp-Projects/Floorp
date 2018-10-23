@@ -84,6 +84,9 @@ public:
   /// This can be called on the render thread only.
   bool Resume();
 
+  /// This can be called on the render thread only.
+  void CheckGraphicsResetStatus();
+
   layers::SyncObjectHost* GetSyncObject() const;
 
   layers::CompositorBridgeParent* GetCompositorBridge() { return mBridge; }

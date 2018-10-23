@@ -1,9 +1,14 @@
+// Copyright © 2017 Mozilla Foundation
+//
+// This program is made available under an ISC-style license.  See the
+// accompanying file LICENSE for details.
+
 // Ease accessing reactor::Core handles.
 
-use futures::{Future, IntoFuture};
 use futures::sync::oneshot;
-use std::{fmt, io, thread};
+use futures::{Future, IntoFuture};
 use std::sync::mpsc;
+use std::{fmt, io, thread};
 use tokio_core::reactor::{Core, Handle, Remote};
 
 scoped_thread_local! {

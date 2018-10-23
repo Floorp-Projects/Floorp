@@ -3,8 +3,6 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use {assert_not_in_callback, set_in_callback};
-use ClientContext;
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::frame::{framed, Framed};
 use audioipc::messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage};
@@ -21,6 +19,8 @@ use std::os::unix::net;
 use std::ptr;
 use std::sync::mpsc;
 use tokio_uds::UnixStream;
+use ClientContext;
+use {assert_not_in_callback, set_in_callback};
 
 // TODO: Remove and let caller allocate based on cubeb backend requirements.
 const SHM_AREA_SIZE: usize = 2 * 1024 * 1024;
@@ -95,14 +95,14 @@ impl rpc::Server for CallbackServer {
                             .get_slice(nframes as usize * frame_size)
                             .unwrap()
                             .as_ptr(),
-                        None => ptr::null()
+                        None => ptr::null(),
                     };
                     let output_ptr: *mut u8 = match output_shm {
                         Some(ref mut shm) => shm
                             .get_mut_slice(nframes as usize * frame_size)
                             .unwrap()
                             .as_mut_ptr(),
-                        None => ptr::null_mut()
+                        None => ptr::null_mut(),
                     };
 
                     set_in_callback(true);
