@@ -6,8 +6,8 @@
 use futures::{Poll, Sink, Stream};
 use std::io;
 
-mod driver;
 mod client;
+mod driver;
 mod server;
 
 pub use self::client::{bind_client, Client, ClientProxy, Response};
