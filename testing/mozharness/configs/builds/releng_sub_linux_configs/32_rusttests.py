@@ -1,11 +1,6 @@
 import os
 
 config = {
-    'default_actions': [
-        'clobber',
-        'build',
-        'check-test',
-    ],
     'stage_platform': 'linux-rusttests',
     #### 32 bit build specific #####
     'env': {
