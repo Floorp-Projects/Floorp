@@ -1543,18 +1543,20 @@ AdjustGeneratorResumptionValue(JSContext* cx, AbstractFramePtr frame,
         // on that bytecode sequence existing in the debuggee, somehow jump to
         // it, and then avoid re-entering the debugger from it.
         Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
-        if (genObj && !genObj->isBeforeInitialYield()) {
+        if (genObj) {
             // 1.  `return <value>` creates and returns a new object,
             //     `{value: <value>, done: true}`.
-            JSObject *pair = CreateIterResultObject(cx, vp, true);
-            if (!pair) {
-                // Out of memory in debuggee code. Arrange for this to propagate.
-                MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
-                cx->clearPendingException();
-                resumeMode = ResumeMode::Throw;
-                return;
+            if (!genObj->isBeforeInitialYield()) {
+                JSObject *pair = CreateIterResultObject(cx, vp, true);
+                if (!pair) {
+                    // Out of memory in debuggee code. Arrange for this to propagate.
+                    MOZ_ALWAYS_TRUE(cx->getPendingException(vp));
+                    cx->clearPendingException();
+                    resumeMode = ResumeMode::Throw;
+                    return;
+                }
+                vp.setObject(*pair);
             }
-            vp.setObject(*pair);
 
             // 2.  The generator must be closed.
             genObj->setClosed();
