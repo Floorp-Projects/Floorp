@@ -55,6 +55,7 @@ class IntentReceiverActivity : Activity() {
     private fun dispatchNormalIntent() {
         val intent = Intent(intent)
         intent.setClassName(applicationContext, MainActivity::class.java.name)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
 
         startActivity(intent)
     }
