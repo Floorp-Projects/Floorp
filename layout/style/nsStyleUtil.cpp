@@ -483,7 +483,8 @@ nsStyleUtil::CSPAllowsInlineStyle(Element* aElement,
   rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_STYLESHEET,
                             nonce,
                             false, // aParserCreated only applies to scripts
-                            aElement, aStyleText, aLineNumber, aColumnNumber,
+                            aElement, nullptr, // nsICSPEventListener
+                            aStyleText, aLineNumber, aColumnNumber,
                             &allowInlineStyle);
   NS_ENSURE_SUCCESS(rv, false);
 

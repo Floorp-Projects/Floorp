@@ -27,6 +27,7 @@
 #include "nsISizeOfEventTarget.h"
 #include "nsIXPConnect.h"
 #include "nsIInputStream.h"
+#include "nsIContentSecurityPolicy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -203,7 +204,8 @@ public:
                  nsIGlobalObject* aGlobalObject,
                  nsIURI* aBaseURI = nullptr,
                  nsILoadGroup* aLoadGroup = nullptr,
-                 PerformanceStorage* aPerformanceStorage = nullptr)
+                 PerformanceStorage* aPerformanceStorage = nullptr,
+                 nsICSPEventListener* aCSPEventListener = nullptr)
   {
     MOZ_ASSERT(aPrincipal);
     mPrincipal = aPrincipal;
@@ -211,6 +213,7 @@ public:
     mBaseURI = aBaseURI;
     mLoadGroup = aLoadGroup;
     mPerformanceStorage = aPerformanceStorage;
+    mCSPEventListener = aCSPEventListener;
   }
 
   void InitParameters(bool aAnon, bool aSystem);
@@ -546,6 +549,7 @@ protected:
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 
   RefPtr<PerformanceStorage> mPerformanceStorage;
+  nsCOMPtr<nsICSPEventListener> mCSPEventListener;
 
   // used to implement getAllResponseHeaders()
   class nsHeaderVisitor : public nsIHttpHeaderVisitor
