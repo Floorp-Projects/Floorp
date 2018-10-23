@@ -31,13 +31,6 @@ namespace mozilla {
 } // namespace mozilla
 
 
-/* 6bd13476-1dd2-11b2-bbef-f0ccb5fa64b6 (thanks, mozbot) */
-
-#define MOZJSCOMPONENTLOADER_CID                                              \
-  {0x6bd13476, 0x1dd2, 0x11b2,                                                \
-    { 0xbb, 0xef, 0xf0, 0xcc, 0xb5, 0xfa, 0x64, 0xb6 }}
-#define MOZJSCOMPONENTLOADER_CONTRACTID "@mozilla.org/moz/jsloader;1"
-
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
 #define STARTUP_RECORDER_ENABLED
 #endif
@@ -62,8 +55,6 @@ class mozJSComponentLoader final : public nsIObserver
 
     static void InitStatics();
     static void Shutdown();
-
-    static already_AddRefed<mozJSComponentLoader> GetOrCreate();
 
     static mozJSComponentLoader* Get() {
         MOZ_ASSERT(sSelf, "Should have already created the component loader");

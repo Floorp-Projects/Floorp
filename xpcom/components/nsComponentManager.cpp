@@ -793,7 +793,7 @@ nsComponentManagerImpl::KnownModule::Load()
       return false;
     }
 
-    RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::GetOrCreate();
+    RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::Get();
     mModule = loader->LoadModule(mFile);
 
     if (!mModule) {

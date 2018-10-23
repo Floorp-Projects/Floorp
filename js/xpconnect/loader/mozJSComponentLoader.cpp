@@ -200,16 +200,6 @@ mozJSComponentLoader::mozJSComponentLoader()
     MOZ_ASSERT(!sSelf, "mozJSComponentLoader should be a singleton");
 }
 
-// static
-already_AddRefed<mozJSComponentLoader>
-mozJSComponentLoader::GetOrCreate()
-{
-    if (!sSelf) {
-        sSelf = new mozJSComponentLoader();
-    }
-    return do_AddRef(sSelf);
-}
-
 #define ENSURE_DEP(name) { nsresult rv = Ensure##name(); NS_ENSURE_SUCCESS(rv, rv); }
 #define ENSURE_DEPS(...) MOZ_FOR_EACH(ENSURE_DEP, (), (__VA_ARGS__));
 #define BEGIN_ENSURE(self, ...) { \
