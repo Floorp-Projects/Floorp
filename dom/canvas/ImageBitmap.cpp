@@ -1549,21 +1549,6 @@ ImageBitmap::FindOptimalFormat(const Optional<Sequence<ImageBitmapFormat>>& aPos
   }
 }
 
-int32_t
-ImageBitmap::MappedDataLength(ImageBitmapFormat aFormat, ErrorResult& aRv)
-{
-  if (!mDataWrapper) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return 0;
-  }
-
-  if (aFormat == mDataWrapper->GetFormat()) {
-    return mDataWrapper->GetBufferLength();
-  } else {
-    return CalculateImageBufferSize(aFormat, Width(), Height());
-  }
-}
-
 size_t
 ImageBitmap::GetAllocatedSize() const
 {
