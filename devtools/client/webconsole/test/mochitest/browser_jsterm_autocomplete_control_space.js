@@ -64,5 +64,5 @@ async function performTests() {
   await onPopUpOpen;
 
   ok(popup.isOpen, "popup opens on Ctrl+Space");
-  ok(popup.itemCount, itemCount, "popup has the expected items");
+  is(popup.itemCount, itemCount, "popup has the expected items");
 }

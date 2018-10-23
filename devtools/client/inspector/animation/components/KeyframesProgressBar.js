@@ -90,7 +90,7 @@ class KeyframesProgressBar extends PureComponent {
     }
 
     const timing = Object.assign({}, animation.state, {
-      iterations: animation.state.iterationCount || Infinity
+      iterations: animation.state.iterationCount || Infinity,
     });
 
     this.simulatedAnimation = simulateAnimationForKeyframesProgressBar(timing);

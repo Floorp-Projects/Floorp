@@ -489,7 +489,7 @@ add_task(async function test_back_button_on_basic_card_page_during_onboarding() 
 
       info("Checking if the address saved in the last step is correctly loaded in the form");
       field = content.document.getElementById("given-name");
-      ok(field.value, PTU.Addresses.TimBL2["given-name"],
+      is(field.value, PTU.Addresses.TimBL2["given-name"],
          "Given name field value is correctly loaded");
 
       info("Editing the address and saving again");
@@ -509,7 +509,7 @@ add_task(async function test_back_button_on_basic_card_page_during_onboarding() 
       ok(content.isVisible(basicCardCancelButton),
          "Cancel button is visible on the basic card page");
       field = content.document.getElementById("cc-number");
-      ok(field.value, PTU.BasicCards.JohnDoe["cc-number"], "Values in the form are preserved");
+      is(field.value, PTU.BasicCards.JohnDoe["cc-number"], "Values in the form are preserved");
     });
 
     info("Closing the payment dialog");

@@ -75,7 +75,7 @@ function* testSteps()
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
     ok(true, "6");
-    ok(obj.data, event.target.result.data,
+    is(obj.data, event.target.result.data,
                   "Non-unique index was properly updated.");
 
     request = uniqueIndex.get(END_DATA);
@@ -84,7 +84,7 @@ function* testSteps()
     event = yield undefined;
 
     ok(true, "7");
-    ok(obj.data, event.target.result.data,
+    is(obj.data, event.target.result.data,
                   "Unique index was properly updated.");
 
     // Wait for success

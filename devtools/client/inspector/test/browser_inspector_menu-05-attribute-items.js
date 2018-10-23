@@ -39,7 +39,7 @@ add_task(async function() {
     inspector.nodeMenuTriggerInfo = {
       type: "attribute",
       name: "data-edit",
-      value: "the"
+      value: "the",
     };
 
     await waitForClipboardPromise(() => copyAttributeValue.click(), "the");
@@ -56,7 +56,7 @@ add_task(async function() {
     inspector.nodeMenuTriggerInfo = {
       type: "attribute",
       name: "data-edit",
-      value: longAttribute
+      value: longAttribute,
     };
 
     await waitForClipboardPromise(() => copyAttributeValue.click(), longAttribute);
@@ -69,7 +69,7 @@ add_task(async function() {
     info("Triggering 'Edit Attribute' and waiting for mutation to occur");
     inspector.nodeMenuTriggerInfo = {
       type: "attribute",
-      name: "data-edit"
+      name: "data-edit",
     };
     editAttribute.click();
     EventUtils.sendString("data-edit='edited'");
@@ -89,7 +89,7 @@ add_task(async function() {
     info("Triggering 'Remove Attribute' and waiting for mutation to occur");
     inspector.nodeMenuTriggerInfo = {
       type: "attribute",
-      name: "data-remove"
+      name: "data-remove",
     };
     const onMutation = inspector.once("markupmutation");
     removeAttribute.click();

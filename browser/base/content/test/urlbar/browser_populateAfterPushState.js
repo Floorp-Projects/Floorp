@@ -18,6 +18,6 @@ add_task(async function() {
       content.history.pushState({}, "Page 2", "dummy_page2.html");
     });
     await locationChangePromise;
-    ok(gURLBar.value, TEST_PATH + "dummy_page2.html", "Should have updated the URL bar.");
+    is(gURLBar.value, TEST_PATH + "dummy_page2.html", "Should have updated the URL bar.");
   });
 });

@@ -24,7 +24,7 @@ const KEYFRAMES_TEST_DATA = [
           {
             title: "rgb(0, 255, 0)",
             marginInlineStart: "100%",
-          }
+          },
         ],
       },
       {
@@ -37,7 +37,7 @@ const KEYFRAMES_TEST_DATA = [
           {
             title: "round space",
             marginInlineStart: "100%",
-          }
+          },
         ],
       },
       {
@@ -50,7 +50,7 @@ const KEYFRAMES_TEST_DATA = [
           {
             title: "20px",
             marginInlineStart: "100%",
-          }
+          },
         ],
       },
       {
@@ -63,7 +63,7 @@ const KEYFRAMES_TEST_DATA = [
           {
             title: "100px",
             marginInlineStart: "100%",
-          }
+          },
         ],
       },
       {
@@ -76,7 +76,7 @@ const KEYFRAMES_TEST_DATA = [
           {
             title: "1",
             marginInlineStart: "100%",
-          }
+          },
         ],
       },
       {
@@ -89,7 +89,7 @@ const KEYFRAMES_TEST_DATA = [
           {
             title: "center",
             marginInlineStart: "100%",
-          }
+          },
         ],
       },
       {
@@ -102,7 +102,7 @@ const KEYFRAMES_TEST_DATA = [
           {
             title: "translate(100px)",
             marginInlineStart: "100%",
-          }
+          },
         ],
       },
     ],

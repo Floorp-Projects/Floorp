@@ -145,7 +145,7 @@ BoxModel.prototype = {
 
       const styleEntries = await this.inspector.pageStyle.getApplied(node, {
         // We don't need styles applied to pseudo elements of the current node.
-        skipPseudo: true
+        skipPseudo: true,
       });
       this.elementRules = styleEntries.map(e => e.rule);
 
@@ -284,7 +284,7 @@ BoxModel.prototype = {
       initial: initialValue,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
       property: {
-        name: property
+        name: property,
       },
       start: self => {
         self.elt.parentNode.classList.add("boxmodel-editing");
@@ -295,7 +295,7 @@ BoxModel.prototype = {
         }
 
         const properties = [
-          { name: property, value: value }
+          { name: property, value: value },
         ];
 
         if (property.substring(0, 7) == "border-") {

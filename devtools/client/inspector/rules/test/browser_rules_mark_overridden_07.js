@@ -52,7 +52,7 @@ function testMarkOverridden(inspector, view) {
      {name: "margin-left", value: "1px", overridden: false}],
     [{name: "font-size", value: "12px", overridden: false}],
     [{name: "margin-right", value: "1px", overridden: true},
-     {name: "font-size", value: "79px", overridden: true}]
+     {name: "font-size", value: "79px", overridden: true}],
   ];
 
   for (let i = 1; i < RESULTS.length; ++i) {

@@ -21,7 +21,7 @@ const TEST_DATA = [
         document.body.appendChild(div);
       `);
     },
-    after: false
+    after: false,
   },
   {
     desc: "Showing a node by deleting an existing stylesheet",
@@ -32,7 +32,7 @@ const TEST_DATA = [
         document.getElementById("new-style").remove();
       `);
     },
-    after: true
+    after: true,
   },
   {
     desc: "Hiding a node by changing its style property",
@@ -44,7 +44,7 @@ const TEST_DATA = [
         node.style.display = "block";
       `);
     },
-    after: true
+    after: true,
   },
   {
     desc: "Showing a node by removing its hidden attribute",
@@ -56,7 +56,7 @@ const TEST_DATA = [
                 .removeAttribute("hidden");
       `);
     },
-    after: true
+    after: true,
   },
   {
     desc: "Hiding a node by adding a hidden attribute",
@@ -65,7 +65,7 @@ const TEST_DATA = [
     changeStyle: async function(testActor) {
       await testActor.setAttribute("#hidden-true", "hidden", "true");
     },
-    after: false
+    after: false,
   },
   {
     desc: "Showing a node by changin a stylesheet's rule",
@@ -78,7 +78,7 @@ const TEST_DATA = [
                 .setProperty("display", "inline");
       `);
     },
-    after: true
+    after: true,
   },
   {
     desc: "Hiding a node by adding a new rule to a stylesheet",
@@ -90,7 +90,7 @@ const TEST_DATA = [
           "#hidden-via-stylesheet {display: none;}", 1);
       `);
     },
-    after: false
+    after: false,
   },
   {
     desc: "Hiding a node by adding a class that matches an existing rule",
@@ -104,8 +104,8 @@ const TEST_DATA = [
                 .classList.add("a-new-class");
       `);
     },
-    after: false
-  }
+    after: false,
+  },
 ];
 
 add_task(async function() {

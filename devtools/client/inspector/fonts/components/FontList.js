@@ -52,7 +52,7 @@ class FontList extends PureComponent {
       fonts,
       fontOptions,
       onPreviewTextChange,
-      onToggleFontHighlight
+      onToggleFontHighlight,
     } = this.props;
 
     const { previewText } = fontOptions;
@@ -60,7 +60,7 @@ class FontList extends PureComponent {
 
     const list = dom.ul(
       {
-        className: "fonts-list"
+        className: "fonts-list",
       },
       fonts.map((font, i) => Font({
         key: i,

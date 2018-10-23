@@ -131,7 +131,7 @@ class Header extends PureComponent {
         dom.div(
           {
             className: "flex-header-content" +
-                       (flexItemShown ? " flex-item-shown" : "")
+                       (flexItemShown ? " flex-item-shown" : ""),
           },
           this.renderFlexContainer(),
           this.renderFlexItemSelector()

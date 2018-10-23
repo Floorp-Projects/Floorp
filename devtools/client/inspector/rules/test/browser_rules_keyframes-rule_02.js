@@ -85,7 +85,7 @@ async function getKeyframeRules(selector, inspector, view) {
 
   const rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.keyframes),
-    keyframeRules: elementStyle.rules.filter(rule => rule.keyframes)
+    keyframeRules: elementStyle.rules.filter(rule => rule.keyframes),
   };
 
   return rules;

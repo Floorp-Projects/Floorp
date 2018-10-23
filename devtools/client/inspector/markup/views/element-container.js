@@ -149,7 +149,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
       const options = {
         naturalWidth: size.naturalWidth,
         naturalHeight: size.naturalHeight,
-        maxDim: Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF)
+        maxDim: Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF),
       };
 
       setImageTooltip(tooltip, this.markup.doc, data, options);
@@ -208,7 +208,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
     }, () => {
       undoMods.apply();
     });
-  }
+  },
 });
 
 module.exports = MarkupElementContainer;

@@ -28,10 +28,8 @@ add_task(async function purgeHistoryTest() {
       Assert.equal(newHistory, 3, "New SHistory size");
     });
 
-    ok(browser.webNavigation.canGoBack, true,
-       "New value for webNavigation.canGoBack");
-    ok(browser.webNavigation.canGoForward, true,
-       "New value for webNavigation.canGoForward");
+    ok(browser.webNavigation.canGoBack, "New value for webNavigation.canGoBack");
+    ok(browser.webNavigation.canGoForward, "New value for webNavigation.canGoForward");
     ok(!backButton.hasAttribute("disabled"), "Back button was enabled");
     ok(!forwardButton.hasAttribute("disabled"), "Forward button was enabled");
 

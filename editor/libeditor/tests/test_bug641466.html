@@ -28,7 +28,12 @@ SimpleTest.waitForFocus(function() {
     element.selectionEnd = 4;
     synthesizeKey("KEY_Backspace", {repeat: 4});
 
-    ok(element.value, "", "4 backspaces should delete all of the characters in the " + element.localName);
+    // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500964
+    // This test is not working for several reasons:
+    // - race conditions between each event, we should wait before sending the next backspace
+    // - race conditions between the two tests
+    // - the value has an initial length of 8, not 4
+    todo_is(element.value, "", "4 backspaces should delete all of the characters in the " + element.localName);
   }
 
   doTest(document.querySelector("input"));

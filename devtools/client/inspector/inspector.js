@@ -168,7 +168,7 @@ Inspector.prototype = {
     await Promise.all([
       this._getCssProperties(),
       this._getPageStyle(),
-      this._getDefaultSelection()
+      this._getDefaultSelection(),
     ]);
 
     return this._deferredOpen();
@@ -571,7 +571,7 @@ Inspector.prototype = {
       splitterSize: 1,
       endPanelControl: true,
       startPanel: this.InspectorTabPanel({
-        id: "inspector-main-content"
+        id: "inspector-main-content",
       }),
       endPanel: this.InspectorSplitBox({
         initialWidth: splitSidebarWidth,
@@ -580,10 +580,10 @@ Inspector.prototype = {
         splitterSize: this.is3PaneModeEnabled ? 1 : 0,
         endPanelControl: this.is3PaneModeEnabled,
         startPanel: this.InspectorTabPanel({
-          id: "inspector-rules-container"
+          id: "inspector-rules-container",
         }),
         endPanel: this.InspectorTabPanel({
-          id: "inspector-sidebar-container"
+          id: "inspector-sidebar-container",
         }),
         ref: splitbox => {
           this.sidebarSplitBox = splitbox;
@@ -868,7 +868,7 @@ Inspector.prototype = {
         collapsePaneTitle: INSPECTOR_L10N.getStr("inspector.hideThreePaneMode"),
         expandPaneTitle: INSPECTOR_L10N.getStr("inspector.showThreePaneMode"),
         onClick: this.onSidebarToggle,
-      }
+      },
     };
 
     this.sidebar = new ToolSidebar(sidebar, this, "inspector", options);
@@ -876,7 +876,7 @@ Inspector.prototype = {
 
     const ruleSideBar = this.panelDoc.getElementById("inspector-rules-sidebar");
     this.ruleViewSideBar = new ToolSidebar(ruleSideBar, this, "inspector", {
-      hideTabstripe: true
+      hideTabstripe: true,
     });
 
     // defaultTab may also be an empty string or a tab id that doesn't exist anymore
@@ -901,7 +901,7 @@ Inspector.prototype = {
       {
         props: {
           id: layoutId,
-          title: layoutTitle
+          title: layoutTitle,
         },
         panel: () => {
           if (!this.layoutview) {
@@ -911,7 +911,7 @@ Inspector.prototype = {
           }
 
           return this.layoutview.provider;
-        }
+        },
       },
       defaultTab == layoutId);
 
@@ -929,14 +929,14 @@ Inspector.prototype = {
       {
         props: {
           id: animationId,
-          title: animationTitle
+          title: animationTitle,
         },
         panel: () => {
           const AnimationInspector =
             this.browserRequire("devtools/client/inspector/animation/animation");
           this.animationinspector = new AnimationInspector(this, this.panelWin);
           return this.animationinspector.provider;
-        }
+        },
       },
       defaultTab == animationId);
 
@@ -950,7 +950,7 @@ Inspector.prototype = {
       {
         props: {
           id: fontId,
-          title: fontTitle
+          title: fontTitle,
         },
         panel: () => {
           if (!this.fontinspector) {
@@ -960,7 +960,7 @@ Inspector.prototype = {
           }
 
           return this.fontinspector.provider;
-        }
+        },
       },
       defaultTab == fontId);
 
@@ -975,7 +975,7 @@ Inspector.prototype = {
         {
           props: {
             id: changesId,
-            title: changesTitle
+            title: changesTitle,
           },
           panel: () => {
             if (!this.changesView) {
@@ -985,7 +985,7 @@ Inspector.prototype = {
             }
 
             return this.changesView.provider;
-          }
+          },
         },
         defaultTab == changesId);
     }
@@ -1200,7 +1200,7 @@ Inspector.prototype = {
     if (this._highlighters) {
       await Promise.all([
         this.highlighters.restoreFlexboxState(),
-        this.highlighters.restoreGridState()
+        this.highlighters.restoreGridState(),
       ]);
     }
 
@@ -1241,7 +1241,7 @@ Inspector.prototype = {
 
     this._selectionCssSelector = {
       selector: cssSelector,
-      url: this._target.url
+      url: this._target.url,
     };
   },
 
@@ -1503,7 +1503,7 @@ Inspector.prototype = {
     this._panelDestroyer = promise.all([
       markupDestroyer,
       sidebarDestroyer,
-      ruleViewSideBarDestroyer
+      ruleViewSideBarDestroyer,
     ]);
 
     return this._panelDestroyer;
@@ -1722,7 +1722,7 @@ Inspector.prototype = {
       id: "node-menu-showaccessibilityproperties",
       label: INSPECTOR_L10N.getStr("inspectorShowAccessibilityProperties.label"),
       click: () => this.showAccessibilityProperties(),
-      disabled: true
+      disabled: true,
     });
     // Only attempt to determine if a11y props menu item needs to be enabled iff
     // AccessibilityFront is enabled.
@@ -2339,7 +2339,7 @@ Inspector.prototype = {
     const args = {
       file: true,
       selector: this.selectionCssSelector,
-      clipboard: clipboardEnabled
+      clipboard: clipboardEnabled,
     };
     const screenshotFront = this.target.getFront("screenshot");
     const screenshot = await screenshotFront.capture(args);

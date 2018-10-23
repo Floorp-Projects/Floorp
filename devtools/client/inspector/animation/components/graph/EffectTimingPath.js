@@ -35,7 +35,7 @@ class EffectTimingPath extends TimingPath {
 
     const { state } = animation;
     const effectTiming = Object.assign({}, state, {
-      iterations: state.iterationCount ? state.iterationCount : Infinity
+      iterations: state.iterationCount ? state.iterationCount : Infinity,
     });
 
     const simulatedAnimation = simulateAnimation(null, effectTiming, false);
@@ -64,7 +64,7 @@ class EffectTimingPath extends TimingPath {
     return dom.g(
       {
         className: "animation-effect-timing-path",
-        transform: `translate(${ offset })`
+        transform: `translate(${ offset })`,
       },
       super.renderGraph(state, helper)
     );

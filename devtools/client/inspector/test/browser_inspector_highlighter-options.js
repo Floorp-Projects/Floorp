@@ -36,7 +36,7 @@ const TEST_DATA = [
           "box-model-guide-" + side, "hidden");
         ok(!hidden, side + " guide is visible");
       }
-    }
+    },
   },
   {
     desc: "All regions should be shown by default",
@@ -46,7 +46,7 @@ const TEST_DATA = [
         const {d} = await testActor.getHighlighterRegionPath(region);
         ok(d, "Region " + region + " has set coordinates");
       }
-    }
+    },
   },
   {
     desc: "Guides can be hidden",
@@ -57,7 +57,7 @@ const TEST_DATA = [
           "box-model-guide-" + side, "hidden");
         is(hidden, "true", side + " guide has been hidden");
       }
-    }
+    },
   },
   {
     desc: "Infobar can be hidden",
@@ -66,7 +66,7 @@ const TEST_DATA = [
       const hidden = await testActor.getHighlighterNodeAttribute(
         "box-model-infobar-container", "hidden");
       is(hidden, "true", "infobar has been hidden");
-    }
+    },
   },
   {
     desc: "One region only can be shown (1)",
@@ -83,7 +83,7 @@ const TEST_DATA = [
 
       ({d} = await testActor.getHighlighterRegionPath("content"));
       ok(d, "content region is shown");
-    }
+    },
   },
   {
     desc: "One region only can be shown (2)",
@@ -100,7 +100,7 @@ const TEST_DATA = [
 
       ({d} = await testActor.getHighlighterRegionPath("content"));
       ok(!d, "content region is hidden");
-    }
+    },
   },
   {
     desc: "Guides can be drawn around a given region (1)",
@@ -122,7 +122,7 @@ const TEST_DATA = [
       is(rightX1, points[1][0] - 1, "Right guide's x1 is correct");
       is(bottomY1, points[2][1] - 1, "Bottom guide's y1 is correct");
       is(leftX1, points[3][0], "Left guide's x1 is correct");
-    }
+    },
   },
   {
     desc: "Guides can be drawn around a given region (2)",
@@ -144,7 +144,7 @@ const TEST_DATA = [
       is(rightX1, points[1][0] - 1, "Right guide's x1 is correct");
       is(bottomY1, points[2][1] - 1, "Bottom guide's y1 is correct");
       is(leftX1, points[3][0], "Left guide's x1 is correct");
-    }
+    },
   },
   {
     desc: "When showOnly is used, other regions can be faded",
@@ -162,7 +162,7 @@ const TEST_DATA = [
           is(faded, "true", "Region " + region + " is faded");
         }
       }
-    }
+    },
   },
   {
     desc: "When showOnly is used, other regions can be faded (2)",
@@ -180,8 +180,8 @@ const TEST_DATA = [
           is(faded, "true", "Region " + region + " is faded");
         }
       }
-    }
-  }
+    },
+  },
 ];
 
 add_task(async function() {

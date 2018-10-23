@@ -44,7 +44,7 @@ const TEST_DATA = [
   [":", "style=\"color:beige;padding:inherit;\"", 27, 34, true],
   ["0", "style=\"color:beige;padding:0;\"", 28, 28, false],
   ["VK_RETURN", "style=\"color:beige;padding:0;\"",
-   -1, -1, false]
+   -1, -1, false],
 ];
 
 add_task(async function() {

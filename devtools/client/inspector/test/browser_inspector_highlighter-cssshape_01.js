@@ -12,20 +12,20 @@ const SHAPE_IDS = ["polygon", "ellipse", "rect"];
 const SHAPE_TYPES = [
   {
     shapeName: "polygon",
-    highlighter: "polygon"
+    highlighter: "polygon",
   },
   {
     shapeName: "circle",
-    highlighter: "ellipse"
+    highlighter: "ellipse",
   },
   {
     shapeName: "ellipse",
-    highlighter: "ellipse"
+    highlighter: "ellipse",
   },
   {
     shapeName: "inset",
-    highlighter: "rect"
-  }
+    highlighter: "rect",
+  },
 ];
 
 add_task(async function() {

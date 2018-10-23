@@ -40,7 +40,7 @@ async function testWellformedMixedCase(inspector, testActor) {
   await assertAttributes("svg", {
     "viewBox": "0 0 1 1",
     "width": "200",
-    "height": "200"
+    "height": "200",
   }, testActor);
 }
 
@@ -66,6 +66,6 @@ async function testMalformedMixedCase(inspector, testActor) {
   await assertAttributes("svg", {
     "viewBox": "<>",
     "width": "200",
-    "height": "200"
+    "height": "200",
   }, testActor);
 }

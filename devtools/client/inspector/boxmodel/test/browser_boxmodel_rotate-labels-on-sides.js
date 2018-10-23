@@ -26,7 +26,7 @@ const TEST_URI = encodeURIComponent([
   "div { border:10px solid black; padding: 20px 20px 20px 2000000px; " +
   "margin: 30px auto; }",
   "</style>",
-  "<div></div>"
+  "<div></div>",
 ].join(""));
 const LONG_TEXT_ROTATE_LIMIT = 3;
 

@@ -11,10 +11,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
   GeckoViewAutoFill: "resource://gre/modules/GeckoViewAutoFill.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
-  ScrollPosition: "resource://gre/modules/ScrollPosition.jsm",
   Services: "resource://gre/modules/Services.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
 });
+
+const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
+              .getService(Ci.nsISessionStoreUtils);
 
 class GeckoViewContent extends GeckoViewContentModule {
   onInit() {
@@ -86,7 +88,7 @@ class GeckoViewContent extends GeckoViewContentModule {
 
   collectSessionState() {
     let history = SessionHistory.collect(docShell);
-    let [formdata, scrolldata] = this.Utils.mapFrameTree(content, FormData.collect, ScrollPosition.collect);
+    let [formdata, scrolldata] = this.Utils.mapFrameTree(content, FormData.collect, ssu.collectScrollPosition.bind(ssu));
 
     // Save the current document resolution.
     let zoom = { value: 1 };
@@ -201,14 +203,23 @@ class GeckoViewContent extends GeckoViewContentModule {
           addEventListener("load", _ => {
             const formdata = this._savedState.formdata;
             if (formdata) {
-              FormData.restoreTree(content, formdata);
+              this.Utils.restoreFrameTreeData(content, formdata, (frame, data) => {
+                // restore() will return false, and thus abort restoration for the
+                // current |frame| and its descendants, if |data.url| is given but
+                // doesn't match the loaded document's URL.
+                return FormData.restore(frame, data);
+              });
             }
           }, {capture: true, mozSystemGroup: true, once: true});
 
           addEventListener("pageshow", _ => {
             const scrolldata = this._savedState.scrolldata;
             if (scrolldata) {
-              ScrollPosition.restoreTree(content, scrolldata);
+              this.Utils.restoreFrameTreeData(content, scrolldata, (frame, data) => {
+                if (data.scroll) {
+                  ssu.restoreScrollPosition(frame, data.scroll);
+                }
+              });
             }
             delete this._savedState;
           }, {capture: true, mozSystemGroup: true, once: true});
