@@ -22,27 +22,27 @@ const TEST_DATA = [
     desc: "Move the focus away from breadcrumbs to a next focusable element",
     focused: false,
     key: "VK_TAB",
-    options: { }
+    options: { },
   },
   {
     desc: "Move the focus back to the breadcrumbs",
     focused: true,
     key: "VK_TAB",
-    options: { shiftKey: true }
+    options: { shiftKey: true },
   },
   {
     desc: "Move the focus back away from breadcrumbs to a previous focusable " +
           "element",
     focused: false,
     key: "VK_TAB",
-    options: { shiftKey: true }
+    options: { shiftKey: true },
   },
   {
     desc: "Move the focus back to the breadcrumbs",
     focused: true,
     key: "VK_TAB",
-    options: { }
-  }
+    options: { },
+  },
 ];
 
 add_task(async function() {

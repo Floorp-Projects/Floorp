@@ -136,12 +136,12 @@ class App extends Component {
             }
           ),
           vert: false,
-        })
+        }),
       ]
       :
       NoAnimationPanel(
         {
-          toggleElementPicker
+          toggleElementPicker,
         }
       )
     );

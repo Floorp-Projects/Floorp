@@ -48,7 +48,7 @@ function linkAndHookup(links) {
   function populate() {
     document.getElementById("test-table").innerHTML += tableContent;
   }
-  gTestList = eval(srvScope.jsonArrayOfTestFiles(links));
+  gTestList = JSON.parse(srvScope.jsonArrayOfTestFiles(links));
   populate();
 
   hookup();

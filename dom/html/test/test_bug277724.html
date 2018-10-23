@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=277724
 -->
 <head>
   <title>Test for Bug 277724</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -44,18 +44,17 @@ function startTest(frameid) {
   is(childUnloaded, false, "Child not unloaded yet");
 
   var doc = $(frameid).contentDocument;
-  ok(doc instanceof Document, "Check for doc", "doc should be a document");
+  ok(doc instanceof Document, "doc should be a document");
 
   for (var i = 0; i < nodes.length; ++i) {
     var id = nodes[i][0];
     var node = doc.getElementById(id);
-    ok(node instanceof nodes[i][1],
-       "Check for " + id, id + " should be a " + nodes[i][1]);
+    ok(node instanceof nodes[i][1], id + " should be a " + nodes[i][1]);
     is(node.disabled, false, "check for " + id + " state");
     node.disabled = true;
     is(node.disabled, true, "check for " + id + " state change");
   }
-  
+
   $(frameid).onload = soon(function() { continueTest(frameid) });
 
   // Do this off a timeout so it's not treated like a replace load.
@@ -68,15 +67,14 @@ function startTest(frameid) {
 function continueTest(frameid) {
   is(childUnloaded, true, "Unload handler should have fired");
   var doc = $(frameid).contentDocument;
-  ok(doc instanceof Document, "Check for doc", "doc should be a document");
+  ok(doc instanceof Document, "doc should be a document");
 
   for (var i = 0; i < nodes.length; ++i) {
     var id = nodes[i][0];
     var node = doc.getElementById(id);
-    ok(node === null,
-       "Check for " + id, id + " should be null");
+    ok(node === null, id + " should be null");
   }
-  
+
   $(frameid).onload = soon(function() { finishTest(frameid); });
 
   // Do this off a timeout too.  Why, I'm not sure.  Something in session
@@ -102,13 +100,12 @@ function flipper(a, b, c) {
 
 function finishTest(frameid) {
   var doc = $(frameid).contentDocument;
-  ok(doc instanceof Document, "Check for doc", "doc should be a document");
+  ok(doc instanceof Document, "doc should be a document");
 
   for (var i = 0; i < nodes.length; ++i) {
     var id = nodes[i][0];
     var node = doc.getElementById(id);
-    ok(node instanceof nodes[i][1],
-       "Check for " + id, id + " should be a " + nodes[i][1]);
+    ok(node instanceof nodes[i][1], id + " should be a " + nodes[i][1]);
     //testIs(node.disabled, true, "check for " + id + " state restore");
   }
 
@@ -119,7 +116,7 @@ function finishTest(frameid) {
 
     // XXXbz this is a nasty hack to deal with the content sink.  See above.
     testIs = flipper;
-    
+
     $("frame2").onload = soon(function() { startTest("frame2"); });
     $("frame2").src = "bug277724_iframe2.xhtml";
   }

@@ -37,7 +37,7 @@ const ACTIONABLE_ELEMENTS_SELECTORS = [
   `.${BEZIER_SWATCH_CLASS}`,
   `.${FILTER_SWATCH_CLASS}`,
   `.${ANGLE_SWATCH_CLASS}`,
-  "a"
+  "a",
 ];
 
 // In order to highlight the used fonts in font-family properties, we
@@ -52,7 +52,7 @@ const GENERIC_FONT_FAMILIES = [
   "cursive",
   "fantasy",
   "monospace",
-  "system-ui"
+  "system-ui",
 ];
 
 /**
@@ -126,17 +126,17 @@ TextPropertyEditor.prototype = {
     this.element._textPropertyEditor = this;
 
     this.container = createChild(this.element, "div", {
-      class: "ruleview-propertycontainer inline-tooltip-container"
+      class: "ruleview-propertycontainer inline-tooltip-container",
     });
 
     // The enable checkbox will disable or enable the rule.
     this.enable = createChild(this.container, "div", {
       class: "ruleview-enableproperty theme-checkbox",
-      tabindex: "-1"
+      tabindex: "-1",
     });
 
     this.nameContainer = createChild(this.container, "span", {
-      class: "ruleview-namecontainer"
+      class: "ruleview-namecontainer",
     });
 
     // Property name, editable when focused.  Property name
@@ -150,7 +150,7 @@ TextPropertyEditor.prototype = {
 
     // Click to expand the computed properties of the text property.
     this.expander = createChild(this.container, "span", {
-      class: "ruleview-expander theme-twisty"
+      class: "ruleview-expander theme-twisty",
     });
     this.expander.addEventListener("click", this._onExpandClicked, true);
 
@@ -158,7 +158,7 @@ TextPropertyEditor.prototype = {
     // Use this span to create a slightly larger click target
     // for the value.
     this.valueContainer = createChild(this.container, "span", {
-      class: "ruleview-propertyvaluecontainer"
+      class: "ruleview-propertyvaluecontainer",
     });
 
     // Property value, editable when focused.  Changes to the
@@ -267,7 +267,7 @@ TextPropertyEditor.prototype = {
           const similarElements = [...this.valueSpan.querySelectorAll(matchedSelector)];
           this._clickedElementOptions = {
             selector: matchedSelector,
-            index: similarElements.indexOf(clickedEl)
+            index: similarElements.indexOf(clickedEl),
           };
         }
       });
@@ -468,7 +468,7 @@ TextPropertyEditor.prototype = {
           onShow: this._onStartEditing,
           onPreview: this._onSwatchPreview,
           onCommit: this._onSwatchCommit,
-          onRevert: this._onSwatchRevert
+          onRevert: this._onSwatchRevert,
         });
         span.on("unit-change", this._onSwatchCommit);
         const title = l10n("rule.colorSwatch.tooltip");
@@ -488,7 +488,7 @@ TextPropertyEditor.prototype = {
           onShow: this._onStartEditing,
           onPreview: this._onSwatchPreview,
           onCommit: this._onSwatchCommit,
-          onRevert: this._onSwatchRevert
+          onRevert: this._onSwatchRevert,
         });
         const title = l10n("rule.bezierSwatch.tooltip");
         span.setAttribute("title", title);
@@ -505,7 +505,7 @@ TextPropertyEditor.prototype = {
           onShow: this._onStartEditing,
           onPreview: this._onSwatchPreview,
           onCommit: this._onSwatchCommit,
-          onRevert: this._onSwatchRevert
+          onRevert: this._onSwatchRevert,
         }, outputParser, parserOptions);
         const title = l10n("rule.filterSwatch.tooltip");
         span.setAttribute("title", title);
@@ -695,7 +695,7 @@ TextPropertyEditor.prototype = {
    */
   _createComputedListItem: function(parentEl, computed, className) {
     const li = createChild(parentEl, "li", {
-      class: className
+      class: className,
     });
 
     if (computed.overridden) {
@@ -703,12 +703,12 @@ TextPropertyEditor.prototype = {
     }
 
     const nameContainer = createChild(li, "span", {
-      class: "ruleview-namecontainer"
+      class: "ruleview-namecontainer",
     });
 
     createChild(nameContainer, "span", {
       class: "ruleview-propertyname theme-fg-color5",
-      textContent: computed.name
+      textContent: computed.name,
     });
     appendText(nameContainer, ": ");
 
@@ -718,7 +718,7 @@ TextPropertyEditor.prototype = {
         colorSwatchClass: "ruleview-swatch ruleview-colorswatch",
         urlClass: "theme-link",
         baseURI: this.sheetHref,
-        fontFamilyClass: "ruleview-font-family"
+        fontFamilyClass: "ruleview-font-family",
       }
     );
 
@@ -726,12 +726,12 @@ TextPropertyEditor.prototype = {
     computed.parsedValue = frag.textContent;
 
     const propertyContainer = createChild(li, "span", {
-      class: "ruleview-propertyvaluecontainer"
+      class: "ruleview-propertyvaluecontainer",
     });
 
     createChild(propertyContainer, "span", {
       class: "ruleview-propertyvalue theme-fg-color1",
-      child: frag
+      child: frag,
     });
     appendText(propertyContainer, ";");
 
@@ -751,7 +751,7 @@ TextPropertyEditor.prototype = {
     this.prop.setEnabled(!checked);
     event.stopPropagation();
     this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-      "session_id": this.toolbox.sessionId
+      "session_id": this.toolbox.sessionId,
     });
   },
 
@@ -824,7 +824,7 @@ TextPropertyEditor.prototype = {
     }
 
     this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-      "session_id": this.toolbox.sessionId
+      "session_id": this.toolbox.sessionId,
     });
 
     // Remove a property if the name is empty
@@ -919,7 +919,7 @@ TextPropertyEditor.prototype = {
     }
 
     this.telemetry.recordEvent("edit_rule", "ruleview", null, {
-      "session_id": this.toolbox.sessionId
+      "session_id": this.toolbox.sessionId,
     });
 
     // Since the value was changed, check if the original property was a flex or grid
@@ -1027,7 +1027,7 @@ TextPropertyEditor.prototype = {
 
     return {
       propertiesToAdd: propertiesToAdd,
-      firstValue: firstValue
+      firstValue: firstValue,
     };
   },
 

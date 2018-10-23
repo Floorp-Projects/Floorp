@@ -63,7 +63,7 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
 
   isSlotted: function() {
     return true;
-  }
+  },
 });
 
 module.exports = SlottedNodeContainer;

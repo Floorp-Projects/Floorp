@@ -99,9 +99,7 @@ const ThreadType WorkerLastThreadTypeToTest = THREAD_TYPE_CURRENT;
 extern bool InitThreadType(void);
 extern void SetThreadType(ThreadType);
 extern JS_FRIEND_API(uint32_t) GetThreadType(void);
-extern JS_FRIEND_API(uint32_t) GetAllocationThreadType(void);
-extern JS_FRIEND_API(uint32_t) GetStackCheckThreadType(void);
-extern JS_FRIEND_API(uint32_t) GetInterruptCheckThreadType(void);
+extern JS_FRIEND_API(uint32_t) GetSimulatingThreadType(void);
 
 # else
 
@@ -137,150 +135,123 @@ namespace oom {
  * Out of memory testing support.  We provide various testing functions to
  * simulate OOM conditions and so we can test that they are handled correctly.
  */
-
-extern JS_PUBLIC_DATA(uint32_t) targetThread;
-extern JS_PUBLIC_DATA(uint64_t) maxAllocations;
-extern JS_PUBLIC_DATA(uint64_t) counter;
-extern JS_PUBLIC_DATA(bool) failAlways;
-
-extern void
-SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always);
-
-extern void
-ResetSimulatedOOM();
-
-inline bool
-IsThreadSimulatingOOM()
+class FailureSimulator
 {
-    return js::oom::targetThread &&
-        js::oom::targetThread == js::oom::GetAllocationThreadType();
-}
+  public:
+    enum class Kind : uint8_t { Nothing, OOM, StackOOM, Interrupt };
+
+  private:
+    Kind kind_ = Kind::Nothing;
+    uint32_t targetThread_ = 0;
+    uint64_t maxChecks_ = UINT64_MAX;
+    uint64_t counter_ = 0;
+    bool failAlways_ = true;
+
+  public:
+    uint64_t maxChecks() const {
+        return maxChecks_;
+    }
+    void setMaxChecks(uint64_t value) {
+        maxChecks_ = value;
+    }
+    uint64_t counter() const {
+        return counter_;
+    }
+    uint32_t targetThread() const {
+        return targetThread_;
+    }
+    bool isThreadSimulatingAny() const {
+        return targetThread_ && targetThread_ == js::oom::GetSimulatingThreadType();
+    }
+    bool isThreadSimulating(Kind kind) const {
+        return kind_ == kind && isThreadSimulatingAny();
+    }
+    bool isSimulatedFailure(Kind kind) const {
+        if (!isThreadSimulating(kind)) {
+            return false;
+        }
+        return counter_ == maxChecks_ || (counter_ > maxChecks_ && failAlways_);
+    }
+    bool hadFailure(Kind kind) const {
+        return kind_ == kind && counter_ >= maxChecks_;
+    }
+    bool shouldFail(Kind kind) {
+        if (!isThreadSimulating(kind)) {
+            return false;
+        }
+        counter_++;
+        if (isSimulatedFailure(kind)) {
+            JS_OOM_CALL_BP_FUNC();
+            return true;
+        }
+        return false;
+    }
+
+    void simulateFailureAfter(Kind kind, uint64_t checks, uint32_t thread, bool always);
+    void reset();
+};
+extern JS_PUBLIC_DATA(FailureSimulator) simulator;
 
 inline bool
 IsSimulatedOOMAllocation()
 {
-    return IsThreadSimulatingOOM() &&
-           (counter == maxAllocations || (counter > maxAllocations && failAlways));
+    return simulator.isSimulatedFailure(FailureSimulator::Kind::OOM);
 }
 
 inline bool
 ShouldFailWithOOM()
 {
-    if (!IsThreadSimulatingOOM()) {
-        return false;
-    }
-
-    counter++;
-    if (IsSimulatedOOMAllocation()) {
-        JS_OOM_CALL_BP_FUNC();
-        return true;
-    }
-    return false;
+    return simulator.shouldFail(FailureSimulator::Kind::OOM);
 }
 
 inline bool
-HadSimulatedOOM() {
-    return counter >= maxAllocations;
+HadSimulatedOOM()
+{
+    return simulator.hadFailure(FailureSimulator::Kind::OOM);
 }
 
 /*
  * Out of stack space testing support, similar to OOM testing functions.
  */
 
-extern JS_PUBLIC_DATA(uint32_t) stackTargetThread;
-extern JS_PUBLIC_DATA(uint64_t) maxStackChecks;
-extern JS_PUBLIC_DATA(uint64_t) stackCheckCounter;
-extern JS_PUBLIC_DATA(bool) stackCheckFailAlways;
-
-extern void
-SimulateStackOOMAfter(uint64_t checks, uint32_t thread, bool always);
-
-extern void
-ResetSimulatedStackOOM();
-
-inline bool
-IsThreadSimulatingStackOOM()
-{
-    return js::oom::stackTargetThread &&
-        js::oom::stackTargetThread == js::oom::GetStackCheckThreadType();
-}
-
 inline bool
 IsSimulatedStackOOMCheck()
 {
-    return IsThreadSimulatingStackOOM() &&
-           (stackCheckCounter == maxStackChecks || (stackCheckCounter > maxStackChecks && stackCheckFailAlways));
+    return simulator.isSimulatedFailure(FailureSimulator::Kind::StackOOM);
 }
 
 inline bool
 ShouldFailWithStackOOM()
 {
-    if (!IsThreadSimulatingStackOOM()) {
-        return false;
-    }
-
-    stackCheckCounter++;
-    if (IsSimulatedStackOOMCheck()) {
-        JS_OOM_CALL_BP_FUNC();
-        return true;
-    }
-    return false;
+    return simulator.shouldFail(FailureSimulator::Kind::StackOOM);
 }
 
 inline bool
 HadSimulatedStackOOM()
 {
-    return stackCheckCounter >= maxStackChecks;
+    return simulator.hadFailure(FailureSimulator::Kind::StackOOM);
 }
 
 /*
  * Interrupt testing support, similar to OOM testing functions.
  */
 
-extern JS_PUBLIC_DATA(uint32_t) interruptTargetThread;
-extern JS_PUBLIC_DATA(uint64_t) maxInterruptChecks;
-extern JS_PUBLIC_DATA(uint64_t) interruptCheckCounter;
-extern JS_PUBLIC_DATA(bool) interruptCheckFailAlways;
-
-extern void
-SimulateInterruptAfter(uint64_t checks, uint32_t thread, bool always);
-
-extern void
-ResetSimulatedInterrupt();
-
-inline bool
-IsThreadSimulatingInterrupt()
-{
-    return js::oom::interruptTargetThread &&
-        js::oom::interruptTargetThread == js::oom::GetInterruptCheckThreadType();
-}
-
 inline bool
 IsSimulatedInterruptCheck()
 {
-    return IsThreadSimulatingInterrupt() &&
-           (interruptCheckCounter == maxInterruptChecks || (interruptCheckCounter > maxInterruptChecks && interruptCheckFailAlways));
+    return simulator.isSimulatedFailure(FailureSimulator::Kind::Interrupt);
 }
 
 inline bool
 ShouldFailWithInterrupt()
 {
-    if (!IsThreadSimulatingInterrupt()) {
-        return false;
-    }
-
-    interruptCheckCounter++;
-    if (IsSimulatedInterruptCheck()) {
-        JS_OOM_CALL_BP_FUNC();
-        return true;
-    }
-    return false;
+    return simulator.shouldFail(FailureSimulator::Kind::Interrupt);
 }
 
 inline bool
 HadSimulatedInterrupt()
 {
-    return interruptCheckCounter >= maxInterruptChecks;
+    return simulator.hadFailure(FailureSimulator::Kind::Interrupt);
 }
 
 } /* namespace oom */
@@ -352,23 +323,25 @@ struct MOZ_RAII JS_PUBLIC_DATA(AutoEnterOOMUnsafeRegion)
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     AutoEnterOOMUnsafeRegion()
-      : oomEnabled_(oom::IsThreadSimulatingOOM() && oom::maxAllocations != UINT64_MAX),
+      : oomEnabled_(oom::simulator.isThreadSimulatingAny() &&
+                    oom::simulator.maxChecks() != UINT64_MAX),
         oomAfter_(0)
     {
         if (oomEnabled_) {
             MOZ_ALWAYS_TRUE(owner_.compareExchange(nullptr, this));
-            oomAfter_ = int64_t(oom::maxAllocations) - int64_t(oom::counter);
-            oom::maxAllocations = UINT64_MAX;
+            oomAfter_ = (int64_t(oom::simulator.maxChecks()) -
+                         int64_t(oom::simulator.counter()));
+            oom::simulator.setMaxChecks(UINT64_MAX);
         }
     }
 
     ~AutoEnterOOMUnsafeRegion() {
         if (oomEnabled_) {
-            MOZ_ASSERT(oom::maxAllocations == UINT64_MAX);
-            int64_t maxAllocations = int64_t(oom::counter) + oomAfter_;
-            MOZ_ASSERT(maxAllocations >= 0,
+            MOZ_ASSERT(oom::simulator.maxChecks() == UINT64_MAX);
+            int64_t maxChecks = int64_t(oom::simulator.counter()) + oomAfter_;
+            MOZ_ASSERT(maxChecks >= 0,
                        "alloc count + oom limit exceeds range, your oom limit is probably too large");
-            oom::maxAllocations = uint64_t(maxAllocations);
+            oom::simulator.setMaxChecks(maxChecks);
             MOZ_ALWAYS_TRUE(owner_.compareExchange(this, nullptr));
         }
     }

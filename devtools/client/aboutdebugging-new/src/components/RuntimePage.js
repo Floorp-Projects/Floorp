@@ -12,6 +12,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
@@ -24,13 +25,17 @@ const TemporaryExtensionInstaller =
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
 const { DEBUG_TARGET_PANE } = require("../constants");
-const { getCurrentRuntimeInfo } = require("../modules/runtimes-state-helper");
+const {
+  getCurrentConnectionPromptSetting,
+  getCurrentRuntimeInfo,
+} = require("../modules/runtimes-state-helper");
 const { isSupportedDebugTargetPane } = require("../modules/debug-target-support");
 
 class RuntimePage extends PureComponent {
   static get propTypes() {
     return {
       collapsibilities: PropTypes.object.isRequired,
+      connectionPromptEnabled: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
       installedExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       otherWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -40,6 +45,17 @@ class RuntimePage extends PureComponent {
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
+  }
+
+  renderConnectionPromptSetting() {
+    const { connectionPromptEnabled, dispatch } = this.props;
+
+    return dom.div(
+      {
+        className: "connection-prompt-setting",
+      },
+      ConnectionPromptSetting({ connectionPromptEnabled, dispatch }),
+    );
   }
 
   renderDebugTargetPane(name, targets, actionComponent,
@@ -90,6 +106,7 @@ class RuntimePage extends PureComponent {
         className: "page js-runtime-page",
       },
       RuntimeInfo(runtimeInfo),
+      this.renderConnectionPromptSetting(),
       isSupportedDebugTargetPane(runtimeInfo.type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
         ? TemporaryExtensionInstaller({ dispatch })
         : null,
@@ -135,6 +152,7 @@ class RuntimePage extends PureComponent {
 
 const mapStateToProps = state => {
   return {
+    connectionPromptEnabled: getCurrentConnectionPromptSetting(state.runtimes),
     collapsibilities: state.ui.debugTargetCollapsibilities,
     installedExtensions: state.debugTargets.installedExtensions,
     otherWorkers: state.debugTargets.otherWorkers,

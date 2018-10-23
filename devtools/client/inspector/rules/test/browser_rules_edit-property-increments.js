@@ -101,7 +101,7 @@ async function testHexIncrements(view) {
     4: {shift: true, start: "#CCCCCC", end: "#DCCCCC", selection: [1, 3]},
     5: {start: "#FFFFFF", end: "#FFFFFF", selectAll: true},
     6: {down: true, shift: true, start: "#000000", end: "#000000",
-        selectAll: true}
+        selectAll: true},
   });
 }
 
@@ -118,7 +118,7 @@ async function testAlphaHexIncrements(view) {
     4: {shift: true, start: "#CCCCCCAA", end: "#DCCCCCAA", selection: [1, 3]},
     5: {start: "#FFFFFFFF", end: "#FFFFFFFF", selectAll: true},
     6: {down: true, shift: true, start: "#00000000", end: "#00000000",
-        selectAll: true}
+        selectAll: true},
   });
 }
 
@@ -137,7 +137,7 @@ async function testRgbIncrements(view) {
         selection: [6, 9]},
     5: {down: true, start: "rgb(0,0,0)", end: "rgb(0,0,0)", selection: [6, 7]},
     6: {down: true, shift: true, start: "rgb(0,5,0)", end: "rgb(0,0,0)",
-        selection: [6, 7]}
+        selection: [6, 7]},
   });
 }
 
@@ -163,7 +163,7 @@ async function testShorthandIncrements(view) {
     8: {up: true, ...getSmallIncrementKey(), start: "0.1em .9em 0em 0em",
         end: "0.1em 1em 0em 0em", selection: [6, 9]},
     9: {up: true, shift: true, start: "0.2em .2em 0em 0em",
-        end: "0.2em 10.2em 0em 0em", selection: [6, 9]}
+        end: "0.2em 10.2em 0em 0em", selection: [6, 9]},
   });
 }
 
@@ -193,7 +193,7 @@ async function testOddCases(view) {
     13: {down: true, ...getSmallIncrementKey(), start: "url('test-0.png')",
          end: "url('test--0.1.png')", selection: [10, 11]},
     14: {...getSmallIncrementKey(), start: "url('test--0.1.png')",
-         end: "url('test-0.png')", selection: [10, 14]}
+         end: "url('test-0.png')", selection: [10, 14]},
   });
 }
 

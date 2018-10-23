@@ -27,50 +27,50 @@ const TEST_DATA = [
           "names",
     search: "`color`",
     ruleCount: 2,
-    propertyIndex: 1
+    propertyIndex: 1,
   },
   {
     desc: "Tests that the strict search filter works properly for property " +
           "values",
     search: "`2%`",
     ruleCount: 2,
-    propertyIndex: 0
+    propertyIndex: 0,
   },
   {
     desc: "Tests that the strict search filter works properly for parsed " +
           "property names",
     search: "`color`:",
     ruleCount: 2,
-    propertyIndex: 1
+    propertyIndex: 1,
   },
   {
     desc: "Tests that the strict search filter works properly for parsed " +
           "property values",
     search: ":`2%`",
     ruleCount: 2,
-    propertyIndex: 0
+    propertyIndex: 0,
   },
   {
     desc: "Tests that the strict search filter works properly for property " +
           "line input",
     search: "`width`:`2%`",
     ruleCount: 2,
-    propertyIndex: 0
+    propertyIndex: 0,
   },
   {
     desc: "Tests that the search filter works properly for a parsed strict " +
           "property name and non-strict property value.",
     search: "`width`:2%",
     ruleCount: 3,
-    propertyIndex: 0
+    propertyIndex: 0,
   },
   {
     desc: "Tests that the search filter works properly for a parsed strict " +
           "property value and non-strict property name.",
     search: "i:`2%`",
     ruleCount: 2,
-    propertyIndex: 0
-  }
+    propertyIndex: 0,
+  },
 ];
 
 add_task(async function() {

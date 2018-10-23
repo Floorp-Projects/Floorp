@@ -18,68 +18,68 @@ const TEST_DATA = [
     suggestions: [
       {label: "div"},
       {label: "#d1"},
-      {label: "#d2"}
-    ]
+      {label: "#d2"},
+    ],
   },
   {
     key: "i",
-    suggestions: [{label: "div"}]
+    suggestions: [{label: "div"}],
   },
   {
     key: "v",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: " ",
     suggestions: [
       {label: "div div"},
-      {label: "div span"}
-    ]
+      {label: "div span"},
+    ],
   },
   {
     key: ">",
     suggestions: [
       {label: "div >div"},
-      {label: "div >span"}
-    ]
+      {label: "div >span"},
+    ],
   },
   {
     key: "VK_BACK_SPACE",
     suggestions: [
       {label: "div div"},
-      {label: "div span"}
-    ]
+      {label: "div span"},
+    ],
   },
   {
     key: "+",
-    suggestions: [{label: "div +span"}]
+    suggestions: [{label: "div +span"}],
   },
   {
     key: "VK_BACK_SPACE",
     suggestions: [
       {label: "div div"},
-      {label: "div span"}
-    ]
+      {label: "div span"},
+    ],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: "div"}]
+    suggestions: [{label: "div"}],
   },
   {
     key: "VK_BACK_SPACE",
     suggestions: [
       {label: "div"},
       {label: "#d1"},
-      {label: "#d2"}
-    ]
+      {label: "#d2"},
+    ],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: "p",
@@ -88,47 +88,47 @@ const TEST_DATA = [
       {label: "#p1"},
       {label: "#p2"},
       {label: "#p3"},
-    ]
+    ],
   },
   {
     key: " ",
-    suggestions: [{label: "p strong"}]
+    suggestions: [{label: "p strong"}],
   },
   {
     key: "+",
     suggestions: [
       {label: "p +button" },
-      {label: "p +p"}
-    ]
+      {label: "p +p"},
+    ],
   },
   {
     key: "b",
-    suggestions: [{label: "p +button"}]
+    suggestions: [{label: "p +button"}],
   },
   {
     key: "u",
-    suggestions: [{label: "p +button"}]
+    suggestions: [{label: "p +button"}],
   },
   {
     key: "t",
-    suggestions: [{label: "p +button"}]
+    suggestions: [{label: "p +button"}],
   },
   {
     key: "t",
-    suggestions: [{label: "p +button"}]
+    suggestions: [{label: "p +button"}],
   },
   {
     key: "o",
-    suggestions: [{label: "p +button"}]
+    suggestions: [{label: "p +button"}],
   },
   {
     key: "n",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: "+",
-    suggestions: [{label: "p +button+p"}]
-  }
+    suggestions: [{label: "p +button+p"}],
+  },
 ];
 
 add_task(async function() {

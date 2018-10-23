@@ -19,7 +19,7 @@ const TEST_DATA = [
           { x: 0, y: 100 },
           { x: 50000, y: 50 },
           { x: 100000, y: 0 },
-        ]
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -34,7 +34,7 @@ const TEST_DATA = [
           { x: 0, y: 100 },
           { x: 50000, y: 50 },
           { x: 100000, y: 0 },
-        ]
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -2",
@@ -49,7 +49,7 @@ const TEST_DATA = [
           marginInlineStart: "75%",
           width: "25%",
         },
-      }
+      },
     ],
     expectedPathList: [
       {
@@ -58,7 +58,7 @@ const TEST_DATA = [
           { x: 0, y: 100 },
           { x: 50000, y: 50 },
           { x: 100000, y: 0 },
-        ]
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -72,7 +72,7 @@ const TEST_DATA = [
           marginInlineStart: "50%",
           width: "25%",
         },
-      }
+      },
     ],
     expectedPathList: [
       {
@@ -81,14 +81,14 @@ const TEST_DATA = [
           { x: 0, y: 100 },
           { x: 50000, y: 50 },
           { x: 50000, y: 0 },
-        ]
+        ],
       },
       {
         selector: ".animation-negative-delay-path path",
         path: [
           { x: 50000, y: 50 },
           { x: 100000, y: 0 },
-        ]
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -103,7 +103,7 @@ const TEST_DATA = [
           marginInlineStart: "25%",
           width: "25%",
         },
-      }
+      },
     ],
     expectedPathList: [
       {
@@ -112,7 +112,7 @@ const TEST_DATA = [
           { x: 50000, y: 100 },
           { x: 100000, y: 50 },
           { x: 150000, y: 0 },
-        ]
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",
@@ -127,7 +127,7 @@ const TEST_DATA = [
           marginInlineStart: "0%",
           width: "25%",
         },
-      }
+      },
     ],
     expectedPathList: [
       {
@@ -135,14 +135,14 @@ const TEST_DATA = [
         path: [
           { x: 0, y: 50 },
           { x: 50000, y: 0 },
-        ]
+        ],
       },
       {
         selector: ".animation-negative-end-delay-path path",
         path: [
           { x: -50000, y: 100 },
           { x: 0, y: 0 },
-        ]
+        ],
       },
     ],
     expectedTooltip: "Playback rate: -1",

@@ -361,7 +361,7 @@ function testTextAddSelection(aID, aStartOffset, aEndOffset, aSelectionsCount) {
 
   acc.addSelection(aStartOffset, aEndOffset);
 
-  ok(acc.selectionCount, aSelectionsCount,
+  is(acc.selectionCount, aSelectionsCount,
      text + ": failed to add selection from offset '" + aStartOffset +
      "' to offset '" + aEndOffset + "': selectionCount after");
 }
@@ -380,7 +380,7 @@ function testTextRemoveSelection(aID, aSelectionIndex, aSelectionsCount) {
 
   acc.removeSelection(aSelectionIndex);
 
-  ok(acc.selectionCount, aSelectionsCount,
+  is(acc.selectionCount, aSelectionsCount,
      text + ": failed to remove selection at index '" +
      aSelectionIndex + "': selectionCount after");
 }

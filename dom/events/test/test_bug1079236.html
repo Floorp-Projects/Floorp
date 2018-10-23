@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079236
       ok(!("composedTarget" in e), "Events shouldn't have composedTarget in non-chrome context!");
       e = SpecialPowers.wrap(e);
       var composedTarget = SpecialPowers.unwrap(e.composedTarget);
-      ok(composedTarget, file, "composedTarget should be the file object.");
+      is(composedTarget, file, "composedTarget should be the file object.");
 
       SimpleTest.finish();
     }

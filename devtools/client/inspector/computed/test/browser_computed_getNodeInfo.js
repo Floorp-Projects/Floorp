@@ -20,7 +20,7 @@ const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
   VIEW_NODE_VALUE_TYPE,
-  VIEW_NODE_IMAGE_URL_TYPE
+  VIEW_NODE_IMAGE_URL_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 
 const TEST_URI = `
@@ -55,7 +55,7 @@ const TEST_DATA = [
     },
     assertNodeInfo: function(nodeInfo) {
       is(nodeInfo, null);
-    }
+    },
   },
   {
     desc: "Testing a useless node",
@@ -64,7 +64,7 @@ const TEST_DATA = [
     },
     assertNodeInfo: function(nodeInfo) {
       is(nodeInfo, null);
-    }
+    },
   },
   {
     desc: "Testing a property name",
@@ -77,7 +77,7 @@ const TEST_DATA = [
       ok("value" in nodeInfo.value);
       is(nodeInfo.value.property, "color");
       is(nodeInfo.value.value, "rgb(255, 0, 0)");
-    }
+    },
   },
   {
     desc: "Testing a property value",
@@ -90,7 +90,7 @@ const TEST_DATA = [
       ok("value" in nodeInfo.value);
       is(nodeInfo.value.property, "color");
       is(nodeInfo.value.value, "rgb(255, 0, 0)");
-    }
+    },
   },
   {
     desc: "Testing an image url",
@@ -106,7 +106,7 @@ const TEST_DATA = [
       is(nodeInfo.value.value,
          "url(\"chrome://global/skin/icons/warning-64.png\")");
       is(nodeInfo.value.url, "chrome://global/skin/icons/warning-64.png");
-    }
+    },
   },
   {
     desc: "Testing a matched rule selector (bestmatch)",
@@ -117,7 +117,7 @@ const TEST_DATA = [
     assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_SELECTOR_TYPE);
       is(nodeInfo.value, "div div");
-    }
+    },
   },
   {
     desc: "Testing a matched rule selector (matched)",
@@ -128,7 +128,7 @@ const TEST_DATA = [
     assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_SELECTOR_TYPE);
       is(nodeInfo.value, "div");
-    }
+    },
   },
   {
     desc: "Testing a matched rule selector (parentmatch)",
@@ -139,7 +139,7 @@ const TEST_DATA = [
     assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_SELECTOR_TYPE);
       is(nodeInfo.value, "body");
-    }
+    },
   },
   {
     desc: "Testing a matched rule value",
@@ -151,7 +151,7 @@ const TEST_DATA = [
       is(nodeInfo.type, VIEW_NODE_VALUE_TYPE);
       is(nodeInfo.value.property, "color");
       is(nodeInfo.value.value, "red");
-    }
+    },
   },
   {
     desc: "Testing a matched rule stylesheet link",
@@ -161,8 +161,8 @@ const TEST_DATA = [
     },
     assertNodeInfo: function(nodeInfo) {
       is(nodeInfo, null);
-    }
-  }
+    },
+  },
 ];
 
 add_task(async function() {

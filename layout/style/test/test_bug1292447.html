@@ -295,13 +295,13 @@ function percentValueTest(camelProp, decl, percentVal, prettyName) {
 function doATest(propName, idBase, coordVal, percentVal, resolveToUsedVal = false) {
   var cssCamelPropName = "";
   var parts = propName.split("-");
-  ok(parts.length > 0, "prop name", "Empty css prop name");
+  ok(parts.length > 0, "CSS prop name should not be empty");
   var i;
   if (parts[0]) {
     i = 0;
   } else {
     is(parts[1], "moz", "Testing an extension property that's not -moz");
-    ok(parts.length > 2, "prop name 2", "Bogus -moz prop name");
+    ok(parts.length > 2, "-moz prop name should not have more than 2 parts");
     cssCamelPropName = "Moz";
     i = 2;
   }

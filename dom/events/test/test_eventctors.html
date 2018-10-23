@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=675884
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=675884">Mozilla Bug 675884</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -364,7 +364,7 @@ ok(ex, "KeyboardEvent: First parameter is required!");
 ex = false;
 
 e = new KeyboardEvent("hello");
-ok(e.type, "hello", "KeyboardEvent: Wrong event type!");
+is(e.type, "hello", "KeyboardEvent: Wrong event type!");
 ok(!e.isTrusted, "KeyboardEvent: Event shouldn't be trusted!");
 ok(!e.bubbles, "KeyboardEvent: Event shouldn't bubble!");
 ok(!e.cancelable, "KeyboardEvent: Event shouldn't be cancelable!");
@@ -439,7 +439,7 @@ for (var i = 0; i < keyboardEventProps.length; ++i) {
     if (!isMethodResultInitializer(prop)) {
       ok(prop in e, "keyboardEvent: KeyboardEvent doesn't have property " + prop + "!");
     }
-    defaultKeyboardEventValues[prop] = keyboardEventProps[i][prop]; 
+    defaultKeyboardEventValues[prop] = keyboardEventProps[i][prop];
   }
 }
 
@@ -698,7 +698,7 @@ for (var i = 0; i < mouseEventProps.length; ++i) {
     if (!isMethodResultInitializer(prop)) {
       ok(prop in e, "MouseEvent: MouseEvent doesn't have property " + prop + "!");
     }
-    defaultMouseEventValues[prop] = mouseEventProps[i][prop]; 
+    defaultMouseEventValues[prop] = mouseEventProps[i][prop];
   }
 }
 
@@ -824,7 +824,7 @@ for (var i = 0; i < wheelEventProps.length; ++i) {
     if (!isMethodResultInitializer(prop)) {
       ok(prop in e, "WheelEvent: WheelEvent doesn't have property " + prop + "!");
     }
-    defaultWheelEventValues[prop] = wheelEventProps[i][prop]; 
+    defaultWheelEventValues[prop] = wheelEventProps[i][prop];
   }
 }
 

@@ -81,7 +81,7 @@ function loadCF_HTMLdata(filename) {
   req.open("GET", filename, false);
   req.overrideMimeType("text/plain; charset=x-user-defined");
   req.send(null);
-  ok(req.status, 200, "Could not read the binary file " + filename);
+  is(req.status, 200, "Could not read the binary file " + filename);
   return req.responseText;
 }
 

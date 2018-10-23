@@ -35,7 +35,7 @@ add_task(async function() {
     {name: "something", overridden: true, isNameValid: false, isValid: false},
     {name: "color", overridden: true, isNameValid: true, isValid: false},
     {name: "background-color", overridden: true, isNameValid: true, isValid: true},
-    {name: "background-color", overridden: false, isNameValid: true, isValid: true}
+    {name: "background-color", overridden: false, isNameValid: true, isValid: true},
   ];
 
   const rule = elementStyle.rules[1];

@@ -32,7 +32,7 @@ async function testTopLeft(inspector, view) {
       firstLetterRulesNb: 1,
       selectionRulesNb: 1,
       afterRulesNb: 1,
-      beforeRulesNb: 2
+      beforeRulesNb: 2,
     }
   );
 
@@ -124,7 +124,7 @@ async function testTopRight(inspector, view) {
     firstLetterRulesNb: 1,
     selectionRulesNb: 0,
     beforeRulesNb: 2,
-    afterRulesNb: 1
+    afterRulesNb: 1,
   });
 
   const gutters = assertGutters(view);
@@ -146,7 +146,7 @@ async function testBottomRight(inspector, view) {
     firstLetterRulesNb: 1,
     selectionRulesNb: 0,
     beforeRulesNb: 3,
-    afterRulesNb: 1
+    afterRulesNb: 1,
   });
 }
 
@@ -157,7 +157,7 @@ async function testBottomLeft(inspector, view) {
     firstLetterRulesNb: 1,
     selectionRulesNb: 0,
     beforeRulesNb: 2,
-    afterRulesNb: 1
+    afterRulesNb: 1,
   });
 }
 
@@ -169,7 +169,7 @@ async function testParagraph(inspector, view) {
       firstLetterRulesNb: 1,
       selectionRulesNb: 2,
       beforeRulesNb: 0,
-      afterRulesNb: 0
+      afterRulesNb: 0,
     });
 
   assertGutters(view);
