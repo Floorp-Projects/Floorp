@@ -13776,49 +13776,6 @@ class CGGlobalNames(CGGeneric):
         CGGeneric.__init__(self, define=define)
 
 
-class CGGlobalNamesString(CGGeneric):
-    def __init__(self, config):
-        globalNames = getGlobalNames(config)
-        currentOffset = 0
-        strings = []
-        for (name, _) in globalNames:
-            strings.append('/* %i */ "%s\\0"' % (currentOffset, name))
-            currentOffset += len(name) + 1 # Add trailing null.
-        define = fill("""
-            const uint32_t WebIDLGlobalNameHash::sCount = ${count};
-
-            const char WebIDLGlobalNameHash::sNames[] =
-              $*{strings}
-
-            """,
-            count=len(globalNames),
-            strings="\n".join(strings) + ";\n")
-
-        CGGeneric.__init__(self, define=define)
-
-
-class CGRegisterGlobalNames(CGAbstractMethod):
-    def __init__(self, config):
-        CGAbstractMethod.__init__(self, None, 'RegisterWebIDLGlobalNames',
-                                  'void', [])
-        self.config = config
-
-    def definition_body(self):
-        def getCheck(desc):
-            if not desc.isExposedConditionally():
-                return "nullptr"
-            return "%s_Binding::ConstructorEnabled" % desc.name
-
-        define = ""
-        currentOffset = 0
-        for (name, desc) in getGlobalNames(self.config):
-            length = len(name)
-            define += "WebIDLGlobalNameHash::Register(%i, %i, %s_Binding::CreateInterfaceObjects, %s, constructors::id::%s);\n" % (
-                currentOffset, length, desc.name, getCheck(desc), desc.name)
-            currentOffset += length + 1 # Add trailing null.
-        return define
-
-
 def dependencySortObjects(objects, dependencyGetter, nameGetter):
     """
     Sort IDL objects with dependencies on each other such that if A
