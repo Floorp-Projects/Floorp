@@ -282,6 +282,7 @@
 #include "nsHTMLTags.h"
 #include "NodeUbiReporting.h"
 #include "nsICookieService.h"
+#include "mozilla/net/RequestContextService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2340,7 +2341,7 @@ nsIDocument::ResetToURI(nsIURI* aURI,
       // Inform the associated request context about this load start so
       // any of its internal load progress flags gets reset.
       nsCOMPtr<nsIRequestContextService> rcsvc =
-        do_GetService("@mozilla.org/network/request-context-service;1");
+        mozilla::net::RequestContextService::GetOrCreate();
       if (rcsvc) {
         nsCOMPtr<nsIRequestContext> rc;
         rcsvc->GetRequestContextFromLoadGroup(aLoadGroup, getter_AddRefs(rc));
