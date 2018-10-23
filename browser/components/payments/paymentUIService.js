@@ -79,7 +79,7 @@ PaymentUIService.prototype = {
       merchantBrowser.setAttribute("tabmodalPromptShowing", "true");
 
       // Darken the merchant content area.
-      let tabModalBackground = chromeWindow.document.createElement("box");
+      let tabModalBackground = chromeWindow.document.createXULElement("box");
       tabModalBackground.classList.add("tabModalBackground", "paymentDialogBackground");
       // Insert the same way as <tabmodalprompt>.
       merchantBrowser.parentNode.insertBefore(tabModalBackground,
