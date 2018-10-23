@@ -8,7 +8,6 @@
 #define mozilla_dom_PaymentResponse_h
 
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/dom/BasicCardPaymentBinding.h"
 #include "mozilla/dom/PaymentResponseBinding.h" // PaymentComplete
 #include "nsPIDOMWindow.h"
 #include "nsITimer.h"
@@ -19,30 +18,6 @@ namespace dom {
 class PaymentAddress;
 class PaymentRequest;
 class Promise;
-
-class ResponseData final
-{
-public:
-  enum TYPE {
-    UNKNOWN = 0,
-    GENERAL_RESPONSE,
-    BASICCARD_RESPONSE,
-  };
-
-  ResponseData();
-
-  ~ResponseData() = default;
-
-  const TYPE& GetType() const { return mType; }
-  void GetData(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) const;
-  void Init(const nsString& aGeneralResponse);
-  void Init(const BasicCardResponse& aBasicCardResponse);
-
-private:
-  TYPE mType;
-  nsString mGeneralResponse;
-  BasicCardResponse mBasicCardResponse;
-};
 
 class PaymentResponse final
   : public DOMEventTargetHelper
@@ -62,7 +37,7 @@ public:
                   const nsAString& aMethodName,
                   const nsAString& aShippingOption,
                   PaymentAddress* aShippingAddress,
-                  const ResponseData& aDetails,
+                  const nsAString& aDetails,
                   const nsAString& aPayerName,
                   const nsAString& aPayerEmail,
                   const nsAString& aPayerPhone);
@@ -105,7 +80,7 @@ public:
   void RespondRetry(const nsAString& aMethodName,
                     const nsAString& aShippingOption,
                     PaymentAddress* aShippingAddress,
-                    const ResponseData& aDetails,
+                    const nsAString& aDetails,
                     const nsAString& aPayerName,
                     const nsAString& aPayerEmail,
                     const nsAString& aPayerPhone);
@@ -128,7 +103,7 @@ private:
   PaymentRequest* mRequest;
   nsString mRequestId;
   nsString mMethodName;
-  ResponseData mDetails;
+  nsString mDetails;
   nsString mShippingOption;
   nsString mPayerName;
   nsString mPayerEmail;

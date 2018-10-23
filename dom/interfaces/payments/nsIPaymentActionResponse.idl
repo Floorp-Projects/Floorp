@@ -69,34 +69,9 @@ interface nsIGeneralResponseData : nsIPaymentResponseData
 interface nsIBasicCardResponseData : nsIPaymentResponseData
 {
   /**
-   *  The cardholder name.
+   *  The stringified response data.
    */
-  readonly attribute AString cardholderName;
-
-  /**
-   *  The card number.
-   */
-  readonly attribute AString cardNumber;
-
-  /**
-   *  The expiry month.
-   */
-  readonly attribute AString expiryMonth;
-
-  /**
-   *  The expiry year.
-   */
-  readonly attribute AString expiryYear;
-
-  /**
-   *  The card security number.
-   */
-  readonly attribute AString cardSecurityCode;
-
-  /**
-   *  The billing address.
-   */
-  readonly attribute nsIPaymentAddress billingAddress;
+  readonly attribute AString data;
 
   /**
    *  The initial method for nsIBasicCardResponseData.
@@ -208,7 +183,7 @@ interface nsIPaymentShowActionResponse : nsIPaymentActionResponse
   /**
    *  The data needed by the payment method. (it must be serializable)
    */
-  readonly attribute nsIPaymentResponseData data;
+  readonly attribute AString data;
 
   /**
    *  The payer name information.
