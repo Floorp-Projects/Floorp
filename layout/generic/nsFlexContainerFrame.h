@@ -63,11 +63,7 @@ struct ComputedFlexLineInfo
   nscoord mCrossSize;
   nscoord mFirstBaselineOffset;
   nscoord mLastBaselineOffset;
-  enum GrowthState {
-    UNCHANGED,
-    SHRINKING,
-    GROWING,
-  } mGrowthState;
+  mozilla::dom::FlexLineGrowthState mGrowthState;
 };
 
 struct ComputedFlexContainerInfo

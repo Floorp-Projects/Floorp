@@ -30,18 +30,7 @@ FlexLineValues::FlexLineValues(Flex* aParent,
 
   // Eagerly copy values from aLine, because we're not
   // going to keep it around.
-  switch (aLine->mGrowthState) {
-    case ComputedFlexLineInfo::GrowthState::SHRINKING:
-      mGrowthState = FlexLineGrowthState::Shrinking;
-      break;
-
-    case ComputedFlexLineInfo::GrowthState::GROWING:
-      mGrowthState = FlexLineGrowthState::Growing;
-      break;
-
-    default:
-      mGrowthState = FlexLineGrowthState::Unchanged;
-  };
+  mGrowthState = aLine->mGrowthState;
 
   // Convert all the app unit values into css pixels.
   mCrossStart = nsPresContext::AppUnitsToDoubleCSSPixels(
