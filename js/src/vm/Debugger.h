@@ -848,6 +848,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     static MOZ_MUST_USE bool slowPathCheckNoExecute(JSContext* cx, HandleScript script);
     static ResumeMode slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame);
+    static ResumeMode slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame);
     static MOZ_MUST_USE bool slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
                                                   jsbytecode* pc, bool ok);
     static MOZ_MUST_USE bool slowPathOnNewGenerator(JSContext* cx, AbstractFramePtr frame,
@@ -978,6 +979,23 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * frames.
      */
     static inline ResumeMode onEnterFrame(JSContext* cx, AbstractFramePtr frame);
+
+    /*
+     * Like onEnterFrame, but for resuming execution of a generator or async
+     * function. `frame` is a new baseline or interpreter frame, but abstractly
+     * it can be identified with a particular generator frame that was
+     * suspended earlier.
+     *
+     * There is no separate user-visible Debugger.onResumeFrame hook; this
+     * fires .onEnterFrame (again, since we're re-entering the frame).
+     *
+     * Unfortunately, the interpreter and the baseline JIT arrange for this to
+     * be called in different ways. The interpreter calls it from JSOP_RESUME,
+     * immediately after pushing the resumed frame; the JIT calls it from
+     * JSOP_DEBUGAFTERYIELD, just after the generator resumes. The difference
+     * should not be user-visible.
+     */
+    static inline ResumeMode onResumeFrame(JSContext* cx, AbstractFramePtr frame);
 
     /*
      * Announce to the debugger a |debugger;| statement on has been
