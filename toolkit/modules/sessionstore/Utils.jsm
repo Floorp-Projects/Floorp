@@ -161,7 +161,18 @@ var Utils = Object.freeze({
    */
   mapFrameTree(frame, ...dataCollectors) {
     // Collect data for the current frame.
-    let objs = dataCollectors.map((dataCollector) => dataCollector(frame) || {});
+    let objs = dataCollectors.map(function(dataCollector) {
+      let obj = dataCollector(frame.document);
+        if (!obj || typeof(obj) == "object") {
+          return obj || {};
+        }
+        // Currently, we return string type when collecting scroll position.
+        // Will switched to webidl and return objects in the future.
+        if (typeof(obj) == "string") {
+          return {scroll: obj};
+        }
+        return obj;
+    });
     let children = dataCollectors.map(() => []);
 
     // Recurse into child frames.

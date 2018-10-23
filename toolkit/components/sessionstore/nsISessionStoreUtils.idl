@@ -5,7 +5,10 @@
 #include "nsISupports.idl"
 
 interface mozIDOMWindowProxy;
+interface nsIDocShell;
 webidl EventTarget;
+webidl Document;
+interface mozIDOMWindow;
 
 /**
  * A callback passed to nsISessionStoreUtils.forEachNonDynamicChildFrame().
@@ -64,4 +67,34 @@ interface nsISessionStoreUtils : nsISupports
                                           in AString type,
                                           in nsISupports listener,
                                           in boolean useCapture);
+
+  /*
+   * Save the docShell.allow* properties
+   */
+  ACString collectDocShellCapabilities(in nsIDocShell docShell);
+
+  /*
+   * Restore the docShell.allow* properties
+   */
+  void restoreDocShellCapabilities(in nsIDocShell docShell,
+                                   in ACString disallowCapabilities);
+
+  /**
+   * Collects scroll position data for any given |frame| in the frame hierarchy.
+   *
+   * @param document (DOMDocument)
+   *
+   * @return {scroll: "x,y"} e.g. {scroll: "100,200"}
+   *         Returns null when there is no scroll data we want to store for the
+   *         given |frame|.
+   */
+  ACString collectScrollPosition(in Document document);
+
+  /**
+   * Restores scroll position data for any given |frame| in the frame hierarchy.
+   *
+   * @param frame (DOMWindow)
+   * @param value (ACString)
+   */
+  void restoreScrollPosition(in mozIDOMWindow frame, in ACString data);
 };

@@ -22,10 +22,6 @@ ChromeUtils.defineModuleGetter(this, "FormData",
 
 ChromeUtils.defineModuleGetter(this, "ContentRestore",
   "resource:///modules/sessionstore/ContentRestore.jsm");
-ChromeUtils.defineModuleGetter(this, "DocShellCapabilities",
-  "resource:///modules/sessionstore/DocShellCapabilities.jsm");
-ChromeUtils.defineModuleGetter(this, "ScrollPosition",
-  "resource://gre/modules/ScrollPosition.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionStorage",
@@ -353,7 +349,7 @@ class ScrollPositionListener extends Handler {
   }
 
   collect() {
-    return mapFrameTree(this.mm, ScrollPosition.collect);
+    return mapFrameTree(this.mm, ssu.collectScrollPosition.bind(ssu));
   }
 }
 
@@ -418,9 +414,7 @@ class DocShellCapabilitiesListener extends Handler {
   }
 
   onPageLoadStarted() {
-    // The order of docShell capabilities cannot change while we're running
-    // so calling join() without sorting before is totally sufficient.
-    let caps = DocShellCapabilities.collect(this.mm.docShell).join(",");
+    let caps = ssu.collectDocShellCapabilities(this.mm.docShell);
 
     // Send new data only when the capability list changes.
     if (caps != this._latestCapabilities) {
