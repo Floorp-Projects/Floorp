@@ -12,7 +12,6 @@ JAR_MANIFESTS += ['jar.mn']
 EXTRA_JS_MODULES.sessionstore = [
     'ContentRestore.jsm',
     'ContentSessionStore.jsm',
-    'DocShellCapabilities.jsm',
     'GlobalState.jsm',
     'RecentlyClosedTabsAndWindowsMenuUtils.jsm',
     'RunState.jsm',
