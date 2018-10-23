@@ -10,8 +10,13 @@
 #include <string>
 #include <string.h>
 
+#include "js/AllocPolicy.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/UniquePtr.h"
+
+// JS::SystemAllocPolicy is used here instead of the default so that the JSONWriter
+// object can also be passed into SpiderMonkey and used there.
+using ProfilerJSONWriter = mozilla::JSONWriter<JS::SystemAllocPolicy>;
 
 class SpliceableChunkedJSONWriter;
 
@@ -83,11 +88,11 @@ struct OStreamJSONWriteFunc : public mozilla::JSONWriteFunc
   std::ostream& mStream;
 };
 
-class SpliceableJSONWriter : public mozilla::JSONWriter
+class SpliceableJSONWriter : public ProfilerJSONWriter
 {
 public:
   explicit SpliceableJSONWriter(mozilla::UniquePtr<mozilla::JSONWriteFunc> aWriter)
-    : JSONWriter(std::move(aWriter))
+    : ProfilerJSONWriter(std::move(aWriter))
   { }
 
   void StartBareList(CollectionStyle aStyle = MultiLineStyle) {

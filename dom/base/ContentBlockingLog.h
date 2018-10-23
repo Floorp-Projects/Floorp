@@ -85,7 +85,7 @@ public:
   {
     nsAutoString buffer;
 
-    JSONWriter w(MakeUnique<StringWriteFunc>(buffer));
+    JSONWriter<> w(MakeUnique<StringWriteFunc>(buffer));
     w.Start();
 
     for (auto iter = mLog.Iter(); !iter.Done(); iter.Next()) {

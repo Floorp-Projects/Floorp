@@ -54,10 +54,12 @@ using DDLogValue = Variant<DDNoValue,
 void
 AppendToString(const DDLogValue& aValue, nsCString& aString);
 
+template <class AllocPolicy>
 class JSONWriter;
+class MallocAllocPolicy;
 void
 ToJSON(const DDLogValue& aValue,
-       JSONWriter& aJSONWriter,
+       JSONWriter<MallocAllocPolicy>& aJSONWriter,
        const char* aPropertyName);
 
 } // namespace mozilla

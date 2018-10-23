@@ -141,9 +141,9 @@ GetLoadedPath(nsAString& aPath)
 }
 
 static void
-AnnotateClsidRegistrationForHive(JSONWriter& aJson, HKEY aHive,
+AnnotateClsidRegistrationForHive(JSONWriter<>& aJson, HKEY aHive,
                                  const nsAString& aClsid,
-                                 const JSONWriter::CollectionStyle aStyle)
+                                 const JSONWriter<>::CollectionStyle aStyle)
 {
   nsAutoString clsidSubkey;
   clsidSubkey.AppendLiteral(kSoftwareClasses);
@@ -193,7 +193,7 @@ AnnotateClsidRegistrationForHive(JSONWriter& aJson, HKEY aHive,
 }
 
 static void
-CheckTlbPath(JSONWriter& aJson, const nsAString& aTypelibPath)
+CheckTlbPath(JSONWriter<>& aJson, const nsAString& aTypelibPath)
 {
   const nsString& flatPath = PromiseFlatString(aTypelibPath);
   DWORD bufCharLen = ExpandEnvironmentStrings(flatPath.get(), nullptr, 0);
@@ -214,10 +214,10 @@ CheckTlbPath(JSONWriter& aJson, const nsAString& aTypelibPath)
 
 template <size_t N>
 static void
-AnnotateTypelibPlatform(JSONWriter& aJson, HKEY aBaseKey,
+AnnotateTypelibPlatform(JSONWriter<>& aJson, HKEY aBaseKey,
                         const nsAString& aLcidSubkey,
                         const char16_t (&aPlatform)[N],
-                        const JSONWriter::CollectionStyle aStyle)
+                        const JSONWriter<>::CollectionStyle aStyle)
 {
   nsLiteralString platform(aPlatform);
 
@@ -235,10 +235,10 @@ AnnotateTypelibPlatform(JSONWriter& aJson, HKEY aBaseKey,
 }
 
 static void
-AnnotateTypelibRegistrationForHive(JSONWriter& aJson, HKEY aHive,
+AnnotateTypelibRegistrationForHive(JSONWriter<>& aJson, HKEY aHive,
                                    const nsAString& aTypelibId,
                                    const nsAString& aTypelibVersion,
-                                   const JSONWriter::CollectionStyle aStyle)
+                                   const JSONWriter<>::CollectionStyle aStyle)
 {
   nsAutoString typelibSubKey;
   typelibSubKey.AppendLiteral(kSoftwareClasses);
@@ -293,8 +293,8 @@ AnnotateTypelibRegistrationForHive(JSONWriter& aJson, HKEY aHive,
 }
 
 static void
-AnnotateInterfaceRegistrationForHive(JSONWriter& aJson, HKEY aHive, REFIID aIid,
-                                     const JSONWriter::CollectionStyle aStyle)
+AnnotateInterfaceRegistrationForHive(JSONWriter<>& aJson, HKEY aHive, REFIID aIid,
+                                     const JSONWriter<>::CollectionStyle aStyle)
 {
   nsAutoString interfaceSubKey;
   interfaceSubKey.AppendLiteral(kSoftwareClasses);
@@ -357,12 +357,12 @@ void
 AnnotateInterfaceRegistration(REFIID aIid)
 {
 #if defined(DEBUG)
-  const JSONWriter::CollectionStyle style = JSONWriter::MultiLineStyle;
+  const JSONWriter<>::CollectionStyle style = JSONWriter<>::MultiLineStyle;
 #else
-  const JSONWriter::CollectionStyle style = JSONWriter::SingleLineStyle;
+  const JSONWriter<>::CollectionStyle style = JSONWriter<>::SingleLineStyle;
 #endif
 
-  JSONWriter json(MakeUnique<CStringWriter>());
+  JSONWriter<> json(MakeUnique<CStringWriter>());
 
   json.Start(style);
 
@@ -391,15 +391,15 @@ void
 AnnotateClassRegistration(REFCLSID aClsid)
 {
 #if defined(DEBUG)
-  const JSONWriter::CollectionStyle style = JSONWriter::MultiLineStyle;
+  const JSONWriter<>::CollectionStyle style = JSONWriter<>::MultiLineStyle;
 #else
-  const JSONWriter::CollectionStyle style = JSONWriter::SingleLineStyle;
+  const JSONWriter<>::CollectionStyle style = JSONWriter<>::SingleLineStyle;
 #endif
 
   nsAutoString strClsid;
   GUIDToString(aClsid, strClsid);
 
-  JSONWriter json(MakeUnique<CStringWriter>());
+  JSONWriter<> json(MakeUnique<CStringWriter>());
 
   json.Start(style);
 

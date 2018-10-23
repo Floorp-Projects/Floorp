@@ -1789,7 +1789,7 @@ private:
 };
 
 static void
-WriteBlockContents(JSONWriter& aWriter, const LiveBlock& aBlock)
+WriteBlockContents(JSONWriter<>& aWriter, const LiveBlock& aBlock)
 {
   size_t numWords = aBlock.ReqSize() / sizeof(uintptr_t*);
   if (numWords == 0) {
@@ -1817,7 +1817,7 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
   // Therefore, this declaration must precede the AutoBlockIntercepts
   // declaration, to ensure that |write| is destroyed *after* intercepts are
   // unblocked.
-  JSONWriter writer(std::move(aWriter));
+  JSONWriter<> writer(std::move(aWriter));
 
   AutoBlockIntercepts block(Thread::Fetch());
   AutoLockState lock;
