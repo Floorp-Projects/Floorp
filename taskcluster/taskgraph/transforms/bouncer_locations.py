@@ -28,12 +28,6 @@ def make_task_worker(config, jobs):
         )
 
         job['worker']['bouncer-products'] = job['bouncer-products']
+
         del job['bouncer-products']
-
-        # chain the breakpoint as dependency to this task
-        dependencies = {}
-        for dep_task in config.kind_dependencies_tasks:
-            dependencies[dep_task.kind] = dep_task.label
-
-        job.setdefault('dependencies', {}).update(dependencies)
         yield job
