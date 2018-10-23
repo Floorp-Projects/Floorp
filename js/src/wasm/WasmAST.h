@@ -95,6 +95,9 @@ class AstRef
     AstName name() const {
         return name_;
     }
+    bool isIndex() const {
+        return index_ != AstNoIndex;
+    }
     size_t index() const {
         MOZ_ASSERT(index_ != AstNoIndex);
         return index_;
@@ -746,15 +749,22 @@ class AstCall : public AstExpr
 
 class AstCallIndirect : public AstExpr
 {
+    AstRef targetTable_;
     AstRef funcType_;
     AstExprVector args_;
     AstExpr* index_;
 
   public:
     static const AstExprKind Kind = AstExprKind::CallIndirect;
-    AstCallIndirect(AstRef funcType, AstExprType type, AstExprVector&& args, AstExpr* index)
-      : AstExpr(Kind, type), funcType_(funcType), args_(std::move(args)), index_(index)
+    AstCallIndirect(AstRef targetTable, AstRef funcType, AstExprType type, AstExprVector&& args,
+                    AstExpr* index)
+      : AstExpr(Kind, type),
+        targetTable_(targetTable),
+        funcType_(funcType),
+        args_(std::move(args)),
+        index_(index)
     {}
+    AstRef& targetTable() { return targetTable_; }
     AstRef& funcType() { return funcType_; }
     const AstExprVector& args() const { return args_; }
     AstExpr* index() const { return index_; }
@@ -979,22 +989,29 @@ class AstWake : public AstExpr
 class AstMemOrTableCopy : public AstExpr
 {
     bool     isMem_;
+    AstRef   destTable_;
     AstExpr* dest_;
+    AstRef   srcTable_;
     AstExpr* src_;
     AstExpr* len_;
 
   public:
     static const AstExprKind Kind = AstExprKind::MemOrTableCopy;
-    explicit AstMemOrTableCopy(bool isMem, AstExpr* dest, AstExpr* src, AstExpr* len)
+    explicit AstMemOrTableCopy(bool isMem, AstRef destTable, AstExpr* dest, AstRef srcTable,
+                               AstExpr* src, AstExpr* len)
       : AstExpr(Kind, ExprType::Void),
         isMem_(isMem),
+        destTable_(destTable),
         dest_(dest),
+        srcTable_(srcTable),
         src_(src),
         len_(len)
     {}
 
     bool     isMem() const { return isMem_; }
+    AstRef&  destTable()   { return destTable_; }
     AstExpr& dest()  const { return *dest_; }
+    AstRef&  srcTable()    { return srcTable_; }
     AstExpr& src()   const { return *src_; }
     AstExpr& len()   const { return *len_; }
 };
@@ -1040,16 +1057,19 @@ class AstMemOrTableInit : public AstExpr
 {
     bool     isMem_;
     uint32_t segIndex_;
+    AstRef   targetTable_;
     AstExpr* dst_;
     AstExpr* src_;
     AstExpr* len_;
 
   public:
     static const AstExprKind Kind = AstExprKind::MemOrTableInit;
-    explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstExpr* dst, AstExpr* src, AstExpr* len)
+    explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstRef targetTable, AstExpr* dst,
+                               AstExpr* src, AstExpr* len)
       : AstExpr(Kind, ExprType::Void),
         isMem_(isMem),
         segIndex_(segIndex),
+        targetTable_(targetTable),
         dst_(dst),
         src_(src),
         len_(len)
@@ -1057,6 +1077,7 @@ class AstMemOrTableInit : public AstExpr
 
     bool     isMem()    const { return isMem_; }
     uint32_t segIndex() const { return segIndex_; }
+    AstRef&  targetTable()      { return targetTable_; }
     AstExpr& dst()      const { return *dst_; }
     AstExpr& src()      const { return *src_; }
     AstExpr& len()      const { return *len_; }
@@ -1066,59 +1087,73 @@ class AstMemOrTableInit : public AstExpr
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
 class AstTableGet : public AstExpr
 {
+    AstRef   targetTable_;
     AstExpr* index_;
 
   public:
     static const AstExprKind Kind = AstExprKind::TableGet;
-    explicit AstTableGet(AstExpr* index)
+    explicit AstTableGet(AstRef targetTable, AstExpr* index)
       : AstExpr(Kind, ExprType::AnyRef),
+        targetTable_(targetTable),
         index_(index)
     {}
 
+    AstRef& targetTable() { return targetTable_; }
     AstExpr& index() const { return *index_; }
 };
 
 class AstTableGrow : public AstExpr
 {
+    AstRef   targetTable_;
     AstExpr* delta_;
     AstExpr* initValue_;
 
   public:
     static const AstExprKind Kind = AstExprKind::TableGrow;
-    AstTableGrow(AstExpr* delta, AstExpr* initValue)
+    AstTableGrow(AstRef targetTable, AstExpr* delta, AstExpr* initValue)
       : AstExpr(Kind, ExprType::I32),
+        targetTable_(targetTable),
         delta_(delta),
         initValue_(initValue)
     {}
 
+    AstRef& targetTable() { return targetTable_; }
     AstExpr& delta() const { return *delta_; }
     AstExpr& initValue() const { return *initValue_; }
 };
 
 class AstTableSet : public AstExpr
 {
+    AstRef   targetTable_;
     AstExpr* index_;
     AstExpr* value_;
 
   public:
     static const AstExprKind Kind = AstExprKind::TableSet;
-    AstTableSet(AstExpr* index, AstExpr* value)
+    AstTableSet(AstRef targetTable, AstExpr* index, AstExpr* value)
       : AstExpr(Kind, ExprType::Void),
+        targetTable_(targetTable),
         index_(index),
         value_(value)
     {}
 
+    AstRef& targetTable() { return targetTable_; }
     AstExpr& index() const { return *index_; }
     AstExpr& value() const { return *value_; }
 };
 
 class AstTableSize : public AstExpr
 {
+    AstRef   targetTable_;
+
   public:
     static const AstExprKind Kind = AstExprKind::TableSize;
-    AstTableSize()
-      : AstExpr(Kind, ExprType::I32)
+    explicit AstTableSize(AstRef targetTable)
+      : AstExpr(Kind, ExprType::I32),
+        targetTable_(targetTable)
     {}
+
+    AstRef& targetTable() { return targetTable_; }
 };
 #endif // ENABLE_WASM_GENERALIZED_TABLES
 
@@ -1389,15 +1424,19 @@ typedef AstVector<AstDataSegment*> AstDataSegmentVector;
 
 class AstElemSegment : public AstNode
 {
+    AstRef targetTable_;
     AstExpr* offsetIfActive_;
     AstRefVector elems_;
 
   public:
-    AstElemSegment(AstExpr* offsetIfActive, AstRefVector&& elems)
-      : offsetIfActive_(offsetIfActive),
+    AstElemSegment(AstRef targetTable, AstExpr* offsetIfActive, AstRefVector&& elems)
+      : targetTable_(targetTable),
+        offsetIfActive_(offsetIfActive),
         elems_(std::move(elems))
     {}
 
+    AstRef targetTable() const { return targetTable_; }
+    AstRef& targetTableRef() { return targetTable_; }
     AstExpr* offsetIfActive() const { return offsetIfActive_; }
     AstRefVector& elems() { return elems_; }
     const AstRefVector& elems() const { return elems_; }

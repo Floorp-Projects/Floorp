@@ -88,9 +88,18 @@ class Module : public JS::WasmModule
 
     bool instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const;
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
-    bool instantiateTable(JSContext* cx,
-                          MutableHandleWasmTableObject table,
-                          SharedTableVector* tables) const;
+    bool instantiateImportedTable(JSContext* cx,
+                                  const TableDesc& td,
+                                  Handle<WasmTableObject*> table,
+                                  WasmTableObjectVector* tableObjs,
+                                  SharedTableVector* tables) const;
+    bool instantiateLocalTable(JSContext* cx,
+                               const TableDesc& td,
+                               WasmTableObjectVector* tableObjs,
+                               SharedTableVector* tables) const;
+    bool instantiateTables(JSContext* cx, WasmTableObjectVector& tableImports,
+                           MutableHandle<WasmTableObjectVector> tableObjs,
+                           SharedTableVector* tables) const;
     bool instantiateGlobals(JSContext* cx, HandleValVector globalImportValues,
                             WasmGlobalObjectVector& globalObjs) const;
     bool initSegments(JSContext* cx,
@@ -145,7 +154,7 @@ class Module : public JS::WasmModule
 
     bool instantiate(JSContext* cx,
                      Handle<FunctionVector> funcImports,
-                     HandleWasmTableObject tableImport,
+                     WasmTableObjectVector& tableImport,
                      HandleWasmMemoryObject memoryImport,
                      HandleValVector globalImportValues,
                      WasmGlobalObjectVector& globalObjs,

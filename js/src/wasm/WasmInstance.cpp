@@ -538,16 +538,20 @@ Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
     return -1;
 }
 
-/* static */ int32_t /* -1 to signal trap; 0 for ok */
-Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len)
+/* static */ int32_t  /* -1 to signal trap; 0 for ok */
+Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len,
+                    uint32_t dstTableIndex, uint32_t srcTableIndex)
 {
-    const SharedTable& table = instance->tables()[0];
-    uint32_t tableLen = table->length();
+    const SharedTable& srcTable = instance->tables()[srcTableIndex];
+    uint32_t srcTableLen = srcTable->length();
+
+    const SharedTable& dstTable = instance->tables()[dstTableIndex];
+    uint32_t dstTableLen = dstTable->length();
 
     if (len == 0) {
         // Even though the number of items to copy is zero, we must check
         // for valid offsets.
-        if (dstOffset < tableLen && srcOffset < tableLen) {
+        if (dstOffset < dstTableLen && srcOffset < srcTableLen) {
             return 0;
         }
     } else {
@@ -557,18 +561,20 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, 
         CheckedU32 highestSrcOffset = CheckedU32(srcOffset) + lenMinus1;
         if (highestDstOffset.isValid() &&
             highestSrcOffset.isValid() &&
-            highestDstOffset.value() < tableLen &&
-            highestSrcOffset.value() < tableLen)
+            highestDstOffset.value() < dstTableLen &&
+            highestSrcOffset.value() < srcTableLen)
         {
             // Actually do the copy, taking care to handle overlapping cases
             // correctly.
-            if (dstOffset > srcOffset) {
+            if (&srcTable == &dstTable && dstOffset > srcOffset) {
                 for (uint32_t i = len; i > 0; i--) {
-                    table->copy(dstOffset + (i - 1), srcOffset + (i - 1));
+                    dstTable->copy(*srcTable, dstOffset + (i - 1), srcOffset + (i - 1));
                 }
-            } else if (dstOffset < srcOffset) {
+            } else if (&srcTable == &dstTable && dstOffset == srcOffset) {
+                // No-op
+            } else {
                 for (uint32_t i = 0; i < len; i++) {
-                    table->copy(dstOffset + i, srcOffset + i);
+                    dstTable->copy(*srcTable, dstOffset + i, srcOffset + i);
                 }
             }
 
@@ -601,9 +607,10 @@ Instance::tableDrop(Instance* instance, uint32_t segIndex)
 }
 
 void
-Instance::initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffset, uint32_t len)
+Instance::initElems(uint32_t tableIndex, const ElemSegment& seg, uint32_t dstOffset,
+                    uint32_t srcOffset, uint32_t len)
 {
-    Table& table = *tables_[seg.tableIndex];
+    Table& table = *tables_[tableIndex];
     MOZ_ASSERT(dstOffset <= table.length());
     MOZ_ASSERT(len <= table.length() - dstOffset);
 
@@ -646,7 +653,7 @@ Instance::initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffs
 
 /* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
-                    uint32_t len, uint32_t segIndex)
+                    uint32_t len, uint32_t segIndex, uint32_t tableIndex)
 {
     MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
                        "ensured by validation");
@@ -659,7 +666,7 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
     const ElemSegment& seg = *instance->passiveElemSegments_[segIndex];
     MOZ_RELEASE_ASSERT(!seg.active());
-    const Table& table = *instance->tables()[0];
+    const Table& table = *instance->tables()[tableIndex];
 
     // Element segments cannot currently contain arbitrary values, and anyref
     // tables cannot be initialized from segments.
@@ -686,7 +693,7 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
             highestDstOffset.value() < table.length() &&
             highestSrcOffset.value() < seg.length())
         {
-            instance->initElems(seg, dstOffset, srcOffset, len);
+            instance->initElems(tableIndex, seg, dstOffset, srcOffset, len);
             return 0;
         }
     }
@@ -696,50 +703,50 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 }
 
 /* static */ void* /* (void*)-1 to signal trap; other pointer value for ok */
-Instance::tableGet(Instance* instance, uint32_t index)
+Instance::tableGet(Instance* instance, uint32_t index, uint32_t tableIndex)
 {
-    const Table& table = *instance->tables()[0];
+    const Table& table = *instance->tables()[tableIndex];
     MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
     if (index >= table.length()) {
         JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
         return (void*)-1;
     }
-    return table.objectArray()[index];
+    return table.getAnyRef(index);
 }
 
 /* static */ uint32_t /* infallible */
-Instance::tableGrow(Instance* instance, uint32_t delta, void* initValue)
+Instance::tableGrow(Instance* instance, uint32_t delta, void* initValue, uint32_t tableIndex)
 {
     RootedObject obj(TlsContext.get(), (JSObject*)initValue);
-    Table& table = *instance->tables()[0];
+    Table& table = *instance->tables()[tableIndex];
     MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
 
     uint32_t oldSize = table.grow(delta, TlsContext.get());
     if (oldSize != uint32_t(-1) && initValue != nullptr) {
         for (uint32_t i = 0; i < delta; i++) {
-            table.objectArray()[oldSize + i] = obj.get();
+            table.setAnyRef(oldSize + i, obj.get());
         }
     }
     return oldSize;
 }
 
 /* static */ int32_t /* -1 to signal trap; 0 for ok */
-Instance::tableSet(Instance* instance, uint32_t index, void* value)
+Instance::tableSet(Instance* instance, uint32_t index, void* value, uint32_t tableIndex)
 {
-    Table& table = *instance->tables()[0];
+    Table& table = *instance->tables()[tableIndex];
     MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
     if (index >= table.length()) {
         JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
         return -1;
     }
-    table.objectArray()[index] = (JSObject*)value;
+    table.setAnyRef(index, (JSObject*)value);
     return 0;
 }
 
 /* static */ uint32_t /* infallible */
-Instance::tableSize(Instance* instance)
+Instance::tableSize(Instance* instance, uint32_t tableIndex)
 {
-    Table& table = *instance->tables()[0];
+    Table& table = *instance->tables()[tableIndex];
     return table.length();
 }
 
@@ -1298,13 +1305,30 @@ Instance::onMovingGrowMemory(uint8_t* prevMemoryBase)
 }
 
 void
-Instance::onMovingGrowTable()
+Instance::onMovingGrowTable(const Table* theTable)
 {
     MOZ_ASSERT(!isAsmJS());
-    MOZ_ASSERT(tables_.length() == 1);
-    TableTls& table = tableTls(metadata().tables[0]);
-    table.length = tables_[0]->length();
-    table.functionBase = tables_[0]->functionBase();
+
+    // `theTable` has grown and we must update cached data for it.  Importantly,
+    // we can have cached those data in more than one location: we'll have
+    // cached them once for each time the table was imported into this instance.
+    //
+    // When an instance is registered as an observer of a table it is only
+    // registered once, regardless of how many times the table was imported.
+    // Thus when a table is grown, onMovingGrowTable() is only invoked once for
+    // the table.
+    //
+    // Ergo we must go through the entire list of tables in the instance here
+    // and check for the table in all the cached-data slots; we can't exit after
+    // the first hit.
+
+    for (uint32_t i = 0; i < tables_.length(); i++) {
+        if (tables_[i] == theTable) {
+            TableTls& table = tableTls(metadata().tables[i]);
+            table.length = tables_[i]->length();
+            table.functionBase = tables_[i]->functionBase();
+        }
+    }
 }
 
 void
