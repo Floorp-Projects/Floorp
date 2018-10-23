@@ -49,8 +49,8 @@ class mozJSComponentLoader final : public nsIObserver
 
     mozJSComponentLoader();
 
-    void LoadedModules(uint32_t* aLength, char*** aModules);
-    void LoadedComponents(uint32_t* aLength, char*** aComponents);
+    void GetLoadedModules(nsTArray<nsCString>& aLoadedModules);
+    void GetLoadedComponents(nsTArray<nsCString>& aLoadedComponents);
     nsresult GetModuleImportStack(const nsACString& aLocation, nsACString& aRetval);
     nsresult GetComponentLoadStack(const nsACString& aLocation, nsACString& aRetval);
 
