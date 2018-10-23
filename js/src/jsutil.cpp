@@ -35,19 +35,17 @@ namespace oom {
 
 JS_PUBLIC_DATA(FailureSimulator) simulator;
 static MOZ_THREAD_LOCAL(uint32_t) threadType;
-static MOZ_THREAD_LOCAL(bool) isSimulatingThread;
 
 bool
 InitThreadType()
 {
-    return threadType.init() && isSimulatingThread.init();
+    return threadType.init();
 }
 
 void
 SetThreadType(ThreadType type)
 {
     threadType.set(type);
-    isSimulatingThread.set(false);
 }
 
 uint32_t
@@ -56,21 +54,10 @@ GetThreadType(void)
     return threadType.get();
 }
 
-uint32_t
-GetSimulatingThreadType()
-{
-    if (isSimulatingThread.get()) {
-        return js::THREAD_TYPE_CURRENT;
-    }
-    return threadType.get();
-}
-
-
 static inline bool
 IsHelperThreadType(uint32_t thread)
 {
-    return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_MAIN &&
-        thread != THREAD_TYPE_CURRENT;
+    return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_MAIN;
 }
 
 void
@@ -86,9 +73,6 @@ FailureSimulator::simulateFailureAfter(Kind kind, uint64_t checks, uint32_t thre
     MOZ_ASSERT(counter_ + checks > counter_);
     MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
     targetThread_ = thread;
-    if (thread == js::THREAD_TYPE_CURRENT) {
-        isSimulatingThread.set(true);
-    }
     maxChecks_ = counter_ + checks;
     failAlways_ = always;
     kind_ = kind;
@@ -104,7 +88,6 @@ FailureSimulator::reset()
     }
 
     targetThread_ = THREAD_TYPE_NONE;
-    isSimulatingThread.set(false);
     maxChecks_ = UINT64_MAX;
     failAlways_ = false;
     kind_ = Kind::Nothing;
