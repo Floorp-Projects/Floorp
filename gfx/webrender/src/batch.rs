@@ -1949,37 +1949,51 @@ impl ClipBatcher {
                 resource_address: GpuCacheAddress::invalid(),
             };
 
-            let gpu_address = gpu_cache.get_address(&clip_node.gpu_cache_handle);
-
             match clip_node.item {
-                ClipItem::Image(ref mask, is_valid) => {
-                    if is_valid {
-                        if let Ok(cache_item) = resource_cache.get_cached_image(
-                            ImageRequest {
-                                key: mask.image,
-                                rendering: ImageRendering::Auto,
-                                tile: None,
+                ClipItem::Image { ref mask, ref visible_tiles } => {
+                    let request = ImageRequest {
+                        key: mask.image,
+                        rendering: ImageRendering::Auto,
+                        tile: None,
+                    };
+                    let mut add_image = |request: ImageRequest, clip_data_address: GpuCacheAddress| {
+                        let cache_item = match resource_cache.get_cached_image(request) {
+                            Ok(item) => item,
+                            Err(..) => {
+                                warn!("Warnings: skip a image mask");
+                                debug!("Mask: {:?}, request: {:?}", mask, request);
+                                return;
                             }
-                        ) {
-                            self.images
-                                .entry(cache_item.texture_id)
-                                .or_insert(Vec::new())
-                                .push(ClipMaskInstance {
-                                    clip_data_address: gpu_address,
-                                    resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
-                                    ..instance
-                                });
-                        } else {
-                            warn!("Warnings: skip a image mask");
-                            debug!("Key:{:?} Rect::{:?}", mask.image, mask.rect);
-                            continue;
+                        };
+                        self.images
+                            .entry(cache_item.texture_id)
+                            .or_insert(Vec::new())
+                            .push(ClipMaskInstance {
+                                clip_data_address,
+                                resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
+                                ..instance
+                            });
+                    };
+
+                    match *visible_tiles {
+                        Some(ref tiles) => {
+                            for tile in tiles {
+                                add_image(
+                                    request.with_tile(tile.tile_offset),
+                                    gpu_cache.get_address(&tile.handle),
+                                )
+                            }
                         }
-                    } else {
-                        warn!("Warnings: clip masks that are tiled blobs are not yet supported (#2852)");
-                        continue;
+                        None => {
+                            let gpu_address =
+                                gpu_cache.get_address(&clip_node.gpu_cache_handle);
+                            add_image(request, gpu_address)
+                        }
                     }
                 }
                 ClipItem::BoxShadow(ref info) => {
+                    let gpu_address =
+                        gpu_cache.get_address(&clip_node.gpu_cache_handle);
                     let rt_handle = info
                         .cache_handle
                         .as_ref()
@@ -2002,6 +2016,8 @@ impl ClipBatcher {
                 ClipItem::Rectangle(_, mode) => {
                     if !clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) ||
                         mode == ClipMode::ClipOut {
+                        let gpu_address =
+                            gpu_cache.get_address(&clip_node.gpu_cache_handle);
                         self.rectangles.push(ClipMaskInstance {
                             clip_data_address: gpu_address,
                             ..instance
@@ -2009,6 +2025,8 @@ impl ClipBatcher {
                     }
                 }
                 ClipItem::RoundedRectangle(..) => {
+                    let gpu_address =
+                        gpu_cache.get_address(&clip_node.gpu_cache_handle);
                     self.rectangles.push(ClipMaskInstance {
                         clip_data_address: gpu_address,
                         ..instance

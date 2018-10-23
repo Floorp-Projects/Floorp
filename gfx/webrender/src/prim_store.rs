@@ -20,7 +20,7 @@ use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use gpu_types::BrushFlags;
-use image::{for_each_tile, for_each_repetition};
+use image::{self, Repetition};
 use intern;
 use picture::{PictureCompositeMode, PicturePrimitive};
 #[cfg(debug_assertions)]
@@ -359,12 +359,22 @@ impl OpacityBinding {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct VisibleImageTile {
     pub tile_offset: TileOffset,
     pub handle: GpuCacheHandle,
     pub edge_flags: EdgeAaSegmentMask,
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct VisibleMaskImageTile {
+    pub tile_offset: TileOffset,
+    pub handle: GpuCacheHandle,
 }
 
 #[derive(Debug)]
@@ -539,6 +549,8 @@ bitflags! {
     ///
     /// *Note*: the bit values have to match the shader logic in
     /// `write_transform_vertex()` function.
+    #[cfg_attr(feature = "capture", derive(Serialize))]
+    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct EdgeAaSegmentMask: u8 {
         const LEFT = 0x1;
         const TOP = 0x2;
@@ -1262,12 +1274,16 @@ impl ClipCorner {
 #[derive(Debug)]
 #[repr(C)]
 pub struct ImageMaskData {
-    pub local_rect: LayoutRect,
+    /// The local rect of the whole masked area.
+    pub local_mask_rect: LayoutRect,
+    /// The local rect of an individual tile.
+    pub local_tile_rect: LayoutRect,
 }
 
 impl ToGpuBlocks for ImageMaskData {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push(self.local_rect);
+        request.push(self.local_mask_rect);
+        request.push(self.local_tile_rect);
     }
 }
 
@@ -2159,28 +2175,24 @@ fn decompose_repeated_primitive(
     );
     let stride = *stretch_size + *tile_spacing;
 
-    for_each_repetition(
-        prim_local_rect,
-        &visible_rect,
-        &stride,
-        &mut |origin, _| {
+    let repetitions = image::repetitions(prim_local_rect, &visible_rect, stride);
+    for Repetition { origin, .. } in repetitions {
+        let mut handle = GpuCacheHandle::new();
+        let rect = LayoutRect {
+            origin: origin,
+            size: *stretch_size,
+        };
 
-            let mut handle = GpuCacheHandle::new();
-            let rect = LayoutRect {
-                origin: *origin,
-                size: *stretch_size,
-            };
-            if let Some(request) = frame_state.gpu_cache.request(&mut handle) {
-                callback(&rect, request);
-            }
-
-            visible_tiles.push(VisibleGradientTile {
-                local_rect: rect,
-                local_clip_rect: tight_clip_rect,
-                handle
-            });
+        if let Some(request) = frame_state.gpu_cache.request(&mut handle) {
+            callback(&rect, request);
         }
-    );
+
+        visible_tiles.push(VisibleGradientTile {
+            local_rect: rect,
+            local_clip_rect: tight_clip_rect,
+            handle
+        });
+    }
 
     if visible_tiles.is_empty() {
         // At this point if we don't have tiles to show it means we could probably
@@ -2329,7 +2341,7 @@ impl BrushPrimitive {
 
                     continue;
                 }
-                ClipItem::Image(..) => {
+                ClipItem::Image { .. } => {
                     rect_clips_only = false;
                     continue;
                 }
@@ -2686,49 +2698,50 @@ impl Primitive {
 
                                 visible_tiles.clear();
 
-                                for_each_repetition(
+                                let repetitions = image::repetitions(
                                     &self.local_rect,
                                     &visible_rect,
-                                    &stride,
-                                    &mut |origin, edge_flags| {
-                                        let edge_flags = base_edge_flags | edge_flags;
-
-                                        let image_rect = LayoutRect {
-                                            origin: *origin,
-                                            size: stretch_size,
-                                        };
-
-                                        for_each_tile(
-                                            &image_rect,
-                                            &visible_rect,
-                                            &device_image_size,
-                                            tile_size as u32,
-                                            &mut |tile_rect, tile_offset, tile_flags| {
-
-                                                frame_state.resource_cache.request_image(
-                                                    request.with_tile(tile_offset),
-                                                    frame_state.gpu_cache,
-                                                );
-
-                                                let mut handle = GpuCacheHandle::new();
-                                                if let Some(mut request) = frame_state.gpu_cache.request(&mut handle) {
-                                                    request.push(ColorF::new(1.0, 1.0, 1.0, opacity_binding.current).premultiplied());
-                                                    request.push(PremultipliedColorF::WHITE);
-                                                    request.push([tile_rect.size.width, tile_rect.size.height, 0.0, 0.0]);
-                                                    request.write_segment(*tile_rect, [0.0; 4]);
-                                                }
-
-                                                visible_tiles.push(VisibleImageTile {
-                                                    tile_offset,
-                                                    handle,
-                                                    edge_flags: tile_flags & edge_flags,
-                                                    local_rect: *tile_rect,
-                                                    local_clip_rect: tight_clip_rect,
-                                                });
-                                            }
-                                        );
-                                    }
+                                    stride,
                                 );
+
+                                for Repetition { origin, edge_flags } in repetitions {
+                                    let edge_flags = base_edge_flags | edge_flags;
+
+                                    let image_rect = LayoutRect {
+                                        origin,
+                                        size: stretch_size,
+                                    };
+
+                                    let tiles = image::tiles(
+                                        &image_rect,
+                                        &visible_rect,
+                                        &device_image_size,
+                                        tile_size as u32,
+                                    );
+
+                                    for tile in tiles {
+                                        frame_state.resource_cache.request_image(
+                                            request.with_tile(tile.offset),
+                                            frame_state.gpu_cache,
+                                        );
+
+                                        let mut handle = GpuCacheHandle::new();
+                                        if let Some(mut request) = frame_state.gpu_cache.request(&mut handle) {
+                                            request.push(ColorF::new(1.0, 1.0, 1.0, opacity_binding.current).premultiplied());
+                                            request.push(PremultipliedColorF::WHITE);
+                                            request.push([tile.rect.size.width, tile.rect.size.height, 0.0, 0.0]);
+                                            request.write_segment(tile.rect, [0.0; 4]);
+                                        }
+
+                                        visible_tiles.push(VisibleImageTile {
+                                            tile_offset: tile.offset,
+                                            handle,
+                                            edge_flags: tile.edge_flags & edge_flags,
+                                            local_rect: tile.rect,
+                                            local_clip_rect: tight_clip_rect,
+                                        });
+                                    }
+                                }
 
                                 if visible_tiles.is_empty() {
                                     // At this point if we don't have tiles to show it means we could probably
