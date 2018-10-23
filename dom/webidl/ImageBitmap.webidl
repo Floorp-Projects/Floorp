@@ -399,6 +399,4 @@ partial interface ImageBitmap {
     ImageBitmapFormat               findOptimalFormat (optional sequence<ImageBitmapFormat> aPossibleFormats);
     [Throws, Func="mozilla::dom::DOMPrefs::canvas_imagebitmap_extensions_enabled"]
     long                            mappedDataLength (ImageBitmapFormat aFormat);
-    [Throws, Func="mozilla::dom::DOMPrefs::canvas_imagebitmap_extensions_enabled"]
-    Promise<ImagePixelLayout> mapDataInto (ImageBitmapFormat aFormat, BufferSource aBuffer, long aOffset);
 };
