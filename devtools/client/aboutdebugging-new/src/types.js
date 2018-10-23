@@ -29,7 +29,7 @@ const runtimeTransportDetails = {
   port: PropTypes.number.isRequired,
 };
 
-const runtimeConnection = {
+const runtimeDetails = {
   // debugger client instance
   client: PropTypes.object.isRequired,
 
@@ -73,7 +73,7 @@ const runtime = {
   id: PropTypes.string.isRequired,
 
   // available after the connection to the runtime is established
-  connection: PropTypes.shape(runtimeConnection),
+  runtimeDetails: PropTypes.shape(runtimeDetails),
 
   // object containing non standard properties that depend on the runtime type,
   // unavailable on this-firefox runtime
