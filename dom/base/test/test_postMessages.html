@@ -244,10 +244,10 @@ function runTests(obj) {
     return new Promise(function(r, rr) {
       var mc = new MessageChannel();
       obj.send(42, [mc.port1]).then(function(received) {
-        ok(received.ports.length, 1, "MessagePort has been transferred");
+        is(received.ports.length, 1, "MessagePort has been transferred");
         mc.port2.postMessage("hello world");
         received.ports[0].onmessage = function(e) {
-          ok(e.data, "hello world", "Ports are connected!");
+          is(e.data, "hello world", "Ports are connected!");
           r();
         }
       });

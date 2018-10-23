@@ -233,7 +233,7 @@ var get_tooltip_info = async function(addon) {
   await promise;
 
   let expectedName = addon.getAttribute("name");
-  ok(tiptext.substring(0, expectedName.length), expectedName,
+  is(tiptext.substring(0, expectedName.length), expectedName,
      "Tooltip should always start with the expected name");
 
   if (expectedName.length == tiptext.length) {

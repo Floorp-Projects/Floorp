@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=508906
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=508906">Mozilla Bug 603008</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript">
@@ -287,7 +287,7 @@ function testMultiTouch(name) {
   };
   window.addEventListener("touchmove", checkFunction2);
   sendTouchEvent(cwu, "touchmove", event, 0);
-  ok(touchMoveEvents, 2, "Correct number of touchmove events fired");
+  is(touchMoveEvents, 2, "Correct number of touchmove events fired");
   window.removeEventListener("touchmove", checkFunction2);
 
   // test removing just one finger
@@ -362,7 +362,7 @@ function testTouchChanged() {
   // test changing y radius
   event.touches[0].radius.y += 1;
   sendTouchEvent(cwu, "touchmove", event, 0);
-  
+
   // test changing x radius
   event.touches[0].radius.x += 1;
   sendTouchEvent(cwu, "touchmove", event, 0);
@@ -377,7 +377,7 @@ function testTouchChanged() {
 
   // changing nothing again
   sendTouchEvent(cwu, "touchmove", event, 0);
-  
+
   is(moveEvents, 7, "Six move events fired");
 
   window.removeEventListener("touchmove", onMove);
@@ -406,7 +406,7 @@ function testPreventDefault() {
   let preventFunction = function(aEvent) {
     aEvent.preventDefault();
   }
-  
+
   let tests = [
     [{ name: "touchstart", prevent: false },
      { name: "touchmove", prevent: false },
@@ -450,7 +450,7 @@ function testPreventDefault() {
     for (var j = 0; j < tests[i].length; j++) {
       dotest(tests[i][j]);
     }
-  } 
+  }
 
   nextTest();
 }
@@ -470,7 +470,7 @@ function testRemovingElement() {
     changedTouches: [touch1]
   });
 
-  var touchEvents = 0;  
+  var touchEvents = 0;
   var removeTarget = function(aEvent) {
     aEvent.target.remove();
   };
