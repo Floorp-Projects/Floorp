@@ -9981,30 +9981,71 @@ CreateSimpleClipRegion(const nsDisplayMasksAndClipPaths& aDisplayItem,
     return Nothing();
   }
 
-  // TODO(emilio): We should be able to also simplify most of the circle() and
-  // ellipse() shapes.
   auto& shape = clipPath.GetBasicShape();
-  if (shape->GetShapeType() != StyleBasicShapeType::Inset) {
+  if (shape->GetShapeType() == StyleBasicShapeType::Polygon) {
     return Nothing();
   }
 
+  auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
   const nsRect refBox =
     nsLayoutUtils::ComputeGeometryBox(frame, clipPath.GetReferenceBox());
 
-  const nsRect insetRect =
-    ShapeUtils::ComputeInsetRect(shape, refBox) + aDisplayItem.ToReferenceFrame();
-
-  auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
-
-  nscoord radii[8] = { 0 };
   AutoTArray<wr::ComplexClipRegion, 1> clipRegions;
-  if (ShapeUtils::ComputeInsetRadii(shape, insetRect, refBox, radii)) {
-    clipRegions.AppendElement(wr::ToComplexClipRegion(
-      insetRect, radii, appUnitsPerDevPixel));
-  }
 
-  auto rect = wr::ToRoundedLayoutRect(
-    LayoutDeviceRect::FromAppUnits(insetRect, appUnitsPerDevPixel));
+  wr::LayoutRect rect;
+  switch (shape->GetShapeType()) {
+    case StyleBasicShapeType::Inset: {
+      const nsRect insetRect =
+        ShapeUtils::ComputeInsetRect(shape, refBox) + aDisplayItem.ToReferenceFrame();
+
+      nscoord radii[8] = { 0 };
+
+      if (ShapeUtils::ComputeInsetRadii(shape, insetRect, refBox, radii)) {
+        clipRegions.AppendElement(wr::ToComplexClipRegion(
+          insetRect, radii, appUnitsPerDevPixel));
+      }
+
+      rect = wr::ToRoundedLayoutRect(
+        LayoutDeviceRect::FromAppUnits(insetRect, appUnitsPerDevPixel));
+      break;
+    }
+    case StyleBasicShapeType::Ellipse:
+    case StyleBasicShapeType::Circle: {
+      nsPoint center = ShapeUtils::ComputeCircleOrEllipseCenter(shape, refBox);
+
+      nsSize radii;
+      if (shape->GetShapeType() == StyleBasicShapeType::Ellipse) {
+        radii = ShapeUtils::ComputeEllipseRadii(shape, center, refBox);
+      } else {
+        nscoord radius = ShapeUtils::ComputeCircleRadius(shape, center, refBox);
+        radii = { radius, radius };
+      }
+
+      nsRect ellipseRect(
+        aDisplayItem.ToReferenceFrame() + center - nsPoint(radii.width, radii.height),
+        radii * 2);
+
+      nscoord ellipseRadii[8];
+      NS_FOR_CSS_HALF_CORNERS(corner) {
+        ellipseRadii[corner] = HalfCornerIsX(corner) ? radii.width : radii.height;
+      }
+
+      clipRegions.AppendElement(wr::ToComplexClipRegion(
+          ellipseRect, ellipseRadii, appUnitsPerDevPixel));
+
+      rect = wr::ToRoundedLayoutRect(
+        LayoutDeviceRect::FromAppUnits(ellipseRect, appUnitsPerDevPixel));
+      break;
+    }
+    default:
+      // Please don't add more exceptions, try to find a way to define the clip
+      // without using a mask image.
+      //
+      // And if you _really really_ need to add an exception, add it to where
+      // the polygon check is.
+      MOZ_ASSERT_UNREACHABLE("Unhandled shape id?");
+      return Nothing();
+  }
   wr::WrClipId clipId =
     aBuilder.DefineClip(Nothing(), rect, &clipRegions, nullptr);
   return Some(clipId);
