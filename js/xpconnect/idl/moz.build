@@ -10,7 +10,6 @@ XPIDL_SOURCES += [
     'nsIXPCScriptable.idl',
     'xpccomponents.idl',
     'xpcIJSGetFactory.idl',
-    'xpcIJSModuleLoader.idl',
     'xpcIJSWeakReference.idl',
     'xpcjsid.idl',
 ]
