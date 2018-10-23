@@ -13,7 +13,7 @@ use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, RepeatMode, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
 use api::{ClipMode, TransformStyle, YuvColorSpace, YuvData};
-use clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore};
+use clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemSceneData};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use euclid::vec2;
 use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
@@ -25,7 +25,7 @@ use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PictureIdGenerator, PicturePrimitive};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance};
-use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey};
+use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData};
 use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore};
 use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive, PictureIndex};
 use render_backend::{DocumentView};
@@ -799,7 +799,12 @@ impl<'a> DisplayListFlattener<'a> {
             for item in clip_items {
                 // Intern this clip item, and store the handle
                 // in the clip chain node.
-                let handle = self.resources.clip_interner.intern(&item);
+                let handle = self.resources
+                    .clip_interner
+                    .intern(&item, || {
+                        ClipItemSceneData {
+                        }
+                    });
 
                 clip_chain_id = self.clip_store
                                     .add_clip_chain_node(
@@ -825,7 +830,12 @@ impl<'a> DisplayListFlattener<'a> {
     ) -> PrimitiveInstance {
         let prim_key = PrimitiveKey::new(info.is_backface_visible);
 
-        let prim_data_handle = self.resources.prim_interner.intern(&prim_key);
+        let prim_data_handle = self.resources
+            .prim_interner
+            .intern(&prim_key, || {
+                PrimitiveSceneData {
+                }
+            });
 
         let prim_index = self.prim_store.add_primitive(
             &info.rect,
@@ -1003,7 +1013,13 @@ impl<'a> DisplayListFlattener<'a> {
         let should_isolate = clipping_node.is_some();
 
         let prim_key = PrimitiveKey::new(is_backface_visible);
-        let primitive_data_handle = self.resources.prim_interner.intern(&prim_key);
+        let primitive_data_handle = self.resources
+            .prim_interner
+            .intern(&prim_key, || {
+                PrimitiveSceneData {
+                }
+            }
+        );
 
         // Push the SC onto the stack, so we know how to handle things in
         // pop_stacking_context.
@@ -1326,7 +1342,10 @@ impl<'a> DisplayListFlattener<'a> {
         let handle = self
             .resources
             .clip_interner
-            .intern(&ClipItemKey::rectangle(clip_region.main, ClipMode::Clip));
+            .intern(&ClipItemKey::rectangle(clip_region.main, ClipMode::Clip), || {
+                ClipItemSceneData {
+                }
+            });
 
         parent_clip_chain_index = self
             .clip_store
@@ -1341,7 +1360,10 @@ impl<'a> DisplayListFlattener<'a> {
             let handle = self
                 .resources
                 .clip_interner
-                .intern(&ClipItemKey::image_mask(image_mask));
+                .intern(&ClipItemKey::image_mask(image_mask), || {
+                    ClipItemSceneData {
+                    }
+                });
 
             parent_clip_chain_index = self
                 .clip_store
@@ -1357,7 +1379,10 @@ impl<'a> DisplayListFlattener<'a> {
             let handle = self
                 .resources
                 .clip_interner
-                .intern(&ClipItemKey::rounded_rect(region.rect, region.radii, region.mode));
+                .intern(&ClipItemKey::rounded_rect(region.rect, region.radii, region.mode), || {
+                    ClipItemSceneData {
+                    }
+                });
 
             parent_clip_chain_index = self
                 .clip_store
@@ -1514,7 +1539,13 @@ impl<'a> DisplayListFlattener<'a> {
                         );
 
                         let shadow_prim_key = PrimitiveKey::new(true);
-                        let shadow_prim_data_handle = self.resources.prim_interner.intern(&shadow_prim_key);
+                        let shadow_prim_data_handle = self.resources
+                            .prim_interner
+                            .intern(&shadow_prim_key, || {
+                                PrimitiveSceneData {
+                                }
+                            }
+                        );
 
                         let shadow_prim_instance = PrimitiveInstance::new(
                             shadow_prim_index,
