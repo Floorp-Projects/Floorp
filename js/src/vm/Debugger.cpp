@@ -806,7 +806,8 @@ Debugger::getFrame(JSContext* cx, const FrameIter& iter, MutableHandleDebuggerFr
 
         // If this is a generator frame, there may be an existing
         // Debugger.Frame object that isn't in `frames` because the generator
-        // was suspended, popping the stack frame, and later resumed.
+        // was suspended, popping the stack frame, and later resumed (and we
+        // were not stepping, so did not pass through slowPathOnResumeFrame).
         Rooted<GeneratorObject*> genObj(cx);
         GeneratorWeakMap::AddPtr gp;
         if (referent.isGeneratorFrame()) {
@@ -822,23 +823,11 @@ Debugger::getFrame(JSContext* cx, const FrameIter& iter, MutableHandleDebuggerFr
                     // We have found an existing Debugger.Frame object. But
                     // since it was previously popped (see comment above), it
                     // is not currently "live". We must revive it.
-                    MOZ_ASSERT(!frame->isLive());
-                    FrameIter::Data* data = iter.copyData();
-                    if (!data) {
+                    if (!frame->resume(iter)) {
                         return false;
                     }
-                    frame->setPrivate(data);
-
                     if (!ensureExecutionObservabilityOfFrame(cx, referent)) {
                         return false;
-                    }
-
-                    RootedValue onStep(cx, frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER));
-                    if (!onStep.isUndefined()) {
-                        AutoRealm ar(cx, genObj);
-                        if (!referent.script()->incrementStepModeCount(cx)) {
-                            return false;
-                        }
                     }
                 }
             }
@@ -1010,6 +999,36 @@ Debugger::slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame)
     // Don't count on this method to be called every time a generator is
     // resumed! This is called only if the frame's debuggee bit is set,
     // i.e. the script has breakpoints or the frame is stepping.
+    MOZ_ASSERT(frame.isGeneratorFrame());
+    MOZ_ASSERT(frame.isDebuggee());
+
+    Rooted<GeneratorObject*> genObj(cx, GetGeneratorObjectForFrame(cx, frame));
+    MOZ_ASSERT(genObj);
+
+    // For each debugger, if there is an existing Debugger.Frame object for the
+    // resumed `frame`, update it with the new frame pointer and make sure the
+    // frame is observable.
+    if (GlobalObject::DebuggerVector* debuggers = frame.global()->getDebuggers()) {
+        for (Debugger* dbg : *debuggers) {
+            if (GeneratorWeakMap::Ptr entry = dbg->generatorFrames.lookup(genObj)) {
+                DebuggerFrame* frameObj = &entry->value()->as<DebuggerFrame>();
+                if (!dbg->frames.putNew(frame, frameObj)) {
+                    ReportOutOfMemory(cx);
+                    return ResumeMode::Throw;
+                }
+
+                FrameIter iter(cx);
+                MOZ_ASSERT(iter.abstractFramePtr() == frame);
+                if (!frameObj->resume(iter)) {
+                    return ResumeMode::Throw;
+                }
+                if (!ensureExecutionObservabilityOfFrame(cx, frame)) {
+                    return ResumeMode::Throw;
+                }
+            }
+        }
+    }
+
     return slowPathOnEnterFrame(cx, frame);
 }
 
@@ -7304,13 +7323,22 @@ Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx, AbstractFrameP
                                                    bool suspending)
 {
     forEachDebuggerFrame(frame, [&](DebuggerFrame* frameobj) {
-        Debugger* dbg = Debugger::fromChildJSObject(frameobj);
-
         FreeOp* fop = cx->runtime()->defaultFreeOp();
         frameobj->freeFrameIterData(fop);
-        DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame, frameobj);
+        if (!suspending) {
+            DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame, frameobj);
+        }
 
+        Debugger* dbg = Debugger::fromChildJSObject(frameobj);
         dbg->frames.remove(frame);
+
+        if (!suspending && frame.isGeneratorFrame()) {
+            // Terminally exiting a generator.
+            GeneratorObject* genObj = GetGeneratorObjectForFrame(cx, frame);
+            if (GeneratorWeakMap::Ptr p = dbg->generatorFrames.lookup(genObj)) {
+                dbg->generatorFrames.remove(p);
+            }
+        }
     });
 
     // If this is an eval frame, then from the debugger's perspective the
@@ -8455,6 +8483,17 @@ ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame, ResumeMode
 
     return ParseResumptionValue(cx, rval, resumeMode, vp);
 };
+
+bool
+DebuggerFrame::resume(const FrameIter& iter)
+{
+    FrameIter::Data* data = iter.copyData();
+    if (!data) {
+        return false;
+    }
+    setPrivate(data);
+    return true;
+}
 
 /* static */ NativeObject*
 DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, Handle<GlobalObject*> global)

@@ -25,6 +25,7 @@ dbg.onEnterFrame = frame => {
             previousLine = line;
         }
     };
+    dbg.onEnterFrame = undefined;
 };
 
 // Run.
