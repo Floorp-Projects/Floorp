@@ -2730,16 +2730,6 @@ GetChannelCountOfImageFormat(ImageBitmapFormat aFormat)
   return format->GetChannelCount();
 }
 
-uint32_t
-CalculateImageBufferSize(ImageBitmapFormat aFormat,
-                         uint32_t aWidth, uint32_t aHeight)
-{
-  UtilsUniquePtr format = Utils::GetUtils(aFormat);
-  MOZ_ASSERT(format, "Cannot get a valid ImageBitmapFormatUtils instance.");
-
-  return format->NeededBufferSize(aWidth, aHeight);
-}
-
 UniquePtr<ImagePixelLayout>
 CopyAndConvertImageData(ImageBitmapFormat aSrcFormat,
                         const uint8_t* aSrcBuffer,
