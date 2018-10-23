@@ -20,6 +20,7 @@ mod send_recv;
 mod context;
 mod stream;
 
+use audioipc::PlatformHandleType;
 use context::ClientContext;
 use cubeb_backend::{capi, ffi};
 use std::os::raw::{c_char, c_int};
@@ -34,7 +35,7 @@ thread_local!(static CPUPOOL_INIT_PARAMS: InitParamsTls = std::cell::RefCell::ne
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct AudioIpcInitParams {
-    pub server_connection: c_int,
+    pub server_connection: PlatformHandleType,
     pub pool_size: usize,
     pub stack_size: usize,
     pub thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,

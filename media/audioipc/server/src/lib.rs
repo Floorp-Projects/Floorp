@@ -22,6 +22,7 @@ use audioipc::messages::{CallbackReq, CallbackResp, ClientMessage, Device, Devic
                          ServerMessage, StreamCreate, StreamInitParams, StreamParams};
 use audioipc::rpc;
 use audioipc::shm::{SharedMemReader, SharedMemWriter};
+use audioipc::PlatformHandleType;
 use cubeb::ffi;
 use futures::future::{self, FutureResult};
 use futures::sync::oneshot;
@@ -487,7 +488,7 @@ pub extern "C" fn audioipc_server_start() -> *mut c_void {
 }
 
 #[no_mangle]
-pub extern "C" fn audioipc_server_new_client(p: *mut c_void) -> libc::c_int {
+pub extern "C" fn audioipc_server_new_client(p: *mut c_void) -> PlatformHandleType {
     let (wait_tx, wait_rx) = oneshot::channel();
     let wrapper: &ServerWrapper = unsafe { &*(p as *mut _) };
 
