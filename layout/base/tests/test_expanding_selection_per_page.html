@@ -37,6 +37,7 @@ async function doTests(aWindow) {
   const kSelectToStartOrEnd = !IS_WIN;
 
   await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]});
+  await SimpleTest.promiseFocus(aWindow);
 
   function getNodeDescription(aNode) {
     function getElementDescription(aElement) {
