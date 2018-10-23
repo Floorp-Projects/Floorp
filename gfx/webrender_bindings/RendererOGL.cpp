@@ -168,6 +168,19 @@ RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize, const May
   mFrameStartTime = TimeStamp();
 #endif
 
+  // TODO: Flush pending actions such as texture deletions/unlocks and
+  //       textureHosts recycling.
+
+  return true;
+}
+
+void
+RendererOGL::CheckGraphicsResetStatus()
+{
+  if (!mCompositor || !mCompositor->gl()) {
+    return;
+  }
+
   gl::GLContext* gl = mCompositor->gl();
   if (gl->IsSupported(gl::GLFeature::robustness)) {
     GLenum resetStatus = gl->fGetGraphicsResetStatus();
@@ -179,11 +192,6 @@ RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize, const May
       ));
     }
   }
-
-  // TODO: Flush pending actions such as texture deletions/unlocks and
-  //       textureHosts recycling.
-
-  return true;
 }
 
 void

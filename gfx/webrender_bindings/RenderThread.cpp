@@ -376,6 +376,8 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
   } else {
     renderer->Update();
   }
+  // Check graphics reset status even when rendering is skipped.
+  renderer->CheckGraphicsResetStatus();
 
   TimeStamp end = TimeStamp::Now();
 
