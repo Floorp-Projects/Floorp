@@ -4,11 +4,11 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.28.0-SNAPSHOT (In Development)
+# 0.28.0
 
-Release date: TBD
+Release date: 2018-10-23
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.27.0...master),
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.27.0...v0.28.0),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/30?closed=1)
 
 ⚠️ **Note**: This and upcoming releases are **only** available from *maven.mozilla.org*.
