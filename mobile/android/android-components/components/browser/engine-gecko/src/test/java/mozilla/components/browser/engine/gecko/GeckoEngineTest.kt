@@ -85,7 +85,6 @@ class GeckoEngineTest {
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
-        `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
 
         GeckoEngine(context, DefaultSettings(

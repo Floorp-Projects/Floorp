@@ -9,9 +9,9 @@ buildscript {
     ]
 
     ext.geckoRelease = [
-        // mozilla-release: FENNEC_62_0_RELEASE
-        revision: '9cbae12a3fff404ed2c12070ad475424d0ae869f',
-        version: '62.0.20180830143136'
+        // mozilla-release: FENNEC_63_0_RELEASE
+        revision: '84219fbf133cacfc6e31c9471ad20ee7162a02af',
+        version: ''
     ]
 
     repositories {
@@ -62,7 +62,7 @@ allprojects {
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        // GeckoView Release (60.0.2)
+        // GeckoView Release
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         // ARM
@@ -79,6 +79,10 @@ allprojects {
         maven {
             url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision.${geckoRelease['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Servo
+        ////////////////////////////////////////////////////////////////////////////////////////////
 
         maven {
             url "https://download.servo.org/nightly/maven"

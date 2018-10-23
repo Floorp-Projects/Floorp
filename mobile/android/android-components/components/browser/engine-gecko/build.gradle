@@ -24,12 +24,13 @@ android {
 dependencies {
     implementation project(':concept-engine')
     implementation project(':support-ktx')
+    implementation project(':support-utils')
 
     // We only compile against the ARM artifact. We let the app decide which artifact to actually
     // use at runtime. As the Kotlin/Java API is the same for all ABIs it is not important which one
     // we import here.
-    compileOnly "org.mozilla:geckoview-release-armeabi-v7a:${rootProject.ext.geckoRelease['version']}"
-    testImplementation "org.mozilla:geckoview-release-armeabi-v7a:${rootProject.ext.geckoRelease['version']}"
+    compileOnly Gecko.geckoview_release_arm
+    testImplementation Gecko.geckoview_release_arm
 
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines
