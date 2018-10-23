@@ -16,7 +16,7 @@ transforms = TransformSequence()
 @transforms.add
 def make_beetmover_description(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
 
         locale = dep_job.attributes.get('locale')
         if not locale:
@@ -34,11 +34,11 @@ def make_beetmover_description(config, jobs):
 
         beet_description = {
             'label': job['label'],
-            'dependent-task': dep_job,
-            'grandparent-tasks': job['grandparent-tasks'],
+            'primary-dependency': dep_job,
+            'dependent-tasks': job['dependent-tasks'],
             'treeherder': treeherder,
             'locale': locale,
-            'shipping-phase': job.get('shipping-phase'),
-            'shipping-product': job.get('shipping-product'),
+            'shipping-phase': job['shipping-phase'],
+            'shipping-product': job['shipping-product'],
         }
         yield beet_description
