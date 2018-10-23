@@ -20,6 +20,7 @@ import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.utils.DownloadUtils
 import org.mozilla.gecko.util.ThreadUtils
+import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -252,18 +253,16 @@ class GeckoEngineSession(
 
         override fun onLoadRequest(
             session: GeckoSession,
-            uri: String,
-            target: Int,
-            flags: Int
-        ): GeckoResult<Boolean>? {
+            request: NavigationDelegate.LoadRequest
+        ): GeckoResult<AllowOrDeny> {
             val response = settings.requestInterceptor?.onLoadRequest(
                 this@GeckoEngineSession,
-                uri
+                request.uri
             )?.apply {
                 loadData(data, mimeType, encoding)
             }
 
-            return GeckoResult.fromValue(response != null)
+            return GeckoResult.fromValue(if (response != null) AllowOrDeny.DENY else AllowOrDeny.ALLOW)
         }
 
         override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {

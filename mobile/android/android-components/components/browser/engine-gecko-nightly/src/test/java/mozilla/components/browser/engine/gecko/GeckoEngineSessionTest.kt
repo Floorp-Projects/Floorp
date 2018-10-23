@@ -497,7 +497,7 @@ class GeckoEngineSessionTest {
         engineSession.geckoSession = spy(engineSession.geckoSession)
 
         engineSession.geckoSession.navigationDelegate.onLoadRequest(
-            engineSession.geckoSession, "sample:about", 0, 0)
+            engineSession.geckoSession, mockLoadRequest("sample:about"))
 
         assertEquals("sample:about", interceptorCalledWithUri!!)
         verify(engineSession.geckoSession).loadString("<h1>Hello World</h1>", "text/html")
@@ -511,7 +511,7 @@ class GeckoEngineSessionTest {
         engineSession.geckoSession = spy(engineSession.geckoSession)
 
         engineSession.geckoSession.navigationDelegate.onLoadRequest(
-            engineSession.geckoSession, "sample:about", 0, 0)
+            engineSession.geckoSession, mockLoadRequest("sample:about"))
 
         verify(engineSession.geckoSession, never()).loadString(anyString(), anyString())
     }
@@ -533,7 +533,7 @@ class GeckoEngineSessionTest {
         engineSession.geckoSession = spy(engineSession.geckoSession)
 
         engineSession.geckoSession.navigationDelegate.onLoadRequest(
-            engineSession.geckoSession, "sample:about", 0, 0)
+            engineSession.geckoSession, mockLoadRequest("sample:about"))
 
         assertEquals("sample:about", interceptorCalledWithUri!!)
         verify(engineSession.geckoSession, never()).loadString(anyString(), anyString())
@@ -556,7 +556,7 @@ class GeckoEngineSessionTest {
         verify(requestInterceptor, never()).onErrorRequest(engineSession, ErrorType.UNKNOWN, "")
         onLoadError.then { value: String? ->
             interceptedUri = value
-            GeckoResult<String>(null)
+            GeckoResult.fromValue(null)
         }
         assertNull(interceptedUri)
 
@@ -572,7 +572,7 @@ class GeckoEngineSessionTest {
         verify(requestInterceptor).onErrorRequest(engineSession, ErrorType.UNKNOWN, "")
         onLoadError.then { value: String? ->
             interceptedUri = value
-            GeckoResult<String>(null)
+            GeckoResult.fromValue(null)
         }
         assertNull(interceptedUri)
     }
@@ -598,7 +598,7 @@ class GeckoEngineSessionTest {
         )
         onLoadError.then { value: String? ->
             assertTrue(value!!.contains("data:text/html;base64,"))
-            GeckoResult<String>(null)
+            GeckoResult.fromValue(null)
         }
     }
 
@@ -940,5 +940,16 @@ class GeckoEngineSessionTest {
         engineSession.clearData()
 
         verifyZeroInteractions(observer)
+    }
+
+    private fun mockLoadRequest(uri: String): GeckoSession.NavigationDelegate.LoadRequest {
+        val constructor = GeckoSession.NavigationDelegate.LoadRequest::class.java.getDeclaredConstructor(
+            String::class.java,
+            String::class.java,
+            Int::class.java,
+            Int::class.java)
+        constructor.isAccessible = true
+
+        return constructor.newInstance(uri, uri, 0, 0)
     }
 }
