@@ -49,7 +49,7 @@
 #include "nsIPropertyBag2.h"
 #include "nsIProtocolProxyService.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
-#include "nsIRequestObserverProxy.h"
+#include "nsRequestObserverProxy.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISensitiveInfoHiddenURI.h"
 #include "nsISimpleStreamListener.h"
@@ -1227,14 +1227,10 @@ NS_NewRequestObserverProxy(nsIRequestObserver **result,
                            nsIRequestObserver  *observer,
                            nsISupports         *context)
 {
-    nsresult rv;
-    nsCOMPtr<nsIRequestObserverProxy> proxy =
-        do_CreateInstance(NS_REQUESTOBSERVERPROXY_CONTRACTID, &rv);
+    nsCOMPtr<nsIRequestObserverProxy> proxy = new nsRequestObserverProxy();
+    nsresult rv = proxy->Init(observer, context);
     if (NS_SUCCEEDED(rv)) {
-        rv = proxy->Init(observer, context);
-        if (NS_SUCCEEDED(rv)) {
-            proxy.forget(result);
-        }
+        proxy.forget(result);
     }
     return rv;
 }
