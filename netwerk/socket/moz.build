@@ -33,6 +33,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     XPIDL_SOURCES += [
         'nsINamedPipeService.idl',
     ]
+    EXPORTS += [
+        'nsNamedPipeService.h',
+    ]
     UNIFIED_SOURCES += [
         'nsNamedPipeIOLayer.cpp',
         'nsNamedPipeService.cpp'
