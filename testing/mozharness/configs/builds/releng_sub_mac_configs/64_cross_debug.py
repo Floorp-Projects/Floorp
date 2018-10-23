@@ -1,9 +1,6 @@
 import os
 
 config = {
-    'default_actions': [
-        'build',
-    ],
     'stage_platform': 'macosx64-debug',
     'debug_build': True,
     #### 64 bit build specific #####
@@ -22,7 +19,6 @@ config = {
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
         ##
     },
-    'mozconfig_variant': 'debug',
     'artifact_flag_build_variant_in_try': 'cross-debug-artifact',
     #######################
 }

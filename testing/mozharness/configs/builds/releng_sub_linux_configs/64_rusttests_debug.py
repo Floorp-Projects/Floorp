@@ -1,11 +1,6 @@
 import os
 
 config = {
-    'default_actions': [
-        'clobber',
-        'build',
-        'check-test',
-    ],
     'stage_platform': 'linux64-rusttests-debug',
     'debug_build': True,
     'env': {
@@ -22,6 +17,5 @@ config = {
         'LD_LIBRARY_PATH': '%(abs_obj_dir)s/dist/bin',
         'TINDERBOX_OUTPUT': '1',
     },
-    'mozconfig_variant': 'rusttests-debug',
     'artifact_flag_build_variant_in_try': None,
 }
