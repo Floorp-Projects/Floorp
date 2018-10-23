@@ -398,7 +398,7 @@ private:
     } else if (const FieldDecl *D2 = dyn_cast<FieldDecl>(Decl)) {
       const RecordDecl *Record = D2->getParent();
       return std::string("F_<") + getMangledName(Ctx, Record) + ">_" +
-             toString(D2->getFieldIndex());
+             D2->getNameAsString();
     } else if (const EnumConstantDecl *D2 = dyn_cast<EnumConstantDecl>(Decl)) {
       const DeclContext *DC = Decl->getDeclContext();
       if (const NamedDecl *Named = dyn_cast<NamedDecl>(DC)) {
