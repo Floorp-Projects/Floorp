@@ -47,6 +47,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'WinDllServices.h',
     ]
     UNIFIED_SOURCES += [
+        '/toolkit/mozapps/update/common/win_dirent.cpp',
         'nsNativeAppSupportWin.cpp',
         'WinDllServices.cpp',
     ]
@@ -98,6 +99,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     ]
 
 UNIFIED_SOURCES += [
+    '/toolkit/mozapps/update/common/commonupdatedir.cpp',
     'AutoSQLiteLifetime.cpp',
     'Bootstrap.cpp',
     'CreateAppData.cpp',

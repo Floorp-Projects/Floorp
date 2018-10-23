@@ -25,18 +25,6 @@
 #include <objbase.h>
 #include <objidl.h>
 
-namespace {
-
-struct LocalFreeDeleter
-{
-  void operator()(void* aPtr)
-  {
-    ::LocalFree(aPtr);
-  }
-};
-
-} // anonymous namespace
-
 // This API from oleaut32.dll is not declared in Windows SDK headers
 extern "C" void __cdecl SetOaNoCache(void);
 

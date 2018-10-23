@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'commonupdatedir.h',
     'readstrings.h',
     'updatecommon.h',
     'updatedefines.h',
@@ -16,6 +17,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'uachelper.h',
         'updatehelper.cpp',
         'updatehelper.h',
+        'win_dirent.h',
     ]
     if CONFIG['MOZ_MAINTENANCE_SERVICE']:
         EXPORTS += [
@@ -35,9 +37,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'pathhash.cpp',
         'uachelper.cpp',
         'updatehelper.cpp',
+        'win_dirent.cpp',
     ]
     OS_LIBS += [
+        'advapi32',
+        'ole32',
         'rpcrt4',
+        'shell32',
     ]
     if CONFIG['MOZ_MAINTENANCE_SERVICE']:
         SOURCES += [
@@ -50,9 +56,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
 
 SOURCES += [
+    '/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',
+    'commonupdatedir.cpp',
     'readstrings.cpp',
     'updatecommon.cpp',
 ]
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497
+
+LOCAL_INCLUDES += [
+    '/other-licenses/nsis/Contrib/CityHash/cityhash',
+]
+
+DEFINES['MOZ_APP_BASENAME'] = '"%s"' % CONFIG['MOZ_APP_BASENAME']

@@ -9,6 +9,7 @@
 # include <softpub.h>
 # include <direct.h>
 # include <io.h>
+# include "commonupdatedir.h"
   typedef WCHAR NS_tchar;
 # define NS_main wmain
 # ifndef F_OK
@@ -194,6 +195,7 @@ int NS_main(int argc, NS_tchar **argv)
             "   or: remove-symlink dir1 dir2 file symlink\n" \
             "   or: check-symlink symlink\n" \
             "   or: post-update\n" \
+            "   or: create-update-dir\n" \
             "\n" \
             "  WORKINGDIR  \tThe relative path to the working directory to use.\n" \
             "  INFILE      \tThe relative path from the working directory for the file to\n" \
@@ -350,6 +352,19 @@ int NS_main(int argc, NS_tchar **argv)
       return 0;
     }
     return lastState;
+#else
+    // Not implemented on non-Windows platforms
+    return 1;
+#endif
+  }
+
+  if (!NS_tstrcmp(argv[1], NS_T("create-update-dir"))) {
+#ifdef XP_WIN
+    mozilla::UniquePtr<wchar_t[]> updateDir;
+    HRESULT result = GetCommonUpdateDirectory(argv[2], nullptr, nullptr,
+                                              SetPermissionsOf::AllFilesAndDirs,
+                                              updateDir);
+    return SUCCEEDED(result) ? 0 : 1;
 #else
     // Not implemented on non-Windows platforms
     return 1;
