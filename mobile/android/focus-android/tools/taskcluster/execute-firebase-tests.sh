@@ -39,19 +39,27 @@ set +e
 URL_FLANK_BIN=`curl -s https://api.github.com/repos/TestArmada/flank/releases/latest | grep "browser_download_url*" | cut -d '"' -f 4`
 JAVA_BIN="/usr/bin/java"
 PATH_TEST="/opt/focus-android/app/src/androidTest/java/org/mozilla/focus/activity"
+PATH_TOOLS="/opt/focus-android/tools/taskcluster"
 PACKAGE="org.mozilla.focus.activity"
 FLANK_BIN="flank.jar"
-FLANK_CONF="flank.yml"
+FLANK_CONF="$PATH_TOOLS/flank.yml"
 
 
 if [ "$1" == "x86" ] || [ "$1" == "arm" ]; then
-    FLANK_CONF_TEMPLATE="flank-conf-webview-${1}.yml"
-else
-    echo "ERROR: $1 does not match [x86 | arm]"
-    exit 1
+    if [ "$2" == "geckoview" ] || [ "$2" == "webview" ]; then
+        FLANK_CONF_TEMPLATE="$PATH_TOOLS/flank-conf-${2}-${1}.yml"
+    else
+	echo "ERROR: $1 does not match [x86 | arm]"
+        echo "or"
+	echo "ERROR: $2 does not match [geckoview | webview]"
+	exit 1
+    fi
 fi
 echo
-echo "FLANK_CONF: $FLANK_CONF_TEMPLATE"
+echo "---------------------------------------"
+echo "FLANK_CONF_TEMPLATE"
+echo "---------------------------------------"
+echo "$FLANK_CONF_TEMPLATE"
 echo
 
 rm  -f TEST_TARGETS 
@@ -59,9 +67,9 @@ rm  -f $FLANK_BIN
 
 wget $URL_FLANK_BIN
 echo
-echo "----------------------------"
+echo "---------------------------------------"
 echo "FLANK VERSION"
-echo "----------------------------"
+echo "---------------------------------------"
 chmod +x $FLANK_BIN
 $JAVA_BIN -jar $FLANK_BIN -v
 echo
