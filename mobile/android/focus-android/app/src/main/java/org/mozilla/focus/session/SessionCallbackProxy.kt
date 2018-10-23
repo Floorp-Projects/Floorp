@@ -17,9 +17,10 @@ import org.mozilla.focus.utils.AppConstants
 @Suppress("TooManyFunctions")
 class SessionCallbackProxy(private val session: Session, private val delegate: IWebView.Callback) : IWebView.Callback {
 
+    var isDownload = false
+
     override fun onPageStarted(url: String) {
         session.loading = true
-        session.securityInfo = Session.SecurityInfo(false)
 
         // We are always setting the progress to 5% when a new page starts loading. Otherwise it might
         // look like the browser is doing nothing (on a slow network) until we receive a progress
@@ -27,17 +28,22 @@ class SessionCallbackProxy(private val session: Session, private val delegate: I
         session.progress = MINIMUM_PROGRESS
 
         if (!AppConstants.isGeckoBuild) {
+            session.securityInfo = Session.SecurityInfo(false)
             session.url = url
         }
     }
 
     override fun onPageFinished(isSecure: Boolean) {
         session.loading = false
-        session.securityInfo = Session.SecurityInfo(
+        if (!isDownload || !AppConstants.isGeckoBuild) {
+            session.securityInfo = Session.SecurityInfo(
                 isSecure,
                 session.securityInfo.host,
                 session.securityInfo.issuer
-        )
+            )
+        } else {
+            isDownload = false
+        }
     }
 
     override fun onSecurityChanged(isSecure: Boolean, host: String?, organization: String?) {
@@ -100,6 +106,7 @@ class SessionCallbackProxy(private val session: Session, private val delegate: I
 
     override fun onDownloadStart(download: Download) {
         // To be replaced with session property
+        isDownload = true
         delegate.onDownloadStart(download)
     }
 
