@@ -2141,8 +2141,13 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
                 }
             } else {
                 mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
-                JS::SourceBufferHolder srcBuf(chars.begin().get(), chars.length(),
-                                              JS::SourceBufferHolder::NoOwnership);
+                JS::SourceBufferHolder srcBuf;
+                if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
+                                 JS::SourceBufferHolder::NoOwnership))
+                {
+                    return false;
+                }
+
                 if (envChain.length() == 0) {
                     (void) JS::Compile(cx, options, srcBuf, &script);
                 } else {
@@ -2383,8 +2388,12 @@ Run(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JS::SourceBufferHolder srcBuf(chars.twoByteRange().begin().get(), str->length(),
-                                  JS::SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, chars.twoByteRange().begin().get(), str->length(),
+                     JS::SourceBufferHolder::NoOwnership))
+    {
+        return false;
+    }
 
     RootedScript script(cx);
     int64_t startClock = PRMJ_Now();
@@ -3865,8 +3874,10 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
         }
         JS::CompileOptions opts(cx);
         opts.setFileAndLine(filename.get(), lineno);
-        JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
-        if (!JS::Evaluate(cx, opts, srcBuf, args.rval())) {
+        JS::SourceBufferHolder srcBuf;
+        if (!srcBuf.init(cx, src, srclen, JS::SourceBufferHolder::NoOwnership) ||
+            !JS::Evaluate(cx, opts, srcBuf, args.rval()))
+        {
             return false;
         }
     }
@@ -3979,9 +3990,11 @@ WorkerMain(WorkerInput* input)
 
         AutoReportException are(cx);
         RootedScript script(cx);
-        JS::SourceBufferHolder srcBuf(input->chars.get(), input->length,
-                                      JS::SourceBufferHolder::NoOwnership);
-        if (!JS::Compile(cx, options, srcBuf, &script)) {
+        JS::SourceBufferHolder srcBuf;
+        if (!srcBuf.init(cx, input->chars.get(), input->length,
+                         JS::SourceBufferHolder::NoOwnership) ||
+            !JS::Compile(cx, options, srcBuf, &script))
+        {
             break;
         }
         RootedValue result(cx);
@@ -4656,13 +4669,21 @@ Compile(JSContext* cx, unsigned argc, Value* vp)
            .setFileAndLine("<string>", 1)
            .setIsRunOnce(true)
            .setNoScriptRval(true);
+
+    JS::SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, stableChars.twoByteRange().begin().get(), scriptContents->length(),
+                     JS::SourceBufferHolder::NoOwnership))
+    {
+        return false;
+    }
+
     RootedScript script(cx);
-    JS::SourceBufferHolder srcBuf(stableChars.twoByteRange().begin().get(),
-                                  scriptContents->length(),
-                                  JS::SourceBufferHolder::NoOwnership);
-    bool ok = JS::Compile(cx, options, srcBuf, &script);
+    if (!JS::Compile(cx, options, srcBuf, &script)) {
+        return false;
+    }
+
     args.rval().setUndefined();
-    return ok;
+    return true;
 }
 
 static ShellCompartmentPrivate*
@@ -4724,8 +4745,10 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
     }
 
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    JS::SourceBufferHolder srcBuf(chars, scriptContents->length(),
-                                  JS::SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, chars, scriptContents->length(), JS::SourceBufferHolder::NoOwnership)) {
+        return false;
+    }
 
     RootedObject module(cx, frontend::CompileModule(cx, options, srcBuf));
     if (!module) {
@@ -5436,10 +5459,9 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JS::SourceBufferHolder srcBuf(job->sourceChars(), length,
-                                  JS::SourceBufferHolder::NoOwnership);
-    if (!JS::CompileOffThread(cx, options, srcBuf,
-                              OffThreadCompileScriptCallback, job))
+    JS::SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, job->sourceChars(), length, JS::SourceBufferHolder::NoOwnership) ||
+        !JS::CompileOffThread(cx, options, srcBuf, OffThreadCompileScriptCallback, job))
     {
         job->cancel();
         DeleteOffThreadJob(cx, job);
@@ -5530,10 +5552,9 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JS::SourceBufferHolder srcBuf(job->sourceChars(), length,
-                                  JS::SourceBufferHolder::NoOwnership);
-    if (!JS::CompileOffThreadModule(cx, options, srcBuf,
-                                    OffThreadCompileScriptCallback, job))
+    JS::SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, job->sourceChars(), length, JS::SourceBufferHolder::NoOwnership) ||
+        !JS::CompileOffThreadModule(cx, options, srcBuf, OffThreadCompileScriptCallback, job))
     {
         job->cancel();
         DeleteOffThreadJob(cx, job);
@@ -8211,9 +8232,12 @@ EntryPoints(JSContext* cx, unsigned argc, Value* vp)
             if (!stableChars.initTwoByte(cx, codeString)) {
                 return false;
             }
-            JS::SourceBufferHolder srcBuf(stableChars.twoByteRange().begin().get(),
-                                          codeString->length(),
-                                          JS::SourceBufferHolder::NoOwnership);
+            JS::SourceBufferHolder srcBuf;
+            if (!srcBuf.init(cx, stableChars.twoByteRange().begin().get(), codeString->length(),
+                             JS::SourceBufferHolder::NoOwnership))
+            {
+                return false;
+            }
 
             CompileOptions options(cx);
             options.setIntroductionType("entryPoint eval")

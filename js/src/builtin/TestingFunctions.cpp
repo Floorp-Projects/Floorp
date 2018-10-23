@@ -4033,7 +4033,11 @@ EvalReturningScope(JSContext* cx, unsigned argc, Value* vp)
     options.setFileAndLine(filename.get(), lineno);
     options.setNoScriptRval(true);
 
-    JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, src, srclen, JS::SourceBufferHolder::NoOwnership)) {
+        return false;
+    }
+
     RootedScript script(cx);
     if (!JS::CompileForNonSyntacticScope(cx, options, srcBuf, &script)) {
         return false;
@@ -4134,7 +4138,11 @@ ShellCloneAndExecuteScript(JSContext* cx, unsigned argc, Value* vp)
     options.setFileAndLine(filename.get(), lineno);
     options.setNoScriptRval(true);
 
-    JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
+    JS::SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, src, srclen, JS::SourceBufferHolder::NoOwnership)) {
+        return false;
+    }
+
     RootedScript script(cx);
     if (!JS::Compile(cx, options, srcBuf, &script)) {
         return false;
@@ -5558,9 +5566,13 @@ js::TestingFunctionArgumentToScript(JSContext* cx,
         }
         const char16_t* chars = linearChars.twoByteRange().begin().get();
 
+        SourceBufferHolder source;
+        if (!source.init(cx, chars, len, SourceBufferHolder::NoOwnership)) {
+            return nullptr;
+        }
+
         RootedScript script(cx);
         CompileOptions options(cx);
-        SourceBufferHolder source(chars, len, SourceBufferHolder::NoOwnership);
         if (!JS::Compile(cx, options, source, &script)) {
             return nullptr;
         }

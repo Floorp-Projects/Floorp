@@ -11,8 +11,9 @@
 #include "mozilla/Maybe.h" // mozilla::None, mozilla::Some
 #include "mozilla/TextUtils.h" // mozilla::IsAscii
 
-#include <algorithm> // std::all_of
+#include <utility> // std::move
 
+#include "jsfriendapi.h" // js::GetErrorMessage
 #include "jstypes.h" // JS_PUBLIC_API
 
 #include "frontend/FullParseHandler.h" // frontend::FullParseHandler
@@ -22,6 +23,7 @@
 #include "js/RootingAPI.h" // JS::Rooted
 #include "js/SourceBufferHolder.h" // JS::SourceBufferHolder
 #include "js/TypeDecls.h" // JS::HandleObject, JS::MutableHandleScript
+#include "js/Utility.h" // JS::UniqueTwoByteChars
 #include "js/Value.h" // JS::Value
 #include "util/CompleteFile.h" // js::FileContents, js::ReadCompleteFile
 #include "util/StringBuffer.h" // js::StringBuffer
@@ -36,10 +38,17 @@ using JS::CompileOptions;
 using JS::HandleObject;
 using JS::ReadOnlyCompileOptions;
 using JS::SourceBufferHolder;
+using JS::UniqueTwoByteChars;
 using JS::UTF8Chars;
 using JS::UTF8CharsToNewTwoByteCharsZ;
 
 using namespace js;
+
+JS_PUBLIC_API(void)
+JS::detail::ReportSourceTooLong(JSContext* cx)
+{
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SOURCE_TOO_LONG);
+}
 
 static bool
 CompileSourceBuffer(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -59,12 +68,16 @@ static bool
 CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
               const char* bytes, size_t length, JS::MutableHandleScript script)
 {
-    char16_t* chars = InflateString(cx, bytes, length);
+    auto chars = UniqueTwoByteChars(InflateString(cx, bytes, length));
     if (!chars) {
         return false;
     }
 
-    SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
+    SourceBufferHolder source;
+    if (!source.init(cx, std::move(chars), length)) {
+        return false;
+    }
+
     return CompileSourceBuffer(cx, options, source, script);
 }
 
@@ -72,12 +85,17 @@ static bool
 CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
             const char* bytes, size_t length, JS::MutableHandleScript script)
 {
-    char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
+    auto chars = UniqueTwoByteChars(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length),
+                                                                &length).get());
     if (!chars) {
         return false;
     }
 
-    SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
+    SourceBufferHolder source;
+    if (!source.init(cx, std::move(chars), length)) {
+        return false;
+    }
+
     return CompileSourceBuffer(cx, options, source, script);
 }
 
@@ -339,7 +357,15 @@ JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
     }
 
     size_t newLen = funStr.length();
-    SourceBufferHolder newSrcBuf(funStr.stealChars(), newLen, SourceBufferHolder::GiveOwnership);
+    UniqueTwoByteChars stolen(funStr.stealChars());
+    if (!stolen) {
+        return false;
+    }
+
+    SourceBufferHolder newSrcBuf;
+    if (!newSrcBuf.init(cx, std::move(stolen), newLen)) {
+        return false;
+    }
 
     return CompileFunction(cx, options, nameAtom, isInvalidName, newSrcBuf, parameterListEnd, env,
                            scope, fun);
@@ -351,12 +377,17 @@ JS::CompileFunctionUtf8(JSContext* cx, AutoObjectVector& envChain,
                         const char* name, unsigned nargs, const char* const* argnames,
                         const char* bytes, size_t length, MutableHandleFunction fun)
 {
-    char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
+    auto chars = UniqueTwoByteChars(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length),
+                                                                &length).get());
     if (!chars) {
         return false;
     }
 
-    SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
+    SourceBufferHolder source;
+    if (!source.init(cx, std::move(chars), length)) {
+        return false;
+    }
+
     return CompileFunction(cx, envChain, options, name, nargs, argnames,
                            source, fun);
 }
@@ -518,12 +549,17 @@ extern JS_PUBLIC_API(bool)
 JS::EvaluateUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
                  const char* bytes, size_t length, MutableHandle<Value> rval)
 {
-    char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
+    auto chars = UniqueTwoByteChars(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length),
+                                                                &length).get());
     if (!chars) {
         return false;
     }
 
-    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::GiveOwnership);
+    SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, std::move(chars), length)) {
+        return false;
+    }
+
     RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
     return ::Evaluate(cx, ScopeKind::Global, globalLexical, options, srcBuf, rval);
 }
@@ -532,12 +568,16 @@ extern JS_PUBLIC_API(bool)
 JS::EvaluateLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
                    const char* bytes, size_t length, MutableHandle<Value> rval)
 {
-    char16_t* chars = InflateString(cx, bytes, length);
+    auto chars = UniqueTwoByteChars(InflateString(cx, bytes, length));
     if (!chars) {
         return false;
     }
 
-    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::GiveOwnership);
+    SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, std::move(chars), length)) {
+        return false;
+    }
+
     RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
     return ::Evaluate(cx, ScopeKind::Global, globalLexical, options, srcBuf, rval);
 }

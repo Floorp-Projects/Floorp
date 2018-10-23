@@ -698,7 +698,7 @@
  *   constructor doesn't initialize all of the member variables and another function
  *   is used to initialize the rest. This marker is used to make the static analysis
  *   tool aware that the marked function is part of the initialization process
- *   and to include the marked function in the scan mechanism that determines witch
+ *   and to include the marked function in the scan mechanism that determines which
  *   member variables still remain uninitialized.
  * MOZ_NON_PARAM: Applies to types. Makes it compile time error to use the type
  *   in parameter without pointer or reference.
