@@ -170,7 +170,7 @@ function getFilename(source) {
     id
   } = source;
 
-  if (!url) {
+  if (!getRawSourceURL(url)) {
     return getFormattedSourceId(id);
   }
 

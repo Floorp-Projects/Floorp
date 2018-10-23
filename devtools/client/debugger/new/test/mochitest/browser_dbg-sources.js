@@ -40,7 +40,7 @@ add_task(async function() {
 
   ok(fourthNode.classList.contains("focused"), "4th node is focused");
   ok(selectedSource.includes("nested-source.js"), "nested-source is selected");
-
+  await assertNodeIsFocused(dbg, 4);
   await waitForSelectedSource(dbg, "nested-source");
 
   // Make sure new sources appear in the list.
@@ -51,6 +51,7 @@ add_task(async function() {
   });
 
   await waitForSourceCount(dbg, 9);
+  await assertNodeIsFocused(dbg, 4);
   is(
     getLabel(dbg, 7),
     "math.min.js",

@@ -102,7 +102,7 @@ function getMenuItems(event, {
     id: "node-menu-copy-source-url",
     label: copySourceUri2Label,
     accesskey: copySourceUri2Key,
-    disabled: false,
+    disabled: !selectedSource.url,
     click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(selectedSource.url))
   };
   const sourceId = selectedSource.id;
@@ -139,14 +139,14 @@ function getMenuItems(event, {
     id: "node-menu-show-source",
     label: revealInTreeLabel,
     accesskey: revealInTreeKey,
-    disabled: false,
+    disabled: !selectedSource.url,
     click: () => showSource(sourceId)
   };
   const blackBoxMenuItem = {
     id: "node-menu-blackbox",
     label: toggleBlackBoxLabel,
     accesskey: blackboxKey,
-    disabled: isOriginal || isPrettyPrinted || hasSourceMap,
+    disabled: isOriginal || isPrettyPrinted || hasSourceMap || !selectedSource.url,
     click: () => toggleBlackBox(selectedSource)
   };
   const watchExpressionItem = {
