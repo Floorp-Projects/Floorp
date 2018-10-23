@@ -70,8 +70,6 @@ const testText = "test string";
 let cipherText;
 
 add_task(async function test_encrypt_decrypt() {
-  Assert.equal(OSKeyStore.isEnabled, true);
-
   Assert.equal(await OSKeyStore.ensureLoggedIn(), true, "Started logged in.");
 
   cipherText = await OSKeyStore.encrypt(testText);

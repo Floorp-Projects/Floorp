@@ -12,12 +12,9 @@ let gFakeLoggedIn = true;
 
 add_task(function setup() {
   OSKeyStoreTestUtils.setup();
-  oldGetters.isEnabled = Object.getOwnPropertyDescriptor(OSKeyStore, "isEnabled").get;
   oldGetters.isLoggedIn = Object.getOwnPropertyDescriptor(OSKeyStore, "isLoggedIn").get;
-  OSKeyStore.__defineGetter__("isEnabled", () => true);
   OSKeyStore.__defineGetter__("isLoggedIn", () => gFakeLoggedIn);
   registerCleanupFunction(async () => {
-    OSKeyStore.__defineGetter__("isEnabled", oldGetters.isEnabled);
     OSKeyStore.__defineGetter__("isLoggedIn", oldGetters.isLoggedIn);
     await OSKeyStoreTestUtils.cleanup();
 
@@ -31,7 +28,6 @@ add_task(function setup() {
 });
 
 add_task(async function test_getLabel_withOSKeyStore() {
-  ok(OSKeyStore.isEnabled, "Confirm that OSKeyStore is faked and thinks it is enabled");
   ok(OSKeyStore.isLoggedIn, "Confirm that OSKeyStore is faked and thinks it is logged in");
 
   const ccNumber = "4111111111111111";
