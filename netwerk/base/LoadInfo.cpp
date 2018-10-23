@@ -1573,5 +1573,19 @@ LoadInfo::GetPerformanceStorage()
   return mPerformanceStorage;
 }
 
+NS_IMETHODIMP
+LoadInfo::GetCspEventListener(nsICSPEventListener** aCSPEventListener)
+{
+  NS_IF_ADDREF(*aCSPEventListener = mCSPEventListener);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetCspEventListener(nsICSPEventListener* aCSPEventListener)
+{
+  mCSPEventListener = aCSPEventListener;
+  return NS_OK;
+}
+
 } // namespace net
 } // namespace mozilla

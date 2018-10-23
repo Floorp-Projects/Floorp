@@ -1473,7 +1473,6 @@ WorkerPrivate::SetCSP(nsIContentSecurityPolicy* aCSP)
   aCSP->EnsureEventTarget(mMainThreadEventTarget);
 
   mLoadInfo.mCSP = aCSP;
-  EnsureCSPEventListener();
 }
 
 nsresult
@@ -1514,7 +1513,6 @@ WorkerPrivate::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
   mLoadInfo.mCSP = csp;
   mLoadInfo.mEvalAllowed = evalAllowed;
   mLoadInfo.mReportCSPViolations = reportEvalViolations;
-  EnsureCSPEventListener();
 
   return NS_OK;
 }
@@ -3439,12 +3437,14 @@ WorkerPrivate::EnsureCSPEventListener()
       return false;
     }
   }
-
-  if (mLoadInfo.mCSP) {
-    mLoadInfo.mCSP->SetEventListener(mCSPEventListener);
-  }
-
   return true;
+}
+
+nsICSPEventListener*
+WorkerPrivate::CSPEventListener() const
+{
+  MOZ_ASSERT(mCSPEventListener);
+  return mCSPEventListener;
 }
 
 void

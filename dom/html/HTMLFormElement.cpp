@@ -1679,7 +1679,7 @@ HTMLFormElement::GetActionURL(nsIURI** aActionURL,
     // form-action is only enforced if explicitly defined in the
     // policy - do *not* consult default-src, see:
     // http://www.w3.org/TR/CSP2/#directive-default-src
-    rv = csp->Permits(this, actionURL,
+    rv = csp->Permits(this, nullptr /* nsICSPEventListener */, actionURL,
                       nsIContentSecurityPolicy::FORM_ACTION_DIRECTIVE,
                       true, &permitsFormAction);
     NS_ENSURE_SUCCESS(rv, rv);
