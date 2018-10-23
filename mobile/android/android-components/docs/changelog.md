@@ -13,10 +13,7 @@ permalink: /changelog/
 * Compiled against:
   * Android (SDK: 27, Support Libraries: 27.1.1)
   * Kotlin (Stdlib: 1.2.61, Coroutines: 0.23.4)
-  * GeckoView
-    * Nightly: 64.0.20181004100221
-    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
-    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
+  * GeckoView (Nightly: **65.0.20181023100123** 🔺, Beta: **64.0.20181022150107** 🔺, Release: **63.0.20181018182531** 🔺)
 * **lib-jexl**
   * New component for for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
 
