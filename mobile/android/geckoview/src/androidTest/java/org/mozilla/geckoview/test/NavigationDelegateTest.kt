@@ -973,4 +973,15 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitUntilCalled(GeckoSession.NavigationDelegate::class,
                                             "onNewSession")
     }
+
+    @Test
+    fun processSwitching() {
+        // This loads in the parent process
+        mainSession.loadUri("about:config")
+        sessionRule.waitForPageStop()
+
+        // This will load a page in the child
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+    }
 }
