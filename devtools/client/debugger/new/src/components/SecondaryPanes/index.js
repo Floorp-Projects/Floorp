@@ -68,6 +68,10 @@ var _FrameworkComponent = require("./FrameworkComponent");
 
 var _FrameworkComponent2 = _interopRequireDefault(_FrameworkComponent);
 
+var _XHRBreakpoints = require("./XHRBreakpoints");
+
+var _XHRBreakpoints2 = _interopRequireDefault(_XHRBreakpoints);
+
 var _Scopes = require("./Scopes");
 
 var _Scopes2 = _interopRequireDefault(_Scopes);
@@ -100,8 +104,15 @@ class SecondaryPanes extends _react.Component {
       });
     };
 
+    this.onXHRAdded = () => {
+      this.setState({
+        showXHRInput: false
+      });
+    };
+
     this.state = {
-      showExpressionsInput: false
+      showExpressionsInput: false,
+      showXHRInput: false
     };
   }
 
@@ -165,6 +176,20 @@ class SecondaryPanes extends _react.Component {
     return buttons;
   }
 
+  xhrBreakpointsHeaderButtons() {
+    const buttons = [];
+    buttons.push(debugBtn(evt => {
+      if (_prefs.prefs.expressionsVisible) {
+        evt.stopPropagation();
+      }
+
+      this.setState({
+        showXHRInput: true
+      });
+    }, "plus", "plus", L10N.getStr("xhrBreakpoints.placeholder")));
+    return buttons;
+  }
+
   getScopeItem() {
     return {
       header: L10N.getStr("scopes.header"),
@@ -207,6 +232,20 @@ class SecondaryPanes extends _react.Component {
       onToggle: opened => {
         _prefs.prefs.expressionsVisible = opened;
       }
+    };
+  }
+
+  getXHRItem() {
+    return {
+      header: L10N.getStr("xhrBreakpoints.header"),
+      className: "xhr-breakpoints-pane",
+      buttons: this.xhrBreakpointsHeaderButtons(),
+      component: _react2.default.createElement(_XHRBreakpoints2.default, {
+        showInput: this.state.showXHRInput,
+        onXHRAdded: this.onXHRAdded
+      }),
+      opened: true,
+      onToggle: () => {}
     };
   }
 
@@ -283,6 +322,10 @@ class SecondaryPanes extends _react.Component {
 
         items.push(this.getScopeItem());
       }
+    }
+
+    if (_prefs.features.xhrBreakpoints) {
+      items.push(this.getXHRItem());
     }
 
     if (_prefs.features.eventListeners) {
