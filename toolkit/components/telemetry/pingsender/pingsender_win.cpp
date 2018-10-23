@@ -143,7 +143,7 @@ Post(const string& url, const string& payload)
   }
 
   if (statusCode != 200) {
-    PINGSENDER_LOG("ERROR: Error submitting the HTTP request: code %u\n", statusCode);
+    PINGSENDER_LOG("ERROR: Error submitting the HTTP request: code %lu\n", statusCode);
     return false;
   }
 
