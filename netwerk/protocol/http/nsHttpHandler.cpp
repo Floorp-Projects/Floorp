@@ -61,6 +61,7 @@
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/net/RequestContextService.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -510,8 +511,7 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
-    mRequestContextService =
-        do_GetService("@mozilla.org/network/request-context-service;1");
+    mRequestContextService = RequestContextService::GetOrCreate();
 
 #if defined(ANDROID)
     mProductSub.AssignLiteral(MOZILLA_UAVERSION);

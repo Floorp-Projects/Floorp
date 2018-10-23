@@ -177,6 +177,7 @@ EXPORTS.mozilla.net += [
     'Predictor.h',
     'RedirectChannelRegistrar.h',
     'ReferrerPolicy.h',
+    'RequestContextService.h',
     'SimpleChannelParent.h',
     'TCPFastOpen.h',
 ]

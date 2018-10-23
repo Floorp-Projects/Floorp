@@ -21,6 +21,7 @@
 #include "nsIRequestContext.h"
 #include "CacheObserver.h"
 #include "MainThreadUtils.h"
+#include "RequestContextService.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -1056,7 +1057,7 @@ nsresult nsLoadGroup::MergeDefaultLoadFlags(nsIRequest *aRequest,
 
 nsresult nsLoadGroup::Init()
 {
-    mRequestContextService = do_GetService("@mozilla.org/network/request-context-service;1");
+    mRequestContextService = RequestContextService::GetOrCreate();
     if (mRequestContextService) {
         Unused << mRequestContextService->NewRequestContext(getter_AddRefs(mRequestContext));
     }
