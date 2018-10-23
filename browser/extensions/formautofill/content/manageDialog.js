@@ -317,11 +317,7 @@ class ManageCreditCards extends ManageRecords {
     elements.add.setAttribute("searchkeywords", FormAutofillUtils.EDIT_CREDITCARD_KEYWORDS
                                                   .map(key => FormAutofillUtils.stringBundle.GetStringFromName(key))
                                                   .join("\n"));
-    this._hasOSKeyStore = OSKeyStore.isEnabled;
     this._isDecrypted = false;
-    if (this._hasOSKeyStore) {
-      elements.showHideCreditCards.setAttribute("hidden", true);
-    }
   }
 
   /**
@@ -331,7 +327,7 @@ class ManageCreditCards extends ManageRecords {
    */
   async openEditDialog(creditCard) {
     // Ask for reauth if user is trying to edit an existing credit card.
-    if (!creditCard || !this._hasOSKeyStore || await OSKeyStore.ensureLoggedIn(true)) {
+    if (!creditCard || await OSKeyStore.ensureLoggedIn(true)) {
       let decryptedCCNumObj = {};
       if (creditCard) {
         decryptedCCNumObj["cc-number"] = await OSKeyStore.decrypt(creditCard["cc-number-encrypted"]);
@@ -362,12 +358,6 @@ class ManageCreditCards extends ManageRecords {
     return cardObj.getLabel({showNumbers: showCreditCards});
   }
 
-  async toggleShowHideCards(options) {
-    this._isDecrypted = !this._isDecrypted;
-    this.updateShowHideButtonState();
-    await this.updateLabels(options, this._isDecrypted);
-  }
-
   async updateLabels(options, isDecrypted) {
     for (let option of options) {
       option.text = await this.getLabel(option.record, isDecrypted);
@@ -395,25 +385,10 @@ class ManageCreditCards extends ManageRecords {
   }
 
   updateButtonsStates(selectedCount) {
-    this.updateShowHideButtonState();
     super.updateButtonsStates(selectedCount);
   }
 
-  updateShowHideButtonState() {
-    if (this._elements.records.length) {
-      this._elements.showHideCreditCards.removeAttribute("disabled");
-    } else {
-      this._elements.showHideCreditCards.setAttribute("disabled", true);
-    }
-    this._elements.showHideCreditCards.textContent =
-      this._isDecrypted ? FormAutofillUtils.stringBundle.GetStringFromName("hideCreditCardsBtnLabel") :
-                          FormAutofillUtils.stringBundle.GetStringFromName("showCreditCardsBtnLabel");
-  }
-
   handleClick(event) {
-    if (event.target == this._elements.showHideCreditCards) {
-      this.toggleShowHideCards(this._elements.records.options);
-    }
     super.handleClick(event);
   }
 }
