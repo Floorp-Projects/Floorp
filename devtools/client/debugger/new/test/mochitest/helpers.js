@@ -1340,3 +1340,21 @@ async function assertSourceCount(dbg, count) {
   await waitForSourceCount(dbg, count);
   is(findAllElements(dbg, "sourceNodes").length, count, `${count} sources`);
 }
+
+async function waitForNodeToGainFocus(dbg, index) {
+  await waitUntil(() => {
+    const element = findElement(dbg, "sourceNode", index);
+
+    if (element) {
+      return element.classList.contains("focused");
+    }
+
+    return false;
+  }, `waiting for source node ${index} to be focused`);
+}
+
+async function assertNodeIsFocused(dbg, index) {
+  await waitForNodeToGainFocus(dbg, index);
+  const node = findElement(dbg, "sourceNode", index);
+  ok(node.classList.contains("focused"), `node ${index} is focused`);
+}
