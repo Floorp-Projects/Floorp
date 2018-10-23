@@ -141,7 +141,7 @@ var resetExistingField = async function(id) {
 
   await iframe.contentWindow.configView._defaultField;
 
-  ok(resetBtn.classList.contains("hide"), true, "Reset button hidden");
+  ok(resetBtn.classList.contains("hide"), "Reset button hidden");
   is(existing.checked, true, "Existing field reset");
 };
 
