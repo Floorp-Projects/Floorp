@@ -157,21 +157,9 @@ treechildren::-moz-tree-cell-text(broken) {
 }
 
 /* Security Tab */
-#securityPanel .caption-icon {
-  display: none;
-}
 
-#securityPanel .header {
-  font-size: 120%;
-}
-
-#securityPanel .fieldLabel {
-  margin: 2px 10px 3px;
-}
-
-#securityPanel .fieldValue {
-  font-weight: bold;
-  margin: 2px 10px 3px;
+#securityPanel grid {
+  margin-bottom: 1em;
 }
 
 #securityPanel row {

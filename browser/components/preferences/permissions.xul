@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://browser/content/preferences/sitePermissions.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<window id="PermissionsDialog" class="windowDialog"
+<window id="PermissionsDialog"
         windowtype="Browser:Permissions"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-id="permissions-window"
@@ -31,7 +31,7 @@
     <key data-l10n-id="permissions-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
-  <vbox class="contentPane largeDialogContainer" flex="1">
+  <vbox class="contentPane">
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
     <label id="urlLabel" control="url" data-l10n-id="permissions-address"/>
@@ -61,23 +61,22 @@
       </listheader>
     </richlistbox>
   </vbox>
-  <vbox>
-    <hbox class="actionButtons" align="left" flex="1">
-      <button id="removePermission" disabled="true"
-              data-l10n-id="permissions-remove"
-              icon="remove"
-              oncommand="gPermissionManager.onPermissionDelete();"/>
-      <button id="removeAllPermissions"
-              data-l10n-id="permissions-remove-all"
-              icon="clear"
-              oncommand="gPermissionManager.onAllPermissionsDelete();"/>
-    </hbox>
-    <spacer flex="1"/>
-    <hbox class="actionButtons" align="right" flex="1">
-      <button oncommand="close();" icon="close"
-              data-l10n-id="permissions-button-cancel" />
-      <button id="btnApplyChanges" oncommand="gPermissionManager.onApplyChanges();" icon="save"
-              data-l10n-id="permissions-button-ok" />
-    </hbox>
-  </vbox>
+
+  <hbox class="actionButtons" align="left" flex="1">
+    <button id="removePermission" disabled="true"
+            data-l10n-id="permissions-remove"
+            icon="remove"
+            oncommand="gPermissionManager.onPermissionDelete();"/>
+    <button id="removeAllPermissions"
+            data-l10n-id="permissions-remove-all"
+            icon="clear"
+            oncommand="gPermissionManager.onAllPermissionsDelete();"/>
+  </hbox>
+  <spacer flex="1"/>
+  <hbox class="actionButtons" align="right" flex="1">
+    <button oncommand="close();" icon="close"
+            data-l10n-id="permissions-button-cancel" />
+    <button id="btnApplyChanges" oncommand="gPermissionManager.onApplyChanges();" icon="save"
+            data-l10n-id="permissions-button-ok" />
+  </hbox>
 </window>
