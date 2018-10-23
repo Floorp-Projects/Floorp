@@ -23,6 +23,7 @@ macosx64/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: cross-debug
+        mozconfig-variant: debug
         tooltool-downloads: internal
     toolchains:
         - linux64-cctools-port
@@ -96,6 +97,7 @@ macosx64-asan-fuzzing/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: cross-fuzzing-asan
+        mozconfig-variant: nightly-fuzzing-asan
         tooltool-downloads: internal
     toolchains:
         - linux64-cctools-port
@@ -136,10 +138,12 @@ macosx64-devedition-nightly/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
             - taskcluster_nightly.py
+        extra-config:
+            stage_platform: macosx64-devedition
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
-        custom-build-variant-cfg: devedition
+        mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     toolchains:
         - linux64-cctools-port
@@ -176,6 +180,7 @@ macosx64-noopt/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: cross-noopt-debug
+        mozconfig-variant: cross-noopt-debug
         tooltool-downloads: internal
         keep-artifacts: false
     run-on-projects: ['trunk', 'try']
@@ -214,6 +219,7 @@ macosx64-add-on-devel/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: add-on-devel
+        mozconfig-variant: add-on-devel
         tooltool-downloads: internal
     run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
     toolchains:
@@ -293,6 +299,7 @@ macosx64-ccov/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: code-coverage-debug
+        mozconfig-variant: code-coverage-debug
         tooltool-downloads: internal
     run-on-projects: ['try']
     toolchains:
