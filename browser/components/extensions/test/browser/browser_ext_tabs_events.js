@@ -372,3 +372,41 @@ add_task(async function testTabCreateRelated() {
 
   BrowserTestUtils.removeTab(openerTab);
 });
+
+add_task(async function testLastTabRemoval() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.tabs.closeWindowWithLastTab", false],
+  ]});
+
+  async function background() {
+    let windowId;
+    browser.tabs.onCreated.addListener(tab => {
+      browser.test.assertEq(windowId, tab.windowId,
+                            "expecting onCreated after onRemoved on the same window");
+      browser.test.sendMessage("tabCreated", `${tab.width}x${tab.height}`);
+    });
+    browser.tabs.onRemoved.addListener((tabId, info) => {
+      windowId = info.windowId;
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+    background,
+  });
+
+  let newWin = await BrowserTestUtils.openNewBrowserWindow();
+  await extension.startup();
+
+  const oldBrowser = newWin.gBrowser.selectedBrowser;
+  const expectedDims = `${oldBrowser.clientWidth}x${oldBrowser.clientHeight}`;
+  BrowserTestUtils.removeTab(newWin.gBrowser.selectedTab);
+
+  const actualDims = await extension.awaitMessage("tabCreated");
+  is(actualDims, expectedDims, "created tab reports a size same to the removed last tab");
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(newWin);
+});
