@@ -142,7 +142,11 @@ function testCompositor(test, win, ctx) {
     // a device reset so the screen redraws.
     if (Services.prefs.getBoolPref(AL_ENABLED_PREF, false)) {
       Services.prefs.setBoolPref(AL_TEST_FAILED_PREF, true);
-      test.utils.triggerDeviceReset();
+      // Do not need to reset device when WebRender is used.
+      // When WebRender is used, advanced layers are not used.
+      if (test.utils.layerManagerType != "WebRender") {
+        test.utils.triggerDeviceReset();
+      }
     }
     reportResult(TEST_FAILED_RENDER);
     testPassed = false;
