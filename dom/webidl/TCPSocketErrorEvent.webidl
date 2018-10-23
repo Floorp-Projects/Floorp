@@ -11,7 +11,7 @@
 
 [Constructor(DOMString type, optional TCPSocketErrorEventInit eventInitDict),
  Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
- Exposed=Window]
+ Exposed=(Window,System)]
 interface TCPSocketErrorEvent : Event {
   readonly attribute DOMString name;
   readonly attribute DOMString message;

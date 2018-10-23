@@ -13,7 +13,7 @@
  */
 
 [Constructor(USVString scriptURL, optional WorkerOptions options),
- Exposed=(Window,DedicatedWorker,SharedWorker)]
+ Exposed=(Window,DedicatedWorker,SharedWorker,System)]
 interface Worker : EventTarget {
   void terminate();
 
@@ -34,6 +34,6 @@ dictionary WorkerOptions {
 
 [Constructor(USVString scriptURL),
  Func="mozilla::dom::ChromeWorker::WorkerAvailable",
- Exposed=(Window,DedicatedWorker,SharedWorker)]
+ Exposed=(Window,DedicatedWorker,SharedWorker,System)]
 interface ChromeWorker : Worker {
 };

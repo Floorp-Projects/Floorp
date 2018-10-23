@@ -9,7 +9,7 @@
  * occurrence of "?" in the glob matches any single literal character.
  */
 [Constructor(DOMString glob, optional boolean allowQuestion = true),
- ChromeOnly, Exposed=Window]
+ ChromeOnly, Exposed=(Window,System)]
 interface MatchGlob {
   /**
    * Returns true if the string matches the glob.

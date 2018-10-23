@@ -10,7 +10,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-[Constructor, Exposed=(Window,Worker)]
+[Constructor,
+ Exposed=(Window,Worker,System)]
 interface TextEncoder {
   [Constant]
   readonly attribute DOMString encoding;

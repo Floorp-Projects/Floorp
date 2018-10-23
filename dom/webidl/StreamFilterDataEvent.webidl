@@ -13,7 +13,7 @@
 
 [Constructor(DOMString type, optional StreamFilterDataEventInit eventInitDict),
  Func="mozilla::extensions::StreamFilter::IsAllowedInContext",
- Exposed=Window]
+ Exposed=(Window,System)]
 interface StreamFilterDataEvent : Event {
   /**
    * Contains a chunk of data read from the input stream.

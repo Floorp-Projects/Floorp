@@ -82,7 +82,7 @@ interface AddonManager : EventTarget {
   readonly attribute boolean permissionPromptsEnabled;
 };
 
-[ChromeOnly,Exposed=Window,HeaderFile="mozilla/AddonManagerWebAPI.h"]
+[ChromeOnly,Exposed=System,HeaderFile="mozilla/AddonManagerWebAPI.h"]
 interface AddonManagerPermissions {
   static boolean isHostPermitted(DOMString host);
 };

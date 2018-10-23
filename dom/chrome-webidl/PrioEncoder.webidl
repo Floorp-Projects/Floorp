@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[ChromeOnly, Exposed=Window]
+[ChromeOnly, Exposed=(Window,System)]
 namespace PrioEncoder {
   [Throws, NewObject]
   PrioEncodedData encode(ByteString batchID, PrioParams params);
