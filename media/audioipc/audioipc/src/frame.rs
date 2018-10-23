@@ -147,10 +147,6 @@ where
     }
 }
 
-fn write_zero() -> io::Error {
-    io::Error::new(io::ErrorKind::WriteZero, "failed to write frame to io")
-}
-
 pub fn framed<A, C>(io: A, codec: C) -> Framed<A, C> {
     Framed {
         io: io,

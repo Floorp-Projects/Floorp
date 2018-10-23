@@ -20,6 +20,7 @@ mod send_recv;
 mod context;
 mod stream;
 
+use audioipc::PlatformHandleType;
 use context::ClientContext;
 use cubeb_backend::{capi, ffi};
 use std::os::raw::{c_char, c_int};
@@ -31,10 +32,13 @@ type InitParamsTls = std::cell::RefCell<Option<CpuPoolInitParams>>;
 thread_local!(static IN_CALLBACK: std::cell::RefCell<bool> = std::cell::RefCell::new(false));
 thread_local!(static CPUPOOL_INIT_PARAMS: InitParamsTls = std::cell::RefCell::new(None));
 
+// This must match the definition of AudioIpcInitParams in
+// dom/media/CubebUtils.cpp in Gecko.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct AudioIpcInitParams {
-    pub server_connection: c_int,
+    // Fields only need to be public for ipctest.
+    pub server_connection: PlatformHandleType,
     pub pool_size: usize,
     pub stack_size: usize,
     pub thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
@@ -42,13 +46,13 @@ pub struct AudioIpcInitParams {
 
 #[derive(Clone, Copy, Debug)]
 struct CpuPoolInitParams {
-    pub pool_size: usize,
-    pub stack_size: usize,
-    pub thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
+    pool_size: usize,
+    stack_size: usize,
+    thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
 }
 
 impl CpuPoolInitParams {
-    pub fn init_with(params: &AudioIpcInitParams) -> Self {
+    fn init_with(params: &AudioIpcInitParams) -> Self {
         CpuPoolInitParams {
             pool_size: params.pool_size,
             stack_size: params.stack_size,
