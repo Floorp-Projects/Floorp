@@ -447,7 +447,8 @@ class GeckoWebViewProvider : IWebViewProvider {
                 ): GeckoResult<String> {
                     ErrorPages.createErrorPage(
                         context,
-                        geckoErrorToErrorType(error)
+                        geckoErrorToErrorType(error),
+                        uri
                     ).apply {
                         return GeckoResult.fromValue(Base64.encodeToUriString(this))
                     }
