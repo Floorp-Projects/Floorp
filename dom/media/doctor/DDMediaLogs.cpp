@@ -462,11 +462,11 @@ DDMediaLogs::FulfillPromises()
     }
 
     nsCString json;
-    JSONWriter jw{ MakeUnique<StringWriteFunc>(json) };
+    JSONWriter<> jw{ MakeUnique<StringWriteFunc>(json) };
     jw.Start();
     jw.StartArrayProperty("messages");
     for (const DDLogMessage& message : log->mMessages) {
-      jw.StartObjectElement(JSONWriter::SingleLineStyle);
+      jw.StartObjectElement(JSONWriter<>::SingleLineStyle);
       jw.IntProperty("i", message.mIndex.Value());
       jw.DoubleProperty("ts", ToSeconds(message.mTimeStamp));
       DDLifetime* lifetime =
@@ -505,7 +505,7 @@ DDMediaLogs::FulfillPromises()
       mediaElement,
       [&](const DDLifetime& lifetime) {
         jw.StartObjectProperty(nsPrintfCString("%" PRIi32, lifetime.mTag).get(),
-                               JSONWriter::SingleLineStyle);
+                               JSONWriter<>::SingleLineStyle);
         jw.IntProperty("tag", lifetime.mTag);
         jw.StringProperty("cls", lifetime.mObject.TypeName());
         jw.StringProperty(

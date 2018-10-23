@@ -2638,7 +2638,7 @@ namespace {
  */
 void
 internal_ReflectHistogramToJSON(const HistogramSnapshotData& aSnapshot,
-                                mozilla::JSONWriter& aWriter)
+                                mozilla::JSONWriter<>& aWriter)
 {
   aWriter.IntProperty("sum", aSnapshot.mSampleSum);
 
@@ -2765,7 +2765,7 @@ internal_ParseHistogramData(JSContext* aCx, JS::HandleId aEntryId,
 // PUBLIC: GeckoView serialization/deserialization functions.
 
 nsresult
-TelemetryHistogram::SerializeHistograms(mozilla::JSONWriter& aWriter)
+TelemetryHistogram::SerializeHistograms(mozilla::JSONWriter<>& aWriter)
 {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only save histograms in the parent process");
   if (!XRE_IsParentProcess()) {
@@ -2812,7 +2812,7 @@ TelemetryHistogram::SerializeHistograms(mozilla::JSONWriter& aWriter)
 }
 
 nsresult
-TelemetryHistogram::SerializeKeyedHistograms(mozilla::JSONWriter& aWriter)
+TelemetryHistogram::SerializeKeyedHistograms(mozilla::JSONWriter<>& aWriter)
 {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only save keyed histograms in the parent process");
   if (!XRE_IsParentProcess()) {
