@@ -20,7 +20,7 @@ using namespace js;
 JSObject*
 GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
 {
-    MOZ_ASSERT(frame.script()->isGenerator() || frame.script()->isAsync());
+    MOZ_ASSERT(frame.isGeneratorFrame());
     MOZ_ASSERT(frame.script()->nfixed() == 0);
     MOZ_ASSERT(!frame.isConstructing());
 
@@ -115,8 +115,7 @@ GeneratorObject*
 js::GetGeneratorObjectForFrame(JSContext* cx, AbstractFramePtr frame)
 {
     cx->check(frame);
-    MOZ_ASSERT(frame.isFunctionFrame() &&
-               (frame.callee()->isGenerator() || frame.callee()->isAsync()));
+    MOZ_ASSERT(frame.isGeneratorFrame());
 
     // The ".generator" binding is always present and always "aliased".
     CallObject& callObj = frame.callObj();
