@@ -46,17 +46,16 @@ add_task(async function testEventReceivedInNewWindow() {
   info("Opening a new window and expecting the SidebarFocused event to not fire");
 
   let promiseNewWindow = BrowserTestUtils.waitForNewWindow();
-  BrowserTestUtils.openNewBrowserWindow();
-  let win = await promiseNewWindow;
+  let win = OpenBrowserWindow();
 
   let adoptedShown = BrowserTestUtils.waitForEvent(win, "SidebarShown");
   win.addEventListener("SidebarFocused", failIfSidebarFocusedFires);
-
   registerCleanupFunction(async function() {
     win.removeEventListener("SidebarFocused", failIfSidebarFocusedFires);
     await BrowserTestUtils.closeWindow(win);
   });
 
+  await promiseNewWindow;
   await adoptedShown;
   ok(true, "SidebarShown event fired on an adopted window");
 });
