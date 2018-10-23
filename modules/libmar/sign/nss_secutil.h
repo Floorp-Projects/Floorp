@@ -13,7 +13,7 @@
 #include "cryptohi.h"
 #include "hasht.h"
 #include "cert.h"
-#include "key.h"
+#include "keyhi.h"
 #include <stdint.h>
 
 typedef struct {
