@@ -48,17 +48,6 @@
     {0xa1, 0xa8, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44}   \
 }
 
-// service implementing nsIProxyAutoConfig.
-#define NS_PROXYAUTOCONFIG_CONTRACTID \
-    "@mozilla.org/network/proxy-auto-config;1"
-#define NS_PROXYAUTOCONFIG_CID                       \
-{ /* 63ac8c66-1dd2-11b2-b070-84d00d3eaece */         \
-    0x63ac8c66,                                      \
-    0x1dd2,                                          \
-    0x11b2,                                          \
-    {0xb0, 0x70, 0x84, 0xd0, 0x0d, 0x3e, 0xae, 0xce} \
-}
-
 // component implementing nsILoadGroup.
 #define NS_LOADGROUP_CONTRACTID \
     "@mozilla.org/network/load-group;1"
