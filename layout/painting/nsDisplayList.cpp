@@ -23,6 +23,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/PLayerTransaction.h"
+#include "mozilla/ShapeUtils.h"
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
 #include "nsISelectionController.h"
@@ -9963,6 +9964,84 @@ nsDisplayMasksAndClipPaths::PaintWithContentsPaintCallback(
   nsDisplayMasksAndClipPathsGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
+static Maybe<wr::WrClipId>
+CreateSimpleClipRegion(const nsDisplayMasksAndClipPaths& aDisplayItem,
+                       wr::DisplayListBuilder& aBuilder)
+{
+  nsIFrame* frame = aDisplayItem.Frame();
+  auto* style = frame->StyleSVGReset();
+  MOZ_ASSERT(style->HasClipPath() || style->HasMask());
+  if (style->HasMask()) {
+    return Nothing();
+  }
+
+  // TODO(emilio): We should be able to still generate a clip and pass the
+  // opacity down to StackingContextHelper instead.
+  if (frame->StyleEffects()->mOpacity != 1.0) {
+    return Nothing();
+  }
+
+  auto& clipPath = style->mClipPath;
+  if (clipPath.GetType() != StyleShapeSourceType::Shape) {
+    return Nothing();
+  }
+
+  // TODO(emilio): We should be able to also simplify most of the circle() and
+  // ellipse() shapes.
+  auto& shape = clipPath.GetBasicShape();
+  if (shape->GetShapeType() != StyleBasicShapeType::Inset) {
+    return Nothing();
+  }
+
+  const nsRect refBox =
+    nsLayoutUtils::ComputeGeometryBox(frame, clipPath.GetReferenceBox());
+
+  const nsRect insetRect =
+    ShapeUtils::ComputeInsetRect(shape, refBox) + aDisplayItem.ToReferenceFrame();
+
+  auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
+
+  nscoord radii[8] = { 0 };
+  AutoTArray<wr::ComplexClipRegion, 1> clipRegions;
+  if (ShapeUtils::ComputeInsetRadii(shape, insetRect, refBox, radii)) {
+    clipRegions.AppendElement(wr::ToComplexClipRegion(
+      insetRect, radii, appUnitsPerDevPixel));
+  }
+
+  auto rect = wr::ToRoundedLayoutRect(
+    LayoutDeviceRect::FromAppUnits(insetRect, appUnitsPerDevPixel));
+  wr::WrClipId clipId =
+    aBuilder.DefineClip(Nothing(), rect, &clipRegions, nullptr);
+  return Some(clipId);
+}
+
+static Maybe<wr::WrClipId>
+CreateWRClipPathAndMasks(nsDisplayMasksAndClipPaths* aDisplayItem,
+                         const LayoutDeviceRect& aBounds,
+                         wr::IpcResourceUpdateQueue& aResources,
+                         wr::DisplayListBuilder& aBuilder,
+                         const StackingContextHelper& aSc,
+                         layers::WebRenderLayerManager* aManager,
+                         nsDisplayListBuilder* aDisplayListBuilder)
+{
+  if (auto clip = CreateSimpleClipRegion(*aDisplayItem, aBuilder)) {
+    return clip;
+  }
+
+  Maybe<wr::WrImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(
+    aDisplayItem, aBuilder, aResources, aSc, aDisplayListBuilder, aBounds);
+  if (!mask) {
+    return Nothing();
+  }
+
+  wr::WrClipId clipId =
+    aBuilder.DefineClip(Nothing(),
+                        wr::ToRoundedLayoutRect(aBounds),
+                        nullptr,
+                        mask.ptr());
+
+  return Some(clipId);
+}
 
 bool
 nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
@@ -9973,20 +10052,18 @@ nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
   nsDisplayListBuilder* aDisplayListBuilder)
 {
   bool snap;
-  float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  auto appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsRect displayBounds = GetBounds(aDisplayListBuilder, &snap);
   LayoutDeviceRect bounds =
     LayoutDeviceRect::FromAppUnits(displayBounds, appUnitsPerDevPixel);
 
-  Maybe<wr::WrImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(
-    this, aBuilder, aResources, aSc, aDisplayListBuilder, bounds);
+  Maybe<wr::WrClipId> clip =
+    CreateWRClipPathAndMasks(
+      this, bounds, aResources, aBuilder, aSc, aManager, aDisplayListBuilder);
+
   Maybe<StackingContextHelper> layer;
   const StackingContextHelper* sc = &aSc;
-  if (mask) {
-    auto layoutBounds = wr::ToRoundedLayoutRect(bounds);
-    wr::WrClipId clipId =
-      aBuilder.DefineClip(Nothing(), layoutBounds, nullptr, mask.ptr());
-
+  if (clip) {
     // Create a new stacking context to attach the mask to, ensuring the mask is
     // applied to the aggregate, and not the individual elements.
 
@@ -10006,7 +10083,7 @@ nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
                   /*aBackfaceVisible: */ true,
                   /*aIsPreserve3D: */ false,
                   /*aTransformForScrollData: */ Nothing(),
-                  /*aClipNodeId: */ &clipId);
+                  /*aClipNodeId: */ clip.ptr());
     sc = layer.ptr();
     // The whole stacking context will be clipped by us, so no need to have any
     // parent for the children context's clip.
@@ -10017,7 +10094,7 @@ nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
   nsDisplayEffectsBase::CreateWebRenderCommands(
     aBuilder, aResources, *sc, aManager, aDisplayListBuilder);
 
-  if (mask) {
+  if (clip) {
     aManager->CommandBuilder().PopOverrideForASR(GetActiveScrolledRoot());
   }
 

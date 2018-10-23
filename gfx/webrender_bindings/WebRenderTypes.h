@@ -503,6 +503,31 @@ static inline wr::BorderRadius ToBorderRadius(const mozilla::LayoutDeviceSize& t
   return br;
 }
 
+static inline wr::ComplexClipRegion ToComplexClipRegion(
+  const nsRect& aRect,
+  const nscoord* aRadii,
+  int32_t aAppUnitsPerDevPixel)
+{
+  wr::ComplexClipRegion ret;
+  ret.rect = ToRoundedLayoutRect(
+    LayoutDeviceRect::FromAppUnits(aRect, aAppUnitsPerDevPixel));
+  ret.radii = ToBorderRadius(
+    LayoutDeviceSize::FromAppUnits(
+      nsSize(aRadii[eCornerTopLeftX], aRadii[eCornerTopLeftY]),
+      aAppUnitsPerDevPixel),
+    LayoutDeviceSize::FromAppUnits(
+      nsSize(aRadii[eCornerTopRightX], aRadii[eCornerTopRightY]),
+      aAppUnitsPerDevPixel),
+    LayoutDeviceSize::FromAppUnits(
+      nsSize(aRadii[eCornerBottomLeftX], aRadii[eCornerBottomLeftY]),
+      aAppUnitsPerDevPixel),
+    LayoutDeviceSize::FromAppUnits(
+      nsSize(aRadii[eCornerBottomRightX], aRadii[eCornerBottomRightY]),
+      aAppUnitsPerDevPixel));
+  ret.mode = ClipMode::Clip;
+  return ret;
+}
+
 static inline wr::LayoutSideOffsets ToBorderWidths(float top, float right, float bottom, float left)
 {
   wr::LayoutSideOffsets bw;
