@@ -44,12 +44,6 @@ const USER_AGENT_MODE_VR = 2;
 // * multiprocess
 // * user agent override
 class GeckoViewSettings extends GeckoViewModule {
-  onInitBrowser() {
-    if (this.settings.useMultiprocess) {
-      this.browser.setAttribute("remote", "true");
-    }
-  }
-
   onInit() {
     debug `onInit`;
     this._useTrackingProtection = false;
