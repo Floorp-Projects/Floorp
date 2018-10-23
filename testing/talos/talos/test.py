@@ -323,6 +323,7 @@ class tabpaint(PageloaderTest):
         # and http://kb.mozillazine.org/Browser.link.open_newwindow.restriction
         'browser.link.open_newwindow': 3,
         'browser.link.open_newwindow.restriction': 2,
+        'browser.newtab.preload': False,
     }
 
 
