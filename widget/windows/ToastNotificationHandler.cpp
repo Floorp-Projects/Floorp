@@ -398,18 +398,21 @@ ToastNotificationHandler::OnActivate(IToastNotification *notification,
                                      IInspectable *inspectable)
 {
   if (mAlertListener) {
-    ComPtr<IToastActivatedEventArgs> eventArgs;
-    HRESULT hr = inspectable->QueryInterface(__uuidof(IToastActivatedEventArgs),
-                                           (void**)&eventArgs);
     nsAutoString argString;
-    if (SUCCEEDED(hr)) {
-      HSTRING arguments;
-      hr = eventArgs->get_Arguments(&arguments);
+    if (inspectable) {
+      ComPtr<IToastActivatedEventArgs> eventArgs;
+      HRESULT hr = inspectable->QueryInterface(
+                     __uuidof(IToastActivatedEventArgs),
+                     (void**)&eventArgs);
       if (SUCCEEDED(hr)) {
-        uint32_t len = 0;
-        const wchar_t* buffer = WindowsGetStringRawBuffer(arguments, &len);
-        if (buffer) {
-          argString.Assign(buffer, len);
+        HSTRING arguments;
+        hr = eventArgs->get_Arguments(&arguments);
+        if (SUCCEEDED(hr)) {
+          uint32_t len = 0;
+          const wchar_t* buffer = WindowsGetStringRawBuffer(arguments, &len);
+          if (buffer) {
+            argString.Assign(buffer, len);
+          }
         }
       }
     }
