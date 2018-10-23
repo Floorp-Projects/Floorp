@@ -453,8 +453,6 @@ wasmFailValidateText('(module (export "a" table))', /exported table index out of
 
 wasmFailValidateText('(module (import "a" "b" (memory 1 1)) (memory 1 1))', /already have default memory/);
 wasmFailValidateText('(module (import "a" "b" (memory 1 1)) (import "x" "y" (memory 2 2)))', /already have default memory/);
-wasmFailValidateText('(module (import "a" "b" (table 1 1 anyfunc)) (table 1 1 anyfunc))', /already have default table/);
-wasmFailValidateText('(module (import "a" "b" (table 1 1 anyfunc)) (import "x" "y" (table 2 2 anyfunc)))', /already have default table/);
 
 // Data segments on imports
 

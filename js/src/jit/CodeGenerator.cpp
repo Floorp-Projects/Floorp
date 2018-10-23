@@ -7346,8 +7346,7 @@ CodeGenerator::emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck)
       case wasm::CalleeDesc::AsmJSTable:
       case wasm::CalleeDesc::WasmTable:
         masm.wasmCallIndirect(desc, callee, needsBoundsCheck);
-        reloadRegs = switchRealm =
-            (callee.which() == wasm::CalleeDesc::WasmTable && callee.wasmTableIsExternal());
+        reloadRegs = switchRealm = callee.which() == wasm::CalleeDesc::WasmTable;
         break;
       case wasm::CalleeDesc::Builtin:
         masm.call(desc, callee.builtin());

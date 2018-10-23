@@ -141,7 +141,8 @@ enum class MemoryTableFlags
 {
     Default                              = 0x0,
     HasMaximum                           = 0x1,
-    IsShared                             = 0x2
+    IsShared                             = 0x2,
+    HasTableIndex                        = 0x4, // UNOFFICIAL.  There will be a separate flag for memory.
 };
 
 enum class MemoryMasks
@@ -588,6 +589,7 @@ enum class FieldFlags {
 
 static const unsigned MaxTypes               =  1000000;
 static const unsigned MaxFuncs               =  1000000;
+static const unsigned MaxTables              =   100000;  // TODO: get this into the shared limits spec
 static const unsigned MaxImports             =   100000;
 static const unsigned MaxExports             =   100000;
 static const unsigned MaxGlobals             =  1000000;

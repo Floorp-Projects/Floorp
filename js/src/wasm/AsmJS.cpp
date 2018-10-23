@@ -6654,9 +6654,8 @@ TryInstantiate(JSContext* cx, CallArgs args, const Module& module, const AsmJSMe
     }
 
     Rooted<WasmGlobalObjectVector> globalObjs(cx);
-
-    RootedWasmTableObject table(cx);
-    if (!module.instantiate(cx, funcs, table, memory, valImports, globalObjs.get(), nullptr,
+    Rooted<WasmTableObjectVector> tables(cx);
+    if (!module.instantiate(cx, funcs, tables.get(), memory, valImports, globalObjs.get(), nullptr,
                             instanceObj))
         return false;
 
