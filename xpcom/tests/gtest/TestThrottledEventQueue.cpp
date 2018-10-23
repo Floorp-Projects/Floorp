@@ -407,3 +407,203 @@ TEST(ThrottledEventQueue, AwaitIdleMixed)
 
   ASSERT_TRUE(NS_SUCCEEDED(thread->Shutdown()));
 }
+
+TEST(ThrottledEventQueue, SimplePauseResume)
+{
+  string log;
+
+  auto base = MakeRefPtr<RunnableQueue>();
+  RefPtr<ThrottledEventQueue> throttled = ThrottledEventQueue::Create(base);
+
+  ASSERT_FALSE(throttled->IsPaused());
+
+  Enqueue(throttled, [&]() { log += 'a'; });
+
+  ASSERT_EQ(log, "");
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  ASSERT_EQ(log, "a");
+
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(true)));
+  ASSERT_TRUE(throttled->IsPaused());
+
+  Enqueue(throttled, [&]() { log += 'b'; });
+
+  ASSERT_EQ(log, "a");
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  ASSERT_EQ(log, "a");
+
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(false)));
+  ASSERT_FALSE(throttled->IsPaused());
+
+  ASSERT_EQ(log, "a");
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  ASSERT_EQ(log, "ab");
+
+  ASSERT_TRUE(base->IsEmpty());
+  ASSERT_TRUE(throttled->IsEmpty());
+}
+
+TEST(ThrottledEventQueue, MixedPauseResume)
+{
+  string log;
+
+  auto base = MakeRefPtr<RunnableQueue>();
+  RefPtr<ThrottledEventQueue> throttled = ThrottledEventQueue::Create(base);
+
+  ASSERT_FALSE(throttled->IsPaused());
+
+  Enqueue(base, [&]() { log += 'A'; });
+  Enqueue(throttled, [&]() {
+      log += 'b';
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(true)));
+    });
+  Enqueue(throttled, [&]() { log += 'c'; });
+  Enqueue(base, [&]() { log += 'D'; });
+
+  ASSERT_EQ(log, "");
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  // Since the 'b' event paused the throttled queue, 'c' should not have run.
+  // but 'D' was enqueued directly on the base, and should have run.
+  ASSERT_EQ(log, "AbD");
+  ASSERT_TRUE(base->IsEmpty());
+  ASSERT_FALSE(throttled->IsEmpty());
+  ASSERT_TRUE(throttled->IsPaused());
+
+  Enqueue(base, [&]() { log += 'E'; });
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(false)));
+  Enqueue(base, [&]() { log += 'F'; });
+  ASSERT_FALSE(throttled->IsPaused());
+
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  // Since we've unpaused, 'c' should be able to run now. The executor should have
+  // been enqueued between 'E' and 'F'.
+  ASSERT_EQ(log, "AbDEcF");
+
+  ASSERT_TRUE(base->IsEmpty());
+  ASSERT_TRUE(throttled->IsEmpty());
+}
+
+TEST(ThrottledEventQueue, AwaitIdlePaused)
+{
+  Mutex mutex("AwaitIdlePaused");
+  CondVar cond(mutex, "AwaitIdlePaused");
+
+  string dequeue_await;          // mutex
+  bool threadFinished = false;   // mutex & cond
+  bool runnableFinished = false; // main thread only
+
+  auto base = MakeRefPtr<RunnableQueue>();
+  RefPtr<ThrottledEventQueue> throttled = ThrottledEventQueue::Create(base);
+
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(true)));
+
+  // Put an event in the queue so the AwaitIdle might block. Since throttled is
+  // paused, this should not enqueue an executor in the base target.
+  Enqueue(throttled, [&]() { runnableFinished = true; });
+  ASSERT_TRUE(base->IsEmpty());
+
+  // Create a separate thread that waits for the queue to become idle, and
+  // then takes observable action.
+  nsCOMPtr<nsIRunnable> await =
+    NS_NewRunnableFunction(
+      "AwaitIdlePaused",
+      [&]() {
+        throttled->AwaitIdle();
+        MutexAutoLock lock(mutex);
+        dequeue_await += " await";
+        threadFinished = true;
+        cond.Notify();
+      });
+
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("AwaitIdlePaused", getter_AddRefs(thread),
+                                  await);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // We can't guarantee that the thread has reached the AwaitIdle call, but we
+  // can get pretty close. Either way, it shouldn't affect the behavior of the
+  // test.
+  PR_Sleep(PR_MillisecondsToInterval(100));
+
+  // The AwaitIdle call should be blocked, even though there is no executor,
+  // because throttled is paused.
+  {
+    MutexAutoLock lock(mutex);
+    ASSERT_EQ(dequeue_await, "");
+    dequeue_await += "dequeue";
+    ASSERT_FALSE(threadFinished);
+  }
+
+  // A paused TEQ contributes no events to its base target. (This is covered by
+  // other tests...)
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  ASSERT_TRUE(base->IsEmpty());
+  ASSERT_FALSE(throttled->IsEmpty());
+
+  // Resume and drain the queue.
+  ASSERT_FALSE(runnableFinished);
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(false)));
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  ASSERT_TRUE(base->IsEmpty());
+  ASSERT_TRUE(throttled->IsEmpty());
+  ASSERT_TRUE(runnableFinished);
+
+  // Wait for the thread to finish.
+  {
+    MutexAutoLock lock(mutex);
+    while (!threadFinished)
+      cond.Wait();
+    ASSERT_EQ(dequeue_await, "dequeue await");
+  }
+
+  ASSERT_TRUE(NS_SUCCEEDED(thread->Shutdown()));
+}
+
+TEST(ThrottledEventQueue, ExecutorTransitions)
+{
+  string log;
+
+  auto base = MakeRefPtr<RunnableQueue>();
+  RefPtr<ThrottledEventQueue> throttled = ThrottledEventQueue::Create(base);
+
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(true)));
+
+  // Since we're paused, queueing an event on throttled shouldn't queue the
+  // executor on the base target.
+  Enqueue(throttled, [&]() { log += 'a'; });
+  ASSERT_EQ(throttled->Length(), 1U);
+  ASSERT_EQ(base->Length(), 0U);
+
+  // Resuming throttled should create the executor, since throttled is not empty.
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(false)));
+  ASSERT_EQ(throttled->Length(), 1U);
+  ASSERT_EQ(base->Length(), 1U);
+
+  // Pausing can't remove the executor from the base target since we've already
+  // queued it there, but it can ensure that it doesn't do anything.
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(true)));
+
+  ASSERT_EQ(log, "");
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  ASSERT_EQ(log, "");
+  ASSERT_EQ(throttled->Length(), 1U);
+  ASSERT_EQ(base->Length(), 0U);
+
+  // As before, resuming must create the executor, since throttled is not empty.
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(false)));
+  ASSERT_EQ(throttled->Length(), 1U);
+  ASSERT_EQ(base->Length(), 1U);
+
+  ASSERT_EQ(log, "");
+  ASSERT_TRUE(NS_SUCCEEDED(base->Run()));
+  ASSERT_EQ(log, "a");
+  ASSERT_EQ(throttled->Length(), 0U);
+  ASSERT_EQ(base->Length(), 0U);
+
+  // Since throttled is empty, pausing and resuming now should not enqueue an
+  // executor.
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(true)));
+  ASSERT_TRUE(NS_SUCCEEDED(throttled->SetIsPaused(false)));
+  ASSERT_EQ(throttled->Length(), 0U);
+  ASSERT_EQ(base->Length(), 0U);
+}
