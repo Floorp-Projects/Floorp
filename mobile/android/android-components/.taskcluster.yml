@@ -65,51 +65,53 @@ tasks:
 ####################################################################################################
   - $if: 'tasks_for == "github-push"'
     then:
-      $let:
-        decision_task_id: {$eval: as_slugid("decision_task")}
-        expires_in: {$fromNow: '1 year'}
-        scheduler_id: taskcluster-github
-        user: ${event.sender.login}
-        head_branch: ${event.ref}
-        head_rev: ${event.after}
-        repository: ${event.repository.clone_url}
-      in:
-        taskId: ${decision_task_id}
-        taskGroupId: ${decision_task_id}
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '2 hours'}
-        expires: ${expires_in}
-        provisionerId: aws-provisioner-v1
-        workerType: github-worker
-        scopes:
-          - queue:create-task:aws-provisioner-v1/github-worker
-          - queue:scheduler-id:${scheduler_id}
-        payload:
-          maxRunTime: 3600
-          image: mozillamobile/android-components:1.8
-          env:
-            TASK_ID: ${decision_task_id}
-            SCHEDULER_ID: ${scheduler_id}
-            MOBILE_HEAD_REPOSITORY: ${repository}
-            MOBILE_HEAD_BRANCH: ${head_branch}
-            MOBILE_HEAD_REV: ${head_rev}
-          command:
-            - /bin/bash
-            - --login
-            - -cx
-            - >-
-              export TERM=dumb
-              && git fetch ${repository} ${head_branch}
-              && git config advice.detachedHead false
-              && git checkout ${head_rev}
-              && python automation/taskcluster/decision_task.py
-          features:
-            taskclusterProxy: true
-        metadata:
-          name: Android Components - Decision task
-          description: Schedules the build and test tasks for Android components.
-          owner: ${user}@users.noreply.github.com
-          source: ${repository}/raw/${head_rev}/.taskcluster.yml
+      $if: 'event.ref[:10] != "refs/tags/"'
+      then:
+        $let:
+          decision_task_id: {$eval: as_slugid("decision_task")}
+          expires_in: {$fromNow: '1 year'}
+          scheduler_id: taskcluster-github
+          user: ${event.sender.login}
+          head_branch: ${event.ref}
+          head_rev: ${event.after}
+          repository: ${event.repository.clone_url}
+        in:
+          taskId: ${decision_task_id}
+          taskGroupId: ${decision_task_id}
+          created: {$fromNow: ''}
+          deadline: {$fromNow: '2 hours'}
+          expires: ${expires_in}
+          provisionerId: aws-provisioner-v1
+          workerType: github-worker
+          scopes:
+            - queue:create-task:aws-provisioner-v1/github-worker
+            - queue:scheduler-id:${scheduler_id}
+          payload:
+            maxRunTime: 3600
+            image: mozillamobile/android-components:1.8
+            env:
+              TASK_ID: ${decision_task_id}
+              SCHEDULER_ID: ${scheduler_id}
+              MOBILE_HEAD_REPOSITORY: ${repository}
+              MOBILE_HEAD_BRANCH: ${head_branch}
+              MOBILE_HEAD_REV: ${head_rev}
+            command:
+              - /bin/bash
+              - --login
+              - -cx
+              - >-
+                export TERM=dumb
+                && git fetch ${repository} ${head_branch}
+                && git config advice.detachedHead false
+                && git checkout ${head_rev}
+                && python automation/taskcluster/decision_task.py
+            features:
+              taskclusterProxy: true
+          metadata:
+            name: Android Components - Decision task
+            description: Schedules the build and test tasks for Android components.
+            owner: ${user}@users.noreply.github.com
+            source: ${repository}/raw/${head_rev}/.taskcluster.yml
 ####################################################################################################
 # Task: Release
 ####################################################################################################
