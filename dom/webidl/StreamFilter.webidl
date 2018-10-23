@@ -57,7 +57,7 @@ enum StreamFilterStatus {
  * An interface which allows an extension to intercept, and optionally modify,
  * response data from an HTTP request.
  */
-[Exposed=Window,
+[Exposed=(Window,System),
  Func="mozilla::extensions::StreamFilter::IsAllowedInContext"]
 interface StreamFilter : EventTarget {
   /**

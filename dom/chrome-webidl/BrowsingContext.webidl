@@ -5,7 +5,7 @@
 
 interface nsIDocShell;
 
-[Exposed=Window, ChromeOnly]
+[Exposed=(Window, System), ChromeOnly]
 interface BrowsingContext {
   readonly attribute BrowsingContext? parent;
 

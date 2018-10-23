@@ -250,6 +250,8 @@ class Configuration(DescriptorProvider):
                 getter = lambda x: x.interface.isExposedInWorkerDebugger()
             elif key == 'isExposedInAnyWorklet':
                 getter = lambda x: x.interface.isExposedInAnyWorklet()
+            elif key == 'isExposedInSystemGlobals':
+                getter = lambda x: x.interface.isExposedInSystemGlobals()
             elif key == 'isExposedInWindow':
                 getter = lambda x: x.interface.isExposedInWindow()
             else:

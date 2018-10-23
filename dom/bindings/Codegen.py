@@ -17199,7 +17199,7 @@ class GlobalGenRoots():
         curr = CGList([], "\n")
 
         descriptors = config.getDescriptors(hasInterfaceObject=True,
-                                            isExposedInWindow=True,
+                                            isExposedInSystemGlobals=True,
                                             register=True)
         properties = [desc.name for desc in descriptors]
 
@@ -17244,7 +17244,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInWindow=True)]
+                                                            isExposedInSystemGlobals=True)]
         defineIncludes.append("nsThreadUtils.h")  # For NS_IsMainThread
         defineIncludes.append("js/Id.h")  # For jsid
         defineIncludes.append("mozilla/dom/WebIDLGlobalNameHash.h")

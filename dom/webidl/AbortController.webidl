@@ -7,7 +7,7 @@
  * https://dom.spec.whatwg.org/#abortcontroller
  */
 
-[Constructor(), Exposed=(Window,Worker)]
+[Constructor(), Exposed=(Window,Worker,System)]
 interface AbortController {
   readonly attribute AbortSignal signal;
 
