@@ -21,8 +21,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
                                "resource:///modules/BrowserWindowTracker.jsm");
-ChromeUtils.defineModuleGetter(this, "MasterPassword",
-                               "resource://formautofill/MasterPassword.jsm");
+ChromeUtils.defineModuleGetter(this, "OSKeyStore",
+                               "resource://formautofill/OSKeyStore.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -155,7 +155,7 @@ var paymentDialogWrapper = {
   /**
    * @param {string} guid The GUID of the basic card record from storage.
    * @param {string} cardSecurityCode The associated card security code (CVV/CCV/etc.)
-   * @throws if the user cancels entering their master password or an error decrypting
+   * @throws If there is an error decrypting
    * @returns {nsIBasicCardResponseData?} returns response data or null (if the
    *                                      master password dialog was cancelled);
    */
@@ -168,7 +168,7 @@ var paymentDialogWrapper = {
 
     let cardNumber;
     try {
-      cardNumber = await MasterPassword.decrypt(cardData["cc-number-encrypted"], true);
+      cardNumber = await OSKeyStore.decrypt(cardData["cc-number-encrypted"], true);
     } catch (ex) {
       if (ex.result != Cr.NS_ERROR_ABORT) {
         throw ex;
@@ -507,8 +507,16 @@ var paymentDialogWrapper = {
     selectedPaymentCardSecurityCode: cardSecurityCode,
     selectedShippingAddressGUID: shippingGUID,
   }) {
-    let methodData = await this._convertProfileBasicCardToPaymentMethodData(paymentCardGUID,
-                                                                            cardSecurityCode);
+    let methodData;
+    try {
+      methodData = await this._convertProfileBasicCardToPaymentMethodData(paymentCardGUID,
+                                                                          cardSecurityCode);
+    } catch (ex) {
+      // TODO (Bug 1498403): Some kind of "credit card storage error" here, perhaps asking user
+      // to re-enter credit card # from management UI.
+      Cu.reportError(ex);
+      return;
+    }
 
     if (!methodData) {
       // TODO (Bug 1429265/Bug 1429205): Handle when a user hits cancel on the

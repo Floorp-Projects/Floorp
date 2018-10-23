@@ -164,7 +164,7 @@ where
 
         buf.reserve((encoded_len + 2) as usize);
 
-        buf.put_u16::<LittleEndian>(encoded_len as u16);
+        buf.put_u16_le(encoded_len as u16);
 
         if let Err(e) = bincode::config()
             .limit(encoded_len)

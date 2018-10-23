@@ -1397,7 +1397,7 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
   }
 
   if (aCropRect.isSome() && (aCropRect->Width() == 0 || aCropRect->Height() == 0)) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.Throw(NS_ERROR_RANGE_ERR);
     return promise.forget();
   }
 

@@ -21,6 +21,8 @@ const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const {formAutofillStorage} = ChromeUtils.import(
   "resource://formautofill/FormAutofillStorage.jsm", {});
+const {OSKeyStoreTestUtils} = ChromeUtils.import(
+  "resource://testing-common/OSKeyStoreTestUtils.jsm", {});
 const {PaymentTestUtils: PTU} = ChromeUtils.import(
   "resource://testing-common/PaymentTestUtils.jsm", {});
 ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
@@ -362,10 +364,12 @@ add_task(async function setup_head() {
     }
     ok(false, msg.message || msg.errorMessage);
   });
+  OSKeyStoreTestUtils.setup();
   await setupFormAutofillStorage();
-  registerCleanupFunction(function cleanup() {
+  registerCleanupFunction(async function cleanup() {
     paymentSrv.cleanup();
     cleanupFormAutofillStorage();
+    await OSKeyStoreTestUtils.cleanup();
     Services.prefs.clearUserPref(RESPONSE_TIMEOUT_PREF);
     Services.prefs.clearUserPref(SAVE_CREDITCARD_DEFAULT_PREF);
     Services.prefs.clearUserPref(SAVE_ADDRESS_DEFAULT_PREF);

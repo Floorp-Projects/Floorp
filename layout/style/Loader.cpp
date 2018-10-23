@@ -817,6 +817,7 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
       csp->LogViolationDetails(
         nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_STYLE,
         nullptr, // triggering element
+        nullptr, // nsICSPEventListener
         NS_ConvertUTF8toUTF16(spec), EmptyString(),
         0, 0, EmptyString(), EmptyString());
       return NS_OK;
