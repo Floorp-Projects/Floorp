@@ -4675,19 +4675,24 @@ var XULBrowserWindow = {
     delete this.reloadCommand;
     return this.reloadCommand = document.getElementById("Browser:Reload");
   },
-  get elementsForTextBasedTypes() {
-    delete this.elementsForTextBasedTypes;
-    return this.elementsForTextBasedTypes = [
+  get _elementsForTextBasedTypes() {
+    delete this._elementsForTextBasedTypes;
+    return this._elementsForTextBasedTypes = [
       document.getElementById("pageStyleMenu"),
       document.getElementById("context-viewpartialsource-selection"),
+    ];
+  },
+  get _elementsForFind() {
+    delete this._elementsForFind;
+    return this._elementsForFind = [
       document.getElementById("cmd_find"),
       document.getElementById("cmd_findAgain"),
       document.getElementById("cmd_findPrevious"),
     ];
   },
-  get elementsForViewSource() {
-    delete this.elementsForViewSource;
-    return this.elementsForViewSource = [
+  get _elementsForViewSource() {
+    delete this._elementsForViewSource;
+    return this._elementsForViewSource = [
       document.getElementById("context-viewsource"),
       document.getElementById("View:PageSource"),
     ];
@@ -4841,24 +4846,18 @@ var XULBrowserWindow = {
         this.status = "";
         this.setDefaultStatus(msg);
 
-        // Disable menu entries for images, enable otherwise
+        // Disable View Source menu entries for images, enable otherwise
         let isText = browser.documentContentType &&
                      BrowserUtils.mimeTypeIsTextBased(browser.documentContentType);
-        for (let element of this.elementsForTextBasedTypes) {
-          if (isText) {
-            element.removeAttribute("disabled");
-          } else {
-            element.setAttribute("disabled", "true");
-          }
-        }
-
-        for (let element of this.elementsForViewSource) {
+        for (let element of this._elementsForViewSource) {
           if (canViewSource && isText) {
             element.removeAttribute("disabled");
           } else {
             element.setAttribute("disabled", "true");
           }
         }
+
+        this._updateElementsForContentType();
       }
 
       this.isBusy = false;
@@ -4890,19 +4889,6 @@ var XULBrowserWindow = {
             break;
           }
         }
-      }
-    }
-
-    let browser = gBrowser.selectedBrowser;
-
-    // Disable menu entries for images, enable otherwise
-    let isText = browser.documentContentType &&
-                 BrowserUtils.mimeTypeIsTextBased(browser.documentContentType);
-    for (let element of this.elementsForTextBasedTypes) {
-      if (isText) {
-        element.removeAttribute("disabled");
-      } else {
-        element.setAttribute("disabled", "true");
       }
     }
 
@@ -4940,46 +4926,7 @@ var XULBrowserWindow = {
 
       gTabletModePageCounter.inc();
 
-      // Utility functions for disabling find
-      var shouldDisableFind = function(aDocument) {
-        let docElt = aDocument.documentElement;
-        return docElt && docElt.getAttribute("disablefastfind") == "true";
-      };
-
-      var disableFindCommands = function(aDisable) {
-        let findCommands = [document.getElementById("cmd_find"),
-                            document.getElementById("cmd_findAgain"),
-                            document.getElementById("cmd_findPrevious")];
-        for (let elt of findCommands) {
-          if (aDisable)
-            elt.setAttribute("disabled", "true");
-          else
-            elt.removeAttribute("disabled");
-        }
-      };
-
-      var onContentRSChange = function(e) {
-        if (e.target.readyState != "interactive" && e.target.readyState != "complete")
-          return;
-
-        e.target.removeEventListener("readystatechange", onContentRSChange);
-        disableFindCommands(shouldDisableFind(e.target));
-      };
-
-      // Disable find commands in documents that ask for them to be disabled.
-      if (!gMultiProcessBrowser && aLocationURI &&
-          (aLocationURI.schemeIs("about") || aLocationURI.schemeIs("chrome"))) {
-        // Don't need to re-enable/disable find commands for same-document location changes
-        // (e.g. the replaceStates in about:addons)
-        if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-          if (window.content.document.readyState == "interactive" || window.content.document.readyState == "complete")
-            disableFindCommands(shouldDisableFind(window.content.document));
-          else {
-            window.content.document.addEventListener("readystatechange", onContentRSChange);
-          }
-        }
-      } else
-        disableFindCommands(false);
+      this._updateElementsForContentType();
 
       // Try not to instantiate gCustomizeMode as much as possible,
       // so don't use CustomizeMode.jsm to check for URI or customizing.
@@ -5022,6 +4969,32 @@ var XULBrowserWindow = {
         if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
           throw ex;
         }
+      }
+    }
+  },
+
+  _updateElementsForContentType() {
+    let browser = gBrowser.selectedBrowser;
+
+    let isText = browser.documentContentType &&
+                 BrowserUtils.mimeTypeIsTextBased(browser.documentContentType);
+    for (let element of this._elementsForTextBasedTypes) {
+      if (isText) {
+        element.removeAttribute("disabled");
+      } else {
+        element.setAttribute("disabled", "true");
+      }
+    }
+
+    // Always enable find commands in PDF documents, otherwise do it only for
+    // text documents whose location is not in the blacklist.
+    let enableFind = browser.documentContentType == "application/pdf" ||
+      (isText && BrowserUtils.canFindInPage(gBrowser.currentURI.spec));
+    for (let element of this._elementsForFind) {
+      if (enableFind) {
+        element.removeAttribute("disabled");
+      } else {
+        element.setAttribute("disabled", "true");
       }
     }
   },

@@ -17,8 +17,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
       id="addons-page" title="&addons.windowTitle;"
-      role="application" windowtype="Addons:Manager"
-      disablefastfind="true">
+      role="application" windowtype="Addons:Manager">
 
   <xhtml:link rel="shortcut icon"
               href="chrome://mozapps/skin/extensions/extensionGeneric-16.svg"/>
