@@ -19,7 +19,7 @@ add_task(async function() {
   await editContainer(inspector, testActor, {
     selector: ".node6",
     newValue: "New text",
-    oldValue: "line6"
+    oldValue: "line6",
   });
 
   await editContainer(inspector, testActor, {
@@ -27,21 +27,21 @@ add_task(async function() {
     newValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
               "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
     oldValue: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
-              "Donec posuere placerat magna et imperdiet."
+              "Donec posuere placerat magna et imperdiet.",
   });
 
   await editContainer(inspector, testActor, {
     selector: "#node17",
     newValue: "New value",
     oldValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
-              "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET."
+              "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
   });
 
   await editContainer(inspector, testActor, {
     selector: "#node17",
     newValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
               "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
-    oldValue: "New value"
+    oldValue: "New value",
   });
 });
 

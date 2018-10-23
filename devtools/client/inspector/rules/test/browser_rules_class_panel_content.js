@@ -11,21 +11,21 @@
 // - {Array} expectedClasses The expected list of classes in the class panel
 const TEST_ARRAY = [{
   inputClassName: "",
-  expectedClasses: []
+  expectedClasses: [],
 }, {
   inputClassName: "         a a a a           a a a      a   a",
-  expectedClasses: ["a"]
+  expectedClasses: ["a"],
 }, {
   inputClassName: "c1 c2 c3 c4 c5",
-  expectedClasses: ["c1", "c2", "c3", "c4", "c5"]
+  expectedClasses: ["c1", "c2", "c3", "c4", "c5"],
 }, {
   inputClassName: "a a b b c c a a b b c c",
-  expectedClasses: ["a", "b", "c"]
+  expectedClasses: ["a", "b", "c"],
 }, {
   inputClassName: "ajdhfkasjhdkjashdkjghaskdgkauhkbdhvliashdlghaslidghasldgliashdglhasli",
   expectedClasses: [
-    "ajdhfkasjhdkjashdkjghaskdgkauhkbdhvliashdlghaslidghasldgliashdglhasli"
-  ]
+    "ajdhfkasjhdkjashdkjghaskdgkauhkbdhvliashdlghaslidghasldgliashdglhasli",
+  ],
 }, {
   inputClassName: "c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 " +
                   "c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 " +
@@ -36,10 +36,10 @@ const TEST_ARRAY = [{
                     "c10", "c11", "c12", "c13", "c14", "c15", "c16", "c17", "c18", "c19",
                     "c20", "c21", "c22", "c23", "c24", "c25", "c26", "c27", "c28", "c29",
                     "c30", "c31", "c32", "c33", "c34", "c35", "c36", "c37", "c38", "c39",
-                    "c40", "c41", "c42", "c43", "c44", "c45", "c46", "c47", "c48", "c49"]
+                    "c40", "c41", "c42", "c43", "c44", "c45", "c46", "c47", "c48", "c49"],
 }, {
   inputClassName: "  \n  \n class1  \t   class2 \t\tclass3\t",
-  expectedClasses: ["class1", "class2", "class3"]
+  expectedClasses: ["class1", "class2", "class3"],
 }];
 
 add_task(async function() {

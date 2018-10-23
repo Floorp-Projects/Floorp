@@ -27,7 +27,7 @@ const TEST_URI = [
   "<div title=\"test\" checked=\"true\"></div>",
   "<p></p>",
   "<p lang=\"en\">Paragraph<p>",
-  "<div class=\"testclass\">Styled Node</div>"
+  "<div class=\"testclass\">Styled Node</div>",
 ].join("\n");
 
 const SELECTOR_ATTRIBUTE = "ruleview-selector-attribute";
@@ -39,73 +39,73 @@ const TEST_DATA = [
   {
     node: "h1",
     expected: [
-      { value: "h1", class: SELECTOR_ELEMENT }
-    ]
+      { value: "h1", class: SELECTOR_ELEMENT },
+    ],
   },
   {
     node: "h1 + p",
     expected: [
-      { value: "h1 + p", class: SELECTOR_ELEMENT }
-    ]
+      { value: "h1 + p", class: SELECTOR_ELEMENT },
+    ],
   },
   {
     node: "h1#testid",
     expected: [
-      { value: "h1#testid", class: SELECTOR_ELEMENT }
-    ]
+      { value: "h1#testid", class: SELECTOR_ELEMENT },
+    ],
   },
   {
     node: "div[hidden='true']",
     expected: [
       { value: "div", class: SELECTOR_ELEMENT },
-      { value: "[hidden=\"true\"]", class: SELECTOR_ATTRIBUTE }
-    ]
+      { value: "[hidden=\"true\"]", class: SELECTOR_ATTRIBUTE },
+    ],
   },
   {
     node: "div[title=\"test\"][checked=\"true\"]",
     expected: [
       { value: "div", class: SELECTOR_ELEMENT },
       { value: "[title=\"test\"]", class: SELECTOR_ATTRIBUTE },
-      { value: "[checked=\"true\"]", class: SELECTOR_ATTRIBUTE }
-    ]
+      { value: "[checked=\"true\"]", class: SELECTOR_ATTRIBUTE },
+    ],
   },
   {
     node: "p:empty",
     expected: [
       { value: "p", class: SELECTOR_ELEMENT },
-      { value: ":empty", class: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":empty", class: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     node: "p:lang(en)",
     expected: [
       { value: "p", class: SELECTOR_ELEMENT },
-      { value: ":lang(en)", class: SELECTOR_PSEUDO_CLASS }
-    ]
+      { value: ":lang(en)", class: SELECTOR_PSEUDO_CLASS },
+    ],
   },
   {
     node: ".testclass",
     pseudoClass: ":active",
     expected: [
       { value: ".testclass", class: SELECTOR_ELEMENT },
-      { value: ":active", class: SELECTOR_PSEUDO_CLASS_LOCK }
-    ]
+      { value: ":active", class: SELECTOR_PSEUDO_CLASS_LOCK },
+    ],
   },
   {
     node: ".testclass",
     pseudoClass: ":focus",
     expected: [
       { value: ".testclass", class: SELECTOR_ELEMENT },
-      { value: ":focus", class: SELECTOR_PSEUDO_CLASS_LOCK }
-    ]
+      { value: ":focus", class: SELECTOR_PSEUDO_CLASS_LOCK },
+    ],
   },
   {
     node: ".testclass",
     pseudoClass: ":hover",
     expected: [
       { value: ".testclass", class: SELECTOR_ELEMENT },
-      { value: ":hover", class: SELECTOR_PSEUDO_CLASS_LOCK }
-    ]
+      { value: ":hover", class: SELECTOR_PSEUDO_CLASS_LOCK },
+    ],
   },
 ];
 

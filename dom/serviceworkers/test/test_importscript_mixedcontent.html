@@ -28,7 +28,7 @@
       } else if (e.data.status == "registrationdone") {
         iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/importscript-mixedcontent/index.html";
       } else if (e.data.status == "done") {
-        ok(e.data.data, "good", "Mixed content blocking should work correctly for service workers");
+        is(e.data.data, "good", "Mixed content blocking should work correctly for service workers");
         iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/importscript-mixedcontent/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;

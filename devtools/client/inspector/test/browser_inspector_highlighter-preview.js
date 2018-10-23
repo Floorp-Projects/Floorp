@@ -40,7 +40,7 @@ async function clickElement(selector, testActor, inspector, isShift) {
   await testActor.synthesizeMouse({
     selector: selector,
     center: true,
-    options: { shiftKey: isShift }
+    options: { shiftKey: isShift },
   });
   await onSelectionChanged;
 }

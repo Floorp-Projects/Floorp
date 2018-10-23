@@ -112,7 +112,7 @@ class GridOutline extends PureComponent {
         gridFragmentIndex,
         rowNumber,
         columnNumber,
-      }
+      },
     });
   }
 
@@ -167,7 +167,7 @@ class GridOutline extends PureComponent {
         dom.span(
           {
             className: "grid-outline-text-icon",
-            title: getStr("layout.cannotShowGridOutline.title")
+            title: getStr("layout.cannotShowGridOutline.title"),
           }
         ),
         getStr("layout.cannotShowGridOutline")
@@ -290,7 +290,7 @@ class GridOutline extends PureComponent {
         {
           id: "grid-outline-group",
           className: "grid-outline-group",
-          style: { color }
+          style: { color },
         },
         this.renderGrid(grid)
       )
@@ -305,7 +305,7 @@ class GridOutline extends PureComponent {
         x: 0,
         y: 0,
         width: borderWidth,
-        height: borderHeight
+        height: borderHeight,
       })
     );
   }

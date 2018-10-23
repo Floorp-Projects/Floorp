@@ -32,8 +32,8 @@ add_task(async function() {
         copyPropertyName: true,
         copyPropertyValue: false,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       desc: "Test Copy Property Value",
@@ -46,8 +46,8 @@ add_task(async function() {
         copyPropertyName: false,
         copyPropertyValue: true,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       desc: "Test Copy Property Value with Priority",
@@ -60,8 +60,8 @@ add_task(async function() {
         copyPropertyName: false,
         copyPropertyValue: true,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       desc: "Test Copy Property Declaration",
@@ -74,8 +74,8 @@ add_task(async function() {
         copyPropertyName: true,
         copyPropertyValue: false,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       desc: "Test Copy Property Declaration with Priority",
@@ -88,8 +88,8 @@ add_task(async function() {
         copyPropertyName: true,
         copyPropertyValue: false,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       desc: "Test Copy Rule",
@@ -108,8 +108,8 @@ add_task(async function() {
         copyPropertyName: true,
         copyPropertyValue: false,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       desc: "Test Copy Selector",
@@ -122,8 +122,8 @@ add_task(async function() {
         copyPropertyName: false,
         copyPropertyValue: false,
         copySelector: true,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       desc: "Test Copy Location",
@@ -137,8 +137,8 @@ add_task(async function() {
         copyPropertyName: false,
         copyPropertyValue: false,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       setup: async function() {
@@ -160,8 +160,8 @@ add_task(async function() {
         copyPropertyName: true,
         copyPropertyValue: false,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       setup: async function() {
@@ -183,8 +183,8 @@ add_task(async function() {
         copyPropertyName: true,
         copyPropertyValue: false,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
     {
       desc: "Test Copy Property Declaration with Disabled Property",
@@ -197,8 +197,8 @@ add_task(async function() {
         copyPropertyName: true,
         copyPropertyValue: false,
         copySelector: false,
-        copyRule: true
-      }
+        copyRule: true,
+      },
     },
   ];
 

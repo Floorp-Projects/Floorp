@@ -26,7 +26,7 @@ async function testPressingEscapeRevertsChanges(view) {
     1, 0, [0, 0, 0, 1], {
       selector: "body",
       name: "background-color",
-      value: "rgb(0, 0, 0)"
+      value: "rgb(0, 0, 0)",
     });
 
   is(swatch.style.backgroundColor, "rgb(0, 0, 0)",

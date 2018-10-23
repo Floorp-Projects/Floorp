@@ -345,7 +345,7 @@ ToolSidebar.prototype = {
           "oldpanel": previousToolId,
           "newpanel": currentToolId,
           "os": this._telemetry.osNameAndVersion,
-          "session_id": sessionId
+          "session_id": sessionId,
         }
       );
     }
@@ -457,5 +457,5 @@ ToolSidebar.prototype = {
     this._telemetry = null;
     this._panelDoc = null;
     this._toolPanel = null;
-  }
+  },
 };

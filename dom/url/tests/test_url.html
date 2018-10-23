@@ -378,7 +378,7 @@
     var url = URL.createObjectURL(blob);
 
     var u = new URL(url);
-    ok(u.origin, 'http://mochi.test:8888', "The URL generated from a blob URI has an origin");
+    is(u.origin, 'http://mochi.test:8888', "The URL generated from a blob URI has an origin");
   </script>
 
   <script>
@@ -387,7 +387,7 @@
 
     var a = document.createElement('A');
     a.href = url;
-    ok(a.origin, 'http://mochi.test:8888', "The 'a' element has the correct origin");
+    is(a.origin, 'http://mochi.test:8888', "The 'a' element has the correct origin");
   </script>
 
   <script>
@@ -484,7 +484,9 @@
 
   <script>
     var u = new URL('http://www.example.org');
-    ok(u.toJSON(), 'http://www.example.org', "URL.toJSON()");
+    // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500962
+    // This would work with `http://www.example.org/` (trailing "/")
+    todo_is(u.toJSON(), 'http://www.example.org', "URL.toJSON()");
     is(JSON.stringify(u), "\"http://www.example.org/\"", "JSON.stringify(u) works");
   </script>
 </body>

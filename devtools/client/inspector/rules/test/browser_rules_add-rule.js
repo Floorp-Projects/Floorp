@@ -32,7 +32,7 @@ const TEST_DATA = [
   { node: "p", expected: "p" },
   { node: "h1", expected: ".asd\\@\\@\\@\\@a\\!\\!\\!\\!\\:\\:\\:\\@asd" },
   { node: "h2", expected: "#asd\\@\\@\\@a\\!\\!2a" },
-  { node: "circle", expected: "circle" }
+  { node: "circle", expected: "circle" },
 ];
 
 add_task(async function() {

@@ -9,7 +9,7 @@ const Services = require("Services");
 const {
   UPDATE_SHOW_GRID_AREAS,
   UPDATE_SHOW_GRID_LINE_NUMBERS,
-  UPDATE_SHOW_INFINITE_LINES
+  UPDATE_SHOW_INFINITE_LINES,
 } = require("../actions/index");
 
 const SHOW_GRID_AREAS = "devtools.gridinspector.showGridAreas";

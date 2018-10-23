@@ -46,7 +46,7 @@ function HTMLEditor(htmlDocument) {
     lineWrapping: true,
     styleActiveLine: false,
     extraKeys: {},
-    theme: "mozilla markup-view"
+    theme: "mozilla markup-view",
   };
 
   config.extraKeys[ctrl("Enter")] = this.hide;
@@ -167,7 +167,7 @@ HTMLEditor.prototype = {
     this.hide(false);
     this.container.remove();
     this.editor.destroy();
-  }
+  },
 };
 
 function ctrl(k) {

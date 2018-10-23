@@ -53,7 +53,7 @@ const TEST_DATA = [
           inner
         class="no-slot-class"
           no-slot-text
-          inner`
+          inner`,
 
   }, {
     // Test that components without any direct children still display a shadow root node,
@@ -75,7 +75,7 @@ const TEST_DATA = [
       test-component
         #shadow-root
           slot
-            fallback-content`
+            fallback-content`,
 
   }, {
     // Test that markup view is correctly displayed for non-trivial shadow DOM nesting.
@@ -128,7 +128,7 @@ const TEST_DATA = [
         div
         third-component
           #shadow-root
-            div`
+            div`,
 
   }, {
     // Test that ::before and ::after pseudo elements are correctly displayed in host
@@ -172,7 +172,7 @@ const TEST_DATA = [
             ::after
         ::before
         class="light-dom"
-        ::after`
+        ::after`,
 
   }, {
     // Test empty web components are still displayed correctly.
@@ -192,8 +192,8 @@ const TEST_DATA = [
       </script>`,
     tree: `
       test-component
-        #shadow-root`
-  }
+        #shadow-root`,
+  },
 ];
 
 for (const {url, tree, title} of TEST_DATA) {

@@ -21,7 +21,7 @@ add_task(async function setupExtensionSidebar() {
     background() {
       // This is just an empty extension used to ensure that the caller extension uuid
       // actually exists.
-    }
+    },
   });
 
   await extension.startup();
@@ -123,7 +123,7 @@ add_task(async function testSidebarSetObjectValueGrip() {
 
   const evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
     evalResultAsGrip: true,
-    toolboxConsoleActorID: toolbox.target.form.consoleActor
+    toolboxConsoleActorID: toolbox.target.form.consoleActor,
   });
 
   sidebar.setObjectValueGrip(evalResult.valueGrip, "Expected Root Title");
@@ -157,7 +157,7 @@ add_task(async function testSidebarDOMNodeHighlighting() {
 
   const evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
     evalResultAsGrip: true,
-    toolboxConsoleActorID: toolbox.target.form.consoleActor
+    toolboxConsoleActorID: toolbox.target.form.consoleActor,
   });
 
   sidebar.setObjectValueGrip(evalResult.valueGrip);

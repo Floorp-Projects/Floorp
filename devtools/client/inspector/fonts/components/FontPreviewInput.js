@@ -29,7 +29,7 @@ class FontPreviewInput extends PureComponent {
     this.inputRef = createRef();
 
     this.state = {
-      value: this.props.previewText
+      value: this.props.previewText,
     };
   }
 

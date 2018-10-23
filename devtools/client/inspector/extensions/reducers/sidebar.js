@@ -22,7 +22,7 @@ const reducers = {
       [sidebarId]: {
         viewMode: "object-treeview",
         object,
-      }
+      },
     });
   },
 
@@ -36,7 +36,7 @@ const reducers = {
         viewMode: "object-value-grip-view",
         objectValueGrip,
         rootTitle,
-      }
+      },
     });
   },
 
@@ -47,7 +47,7 @@ const reducers = {
       [sidebarId]: {
         viewMode: "extension-page",
         iframeURL,
-      }
+      },
     });
   },
 

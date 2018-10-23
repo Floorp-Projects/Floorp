@@ -57,6 +57,9 @@
 #elif defined(ANDROID)
 #include "gfxAndroidPlatform.h"
 #endif
+#if defined(MOZ_WIDGET_ANDROID)
+#include "mozilla/jni/Utils.h"  // for IsFennec
+#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -2850,10 +2853,12 @@ gfxPlatform::InitWebRenderConfig()
   }
 
 #ifdef MOZ_WIDGET_ANDROID
-  featureWebRender.ForceDisable(
-    FeatureStatus::Unavailable,
-    "WebRender not ready for use on Android",
-    NS_LITERAL_CSTRING("FEATURE_FAILURE_ANDROID"));
+  if (jni::IsFennec()) {
+    featureWebRender.ForceDisable(
+      FeatureStatus::Unavailable,
+      "WebRender not ready for use on non-e10s Android",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_ANDROID"));
+  }
 #endif
 
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit this feature

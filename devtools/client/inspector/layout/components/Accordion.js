@@ -18,7 +18,7 @@ const { div, span } = dom;
 class Accordion extends PureComponent {
   static get propTypes() {
     return {
-      items: PropTypes.array
+      items: PropTypes.array,
     };
   }
 
@@ -27,7 +27,7 @@ class Accordion extends PureComponent {
 
     this.state = {
       opened: props.items.map(item => item.opened),
-      created: []
+      created: [],
     };
 
     this.handleHeaderClick = this.handleHeaderClick.bind(this);
@@ -77,7 +77,7 @@ class Accordion extends PureComponent {
       (created[i] || opened[i]) ?
         div(
           { className: "_content",
-            style: { display: opened[i] ? "block" : "none" }
+            style: { display: opened[i] ? "block" : "none" },
           },
           createElement(item.component, item.componentProps || {})
         ) :

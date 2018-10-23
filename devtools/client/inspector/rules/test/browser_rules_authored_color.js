@@ -46,7 +46,7 @@ add_task(async function() {
     await simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
       selector,
       name: "color",
-      value: "rgb(0, 255, 0)"
+      value: "rgb(0, 255, 0)",
     });
 
     const spectrum = cPicker.spectrum;

@@ -37,19 +37,19 @@ async function checkColorCycling(container, view) {
 
   const tests = [{
     value: "hsl(0, 100%, 50%)",
-    comment: "Color displayed as an HSL value."
+    comment: "Color displayed as an HSL value.",
   }, {
     value: "rgb(255, 0, 0)",
-    comment: "Color displayed as an RGB value."
+    comment: "Color displayed as an RGB value.",
   }, {
     value: "red",
-    comment: "Color displayed as a color name."
+    comment: "Color displayed as a color name.",
   }, {
     value: "#f00",
-    comment: "Color displayed as an authored value."
+    comment: "Color displayed as an authored value.",
   }, {
     value: "hsl(0, 100%, 50%)",
-    comment: "Color displayed as an HSL value again."
+    comment: "Color displayed as an HSL value again.",
   }];
 
   for (const test of tests) {
@@ -68,13 +68,13 @@ async function checkAlphaColorCycling(inspector, view) {
 
   const tests = [{
     value: "hsla(0, 100%, 50%, 0.5)",
-    comment: "Color displayed as an HSLa value."
+    comment: "Color displayed as an HSLa value.",
   }, {
     value: "rgba(255, 0, 0, 0.5)",
-    comment: "Color displayed as an RGBa value."
+    comment: "Color displayed as an RGBa value.",
   }, {
     value: "#ff000080",
-    comment: "Color displayed as an alpha hex value again."
+    comment: "Color displayed as an alpha hex value again.",
   }];
 
   for (const test of tests) {
@@ -113,7 +113,7 @@ async function checkSwatchShiftClick(container, win, expectedValue, comment) {
   const onUnitChange = swatch.once("unit-change");
   EventUtils.synthesizeMouseAtCenter(swatch, {
     type: "mousedown",
-    shiftKey: true
+    shiftKey: true,
   }, win);
   await onUnitChange;
   is(valueNode.textContent, expectedValue, comment);

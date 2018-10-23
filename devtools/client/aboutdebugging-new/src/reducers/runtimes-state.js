@@ -10,6 +10,7 @@ const {
   NETWORK_LOCATIONS_UPDATED,
   RUNTIMES,
   UNWATCH_RUNTIME_SUCCESS,
+  UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
   USB_RUNTIMES_UPDATED,
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
@@ -69,13 +70,13 @@ function _updateRuntimeById(runtimeId, updatedRuntime, state) {
 function runtimesReducer(state = RuntimesState(), action) {
   switch (action.type) {
     case CONNECT_RUNTIME_SUCCESS: {
-      const { id, connection } = action.runtime;
-      return _updateRuntimeById(id, { connection }, state);
+      const { id, runtimeDetails } = action.runtime;
+      return _updateRuntimeById(id, { runtimeDetails }, state);
     }
 
     case DISCONNECT_RUNTIME_SUCCESS: {
       const { id } = action.runtime;
-      return _updateRuntimeById(id, { connection: null }, state);
+      return _updateRuntimeById(id, { runtimeDetails: null }, state);
     }
 
     case NETWORK_LOCATIONS_UPDATED: {
@@ -96,6 +97,15 @@ function runtimesReducer(state = RuntimesState(), action) {
 
     case UNWATCH_RUNTIME_SUCCESS: {
       return Object.assign({}, state, { selectedRuntimeId: null });
+    }
+
+    case UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS: {
+      const { connectionPromptEnabled } = action;
+      const { id: runtimeId } = action.runtime;
+      const runtime = findRuntimeById(runtimeId, state);
+      const runtimeDetails =
+        Object.assign({}, runtime.runtimeDetails, { connectionPromptEnabled });
+      return _updateRuntimeById(runtimeId, { runtimeDetails }, state);
     }
 
     case USB_RUNTIMES_UPDATED: {

@@ -51,6 +51,12 @@ async function openAboutDebugging(page, win) {
   info("Wait until the client connection was established");
   await waitUntil(() => document.querySelector(".js-runtime-page"));
 
+  // Wait until the about:debugging target is visible in the tab list
+  // Otherwise, we might have a race condition where TAB1 is discovered by the initial
+  // listTabs from the watchRuntime action, instead of being discovered after the
+  // TAB_UPDATED event. See analysis in Bug 1493968.
+  await waitUntil(() => findDebugTargetByText("about:debugging", document));
+
   return { tab, document, window };
 }
 
@@ -69,6 +75,11 @@ async function selectConnectPage(doc) {
 
   info("Wait until Connect page is displayed");
   await waitUntil(() => doc.querySelector(".js-connect-page"));
+}
+
+function findDebugTargetByText(text, document) {
+  const targets = [...document.querySelectorAll(".js-debug-target-item")];
+  return targets.find(target => target.textContent.includes(text));
 }
 
 function findSidebarItemByText(text, document) {

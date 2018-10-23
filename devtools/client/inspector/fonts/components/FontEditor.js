@@ -129,11 +129,11 @@ class FontEditor extends PureComponent {
 
     return dom.div(
       {
-        className: "font-group"
+        className: "font-group",
       },
       dom.div(
         {
-          className: "font-family-name"
+          className: "font-family-name",
         },
         family),
       group
@@ -188,7 +188,7 @@ class FontEditor extends PureComponent {
     // Append a "Custom" instance entry which represents the latest manual axes changes.
     const customInstance = {
       name: getStr("fontinspector.customInstanceName"),
-      values: this.props.fontEditor.customInstanceValues
+      values: this.props.fontEditor.customInstanceValues,
     };
     fontInstances = [ ...fontInstances, customInstance ];
 
@@ -210,7 +210,7 @@ class FontEditor extends PureComponent {
         onChange: (e) => {
           const instance = fontInstances.find(inst => e.target.value === inst.name);
           instance && this.props.onInstanceChange(instance.name, instance.values);
-        }
+        },
       },
       instanceOptions
     );
@@ -232,11 +232,11 @@ class FontEditor extends PureComponent {
   renderWarning(warning) {
     return dom.div(
       {
-        id: "font-editor"
+        id: "font-editor",
       },
       dom.div(
         {
-          className: "devtools-sidepanel-no-result"
+          className: "devtools-sidepanel-no-result",
         },
         warning
       )
@@ -265,7 +265,7 @@ class FontEditor extends PureComponent {
 
     return dom.div(
       {
-        id: "font-editor"
+        id: "font-editor",
       },
       // Always render UI for used fonts.
       this.renderUsedFonts(fonts),

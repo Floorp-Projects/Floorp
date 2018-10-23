@@ -114,7 +114,7 @@ class AnimationTarget extends Component {
     if (!nodeFront) {
       return dom.div(
         {
-          className: "animation-target"
+          className: "animation-target",
         }
       );
     }
@@ -154,7 +154,7 @@ class AnimationTarget extends Component {
             }
 
             setHighlightedNode(isHighlighted ? null : nodeFront);
-          }
+          },
         }
       )
     );

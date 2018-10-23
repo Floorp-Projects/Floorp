@@ -18,7 +18,7 @@ add_task(async function() {
 
   info("Verify attributes, only ID should be there for now");
   await assertAttributes("#test-div", {
-    id: "test-div"
+    id: "test-div",
   }, testActor);
 
   info("Focus the ID attribute and change its content");
@@ -33,12 +33,12 @@ add_task(async function() {
   await assertAttributes("#test-div", {
     id: "test-div",
     class: "newclass",
-    style: "color:green"
+    style: "color:green",
   }, testActor);
 
   info("Trying to undo the change");
   await undoChange(inspector);
   await assertAttributes("#test-div", {
-    id: "test-div"
+    id: "test-div",
   }, testActor);
 });

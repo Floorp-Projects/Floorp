@@ -39,15 +39,15 @@ addTest(function testRearrange() {
     listFront = front;
   }).then(() => {
     const computed = gInspectee.defaultView.getComputedStyle(listNode);
-    ok(computed.visibility, "visible", "Node should be visible to start with");
+    is(computed.visibility, "visible", "Node should be visible to start with");
     return gWalker.hideNode(listFront);
   }).then(response => {
     const computed = gInspectee.defaultView.getComputedStyle(listNode);
-    ok(computed.visibility, "hidden", "Node should be hidden");
+    is(computed.visibility, "hidden", "Node should be hidden");
     return gWalker.unhideNode(listFront);
   }).then(() => {
     const computed = gInspectee.defaultView.getComputedStyle(listNode);
-    ok(computed.visibility, "visible", "Node should be visible again.");
+    is(computed.visibility, "visible", "Node should be visible again.");
   }).then(runNextTest));
 });
 

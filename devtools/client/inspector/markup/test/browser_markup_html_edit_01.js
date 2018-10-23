@@ -19,17 +19,17 @@ const TEST_DATA = [{
     is(text, "First Div", "New div has expected text content");
     const num = await testActor.getNumberOfElementMatches("#one em");
     is(num, 0, "No em remaining");
-  }
+  },
 }, {
   selector: "#removedChildren",
   oldHTML: "<div id=\"removedChildren\">removedChild " +
            "<i>Italic <b>Bold <u>Underline</u></b></i> Normal</div>",
-  newHTML: "<div id=\"removedChildren\">removedChild</div>"
+  newHTML: "<div id=\"removedChildren\">removedChild</div>",
 }, {
   selector: "#addedChildren",
   oldHTML: '<div id="addedChildren">addedChildren</div>',
   newHTML: "<div id=\"addedChildren\">addedChildren " +
-           "<i>Italic <b>Bold <u>Underline</u></b></i> Normal</div>"
+           "<i>Italic <b>Bold <u>Underline</u></b></i> Normal</div>",
 }, {
   selector: "#addedAttribute",
   oldHTML: '<div id="addedAttribute">addedAttribute</div>',
@@ -40,11 +40,11 @@ const TEST_DATA = [{
     const html = await testActor.getProperty("#addedAttribute", "outerHTML");
     is(html, "<div id=\"addedAttribute\" class=\"important\" disabled=\"\" " +
        "checked=\"\">addedAttribute</div>", "Attributes have been added");
-  }
+  },
 }, {
   selector: "#changedTag",
   oldHTML: '<div id="changedTag">changedTag</div>',
-  newHTML: '<p id="changedTag" class="important">changedTag</p>'
+  newHTML: '<p id="changedTag" class="important">changedTag</p>',
 }, {
   selector: "#siblings",
   oldHTML: '<div id="siblings">siblings</div>',
@@ -66,7 +66,7 @@ const TEST_DATA = [{
     const afterText = await testActor.getProperty("#siblings-after-sibling",
                                                 "textContent");
     is(afterText, "after sibling", "Sibling has been inserted");
-  }
+  },
 }];
 
 const TEST_URL = "data:text/html," +

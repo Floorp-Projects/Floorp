@@ -26,7 +26,7 @@ async function testPressingEscapeRevertsChanges(view) {
     [0.1, 2, 0.9, -1], {
       selector: "body",
       name: "animation-timing-function",
-      value: "cubic-bezier(0.1, 2, 0.9, -1)"
+      value: "cubic-bezier(0.1, 2, 0.9, -1)",
     });
 
   is(propEditor.valueSpan.textContent, "cubic-bezier(.1,2,.9,-1)",

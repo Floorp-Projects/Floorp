@@ -83,7 +83,7 @@ http://creativecommons.org/licenses/publicdomain/
       "Mismatched key share"
     );
     var authSecret = new Uint8Array(pushSubscription.getKey("auth"));
-    ok(authSecret.length, 16, "Auth secret should be 16 octets");
+    is(authSecret.length, 16, "Auth secret should be 16 octets");
     isDeeply(
       authSecret,
       new Uint8Array(data.auth),

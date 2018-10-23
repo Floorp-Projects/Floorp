@@ -28,25 +28,25 @@ const testData = [
     value: "red",
     commitKey: "VK_ESCAPE",
     modifiers: {},
-    expected: "#00F"
+    expected: "#00F",
   },
   {
     value: "red",
     commitKey: "VK_RETURN",
     modifiers: {},
-    expected: "red"
+    expected: "red",
   },
   {
     value: "invalid",
     commitKey: "VK_RETURN",
     modifiers: {},
-    expected: "invalid"
+    expected: "invalid",
   },
   {
     value: "blue",
     commitKey: "VK_TAB", modifiers: {shiftKey: true},
-    expected: "blue"
-  }
+    expected: "blue",
+  },
 ];
 
 add_task(async function() {
