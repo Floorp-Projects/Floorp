@@ -6,6 +6,7 @@
 
 #include "PaymentActionResponse.h"
 #include "PaymentRequestUtils.h"
+#include "BasicCardPayment.h"
 
 namespace mozilla {
 namespace dom {
@@ -77,47 +78,9 @@ BasicCardResponseData::BasicCardResponseData()
 }
 
 NS_IMETHODIMP
-BasicCardResponseData::GetCardholderName(nsAString& aCardholderName)
+BasicCardResponseData::GetData(nsAString& aData)
 {
-  aCardholderName = mCardholderName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasicCardResponseData::GetCardNumber(nsAString& aCardNumber)
-{
-  aCardNumber = mCardNumber;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasicCardResponseData::GetExpiryMonth(nsAString& aExpiryMonth)
-{
-  aExpiryMonth = mExpiryMonth;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasicCardResponseData::GetExpiryYear(nsAString& aExpiryYear)
-{
-  aExpiryYear = mExpiryYear;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasicCardResponseData::GetCardSecurityCode(nsAString& aCardSecurityCode)
-{
-  aCardSecurityCode = mCardSecurityCode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasicCardResponseData::GetBillingAddress(nsIPaymentAddress** aBillingAddress)
-{
-  NS_ENSURE_ARG_POINTER(aBillingAddress);
-  nsCOMPtr<nsIPaymentAddress> address;
-  address = mBillingAddress;
-  address.forget(aBillingAddress);
+  aData = mData;
   return NS_OK;
 }
 
@@ -144,14 +107,16 @@ BasicCardResponseData::InitData(const nsAString& aCardholderName,
   if (!service->IsValidExpiryYear(aExpiryYear)) {
     return NS_ERROR_FAILURE;
   }
-
-  mCardholderName = aCardholderName;
-  mCardNumber = aCardNumber;
-  mExpiryMonth = aExpiryMonth;
-  mExpiryYear = aExpiryYear;
-  mCardSecurityCode = aCardSecurityCode;
-  mBillingAddress = aBillingAddress;
-
+  nsresult rv = service->EncodeBasicCardData(aCardholderName,
+                                             aCardNumber,
+                                             aExpiryMonth,
+                                             aExpiryYear,
+                                             aCardSecurityCode,
+                                             aBillingAddress,
+                                             mData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return NS_OK;
 }
 
@@ -237,11 +202,9 @@ PaymentShowActionResponse::GetMethodName(nsAString& aMethodName)
 }
 
 NS_IMETHODIMP
-PaymentShowActionResponse::GetData(nsIPaymentResponseData** aData)
+PaymentShowActionResponse::GetData(nsAString& aData)
 {
-  NS_ENSURE_ARG_POINTER(aData);
-  nsCOMPtr<nsIPaymentResponseData> data = mData;
-  data.forget(aData);
+  aData = mData;
   return NS_OK;
 }
 
@@ -295,20 +258,28 @@ PaymentShowActionResponse::Init(const nsAString& aRequestId,
         if (isBasicCardPayment) {
           return NS_ERROR_FAILURE;
         }
+        nsCOMPtr<nsIGeneralResponseData> data = do_QueryInterface(aData);
+        MOZ_ASSERT(data);
+        NS_ENSURE_SUCCESS(data->GetData(mData), NS_ERROR_FAILURE);
         break;
       }
       case nsIPaymentResponseData::BASICCARD_RESPONSE: {
         if (!isBasicCardPayment) {
           return NS_ERROR_FAILURE;
         }
+        nsCOMPtr<nsIBasicCardResponseData> data = do_QueryInterface(aData);
+        MOZ_ASSERT(data);
+        NS_ENSURE_SUCCESS(data->GetData(mData), NS_ERROR_FAILURE);
         break;
       }
       default: {
         return NS_ERROR_FAILURE;
       }
     }
+    if (mData.IsEmpty()) {
+      return NS_ERROR_FAILURE;
+    }
   }
-  mData = aData;
   mPayerName = aPayerName;
   mPayerEmail = aPayerEmail;
   mPayerPhone = aPayerPhone;
