@@ -63,8 +63,8 @@ startupRecorder.prototype = {
       return;
 
     this.data.code[name] = {
-      components: Cu.loadedComponents(),
-      modules: Cu.loadedModules(),
+      components: Cu.loadedComponents,
+      modules: Cu.loadedModules,
       services: Object.keys(Cc).filter(c => {
         try {
           return Cm.isServiceInstantiatedByContractID(c, Ci.nsISupports);
