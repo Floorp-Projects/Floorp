@@ -20,6 +20,7 @@
 @import "chrome://devtools/content/netmonitor/src/assets/styles/RequestList.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/NetworkDetailsPanel.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/StatisticsPanel.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/StatusCode.css";
 
 /* General */
 
