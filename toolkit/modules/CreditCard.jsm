@@ -208,7 +208,13 @@ class CreditCard {
 
     if (showNumbers) {
       if (this._encryptedNumber) {
-        label = await OSKeyStore.decrypt(this._encryptedNumber);
+        try {
+          label = await OSKeyStore.decrypt(this._encryptedNumber);
+        } catch (ex) {
+          // Quietly recover from decryption error.
+          label = this._number;
+          Cu.reportError(ex);
+        }
       } else {
         label = this._number;
       }
