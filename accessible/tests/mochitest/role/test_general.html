@@ -21,19 +21,19 @@
 
       // nsHyperTextAcc tests section
       // Test html:form.
-      testRole("nav", ROLE_SECTION);
-      testRole("header", ROLE_HEADER);
-      testRole("footer", ROLE_FOOTER);
+      testRole("nav", ROLE_LANDMARK);
+      testRole("header", ROLE_LANDMARK);
+      testRole("footer", ROLE_LANDMARK);
       testRole("article", ROLE_ARTICLE);
-      testRole("aside", ROLE_NOTE);
+      testRole("aside", ROLE_LANDMARK);
       testRole("section", ROLE_SECTION);
 
       // Bug 996821
       // Check that landmark elements get accessibles with styled overflow.
       testRole("section_overflow", ROLE_SECTION);
-      testRole("nav_overflow", ROLE_SECTION);
+      testRole("nav_overflow", ROLE_LANDMARK);
       testRole("header_overflow", ROLE_SECTION);
-      testRole("aside_overflow", ROLE_NOTE);
+      testRole("aside_overflow", ROLE_LANDMARK);
       testRole("footer_overflow", ROLE_SECTION);
       testRole("article_overflow", ROLE_ARTICLE);
 

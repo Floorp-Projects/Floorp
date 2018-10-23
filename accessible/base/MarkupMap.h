@@ -24,7 +24,7 @@ MARKUPMAP(article,
 
 MARKUPMAP(aside,
           New_HyperText,
-          roles::NOTE)
+          roles::LANDMARK)
 
 MARKUPMAP(blockquote,
           New_HyperText,
@@ -118,6 +118,10 @@ MARKUPMAP(legend,
 MARKUPMAP(li,
           New_HTMLListitem,
           0)
+
+MARKUPMAP(main,
+          New_HyperText,
+          roles::LANDMARK)
 
 MARKUPMAP(map,
           nullptr,
@@ -293,7 +297,7 @@ MARKUPMAP(msline_,
 
 MARKUPMAP(nav,
           New_HyperText,
-          roles::SECTION)
+          roles::LANDMARK)
 
 MARKUPMAP(ol,
           New_HTMLList,
