@@ -245,6 +245,10 @@ class UrlbarInput {
       "urlbar-go-button");
   }
 
+  get textValue() {
+    return this.inputField.value;
+  }
+
   get value() {
     return this._untrimmedValue;
   }
