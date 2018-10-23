@@ -119,6 +119,13 @@ WorkerRunnable::DispatchInternal()
     return NS_SUCCEEDED(parent->Dispatch(runnable.forget()));
   }
 
+  if (IsDebuggeeRunnable()) {
+    RefPtr<WorkerDebuggeeRunnable> debuggeeRunnable =
+      runnable.forget().downcast<WorkerDebuggeeRunnable>();
+    return NS_SUCCEEDED(mWorkerPrivate->DispatchDebuggeeToMainThread(debuggeeRunnable.forget(),
+                                                                     NS_DISPATCH_NORMAL));
+  }
+
   return NS_SUCCEEDED(mWorkerPrivate->DispatchToMainThread(runnable.forget()));
 }
 
@@ -746,6 +753,25 @@ void
 WorkerProxyToMainThreadRunnable::ReleaseWorker()
 {
   mWorkerRef = nullptr;
+}
+
+bool
+WorkerDebuggeeRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate)
+{
+  if (mBehavior == ParentThreadUnchangedBusyCount) {
+    RefPtr<StrongWorkerRef> strongRef =
+      StrongWorkerRef::Create(aWorkerPrivate, "WorkerDebuggeeRunnable::mSender");
+    if (!strongRef) {
+      return false;
+    }
+
+    mSender = new ThreadSafeWorkerRef(strongRef);
+    if (!mSender) {
+      return false;
+    }
+  }
+
+  return WorkerRunnable::PreDispatch(aWorkerPrivate);
 }
 
 } // dom namespace
