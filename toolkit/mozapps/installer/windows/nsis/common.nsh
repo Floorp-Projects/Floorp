@@ -5092,10 +5092,11 @@
 
             ; We still accept the plural version for backwards compatibility,
             ; but the singular version takes priority.
+            ClearErrors
             ReadINIStr $R8 $R7 "Install" "StartMenuShortcut"
             ${If} $R8 == "false"
               StrCpy $AddStartMenuSC "0"
-            ${Else}
+            ${ElseIfNot} ${Errors}
               StrCpy $AddStartMenuSC "1"
             ${EndIf}
 

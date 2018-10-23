@@ -315,12 +315,8 @@ nsColumnSetFrame::ClampUsedColumnWidth(const nsStyleCoord& aColumnWidth)
 
 nsColumnSetFrame::ReflowConfig
 nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
-                                       bool aForceAuto = false,
-                                       nscoord aFeasibleBSize = NS_INTRINSICSIZE,
-                                       nscoord aInfeasibleBSize = 0)
+                                       bool aForceAuto = false)
 {
-  nscoord knownFeasibleBSize = aFeasibleBSize;
-  nscoord knownInfeasibleBSize = aInfeasibleBSize;
   WritingMode wm = aReflowInput.GetWritingMode();
 
   const nsStyleColumn* colStyle = StyleColumn();
@@ -456,9 +452,18 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
                  colBSize,
                  colGap);
 
-  ReflowConfig config = { numColumns, colISize, expectedISizeLeftOver, colGap,
-                          colBSize, isBalancing, knownFeasibleBSize,
-                          knownInfeasibleBSize, computedBSize, consumedBSize };
+  ReflowConfig config;
+  config.mBalanceColCount = numColumns;
+  config.mColISize = colISize;
+  config.mExpectedISizeLeftOver = expectedISizeLeftOver;
+  config.mColGap = colGap;
+  config.mColMaxBSize = colBSize;
+  config.mIsBalancing = isBalancing;
+  config.mKnownFeasibleBSize = NS_INTRINSICSIZE;
+  config.mKnownInfeasibleBSize = 0;
+  config.mComputedBSize = computedBSize;
+  config.mConsumedBSize = consumedBSize;
+
   return config;
 }
 
@@ -1235,7 +1240,6 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   bool unboundedLastColumn = config.mIsBalancing && !nextInFlow;
   nsCollapsingMargin carriedOutBottomMargin;
   ColumnBalanceData colData;
-  colData.mHasExcessBSize = false;
 
   bool feasible = ReflowColumns(aDesiredSize, aReflowInput, aStatus, config,
                                 unboundedLastColumn, &carriedOutBottomMargin,

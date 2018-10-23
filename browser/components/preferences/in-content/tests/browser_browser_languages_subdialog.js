@@ -163,6 +163,7 @@ add_task(async function testReorderingBrowserLanguages() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", true],
       ["intl.locale.requested", "pl,en-US"],
     ],
   });
@@ -219,6 +220,7 @@ add_task(async function testAddAndRemoveRequestedLanguages() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", true],
       ["intl.locale.requested", "en-US"],
       ["extensions.langpacks.signatures.required", false],
     ],
@@ -292,6 +294,7 @@ add_task(async function testInstallFromAMO() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", true],
       ["intl.locale.requested", "en-US"],
       ["extensions.getAddons.langpacks.url", langpacksUrl],
       ["extensions.langpacks.signatures.required", false],
@@ -357,6 +360,49 @@ add_task(async function testInstallFromAMO() {
   let installs = await AddonManager.getAddonsByTypes(["locale", "dictionary"]);
   is(installs.length, 2, "There is one langpack and one dictionary installed");
   await Promise.all(installs.map(item => item.uninstall()));
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+let hasSearchOption = popup => Array.from(popup.children).some(el => el.value == "search");
+
+add_task(async function testDownloadEnabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", true],
+    ],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  let defaultMenulist = doc.getElementById("defaultBrowserLanguage");
+  ok(hasSearchOption(defaultMenulist.firstChild), "There's a search option in the General pane");
+
+  let { available } = await openDialog(doc, false);
+  ok(hasSearchOption(available.firstChild), "There's a search option in the dialog");
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+
+add_task(async function testDownloadDisabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", false],
+    ],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  let defaultMenulist = doc.getElementById("defaultBrowserLanguage");
+  ok(!hasSearchOption(defaultMenulist.firstChild), "There's no search option in the General pane");
+
+  let { available } = await openDialog(doc, false);
+  ok(!hasSearchOption(available.firstChild), "There's no search option in the dialog");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

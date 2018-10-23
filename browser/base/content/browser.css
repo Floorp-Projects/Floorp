@@ -70,6 +70,18 @@ toolbar[customizable="true"] {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar");
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
+#toolbar-menubar[autohide="true"] {
+  overflow: hidden;
+}
+
+#toolbar-menubar[autohide="true"][inactive="true"]:not([customizing="true"]) {
+  min-height: 0 !important;
+  height: 0 !important;
+  -moz-appearance: none !important;
+}
+%endif
+
 %ifdef XP_MACOSX
 #toolbar-menubar {
   -moz-binding: none;

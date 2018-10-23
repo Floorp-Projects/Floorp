@@ -271,17 +271,6 @@ toolbar[type="menubar"] {
   min-height: 0 !important;
   border: 0 !important;
 }
-%else
-toolbar[type="menubar"][autohide="true"] {
-  overflow: hidden;
-}
-
-toolbar[type="menubar"][autohide="true"][inactive="true"]:not([customizing="true"]) {
-  min-height: 0 !important;
-  height: 0 !important;
-  -moz-appearance: none !important;
-  border-style: none !important;
-}
 %endif
 
 toolbarspring {

@@ -659,6 +659,16 @@ tv = {
       "ef29dd382fa66a83a95be7ccfb71f1ccfee494977855a4c260d90c2f8c91e062")
   },
 
+  pbkdf2_sha256_no_pwd: {
+    password: new Uint8Array(),
+    salt: new TextEncoder("utf-8").encode("saltSALTsaltSALTsaltSALTsaltSALTsalt"),
+    length: 32 * 8,
+    iterations: 1,
+
+    derived: util.hex2abv(
+      "1635fa0f0542cc84f51207ff6cad5284aee3b0264faa55868eca95a7efd2335c")
+  },
+
   broken_pkcs8: {
     // A DH key with parameters p and g, and a private value.
     // This currently fails the key import due to the missing public value.
