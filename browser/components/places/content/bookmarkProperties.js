@@ -365,6 +365,8 @@ var BookmarkPropertiesPanel = {
     // currently registered EventListener on the EventTarget has no effect.
     this._element("locationField")
         .removeEventListener("input", this);
+    this._element("keywordField")
+        .removeEventListener("input", this);
   },
 
   onDialogAccept() {
