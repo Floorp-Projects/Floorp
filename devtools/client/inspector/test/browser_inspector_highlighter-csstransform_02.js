@@ -39,7 +39,7 @@ add_task(async function() {
   const polygonPoints = points.split(" ").map(p => {
     return {
       x: +p.substring(0, p.indexOf(",")),
-      y: +p.substring(p.indexOf(",") + 1)
+      y: +p.substring(p.indexOf(",") + 1),
     };
   });
 

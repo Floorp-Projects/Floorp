@@ -16,18 +16,18 @@ const TEST_URL = "data:text/html;charset=utf-8," +
 
 const TEST_DATA = [{
   selector: ".root-level-node",
-  containerCount: 1
+  containerCount: 1,
 }, {
   selector: ".sub-level-node",
-  containerCount: 0
+  containerCount: 0,
 }, {
   inIframe: true,
   selector: ".root-level-node",
-  containerCount: 0
+  containerCount: 0,
 }, {
   inIframe: true,
   selector: ".sub-level-node",
-  containerCount: 1
+  containerCount: 1,
 }];
 
 requestLongerTimeout(5);

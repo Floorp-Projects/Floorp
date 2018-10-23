@@ -154,7 +154,7 @@ class ComputedStylePath extends PureComponent {
 
       const g = dom.g(
         {
-          className: "hint"
+          className: "hint",
         },
         dom.title({}, startKeyframe.easing),
         dom.path(
@@ -163,7 +163,7 @@ class ComputedStylePath extends PureComponent {
                toPathString(hintSegments),
             style: {
               "stroke-width": easingHintStrokeWidth,
-            }
+            },
           }
         )
       );
@@ -198,7 +198,7 @@ class ComputedStylePath extends PureComponent {
 
     return [
       this.renderPathSegments(segments),
-      this.renderEasingHint(segments)
+      this.renderEasingHint(segments),
     ];
   }
 

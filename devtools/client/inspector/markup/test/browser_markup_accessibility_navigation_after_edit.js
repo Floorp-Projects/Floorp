@@ -32,49 +32,49 @@ const TESTS = [
     activedescendant: "div.tagLine",
     key: "VK_DOWN",
     options: { },
-    waitFor: "inspector-updated"
+    waitFor: "inspector-updated",
   },
   {
     desc: "Focus on header tag",
     focused: "div.focusableElms.0",
     activedescendant: "div.tagLine",
     key: "VK_RETURN",
-    options: { }
+    options: { },
   },
   {
     desc: "Activate header tag editor",
     focused: "div.editor.tag.inplaceEditor.input",
     activedescendant: "div.tagLine",
     key: "VK_RETURN",
-    options: { }
+    options: { },
   },
   {
     desc: "Activate header id attribute editor",
     focused: "div.editor.attrList.children.0.children.1.inplaceEditor.input",
     activedescendant: "div.tagLine",
     key: "VK_TAB",
-    options: { }
+    options: { },
   },
   {
     desc: "Deselect text in header id attribute editor",
     focused: "div.editor.attrList.children.0.children.1.inplaceEditor.input",
     activedescendant: "div.tagLine",
     key: "VK_TAB",
-    options: { }
+    options: { },
   },
   {
     desc: "Move the cursor to the left",
     focused: "div.editor.attrList.children.0.children.1.inplaceEditor.input",
     activedescendant: "div.tagLine",
     key: "VK_LEFT",
-    options: { }
+    options: { },
   },
   {
     desc: "Modify the attribute",
     focused: "div.editor.attrList.children.0.children.1.inplaceEditor.input",
     activedescendant: "div.tagLine",
     key: "A",
-    options: { }
+    options: { },
   },
   {
     desc: "Commit the attribute change",
@@ -82,21 +82,21 @@ const TESTS = [
     activedescendant: "div.tagLine",
     key: "VK_RETURN",
     options: { },
-    waitFor: "inspector-updated"
+    waitFor: "inspector-updated",
   },
   {
     desc: "Tab and focus on header class attribute",
     focused: "div.focusableElms.2",
     activedescendant: "div.tagLine",
     key: "VK_TAB",
-    options: { }
+    options: { },
   },
   {
     desc: "Tab and focus on header new attribute node",
     focused: "div.focusableElms.3",
     activedescendant: "div.tagLine",
     key: "VK_TAB",
-    options: { }
+    options: { },
   },
 ];
 

@@ -13,85 +13,85 @@ const TEST_URL = URL_ROOT + "doc_inspector_search-reserved.html";
 const TEST_DATA = [
   {
     key: "#",
-    suggestions: [{label: "#d1\\.d2"}]
+    suggestions: [{label: "#d1\\.d2"}],
   },
   {
     key: "d",
-    suggestions: [{label: "#d1\\.d2"}]
+    suggestions: [{label: "#d1\\.d2"}],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: "#d1\\.d2"}]
+    suggestions: [{label: "#d1\\.d2"}],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: ".",
-    suggestions: [{label: ".c1\\.c2"}]
+    suggestions: [{label: ".c1\\.c2"}],
   },
   {
     key: "c",
-    suggestions: [{label: ".c1\\.c2"}]
+    suggestions: [{label: ".c1\\.c2"}],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: ".c1\\.c2"}]
+    suggestions: [{label: ".c1\\.c2"}],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: "d",
     suggestions: [{label: "div"},
-                  {label: "#d1\\.d2"}]
+                  {label: "#d1\\.d2"}],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: "c",
-    suggestions: [{label: ".c1\\.c2"}]
+    suggestions: [{label: ".c1\\.c2"}],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: "b",
-    suggestions: [{label: "body"}]
+    suggestions: [{label: "body"}],
   },
   {
     key: "o",
-    suggestions: [{label: "body"}]
+    suggestions: [{label: "body"}],
   },
   {
     key: "d",
-    suggestions: [{label: "body"}]
+    suggestions: [{label: "body"}],
   },
   {
     key: "y",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: " ",
-    suggestions: [{label: "body div"}]
+    suggestions: [{label: "body div"}],
   },
   {
     key: ".",
-    suggestions: [{label: "body .c1\\.c2"}]
+    suggestions: [{label: "body .c1\\.c2"}],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: "body div"}]
+    suggestions: [{label: "body div"}],
   },
   {
     key: "#",
-    suggestions: [{label: "body #d1\\.d2"}]
-  }
+    suggestions: [{label: "body #d1\\.d2"}],
+  },
 ];
 
 add_task(async function() {

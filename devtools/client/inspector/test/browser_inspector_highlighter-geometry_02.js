@@ -45,32 +45,32 @@ const POSITIONED_ELEMENT_TESTS = [{
     {side: "left", visible: true, label: "5rem"},
     {side: "top", visible: true, label: "30px"},
     {side: "right", visible: true, label: "300px"},
-    {side: "bottom", visible: true, label: "10em"}
-  ]
+    {side: "bottom", visible: true, label: "10em"},
+  ],
 }, {
   selector: "#positioned2",
   expectedLabels: [
     {side: "left", visible: false},
     {side: "top", visible: true, label: "5vmin"},
     {side: "right", visible: true, label: "10%"},
-    {side: "bottom", visible: false}
-  ]
+    {side: "bottom", visible: false},
+  ],
 }, {
   selector: "#relative",
   expectedLabels: [
     {side: "left", visible: true, label: "20px"},
     {side: "top", visible: true, label: "10px"},
     {side: "right", visible: false},
-    {side: "bottom", visible: false}
-  ]
+    {side: "bottom", visible: false},
+  ],
 }, {
   selector: "#relative2",
   expectedLabels: [
     {side: "left", visible: false},
     {side: "top", visible: true, label: "0px"},
     {side: "right", visible: false},
-    {side: "bottom", visible: false}
-  ]
+    {side: "bottom", visible: false},
+  ],
 }];
 
 add_task(async function() {

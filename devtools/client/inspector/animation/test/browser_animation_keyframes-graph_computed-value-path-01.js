@@ -23,7 +23,7 @@ const TEST_DATA = [
         expectedStopColors: [
           { offset: 0, color: "rgb(255, 0, 0)" },
           { offset: 1, color: "rgb(0, 255, 0)" },
-        ]
+        ],
       },
       {
         name: "background-repeat",
@@ -97,7 +97,7 @@ const TEST_DATA = [
         expectedStopColors: [
           { offset: 0, color: "rgb(0, 255, 0)" },
           { offset: 1, color: "rgb(255, 0, 0)" },
-        ]
+        ],
       },
       {
         name: "background-repeat",

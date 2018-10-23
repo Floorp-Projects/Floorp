@@ -54,7 +54,7 @@ SlottedNodeEditor.prototype = {
    */
   getInfoAtNode: function() {
     return null;
-  }
+  },
 };
 
 module.exports = SlottedNodeEditor;

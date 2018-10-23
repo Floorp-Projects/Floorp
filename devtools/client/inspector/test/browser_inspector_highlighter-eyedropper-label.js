@@ -25,49 +25,49 @@ const TEST_DATA = [{
   getCoordinates: (width, height) => {
     return {x: width / 2, y: height / 2};
   },
-  expectedPositions: {top: false, right: false, left: false}
+  expectedPositions: {top: false, right: false, left: false},
 }, {
   desc: "Move the mouse to the center left",
   getCoordinates: (width, height) => {
     return {x: 0, y: height / 2};
   },
-  expectedPositions: {top: false, right: true, left: false}
+  expectedPositions: {top: false, right: true, left: false},
 }, {
   desc: "Move the mouse to the center right",
   getCoordinates: (width, height) => {
     return {x: width, y: height / 2};
   },
-  expectedPositions: {top: false, right: false, left: true}
+  expectedPositions: {top: false, right: false, left: true},
 }, {
   desc: "Move the mouse to the bottom center",
   getCoordinates: (width, height) => {
     return {x: width / 2, y: height};
   },
-  expectedPositions: {top: true, right: false, left: false}
+  expectedPositions: {top: true, right: false, left: false},
 }, {
   desc: "Move the mouse to the bottom left",
   getCoordinates: (width, height) => {
     return {x: 0, y: height};
   },
-  expectedPositions: {top: true, right: true, left: false}
+  expectedPositions: {top: true, right: true, left: false},
 }, {
   desc: "Move the mouse to the bottom right",
   getCoordinates: (width, height) => {
     return {x: width, y: height};
   },
-  expectedPositions: {top: true, right: false, left: true}
+  expectedPositions: {top: true, right: false, left: true},
 }, {
   desc: "Move the mouse to the top left",
   getCoordinates: (width, height) => {
     return {x: 0, y: 0};
   },
-  expectedPositions: {top: false, right: true, left: false}
+  expectedPositions: {top: false, right: true, left: false},
 }, {
   desc: "Move the mouse to the top right",
   getCoordinates: (width, height) => {
     return {x: width, y: 0};
   },
-  expectedPositions: {top: false, right: false, left: true}
+  expectedPositions: {top: false, right: false, left: true},
 }];
 
 add_task(async function() {

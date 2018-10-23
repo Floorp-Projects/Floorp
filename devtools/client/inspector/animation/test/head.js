@@ -571,7 +571,7 @@ function _afterDispatchDone(store, type) {
       },
       run: (dispatch, getState, action) => {
         resolve(action);
-      }
+      },
     });
   });
 }

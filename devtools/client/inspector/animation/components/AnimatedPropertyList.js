@@ -100,7 +100,7 @@ class AnimatedPropertyList extends Component {
     this.setState(
       {
         animatedProperties,
-        isStateUpdating: false
+        isStateUpdating: false,
       }
     );
 
@@ -122,7 +122,7 @@ class AnimatedPropertyList extends Component {
 
     return dom.ul(
       {
-        className: "animated-property-list"
+        className: "animated-property-list",
       },
       animatedProperties.map(({ isUnchanged, keyframes, name, type }) => {
         const state = this.getPropertyState(name);

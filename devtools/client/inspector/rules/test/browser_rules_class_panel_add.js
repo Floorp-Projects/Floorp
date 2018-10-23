@@ -14,30 +14,30 @@
 const TEST_ARRAY = [{
   textEntered: "",
   expectNoMutation: true,
-  expectedClasses: []
+  expectedClasses: [],
 }, {
   textEntered: "class",
-  expectedClasses: ["class"]
+  expectedClasses: ["class"],
 }, {
   textEntered: "class",
   expectNoMutation: true,
-  expectedClasses: ["class"]
+  expectedClasses: ["class"],
 }, {
   textEntered: "a a a a a a a a a a",
-  expectedClasses: ["class", "a"]
+  expectedClasses: ["class", "a"],
 }, {
   textEntered: "class2 class3",
-  expectedClasses: ["class", "a", "class2", "class3"]
+  expectedClasses: ["class", "a", "class2", "class3"],
 }, {
   textEntered: "                       ",
   expectNoMutation: true,
-  expectedClasses: ["class", "a", "class2", "class3"]
+  expectedClasses: ["class", "a", "class2", "class3"],
 }, {
   textEntered: "          class4",
-  expectedClasses: ["class", "a", "class2", "class3", "class4"]
+  expectedClasses: ["class", "a", "class2", "class3", "class4"],
 }, {
   textEntered: "    \t      class5      \t \t\t             ",
-  expectedClasses: ["class", "a", "class2", "class3", "class4", "class5"]
+  expectedClasses: ["class", "a", "class2", "class3", "class4", "class5"],
 }];
 
 add_task(async function() {

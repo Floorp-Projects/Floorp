@@ -179,7 +179,7 @@ EditingSession.prototype = {
     this._inspector = null;
     this._modifications = null;
     this._rules = null;
-  }
+  },
 };
 
 module.exports = EditingSession;

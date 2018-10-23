@@ -24,15 +24,15 @@ const TEST_DATA = [
           "selector",
     search: "#test",
     selectorText: "#testid",
-    index: 0
+    index: 0,
   },
   {
     desc: "Tests that the search filter works properly for multiple rule " +
           "selectors",
     search: "body",
     selectorText: "html, body, div",
-    index: 2
-  }
+    index: 2,
+  },
 ];
 
 add_task(async function() {

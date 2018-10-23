@@ -13,7 +13,7 @@ const {
 const INITIAL_BOX_MODEL = {
   geometryEditorEnabled: false,
   layout: {},
-  offsetParent: null
+  offsetParent: null,
 };
 
 const reducers = {

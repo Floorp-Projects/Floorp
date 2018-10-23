@@ -84,7 +84,7 @@ class LayoutApp extends PureComponent {
         onToggled: () => {
           const opened = Services.prefs.getBoolPref(GRID_OPENED_PREF);
           Services.prefs.setBoolPref(GRID_OPENED_PREF, !opened);
-        }
+        },
       },
       {
         component: BoxModel,
@@ -94,7 +94,7 @@ class LayoutApp extends PureComponent {
         onToggled: () => {
           const opened = Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF);
           Services.prefs.setBoolPref(BOXMODEL_OPENED_PREF, !opened);
-        }
+        },
       },
     ];
 
@@ -112,7 +112,7 @@ class LayoutApp extends PureComponent {
         onToggled: () => {
           const opened =  Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF);
           Services.prefs.setBoolPref(FLEXBOX_OPENED_PREF, !opened);
-        }
+        },
       });
 
       // If the current selected node is both a flex container and flex item. Render
@@ -133,7 +133,7 @@ class LayoutApp extends PureComponent {
           onToggled: () => {
             const opened =  Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF);
             Services.prefs.setBoolPref(FLEXBOX_OPENED_PREF, !opened);
-          }
+          },
         });
       }
     }

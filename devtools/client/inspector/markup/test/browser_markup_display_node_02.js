@@ -33,7 +33,7 @@ const TEST_DATA = [
     selector: "#grid",
     before: {
       textContent: "grid",
-      visible: true
+      visible: true,
     },
     changeStyle: async function(testActor) {
       await testActor.eval(`
@@ -42,14 +42,14 @@ const TEST_DATA = [
       `);
     },
     after: {
-      visible: false
-    }
+      visible: false,
+    },
   },
   {
     desc: "Reusing the 'grid' node, updating the display to 'grid again",
     selector: "#grid",
     before: {
-      visible: false
+      visible: false,
     },
     changeStyle: async function(testActor) {
       await testActor.eval(`
@@ -59,14 +59,14 @@ const TEST_DATA = [
     },
     after: {
       textContent: "grid",
-      visible: true
-    }
+      visible: true,
+    },
   },
   {
     desc: "Showing a 'grid' node by changing its style property",
     selector: "#block",
     before: {
-      visible: false
+      visible: false,
     },
     changeStyle: async function(testActor) {
       await testActor.eval(`
@@ -76,14 +76,14 @@ const TEST_DATA = [
     },
     after: {
       textContent: "grid",
-      visible: true
-    }
+      visible: true,
+    },
   },
   {
     desc: "Showing a 'flex' node by removing its hidden attribute",
     selector: "#flex",
     before: {
-      visible: false
+      visible: false,
     },
     changeStyle: async function(testActor) {
       await testActor.eval(`
@@ -92,9 +92,9 @@ const TEST_DATA = [
     },
     after: {
       textContent: "flex",
-      visible: true
-    }
-  }
+      visible: true,
+    },
+  },
 ];
 
 add_task(async function() {

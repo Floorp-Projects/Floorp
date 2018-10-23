@@ -225,7 +225,7 @@ TextProperty.prototype = {
     return (this.rule.domRule.declarations[selfIndex].isNameValid !== undefined)
       ? this.rule.domRule.declarations[selfIndex].isNameValid
       : true;
-  }
+  },
 };
 
 module.exports = TextProperty;

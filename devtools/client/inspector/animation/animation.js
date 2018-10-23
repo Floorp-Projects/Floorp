@@ -19,7 +19,7 @@ const {
   updateHighlightedNode,
   updatePlaybackRates,
   updateSelectedAnimation,
-  updateSidebarSize
+  updateSidebarSize,
 } = require("./actions/animations");
 const {
   hasAnimationIterationCountInfinite,
@@ -111,7 +111,7 @@ class AnimationInspector {
       {
         id: "animationinspector",
         key: "animationinspector",
-        store: this.inspector.store
+        store: this.inspector.store,
       },
       App(
         {

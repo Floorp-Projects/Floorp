@@ -29,7 +29,7 @@ const TEST_DATA = [{
   linkFollowItemLabel: TOOLBOX_L10N.getStr(
     "toolbox.viewCssSourceInStyleEditor.label"),
   linkCopyItemLabel: INSPECTOR_L10N.getStr(
-    "inspector.menu.copyUrlToClipboard.label")
+    "inspector.menu.copyUrlToClipboard.label"),
 }, {
   selector: "link[rel=icon]",
   attributeName: "href",
@@ -39,13 +39,13 @@ const TEST_DATA = [{
   linkFollowItemLabel: INSPECTOR_L10N.getStr(
     "inspector.menu.openUrlInNewTab.label"),
   linkCopyItemLabel: INSPECTOR_L10N.getStr(
-    "inspector.menu.copyUrlToClipboard.label")
+    "inspector.menu.copyUrlToClipboard.label"),
 }, {
   selector: "link",
   attributeName: "rel",
   popupNodeSelector: ".attr-value",
   isLinkFollowItemVisible: false,
-  isLinkCopyItemVisible: false
+  isLinkCopyItemVisible: false,
 }, {
   selector: "output",
   attributeName: "for",
@@ -53,7 +53,7 @@ const TEST_DATA = [{
   isLinkFollowItemVisible: true,
   isLinkCopyItemVisible: false,
   linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-    "inspector.menu.selectElement.label", "name")
+    "inspector.menu.selectElement.label", "name"),
 }, {
   selector: "script",
   attributeName: "src",
@@ -63,13 +63,13 @@ const TEST_DATA = [{
   linkFollowItemLabel: TOOLBOX_L10N.getStr(
     "toolbox.viewJsSourceInDebugger.label"),
   linkCopyItemLabel: INSPECTOR_L10N.getStr(
-    "inspector.menu.copyUrlToClipboard.label")
+    "inspector.menu.copyUrlToClipboard.label"),
 }, {
   selector: "p[for]",
   attributeName: "for",
   popupNodeSelector: ".attr-value",
   isLinkFollowItemVisible: false,
-  isLinkCopyItemVisible: false
+  isLinkCopyItemVisible: false,
 }];
 
 add_task(async function() {

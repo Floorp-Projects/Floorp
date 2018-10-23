@@ -30,7 +30,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: false,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: true
+    isMarginLeftHighlighted: true,
   },
   {
     desc: "Tests that the strict search filter works properly in the " +
@@ -42,7 +42,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: false,
     isMarginRightHighlighted: true,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: false
+    isMarginLeftHighlighted: false,
   },
   {
     desc: "Tests that the strict search filter works properly in the " +
@@ -54,7 +54,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: false,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: true
+    isMarginLeftHighlighted: true,
   },
   {
     desc: "Tests that the strict search filter works properly in the " +
@@ -66,7 +66,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: false
+    isMarginLeftHighlighted: false,
   },
   {
     desc: "Tests that the strict search filter works properly in the " +
@@ -78,7 +78,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: false
+    isMarginLeftHighlighted: false,
   },
   {
     desc: "Tests that the strict search filter works properly in the " +
@@ -91,7 +91,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: false
+    isMarginLeftHighlighted: false,
   },
   {
     desc: "Tests that the strict search filter works properly in the " +
@@ -104,7 +104,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: false
+    isMarginLeftHighlighted: false,
   },
 ];
 

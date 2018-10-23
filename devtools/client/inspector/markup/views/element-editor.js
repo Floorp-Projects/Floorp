@@ -27,7 +27,7 @@ const COLLAPSE_DATA_URL_LENGTH = 60;
 const HTML_VOID_ELEMENTS = [
   "area", "base", "br", "col", "command", "embed",
   "hr", "img", "input", "keygen", "link", "meta", "param", "source",
-  "track", "wbr"
+  "track", "wbr",
 ];
 
 // Contains only valid computed display property types of the node to display in the
@@ -91,7 +91,7 @@ function ElementEditor(container, node) {
       trigger: "dblclick",
       stopOnReturn: true,
       done: this.onTagEdit,
-      cssProperties: this._cssProperties
+      cssProperties: this._cssProperties,
     });
   }
 
@@ -118,7 +118,7 @@ function ElementEditor(container, node) {
         undoMods.apply();
       });
     },
-    cssProperties: this._cssProperties
+    cssProperties: this._cssProperties,
   });
 
   const displayName = this.node.displayName;
@@ -517,7 +517,7 @@ ElementEditor.prototype = {
           undoMods.apply();
         });
       },
-      cssProperties: this._cssProperties
+      cssProperties: this._cssProperties,
     });
 
     // Figure out where we should place the attribute.
@@ -844,7 +844,7 @@ ElementEditor.prototype = {
       clearTimeout(this.animationTimers[key]);
     }
     this.animationTimers = null;
-  }
+  },
 };
 
 module.exports = ElementEditor;

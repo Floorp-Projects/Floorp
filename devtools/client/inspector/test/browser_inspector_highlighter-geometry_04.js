@@ -17,7 +17,7 @@ const handlerMap = {
   "top": {"cx": "x2", "cy": "y2"},
   "bottom": {"cx": "x2", "cy": "y2"},
   "left": {"cx": "x2", "cy": "y2"},
-  "right": {"cx": "x2", "cy": "y2"}
+  "right": {"cx": "x2", "cy": "y2"},
 };
 
 add_task(async function() {
@@ -32,17 +32,17 @@ add_task(async function() {
     "top": {x1: 506, y1: 51, x2: 506, y2: 61},
     "bottom": {x1: 506, y1: 451, x2: 506, y2: 251},
     "left": {x1: 401, y1: 156, x2: 411, y2: 156},
-    "right": {x1: 901, y1: 156, x2: 601, y2: 156}
+    "right": {x1: 901, y1: 156, x2: 601, y2: 156},
   });
 
   await checkArrowsAndHandlers(helper, ".relative", {
     "top": {x1: 901, y1: 51, x2: 901, y2: 91},
-    "left": {x1: 401, y1: 97, x2: 651, y2: 97}
+    "left": {x1: 401, y1: 97, x2: 651, y2: 97},
   });
 
   await checkArrowsAndHandlers(helper, ".fixed", {
     "top": {x1: 25, y1: 0, x2: 25, y2: 400},
-    "left": {x1: 0, y1: 425, x2: 0, y2: 425}
+    "left": {x1: 0, y1: 425, x2: 0, y2: 425},
   });
 
   info("Hiding the highlighter");

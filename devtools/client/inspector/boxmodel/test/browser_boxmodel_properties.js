@@ -28,54 +28,54 @@ const TEST_URI = `
 const res1 = [
   {
     property: "box-sizing",
-    value: "border-box"
+    value: "border-box",
   },
   {
     property: "display",
-    value: "block"
+    value: "block",
   },
   {
     property: "float",
-    value: "left"
+    value: "left",
   },
   {
     property: "line-height",
-    value: "20px"
+    value: "20px",
   },
   {
     property: "position",
-    value: "relative"
+    value: "relative",
   },
   {
     property: "z-index",
-    value: 2
+    value: 2,
   },
 ];
 
 const res2 = [
   {
     property: "box-sizing",
-    value: "content-box"
+    value: "content-box",
   },
   {
     property: "display",
-    value: "block"
+    value: "block",
   },
   {
     property: "float",
-    value: "right"
+    value: "right",
   },
   {
     property: "line-height",
-    value: "10px"
+    value: "10px",
   },
   {
     property: "position",
-    value: "static"
+    value: "static",
   },
   {
     property: "z-index",
-    value: 5
+    value: 5,
   },
 ];
 

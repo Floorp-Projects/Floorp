@@ -55,6 +55,6 @@ module.exports = {
       type: EXTENSION_SIDEBAR_REMOVE,
       sidebarId,
     };
-  }
+  },
 
 };
