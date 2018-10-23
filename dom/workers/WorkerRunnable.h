@@ -541,6 +541,9 @@ class WorkerDebuggeeRunnable : public WorkerRunnable
     : WorkerRunnable(aWorkerPrivate, aBehavior)
   { }
 
+  bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override;
+
  private:
   // This override is deliberately private: it doesn't make sense to call it if
   // we know statically that we are a WorkerDebuggeeRunnable.
@@ -549,6 +552,18 @@ class WorkerDebuggeeRunnable : public WorkerRunnable
   {
     return true;
   }
+
+  // Runnables sent upwards, to the content window or parent worker, must keep
+  // their sender alive until they are delivered: they check back with the
+  // sender in case it has been terminated after having dispatched the runnable
+  // (in which case it should not be acted upon); and runnables sent to content
+  // wait until delivery to determine the target window, since
+  // WorkerPrivate::GetWindow may only be used on the main thread.
+  //
+  // Runnables sent downwards, from content to a worker or from a worker to a
+  // child, keep the sender alive because they are WorkerThreadModifyBusyCount
+  // runnables, and so leave this null.
+  RefPtr<ThreadSafeWorkerRef> mSender;
 };
 
 } // dom namespace
