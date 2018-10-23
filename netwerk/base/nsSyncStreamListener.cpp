@@ -21,6 +21,19 @@ nsSyncStreamListener::Init()
                       false);
 }
 
+// static
+already_AddRefed<nsISyncStreamListener>
+nsSyncStreamListener::Create()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<nsSyncStreamListener> inst = new nsSyncStreamListener();
+  nsresult rv = inst->Init();
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return inst.forget();
+}
+
 nsresult
 nsSyncStreamListener::WaitForData()
 {
