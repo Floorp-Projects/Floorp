@@ -294,17 +294,6 @@
     {0xbb, 0xae, 0xcc, 0x0d, 0xe5, 0x39, 0xf6, 0x1a} \
 }
 
-// component implementing nsISyncStreamListener.
-#define NS_SYNCSTREAMLISTENER_CONTRACTID \
-    "@mozilla.org/network/sync-stream-listener;1"
-#define NS_SYNCSTREAMLISTENER_CID \
-{ /* 439400d3-6f23-43db-8b06-8aafe1869bd8 */         \
-    0x439400d3,                                      \
-    0x6f23,                                          \
-    0x43db,                                          \
-    {0x8b, 0x06, 0x8a, 0xaf, 0xe1, 0x86, 0x9b, 0xd8} \
-}
-
 // component implementing nsIIncrementalDownload.
 #define NS_INCREMENTALDOWNLOAD_CONTRACTID \
     "@mozilla.org/network/incremental-download;1"

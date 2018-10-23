@@ -60,7 +60,7 @@
 #include "nsIIncrementalStreamLoader.h"
 #include "nsIStreamTransportService.h"
 #include "nsStringStream.h"
-#include "nsISyncStreamListener.h"
+#include "nsSyncStreamListener.h"
 #include "nsITransport.h"
 #include "nsIURIWithSpecialOrigin.h"
 #include "nsIURLParser.h"
@@ -1186,16 +1186,15 @@ nsresult
 NS_NewSyncStreamListener(nsIStreamListener **result,
                          nsIInputStream    **stream)
 {
-    nsresult rv;
-    nsCOMPtr<nsISyncStreamListener> listener =
-        do_CreateInstance(NS_SYNCSTREAMLISTENER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = listener->GetInputStream(stream);
+    nsCOMPtr<nsISyncStreamListener> listener = nsSyncStreamListener::Create();
+    if (listener) {
+        nsresult rv = listener->GetInputStream(stream);
         if (NS_SUCCEEDED(rv)) {
             listener.forget(result);
         }
+        return rv;
     }
-    return rv;
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
