@@ -195,7 +195,11 @@ function test_tabbox_focus()
       var textboxExtra = $("textbox-extra");
       textboxExtra.addEventListener("focus", function () {
         textboxExtra.removeEventListener("focus", arguments.callee, true);
-        ok(document.activeElement, textboxExtra, "focus in tab with focus currently in textbox that is sibling of tabs");
+
+        // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500971
+        // Here the active element is not the XUL textbox but an HTML input inside it.
+        // textboxExtra is document.activeElement.parentNode.parentNode.
+        todo_is(document.activeElement, textboxExtra, "focus in tab with focus currently in textbox that is sibling of tabs");
 
         SimpleTest.finish();
       }, true);

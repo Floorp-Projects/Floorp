@@ -484,7 +484,9 @@
 
   <script>
     var u = new URL('http://www.example.org');
-    ok(u.toJSON(), 'http://www.example.org', "URL.toJSON()");
+    // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500962
+    // This would work with `http://www.example.org/` (trailing "/")
+    todo_is(u.toJSON(), 'http://www.example.org', "URL.toJSON()");
     is(JSON.stringify(u), "\"http://www.example.org/\"", "JSON.stringify(u) works");
   </script>
 </body>
