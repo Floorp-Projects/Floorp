@@ -3,5 +3,6 @@ config = {
     'env': {
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
     },
+    'mozconfig_variant': 'rusttests',
     'artifact_flag_build_variant_in_try': None,
 }

@@ -1,7 +1,3 @@
-job-defaults:
-    run:
-        mozconfig-variant: null
-
 android-api-16/debug:
     description: "Android 4.0 api-16+ Debug"
     index:

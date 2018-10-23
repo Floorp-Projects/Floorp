@@ -1,6 +1,9 @@
 import os
 
 config = {
+    'default_actions': [
+        'build',
+    ],
     'stage_platform': 'macosx64-fuzzing-asan',
     'publish_nightly_en_US_routes': False,
     'platform_supports_post_upload_to_latest': False,
@@ -20,5 +23,6 @@ config = {
         'PATH': '/usr/local/bin:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
     },
+    'mozconfig_variant': 'nightly-fuzzing-asan',
     'artifact_flag_build_variant_in_try': None,
 }
