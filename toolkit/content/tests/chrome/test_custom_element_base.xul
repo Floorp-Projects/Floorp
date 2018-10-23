@@ -104,7 +104,10 @@
     // Try various ways to get the custom interface.
 
     let asControl = twoElement.getCustomInterfaceCallback(Ci.nsIDOMXULControlElement);
-    ok(asControl, twoElement, "getCustomInterface returns interface implementation ");
+
+    // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500967
+    // Not sure if this was suppose to simply check for existence or equality?
+    todo_is(asControl, twoElement, "getCustomInterface returns interface implementation ");
 
     asControl = twoElement.QueryInterface(Ci.nsIDOMXULControlElement);
     ok(asControl, "QueryInterface to nsIDOMXULControlElement");

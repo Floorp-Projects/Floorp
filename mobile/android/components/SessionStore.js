@@ -13,7 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  ScrollPosition: "resource://gre/modules/ScrollPosition.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
   SharedPreferences: "resource://gre/modules/SharedPreferences.jsm",
   Task: "resource://gre/modules/Task.jsm",
@@ -22,6 +21,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetter(this, "Log", "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
+
+const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
+              .getService(Ci.nsISessionStoreUtils);
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -932,7 +934,7 @@ SessionStore.prototype = {
 
     // Save the scroll position itself.
     let content = aBrowser.contentWindow;
-    let [scrolldata] = Utils.mapFrameTree(content, ScrollPosition.collect);
+    let [scrolldata] = Utils.mapFrameTree(content, ssu.collectScrollPosition.bind(ssu));
     scrolldata = scrolldata || {};
 
     // Save the current document resolution.
@@ -1384,7 +1386,12 @@ SessionStore.prototype = {
   _restoreTextData: function ss_restoreTextData(aFormData, aBrowser) {
     if (aFormData) {
       log("_restoreTextData()");
-      FormData.restoreTree(aBrowser.contentWindow, aFormData);
+      Utils.restoreFrameTreeData(aBrowser.contentWindow, aFormData, (frame, data) => {
+        // restore() will return false, and thus abort restoration for the
+        // current |frame| and its descendants, if |data.url| is given but
+        // doesn't match the loaded document's URL.
+        return FormData.restore(frame, data);
+      });
     }
   },
 
@@ -1411,7 +1418,11 @@ SessionStore.prototype = {
   _restoreScrollPosition: function ss_restoreScrollPosition(aScrollData, aBrowser) {
     if (aScrollData) {
       log("_restoreScrollPosition()");
-      ScrollPosition.restoreTree(aBrowser.contentWindow, aScrollData);
+      Utils.restoreFrameTreeData(aBrowser.contentWindow, aScrollData, (frame, data) => {
+        if (data.scroll) {
+          ssu.restoreScrollPosition(frame, data.scroll);
+        }
+      });
     }
   },
 

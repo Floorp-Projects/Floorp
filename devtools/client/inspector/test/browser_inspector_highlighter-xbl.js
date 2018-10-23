@@ -23,7 +23,7 @@ add_task(async function() {
     testActor.synthesizeKey(msg);
     return promise.all([
       inspector.selection.once("new-node-front"),
-      inspector.once("inspector-updated")
+      inspector.once("inspector-updated"),
     ]);
   }
 
@@ -32,7 +32,7 @@ add_task(async function() {
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
-      selector: selector
+      selector: selector,
     });
     return inspector.toolbox.once("picker-node-hovered");
   }

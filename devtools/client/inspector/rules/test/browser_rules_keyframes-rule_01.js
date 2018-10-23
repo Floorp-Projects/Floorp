@@ -24,12 +24,12 @@ async function testPacman(inspector, view) {
     elementRulesNb: 2,
     keyframeRulesNb: 2,
     keyframesRules: ["pacman", "pacman"],
-    keyframeRules: ["100%", "100%"]
+    keyframeRules: ["100%", "100%"],
   });
 
   assertGutters(view, {
     guttersNbs: 2,
-    gutterHeading: ["Keyframes pacman", "Keyframes pacman"]
+    gutterHeading: ["Keyframes pacman", "Keyframes pacman"],
   });
 }
 
@@ -40,12 +40,12 @@ async function testBoxy(inspector, view) {
     elementRulesNb: 3,
     keyframeRulesNb: 3,
     keyframesRules: ["boxy", "boxy", "boxy"],
-    keyframeRules: ["10%", "20%", "100%"]
+    keyframeRules: ["10%", "20%", "100%"],
   });
 
   assertGutters(view, {
     guttersNbs: 1,
-    gutterHeading: ["Keyframes boxy"]
+    gutterHeading: ["Keyframes boxy"],
   });
 }
 
@@ -56,12 +56,12 @@ async function testMoxy(inspector, view) {
     elementRulesNb: 3,
     keyframeRulesNb: 4,
     keyframesRules: ["boxy", "boxy", "boxy", "moxy"],
-    keyframeRules: ["10%", "20%", "100%", "100%"]
+    keyframeRules: ["10%", "20%", "100%", "100%"],
   });
 
   assertGutters(view, {
     guttersNbs: 2,
-    gutterHeading: ["Keyframes boxy", "Keyframes moxy"]
+    gutterHeading: ["Keyframes boxy", "Keyframes moxy"],
   });
 }
 
@@ -71,7 +71,7 @@ async function assertKeyframeRules(selector, inspector, view, expected) {
 
   const rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.keyframes),
-    keyframeRules: elementStyle.rules.filter(rule => rule.keyframes)
+    keyframeRules: elementStyle.rules.filter(rule => rule.keyframes),
   };
 
   is(rules.elementRules.length, expected.elementRulesNb, selector +

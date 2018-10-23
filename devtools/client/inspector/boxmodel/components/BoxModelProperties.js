@@ -56,7 +56,7 @@ class BoxModelProperties extends PureComponent {
         this.props.boxModel.offsetParent) {
       return {
         referenceElement: this.props.boxModel.offsetParent,
-        referenceElementType: BOXMODEL_L10N.getStr("boxmodel.offsetParent")
+        referenceElementType: BOXMODEL_L10N.getStr("boxmodel.offsetParent"),
       };
     }
 

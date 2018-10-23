@@ -1325,7 +1325,7 @@ static inline bool
 IsHelperThreadSimulatingOOM(js::ThreadType threadType)
 {
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
-    return js::oom::targetThread == threadType;
+    return js::oom::simulator.targetThread() == threadType;
 #else
     return false;
 #endif

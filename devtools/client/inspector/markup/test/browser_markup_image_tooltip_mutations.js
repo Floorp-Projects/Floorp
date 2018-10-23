@@ -65,7 +65,7 @@ function updateImageSrc(img, newSrc, inspector) {
   const onMutated = inspector.once("markupmutation");
   const onModified = img.modifyAttributes([{
     attributeName: "src",
-    newValue: newSrc
+    newValue: newSrc,
   }]);
 
   return Promise.all([onMutated, onModified]);

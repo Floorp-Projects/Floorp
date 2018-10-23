@@ -49,7 +49,7 @@ class ObjectValueGripView extends PureComponent {
         path: objectValueGrip && objectValueGrip.actor || JSON.stringify(objectValueGrip),
         contents: {
           value: objectValueGrip,
-        }
+        },
       }],
       createObjectClient: serviceContainer.createObjectClient,
       releaseActor: serviceContainer.releaseActor,

@@ -749,7 +749,7 @@ HTMLBreadcrumbs.prototype = {
         this.nodeHierarchy.splice(originalLength, 0, {
           node,
           button,
-          currentPrettyPrintText: this.prettyPrintNodeAsText(node)
+          currentPrettyPrintText: this.prettyPrintNodeAsText(node),
         });
       }
       node = node.parentOrHost();
@@ -945,5 +945,5 @@ HTMLBreadcrumbs.prototype = {
         }
       }
     }, 0);
-  }
+  },
 };

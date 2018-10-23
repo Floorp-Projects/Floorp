@@ -51,8 +51,8 @@ function testFunc(done_cb) {
     });
 
     utterance.addEventListener('end', function(e) {
-      ok(e.charIndex, 1, 'resume event charIndex matches service arguments');
-      ok(e.elapsedTime, 1.5, 'end event elapsedTime matches service arguments');
+      is(e.charIndex, 1, 'resume event charIndex matches service arguments');
+      is(e.elapsedTime, 1.5, 'end event elapsedTime matches service arguments');
       test_no_events();
     });
 

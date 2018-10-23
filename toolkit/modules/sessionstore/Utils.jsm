@@ -161,7 +161,18 @@ var Utils = Object.freeze({
    */
   mapFrameTree(frame, ...dataCollectors) {
     // Collect data for the current frame.
-    let objs = dataCollectors.map((dataCollector) => dataCollector(frame) || {});
+    let objs = dataCollectors.map(function(dataCollector) {
+      let obj = dataCollector(frame.document);
+        if (!obj || typeof(obj) == "object") {
+          return obj || {};
+        }
+        // Currently, we return string type when collecting scroll position.
+        // Will switched to webidl and return objects in the future.
+        if (typeof(obj) == "string") {
+          return {scroll: obj};
+        }
+        return obj;
+    });
     let children = dataCollectors.map(() => []);
 
     // Recurse into child frames.
@@ -187,5 +198,29 @@ var Utils = Object.freeze({
     }
 
     return objs.map((obj) => Object.getOwnPropertyNames(obj).length ? obj : null);
+  },
+
+  /**
+   * Restores frame tree |data|, starting at the given root |frame|. As the
+   * function recurses into descendant frames it will call cb(frame, data) for
+   * each frame it encounters, starting with the given root.
+   */
+  restoreFrameTreeData(frame, data, cb) {
+    // Restore data for the root frame.
+    // The callback can abort by returning false.
+    if (cb(frame, data) === false) {
+      return;
+    }
+
+    if (!data.hasOwnProperty("children")) {
+      return;
+    }
+
+    // Recurse into child frames.
+    ssu.forEachNonDynamicChildFrame(frame, (subframe, index) => {
+      if (data.children[index]) {
+        this.restoreFrameTreeData(subframe, data.children[index], cb);
+      }
+    });
   },
 });

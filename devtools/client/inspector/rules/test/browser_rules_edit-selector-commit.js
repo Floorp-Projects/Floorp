@@ -37,22 +37,22 @@ const TEST_DATA = [
     value: ".testclass1",
     commitKey: "VK_RETURN",
     modifiers: {},
-    expected: ".testclass1"
+    expected: ".testclass1",
   },
   {
     node: "#testid2",
     value: ".testclass2",
     commitKey: "VK_TAB",
     modifiers: {},
-    expected: ".testclass2"
+    expected: ".testclass2",
   },
   {
     node: "#testid3",
     value: ".testclass3",
     commitKey: "VK_TAB",
     modifiers: {shiftKey: true},
-    expected: ".testclass3"
-  }
+    expected: ".testclass3",
+  },
 ];
 
 add_task(async function() {

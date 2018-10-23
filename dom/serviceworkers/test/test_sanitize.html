@@ -42,7 +42,7 @@
     }).then(function(reg) {
       reg.active.onstatechange = function(e) {
         e.target.onstatechange = null;
-        ok(e.target.state, "redundant", "On clearing data, serviceworker should become redundant");
+        is(e.target.state, "redundant", "On clearing data, serviceworker should become redundant");
         testNotIntercepted();
       };
     }).then(function() {

@@ -19,7 +19,7 @@ const TEST_URL = "data:text/html;charset=utf-8," +
 
 const TEST_DATA = [{
   selector: "#test-node",
-  containerCount: 1
+  containerCount: 1,
 }, {
   selector: null,
   containerCount: 0,
@@ -28,13 +28,13 @@ const TEST_DATA = [{
   containerCount: 0,
 }, {
   selector: ".invalid-class",
-  containerCount: 0
+  containerCount: 0,
 }, {
   selector: ".item",
-  containerCount: 5
+  containerCount: 5,
 }, {
   selector: "#test-node, ul, .item",
-  containerCount: 7
+  containerCount: 7,
 }];
 
 requestLongerTimeout(5);

@@ -15,27 +15,27 @@ const TEST_URI = TEST_URL_ROOT + "doc_content_style_changes.html";
 const TEST_DATA = [{
   target: "#test",
   className: "green-class",
-  force: true
+  force: true,
 }, {
   target: "#test",
   className: "green-class",
-  force: false
+  force: false,
 }, {
   target: "#parent",
   className: "purple-class",
-  force: true
+  force: true,
 }, {
   target: "#parent",
   className: "purple-class",
-  force: false
+  force: false,
 }, {
   target: "#sibling",
   className: "blue-class",
-  force: true
+  force: true,
 }, {
   target: "#sibling",
   className: "blue-class",
-  force: false
+  force: false,
 }];
 
 add_task(async function() {

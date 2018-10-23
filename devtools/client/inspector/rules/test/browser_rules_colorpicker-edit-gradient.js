@@ -61,7 +61,7 @@ async function testPickingNewColor(view) {
     selector: "body",
     name: "background-image",
     value: "linear-gradient(to left, rgb(1, 1, 1) 25%, " +
-           "rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)"
+           "rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)",
   };
   await simulateColorPickerChange(view, cPicker, [1, 1, 1, 1], change);
 

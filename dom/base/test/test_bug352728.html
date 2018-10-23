@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=352728
 -->
 <head>
   <title>Test for Bug 352728</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=352728">Mozilla Bug 352728</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -21,8 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=352728
 function checkTypes(aNode, aNodeType, aTypeArray)
 {
   for (var i = 0; i < aTypeArray.length; ++i) {
-    ok(aNode instanceof aTypeArray[i], aNodeType + " type test " + i,
-       aNodeType + " should be a " + aTypeArray[i]);
+    ok(aNode instanceof aTypeArray[i],
+       `${aNodeType} type test ${i}: ${aNodeType} should be a ${aTypeArray[i]}`);
   }
 }
 
@@ -75,7 +75,7 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
     is(pi.nodeValue, aData, "Check nodeValue");
     is(pi.localName, undefined, "Check localName")
     is(pi.namespaceURI, undefined, "Check namespaceURI");
-    
+
     is(pi.nodeType, Node.PROCESSING_INSTRUCTION_NODE, "Check nodeType");
 
     if (!aShouldSucceed) {

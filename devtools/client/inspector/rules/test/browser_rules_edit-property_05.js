@@ -71,7 +71,7 @@ async function getRulePropertyValue(name) {
   const propValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: name
+    name: name,
   });
   return propValue;
 }

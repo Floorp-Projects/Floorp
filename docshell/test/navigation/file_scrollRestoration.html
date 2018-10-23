@@ -13,13 +13,13 @@
           case 1: {
             opener.is(event.persisted, false, "Shouldn't have persisted session history entry.");
             opener.ok(history.scrollRestoration, "History object has scrollRestoration property.");
-            opener.ok(history.scrollRestoration, "auto", "history.scrollRestoration's default value should be 'auto'.");
+            opener.is(history.scrollRestoration, "auto", "history.scrollRestoration's default value should be 'auto'.");
             history.scrollRestoration = "foobar";
-            opener.ok(history.scrollRestoration, "auto", "Invalid enum value should not change the value of an attribute.");
+            opener.is(history.scrollRestoration, "auto", "Invalid enum value should not change the value of an attribute.");
             history.scrollRestoration = "manual";
-            opener.ok(history.scrollRestoration, "manual", "Valid enum value should change the value of an attribute.");
+            opener.is(history.scrollRestoration, "manual", "Valid enum value should change the value of an attribute.");
             history.scrollRestoration = "auto";
-            opener.ok(history.scrollRestoration, "auto", "Valid enum value should change the value of an attribute.");
+            opener.is(history.scrollRestoration, "auto", "Valid enum value should change the value of an attribute.");
             document.getElementById("bottom").scrollIntoView();
             window.location.reload(false);
             break;

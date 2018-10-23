@@ -21,25 +21,25 @@ const TEST_URI = `
 const TEST_DATA = [
   {
     desc: "Tests that the search filter works properly for property names",
-    search: "color"
+    search: "color",
   },
   {
     desc: "Tests that the search filter works properly for property values",
-    search: "00F"
+    search: "00F",
   },
   {
     desc: "Tests that the search filter works properly for property line input",
-    search: "background-color:#00F"
+    search: "background-color:#00F",
   },
   {
     desc: "Tests that the search filter works properly for parsed property " +
           "names",
-    search: "background:"
+    search: "background:",
   },
   {
     desc: "Tests that the search filter works properly for parsed property " +
           "values",
-    search: ":00F"
+    search: ":00F",
   },
 ];
 

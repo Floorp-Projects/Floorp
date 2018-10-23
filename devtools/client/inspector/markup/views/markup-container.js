@@ -813,7 +813,7 @@ MarkupContainer.prototype = {
     }
 
     this.editor.destroy();
-  }
+  },
 };
 
 module.exports = MarkupContainer;

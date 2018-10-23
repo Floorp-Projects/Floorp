@@ -118,9 +118,8 @@ function prepareForResult(aBrowser, aExpectation) {
       break;
     case kNewWin:
       return (async function() {
-        let newWin = await BrowserTestUtils.waitForNewWindow();
+        let newWin = await BrowserTestUtils.waitForNewWindow({url: expectedSpec});
         let newBrowser = newWin.gBrowser.selectedBrowser;
-        await BrowserTestUtils.browserLoaded(newBrowser);
         is(newBrowser.currentURI.spec, expectedSpec, "Should be at dummy.html");
         await BrowserTestUtils.closeWindow(newWin);
       })();

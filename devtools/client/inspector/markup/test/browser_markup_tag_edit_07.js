@@ -23,15 +23,15 @@ var TEST_DATA = [{
   desc: "Add an attribute value containing < > &uuml; \" & '",
   text: 'src="somefile.html?param1=<a>&param2=&uuml;&param3=\'&quot;\'"',
   expectedAttributes: {
-    src: "somefile.html?param1=<a>&param2=\xfc&param3='\"'"
-  }
+    src: "somefile.html?param1=<a>&param2=\xfc&param3='\"'",
+  },
 }, {
   desc: "Add an attribute by clicking the empty space after a node",
   text: 'class="newclass" style="color:green"',
   expectedAttributes: {
     class: "newclass",
-    style: "color:green"
-  }
+    style: "color:green",
+  },
 }, {
   desc: "Try add an attribute containing a quote (\") attribute by " +
         "clicking the empty space after a node - this should result " +
@@ -39,14 +39,14 @@ var TEST_DATA = [{
   text: 'class="newclass" style="""',
   expectedAttributes: {
     class: "newclass",
-    style: ""
-  }
+    style: "",
+  },
 }, {
   desc: "Try to add long data URL to make sure it is collapsed in attribute " +
         "editor.",
   text: `style='${DATA_URL_INLINE_STYLE}'`,
   expectedAttributes: {
-    "style": DATA_URL_INLINE_STYLE
+    "style": DATA_URL_INLINE_STYLE,
   },
   validate: (container, inspector) => {
     const editor = container.editor;
@@ -54,13 +54,13 @@ var TEST_DATA = [{
                                              .querySelector(".attr-value")
                                              .textContent;
     is(visibleAttrText, DATA_URL_INLINE_STYLE_COLLAPSED);
-  }
+  },
 }, {
   desc: "Try to add long attribute to make sure it is collapsed in attribute " +
         "editor.",
   text: `data-long="${LONG_ATTRIBUTE}"`,
   expectedAttributes: {
-    "data-long": LONG_ATTRIBUTE
+    "data-long": LONG_ATTRIBUTE,
   },
   validate: (container, inspector) => {
     const editor = container.editor;
@@ -68,26 +68,26 @@ var TEST_DATA = [{
                                              .querySelector(".attr-value")
                                              .textContent;
     is(visibleAttrText, LONG_ATTRIBUTE_COLLAPSED);
-  }
+  },
 }, {
   desc: "Try to add long data URL to make sure it is collapsed in attribute " +
         "editor.",
   text: `src="${DATA_URL_ATTRIBUTE}"`,
   expectedAttributes: {
-    "src": DATA_URL_ATTRIBUTE
+    "src": DATA_URL_ATTRIBUTE,
   },
   validate: (container, inspector) => {
     const editor = container.editor;
     const visibleAttrText = editor.attrElements.get("src")
                                 .querySelector(".attr-value").textContent;
     is(visibleAttrText, DATA_URL_ATTRIBUTE_COLLAPSED);
-  }
+  },
 }, {
   desc: "Try to add long attribute with collapseAttributes == false" +
   "to make sure it isn't collapsed in attribute editor.",
   text: `data-long="${LONG_ATTRIBUTE}"`,
   expectedAttributes: {
-    "data-long": LONG_ATTRIBUTE
+    "data-long": LONG_ATTRIBUTE,
   },
   setUp: function(inspector) {
     Services.prefs.setBoolPref("devtools.markup.collapseAttributes", false);
@@ -102,12 +102,12 @@ var TEST_DATA = [{
   },
   tearDown: function(inspector) {
     Services.prefs.clearUserPref("devtools.markup.collapseAttributes");
-  }
+  },
 }, {
   desc: "Try to collapse attributes with collapseAttributeLength == 5",
   text: `data-long="${LONG_ATTRIBUTE}"`,
   expectedAttributes: {
-    "data-long": LONG_ATTRIBUTE
+    "data-long": LONG_ATTRIBUTE,
   },
   setUp: function(inspector) {
     Services.prefs.setIntPref("devtools.markup.collapseAttributeLength", 2);
@@ -125,7 +125,7 @@ var TEST_DATA = [{
   },
   tearDown: function(inspector) {
     Services.prefs.clearUserPref("devtools.markup.collapseAttributeLength");
-  }
+  },
 }];
 
 add_task(async function() {

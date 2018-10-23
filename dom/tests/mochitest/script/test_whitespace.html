@@ -11,19 +11,19 @@
 let passed = false;
 
 let tests = [
-  [ " application/javascript", true ],
-  [ "\tapplication/javascript\n\r \t", true ],
+  " application/javascript",
+  "\tapplication/javascript\n\r \t",
 ];
 
 for (let i = 0; i < tests.length; ++i) {
   passed = false;
 
   let script = document.createElement('script');
-  script.setAttribute('type', tests[i][0]);
+  script.setAttribute('type', tests[i]);
   script.innerText = "passed = true;";
   document.body.appendChild(script);
 
-  ok (passed, tests[i][1], "Test " + tests[i][0] + " passed");
+  ok (passed, "Test " + tests[i] + " passed");
 }
 </script>
 

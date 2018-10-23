@@ -40,7 +40,7 @@ async function testImageTooltipAfterColorChange(swatch, url, ruleView) {
   await simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
     selector: "body",
     name: "background-image",
-    value: 'url("chrome://global/skin/icons/warning-64.png"), linear-gradient(rgb(0, 0, 0), rgb(255, 0, 102) 400px)'
+    value: 'url("chrome://global/skin/icons/warning-64.png"), linear-gradient(rgb(0, 0, 0), rgb(255, 0, 102) 400px)',
   });
 
   const spectrum = picker.spectrum;

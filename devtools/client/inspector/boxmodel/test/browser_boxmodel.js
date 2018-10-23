@@ -11,142 +11,142 @@
 var res1 = [
   {
     selector: ".boxmodel-element-size",
-    value: "160" + "\u00D7" + "160.117"
+    value: "160" + "\u00D7" + "160.117",
   },
   {
     selector: ".boxmodel-size > .boxmodel-width",
-    value: "100"
+    value: "100",
   },
   {
     selector: ".boxmodel-size > .boxmodel-height",
-    value: "100.117"
+    value: "100.117",
   },
   {
     selector: ".boxmodel-position.boxmodel-top > span",
-    value: 42
+    value: 42,
   },
   {
     selector: ".boxmodel-position.boxmodel-left > span",
-    value: 42
+    value: 42,
   },
   {
     selector: ".boxmodel-margin.boxmodel-top > span",
-    value: 30
+    value: 30,
   },
   {
     selector: ".boxmodel-margin.boxmodel-left > span",
-    value: "auto"
+    value: "auto",
   },
   {
     selector: ".boxmodel-margin.boxmodel-bottom > span",
-    value: 30
+    value: 30,
   },
   {
     selector: ".boxmodel-margin.boxmodel-right > span",
-    value: "auto"
+    value: "auto",
   },
   {
     selector: ".boxmodel-padding.boxmodel-top > span",
-    value: 20
+    value: 20,
   },
   {
     selector: ".boxmodel-padding.boxmodel-left > span",
-    value: 20
+    value: 20,
   },
   {
     selector: ".boxmodel-padding.boxmodel-bottom > span",
-    value: 20
+    value: 20,
   },
   {
     selector: ".boxmodel-padding.boxmodel-right > span",
-    value: 20
+    value: 20,
   },
   {
     selector: ".boxmodel-border.boxmodel-top > span",
-    value: 10
+    value: 10,
   },
   {
     selector: ".boxmodel-border.boxmodel-left > span",
-    value: 10
+    value: 10,
   },
   {
     selector: ".boxmodel-border.boxmodel-bottom > span",
-    value: 10
+    value: 10,
   },
   {
     selector: ".boxmodel-border.boxmodel-right > span",
-    value: 10
+    value: 10,
   },
 ];
 
 var res2 = [
   {
     selector: ".boxmodel-element-size",
-    value: "190" + "\u00D7" + "210"
+    value: "190" + "\u00D7" + "210",
   },
   {
     selector: ".boxmodel-size > .boxmodel-width",
-    value: "100"
+    value: "100",
   },
   {
     selector: ".boxmodel-size > .boxmodel-height",
-    value: "150"
+    value: "150",
   },
   {
     selector: ".boxmodel-position.boxmodel-top > span",
-    value: 50
+    value: 50,
   },
   {
     selector: ".boxmodel-position.boxmodel-left > span",
-    value: 42
+    value: 42,
   },
   {
     selector: ".boxmodel-margin.boxmodel-top > span",
-    value: 30
+    value: 30,
   },
   {
     selector: ".boxmodel-margin.boxmodel-left > span",
-    value: "auto"
+    value: "auto",
   },
   {
     selector: ".boxmodel-margin.boxmodel-bottom > span",
-    value: 30
+    value: 30,
   },
   {
     selector: ".boxmodel-margin.boxmodel-right > span",
-    value: "auto"
+    value: "auto",
   },
   {
     selector: ".boxmodel-padding.boxmodel-top > span",
-    value: 20
+    value: 20,
   },
   {
     selector: ".boxmodel-padding.boxmodel-left > span",
-    value: 20
+    value: 20,
   },
   {
     selector: ".boxmodel-padding.boxmodel-bottom > span",
-    value: 20
+    value: 20,
   },
   {
     selector: ".boxmodel-padding.boxmodel-right > span",
-    value: 50
+    value: 50,
   },
   {
     selector: ".boxmodel-border.boxmodel-top > span",
-    value: 10
+    value: 10,
   },
   {
     selector: ".boxmodel-border.boxmodel-left > span",
-    value: 10
+    value: 10,
   },
   {
     selector: ".boxmodel-border.boxmodel-bottom > span",
-    value: 10
+    value: 10,
   },
   {
     selector: ".boxmodel-border.boxmodel-right > span",
-    value: 10
+    value: 10,
   },
 ];
 

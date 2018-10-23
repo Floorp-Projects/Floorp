@@ -38,7 +38,7 @@ runWithMSE(async (ms, v) => {
   is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
 
   ms.clearLiveSeekableRange();
-  ok(v.seekable.length, 1, "continuous seekable range");
+  is(v.seekable.length, 1, "continuous seekable range");
   is(v.seekable.start(0), 0, "seekable range start at 0");
   is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
 

@@ -18,7 +18,7 @@ const TEST_DATA = [
   "p",
   "p span",
   // The following test case used to fail. See bug 1139925.
-  "[dir=rtl] > span"
+  "[dir=rtl] > span",
 ];
 
 add_task(async function() {
@@ -47,7 +47,7 @@ add_task(async function() {
       p1: {x: Infinity, y: Infinity},
       p2: {x: -Infinity, y: Infinity},
       p3: {x: -Infinity, y: -Infinity},
-      p4: {x: Infinity, y: -Infinity}
+      p4: {x: Infinity, y: -Infinity},
     };
     for (const {p1, p2, p3, p4} of data.content) {
       expectedContentRect.p1.x = Math.min(expectedContentRect.p1.x, p1.x);

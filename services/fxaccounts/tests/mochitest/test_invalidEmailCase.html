@@ -77,8 +77,8 @@ function runTest() {
   let fxa = new MockFxAccounts();
   let client = fxa.internal.fxAccountsClient;
 
-  ok(true, !!fxa, "Couldn't mock fxa");
-  ok(true, !!client, "Couldn't mock fxa client");
+  is(true, !!fxa, "Couldn't mock fxa");
+  is(true, !!client, "Couldn't mock fxa client");
   is(client.host, TEST_SERVER, "Should be using the test auth server uri");
 
   // First try to sign in using the email with the wrong capitalization.  The

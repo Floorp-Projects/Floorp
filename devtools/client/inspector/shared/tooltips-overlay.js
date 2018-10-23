@@ -129,7 +129,7 @@ TooltipsOverlay.prototype = {
       case "previewTooltip":
         tooltip = new HTMLTooltip(doc, {
           type: "arrow",
-          useXulWrapper: true
+          useXulWrapper: true,
         });
         tooltip.startTogglingOnHover(this.view.element,
           this._onPreviewTooltipTargetHover.bind(this));
@@ -342,7 +342,7 @@ TooltipsOverlay.prototype = {
     this.view = null;
 
     this._isDestroyed = true;
-  }
+  },
 };
 
 module.exports = TooltipsOverlay;

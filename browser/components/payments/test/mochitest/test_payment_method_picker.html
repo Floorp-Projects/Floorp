@@ -182,7 +182,7 @@ add_task(async function test_change_selected_card() {
   sendString("836");
   sendKey("Tab");
   let state = await stateChangePromise;
-  ok(state.selectedPaymentCardSecurityCode, "836", "Check security code in state");
+  is(state.selectedPaymentCardSecurityCode, "836", "Check security code in state");
 });
 
 add_task(async function test_delete() {

@@ -25,7 +25,7 @@ const TEST_DATA = [
           { offset: 0, color: "rgb(255, 0, 0)" },
           { offset: 0.5, color: "rgb(0, 0, 255)" },
           { offset: 1, color: "rgb(0, 255, 0)" },
-        ]
+        ],
       },
       {
         name: "background-repeat",
@@ -115,7 +115,7 @@ const TEST_DATA = [
           { offset: 0.5, color: "rgb(128, 128, 0)" },
           { offset: 0.999, color: "rgb(128, 128, 0)" },
           { offset: 1, color: "rgb(0, 255, 0)" },
-        ]
+        ],
       },
       {
         name: "background-repeat",

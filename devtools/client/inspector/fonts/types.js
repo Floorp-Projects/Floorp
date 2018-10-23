@@ -74,7 +74,7 @@ const font = exports.font = {
   variationAxes: PropTypes.arrayOf(PropTypes.shape(fontVariationAxis)),
 
   // The variation instances of the font
-  variationInstances: PropTypes.arrayOf(PropTypes.shape(fontVariationInstance))
+  variationInstances: PropTypes.arrayOf(PropTypes.shape(fontVariationInstance)),
 };
 
 exports.fontOptions = {

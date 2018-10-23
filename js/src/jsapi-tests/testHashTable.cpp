@@ -388,11 +388,12 @@ BEGIN_TEST(testHashMapGrowOOM)
 {
     uint32_t timeToFail;
     for (timeToFail = 1; timeToFail < 1000; timeToFail++) {
-        js::oom::SimulateOOMAfter(timeToFail, js::THREAD_TYPE_MAIN, false);
+        js::oom::simulator.simulateFailureAfter(js::oom::FailureSimulator::Kind::OOM,
+						timeToFail, js::THREAD_TYPE_MAIN, false);
         GrowUntilResize();
     }
 
-    js::oom::ResetSimulatedOOM();
+    js::oom::simulator.reset();
     return true;
 }
 

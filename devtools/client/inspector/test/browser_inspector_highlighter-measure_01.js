@@ -70,7 +70,7 @@ async function areLabelsProperlyDisplayedWhenMouseMoved({isElementHidden,
     selector: ":root",
     options: {type: "mousemove"},
     x: X,
-    y: Y
+    y: Y,
   });
 
   let hidden = await isElementHidden("label-position");

@@ -34,17 +34,10 @@ add_task(async function alt_left_click_test() {
 add_task(async function shift_left_click_test() {
   info("Running test: Shift left click");
 
-  let newWindowPromise = BrowserTestUtils.waitForNewWindow();
+  let destinationURL = "http://" + TEST_VALUE + "/";
+  let newWindowPromise = BrowserTestUtils.waitForNewWindow({url: destinationURL});
   triggerCommand(true, {shiftKey: true});
   let win = await newWindowPromise;
-
-  // Wait for the initial browser to load.
-  let browser = win.gBrowser.selectedBrowser;
-  let destinationURL = "http://" + TEST_VALUE + "/";
-  await Promise.all([
-    BrowserTestUtils.browserLoaded(browser),
-    BrowserTestUtils.waitForLocationChange(win.gBrowser, destinationURL),
-  ]);
 
   info("URL should be loaded in a new window");
   is(gURLBar.value, "", "Urlbar reverted to original value");

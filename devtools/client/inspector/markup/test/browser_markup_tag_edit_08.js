@@ -37,7 +37,7 @@ async function testCollapsedLongAttribute(inspector, testActor) {
   await assertAttributes("#node24", {
     id: "node24",
     "class": "",
-    "data-long": LONG_ATTRIBUTE
+    "data-long": LONG_ATTRIBUTE,
   }, testActor);
 
   const {editor} = await focusNode("#node24", inspector);
@@ -61,7 +61,7 @@ async function testCollapsedLongAttribute(inspector, testActor) {
     id: "node24",
     class: "",
     "data-long": LONG_ATTRIBUTE,
-    "data-short": "ABC"
+    "data-short": "ABC",
   }, testActor);
 }
 
@@ -70,7 +70,7 @@ async function testModifyInlineStyleWithQuotes(inspector, testActor) {
 
   await assertAttributes("#node26", {
     id: "node26",
-    style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");'
+    style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");',
   }, testActor);
 
   const onMutated = inspector.once("markupmutation");
@@ -97,7 +97,7 @@ async function testModifyInlineStyleWithQuotes(inspector, testActor) {
 
   await assertAttributes("#node26", {
     id: "node26",
-    style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");'
+    style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");',
   }, testActor);
 }
 
@@ -106,7 +106,7 @@ async function testEditingAttributeWithMixedQuotes(inspector, testActor) {
 
   await assertAttributes("#node27", {
     "id": "node27",
-    "class": 'Double " and single \''
+    "class": 'Double " and single \'',
   }, testActor);
 
   const onMutated = inspector.once("markupmutation");
@@ -130,6 +130,6 @@ async function testEditingAttributeWithMixedQuotes(inspector, testActor) {
 
   await assertAttributes("#node27", {
     id: "node27",
-    class: '" " and \' \''
+    class: '" " and \' \'',
   }, testActor);
 }

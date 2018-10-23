@@ -23,14 +23,14 @@ add_task(async function test() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Opening a new window from this tab...");
+  let newWinPromise = BrowserTestUtils.waitForNewWindow({url: BASE_URI});
   ContentTask.spawn(browser, BASE_URI, function(url) {
     content.window.newWindow = content.window.open(url, "_blank");
   });
 
-  let newWin = await BrowserTestUtils.waitForNewWindow();
+  let newWin = await newWinPromise;
   let newTab = newWin.gBrowser.selectedTab;
 
-  await BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
   is(newTab.getAttribute("usercontextid"), 1, "New tab has UCI equal 1");
 
   info("Closing the new window and tab...");

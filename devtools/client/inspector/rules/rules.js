@@ -312,7 +312,7 @@ CssRuleView.prototype = {
       await highlighter.show(node, {
         hideInfoBar: true,
         hideGuides: true,
-        selector
+        selector,
       });
 
       this.emit("ruleview-selectorhighlighter-toggled", true);
@@ -352,7 +352,7 @@ CssRuleView.prototype = {
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,
         sheetHref: prop.rule.domRule.href,
-        textProperty: prop
+        textProperty: prop,
       };
     } else if (classes.contains("ruleview-propertyvalue") && prop) {
       type = VIEW_NODE_VALUE_TYPE;
@@ -363,7 +363,7 @@ CssRuleView.prototype = {
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,
         sheetHref: prop.rule.domRule.href,
-        textProperty: prop
+        textProperty: prop,
       };
     } else if (classes.contains("ruleview-font-family") && prop) {
       type = VIEW_NODE_FONT_TYPE;
@@ -374,7 +374,7 @@ CssRuleView.prototype = {
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,
         sheetHref: prop.rule.domRule.href,
-        textProperty: prop
+        textProperty: prop,
       };
     } else if (classes.contains("ruleview-shape-point") && prop) {
       type = VIEW_NODE_SHAPE_POINT_TYPE;
@@ -387,7 +387,7 @@ CssRuleView.prototype = {
         sheetHref: prop.rule.domRule.href,
         textProperty: prop,
         toggleActive: getShapeToggleActive(node),
-        point: getShapePoint(node)
+        point: getShapePoint(node),
       };
     } else if (classes.contains("ruleview-shapeswatch") && prop) {
       type = VIEW_NODE_SHAPE_SWATCH;
@@ -407,7 +407,7 @@ CssRuleView.prototype = {
         pseudoElement: prop.rule.pseudoElement,
         sheetHref: prop.rule.domRule.href,
         textProperty: prop,
-        variable: node.dataset.variable
+        variable: node.dataset.variable,
       };
     } else if (classes.contains("theme-link") &&
                !classes.contains("ruleview-rule-source") && prop) {
@@ -420,7 +420,7 @@ CssRuleView.prototype = {
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,
         sheetHref: prop.rule.domRule.href,
-        textProperty: prop
+        textProperty: prop,
       };
     } else if (classes.contains("ruleview-selector-unmatched") ||
                classes.contains("ruleview-selector-matched") ||
@@ -664,7 +664,7 @@ CssRuleView.prototype = {
         strictSearchValue: "",
         strictSearchPropertyName: false,
         strictSearchPropertyValue: false,
-        strictSearchAllValues: false
+        strictSearchAllValues: false,
       };
 
       if (this.searchData.searchPropertyMatch) {
@@ -995,7 +995,7 @@ CssRuleView.prototype = {
     createChild(this.element, "div", {
       id: "ruleview-no-results",
       class: "devtools-sidepanel-no-result",
-      textContent: l10n("rule.empty")
+      textContent: l10n("rule.empty"),
     });
   },
 
@@ -1717,7 +1717,7 @@ function getPropertyNameAndValue(node) {
         node.classList.contains("ruleview-property")) {
       return {
         name: node.querySelector(".ruleview-propertyname").textContent,
-        value: node.querySelector(".ruleview-propertyvalue").textContent
+        value: node.querySelector(".ruleview-propertyvalue").textContent,
       };
     }
     node = node.parentNode;
@@ -1881,7 +1881,7 @@ RuleViewTool.prototype = {
     this.view.destroy();
 
     this.view = this.document = this.inspector = null;
-  }
+  },
 };
 
 exports.CssRuleView = CssRuleView;

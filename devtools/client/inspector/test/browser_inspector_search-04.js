@@ -21,43 +21,43 @@ var TEST_DATA = [
     suggestions: [
       {label: "div"},
       {label: "#d1"},
-      {label: "#d2"}
-    ]
+      {label: "#d2"},
+    ],
   },
   {
     key: "i",
-    suggestions: [{label: "div"}]
+    suggestions: [{label: "div"}],
   },
   {
     key: "v",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: "div"}]
+    suggestions: [{label: "div"}],
   },
   {
     key: "VK_BACK_SPACE",
     suggestions: [
       {label: "div"},
       {label: "#d1"},
-      {label: "#d2"}
-    ]
+      {label: "#d2"},
+    ],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: ".",
     suggestions: [
       {label: ".c1"},
-      {label: ".c2"}
-    ]
+      {label: ".c2"},
+    ],
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: []
+    suggestions: [],
   },
   {
     key: "#",
@@ -69,8 +69,8 @@ var TEST_DATA = [
       {label: "#p2"},
       {label: "#p3"},
       {label: "#s1"},
-      {label: "#s2"}
-    ]
+      {label: "#s2"},
+    ],
   },
 ];
 

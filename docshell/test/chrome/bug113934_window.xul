@@ -10,7 +10,7 @@
     </vbox>
     <spacer flex="1"/>
   </hbox>
-  
+
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
     var imports = [ "SimpleTest", "is", "isnot", "ok", "snapshotWindow",
@@ -119,7 +119,7 @@
 
             var s1_new = snapshotWindow($("f1").contentWindow);
             var [same, first, second] = compareSnapshots(s1_new, s2, true);
-            ok(same, "Should reflow on swap", "Expected " + second + " but got " + first);
+            ok(same, "Should reflow on swap. Expected " + second + " but got " + first);
 
             is(strs["f1"], "f1.pagehide f1.pageshow");
             is(strs["f3"], "f3.pagehide f3.pageshow");

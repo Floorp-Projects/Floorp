@@ -66,7 +66,7 @@ add_task(async function() {
 async function chooseWithInspectElementContextMenu(selector, tab) {
   await BrowserTestUtils.synthesizeMouseAtCenter(selector, {
     type: "contextmenu",
-    button: 2
+    button: 2,
   }, tab.linkedBrowser);
 
   await EventUtils.sendString("Q");

@@ -86,7 +86,7 @@ function verifyExpectedEvent(event) {
   const checkingEvent = expectingEvents.shift();
 
   if (event.type == checkingEvent) {
-    ok(true, "checking event type: ", checkingEvent);
+    ok(true, "checking event type: " + checkingEvent);
   } else {
     expectingEventPromise.reject(new Error(`Got event: ${event.type}, expected: ${checkingEvent}`));
   }

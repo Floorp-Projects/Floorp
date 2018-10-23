@@ -76,14 +76,14 @@ class Sidebar extends PureComponent {
 
     return runtimes.map(runtime => {
       const pageId = runtime.type + "-" + runtime.id;
-      const runtimeHasConnection = !!runtime.connection;
+      const runtimeHasDetails = !!runtime.runtimeDetails;
 
       return SidebarRuntimeItem({
         id: pageId,
         deviceName: runtime.extra.deviceName,
         dispatch,
         icon,
-        isConnected: runtimeHasConnection,
+        isConnected: runtimeHasDetails,
         isSelected: selectedPage === pageId,
         key: pageId,
         name: runtime.name,

@@ -11,7 +11,7 @@ const {
   UPDATE_HIGHLIGHTED_NODE,
   UPDATE_PLAYBACK_RATES,
   UPDATE_SELECTED_ANIMATION,
-  UPDATE_SIDEBAR_SIZE
+  UPDATE_SIDEBAR_SIZE,
 } = require("./index");
 
 module.exports = {
@@ -82,5 +82,5 @@ module.exports = {
       type: UPDATE_SIDEBAR_SIZE,
       sidebarSize,
     };
-  }
+  },
 };

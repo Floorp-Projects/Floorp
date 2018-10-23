@@ -346,7 +346,7 @@ CssComputedView.prototype = {
       }
       return {
         type: VIEW_NODE_SELECTOR_TYPE,
-        value: selectorText.trim()
+        value: selectorText.trim(),
       };
     }
 
@@ -378,7 +378,7 @@ CssComputedView.prototype = {
                          isHref)) {
       value = {
         property: parent.querySelector(".computed-property-name").firstChild.textContent,
-        value: parent.querySelector(".computed-property-value").textContent
+        value: parent.querySelector(".computed-property-value").textContent,
       };
     }
     if (propertyContent && (classes.contains("computed-other-property-value") ||
@@ -386,7 +386,7 @@ CssComputedView.prototype = {
       const view = propertyContent.previousSibling;
       value = {
         property: view.querySelector(".computed-property-name").firstChild.textContent,
-        value: node.textContent
+        value: node.textContent,
       };
     }
     if (classes.contains("computed-font-family")) {
@@ -394,13 +394,13 @@ CssComputedView.prototype = {
         value = {
           property: parent.querySelector(
             ".computed-property-name").firstChild.textContent,
-          value: node.parentNode.textContent
+          value: node.parentNode.textContent,
         };
       } else if (propertyContent) {
         const view = propertyContent.previousSibling;
         value = {
           property: view.querySelector(".computed-property-name").firstChild.textContent,
-          value: node.parentNode.textContent
+          value: node.parentNode.textContent,
         };
       } else {
         return null;
@@ -460,7 +460,7 @@ CssComputedView.prototype = {
             this.element.appendChild(fragment);
             this.noResults.hidden = this.numVisibleProperties > 0;
             resolve(undefined);
-          }
+          },
         }
       );
     });
@@ -487,8 +487,8 @@ CssComputedView.prototype = {
       this.pageStyle.getComputed(this._viewedElement, {
         filter: this._sourceFilter,
         onlyMatched: !this.includeBrowserStyles,
-        markMatched: true
-      })
+        markMatched: true,
+      }),
     ]).then(([, computed]) => {
       if (viewedElement !== this._viewedElement) {
         return promise.resolve();
@@ -538,7 +538,7 @@ CssComputedView.prototype = {
 
               this.inspector.emit("computed-view-refreshed");
               resolve(undefined);
-            }
+            },
           }
         );
         this._refreshProcess.schedule();
@@ -794,7 +794,7 @@ CssComputedView.prototype = {
     this.styleWindow = null;
 
     this._isDestroyed = true;
-  }
+  },
 };
 
 function PropertyInfo(tree, name) {
@@ -809,7 +809,7 @@ PropertyInfo.prototype = {
       return value;
     }
     return null;
-  }
+  },
 };
 
 /**
@@ -952,7 +952,7 @@ PropertyView.prototype = {
     this.element.setAttribute("tabindex", "0");
     this.shortcuts = new KeyShortcuts({
       window: this.tree.styleWindow,
-      target: this.element
+      target: this.element,
     });
     this.shortcuts.on("F1", event => {
       this.mdnLinkClick(event);
@@ -1114,7 +1114,7 @@ PropertyView.prototype = {
     for (const selector of this.matchedSelectorViews) {
       const p = createChild(frag, "p");
       const span = createChild(p, "span", {
-        class: "rule-link"
+        class: "rule-link",
       });
       const link = createChild(span, "a", {
         target: "_blank",
@@ -1122,28 +1122,28 @@ PropertyView.prototype = {
         title: selector.href,
         sourcelocation: selector.source,
         tabindex: "0",
-        textContent: selector.source
+        textContent: selector.source,
       });
       link.addEventListener("click", selector.openStyleEditor);
       const shortcuts = new KeyShortcuts({
         window: this.tree.styleWindow,
-        target: link
+        target: link,
       });
       shortcuts.on("Return", () => selector.openStyleEditor());
 
       const status = createChild(p, "span", {
         dir: "ltr",
         class: "rule-text theme-fg-color3 " + selector.statusClass,
-        title: selector.statusText
+        title: selector.statusText,
       });
 
       createChild(status, "div", {
         class: "fix-get-selection",
-        textContent: selector.sourceText
+        textContent: selector.sourceText,
       });
 
       const valueDiv = createChild(status, "div", {
-        class: "fix-get-selection computed-other-property-value theme-fg-color1"
+        class: "fix-get-selection computed-other-property-value theme-fg-color1",
       });
       valueDiv.appendChild(selector.outputFragment);
     }
@@ -1212,7 +1212,7 @@ PropertyView.prototype = {
 
     this.valueNode.removeEventListener("click", this.onFocus);
     this.valueNode = null;
-  }
+  },
 };
 
 /**
@@ -1260,7 +1260,7 @@ SelectorView.STATUS_NAMES = [
 ];
 
 SelectorView.CLASS_NAMES = [
-  "parentmatch", "matched", "bestmatch"
+  "parentmatch", "matched", "bestmatch",
 ];
 
 SelectorView.prototype = {
@@ -1330,7 +1330,7 @@ SelectorView.prototype = {
         colorClass: "computed-color",
         urlClass: "theme-link",
         fontFamilyClass: "computed-font-family",
-        baseURI: this.selectorInfo.rule.href
+        baseURI: this.selectorInfo.rule.href,
       }
     );
     return frag;
@@ -1517,7 +1517,7 @@ ComputedViewTool.prototype = {
     this.computedView.destroy();
 
     this.computedView = this.document = this.inspector = null;
-  }
+  },
 };
 
 exports.CssComputedView = CssComputedView;

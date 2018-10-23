@@ -30,7 +30,7 @@ function onLoadEnd1(e) {
   e.target.removeEventListener('loadend', onLoadEnd1);
 
   is(e.target, r, "Target and r are ok");
-  ok(e.target.readyState, FileReader.DONE, "The file has been read.");
+  is(e.target.readyState, FileReader.DONE, "The file has been read.");
   ok(e.target.result instanceof ArrayBuffer, "The result is an ArrayBuffer");
 
   var view = new Uint8Array(e.target.result);

@@ -111,7 +111,7 @@ function promiseCurrentEngineChanged() {
   return new Promise(resolve => {
     function observer(aSub, aTopic, aData) {
       if (aData == "engine-current") {
-        Assert.ok(Services.search.currentEngine.name, TEST_ENGINE_NAME, "currentEngine set");
+        Assert.equal(Services.search.currentEngine.name, TEST_ENGINE_NAME, "currentEngine set");
         Services.obs.removeObserver(observer, "browser-search-engine-modified");
         resolve();
       }

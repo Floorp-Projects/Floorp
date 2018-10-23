@@ -38,32 +38,32 @@ const DATA = [
     timestamp: null,
     category: "devtools.main",
     method: "edit_rule",
-    object: "ruleview"
+    object: "ruleview",
   },
   {
     timestamp: null,
     category: "devtools.main",
     method: "edit_rule",
-    object: "ruleview"
+    object: "ruleview",
   },
   {
     timestamp: null,
     category: "devtools.main",
     method: "edit_rule",
-    object: "ruleview"
+    object: "ruleview",
   },
   {
     timestamp: null,
     category: "devtools.main",
     method: "edit_rule",
-    object: "ruleview"
+    object: "ruleview",
   },
   {
     timestamp: null,
     category: "devtools.main",
     method: "edit_rule",
-    object: "ruleview"
-  }
+    object: "ruleview",
+  },
 ];
 
 add_task(async function() {
@@ -126,7 +126,7 @@ async function testEditProperty(view, rule, name, value, isValid) {
   const propValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name
+    name,
   });
 
   if (isValid) {

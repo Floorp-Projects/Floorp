@@ -41,7 +41,7 @@ function testComputedList(inspector, view) {
     "margin-top",
     "margin-right",
     "margin-bottom",
-    "margin-left"
+    "margin-left",
   ];
 
   is(computed.length, propNames.length, "There should be 4 computed values");

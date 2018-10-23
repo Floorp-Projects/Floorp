@@ -11,7 +11,7 @@
 <script class="testbody" type="text/javascript">
 
 function tryToCreateNodeOnClosedContext(ctx) {
-  ok(ctx.state, "closed", "The context is in closed state");
+  is(ctx.state, "closed", "The context is in closed state");
 
   [ { name: "createBufferSource" },
     { name: "createMediaStreamDestination",
@@ -60,7 +60,7 @@ function loadFile(url, callback) {
 // createBuffer, createPeriodicWave and decodeAudioData should work on a context
 // that has `state` == "closed"
 function tryLegalOpeerationsOnClosedContext(ctx) {
-  ok(ctx.state, "closed", "The context is in closed state");
+  is(ctx.state, "closed", "The context is in closed state");
 
   [ { name: "createBuffer",
       args: [1, 44100, 44100] },

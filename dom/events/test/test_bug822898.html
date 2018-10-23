@@ -238,7 +238,7 @@ function testPointerEventCTORS()
   ex = false;
 
   e = new PointerEvent("hello");
-  ok(e.type, "hello", "PointerEvent: Wrong event type!");
+  is(e.type, "hello", "PointerEvent: Wrong event type!");
   ok(!e.isTrusted, "PointerEvent: Event shouldn't be trusted!");
   ok(!e.bubbles, "PointerEvent: Event shouldn't bubble!");
   ok(!e.cancelable, "PointerEvent: Event shouldn't be cancelable!");

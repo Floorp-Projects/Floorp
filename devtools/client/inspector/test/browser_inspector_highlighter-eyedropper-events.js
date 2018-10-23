@@ -39,8 +39,8 @@ const MOVE_EVENTS_DATA = [
     y: 0,
     expected: {
       x: (width, height) => width - 5,
-      y: 0
-    }
+      y: 0,
+    },
   },
   // Right snapping
   {
@@ -49,9 +49,9 @@ const MOVE_EVENTS_DATA = [
     shift: true,
     expected: {
       x: (width, height) => width,
-      y: 0
+      y: 0,
     },
-    desc: "Right snapping to x=max window width available"
+    desc: "Right snapping to x=max window width available",
   },
   // Mouse initialization for bottom snapping
   {
@@ -60,8 +60,8 @@ const MOVE_EVENTS_DATA = [
     y: (width, height) => height - 5,
     expected: {
       x: 0,
-      y: (width, height) => height - 5
-    }
+      y: (width, height) => height - 5,
+    },
   },
   // Bottom snapping
   {
@@ -70,9 +70,9 @@ const MOVE_EVENTS_DATA = [
     shift: true,
     expected: {
       x: 0,
-      y: (width, height) => height
+      y: (width, height) => height,
     },
-    desc: "Bottom snapping to y=max window height available"
+    desc: "Bottom snapping to y=max window height available",
   },
 ];
 

@@ -60,5 +60,5 @@ function check_tree_order(tree, pages, aNumberOfRowsDelta = 0) {
     is(node.uri, pages[i], "Node is in correct position based on its visit date");
     found++;
   }
-  ok(found, pages.length + aNumberOfRowsDelta, "Found all expected results");
+  is(found, pages.length + aNumberOfRowsDelta, "Found all expected results");
 }

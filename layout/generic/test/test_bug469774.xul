@@ -56,8 +56,8 @@ function doTest() {
 
     var equal, str1, str2;
     [equal, str1, str2] = compareSnapshots(after, before, true);
-    ok(equal, "Showing a popup shouldn't affect drawing in its parent window",
-       "got " + str1 + " but expected " + str2);
+    ok(equal, "Showing a popup shouldn't affect drawing in its parent window" +
+       "got " + str1 + ", expected " + str2);
 
     popup.hidePopup();
     SimpleTest.finish();
