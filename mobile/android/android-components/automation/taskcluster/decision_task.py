@@ -92,7 +92,7 @@ def create_detekt_task():
     return create_task(
         name='Android Components - detekt',
         description='Running detekt over all modules',
-        command='detektCheck')
+        command='detekt')
 
 
 def create_ktlint_task():

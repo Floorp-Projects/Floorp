@@ -58,7 +58,7 @@ def generate_build_task(version):
         name="Android Components - Release ({})".format(version),
         description="Building and publishing release versions.",
         command=(checkout +
-                 ' && ./gradlew --no-daemon clean test detektCheck ktlint '
+                 ' && ./gradlew --no-daemon clean test detekt ktlint '
                  + assemble_task +
                  ' docs uploadArchives zipMavenArtifacts'),
         features={

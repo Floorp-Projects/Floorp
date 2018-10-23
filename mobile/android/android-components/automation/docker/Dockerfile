@@ -82,6 +82,13 @@ RUN ./gradlew clean \
     && ./gradlew --stop \
     && ./gradlew --no-daemon assemble \
     && ./gradlew --no-daemon test \
-    && ./gradlew --no-daemon detektCheck \
+    && ./gradlew --no-daemon detekt \
     && ./gradlew --no-daemon ktlint \
     && ./gradlew --no-daemon docs
+
+#----------------------------------------------------------------------------------------------------------------------
+# -- Cleanup ----------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------
+
+RUN apt-get clean
+>>>>>>> Use new detekt command in automation scripts.
