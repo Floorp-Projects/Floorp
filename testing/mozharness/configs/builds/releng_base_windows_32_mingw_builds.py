@@ -50,6 +50,5 @@ config = {
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
     'mozconfig_platform': 'win32',
-    'mozconfig_variant': 'mingw32',
     #########################################################################
 }
