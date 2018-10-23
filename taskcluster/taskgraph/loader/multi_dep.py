@@ -98,6 +98,52 @@ def platform_grouping(config, tasks):
     return groups
 
 
+@group_by('single-locale')
+def single_locale_grouping(config, tasks):
+    """Split by a single locale (but also by platform, build-type, product)
+
+    The locale can be `None` (en-US build/signing/repackage), a single locale,
+    or multiple locales per task, e.g. for l10n chunking. In the case of a task
+    with, say, five locales, the task will show up in all five locale groupings.
+
+    This grouping is written for non-partner-repack beetmover, but might also
+    be useful elsewhere.
+
+    """
+    only_platforms = config.get('only-for-build-platforms')
+    not_platforms = config.get('not-for-build-platforms')
+    groups = {}
+
+    for task in tasks:
+        if task.kind not in config.get('kind-dependencies', []):
+            continue
+        platform = task.attributes.get('build_platform')
+        build_type = task.attributes.get('build_type')
+        product = task.attributes.get('shipping_product',
+                                      task.task.get('shipping-product'))
+        task_locale = task.attributes.get('locale')
+        chunk_locales = task.attributes.get('chunk_locales')
+        locales = chunk_locales or [task_locale]
+
+        # Skip only_ and not_ platforms that don't match
+        if only_platforms or not_platforms:
+            if not platform or not build_type:
+                continue
+            combined_platform = "{}/{}".format(platform, build_type)
+            if only_platforms and combined_platform not in only_platforms:
+                continue
+            elif not_platforms and combined_platform in not_platforms:
+                continue
+
+        for locale in locales:
+            locale_key = (platform, build_type, product, locale)
+            groups.setdefault(locale_key, [])
+            if task not in groups[locale_key]:
+                groups[locale_key].append(task)
+
+    return groups
+
+
 def assert_unique_members(kinds, error_msg=None):
     if len(kinds) != len(set(kinds)):
         raise Exception(error_msg)
