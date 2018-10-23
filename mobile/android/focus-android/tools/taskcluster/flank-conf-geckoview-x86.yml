@@ -1,8 +1,8 @@
 # gcloud args match the official gcloud cli
 # https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
 gcloud:
-  #results-bucket: focus_android_test_artifacts
-  results-bucket: focus_android_test_reports 
+  results-bucket: focus_android_test_artifacts
+  #results-bucket: focus_android_test_reports 
   record-video: true
 
   # The maximum possible testing time is 30m on physical devices and 60m on virtual devices.

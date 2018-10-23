@@ -41,7 +41,7 @@ JAVA_BIN="/usr/bin/java"
 PATH_TEST="/opt/focus-android/app/src/androidTest/java/org/mozilla/focus/activity"
 PATH_TOOLS="/opt/focus-android/tools/taskcluster"
 PACKAGE="org.mozilla.focus.activity"
-FLANK_BIN="flank.jar"
+FLANK_BIN="$PATH_TOOLS/flank.jar"
 FLANK_CONF="$PATH_TOOLS/flank.yml"
 
 
@@ -55,15 +55,18 @@ if [ "$1" == "x86" ] || [ "$1" == "arm" ]; then
 	exit 1
     fi
 fi
-echo
-echo "---------------------------------------"
-echo "FLANK_CONF_TEMPLATE"
-echo "---------------------------------------"
-echo "$FLANK_CONF_TEMPLATE"
-echo
 
 rm  -f TEST_TARGETS 
 rm  -f $FLANK_BIN
+
+echo
+echo "---------------------------------------"
+echo "FLANK FILES"
+echo "---------------------------------------"
+echo "FLANK_CONF_TEMPLATE: $FLANK_CONF_TEMPLATE"
+echo "FLANK_CONF: $FLANK_CONF"
+echo "FLANK_BIN: $FLANK_BIN"
+echo
 
 wget $URL_FLANK_BIN
 echo
@@ -98,7 +101,7 @@ test_targets=$(echo "${test_targets}" | sed '$!s~$~\\~g')
 # create flank.yml config file 
 sed "s/TEST_TARGETS/${test_targets}/g" $FLANK_CONF_TEMPLATE > $FLANK_CONF
 rm -f TEST_TARGETS
-$JAVA_BIN -jar ./$FLANK_BIN android run 
+$JAVA_BIN -jar $FLANK_BIN android run --config=$FLANK_CONF
 
 exitcode=$?
 
