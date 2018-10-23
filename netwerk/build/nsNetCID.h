@@ -777,16 +777,6 @@
     { 0x89, 0xc3, 0x8d, 0x83, 0xb1, 0x7d, 0x3f, 0xb4 } \
 }
 
-#define NS_SSLSOCKETPROVIDER_CONTRACTID \
-    NS_NETWORK_SOCKET_CONTRACTID_PREFIX "ssl"
-
-/* This code produces a normal socket which can be used to initiate the
- * STARTTLS protocol by calling its nsISSLSocketControl->StartTLS()
- */
-#define NS_STARTTLSSOCKETPROVIDER_CONTRACTID \
-    NS_NETWORK_SOCKET_CONTRACTID_PREFIX "starttls"
-
-
 #define NS_DASHBOARD_CONTRACTID \
     "@mozilla.org/network/dashboard;1"
 #define NS_DASHBOARD_CID                               \

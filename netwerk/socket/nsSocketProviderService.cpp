@@ -6,8 +6,10 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsISocketProvider.h"
-#include "nsSocketProviderService.h"
 #include "nsError.h"
+#include "nsNSSComponent.h"
+#include "nsSOCKSSocketProvider.h"
+#include "nsSocketProviderService.h"
 #include "nsSSLSocketProvider.h"
 #include "nsTLSSocketProvider.h"
 #include "nsUDPSocketProvider.h"
@@ -45,15 +47,26 @@ NS_IMETHODIMP
 nsSocketProviderService::GetSocketProvider(const char         *type,
                                            nsISocketProvider **result)
 {
-  nsresult rv;
-  nsAutoCString contractID(
-          NS_LITERAL_CSTRING(NS_NETWORK_SOCKET_CONTRACTID_PREFIX) +
-          nsDependentCString(type));
-
-  rv = CallGetService(contractID.get(), result);
-  if (NS_FAILED(rv))
-      rv = NS_ERROR_UNKNOWN_SOCKET_TYPE;
-  return rv;
+  nsCOMPtr<nsISocketProvider> inst;
+  if (!nsCRT::strcmp(type, "ssl") &&
+      XRE_IsParentProcess() &&
+      EnsureNSSInitializedChromeOrContent()) {
+    inst = new nsSSLSocketProvider();
+  } else if (!nsCRT::strcmp(type, "starttls") &&
+             XRE_IsParentProcess() &&
+             EnsureNSSInitializedChromeOrContent()) {
+    inst = new nsTLSSocketProvider();
+  } else if (!nsCRT::strcmp(type, "socks")) {
+    inst = new nsSOCKSSocketProvider(NS_SOCKS_VERSION_5);
+  } else if (!nsCRT::strcmp(type, "socks4")) {
+    inst = new nsSOCKSSocketProvider(NS_SOCKS_VERSION_4);
+  } else if (!nsCRT::strcmp(type, "udp")) {
+    inst = new nsUDPSocketProvider();
+  } else {
+    return NS_ERROR_UNKNOWN_SOCKET_TYPE;
+  }
+  inst.forget(result);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
