@@ -2047,9 +2047,18 @@ nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify)
 // When replacing, aRefChild is the content being replaced; when
 // inserting it's the content before which we're inserting.  In the
 // latter case it may be null.
+//
+// If aRv is a failure after this call, the insertion should not happen.
+//
+// This implements the parts of
+// https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity and
+// the checks in https://dom.spec.whatwg.org/#concept-node-replace that
+// depend on the child nodes or come after steps that depend on the child nodes
+// (steps 2-6 in both cases).
 static
-bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
-                      bool aIsReplace, nsINode* aRefChild)
+void EnsureAllowedAsChild(nsINode* aNewChild, nsINode* aParent,
+                          bool aIsReplace, nsINode* aRefChild,
+                          ErrorResult& aRv)
 {
   MOZ_ASSERT(aNewChild, "Must have new child");
   MOZ_ASSERT_IF(aIsReplace, aRefChild);
@@ -2060,6 +2069,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
              "Nodes that are not documents, document fragments or elements "
              "can't be parents!");
 
+  // Step 2.
   // A common case is that aNewChild has no kids, in which case
   // aParent can't be a descendant of aNewChild unless they're
   // actually equal to each other.  Fast-path that case, since aParent
@@ -2070,28 +2080,45 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         // to be checked to ensure that they are not inserted into
         // the hosted content.
         aNewChild->NodeInfo()->NameAtom() == nsGkAtoms::_template ||
-        aNewChild->GetShadowRoot()) &&
+        (aNewChild->IsElement() && aNewChild->AsElement()->GetShadowRoot())) &&
        nsContentUtils::ContentIsHostIncludingDescendantOf(aParent,
                                                           aNewChild))) {
-    return false;
+    aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+    return;
   }
 
+  // Step 3.
+  if (aRefChild && aRefChild->GetParentNode() != aParent) {
+    aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
+    return;
+  }
+
+  // Step 4.
+  if (!aNewChild->IsContent()) {
+    aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+    return;
+  }
+
+  // Steps 5 and 6 combined.
   // The allowed child nodes differ for documents and elements
   switch (aNewChild->NodeType()) {
   case nsINode::COMMENT_NODE :
   case nsINode::PROCESSING_INSTRUCTION_NODE :
     // OK in both cases
-    return true;
+    return;
   case nsINode::TEXT_NODE :
   case nsINode::CDATA_SECTION_NODE :
   case nsINode::ENTITY_REFERENCE_NODE :
     // Allowed under Elements and DocumentFragments
-    return aParent->NodeType() != nsINode::DOCUMENT_NODE;
+    if (aParent->NodeType() == nsINode::DOCUMENT_NODE) {
+      aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+    }
+    return;
   case nsINode::ELEMENT_NODE :
     {
       if (!aParent->IsDocument()) {
         // Always ok to have elements under other elements or document fragments
-        return true;
+        return;
       }
 
       nsIDocument* parentDocument = aParent->AsDocument();
@@ -2099,20 +2126,23 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       if (rootElement) {
         // Already have a documentElement, so this is only OK if we're
         // replacing it.
-        return aIsReplace && rootElement == aRefChild;
+        if (!aIsReplace || rootElement != aRefChild) {
+          aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        }
+        return;
       }
 
       // We don't have a documentElement yet.  Our one remaining constraint is
       // that the documentElement must come after the doctype.
       if (!aRefChild) {
         // Appending is just fine.
-        return true;
+        return;
       }
 
       nsIContent* docTypeContent = parentDocument->GetDoctype();
       if (!docTypeContent) {
         // It's all good.
-        return true;
+        return;
       }
 
       int32_t doctypeIndex = aParent->ComputeIndexOf(docTypeContent);
@@ -2121,21 +2151,29 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       // Now we're OK in the following two cases only:
       // 1) We're replacing something that's not before the doctype
       // 2) We're inserting before something that comes after the doctype
-      return aIsReplace ? (insertIndex >= doctypeIndex) :
+      bool ok = aIsReplace ? (insertIndex >= doctypeIndex) :
         insertIndex > doctypeIndex;
+      if (!ok) {
+        aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      }
+      return;
     }
   case nsINode::DOCUMENT_TYPE_NODE :
     {
       if (!aParent->IsDocument()) {
         // doctypes only allowed under documents
-        return false;
+        aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        return;
       }
 
       nsIDocument* parentDocument = aParent->AsDocument();
       nsIContent* docTypeContent = parentDocument->GetDoctype();
       if (docTypeContent) {
         // Already have a doctype, so this is only OK if we're replacing it
-        return aIsReplace && docTypeContent == aRefChild;
+        if (!aIsReplace || docTypeContent != aRefChild) {
+          aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        }
+        return;
       }
 
       // We don't have a doctype yet.  Our one remaining constraint is
@@ -2143,12 +2181,13 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       Element* rootElement = parentDocument->GetRootElement();
       if (!rootElement) {
         // It's all good
-        return true;
+        return;
       }
 
       if (!aRefChild) {
         // Trying to append a doctype, but have a documentElement
-        return false;
+        aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        return;
       }
 
       int32_t rootIndex = aParent->ComputeIndexOf(rootElement);
@@ -2157,7 +2196,10 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       // Now we're OK if and only if insertIndex <= rootIndex.  Indeed, either
       // we end up replacing aRefChild or we end up before it.  Either one is
       // ok as long as aRefChild is not after rootElement.
-      return insertIndex <= rootIndex;
+      if (insertIndex > rootIndex) {
+        aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+      }
+      return;
     }
   case nsINode::DOCUMENT_FRAGMENT_NODE :
     {
@@ -2168,7 +2210,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       // change this code, change that too.
       if (!aParent->IsDocument()) {
         // All good here
-        return true;
+        return;
       }
 
       bool sawElement = false;
@@ -2178,19 +2220,21 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         if (child->IsElement()) {
           if (sawElement) {
             // Can't put two elements into a document
-            return false;
+            aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+            return;
           }
           sawElement = true;
         }
-        // If we can put this content at the the right place, we might be ok;
+        // If we can put this content at the right place, we might be ok;
         // if not, we bail out.
-        if (!IsAllowedAsChild(child, aParent, aIsReplace, aRefChild)) {
-          return false;
+        EnsureAllowedAsChild(child, aParent, aIsReplace, aRefChild, aRv);
+        if (aRv.Failed()) {
+          return;
         }
       }
 
       // Everything in the fragment checked out ok, so we can stick it in here
-      return true;
+      return;
     }
   default:
     /*
@@ -2199,26 +2243,29 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
     break;
   }
 
-  return false;
+  aRv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 }
 
+// Implements https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
 void
 nsINode::EnsurePreInsertionValidity(nsINode& aNewChild, nsINode* aRefChild,
                                     ErrorResult& aError)
 {
-  EnsurePreInsertionValidity1(aNewChild, aRefChild, aError);
+  EnsurePreInsertionValidity1(aError);
   if (aError.Failed()) {
     return;
   }
   EnsurePreInsertionValidity2(false, aNewChild, aRefChild, aError);
 }
 
+// Implements the parts of
+// https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity and
+// the checks in https://dom.spec.whatwg.org/#concept-node-replace that can be
+// evaluated before ever looking at the child nodes (step 1 in both cases).
 void
-nsINode::EnsurePreInsertionValidity1(nsINode& aNewChild, nsINode* aRefChild,
-                                     ErrorResult& aError)
+nsINode::EnsurePreInsertionValidity1(ErrorResult& aError)
 {
-  if ((!IsDocument() && !IsDocumentFragment() && !IsElement()) ||
-      !aNewChild.IsContent()) {
+  if (!IsDocument() && !IsDocumentFragment() && !IsElement()) {
     aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
     return;
   }
@@ -2228,8 +2275,8 @@ void
 nsINode::EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
                                      nsINode* aRefChild, ErrorResult& aError)
 {
-  nsIContent* newContent = aNewChild.AsContent();
-  if (newContent->IsRootOfAnonymousSubtree()) {
+  if (aNewChild.IsContent() &&
+      aNewChild.AsContent()->IsRootOfAnonymousSubtree()) {
     // This is anonymous content.  Don't allow its insertion
     // anywhere, since it might have UnbindFromTree calls coming
     // its way.
@@ -2238,10 +2285,7 @@ nsINode::EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
   }
 
   // Make sure that the inserted node is allowed as a child of its new parent.
-  if (!IsAllowedAsChild(newContent, this, aReplace, aRefChild)) {
-    aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-    return;
-  }
+  EnsureAllowedAsChild(&aNewChild, this, aReplace, aRefChild, aError);
 }
 
 nsINode*
@@ -2255,7 +2299,14 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // the bad XBL cases.
   MOZ_ASSERT_IF(aReplace, aRefChild);
 
-  EnsurePreInsertionValidity1(*aNewChild, aRefChild, aError);
+  // Before firing DOMNodeRemoved events, make sure this is actually an insert
+  // we plan to do.
+  EnsurePreInsertionValidity1(aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  EnsurePreInsertionValidity2(aReplace, *aNewChild, aRefChild, aError);
   if (aError.Failed()) {
     return nullptr;
   }
@@ -2268,16 +2319,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // Scope firing mutation events so that we don't carry any state that
   // might be stale
   {
-    // This check happens again further down (though then using
-    // ComputeIndexOf).
-    // We're only checking this here to avoid firing mutation events when
-    // none should be fired.
-    // It's ok that we do the check twice in the case when firing mutation
-    // events as we need to recheck after running script anyway.
-    if (aRefChild && aRefChild->GetParentNode() != this) {
-      aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
-      return nullptr;
-    }
+    nsMutationGuard guard;
 
     // If we're replacing, fire for node-to-be-replaced.
     // If aRefChild == aNewChild then we'll fire for it in check below
@@ -2297,16 +2339,15 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     if (nodeType == DOCUMENT_FRAGMENT_NODE) {
       static_cast<FragmentOrElement*>(aNewChild)->FireNodeRemovedForChildren();
     }
-    // Verify that our aRefChild is still sensible
-    if (aRefChild && aRefChild->GetParentNode() != this) {
-      aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
-      return nullptr;
-    }
-  }
 
-  EnsurePreInsertionValidity2(aReplace, *aNewChild, aRefChild, aError);
-  if (aError.Failed()) {
-    return nullptr;
+    if (guard.Mutated(0)) {
+      // Re-check the parts of our pre-insertion validity that might depend on
+      // the tree shape.
+      EnsurePreInsertionValidity2(aReplace, *aNewChild, aRefChild, aError);
+      if (aError.Failed()) {
+        return nullptr;
+      }
+    }
   }
 
   // Record the node to insert before, if any
@@ -2355,13 +2396,6 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     if (guard.Mutated(1)) {
       // XBL destructors, yuck.
 
-      // Verify that nodeToInsertBefore, if non-null, is still our child.  If
-      // it's not, there's no way we can do this insert sanely; just bail out.
-      if (nodeToInsertBefore && nodeToInsertBefore->GetParent() != this) {
-        aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-        return nullptr;
-      }
-
       // Verify that newContent has no parent.
       if (newContent->GetParentNode()) {
         aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
@@ -2372,16 +2406,16 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       if (aNewChild == aRefChild) {
         // We've already removed aRefChild.  So even if we were doing a replace,
         // now we're doing a simple insert before nodeToInsertBefore.
-        if (!IsAllowedAsChild(newContent, this, false, nodeToInsertBefore)) {
-          aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        EnsureAllowedAsChild(newContent, this, false, nodeToInsertBefore, aError);
+        if (aError.Failed()) {
           return nullptr;
         }
       } else {
-        if ((aRefChild && aRefChild->GetParent() != this) ||
-            !IsAllowedAsChild(newContent, this, aReplace, aRefChild)) {
-          aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        EnsureAllowedAsChild(newContent, this, aReplace, aRefChild, aError);
+        if (aError.Failed()) {
           return nullptr;
         }
+
         // And recompute nodeToInsertBefore, just in case.
         if (aReplace) {
           nodeToInsertBefore = aRefChild->GetNextSibling();
@@ -2447,7 +2481,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
       // Note that unlike the single-element case above, none of our kids can
       // be aRefChild, so we can always pass through aReplace in the
-      // IsAllowedAsChild checks below and don't have to worry about whether
+      // EnsureAllowedAsChild checks below and don't have to worry about whether
       // recomputing nodeToInsertBefore is OK.
 
       // Verify that our aRefChild is still sensible
@@ -2465,7 +2499,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       }
 
       // And verify that newContent is still allowed as our child.  Sadly, we
-      // need to reimplement the relevant part of IsAllowedAsChild() because
+      // need to reimplement the relevant part of EnsureAllowedAsChild() because
       // now our nodes are in an array and all.  If you change this code,
       // change the code there.
       if (IsDocument()) {
@@ -2480,8 +2514,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
             }
             sawElement = true;
           }
-          if (!IsAllowedAsChild(child, this, aReplace, aRefChild)) {
-            aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+          EnsureAllowedAsChild(child, this, aReplace, aRefChild, aError);
+          if (aError.Failed()) {
             return nullptr;
           }
         }

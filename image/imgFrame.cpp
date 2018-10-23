@@ -22,11 +22,13 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/SourceSurfaceRawData.h"
+#include "mozilla/image/RecyclingSourceSurface.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/SourceSurfaceVolatileData.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsMargin.h"
+#include "nsRefreshDriver.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -178,9 +180,11 @@ imgFrame::imgFrame()
   : mMonitor("imgFrame")
   , mDecoded(0, 0, 0, 0)
   , mLockCount(0)
+  , mRecycleLockCount(0)
   , mAborted(false)
   , mFinished(false)
   , mOptimizable(false)
+  , mShouldRecycle(false)
   , mTimeout(FrameTimeout::FromRawMilliseconds(100))
   , mDisposalMethod(DisposalMethod::NOT_SPECIFIED)
   , mBlendMethod(BlendMethod::OVER)
@@ -209,10 +213,11 @@ nsresult
 imgFrame::InitForDecoder(const nsIntSize& aImageSize,
                          const nsIntRect& aRect,
                          SurfaceFormat aFormat,
-                         uint8_t aPaletteDepth /* = 0 */,
-                         bool aNonPremult /* = false */,
-                         const Maybe<AnimationParams>& aAnimParams /* = Nothing() */,
-                         bool aIsFullFrame /* = false */)
+                         uint8_t aPaletteDepth,
+                         bool aNonPremult,
+                         const Maybe<AnimationParams>& aAnimParams,
+                         bool aIsFullFrame,
+                         bool aShouldRecycle)
 {
   // Assert for properties that should be verified by decoders,
   // warn for properties related to bad content.
@@ -254,9 +259,21 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
     return NS_ERROR_FAILURE;
   }
 
-  mFormat = aFormat;
+  if (aShouldRecycle) {
+    // If we are recycling then we should always use BGRA for the underlying
+    // surface because if we use BGRX, the next frame composited into the
+    // surface could be BGRA and cause rendering problems.
+    MOZ_ASSERT(mIsFullFrame);
+    MOZ_ASSERT(aPaletteDepth == 0);
+    MOZ_ASSERT(aAnimParams);
+    mFormat = SurfaceFormat::B8G8R8A8;
+  } else {
+    mFormat = aFormat;
+  }
+
   mPaletteDepth = aPaletteDepth;
   mNonPremult = aNonPremult;
+  mShouldRecycle = aShouldRecycle;
 
   if (aPaletteDepth != 0) {
     // We're creating for a paletted image.
@@ -299,6 +316,69 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
+
+  return NS_OK;
+}
+
+nsresult
+imgFrame::InitForDecoderRecycle(const AnimationParams& aAnimParams)
+{
+  // We want to recycle this frame, but there is no guarantee that consumers are
+  // done with it in a timely manner. Let's ensure they are done with it first.
+  MonitorAutoLock lock(mMonitor);
+
+  MOZ_ASSERT(mIsFullFrame);
+  MOZ_ASSERT(mLockCount > 0);
+  MOZ_ASSERT(mLockedSurface);
+  MOZ_ASSERT(mShouldRecycle);
+
+  if (mRecycleLockCount > 0) {
+    if (NS_IsMainThread()) {
+      // We should never be both decoding and recycling on the main thread. Sync
+      // decoding can only be used to produce the first set of frames. Those
+      // either never use recycling because advancing was blocked (main thread
+      // is busy) or we were auto-advancing (to seek to a frame) and the frames
+      // were never accessed (and thus cannot have recycle locks).
+      MOZ_ASSERT_UNREACHABLE("Recycling/decoding on the main thread?");
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    // We don't want to wait forever to reclaim the frame because we have no
+    // idea why it is still held. It is possibly due to OMTP. Since we are off
+    // the main thread, and we generally have frames already buffered for the
+    // animation, we can afford to wait a short period of time to hopefully
+    // complete the transaction and reclaim the buffer.
+    //
+    // We choose to wait for, at most, the refresh driver interval, so that we
+    // won't skip more than one frame. If the frame is still in use due to
+    // outstanding transactions, we are already skipping frames. If the frame
+    // is still in use for some other purpose, it won't be returned to the pool
+    // and its owner can hold onto it forever without additional impact here.
+    TimeDuration timeout =
+      TimeDuration::FromMilliseconds(nsRefreshDriver::DefaultInterval());
+    while (true) {
+      TimeStamp start = TimeStamp::Now();
+      mMonitor.Wait(timeout);
+      if (mRecycleLockCount == 0) {
+        break;
+      }
+
+      TimeDuration delta = TimeStamp::Now() - start;
+      if (delta >= timeout) {
+        // We couldn't secure the frame for recycling. It will allocate a new
+        // frame instead.
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+
+      timeout -= delta;
+    }
+  }
+
+  mBlendRect = aAnimParams.mBlendRect;
+  mTimeout = aAnimParams.mTimeout;
+  mBlendMethod = aAnimParams.mBlendMethod;
+  mDisposalMethod = aAnimParams.mDisposalMethod;
+  mDirtyRect = mFrameRect;
 
   return NS_OK;
 }
@@ -562,26 +642,43 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
     return false;
   }
 
-  MonitorAutoLock lock(mMonitor);
-
-  // Possibly convert this image into a GPU texture, this may also cause our
-  // mLockedSurface to be released and the OS to release the underlying memory.
-  Optimize(aContext->GetDrawTarget());
-
-  bool doPartialDecode = !AreAllPixelsWritten();
-
-  RefPtr<SourceSurface> surf = GetSourceSurfaceInternal();
-  if (!surf) {
-    return false;
-  }
-
-  gfxRect imageRect(0, 0, mImageSize.width, mImageSize.height);
-  bool doTile = !imageRect.Contains(aRegion.Rect()) &&
-                !(aImageFlags & imgIContainer::FLAG_CLAMP);
-
+  // Perform the draw and freeing of the surface outside the lock. We want to
+  // avoid contention with the decoder if we can. The surface may also attempt
+  // to relock the monitor if it is freed (e.g. RecyclingSourceSurface).
+  RefPtr<SourceSurface> surf;
+  SurfaceWithFormat surfaceResult;
   ImageRegion region(aRegion);
-  SurfaceWithFormat surfaceResult =
-    SurfaceForDrawing(doPartialDecode, doTile, region, surf);
+  gfxRect imageRect(0, 0, mImageSize.width, mImageSize.height);
+
+  {
+    MonitorAutoLock lock(mMonitor);
+
+    // Possibly convert this image into a GPU texture, this may also cause our
+    // mLockedSurface to be released and the OS to release the underlying memory.
+    Optimize(aContext->GetDrawTarget());
+
+    bool doPartialDecode = !AreAllPixelsWritten();
+
+    // Most draw targets will just use the surface only during DrawPixelSnapped
+    // but captures/recordings will retain a reference outside this stack
+    // context. While in theory a decoder thread could be trying to recycle this
+    // frame at this very moment, in practice the only way we can get here is if
+    // this frame is the current frame of the animation. Since we can only
+    // advance on the main thread, we know nothing else will try to use it.
+    DrawTarget* drawTarget = aContext->GetDrawTarget();
+    bool temporary = !drawTarget->IsCaptureDT() &&
+                    drawTarget->GetBackendType() != BackendType::RECORDING;
+    RefPtr<SourceSurface> surf = GetSourceSurfaceInternal(temporary);
+    if (!surf) {
+      return false;
+    }
+
+    bool doTile = !imageRect.Contains(aRegion.Rect()) &&
+                  !(aImageFlags & imgIContainer::FLAG_CLAMP);
+
+    surfaceResult =
+      SurfaceForDrawing(doPartialDecode, doTile, region, surf);
+  }
 
   if (surfaceResult.IsValid()) {
     gfxUtils::DrawPixelSnapped(aContext, surfaceResult.mDrawable,
@@ -850,11 +947,11 @@ already_AddRefed<SourceSurface>
 imgFrame::GetSourceSurface()
 {
   MonitorAutoLock lock(mMonitor);
-  return GetSourceSurfaceInternal();
+  return GetSourceSurfaceInternal(/* aTemporary */ false);
 }
 
 already_AddRefed<SourceSurface>
-imgFrame::GetSourceSurfaceInternal()
+imgFrame::GetSourceSurfaceInternal(bool aTemporary)
 {
   mMonitor.AssertCurrentThreadOwns();
 
@@ -868,9 +965,19 @@ imgFrame::GetSourceSurfaceInternal()
   }
 
   if (mLockedSurface) {
+    // We don't need to create recycling wrapper for some callers because they
+    // promise to release the surface immediately after.
+    if (!aTemporary && mShouldRecycle) {
+      RefPtr<SourceSurface> surf =
+        new RecyclingSourceSurface(this, mLockedSurface);
+      return surf.forget();
+    }
+
     RefPtr<SourceSurface> surf(mLockedSurface);
     return surf.forget();
   }
+
+  MOZ_ASSERT(!mShouldRecycle, "Should recycle but no locked surface!");
 
   if (!mRawSurface) {
     return nullptr;
@@ -964,6 +1071,24 @@ imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   }
 
   aCallback(metadata);
+}
+
+RecyclingSourceSurface::RecyclingSourceSurface(imgFrame* aParent, DataSourceSurface* aSurface)
+  : mParent(aParent)
+  , mSurface(aSurface)
+  , mType(SurfaceType::DATA)
+{
+  mParent->mMonitor.AssertCurrentThreadOwns();
+  ++mParent->mRecycleLockCount;
+}
+
+RecyclingSourceSurface::~RecyclingSourceSurface()
+{
+  MonitorAutoLock lock(mParent->mMonitor);
+  MOZ_ASSERT(mParent->mRecycleLockCount > 0);
+  if (--mParent->mRecycleLockCount == 0) {
+    mParent->mMonitor.NotifyAll();
+  }
 }
 
 } // namespace image

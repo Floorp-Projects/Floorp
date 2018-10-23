@@ -1953,6 +1953,18 @@ BacktrackingAllocator::deadRange(LiveRange* range)
 }
 
 bool
+BacktrackingAllocator::moveAtEdge(LBlock* predecessor, LBlock* successor, LiveRange* from,
+                                  LiveRange* to, LDefinition::Type type)
+{
+    if (successor->mir()->numPredecessors() > 1) {
+        MOZ_ASSERT(predecessor->mir()->numSuccessors() == 1);
+        return moveAtExit(predecessor, from, to, type);
+    }
+
+    return moveAtEntry(successor, from, to, type);
+}
+
+bool
 BacktrackingAllocator::resolveControlFlow()
 {
     // Add moves to handle changing assignments for vregs over their lifetime.
@@ -2070,15 +2082,11 @@ BacktrackingAllocator::resolveControlFlow()
                 if (!alloc().ensureBallast()) {
                     return false;
                 }
-                if (mSuccessor->numPredecessors() > 1) {
-                    MOZ_ASSERT(predecessor->mir()->numSuccessors() == 1);
-                    if (!moveAtExit(predecessor, from, to, def->type())) {
-                        return false;
-                    }
-                } else {
-                    if (!moveAtEntry(successor, from, to, def->type())) {
-                        return false;
-                    }
+
+                // Note: we have to use moveAtEdge both here and below (for edge
+                // resolution) to avoid conflicting moves. See bug 1493900.
+                if (!moveAtEdge(predecessor, successor, from, to, def->type())) {
+                    return false;
                 }
             }
         }
@@ -2116,15 +2124,8 @@ BacktrackingAllocator::resolveControlFlow()
                         return false;
                     }
                     LiveRange* from = reg.rangeFor(exitOf(predecessor), true);
-                    if (successor->mir()->numPredecessors() > 1) {
-                        MOZ_ASSERT(predecessor->mir()->numSuccessors() == 1);
-                        if (!moveAtExit(predecessor, from, targetRange, reg.type())) {
-                            return false;
-                        }
-                    } else {
-                        if (!moveAtEntry(successor, from, targetRange, reg.type())) {
-                            return false;
-                        }
+                    if (!moveAtEdge(predecessor, successor, from, targetRange, reg.type())) {
+                        return false;
                     }
                 }
             }

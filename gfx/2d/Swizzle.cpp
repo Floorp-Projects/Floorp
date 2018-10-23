@@ -87,7 +87,7 @@ RGBBitShift(SurfaceFormat aFormat)
 #if MOZ_LITTLE_ENDIAN
   return 8 * RGBByteIndex(aFormat);
 #else
-  return 24 - 8 * RGBByteIndex(aFormat);
+  return 8 - 8 * RGBByteIndex(aFormat);
 #endif
 }
 

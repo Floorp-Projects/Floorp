@@ -57,10 +57,11 @@ public:
   nsresult InitForDecoder(const nsIntSize& aImageSize,
                           const nsIntRect& aRect,
                           SurfaceFormat aFormat,
-                          uint8_t aPaletteDepth = 0,
-                          bool aNonPremult = false,
-                          const Maybe<AnimationParams>& aAnimParams = Nothing(),
-                          bool aIsFullFrame = false);
+                          uint8_t aPaletteDepth,
+                          bool aNonPremult,
+                          const Maybe<AnimationParams>& aAnimParams,
+                          bool aIsFullFrame,
+                          bool aShouldRecycle);
 
   nsresult InitForAnimator(const nsIntSize& aSize,
                            SurfaceFormat aFormat)
@@ -74,9 +75,18 @@ public:
     // otherwise used for frames produced by Decoder, so it isn't relevant.
     return InitForDecoder(aSize, frameRect, aFormat, /* aPaletteDepth */ 0,
                           /* aNonPremult */ false, Some(animParams),
-                          /* aIsFullFrame */ false);
+                          /* aIsFullFrame */ false, /* aShouldRecycle */ false);
   }
 
+  /**
+   * Reinitialize this imgFrame with the new parameters, but otherwise retain
+   * the underlying buffer.
+   *
+   * This is appropriate for use with animated images, where the decoder was
+   * given an IDecoderFrameRecycler object which may yield a recycled imgFrame
+   * that was discarded to save memory.
+   */
+  nsresult InitForDecoderRecycle(const AnimationParams& aAnimParams);
 
   /**
    * Initialize this imgFrame with a new surface and draw the provided
@@ -201,6 +211,8 @@ public:
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
+  bool ShouldRecycle() const { return mShouldRecycle; }
+
   void SetOptimizable();
 
   void FinalizeSurface();
@@ -247,7 +259,14 @@ private: // methods
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
   void FinalizeSurfaceInternal();
-  already_AddRefed<SourceSurface> GetSourceSurfaceInternal();
+
+  /**
+   * @param aTemporary  If true, it will assume the caller does not require a
+   *                    wrapping RecycleSourceSurface to protect the underlying
+   *                    surface from recycling. The reference to the surface
+   *                    must be freed before releasing the main thread context.
+   */
+  already_AddRefed<SourceSurface> GetSourceSurfaceInternal(bool aTemporary);
 
   uint32_t PaletteDataLength() const
   {
@@ -265,6 +284,17 @@ private: // methods
     SurfaceWithFormat(gfxDrawable* aDrawable, SurfaceFormat aFormat)
       : mDrawable(aDrawable), mFormat(aFormat)
     { }
+    SurfaceWithFormat(SurfaceWithFormat&& aOther)
+      : mDrawable(std::move(aOther.mDrawable)), mFormat(aOther.mFormat)
+    { }
+    SurfaceWithFormat& operator=(SurfaceWithFormat&& aOther)
+    {
+      mDrawable = std::move(aOther.mDrawable);
+      mFormat = aOther.mFormat;
+      return *this;
+    }
+    SurfaceWithFormat& operator=(const SurfaceWithFormat& aOther) = delete;
+    SurfaceWithFormat(const SurfaceWithFormat& aOther) = delete;
     bool IsValid() { return !!mDrawable; }
   };
 
@@ -276,6 +306,7 @@ private: // methods
 private: // data
   friend class DrawableFrameRef;
   friend class RawAccessFrameRef;
+  friend class RecyclingSourceSurface;
   friend class UnlockImageDataRunnable;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -307,11 +338,15 @@ private: // data
   nsIntRect mDecoded;
 
   //! Number of RawAccessFrameRefs currently alive for this imgFrame.
-  int32_t mLockCount;
+  int16_t mLockCount;
+
+  //! Number of RecyclingSourceSurface's currently alive for this imgFrame.
+  int16_t mRecycleLockCount;
 
   bool mAborted;
   bool mFinished;
   bool mOptimizable;
+  bool mShouldRecycle;
 
 
   //////////////////////////////////////////////////////////////////////////////
