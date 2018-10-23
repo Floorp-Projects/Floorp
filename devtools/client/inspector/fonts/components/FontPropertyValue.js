@@ -51,7 +51,7 @@ class FontPropertyValue extends PureComponent {
       nameLabel: false,
       step: 1,
       unit: null,
-      unitOptions: []
+      unitOptions: [],
     };
   }
 
@@ -275,7 +275,7 @@ class FontPropertyValue extends PureComponent {
     this.setState((prevState) => {
       return {
         ...prevState,
-        value: null
+        value: null,
       };
     });
   }
@@ -330,7 +330,7 @@ class FontPropertyValue extends PureComponent {
     this.setState((prevState) => {
       return {
         ...prevState,
-        interactive: isInteractive
+        interactive: isInteractive,
       };
     });
   }
@@ -355,7 +355,7 @@ class FontPropertyValue extends PureComponent {
     this.setState((prevState) => {
       return {
         ...prevState,
-        value
+        value,
       };
     });
   }
@@ -409,7 +409,7 @@ class FontPropertyValue extends PureComponent {
       dom.span(
         {
           className: "font-control-label-detail",
-          id: `detail-${name}`
+          id: `detail-${name}`,
         },
         this.getPropLabel("name")
       )
@@ -480,7 +480,7 @@ class FontPropertyValue extends PureComponent {
       ),
       dom.div(
         {
-          className: "font-control-input"
+          className: "font-control-input",
         },
         dom.div(
           {

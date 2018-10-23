@@ -12,7 +12,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 class ChangesApp extends PureComponent {
   static get propTypes() {
     return {
-      changes: PropTypes.object.isRequired
+      changes: PropTypes.object.isRequired,
     };
   }
 
@@ -68,7 +68,7 @@ class ChangesApp extends PureComponent {
     return dom.div(
       {
         className: "theme-sidebar inspector-tabpanel",
-        id: "sidebar-panel-changes"
+        id: "sidebar-panel-changes",
       },
       this.renderDiff(this.props.changes.diff)
     );

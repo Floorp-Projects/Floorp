@@ -647,8 +647,9 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // the choice to reuse |wobj| or not.
     RootedObject tobj(cx, newTarget);
     AutoRealmUnchecked ar(cx, wrealm);
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!wcompartment->rewrap(cx, &tobj, wobj)) {
-        MOZ_CRASH();
+        oomUnsafe.crash("js::RemapWrapper");
     }
 
     // If wrap() reused |wobj|, it will have overwritten it and returned with
@@ -659,9 +660,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
         // Now, because we need to maintain object identity, we do a brain
         // transplant on the old object so that it contains the contents of the
         // new one.
-        if (!JSObject::swap(cx, wobj, tobj)) {
-            MOZ_CRASH();
-        }
+        JSObject::swap(cx, wobj, tobj);
     }
 
     // Before swapping, this wrapper came out of wrap(), which enforces the
@@ -672,7 +671,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // wrapper, which has now been updated (via reuse or swap).
     MOZ_ASSERT(wobj->is<WrapperObject>());
     if (!wcompartment->putWrapper(cx, CrossCompartmentKey(newTarget), ObjectValue(*wobj))) {
-        MOZ_CRASH();
+        oomUnsafe.crash("js::RemapWrapper");
     }
 }
 

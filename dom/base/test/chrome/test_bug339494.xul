@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=339494">Mozilla Bug 339494</a>
@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
 /** Test for Bug 339494 **/
 
   var d = document.getElementById("d");
-  
+
   d.setAttribute("hhh", "testvalue");
 
   document.addEventListener("DOMAttrModified", removeItAgain, false);
@@ -35,16 +35,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
 
   function removeItAgain()
   {
-    ok(!d.hasAttribute("hhh"), "Value check 1",
-       "There should be no value");
+    ok(!d.hasAttribute("hhh"), "Value check 1. There should be no value");
     isnot(d.getAttribute("hhh"), "testvalue", "Value check 2");
     document.removeEventListener("DOMAttrModified", removeItAgain, false);
     d.removeAttribute("hhh");
-    ok(true, "Reachability", "We shouldn't have crashed");
+    ok(true, "Reachability. We shouldn't have crashed");
   }
-  
+
   var s = document.getElementById("s");
-  
+
   s.setAttribute("ggg", "testvalue");
 
   document.addEventListener("DOMAttrModified", compareVal, false);
@@ -53,8 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
 
   function compareVal()
   {
-    ok(s.hasAttribute("ggg"), "Value check 3",
-       "There should be a value");
+    ok(s.hasAttribute("ggg"), "Value check 3. There should be a value");
     isnot(s.getAttribute("ggg"), "testvalue", "Value check 4");
     is(s.getAttribute("ggg"), "othervalue", "Value check 5");
   }

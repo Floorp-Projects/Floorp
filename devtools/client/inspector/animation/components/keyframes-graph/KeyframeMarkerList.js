@@ -22,7 +22,7 @@ class KeyframeMarkerList extends PureComponent {
 
     return dom.ul(
       {
-        className: "keyframe-marker-list"
+        className: "keyframe-marker-list",
       },
       keyframes.map(keyframe => KeyframeMarkerItem({ keyframe }))
     );

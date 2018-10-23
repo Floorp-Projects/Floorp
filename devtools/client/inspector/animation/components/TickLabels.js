@@ -23,7 +23,7 @@ class TickLabels extends PureComponent {
 
     return dom.div(
       {
-        className: "tick-labels"
+        className: "tick-labels",
       },
       ticks.map(tick =>
         dom.div(
@@ -31,7 +31,7 @@ class TickLabels extends PureComponent {
             className: "tick-label",
             style: {
               marginInlineStart: `${ tick.position }%`,
-              maxWidth: `${ tick.width }px`
+              maxWidth: `${ tick.width }px`,
             },
           },
           tick.label

@@ -1799,7 +1799,7 @@ ProxyObject::initExternalValueArrayAfterSwap(JSContext* cx, const AutoValueVecto
 }
 
 /* Use this method with extreme caution. It trades the guts of two objects. */
-bool
+void
 JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
 {
     // Ensure swap doesn't cause a finalizer to not be run.
@@ -1976,7 +1976,6 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
     }
 
     NotifyGCPostSwap(a, b, r);
-    return true;
 }
 
 static void

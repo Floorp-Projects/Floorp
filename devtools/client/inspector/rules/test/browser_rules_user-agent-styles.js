@@ -16,45 +16,45 @@ const TEST_DATA = [
   {
     selector: "blockquote",
     numUserRules: 1,
-    numUARules: 0
+    numUARules: 0,
   },
   {
     selector: "pre",
     numUserRules: 1,
-    numUARules: 0
+    numUARules: 0,
   },
   {
     selector: "input[type=range]",
     numUserRules: 1,
-    numUARules: 0
+    numUARules: 0,
   },
   {
     selector: "input[type=number]",
     numUserRules: 1,
-    numUARules: 0
+    numUARules: 0,
   },
   {
     selector: "input[type=color]",
     numUserRules: 1,
-    numUARules: 0
+    numUARules: 0,
   },
   {
     selector: "input[type=text]",
     numUserRules: 1,
-    numUARules: 0
+    numUARules: 0,
   },
   {
     selector: "progress",
     numUserRules: 1,
-    numUARules: 0
+    numUARules: 0,
   },
   // Note that some tests below assume that the "a" selector is the
   // last test in TEST_DATA.
   {
     selector: "a",
     numUserRules: 3,
-    numUARules: 0
-  }
+    numUARules: 0,
+  },
 ];
 
 add_task(async function() {
@@ -156,7 +156,7 @@ async function compareAppliedStylesWithUI(inspector, view, filter) {
     {
       inherited: true,
       matchedSelectors: true,
-      filter: filter
+      filter: filter,
     }
   );
 

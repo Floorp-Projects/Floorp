@@ -50,7 +50,7 @@ add_task(async function() {
       callback: () => {
         inspector.reflowTracker.untrackReflows(listener, listener.callback);
         resolve();
-      }
+      },
     };
     inspector.reflowTracker.trackReflows(listener, listener.callback);
   });

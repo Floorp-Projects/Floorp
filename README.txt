@@ -18,11 +18,12 @@ on https://developer.mozilla.org, you can try asking your question in a
 mozilla.* Usenet group, or on IRC at irc.mozilla.org. [The Mozilla news groups
 are accessible on Google Groups, or news.mozilla.org with a NNTP reader.]
 
-You can download nightly development builds from the Mozilla FTP server.
-Keep in mind that nightly builds, which are used by Mozilla developers for
-testing, may be buggy. Firefox nightlies, for example, can be found at:
+Nightly development builds can be downloaded from:
 
     https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/
             - or -
     https://www.mozilla.org/firefox/channel/desktop/#nightly
+
+Keep in mind that nightly builds, which are used by Mozilla developers for
+testing, may be buggy.
 

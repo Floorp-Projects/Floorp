@@ -15,8 +15,8 @@ const TELEMETRY_DATA = [
     object: "layoutview",
     value: null,
     extra: {
-      time_open: ""
-    }
+      time_open: "",
+    },
   },
   {
     timestamp: null,
@@ -25,8 +25,8 @@ const TELEMETRY_DATA = [
     object: "fontinspector",
     value: null,
     extra: {
-      time_open: ""
-    }
+      time_open: "",
+    },
   },
   {
     timestamp: null,
@@ -35,9 +35,9 @@ const TELEMETRY_DATA = [
     object: "computedview",
     value: null,
     extra: {
-      time_open: ""
-    }
-  }
+      time_open: "",
+    },
+  },
 ];
 
 add_task(async function() {

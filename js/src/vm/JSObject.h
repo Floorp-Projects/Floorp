@@ -489,7 +489,7 @@ class JSObject : public js::gc::Cell
                                     js::HandleValue v, js::HandleValue receiver,
                                     JS::ObjectOpResult& result);
 
-    static bool swap(JSContext* cx, JS::HandleObject a, JS::HandleObject b);
+    static void swap(JSContext* cx, JS::HandleObject a, JS::HandleObject b);
 
   private:
     void fixDictionaryShapeAfterSwap();

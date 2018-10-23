@@ -117,9 +117,9 @@ function testResponses() {
 
 function testBlob() {
   return fetch(path + '/file_XHR_binary2.bin').then((r) => {
-    ok(r.status, 200, "status should match");
+    is(r.status, 200, "status should match");
     return r.blob().then((b) => {
-      ok(b.size, 65536, "blob should have size 65536");
+      is(b.size, 65536, "blob should have size 65536");
       return readAsArrayBuffer(b).then(function(ab) {
         var u8 = new Uint8Array(ab);
         for (var i = 0; i < 65536; i++) {
@@ -156,7 +156,7 @@ function testFormDataSend() {
                         });
 
   return fetch(req).then((r) => {
-    ok(r.status, 200, "status should match");
+    is(r.status, 200, "status should match");
     return r.json().then((response) => {
       for (var entry of response) {
         if (entry.headers['Content-Disposition'] != 'form-data; name="string"') {

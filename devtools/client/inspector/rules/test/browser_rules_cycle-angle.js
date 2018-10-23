@@ -35,16 +35,16 @@ async function checkAngleCycling(container, view) {
 
   const tests = [{
     value: "360deg",
-    comment: "Angle displayed as a degree value."
+    comment: "Angle displayed as a degree value.",
   }, {
     value: `${Math.round(Math.PI * 2 * 10000) / 10000}rad`,
-    comment: "Angle displayed as a radian value."
+    comment: "Angle displayed as a radian value.",
   }, {
     value: "400grad",
-    comment: "Angle displayed as a gradian value."
+    comment: "Angle displayed as a gradian value.",
   }, {
     value: "1turn",
-    comment: "Angle displayed as a turn value again."
+    comment: "Angle displayed as a turn value again.",
   }];
 
   for (const test of tests) {
@@ -84,7 +84,7 @@ async function checkSwatchShiftClick(container, win, expectedValue, comment) {
   const onUnitChange = swatch.once("unit-change");
   EventUtils.synthesizeMouseAtCenter(swatch, {
     type: "mousedown",
-    shiftKey: true
+    shiftKey: true,
   }, win);
   await onUnitChange;
   is(valueNode.textContent, expectedValue, comment);

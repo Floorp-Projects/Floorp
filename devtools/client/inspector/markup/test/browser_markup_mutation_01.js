@@ -27,7 +27,7 @@ const TEST_DATA = [
           && attr.dataset.value === "newattrval"
           && attr.dataset.attr === "newattr";
       }), "newattr attribute found");
-    }
+    },
   },
   {
     desc: "Removing an attribute",
@@ -39,7 +39,7 @@ const TEST_DATA = [
       ok(![...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrval\"";
       }), "newattr attribute removed");
-    }
+    },
   },
   {
     desc: "Re-adding an attribute",
@@ -53,7 +53,7 @@ const TEST_DATA = [
           && attr.dataset.value === "newattrval"
           && attr.dataset.attr === "newattr";
       }), "newattr attribute found");
-    }
+    },
   },
   {
     desc: "Changing an attribute",
@@ -67,7 +67,7 @@ const TEST_DATA = [
           && attr.dataset.value === "newattrchanged"
           && attr.dataset.attr === "newattr";
       }), "newattr attribute found");
-    }
+    },
   },
   {
     desc: "Adding another attribute does not rerender unchanged attributes",
@@ -97,7 +97,7 @@ const TEST_DATA = [
       const newAttrContainer = editor.attrList.querySelector("[data-attr=newattr]");
       ok(newAttrContainer, "attribute-container for 'newattr' found");
       ok(newAttrContainer.beforeMutationFlag, "attribute-container same as earlier");
-    }
+    },
   },
   {
     desc: "Adding ::after element",
@@ -112,7 +112,7 @@ const TEST_DATA = [
       const {children} = await getContainerForSelector("#node1", inspector);
       is(children.childNodes.length, 2,
         "Node1 now has 2 children (text child and ::after");
-    }
+    },
   },
   {
     desc: "Removing ::after element",
@@ -126,7 +126,7 @@ const TEST_DATA = [
     check: async function(inspector) {
       const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
-    }
+    },
   },
   {
     desc: "Updating the text-content",
@@ -140,7 +140,7 @@ const TEST_DATA = [
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
       is(container.editor.elt.querySelector(".text").textContent.trim(),
          "newtext", "Single text child editor updated.");
-    }
+    },
   },
   {
     desc: "Adding a second text child",
@@ -217,7 +217,7 @@ const TEST_DATA = [
 
       is(container.children.querySelector(".text").textContent.trim(), "foo",
         "The span's textcontent is correct");
-    }
+    },
   },
   {
     desc: "Removing child nodes",
@@ -232,7 +232,7 @@ const TEST_DATA = [
     check: async function(inspector) {
       const {children} = await getContainerForSelector("#node4", inspector);
       is(children.innerHTML, "", "Children have been removed");
-    }
+    },
   },
   {
     desc: "Appending a child to a different parent",
@@ -252,7 +252,7 @@ const TEST_DATA = [
       const openTags = container.children.querySelectorAll(".open .tag");
       is(openTags.length, 3, "There are now 3 tags in node2");
       is(openTags[2].textContent.trim(), "p", "The third tag is node17");
-    }
+    },
   },
   {
     desc: "Swapping a parent and child element, putting them in the same tree",
@@ -298,8 +298,8 @@ const TEST_DATA = [
       is(node18.querySelector(".open .attreditor .attr-value")
                .textContent.trim(),
          "node18", "Node20's second child is indeed node18");
-    }
-  }
+    },
+  },
 ];
 
 add_task(async function() {

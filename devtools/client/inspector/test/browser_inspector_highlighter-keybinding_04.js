@@ -19,7 +19,7 @@ add_task(async function() {
   testActor.synthesizeMouse({
     options: {type: "mousemove"},
     center: true,
-    selector: "div"
+    selector: "div",
   });
   await onHover;
 
@@ -27,7 +27,7 @@ add_task(async function() {
   const onPickerStopped = toolbox.once("picker-stopped");
   testActor.synthesizeKey({
     key: "VK_ESCAPE",
-    options: {}
+    options: {},
   });
   await onPickerStopped;
 

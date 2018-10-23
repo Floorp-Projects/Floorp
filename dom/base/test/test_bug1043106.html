@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1043106
 var storage;
 
 window.addEventListener("storage", function (event) {
-  ok(event.storageArea, storage, "The storageArea is correct");
+  is(event.storageArea, storage, "The storageArea is correct");
   storage.removeItem("a");
   runTests();
 });

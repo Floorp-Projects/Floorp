@@ -95,7 +95,7 @@ function runTests() {
           type: "evaluateJS",
           text: "var a = 42; a",
         }, function({result}) {
-          ok(result, 42, "console.eval worked");
+          is(result, 42, "console.eval worked");
 
           getProcessAgain(actor, content.id);
         });

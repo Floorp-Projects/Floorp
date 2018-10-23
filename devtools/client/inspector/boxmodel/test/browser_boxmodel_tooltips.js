@@ -28,46 +28,46 @@ const VALUES_TEST_DATA = [{
   values: [{
     name: "margin-top",
     ruleSelector: "#div1",
-    styleSheetLocation: "inline:1"
+    styleSheetLocation: "inline:1",
   }, {
     name: "margin-right",
     ruleSelector: "#div1",
-    styleSheetLocation: "inline:1"
+    styleSheetLocation: "inline:1",
   }, {
     name: "margin-bottom",
     ruleSelector: "#div1",
-    styleSheetLocation: "inline:1"
+    styleSheetLocation: "inline:1",
   }, {
     name: "margin-left",
     ruleSelector: "#div1",
-    styleSheetLocation: "inline:1"
-  }]
+    styleSheetLocation: "inline:1",
+  }],
 }, {
   selector: "#div2",
   values: [{
     name: "border-bottom-width",
     ruleSelector: "#div2",
-    styleSheetLocation: "inline:2"
-  }]
+    styleSheetLocation: "inline:2",
+  }],
 }, {
   selector: "#div3",
   values: [{
     name: "padding-top",
     ruleSelector: "html, body, #div3",
-    styleSheetLocation: "inline:3"
+    styleSheetLocation: "inline:3",
   }, {
     name: "padding-right",
     ruleSelector: "html, body, #div3",
-    styleSheetLocation: "inline:3"
+    styleSheetLocation: "inline:3",
   }, {
     name: "padding-bottom",
     ruleSelector: "html, body, #div3",
-    styleSheetLocation: "inline:3"
+    styleSheetLocation: "inline:3",
   }, {
     name: "padding-left",
     ruleSelector: "html, body, #div3",
-    styleSheetLocation: "inline:3"
-  }]
+    styleSheetLocation: "inline:3",
+  }],
 }];
 
 add_task(async function() {

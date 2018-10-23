@@ -12,7 +12,7 @@ add_task(async function() {
   const {inspector, testActor} = await openInspectorForURL(TEST_URI);
   const testData = {
     selector: "#top",
-    dims: "500" + " \u00D7 " + "100"
+    dims: "500" + " \u00D7 " + "100",
   };
 
   await testInfobar(testData, inspector, testActor);

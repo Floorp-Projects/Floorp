@@ -138,12 +138,11 @@ add_task(async function() {
     BrowserTestUtils.removeTab(tab);
 
     // Now let's open a window with toolbars hidden
-    let winPromise = BrowserTestUtils.waitForNewWindow();
+    let winPromise = BrowserTestUtils.waitForNewWindow({url: TARGET_PAGE});
     await BrowserTestUtils.synthesizeMouseAtCenter("#winOpenNonDefault", {}, browser);
     let popupWindow = await winPromise;
 
     let popupBrowser = popupWindow.gBrowser.selectedBrowser;
-    await BrowserTestUtils.browserLoaded(popupBrowser);
 
     // Test toolbars visibility
     let popupToolbars = await getToolbarsFromBrowserContent(popupBrowser);
@@ -200,7 +199,7 @@ add_task(async function() {
  */
 add_task(async function() {
   // First open a default window from this chrome context
-  let defaultWindowPromise = BrowserTestUtils.waitForNewWindow();
+  let defaultWindowPromise = BrowserTestUtils.waitForNewWindow({url: TARGET_PAGE});
   window.open(TARGET_PAGE, "_blank");
   let defaultWindow = await defaultWindowPromise;
 
@@ -210,7 +209,7 @@ add_task(async function() {
 
   // Now lets open a window with toolbars hidden from this chrome context
   let features = "location=no, personalbar=no, toolbar=no, scrollbars=no, menubar=no, status=no";
-  let popupWindowPromise = BrowserTestUtils.waitForNewWindow();
+  let popupWindowPromise = BrowserTestUtils.waitForNewWindow({url: TARGET_PAGE});
   window.open(TARGET_PAGE, "_blank", features);
   let popupWindow = await popupWindowPromise;
 

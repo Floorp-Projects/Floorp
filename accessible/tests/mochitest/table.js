@@ -497,7 +497,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg) {
     let rowIdx = acc.getRowIndexAt(selCells[i]);
     var expectedSelCellAccessible = acc.getCellAt(rowIdx, colIdx);
 
-    ok(actualSelCellAccessible, expectedSelCellAccessible,
+    is(actualSelCellAccessible, expectedSelCellAccessible,
        msg + "getSelectedCells: Cell at index " + selCells[i] +
        " should be selected.");
 

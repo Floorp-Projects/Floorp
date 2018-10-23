@@ -171,8 +171,8 @@ function* test(testDriver) {
   utils.advanceTimeAndRefresh(16);
   utils.advanceTimeAndRefresh(16);
   yield flushApzRepaints(testDriver);
-  ok(elm.scrollTop > 0, "APZ animation in progress", "scrollTop is now " + elm.scrollTop);
-  ok(elm.scrollTop < 200, "APZ animation not yet completed", "scrollTop is now " + elm.scrollTop);
+  ok(elm.scrollTop > 0, "APZ animation in progress, scrollTop is now " + elm.scrollTop);
+  ok(elm.scrollTop < 200, "APZ animation not yet completed, scrollTop is now " + elm.scrollTop);
 
   var frameReconstructionTriggered = 0;
   // Register the listener that triggers the frame reconstruction
@@ -191,8 +191,8 @@ function* test(testDriver) {
   utils.advanceTimeAndRefresh(16);
   utils.advanceTimeAndRefresh(16);
   yield flushApzRepaints(testDriver);
-  ok(elm.scrollTop < 200, "APZ animation not yet completed", "scrollTop is now " + elm.scrollTop);
-  ok(frameReconstructionTriggered > 0, "Frame reconstruction triggered", "reconstruction triggered " + frameReconstructionTriggered + " times");
+  ok(elm.scrollTop < 200, "APZ animation not yet completed, scrollTop is now " + elm.scrollTop);
+  ok(frameReconstructionTriggered > 0, "Frame reconstruction triggered, reconstruction triggered " + frameReconstructionTriggered + " times");
 
   // and now run to completion
   for (var i = 0; i < 100; i++) {

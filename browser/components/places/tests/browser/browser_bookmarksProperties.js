@@ -142,7 +142,7 @@ gTests.push({
   async cleanup() {
     // Check tags have not changed.
     var tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL));
-    Assert.ok(tags[0], "testTag", "Tag on node has not changed");
+    Assert.equal(tags[0], "testTag", "Tag on node has not changed");
 
     // Cleanup.
     PlacesUtils.tagging.untagURI(Services.io.newURI(TEST_URL), ["testTag"]);

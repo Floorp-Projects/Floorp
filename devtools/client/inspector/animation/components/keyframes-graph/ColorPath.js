@@ -85,7 +85,7 @@ class ColorPath extends ComputedStylePath {
 
       const g = dom.g(
         {
-          className: "hint"
+          className: "hint",
         },
         dom.title({}, startKeyframe.easing),
         dom.rect(

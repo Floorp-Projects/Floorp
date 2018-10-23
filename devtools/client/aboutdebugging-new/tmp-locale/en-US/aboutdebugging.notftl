@@ -195,3 +195,11 @@ about-debugging-runtime-info = { $name } ({ $version })
 # { $version } is version such as "64.0a1"
 # { $deviceName } is model name of device
 about-debugging-runtime-info-with-model = { $name } on { $deviceName } ({ $version })
+
+# Text of the connection prompt button displayed in Runtime pages, when the preference
+# "devtools.debugger.prompt-connection" is false on the target runtime.
+about-debugging-connection-prompt-enable-button = Enable connection prompt
+
+# Text of the connection prompt button displayed in Runtime pages, when the preference
+# "devtools.debugger.prompt-connection" is true on the target runtime.
+about-debugging-connection-prompt-disable-button = Disable connection prompt

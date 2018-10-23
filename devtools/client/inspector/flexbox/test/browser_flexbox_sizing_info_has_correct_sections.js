@@ -12,16 +12,16 @@ const TEST_URI = URL_ROOT + "doc_flexbox_simple.html";
 
 const TEST_DATA = [{
   selector: ".shrinking .item",
-  expectedSections: ["Base Size", "Flexibility", "Final Size"]
+  expectedSections: ["Base Size", "Flexibility", "Final Size"],
 }, {
   selector: ".shrinking.is-clamped .item",
-  expectedSections: ["Base Size", "Flexibility", "Minimum Size", "Final Size"]
+  expectedSections: ["Base Size", "Flexibility", "Minimum Size", "Final Size"],
 }, {
   selector: ".growing .item",
-  expectedSections: ["Base Size", "Flexibility", "Final Size"]
+  expectedSections: ["Base Size", "Flexibility", "Final Size"],
 }, {
   selector: ".growing.is-clamped .item",
-  expectedSections: ["Base Size", "Flexibility", "Maximum Size", "Final Size"]
+  expectedSections: ["Base Size", "Flexibility", "Maximum Size", "Final Size"],
 }];
 
 add_task(async function() {

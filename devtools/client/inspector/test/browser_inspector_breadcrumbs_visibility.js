@@ -33,7 +33,7 @@ const NODES = [
   { action: "end", title: NODE_THREE },
   { action: "end", title: NODE_FOUR },
   { action: "end", title: NODE_FIVE },
-  { action: "end", title: NODE_SIX }
+  { action: "end", title: NODE_SIX },
 ];
 
 add_task(async function() {

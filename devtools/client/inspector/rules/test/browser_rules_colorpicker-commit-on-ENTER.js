@@ -35,7 +35,7 @@ async function testPressingEnterCommitsChanges(swatch, ruleView) {
   await simulateColorPickerChange(ruleView, cPicker, [0, 255, 0, .5], {
     selector: "body",
     name: "border-left-color",
-    value: "rgba(0, 255, 0, 0.5)"
+    value: "rgba(0, 255, 0, 0.5)",
   });
 
   is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",

@@ -203,7 +203,7 @@ var clickOnInspectMenuItem = async function(testActor, selector) {
   await testActor.synthesizeMouse({
     selector: selector,
     center: true,
-    options: {type: "contextmenu", button: 2}
+    options: {type: "contextmenu", button: 2},
   });
 
   await contextOpened;
@@ -474,7 +474,7 @@ const getHighlighterHelperFor = (type) => async function({inspector, testActor})
         getComputedStyle: async function(options = {}) {
           return inspector.pageStyle.getComputed(
             highlightedNode, options);
-        }
+        },
       };
     },
 
@@ -551,7 +551,7 @@ const getHighlighterHelperFor = (type) => async function({inspector, testActor})
           prevY = y;
           await testActor.synthesizeMouse({
             selector, x, y, options: {type: "mouse" + name}});
-        }
+        },
     }),
 
     reflow: async function() {
@@ -561,7 +561,7 @@ const getHighlighterHelperFor = (type) => async function({inspector, testActor})
     finalize: async function() {
       highlightedNode = null;
       await highlighter.finalize();
-    }
+    },
   };
 };
 
@@ -777,7 +777,7 @@ async function assertTooltipHiddenOnMouseOut(tooltip, target) {
   // The tooltip actually relies on mousemove events to check if it sould be hidden.
   const mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
     bubbles: true,
-    relatedTarget: target
+    relatedTarget: target,
   });
   target.parentNode.dispatchEvent(mouseEvent);
 

@@ -27,13 +27,17 @@ add_task(async function() {
   };
 
   PerformanceController._setMultiprocessAttributes();
-  ok($("#performance-view").getAttribute("e10s"), "disabled",
+  is($("#performance-view").getAttribute("e10s"), "disabled",
     "When e10s is disabled, container has [e10s=disabled].");
 
   enabled = true;
 
   PerformanceController._setMultiprocessAttributes();
-  ok($("#performance-view").getAttribute("e10s"), "",
+
+  // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500913
+  // This cannot work with the current implementation, _setMultiprocessAttributes is not
+  // removing existing attributes.
+  todo_is($("#performance-view").getAttribute("e10s"), "",
     "When e10s is enabled, there should be no e10s attribute.");
 
   await teardownToolboxAndRemoveTab(panel);

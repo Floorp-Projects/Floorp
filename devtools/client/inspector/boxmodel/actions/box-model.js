@@ -43,6 +43,6 @@ module.exports = {
       type: UPDATE_OFFSET_PARENT,
       offsetParent,
     };
-  }
+  },
 
 };

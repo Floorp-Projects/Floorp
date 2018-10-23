@@ -8,12 +8,8 @@ var EXPORTED_SYMBOLS = ["ContentRestore"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "DocShellCapabilities",
-  "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 ChromeUtils.defineModuleGetter(this, "FormData",
   "resource://gre/modules/FormData.jsm");
-ChromeUtils.defineModuleGetter(this, "ScrollPosition",
-  "resource://gre/modules/ScrollPosition.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionHistory",
   "resource://gre/modules/sessionstore/SessionHistory.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionStorage",
@@ -23,30 +19,6 @@ ChromeUtils.defineModuleGetter(this, "Utils",
 
 const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
               .getService(Ci.nsISessionStoreUtils);
-
-/**
- * Restores frame tree |data|, starting at the given root |frame|. As the
- * function recurses into descendant frames it will call cb(frame, data) for
- * each frame it encounters, starting with the given root.
- */
-function restoreFrameTreeData(frame, data, cb) {
-  // Restore data for the root frame.
-  // The callback can abort by returning false.
-  if (cb(frame, data) === false) {
-    return;
-  }
-
-  if (!data.hasOwnProperty("children")) {
-    return;
-  }
-
-  // Recurse into child frames.
-  ssu.forEachNonDynamicChildFrame(frame, (subframe, index) => {
-    if (data.children[index]) {
-      restoreFrameTreeData(subframe, data.children[index], cb);
-    }
-  });
-}
 
 /**
  * This module implements the content side of session restoration. The chrome
@@ -168,8 +140,7 @@ ContentRestoreInternal.prototype = {
 
     // Make sure to reset the capabilities and attributes in case this tab gets
     // reused.
-    let disallow = new Set(tabData.disallow && tabData.disallow.split(","));
-    DocShellCapabilities.restore(this.docShell, disallow);
+    ssu.restoreDocShellCapabilities(this.docShell, tabData.disallow);
 
     if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
       SessionStorage.restore(this.docShell, tabData.storage);
@@ -317,7 +288,7 @@ ContentRestoreInternal.prototype = {
     let window = this.docShell.domWindow;
 
     // Restore form data.
-    restoreFrameTreeData(window, formdata, (frame, data) => {
+    Utils.restoreFrameTreeData(window, formdata, (frame, data) => {
       // restore() will return false, and thus abort restoration for the
       // current |frame| and its descendants, if |data.url| is given but
       // doesn't match the loaded document's URL.
@@ -325,9 +296,9 @@ ContentRestoreInternal.prototype = {
     });
 
     // Restore scroll data.
-    restoreFrameTreeData(window, scrollPositions, (frame, data) => {
+    Utils.restoreFrameTreeData(window, scrollPositions, (frame, data) => {
       if (data.scroll) {
-        ScrollPosition.restore(frame, data.scroll);
+        ssu.restoreScrollPosition(frame, data.scroll);
       }
     });
   },

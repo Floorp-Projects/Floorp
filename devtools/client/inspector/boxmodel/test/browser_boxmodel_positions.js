@@ -26,19 +26,19 @@ const TEST_URI = `
 const res1 = [
   {
     selector: ".boxmodel-position.boxmodel-top > span",
-    value: "auto"
+    value: "auto",
   },
   {
     selector: ".boxmodel-position.boxmodel-right > span",
-    value: "auto"
+    value: "auto",
   },
   {
     selector: ".boxmodel-position.boxmodel-bottom > span",
-    value: "auto"
+    value: "auto",
   },
   {
     selector: ".boxmodel-position.boxmodel-left > span",
-    value: 0
+    value: 0,
   },
 ];
 

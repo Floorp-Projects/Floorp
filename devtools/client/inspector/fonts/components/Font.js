@@ -45,7 +45,7 @@ class Font extends PureComponent {
 
   onFontFaceRuleToggle(event) {
     this.setState({
-      isFontFaceRuleExpanded: !this.state.isFontFaceRuleExpanded
+      isFontFaceRuleExpanded: !this.state.isFontFaceRuleExpanded,
     });
     event.stopPropagation();
   }

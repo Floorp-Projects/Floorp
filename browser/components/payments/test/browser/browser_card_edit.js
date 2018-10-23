@@ -77,7 +77,7 @@ async function add_link(aOptions = {}) {
          "Only 2 child options should exist by default");
       is(billingAddressSelect.children[0].value, "",
          "The first option should be the blank/empty option");
-      ok(billingAddressSelect.children[1].value, "",
+      ok(billingAddressSelect.children[1].value,
          "The 2nd option is the prefilled address and should be truthy");
     }, aOptions);
 

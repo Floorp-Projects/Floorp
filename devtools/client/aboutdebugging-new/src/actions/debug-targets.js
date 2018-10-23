@@ -36,13 +36,13 @@ const {
 function inspectDebugTarget(type, id) {
   return async (_, getState) => {
     const runtime = getCurrentRuntime(getState().runtimes);
-    const { connection, type: runtimeType } = runtime;
+    const { runtimeDetails, type: runtimeType } = runtime;
 
     switch (type) {
       case DEBUG_TARGETS.TAB: {
         // Open tab debugger in new window.
         if (runtimeType === RUNTIMES.NETWORK || runtimeType === RUNTIMES.USB) {
-          const { host, port } = connection.transportDetails;
+          const { host, port } = runtimeDetails.transportDetails;
           window.open(`about:devtools-toolbox?type=tab&id=${id}` +
                       `&host=${host}&port=${port}`);
         } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
@@ -52,7 +52,7 @@ function inspectDebugTarget(type, id) {
       }
       case DEBUG_TARGETS.EXTENSION: {
         if (runtimeType === RUNTIMES.NETWORK) {
-          await debugRemoteAddon(id, connection.client);
+          await debugRemoteAddon(id, runtimeDetails.client);
         } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
           debugLocalAddon(id);
         }
@@ -60,7 +60,7 @@ function inspectDebugTarget(type, id) {
       }
       case DEBUG_TARGETS.WORKER: {
         // Open worker toolbox in new window.
-        gDevToolsBrowser.openWorkerToolbox(connection.client, id);
+        gDevToolsBrowser.openWorkerToolbox(runtimeDetails.client, id);
         break;
       }
 

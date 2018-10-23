@@ -31,7 +31,7 @@ const TEST_DATA = [{
     await walker.setInnerHTML(selection.nodeFront, "<b>test</b>");
   },
   shouldRefresh: false,
-  output: ["html", "body", "article#i1", "div#i11", "div#i111", "div#i1111"]
+  output: ["html", "body", "article#i1", "div#i11", "div#i111", "div#i1111"],
 }, {
   desc: "Updating an ID to an displayed element should refresh",
   setup: function() {},
@@ -39,12 +39,12 @@ const TEST_DATA = [{
     const node = await walker.querySelector(walker.rootNode, "#i1");
     await node.modifyAttributes([{
       attributeName: "id",
-      newValue: "i1-changed"
+      newValue: "i1-changed",
     }]);
   },
   shouldRefresh: true,
   output: ["html", "body", "article#i1-changed", "div#i11", "div#i111",
-           "div#i1111"]
+           "div#i1111"],
 }, {
   desc: "Updating an class to a displayed element should refresh",
   setup: function() {},
@@ -52,12 +52,12 @@ const TEST_DATA = [{
     const node = await walker.querySelector(walker.rootNode, "body");
     await node.modifyAttributes([{
       attributeName: "class",
-      newValue: "test-class"
+      newValue: "test-class",
     }]);
   },
   shouldRefresh: true,
   output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"]
+           "div#i111", "div#i1111"],
 }, {
   desc: "Updating a non id/class attribute to a displayed element should not " +
         "refresh",
@@ -66,12 +66,12 @@ const TEST_DATA = [{
     const node = await walker.querySelector(walker.rootNode, "#i11");
     await node.modifyAttributes([{
       attributeName: "name",
-      newValue: "value"
+      newValue: "value",
     }]);
   },
   shouldRefresh: false,
   output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"]
+           "div#i111", "div#i1111"],
 }, {
   desc: "Moving a child in an element that's not displayed should not refresh",
   setup: function() {},
@@ -83,7 +83,7 @@ const TEST_DATA = [{
   },
   shouldRefresh: false,
   output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"]
+           "div#i111", "div#i1111"],
 }, {
   desc: "Moving an undisplayed child in a displayed element should not refresh",
   setup: function() {},
@@ -95,7 +95,7 @@ const TEST_DATA = [{
   },
   shouldRefresh: false,
   output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"]
+           "div#i111", "div#i1111"],
 }, {
   desc: "Updating attributes on an element that's not displayed should not " +
         "refresh",
@@ -104,15 +104,15 @@ const TEST_DATA = [{
     const node = await walker.querySelector(walker.rootNode, "#i2");
     await node.modifyAttributes([{
       attributeName: "id",
-      newValue: "i2-changed"
+      newValue: "i2-changed",
     }, {
       attributeName: "class",
-      newValue: "test-class"
+      newValue: "test-class",
     }]);
   },
   shouldRefresh: false,
   output: ["html", "body.test-class", "article#i1-changed", "div#i11",
-           "div#i111", "div#i1111"]
+           "div#i111", "div#i1111"],
 }, {
   desc: "Removing the currently selected node should refresh",
   setup: async function(inspector) {
@@ -122,29 +122,29 @@ const TEST_DATA = [{
     await walker.removeNode(selection.nodeFront);
   },
   shouldRefresh: true,
-  output: ["html", "body.test-class"]
+  output: ["html", "body.test-class"],
 }, {
   desc: "Changing the class of the currently selected node should refresh",
   setup: function() {},
   run: async function({selection}) {
     await selection.nodeFront.modifyAttributes([{
       attributeName: "class",
-      newValue: "test-class-changed"
+      newValue: "test-class-changed",
     }]);
   },
   shouldRefresh: true,
-  output: ["html", "body.test-class-changed"]
+  output: ["html", "body.test-class-changed"],
 }, {
   desc: "Changing the id of the currently selected node should refresh",
   setup: function() {},
   run: async function({selection}) {
     await selection.nodeFront.modifyAttributes([{
       attributeName: "id",
-      newValue: "new-id"
+      newValue: "new-id",
     }]);
   },
   shouldRefresh: true,
-  output: ["html", "body#new-id.test-class-changed"]
+  output: ["html", "body#new-id.test-class-changed"],
 }];
 
 add_task(async function() {
@@ -182,7 +182,7 @@ add_task(async function() {
     observer.observe(container, {
       attributes: true,
       childList: true,
-      subtree: true
+      subtree: true,
     });
 
     info("Running the test case");

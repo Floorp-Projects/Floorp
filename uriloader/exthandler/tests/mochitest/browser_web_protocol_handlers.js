@@ -51,11 +51,10 @@ add_task(async function() {
   BrowserTestUtils.removeTab(tab);
 
   // Shift-click the testprotocol link and check the new window.
-  let newWindowPromise = BrowserTestUtils.waitForNewWindow();
+  let newWindowPromise = BrowserTestUtils.waitForNewWindow({url: expectedURL});
   await BrowserTestUtils.synthesizeMouseAtCenter(link, {shiftKey: true},
                                                  browser);
   let win = await newWindowPromise;
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
   await BrowserTestUtils.waitForCondition(() => win.gBrowser.currentURI.spec == expectedURL);
   is(win.gURLBar.value, expectedURL,
      "the expected URL is displayed in the location bar");

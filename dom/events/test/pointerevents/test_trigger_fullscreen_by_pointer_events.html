@@ -24,7 +24,7 @@ function startTest() {
 
     win.document.addEventListener("fullscreenchange", () => {
       if (win.document.fullscreenElement) {
-        ok(win.document.fullscreenElement, target, "fullscreenElement should be the div element");
+        is(win.document.fullscreenElement, target, "fullscreenElement should be the div element");
         // synthesize mouse events to generate pointer events and leave full screen.
         synthesizeMouseAtCenter(target, { type: "mousedown" }, win);
         synthesizeMouseAtCenter(target, { type: "mouseup" }, win);

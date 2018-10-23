@@ -176,7 +176,7 @@ class SummaryGraphPath extends Component {
       {
         durationPerPixel,
         isStateUpdating: false,
-        keyframesList
+        keyframesList,
       }
     );
 

@@ -26,7 +26,7 @@ const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 const TEST_DATA = [
   { node: "clipPath", expected: "clipPath" },
   { node: "rect", expected: "rect" },
-  { node: "circle", expected: "circle" }
+  { node: "circle", expected: "circle" },
 ];
 
 add_task(async function() {
