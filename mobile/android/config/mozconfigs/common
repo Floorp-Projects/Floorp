@@ -21,7 +21,7 @@ ac_add_options --enable-application=mobile/android
 ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux"
 
 ac_add_options --with-gradle="$topsrcdir/android-gradle-dependencies/gradle-dist/bin/gradle"
-export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/android-gradle-dependencies/jcenter","file://$topsrcdir/android-gradle-dependencies/google"
+export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/android-gradle-dependencies/google","file://$topsrcdir/android-gradle-dependencies/jcenter"
 
 if [ -z "$NO_NDK" ]; then
     # We use our own clang instead of the NDK's clang.
