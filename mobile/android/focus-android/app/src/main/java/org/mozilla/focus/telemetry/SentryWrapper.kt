@@ -7,6 +7,8 @@ import android.content.Context
 import io.sentry.Sentry
 import io.sentry.android.AndroidSentryClientFactory
 import org.mozilla.focus.BuildConfig
+import org.mozilla.focus.locale.LocaleManager
+import java.util.Locale
 
 /**
  * An interface to the Sentry crash reporting SDK. All code that touches the Sentry APIs
@@ -20,10 +22,11 @@ import org.mozilla.focus.BuildConfig
 object SentryWrapper {
     private const val TAG_BUILD_FLAVOR: String = "build_flavor"
     private const val TAG_BUILD_TYPE: String = "build_type"
+    private const val TAG_LOCALE_LANG_TAG: String = "locale_lang_tag"
 
     fun init(context: Context) {
         onIsEnabledChanged(context, TelemetryWrapper.isTelemetryEnabled(context))
-        addTags()
+        addTags(context)
     }
 
     internal fun onIsEnabledChanged(context: Context, isEnabled: Boolean) {
@@ -40,9 +43,22 @@ object SentryWrapper {
         Sentry.init(sentryDsn, AndroidSentryClientFactory(context.applicationContext))
     }
 
-    private fun addTags() {
+    private fun addTags(context: Context) {
         Sentry.getContext().addTag(TAG_BUILD_FLAVOR, BuildConfig.FLAVOR)
         Sentry.getContext().addTag(TAG_BUILD_TYPE, BuildConfig.BUILD_TYPE)
+        Sentry.getContext().addTag(
+            TAG_LOCALE_LANG_TAG,
+            getLocaleTag(context)
+        )
+    }
+
+    private fun getLocaleTag(context: Context): String {
+        val currentLocale = LocaleManager.getInstance().getCurrentLocale(context)
+        return if (currentLocale != null) {
+            currentLocale.toLanguageTag()
+        } else {
+            Locale.getDefault().toLanguageTag()
+        }
     }
 
     fun captureGeckoCrash() {
