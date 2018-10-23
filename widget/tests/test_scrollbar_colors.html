@@ -55,6 +55,15 @@ const MAC_REFERENCES = [
   ["0,255,255", 1760],
 ];
 
+const LINUX_REFERENCES = [
+  // Yellow background
+  ["255,255,0", 8100],
+  // Blue scrollbar face
+  ["0,0,255", 720],
+  // Cyan scrollbar track
+  ["0,255,255", 1180],
+];
+
 let outer = document.querySelector('.outer');
 let outerRect = outer.getBoundingClientRect();
 if (outerRect.width == outer.clientWidth &&
@@ -76,6 +85,8 @@ if (outerRect.width == outer.clientWidth &&
       references = WIN_REFERENCES;
     } else if (navigator.platform.startsWith("Mac")) {
       references = MAC_REFERENCES;
+    } else if (navigator.platform.startsWith("Linux")) {
+      references = LINUX_REFERENCES;
     } else {
       ok(false, "Unsupported platform");
     }
