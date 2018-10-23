@@ -8,6 +8,8 @@ import android.view.View
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
+import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -417,5 +419,53 @@ class BrowserToolbarTest {
 
             verify(it).layout(50, 20, 940, 185)
         }
+    }
+
+    @Test
+    fun `editListener is set on EditToolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        assertNull(toolbar.editToolbar.editListener)
+
+        val listener: Toolbar.OnEditListener = mock()
+        toolbar.setOnEditListener(listener)
+
+        assertEquals(listener, toolbar.editToolbar.editListener)
+    }
+
+    @Test
+    fun `editListener is invoked when switching between modes`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        val listener: Toolbar.OnEditListener = mock()
+        toolbar.setOnEditListener(listener)
+
+        toolbar.editMode()
+
+        verify(listener).onStartEditing()
+        verifyNoMoreInteractions(listener)
+
+        toolbar.displayMode()
+
+        verify(listener).onStopEditing()
+        verifyNoMoreInteractions(listener)
+    }
+
+    @Test
+    fun `editListener is invoked when text changes`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        val listener: Toolbar.OnEditListener = mock()
+        toolbar.setOnEditListener(listener)
+
+        toolbar.editToolbar.urlView.onAttachedToWindow()
+
+        toolbar.editMode()
+
+        toolbar.editToolbar.urlView.setText("Hello")
+        toolbar.editToolbar.urlView.setText("Hello World")
+
+        verify(listener).onStartEditing()
+        verify(listener).onTextChanged("Hello")
+        verify(listener).onTextChanged("Hello World")
     }
 }

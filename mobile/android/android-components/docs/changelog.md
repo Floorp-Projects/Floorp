@@ -14,6 +14,23 @@ permalink: /changelog/
   * Android (SDK: 27, Support Libraries: 27.1.1)
   * Kotlin (Stdlib: 1.2.61, Coroutines: 0.23.4)
   * GeckoView (Nightly: **65.0.20181023100123** 🔺, Beta: **64.0.20181022150107** 🔺, Release: **63.0.20181018182531** 🔺)
+* **browser-toolbar**:
+  * Added new listener to get notified when the user is editing the URL:
+  ```kotlin
+          toolbar.setOnEditListener(object : Toolbar.OnEditListener {
+            override fun onTextChanged(text: String) {
+              // Fired whenever the user changes the text in the address bar.
+            }
+
+            override fun onStartEditing() {
+              // Fired when the toolbar switches to edit mode.
+            }
+
+            override fun onStopEditing() {
+              // Fired when the toolbar switches back to display mode.
+            }
+        })
+  ```
 * **lib-jexl**
   * New component for for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
 
