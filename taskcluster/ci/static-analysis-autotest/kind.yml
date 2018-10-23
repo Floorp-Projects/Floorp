@@ -76,6 +76,7 @@ jobs:
                 - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win64.py
                 - builds/taskcluster_sub_win64/debug.py
+            mozconfig-variant: debug
         toolchains:
             - win64-clang-cl
             - win64-rust

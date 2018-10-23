@@ -1,11 +1,6 @@
 import os
 
 config = {
-    'default_actions': [
-        'clobber',
-        'build',
-        'check-test',
-    ],
     'debug_build': True,
     'stage_platform': 'linux-debug',
     #### 32 bit build specific #####
@@ -23,6 +18,5 @@ config = {
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'TINDERBOX_OUTPUT': '1',
     },
-    'mozconfig_variant': 'debug',
     #######################
 }
