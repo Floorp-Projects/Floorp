@@ -136,3 +136,28 @@ add_task(async function() {
     await delete_all_secrets();
   }
 });
+
+// Test that if we kick off a background operation and then call a synchronous function on the
+// keystore, we don't deadlock.
+add_task(async function() {
+  await delete_all_secrets();
+
+  let keystore = Cc["@mozilla.org/security/oskeystore;1"]
+                   .getService(Ci.nsIOSKeyStore);
+  let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
+  ok(recoveryPhrase, "A recovery phrase should've been created.");
+
+  try {
+    let text = new Uint8Array(8192);
+    let promise = keystore.asyncEncryptBytes(LABELS[0], text.length, text);
+    /* eslint-disable no-unused-expressions */
+    keystore.isNSSKeyStore; // we don't care what this is - we just need to access it
+    /* eslint-enable no-unused-expressions */
+    let ciphertext = await promise;
+    ok(ciphertext, "We should have a ciphertext now.");
+  } catch (e) {
+    ok(false, "Error encrypting " + e);
+  }
+
+  await delete_all_secrets();
+});

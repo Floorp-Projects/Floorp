@@ -27,7 +27,6 @@ public:
                                   std::vector<uint8_t>& outBytes,
                                   bool encrypt) override;
   virtual bool SecretAvailable(const nsACString& label) override;
-  virtual bool IsNSSKeyStore() override;
   virtual ~NSSKeyStore();
 
 private:
