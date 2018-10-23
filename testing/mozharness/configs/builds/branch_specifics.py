@@ -36,70 +36,16 @@ config = {
         'enable_release_promotion': True,
         'repo_path': 'releases/mozilla-release',
         'branch_uses_per_checkin_strategy': True,
-        'platform_overrides': {
-            'linux': {
-                'mozconfig_variant': 'release',
-            },
-            'linux64': {
-                'mozconfig_variant': 'release',
-            },
-            'macosx64': {
-                'mozconfig_variant': 'release',
-            },
-            'win32': {
-                'mozconfig_variant': 'release',
-            },
-            'win64': {
-                'mozconfig_variant': 'release',
-            },
-        },
     },
     'mozilla-esr60': {
         'enable_release_promotion': True,
         'repo_path': 'releases/mozilla-esr60',
         'branch_uses_per_checkin_strategy': True,
-        'platform_overrides': {
-            'linux': {
-                # We keep using the release configs as the beta and release configs are
-                # identical except for
-                # https://searchfox.org/mozilla-central/rev/ce9ff94ffed34dc17ec0bfa406156d489eaa8ee1/browser/config/mozconfigs/linux32/release#1    # noqa
-                'mozconfig_variant': 'release',
-            },
-            'linux64': {
-                'mozconfig_variant': 'release',
-            },
-            'macosx64': {
-                'mozconfig_variant': 'release',
-            },
-            'win32': {
-                'mozconfig_variant': 'release',
-            },
-            'win64': {
-                'mozconfig_variant': 'release',
-            },
-        },
     },
     'mozilla-beta': {
         'enable_release_promotion': 1,
         'repo_path': 'releases/mozilla-beta',
         'branch_uses_per_checkin_strategy': True,
-        'platform_overrides': {
-            'linux': {
-                'mozconfig_variant': 'beta',
-            },
-            'linux64': {
-                'mozconfig_variant': 'beta',
-            },
-            'macosx64': {
-                'mozconfig_variant': 'beta',
-            },
-            'win32': {
-                'mozconfig_variant': 'beta',
-            },
-            'win64': {
-                'mozconfig_variant': 'beta',
-            },
-        },
     },
     'try': {
         'repo_path': 'try',
@@ -135,23 +81,6 @@ config = {
     # 'holly': {},
     'jamun': {
         'enable_release_promotion': 1,
-        'platform_overrides': {
-            'linux': {
-                'mozconfig_variant': 'release',
-            },
-            'linux64': {
-                'mozconfig_variant': 'release',
-            },
-            'macosx64': {
-                'mozconfig_variant': 'release',
-            },
-            'win32': {
-                'mozconfig_variant': 'release',
-            },
-            'win64': {
-                'mozconfig_variant': 'release',
-            },
-        },
     },
     'larch': {},
     # 'maple': {},
