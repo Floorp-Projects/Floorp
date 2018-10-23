@@ -1728,6 +1728,11 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
       Unused << mChannel->Suspend();
       mSuspendedForFlowControl = true;
       mHasSuspendedByBackPressure = true;
+    } else if (!mResumedTimestamp.IsNull()) {
+      // Calculate the delay when the first packet arrived after resume
+      Telemetry::AccumulateTimeDelta(Telemetry::NETWORK_BACK_PRESSURE_SUSPENSION_DELAY_TIME_MS,
+                                     mResumedTimestamp);
+      mResumedTimestamp = TimeStamp();
     }
     mSendWindowSize -= count;
   }
@@ -1776,6 +1781,8 @@ HttpChannelParent::RecvBytesRead(const int32_t& aCount)
     MOZ_ASSERT(mSuspendedForFlowControl);
     Unused << mChannel->Resume();
     mSuspendedForFlowControl = false;
+
+    mResumedTimestamp = TimeStamp::Now();
   }
   mSendWindowSize += aCount;
   return IPC_OK();

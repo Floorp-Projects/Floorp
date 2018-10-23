@@ -299,6 +299,9 @@ private:
 
   dom::TabId mNestedFrameId;
 
+  // To calculate the delay caused by the e10s back-pressure suspension
+  TimeStamp mResumedTimestamp;
+
   Atomic<bool> mIPCClosed; // PHttpChannel actor has been Closed()
 
   // Corresponding redirect channel registrar Id. 0 means redirection is not started.
