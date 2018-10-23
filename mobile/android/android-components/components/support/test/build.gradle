@@ -37,10 +37,6 @@ dependencies {
     testImplementation project(':support-ktx')
 }
 
-archivesBaseName = "support-test"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'support-test',
-        'A collection of helpers for testing components.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])
+

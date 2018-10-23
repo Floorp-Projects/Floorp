@@ -4,7 +4,6 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply from: '../../../publish.gradle'
 apply plugin: 'kotlin-android-extensions'
 
 android {
@@ -37,9 +36,5 @@ dependencies {
     testImplementation project(':concept-engine')
 }
 
-archivesBaseName = "feature-downloads"
-
-ext.configurePublish(
-        'org.mozilla.components',
-        'feature-downloads',
-        'Feature implementation for apps that want to use Android downloads manager.')
+apply from: '../../../publish.gradle'
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

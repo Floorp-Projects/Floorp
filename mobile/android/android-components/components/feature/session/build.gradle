@@ -36,10 +36,5 @@ dependencies {
     testImplementation Deps.support_customtabs
 }
 
-archivesBaseName = "feature-session"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'feature-session',
-        'Feature implementation connecting an engine implementation with the session module.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

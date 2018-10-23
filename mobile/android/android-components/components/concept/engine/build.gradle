@@ -37,10 +37,5 @@ dependencies {
     testImplementation project(':support-test')
 }
 
-archivesBaseName = "concept-engine"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'concept-engine',
-        'An abstract layer hiding the actual browser engine implementation.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

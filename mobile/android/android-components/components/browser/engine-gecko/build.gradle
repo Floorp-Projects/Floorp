@@ -42,10 +42,5 @@ dependencies {
     testImplementation project(':support-test')
 }
 
-archivesBaseName = "browser-engine-gecko"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'browser-engine-gecko',
-        'Engine implementation based on GeckoView.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

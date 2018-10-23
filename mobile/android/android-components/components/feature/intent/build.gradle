@@ -41,10 +41,5 @@ dependencies {
     testImplementation Deps.kotlin_coroutines
 }
 
-archivesBaseName = "feature-intent"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'feature-intent',
-        'Combining various feature components for intent processing.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

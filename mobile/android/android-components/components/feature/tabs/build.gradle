@@ -47,10 +47,5 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "feature-tabs"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'feature-tabs',
-        'Feature implementation connecting a trabs tray implementation with the session and toolbar modules.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

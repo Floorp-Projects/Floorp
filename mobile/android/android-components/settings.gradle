@@ -2,176 +2,105 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+def setupProject(name, path, description) {
+    settings.include(name)
+
+    project(name).projectDir = new File(rootDir, path)
+
+    if (!gradle.ext.has('componentDescriptions')) {
+        gradle.ext.set('componentDescriptions', [:])
+    }
+
+    gradle.ext.componentDescriptions[name.substring(1)] = description
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Concept
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':concept-toolbar'
-project(':concept-toolbar').projectDir = new File(rootDir, 'components/concept/toolbar')
-
-include ':concept-tabstray'
-project(':concept-tabstray').projectDir = new File(rootDir, 'components/concept/tabstray')
-
-include ':concept-engine'
-project(':concept-engine').projectDir = new File(rootDir, 'components/concept/engine')
+setupProject(':concept-toolbar', 'components/concept/toolbar', 'An abstract definition of a toolbar component.')
+setupProject(':concept-tabstray', 'components/concept/tabstray', 'An abstract definition of a tabs tray component.')
+setupProject(':concept-engine', 'components/concept/engine', 'An abstract layer hiding the actual browser engine implementation.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Features
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':feature-intent'
-project(':feature-intent').projectDir = new File(rootDir, 'components/feature/intent')
-
-include ':feature-search'
-project(':feature-search').projectDir = new File(rootDir, 'components/feature/search')
-
-include ':feature-session'
-project(':feature-session').projectDir = new File(rootDir, 'components/feature/session')
-
-include ':feature-tabs'
-project(':feature-tabs').projectDir = new File(rootDir, 'components/feature/tabs')
-
-include ':feature-toolbar'
-project(':feature-toolbar').projectDir = new File(rootDir, 'components/feature/toolbar')
-
-include ':feature-downloads'
-project(':feature-downloads').projectDir = new File(rootDir, 'components/feature/downloads')
+setupProject(':feature-intent', 'components/feature/intent', 'Combining various feature components for intent processing.')
+setupProject(':feature-search', 'components/feature/search', 'Feature implementation connecting an engine implementation with the search module.')
+setupProject(':feature-session', 'components/feature/session', 'Feature implementation connecting an engine implementation with the session module.')
+setupProject(':feature-tabs', 'components/feature/tabs', 'Feature implementation connecting a trabs tray implementation with the session and toolbar modules.')
+setupProject(':feature-toolbar', 'components/feature/toolbar', 'Feature implementation connecting a toolbar implementation with the session module.')
+setupProject(':feature-downloads', 'components/feature/downloads', 'Feature implementation for apps that want to use Android downloads manager.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Browser components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':browser-engine-gecko'
-project(':browser-engine-gecko').projectDir = new File(rootDir, 'components/browser/engine-gecko')
-
-include ':browser-engine-gecko-beta'
-project(':browser-engine-gecko-beta').projectDir = new File(rootDir, 'components/browser/engine-gecko-beta')
-
-include ':browser-engine-gecko-nightly'
-project(':browser-engine-gecko-nightly').projectDir = new File(rootDir, 'components/browser/engine-gecko-nightly')
-
-include ':browser-engine-system'
-project(':browser-engine-system').projectDir = new File(rootDir, 'components/browser/engine-system')
-
-include ':browser-engine-servo'
-project(':browser-engine-servo').projectDir = new File(rootDir, 'components/browser/engine-servo')
-
-include ':browser-errorpages'
-project(':browser-errorpages').projectDir = new File(rootDir, 'components/browser/errorpages')
-
-include ':browser-menu'
-project(':browser-menu').projectDir = new File(rootDir, 'components/browser/menu')
-
-include ':browser-search'
-project(':browser-search').projectDir = new File(rootDir, 'components/browser/search')
-
-include ':browser-session'
-project(':browser-session').projectDir = new File(rootDir, 'components/browser/session')
-
-include ':browser-tabstray'
-project(':browser-tabstray').projectDir = new File(rootDir, 'components/browser/tabstray')
-
-include ':browser-toolbar'
-project(':browser-toolbar').projectDir = new File(rootDir, 'components/browser/toolbar')
-
-include ':browser-domains'
-project(':browser-domains').projectDir = new File(rootDir, 'components/browser/domains')
+setupProject(':browser-domains', 'components/browser/domains', 'Localized and customizable domain lists for auto-completion in browsers.')
+setupProject(':browser-engine-gecko', 'components/browser/engine-gecko', 'Engine implementation based on GeckoView.')
+setupProject(':browser-engine-gecko-beta', 'components/browser/engine-gecko-beta', 'Engine implementation based on GeckoView (Beta channel).')
+setupProject(':browser-engine-gecko-nightly', 'components/browser/engine-gecko-nightly', 'Engine implementation based on GeckoView (Nightly).')
+setupProject(':browser-engine-system', 'components/browser/engine-system', 'Engine implementation based on the system\'s WebView.')
+setupProject(':browser-engine-servo', 'components/browser/engine-servo', 'Engine implementation based on the Servo Browser Engine.')
+setupProject(':browser-errorpages', 'components/browser/errorpages', 'Responsive browser error pages for Android apps.')
+setupProject(':browser-menu', 'components/browser/menu', 'A customizable menu for browsers.')
+setupProject(':browser-search', 'components/browser/search', 'Search plugins and companion code to load, parse and use them.')
+setupProject(':browser-session', 'components/browser/session', 'An abstract layer hiding the actual browser engine implementation.')
+setupProject(':browser-tabstray', 'components/browser/tabstray', 'A tabs tray component for browsers.')
+setupProject(':browser-toolbar', 'components/browser/toolbar', 'A customizable toolbar for browsers.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // UI components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':ui-autocomplete'
-project(':ui-autocomplete').projectDir = new File(rootDir, 'components/ui/autocomplete')
-
-include ':ui-colors'
-project(':ui-colors').projectDir = new File(rootDir, 'components/ui/colors')
-
-include ':ui-fonts'
-project(':ui-fonts').projectDir = new File('components/ui/fonts')
-
-include ':ui-icons'
-project(':ui-icons').projectDir = new File('components/ui/icons')
-
-include ':ui-progress'
-project(':ui-progress').projectDir = new File('components/ui/progress')
-
-include ':ui-tabcounter'
-project(':ui-tabcounter').projectDir = new File('components/ui/tabcounter')
+setupProject(':ui-autocomplete', 'components/ui/autocomplete', 'A set of components to provide autocomplete functionality.')
+setupProject(':ui-colors', 'components/ui/colors', 'The standard set of Photon colors.')
+setupProject(':ui-fonts', 'components/ui/fonts', 'Convenience accessor for fonts used by Mozilla.')
+setupProject(':ui-icons', 'components/ui/icons', 'A collection of often used browser icons.')
+setupProject(':ui-progress', 'components/ui/progress', 'An animated progress bar following the Photon Design System.')
+setupProject(':ui-tabcounter', 'components/ui/tabcounter', 'A tab counter for browsers.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Services
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':service-firefox-accounts'
-project(':service-firefox-accounts').projectDir = new File('components/service/firefox-accounts')
-
-include ':service-sync-logins'
-project(':service-sync-logins').projectDir = new File('components/service/sync-logins')
-
-include ':service-fretboard'
-project(':service-fretboard').projectDir = new File('components/service/fretboard')
-
-include ':service-glean'
-project(':service-glean').projectDir = new File('components/service/glean')
-
-include ':service-telemetry'
-project(':service-telemetry').projectDir = new File('components/service/telemetry')
+setupProject(':service-firefox-accounts', 'components/service/firefox-accounts', 'A library for integrating with Firefox Accounts.')
+setupProject(':service-sync-logins', 'components/service/sync-logins', 'A library for integrating with Firefox Sync - Logins.')
+setupProject(':service-fretboard', 'components/service/fretboard', 'An Android framework for segmenting users in order to run A/B tests and rollout features gradually.')
+setupProject(':service-glean', 'components/service/glean', 'A client-side telemetry SDK for collecting metrics and sending them to Mozilla\'s telemetry service')
+setupProject(':service-telemetry', 'components/service/telemetry', 'A generic library for generating and sending telemetry pings from Android applications to Mozilla\'s telemetry service.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Support components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':support-base'
-project(':support-base').projectDir = new File(rootDir, 'components/support/base')
-
-include ':support-ktx'
-project(':support-ktx').projectDir = new File(rootDir, 'components/support/ktx')
-
-include ':support-test'
-project(':support-test').projectDir = new File(rootDir, 'components/support/test')
-
-include ':support-utils'
-project(':support-utils').projectDir = new File(rootDir, 'components/support/utils')
+setupProject(':support-base', 'components/support/base', 'Base component containing building blocks for components.')
+setupProject(':support-ktx', 'components/support/ktx', 'A set of Kotlin extensions.')
+setupProject(':support-test', 'components/support/test', 'A collection of helpers for testing components.')
+setupProject(':support-utils', 'components/support/utils', 'A collection of generic helper classes.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Standalone Libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':lib-crash'
-project(':lib-crash').projectDir = new File(rootDir, 'components/lib/crash')
-
-include ':lib-dataprotect'
-project(':lib-dataprotect').projectDir = new File(rootDir, 'components/lib/dataprotect')
-
-include ':lib-jexl'
-project(':lib-jexl').projectDir = new File(rootDir, 'components/lib/jexl')
+setupProject(':lib-crash', 'components/lib/crash', 'A generic crash reporter library that can report crashes to multiple services.')
+setupProject(':lib-dataprotect', 'components/lib/dataprotect', 'A component using AndroidKeyStore to protect user data.')
+setupProject(':lib-jexl', 'components/lib/jexl', 'Javascript Expression Language: Powerful context-based expression parser and evaluator.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tooling
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':tooling-lint'
-project(':tooling-lint').projectDir = new File(rootDir, 'components/tooling/lint')
+setupProject(':tooling-lint', 'components/tooling/lint', 'Custom Lint checks for using and writing components.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Samples
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-include ':samples-browser'
-project(':samples-browser').projectDir = new File(rootDir, 'samples/browser')
-
-include ':samples-firefox-accounts'
-project(':samples-firefox-accounts').projectDir = new File(rootDir, 'samples/firefox-accounts')
-
-include ':samples-glean'
-project(':samples-glean').projectDir = new File(rootDir, 'samples/glean')
-
-include ':samples-sync-logins'
-project(':samples-sync-logins').projectDir = new File(rootDir, 'samples/sync-logins')
-
-include ':samples-toolbar'
-project(':samples-toolbar').projectDir = new File(rootDir, 'samples/toolbar')
-
-include ':samples-dataprotect'
-project(':samples-dataprotect').projectDir = new File(rootDir, 'samples/dataprotect')
+setupProject(':samples-browser', 'samples/browser', 'A simple browser composed from browser components.')
+setupProject(':samples-firefox-accounts', 'samples/firefox-accounts', 'A simple app demoing Firefox Accounts integration.')
+setupProject(':samples-glean', 'samples/glean', 'An app demoing how to use the Glean library to collect and send telemetry data.')
+setupProject(':samples-sync-logins', 'samples/sync-logins', 'A simple app demoing Firefox Sync (Logins) integration.')
+setupProject(':samples-toolbar', 'samples/toolbar', 'An app demoing multiple customized toolbars using the browser-toolbar component.')
+setupProject(':samples-dataprotect', 'samples/dataprotect', 'An app demoing how to use the Dataprotect component to load and store encrypted data in SharedPreferences.')

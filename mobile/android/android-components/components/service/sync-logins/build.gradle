@@ -62,10 +62,5 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "service-sync-logins"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'service-sync-logins',
-        'A library for integrating with Firefox Sync - Logins.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

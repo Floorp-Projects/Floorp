@@ -45,10 +45,5 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "lib-crash"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'lib-crash',
-        'A generic crash reporter library that can report crashes to multiple services.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

@@ -35,10 +35,5 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "browser-menu"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'browser-menu',
-        'A customizable menu for browsers.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

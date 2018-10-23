@@ -33,10 +33,5 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "feature-search"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'feature-search',
-        'Feature implementation connecting an engine implementation with the search module.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

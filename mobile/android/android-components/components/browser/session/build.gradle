@@ -40,10 +40,5 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "browser-session"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'browser-session',
-        'An abstract layer hiding the actual browser engine implementation.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

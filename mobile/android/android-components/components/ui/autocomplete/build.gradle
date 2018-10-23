@@ -33,10 +33,5 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "ui-autocomplete"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'ui-autocomplete',
-        'A set of components to provide autocomplete functionality.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

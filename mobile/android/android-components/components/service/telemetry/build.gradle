@@ -35,10 +35,5 @@ dependencies {
     testImplementation Deps.testing_mockwebserver
 }
 
-archivesBaseName = "service-telemetry"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'service-telemetry',
-        'A generic library for generating and sending telemetry pings from Android applications to Mozilla\'s telemetry service.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

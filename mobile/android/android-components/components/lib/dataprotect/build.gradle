@@ -31,10 +31,5 @@ dependencies {
     testImplementation Deps.testing_mockito
 }
 
-archivesBaseName = "lib-dataprotect"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'lib-dataprotect',
-        'A component using AndroidKeyStore to protect user data.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

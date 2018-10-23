@@ -28,10 +28,5 @@ dependencies {
     implementation Deps.kotlin_stdlib
 }
 
-archivesBaseName = "concept-tabstray"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'concept-tabstray',
-        'An abstract definition of a tabs tray component.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

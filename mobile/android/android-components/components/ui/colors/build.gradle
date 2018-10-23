@@ -24,10 +24,5 @@ dependencies {
     // None
 }
 
-archivesBaseName = "ui-colors"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'ui-colors',
-        'The standard set of Photon colors.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])

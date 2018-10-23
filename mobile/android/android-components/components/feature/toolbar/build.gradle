@@ -31,10 +31,5 @@ dependencies {
     implementation Deps.kotlin_stdlib
 }
 
-archivesBaseName = "feature-toolbar"
-
 apply from: '../../../publish.gradle'
-ext.configurePublish(
-        'org.mozilla.components',
-        'feature-toolbar',
-        'Feature implementation connecting a toolbar implementation with the session module.')
+ext.configurePublish(Config.componentsGroupId, archivesBaseName, gradle.componentDescriptions[archivesBaseName])
