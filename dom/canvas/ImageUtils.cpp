@@ -125,38 +125,6 @@ public:
     return (uint32_t)(size.height * stride);
   }
 
-  virtual UniquePtr<ImagePixelLayout>
-  MapDataInto(uint8_t* aBuffer,
-              uint32_t aOffset,
-              uint32_t aBufferLength,
-              ImageBitmapFormat aFormat,
-              ErrorResult& aRv) const
-  {
-    DataSourceSurface::ScopedMap map(Surface(), DataSourceSurface::READ);
-    if (!map.IsMapped()) {
-      aRv.Throw(NS_ERROR_ILLEGAL_VALUE);
-      return nullptr;
-    }
-
-    // Copy or convert data.
-    UniquePtr<ImagePixelLayout> srcLayout =
-      CreateDefaultPixelLayout(GetFormat(), Surface()->GetSize().width,
-                               Surface()->GetSize().height, map.GetStride());
-
-    // Prepare destination buffer.
-    uint8_t* dstBuffer = aBuffer + aOffset;
-    UniquePtr<ImagePixelLayout> dstLayout =
-      CopyAndConvertImageData(GetFormat(), map.GetData(), srcLayout.get(),
-                              aFormat, dstBuffer);
-
-    if (!dstLayout) {
-      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-      return nullptr;
-    }
-
-    return dstLayout;
-  }
-
 protected:
   Impl() {}
 
@@ -201,31 +169,6 @@ public:
       return mImage->AsPlanarYCbCrImage()->GetDataSize();
     }
     return mImage->AsNVImage()->GetBufferSize();
-  }
-
-  UniquePtr<ImagePixelLayout> MapDataInto(uint8_t* aBuffer,
-                                          uint32_t aOffset,
-                                          uint32_t aBufferLength,
-                                          ImageBitmapFormat aFormat,
-                                          ErrorResult& aRv) const override
-  {
-    // Prepare source buffer and pixel layout.
-    const PlanarYCbCrData* data = GetPlanarYCbCrData();
-
-    UniquePtr<ImagePixelLayout> srcLayout =
-      CreatePixelLayoutFromPlanarYCbCrData(data);
-
-    // Do conversion.
-    UniquePtr<ImagePixelLayout> dstLayout =
-      CopyAndConvertImageData(GetFormat(), data->mYChannel, srcLayout.get(),
-                              aFormat, aBuffer+aOffset);
-
-    if (!dstLayout) {
-      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-      return nullptr;
-    }
-
-    return dstLayout;
   }
 
 private:
@@ -275,18 +218,6 @@ ImageUtils::GetBufferLength() const
 {
   MOZ_ASSERT(mImpl);
   return mImpl->GetBufferLength();
-}
-
-UniquePtr<ImagePixelLayout>
-ImageUtils::MapDataInto(uint8_t* aBuffer,
-                        uint32_t aOffset,
-                        uint32_t aBufferLength,
-                        ImageBitmapFormat aFormat,
-                        ErrorResult& aRv) const
-{
-  MOZ_ASSERT(mImpl);
-  MOZ_ASSERT(aBuffer, "Map data into a null buffer.");
-  return mImpl->MapDataInto(aBuffer, aOffset, aBufferLength, aFormat, aRv);
 }
 
 } // namespace dom
