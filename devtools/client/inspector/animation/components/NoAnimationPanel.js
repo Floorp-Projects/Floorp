@@ -30,7 +30,7 @@ class NoAnimationPanel extends Component {
 
     return dom.div(
       {
-        className: "animation-error-message devtools-sidepanel-no-result"
+        className: "animation-error-message devtools-sidepanel-no-result",
       },
       dom.p(
         null,
@@ -44,7 +44,7 @@ class NoAnimationPanel extends Component {
           onClick: event => {
             event.stopPropagation();
             toggleElementPicker();
-          }
+          },
         }
       )
     );
@@ -53,7 +53,7 @@ class NoAnimationPanel extends Component {
 
 const mapStateToProps = state => {
   return {
-    elementPickerEnabled: state.animations.elementPickerEnabled
+    elementPickerEnabled: state.animations.elementPickerEnabled,
   };
 };
 

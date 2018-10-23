@@ -23,7 +23,7 @@ add_task(async function() {
   info("Check that the panel still contains the right classes");
   checkClassPanelContent(view, [
     {name: "c1", state: true},
-    {name: "c2", state: true}
+    {name: "c2", state: true},
   ]);
 
   info("Trigger a class mutation on a different, unknown, node");
@@ -34,7 +34,7 @@ add_task(async function() {
   info("Check that the panel still contains the right classes");
   checkClassPanelContent(view, [
     {name: "c1", state: true},
-    {name: "c2", state: true}
+    {name: "c2", state: true},
   ]);
 
   info("Trigger a class mutation on the current node");
@@ -45,14 +45,14 @@ add_task(async function() {
   info("Check that the panel now contains the new classes");
   checkClassPanelContent(view, [
     {name: "c3", state: true},
-    {name: "c4", state: true}
+    {name: "c4", state: true},
   ]);
 
   info("Change the state of one of the new classes");
   await toggleClassPanelCheckBox(view, "c4");
   checkClassPanelContent(view, [
     {name: "c3", state: true},
-    {name: "c4", state: false}
+    {name: "c4", state: false},
   ]);
 
   info("Select another node");
@@ -69,6 +69,6 @@ add_task(async function() {
   checkClassPanelContent(view, [
     {name: "c5", state: true},
     {name: "c6", state: true},
-    {name: "c7", state: true}
+    {name: "c7", state: true},
   ]);
 });

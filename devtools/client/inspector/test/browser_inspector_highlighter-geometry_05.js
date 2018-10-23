@@ -17,57 +17,57 @@ const TEST_DATA = [{
   selector: "body",
   isOffsetParentVisible: false,
   isCurrentNodeVisible: false,
-  hasVisibleArrowsAndHandlers: false
+  hasVisibleArrowsAndHandlers: false,
 }, {
   selector: "h1",
   isOffsetParentVisible: false,
   isCurrentNodeVisible: false,
-  hasVisibleArrowsAndHandlers: false
+  hasVisibleArrowsAndHandlers: false,
 }, {
   selector: ".absolute",
   isOffsetParentVisible: false,
   isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true
+  hasVisibleArrowsAndHandlers: true,
 }, {
   selector: "#absolute-container",
   isOffsetParentVisible: false,
   isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: false
+  hasVisibleArrowsAndHandlers: false,
 }, {
   selector: ".absolute-bottom-right",
   isOffsetParentVisible: true,
   isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true
+  hasVisibleArrowsAndHandlers: true,
 }, {
   selector: ".absolute-width-margin",
   isOffsetParentVisible: true,
   isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true
+  hasVisibleArrowsAndHandlers: true,
 }, {
   selector: ".absolute-all-4",
   isOffsetParentVisible: true,
   isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true
+  hasVisibleArrowsAndHandlers: true,
 }, {
   selector: ".relative",
   isOffsetParentVisible: true,
   isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true
+  hasVisibleArrowsAndHandlers: true,
 }, {
   selector: ".static",
   isOffsetParentVisible: false,
   isCurrentNodeVisible: false,
-  hasVisibleArrowsAndHandlers: false
+  hasVisibleArrowsAndHandlers: false,
 }, {
   selector: ".static-size",
   isOffsetParentVisible: false,
   isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: false
+  hasVisibleArrowsAndHandlers: false,
 }, {
   selector: ".fixed",
   isOffsetParentVisible: false,
   isCurrentNodeVisible: true,
-  hasVisibleArrowsAndHandlers: true
+  hasVisibleArrowsAndHandlers: true,
 }];
 
 add_task(async function() {

@@ -34,20 +34,20 @@ const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 // Note that after each test case, undo is called.
 const TEST_DATA = [{
   selector: "#first",
-  focusedSelector: "#second"
+  focusedSelector: "#second",
 }, {
   selector: "#second",
-  focusedSelector: "#third"
+  focusedSelector: "#third",
 }, {
   selector: "#third",
-  focusedSelector: "#second"
+  focusedSelector: "#second",
 }, {
   selector: "#fourth",
-  focusedSelector: "#only-child"
+  focusedSelector: "#only-child",
 }, {
   selector: "#fifth",
   focusedSelector: "#pseudo",
-  pseudo: "after"
+  pseudo: "after",
 }];
 
 add_task(async function() {

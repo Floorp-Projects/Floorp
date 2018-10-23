@@ -250,12 +250,6 @@ function test_newURI_takes_nsIFile()
   run_next_test();
 }
 
-function test_ioService()
-{
-  Assert.ok(NetUtil.ioService instanceof Ci.nsIIOService);
-  run_next_test();
-}
-
 function test_asyncFetch_no_channel()
 {
   try {
@@ -519,7 +513,7 @@ function test_newChannel_with_string()
 
   // Check that we get the same URI back from channel the IO service creates and
   // the channel the utility method creates.
-  let ios = NetUtil.ioService;
+  let ios = Services.io
   let iosChannel = ios.newChannel2(TEST_SPEC,
                                    null,
                                    null,
@@ -544,12 +538,12 @@ function test_newChannel_with_nsIURI()
   // Check that we get the same URI back from channel the IO service creates and
   // the channel the utility method creates.
   let uri = NetUtil.newURI(TEST_SPEC);
-  let iosChannel = NetUtil.ioService.newChannelFromURI2(uri,
-                                                        null,      // aLoadingNode
-                                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                                        null,      // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                                        Ci.nsIContentPolicy.TYPE_OTHER);
+  let iosChannel = Services.io.newChannelFromURI2(uri,
+                                                  null,      // aLoadingNode
+                                                  Services.scriptSecurityManager.getSystemPrincipal(),
+                                                  null,      // aTriggeringPrincipal
+                                                  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                  Ci.nsIContentPolicy.TYPE_OTHER);
   let NetUtilChannel = NetUtil.newChannel({
     uri: uri,
     loadUsingSystemPrincipal: true
@@ -563,12 +557,12 @@ function test_newChannel_with_options()
 {
   let uri = "data:text/plain,";
 
-  let iosChannel = NetUtil.ioService.newChannelFromURI2(NetUtil.newURI(uri),
-                                                        null,      // aLoadingNode
-                                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                                        null,      // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                                        Ci.nsIContentPolicy.TYPE_OTHER);
+  let iosChannel = Services.io.newChannelFromURI2(NetUtil.newURI(uri),
+                                                  null,      // aLoadingNode
+                                                  Services.scriptSecurityManager.getSystemPrincipal(),
+                                                  null,      // aTriggeringPrincipal
+                                                  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                  Ci.nsIContentPolicy.TYPE_OTHER);
 
   function checkEqualToIOSChannel(channel) {
     Assert.ok(iosChannel.URI.equals(channel.URI));  
@@ -778,7 +772,6 @@ function test_readInputStreamToString_invalid_sequence()
   test_newURI_no_spec_throws,
   test_newURI,
   test_newURI_takes_nsIFile,
-  test_ioService,
   test_asyncFetch_no_channel,
   test_asyncFetch_no_callback,
   test_asyncFetch_with_nsIChannel,

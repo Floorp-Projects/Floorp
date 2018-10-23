@@ -21,43 +21,43 @@ const TESTS = {
   "Drag top's handler along x and y, south-east direction": {
     "expects": "Only y axis is used to updated the top's element value",
     "drag": "top",
-    "by": {x: 10, y: 10}
+    "by": {x: 10, y: 10},
   },
   "Drag right's handler along x and y, south-east direction": {
     "expects": "Only x axis is used to updated the right's element value",
     "drag": "right",
-    "by": {x: 10, y: 10}
+    "by": {x: 10, y: 10},
   },
   "Drag bottom's handler along x and y, south-east direction": {
     "expects": "Only y axis is used to updated the bottom's element value",
     "drag": "bottom",
-    "by": {x: 10, y: 10}
+    "by": {x: 10, y: 10},
   },
   "Drag left's handler along x and y, south-east direction": {
     "expects": "Only y axis is used to updated the left's element value",
     "drag": "left",
-    "by": {x: 10, y: 10}
+    "by": {x: 10, y: 10},
   },
   "Drag top's handler along x and y, north-west direction": {
     "expects": "Only y axis is used to updated the top's element value",
     "drag": "top",
-    "by": {x: -20, y: -20}
+    "by": {x: -20, y: -20},
   },
   "Drag right's handler along x and y, north-west direction": {
     "expects": "Only x axis is used to updated the right's element value",
     "drag": "right",
-    "by": {x: -20, y: -20}
+    "by": {x: -20, y: -20},
   },
   "Drag bottom's handler along x and y, north-west direction": {
     "expects": "Only y axis is used to updated the bottom's element value",
     "drag": "bottom",
-    "by": {x: -20, y: -20}
+    "by": {x: -20, y: -20},
   },
   "Drag left's handler along x and y, north-west direction": {
     "expects": "Only y axis is used to updated the left's element value",
     "drag": "left",
-    "by": {x: -20, y: -20}
-  }
+    "by": {x: -20, y: -20},
+  },
 };
 
 add_task(async function() {
@@ -161,6 +161,6 @@ async function areElementSideValuesCorrect(node, beforeDragStyle, name, delta) {
 async function getHandlerCoords({getElementAttribute}, side) {
   return {
     x: Math.round(await getElementAttribute("handler-" + side, "cx")),
-    y: Math.round(await getElementAttribute("handler-" + side, "cy"))
+    y: Math.round(await getElementAttribute("handler-" + side, "cy")),
   };
 }

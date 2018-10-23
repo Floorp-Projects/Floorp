@@ -47,7 +47,7 @@ class AnimationDetailContainer extends PureComponent {
 
     return dom.div(
       {
-        className: "animation-detail-container"
+        className: "animation-detail-container",
       },
       animation ?
         AnimationDetailHeader(

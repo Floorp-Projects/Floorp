@@ -22,7 +22,7 @@ const TEST_DATA = [
         filename: "webpack:///events_original.js:7",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: `function clickme() {
   console.log("clickme");

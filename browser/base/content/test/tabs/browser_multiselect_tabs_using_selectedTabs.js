@@ -25,8 +25,9 @@ add_task(async function() {
       ok(!selectedTab.hasAttribute("aria-selected"),
          "Selected tab shouldn't be marked as aria-selected when only one tab is selected");
     } else {
-      ok(selectedTabs.length, tabs.length, "Check number of selected tabs");
-      for (let tab of tabs) {
+      const uniqueTabs = [...new Set(tabs)];
+      is(selectedTabs.length, uniqueTabs.length, "Check number of selected tabs");
+      for (let tab of uniqueTabs) {
         ok(tab.multiselected, "Tab should be multi-selected");
         ok(_multiSelectedTabsSet.has(tab), "Tab should be in _multiSelectedTabsSet");
         ok(selectedTabs.includes(tab), "Tab should be in selectedTabs");

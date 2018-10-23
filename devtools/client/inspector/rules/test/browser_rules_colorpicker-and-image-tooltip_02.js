@@ -39,7 +39,7 @@ async function testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
   await simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
     selector: "body",
     name: "background-color",
-    value: "rgb(0, 0, 0)"
+    value: "rgb(0, 0, 0)",
   });
 
   const spectrum = picker.spectrum;

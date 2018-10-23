@@ -592,8 +592,7 @@ const gStoragePressureObserver = {
         callback(notificationBar, button) {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.
-          let win = gBrowser.ownerGlobal;
-          win.openPreferences("privacy-sitedata", { origin: "storagePressure" });
+          openPreferences("privacy-sitedata", { origin: "storagePressure" });
         },
       });
     }

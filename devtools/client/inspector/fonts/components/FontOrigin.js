@@ -35,7 +35,7 @@ class FontOrigin extends PureComponent {
     if (!url) {
       return dom.p(
         {
-          className: "font-origin system"
+          className: "font-origin system",
         },
         getStr("fontinspector.system")
       );
@@ -48,7 +48,7 @@ class FontOrigin extends PureComponent {
       dom.span(
         {
           className: "url",
-          title: url
+          title: url,
         },
         url
       ),

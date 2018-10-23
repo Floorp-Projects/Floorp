@@ -241,7 +241,6 @@ EXTRA_JS_MODULES += [
     'ServiceRequest.jsm',
     'Services.jsm',
     'sessionstore/FormData.jsm',
-    'sessionstore/ScrollPosition.jsm',
     'ShortcutUtils.jsm',
     'Sqlite.jsm',
     'Task.jsm',

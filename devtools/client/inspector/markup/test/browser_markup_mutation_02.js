@@ -32,7 +32,7 @@ const TEST_DATA = [{
       document.querySelector(".list").appendChild(newLi);
     `);
   },
-  flashedNode: ".list li:nth-child(3)"
+  flashedNode: ".list li:nth-child(3)",
 }, {
   desc: "Removing a node should flash its parent",
   mutate: async function(testActor) {
@@ -40,7 +40,7 @@ const TEST_DATA = [{
       let root = document.querySelector(".list");
       root.removeChild(root.lastElementChild);
     `);
-  }
+  },
 }, {
   desc: "Re-appending an existing node should only flash this node",
   mutate: async function(testActor) {
@@ -49,26 +49,26 @@ const TEST_DATA = [{
       root.appendChild(root.firstElementChild);
     `);
   },
-  flashedNode: ".list .item:last-child"
+  flashedNode: ".list .item:last-child",
 }, {
   desc: "Adding an attribute should flash the attribute",
   attribute: "test-name",
   mutate: async function(testActor) {
     await testActor.setAttribute(".list", "test-name", "value-" + Date.now());
-  }
+  },
 }, {
   desc: "Adding an attribute with css reserved characters should flash the " +
         "attribute",
   attribute: "one:two",
   mutate: async function(testActor) {
     await testActor.setAttribute(".list", "one:two", "value-" + Date.now());
-  }
+  },
 }, {
   desc: "Editing an attribute should flash the attribute",
   attribute: "class",
   mutate: async function(testActor) {
     await testActor.setAttribute(".list", "class", "list value-" + Date.now());
-  }
+  },
 }, {
   desc: "Multiple changes to an attribute should flash the attribute",
   attribute: "class",
@@ -82,7 +82,7 @@ const TEST_DATA = [{
       root.setAttribute("class", "list value-" + Date.now());
       root.setAttribute("class", "list value-" + Date.now());
     `);
-  }
+  },
 }, {
   desc: "Removing an attribute should flash the node",
   mutate: async function(testActor) {
@@ -90,7 +90,7 @@ const TEST_DATA = [{
       let root = document.querySelector(".list");
       root.removeAttribute("class");
     `);
-  }
+  },
 }];
 
 add_task(async function() {

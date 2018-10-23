@@ -3,15 +3,15 @@
 
 "use strict";
 
-const TEST_URL = "http://example.com";
+const TEST_URL = "http://example.com/";
 
 add_task(async function setup() {
   let oldHomepagePref = Services.prefs.getCharPref("browser.startup.homepage");
 
   await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
 
-  Assert.ok(gBrowser.currentURI.spec, "about:preferences#home",
-            "#home should be in the URI for about:preferences");
+  Assert.equal(gBrowser.currentURI.spec, "about:preferences#home",
+               "#home should be in the URI for about:preferences");
 
   registerCleanupFunction(async () => {
     Services.prefs.setCharPref("browser.startup.homepage", oldHomepagePref);
@@ -42,6 +42,6 @@ add_task(async function testSetHomepageFromBookmark() {
 
   dialog.document.documentElement.getButton("accept").click();
 
-  Assert.ok(Services.prefs.getCharPref("browser.startup.homepage"), TEST_URL,
-            "Should have set the homepage to the same as the bookmark.");
+  Assert.equal(Services.prefs.getCharPref("browser.startup.homepage"), TEST_URL,
+               "Should have set the homepage to the same as the bookmark.");
 });

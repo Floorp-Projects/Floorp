@@ -125,7 +125,7 @@ TextEditor.prototype = {
    */
   getInfoAtNode: function() {
     return null;
-  }
+  },
 };
 
 module.exports = TextEditor;

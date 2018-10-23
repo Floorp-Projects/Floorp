@@ -429,9 +429,9 @@ async function testFastBlock(aWindow) {
   });
 
   is(results.badIFrame, "yes", "post-load tracking iframe loaded");
-  ok(results.goodIFrameScript, "yes", "is not a tracker");
-  ok(results.fastIFrameScript, "yes", "is a loaded tracker");
-  ok(results.slowIFrameScript, "yes", "is a loaded tracker");
+  is(results.goodIFrameScript, "yes", "is not a tracker");
+  is(results.fastIFrameScript, "yes", "is a loaded tracker");
+  is(results.slowIFrameScript, "yes", "is a loaded tracker");
 
   is(results.numTrackersFound, 10, "10 trackers found");
   is(results.numTrackersBlocked, 4, "4 tracker blocked");

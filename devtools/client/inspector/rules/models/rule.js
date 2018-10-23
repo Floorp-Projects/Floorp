@@ -190,7 +190,7 @@ Rule.prototype = {
         disabledProps.push({
           name: prop.name,
           value: prop.value,
-          priority: prop.priority
+          priority: prop.priority,
         });
         continue;
       }
@@ -231,7 +231,7 @@ Rule.prototype = {
           cssProp = {
             name: textProp.name,
             value: "",
-            priority: ""
+            priority: "",
           };
         }
 
@@ -664,7 +664,7 @@ Rule.prototype = {
       }
     }
     return false;
-  }
+  },
 };
 
 module.exports = Rule;

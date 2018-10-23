@@ -41,7 +41,7 @@ class FontStyle extends PureComponent {
       ),
       dom.div(
         {
-          className: "font-control-input"
+          className: "font-control-input",
         },
         dom.input(
           {

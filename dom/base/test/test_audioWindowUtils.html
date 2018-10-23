@@ -86,7 +86,7 @@ function runTest() {
 
     ok(utils.audioMuted, "Audio should still be muted");
     utils.audioMuted = false;
-    ok(utils.audioVolume.toFixed(2), "0.60", "Volume should be preserved");
+    is(utils.audioVolume.toFixed(2), "0.60", "Volume should be preserved");
 
     SimpleTest.finish();
   };

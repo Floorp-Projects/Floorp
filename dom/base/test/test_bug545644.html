@@ -16,13 +16,13 @@
 
 function testInner () {
   var div = document.getElementById("test_inner");
-			
+
     try {
       div.innerHTML = "some \u00A0 &nbsp; text";
       div.innerHTML += "!";
-      ok (true, "innerHTML in html", "test ok");
+      ok(true, "innerHTML in html test ok");
     } catch (e) {
-      ok(false, "innerHTML in html", "test failed, unwanted exception "+e);
+      ok(false, "innerHTML in html test failed, unwanted exception " + e);
     }
 
   SimpleTest.finish();

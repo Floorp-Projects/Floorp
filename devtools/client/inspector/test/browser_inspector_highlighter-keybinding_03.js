@@ -48,7 +48,7 @@ add_task(async function() {
     return promise.all([
       inspector.selection.once("new-node-front"),
       inspector.once("inspector-updated"),
-      inspector.toolbox.once("picker-stopped")
+      inspector.toolbox.once("picker-stopped"),
     ]);
   }
 
@@ -65,7 +65,7 @@ add_task(async function() {
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
-      selector: selector
+      selector: selector,
     });
     return promise.all([onHighlighterReady, onPickerNodeHovered]);
   }

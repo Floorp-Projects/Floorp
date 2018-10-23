@@ -13,6 +13,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     EXPORTS += [
         'public/ChildProfilerController.h',
         'public/GeckoProfilerReporter.h',
+        'public/ProfileJSONWriter.h',
         'public/ProfilerChild.h',
         'public/ProfilerMarkerPayload.h',
         'public/ProfilerParent.h',

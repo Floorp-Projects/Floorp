@@ -28,7 +28,7 @@ const TEST_DATA = [
       // Getting the comment node.
       return getContainerForNodeFront(nodes[1], inspector);
     },
-    draggable: true
+    draggable: true,
   },
   {
     node: async function(inspector) {
@@ -37,8 +37,8 @@ const TEST_DATA = [
       // Getting the ::before pseudo element.
       return getContainerForNodeFront(nodes[0], inspector);
     },
-    draggable: false
-  }
+    draggable: false,
+  },
 ];
 
 add_task(async function() {

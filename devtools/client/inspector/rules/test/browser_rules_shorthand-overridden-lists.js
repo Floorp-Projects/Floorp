@@ -35,7 +35,7 @@ function testComputedList(inspector, view) {
   const overriddenItems = propEditor.shorthandOverridden.children;
   const propNames = [
     "margin-right",
-    "margin-left"
+    "margin-left",
   ];
 
   ok(!expander.hasAttribute("open"), "margin computed list is closed.");

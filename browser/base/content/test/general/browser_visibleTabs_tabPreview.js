@@ -11,12 +11,15 @@ add_task(async function test() {
 
   // test the ctrlTab.tabList
   pressCtrlTab();
-  ok(ctrlTab.tabList.length, 3, "Show 3 tabs in tab preview");
+  is(ctrlTab.tabList.length, 3, "Show 3 tabs in tab preview");
   releaseCtrl();
 
   gBrowser.showOnlyTheseTabs([origTab]);
   pressCtrlTab();
-  ok(ctrlTab.tabList.length, 1, "Show 1 tab in tab preview");
+
+  // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500959
+  // `ctrlTab.tabList.length` is still equal to 3 at this step.
+  todo_is(ctrlTab.tabList.length, 1, "Show 1 tab in tab preview");
   ok(!ctrlTab.isOpen, "With 1 tab open, Ctrl+Tab doesn't open the preview panel");
 
   gBrowser.showOnlyTheseTabs([origTab, tabOne, tabTwo]);

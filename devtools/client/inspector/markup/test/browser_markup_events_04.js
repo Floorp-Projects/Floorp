@@ -21,35 +21,35 @@ const TEST_DATA = [ // eslint-disable-line
         filename: TEST_URL + ":56",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: "function(foo2, bar2) {\n" +
                  "  alert(\"documentElement event listener clicked\");\n" +
-                 "}"
+                 "}",
       },
       {
         type: "click",
         filename: TEST_URL + ":52",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: "function(foo, bar) {\n" +
                  "  alert(\"document event listener clicked\");\n" +
-                 "}"
+                 "}",
       },
       {
         type: "load",
         filename: TEST_URL,
         attributes: [
           "Bubbling",
-          "DOM0"
+          "DOM0",
         ],
         handler: "function onload(event) {\n" +
                  "  init();\n" +
-                 "}"
-      }
-    ]
+                 "}",
+      },
+    ],
   },
   {
     selector: "#constructed-function",
@@ -59,13 +59,13 @@ const TEST_DATA = [ // eslint-disable-line
         filename: TEST_URL + ":1",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: "function anonymous() {\n" +
                  "\n" +
-                 "}"
-      }
-    ]
+                 "}",
+      },
+    ],
   },
   {
     selector: "#constructed-function-with-body-string",
@@ -75,13 +75,13 @@ const TEST_DATA = [ // eslint-disable-line
         filename: TEST_URL + ":1",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: "function anonymous(a, b, c) {\n" +
                  "  alert(\"constructedFuncWithBodyString\");\n" +
-        "}"
-      }
-    ]
+        "}",
+      },
+    ],
   },
   {
     selector: "#multiple-assignment",
@@ -91,13 +91,13 @@ const TEST_DATA = [ // eslint-disable-line
         filename: TEST_URL + ":24",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: "function multi() {\n" +
                  "  alert(\"multipleAssignment\");\n" +
-                 "}"
-      }
-    ]
+                 "}",
+      },
+    ],
   },
   {
     selector: "#promise",
@@ -107,13 +107,13 @@ const TEST_DATA = [ // eslint-disable-line
         filename: "[native code]",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: "function() {\n" +
                  "  [native code]\n" +
-                 "}"
-      }
-    ]
+                 "}",
+      },
+    ],
   },
   {
     selector: "#arraysort",
@@ -123,13 +123,13 @@ const TEST_DATA = [ // eslint-disable-line
         filename: "[native code]",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: "function sort(arr, comparefn) {\n" +
                  "  [native code]\n" +
-                 "}"
-      }
-    ]
+                 "}",
+      },
+    ],
   },
   {
     selector: "#handleEvent",
@@ -139,16 +139,16 @@ const TEST_DATA = [ // eslint-disable-line
         filename: TEST_URL + ":77",
         attributes: [
           "Bubbling",
-          "DOM2"
+          "DOM2",
         ],
         handler: "function(event) {\n" +
                  "  switch (event.type) {\n" +
                  "    case \"click\":\n" +
                  "      alert(\"handleEvent click\");\n" +
                  "  }\n" +
-                 "}"
-      }
-    ]
+                 "}",
+      },
+    ],
   },
 ];
 
