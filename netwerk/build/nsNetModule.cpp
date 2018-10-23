@@ -168,11 +168,8 @@ net_NewIncrementalDownload(nsISupports *, const nsIID &, void **);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEHeaderParamImpl)
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "nsRequestObserverProxy.h"
 #include "nsSimpleStreamListener.h"
 
-typedef mozilla::net::nsRequestObserverProxy nsRequestObserverProxy;
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsRequestObserverProxy)
 typedef mozilla::net::nsSimpleStreamListener nsSimpleStreamListener;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamListener)
 
@@ -666,7 +663,6 @@ NS_DEFINE_NAMED_CID(NS_DOWNLOADER_CID);
 NS_DEFINE_NAMED_CID(NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_BACKGROUNDFILESAVERSTREAMLISTENER_CID);
 NS_DEFINE_NAMED_CID(NS_SYNCSTREAMLISTENER_CID);
-NS_DEFINE_NAMED_CID(NS_REQUESTOBSERVERPROXY_CID);
 NS_DEFINE_NAMED_CID(NS_SIMPLESTREAMLISTENER_CID);
 NS_DEFINE_NAMED_CID(NS_STREAMLISTENERTEE_CID);
 NS_DEFINE_NAMED_CID(NS_LOADGROUP_CID);
@@ -781,7 +777,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_BACKGROUNDFILESAVERSTREAMLISTENER_CID, false, nullptr,
       mozilla::net::BackgroundFileSaverStreamListenerConstructor },
     { &kNS_SYNCSTREAMLISTENER_CID, false, nullptr, nsSyncStreamListenerConstructor },
-    { &kNS_REQUESTOBSERVERPROXY_CID, false, nullptr, nsRequestObserverProxyConstructor },
     { &kNS_SIMPLESTREAMLISTENER_CID, false, nullptr, nsSimpleStreamListenerConstructor },
     { &kNS_STREAMLISTENERTEE_CID, false, nullptr, nsStreamListenerTeeConstructor },
     { &kNS_LOADGROUP_CID, false, nullptr, nsLoadGroupConstructor },
@@ -897,7 +892,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CONTRACTID, &kNS_BACKGROUNDFILESAVEROUTPUTSTREAM_CID },
     { NS_BACKGROUNDFILESAVERSTREAMLISTENER_CONTRACTID, &kNS_BACKGROUNDFILESAVERSTREAMLISTENER_CID },
     { NS_SYNCSTREAMLISTENER_CONTRACTID, &kNS_SYNCSTREAMLISTENER_CID },
-    { NS_REQUESTOBSERVERPROXY_CONTRACTID, &kNS_REQUESTOBSERVERPROXY_CID },
     { NS_SIMPLESTREAMLISTENER_CONTRACTID, &kNS_SIMPLESTREAMLISTENER_CID },
     { NS_STREAMLISTENERTEE_CONTRACTID, &kNS_STREAMLISTENERTEE_CID },
     { NS_LOADGROUP_CONTRACTID, &kNS_LOADGROUP_CID },

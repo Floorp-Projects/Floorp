@@ -181,17 +181,6 @@
     {0x92, 0x01, 0xdc, 0x9b, 0x2c, 0x03, 0x2e, 0xba} \
 }
 
-// component implementing nsIRequestObserverProxy.
-#define NS_REQUESTOBSERVERPROXY_CONTRACTID \
-    "@mozilla.org/network/request-observer-proxy;1"
-#define NS_REQUESTOBSERVERPROXY_CID                  \
-{ /* 51fa28c7-74c0-4b85-9c46-d03faa7b696b */         \
-    0x51fa28c7,                                      \
-    0x74c0,                                          \
-    0x4b85,                                          \
-    {0x9c, 0x46, 0xd0, 0x3f, 0xaa, 0x7b, 0x69, 0x6b} \
-}
-
 // component implementing nsISimpleStreamListener.
 #define NS_SIMPLESTREAMLISTENER_CONTRACTID \
     "@mozilla.org/network/simple-stream-listener;1"
