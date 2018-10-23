@@ -131,7 +131,7 @@ nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler,
   , returnStateSave(0)
   , index(0)
   , forceQuirks(false)
-  , additional('\0')
+  , additional(u'\0')
   , entCol(0)
   , firstCharKey(0)
   , lo(0)
@@ -147,7 +147,7 @@ nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler,
   , bmpChar(jArray<char16_t, int32_t>::newJArray(1))
   , astralChar(jArray<char16_t, int32_t>::newJArray(2))
   , endTagExpectation(nullptr)
-  , endTagExpectationAsArray(jArray<char16_t, int32_t>::newJArray(0))
+  , endTagExpectationAsArray{}
   , endTag(false)
   , containsHyphen(false)
   , tagName(nullptr)
