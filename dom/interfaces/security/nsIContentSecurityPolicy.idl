@@ -141,6 +141,7 @@ interface nsIContentSecurityPolicy : nsISerializable
                           in AString aNonce,
                           in boolean aParserCreated,
                           in Element aTriggeringElement,
+                          in nsICSPEventListener aCSPEventListener,
                           in AString aContentOfPseudoScript,
                           in unsigned long aLineNumber,
                           in unsigned long aColumnNumber);
@@ -199,6 +200,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   void logViolationDetails(in unsigned short violationType,
                            in Element triggeringElement,
+                           in nsICSPEventListener aCSPEventListener,
                            in AString sourceFile,
                            in AString scriptSample,
                            in int32_t lineNum,
@@ -224,13 +226,6 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   void setRequestContext(in Document aDocument,
                          in nsIPrincipal aPrincipal);
-
-  /**
-   * Called after the CSP object is created to fill in event listener.
-   * @param aListener this listener will be notified when a CSP violation event
-   *                  must be dispatched.
-   */
-  void setEventListener(in nsICSPEventListener aListener);
 
   /**
    *  Ensure we have a nsIEventTarget to use to label CSPReportSenderRunnable
@@ -283,6 +278,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    *    directive. (block the pending operation if false).
    */
   boolean permits(in Element aTriggeringElement,
+                  in nsICSPEventListener aCSPEventListener,
                   in nsIURI aURI,
                   in CSPDirective aDir,
                   in boolean aSpecific);
@@ -300,6 +296,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    * URL.
    */
   short shouldLoad(in nsContentPolicyType aContentType,
+                   in nsICSPEventListener aCSPEventListener,
                    in nsIURI          aContentLocation,
                    in nsIURI          aRequestOrigin,
                    in nsISupports     aContext,
