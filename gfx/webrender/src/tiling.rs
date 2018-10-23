@@ -13,7 +13,7 @@ use device::{FrameId, Texture};
 use euclid::{TypedPoint2D, TypedVector2D};
 use gpu_cache::{GpuCache};
 use gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
-use gpu_types::{TransformData, TransformPalette};
+use gpu_types::{TransformData, TransformPalette, ZBufferIdGenerator};
 use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSource};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
@@ -124,6 +124,7 @@ pub trait RenderTarget {
         _deferred_resolves: &mut Vec<DeferredResolve>,
         _prim_headers: &mut PrimitiveHeaders,
         _transforms: &mut TransformPalette,
+        _z_generator: &mut ZBufferIdGenerator,
     ) {
     }
 
@@ -217,6 +218,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         saved_index: Option<SavedTargetIndex>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
+        z_generator: &mut ZBufferIdGenerator,
     ) {
         debug_assert_eq!(None, self.saved_index);
         self.saved_index = saved_index;
@@ -229,6 +231,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 deferred_resolves,
                 prim_headers,
                 transforms,
+                z_generator,
             );
         }
     }
@@ -399,6 +402,7 @@ impl RenderTarget for ColorRenderTarget {
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
+        z_generator: &mut ZBufferIdGenerator,
     ) {
         let mut merged_batches = AlphaBatchContainer::new(None);
 
@@ -427,6 +431,7 @@ impl RenderTarget for ColorRenderTarget {
                         prim_headers,
                         transforms,
                         pic_task.root_spatial_node_index,
+                        z_generator,
                     );
 
                     if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
@@ -895,6 +900,7 @@ impl RenderPass {
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
         prim_headers: &mut PrimitiveHeaders,
+        z_generator: &mut ZBufferIdGenerator,
     ) {
         profile_scope!("RenderPass::build");
 
@@ -919,6 +925,7 @@ impl RenderPass {
                     deferred_resolves,
                     prim_headers,
                     transforms,
+                    z_generator,
                 );
             }
             RenderPassKind::OffScreen { ref mut color, ref mut alpha, ref mut texture_cache } => {
@@ -1023,6 +1030,7 @@ impl RenderPass {
                     saved_color,
                     prim_headers,
                     transforms,
+                    z_generator,
                 );
                 alpha.build(
                     ctx,
@@ -1032,6 +1040,7 @@ impl RenderPass {
                     saved_alpha,
                     prim_headers,
                     transforms,
+                    z_generator,
                 );
             }
         }

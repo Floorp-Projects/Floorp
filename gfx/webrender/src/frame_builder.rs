@@ -9,7 +9,7 @@ use clip::{ClipDataStore, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
-use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind};
+use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap, PlaneSplitter};
 use picture::{PictureCompositeMode, PictureSurface, RasterConfig};
@@ -380,6 +380,8 @@ impl FrameBuilder {
         let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
         let mut prim_headers = PrimitiveHeaders::new();
+        // Used to generated a unique z-buffer value per primitive.
+        let mut z_generator = ZBufferIdGenerator::new();
         let use_dual_source_blending = self.config.dual_source_blending_is_enabled &&
                                        self.config.dual_source_blending_is_supported;
 
@@ -401,6 +403,7 @@ impl FrameBuilder {
                 &self.clip_store,
                 &mut transform_palette,
                 &mut prim_headers,
+                &mut z_generator,
             );
 
             if let RenderPassKind::OffScreen { ref texture_cache, .. } = pass.kind {
