@@ -84,6 +84,8 @@
 #include "mozilla/layers/CompositorSession.h"
 #include "VRManagerChild.h"
 #include "gfxConfig.h"
+#include "nsView.h"
+#include "nsViewManager.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -2088,6 +2090,12 @@ nsBaseWidget::GetWidgetScreen()
                                deskBounds.Width(), deskBounds.Height(),
                                getter_AddRefs(screen));
   return screen.forget();
+}
+
+mozilla::DesktopToLayoutDeviceScale
+nsBaseWidget::GetDesktopToDeviceScaleByScreen()
+{
+  return (nsView::GetViewFor(this)->GetViewManager()->GetDeviceContext())->GetDesktopToDeviceScale();
 }
 
 nsresult
