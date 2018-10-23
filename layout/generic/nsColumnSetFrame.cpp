@@ -1240,7 +1240,6 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   bool unboundedLastColumn = config.mIsBalancing && !nextInFlow;
   nsCollapsingMargin carriedOutBottomMargin;
   ColumnBalanceData colData;
-  colData.mHasExcessBSize = false;
 
   bool feasible = ReflowColumns(aDesiredSize, aReflowInput, aStatus, config,
                                 unboundedLastColumn, &carriedOutBottomMargin,

@@ -145,18 +145,22 @@ protected:
    */
   struct ColumnBalanceData {
     // The maximum "content block-size" of any column
-    nscoord mMaxBSize;
+    nscoord mMaxBSize = 0;
+
     // The sum of the "content block-size" for all columns
-    nscoord mSumBSize;
+    nscoord mSumBSize = 0;
+
     // The "content block-size" of the last column
-    nscoord mLastBSize;
+    nscoord mLastBSize = 0;
+
     // The maximum "content block-size" of all columns that overflowed
     // their available block-size
-    nscoord mMaxOverflowingBSize;
+    nscoord mMaxOverflowingBSize = 0;
+
     // This flag determines whether the last reflow of children exceeded the
     // computed block-size of the column set frame. If so, we set the bSize to
     // this maximum allowable bSize, and continue reflow without balancing.
-    bool mHasExcessBSize;
+    bool mHasExcessBSize = false;
 
     void Reset() {
       mMaxBSize = mSumBSize = mLastBSize = mMaxOverflowingBSize = 0;
