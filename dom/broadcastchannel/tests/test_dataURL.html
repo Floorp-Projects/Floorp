@@ -18,7 +18,7 @@ b.postMessage(42);
 SimpleTest.waitForExplicitFinish();
 
 onmessage= function(e) {
-  ok(e.data, "42", "BroadcastChannel works with data URLs");
+  is(e.data, 42, "BroadcastChannel works with data URLs");
   SimpleTest.finish();
 }
 
