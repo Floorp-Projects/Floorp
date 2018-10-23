@@ -152,16 +152,17 @@ taskref_or_string = Any(
     {Required('task-reference'): basestring})
 
 beetmover_description_schema = Schema({
-    # the dependent task (object) for this beetmover job, used to inform beetmover.
-    Required('dependent-task'): object,
+    # dictionary of dependent task objects, keyed by kind.
+    Required('dependent-tasks'): {basestring: object},
 
-    Required('grandparent-tasks'): object,
+    # The primary dependency; we key our task info off this dep task
+    Required('primary-dependency'): object,
 
     # depname is used in taskref's to identify the taskID of the unsigned things
     Required('depname', default='build'): basestring,
 
     # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
-    Optional('label'): basestring,
+    Required('label'): basestring,
 
     # treeherder is allowed here to override any defaults we use for beetmover.  See
     # taskcluster/taskgraph/transforms/task.py for the schema details, and the
@@ -171,6 +172,7 @@ beetmover_description_schema = Schema({
     # locale is passed only for l10n beetmoving
     Optional('locale'): basestring,
     Required('shipping-phase'): task_description_schema['shipping-phase'],
+    # Optional until we fix asan (run_on_projects?)
     Optional('shipping-product'): task_description_schema['shipping-product'],
 })
 
@@ -178,7 +180,7 @@ beetmover_description_schema = Schema({
 @transforms.add
 def validate(config, jobs):
     for job in jobs:
-        label = job.get('dependent-task', object).__dict__.get('label', '?no-label?')
+        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
         validate_schema(
             beetmover_description_schema, job,
             "In beetmover ({!r} kind) task for {!r}:".format(config.kind, label))
@@ -188,7 +190,7 @@ def validate(config, jobs):
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job['dependent-task']
+        dep_job = job['primary-dependency']
         attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
@@ -209,30 +211,26 @@ def make_task_description(config, jobs):
             )
         )
 
-        dependent_kind = dep_job.kind
-        if dependent_kind == 'repackage-signing-l10n':
-            dependent_kind = "repackage-signing"
-        dependencies = {dependent_kind: dep_job}
+        upstream_deps = job['dependent-tasks']
 
+        # TODO fix the upstreamArtifact generation to not need this?
         signing_name = "build-signing"
+        build_name = "build"
+        repackage_name = "repackage"
+        repackage_signing_name = "repackage-signing"
         if job.get('locale'):
             signing_name = "nightly-l10n-signing"
-        dependencies['signing'] = job['grandparent-tasks'][signing_name]
-
-        build_name = "build"
-        if job.get('locale'):
-            build_name = "unsigned-repack"
-        dependencies["build"] = job['grandparent-tasks'][build_name]
-
-        # repackage-l10n actually uses the repackage depname here
-        dependencies["repackage"] = job['grandparent-tasks']["repackage"]
-
-        # If this isn't a direct dependency, it won't be in there.
-        if 'repackage-signing' not in dependencies:
-            repackage_signing_name = "repackage-signing"
-            if job.get('locale'):
-                repackage_signing_name = "repackage-signing-l10n"
-            dependencies["repackage-signing"] = job['grandparent-tasks'][repackage_signing_name]
+            build_name = "nightly-l10n"
+            repackage_name = "repackage-l10n"
+            repackage_signing_name = "repackage-signing-l10n"
+        dependencies = {
+            "build": upstream_deps[build_name],
+            "repackage": upstream_deps[repackage_name],
+            "repackage-signing": upstream_deps[repackage_signing_name],
+            "signing": upstream_deps[signing_name],
+        }
+        if 'partials-signing' in upstream_deps:
+            dependencies['partials-signing'] = upstream_deps['partials-signing']
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         if job.get('locale'):
@@ -353,27 +351,9 @@ least 2 regular expressions. First matched: "{first_matched}". Second matched: \
         ))
 
 
-def is_valid_beetmover_job(job):
-    # beetmover after partials-signing should have six dependencies.
-    # windows builds w/o partials don't have docker-image, so fewer
-    # dependencies
-    if 'partials-signing' in job['dependencies'].keys():
-        expected_dep_count = 5
-    else:
-        expected_dep_count = 4
-
-    return (len(job["dependencies"]) == expected_dep_count and
-            any(['repackage' in j for j in job['dependencies']]))
-
-
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        if not is_valid_beetmover_job(job):
-            raise NotImplementedError(
-                "{}: Beetmover_repackage must have five dependencies.".format(job['label'])
-            )
-
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
 
@@ -406,23 +386,14 @@ def make_partials_artifacts(config, jobs):
 
         platform = job["attributes"]["build_platform"]
 
-        balrog_platform = get_balrog_platform_name(platform)
+        if 'partials-signing' not in job['dependencies']:
+            logger.debug("beetmover-repackage partials finished, no partials")
+            yield job
+            continue
 
+        balrog_platform = get_balrog_platform_name(platform)
         artifacts = get_partials_artifacts(config.params.get('release_history'),
                                            balrog_platform, locale)
-
-        # Dependency:        | repackage-signing | partials-signing
-        # Partials artifacts |              Skip | Populate & yield
-        # No partials        |             Yield |         continue
-        if len(artifacts) == 0:
-            if 'partials-signing' in job['dependencies']:
-                continue
-            else:
-                yield job
-                continue
-        else:
-            if 'partials-signing' not in job['dependencies']:
-                continue
 
         upstream_artifacts = generate_partials_upstream_artifacts(
             job, artifacts, balrog_platform, locale
