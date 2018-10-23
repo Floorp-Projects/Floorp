@@ -23,6 +23,7 @@ const {
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
+  RUNTIME_PREFERENCE,
   RUNTIMES,
   UNWATCH_RUNTIME_FAILURE,
   UNWATCH_RUNTIME_START,
@@ -95,7 +96,10 @@ function connectRuntime(id) {
       const runtime = findRuntimeById(id, getState().runtimes);
       const { client, transportDetails } = await createClientForRuntime(runtime);
       const info = await getRuntimeInfo(runtime, client);
-      const connection = { client, info, transportDetails };
+      const preferenceFront = await client.mainRoot.getFront("preference");
+      const connectionPromptEnabled =
+        await preferenceFront.getBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT);
+      const connection = { connectionPromptEnabled, client, info, transportDetails };
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
