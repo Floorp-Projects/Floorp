@@ -8,8 +8,9 @@
 #define mozJSComponentLoader_h
 
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ModuleLoader.h"
+#include "mozilla/Module.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIObserver.h"
@@ -40,8 +41,7 @@ namespace mozilla {
 #define STARTUP_RECORDER_ENABLED
 #endif
 
-class mozJSComponentLoader final : public mozilla::ModuleLoader,
-                                   public nsIObserver
+class mozJSComponentLoader final : public nsIObserver
 {
  public:
     NS_DECL_ISUPPORTS
@@ -54,8 +54,7 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
     nsresult GetModuleImportStack(const nsACString& aLocation, nsACString& aRetval);
     nsresult GetComponentLoadStack(const nsACString& aLocation, nsACString& aRetval);
 
-    // ModuleLoader
-    const mozilla::Module* LoadModule(mozilla::FileLocation& aFile) override;
+    const mozilla::Module* LoadModule(mozilla::FileLocation& aFile);
 
     void FindTargetObject(JSContext* aCx,
                           JS::MutableHandleObject aTargetObject);
