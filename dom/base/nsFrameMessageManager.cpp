@@ -1391,10 +1391,14 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
                                    dataStringBuf, dataStringLength);
     }
 
-    JS::SourceBufferHolder srcBuf(dataStringBuf, dataStringLength,
-                                  JS::SourceBufferHolder::GiveOwnership);
-
     if (!dataStringBuf || dataStringLength == 0) {
+      return;
+    }
+
+    JS::UniqueTwoByteChars srcChars(dataStringBuf);
+
+    JS::SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, std::move(srcChars), dataStringLength)) {
       return;
     }
 

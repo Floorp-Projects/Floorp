@@ -8903,8 +8903,13 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
            .setFileAndLine(filename, lineno)
            .setIntroductionType("debugger eval")
            .maybeMakeStrictMode(frame && frame.hasScript() ? frame.script()->strict() : false);
+
+    SourceBufferHolder srcBuf;
+    if (!srcBuf.init(cx, chars.begin().get(), chars.length(), SourceBufferHolder::NoOwnership)) {
+        return false;
+    }
+
     RootedScript callerScript(cx, frame && frame.hasScript() ? frame.script() : nullptr);
-    SourceBufferHolder srcBuf(chars.begin().get(), chars.length(), SourceBufferHolder::NoOwnership);
     RootedScript script(cx);
 
     ScopeKind scopeKind;

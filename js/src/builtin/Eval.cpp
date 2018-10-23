@@ -317,11 +317,16 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
             return false;
         }
 
+        SourceBufferHolder srcBuf;
+
         const char16_t* chars = linearChars.twoByteRange().begin().get();
         SourceBufferHolder::Ownership ownership = linearChars.maybeGiveOwnershipToCaller()
                                                   ? SourceBufferHolder::GiveOwnership
                                                   : SourceBufferHolder::NoOwnership;
-        SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
+        if (!srcBuf.init(cx, chars, linearStr->length(), ownership)) {
+            return false;
+        }
+
         JSScript* compiled = frontend::CompileEvalScript(cx, env, enclosing, options, srcBuf);
         if (!compiled) {
             return false;
@@ -401,11 +406,16 @@ js::DirectEvalStringFromIon(JSContext* cx,
             return false;
         }
 
+        SourceBufferHolder srcBuf;
+
         const char16_t* chars = linearChars.twoByteRange().begin().get();
         SourceBufferHolder::Ownership ownership = linearChars.maybeGiveOwnershipToCaller()
                                                   ? SourceBufferHolder::GiveOwnership
                                                   : SourceBufferHolder::NoOwnership;
-        SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
+        if (!srcBuf.init(cx, chars, linearStr->length(), ownership)) {
+            return false;
+        }
+
         JSScript* compiled = frontend::CompileEvalScript(cx, env, enclosing, options, srcBuf);
         if (!compiled) {
             return false;

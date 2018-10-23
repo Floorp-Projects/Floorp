@@ -96,9 +96,16 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
   }
 
   // Compile.
+  const nsPromiseFlatString& flatBody = PromiseFlatString(aBody);
+
+  JS::SourceBufferHolder source;
+  if (!source.init(cx, flatBody.get(), flatBody.Length(),
+                   JS::SourceBufferHolder::NoOwnership))
+  {
+    return NS_ERROR_FAILURE;
+  }
+
   JS::Rooted<JSFunction*> fun(cx);
-  JS::SourceBufferHolder source(PromiseFlatString(aBody).get(), aBody.Length(),
-                                JS::SourceBufferHolder::NoOwnership);
   if (!JS::CompileFunction(cx, aScopeChain, aOptions,
                            PromiseFlatCString(aName).get(),
                            aArgCount, aArgArray,
@@ -270,8 +277,15 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
   }
 
   const nsPromiseFlatString& flatScript = PromiseFlatString(aScript);
-  JS::SourceBufferHolder srcBuf(flatScript.get(), aScript.Length(),
-                                JS::SourceBufferHolder::NoOwnership);
+  JS::SourceBufferHolder srcBuf;
+  if (!srcBuf.init(mCx, flatScript.get(), flatScript.Length(),
+                   JS::SourceBufferHolder::NoOwnership))
+  {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
   JS::Rooted<JSScript*> script(mCx);
   return CompileAndExec(aCompileOptions, srcBuf, &script);
 }
