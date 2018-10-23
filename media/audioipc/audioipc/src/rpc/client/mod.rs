@@ -39,10 +39,10 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-use futures::{Async, Future, Poll, Sink, Stream};
 use futures::sync::oneshot;
-use rpc::Handler;
+use futures::{Async, Future, Poll, Sink, Stream};
 use rpc::driver::Driver;
+use rpc::Handler;
 use std::collections::VecDeque;
 use std::io;
 use tokio_core::reactor::Handle;
