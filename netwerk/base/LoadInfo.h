@@ -167,6 +167,7 @@ private:
   nsCOMPtr<nsIPrincipal>           mTopLevelPrincipal;
   nsCOMPtr<nsIPrincipal>           mTopLevelStorageAreaPrincipal;
   nsCOMPtr<nsIURI>                 mResultPrincipalURI;
+  nsCOMPtr<nsICSPEventListener>    mCSPEventListener;
 
   Maybe<mozilla::dom::ClientInfo>               mClientInfo;
   UniquePtr<mozilla::dom::ClientSource>         mReservedClientSource;

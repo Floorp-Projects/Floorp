@@ -110,6 +110,7 @@ function run_test() {
                                        "", // aNonce
                                        false, // aParserCreated
                                        null, // aTriggeringElement
+                                       null, // nsICSPEventListener
                                        "", // aContentOfPseudoScript
                                        0, // aLineNumber
                                        0); // aColumnNumber
@@ -137,6 +138,7 @@ function run_test() {
           // force the logging, since the getter doesn't.
           csp.logViolationDetails(Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_EVAL,
                                   null, // aTriggeringElement
+                                  null, // nsICSPEventListener
                                   selfuri.asciiSpec,
                                   // sending UTF-16 script sample to make sure
                                   // csp report in JSON is not cut-off, please
@@ -151,6 +153,7 @@ function run_test() {
       function(csp) {
         // shouldLoad creates and sends out the report here.
         csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SCRIPT,
+                      null, // nsICSPEventListener
                       NetUtil.newURI("http://blocked.test/foo.js"),
                       null, null, null, null, true);
       });
@@ -163,6 +166,7 @@ function run_test() {
                                        "", // aNonce
                                        false, // aParserCreated
                                        null, // aTriggeringElement
+                                       null, // nsICSPEventListener
                                        "", // aContentOfPseudoScript
                                        0, // aLineNumber
                                        0); // aColumnNumber
@@ -186,6 +190,7 @@ function run_test() {
           // force the logging, since the getter doesn't.
           csp.logViolationDetails(Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT,
                                   null, // aTriggeringElement
+                                  null, // nsICSPEventListener
                                   selfuri.asciiSpec,
                                   "script sample",
                                   4, // line number
@@ -201,6 +206,7 @@ function run_test() {
         "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_IMAGE,
+                     null, // nsICSPEventListener
                      NetUtil.newURI("data:image/png;base64," + base64data),
                      null, null, null, null, true);
       });
@@ -210,6 +216,7 @@ function run_test() {
     function(csp) {
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
+                     null, // nsICSPEventListener
                      NetUtil.newURI("intent://mymaps.com/maps?um=1&ie=UTF-8&fb=1&sll"),
                      null, null, null, null, true);
       });
@@ -221,6 +228,7 @@ function run_test() {
       var uri = NetUtil
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SCRIPT,
+                     null, // nsICSPEventListener
                      NetUtil.newURI(selfSpec + "#bar"),
                      null, null, null, null, true);
       });
@@ -230,6 +238,7 @@ function run_test() {
     function(csp) {
       // shouldLoad creates and sends out the report here.
       csp.shouldLoad(Ci.nsIContentPolicy.TYPE_SCRIPT,
+                     null, // nsICSPEventListener
                     NetUtil.newURI("ftp://blocked.test/profile.png"),
                     null, null, null, null, true);
     });

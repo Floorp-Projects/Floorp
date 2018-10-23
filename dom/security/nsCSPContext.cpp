@@ -118,6 +118,7 @@ BlockedContentSourceToString(nsCSPContext::BlockedContentSource aSource,
 
 NS_IMETHODIMP
 nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
+                         nsICSPEventListener* aCSPEventListener,
                          nsIURI*             aContentLocation,
                          nsIURI*             aRequestOrigin,
                          nsISupports*        aRequestContext,
@@ -178,6 +179,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
 
   bool permitted = permitsInternal(dir,
                                    nullptr, // aTriggeringElement
+                                   aCSPEventListener,
                                    aContentLocation,
                                    aOriginalURIIfRedirect,
                                    nonce,
@@ -202,6 +204,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
 bool
 nsCSPContext::permitsInternal(CSPDirective aDir,
                               Element* aTriggeringElement,
+                              nsICSPEventListener* aCSPEventListener,
                               nsIURI* aContentLocation,
                               nsIURI* aOriginalURIIfRedirect,
                               const nsAString& aNonce,
@@ -234,6 +237,7 @@ nsCSPContext::permitsInternal(CSPDirective aDir,
       // incorrectly fail the unit tests.
       if (!aIsPreload && aSendViolationReports) {
         AsyncReportViolation(aTriggeringElement,
+                             aCSPEventListener,
                              (aSendContentLocationInViolationReports ?
                               aContentLocation : nullptr),
                              BlockedContentSource::eUnknown, /* a BlockedContentSource */
@@ -405,6 +409,7 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
 void
 nsCSPContext::reportInlineViolation(nsContentPolicyType aContentType,
                                     Element* aTriggeringElement,
+                                    nsICSPEventListener* aCSPEventListener,
                                     const nsAString& aNonce,
                                     const nsAString& aContent,
                                     const nsAString& aViolatedDirective,
@@ -434,8 +439,9 @@ nsCSPContext::reportInlineViolation(nsContentPolicyType aContentType,
   }
 
   AsyncReportViolation(aTriggeringElement,
+                       aCSPEventListener,
                        nullptr,                            // aBlockedURI
-                       BlockedContentSource::eInline,      // aBloeckedSource
+                       BlockedContentSource::eInline,      // aBlockedSource
                        mSelfURI,                           // aOriginalURI
                        aViolatedDirective,                 // aViolatedDirective
                        aViolatedPolicyIndex,               // aViolatedPolicyIndex
@@ -451,6 +457,7 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
                               const nsAString& aNonce,
                               bool aParserCreated,
                               Element* aTriggeringElement,
+                              nsICSPEventListener* aCSPEventListener,
                               const nsAString& aContentOfPseudoScript,
                               uint32_t aLineNumber,
                               uint32_t aColumnNumber,
@@ -511,6 +518,7 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
                                                                     &reportSample);
       reportInlineViolation(aContentType,
                             aTriggeringElement,
+                            aCSPEventListener,
                             aNonce,
                             reportSample ? content : EmptyString(),
                             violatedDirective,
@@ -563,7 +571,8 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
       mPolicies[p]->getDirectiveStringAndReportSampleForContentType(           \
                         nsIContentPolicy::TYPE_ ## contentPolicyType,          \
                         violatedDirective, &reportSample);                     \
-      AsyncReportViolation(aTriggeringElement, nullptr, blockedContentSource,  \
+      AsyncReportViolation(aTriggeringElement, aCSPEventListener,              \
+                           nullptr, blockedContentSource,                      \
                            nullptr, violatedDirective, p,                      \
                            NS_LITERAL_STRING(observerTopic),                   \
                            aSourceFile,                                        \
@@ -601,6 +610,7 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
 NS_IMETHODIMP
 nsCSPContext::LogViolationDetails(uint16_t aViolationType,
                                   Element* aTriggeringElement,
+                                  nsICSPEventListener* aCSPEventListener,
                                   const nsAString& aSourceFile,
                                   const nsAString& aScriptSample,
                                   int32_t aLineNum,
@@ -688,13 +698,6 @@ nsCSPContext::SetRequestContext(nsIDocument* aDocument,
   }
 
   NS_ASSERTION(mSelfURI, "mSelfURI not available, can not translate 'self' into actual URI");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSPContext::SetEventListener(nsICSPEventListener* aEventListener)
-{
-  mEventListener = aEventListener;
   return NS_OK;
 }
 
@@ -1135,12 +1138,13 @@ nsCSPContext::SendReports(
 nsresult
 nsCSPContext::FireViolationEvent(
   Element* aTriggeringElement,
+  nsICSPEventListener* aCSPEventListener,
   const mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit)
 {
-  if (mEventListener) {
+  if (aCSPEventListener) {
     nsAutoString json;
     if (aViolationEventInit.ToJSON(json)) {
-      mEventListener->OnCSPViolationEvent(json);
+      aCSPEventListener->OnCSPViolationEvent(json);
     }
   }
 
@@ -1185,6 +1189,7 @@ class CSPReportSenderRunnable final : public Runnable
 {
   public:
     CSPReportSenderRunnable(Element* aTriggeringElement,
+                            nsICSPEventListener* aCSPEventListener,
                             nsIURI* aBlockedURI,
                             nsCSPContext::BlockedContentSource aBlockedContentSource,
                             nsIURI* aOriginalURI,
@@ -1199,6 +1204,7 @@ class CSPReportSenderRunnable final : public Runnable
                             nsCSPContext* aCSPContext)
       : mozilla::Runnable("CSPReportSenderRunnable")
       , mTriggeringElement(aTriggeringElement)
+      , mCSPEventListener(aCSPEventListener)
       , mBlockedURI(aBlockedURI)
       , mBlockedContentSource(aBlockedContentSource)
       , mOriginalURI(aOriginalURI)
@@ -1292,13 +1298,14 @@ class CSPReportSenderRunnable final : public Runnable
       }
 
       // 4) fire violation event
-      mCSPContext->FireViolationEvent(mTriggeringElement, init);
+      mCSPContext->FireViolationEvent(mTriggeringElement, mCSPEventListener, init);
 
       return NS_OK;
     }
 
   private:
     RefPtr<Element>         mTriggeringElement;
+    nsCOMPtr<nsICSPEventListener> mCSPEventListener;
     nsCOMPtr<nsIURI>        mBlockedURI;
     nsCSPContext::BlockedContentSource mBlockedContentSource;
     nsCOMPtr<nsIURI>        mOriginalURI;
@@ -1344,6 +1351,7 @@ class CSPReportSenderRunnable final : public Runnable
  */
 nsresult
 nsCSPContext::AsyncReportViolation(Element* aTriggeringElement,
+                                   nsICSPEventListener* aCSPEventListener,
                                    nsIURI* aBlockedURI,
                                    BlockedContentSource aBlockedContentSource,
                                    nsIURI* aOriginalURI,
@@ -1359,6 +1367,7 @@ nsCSPContext::AsyncReportViolation(Element* aTriggeringElement,
 
   nsCOMPtr<nsIRunnable> task =
     new CSPReportSenderRunnable(aTriggeringElement,
+                                aCSPEventListener,
                                 aBlockedURI,
                                 aBlockedContentSource,
                                 aOriginalURI,
@@ -1489,7 +1498,8 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
 
 
     bool permits = permitsInternal(nsIContentSecurityPolicy::FRAME_ANCESTORS_DIRECTIVE,
-                                   nullptr,
+                                   nullptr, // triggering element
+                                   nullptr, // nsICSPEventListener
                                    ancestorsArray[a],
                                    nullptr, // no redirect here.
                                    EmptyString(), // no nonce
@@ -1507,6 +1517,7 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
 
 NS_IMETHODIMP
 nsCSPContext::Permits(Element* aTriggeringElement,
+                      nsICSPEventListener* aCSPEventListener,
                       nsIURI* aURI,
                       CSPDirective aDir,
                       bool aSpecific,
@@ -1519,6 +1530,7 @@ nsCSPContext::Permits(Element* aTriggeringElement,
 
   *outPermits = permitsInternal(aDir,
                                 aTriggeringElement,
+                                aCSPEventListener,
                                 aURI,
                                 nullptr,  // no original (pre-redirect) URI
                                 EmptyString(),  // no nonce

@@ -20,6 +20,7 @@ namespace {
 
 nsresult
 CheckInternal(nsIContentSecurityPolicy* aCSP,
+              nsICSPEventListener* aCSPEventListener,
               const nsAString& aExpression,
               const nsAString& aFileNameString,
               uint32_t aLineNum,
@@ -47,6 +48,7 @@ CheckInternal(nsIContentSecurityPolicy* aCSP,
   if (reportViolation) {
     aCSP->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                               nullptr, // triggering element
+                              aCSPEventListener,
                               aFileNameString, aExpression, aLineNum,
                               aColumnNum, EmptyString(), EmptyString());
   }
@@ -74,8 +76,9 @@ public:
   bool
   MainThreadRun() override
   {
-    mResult = CheckInternal(mWorkerPrivate->GetCSP(), mExpression,
-                            mFileNameString, mLineNum, mColumnNum,
+    mResult = CheckInternal(mWorkerPrivate->GetCSP(),
+                            mWorkerPrivate->CSPEventListener(),
+                            mExpression, mFileNameString, mLineNum, mColumnNum,
                             &mEvalAllowed);
     return true;
   }
@@ -135,7 +138,8 @@ CSPEvalChecker::CheckForWindow(JSContext* aCx, nsGlobalWindowInner* aWindow,
     fileNameString.AssignLiteral("unknown");
   }
 
-  rv = CheckInternal(csp, aExpression, fileNameString, lineNum, columnNum,
+  rv = CheckInternal(csp, nullptr /* no CSPEventListener for window */,
+                     aExpression, fileNameString, lineNum, columnNum,
                      aAllowEval);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     *aAllowEval = false;
