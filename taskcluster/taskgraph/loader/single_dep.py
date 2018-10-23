@@ -29,8 +29,6 @@ def loader(kind, path, config, params, loaded_tasks):
     only_attributes = config.get('only-for-attributes')
     job_template = config.get('job-template')
 
-    include_parents = config.get('fake-multi-dep')
-
     for task in loaded_tasks:
         if task.kind not in config.get('kind-dependencies', []):
             continue
@@ -53,8 +51,6 @@ def loader(kind, path, config, params, loaded_tasks):
                 continue
 
         job = {'dependent-task': task}
-        if include_parents:
-            job['grandparent-tasks'] = _get_grandparent_tasks(task.dependencies, loaded_tasks)
 
         if job_template:
             job.update(copy.deepcopy(job_template))
@@ -67,15 +63,3 @@ def loader(kind, path, config, params, loaded_tasks):
             job.setdefault('shipping-product', product)
 
         yield job
-
-
-def _get_grandparent_tasks(dependencies, loaded_tasks):
-    parent_tasks = {}
-    for task in loaded_tasks:
-        if task.label in dependencies.values():
-            for name, label in dependencies.items():
-                if label == task.label:
-                    parent_tasks[name] = task
-    if set(parent_tasks.keys()) != set(dependencies.keys()):
-        raise Exception("Missing parent tasks.")
-    return parent_tasks
