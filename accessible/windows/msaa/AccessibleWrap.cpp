@@ -68,7 +68,7 @@ static gAccessibles = 0;
 MsaaIdGenerator AccessibleWrap::sIDGen;
 StaticAutoPtr<nsTArray<AccessibleWrap::HandlerControllerData>> AccessibleWrap::sHandlerControllers;
 
-static const VARIANT kVarChildIdSelf = {VT_I4};
+static const VARIANT kVarChildIdSelf = {{{VT_I4}}};
 
 static const int32_t kIEnumVariantDisconnected = -1;
 
@@ -1426,7 +1426,7 @@ GetProxiedAccessibleInSubtree(const DocAccessibleParent* aDoc,
     MOZ_ASSERT(tab);
     DocAccessibleParent* topLevelDoc = tab->GetTopLevelDocAccessible();
     MOZ_ASSERT(topLevelDoc && topLevelDoc->IsTopLevel());
-    VARIANT docId = {VT_I4};
+    VARIANT docId = {{{VT_I4}}};
     docId.lVal = docWrapperChildId;
     RefPtr<IDispatch> disp = GetProxiedAccessibleInSubtree(topLevelDoc, docId);
     if (!disp) {
