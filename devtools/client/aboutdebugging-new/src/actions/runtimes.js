@@ -103,13 +103,13 @@ function connectRuntime(id) {
       const preferenceFront = await client.mainRoot.getFront("preference");
       const connectionPromptEnabled =
         await preferenceFront.getBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT);
-      const connection = { connectionPromptEnabled, client, info, transportDetails };
+      const runtimeDetails = { connectionPromptEnabled, client, info, transportDetails };
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
         runtime: {
           id,
-          connection,
+          runtimeDetails,
           type: runtime.type,
         },
       });
@@ -124,7 +124,7 @@ function disconnectRuntime(id) {
     dispatch({ type: DISCONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
-      const client = runtime.connection.client;
+      const client = runtime.runtimeDetails.client;
 
       await client.close();
       DebuggerServer.destroy();
@@ -147,7 +147,7 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
     dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_START });
     try {
       const runtime = getCurrentRuntime(getState().runtimes);
-      const client = runtime.connection.client;
+      const client = runtime.runtimeDetails.client;
       const preferenceFront = await client.mainRoot.getFront("preference");
       await preferenceFront.setBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT,
                                         connectionPromptEnabled);

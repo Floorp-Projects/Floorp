@@ -11,20 +11,20 @@ function getCurrentRuntime(runtimesState) {
 exports.getCurrentRuntime = getCurrentRuntime;
 
 function getCurrentClient(runtimesState) {
-  const connection = getCurrentConnection(runtimesState);
-  return connection ? connection.client : null;
+  const runtimeDetails = getCurrentRuntimeDetails(runtimesState);
+  return runtimeDetails ? runtimeDetails.client : null;
 }
 exports.getCurrentClient = getCurrentClient;
 
 function getCurrentRuntimeInfo(runtimesState) {
-  const connection = getCurrentConnection(runtimesState);
-  return connection ? connection.info : null;
+  const runtimeDetails = getCurrentRuntimeDetails(runtimesState);
+  return runtimeDetails ? runtimeDetails.info : null;
 }
 exports.getCurrentRuntimeInfo = getCurrentRuntimeInfo;
 
 function getCurrentConnectionPromptSetting(runtimesState) {
-  const connection = getCurrentConnection(runtimesState);
-  return connection ? connection.connectionPromptEnabled : false;
+  const runtimeDetails = getCurrentRuntimeDetails(runtimesState);
+  return runtimeDetails ? runtimeDetails.connectionPromptEnabled : false;
 }
 exports.getCurrentConnectionPromptSetting = getCurrentConnectionPromptSetting;
 
@@ -38,7 +38,7 @@ function findRuntimeById(id, runtimesState) {
 }
 exports.findRuntimeById = findRuntimeById;
 
-function getCurrentConnection(runtimesState) {
+function getCurrentRuntimeDetails(runtimesState) {
   const runtime = getCurrentRuntime(runtimesState);
-  return runtime ? runtime.connection : null;
+  return runtime ? runtime.runtimeDetails : null;
 }
