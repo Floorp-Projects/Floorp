@@ -3,7 +3,6 @@
 const TEST_SELECTORS = {
   selRecords: "#credit-cards",
   btnRemove: "#remove",
-  btnShowHideCreditCards: "#show-hide-credit-cards",
   btnAdd: "#add",
   btnEdit: "#edit",
 };
@@ -15,13 +14,11 @@ add_task(async function test_manageCreditCardsInitialState() {
     await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       let selRecords = content.document.querySelector(args.selRecords);
       let btnRemove = content.document.querySelector(args.btnRemove);
-      let btnShowHideCreditCards = content.document.querySelector(args.btnShowHideCreditCards);
       let btnAdd = content.document.querySelector(args.btnAdd);
       let btnEdit = content.document.querySelector(args.btnEdit);
 
       is(selRecords.length, 0, "No credit card");
       is(btnRemove.disabled, true, "Remove button disabled");
-      is(btnShowHideCreditCards.disabled, true, "Show Credit Cards button disabled");
       is(btnAdd.disabled, false, "Add button enabled");
       is(btnEdit.disabled, true, "Edit button disabled");
     });
@@ -155,11 +152,8 @@ add_task(async function test_hasEditLoginPrompt() {
 
   let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
   let btnRemove = win.document.querySelector(TEST_SELECTORS.btnRemove);
-  let btnShowHideCreditCards = win.document.querySelector(TEST_SELECTORS.btnShowHideCreditCards);
   let btnAdd = win.document.querySelector(TEST_SELECTORS.btnAdd);
   // let btnEdit = win.document.querySelector(TEST_SELECTORS.btnEdit);
-
-  is(btnShowHideCreditCards.hidden, true, "Show credit cards button is hidden");
 
   EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
 

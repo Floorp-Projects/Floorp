@@ -39,17 +39,6 @@ var OSKeyStore = {
   _pendingUnlockPromise: null,
 
   /**
-   * @returns {boolean} Always considered enabled because OS store is always
-   *                    protected via OS user login password.
-   *                    TODO: Figure out if the affacted behaviors
-   *                    (e.g. like bug 1486954 or confirming payment transaction)
-   *                    is correct or not.
-   */
-  get isEnabled() {
-    return true;
-  },
-
-  /**
    * @returns {boolean} True if logged in (i.e. decrypt(reauth = false) will
    *                    not retrigger a dialog) and false if not.
    *                    User might log out elsewhere in the OS, so even if this
