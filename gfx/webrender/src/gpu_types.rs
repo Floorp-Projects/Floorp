@@ -12,15 +12,22 @@ use gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use internal_types::FastHashMap;
 use prim_store::EdgeAaSegmentMask;
 use render_task::RenderTaskAddress;
+use std::i32;
 use util::{TransformedRectKind, MatrixHelpers};
 
 // Contains type that must exactly match the same structures declared in GLSL.
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ZBufferId(i32);
+
+impl ZBufferId {
+    pub fn invalid() -> Self {
+        ZBufferId(i32::MAX)
+    }
+}
 
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -167,8 +174,6 @@ pub struct PrimitiveHeaders {
     pub headers_int: Vec<PrimitiveHeaderI>,
     // The float-type headers for a primitive.
     pub headers_float: Vec<PrimitiveHeaderF>,
-    // Used to generated a unique z-buffer value per primitive.
-    pub z_generator: ZBufferIdGenerator,
 }
 
 impl PrimitiveHeaders {
@@ -176,7 +181,6 @@ impl PrimitiveHeaders {
         PrimitiveHeaders {
             headers_int: Vec::new(),
             headers_float: Vec::new(),
-            z_generator: ZBufferIdGenerator::new(),
         }
     }
 
@@ -184,6 +188,7 @@ impl PrimitiveHeaders {
     pub fn push(
         &mut self,
         prim_header: &PrimitiveHeader,
+        z: ZBufferId,
         user_data: [i32; 3],
     ) -> PrimitiveHeaderIndex {
         debug_assert_eq!(self.headers_int.len(), self.headers_float.len());
@@ -195,7 +200,7 @@ impl PrimitiveHeaders {
         });
 
         self.headers_int.push(PrimitiveHeaderI {
-            z: self.z_generator.next(),
+            z,
             task_address: prim_header.task_address,
             specific_prim_address: prim_header.specific_prim_address.as_int(),
             clip_task_address: prim_header.clip_task_address,
