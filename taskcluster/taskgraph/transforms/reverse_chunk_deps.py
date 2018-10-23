@@ -33,7 +33,8 @@ def add_dependencies(config, jobs):
         count = 1
         deps = {}
 
-        for dep_label in job['dependencies'].keys():
+        # sort for deterministic chunking
+        for dep_label in sorted(job['dependencies'].keys()):
             deps[dep_label] = dep_label
             if len(deps) == MAX_DEPENDENCIES:
                 yield yield_job(job, deps, count)
