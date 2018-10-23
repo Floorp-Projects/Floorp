@@ -85,7 +85,7 @@ AppendToString(const DDLogValue& aValue, nsCString& aString)
 
 struct LogValueMatcherJson
 {
-  JSONWriter& mJW;
+  JSONWriter<>& mJW;
   const char* mPropertyName;
 
   void match(const DDNoValue&) const { mJW.NullProperty(mPropertyName); }
@@ -137,7 +137,7 @@ struct LogValueMatcherJson
 
 void
 ToJSON(const DDLogValue& aValue,
-       JSONWriter& aJSONWriter,
+       JSONWriter<>& aJSONWriter,
        const char* aPropertyName)
 {
   aValue.match(LogValueMatcherJson{ aJSONWriter, aPropertyName });

@@ -101,7 +101,7 @@ void TestBasicProperties()
 }\n\
 ";
 
-  JSONWriter w(MakeUnique<StringWriteFunc>());
+  JSONWriter<> w(MakeUnique<StringWriteFunc>());
 
   w.Start();
   {
@@ -260,7 +260,7 @@ void TestBasicElements()
 }\n\
 ";
 
-  JSONWriter w(MakeUnique<StringWriteFunc>());
+  JSONWriter<> w(MakeUnique<StringWriteFunc>());
 
   w.Start();
   w.StartArrayProperty("array");
@@ -376,7 +376,7 @@ void TestOneLineObject()
 {\"i\": 1, \"array\": [null, [{}], {\"o\": {}}, \"s\"], \"d\": 3.33}\n\
 ";
 
-  JSONWriter w(MakeUnique<StringWriteFunc>());
+  JSONWriter<> w(MakeUnique<StringWriteFunc>());
 
   w.Start(w.SingleLineStyle);
 
@@ -430,7 +430,7 @@ void TestStringEscaping()
 }\n\
 ";
 
-  JSONWriter w(MakeUnique<StringWriteFunc>());
+  JSONWriter<> w(MakeUnique<StringWriteFunc>());
 
   // Test the string escaping behaviour.
   w.Start();
@@ -508,7 +508,7 @@ void TestDeepNesting()
 }\n\
 ";
 
-  JSONWriter w(MakeUnique<StringWriteFunc>());
+  JSONWriter<> w(MakeUnique<StringWriteFunc>());
 
   w.Start();
   {
@@ -533,7 +533,7 @@ void TestEscapedPropertyNames()
 {\"i\\t\": 1, \"array\\t\": [null, [{}], {\"o\\t\": {}}, \"s\"], \"d\\t\": 3.33}\n\
 ";
 
-  JSONWriter w(MakeUnique<StringWriteFunc>());
+  JSONWriter<> w(MakeUnique<StringWriteFunc>());
 
   w.Start(w.SingleLineStyle);
 
