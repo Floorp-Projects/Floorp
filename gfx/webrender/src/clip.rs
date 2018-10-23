@@ -102,7 +102,7 @@ pub struct ClipDataMarker;
 pub type ClipDataStore = intern::DataStore<ClipItemKey, ClipNode, ClipDataMarker>;
 pub type ClipDataHandle = intern::Handle<ClipDataMarker>;
 pub type ClipDataUpdateList = intern::UpdateList<ClipItemKey>;
-pub type ClipDataInterner = intern::Interner<ClipItemKey, ClipDataMarker>;
+pub type ClipDataInterner = intern::Interner<ClipItemKey, ClipItemSceneData, ClipDataMarker>;
 
 // Result of comparing a clip node instance against a local rect.
 #[derive(Debug)]
@@ -750,6 +750,20 @@ impl ClipRegion<Option<ComplexClipRegion>> {
             complex_clips: None,
         }
     }
+}
+
+/// The information about an interned clip item that
+/// is stored and available in the scene builder
+/// thread.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ClipItemSceneData {
+    // TODO(gw): We will store the local clip rect of
+    //           the clip item here. This will allow
+    //           calculation of the local clip rect
+    //           for a primitive and its clip chain
+    //           during scene building, rather than
+    //           frame building.
 }
 
 // The ClipItemKey is a hashable representation of the contents
