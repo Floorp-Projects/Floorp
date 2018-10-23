@@ -10,6 +10,16 @@ const DIALOG_WRAPPER_URI = "chrome://payments/content/paymentDialogWrapper.js";
 let dialogGlobal = {};
 Services.scriptloader.loadSubScript(DIALOG_WRAPPER_URI, dialogGlobal);
 
+/**
+ * @param {Object} responseData with properties in the order matching `nsIBasicCardResponseData`
+ *                              init method args.
+ * @returns {string} serialized card data
+ */
+function serializeBasicCardResponseData(responseData) {
+  return [...Object.entries(responseData)].map(array => array.join(":")).join(";") + ";";
+}
+
+
 add_task(async function test_createBasicCardResponseData_basic() {
   let expected = {
     cardholderName: "John Smith",
@@ -19,11 +29,8 @@ add_task(async function test_createBasicCardResponseData_basic() {
     cardSecurityCode: "0123",
   };
   let actual = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(expected);
-  Assert.equal(actual.cardholderName, expected.cardholderName, "Check cardholderName");
-  Assert.equal(actual.cardNumber, expected.cardNumber, "Check cardNumber");
-  Assert.equal(actual.expiryMonth, expected.expiryMonth, "Check expiryMonth");
-  Assert.equal(actual.expiryYear, expected.expiryYear, "Check expiryYear");
-  Assert.equal(actual.cardSecurityCode, expected.cardSecurityCode, "Check cardSecurityCode");
+  let expectedSerialized = serializeBasicCardResponseData(expected);
+  Assert.equal(actual.data, expectedSerialized, "Check data");
 });
 
 add_task(async function test_createBasicCardResponseData_minimal() {
@@ -31,8 +38,9 @@ add_task(async function test_createBasicCardResponseData_minimal() {
     cardNumber: "1234567890",
   };
   let actual = dialogGlobal.paymentDialogWrapper.createBasicCardResponseData(expected);
-  info(actual.cardNumber);
-  Assert.equal(actual.cardNumber, expected.cardNumber, "Check cardNumber");
+  let expectedSerialized = serializeBasicCardResponseData(expected);
+  info(actual.data);
+  Assert.equal(actual.data, expectedSerialized, "Check data");
 });
 
 add_task(async function test_createBasicCardResponseData_withoutNumber() {
@@ -122,6 +130,11 @@ add_task(async function test_createShowResponse_basic() {
       Assert.equal(propVal, requestId, `Check ${propName}`);
       continue;
     }
+    if (propName == "data") {
+      Assert.equal(propVal, serializeBasicCardResponseData(cardData), `Check ${propName}`);
+      continue;
+    }
+
     Assert.equal(propVal, responseData[propName], `Check ${propName}`);
   }
 });

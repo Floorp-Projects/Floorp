@@ -16,50 +16,6 @@
 namespace mozilla {
 namespace dom {
 
-ResponseData::ResponseData()
-  : mType(ResponseData::UNKNOWN)
-{
-}
-
-void
-ResponseData::GetData(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) const
-{
-  switch (mType) {
-    case ResponseData::GENERAL_RESPONSE : {
-      DeserializeToJSObject(mGeneralResponse, aCx, aRetVal);
-      break;
-    }
-    case ResponseData::BASICCARD_RESPONSE : {
-      MOZ_ASSERT(aCx);
-      JS::RootedValue value(aCx);
-      if (NS_WARN_IF(!mBasicCardResponse.ToObjectInternal(aCx, &value))) {
-        return;
-      }
-      aRetVal.set(&value.toObject());
-      break;
-    }
-    default : {
-      break;
-    }
-  }
-}
-
-void
-ResponseData::Init(const nsString& aGeneralResponse)
-{
-  mType = ResponseData::GENERAL_RESPONSE;
-  mGeneralResponse = aGeneralResponse;
-  mBasicCardResponse = BasicCardResponse();
-}
-
-void
-ResponseData::Init(const BasicCardResponse& aBasicCardResponse)
-{
-  mType = ResponseData::BASICCARD_RESPONSE;
-  mBasicCardResponse = aBasicCardResponse;
-  mGeneralResponse = EmptyString();
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(PaymentResponse)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PaymentResponse,
@@ -95,7 +51,7 @@ PaymentResponse::PaymentResponse(nsPIDOMWindowInner* aWindow,
                                  const nsAString& aMethodName,
                                  const nsAString& aShippingOption,
                                  PaymentAddress* aShippingAddress,
-                                 const ResponseData& aDetails,
+                                 const nsAString& aDetails,
                                  const nsAString& aPayerName,
                                  const nsAString& aPayerEmail,
                                  const nsAString& aPayerPhone)
@@ -145,7 +101,24 @@ void
 PaymentResponse::GetDetails(JSContext* aCx,
                             JS::MutableHandle<JSObject*> aRetVal) const
 {
-  mDetails.GetData(aCx, aRetVal);
+  RefPtr<BasicCardService> service = BasicCardService::GetService();
+  MOZ_ASSERT(service);
+  if (!service->IsBasicCardPayment(mMethodName)) {
+    DeserializeToJSObject(mDetails, aCx, aRetVal);
+  } else {
+    BasicCardResponse response;
+    nsresult rv = service->DecodeBasicCardData(mDetails, GetOwner(), response);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    MOZ_ASSERT(aCx);
+    JS::RootedValue value(aCx);
+    if (NS_WARN_IF(!response.ToObjectInternal(aCx, &value))) {
+      return;
+    }
+    aRetVal.set(&value.toObject());
+  }
 }
 
 void
@@ -302,7 +275,7 @@ void
 PaymentResponse::RespondRetry(const nsAString& aMethodName,
                               const nsAString& aShippingOption,
                               PaymentAddress* aShippingAddress,
-                              const ResponseData& aDetails,
+                              const nsAString& aDetails,
                               const nsAString& aPayerName,
                               const nsAString& aPayerEmail,
                               const nsAString& aPayerPhone)
