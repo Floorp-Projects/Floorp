@@ -74,7 +74,6 @@ toolkit.jar:
    content/global/bindings/datetimebox.css     (widgets/datetimebox.css)
 *  content/global/bindings/dialog.xml          (widgets/dialog.xml)
    content/global/bindings/general.xml         (widgets/general.xml)
-   content/global/bindings/groupbox.xml        (widgets/groupbox.xml)
    content/global/bindings/menu.xml            (widgets/menu.xml)
    content/global/bindings/menulist.xml        (widgets/menulist.xml)
    content/global/bindings/notification.xml    (widgets/notification.xml)
