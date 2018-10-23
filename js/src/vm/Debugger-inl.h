@@ -28,6 +28,16 @@ js::Debugger::onLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc
     return ok;
 }
 
+/* static */ inline bool
+js::Debugger::onNewGenerator(JSContext* cx, AbstractFramePtr frame,
+                             Handle<GeneratorObject*> genObj)
+{
+    if (frame.isDebuggee()) {
+        return slowPathOnNewGenerator(cx, frame, genObj);
+    }
+    return true;
+}
+
 /* static */ inline js::Debugger*
 js::Debugger::fromJSObject(const JSObject* obj)
 {

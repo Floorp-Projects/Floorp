@@ -9,6 +9,7 @@
 #include "vm/JSObject.h"
 
 #include "vm/ArrayObject-inl.h"
+#include "vm/Debugger-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -50,6 +51,10 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
         genObj->setArgsObj(frame.argsObj());
     }
     genObj->clearExpressionStack();
+
+    if (!Debugger::onNewGenerator(cx, frame, genObj)) {
+        return nullptr;
+    }
 
     return genObj;
 }
