@@ -12,7 +12,9 @@
 #include "nsINamedPipeService.h"
 #include "nsIObserver.h"
 #include "nsIRunnable.h"
+#include "nsIThread.h"
 #include "nsTArray.h"
+#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace net {
@@ -27,12 +29,14 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIRUNNABLE
 
+  static already_AddRefed<nsINamedPipeService> GetOrCreate();
+
+private:
   explicit NamedPipeService();
+  virtual ~NamedPipeService() = default;
 
   nsresult Init();
 
-private:
-  virtual ~NamedPipeService() = default;
   void Shutdown();
   void RemoveRetiredObjects();
 
@@ -51,6 +55,8 @@ private:
   nsTArray<nsCOMPtr<nsINamedPipeDataObserver>> mObservers; // protected by mLock
   nsTArray<nsCOMPtr<nsINamedPipeDataObserver>> mRetiredObservers; // protected by mLock
   nsTArray<HANDLE> mRetiredHandles; // protected by mLock
+
+  static StaticRefPtr<NamedPipeService> gSingleton;
 };
 
 } // namespace net

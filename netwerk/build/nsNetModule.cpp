@@ -252,15 +252,6 @@ namespace net {
 } // namespace net
 } // namespace mozilla
 
-#ifdef XP_WIN
-#include "../socket/nsNamedPipeService.h"
-namespace mozilla {
-namespace net {
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NamedPipeService, Init)
-} // namespace net
-} // namespace mozilla
-#endif
-
 // resource
 #include "nsResProtocolHandler.h"
 #include "ExtensionProtocolHandler.h"
@@ -673,9 +664,6 @@ NS_DEFINE_NAMED_CID(NS_BUFFEREDOUTPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_MIMEINPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_PROTOCOLPROXYSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_STREAMCONVERTERSERVICE_CID);
-#if defined(XP_WIN)
-NS_DEFINE_NAMED_CID(NS_NAMEDPIPESERVICE_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_DASHBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_FTPDIRLISTINGCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_NSINDEXEDTOHTMLCONVERTER_CID);
@@ -782,9 +770,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_MIMEINPUTSTREAM_CID, false, nullptr, nsMIMEInputStreamConstructor },
     { &kNS_PROTOCOLPROXYSERVICE_CID, true, nullptr, nsProtocolProxyServiceConstructor },
     { &kNS_STREAMCONVERTERSERVICE_CID, false, nullptr, CreateNewStreamConvServiceFactory },
-#if defined (XP_WIN)
-    { &kNS_NAMEDPIPESERVICE_CID, false, NULL, mozilla::net::NamedPipeServiceConstructor },
-#endif
     { &kNS_DASHBOARD_CID, false, nullptr, mozilla::net::DashboardConstructor },
     { &kNS_FTPDIRLISTINGCONVERTER_CID, false, nullptr, CreateNewFTPDirListingConv },
     { &kNS_NSINDEXEDTOHTMLCONVERTER_CID, false, nullptr, nsIndexedToHTML::Create },
@@ -891,9 +876,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_MIMEINPUTSTREAM_CONTRACTID, &kNS_MIMEINPUTSTREAM_CID },
     { NS_PROTOCOLPROXYSERVICE_CONTRACTID, &kNS_PROTOCOLPROXYSERVICE_CID },
     { NS_STREAMCONVERTERSERVICE_CONTRACTID, &kNS_STREAMCONVERTERSERVICE_CID },
-#if defined(XP_WIN)
-    { NS_NAMEDPIPESERVICE_CONTRACTID, &kNS_NAMEDPIPESERVICE_CID },
-#endif
     { NS_DASHBOARD_CONTRACTID, &kNS_DASHBOARD_CID },
     { NS_ISTREAMCONVERTER_KEY FTP_TO_INDEX, &kNS_FTPDIRLISTINGCONVERTER_CID },
     { NS_ISTREAMCONVERTER_KEY INDEX_TO_HTML, &kNS_NSINDEXEDTOHTMLCONVERTER_CID },
