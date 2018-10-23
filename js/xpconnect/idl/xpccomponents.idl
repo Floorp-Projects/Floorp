@@ -739,13 +739,10 @@ interface nsIXPCComponents_Utils : nsISupports
     /* Create a persistent property object. */
     nsIPersistentProperties createPersistentProperties();
 
-    // These functions are for startup testing purposes. They are not expected
+    // These attributes are for startup testing purposes. They are not expected
     // to be used for production code.
-    void loadedModules([optional] out unsigned long length,
-                       [retval, array, size_is(length)] out string aModules);
-
-    void loadedComponents([optional] out unsigned long length,
-                          [retval, array, size_is(length)] out string aComponents);
+    readonly attribute Array<ACString> loadedModules;
+    readonly attribute Array<ACString> loadedComponents;
 
     // These 2 functions will only return useful values if the
     // "browser.startup.record" preference was true at the time the JS file
