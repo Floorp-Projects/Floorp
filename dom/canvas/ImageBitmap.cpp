@@ -1520,35 +1520,6 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   return true;
 }
 
-// ImageBitmap extensions.
-ImageBitmapFormat
-ImageBitmap::FindOptimalFormat(const Optional<Sequence<ImageBitmapFormat>>& aPossibleFormats,
-                               ErrorResult& aRv)
-{
-  if (!mDataWrapper) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return ImageBitmapFormat::EndGuard_;
-  }
-
-  ImageBitmapFormat platformFormat = mDataWrapper->GetFormat();
-
-  if (!aPossibleFormats.WasPassed() ||
-      aPossibleFormats.Value().Contains(platformFormat)) {
-    return platformFormat;
-  } else {
-    // If no matching is found, FindBestMatchingFromat() returns
-    // ImageBitmapFormat::EndGuard_ and we throw an exception.
-    ImageBitmapFormat optimalFormat =
-      FindBestMatchingFromat(platformFormat, aPossibleFormats.Value());
-
-    if (optimalFormat == ImageBitmapFormat::EndGuard_) {
-      aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    }
-
-    return optimalFormat;
-  }
-}
-
 size_t
 ImageBitmap::GetAllocatedSize() const
 {
