@@ -11,6 +11,7 @@
 #include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
+#include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIObserver.h"
@@ -59,9 +60,15 @@ class mozJSComponentLoader final : public nsIObserver
     void FindTargetObject(JSContext* aCx,
                           JS::MutableHandleObject aTargetObject);
 
+    static void InitStatics();
+    static void Shutdown();
+
     static already_AddRefed<mozJSComponentLoader> GetOrCreate();
 
-    static mozJSComponentLoader* Get() { return sSelf; }
+    static mozJSComponentLoader* Get() {
+        MOZ_ASSERT(sSelf, "Should have already created the component loader");
+        return sSelf;
+    }
 
     nsresult ImportInto(const nsACString& aResourceURI, JS::HandleValue aTargetObj,
                         JSContext* aCx, uint8_t aArgc, JS::MutableHandleValue aRetval);
@@ -101,7 +108,7 @@ class mozJSComponentLoader final : public nsIObserver
     }
 
  private:
-    static mozJSComponentLoader* sSelf;
+    static mozilla::StaticRefPtr<mozJSComponentLoader> sSelf;
 
     nsresult ReallyInit();
     void UnloadModules();
