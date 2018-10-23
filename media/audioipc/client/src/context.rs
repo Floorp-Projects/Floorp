@@ -3,27 +3,29 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use {ClientStream, CPUPOOL_INIT_PARAMS, G_SERVER_FD};
 use assert_not_in_callback;
-use audioipc::{messages, ClientMessage, ServerMessage};
-use audioipc::{core, rpc};
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::fd_passing::{framed_with_fds, FramedWithFds};
-use cubeb_backend::{ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceType, Error,
-                    Ops, Result, Stream, StreamParams, StreamParamsRef};
+use audioipc::{core, rpc};
+use audioipc::{messages, ClientMessage, ServerMessage};
+use cubeb_backend::{
+    ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceType, Error, Ops, Result,
+    Stream, StreamParams, StreamParamsRef,
+};
 use futures::Future;
 use futures_cpupool::{self, CpuPool};
 use libc;
-use std::{fmt, io, mem, ptr};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::os::unix::io::FromRawFd;
 use std::os::unix::net;
 use std::sync::mpsc;
 use std::thread;
+use std::{fmt, io, mem, ptr};
 use stream;
 use tokio_core::reactor::{Handle, Remote};
 use tokio_uds::UnixStream;
+use {ClientStream, CPUPOOL_INIT_PARAMS, G_SERVER_FD};
 
 struct CubebClient;
 
@@ -100,9 +102,7 @@ impl ContextOps for ClientContext {
 
         let (tx_rpc, rx_rpc) = mpsc::channel();
 
-        let params = CPUPOOL_INIT_PARAMS.with(|p| {
-            p.replace(None).unwrap()
-        });
+        let params = CPUPOOL_INIT_PARAMS.with(|p| p.replace(None).unwrap());
 
         let thread_create_callback = params.thread_create_callback;
 
@@ -134,11 +134,11 @@ impl ContextOps for ClientContext {
         let rpc = t!(rx_rpc.recv());
 
         let cpupool = futures_cpupool::Builder::new()
-                .name_prefix("AudioIPC")
-                .after_start(register_thread)
-                .pool_size(params.pool_size)
-                .stack_size(params.stack_size)
-                .create();
+            .name_prefix("AudioIPC")
+            .after_start(register_thread)
+            .pool_size(params.pool_size)
+            .stack_size(params.stack_size)
+            .create();
 
         let ctx = Box::new(ClientContext {
             _ops: &CLIENT_OPS as *const _,

@@ -5,8 +5,8 @@
 
 use bytes::{BufMut, Bytes, BytesMut};
 use libc::{self, cmsghdr};
-use std::{convert, mem, ops, slice};
 use std::os::unix::io::RawFd;
+use std::{convert, mem, ops, slice};
 
 #[derive(Clone, Debug)]
 pub struct Fds {
