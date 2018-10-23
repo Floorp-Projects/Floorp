@@ -240,10 +240,6 @@ AnimationFrameDiscardingQueue::AdvanceInternal()
 imgFrame*
 AnimationFrameDiscardingQueue::Get(size_t aFrame, bool aForDisplay)
 {
-  // If we are advancing on behalf of the animation, we don't expect it to be
-  // getting any frames (besides the first) until we get the desired frame.
-  MOZ_ASSERT(aFrame == 0 || mAdvance == 0);
-
   // The first frame is stored separately. If we only need the frame for
   // display purposes, we can return it right away. If we need it for advancing
   // the animation, we want to verify the recreated first frame is available
@@ -270,6 +266,10 @@ AnimationFrameDiscardingQueue::Get(size_t aFrame, bool aForDisplay)
   if (offset >= mDisplay.size()) {
     return nullptr;
   }
+
+  // If we are advancing on behalf of the animation, we don't expect it to be
+  // getting any frames (besides the first) until we get the desired frame.
+  MOZ_ASSERT(aFrame == 0 || mAdvance == 0);
 
   // If we have space for the frame, it should always be available.
   MOZ_ASSERT(mDisplay[offset]);
