@@ -32,6 +32,7 @@ dependencies {
     testImplementation Deps.testing_junit
     testImplementation Deps.testing_robolectric
     testImplementation Deps.testing_mockito
+    testImplementation Deps.testing_mockwebserver
 }
 
 apply from: '../../../publish.gradle'
