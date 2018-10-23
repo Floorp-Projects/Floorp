@@ -826,7 +826,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .panel-banner-item {
-  color: black;
+  color: black !important /* !important overrides the toolbarbutton:hover default style on Linux */;
   background-color: hsla(96,65%,75%,.5);
 }
 
@@ -840,7 +840,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 :root[lwt-popup-brighttext] .panel-banner-item:not([disabled]) {
   background-color: rgba(48,230,11,.1);
-  color: #F9F9FA;
+  color: #F9F9FA !important;
 }
 
 :root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):hover {
