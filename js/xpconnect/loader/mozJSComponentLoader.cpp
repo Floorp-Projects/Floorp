@@ -311,7 +311,7 @@ mozJSComponentLoader::~mozJSComponentLoader()
     sSelf = nullptr;
 }
 
-mozJSComponentLoader*
+StaticRefPtr<mozJSComponentLoader>
 mozJSComponentLoader::sSelf;
 
 NS_IMPL_ISUPPORTS(mozJSComponentLoader,
@@ -538,6 +538,20 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
         !IsLoaderGlobal(JS::GetNonCCWObjectGlobal(aTargetObject))) {
         aTargetObject.set(CurrentGlobalOrNull(aCx));
     }
+}
+
+void
+mozJSComponentLoader::InitStatics()
+{
+    MOZ_ASSERT(!sSelf);
+    sSelf = new mozJSComponentLoader();
+}
+
+void
+mozJSComponentLoader::Shutdown()
+{
+    MOZ_ASSERT(sSelf);
+    sSelf = nullptr;
 }
 
 // This requires that the keys be strings and the values be pointers.
