@@ -54,7 +54,7 @@ job-defaults:
             beta: beta
             release(-rc)?: nonbeta
             esr60: esr
-            nightly: beta
+            default: beta
       last-watershed:
          by-release-type:
             beta: "56.0b3"
@@ -67,7 +67,7 @@ job-defaults:
                   win64-.*: "56.0"
                   default: null
             esr60: "52.0esr"
-            nightly: "default"
+            default: "default"
 
 jobs:
    firefox-linux:
@@ -88,7 +88,7 @@ jobs:
                beta: "beta-localtest"
                release(-rc)?: "release-localtest"
                esr60: "esr-localtest"
-               nightly: "default"
+               default: "default"
          mar-channel-id-override:
             by-release-type:
                beta: beta
@@ -112,7 +112,7 @@ jobs:
                beta: "beta-localtest"
                release(-rc)?: "release-localtest"
                esr60: "esr-localtest"
-               nightly: "default"
+               default: "default"
          mar-channel-id-override:
             by-release-type:
                beta: beta
@@ -136,7 +136,7 @@ jobs:
                beta: "beta-localtest"
                release(-rc)?: "release-localtest"
                esr60: "esr-localtest"
-               nightly: "default"
+               default: "default"
          mar-channel-id-override:
             by-release-type:
                beta: beta
@@ -160,7 +160,7 @@ jobs:
                beta: "beta-localtest"
                release(-rc)?: "release-localtest"
                esr60: "esr-localtest"
-               nightly: "default"
+               default: "default"
          mar-channel-id-override:
             by-release-type:
                beta: beta
@@ -184,7 +184,7 @@ jobs:
                beta: "beta-localtest"
                release(-rc)?: "release-localtest"
                esr60: "esr-localtest"
-               nightly: "default"
+               default: "default"
          mar-channel-id-override:
             by-release-type:
                beta: beta
