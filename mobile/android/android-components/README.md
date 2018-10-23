@@ -8,6 +8,8 @@ _A collection of Android libraries to build browsers or browser-like application
 
  For more information [see the website](https://mozilla-mobile.github.io/android-components/).
 
+[Reference browser](https://github.com/mozilla-mobile/reference-browser).
+
 # Getting Involved
 
 We encourage you to participate in this open source project. We love pull requests, bug reports, ideas, (security) code reviews or any kind of positive contribution.

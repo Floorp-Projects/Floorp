@@ -4,6 +4,8 @@
 
 A simple browser app that is composed from the browser components in this repository.
 
+[Reference browser](https://github.com/mozilla-mobile/reference-browser).
+
 ## Build variants
 
 The browser app has two product flavor dimensions:
