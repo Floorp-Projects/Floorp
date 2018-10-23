@@ -59,6 +59,10 @@ const PAGES = {
   CONNECT: "connect",
 };
 
+const RUNTIME_PREFERENCE = {
+  CONNECTION_PROMPT: "devtools.debugger.prompt-connection",
+};
+
 const RUNTIMES = {
   NETWORK: "network",
   THIS_FIREFOX: "this-firefox",
@@ -87,6 +91,7 @@ module.exports = Object.assign({}, {
   DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
   PAGES,
+  RUNTIME_PREFERENCE,
   RUNTIMES,
   SERVICE_WORKER_FETCH_STATES,
   SERVICE_WORKER_STATUSES,

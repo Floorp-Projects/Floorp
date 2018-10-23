@@ -22,6 +22,12 @@ function getCurrentRuntimeInfo(runtimesState) {
 }
 exports.getCurrentRuntimeInfo = getCurrentRuntimeInfo;
 
+function getCurrentConnectionPromptSetting(runtimesState) {
+  const connection = getCurrentConnection(runtimesState);
+  return connection ? connection.connectionPromptEnabled : false;
+}
+exports.getCurrentConnectionPromptSetting = getCurrentConnectionPromptSetting;
+
 function findRuntimeById(id, runtimesState) {
   const allRuntimes = [
     ...runtimesState.networkRuntimes,
