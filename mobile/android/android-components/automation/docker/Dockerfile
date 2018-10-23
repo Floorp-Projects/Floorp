@@ -91,4 +91,3 @@ RUN ./gradlew clean \
 #----------------------------------------------------------------------------------------------------------------------
 
 RUN apt-get clean
->>>>>>> Use new detekt command in automation scripts.

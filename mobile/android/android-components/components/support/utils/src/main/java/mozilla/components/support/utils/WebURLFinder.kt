@@ -296,7 +296,7 @@ class WebURLFinder {
          * tries to match the URL structure with a relaxed rule for TLDs. If the string does not start
          * with http(s):// the TLDs are expected to be one of the known TLDs.
          */
-        private val AUTOLINK_WEB_URL = Pattern.compile(
+        private val autolinkWebUrl = Pattern.compile(
             "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL)"
         )
 
@@ -337,7 +337,7 @@ class WebURLFinder {
         }
 
         private fun candidateWebURLs(string: String): List<String> {
-            val matcher = AUTOLINK_WEB_URL.matcher(string)
+            val matcher = autolinkWebUrl.matcher(string)
             val matches = LinkedList<String>()
 
             while (matcher.find()) {

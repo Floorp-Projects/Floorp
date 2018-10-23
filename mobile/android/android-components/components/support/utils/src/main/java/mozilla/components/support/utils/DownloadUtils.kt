@@ -34,13 +34,13 @@ object DownloadUtils {
      * Format as defined in RFC 2616 and RFC 5987
      * Both inline and attachment types are supported.
      */
-    private val CONTENT_DISPOSITION_PATTERN = Pattern.compile("(inline|attachment)\\s*;" +
+    private val contentDispositionPattern = Pattern.compile("(inline|attachment)\\s*;" +
             "\\s*filename\\s*=\\s*(\"((?:\\\\.|[^\"\\\\])*)\"|[^;]*)\\s*" +
             "(?:;\\s*filename\\*\\s*=\\s*(utf-8|iso-8859-1)'[^']*'(\\S*))?",
             Pattern.CASE_INSENSITIVE)
 
     /**
-     * Keys for the capture groups inside CONTENT_DISPOSITION_PATTERN
+     * Keys for the capture groups inside contentDispositionPattern
      */
     private const val ENCODED_FILE_NAME_GROUP = 5
     private const val ENCODING_GROUP = 4
@@ -50,7 +50,7 @@ object DownloadUtils {
     /**
      * Definition as per RFC 5987, section 3.2.1. (value-chars)
      */
-    private val ENCODED_SYMBOL_PATTERN = Pattern.compile("%[0-9a-f]{2}|[0-9a-z!#$&+-.^_`|~]", Pattern.CASE_INSENSITIVE)
+    private val encodedSymbolPattern = Pattern.compile("%[0-9a-f]{2}|[0-9a-z!#$&+-.^_`|~]", Pattern.CASE_INSENSITIVE)
 
     /**
      * Guess the name of the file that should be downloaded.
@@ -143,7 +143,7 @@ object DownloadUtils {
 
     private fun parseContentDisposition(contentDisposition: String): String? {
         try {
-            val m = CONTENT_DISPOSITION_PATTERN.matcher(contentDisposition)
+            val m = contentDispositionPattern.matcher(contentDisposition)
 
             if (m.find()) {
                 // If escaped string is found, decode it using the given encoding.
@@ -173,7 +173,7 @@ object DownloadUtils {
 
     @Throws(UnsupportedEncodingException::class)
     private fun decodeHeaderField(field: String, encoding: String): String {
-        val m = ENCODED_SYMBOL_PATTERN.matcher(field)
+        val m = encodedSymbolPattern.matcher(field)
         val stream = ByteArrayOutputStream()
 
         while (m.find()) {
