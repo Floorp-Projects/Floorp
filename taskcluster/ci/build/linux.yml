@@ -46,12 +46,15 @@ linux64-plain/opt:
             PERFHERDER_EXTRA_OPTIONS: plain
     run:
         using: mozharness
+        actions: [build]
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - builds/releng_sub_linux_configs/64_plain_opt.py
         script: mozharness/scripts/fx_desktop_build.py
         tooltool-downloads: public
+        extra-config:
+            disable_package_metrics: true
+        mozconfig-variant: plain-opt
     run-on-projects: [trunk]
     toolchains:
         - linux64-binutils
@@ -116,6 +119,7 @@ linux64-fuzzing/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: fuzzing-debug
+        mozconfig-variant: debug-fuzzing
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -149,6 +153,7 @@ linux64/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: debug
+        mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -176,10 +181,13 @@ linux64-plain/debug:
             PERFHERDER_EXTRA_OPTIONS: plain
     run:
         using: mozharness
+        actions: [build]
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - builds/releng_sub_linux_configs/64_plain_debug.py
+        extra-config:
+            disable_package_metrics: true
+        mozconfig-variant: plain-debug
         script: mozharness/scripts/fx_desktop_build.py
         tooltool-downloads: public
     run-on-projects: [trunk]
@@ -214,11 +222,13 @@ linux64-devedition-nightly/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - taskcluster_nightly.py
+        extra-config:
+            stage_platform: 'linux64-devedition'
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-        custom-build-variant-cfg: devedition
+        mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     toolchains:
         - linux64-binutils
@@ -284,6 +294,7 @@ linux64-base-toolchains/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: debug
+        mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -350,6 +361,7 @@ linux/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: debug
+        mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -419,6 +431,7 @@ linux-rusttests/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: rusttests
+        mozconfig-variant: rusttests
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
@@ -455,6 +468,7 @@ linux-rusttests/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: rusttests-debug
+        mozconfig-variant: rusttests-debug
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
@@ -492,11 +506,13 @@ linux-devedition-nightly/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - taskcluster_nightly.py
+        extra-config:
+            stage_platform: linux-devedition
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-        custom-build-variant-cfg: devedition
+        mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     toolchains:
         - linux64-binutils
@@ -567,6 +583,7 @@ linux64-asan/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: asan-tc
+        mozconfig-variant: nightly-asan
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -600,6 +617,7 @@ linux64-asan-fuzzing/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: fuzzing-asan-tc
+        mozconfig-variant: nightly-fuzzing-asan
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -633,8 +651,7 @@ linux64-asan-fuzzing-ccov/opt:
             - builds/releng_base_linux_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        extra-config:
-            mozconfig_variant: 'asan-fuzzing-ccov'
+        mozconfig-variant: asan-fuzzing-ccov
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -669,8 +686,7 @@ linux64-fuzzing-ccov/opt:
             - builds/releng_base_linux_64_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        extra-config:
-            mozconfig_variant: 'fuzzing-ccov'
+        mozconfig-variant: fuzzing-ccov
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -708,6 +724,7 @@ linux64-asan-reporter-nightly/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: asan-reporter-tc
+        mozconfig-variant: nightly-asan-reporter
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -741,6 +758,7 @@ linux64-asan/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: asan-tc-and-debug
+        mozconfig-variant: debug-asan
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -810,6 +828,7 @@ linux64-noopt/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: noopt-debug
+        mozconfig-variant: noopt-debug
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
@@ -846,6 +865,7 @@ linux64-rusttests/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: rusttests
+        mozconfig-variant: rusttests
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
@@ -881,6 +901,7 @@ linux64-rusttests/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: rusttests-debug
+        mozconfig-variant: rusttests-debug
         tooltool-downloads: public
         keep-artifacts: false
         need-xvfb: true
@@ -915,6 +936,7 @@ linux64-tup/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: tup
+        mozconfig-variant: tup
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -950,6 +972,7 @@ linux64-ccov/debug:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: code-coverage-debug
+        mozconfig-variant: code-coverage-debug
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -984,6 +1007,7 @@ linux64-ccov/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: code-coverage-opt
+        mozconfig-variant: code-coverage-opt
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
@@ -1015,6 +1039,7 @@ linux64-add-on-devel/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: add-on-devel
+        mozconfig-variant: add-on-devel
         tooltool-downloads: public
         need-xvfb: true
     run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
