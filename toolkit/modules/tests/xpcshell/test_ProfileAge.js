@@ -26,7 +26,7 @@ add_task(withDummyProfile(async (profile) => {
   const CREATED_TIME = Date.now() - 2000;
   const RESET_TIME = Date.now() - 1000;
 
-  CommonUtils.writeJSON({
+  await CommonUtils.writeJSON({
     created: CREATED_TIME,
   }, OS.Path.join(profile, "times.json"));
 
@@ -69,7 +69,7 @@ add_task(withDummyProfile(async (profile) => {
 add_task(withDummyProfile(async (profile) => {
   const CREATED_TIME = Date.now() - 1000;
 
-  CommonUtils.writeJSON({
+  await CommonUtils.writeJSON({
     created: CREATED_TIME,
     firstUse: null,
   }, OS.Path.join(profile, "times.json"));

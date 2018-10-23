@@ -554,7 +554,7 @@ impl RenderTask {
                 }
                 ClipItem::Rectangle(..) |
                 ClipItem::RoundedRectangle(..) |
-                ClipItem::Image(..) => {}
+                ClipItem::Image { .. } => {}
             }
         }
 

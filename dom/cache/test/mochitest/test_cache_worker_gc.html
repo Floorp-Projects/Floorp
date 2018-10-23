@@ -29,18 +29,19 @@ function gc() {
   });
 }
 
-var weakWorker;
-
 SimpleTest.waitForExplicitFinish();
-startWorker().then(w => {
-  weakWorker = SpecialPowers.Cu.getWeakReference(w);
+
+async function test() {
+  let w = await startWorker();
+  let weakWorker = SpecialPowers.Cu.getWeakReference(w);
   ok(weakWorker, 'worker supports weak reference');
-}).then(_ => {
-  return gc();
-}).then(_ => {
+  w = null;
+  await gc();
   ok(!weakWorker.get(), 'worker weak reference should be garbage collected');
   SimpleTest.finish();
-});
+}
+
+test();
 </script>
 </body>
 </html>

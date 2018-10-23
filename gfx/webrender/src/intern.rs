@@ -173,28 +173,29 @@ impl<S, T, M> ops::IndexMut<Handle<M>> for DataStore<S, T, M> {
 /// an update list of additions / removals.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct Interner<S : Eq + Hash + Clone + Debug, M> {
+pub struct Interner<S : Eq + Hash + Clone + Debug, D, M> {
     /// Uniquely map an interning key to a handle
     map: FastHashMap<S, Handle<M>>,
     /// List of free slots in the data store for re-use.
     free_list: Vec<usize>,
-    /// The next index to append items to if free-list is empty.
-    next_index: usize,
     /// Pending list of updates that need to be applied.
     updates: Vec<Update<S>>,
     /// The current epoch for the interner.
     current_epoch: Epoch,
+    /// The information associated with each interned
+    /// item that can be accessed by the interner.
+    local_data: Vec<Item<D>>,
 }
 
-impl<S, M> Interner<S, M> where S: Eq + Hash + Clone + Debug, M: Copy + Debug {
+impl<S, D, M> Interner<S, D, M> where S: Eq + Hash + Clone + Debug, M: Copy + Debug {
     /// Construct a new interner
     pub fn new() -> Self {
         Interner {
             map: FastHashMap::default(),
             free_list: Vec::new(),
-            next_index: 0,
             updates: Vec::new(),
             current_epoch: Epoch(1),
+            local_data: Vec::new(),
         }
     }
 
@@ -202,10 +203,14 @@ impl<S, M> Interner<S, M> where S: Eq + Hash + Clone + Debug, M: Copy + Debug {
     /// that data. The handle can then be stored in the
     /// frame builder, and safely accessed via the data
     /// store that lives in the frame builder thread.
-    pub fn intern(
+    /// The provided closure is invoked to build the
+    /// local data about an interned structure if the
+    /// key isn't already interned.
+    pub fn intern<F>(
         &mut self,
         data: &S,
-    ) -> Handle<M> {
+        f: F,
+    ) -> Handle<M> where F: FnOnce() -> D {
         // Use get_mut rather than entry here to avoid
         // cloning the (sometimes large) key in the common
         // case, where the data already exists in the interner.
@@ -218,7 +223,8 @@ impl<S, M> Interner<S, M> where S: Eq + Hash + Clone + Debug, M: Copy + Debug {
                 self.updates.push(Update {
                     index: handle.index,
                     kind: UpdateKind::UpdateEpoch,
-                })
+                });
+                self.local_data[handle.index].epoch = self.current_epoch;
             }
             handle.epoch = self.current_epoch;
             return *handle;
@@ -229,11 +235,7 @@ impl<S, M> Interner<S, M> where S: Eq + Hash + Clone + Debug, M: Copy + Debug {
         // can use. Otherwise, append to the end of the list.
         let index = match self.free_list.pop() {
             Some(index) => index,
-            None => {
-                let index = self.next_index;
-                self.next_index += 1;
-                index
-            }
+            None => self.local_data.len(),
         };
 
         // Add a pending update to insert the new data.
@@ -252,6 +254,18 @@ impl<S, M> Interner<S, M> where S: Eq + Hash + Clone + Debug, M: Copy + Debug {
         // Store this handle so the next time it is
         // interned, it gets re-used.
         self.map.insert(data.clone(), handle);
+
+        // Create the local data for this item that is
+        // being interned.
+        let local_item = Item {
+            epoch: self.current_epoch,
+            data: f(),
+        };
+        if self.local_data.len() == index {
+            self.local_data.push(local_item);
+        } else {
+            self.local_data[index] = local_item;
+        }
 
         handle
     }
@@ -297,5 +311,15 @@ impl<S, M> Interner<S, M> where S: Eq + Hash + Clone + Debug, M: Copy + Debug {
         self.current_epoch = Epoch(self.current_epoch.0 + 1);
 
         updates
+    }
+}
+
+/// Retrieve the local data for an item from the interner via handle
+impl<S, D, M> ops::Index<Handle<M>> for Interner<S, D, M> where S: Eq + Clone + Hash + Debug, M: Copy + Debug {
+    type Output = D;
+    fn index(&self, handle: Handle<M>) -> &D {
+        let item = &self.local_data[handle.index];
+        assert_eq!(item.epoch, handle.epoch);
+        &item.data
     }
 }
