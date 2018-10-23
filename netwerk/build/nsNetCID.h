@@ -753,16 +753,6 @@
  * netwerk/socket classes
  */
 
-#define NS_SOCKETPROVIDERSERVICE_CONTRACTID \
-    "@mozilla.org/network/socket-provider-service;1"
-#define NS_SOCKETPROVIDERSERVICE_CID                   \
-{ /* ed394ba0-5472-11d3-bbc8-0000861d1237 */           \
-    0xed394ba0,                                        \
-    0x5472,                                            \
-    0x11d3,                                            \
-    { 0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37 } \
-}
-
 #define NS_SOCKSSOCKETPROVIDER_CID                     \
 { /* 8dbe7246-1dd2-11b2-9b8f-b9a849e4403a */           \
     0x8dbe7246,                                        \
