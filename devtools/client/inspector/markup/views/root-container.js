@@ -53,7 +53,7 @@ RootContainer.prototype = {
 
   isSlotted: function() {
     return false;
-  }
+  },
 };
 
 module.exports = RootContainer;

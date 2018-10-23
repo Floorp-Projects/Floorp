@@ -48,7 +48,7 @@ async function testCopySome(view) {
 
   await copySomeTextAndCheckClipboard(view, {
     start: {prop: 1, offset: 0},
-    end: {prop: 3, offset: 2}
+    end: {prop: 3, offset: 2},
   }, expectedPattern);
 }
 

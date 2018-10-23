@@ -33,7 +33,7 @@ class KeyframesGraph extends PureComponent {
 
     return dom.div(
       {
-        className: `keyframes-graph ${ name }`
+        className: `keyframes-graph ${ name }`,
       },
       KeyframesGraphPath(
         {

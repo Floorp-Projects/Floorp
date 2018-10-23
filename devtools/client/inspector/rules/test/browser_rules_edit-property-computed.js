@@ -66,7 +66,7 @@ async function editAndCheck(view) {
     "padding-top",
     "padding-right",
     "padding-bottom",
-    "padding-left"
+    "padding-left",
   ];
 
   is(computed.length, propNames.length, "There should be 4 computed values");

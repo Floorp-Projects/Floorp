@@ -73,7 +73,7 @@ const TEST_DATA = [
   ["KEY_PageUp", "*doctype*"],
   ["KEY_ArrowDown", "html"],
   ["KEY_ArrowLeft", "html"],
-  ["KEY_ArrowDown", "head"]
+  ["KEY_ArrowDown", "head"],
 ];
 
 add_task(async function() {

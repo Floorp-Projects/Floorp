@@ -56,7 +56,7 @@ var openFontInspectorForURL = async function(url) {
     testActor,
     toolbox,
     inspector,
-    view: inspector.fontinspector
+    view: inspector.fontinspector,
   };
 };
 
@@ -233,7 +233,7 @@ function getPropertyValue(viewDoc, name) {
            parseFloat(viewDoc.querySelector(selector).value),
     // Ensure unit dropdown exists before querying its value
     unit: viewDoc.querySelector(selector + ` ~ .font-value-select`) &&
-          viewDoc.querySelector(selector + ` ~ .font-value-select`).value
+          viewDoc.querySelector(selector + ` ~ .font-value-select`).value,
   };
 }
 

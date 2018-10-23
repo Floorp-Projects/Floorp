@@ -101,7 +101,7 @@ const reducers = {
       selector: "",
       tag: null,
       add: null,
-      remove: null
+      remove: null,
     };
 
     data = { ...defaults, ...data };

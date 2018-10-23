@@ -21,37 +21,37 @@ const OFFSET_PARENT_SELECTOR = ".computed-property-value-container .objectBox-no
 const res1 = [
   {
     selector: "#absolute_child",
-    offsetParentValue: "div#relative_parent"
+    offsetParentValue: "div#relative_parent",
   },
   {
     selector: "#no_parent",
-    offsetParentValue: "body"
+    offsetParentValue: "body",
   },
   {
     selector: "#relative_parent",
-    offsetParentValue: "body"
+    offsetParentValue: "body",
   },
   {
     selector: "#static",
-    offsetParentValue: null
+    offsetParentValue: null,
   },
   {
     selector: "#fixed",
-    offsetParentValue: null
+    offsetParentValue: null,
   },
 ];
 
 const updates = [
   {
     selector: "#absolute_child",
-    update: "position: static"
+    update: "position: static",
   },
 ];
 
 const res2 = [
   {
     selector: "#absolute_child",
-    offsetParentValue: null
+    offsetParentValue: null,
   },
 ];
 

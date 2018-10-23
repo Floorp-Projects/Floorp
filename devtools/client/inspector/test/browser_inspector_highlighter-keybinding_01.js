@@ -57,7 +57,7 @@ add_task(async function() {
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
-      selector: selector
+      selector: selector,
     });
     return inspector.toolbox.once("picker-node-hovered");
   }

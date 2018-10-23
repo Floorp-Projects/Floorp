@@ -58,7 +58,7 @@ ReadOnlyEditor.prototype = {
    */
   getInfoAtNode: function() {
     return null;
-  }
+  },
 };
 
 module.exports = ReadOnlyEditor;

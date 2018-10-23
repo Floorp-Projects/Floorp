@@ -79,7 +79,7 @@ UserProperties.prototype = {
 
   clear: function() {
     this.map.clear();
-  }
+  },
 };
 
 module.exports = UserProperties;

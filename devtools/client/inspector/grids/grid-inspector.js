@@ -46,7 +46,7 @@ const GRID_COLORS = [
   "#B5007F",
   "#058B00",
   "#A47F00",
-  "#005A71"
+  "#005A71",
 ];
 
 class GridInspector {

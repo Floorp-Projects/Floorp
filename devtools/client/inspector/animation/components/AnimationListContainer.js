@@ -59,7 +59,7 @@ class AnimationListContainer extends PureComponent {
   componentDidUpdate(prevProps) {
     const {
       timeScale,
-      sidebarWidth
+      sidebarWidth,
     } = this.props;
 
     if (timeScale.getDuration() !== prevProps.timeScale.getDuration() ||
@@ -126,7 +126,7 @@ class AnimationListContainer extends PureComponent {
 
     return dom.div(
       {
-        className: "animation-list-container"
+        className: "animation-list-container",
       },
       ProgressInspectionPanel(
         {
@@ -163,7 +163,7 @@ class AnimationListContainer extends PureComponent {
 
 const mapStateToProps = state => {
   return {
-    sidebarWidth: state.animations.sidebarSize ? state.animations.sidebarSize.width : 0
+    sidebarWidth: state.animations.sidebarSize ? state.animations.sidebarSize.width : 0,
   };
 };
 

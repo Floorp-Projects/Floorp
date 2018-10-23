@@ -33,7 +33,7 @@ add_task(async function() {
   let newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: "background-color"
+    name: "background-color",
   });
   is(newValue, "", "background-color should have been unset.");
 
@@ -51,7 +51,7 @@ add_task(async function() {
   newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: "color"
+    name: "color",
   });
   is(newValue, "", "color should have been unset.");
 

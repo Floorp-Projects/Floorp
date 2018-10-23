@@ -61,36 +61,36 @@ class BoxModelMain extends PureComponent {
         [KeyCodes.DOM_VK_DOWN, this.marginLayout],
         [KeyCodes.DOM_VK_RETURN, this.positionEditable],
         [KeyCodes.DOM_VK_UP, null],
-        ["click", this.positionLayout]
+        ["click", this.positionLayout],
       ]),
       "margin": new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.marginLayout],
         [KeyCodes.DOM_VK_DOWN, this.borderLayout],
         [KeyCodes.DOM_VK_RETURN, this.marginEditable],
         [KeyCodes.DOM_VK_UP, displayPosition ? this.positionLayout : null],
-        ["click", this.marginLayout]
+        ["click", this.marginLayout],
       ]),
       "border": new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.borderLayout],
         [KeyCodes.DOM_VK_DOWN, this.paddingLayout],
         [KeyCodes.DOM_VK_RETURN, this.borderEditable],
         [KeyCodes.DOM_VK_UP, this.marginLayout],
-        ["click", this.borderLayout]
+        ["click", this.borderLayout],
       ]),
       "padding": new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.paddingLayout],
         [KeyCodes.DOM_VK_DOWN, isContentBox ? this.contentLayout : null],
         [KeyCodes.DOM_VK_RETURN, this.paddingEditable],
         [KeyCodes.DOM_VK_UP, this.borderLayout],
-        ["click", this.paddingLayout]
+        ["click", this.paddingLayout],
       ]),
       "content": new Map([
         [KeyCodes.DOM_VK_ESCAPE, this.contentLayout],
         [KeyCodes.DOM_VK_DOWN, null],
         [KeyCodes.DOM_VK_RETURN, this.contentEditable],
         [KeyCodes.DOM_VK_UP, this.paddingLayout],
-        ["click", this.contentLayout]
-      ])
+        ["click", this.contentLayout],
+      ]),
     };
   }
 
@@ -215,7 +215,7 @@ class BoxModelMain extends PureComponent {
    */
   moveFocus({ target, shiftKey }, level) {
     const editBoxes = [
-      ...this.positionLayout.querySelectorAll(`[data-box="${level}"].boxmodel-editable`)
+      ...this.positionLayout.querySelectorAll(`[data-box="${level}"].boxmodel-editable`),
     ];
     const editingMode = target.tagName === "input";
     // target.nextSibling is input field
@@ -425,7 +425,7 @@ class BoxModelMain extends PureComponent {
             this.contentEditable = editable;
           },
           textContent: width,
-          onShowBoxModelEditor
+          onShowBoxModelEditor,
         }),
         dom.span({}, "\u00D7"),
         BoxModelEditable({
@@ -434,7 +434,7 @@ class BoxModelMain extends PureComponent {
           level,
           property: "height",
           textContent: height,
-          onShowBoxModelEditor
+          onShowBoxModelEditor,
         })
       )
       :

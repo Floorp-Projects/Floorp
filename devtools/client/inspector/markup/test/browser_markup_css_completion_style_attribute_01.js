@@ -66,7 +66,7 @@ const TEST_DATA = [
   ["VK_RIGHT", "style=\"display:  inherit; color :chartreuse !important; ",
    55, 55, false],
   ["VK_RETURN", "style=\"display:  inherit; color :chartreuse !important;\"",
-   -1, -1, false]
+   -1, -1, false],
 ];
 
 add_task(async function() {

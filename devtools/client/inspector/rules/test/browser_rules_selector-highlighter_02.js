@@ -40,7 +40,7 @@ add_task(async function() {
       this.nodeFront = null;
       this.options = null;
       this.isShown = false;
-    }
+    },
   };
 
   // Inject the mock highlighter in the rule-view

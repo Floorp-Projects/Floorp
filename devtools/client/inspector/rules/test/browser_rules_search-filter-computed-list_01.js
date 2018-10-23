@@ -30,7 +30,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: true,
     isMarginBottomHighlighted: true,
-    isMarginLeftHighlighted: true
+    isMarginLeftHighlighted: true,
   },
   {
     desc: "Tests that the search filter works properly in the computed list " +
@@ -42,7 +42,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: false,
     isMarginRightHighlighted: true,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: true
+    isMarginLeftHighlighted: true,
   },
   {
     desc: "Tests that the search filter works properly in the computed list " +
@@ -54,7 +54,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: false
+    isMarginLeftHighlighted: false,
   },
   {
     desc: "Tests that the search filter works properly in the computed list " +
@@ -66,7 +66,7 @@ const TEST_DATA = [
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: false,
-    isMarginLeftHighlighted: false
+    isMarginLeftHighlighted: false,
   },
   {
     desc: "Tests that the search filter works properly in the computed list " +
@@ -78,8 +78,8 @@ const TEST_DATA = [
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: false,
     isMarginBottomHighlighted: true,
-    isMarginLeftHighlighted: false
-  }
+    isMarginLeftHighlighted: false,
+  },
 ];
 
 add_task(async function() {

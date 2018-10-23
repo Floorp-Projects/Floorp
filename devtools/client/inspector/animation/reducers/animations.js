@@ -64,13 +64,13 @@ const reducers = {
 
   [UPDATE_ELEMENT_PICKER_ENABLED](state, { elementPickerEnabled }) {
     return Object.assign({}, state, {
-      elementPickerEnabled
+      elementPickerEnabled,
     });
   },
 
   [UPDATE_HIGHLIGHTED_NODE](state, { highlightedNode }) {
     return Object.assign({}, state, {
-      highlightedNode
+      highlightedNode,
     });
   },
 
@@ -85,13 +85,13 @@ const reducers = {
 
     return Object.assign({}, state, {
       detailVisibility,
-      selectedAnimation
+      selectedAnimation,
     });
   },
 
   [UPDATE_SIDEBAR_SIZE](state, { sidebarSize }) {
     return Object.assign({}, state, {
-      sidebarSize
+      sidebarSize,
     });
   },
 };

@@ -38,7 +38,7 @@ const testData = [
   ["VK_RIGHT", {}, "royalblue", !OPEN, !SELECTED, !CHANGE],
   [" ", {}, "royalblue aliceblue", OPEN, SELECTED, CHANGE],
   ["!", {}, "royalblue !important", !OPEN, !SELECTED, CHANGE],
-  ["VK_ESCAPE", {}, null, !OPEN, !SELECTED, CHANGE]
+  ["VK_ESCAPE", {}, null, !OPEN, !SELECTED, CHANGE],
 ];
 
 const TEST_URI = `

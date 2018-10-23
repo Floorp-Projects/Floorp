@@ -47,7 +47,7 @@ class FontName extends PureComponent {
 
   render() {
     const options = {
-      className: "font-name"
+      className: "font-name",
     };
 
     if (Services.prefs.getBoolPref(FONT_HIGHLIGHTER_PREF)) {

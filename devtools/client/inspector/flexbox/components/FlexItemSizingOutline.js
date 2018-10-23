@@ -40,8 +40,8 @@ class FlexItemSizingOutline extends PureComponent {
       dom.div({
         className: "flex-outline-delta",
         style: {
-          backgroundColor: colorUtils.setAlpha(this.props.color, 0.1)
-        }
+          backgroundColor: colorUtils.setAlpha(this.props.color, 0.1),
+        },
       })
     );
   }
@@ -49,7 +49,7 @@ class FlexItemSizingOutline extends PureComponent {
   renderFinalOutline(mainFinalSize, mainMaxSize, mainMinSize, isClamped) {
     return (
       dom.div({
-        className: "flex-outline-final" + (isClamped ? " clamped" : "")
+        className: "flex-outline-final" + (isClamped ? " clamped" : ""),
       })
     );
   }
@@ -100,7 +100,7 @@ class FlexItemSizingOutline extends PureComponent {
     // Make mainDeltaSize start from the same point as the other ones so we can compare.
     let sizes = [
       { name: "basis-end", size: mainBaseSize },
-      { name: "final-end", size: mainFinalSize }
+      { name: "final-end", size: mainFinalSize },
     ];
 
     if (mainDeltaSize > 0) {
@@ -143,8 +143,8 @@ class FlexItemSizingOutline extends PureComponent {
                        (mainDeltaSize > 0 ? " growing" : " shrinking"),
             style: {
               color: this.props.color,
-              gridTemplateColumns
-            }
+              gridTemplateColumns,
+            },
           },
           this.renderPoint("basis"),
           this.renderPoint("final"),

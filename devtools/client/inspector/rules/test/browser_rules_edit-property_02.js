@@ -79,7 +79,7 @@ async function testEditProperty(inspector, ruleView) {
   const newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: "border-color"
+    name: "border-color",
   });
   is(newValue, "red", "border-color should have been set.");
 
@@ -103,7 +103,7 @@ async function testDisableProperty(inspector, ruleView) {
   let newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: "border-color"
+    name: "border-color",
   });
   is(newValue, "", "Border-color should have been unset.");
 
@@ -113,7 +113,7 @@ async function testDisableProperty(inspector, ruleView) {
   newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: "border-color"
+    name: "border-color",
   });
   is(newValue, "red", "Border-color should have been reset.");
 }

@@ -30,7 +30,7 @@ add_task(async function() {
   const newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: "background-color"
+    name: "background-color",
   });
   is(newValue, "", "background-color should have been unset.");
 
@@ -54,7 +54,7 @@ async function testEditDisableProperty(view, rule, prop, fieldType, commitKey) {
   let newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: "background-color"
+    name: "background-color",
   });
   is(newValue, "", "background-color should remain unset.");
 
@@ -79,7 +79,7 @@ async function testEditDisableProperty(view, rule, prop, fieldType, commitKey) {
   newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name: "background-color"
+    name: "background-color",
   });
   is(newValue, "", "background-color should remain unset.");
 }

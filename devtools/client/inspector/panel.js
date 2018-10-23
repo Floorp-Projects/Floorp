@@ -14,6 +14,6 @@ InspectorPanel.prototype = {
 
   destroy() {
     return this._inspector.destroy();
-  }
+  },
 };
 exports.InspectorPanel = InspectorPanel;

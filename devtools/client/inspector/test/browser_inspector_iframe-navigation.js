@@ -22,7 +22,7 @@ add_task(async function() {
     selector: "body",
     options: {type: "mousemove"},
     x: 1,
-    y: 1
+    y: 1,
   });
   await highlighterShowing;
 

@@ -39,7 +39,7 @@ class ComputedTimingPath extends TimingPath {
 
     const { state } = animation;
     const effectTiming = Object.assign({}, state, {
-      iterations: state.iterationCount ? state.iterationCount : Infinity
+      iterations: state.iterationCount ? state.iterationCount : Infinity,
     });
 
     // Create new keyframes for opacity as computed style.
@@ -50,7 +50,7 @@ class ComputedTimingPath extends TimingPath {
       return {
         opacity: keyframe.offset,
         offset: keyframe.offset,
-        easing: keyframe.easing
+        easing: keyframe.easing,
       };
     });
 
@@ -87,7 +87,7 @@ class ComputedTimingPath extends TimingPath {
       {
         className: "animation-computed-timing-path",
         style: { opacity },
-        transform: `translate(${ offset })`
+        transform: `translate(${ offset })`,
       },
       super.renderGraph(state, helper)
     );
