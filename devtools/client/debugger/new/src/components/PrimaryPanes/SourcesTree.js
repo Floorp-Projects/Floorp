@@ -116,7 +116,8 @@ class SourcesTree extends _react.Component {
         debuggeeUrl,
         projectRoot,
         uncollapsedTree,
-        sourceTree
+        sourceTree,
+        focusedItem: this.state.focusedItem
       }));
     }
   }

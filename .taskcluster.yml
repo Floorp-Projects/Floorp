@@ -81,6 +81,11 @@ tasks:
                 - $if: 'repository.project == "try"'
                   then:
                     "notify.email.${ownerEmail}.on-completed"
+                # BUG 1500166 Notify ciduty by email if a nightly hook fails
+                - "notify.email.ciduty+failedcron@mozilla.com.on-failed"
+                - "notify.email.ciduty+exceptioncron@mozilla.com.on-exception"
+                - "notify.email.sheriffs+failedcron@mozilla.com.on-failed"
+                - "notify.email.sheriffs+exceptioncron@mozilla.com.on-exception"
                 # These are the old index routes for the decision task.
                 # They are still here so external tools that referenced them continue to work.
                 - "index.gecko.v2.${repository.project}.latest.firefox.decision"

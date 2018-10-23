@@ -340,13 +340,16 @@ SubDialog.prototype = {
     }
 
     if (comparisonFrameHeight > maxHeight) {
-      // If the height is bigger than that of the window, we should let the contents scroll:
+      // If the height is bigger than that of the window, we should let the
+      // contents scroll. The class is set on the "dialog" element, unless a
+      // content pane exists, which is usually the case when the "window"
+      // element is used to implement the subdialog instead.
       frameHeight = maxHeight + "px";
       frameMinHeight = maxHeight + "px";
-      let containers = this._frame.contentDocument.querySelectorAll(".largeDialogContainer");
-      for (let container of containers) {
-        container.classList.add("doScroll");
-      }
+      let contentPane =
+          this._frame.contentDocument.querySelector(".contentPane") ||
+          this._frame.contentDocument.documentElement;
+      contentPane.classList.add("doScroll");
     }
 
     this._frame.style.height = frameHeight;

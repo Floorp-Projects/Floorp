@@ -24,17 +24,18 @@
   padding: 0;
 }
 
-.prefpane > groupbox + groupbox {
-  margin-top: 16px;
+groupbox[data-category] {
+  margin: 0 0 32px;
 }
 
-groupbox + groupbox > .groupbox-body,
-groupbox + vbox groupbox > .groupbox-body {
-  margin-top: 4px;
+caption {
+  margin: 16px 0 4px;
+  font-size: 1.14em;
+  font-weight: 600;
 }
 
-.groupbox-title {
-  margin-top: 16px;
+.header-name {
+  margin-bottom: 8px;
 }
 
 description.indent,
@@ -60,8 +61,7 @@ button[flex] {
 description,
 label {
   line-height: 1.8em;
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
+  margin: 0;
 }
 
 .tip-caption {
@@ -117,10 +117,6 @@ button > hbox > label {
   margin-right: -4px;
   padding-left: 4px;
   padding-right: 4px;
-}
-
-[data-subcategory] > .groupbox-title {
-  padding-inline-start: 4px;
 }
 
 .ac-site-icon {
@@ -234,6 +230,10 @@ button > hbox > label {
   font-size: 90%;
 }
 
+#useDocumentColors {
+  margin: 0;
+}
+
 #activeLanguages {
   height: 16em;
 }
@@ -252,14 +252,6 @@ button > hbox > label {
 
 #downloadFolder:-moz-locale-dir(rtl) {
   background-position-x: right 8px;
-}
-
-#updateApp > .groupbox-body > label {
-  margin: 0 0 4px;
-}
-
-#updateApp > .groupbox-body > description {
-  margin: 0;
 }
 
 #updateBox {
@@ -329,11 +321,6 @@ button > hbox > label {
 }
 
 /* Home Pane */
-#homepageGroup > .groupbox-title {
-  /* The Restore Defaults button will make this heading taller than the other
-   * sections, so lower the top margin to account for it. */
-  margin-top: 6px;
-}
 #homepageGroup menulist,
 #homepageGroup textbox {
   margin: 5px 0;
@@ -453,19 +440,6 @@ button > hbox > label {
   visibility: collapse;
 }
 
-#weavePrefsDeck > vbox > label,
-#weavePrefsDeck > vbox > groupbox,
-#weavePrefsDeck > vbox > description,
-#weavePrefsDeck > #hasFxaAccount > vbox > label,
-#weavePrefsDeck > #hasFxaAccount > hbox > label {
-  /* no margin-inline-start for elements at the beginning of a line */
-  margin-inline-start: 0;
-}
-
-#weavePrefsDeck > vbox > groupbox {
-  margin-top: 16px;
-}
-
 #tabsElement {
   margin-inline-end: 4px; /* add the 4px end-margin of other elements */
 }
@@ -541,11 +515,6 @@ button > hbox > label {
   -moz-box-flex: 1;
   /* Default dialog dimensions */
   width: 66ch;
-}
-
-.largeDialogContainer.doScroll {
-  overflow-y: auto;
-  -moz-box-flex: 1;
 }
 
 /**

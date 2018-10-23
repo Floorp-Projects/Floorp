@@ -98,7 +98,11 @@ function update(state = initialSourcesState(), action) {
       location = { ...action.location,
         url: action.source.url
       };
-      _prefs.prefs.pendingSelectedLocation = location;
+
+      if (action.source.url) {
+        _prefs.prefs.pendingSelectedLocation = location;
+      }
+
       return { ...state,
         selectedLocation: {
           sourceId: action.source.id,
