@@ -996,7 +996,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
   }
 
   if (NS_WARN_IF(!croppedSurface)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
@@ -1004,7 +1004,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
   RefPtr<layers::Image> data = CreateImageFromSurface(croppedSurface);
 
   if (NS_WARN_IF(!data)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
@@ -1071,7 +1071,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   }
 
   if (NS_WARN_IF(!data)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
@@ -2265,7 +2265,8 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   RefPtr<SourceSurface> surface = aImgContainer->GetFrame(whichFrame, frameFlags);
 
   if (NS_WARN_IF(!surface)) {
-    DecodeAndCropBlobCompletedMainThread(nullptr, NS_ERROR_FAILURE);
+    DecodeAndCropBlobCompletedMainThread(nullptr,
+                                         NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
@@ -2294,7 +2295,8 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   }
 
   if (NS_WARN_IF(!croppedSurface)) {
-    DecodeAndCropBlobCompletedMainThread(nullptr, NS_ERROR_FAILURE);
+    DecodeAndCropBlobCompletedMainThread(nullptr,
+                                         NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
@@ -2302,7 +2304,8 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   RefPtr<layers::Image> image = CreateImageFromSurface(croppedSurface);
 
   if (NS_WARN_IF(!image)) {
-    DecodeAndCropBlobCompletedMainThread(nullptr, NS_ERROR_FAILURE);
+    DecodeAndCropBlobCompletedMainThread(nullptr,
+                                         NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
