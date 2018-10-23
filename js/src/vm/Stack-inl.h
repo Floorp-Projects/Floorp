@@ -787,6 +787,16 @@ AbstractFramePtr::isFunctionFrame() const
 }
 
 inline bool
+AbstractFramePtr::isGeneratorFrame() const
+{
+    if (!isFunctionFrame()) {
+        return false;
+    }
+    JSScript* s = script();
+    return s->isGenerator() || s->isAsync();
+}
+
+inline bool
 AbstractFramePtr::isNonStrictDirectEvalFrame() const
 {
     if (isInterpreterFrame()) {
