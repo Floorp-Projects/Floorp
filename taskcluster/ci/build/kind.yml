@@ -22,3 +22,17 @@ jobs-from:
     - linux.yml
     - macosx.yml
     - windows.yml
+
+job-defaults:
+    run:
+        # Note: These settings are only honored by nightly (i.e. shipping) builds
+        update-channel:
+            by-release-type:
+                nightly: nightly
+                beta:
+                    by-shipping-product:
+                        devedition: aurora
+                        default: beta
+                release.*: release
+                esr.*: esr
+                default: null
