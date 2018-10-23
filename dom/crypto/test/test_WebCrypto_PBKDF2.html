@@ -235,6 +235,35 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Import raw PBKDF2 zero-length key and derive bits using HMAC-SHA-256",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha256_no_pwd.password;
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw "Invalid key; missing field(s)";
+      }
+
+      var alg = {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: tv.pbkdf2_sha256_no_pwd.salt,
+        iterations: tv.pbkdf2_sha256_no_pwd.iterations
+      };
+      return crypto.subtle.deriveBits(alg, x, tv.pbkdf2_sha256_no_pwd.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveBits"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha256_no_pwd.derived), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "Import raw PBKDF2 key and derive bits using HMAC-SHA-256 with zero-length salt",
   function() {
     var that = this;
