@@ -407,6 +407,30 @@ interface nsIUpdateProcessor : nsISupports
    *               to updated application request.
    */
   void processUpdate(in nsIUpdate update);
+
+  /**
+   * Attempts to fix the permissions of the update directory. This can be done
+   * in two ways. Firefox can attempt to fix the permissions itself, or it can
+   * call into the maintenance service to request that it attempt to fix the
+   * permissions.
+   *
+   * Fixing the permissions can take some time, so this work is all done off of
+   * the main thread.
+   *
+   * Currently, this function only has a Windows implementation. On other
+   * operating systems, it will throw NS_ERROR_NOT_IMPLEMENTED.
+   *
+   * Since this function does its work off of the main thread and does not
+   * block, it will only throw if it was unable to dispatch to another thread.
+   *
+   * @param shouldUseService If set to false, Firefox will attempt to fix the
+   *                         permissions itself, but the maintenance service
+   *                         will not be used. If set to true and Firefox is
+   *                         unable to fix the permissions itself, it will
+   *                         attempt to call into the maintenance service to
+   *                         request that it attempt to fix the permissions.
+   */
+  void fixUpdateDirectoryPerms(in boolean shouldUseService);
 };
 
 /**

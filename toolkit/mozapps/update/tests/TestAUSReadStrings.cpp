@@ -10,16 +10,12 @@
 #ifdef XP_WIN
   #include <windows.h>
   #define NS_main wmain
-  #define NS_tstrrchr wcsrchr
-  #define NS_T(str) L ## str
   #define PATH_SEPARATOR_CHAR L'\\'
   // On Windows, argv[0] can also have forward slashes instead
   #define ALT_PATH_SEPARATOR_CHAR L'/'
 #else
   #include <unistd.h>
   #define NS_main main
-  #define NS_tstrrchr strrchr
-  #define NS_T(str) str
   #define PATH_SEPARATOR_CHAR '/'
 #endif
 
@@ -31,6 +27,7 @@
 #include "updater/progressui.h"
 #include "common/readstrings.h"
 #include "common/errors.h"
+#include "common/updatedefines.h"
 #include "mozilla/ArrayUtils.h"
 
 #ifndef MAXPATHLEN

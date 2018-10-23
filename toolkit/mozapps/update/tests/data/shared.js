@@ -38,10 +38,11 @@ const PREF_DISABLE_SECURITY          = "security.turn_off_all_security_so_that_v
 
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
-const NS_GRE_DIR                   = "GreD";
 const NS_GRE_BIN_DIR               = "GreBinD";
+const NS_GRE_DIR                   = "GreD";
 const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
 const XRE_EXECUTABLE_FILE          = "XREExeF";
+const XRE_OLD_UPDATE_ROOT_DIR      = "OldUpdRootD";
 const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
 
 const DIR_PATCH        = "0";

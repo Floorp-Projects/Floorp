@@ -19,6 +19,7 @@
 #include "shellapi.h"
 #include "readstrings.h"
 #include "errors.h"
+#include "commonupdatedir.h"
 
 #pragma comment(lib, "version.lib")
 
@@ -255,6 +256,15 @@ FixServicePath(SC_HANDLE service,
 BOOL
 SvcInstall(SvcInstallAction action)
 {
+  mozilla::UniquePtr<wchar_t[]> updateDir;
+  HRESULT permResult = GetCommonUpdateDirectory(nullptr, nullptr, nullptr,
+                                                SetPermissionsOf::AllFilesAndDirs,
+                                                updateDir);
+  if (FAILED(permResult)) {
+    LOG_WARN(("Unable to set the permissions on the update directory ('%S'): %d",
+             updateDir.get(), permResult));
+  }
+
   // Get a handle to the local computer SCM database with full access rights.
   nsAutoServiceHandle schSCManager(OpenSCManager(nullptr, nullptr,
                                                  SC_MANAGER_ALL_ACCESS));
