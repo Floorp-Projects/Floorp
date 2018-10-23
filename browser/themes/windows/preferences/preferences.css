@@ -58,14 +58,6 @@
   margin: 0 3px 6px !important;
 }
 
-/* Advanced Pane */
-
-/* bottom-most box containing a groupbox in a prefpane. Prevents the bottom
-   of the groupbox from being cutoff */
-.bottomBox {
-  padding-bottom: 4px;
-}
-
 /* Sync Pane */
 
 #noFxaAccount {

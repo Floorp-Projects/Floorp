@@ -26,42 +26,38 @@
 
   <description control="pw1">&masterPasswordDescription.label;</description>
 
-  <groupbox>
-    <grid>
-      <columns>
-        <column flex="1"/>
-        <column/>
-      </columns>
-      <rows>
-        <row>
-          <label control="oldpw">&setPassword.oldPassword.label;</label>
-          <textbox id="oldpw" type="password"/>
-          <!-- This textbox is inserted as a workaround to the fact that making the 'type'
-                & 'disabled' property of the 'oldpw' textbox toggle between ['password' &
-                'false'] and ['text' & 'true'] - as would be necessary if the menu has more
-                than one tokens, some initialized and some not - does not work properly. So,
-                either the textbox 'oldpw' or the textbox 'message' would be displayed,
-                depending on the state of the token selected
-          -->
-          <textbox id="message" disabled="true" />
-        </row>
-        <row>
-          <label control="pw1">&setPassword.newPassword.label;</label>
-          <textbox id="pw1" type="password"
-                   oninput="setPasswordStrength(); checkPasswords();"/>
-        </row>
-        <row>
-          <label control="pw2">&setPassword.reenterPassword.label;</label>
-          <textbox id="pw2" type="password" oninput="checkPasswords();"/>
-        </row>
-      </rows>
-    </grid>
-  </groupbox>
+  <grid>
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+        <label control="oldpw">&setPassword.oldPassword.label;</label>
+        <textbox id="oldpw" type="password"/>
+        <!-- This textbox is inserted as a workaround to the fact that making the 'type'
+              & 'disabled' property of the 'oldpw' textbox toggle between ['password' &
+              'false'] and ['text' & 'true'] - as would be necessary if the menu has more
+              than one tokens, some initialized and some not - does not work properly. So,
+              either the textbox 'oldpw' or the textbox 'message' would be displayed,
+              depending on the state of the token selected
+        -->
+        <textbox id="message" disabled="true" />
+      </row>
+      <row>
+        <label control="pw1">&setPassword.newPassword.label;</label>
+        <textbox id="pw1" type="password"
+                 oninput="setPasswordStrength(); checkPasswords();"/>
+      </row>
+      <row>
+        <label control="pw2">&setPassword.reenterPassword.label;</label>
+        <textbox id="pw2" type="password" oninput="checkPasswords();"/>
+      </row>
+    </rows>
+  </grid>
 
-  <groupbox>
-    <caption label="&setPassword.meter.label;"/>
-    <html:progress id="pwmeter" value="0" max="100"/>
-  </groupbox>
+  <html:label for="pwmeter" style="display: -moz-box;">&setPassword.meter.label;</html:label>
+  <html:progress id="pwmeter" value="0" max="100"/>
 
   <description control="pw2" class="header">&masterPasswordWarning.label;</description>
 

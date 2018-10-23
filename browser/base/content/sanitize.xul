@@ -83,7 +83,7 @@
 
     <separator class="thin"/>
 
-    <groupbox orient="horizontal">
+    <groupbox>
       <caption><label>&historySection.label;</label></caption>
       <grid flex="1">
         <columns>
@@ -120,7 +120,7 @@
         </rows>
       </grid>
     </groupbox>
-    <groupbox orient="horizontal">
+    <groupbox>
       <caption><label>&dataSection.label;</label></caption>
       <grid flex="1">
         <columns>
