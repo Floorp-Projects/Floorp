@@ -145,8 +145,7 @@ protected:
     mutable CacheWeakMap<const WebGLSampler*, webgl::SampleableInfo> mSamplingCache;
 
 public:
-    Maybe<const CompletenessInfo> CalcCompletenessInfo(bool ensureInit,
-                                                       bool skipMips = false) const;
+    Maybe<const CompletenessInfo> CalcCompletenessInfo() const;
     Maybe<const webgl::SampleableInfo> CalcSampleableInfo(const WebGLSampler*) const;
 
     const webgl::SampleableInfo* GetSampleableInfo(const WebGLSampler*) const;
@@ -311,8 +310,7 @@ public:
     bool EnsureImageDataInitialized(TexImageTarget target,
                                     uint32_t level);
     void PopulateMipChain(uint32_t maxLevel);
-    bool IsMipAndCubeComplete(uint32_t maxLevel, bool ensureInit,
-                              bool* out_initFailed) const;
+    bool IsMipAndCubeComplete(uint32_t maxLevel, bool* out_initFailed) const;
 
     bool IsCubeMap() const { return (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP); }
 };
