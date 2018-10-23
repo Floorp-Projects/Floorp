@@ -38,6 +38,7 @@
 #include "ManifestParser.h"
 #include "nsNetUtil.h"
 #include "mozilla/Services.h"
+#include "mozJSComponentLoader.h"
 
 #include "mozilla/GenericFactory.h"
 #include "nsSupportsPrimitives.h"
@@ -774,30 +775,21 @@ nsComponentManagerImpl::RereadChromeManifests(bool aChromeOnly)
 }
 
 bool
-nsComponentManagerImpl::KnownModule::EnsureLoader()
-{
-  if (!mLoader) {
-    nsCString extension;
-    mFile.GetURIString(extension);
-    CutExtension(extension);
-    mLoader =
-      nsComponentManagerImpl::gComponentManager->LoaderForExtension(extension);
-  }
-  return !!mLoader;
-}
-
-bool
 nsComponentManagerImpl::KnownModule::Load()
 {
   if (mFailed) {
     return false;
   }
   if (!mModule) {
-    if (!EnsureLoader()) {
+    nsCString extension;
+    mFile.GetURIString(extension);
+    CutExtension(extension);
+    if (!extension.Equals("js")) {
       return false;
     }
 
-    mModule = mLoader->LoadModule(mFile);
+    RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::GetOrCreate();
+    mModule = loader->LoadModule(mFile);
 
     if (!mModule) {
       mFailed = true;
@@ -844,7 +836,6 @@ nsresult nsComponentManagerImpl::Shutdown(void)
   // Release all cached factories
   mContractIDs.Clear();
   mFactories.Clear(); // XXX release the objects, don't just clear
-  mLoaderMap.Clear();
   mKnownModules.Clear();
   mKnownStaticModules.Clear();
 
@@ -1521,23 +1512,6 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
   return NS_OK;
 }
 
-already_AddRefed<mozilla::ModuleLoader>
-nsComponentManagerImpl::LoaderForExtension(const nsACString& aExt)
-{
-  nsCOMPtr<mozilla::ModuleLoader> loader = mLoaderMap.Get(aExt);
-  if (!loader) {
-    loader = do_GetServiceFromCategory(NS_LITERAL_CSTRING("module-loader"),
-                                       aExt);
-    if (!loader) {
-      return nullptr;
-    }
-
-    mLoaderMap.Put(aExt, loader);
-  }
-
-  return loader.forget();
-}
-
 NS_IMETHODIMP
 nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
                                         const char* aName,
@@ -1746,8 +1720,6 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
 
-  n += mLoaderMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
-
   n += mFactories.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mFactories.ConstIter(); !iter.Done(); iter.Next()) {
     n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
@@ -1774,7 +1746,6 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mLoaderMap's keys and values
   // - mMon
   // - sModuleLocations' entries
   // - mKnownStaticModules' entries?

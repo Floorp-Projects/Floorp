@@ -142,9 +142,6 @@ public:
 
   nsresult FreeServices();
 
-  already_AddRefed<mozilla::ModuleLoader> LoaderForExtension(const nsACString& aExt);
-  nsInterfaceHashtable<nsCStringHashKey, mozilla::ModuleLoader> mLoaderMap;
-
   already_AddRefed<nsIFactory> FindFactory(const nsCID& aClass);
   already_AddRefed<nsIFactory> FindFactory(const char* aContractID,
                                            uint32_t aContractIDLen);
@@ -196,7 +193,6 @@ public:
     explicit KnownModule(mozilla::FileLocation& aFile)
       : mModule(nullptr)
       , mFile(aFile)
-      , mLoader(nullptr)
       , mLoaded(false)
       , mFailed(false)
     {
@@ -209,7 +205,6 @@ public:
       }
     }
 
-    bool EnsureLoader();
     bool Load();
 
     const mozilla::Module* Module() const { return mModule; }
@@ -223,7 +218,6 @@ public:
   private:
     const mozilla::Module* mModule;
     mozilla::FileLocation mFile;
-    nsCOMPtr<mozilla::ModuleLoader> mLoader;
     bool mLoaded;
     bool mFailed;
   };
