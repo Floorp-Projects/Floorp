@@ -10948,7 +10948,7 @@ main(int argc, char** argv, char** envp)
 
 #ifdef DEBUG
     if (OOM_printAllocationCount) {
-        printf("OOM max count: %" PRIu64 "\n", js::oom::counter);
+        printf("OOM max count: %" PRIu64 "\n", js::oom::simulator.counter());
     }
 #endif
 
