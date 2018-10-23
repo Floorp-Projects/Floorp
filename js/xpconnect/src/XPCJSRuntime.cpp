@@ -3354,7 +3354,7 @@ JSObject*
 XPCJSRuntime::LoaderGlobal()
 {
     if (!mLoaderGlobal) {
-        RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::GetOrCreate();
+        RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::Get();
 
         dom::AutoJSAPI jsapi;
         jsapi.Init();
