@@ -40,7 +40,6 @@
 #include "mozilla/Attributes.h"
 
 struct nsFactoryEntry;
-class nsIServiceManager;
 struct PRThread;
 
 #define NS_COMPONENTMANAGER_CID                      \
@@ -51,17 +50,6 @@ struct PRThread;
     {0x92, 0xfb, 0x00, 0xe0, 0x98, 0x05, 0x57, 0x0f} \
 }
 
-/* keys for registry use */
-extern const char xpcomKeyName[];
-extern const char xpcomComponentsKeyName[];
-extern const char lastModValueName[];
-extern const char fileSizeValueName[];
-extern const char nativeComponentType[];
-extern const char staticComponentType[];
-
-#ifdef DEBUG
-#define XPCOM_CHECK_PENDING_CIDS
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 extern const mozilla::Module kXPCOMModule;
