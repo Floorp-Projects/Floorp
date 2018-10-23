@@ -4,12 +4,29 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 0.29.0-SNAPSHOT (In Development)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.28.0...master),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/31?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.29.0/index)
+
+* Compiled against:
+  * Android (SDK: 27, Support Libraries: 27.1.1)
+  * Kotlin (Stdlib: 1.2.61, Coroutines: 0.23.4)
+  * GeckoView
+    * Nightly: 64.0.20181004100221
+    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
+    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
+* **lib-jexl**
+  * New component for for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
+
 # 0.28.0
 
 Release date: 2018-10-23
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.27.0...v0.28.0),
-[Milestone](https://github.com/mozilla-mobile/android-components/milestone/30?closed=1)
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/30?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.28.0/index)
 
 ⚠️ **Note**: This and upcoming releases are **only** available from *maven.mozilla.org*.
 
@@ -54,16 +71,12 @@ Release date: 2018-10-23
   * Added translation annotations to our error page strings. Translated strings will follow in a future release.
 * **service-glean**
   * A new client-side telemetry SDK for collecting metrics and sending them to Mozilla's telemetry service. This component is going to eventually replace `service-telemetry`. The SDK is currently in development and the component is not ready to be used yet.
-* **lib-jexl**
-  * New component for for evaluating Javascript Expression Language (JEXL) expressions. This implementation is based on [Mozjexl](https://github.com/mozilla/mozjexl) used at Mozilla, specifically as a part of SHIELD and Normandy. In a future version of Fretboard JEXL will allow more complex rules for experiments. For more see [documentation](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/README.md).
 * **lib-dataprotect**
   * The `Keystore` class and its `encryptBytes()` and `decryptBytes()` methods are now open to simplify mocking in unit tests.
 * **ui-tabcounter**
   * The `TabCounter` class is now open and can get extended.
 * **feature-downloads**
   * Now you're able to provide a dialog before a download starts and customize it to your wish. Take a look at the [updated docs](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/README.md).
-* **sample-toolbar**
-  * Bug fixed: issue [#980](https://github.com/mozilla-mobile/android-components/issues/980) Add pressed state for unselected toggle buttons
 
 # 0.27.0
 

@@ -7,7 +7,7 @@ object Config {
 
     // This version number should follow semantic versioning (MAJOR.MINOR.PATCH).
     // See https://semver.org/
-    const val componentsVersion = "0.28.0"
+    const val componentsVersion = "0.29.0"
 
     // Synchronized build configuration for all modules
     const val compileSdkVersion = 27
