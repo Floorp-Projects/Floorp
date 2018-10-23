@@ -282,7 +282,7 @@ SvcMain(DWORD argc, LPWSTR *argv)
   // The service command was executed, stop logging and set an event
   // to indicate the work is done in case someone is waiting on a
   // service stop operation.
-  ExecuteServiceCommand(argc, argv);
+  BOOL success = ExecuteServiceCommand(argc, argv);
   LogFinish();
 
   SetEvent(gWorkDoneEvent);
@@ -291,7 +291,7 @@ SvcMain(DWORD argc, LPWSTR *argv)
   // now.  If we are already in a stopping state then the SERVICE_STOPPED state
   // will be set by the SvcCtrlHandler.
   if (!gServiceControlStopping) {
-    ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+    ReportSvcStatus(SERVICE_STOPPED, success ? NO_ERROR : 1, 0);
     StartTerminationThread();
   }
 }

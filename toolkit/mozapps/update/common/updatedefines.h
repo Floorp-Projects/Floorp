@@ -51,7 +51,9 @@
 # define CALLBACK_BACKUP_EXT L".moz-callback"
 
 # define LOG_S "%S"
-# define NS_T(str) L ## str
+# define NS_CONCAT(x, y) x##y
+// The extra layer of indirection here allows this macro to be passed macros
+# define NS_T(str) NS_CONCAT(L, str)
 # define NS_SLASH NS_T('\\')
 
 static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
