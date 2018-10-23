@@ -9976,12 +9976,6 @@ CreateSimpleClipRegion(const nsDisplayMasksAndClipPaths& aDisplayItem,
     return Nothing();
   }
 
-  // TODO(emilio): We should be able to still generate a clip and pass the
-  // opacity down to StackingContextHelper instead.
-  if (frame->StyleEffects()->mOpacity != 1.0) {
-    return Nothing();
-  }
-
   auto& clipPath = style->mClipPath;
   if (clipPath.GetType() != StyleShapeSourceType::Shape) {
     return Nothing();
@@ -10016,7 +10010,13 @@ CreateSimpleClipRegion(const nsDisplayMasksAndClipPaths& aDisplayItem,
   return Some(clipId);
 }
 
-static Maybe<wr::WrClipId>
+enum class HandleOpacity
+{
+  No,
+  Yes,
+};
+
+static Maybe<Pair<wr::WrClipId, HandleOpacity>>
 CreateWRClipPathAndMasks(nsDisplayMasksAndClipPaths* aDisplayItem,
                          const LayoutDeviceRect& aBounds,
                          wr::IpcResourceUpdateQueue& aResources,
@@ -10026,7 +10026,7 @@ CreateWRClipPathAndMasks(nsDisplayMasksAndClipPaths* aDisplayItem,
                          nsDisplayListBuilder* aDisplayListBuilder)
 {
   if (auto clip = CreateSimpleClipRegion(*aDisplayItem, aBuilder)) {
-    return clip;
+    return Some(MakePair(*clip, HandleOpacity::Yes));
   }
 
   Maybe<wr::WrImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(
@@ -10041,7 +10041,7 @@ CreateWRClipPathAndMasks(nsDisplayMasksAndClipPaths* aDisplayItem,
                         nullptr,
                         mask.ptr());
 
-  return Some(clipId);
+  return Some(MakePair(clipId, HandleOpacity::No));
 }
 
 bool
@@ -10058,7 +10058,7 @@ nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
   LayoutDeviceRect bounds =
     LayoutDeviceRect::FromAppUnits(displayBounds, appUnitsPerDevPixel);
 
-  Maybe<wr::WrClipId> clip =
+  Maybe<Pair<wr::WrClipId, HandleOpacity>> clip =
     CreateWRClipPathAndMasks(
       this, bounds, aResources, aBuilder, aSc, aManager, aDisplayListBuilder);
 
@@ -10071,20 +10071,26 @@ nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
     // The stacking context shouldn't have any offset.
     bounds.MoveTo(0, 0);
 
+    wr::WrClipId clipId = clip->first();
+
+    Maybe<float> opacity = clip->second() == HandleOpacity::Yes
+      ? Some(mFrame->StyleEffects()->mOpacity)
+      : Nothing();
+
     layer.emplace(aSc,
                   aBuilder,
                   /*aFilters: */ nsTArray<wr::WrFilterOp>(),
                   /*aBounds: */ bounds,
                   /*aBoundTransform: */ nullptr,
                   /*aAnimation: */ nullptr,
-                  /*aOpacity: */ nullptr,
+                  /*aOpacity: */ opacity.ptrOr(nullptr),
                   /*aTransform: */ nullptr,
                   /*aPerspective: */ nullptr,
                   /*aMixBlendMode: */ gfx::CompositionOp::OP_OVER,
                   /*aBackfaceVisible: */ true,
                   /*aIsPreserve3D: */ false,
                   /*aTransformForScrollData: */ Nothing(),
-                  /*aClipNodeId: */ clip.ptr());
+                  /*aClipNodeId: */ &clipId);
     sc = layer.ptr();
     // The whole stacking context will be clipped by us, so no need to have any
     // parent for the children context's clip.
