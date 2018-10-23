@@ -809,9 +809,7 @@ Debugger::getFrame(JSContext* cx, const FrameIter& iter, MutableHandleDebuggerFr
         // was suspended, popping the stack frame, and later resumed.
         Rooted<GeneratorObject*> genObj(cx);
         GeneratorWeakMap::AddPtr gp;
-        if (referent.isFunctionFrame() && (referent.callee()->isGenerator() ||
-                                           referent.callee()->isAsync()))
-        {
+        if (referent.isGeneratorFrame()) {
             {
                 AutoRealm ar(cx, referent.callee());
                 genObj = GetGeneratorObjectForFrame(cx, referent);
