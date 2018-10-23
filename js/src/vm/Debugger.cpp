@@ -1004,6 +1004,16 @@ Debugger::slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame)
     return resumeMode;
 }
 
+/* static */ ResumeMode
+Debugger::slowPathOnResumeFrame(JSContext* cx, AbstractFramePtr frame)
+{
+    // Don't count on this method to be called every time a generator is
+    // resumed! This is called only if the frame's debuggee bit is set,
+    // i.e. the script has breakpoints or the frame is stepping.
+    return slowPathOnEnterFrame(cx, frame);
+}
+
+
 static void
 DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp* fop, AbstractFramePtr frame,
                                                      NativeObject* frameobj);
