@@ -1070,9 +1070,26 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
 {
     mozilla::DebugOnly<Handle<GlobalObject*>> debuggeeGlobal = cx->global();
 
+    // Determine if we are suspending this frame or popping it forever.
+    bool suspending = false;
+    Rooted<GeneratorObject*> genObj(cx);
+    if (frame.isGeneratorFrame()) {
+        // If we're leaving successfully at a yield opcode, we're probably
+        // suspending; the `isClosed()` check detects a debugger forced return
+        // from an `onStep` handler, which looks almost the same.
+        genObj = GetGeneratorObjectForFrame(cx, frame);
+        suspending =
+            frameOk &&
+            pc && (*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD || *pc == JSOP_AWAIT) &&
+            !genObj->isClosed();
+    }
+
+    bool success = false;
     auto frameMapsGuard = MakeScopeExit([&] {
-        // Clean up all Debugger.Frame instances.
-        removeFromFrameMapsAndClearBreakpointsIn(cx, frame);
+        // Clean up all Debugger.Frame instances on exit. On suspending, pass
+        // the flag that says to leave those frames `.live`. Note that if
+        // suspending && !success, the generator is closed, not suspended.
+        removeFromFrameMapsAndClearBreakpointsIn(cx, frame, suspending && success);
     });
 
     // The onPop handler and associated clean up logic should not run multiple
@@ -1090,13 +1107,6 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
     ResumeMode resumeMode;
     RootedValue value(cx);
     Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &resumeMode, &value);
-
-    // If we are yielding or awaiting, we'll need to mark the generator as
-    // "running" temporarily.
-    Rooted<GeneratorObject*> genObj(cx);
-    if (frame.isFunctionFrame() && (frame.callee()->isGenerator() || frame.callee()->isAsync())) {
-        genObj = GetGeneratorObjectForFrame(cx, frame);
-    }
 
     // This path can be hit via unwinding the stack due to over-recursion or
     // OOM. In those cases, don't fire the frames' onPop handlers, because
@@ -1151,6 +1161,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
     switch (resumeMode) {
       case ResumeMode::Return:
         frame.setReturnValue(value);
+        success = true;
         return true;
 
       case ResumeMode::Throw:
@@ -7289,7 +7300,8 @@ Debugger::inFrameMaps(AbstractFramePtr frame)
 }
 
 /* static */ void
-Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx, AbstractFramePtr frame)
+Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx, AbstractFramePtr frame,
+                                                   bool suspending)
 {
     forEachDebuggerFrame(frame, [&](DebuggerFrame* frameobj) {
         Debugger* dbg = Debugger::fromChildJSObject(frameobj);
