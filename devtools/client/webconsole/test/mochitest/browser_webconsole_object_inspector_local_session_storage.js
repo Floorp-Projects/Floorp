@@ -65,6 +65,9 @@ async function checkValues(oi, storageType) {
   is(nodes.length, 7, "There is the expected number of nodes in the tree");
 
   const title = nodes[0].querySelector(".objectTitle").textContent;
+  const name1 = nodes[1].querySelector(".object-label").textContent;
+  const value1 = nodes[1].querySelector(".objectBox").textContent;
+
   const length = [...nodes[2].querySelectorAll(".object-label,.objectBox")]
                              .map(node => node.textContent);
   const key2 = [...nodes[4].querySelectorAll(".object-label,.nodeName,.objectBox-string")]
@@ -79,6 +82,8 @@ async function checkValues(oi, storageType) {
   is(key2[1], "key2", `1st entry of ${storageType} entry has the correct key`);
 
   const firstValue = storageType === "localStorage" ? `"value2"` : `"value4"`;
+  is(name1, "key2", "Name of short descriptor is correct");
+  is(value1, firstValue, "Value of short descriptor is correct");
   is(key2[2], firstValue, `1st entry of ${storageType} entry has the correct value`);
   is(key[0], "1", `2nd entry of ${storageType} entry has the correct index`);
   is(key[1], "key", `2nd entry of ${storageType} entry has the correct key`);
