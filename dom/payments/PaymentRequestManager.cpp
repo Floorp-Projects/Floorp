@@ -249,74 +249,6 @@ ConvertOptions(const PaymentOptions& aOptions,
                                  aOptions.mRequestShipping,
                                  shippingType);
 }
-
-nsresult
-ConvertResponseData(nsPIDOMWindowInner* aWindow,
-                    const IPCPaymentResponseData& aIPCResponseData,
-                    ResponseData& aResponseData)
-{
-  NS_ENSURE_ARG_POINTER(aWindow);
-  switch(aIPCResponseData.type()) {
-    case IPCPaymentResponseData::TIPCGeneralResponse: {
-      const IPCGeneralResponse& rawData = aIPCResponseData;
-      aResponseData.Init(rawData.data());
-      break;
-    }
-    case IPCPaymentResponseData::TIPCBasicCardResponse: {
-      const IPCBasicCardResponse& rawData = aIPCResponseData;
-      BasicCardResponse basicCardResponse;
-      if (!rawData.cardholderName().IsEmpty()) {
-        basicCardResponse.mCardholderName.Construct();
-        basicCardResponse.mCardholderName.Value() = rawData.cardholderName();
-      }
-      basicCardResponse.mCardNumber = rawData.cardNumber();
-      if (!rawData.expiryMonth().IsEmpty()) {
-        basicCardResponse.mExpiryMonth.Construct();
-        basicCardResponse.mExpiryMonth.Value() = rawData.expiryMonth();
-      }
-      if (!rawData.expiryYear().IsEmpty()) {
-        basicCardResponse.mExpiryYear.Construct();
-        basicCardResponse.mExpiryYear.Value() = rawData.expiryYear();
-      }
-      if (!rawData.cardSecurityCode().IsEmpty()) {
-        basicCardResponse.mCardSecurityCode.Construct();
-        basicCardResponse.mCardSecurityCode.Value() = rawData.cardSecurityCode();
-      }
-      if (!rawData.billingAddress().country().IsEmpty() ||
-          !rawData.billingAddress().addressLine().IsEmpty() ||
-          !rawData.billingAddress().region().IsEmpty() ||
-          !rawData.billingAddress().regionCode().IsEmpty() ||
-          !rawData.billingAddress().city().IsEmpty() ||
-          !rawData.billingAddress().dependentLocality().IsEmpty() ||
-          !rawData.billingAddress().postalCode().IsEmpty() ||
-          !rawData.billingAddress().sortingCode().IsEmpty() ||
-          !rawData.billingAddress().organization().IsEmpty() ||
-          !rawData.billingAddress().recipient().IsEmpty() ||
-          !rawData.billingAddress().phone().IsEmpty()) {
-        basicCardResponse.mBillingAddress.Construct();
-        basicCardResponse.mBillingAddress.Value() =
-          new PaymentAddress(aWindow,
-                             rawData.billingAddress().country(),
-                             rawData.billingAddress().addressLine(),
-                             rawData.billingAddress().region(),
-                             rawData.billingAddress().regionCode(),
-                             rawData.billingAddress().city(),
-                             rawData.billingAddress().dependentLocality(),
-                             rawData.billingAddress().postalCode(),
-                             rawData.billingAddress().sortingCode(),
-                             rawData.billingAddress().organization(),
-                             rawData.billingAddress().recipient(),
-                             rawData.billingAddress().phone());
-      }
-      aResponseData.Init(basicCardResponse);
-      break;
-    }
-    default: {
-      return NS_ERROR_FAILURE;
-    }
-  }
-  return NS_OK;
-}
 } // end of namespace
 
 /* PaymentRequestManager */
@@ -657,14 +589,9 @@ PaymentRequestManager::RespondPayment(PaymentRequest* aRequest,
     case IPCPaymentActionResponse::TIPCPaymentShowActionResponse: {
       const IPCPaymentShowActionResponse& response = aResponse;
       nsresult rejectedReason = NS_ERROR_DOM_ABORT_ERR;
-      ResponseData responseData;
       switch (response.status()) {
         case nsIPaymentActionResponse::PAYMENT_ACCEPTED: {
           rejectedReason = NS_OK;
-          NS_ENSURE_SUCCESS(ConvertResponseData(aRequest->GetOwner(),
-                                                response.data(),
-                                                responseData),
-                            NS_ERROR_FAILURE);
           break;
         }
         case nsIPaymentActionResponse::PAYMENT_REJECTED: {
@@ -681,7 +608,7 @@ PaymentRequestManager::RespondPayment(PaymentRequest* aRequest,
         }
       }
       aRequest->RespondShowPayment(response.methodName(),
-                                   responseData,
+                                   response.data(),
                                    response.payerName(),
                                    response.payerEmail(),
                                    response.payerPhone(),
