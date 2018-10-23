@@ -62,7 +62,7 @@ def create_raw_task(name, description, full_command):
         "payload": {
             "features": {},
             "maxRunTime": 7200,
-            "image": "mozillamobile/android-components:1.7",
+            "image": "mozillamobile/android-components:1.8",
             "command": [
                 "/bin/bash",
                 "--login",
