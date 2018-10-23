@@ -28,12 +28,13 @@ fi
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
 : START_VNC                     ${START_VNC:=false}
 : TASKCLUSTER_INTERACTIVE       ${TASKCLUSTER_INTERACTIVE:=false}
-: WORKSPACE                     ${WORKSPACE:=$HOME/workspace}
 : mozharness args               "${@}"
+: WORKING_DIR                   ${WORKING_DIR:=$(pwd)}
+: WORKSPACE                     ${WORKSPACE:=${WORKING_DIR%/}/workspace}
 
 set -v
-mkdir -p $WORKSPACE
-cd $WORKSPACE
+mkdir -p "$WORKSPACE"
+cd "$WORKSPACE"
 
 fail() {
     echo # make sure error message is on a new line
@@ -57,15 +58,15 @@ if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
 # make sure artifact directories exist
-mkdir -p $WORKSPACE/build/upload/logs
-mkdir -p ~/artifacts/public
-mkdir -p $WORKSPACE/build/blobber_upload_dir
+mkdir -p "$WORKSPACE/build/upload/logs"
+mkdir -p "$WORKING_DIR/artifacts/public"
+mkdir -p "$WORKSPACE/build/blobber_upload_dir"
 
 cleanup() {
     local rv=$?
     if [[ -s $HOME/.xsession-errors ]]; then
       # To share X issues
-      cp $HOME/.xsession-errors ~/artifacts/public/xsession-errors.log
+      cp "$HOME/.xsession-errors" "$WORKING_DIR/artifacts/public/xsession-errors.log"
     fi
     if $NEED_XVFB; then
         cleanup_xvfb
@@ -124,7 +125,7 @@ if $NEED_XVFB; then
 fi
 
 if $START_VNC; then
-    x11vnc > ~/artifacts/public/x11vnc.log 2>&1 &
+    x11vnc > "$WORKING_DIR/artifacts/public/x11vnc.log" 2>&1 &
 fi
 
 if $NEED_WINDOW_MANAGER; then
@@ -176,7 +177,7 @@ mkdir -p $(dirname $mozharness_bin)
 echo -e "#!/usr/bin/env bash
 # Some mozharness scripts assume base_work_dir is in
 # the current working directory, see bug 1279237
-cd $WORKSPACE
+cd "$WORKSPACE"
 cmd=\"python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} ${@} \${@}\"
 echo \"Running: \${cmd}\"
 exec \${cmd}" > ${mozharness_bin}
@@ -192,6 +193,6 @@ fi
 # Run a custom mach command (this is typically used by action tasks to run
 # harnesses in a particular way)
 if [ "$CUSTOM_MACH_COMMAND" ]; then
-    eval "$HOME/workspace/build/tests/mach ${CUSTOM_MACH_COMMAND}"
+    eval "'$WORKSPACE/build/tests/mach' ${CUSTOM_MACH_COMMAND}"
     exit $?
 fi
