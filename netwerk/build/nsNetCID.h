@@ -543,18 +543,6 @@
     {0x9f, 0xd4, 0xe0, 0x65, 0xe8, 0x55, 0x68, 0xf4} \
 }
 
-// component implementing nsIHttpPushListener.
-#define NS_HTTPPUSHLISTENER_CONTRACTID \
-    "@mozilla.org/network/push-listener;1"
-#define NS_HTTPPUSHLISTENER_CID                      \
-{                                                    \
-    0x73cf4430,                                      \
-    0x5877,                                          \
-    0x4c6b,                                          \
-    {0xb8, 0x78, 0x3e, 0xde, 0x5b, 0xc8, 0xef, 0xf1} \
-}
-
-
 #define NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID \
     "@mozilla.org/network/http-activity-distributor;1"
 #define NS_HTTPACTIVITYDISTRIBUTOR_CID \
