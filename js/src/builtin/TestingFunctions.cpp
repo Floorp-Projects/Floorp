@@ -1885,6 +1885,10 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
         return true;
     }
 
+    if (!CheckCanSimulateOOM(cx)) {
+        return false;
+    }
+
     // Disallow nested tests.
     if (cx->runningOOMTest) {
         JS_ReportErrorASCII(cx, "Nested call to iterative failure test is not allowed.");
@@ -2045,22 +2049,15 @@ ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
         params->expectExceptionOnFailure = false;
     }
 
-    // Test all threads by default except worker threads, except if we are
-    // running in a worker thread in which case only the worker thread which
-    // requested the simulation is tested.
-    if (js::oom::GetThreadType() == js::THREAD_TYPE_WORKER) {
-        params->threadStart = oom::WorkerFirstThreadTypeToTest;
-        params->threadEnd = oom::WorkerLastThreadTypeToTest;
-    } else {
-        params->threadStart = oom::FirstThreadTypeToTest;
-        params->threadEnd = oom::LastThreadTypeToTest;
-    }
+    // Test all threads by default except worker threads.
+    params->threadStart = oom::FirstThreadTypeToTest;
+    params->threadEnd = oom::LastThreadTypeToTest;
 
     // Test a single thread type if specified by the OOM_THREAD environment variable.
     int threadOption = 0;
     if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
-        if (threadOption < oom::FirstThreadTypeToTest || threadOption > oom::LastThreadTypeToTest ||
-            threadOption != js::THREAD_TYPE_CURRENT)
+        if (threadOption < oom::FirstThreadTypeToTest ||
+            threadOption > oom::LastThreadTypeToTest)
         {
             JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
             return false;

@@ -448,12 +448,10 @@ skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-au
 skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-style-short.js
 skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-long.js
 skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-narrow.js
+skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-short.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473230
 skip script test262/intl402/RelativeTimeFormat/prototype/format/unit-plural.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1483547
-skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-short.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1483548
 skip script test262/intl402/RelativeTimeFormat/prototype/format/value-non-finite.js
