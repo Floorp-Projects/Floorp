@@ -253,9 +253,7 @@ class CodeCoverageMixin(SingleTestMixin):
         env['GCOV_PREFIX'] = self.gcov_dir
 
         # Set the GCOV/JSVM directories where counters will be dumped in per-test mode.
-        # Resetting/dumping is only available on Linux for the time being
-        # (https://bugzilla.mozilla.org/show_bug.cgi?id=1471576).
-        if self.per_test_coverage and not is_baseline_test and self._is_linux():
+        if self.per_test_coverage and not is_baseline_test:
             env['GCOV_RESULTS_DIR'] = tempfile.mkdtemp()
             env['JSVM_RESULTS_DIR'] = tempfile.mkdtemp()
 
