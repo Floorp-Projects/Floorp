@@ -11,6 +11,7 @@ const { DebuggerServer } = require("devtools/server/main");
 const Actions = require("./index");
 
 const {
+  getCurrentRuntime,
   findRuntimeById,
 } = require("../modules/runtimes-state-helper");
 const { isSupportedDebugTarget } = require("../modules/debug-target-support");
@@ -28,6 +29,9 @@ const {
   UNWATCH_RUNTIME_FAILURE,
   UNWATCH_RUNTIME_START,
   UNWATCH_RUNTIME_SUCCESS,
+  UPDATE_CONNECTION_PROMPT_SETTING_FAILURE,
+  UPDATE_CONNECTION_PROMPT_SETTING_START,
+  UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
   USB_RUNTIMES_UPDATED,
   WATCH_RUNTIME_FAILURE,
   WATCH_RUNTIME_START,
@@ -138,6 +142,28 @@ function disconnectRuntime(id) {
   };
 }
 
+function updateConnectionPromptSetting(connectionPromptEnabled) {
+  return async (dispatch, getState) => {
+    dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_START });
+    try {
+      const runtime = getCurrentRuntime(getState().runtimes);
+      const client = runtime.connection.client;
+      const preferenceFront = await client.mainRoot.getFront("preference");
+      await preferenceFront.setBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT,
+                                        connectionPromptEnabled);
+      // Re-get actual value from the runtime.
+      connectionPromptEnabled =
+        await preferenceFront.getBoolPref(RUNTIME_PREFERENCE.CONNECTION_PROMPT);
+
+      dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
+                 runtime, connectionPromptEnabled });
+    } catch (e) {
+      dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_FAILURE,
+                 error: e.message });
+    }
+  };
+}
+
 function watchRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: WATCH_RUNTIME_START });
@@ -196,6 +222,7 @@ module.exports = {
   connectRuntime,
   disconnectRuntime,
   unwatchRuntime,
+  updateConnectionPromptSetting,
   updateUSBRuntimes,
   watchRuntime,
 };
