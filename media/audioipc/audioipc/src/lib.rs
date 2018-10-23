@@ -52,6 +52,13 @@ use std::path::PathBuf;
 #[cfg(not(target_os = "linux"))]
 const MSG_CMSG_CLOEXEC: libc::c_int = 0;
 
+// This must match the definition of
+// ipc::FileDescriptor::PlatformHandleType in Gecko.
+#[cfg(target_os = "windows")]
+pub type PlatformHandleType = *mut std::os::raw::c_void;
+#[cfg(not(target_os = "windows"))]
+pub type PlatformHandleType = libc::c_int;
+
 // Extend sys::os::unix::net::UnixStream to support sending and receiving a single file desc.
 // We can extend UnixStream by using traits, eliminating the need to introduce a new wrapped
 // UnixStream type.
