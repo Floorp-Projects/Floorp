@@ -797,7 +797,7 @@ PaymentRequest::RejectShowPayment(nsresult aRejectReason)
 
 void
 PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
-                                   const ResponseData& aDetails,
+                                   const nsAString& aDetails,
                                    const nsAString& aPayerName,
                                    const nsAString& aPayerEmail,
                                    const nsAString& aPayerPhone,
@@ -888,7 +888,7 @@ PaymentRequest::RespondAbortPayment(bool aSuccess)
   if (NS_FAILED(mUpdateError)) {
     // Respond show with mUpdateError, set mUpdating to false.
     mUpdating = false;
-    RespondShowPayment(EmptyString(), ResponseData(), EmptyString(),
+    RespondShowPayment(EmptyString(), EmptyString(), EmptyString(),
                        EmptyString(), EmptyString(), mUpdateError);
     mUpdateError = NS_OK;
     return;
