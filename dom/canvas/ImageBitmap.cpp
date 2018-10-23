@@ -18,9 +18,12 @@
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ScopeExit.h"
+#include "nsNetUtil.h"
+#include "nsStreamUtils.h"
 #include "ImageBitmapColorUtils.h"
 #include "ImageBitmapUtils.h"
 #include "ImageUtils.h"
+#include "imgLoader.h"
 #include "imgTools.h"
 
 using namespace mozilla::gfx;
@@ -1234,12 +1237,14 @@ class CreateImageBitmapFromBlobRunnable;
 
 class CreateImageBitmapFromBlob final : public CancelableRunnable
                                       , public imgIContainerCallback
+                                      , public nsIInputStreamCallback
 {
   friend class CreateImageBitmapFromBlobRunnable;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_IMGICONTAINERCALLBACK
+  NS_DECL_NSIINPUTSTREAMCALLBACK
 
   static already_AddRefed<CreateImageBitmapFromBlob>
   Create(Promise* aPromise,
@@ -1252,9 +1257,9 @@ public:
   {
     MOZ_ASSERT(IsCurrentThread());
 
-    nsresult rv = StartDecodeAndCropBlob();
+    nsresult rv = StartMimeTypeAndDecodeAndCropBlob();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      DecodeAndCropBlobCompletedMainThread(nullptr, rv);
+      MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr, rv);
     }
 
     return NS_OK;
@@ -1267,7 +1272,6 @@ private:
   CreateImageBitmapFromBlob(Promise* aPromise,
                             nsIGlobalObject* aGlobal,
                             already_AddRefed<nsIInputStream> aInputStream,
-                            const nsACString& aMimeType,
                             const Maybe<IntRect>& aCropRect,
                             nsIEventTarget* aMainThreadEventTarget)
     : CancelableRunnable("dom::CreateImageBitmapFromBlob")
@@ -1275,7 +1279,6 @@ private:
     , mPromise(aPromise)
     , mGlobalObject(aGlobal)
     , mInputStream(std::move(aInputStream))
-    , mMimeType(aMimeType)
     , mCropRect(aCropRect)
     , mOriginalCropRect(aCropRect)
     , mMainThreadEventTarget(aMainThreadEventTarget)
@@ -1293,20 +1296,29 @@ private:
   }
 
   // Called on the owning thread.
-  nsresult StartDecodeAndCropBlob();
+  nsresult StartMimeTypeAndDecodeAndCropBlob();
 
   // Will be called when the decoding + cropping is completed on the
   // main-thread. This could the not the owning thread!
-  void DecodeAndCropBlobCompletedMainThread(layers::Image* aImage,
-                                            nsresult aStatus);
+  void MimeTypeAndDecodeAndCropBlobCompletedMainThread(layers::Image* aImage,
+                                                       nsresult aStatus);
 
   // Will be called when the decoding + cropping is completed on the owning
   // thread.
-  void DecodeAndCropBlobCompletedOwningThread(layers::Image* aImage,
-                                              nsresult aStatus);
+  void MimeTypeAndDecodeAndCropBlobCompletedOwningThread(layers::Image* aImage,
+                                                         nsresult aStatus);
 
   // This is called on the main-thread only.
-  nsresult DecodeAndCropBlob();
+  nsresult MimeTypeAndDecodeAndCropBlob();
+
+  // This is called on the main-thread only.
+  nsresult DecodeAndCropBlob(const nsACString& aMimeType);
+
+  // This is called on the main-thread only.
+  nsresult GetMimeTypeSync(nsACString& aMimeType);
+
+  // This is called on the main-thread only.
+  nsresult GetMimeTypeAsync();
 
   Mutex mMutex;
 
@@ -1321,7 +1333,6 @@ private:
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
   nsCOMPtr<nsIInputStream> mInputStream;
-  nsCString mMimeType;
   Maybe<IntRect> mCropRect;
   Maybe<IntRect> mOriginalCropRect;
   IntSize mSourceSize;
@@ -1331,7 +1342,7 @@ private:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(CreateImageBitmapFromBlob, CancelableRunnable,
-                            imgIContainerCallback)
+                            imgIContainerCallback, nsIInputStreamCallback)
 
 class CreateImageBitmapFromBlobRunnable : public WorkerRunnable
 {
@@ -1349,7 +1360,7 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    mTask->DecodeAndCropBlobCompletedOwningThread(mImage, mStatus);
+    mTask->MimeTypeAndDecodeAndCropBlobCompletedOwningThread(mImage, mStatus);
     return true;
   }
 
@@ -2167,14 +2178,19 @@ CreateImageBitmapFromBlob::Create(Promise* aPromise,
     return nullptr;
   }
 
-  // Get the MIME type string of the blob.
-  // The type will be checked in the DecodeImageAsync() method.
-  nsAutoString mimeTypeUTF16;
-  aBlob.Impl()->GetType(mimeTypeUTF16);
-  NS_ConvertUTF16toUTF8 mimeType(mimeTypeUTF16);
+  if (!NS_InputStreamIsBuffered(stream)) {
+    nsCOMPtr<nsIInputStream> bufferedStream;
+    nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                   stream.forget(), 4096);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    stream = bufferedStream;
+  }
 
   RefPtr<CreateImageBitmapFromBlob> task =
-    new CreateImageBitmapFromBlob(aPromise, aGlobal, stream.forget(), mimeType,
+    new CreateImageBitmapFromBlob(aPromise, aGlobal, stream.forget(),
                                   aCropRect, aMainThreadEventTarget);
 
   // Nothing to do for the main-thread.
@@ -2201,7 +2217,7 @@ CreateImageBitmapFromBlob::Create(Promise* aPromise,
 }
 
 nsresult
-CreateImageBitmapFromBlob::StartDecodeAndCropBlob()
+CreateImageBitmapFromBlob::StartMimeTypeAndDecodeAndCropBlob()
 {
   MOZ_ASSERT(IsCurrentThread());
 
@@ -2209,11 +2225,11 @@ CreateImageBitmapFromBlob::StartDecodeAndCropBlob()
   if (!NS_IsMainThread()) {
     RefPtr<CreateImageBitmapFromBlob> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "CreateImageBitmapFromBlob::DecodeAndCropBlob",
+      "CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlob",
       [self]() {
-        nsresult rv = self->DecodeAndCropBlob();
+        nsresult rv = self->MimeTypeAndDecodeAndCropBlob();
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          self->DecodeAndCropBlobCompletedMainThread(nullptr, rv);
+          self->MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr, rv);
         }
       });
 
@@ -2221,14 +2237,30 @@ CreateImageBitmapFromBlob::StartDecodeAndCropBlob()
   }
 
   // Main-thread.
-  return DecodeAndCropBlob();
+  return MimeTypeAndDecodeAndCropBlob();
 }
 
 nsresult
-CreateImageBitmapFromBlob::DecodeAndCropBlob()
+CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlob()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsAutoCString mimeType;
+  nsresult rv = GetMimeTypeSync(mimeType);
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    return GetMimeTypeAsync();
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return DecodeAndCropBlob(mimeType);
+}
+
+nsresult
+CreateImageBitmapFromBlob::DecodeAndCropBlob(const nsACString& aMimeType)
+{
   // Get the Component object.
   nsCOMPtr<imgITools> imgtool = do_GetService(NS_IMGTOOLS_CID);
   if (NS_WARN_IF(!imgtool)) {
@@ -2236,14 +2268,61 @@ CreateImageBitmapFromBlob::DecodeAndCropBlob()
   }
 
   // Decode image.
-  nsCOMPtr<imgIContainer> imgContainer;
-  nsresult rv = imgtool->DecodeImageAsync(mInputStream, mMimeType, this,
+  nsresult rv = imgtool->DecodeImageAsync(mInputStream, aMimeType, this,
                                           mMainThreadEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   return NS_OK;
+}
+
+static nsresult
+sniff_cb(nsIInputStream* aInputStream,
+         void* aClosure,
+         const char* aFromRawSegment,
+         uint32_t aToOffset,
+         uint32_t aCount,
+         uint32_t* aWriteCount)
+{
+  nsACString* mimeType = static_cast<nsACString*>(aClosure);
+  MOZ_ASSERT(mimeType);
+
+  if (aCount > 0) {
+    imgLoader::GetMimeTypeFromContent(aFromRawSegment, aCount, *mimeType);
+  }
+
+  *aWriteCount = 0;
+
+  // We don't want to consume data from the stream.
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+CreateImageBitmapFromBlob::GetMimeTypeSync(nsACString& aMimeType)
+{
+  uint32_t dummy;
+  return mInputStream->ReadSegments(sniff_cb, &aMimeType, 128, &dummy);
+}
+
+nsresult
+CreateImageBitmapFromBlob::GetMimeTypeAsync()
+{
+  nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
+    do_QueryInterface(mInputStream);
+  if (NS_WARN_IF(!asyncInputStream)) {
+    // If the stream is not async, why are we here?
+    return NS_ERROR_FAILURE;
+  }
+
+  return asyncInputStream->AsyncWait(this, 0, 128, mMainThreadEventTarget);
+}
+
+NS_IMETHODIMP
+CreateImageBitmapFromBlob::OnInputStreamReady(nsIAsyncInputStream* aStream)
+{
+  // The stream should have data now. Let's start from scratch again.
+  return MimeTypeAndDecodeAndCropBlob();
 }
 
 NS_IMETHODIMP
@@ -2253,7 +2332,7 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_FAILED(aStatus)) {
-    DecodeAndCropBlobCompletedMainThread(nullptr, aStatus);
+    MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr, aStatus);
     return NS_OK;
   }
 
@@ -2265,12 +2344,13 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   RefPtr<SourceSurface> surface = aImgContainer->GetFrame(whichFrame, frameFlags);
 
   if (NS_WARN_IF(!surface)) {
-    DecodeAndCropBlobCompletedMainThread(nullptr,
-                                         NS_ERROR_DOM_INVALID_STATE_ERR);
+    MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr,
+                                                    NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
-  // Store the sourceSize value for the DecodeAndCropBlobCompletedMainThread call.
+  // Store the sourceSize value for the
+  // MimeTypeAndDecodeAndCropBlobCompletedMainThread call.
   mSourceSize = surface->GetSize();
 
   // Crop the source surface if needed.
@@ -2295,8 +2375,8 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   }
 
   if (NS_WARN_IF(!croppedSurface)) {
-    DecodeAndCropBlobCompletedMainThread(nullptr,
-                                         NS_ERROR_DOM_INVALID_STATE_ERR);
+    MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr,
+                                                    NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
@@ -2304,18 +2384,18 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   RefPtr<layers::Image> image = CreateImageFromSurface(croppedSurface);
 
   if (NS_WARN_IF(!image)) {
-    DecodeAndCropBlobCompletedMainThread(nullptr,
-                                         NS_ERROR_DOM_INVALID_STATE_ERR);
+    MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr,
+                                                    NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
-  DecodeAndCropBlobCompletedMainThread(image, NS_OK);
+  MimeTypeAndDecodeAndCropBlobCompletedMainThread(image, NS_OK);
   return NS_OK;
 }
 
 void
-CreateImageBitmapFromBlob::DecodeAndCropBlobCompletedMainThread(layers::Image* aImage,
-                                                                nsresult aStatus)
+CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedMainThread(layers::Image* aImage,
+                                                                           nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2334,12 +2414,12 @@ CreateImageBitmapFromBlob::DecodeAndCropBlobCompletedMainThread(layers::Image* a
     return;
   }
 
-  DecodeAndCropBlobCompletedOwningThread(aImage, aStatus);
+  MimeTypeAndDecodeAndCropBlobCompletedOwningThread(aImage, aStatus);
 }
 
 void
-CreateImageBitmapFromBlob::DecodeAndCropBlobCompletedOwningThread(layers::Image* aImage,
-                                                                  nsresult aStatus)
+CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedOwningThread(layers::Image* aImage,
+                                                                             nsresult aStatus)
 {
   MOZ_ASSERT(IsCurrentThread());
 
