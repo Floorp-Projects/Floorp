@@ -305,10 +305,13 @@ AnimationFrameDiscardingQueue::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf
   for (const RefPtr<imgFrame>& frame : mDisplay) {
     ++i;
     if (mSize < i) {
-      // First frame again, we already covered it above.
-      MOZ_ASSERT(mFirstFrame.get() == frame.get());
       i = 1;
-      continue;
+      if (mFirstFrame.get() == frame.get()) {
+        // First frame again, we already covered it above. We can have a
+        // different frame in the first frame position in the discard queue
+        // on subsequent passes of the animation. This is useful for recycling.
+        continue;
+      }
     }
 
     frame->AddSizeOfExcludingThis(aMallocSizeOf,
