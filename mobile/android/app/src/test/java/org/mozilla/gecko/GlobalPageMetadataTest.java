@@ -3,8 +3,6 @@
 
 package org.mozilla.gecko;
 
-import java.lang.ref.SoftReference;
-
 import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
@@ -108,19 +106,6 @@ public class GlobalPageMetadataTest {
         } finally {
             provider.shutdown();
         }
-    }
-
-    @Test
-    public void testGlobalHistory() throws Exception {
-        GlobalHistory history = GlobalHistory.getInstance();
-        // Hold reference to prevent racing with GC.
-        SimpleLongOpenHashSet set = new SimpleLongOpenHashSet();
-        history.mVisitedCache = new SoftReference<>(set);
-        String exampleDotCom = "http://example.com/";
-        assertFalse(history.containsUri(exampleDotCom));
-        history.addUri(exampleDotCom);
-        assertTrue(history.containsUri(exampleDotCom));
-        assertFalse(history.containsUri(exampleDotCom + "2.html"));
     }
 
     /**
