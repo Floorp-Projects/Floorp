@@ -20,67 +20,58 @@
  *    for certain types of links (_blank links for example) to open new tabs.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Task.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyScriptGetter(this, "TalosParentProfiler",
+                                  "resource://talos-powers/TalosParentProfiler.js");
 
 const ANIMATION_PREF = "toolkit.cosmeticAnimations.enabled";
-
 const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";
 
-const TARGET_URI = "chrome://tabpaint/content/target.html";
+const MESSAGES = [
+  "TabPaint:Go",
+  "TabPaint:Painted",
+];
 
-var TabPaint = {
-  MESSAGES: [
-    "TabPaint:Go",
-    "TabPaint:Painted",
-  ],
-
-  /**
-   * We'll hold the original tab animation preference here so
-   * we can restore it once the test is done.
-   */
-  originalTabsAnimate: null,
-
-  /**
-   * We'll store a callback here to be fired once the TARGET_URI
-   * reports that it has painted.
-   */
-  paintCallback: null,
-
-  /**
-   * Shortcut to getting at the TalosParentProfiler.
-   */
-  get Profiler() {
-    delete this.Profiler;
-    let context = {};
-    Services.scriptloader.loadSubScript("resource://talos-powers/TalosParentProfiler.js", context);
-    return this.Profiler = context.TalosParentProfiler;
-  },
-
-  init() {
+/* globals ExtensionAPI */
+this.tabpaint = class extends ExtensionAPI {
+  onStartup() {
     // We don't have a window in this scope, and in fact, there might
     // not be any browser windows around. Since pageloader is loading
     // this add-on, along with the tabpaint.html content, what we'll do
     // is wait for the tabpaint.html content to send us a message to
     // get us moving.
-    for (let msgName of this.MESSAGES) {
+    for (let msgName of MESSAGES) {
       Services.mm.addMessageListener(msgName, this);
     }
+
+    this.framescriptURL = this.extension.baseURI.resolve("/framescript.js");
+    Services.mm.loadFrameScript(this.framescriptURL, true);
 
     this.originalAnimate = Services.prefs.getBoolPref(ANIMATION_PREF);
     Services.prefs.setBoolPref(ANIMATION_PREF, false);
     Services.prefs.setIntPref(MULTI_OPT_OUT_PREF,
                               Services.appinfo.E10S_MULTI_EXPERIMENT);
-  },
 
-  uninit() {
-    for (let msgName of this.MESSAGES) {
+    /**
+     * We'll store a callback here to be fired once the target page
+     * reports that it has painted.
+     */
+    this.paintCallback = null;
+  }
+
+  onShutdown() {
+    for (let msgName of MESSAGES) {
       Services.mm.removeMessageListener(msgName, this);
     }
 
+    Services.mm.removeDelayedFrameScript(this.framescriptURL);
+
     Services.prefs.setBoolPref(ANIMATION_PREF, this.originalAnimate);
     Services.prefs.clearUserPref(MULTI_OPT_OUT_PREF);
-  },
+  }
 
   receiveMessage(msg) {
     let browser = msg.target;
@@ -90,10 +81,7 @@ var TabPaint = {
     switch (msg.name) {
       case "TabPaint:Go": {
         // Our document has loaded, and we're off to the races!
-        this.go(gBrowser).then((results) => {
-          this.reportResults(results);
-        });
-
+        this.go(browser.messageManager, gBrowser, msg.data.target);
         break;
       }
 
@@ -109,7 +97,7 @@ var TabPaint = {
         break;
       }
     }
-  },
+  }
 
   /**
    * Start a single run of the test. This will measure the time
@@ -118,24 +106,13 @@ var TabPaint = {
    *
    * @param gBrowser (<xul:tabbrowser>)
    *        The tabbrowser of the window to use.
-   *
-   * @return Promise
-   *         Resolves with an object with two properties:
-   *
-   *          fromParent (int):
-   *            The time (ms) it took to present a tab that
-   *            was opened from the parent.
-   *
-   *          fromContent (int):
-   *            The time (ms) it took to present a tab that
-   *            was opened from content.
    */
-  go: Task.async(function* (gBrowser) {
-    let fromParent = yield this.openTabFromParent(gBrowser);
-    let fromContent = yield this.openTabFromContent(gBrowser);
+  async go(mm, gBrowser, target) {
+    let fromParent = await this.openTabFromParent(gBrowser, target);
+    let fromContent = await this.openTabFromContent(gBrowser);
 
-    return { fromParent, fromContent };
-  }),
+    mm.sendAsyncMessage("TabPaint:FinalResults", { fromParent, fromContent });
+  }
 
   /**
    * Opens a tab from the parent, waits until it is displayed, then
@@ -148,23 +125,19 @@ var TabPaint = {
    *         Resolves once the tab has been fully removed. Resolves
    *         with the time (in ms) it took to open the tab from the parent.
    */
-  openTabFromParent(gBrowser) {
-    return new Promise((resolve) => {
-      this.Profiler.resume("tabpaint parent start");
+  async openTabFromParent(gBrowser, target) {
+    TalosParentProfiler.resume("tabpaint parent start");
 
-      // eslint-disable-next-line mozilla/avoid-Date-timing
-      gBrowser.selectedTab = gBrowser.addTab(TARGET_URI + "?" + Date.now(), {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
-
-      this.whenTabShown().then(({tab, delta}) => {
-        this.Profiler.pause("tabpaint parent end");
-        this.removeTab(tab).then(() => {
-          resolve(delta);
-        });
-      });
+    // eslint-disable-next-line mozilla/avoid-Date-timing
+    gBrowser.selectedTab = gBrowser.addTab(`${target}?${Date.now()}`, {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-  },
+
+    let {tab, delta} = await this.whenTabShown();
+    TalosParentProfiler.pause("tabpaint parent end");
+    await this.removeTab(tab);
+    return delta;
+  }
 
   /**
    * Opens a tab from content, waits until it is displayed, then
@@ -177,20 +150,16 @@ var TabPaint = {
    *         Resolves once the tab has been fully removed. Resolves
    *         with the time (in ms) it took to open the tab from content.
    */
-  openTabFromContent(gBrowser) {
-    return new Promise((resolve) => {
-      this.Profiler.resume("tabpaint content start");
+  async openTabFromContent(gBrowser) {
+    TalosParentProfiler.resume("tabpaint content start");
 
-      Services.mm.broadcastAsyncMessage("TabPaint:OpenFromContent");
+    Services.mm.broadcastAsyncMessage("TabPaint:OpenFromContent");
 
-      this.whenTabShown().then(({tab, delta}) => {
-        this.Profiler.pause("tabpaint content end");
-        this.removeTab(tab).then(() => {
-          resolve(delta);
-        });
-      });
-    });
-  },
+    let {tab, delta} = await this.whenTabShown();
+    TalosParentProfiler.pause("tabpaint content end");
+    await this.removeTab(tab);
+    return delta;
+  }
 
   /**
    * Returns a Promise that will resolve once the next tab reports
@@ -202,7 +171,7 @@ var TabPaint = {
     return new Promise((resolve) => {
       this.paintCallback = resolve;
     });
-  },
+  }
 
   /**
    * Returns a Promise that removes a tab, and resolves once the final
@@ -225,38 +194,5 @@ var TabPaint = {
 
       tab.ownerGlobal.gBrowser.removeTab(tab);
     });
-  },
-
-  /**
-   * Sends the results down to the tabpaint-test.html page, which will
-   * pipe them out to the console.
-   *
-   * @param results (Object)
-   *        An object with the following properties:
-   *
-   *          fromParent (int):
-   *            The time (ms) it took to present a tab that
-   *            was opened from the parent.
-   *
-   *          fromContent (int):
-   *            The time (ms) it took to present a tab that
-   *            was opened from content.
-   */
-  reportResults(results) {
-    Services.mm.broadcastAsyncMessage("TabPaint:FinalResults", results);
-  },
+  }
 };
-
-// Bootstrap functions below
-
-function install(aData, aReason) {}
-
-function startup(aData, aReason) {
-  TabPaint.init();
-}
-
-function shutdown(aData, aReason) {
-  TabPaint.uninit();
-}
-
-function uninstall(aData, aReason) {}
