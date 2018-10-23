@@ -19,7 +19,7 @@ menulist > menupopup {
 }
 
 @media (-moz-menubar-drag) {
-  toolbar[type="menubar"]:not([autohide="true"]) {
+  toolbar[type="menubar"] {
     -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
   }
 }

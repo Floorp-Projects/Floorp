@@ -18,8 +18,6 @@ toolbar {
 
 toolbar:-moz-lwtheme {
   -moz-appearance: none;
-  background: none;
-  border-color: transparent;
 }
 
 toolbarseparator {
