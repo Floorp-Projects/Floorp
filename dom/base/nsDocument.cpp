@@ -2232,20 +2232,35 @@ nsIDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 }
 
 /**
- * DocumentL10n is currently allowed for system
- * principal.
- *
- * In the future we'll want to expose it to non-web-exposed
- * about:* pages.
+ * Determine whether the principal is allowed access to the localization system.
+ * We don't want the web to ever see this but all our UI including in content
+ * pages should pass this test.
  */
 bool
 PrincipalAllowsL10n(nsIPrincipal* principal)
 {
+  // The system principal is always allowed.
   if (nsContentUtils::IsSystemPrincipal(principal)) {
     return true;
   }
 
-  return false;
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = principal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool hasFlags;
+
+  // Allow access to uris that cannot be loaded by web content.
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DANGEROUS_TO_LOAD, &hasFlags);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (hasFlags) {
+    return true;
+  }
+
+  // UI resources also get access.
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE, &hasFlags);
+  NS_ENSURE_SUCCESS(rv, false);
+  return hasFlags;
 }
 
 void
@@ -3400,7 +3415,8 @@ nsIDocument::GetL10n()
 bool
 nsDocument::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject)
 {
-  return PrincipalAllowsL10n(nsContentUtils::SubjectPrincipal(aCx));
+  nsCOMPtr<nsIPrincipal> callerPrincipal = nsContentUtils::SubjectPrincipal(aCx);
+  return PrincipalAllowsL10n(callerPrincipal);
 }
 
 void
