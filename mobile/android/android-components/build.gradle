@@ -1,17 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    // Synchronized versions numbers of GeckoView (Beta) artifacts.
-    ext.geckoBeta = [
-        // mozilla-beta: FENNEC_63_0b3
-        revision: '0269319281578bff4e01d77a21350bf91ba08620',
-        version: '63.0.20180904170936'
-    ]
-
     ext.geckoRelease = [
-        // mozilla-release: FENNEC_63_0_RELEASE
         revision: '84219fbf133cacfc6e31c9471ad20ee7162a02af',
-        version: ''
     ]
 
     repositories {
@@ -40,25 +31,6 @@ allprojects {
 
         maven {
             url "https://maven.mozilla.org/maven2"
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        // GeckoView Beta
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-        // ARM
-        maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-beta.revision.${geckoBeta['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
-        }
-
-        // x86
-        maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-beta.revision.${geckoBeta['revision']}.mobile.android-x86-opt/artifacts/public/android/maven"
-        }
-
-        // aarch64
-        maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-beta.revision.${geckoBeta['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////

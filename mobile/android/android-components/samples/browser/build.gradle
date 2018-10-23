@@ -138,9 +138,9 @@ dependencies {
     geckoNightlyAarch64Implementation Gecko.geckoview_nightly_aarch64
 
     geckoBetaImplementation project(':browser-engine-gecko-beta')
-    geckoBetaArmImplementation "org.mozilla.geckoview:geckoview-beta-armeabi-v7a:${rootProject.ext.geckoBeta['version']}"
-    geckoBetaX86Implementation "org.mozilla.geckoview:geckoview-beta-x86:${rootProject.ext.geckoBeta['version']}"
-    geckoBetaAarch64Implementation "org.mozilla.geckoview:geckoview-beta-arm64-v8a:${rootProject.ext.geckoBeta['version']}"
+    geckoBetaArmImplementation Gecko.geckoview_beta_arm
+    geckoBetaX86Implementation Gecko.geckoview_beta_x86
+    geckoBetaAarch64Implementation Gecko.geckoview_beta_aarch64
 
     geckoReleaseImplementation project(':browser-engine-gecko')
     geckoReleaseArmImplementation Gecko.geckoview_release_arm
