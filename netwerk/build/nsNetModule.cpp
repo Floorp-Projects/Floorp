@@ -15,7 +15,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
-#include "nsSocketProviderService.h"
 #include "nscore.h"
 #include "nsSimpleURI.h"
 #include "nsSimpleNestedURI.h"
@@ -646,7 +645,6 @@ NS_DEFINE_NAMED_CID(NS_SOCKETTRANSPORTSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_SERVERSOCKET_CID);
 NS_DEFINE_NAMED_CID(NS_TLSSERVERSOCKET_CID);
 NS_DEFINE_NAMED_CID(NS_UDPSOCKET_CID);
-NS_DEFINE_NAMED_CID(NS_SOCKETPROVIDERSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_DNSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_IDNSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_EFFECTIVETLDSERVICE_CID);
@@ -758,7 +756,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_SERVERSOCKET_CID, false, nullptr, nsServerSocketConstructor },
     { &kNS_TLSSERVERSOCKET_CID, false, nullptr, TLSServerSocketConstructor },
     { &kNS_UDPSOCKET_CID, false, nullptr, nsUDPSocketConstructor },
-    { &kNS_SOCKETPROVIDERSERVICE_CID, false, nullptr, nsSocketProviderService::Create },
     { &kNS_DNSSERVICE_CID, false, nullptr, nsIDNSServiceConstructor },
     { &kNS_IDNSERVICE_CID, false, nullptr, nsIDNServiceConstructor },
     { &kNS_EFFECTIVETLDSERVICE_CID, false, nullptr, nsEffectiveTLDServiceConstructor },
@@ -878,7 +875,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_SERVERSOCKET_CONTRACTID, &kNS_SERVERSOCKET_CID },
     { NS_TLSSERVERSOCKET_CONTRACTID, &kNS_TLSSERVERSOCKET_CID },
     { NS_UDPSOCKET_CONTRACTID, &kNS_UDPSOCKET_CID },
-    { NS_SOCKETPROVIDERSERVICE_CONTRACTID, &kNS_SOCKETPROVIDERSERVICE_CID },
     { NS_DNSSERVICE_CONTRACTID, &kNS_DNSSERVICE_CID },
     { NS_IDNSERVICE_CONTRACTID, &kNS_IDNSERVICE_CID },
     { NS_EFFECTIVETLDSERVICE_CONTRACTID, &kNS_EFFECTIVETLDSERVICE_CID },

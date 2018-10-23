@@ -24,7 +24,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
-#include "nsISocketProviderService.h"
+#include "nsSocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsPrintfCString.h"
 #include "nsCOMPtr.h"
@@ -1443,8 +1443,8 @@ nsHttpHandler::PrefsChanged(const char *pref)
                 mDefaultSocketType.SetIsVoid(true);
             else {
                 // verify that this socket type is actually valid
-                nsCOMPtr<nsISocketProviderService> sps(
-                        do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID));
+                nsCOMPtr<nsISocketProviderService> sps =
+                  nsSocketProviderService::GetOrCreate();
                 if (sps) {
                     nsCOMPtr<nsISocketProvider> sp;
                     rv = sps->GetSocketProvider(sval.get(), getter_AddRefs(sp));

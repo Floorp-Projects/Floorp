@@ -8,19 +8,33 @@
 #include "nsISocketProvider.h"
 #include "nsSocketProviderService.h"
 #include "nsError.h"
+#include "nsSSLSocketProvider.h"
+#include "nsTLSSocketProvider.h"
+#include "nsUDPSocketProvider.h"
+#include "mozilla/ClearOnShutdown.h"
+
+mozilla::StaticRefPtr<nsSocketProviderService> nsSocketProviderService::gSingleton;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-nsSocketProviderService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+already_AddRefed<nsISocketProviderService>
+nsSocketProviderService::GetOrCreate()
 {
-  nsresult rv;
-  nsCOMPtr<nsISocketProviderService> inst = new nsSocketProviderService();
-  if (!inst)
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  else
-    rv = inst->QueryInterface(aIID, aResult);
-  return rv;
+  RefPtr<nsSocketProviderService> inst;
+  if (gSingleton) {
+    inst = gSingleton;
+  } else {
+    inst = new nsSocketProviderService();
+    gSingleton = inst;
+    if (NS_IsMainThread()) {
+      mozilla::ClearOnShutdown(&gSingleton);
+    } else {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "net::nsSocketProviderService::GetOrCreate",
+        []() -> void { mozilla::ClearOnShutdown(&gSingleton); }));
+    }
+  }
+  return inst.forget();
 }
 
 NS_IMPL_ISUPPORTS(nsSocketProviderService, nsISocketProviderService)

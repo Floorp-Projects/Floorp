@@ -18,6 +18,10 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
+EXPORTS += [
+    'nsSocketProviderService.h',
+]
+
 UNIFIED_SOURCES += [
     'nsSocketProviderService.cpp',
     'nsSOCKSIOLayer.cpp',
