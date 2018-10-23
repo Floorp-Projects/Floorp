@@ -21,7 +21,8 @@ const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const {formAutofillStorage} = ChromeUtils.import(
   "resource://formautofill/FormAutofillStorage.jsm", {});
-const {OSKeyStoreTestUtils} = ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", {});
+const {OSKeyStoreTestUtils} = ChromeUtils.import(
+  "resource://testing-common/OSKeyStoreTestUtils.jsm", {});
 const {PaymentTestUtils: PTU} = ChromeUtils.import(
   "resource://testing-common/PaymentTestUtils.jsm", {});
 ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
