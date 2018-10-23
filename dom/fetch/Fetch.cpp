@@ -396,17 +396,20 @@ class MainThreadFetchRunnable : public Runnable
   RefPtr<WorkerFetchResolver> mResolver;
   const ClientInfo mClientInfo;
   const Maybe<ServiceWorkerDescriptor> mController;
+  nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   RefPtr<InternalRequest> mRequest;
 
 public:
   MainThreadFetchRunnable(WorkerFetchResolver* aResolver,
                           const ClientInfo& aClientInfo,
                           const Maybe<ServiceWorkerDescriptor>& aController,
+                          nsICSPEventListener* aCSPEventListener,
                           InternalRequest* aRequest)
     : Runnable("dom::MainThreadFetchRunnable")
     , mResolver(aResolver)
     , mClientInfo(aClientInfo)
     , mController(aController)
+    , mCSPEventListener(aCSPEventListener)
     , mRequest(aRequest)
   {
     MOZ_ASSERT(mResolver);
@@ -447,6 +450,7 @@ public:
 
       fetch->SetClientInfo(mClientInfo);
       fetch->SetController(mController);
+      fetch->SetCSPEventListener(mCSPEventListener);
     }
 
     RefPtr<AbortSignalImpl> signalImpl =
@@ -579,7 +583,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
     RefPtr<MainThreadFetchRunnable> run =
       new MainThreadFetchRunnable(resolver, clientInfo.ref(),
-                                  worker->GetController(), r);
+                                  worker->GetController(),
+                                  worker->CSPEventListener(), r);
     worker->DispatchToMainThread(run.forget());
   }
 
