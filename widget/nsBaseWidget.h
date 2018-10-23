@@ -24,6 +24,7 @@
 #include "nsIWidgetListener.h"
 #include "nsPIDOMWindow.h"
 #include "nsWeakReference.h"
+
 #include <algorithm>
 
 #if defined(XP_WIN)
@@ -238,6 +239,8 @@ public:
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() override {
     return mozilla::DesktopToLayoutDeviceScale(1.0);
   }
+  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScaleByScreen() override;
+
   virtual void            ConstrainPosition(bool aAllowSlop,
                                             int32_t *aX,
                                             int32_t *aY) override {}

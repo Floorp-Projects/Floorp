@@ -10,6 +10,7 @@
   --submit-button-active-background-color: rgba(0,0,0,0.12);
   --submit-button-active-color: var(--theme-body-color);
   --viewport-active-color: #3b3b3b;
+  --input-invalid-border-color: var(--red-60);
 }
 
 :root.theme-dark {
@@ -17,6 +18,7 @@
   --submit-button-active-background-color: var(--theme-toolbar-hover-active);
   --submit-button-active-color: var(--theme-selection-color);
   --viewport-active-color: #fcfcfc;
+  --input-invalid-border-color: var(--red-50);
 }
 
 * {
@@ -29,6 +31,12 @@ button {
   font-size: 12px;
 }
 
+input,
+button {
+  color: var(--theme-toolbar-color);
+  background-color: var(--theme-tab-toolbar-background);
+}
+
 html,
 body,
 #root {
@@ -36,10 +44,19 @@ body,
   overflow: hidden;
 }
 
-.theme-dark body,
-.theme-dark button,
-.theme-dark input {
-  color: var(--theme-toolbar-color);
+.text-input {
+  border: 1px solid var(--theme-splitter-color);
+  padding: 2px;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--theme-selection-background);
+  transition: all 0.2s ease-in-out;
+}
+
+.text-input.invalid {
+  border-color: var(--input-invalid-border-color);
 }
 
 #app {
@@ -266,23 +283,8 @@ body,
 }
 
 .viewport-dimension-input {
-  border: 1px solid var(--theme-splitter-color);
-  outline: none;
   text-align: center;
   width: 3em;
-}
-
-.viewport-dimension-input:focus {
-  border: 1px solid var(--theme-selection-background);
-  transition: all 0.2s ease-in-out;
-}
-
-.viewport-dimension-input.invalid:focus {
-  border: 1px solid #d92215;
-}
-
-.theme-dark .viewport-dimension-input {
-  background-color: var(--theme-tab-toolbar-background);
 }
 
 .viewport-dimension-separator {

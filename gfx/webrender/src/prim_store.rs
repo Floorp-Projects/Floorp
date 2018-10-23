@@ -20,7 +20,7 @@ use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use gpu_types::BrushFlags;
-use image::{for_each_tile, for_each_repetition};
+use image::{self, Repetition};
 use intern;
 use picture::{PictureCompositeMode, PicturePrimitive};
 #[cfg(debug_assertions)]
@@ -30,8 +30,9 @@ use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHand
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
-use std::{cmp, fmt, mem, usize};
-use util::{ScaleOffset, MatrixHelpers, pack_as_float, project_rect, raster_rect_to_device_pixels};
+use std::{cmp, fmt, mem, ops, usize};
+use util::{ScaleOffset, MatrixHelpers};
+use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
 use smallvec::SmallVec;
 
 
@@ -73,6 +74,22 @@ impl PrimitiveOpacity {
     pub fn from_alpha(alpha: f32) -> PrimitiveOpacity {
         PrimitiveOpacity {
             is_opaque: alpha >= 1.0,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum VisibleFace {
+    Front,
+    Back,
+}
+
+impl ops::Not for VisibleFace {
+    type Output = Self;
+    fn not(self) -> Self {
+        match self {
+            VisibleFace::Front => VisibleFace::Back,
+            VisibleFace::Back => VisibleFace::Front,
         }
     }
 }
@@ -199,6 +216,20 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             }
         }
     }
+
+    pub fn visible_face(&self) -> VisibleFace {
+        match self.kind {
+            CoordinateSpaceMapping::Local => VisibleFace::Front,
+            CoordinateSpaceMapping::ScaleOffset(_) => VisibleFace::Front,
+            CoordinateSpaceMapping::Transform(ref transform) => {
+                if transform.is_backface_visible() {
+                    VisibleFace::Back
+                } else {
+                    VisibleFace::Front
+                }
+            }
+        }
+    }
 }
 
 /// For external images, it's not possible to know the
@@ -244,6 +275,19 @@ impl GpuCacheAddress {
     }
 }
 
+/// The information about an interned primitive that
+/// is stored and available in the scene builder
+/// thread.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PrimitiveSceneData {
+    // TODO(gw): We will store the local clip rect of
+    //           the primitive here. This will allow
+    //           fast calculation of the tight local
+    //           bounding rect of a primitive during
+    //           picture traversal.
+}
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -284,7 +328,7 @@ pub struct PrimitiveDataMarker;
 pub type PrimitiveDataStore = intern::DataStore<PrimitiveKey, PrimitiveTemplate, PrimitiveDataMarker>;
 pub type PrimitiveDataHandle = intern::Handle<PrimitiveDataMarker>;
 pub type PrimitiveDataUpdateList = intern::UpdateList<PrimitiveKey>;
-pub type PrimitiveDataInterner = intern::Interner<PrimitiveKey, PrimitiveDataMarker>;
+pub type PrimitiveDataInterner = intern::Interner<PrimitiveKey, PrimitiveSceneData, PrimitiveDataMarker>;
 
 // Maintains a list of opacity bindings that have been collapsed into
 // the color of a single primitive. This is an important optimization
@@ -328,12 +372,22 @@ impl OpacityBinding {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct VisibleImageTile {
     pub tile_offset: TileOffset,
     pub handle: GpuCacheHandle,
     pub edge_flags: EdgeAaSegmentMask,
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct VisibleMaskImageTile {
+    pub tile_offset: TileOffset,
+    pub handle: GpuCacheHandle,
 }
 
 #[derive(Debug)]
@@ -363,7 +417,6 @@ pub enum BorderSource {
     },
 }
 
-#[derive(Debug)]
 pub enum BrushKind {
     Solid {
         color: ColorF,
@@ -509,6 +562,8 @@ bitflags! {
     ///
     /// *Note*: the bit values have to match the shader logic in
     /// `write_transform_vertex()` function.
+    #[cfg_attr(feature = "capture", derive(Serialize))]
+    #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct EdgeAaSegmentMask: u8 {
         const LEFT = 0x1;
         const TOP = 0x2;
@@ -621,7 +676,6 @@ pub struct BrushSegmentDescriptor {
     pub segments: BrushSegmentVec,
 }
 
-#[derive(Debug)]
 pub struct BrushPrimitive {
     pub kind: BrushKind,
     pub segment_desc: Option<BrushSegmentDescriptor>,
@@ -1233,12 +1287,16 @@ impl ClipCorner {
 #[derive(Debug)]
 #[repr(C)]
 pub struct ImageMaskData {
-    pub local_rect: LayoutRect,
+    /// The local rect of the whole masked area.
+    pub local_mask_rect: LayoutRect,
+    /// The local rect of an individual tile.
+    pub local_tile_rect: LayoutRect,
 }
 
 impl ToGpuBlocks for ImageMaskData {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push(self.local_rect);
+        request.push(self.local_mask_rect);
+        request.push(self.local_tile_rect);
     }
 }
 
@@ -1368,7 +1426,6 @@ impl ClipData {
     }
 }
 
-#[derive(Debug)]
 pub enum PrimitiveContainer {
     TextRun(TextRunPrimitive),
     Brush(BrushPrimitive),
@@ -1504,7 +1561,7 @@ pub struct Primitive {
     pub details: PrimitiveDetails,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PrimitiveInstance {
     /// Index into the prim store containing information about
     /// the specific primitive. This will be removed once all
@@ -1753,8 +1810,8 @@ impl PrimitiveStore {
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         display_list: &BuiltDisplayList,
+        plane_split_anchor: usize,
         is_chased: bool,
-        current_pic_rect: &mut PictureRect,
     ) -> bool {
         // If we have dependencies, we need to prepare them first, in order
         // to know the actual rect of this primitive.
@@ -1769,8 +1826,9 @@ impl PrimitiveStore {
                     match pic.take_context(
                         pic_index,
                         prim_context,
-                        pic_state.surface_spatial_node_index,
-                        pic_state.raster_spatial_node_index,
+                        pic_context.local_spatial_node_index,
+                        pic_context.surface_spatial_node_index,
+                        pic_context.raster_spatial_node_index,
                         pic_context.allow_subpixel_aa,
                         frame_state,
                         frame_context,
@@ -1794,21 +1852,19 @@ impl PrimitiveStore {
                 pic_state_for_children.has_non_root_coord_system |=
                     prim_context.spatial_node.coordinate_system_id != CoordinateSystemId::root();
 
-                let mut pic_rect = PictureRect::zero();
                 self.prepare_primitives(
                     &mut prim_instances,
                     &pic_context_for_children,
                     &mut pic_state_for_children,
                     frame_context,
                     frame_state,
-                    &mut pic_rect,
                 );
 
                 let pic_rect = if is_passthrough {
-                    *current_pic_rect = current_pic_rect.union(&pic_rect);
+                    pic_state.rect = pic_state.rect.union(&pic_state_for_children.rect);
                     None
                 } else {
-                    Some(pic_rect)
+                    Some(pic_state_for_children.rect)
                 };
 
                 if !pic_state_for_children.is_cacheable {
@@ -1925,8 +1981,10 @@ impl PrimitiveStore {
 
             // Check if the clip bounding rect (in pic space) is visible on screen
             // This includes both the prim bounding rect + local prim clip rect!
-            let world_rect = match pic_state.map_pic_to_world
-                                            .map(&clip_chain.pic_clip_rect) {
+            let world_rect = match pic_state
+                .map_pic_to_world
+                .map(&clip_chain.pic_clip_rect)
+            {
                 Some(world_rect) => world_rect,
                 None => {
                     return false;
@@ -1946,7 +2004,7 @@ impl PrimitiveStore {
                 prim_instance,
                 prim_context,
                 clipped_world_rect,
-                pic_state.raster_spatial_node_index,
+                pic_context.raster_spatial_node_index,
                 &clip_chain,
                 pic_state,
                 frame_context,
@@ -1959,7 +2017,7 @@ impl PrimitiveStore {
                 println!("\tconsidered visible and ready with local rect {:?}", local_rect);
             }
 
-            *current_pic_rect = current_pic_rect.union(&pic_rect);
+            pic_state.rect = pic_state.rect.union(&pic_rect);
         }
 
         prim.prepare_prim_for_render_inner(
@@ -1971,6 +2029,7 @@ impl PrimitiveStore {
             frame_context,
             frame_state,
             display_list,
+            plane_split_anchor,
             is_chased,
         );
 
@@ -1979,12 +2038,11 @@ impl PrimitiveStore {
 
     pub fn prepare_primitives(
         &mut self,
-        prim_instances: &mut Vec<PrimitiveInstance>,
+        prim_instances: &mut [PrimitiveInstance],
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
-        current_pic_rect: &mut PictureRect,
     ) {
         let display_list = &frame_context
             .pipelines
@@ -1992,7 +2050,7 @@ impl PrimitiveStore {
             .expect("No display list?")
             .display_list;
 
-        for prim_instance in prim_instances {
+        for (plane_split_anchor, prim_instance) in prim_instances.iter_mut().enumerate() {
             prim_instance.clipped_world_rect = None;
 
             let prim_index = prim_instance.prim_index;
@@ -2003,14 +2061,48 @@ impl PrimitiveStore {
                     prim_instance.prim_index, pic_context.pipeline_id);
             }
 
-            let is_backface_visible = frame_state
+            // Do some basic checks first, that can early out
+            // without even knowing the local rect.
+            if !frame_state
                 .resources
                 .prim_data_store[prim_instance.prim_data_handle]
-                .is_backface_visible;
+                .is_backface_visible
+            {
+                pic_state.map_local_to_containing_block.set_target_spatial_node(
+                    prim_instance.spatial_node_index,
+                    frame_context.clip_scroll_tree,
+                );
+
+                match pic_state.map_local_to_containing_block.visible_face() {
+                    VisibleFace::Back => {
+                        if cfg!(debug_assertions) && is_chased {
+                            println!("\tculled for not having visible back faces, transform {:?}",
+                                pic_state.map_local_to_containing_block);
+                        }
+                        continue;
+                    }
+                    VisibleFace::Front => {
+                        if cfg!(debug_assertions) && is_chased {
+                            println!("\tprim {:?} is not culled for visible face {:?}, transform {:?}",
+                                prim_index,
+                                pic_state.map_local_to_containing_block.visible_face(),
+                                pic_state.map_local_to_containing_block);
+                            println!("\tpicture context {:?}", pic_context);
+                        }
+                    }
+                }
+            }
 
             let spatial_node = &frame_context
                 .clip_scroll_tree
                 .spatial_nodes[prim_instance.spatial_node_index.0];
+
+            if !spatial_node.invertible {
+                if cfg!(debug_assertions) && is_chased {
+                    println!("\tculled for the scroll node transform being invertible");
+                }
+                continue;
+            }
 
             // TODO(gw): Although constructing these is cheap, they are often
             //           the same for many consecutive primitives, so it may
@@ -2019,22 +2111,6 @@ impl PrimitiveStore {
                 spatial_node,
                 prim_instance.spatial_node_index,
             );
-
-            // Do some basic checks first, that can early out
-            // without even knowing the local rect.
-            if !is_backface_visible && spatial_node.world_content_transform.is_backface_visible() {
-                if cfg!(debug_assertions) && is_chased {
-                    println!("\tculled for not having visible back faces");
-                }
-                continue;
-            }
-
-            if !spatial_node.invertible {
-                if cfg!(debug_assertions) && is_chased {
-                    println!("\tculled for the scroll node transform being invertible");
-                }
-                continue;
-            }
 
             // Mark whether this picture contains any complex coordinate
             // systems, due to either the scroll node or the clip-chain.
@@ -2054,8 +2130,8 @@ impl PrimitiveStore {
                 frame_context,
                 frame_state,
                 display_list,
+                plane_split_anchor,
                 is_chased,
-                current_pic_rect,
             ) {
                 frame_state.profile_counters.visible_primitives.inc();
             }
@@ -2112,28 +2188,24 @@ fn decompose_repeated_primitive(
     );
     let stride = *stretch_size + *tile_spacing;
 
-    for_each_repetition(
-        prim_local_rect,
-        &visible_rect,
-        &stride,
-        &mut |origin, _| {
+    let repetitions = image::repetitions(prim_local_rect, &visible_rect, stride);
+    for Repetition { origin, .. } in repetitions {
+        let mut handle = GpuCacheHandle::new();
+        let rect = LayoutRect {
+            origin: origin,
+            size: *stretch_size,
+        };
 
-            let mut handle = GpuCacheHandle::new();
-            let rect = LayoutRect {
-                origin: *origin,
-                size: *stretch_size,
-            };
-            if let Some(request) = frame_state.gpu_cache.request(&mut handle) {
-                callback(&rect, request);
-            }
-
-            visible_tiles.push(VisibleGradientTile {
-                local_rect: rect,
-                local_clip_rect: tight_clip_rect,
-                handle
-            });
+        if let Some(request) = frame_state.gpu_cache.request(&mut handle) {
+            callback(&rect, request);
         }
-    );
+
+        visible_tiles.push(VisibleGradientTile {
+            local_rect: rect,
+            local_clip_rect: tight_clip_rect,
+            handle
+        });
+    }
 
     if visible_tiles.is_empty() {
         // At this point if we don't have tiles to show it means we could probably
@@ -2282,7 +2354,7 @@ impl BrushPrimitive {
 
                     continue;
                 }
-                ClipItem::Image(..) => {
+                ClipItem::Image { .. } => {
                     rect_clips_only = false;
                     continue;
                 }
@@ -2461,6 +2533,7 @@ impl Primitive {
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         display_list: &BuiltDisplayList,
+        plane_split_anchor: usize,
         is_chased: bool,
     ) {
         let mut is_tiled = false;
@@ -2638,49 +2711,50 @@ impl Primitive {
 
                                 visible_tiles.clear();
 
-                                for_each_repetition(
+                                let repetitions = image::repetitions(
                                     &self.local_rect,
                                     &visible_rect,
-                                    &stride,
-                                    &mut |origin, edge_flags| {
-                                        let edge_flags = base_edge_flags | edge_flags;
-
-                                        let image_rect = LayoutRect {
-                                            origin: *origin,
-                                            size: stretch_size,
-                                        };
-
-                                        for_each_tile(
-                                            &image_rect,
-                                            &visible_rect,
-                                            &device_image_size,
-                                            tile_size as u32,
-                                            &mut |tile_rect, tile_offset, tile_flags| {
-
-                                                frame_state.resource_cache.request_image(
-                                                    request.with_tile(tile_offset),
-                                                    frame_state.gpu_cache,
-                                                );
-
-                                                let mut handle = GpuCacheHandle::new();
-                                                if let Some(mut request) = frame_state.gpu_cache.request(&mut handle) {
-                                                    request.push(ColorF::new(1.0, 1.0, 1.0, opacity_binding.current).premultiplied());
-                                                    request.push(PremultipliedColorF::WHITE);
-                                                    request.push([tile_rect.size.width, tile_rect.size.height, 0.0, 0.0]);
-                                                    request.write_segment(*tile_rect, [0.0; 4]);
-                                                }
-
-                                                visible_tiles.push(VisibleImageTile {
-                                                    tile_offset,
-                                                    handle,
-                                                    edge_flags: tile_flags & edge_flags,
-                                                    local_rect: *tile_rect,
-                                                    local_clip_rect: tight_clip_rect,
-                                                });
-                                            }
-                                        );
-                                    }
+                                    stride,
                                 );
+
+                                for Repetition { origin, edge_flags } in repetitions {
+                                    let edge_flags = base_edge_flags | edge_flags;
+
+                                    let image_rect = LayoutRect {
+                                        origin,
+                                        size: stretch_size,
+                                    };
+
+                                    let tiles = image::tiles(
+                                        &image_rect,
+                                        &visible_rect,
+                                        &device_image_size,
+                                        tile_size as u32,
+                                    );
+
+                                    for tile in tiles {
+                                        frame_state.resource_cache.request_image(
+                                            request.with_tile(tile.offset),
+                                            frame_state.gpu_cache,
+                                        );
+
+                                        let mut handle = GpuCacheHandle::new();
+                                        if let Some(mut request) = frame_state.gpu_cache.request(&mut handle) {
+                                            request.push(ColorF::new(1.0, 1.0, 1.0, opacity_binding.current).premultiplied());
+                                            request.push(PremultipliedColorF::WHITE);
+                                            request.push([tile.rect.size.width, tile.rect.size.height, 0.0, 0.0]);
+                                            request.write_segment(tile.rect, [0.0; 4]);
+                                        }
+
+                                        visible_tiles.push(VisibleImageTile {
+                                            tile_offset: tile.offset,
+                                            handle,
+                                            edge_flags: tile.edge_flags & edge_flags,
+                                            local_rect: tile.rect,
+                                            local_clip_rect: tight_clip_rect,
+                                        });
+                                    }
+                                }
 
                                 if visible_tiles.is_empty() {
                                     // At this point if we don't have tiles to show it means we could probably
@@ -2970,7 +3044,7 @@ impl Primitive {
                     }
                     BrushKind::Picture { pic_index, .. } => {
                         let pic = &mut pictures[pic_index.0];
-                        if !pic.prepare_for_render(
+                        if pic.prepare_for_render(
                             pic_index,
                             prim_instance,
                             &self.local_rect,
@@ -2978,6 +3052,16 @@ impl Primitive {
                             frame_context,
                             frame_state,
                         ) {
+                            if let Some(ref mut splitter) = pic_state.plane_splitter {
+                                PicturePrimitive::add_split_plane(
+                                    splitter,
+                                    frame_state.transforms,
+                                    prim_instance,
+                                    self.local_rect,
+                                    plane_split_anchor,
+                                );
+                            }
+                        } else {
                             prim_instance.clipped_world_rect = None;
                         }
                     }
