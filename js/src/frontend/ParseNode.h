@@ -575,6 +575,11 @@ class typeName;
 FOR_EACH_PARSENODE_SUBCLASS(DECLARE_CLASS)
 #undef DECLARE_CLASS
 
+#ifdef DEBUG
+// ParseNodeKindArity[size_t(pnk)] is the arity of a ParseNode of kind pnk.
+extern const ParseNodeArity ParseNodeKindArity[];
+#endif
+
 class ParseNode
 {
     ParseNodeKind pn_type;   /* ParseNodeKind::PNK_* type */
@@ -603,6 +608,7 @@ class ParseNode
         pn_next(nullptr)
     {
         MOZ_ASSERT(kind < ParseNodeKind::Limit);
+        MOZ_ASSERT(hasExpectedArity());
         memset(&pn_u, 0, sizeof pn_u);
     }
 
@@ -616,6 +622,7 @@ class ParseNode
         pn_next(nullptr)
     {
         MOZ_ASSERT(kind < ParseNodeKind::Limit);
+        MOZ_ASSERT(hasExpectedArity());
         memset(&pn_u, 0, sizeof pn_u);
     }
 
@@ -625,6 +632,7 @@ class ParseNode
 
     ParseNodeKind getKind() const {
         MOZ_ASSERT(pn_type < ParseNodeKind::Limit);
+        MOZ_ASSERT(hasExpectedArity());
         return pn_type;
     }
     void setKind(ParseNodeKind kind) {
@@ -634,8 +642,11 @@ class ParseNode
     bool isKind(ParseNodeKind kind) const  { return getKind() == kind; }
 
     ParseNodeArity getArity() const        { return ParseNodeArity(pn_arity); }
+#ifdef DEBUG
+    bool hasExpectedArity() const          { return isArity(ParseNodeKindArity[size_t(pn_type)]); }
+#endif
     bool isArity(ParseNodeArity a) const   { return getArity() == a; }
-    void setArity(ParseNodeArity a)        { pn_arity = a; }
+    void setArity(ParseNodeArity a)        { pn_arity = a; MOZ_ASSERT(hasExpectedArity()); }
 
     bool isBinaryOperation() const {
         ParseNodeKind kind = getKind();
