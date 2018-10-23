@@ -9,9 +9,9 @@ use clip::{ClipDataStore, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
-use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind};
+use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use hit_test::{HitTester, HitTestingRun};
-use internal_types::{FastHashMap};
+use internal_types::{FastHashMap, PlaneSplitter};
 use picture::{PictureCompositeMode, PictureSurface, RasterConfig};
 use prim_store::{PrimitiveIndex, PrimitiveStore, SpaceMapper, PictureIndex};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
@@ -87,6 +87,8 @@ pub struct FrameBuildingState<'a> {
     pub segment_builder: SegmentBuilder,
 }
 
+/// Immutable context of a picture when processing children.
+#[derive(Debug)]
 pub struct PictureContext {
     pub pic_index: PictureIndex,
     pub pipeline_id: PipelineId,
@@ -95,20 +97,30 @@ pub struct PictureContext {
     pub allow_subpixel_aa: bool,
     pub is_passthrough: bool,
     pub raster_space: RasterSpace,
+    pub local_spatial_node_index: SpatialNodeIndex,
+    pub surface_spatial_node_index: SpatialNodeIndex,
+    pub raster_spatial_node_index: SpatialNodeIndex,
 }
 
-#[derive(Debug)]
+/// Mutable state of a picture that gets modified when
+/// the children are processed.
 pub struct PictureState {
     pub tasks: Vec<RenderTaskId>,
     pub has_non_root_coord_system: bool,
     pub is_cacheable: bool,
     pub local_rect_changed: bool,
+    /// Union rectangle of all the items in this picture.
+    pub rect: PictureRect,
     pub map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel>,
     pub map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel>,
     pub map_pic_to_raster: SpaceMapper<PicturePixel, RasterPixel>,
     pub map_raster_to_world: SpaceMapper<RasterPixel, WorldPixel>,
-    pub surface_spatial_node_index: SpatialNodeIndex,
-    pub raster_spatial_node_index: SpatialNodeIndex,
+    /// Mapping from local space to the containing block, which is the root for
+    /// plane splitting and affects backface visibility.
+    pub map_local_to_containing_block: SpaceMapper<LayoutPixel, LayoutPixel>,
+    /// If the plane splitter, the primitives get added to it insted of
+    /// batching into their parent pictures.
+    pub plane_splitter: Option<PlaneSplitter>,
 }
 
 pub struct PrimitiveContext<'a> {
@@ -235,6 +247,7 @@ impl FrameBuilder {
                 &prim_context,
                 root_spatial_node_index,
                 root_spatial_node_index,
+                root_spatial_node_index,
                 true,
                 &mut frame_state,
                 &frame_context,
@@ -242,27 +255,25 @@ impl FrameBuilder {
             )
             .unwrap();
 
-        let mut pic_rect = PictureRect::zero();
-
         self.prim_store.prepare_primitives(
             &mut instances,
             &pic_context,
             &mut pic_state,
             &frame_context,
             &mut frame_state,
-            &mut pic_rect,
         );
 
+        let pic_rect = Some(pic_state.rect);
         let pic = &mut self.prim_store.pictures[self.root_pic_index.0];
         pic.restore_context(
             instances,
             pic_context,
             pic_state,
-            Some(pic_rect),
+            pic_rect,
             &mut frame_state,
         );
 
-        let pic_state = pic.take_state();
+        let (pic_state, _) = pic.take_state_and_context();
 
         let root_render_task = RenderTask::new_picture(
             RenderTaskLocation::Fixed(self.screen_rect.to_i32()),
@@ -369,6 +380,8 @@ impl FrameBuilder {
         let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
         let mut prim_headers = PrimitiveHeaders::new();
+        // Used to generated a unique z-buffer value per primitive.
+        let mut z_generator = ZBufferIdGenerator::new();
         let use_dual_source_blending = self.config.dual_source_blending_is_enabled &&
                                        self.config.dual_source_blending_is_supported;
 
@@ -390,6 +403,7 @@ impl FrameBuilder {
                 &self.clip_store,
                 &mut transform_palette,
                 &mut prim_headers,
+                &mut z_generator,
             );
 
             if let RenderPassKind::OffScreen { ref texture_cache, .. } = pass.kind {

@@ -755,15 +755,18 @@ var gMainPane = {
       fragment.appendChild(menuitem);
     }
 
-    // Add an option to search for more languages.
-    let menuitem = document.createXULElement("menuitem");
-    menuitem.id = "defaultBrowserLanguageSearch";
-    menuitem.setAttribute(
-      "label", await document.l10n.formatValue("browser-languages-search"));
-    menuitem.addEventListener("command", () => {
-      gMainPane.showBrowserLanguages({search: true});
-    });
-    fragment.appendChild(menuitem);
+    // Add an option to search for more languages if downloading is supported.
+    if (Services.prefs.getBoolPref("intl.multilingual.downloadEnabled")) {
+      let menuitem = document.createXULElement("menuitem");
+      menuitem.id = "defaultBrowserLanguageSearch";
+      menuitem.setAttribute(
+        "label", await document.l10n.formatValue("browser-languages-search"));
+      menuitem.setAttribute("value", "search");
+      menuitem.addEventListener("command", () => {
+        gMainPane.showBrowserLanguages({search: true});
+      });
+      fragment.appendChild(menuitem);
+    }
 
     let menulist = document.getElementById("defaultBrowserLanguage");
     let menupopup = menulist.querySelector("menupopup");
