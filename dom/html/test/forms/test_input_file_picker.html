@@ -244,7 +244,7 @@ function runTests() {
              "Mixing mime types and file extension filters shouldn't restrict extension list: " +
              mixRefExtensionList + " | " + filters[0]);
           ok(filters[0].includes("*.jpg"),
-             "Filter should contain '.jpg' extension", filters[0]);
+             "Filter should contain '.jpg' extension. Filter was:" + filters[0]);
         } else {
           is(filters[0], testData[currentTest][2],
              "Correct filters should have been added (" + testName + ")");
