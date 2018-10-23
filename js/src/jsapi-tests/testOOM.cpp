@@ -38,7 +38,8 @@ const uint32_t maxAllocsPerTest = 100;
     testName = name;                                                          \
     printf("Test %s: started\n", testName);                                   \
     for (oomAfter = 1; oomAfter < maxAllocsPerTest; ++oomAfter) {             \
-    js::oom::SimulateOOMAfter(oomAfter, js::THREAD_TYPE_MAIN, true)
+    js::oom::simulator.simulateFailureAfter(js::oom::FailureSimulator::Kind::OOM, \
+                                            oomAfter, js::THREAD_TYPE_MAIN, true)
 
 #define OOM_TEST_FINISHED                                                     \
     {                                                                         \
@@ -49,8 +50,8 @@ const uint32_t maxAllocsPerTest = 100;
 
 #define END_OOM_TEST                                                          \
     }                                                                         \
-    js::oom::ResetSimulatedOOM();                                             \
-    CHECK(oomAfter != maxAllocsPerTest)
+    js::oom::simulator.reset();                                    \
+CHECK(oomAfter != maxAllocsPerTest)
 
 BEGIN_TEST(testNewContext)
 {
