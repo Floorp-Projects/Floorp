@@ -1,0 +1,152 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AstNode - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.jexl.ast</a>&nbsp;/&nbsp;<a href="./index.html">AstNode</a><br/>
+<br/>
+<h1>AstNode</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">AstNode</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/jexl/src/main/java/mozilla/components/lib/jexl/ast/AstNode.kt#L13">(source)</a>
+<p>A node of the abstract syntax tree.</p>
+<p>This class has a lot of properties because it needs to represent all types of nodes (See <a href="../-ast-type/index.html">AstType</a>). It should be
+possible to make this much simpler by creating a dedicated class for each type.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">AstNode</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/type">type</span><span class="symbol">:</span>&nbsp;<a href="../-ast-type/index.html"><span class="identifier">AstType</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/operator">operator</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/left">left</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/right">right</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/from">from</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/relative">relative</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/subject">subject</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/expression">expression</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/test">test</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/consequent">consequent</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/alternate">alternate</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$<init>(mozilla.components.lib.jexl.ast.AstType, kotlin.Any, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.Boolean, mozilla.components.lib.jexl.ast.AstNode, kotlin.String, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, mozilla.components.lib.jexl.ast.AstNode, kotlin.collections.MutableList((mozilla.components.lib.jexl.ast.AstNode)))/arguments">arguments</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/index.html"><span class="identifier">MutableList</span></a><span class="symbol">&lt;</span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;mutableListOf()<span class="symbol">)</span></code>
+<p>A node of the abstract syntax tree.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="alternate.html">alternate</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">alternate</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="arguments.html">arguments</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">arguments</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/index.html"><span class="identifier">MutableList</span></a><span class="symbol">&lt;</span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="consequent.html">consequent</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">consequent</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="expression.html">expression</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">expression</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="from.html">from</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">from</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="left.html">left</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">left</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="name.html">name</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">name</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="operator.html">operator</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">operator</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="relative.html">relative</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">relative</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="right.html">right</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">right</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="subject.html">subject</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">subject</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="test.html">test</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">test</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AstNode</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="type.html">type</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">type</span><span class="symbol">: </span><a href="../-ast-type/index.html"><span class="identifier">AstType</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="value.html">value</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">value</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="equals.html">equals</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">equals</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.jexl.ast.AstNode$equals(kotlin.Any)/other">other</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="to-string.html">toString</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">toString</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

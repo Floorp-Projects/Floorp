@@ -1,0 +1,52 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SafeBundle - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.utils</a>&nbsp;/&nbsp;<a href="./index.html">SafeBundle</a><br/>
+<br/>
+<h1>SafeBundle</h1>
+<code><span class="keyword">class </span><span class="identifier">SafeBundle</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeBundle.kt#L18">(source)</a>
+<p>See SafeIntent for more background: applications can put garbage values into Bundles. This is primarily
+experienced when there's garbage in the Intent's Bundle. However that Bundle can contain further bundles,
+and we need to handle those defensively too.</p>
+<p>See bug 1090385 for more.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SafeBundle</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeBundle$<init>(android.os.Bundle)/bundle">bundle</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/os/Bundle.html"><span class="identifier">Bundle</span></a><span class="symbol">)</span></code>
+<p>See SafeIntent for more background: applications can put garbage values into Bundles. This is primarily
+experienced when there's garbage in the Intent's Bundle. However that Bundle can contain further bundles,
+and we need to handle those defensively too.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-parcelable.html">getParcelable</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/os/Parcelable.html"><span class="identifier">Parcelable</span></a><span class="symbol">&gt;</span> <span class="identifier">getParcelable</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeBundle$getParcelable(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="get-parcelable.html#T"><span class="identifier">T</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-string.html">getString</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getString</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.utils.SafeBundle$getString(kotlin.String)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

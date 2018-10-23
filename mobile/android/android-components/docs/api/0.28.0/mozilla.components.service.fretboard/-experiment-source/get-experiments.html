@@ -1,0 +1,24 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ExperimentSource.getExperiments - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fretboard</a>&nbsp;/&nbsp;<a href="index.html">ExperimentSource</a>&nbsp;/&nbsp;<a href="./get-experiments.html">getExperiments</a><br/>
+<br/>
+<h1>getExperiments</h1>
+<a name="mozilla.components.service.fretboard.ExperimentSource$getExperiments(mozilla.components.service.fretboard.ExperimentsSnapshot)"></a>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getExperiments</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.ExperimentSource$getExperiments(mozilla.components.service.fretboard.ExperimentsSnapshot)/snapshot">snapshot</span><span class="symbol">:</span>&nbsp;<a href="../-experiments-snapshot/index.html"><span class="identifier">ExperimentsSnapshot</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-experiments-snapshot/index.html"><span class="identifier">ExperimentsSnapshot</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/ExperimentSource.kt#L21">(source)</a>
+<p>Requests new experiments from the source,
+parsing the response into experiments</p>
+<h3>Parameters</h3>
+<p><a name="client"></a>
+<code>client</code> - Http client to use, provided by Fretboard</p>
+<p><a name="snapshot"></a>
+<code>snapshot</code> - list of already downloaded experiments
+(in order to process a diff response, for example)</p>
+<p><strong>Return</strong><br/>
+modified list of experiments</p>
+</BODY>
+</HTML>
