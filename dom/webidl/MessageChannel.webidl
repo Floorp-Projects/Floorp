@@ -7,7 +7,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#channel-messaging
  */
 
-[Constructor, Exposed=(Window,Worker)]
+[Constructor, Exposed=(Window,Worker,System)]
 interface MessageChannel {
   readonly attribute MessagePort port1;
   readonly attribute MessagePort port2;

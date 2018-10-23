@@ -11,7 +11,7 @@ callback WebExtensionLocalizeCallback = DOMString (DOMString unlocalizedText);
  * Defines the platform-level policies for a WebExtension, including its
  * permissions and the characteristics of its moz-extension: URLs.
  */
-[Constructor(WebExtensionInit options), ChromeOnly, Exposed=Window]
+[Constructor(WebExtensionInit options), ChromeOnly, Exposed=System]
 interface WebExtensionPolicy {
   /**
    * The add-on's internal ID, as specified in its manifest.json file or its

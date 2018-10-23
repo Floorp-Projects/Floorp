@@ -50,7 +50,7 @@ callback interface UncaughtRejectionObserver {
   void onConsumed(object p);
 };
 
-[ChromeOnly, Exposed=Window]
+[ChromeOnly, Exposed=(Window,System)]
 interface PromiseDebugging {
   /**
    * The various functions on this interface all expect to take promises but

@@ -41,7 +41,7 @@ enum MozContentPolicyType {
  * A thin wrapper around nsIChannel and nsIHttpChannel that allows JS
  * callers to access them without XPConnect overhead.
  */
-[ChromeOnly, Exposed=Window]
+[ChromeOnly, Exposed=System]
 interface ChannelWrapper : EventTarget {
   /**
    * Returns the wrapper instance for the given channel. The same wrapper is

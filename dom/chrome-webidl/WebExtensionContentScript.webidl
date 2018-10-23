@@ -9,7 +9,7 @@ interface WindowProxy;
 typedef (MatchPatternSet or sequence<DOMString>) MatchPatternSetOrStringSequence;
 typedef (MatchGlob or DOMString) MatchGlobOrString;
 
-[Constructor(MozDocumentMatcherInit options), ChromeOnly, Exposed=Window]
+[Constructor(MozDocumentMatcherInit options), ChromeOnly, Exposed=System]
 interface MozDocumentMatcher {
   /**
    * Returns true if the script's match and exclude patterns match the given
@@ -132,7 +132,7 @@ enum ContentScriptRunAt {
   "document_idle",
 };
 
-[Constructor(WebExtensionPolicy extension, WebExtensionContentScriptInit options), ChromeOnly, Exposed=Window]
+[Constructor(WebExtensionPolicy extension, WebExtensionContentScriptInit options), ChromeOnly, Exposed=System]
 interface WebExtensionContentScript : MozDocumentMatcher {
   /**
    * The earliest point in the load cycle at which this script should run. For

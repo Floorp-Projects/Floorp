@@ -7,7 +7,7 @@
  * https://w3c.github.io/requestidlecallback/
  */
 
-[Exposed=Window,
+[Exposed=(Window,System),
  Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
 interface IdleDeadline {
   DOMHighResTimeStamp timeRemaining();
