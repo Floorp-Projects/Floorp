@@ -1055,8 +1055,8 @@ impl CompositeOps {
         }
     }
 
-    pub fn count(&self) -> usize {
-        self.filters.len() + if self.mix_blend_mode.is_some() { 1 } else { 0 }
+    pub fn is_empty(&self) -> bool {
+        self.filters.is_empty() && self.mix_blend_mode.is_none()
     }
 }
 

@@ -4,10 +4,9 @@
 
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize, LineStyle};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
-use api::{YuvColorSpace, YuvFormat, WorldPixel, WorldRect, ColorDepth};
+use api::{YuvColorSpace, YuvFormat, WorldRect, ColorDepth};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
-use euclid::vec3;
 use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheAddress};
 use gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders};
@@ -15,8 +14,7 @@ use gpu_types::{ClipMaskInstance, SplitCompositeInstance};
 use gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
-use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
-use plane_split::{BspSplitter, Clipper, Polygon, Splitter};
+use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureSurface};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, DeferredResolve};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveIndex};
 use prim_store::{VisibleGradientTile, PrimitiveInstance};
@@ -29,7 +27,7 @@ use scene::FilterOpHelpers;
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use tiling::{RenderTargetContext};
-use util::{MatrixHelpers, TransformedRectKind};
+use util::{TransformedRectKind};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -480,12 +478,8 @@ impl AlphaBatchBuilder {
     ) {
         let task_address = render_tasks.get_task_address(task_id);
 
-        // Even though most of the time a splitter isn't used or needed,
-        // they are cheap to construct so we will always pass one down.
-        let mut splitter = BspSplitter::new();
-
         // Add each run in this picture to the batch.
-        for (plane_split_anchor, prim_instance) in pic.prim_instances.iter().enumerate() {
+        for prim_instance in &pic.prim_instances {
             self.add_prim_to_batch(
                 prim_instance,
                 ctx,
@@ -494,106 +488,9 @@ impl AlphaBatchBuilder {
                 task_id,
                 task_address,
                 deferred_resolves,
-                &mut splitter,
                 prim_headers,
                 transforms,
                 root_spatial_node_index,
-                plane_split_anchor,
-            );
-        }
-
-        // Flush the accumulated plane splits onto the task tree.
-        // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
-        for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
-            let prim_instance = &pic.prim_instances[poly.anchor];
-            let prim_index = prim_instance.prim_index;
-            let prim = &ctx.prim_store.primitives[prim_index.0];
-            if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
-                println!("\t\tsplit polygon {:?}", poly.points);
-            }
-            let transform = transforms.get_world_transform(prim_instance.spatial_node_index).inverse().unwrap();
-            let transform_id = transforms.get_id(
-                prim_instance.spatial_node_index,
-                ROOT_SPATIAL_NODE_INDEX,
-                ctx.clip_scroll_tree,
-            );
-
-            let clip_task_address = prim_instance
-                .clip_task_id
-                .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
-
-            let prim_header = PrimitiveHeader {
-                local_rect: prim.local_rect,
-                local_clip_rect: prim_instance.combined_local_clip_rect,
-                task_address,
-                specific_prim_address: GpuCacheAddress::invalid(),
-                clip_task_address,
-                transform_id,
-            };
-
-            let pic_index = match prim.details {
-                PrimitiveDetails::Brush(ref brush) => {
-                    match brush.kind {
-                        BrushKind::Picture { pic_index, .. } => pic_index,
-                        _ => unreachable!(),
-                    }
-                }
-                PrimitiveDetails::TextRun(..) => {
-                    unreachable!();
-                }
-            };
-            let pic = &ctx.prim_store.pictures[pic_index.0];
-
-            let (uv_rect_address, _) = pic
-                .raster_config
-                .as_ref()
-                .expect("BUG: no raster config")
-                .surface
-                .as_ref()
-                .expect("BUG: no surface")
-                .resolve(
-                    render_tasks,
-                    ctx.resource_cache,
-                    gpu_cache,
-                );
-
-            let prim_header_index = prim_headers.push(&prim_header, [
-                uv_rect_address.as_int(),
-                0,
-                0,
-            ]);
-
-            let mut local_points = [
-                transform.transform_point3d(&poly.points[0].cast()).unwrap(),
-                transform.transform_point3d(&poly.points[1].cast()).unwrap(),
-                transform.transform_point3d(&poly.points[2].cast()).unwrap(),
-                transform.transform_point3d(&poly.points[3].cast()).unwrap(),
-            ];
-            let gpu_blocks = [
-                [local_points[0].x, local_points[0].y, local_points[1].x, local_points[1].y].into(),
-                [local_points[2].x, local_points[2].y, local_points[3].x, local_points[3].y].into(),
-            ];
-
-            let gpu_handle = gpu_cache.push_per_frame_blocks(&gpu_blocks);
-            let key = BatchKey::new(
-                BatchKind::SplitComposite,
-                BlendMode::PremultipliedAlpha,
-                BatchTextures::no_texture(),
-            );
-
-            let gpu_address = gpu_cache.get_address(&gpu_handle);
-
-            let instance = SplitCompositeInstance::new(
-                prim_header_index,
-                gpu_address,
-                prim_headers.z_generator.next(),
-            );
-
-            self.batch_list.push_single_instance(
-                key,
-                &prim_instance.clipped_world_rect.as_ref().expect("bug"),
-                prim_instance.prim_index,
-                PrimitiveInstanceData::from(instance),
             );
         }
     }
@@ -611,11 +508,9 @@ impl AlphaBatchBuilder {
         task_id: RenderTaskId,
         task_address: RenderTaskAddress,
         deferred_resolves: &mut Vec<DeferredResolve>,
-        splitter: &mut BspSplitter<f64, WorldPixel>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         root_spatial_node_index: SpatialNodeIndex,
-        plane_split_anchor: usize,
     ) {
         let prim = &ctx.prim_store.primitives[prim_instance.prim_index.0];
 
@@ -669,7 +564,8 @@ impl AlphaBatchBuilder {
 
         let non_segmented_blend_mode = if !prim_instance.opacity.is_opaque ||
             prim_instance.clip_task_id.is_some() ||
-            transform_kind == TransformedRectKind::Complex {
+            transform_kind == TransformedRectKind::Complex
+        {
             specified_blend_mode
         } else {
             BlendMode::None
@@ -692,60 +588,86 @@ impl AlphaBatchBuilder {
         match prim.details {
             PrimitiveDetails::Brush(ref brush) => {
                 match brush.kind {
-                    BrushKind::Picture { pic_index, .. } => {
+                    BrushKind::Picture { pic_index } => {
                         let picture = &ctx.prim_store.pictures[pic_index.0];
+                        match picture.context_3d {
+                            // Convert all children of the 3D hierarchy root into batches.
+                            Picture3DContext::In { root_data: Some(ref list), .. } => {
+                                let z = prim_headers.z_generator.next();
+                                for child in list {
+                                    let prim_instance = &picture.prim_instances[child.anchor];
+                                    let pic_primitive = &ctx.prim_store.primitives[prim_instance.prim_index.0];
 
-                        // If this picture is participating in a 3D rendering context,
-                        // then don't add it to any batches here. Instead, create a polygon
-                        // for it and add it to the current plane splitter.
-                        if picture.is_in_3d_context {
-                            // Push into parent plane splitter.
-                            debug_assert!(picture.raster_config.is_some());
-                            let transform = transforms.get_world_transform(prim_instance.spatial_node_index);
+                                    let clip_task_address = prim_instance
+                                        .clip_task_id
+                                        .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
 
-                            // Apply the local clip rect here, before splitting. This is
-                            // because the local clip rect can't be applied in the vertex
-                            // shader for split composites, since we are drawing polygons
-                            // rather that rectangles. The interpolation still works correctly
-                            // since we determine the UVs by doing a bilerp with a factor
-                            // from the original local rect.
-                            let local_rect = prim
-                                .local_rect
-                                .intersection(&prim_instance.combined_local_clip_rect);
+                                    let prim_header = PrimitiveHeader {
+                                        local_rect: pic_primitive.local_rect,
+                                        local_clip_rect: prim_instance.combined_local_clip_rect,
+                                        task_address,
+                                        specific_prim_address: GpuCacheAddress::invalid(),
+                                        clip_task_address,
+                                        transform_id: child.transform_id,
+                                    };
 
-                            if let Some(local_rect) = local_rect {
-                                match transform.transform_kind() {
-                                    TransformedRectKind::AxisAligned => {
-                                        let inv_transform = transforms.get_world_inv_transform(prim_instance.spatial_node_index);
-                                        let polygon = Polygon::from_transformed_rect_with_inverse(
-                                            local_rect.cast(),
-                                            &transform.cast(),
-                                            &inv_transform.cast(),
-                                            plane_split_anchor,
-                                        ).unwrap();
-                                        splitter.add(polygon);
-                                    }
-                                    TransformedRectKind::Complex => {
-                                        let mut clipper = Clipper::new();
-                                        let matrix = transform.cast();
-                                        let results = clipper.clip_transformed(
-                                            Polygon::from_rect(
-                                                local_rect.cast(),
-                                                plane_split_anchor,
-                                            ),
-                                            &matrix,
-                                            Some(bounding_rect.to_f64()),
+						            let pic_index = match pic_primitive.details {
+						            	PrimitiveDetails::Brush(ref brush) => {
+						                    match brush.kind {
+						                        BrushKind::Picture { pic_index, .. } => pic_index,
+						                        _ => unreachable!(),
+						                    }
+						                }
+						                PrimitiveDetails::TextRun(..) => {
+						                    unreachable!();
+						                }
+						            };
+						            let pic = &ctx.prim_store.pictures[pic_index.0];
+
+                                    let (uv_rect_address, _) = pic
+                                        .raster_config
+                                        .as_ref()
+                                        .expect("BUG: no raster config")
+                                        .surface
+                                        .as_ref()
+                                        .expect("BUG: no surface")
+                                        .resolve(
+                                            render_tasks,
+                                            ctx.resource_cache,
+                                            gpu_cache,
                                         );
-                                        if let Ok(results) = results {
-                                            for poly in results {
-                                                splitter.add(poly);
-                                            }
-                                        }
-                                    }
+
+                                    let prim_header_index = prim_headers.push(&prim_header, [
+                                        uv_rect_address.as_int(),
+                                        0,
+                                        0,
+                                    ]);
+
+                                    let key = BatchKey::new(
+                                        BatchKind::SplitComposite,
+                                        BlendMode::PremultipliedAlpha,
+                                        BatchTextures::no_texture(),
+                                    );
+
+                                    let instance = SplitCompositeInstance::new(
+                                        prim_header_index,
+                                        child.gpu_address,
+                                        z,
+                                    );
+
+                                    self.batch_list.push_single_instance(
+                                        key,
+                                        &prim_instance.clipped_world_rect.as_ref().expect("bug"),
+                                        prim_instance.prim_index,
+                                        PrimitiveInstanceData::from(instance),
+                                    );
                                 }
                             }
-
-                            return;
+                            // Ignore the 3D pictures that are not in the root of preserve-3D
+                            // hierarchy, since we process them with the root.
+                            Picture3DContext::In { root_data: None, .. } => return,
+                            // Proceed for non-3D pictures.
+                            Picture3DContext::Out => ()
                         }
 
                         match picture.raster_config {
