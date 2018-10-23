@@ -14,7 +14,6 @@
 #include "nsISupports.h"
 #include "nsIObserver.h"
 #include "nsIURI.h"
-#include "xpcIJSModuleLoader.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "jsapi.h"
@@ -42,15 +41,18 @@ namespace mozilla {
 #endif
 
 class mozJSComponentLoader final : public mozilla::ModuleLoader,
-                                   public xpcIJSModuleLoader,
                                    public nsIObserver
 {
  public:
     NS_DECL_ISUPPORTS
-    NS_DECL_XPCIJSMODULELOADER
     NS_DECL_NSIOBSERVER
 
     mozJSComponentLoader();
+
+    void LoadedModules(uint32_t* aLength, char*** aModules);
+    void LoadedComponents(uint32_t* aLength, char*** aComponents);
+    nsresult GetModuleImportStack(const nsACString& aLocation, nsACString& aRetval);
+    nsresult GetComponentLoadStack(const nsACString& aLocation, nsACString& aRetval);
 
     // ModuleLoader
     const mozilla::Module* LoadModule(mozilla::FileLocation& aFile) override;

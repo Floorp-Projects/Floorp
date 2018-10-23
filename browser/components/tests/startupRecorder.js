@@ -43,7 +43,6 @@ let afterPaintListener = () => {
   */
 function startupRecorder() {
   this.wrappedJSObject = this;
-  this.loader = Cc["@mozilla.org/moz/jsloader;1"].getService(Ci.xpcIJSModuleLoader);
   this.data = {
     images: {
       "image-drawing": new Set(),
@@ -64,8 +63,8 @@ startupRecorder.prototype = {
       return;
 
     this.data.code[name] = {
-      components: this.loader.loadedComponents(),
-      modules: this.loader.loadedModules(),
+      components: Cu.loadedComponents(),
+      modules: Cu.loadedModules(),
       services: Object.keys(Cc).filter(c => {
         try {
           return Cm.isServiceInstantiatedByContractID(c, Ci.nsISupports);
