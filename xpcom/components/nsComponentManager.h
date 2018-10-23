@@ -19,7 +19,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
-#include "mozilla/ModuleLoader.h"
 #include "mozilla/Mutex.h"
 #include "nsXULAppAPI.h"
 #include "nsIFactory.h"
