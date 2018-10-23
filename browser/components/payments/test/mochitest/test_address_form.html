@@ -253,7 +253,7 @@ add_task(async function test_edit() {
   ok(form.saveButton.disabled, "Save button should be disabled if only the name is filled");
   ok(form.querySelectorAll(":-moz-ui-invalid").length > 3,
      "Check fields are visibly invalid on an 'edit' form with only the given-name filled");
-  ok(form.querySelectorAll("#country:-moz-ui-invalid").length, 1,
+  is(form.querySelectorAll("#country:-moz-ui-invalid").length, 1,
      "Check that the country `select` is marked as invalid");
 
   info("change to no selected address");

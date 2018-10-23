@@ -6,7 +6,7 @@ tests.test_Color = function (t) {
     var approx = function (a, b, msg) {
         return t.is(a.toPrecision(4), b.toPrecision(4), msg);
     };
-   
+
     t.is( Color.whiteColor().toHexString(), "#ffffff", "whiteColor has right hex" );
     t.is( Color.blackColor().toHexString(), "#000000", "blackColor has right hex" );
     t.is( Color.blueColor().toHexString(), "#0000ff", "blueColor has right hex" );
@@ -14,8 +14,8 @@ tests.test_Color = function (t) {
     t.is( Color.greenColor().toHexString(), "#00ff00", "greenColor has right hex" );
     t.is( compare(Color.whiteColor(), Color.whiteColor()), 0, "default colors compare right" );
     t.ok( Color.whiteColor() == Color.whiteColor(), "default colors are interned" );
-    t.ok( Color.whiteColor().toRGBString(), "rgb(255,255,255)", "toRGBString white" );
-    t.ok( Color.blueColor().toRGBString(), "rgb(0,0,255)", "toRGBString blue" );
+    t.is( Color.whiteColor().toRGBString(), "rgb(255,255,255)", "toRGBString white" );
+    t.is( Color.blueColor().toRGBString(), "rgb(0,0,255)", "toRGBString blue" );
     t.is( Color.fromRGB(190/255, 222/255, 173/255).toHexString(), "#bedead", "fromRGB works" );
     t.is( Color.fromRGB(226/255, 15.9/255, 182/255).toHexString(), "#e210b6", "fromRGB < 16 works" );
     t.is( Color.fromRGB({r:190/255,g:222/255,b:173/255}).toHexString(), "#bedead", "alt fromRGB works" );
@@ -59,7 +59,7 @@ tests.test_Color = function (t) {
         "#80ff80",
         "fromHSLString"
     );
-    t.is( 
+    t.is(
         Color.fromRGB(0.5, 1, 0.5).toHSLString(),
         "hsl(120,100.0%,75.00%)",
         "toHSLString"
@@ -90,7 +90,7 @@ tests.test_Color = function (t) {
     t.is( Color.fromRGBString("rgba( 0, 255, 255, 1)").toHexString(), "#00ffff", "fromRGBString with spaces and alpha" );
     t.is( Color.fromRGBString("rgb( 0, 255, 255)").toHexString(), "#00ffff", "fromRGBString with spaces" );
     t.is( Color.fromRGBString("rgb( 0, 100%, 255)").toHexString(), "#00ffff", "fromRGBString with percents" );
-    
+
     var hsv = Color.redColor().asHSV();
     approx( hsv.h, 0.0, "red hsv.h" );
     approx( hsv.s, 1.0, "red hsv.s" );

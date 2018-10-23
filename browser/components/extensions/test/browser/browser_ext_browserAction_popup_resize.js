@@ -170,14 +170,14 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
     let panelRect = panel.getBoundingClientRect();
     if (arrowSide == "top") {
-      ok(panelRect.top, origPanelRect.top, "Panel has not moved downwards");
+      is(panelRect.top, origPanelRect.top, "Panel has not moved downwards");
       ok(panelRect.bottom >= origPanelRect.bottom, `Panel has not shrunk from original size (${panelRect.bottom} >= ${origPanelRect.bottom})`);
 
       let screenBottom = browserWin.screen.availTop + browserWin.screen.availHeight;
       let panelBottom = browserWin.mozInnerScreenY + panelRect.bottom;
       ok(Math.round(panelBottom) <= screenBottom, `Bottom of popup should be on-screen. (${panelBottom} <= ${screenBottom})`);
     } else {
-      ok(panelRect.bottom, origPanelRect.bottom, "Panel has not moved upwards");
+      is(panelRect.bottom, origPanelRect.bottom, "Panel has not moved upwards");
       ok(panelRect.top <= origPanelRect.top, `Panel has not shrunk from original size (${panelRect.top} <= ${origPanelRect.top})`);
 
       let panelTop = browserWin.mozInnerScreenY + panelRect.top;

@@ -8,7 +8,7 @@
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <div id="editor" contenteditable>abc<br>def</div>
 <pre id="test">
@@ -132,9 +132,9 @@ function runTests()
   var width2 = {};
   var height2 = {};
   textRectArray.getCharacterRect(0, left, top, width, height);
-  ok(textRect.top, top.value,
+  is(textRect.top, top.value,
      "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same top that returns QUERY_TEXT_RECT");
-  ok(textRect.left, left.value,
+  is(textRect.left, left.value,
      "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same left that returns QUERY_TEXT_RECT");
   textRectArray.getCharacterRect(1, left2, top2, width2, height2);
   ok(textRect.width, width.value + width2.value,

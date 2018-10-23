@@ -7,8 +7,8 @@
 <window title="Tabbox Test" width="500" height="600"
         onload="setTimeout(test_tabbox, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="xul_selectcontrol.js"/>
 
 <vbox id="tabboxes">
@@ -184,13 +184,13 @@ function test_tabbox_focus()
   var tab = $("tab-nofocus");
 
   when_tab_focused(tab, function () {
-    ok(document.activeElement, tab, "focus in tab with no focusable elements");
+    is(document.activeElement, tab, "focus in tab with no focusable elements");
 
     tabbox.selectedIndex = 0;
     $("tab-nofocus-button").focus();
 
     when_tab_focused(tab, function () {
-      ok(document.activeElement, tab, "focus in tab with no focusable elements, but with something in another tab focused");
+      is(document.activeElement, tab, "focus in tab with no focusable elements, but with something in another tab focused");
 
       var textboxExtra = $("textbox-extra");
       textboxExtra.addEventListener("focus", function () {

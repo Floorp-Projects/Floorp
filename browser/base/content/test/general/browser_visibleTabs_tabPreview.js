@@ -11,7 +11,7 @@ add_task(async function test() {
 
   // test the ctrlTab.tabList
   pressCtrlTab();
-  ok(ctrlTab.tabList.length, 3, "Show 3 tabs in tab preview");
+  is(ctrlTab.tabList.length, 3, "Show 3 tabs in tab preview");
   releaseCtrl();
 
   gBrowser.showOnlyTheseTabs([origTab]);

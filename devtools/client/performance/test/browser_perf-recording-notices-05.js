@@ -27,7 +27,7 @@ add_task(async function() {
   };
 
   PerformanceController._setMultiprocessAttributes();
-  ok($("#performance-view").getAttribute("e10s"), "disabled",
+  is($("#performance-view").getAttribute("e10s"), "disabled",
     "When e10s is disabled, container has [e10s=disabled].");
 
   enabled = true;

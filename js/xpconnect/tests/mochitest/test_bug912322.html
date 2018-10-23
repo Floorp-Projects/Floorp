@@ -19,8 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912322
   }
 
   // Test window.controllers.
-  ok(typeof window.controllers, 'undefined', "controllers should not be available to content");
-  ok(typeof SpecialPowers.wrap(window).controllers, 'object', "controllers should be available over Xray");
+  is(typeof window.controllers, 'undefined', "controllers should not be available to content");
+  is(typeof SpecialPowers.wrap(window).controllers, 'object', "controllers should be available over Xray");
 
   </script>
 </head>

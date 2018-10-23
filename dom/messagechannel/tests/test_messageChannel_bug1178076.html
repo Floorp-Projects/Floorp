@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1178076
 
   function runTest() {
     onmessage = function(e) {
-      ok(e.ports.length, 1, "A port has been received!");
+      is(e.ports.length, 1, "A port has been received!");
       var port = e.ports[0];
       ok(port instanceof MessagePort, "This is a port.");
       SimpleTest.finish();

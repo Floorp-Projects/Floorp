@@ -25,13 +25,13 @@ var rdoList = document.forms[0].elements.namedItem('rdo');
 is(rdoList.value, "", "The value attribute should be empty");
 
 document.getElementById('r2').checked = true;
-ok(rdoList.value, "2", "The value attribute should be 2");
+is(rdoList.value, "2", "The value attribute should be 2");
 
 document.getElementById('r1').checked = true;
-ok(rdoList.value, "on", "The value attribute should be on");
+is(rdoList.value, "on", "The value attribute should be on");
 
 document.getElementById('r1').value = 1;
-ok(rdoList.value, "1", "The value attribute should be 1");
+is(rdoList.value, "1", "The value attribute should be 1");
 
 is(rdoList.value, document.getElementById('r1').value,
   "The value attribute should be equal to the first checked radio input element's value");

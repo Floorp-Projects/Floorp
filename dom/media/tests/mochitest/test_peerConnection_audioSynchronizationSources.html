@@ -64,7 +64,7 @@
     for (let sourceSet of sourceSets) {
       for (let recv of receivers) {
         let sources = recv.getSynchronizationSources();
-        ok(sources.length, 1,
+        is(sources.length, 1,
            `Expected number of sources is 1. (${sources.length})`);
         sourceSet.push(sources);
       }

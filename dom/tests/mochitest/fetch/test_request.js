@@ -339,7 +339,7 @@ function testFormDataBodyCreation() {
     ok(fd.has("more"), "more should exist.");
 
     var b = fd.get("blob");
-    ok(b.name, "blob", "blob entry should be a Blob.");
+    is(b.name, "blob", "blob entry should be a Blob.");
     ok(b instanceof Blob, "blob entry should be a Blob.");
 
     return readAsText(b).then(function(output) {
