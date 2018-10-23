@@ -1139,7 +1139,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
                             const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
 {
   if (!aImageBitmap.mData) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
