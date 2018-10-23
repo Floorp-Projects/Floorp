@@ -28,7 +28,6 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
     this.displayMode = this.settings.displayMode;
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
     this.userAgentMode = this.settings.userAgentMode;
-    this.allowJavascript = this.settings.allowJavascript;
   }
 
   get useTrackingProtection() {
@@ -63,14 +62,6 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
     if (docShell) {
       docShell.displayMode = aMode;
     }
-  }
-
-  get allowJavascript() {
-    return docShell.allowJavascript;
-  }
-
-  set allowJavascript(aAllowJavascript) {
-    docShell.allowJavascript = aAllowJavascript;
   }
 }
 
