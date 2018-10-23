@@ -16,7 +16,14 @@ open class MainActivity : AppCompatActivity() {
 
         // Generate an event when user clicks on the button.
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
-            GleanMetrics.BrowserEngagement.click.record("Generate Data")
+            GleanMetrics.BrowserEngagement.click.record(
+                    "object1",
+                    "data",
+                    mapOf(
+                            "key1" to "extra_value_1",
+                            "key2" to "extra_value_2"
+                    )
+            )
         }
     }
 }

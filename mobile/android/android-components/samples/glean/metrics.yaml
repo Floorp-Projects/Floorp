@@ -1,22 +1,21 @@
-# This file contains a definition of the scalar probes that are recorded in Telemetry.
-# They are submitted with the "main" pings and can be inspected in about:telemetry.
+# This file defines the metrics that are recorded by glean telemetry. They are
+# automatically converted to Kotlin code at build time using the `glean_parser`
+# PyPI package.
 
-# The following section contains the accessibility scalars.
-a11y:
-  instantiators:
-    bug_numbers:
-      - 1323069
-      - 1462238
+$schema: http://mozilla.org/schemas/glean/metrics
+
+browser_engagement:
+  click:
+    type: event
     description: >
-      The leaf name and version number of the binary for the process responsible
-      for remotely instantiating a11y.
-    expires: never
-    kind: string
+      Just testing events
+    bugs:
+      - 123456789
     notification_emails:
-      - accessibility@mozilla.com
-      - jteh@mozilla.com
-    record_in_processes:
-      - 'main'
-    release_channel_collection: opt-out
-    keyed: false
-    cpp_guard: 'ACCESSIBILITY'
+      - telemetry-client-dev@mozilla.com
+    objects:
+      - object1
+      - object2
+    extra_keys:
+      key1: "This is key one"
+      key2: "This is key two"

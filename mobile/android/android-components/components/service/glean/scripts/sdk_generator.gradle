@@ -8,9 +8,10 @@ import org.apache.tools.ant.taskdefs.condition.Os
 envs {
     bootstrapDirectory = new File(buildDir, 'bootstrap')
     envsDirectory = new File(buildDir, 'envs')
+    pipInstallOptions = "--trusted-host pypi.python.org --no-cache-dir"
 
     // Setup a miniconda environment.
-    conda "Miniconda3", "Miniconda3-latest", "64"
+    conda "Miniconda3", "Miniconda3-latest", "64", ["glean_parser"]
 }
 
 // Setup the python environment before the build starts.
@@ -46,11 +47,14 @@ android.applicationVariants.all { variant ->
         } else {
             commandLine "$buildDir/bootstrap/Miniconda3/bin/python"
         }
-        // TODO use the published glean_parsers package once bug 1497800 lands
-        // The path to the parser needs to be hardcoded now that we're using a stubbed parser.
-        args "$rootDir/components/service/glean/scripts/parser.py"
-        args "$projectDir/metrics.yaml"
+        args "-m"
+        args "glean_parser"
+        args "translate"
+        args "-f"
+        args "kotlin"
+        args "-o"
         args "$sourceOutputDir"
+        args "$projectDir/metrics.yaml"
 
         // Only show the output if something went wrong.
         ignoreExitValue = true

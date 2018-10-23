@@ -11,8 +11,6 @@ import mozilla.components.support.base.log.logger.Logger
 internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 80
 // Maximum length of any passed value string, in UTF8 byte sequence length.
 internal const val MAX_LENGTH_VALUE = 80
-// Maximum length of any passed object string, in UTF8 byte sequence length.
-internal const val MAX_LENGTH_OBJECT_ID = 20
 
 /**
  * This implements the developer facing API for recording events.
@@ -24,12 +22,13 @@ internal const val MAX_LENGTH_OBJECT_ID = 20
  * data and making sure that limits are enforced.
  */
 data class EventMetricType(
-    override val applicationProperty: Boolean,
-    override val disabled: Boolean,
-    override val group: String,
+    override val applicationProperty: Boolean = false,
+    override val disabled: Boolean = false,
+    override val category: String,
     override val name: String,
-    override val sendInPings: List<String>,
-    override val userProperty: Boolean,
+    override val sendInPings: List<String> = listOf("default"),
+    override val userProperty: Boolean = false,
+    val objects: List<String>,
     val allowedExtraKeys: List<String>? = null
 ) : CommonMetricData {
     private val logger = Logger("glean/EventMetricType")
@@ -62,12 +61,11 @@ data class EventMetricType(
             return
         }
 
-        val truncatedObjectId = objectId.let {
-            if (it.length > MAX_LENGTH_OBJECT_ID) {
-                logger.warn("objectId parameter exceeds maximum string length, truncating.")
-                return@let it.substring(0, MAX_LENGTH_OBJECT_ID)
-            }
-            it
+        // We don't need to check that the objectId is short, since that
+        // has already been determined at build time for each of the valid objectId values.
+        if (!objects.contains(objectId)) {
+            logger.warn("objectId '$objectId' is not valid on the $category.$name metric")
+            return
         }
 
         val truncatedValue = value?.let {
@@ -87,12 +85,12 @@ data class EventMetricType(
 
             for ((key, extraValue) in eventKeys) {
                 if (!allowedExtraKeys.contains(key)) {
-                    logger.error("$key extra key is not allowed for $group.$name.")
+                    logger.error("$key extra key is not allowed for $category.$name.")
                     return
                 }
 
                 if (extraValue.length > MAX_LENGTH_EXTRA_KEY_VALUE) {
-                    logger.warn("$extraValue for $key is too long for $group.$name, truncating.")
+                    logger.warn("$extraValue for $key is too long for $category.$name, truncating.")
                     eventKeys[key] = extraValue.substring(0, MAX_LENGTH_EXTRA_KEY_VALUE)
                 }
             }
@@ -102,9 +100,9 @@ data class EventMetricType(
         // Delegate storing the event to the storage engine.
         EventsStorageEngine.record(
             stores = sendInPings,
-            category = group,
+            category = category,
             name = name,
-            objectId = truncatedObjectId,
+            objectId = objectId,
             value = truncatedValue,
             extra = truncatedExtraKeys
         )

@@ -11,7 +11,7 @@ package mozilla.components.service.glean
 interface CommonMetricData {
     val applicationProperty: Boolean?
     val disabled: Boolean?
-    val group: String?
+    val category: String?
     val name: String?
     val sendInPings: List<String>?
     val userProperty: Boolean?

@@ -29,10 +29,11 @@ class EventMetricTypeTest {
         val click = EventMetricType(
             applicationProperty = true,
             disabled = false,
-            group = "ui",
+            category = "ui",
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false
+            userProperty = false,
+            objects = listOf("buttonA", "buttonB")
         )
 
         // Record two events of the same type, with a little delay.
@@ -66,10 +67,11 @@ class EventMetricTypeTest {
         val click = EventMetricType(
             applicationProperty = false,
             disabled = true,
-            group = "ui",
+            category = "ui",
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false
+            userProperty = false,
+            objects = listOf("buttonA")
         )
 
         // Attempt to store the event.
@@ -87,10 +89,11 @@ class EventMetricTypeTest {
         val click = EventMetricType(
             applicationProperty = true,
             disabled = true,
-            group = "ui",
+            category = "ui",
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false
+            userProperty = false,
+            objects = listOf("buttonA")
         )
 
         // Attempt to store the event.
@@ -102,31 +105,22 @@ class EventMetricTypeTest {
     }
 
     @Test
-    fun `'objectId' is properly recorded and truncated`() {
+    fun `'objectId' is in the object set`() {
         val click = EventMetricType(
             applicationProperty = true,
             disabled = false,
-            group = "ui",
+            category = "ui",
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false
+            userProperty = false,
+            objects = listOf("object1")
         )
 
         val testValue = "LeanGleanByFrank"
         click.record(testValue)
-        click.record(testValue.repeat(3))
 
         val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-
-        val firstEvent = snapshot!!.filter { e -> e.objectId == testValue }.single()
-        assertEquals("ui", firstEvent.category)
-        assertEquals("click", firstEvent.name)
-
-        val secondEvent = snapshot.filter {
-            e -> e.objectId == testValue.repeat(3).substring(0, MAX_LENGTH_OBJECT_ID)
-        }.single()
-        assertEquals("ui", secondEvent.category)
-        assertEquals("click", secondEvent.name)
+        assertNull("Events must not be recorded if they are invalid", snapshot)
     }
 
     @Test
@@ -134,10 +128,11 @@ class EventMetricTypeTest {
         val click = EventMetricType(
             applicationProperty = true,
             disabled = false,
-            group = "ui",
+            category = "ui",
             name = "click",
             sendInPings = listOf("store1"),
-            userProperty = false
+            userProperty = false,
+            objects = listOf("buttonA", "buttonB")
         )
 
         val testValue = "LeanGleanByFrank"
@@ -162,10 +157,11 @@ class EventMetricTypeTest {
         val testEvent = EventMetricType(
             applicationProperty = true,
             disabled = false,
-            group = "ui",
+            category = "ui",
             name = "testEvent",
             sendInPings = listOf("store1"),
-            userProperty = false
+            userProperty = false,
+            objects = listOf("buttonA")
         )
 
         testEvent.record("buttonA",
@@ -181,15 +177,16 @@ class EventMetricTypeTest {
         val testEvent = EventMetricType(
             applicationProperty = true,
             disabled = false,
-            group = "ui",
+            category = "ui",
             name = "testEvent",
             sendInPings = listOf("store1"),
             userProperty = false,
-            allowedExtraKeys = listOf("extra1", "extra2")
+            allowedExtraKeys = listOf("extra1", "extra2"),
+            objects = listOf("buttonA")
         )
 
         testEvent.record("buttonA",
-            extra = mapOf("unknownExtra" to "someValue", "extra1" to "test"))
+        extra = mapOf("unknownExtra" to "someValue", "extra1" to "test"))
 
         // Check that nothing was recorded.
         val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
@@ -201,16 +198,17 @@ class EventMetricTypeTest {
         val testEvent = EventMetricType(
             applicationProperty = true,
             disabled = false,
-            group = "ui",
+            category = "ui",
             name = "testEvent",
             sendInPings = listOf("store1"),
             userProperty = false,
-            allowedExtraKeys = listOf("extra1", "truncatedExtra")
+            allowedExtraKeys = listOf("extra1", "truncatedExtra"),
+            objects = listOf("buttonA")
         )
 
         val testValue = "LeanGleanByFrank"
         testEvent.record("buttonA",
-            extra = mapOf("extra1" to testValue, "truncatedExtra" to testValue.repeat(10)))
+        extra = mapOf("extra1" to testValue, "truncatedExtra" to testValue.repeat(10)))
 
         // Check that nothing was recorded.
         val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
