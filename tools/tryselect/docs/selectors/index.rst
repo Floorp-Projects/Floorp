@@ -31,6 +31,7 @@ See selector specific options by running:
   :hidden:
 
   Fuzzy <fuzzy>
+  Again <again>
   Empty <empty>
   Syntax <syntax>
   Release <release>
