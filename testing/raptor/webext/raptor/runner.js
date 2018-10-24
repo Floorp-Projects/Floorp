@@ -17,7 +17,7 @@
 
 // when the browser starts this webext runner will start automatically; we
 // want to give the browser some time (ms) to settle before starting tests
-var postStartupDelay = 30000;
+var postStartupDelay;
 
 // delay (ms) between pageload cycles
 var pageCycleDelay = 1000;
@@ -414,6 +414,7 @@ function runner() {
   csPort = config.cs_port;
   browserName = config.browser;
   benchmarkPort = config.benchmark_port;
+  postStartupDelay = config.post_startup_delay;
 
   getBrowserInfo().then(function() {
     getTestSettings().then(function() {
