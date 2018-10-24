@@ -5,15 +5,13 @@
 
 "use strict";
 
+/* import-globals-from helper_addons.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_addons.js",
+  this);
+
 var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
-
-const chromeRegistry =
-  Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
-const DEBUGGER_CHROME_URL = "chrome://mochitests/content/browser/devtools/client/shared/test/";
-const DEBUGGER_CHROME_URI = Services.io.newURI(DEBUGGER_CHROME_URL);
-
-var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 
 /**
  * Make sure the listAddons request works as specified.
@@ -118,48 +116,3 @@ registerCleanupFunction(function() {
   gAddon2 = null;
   gClient = null;
 });
-
-function getAddonURIFromPath(path) {
-  const chromeURI = Services.io.newURI(path, null, DEBUGGER_CHROME_URI);
-  return chromeRegistry.convertChromeURL(chromeURI).QueryInterface(Ci.nsIFileURL);
-}
-
-function addTemporaryAddon(path) {
-  const addonFile = getAddonURIFromPath(path).file;
-  info("Installing addon: " + addonFile.path);
-
-  return AddonManager.installTemporaryAddon(addonFile);
-}
-
-function getAddonActorForId(client, addonId) {
-  info("Get addon actor for ID: " + addonId);
-  const deferred = promise.defer();
-
-  client.listAddons().then(response => {
-    const addonTargetActor = response.addons.filter(grip => grip.id == addonId).pop();
-    info("got addon actor for ID: " + addonId);
-    deferred.resolve(addonTargetActor);
-  });
-
-  return deferred.promise;
-}
-
-function removeAddon(addon) {
-  info("Removing addon.");
-
-  const deferred = promise.defer();
-
-  const listener = {
-    onUninstalled: function(uninstalledAddon) {
-      if (uninstalledAddon != addon) {
-        return;
-      }
-      AddonManager.removeAddonListener(listener);
-      deferred.resolve();
-    },
-  };
-  AddonManager.addAddonListener(listener);
-  addon.uninstall();
-
-  return deferred.promise;
-}

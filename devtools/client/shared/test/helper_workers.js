@@ -12,13 +12,16 @@ Services.scriptloader.loadSubScript(
 
 var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
-
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
 
 var nextId = 0;
 
+/**
+ * Returns a thenable promise
+ * @return {Promise}
+ */
 function getDeferredPromise() {
   // Override promise with deprecated-sync-thenables
   const promise = require("devtools/shared/deprecated-sync-thenables");
