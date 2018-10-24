@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-addons-window = 
+addons-window =
     .title = Add-ons Manager
 
 search-header =
@@ -12,13 +12,13 @@ search-header =
 search-header-shortcut =
     .key = f
 
-loading-label = 
+loading-label =
     .value = Loading…
 
-list-empty-installed = 
+list-empty-installed =
     .value = You don’t have any add-ons of this type installed
 
-list-empty-available-updates = 
+list-empty-available-updates =
     .value = No updates found
 
 list-empty-recent-updates =
@@ -27,7 +27,7 @@ list-empty-recent-updates =
 list-empty-find-updates =
     .label = Check For Updates
 
-list-empty-button = 
+list-empty-button =
     .label = Learn more about add-ons
 
 install-addon-from-file =
@@ -36,7 +36,7 @@ install-addon-from-file =
 
 help-button = Add-ons Support
 
-preferences = 
+preferences =
     { PLATFORM() ->
         [windows] { -brand-short-name } Options
        *[other] { -brand-short-name } Preferences
@@ -48,7 +48,7 @@ tools-menu =
 show-unsigned-extensions-button =
     .label = Some extensions could not be verified
 
-show-all-extensions-button = 
+show-all-extensions-button =
     .label = Show all extensions
 
 debug-addons =
@@ -59,17 +59,17 @@ cmd-show-details =
     .label = Show More Information
     .accesskey = S
 
-cmd-find-updates = 
+cmd-find-updates =
     .label = Find Updates
     .accesskey = F
 
-cmd-preferences = 
-    .label = 
+cmd-preferences =
+    .label =
         { PLATFORM() ->
             [windows] Options
            *[other] Preferences
         }
-    .accesskey = 
+    .accesskey =
         { PLATFORM() ->
             [windows] O
            *[other] P
@@ -94,12 +94,12 @@ cmd-contribute =
 
 discover-title = What are Add-ons?
 
-discover-description = 
+discover-description =
     Add-ons are applications that let you personalize { -brand-short-name } with
     extra functionality or style. Try a time-saving sidebar, a weather notifier, or a themed look to make { -brand-short-name }
     your own.
 
-discover-footer = 
+discover-footer =
     When you’re connected to the internet, this pane will feature
     some of the best and most popular add-ons for you to try out.
 
@@ -111,14 +111,14 @@ detail-last-updated =
 
 detail-contributions-description = The developer of this add-on asks that you help support its continued development by making a small contribution.
 
-detail-update-type = 
+detail-update-type =
     .value = Automatic Updates
 
-detail-update-default = 
+detail-update-default =
     .label = Default
     .tooltiptext = Automatically install updates only if that’s the default
 
-detail-update-automatic = 
+detail-update-automatic =
     .label = On
     .tooltiptext = Automatically install updates
 
@@ -126,13 +126,13 @@ detail-update-manual =
     .label = Off
     .tooltiptext = Don’t automatically install updates
 
-detail-home = 
+detail-home =
     .label = Homepage
 
 detail-home-value =
     .value = { detail-home.label }
 
-detail-repository = 
+detail-repository =
     .label = Add-on Profile
 
 detail-repository-value =
@@ -160,7 +160,7 @@ detail-show-preferences =
            *[other] Change this add-on’s preferences
         }
 
-detail-rating = 
+detail-rating =
     .value = Rating
 
 addon-restart-now =
@@ -176,7 +176,7 @@ disabled-unsigned-description =
 disabled-unsigned-learn-more = Learn more about our efforts to help keep you safe online.
 
 disabled-unsigned-devinfo =
-    Developers interested in getting their add-ons verified can continue by reading our 
+    Developers interested in getting their add-ons verified can continue by reading our
     <label data-l10n-name="learn-more">manual</label>.
 
 plugin-deprecation-description =
@@ -187,7 +187,5 @@ legacy-warning-show-legacy = Show legacy extensions
 legacy-extensions =
     .value = Legacy Extensions
 
-legacy-extensions-description = 
-    These extensions do not meet current { -brand-short-name } standards so they have been deactivated.<label data-l10n-name="legacy-learn-more">Learn about the changes to add-ons</label>
-
-
+legacy-extensions-description =
+    These extensions do not meet current { -brand-short-name } standards so they have been deactivated. <label data-l10n-name="legacy-learn-more">Learn about the changes to add-ons</label>
