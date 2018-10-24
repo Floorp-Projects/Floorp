@@ -1645,6 +1645,15 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
         AccumulateCategorical(Telemetry::LABELS_NETWORK_BACK_PRESSURE_SUSPENSION_RATE_V2::NotSuspended);
       } else {
         AccumulateCategorical(Telemetry::LABELS_NETWORK_BACK_PRESSURE_SUSPENSION_RATE_V2::Suspended);
+
+        // Only analyze non-local suspended cases, which we are interested in.
+        nsCOMPtr<nsILoadInfo> loadInfo;
+        if (NS_SUCCEEDED(mChannel->GetLoadInfo(getter_AddRefs(loadInfo)))) {
+          nsContentPolicyType type = loadInfo ?
+                                     loadInfo->InternalContentPolicyType() :
+                                     nsIContentPolicy::TYPE_OTHER;
+          Telemetry::Accumulate(Telemetry::NETWORK_BACK_PRESSURE_SUSPENSION_CP_TYPE, type);
+        }
       }
     } else {
       if (!mHasSuspendedByBackPressure) {
@@ -1654,7 +1663,6 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
       }
     }
   }
-
   return NS_OK;
 }
 
