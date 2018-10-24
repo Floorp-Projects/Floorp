@@ -26,7 +26,7 @@ loading-label =
     .value = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "loading.label")}
 list-empty-installed =
     .value = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "listEmpty.installed.label")}
-list-empty-available-updates = 
+list-empty-available-updates =
     .value ={ COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "listEmpty.availableUpdates.label")}
 list-empty-recent-updates =
     .value = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "listEmpty.recentUpdates.label")}
@@ -56,10 +56,10 @@ cmd-find-updates =
 cmd-enable-theme =
     .label = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "cmd.enableTheme.label")}
     .accesskey = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "cmd.enableTheme.accesskey")}
-cmd-disable-theme = 
+cmd-disable-theme =
     .label = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "cmd.disableTheme.label")}
     .accesskey = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "cmd.disableTheme.accesskey")}
-cmd-install-addon = 
+cmd-install-addon =
     .label = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "cmd.installAddon.label")}
     .accesskey = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "cmd.installAddon.accesskey")}
 cmd-contribute =
@@ -75,7 +75,7 @@ detail-last-updated =
 detail-contributions-description = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.contributions.description")}
 detail-update-type =
     .value = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.updateType")}
-detail-update-default = 
+detail-update-default =
     .label = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.updateDefault.label")}
     .tooltiptext = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.updateDefault.tooltip")}
 detail-update-automatic =
@@ -84,9 +84,9 @@ detail-update-automatic =
 detail-update-manual =
     .label = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.updateManual.label")}
     .tooltiptext = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.updateManual.tooltip")}
-detail-home = 
+detail-home =
     .label ={ COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.home")}
-detail-repository = 
+detail-repository =
     .label = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.repository")}
 detail-check-for-updates =
     .label = { COPY("toolkit/chrome/mozapps/extensions/extensions.dtd", "detail.checkForUpdates.label")}
@@ -427,7 +427,7 @@ legacy-extensions =
                             "&brandShortName;": TERM_REFERENCE("-brand-short-name")
                         }
                     ),
-                    FTL.TextElement('<label data-l10n-name="legacy-learn-more">'),
+                    FTL.TextElement(' <label data-l10n-name="legacy-learn-more">'),
                     COPY(
                         "toolkit/chrome/mozapps/extensions/extensions.dtd",
                         "legacyExtensions.learnMore"
