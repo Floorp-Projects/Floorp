@@ -7,7 +7,6 @@
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsThreadUtils.h"
-#include "xpcjsid.h"
 
 NS_INTERFACE_MAP_BEGIN(nsArray)
   NS_INTERFACE_MAP_ENTRY(nsIArray)
@@ -80,11 +79,11 @@ nsArrayBase::IndexOf(uint32_t aStartIndex, nsISupports* aElement,
 }
 
 NS_IMETHODIMP
-nsArrayBase::ScriptedEnumerate(nsIJSIID* aElemIID, uint8_t aArgc,
+nsArrayBase::ScriptedEnumerate(const nsIID& aElemIID, uint8_t aArgc,
                                nsISimpleEnumerator** aResult)
 {
-  if (aArgc > 0 && aElemIID) {
-    return NS_NewArrayEnumerator(aResult, static_cast<nsIArray*>(this), *aElemIID->GetID());
+  if (aArgc > 0) {
+    return NS_NewArrayEnumerator(aResult, static_cast<nsIArray*>(this), aElemIID);
   }
   return NS_NewArrayEnumerator(aResult, static_cast<nsIArray*>(this));
 }

@@ -1595,6 +1595,17 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
         return true;
     }
 
+    // Some types usually don't support default values, but we want to handle
+    // the default value if IsOptional is true.
+    if (i >= mArgc) {
+        MOZ_ASSERT(paramInfo.IsOptional(), "missing non-optional argument!");
+        if (type.Tag() == nsXPTType::T_IID) {
+            // NOTE: 'const nsIID&' is supported, so it must be allocated.
+            dp->val.p = new nsIID();
+            return true;
+        }
+    }
+
     // We're definitely some variety of 'in' now, so there's something to
     // convert. The source value for conversion depends on whether we're
     // dealing with an 'in' or an 'inout' parameter. 'inout' was handled above,
