@@ -28,10 +28,10 @@ add_task(async function test_javascript_match() {
     matches: [ { uri: uri1, title: "Title with javascript:" } ],
   });
 
-  info("Match nothing with 'javascript:'");
+  info("Match non-javascript with 'javascript:'");
   await check_autocomplete({
     search: "javascript:",
-    matches: [],
+    matches: [ { uri: uri1, title: "Title with javascript:" } ],
   });
 
   info("Match nothing with '5 javascript:'");
