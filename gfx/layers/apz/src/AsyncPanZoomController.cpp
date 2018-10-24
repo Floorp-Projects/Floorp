@@ -4427,6 +4427,16 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     SmoothScrollTo(Metrics().GetSmoothScrollOffset());
   }
 
+  if (viewportUpdated) {
+    // While we want to accept the main thread's layout viewport _size_,
+    // its position may be out of date in light of async scrolling, to
+    // adjust it if necessary to make sure it continues to enclose the
+    // visual viewport.
+    // Note: it's important to do this _after_ we've accepted any
+    // updated composition bounds.
+    Metrics().RecalculateViewportOffset();
+  }
+
   if (needContentRepaint) {
     // This repaint request is not driven by a user action on the APZ side
     RequestContentRepaint(false);
