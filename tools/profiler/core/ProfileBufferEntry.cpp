@@ -85,11 +85,11 @@ ProfileBufferEntry::ProfileBufferEntry(Kind aKind, uint64_t aUint64)
 
 class JSONSchemaWriter
 {
-  ProfilerJSONWriter& mWriter;
+  JSONWriter& mWriter;
   uint32_t mIndex;
 
 public:
-  explicit JSONSchemaWriter(ProfilerJSONWriter& aWriter)
+  explicit JSONSchemaWriter(JSONWriter& aWriter)
    : mWriter(aWriter)
    , mIndex(0)
   {

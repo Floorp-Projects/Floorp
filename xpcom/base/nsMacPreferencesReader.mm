@@ -25,10 +25,10 @@ struct StringWriteFunc : public JSONWriteFunc
 };
 
 static void
-EvaluateDict(JSONWriter<>* aWriter, NSDictionary<NSString*, id>* aDict);
+EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict);
 
 static void
-EvaluateArray(JSONWriter<>* aWriter, NSArray* aArray)
+EvaluateArray(JSONWriter* aWriter, NSArray* aArray)
 {
   for (id elem in aArray) {
     if ([elem isKindOfClass:[NSString class]]) {
@@ -48,7 +48,7 @@ EvaluateArray(JSONWriter<>* aWriter, NSArray* aArray)
 }
 
 static void
-EvaluateDict(JSONWriter<>* aWriter, NSDictionary<NSString*, id>* aDict)
+EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict)
 {
   for (NSString* key in aDict) {
     id value = aDict[key];
@@ -83,7 +83,7 @@ nsMacPreferencesReader::ReadPreferences(JSContext* aCx,
                                         JS::MutableHandle<JS::Value> aResult)
 {
   nsAutoString jsonStr;
-  JSONWriter<> w(MakeUnique<StringWriteFunc>(jsonStr));
+  JSONWriter w(MakeUnique<StringWriteFunc>(jsonStr));
   w.Start();
   EvaluateDict(&w, [[NSUserDefaults standardUserDefaults]
                      dictionaryRepresentation]);

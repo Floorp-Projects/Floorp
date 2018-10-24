@@ -120,7 +120,6 @@ namespace detail {
 extern MFBT_DATA const char gTwoCharEscapes[256];
 } // namespace detail
 
-template <class AllocPolicy = MallocAllocPolicy>
 class JSONWriter
 {
   // From http://www.ietf.org/rfc/rfc4627.txt:
@@ -143,15 +142,7 @@ class JSONWriter
     // wouldn't work with UniquePtr.
     bool mIsOwned;
     const char* mUnownedStr;
-
-    struct FreePolicy {
-      AllocPolicy mAllocPolicy;
-      void operator() (void* p) {
-        mAllocPolicy.free_(p);
-      }
-    };
-
-    UniquePtr<char[], FreePolicy> mOwnedStr;
+    UniquePtr<char[]> mOwnedStr;
 
     void SanityCheck() const
     {
@@ -163,10 +154,6 @@ class JSONWriter
     {
       u = u & 0xf;
       return u < 10 ? '0' + u : 'a' + (u - 10);
-    }
-
-    AllocPolicy& allocPolicy() {
-      return mOwnedStr.get_deleter().mAllocPolicy;
     }
 
   public:
@@ -202,8 +189,7 @@ class JSONWriter
       // Escapes are needed. We'll create a new string.
       mIsOwned = true;
       size_t len = (p - aStr) + nExtra;
-      UniquePtr<char[], FreePolicy> buffer(allocPolicy().template pod_malloc<char>(len + 1));
-      mOwnedStr = std::move(buffer);
+      mOwnedStr = MakeUnique<char[]>(len + 1);
 
       p = aStr;
       size_t i = 0;

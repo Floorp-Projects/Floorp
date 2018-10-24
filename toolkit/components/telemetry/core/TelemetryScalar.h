@@ -18,9 +18,7 @@
 
 namespace mozilla {
 // This is only used for the GeckoView persistence.
-template <class AllocPolicy>
 class JSONWriter;
-class MallocAllocPolicy;
 namespace Telemetry {
   struct ScalarAction;
   struct KeyedScalarAction;
@@ -96,8 +94,8 @@ void AddDynamicScalarDefinitions(const nsTArray<mozilla::Telemetry::DynamicScala
 
 // They are responsible for updating in-memory probes with the data persisted
 // on the disk and vice-versa.
-nsresult SerializeScalars(mozilla::JSONWriter<mozilla::MallocAllocPolicy>& aWriter);
-nsresult SerializeKeyedScalars(mozilla::JSONWriter<mozilla::MallocAllocPolicy>& aWriter);
+nsresult SerializeScalars(mozilla::JSONWriter &aWriter);
+nsresult SerializeKeyedScalars(mozilla::JSONWriter &aWriter);
 nsresult DeserializePersistedScalars(JSContext* aCx, JS::HandleValue aData);
 nsresult DeserializePersistedKeyedScalars(JSContext* aCx, JS::HandleValue aData);
 // Mark deserialization as in progress.

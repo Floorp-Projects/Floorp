@@ -1567,7 +1567,7 @@ SafeJSInteger(uint64_t aValue) {
 }
 
 static void
-AddSharedLibraryInfoToStream(ProfilerJSONWriter& aWriter, const SharedLibrary& aLib)
+AddSharedLibraryInfoToStream(JSONWriter& aWriter, const SharedLibrary& aLib)
 {
   aWriter.StartObjectElement();
   aWriter.IntProperty("start", SafeJSInteger(aLib.GetStart()));
@@ -1583,7 +1583,7 @@ AddSharedLibraryInfoToStream(ProfilerJSONWriter& aWriter, const SharedLibrary& a
 }
 
 void
-AppendSharedLibraries(ProfilerJSONWriter& aWriter)
+AppendSharedLibraries(JSONWriter& aWriter)
 {
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
   info.SortByAddress();
@@ -1594,7 +1594,7 @@ AppendSharedLibraries(ProfilerJSONWriter& aWriter)
 
 #ifdef MOZ_TASK_TRACER
 static void
-StreamNameAndThreadId(ProfilerJSONWriter& aWriter, const char* aName, int aThreadId)
+StreamNameAndThreadId(JSONWriter& aWriter, const char* aName, int aThreadId)
 {
   aWriter.StartObjectElement();
   {
@@ -1823,7 +1823,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
         ExtensionPolicyService::GetSingleton().GetAll(exts);
 
         for (auto& ext : exts) {
-          aWriter.StartArrayElement(ProfilerJSONWriter::SingleLineStyle);
+          aWriter.StartArrayElement(JSONWriter::SingleLineStyle);
 
           nsAutoString id;
           ext->GetId(id);

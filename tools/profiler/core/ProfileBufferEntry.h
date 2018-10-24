@@ -140,11 +140,11 @@ public:
     aWriter.TakeAndSplice(mStringTableWriter.WriteFunc());
   }
 
-  void WriteProperty(ProfilerJSONWriter& aWriter, const char* aName, const char* aStr) {
+  void WriteProperty(mozilla::JSONWriter& aWriter, const char* aName, const char* aStr) {
     aWriter.IntProperty(aName, GetOrAddIndex(aStr));
   }
 
-  void WriteElement(ProfilerJSONWriter& aWriter, const char* aStr) {
+  void WriteElement(mozilla::JSONWriter& aWriter, const char* aStr) {
     aWriter.IntElement(GetOrAddIndex(aStr));
   }
 
