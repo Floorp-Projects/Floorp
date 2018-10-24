@@ -1495,6 +1495,8 @@ class DebuggerFrame : public NativeObject
      */
     bool resume(const FrameIter& iter);
 
+    bool hasAnyLiveHooks() const;
+
   private:
     static const ClassOps classOps_;
 

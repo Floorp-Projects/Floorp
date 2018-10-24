@@ -947,11 +947,21 @@ Debugger::hasAnyLiveHooks(JSRuntime* rt) const
         }
     }
 
+    // Check for hooks in live stack frames.
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        NativeObject* frameObj = r.front().value();
-        if (!frameObj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() ||
-            !frameObj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined())
+        DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
+        if (frameObj.hasAnyLiveHooks()) {
             return true;
+        }
+    }
+
+    // Check for hooks set on suspended generator frames.
+    for (GeneratorWeakMap::Range r = generatorFrames.all(); !r.empty(); r.popFront()) {
+        JSObject* key = r.front().key();
+        DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
+        if (IsMarkedUnbarriered(rt, &key) && frameObj.hasAnyLiveHooks()) {
+            return true;
+        }
     }
 
     return false;
@@ -8493,6 +8503,13 @@ DebuggerFrame::resume(const FrameIter& iter)
     }
     setPrivate(data);
     return true;
+}
+
+bool
+DebuggerFrame::hasAnyLiveHooks() const
+{
+    return !getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() ||
+           !getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined();
 }
 
 /* static */ NativeObject*
