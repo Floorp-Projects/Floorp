@@ -139,7 +139,7 @@ PowerManagerService::NewWakeLock(const nsAString& aTopic,
 NS_IMETHODIMP
 PowerManagerService::NewWakeLock(const nsAString &aTopic,
                                  mozIDOMWindow *aWindow,
-                                 nsISupports **aWakeLock)
+                                 nsIWakeLock **aWakeLock)
 {
   mozilla::ErrorResult rv;
   RefPtr<WakeLock> wakelock =
@@ -148,8 +148,7 @@ PowerManagerService::NewWakeLock(const nsAString &aTopic,
     return rv.StealNSResult();
   }
 
-  nsCOMPtr<nsIDOMEventListener> eventListener = wakelock.get();
-  eventListener.forget(aWakeLock);
+  wakelock.forget(aWakeLock);
   return NS_OK;
 }
 
