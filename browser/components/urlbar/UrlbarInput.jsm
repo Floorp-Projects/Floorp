@@ -230,7 +230,17 @@ class UrlbarInput {
    * @param {UrlbarMatch} result The result that was selected.
    */
   resultSelected(event, result) {
-    // TODO: Set the input value to the target url.
+    // Set the input value to the target url.
+    let val = result.url;
+    let uri;
+    try {
+      uri = Services.io.newURI(val);
+    } catch (ex) {}
+    if (uri) {
+      val = this.window.losslessDecodeURI(uri);
+    }
+    this.value = val;
+
     this.controller.resultSelected(event, result);
   }
 

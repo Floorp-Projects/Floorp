@@ -982,8 +982,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::MainThreadData<JS::ModuleMetadataHook> moduleMetadataHook;
 
     // A hook that implements the abstract operation
-    // HostImportModuleDynamically.
-    js::MainThreadData<JS::ModuleDynamicImportHook> moduleDynamicImportHook;
+    // HostImportModuleDynamically. This is also used to enable/disable dynamic
+    // module import and can accessed by off-thread parsing.
+    mozilla::Atomic<JS::ModuleDynamicImportHook> moduleDynamicImportHook;
 
   public:
 #if defined(JS_BUILD_BINAST)

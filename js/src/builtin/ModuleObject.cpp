@@ -1844,18 +1844,27 @@ js::StartDynamicModuleImport(JSContext* cx, HandleValue referencingPrivate, Hand
 
     Handle<PromiseObject*> promise = promiseObject.as<PromiseObject>();
 
-    RootedString specifier(cx, ToString(cx, specifierArg));
-    if (!specifier) {
-        if (!RejectPromiseWithPendingError(cx, promise))
+    JS::ModuleDynamicImportHook importHook = cx->runtime()->moduleDynamicImportHook;
+    if (!importHook) {
+        JS_ReportErrorASCII(cx, "Dynamic module import is disabled");
+        if (!RejectPromiseWithPendingError(cx, promise)) {
             return nullptr;
+        }
         return promise;
     }
 
-    JS::ModuleDynamicImportHook importHook = cx->runtime()->moduleDynamicImportHook;
-    MOZ_ASSERT(importHook);
-    if (!importHook(cx, referencingPrivate, specifier, promise)) {
-        if (!RejectPromiseWithPendingError(cx, promise))
+    RootedString specifier(cx, ToString(cx, specifierArg));
+    if (!specifier) {
+        if (!RejectPromiseWithPendingError(cx, promise)) {
             return nullptr;
+        }
+        return promise;
+    }
+
+    if (!importHook(cx, referencingPrivate, specifier, promise)) {
+        if (!RejectPromiseWithPendingError(cx, promise)) {
+            return nullptr;
+        }
         return promise;
     }
 
