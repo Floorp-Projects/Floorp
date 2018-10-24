@@ -547,7 +547,9 @@ var gSearchResultsPane = {
   removeAllSearchTooltips() {
     for (let anchorNode of this.listSearchTooltips) {
       anchorNode.parentElement.classList.remove("search-tooltip-parent");
-      anchorNode.tooltipNode.remove();
+      if (anchorNode.tooltipNode) {
+        anchorNode.tooltipNode.remove();
+      }
       anchorNode.tooltipNode = null;
     }
     this.listSearchTooltips.clear();
