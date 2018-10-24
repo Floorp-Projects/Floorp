@@ -42,6 +42,11 @@ class AccessibilityStartup {
   initAccessibility() {
     if (!this._initAccessibility) {
       this._initAccessibility = (async function() {
+        await Promise.race([
+          this.toolbox.isOpen,
+          this.toolbox.once("accessibility-init"),
+        ]);
+
         this._accessibility = this.target.getFront("accessibility");
         // We must call a method on an accessibility front here (such as getWalker), in
         // oreder to be able to check actor's backward compatibility via actorHasMethod.
