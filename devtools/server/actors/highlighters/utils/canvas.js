@@ -284,13 +284,16 @@ function getBoundsFromPoints(points) {
  *         The current element.
  * @param  {Window} window
  *         The window object.
+ * @param  {Object} [options.ignoreWritingModeAndTextDirection=false]
+ *                  Avoid transforming the current matrix to match the text direction
+ *                  and writing mode.
  * @return {Object} An object with the following properties:
  *         - {Array} currentMatrix
  *           The current matrix.
  *         - {Boolean} hasNodeTransformations
  *           true if the node has transformed and false otherwise.
  */
-function getCurrentMatrix(element, window) {
+function getCurrentMatrix(element, window, { ignoreWritingModeAndTextDirection } = {}) {
   const computedStyle = getComputedStyle(element);
 
   const paddingTop = parseFloat(computedStyle.paddingTop);
@@ -329,9 +332,12 @@ function getCurrentMatrix(element, window) {
     width: element.offsetWidth - borderLeft - borderRight - paddingLeft - paddingRight,
     height: element.offsetHeight - borderTop - borderBottom - paddingTop - paddingBottom,
   };
-  const writingModeMatrix = getWritingModeMatrix(size, computedStyle);
-  if (!isIdentity(writingModeMatrix)) {
-    currentMatrix = multiply(currentMatrix, writingModeMatrix);
+
+  if (!ignoreWritingModeAndTextDirection) {
+    const writingModeMatrix = getWritingModeMatrix(size, computedStyle);
+    if (!isIdentity(writingModeMatrix)) {
+      currentMatrix = multiply(currentMatrix, writingModeMatrix);
+    }
   }
 
   return { currentMatrix, hasNodeTransformations };
