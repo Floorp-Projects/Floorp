@@ -486,10 +486,6 @@ public:
     std::list<ElfSection *>::iterator end() { return sections.end(); }
 
     void clear();
-
-    bool isElfHackFillerSegment() {
-      return type == PT_LOAD && flags == 0;
-    }
 private:
     unsigned int type;
     int v_p_diff; // Difference between physical and virtual address
