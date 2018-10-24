@@ -46,7 +46,7 @@ class LCovSource
 
     // Write the Lcov output in a buffer, such as the one associated with
     // the runtime code coverage trace file.
-    void exportInto(GenericPrinter& out) const;
+    void exportInto(GenericPrinter& out);
 
   private:
     // Write the script name in out.
