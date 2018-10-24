@@ -4093,7 +4093,9 @@ SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(HandleObject obj, ObjOpera
     }
 
     // Indexed properties on the prototype chain aren't handled by the helper.
-    if (ObjectMayHaveExtraIndexedProperties(aobj->staticPrototype())) {
+    if ((aobj->staticPrototype() != nullptr) &&
+        ObjectMayHaveExtraIndexedProperties(aobj->staticPrototype()))
+    {
         return false;
     }
 
