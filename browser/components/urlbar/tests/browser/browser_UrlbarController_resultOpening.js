@@ -59,7 +59,13 @@ add_task(function test_resultSelected_switchtab() {
   const url = "https://example.com/1";
   const result = new UrlbarMatch(UrlbarUtils.MATCH_TYPE.TAB_SWITCH, {url});
 
-  controller.resultSelected(event, result);
+  Assert.equal(gURLBar.value, "", "urlbar input is empty before selecting a result");
+  if (Services.prefs.getBoolPref("browser.urlbar.quantumbar", true)) {
+    gURLBar.resultSelected(event, result);
+    Assert.equal(gURLBar.value, url, "urlbar value updated for selected result");
+  } else {
+    controller.resultSelected(event, result);
+  }
 
   Assert.ok(window.switchToTabHavingURI.calledOnce,
     "Should have triggered switching to the tab");
