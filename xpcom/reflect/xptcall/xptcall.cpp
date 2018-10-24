@@ -43,8 +43,9 @@ NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
         return NS_ERROR_INVALID_ARG;
 
     const nsXPTInterfaceInfo* iie = nsXPTInterfaceInfo::ByIID(aIID);
-    if (!iie || !iie->EnsureResolved() || iie->IsBuiltinClass())
+    if (!iie || iie->IsBuiltinClass()) {
         return NS_ERROR_FAILURE;
+    }
 
     *aResult = new nsXPTCStubBase(aOuter, iie);
     return NS_OK;
