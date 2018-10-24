@@ -958,6 +958,59 @@ nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::InsertScrollFrame(
   mUsed = true;
 }
 
+/* static */ nsRect
+nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
+    nsDisplayListBuilder* aBuilder,
+    nsIFrame* aFrame,
+    const nsRect& aVisibleRect,
+    const nsRect& aDirtyRect,
+    nsRect* aOutDirtyRect)
+{
+  nsRect visible = aVisibleRect;
+  nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
+      aBuilder->IsPaintingToWindow()) {
+    // We want to ensure that fixed position elements are visible when
+    // being async scrolled, so we paint them at the size of the larger
+    // viewport.
+    dirtyRectRelativeToDirtyFrame =
+      nsRect(nsPoint(0, 0), aFrame->GetParent()->GetSize());
+
+    nsIPresShell* ps = aFrame->PresShell();
+    if (ps->IsVisualViewportSizeSet() &&
+        dirtyRectRelativeToDirtyFrame.Size() <
+          ps->GetVisualViewportSize()) {
+      dirtyRectRelativeToDirtyFrame.SizeTo(ps->GetVisualViewportSize());
+    }
+
+    visible = dirtyRectRelativeToDirtyFrame;
+  }
+#endif
+
+  *aOutDirtyRect = dirtyRectRelativeToDirtyFrame - aFrame->GetPosition();
+  visible -= aFrame->GetPosition();
+
+  nsRect overflowRect = aFrame->GetVisualOverflowRect();
+
+  if (aFrame->IsTransformed() &&
+      mozilla::EffectCompositor::HasAnimationsForCompositor(
+        aFrame, eCSSProperty_transform)) {
+    /**
+     * Add a fuzz factor to the overflow rectangle so that elements only
+     * just out of view are pulled into the display list, so they can be
+     * prerendered if necessary.
+     */
+    overflowRect.Inflate(nsPresContext::CSSPixelsToAppUnits(32));
+  }
+
+  visible.IntersectRect(visible, overflowRect);
+  aOutDirtyRect->IntersectRect(*aOutDirtyRect, overflowRect);
+
+  return visible;
+}
+
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
                                            nsDisplayListBuilderMode aMode,
                                            bool aBuildCaret,
