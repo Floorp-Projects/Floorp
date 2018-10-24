@@ -459,9 +459,6 @@ private:
   void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
   void SetValueFromComplexColor(nsROCSSPrimitiveValue* aValue,
                                 const mozilla::StyleComplexColor& aColor);
-  void SetValueForWidgetColor(nsROCSSPrimitiveValue* aValue,
-                              const mozilla::StyleComplexColor& aColor,
-                              mozilla::StyleAppearance aWidgetType);
   void SetValueToPositionCoord(const mozilla::Position::Coord& aCoord,
                                nsROCSSPrimitiveValue* aValue);
   void SetValueToPosition(const mozilla::Position& aPosition,
