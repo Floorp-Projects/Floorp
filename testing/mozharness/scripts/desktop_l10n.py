@@ -50,7 +50,7 @@ configuration_tokens = ('branch', 'update_channel')
 # some other values such as "%(version)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
-runtime_config_tokens = ('version', 'locale', 'abs_objdir', 'revision',
+runtime_config_tokens = ('version', 'locale', 'abs_objdir',
                          'en_us_installer_binary_url')
 
 
@@ -71,13 +71,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
          "dest": "tag_override",
          "type": "string",
          "help": "Override the tags set for all repos"}
-    ], [
-        ['--revision', ],
-        {"action": "store",
-         "dest": "revision",
-         "type": "string",
-         "help": "Override the gecko revision to use (otherwise use automation supplied"
-                 " value, or en-US revision) "}
     ], [
         ['--en-us-installer-url', ],
         {"action": "store",
@@ -122,7 +115,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
 
         self.bootstrap_env = None
         self.upload_env = None
-        self.revision = None
         self.upload_urls = {}
         self.pushdate = None
         # upload_files is a dictionary of files to upload, keyed by locale.
@@ -282,27 +274,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         l10n_env = self._query_upload_env().copy()
         l10n_env.update(self.query_bootstrap_env())
         return l10n_env
-
-    def _query_revision(self):
-        """ Get the gecko revision in this order of precedence
-              * cached value
-              * command line arg --revision   (development, taskcluster)
-              * from the en-US build          (m-c & m-a)
-
-        This will fail the last case if the build hasn't been pulled yet.
-        """
-        if self.revision:
-            return self.revision
-
-        config = self.config
-        revision = None
-        if config.get("revision"):
-            revision = config["revision"]
-
-        if not revision:
-            self.fatal("Can't determine revision!")
-        self.revision = str(revision)
-        return self.revision
 
     def _query_make_variable(self, variable, make_args=None):
         """returns the value of make echo-variable-<variable>
