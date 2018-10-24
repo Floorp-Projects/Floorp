@@ -31,92 +31,72 @@ ARTIFACTS_DIR = 'artifacts'
 PER_PROJECT_PARAMETERS = {
     'try': {
         'target_tasks_method': 'try_tasks',
-        # By default, the `try_option_syntax` `target_task_method` ignores this
-        # parameter, and enables/disables nightlies depending whether
-        # `--include-nightly` is specified in the commit message.
-        # We're setting the `include_nightly` parameter to True here for when
-        # we submit decision tasks against Try that use other
-        # `target_task_method`s, like `nightly_fennec` or `mozilla_beta_tasks`,
-        # which reference the `include_nightly` parameter.
-        'include_nightly': True,
     },
 
     'try-comm-central': {
         'target_tasks_method': 'try_tasks',
-        'include_nightly': True,
     },
 
     'ash': {
         'target_tasks_method': 'ash_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': False,
     },
 
     'cedar': {
         'target_tasks_method': 'cedar_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': False,
     },
 
     'graphics': {
         'target_tasks_method': 'graphics_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': False,
     },
 
     'mozilla-central': {
         'target_tasks_method': 'default',
         'optimize_target_tasks': True,
-        'include_nightly': False,
         'release_type': 'nightly',
     },
 
     'mozilla-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': True,
         'release_type': 'beta',
     },
 
     'mozilla-release': {
         'target_tasks_method': 'mozilla_release_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': True,
         'release_type': 'release',
     },
 
     'mozilla-esr60': {
         'target_tasks_method': 'mozilla_esr60_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': True,
         'release_type': 'esr60',
     },
 
     'comm-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': True,
         'release_type': 'beta',
     },
 
     'comm-esr60': {
         'target_tasks_method': 'mozilla_esr60_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': True,
         'release_type': 'release',
     },
 
     'pine': {
         'target_tasks_method': 'pine_tasks',
         'optimize_target_tasks': True,
-        'include_nightly': False,
     },
 
     # the default parameters are used for projects that do not match above.
     'default': {
         'target_tasks_method': 'default',
         'optimize_target_tasks': True,
-        'include_nightly': False,
     }
 }
 

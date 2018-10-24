@@ -68,7 +68,6 @@ def run_try_release(
         'parameters': {
             'target_tasks_method': 'staging_release_builds',
             'optimize_target_tasks': True,
-            'include_nightly': True,
             'release_type': release_type,
         },
     }
