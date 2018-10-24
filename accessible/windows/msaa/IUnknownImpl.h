@@ -20,6 +20,12 @@
 #pragma warning( disable : 4509 )
 #endif
 
+#ifdef __GNUC__
+#define ATTRIBUTE_UNUSED __attribute__((unused))
+#else
+#define ATTRIBUTE_UNUSED
+#endif
+
 namespace mozilla {
 namespace a11y {
 
@@ -77,8 +83,7 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
     return E_INVALIDARG;                                                       \
   *aInstancePtr = nullptr;                                                     \
                                                                                \
-  HRESULT hr = E_NOINTERFACE;                                                  \
-  (void)hr;
+  HRESULT hr ATTRIBUTE_UNUSED = E_NOINTERFACE;
 
 #define IMPL_IUNKNOWN_QUERY_TAIL                                               \
   return hr;                                                                   \
