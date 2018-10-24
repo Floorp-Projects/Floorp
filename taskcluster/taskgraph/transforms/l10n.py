@@ -11,6 +11,7 @@ import copy
 import json
 
 from mozbuild.chunkify import chunkify
+from taskgraph.loader.multi_dep import schema
 from taskgraph.transforms.base import (
     TransformSequence,
 )
@@ -18,7 +19,6 @@ from taskgraph.util.schema import (
     validate_schema,
     optionally_keyed_by,
     resolve_keyed_by,
-    Schema,
 )
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.taskcluster import get_artifact_prefix
@@ -46,7 +46,7 @@ taskref_or_string = Any(
 job_description_schema = {str(k): v for k, v in job_description_schema.schema.iteritems()}
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
 
-l10n_description_schema = Schema({
+l10n_description_schema = schema.extend({
     # Name for this job, inferred from the dependent job before validation
     Required('name'): basestring,
 
@@ -96,12 +96,6 @@ l10n_description_schema = Schema({
     Required('description'): _by_platform(basestring),
 
     Optional('run-on-projects'): job_description_schema['run-on-projects'],
-
-    # dictionary of dependent task objects, keyed by kind.
-    Required('dependent-tasks'): {basestring: object},
-
-    # primary dependency task
-    Required('primary-dependency'): object,
 
     # worker-type to utilize
     Required('worker-type'): _by_platform(basestring),
