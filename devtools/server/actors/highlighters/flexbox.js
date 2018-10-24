@@ -66,6 +66,18 @@ const JUSTIFY_CONTENT = "justify-content";
  * - showAlignment(isShown)
  *     @param  {Boolean} isShown
  *     Shows the alignment in the flexbox highlighter.
+ *
+ * Structure:
+ * <div class="highlighter-container">
+ *   <div id="flexbox-root" class="flexbox-root">
+ *     <canvas id="flexbox-canvas"
+ *             class="flexbox-canvas"
+ *             width="4096"
+ *             height="4096"
+ *             hidden="true">
+ *     </canvas>
+ *   </div>
+ * </div>
  */
 class FlexboxHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
@@ -683,8 +695,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     updateCanvasElement(this.canvas, this._canvasPosition, this.win.devicePixelRatio);
 
     // Update the current matrix used in our canvas' rendering
-    const { currentMatrix, hasNodeTransformations } = getCurrentMatrix(this.currentNode,
-      this.win);
+    const { currentMatrix, hasNodeTransformations } =
+      getCurrentMatrix(this.currentNode, this.win, {
+        ignoreWritingModeAndTextDirection: true,
+      });
     this.currentMatrix = currentMatrix;
     this.hasNodeTransformations = hasNodeTransformations;
 
