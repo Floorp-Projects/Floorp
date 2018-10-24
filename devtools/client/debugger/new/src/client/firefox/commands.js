@@ -137,6 +137,14 @@ function getBreakpointByLocation(location) {
   return null;
 }
 
+function setXHRBreakpoint(path, method) {
+  return threadClient.setXHRBreakpoint(path, method);
+}
+
+function removeXHRBreakpoint(path, method) {
+  return threadClient.removeXHRBreakpoint(path, method);
+}
+
 function setBreakpoint(location, condition, noSliding) {
   const sourceClient = threadClient.source({
     actor: location.sourceId
@@ -435,6 +443,8 @@ const clientCommands = {
   sourceContents,
   getBreakpointByLocation,
   setBreakpoint,
+  setXHRBreakpoint,
+  removeXHRBreakpoint,
   removeBreakpoint,
   setBreakpointCondition,
   evaluate,
