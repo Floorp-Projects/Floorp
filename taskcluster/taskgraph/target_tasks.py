@@ -48,9 +48,6 @@ def filter_on_platforms(task, platforms):
 
 
 def filter_release_tasks(task, parameters):
-    if not standard_filter(task, parameters):
-        return False
-
     platform = task.attributes.get('build_platform')
     if platform in (
             # On beta, Nightly builds are already PGOs
@@ -261,7 +258,8 @@ def target_tasks_mozilla_beta(full_task_graph, parameters, graph_config):
     of builds and signing, but does not include beetmover or balrog jobs."""
 
     return [l for l, t in full_task_graph.tasks.iteritems()
-            if filter_release_tasks(t, parameters)]
+            if filter_release_tasks(t, parameters)
+            and standard_filter(t, parameters)]
 
 
 @_target_task('mozilla_release_tasks')
@@ -271,7 +269,8 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
     of builds and signing, but does not include beetmover or balrog jobs."""
 
     return [l for l, t in full_task_graph.tasks.iteritems()
-            if filter_release_tasks(t, parameters)]
+            if filter_release_tasks(t, parameters)
+            and standard_filter(t, parameters)]
 
 
 @_target_task('mozilla_esr60_tasks')
@@ -282,6 +281,9 @@ def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
 
     def filter(task):
         if not filter_release_tasks(task, parameters):
+            return False
+
+        if not standard_filter(task, parameters):
             return False
 
         platform = task.attributes.get('build_platform')
@@ -583,3 +585,20 @@ def target_tasks_staging_release(full_task_graph, parameters, graph_config):
         return False
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('beta_simulation')
+def target_tasks_beta_simulation(full_task_graph, parameters, graph_config):
+    """
+    Select builds that would run on mozilla-beta.
+    """
+
+    def filter_for_beta(task):
+        """Filter tasks by project.  Optionally enable nightlies."""
+        run_on_projects = set(task.attributes.get('run_on_projects', []))
+        return match_run_on_projects('mozilla-beta', run_on_projects)
+
+    return [l for l, t in full_task_graph.tasks.iteritems()
+            if filter_release_tasks(t, parameters)
+            and filter_out_cron(t, parameters)
+            and filter_for_beta(t)]
