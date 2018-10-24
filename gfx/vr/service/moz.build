@@ -21,6 +21,9 @@ if CONFIG['OS_TARGET'] != 'Android':
 
 # Build OpenVR on Windows, Linux, and macOS desktop targets
 if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
+    DIRS += [
+        'openvr',
+    ]
     LOCAL_INCLUDES += [
         '/dom/base',
         '/gfx/layers/d3d11'

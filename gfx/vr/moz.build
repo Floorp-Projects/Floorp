@@ -61,20 +61,6 @@ SOURCES += [
     'VRDisplayLocal.cpp',
 ]
 
-# Build OpenVR on Windows, Linux, and macOS desktop targets
-if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
-    DIRS += [
-        'openvr',
-    ]
-    SOURCES += [
-        'gfxVROpenVR.cpp',
-    ]
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    SOURCES += [
-        'gfxVROculus.cpp',
-    ]
-
 if CONFIG['OS_TARGET'] == 'Android':
     LOCAL_INCLUDES += ['/widget/android']
 else:
@@ -89,16 +75,6 @@ IPDL_SOURCES = [
     'ipc/PVRManager.ipdl',
 ]
 
-# For building with the real SDK instead of our local hack
-#SOURCES += [
-#    'OVR_CAPI_Util.cpp',
-#    'OVR_CAPIShim.c',
-#    'OVR_StereoProjection.cpp',
-#]
-#
-#CXXFLAGS += ["-Ic:/proj/ovr/OculusSDK-0.6.0-beta/LibOVR/Include"]
-#CFLAGS += ["-Ic:/proj/ovr/OculusSDK-0.6.0-beta/LibOVR/Include"]
-
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
 CFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
@@ -107,12 +83,6 @@ CFLAGS += CONFIG['TK_CFLAGS']
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-# This is intended as a temporary hack to enable VS2015 builds.
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    # ovr_capi_dynamic.h '<unnamed-tag>': Alignment specifier is less than
-    # actual alignment (8), and will be ignored
-    CXXFLAGS += ['-wd4359']
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497
