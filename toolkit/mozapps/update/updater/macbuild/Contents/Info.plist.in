@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
+	<key>CFBundleDisplayName</key>
+	<string>updater</string>
 	<key>CFBundleExecutable</key>
 	<string>org.mozilla.updater</string>
 	<key>CFBundleIconFile</key>
@@ -12,25 +14,20 @@
 	<string>org.mozilla.updater</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>updater</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
+	<key>LSHasLocalizedDisplayName</key>
+	<true/>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>LSMinimumSystemVersion</key>
-	<string>10.5</string>
-	<key>LSMinimumSystemVersionByArchitecture</key>
-	<dict>
-		<key>i386</key>
-		<string>10.5.0</string>
-		<key>x86_64</key>
-		<string>10.6.0</string>
-	</dict>
 	<key>LSUIElement</key>
 	<true/>
 	<key>SMAuthorizedClients</key>
