@@ -11,6 +11,8 @@ android {
     defaultConfig {
         minSdkVersion Config.minSdkVersion
         targetSdkVersion Config.targetSdkVersion
+
+        buildConfigField("String", "LIBRARY_VERSION", "\"" + Config.componentsVersion + "\"")
     }
 
     buildTypes {
