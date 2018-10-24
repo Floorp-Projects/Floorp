@@ -122,8 +122,9 @@ class FlexItemSizingProperties extends PureComponent {
         [getStr("flexbox.itemSizing.itemBaseSizeFromContent")]);
     }
 
+    const className = "section base";
     return (
-      dom.li({ className: property ? "section" : "section no-property" },
+      dom.li({ className: className + (property ? "" : " no-property") },
         dom.span({ className: "name" },
           getStr("flexbox.itemSizing.baseSizeSectionHeader")
         ),
@@ -150,7 +151,7 @@ class FlexItemSizingProperties extends PureComponent {
     }
 
     const flexGrow = properties["flex-grow"];
-    const flexGrow0 = parseFloat(flexGrow) === 0;
+    const nonZeroFlexGrowDefined = flexGrow && parseFloat(flexGrow) !== 0;
     const flexShrink = properties["flex-shrink"];
     const flexShrink0 = parseFloat(flexShrink) === 0;
     const grew = mainDeltaSize > 0;
@@ -170,13 +171,13 @@ class FlexItemSizingProperties extends PureComponent {
     }
 
     // Then tell users whether the item was set to grow, shrink or none of them.
-    if (flexGrow && !flexGrow0 && lineGrowthState !== "shrinking") {
+    if (nonZeroFlexGrowDefined && lineGrowthState !== "shrinking") {
       reasons.push(getStr("flexbox.itemSizing.setToGrow"));
     }
     if (flexShrink && !flexShrink0 && lineGrowthState !== "growing") {
       reasons.push(getStr("flexbox.itemSizing.setToShrink"));
     }
-    if (!grew && !shrank && lineGrowthState === "growing") {
+    if (!nonZeroFlexGrowDefined && !grew && !shrank && lineGrowthState === "growing") {
       reasons.push(getStr("flexbox.itemSizing.notSetToGrow"));
     }
     if (!grew && !shrank && lineGrowthState === "shrinking") {
@@ -211,7 +212,7 @@ class FlexItemSizingProperties extends PureComponent {
         // because it was later min-clamped.
         reasons.push(getStr("flexbox.itemSizing.shrinkAttemptWhenClamped"));
       }
-    } else if (lineGrowthState === "growing" && flexGrow && !flexGrow0) {
+    } else if (lineGrowthState === "growing" && nonZeroFlexGrowDefined) {
       // The item did not grow or shrink. There was room on the line and flex-grow was
       // set, other items have likely used up all of the space.
       property = this.renderCssProperty("flex-grow", flexGrow);
@@ -244,8 +245,9 @@ class FlexItemSizingProperties extends PureComponent {
       return null;
     }
 
+    const className = "section flexibility";
     return (
-      dom.li({ className: property ? "section" : "section no-property" },
+      dom.li({ className: className + (property ? "" : " no-property") },
         dom.span({ className: "name" },
           getStr("flexbox.itemSizing.flexibilitySectionHeader")
         ),
@@ -271,7 +273,7 @@ class FlexItemSizingProperties extends PureComponent {
     }
 
     return (
-      dom.li({ className: "section" },
+      dom.li({ className: "section min" },
         dom.span({ className: "name" },
           getStr("flexbox.itemSizing.minSizeSectionHeader")
         ),
@@ -293,7 +295,7 @@ class FlexItemSizingProperties extends PureComponent {
     const maxDimensionValue = properties[`max-${dimension}`];
 
     return (
-      dom.li({ className: "section" },
+      dom.li({ className: "section max" },
         dom.span({ className: "name" },
           getStr("flexbox.itemSizing.maxSizeSectionHeader")
         ),
@@ -307,7 +309,7 @@ class FlexItemSizingProperties extends PureComponent {
 
   renderFinalSizeSection({ mainFinalSize }) {
     return (
-      dom.li({ className: "section no-property" },
+      dom.li({ className: "section final no-property" },
         dom.span({ className: "name" },
           getStr("flexbox.itemSizing.finalSizeSectionHeader")
         ),
