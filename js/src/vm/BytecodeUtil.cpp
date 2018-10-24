@@ -2920,81 +2920,83 @@ GenerateLcovInfo(JSContext* cx, JS::Realm* realm, GenericPrinter& out)
         js::gc::AutoPrepareForTracing apft(cx);
     }
 
-    Rooted<ScriptVector> topScripts(cx, ScriptVector(cx));
+    // Hold the scripts that we have already flushed, to avoid flushing them twice.
+    using JSScriptSet = GCHashSet<JSScript*>;
+    Rooted<JSScriptSet> scriptsDone(cx, JSScriptSet(cx));
+
+    Rooted<ScriptVector> queue(cx, ScriptVector(cx));
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
             if (script->realm() != realm ||
-                !script->isTopLevel() ||
                 !script->filename())
             {
                 continue;
             }
 
-            if (!topScripts.append(script)) {
+            if (!queue.append(script)) {
                 return false;
             }
         }
     }
 
-    if (topScripts.length() == 0) {
+    if (queue.length() == 0) {
         return true;
     }
 
     // Collect code coverage info for one realm.
-    coverage::LCovRealm realmCover;
-    for (JSScript* topLevel: topScripts) {
-        RootedScript topScript(cx, topLevel);
+    do {
+        RootedScript script(cx, queue.popCopy());
+        RootedFunction fun(cx);
 
-        // We found the top-level script, visit all the functions reachable
-        // from the top-level function, and delazify them.
-        Rooted<ScriptVector> queue(cx, ScriptVector(cx));
-        if (!queue.append(topLevel)) {
-            return false;
+        JSScriptSet::AddPtr entry = scriptsDone.lookupForAdd(script);
+        if (script->filename() && !entry) {
+            realm->lcovOutput.collectCodeCoverageInfo(realm, script, script->filename());
+            script->resetScriptCounts();
+
+            if (!scriptsDone.add(entry, script)) {
+                return false;
+            }
         }
 
-        RootedScript script(cx);
-        RootedFunction fun(cx);
-        do {
-            script = queue.popCopy();
-            if (script->filename()) {
-                realmCover.collectCodeCoverageInfo(realm, script, script->filename());
-            }
+        if (!script->isTopLevel()) {
+            continue;
+        }
 
-            // Iterate from the last to the first object in order to have
-            // the functions them visited in the opposite order when popping
-            // elements from the stack of remaining scripts, such that the
-            // functions are more-less listed with increasing line numbers.
-            if (!script->hasObjects()) {
+        // Iterate from the last to the first object in order to have
+        // the functions them visited in the opposite order when popping
+        // elements from the stack of remaining scripts, such that the
+        // functions are more-less listed with increasing line numbers.
+        if (!script->hasObjects()) {
+            continue;
+        }
+        auto objects = script->objects();
+        for (JSObject* obj : mozilla::Reversed(objects)) {
+            // Only continue on JSFunction objects.
+            if (!obj->is<JSFunction>()) {
                 continue;
             }
-            auto objects = script->objects();
-            for (JSObject* obj : mozilla::Reversed(objects)) {
-                // Only continue on JSFunction objects.
-                if (!obj->is<JSFunction>()) {
-                    continue;
-                }
-                fun = &obj->as<JSFunction>();
+            fun = &obj->as<JSFunction>();
 
-                // Let's skip wasm for now.
-                if (!fun->isInterpreted()) {
-                    continue;
-                }
-
-                // Queue the script in the list of script associated to the
-                // current source.
-                JSScript* childScript = JSFunction::getOrCreateScript(cx, fun);
-                if (!childScript || !queue.append(childScript)) {
-                    return false;
-                }
+            // Let's skip wasm for now.
+            if (!fun->isInterpreted()) {
+                continue;
             }
-        } while (!queue.empty());
-    }
+
+            // Queue the script in the list of script associated to the
+            // current source.
+            JSScript* childScript = JSFunction::getOrCreateScript(cx, fun);
+            if (!childScript || !queue.append(childScript)) {
+                return false;
+            }
+        }
+    } while (!queue.empty());
 
     bool isEmpty = true;
-    realmCover.exportInto(out, &isEmpty);
+    realm->lcovOutput.exportInto(out, &isEmpty);
     if (out.hadOutOfMemory()) {
         return false;
     }
+
     return true;
 }
 
@@ -3007,9 +3009,11 @@ js::GetCodeCoverageSummary(JSContext* cx, size_t* length)
         return nullptr;
     }
 
-    if (!GenerateLcovInfo(cx, cx->realm(), out)) {
-        JS_ReportOutOfMemory(cx);
-        return nullptr;
+    for (RealmsIter realm(cx->runtime()); !realm.done(); realm.next()) {
+        if (!GenerateLcovInfo(cx, realm, out)) {
+            JS_ReportOutOfMemory(cx);
+            return nullptr;
+        }
     }
 
     if (out.hadOutOfMemory()) {
