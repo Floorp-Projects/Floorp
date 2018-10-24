@@ -320,6 +320,40 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
       APPEND_DEVICE(0xa011);
       APPEND_DEVICE(0xa012);
       break;
+    case NvidiaBlockWebRender:
+      /* GT218 */
+      APPEND_DEVICE(0x0a60);
+      APPEND_DEVICE(0x0a62);
+      APPEND_DEVICE(0x0a63);
+      APPEND_DEVICE(0x0a64);
+      APPEND_DEVICE(0x0a65);
+      APPEND_DEVICE(0x0a66);
+      APPEND_DEVICE(0x0a67);
+      APPEND_DEVICE(0x0a7b);
+      APPEND_DEVICE(0x10c0);
+      APPEND_DEVICE(0x10c3);
+      APPEND_DEVICE(0x10c5);
+      APPEND_DEVICE(0x10d8);
+      /* GT218M */
+      APPEND_DEVICE(0x0a68);
+      APPEND_DEVICE(0x0a69);
+      APPEND_DEVICE(0x0a6a);
+      APPEND_DEVICE(0x0a6c);
+      APPEND_DEVICE(0x0a6e);
+      APPEND_DEVICE(0x0a6f);
+      APPEND_DEVICE(0x0a70);
+      APPEND_DEVICE(0x0a71);
+      APPEND_DEVICE(0x0a72);
+      APPEND_DEVICE(0x0a73);
+      APPEND_DEVICE(0x0a74);
+      APPEND_DEVICE(0x0a75);
+      APPEND_DEVICE(0x0a76);
+      APPEND_DEVICE(0x0a7a);
+      /* GT218GL */
+      APPEND_DEVICE(0x0a78);
+      /* GT218GLM */
+      APPEND_DEVICE(0x0a7c);
+      break;
     // This should never happen, but we get a warning if we don't handle this.
     case DeviceFamilyMax:
       NS_WARNING("Invalid DeviceFamily id");
