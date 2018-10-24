@@ -819,12 +819,12 @@ WrapObjectPure(JSContext* cx, JSObject* obj)
     return nullptr;
 }
 
-bool
-DebugPrologue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustReturn)
+static bool
+HandlePrologueResumeMode(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustReturn,
+                         ResumeMode resumeMode)
 {
     *mustReturn = false;
-
-    switch (Debugger::onEnterFrame(cx, frame)) {
+    switch (resumeMode) {
       case ResumeMode::Continue:
         return true;
 
@@ -842,6 +842,13 @@ DebugPrologue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustRet
       default:
         MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
     }
+}
+
+bool
+DebugPrologue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustReturn)
+{
+    ResumeMode resumeMode = Debugger::onEnterFrame(cx, frame);
+    return HandlePrologueResumeMode(cx, frame, pc, mustReturn, resumeMode);
 }
 
 bool
@@ -958,8 +965,6 @@ InterpretResume(JSContext* cx, HandleObject obj, HandleValue val, HandleProperty
 bool
 DebugAfterYield(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustReturn)
 {
-    *mustReturn = false;
-
     // The BaselineFrame has just been constructed by JSOP_RESUME in the
     // caller. We need to set its debuggee flag as necessary.
     //
@@ -967,8 +972,11 @@ DebugAfterYield(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustR
     // we may already have done this work. Don't fire onEnterFrame again.
     if (frame->script()->isDebuggee() && !frame->isDebuggee()) {
         frame->setIsDebuggee();
-        return DebugPrologue(cx, frame, pc, mustReturn);
+        ResumeMode resumeMode = Debugger::onResumeFrame(cx, frame);
+        return HandlePrologueResumeMode(cx, frame, pc, mustReturn, resumeMode);
     }
+
+    *mustReturn = false;
     return true;
 }
 

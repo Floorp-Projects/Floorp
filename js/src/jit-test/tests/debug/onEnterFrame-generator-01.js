@@ -24,9 +24,11 @@ function check(frame) {
 
     // `arguments` elements don't work in resumed generator frames,
     // because generators don't keep the arguments around.
-    // The first onEnterFrame and onPop events can see them.
-    assertEq(frame.arguments.length, hits < 2 ? args.length : 0);
-    for (var i = 0; i < frame.arguments.length; i++) {
+    // However, some of this is initialized when the frame.arguments object is
+    // created, so if they are created during the first onEnterFrame or onPop
+    // event, the properties exist, and those events can also see the values.
+    assertEq(frame.arguments.length, args.length);
+    for (var i = 0; i < args.length; i++) {
         assertEq(frame.arguments.hasOwnProperty(i), true);
 
         if (hits < 2)

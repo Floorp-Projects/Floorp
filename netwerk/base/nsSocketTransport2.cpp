@@ -25,7 +25,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsThreadUtils.h"
-#include "nsISocketProviderService.h"
+#include "nsSocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsISSLSocketControl.h"
 #include "nsIPipe.h"
@@ -63,7 +63,6 @@
 
 //-----------------------------------------------------------------------------
 
-static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 
 //-----------------------------------------------------------------------------
@@ -886,8 +885,7 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
     // better exist!
     nsresult rv;
     nsCOMPtr<nsISocketProviderService> spserv =
-        do_GetService(kSocketProviderServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+        nsSocketProviderService::GetOrCreate();
 
     mTypes = (char **) malloc(mTypeCount * sizeof(char *));
     if (!mTypes)
@@ -1211,8 +1209,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
         fd = nullptr;
 
         nsCOMPtr<nsISocketProviderService> spserv =
-            do_GetService(kSocketProviderServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
+            nsSocketProviderService::GetOrCreate();
 
         // by setting host to mOriginHost, instead of mHost we send the
         // SocketProvider (e.g. PSM) the origin hostname but can still do DNS

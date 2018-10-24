@@ -168,9 +168,8 @@ Maybe<DWORD> Compatibility::sUiaRemotePid;
 Maybe<bool>
 Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
 {
-  Maybe<DWORD>& remotePid = sUiaRemotePid;
-  auto clearUiaRemotePid = MakeScopeExit([&remotePid]() {
-    remotePid = Nothing();
+  auto clearUiaRemotePid = MakeScopeExit([]() {
+    sUiaRemotePid = Nothing();
   });
 
   Telemetry::AutoTimer<Telemetry::A11Y_UIA_DETECTION_TIMING_MS> timer;
@@ -301,7 +300,7 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
     if (ourPid != curHandle.mPid) {
       if (kernelObject && kernelObject.value() == curHandle.mObject) {
         // The kernel objects match -- we have found the remote pid!
-        remotePid = Some(curHandle.mPid);
+        sUiaRemotePid = Some(curHandle.mPid);
         break;
       }
 
@@ -319,20 +318,20 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
     return Nothing();
   }
 
-  if (!remotePid) {
+  if (!sUiaRemotePid) {
     // We found kernelObject *after* we saw the remote process's copy. Now we
     // must look it up in objMap.
     DWORD pid;
     if (objMap.Get(kernelObject.value(), &pid)) {
-      remotePid = Some(pid);
+      sUiaRemotePid = Some(pid);
     }
   }
 
-  if (!remotePid) {
+  if (!sUiaRemotePid) {
     return Nothing();
   }
 
-  a11y::SetInstantiator(remotePid.value());
+  a11y::SetInstantiator(sUiaRemotePid.value());
 
   // Block if necessary
   nsCOMPtr<nsIFile> instantiator;

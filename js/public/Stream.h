@@ -220,7 +220,7 @@ NewReadableExternalSourceStreamObject(JSContext* cx, void* underlyingSource,
  * Asserts that the given stream has an embedding-provided underlying source.
  */
 extern JS_PUBLIC_API(bool)
-ReadableStreamGetEmbeddingFlags(JSContext* cx, const JSObject* stream, uint8_t* flags);
+ReadableStreamGetEmbeddingFlags(JSContext* cx, HandleObject stream, uint8_t* flags);
 
 /**
  * Returns the embedding-provided underlying source of the given |stream|.
@@ -262,7 +262,7 @@ ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject stream, vo
  * Asserts that the stream has an embedding-provided underlying source.
  */
 extern JS_PUBLIC_API(bool)
-ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, JSObject* stream);
+ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, HandleObject stream);
 
 /**
  * Update the amount of data available at the underlying source of the given
@@ -284,7 +284,7 @@ ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, HandleObject stream,
  * unwrappable wrapper for one, false otherwise.
  */
 extern JS_PUBLIC_API(bool)
-IsReadableStream(const JSObject* obj);
+IsReadableStream(JSObject* obj);
 
 /**
  * Returns true if the given object is a ReadableStreamDefaultReader or
@@ -292,14 +292,14 @@ IsReadableStream(const JSObject* obj);
  * otherwise.
  */
 extern JS_PUBLIC_API(bool)
-IsReadableStreamReader(const JSObject* obj);
+IsReadableStreamReader(JSObject* obj);
 
 /**
  * Returns true if the given object is a ReadableStreamDefaultReader object
  * or an unwrappable wrapper for one, false otherwise.
  */
 extern JS_PUBLIC_API(bool)
-IsReadableStreamDefaultReader(const JSObject* obj);
+IsReadableStreamDefaultReader(JSObject* obj);
 
 enum class ReadableStreamMode {
     Default,
@@ -316,7 +316,7 @@ enum class ReadableStreamMode {
  * for one.
  */
 extern JS_PUBLIC_API(bool)
-ReadableStreamGetMode(JSContext* cx, const JSObject* stream, ReadableStreamMode* mode);
+ReadableStreamGetMode(JSContext* cx, HandleObject stream, ReadableStreamMode* mode);
 
 enum class ReadableStreamReaderMode {
     Default
@@ -329,7 +329,7 @@ enum class ReadableStreamReaderMode {
  * for one.
  */
 extern JS_PUBLIC_API(bool)
-ReadableStreamIsReadable(JSContext* cx, const JSObject* stream, bool* result);
+ReadableStreamIsReadable(JSContext* cx, HandleObject stream, bool* result);
 
 /**
  * Returns true if the given ReadableStream is locked, false if not.
@@ -338,7 +338,7 @@ ReadableStreamIsReadable(JSContext* cx, const JSObject* stream, bool* result);
  * for one.
  */
 extern JS_PUBLIC_API(bool)
-ReadableStreamIsLocked(JSContext* cx, const JSObject* stream, bool* result);
+ReadableStreamIsLocked(JSContext* cx, HandleObject stream, bool* result);
 
 /**
  * Returns true if the given ReadableStream is disturbed, false if not.
@@ -347,7 +347,7 @@ ReadableStreamIsLocked(JSContext* cx, const JSObject* stream, bool* result);
  * for one.
  */
 extern JS_PUBLIC_API(bool)
-ReadableStreamIsDisturbed(JSContext* cx, const JSObject* stream, bool* result);
+ReadableStreamIsDisturbed(JSContext* cx, HandleObject stream, bool* result);
 
 /**
  * Cancels the given ReadableStream with the given reason and returns a
@@ -422,7 +422,7 @@ ReadableStreamClose(JSContext* cx, HandleObject stream);
  * ReadableStreamBYOBReader object or an unwrappable wrapper for one.
  */
 extern JS_PUBLIC_API(bool)
-ReadableStreamReaderIsClosed(JSContext* cx, const JSObject* reader, bool* result);
+ReadableStreamReaderIsClosed(JSContext* cx, HandleObject reader, bool* result);
 
 /**
  * Enqueues the given chunk in the given ReadableStream.

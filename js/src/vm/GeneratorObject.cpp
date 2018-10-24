@@ -9,6 +9,7 @@
 #include "vm/JSObject.h"
 
 #include "vm/ArrayObject-inl.h"
+#include "vm/Debugger-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -19,7 +20,7 @@ using namespace js;
 JSObject*
 GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
 {
-    MOZ_ASSERT(frame.script()->isGenerator() || frame.script()->isAsync());
+    MOZ_ASSERT(frame.isGeneratorFrame());
     MOZ_ASSERT(frame.script()->nfixed() == 0);
     MOZ_ASSERT(!frame.isConstructing());
 
@@ -50,6 +51,10 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
         genObj->setArgsObj(frame.argsObj());
     }
     genObj->clearExpressionStack();
+
+    if (!Debugger::onNewGenerator(cx, frame, genObj)) {
+        return nullptr;
+    }
 
     return genObj;
 }
@@ -110,8 +115,7 @@ GeneratorObject*
 js::GetGeneratorObjectForFrame(JSContext* cx, AbstractFramePtr frame)
 {
     cx->check(frame);
-    MOZ_ASSERT(frame.isFunctionFrame() &&
-               (frame.callee()->isGenerator() || frame.callee()->isAsync()));
+    MOZ_ASSERT(frame.isGeneratorFrame());
 
     // The ".generator" binding is always present and always "aliased".
     CallObject& callObj = frame.callObj();

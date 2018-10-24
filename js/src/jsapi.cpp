@@ -4717,26 +4717,29 @@ JS::NewReadableExternalSourceStreamObject(JSContext* cx, void* underlyingSource,
 }
 
 JS_PUBLIC_API(bool)
-JS::IsReadableStream(const JSObject* obj)
+JS::IsReadableStream(JSObject* obj)
 {
-    if (IsWrapper(const_cast<JSObject*>(obj)))
-        obj = CheckedUnwrap(const_cast<JSObject*>(obj));
+    if (IsWrapper(obj)) {
+        obj = CheckedUnwrap(obj);
+    }
     return obj && obj->is<ReadableStream>();
 }
 
 JS_PUBLIC_API(bool)
-JS::IsReadableStreamReader(const JSObject* obj)
+JS::IsReadableStreamReader(JSObject* obj)
 {
-    if (IsWrapper(const_cast<JSObject*>(obj)))
-        obj = CheckedUnwrap(const_cast<JSObject*>(obj));
+    if (IsWrapper(obj)) {
+        obj = CheckedUnwrap(obj);
+    }
     return obj && obj->is<ReadableStreamDefaultReader>();
 }
 
 JS_PUBLIC_API(bool)
-JS::IsReadableStreamDefaultReader(const JSObject* obj)
+JS::IsReadableStreamDefaultReader(JSObject* obj)
 {
-    if (IsWrapper(const_cast<JSObject*>(obj)))
-        obj = CheckedUnwrap(const_cast<JSObject*>(obj));
+    if (IsWrapper(obj)) {
+        obj = CheckedUnwrap(obj);
+    }
     return obj && obj->is<ReadableStreamDefaultReader>();
 }
 
@@ -4756,9 +4759,9 @@ ToUnwrapped(JSContext* cx, JSObject* obj)
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamIsReadable(JSContext* cx, const JSObject* streamObj, bool* result)
+JS::ReadableStreamIsReadable(JSContext* cx, HandleObject streamObj, bool* result)
 {
-    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, streamObj);
     if (!stream)
         return false;
 
@@ -4767,9 +4770,9 @@ JS::ReadableStreamIsReadable(JSContext* cx, const JSObject* streamObj, bool* res
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamIsLocked(JSContext* cx, const JSObject* streamObj, bool* result)
+JS::ReadableStreamIsLocked(JSContext* cx, HandleObject streamObj, bool* result)
 {
-    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, streamObj);
     if (!stream)
         return false;
 
@@ -4778,9 +4781,9 @@ JS::ReadableStreamIsLocked(JSContext* cx, const JSObject* streamObj, bool* resul
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamIsDisturbed(JSContext* cx, const JSObject* streamObj, bool* result)
+JS::ReadableStreamIsDisturbed(JSContext* cx, HandleObject streamObj, bool* result)
 {
-    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, streamObj);
     if (!stream)
         return false;
 
@@ -4789,9 +4792,9 @@ JS::ReadableStreamIsDisturbed(JSContext* cx, const JSObject* streamObj, bool* re
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamGetEmbeddingFlags(JSContext* cx, const JSObject* streamObj, uint8_t* flags)
+JS::ReadableStreamGetEmbeddingFlags(JSContext* cx, HandleObject streamObj, uint8_t* flags)
 {
-    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, streamObj);
     if (!stream)
         return false;
 
@@ -4814,9 +4817,9 @@ JS::ReadableStreamCancel(JSContext* cx, HandleObject streamObj, HandleValue reas
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamGetMode(JSContext* cx, const JSObject* streamObj, JS::ReadableStreamMode* mode)
+JS::ReadableStreamGetMode(JSContext* cx, HandleObject streamObj, JS::ReadableStreamMode* mode)
 {
-    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, streamObj);
     if (!stream)
         return false;
 
@@ -4853,9 +4856,9 @@ JS::ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject stream
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, JSObject* streamObj)
+JS::ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, HandleObject streamObj)
 {
-    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, const_cast<JSObject*>(streamObj));
+    ReadableStream* stream = ToUnwrapped<ReadableStream>(cx, streamObj);
     if (!stream)
         return false;
 
@@ -4960,9 +4963,9 @@ JS::ReadableStreamError(JSContext* cx, HandleObject streamObj, HandleValue error
 }
 
 JS_PUBLIC_API(bool)
-JS::ReadableStreamReaderIsClosed(JSContext* cx, const JSObject* reader, bool* result)
+JS::ReadableStreamReaderIsClosed(JSContext* cx, HandleObject readerObj, bool* result)
 {
-    reader = ToUnwrapped<NativeObject>(cx, const_cast<JSObject*>(reader));
+    RootedObject reader(cx, ToUnwrapped<NativeObject>(cx, readerObj));
     if (!reader)
         return false;
 

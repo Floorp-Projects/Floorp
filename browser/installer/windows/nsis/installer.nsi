@@ -352,6 +352,12 @@ Section "-Application" APP_IDX
     StrCpy $AddDesktopSC "1"
   ${EndIf}
 
+  ${CreateUpdateDir} "Mozilla"
+  ${If} ${Errors}
+    Pop $0
+    ${LogMsg} "** ERROR Failed to create update directory: $0"
+  ${EndIf}
+
   ${LogHeader} "Adding Registry Entries"
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"

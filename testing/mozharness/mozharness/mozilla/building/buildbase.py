@@ -393,7 +393,6 @@ class BuildOptionParser(object):
         'valgrind': 'builds/releng_sub_%s_configs/%s_valgrind.py',
         'artifact': 'builds/releng_sub_%s_configs/%s_artifact.py',
         'debug-artifact': 'builds/releng_sub_%s_configs/%s_debug_artifact.py',
-        'devedition': 'builds/releng_sub_%s_configs/%s_devedition.py',
         'tup': 'builds/releng_sub_%s_configs/%s_tup.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
@@ -844,7 +843,10 @@ or run without that action (ie: --no-{action})"
         if self.query_is_nightly() or self.query_is_nightly_promotion():
             # in branch_specifics.py we might set update_channel explicitly
             if c.get('update_channel'):
-                env["MOZ_UPDATE_CHANNEL"] = c['update_channel']
+                update_channel = c['update_channel']
+                if isinstance(update_channel, unicode):
+                    update_channel = update_channel.encode("utf-8")
+                env["MOZ_UPDATE_CHANNEL"] = update_channel
             elif c.get('enable_release_promotion'):
                 env["MOZ_UPDATE_CHANNEL"] = self.branch
             else:  # let's just give the generic channel based on branch

@@ -15,8 +15,10 @@
 #include "RequestContextService.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 
 #include "mozilla/net/NeckoChild.h"
@@ -31,6 +33,8 @@ namespace net {
 LazyLogModule gRequestContextLog("RequestContext");
 #undef LOG
 #define LOG(args) MOZ_LOG(gRequestContextLog, LogLevel::Info, args)
+
+static StaticRefPtr<RequestContextService> gSingleton;
 
 // This is used to prevent adding tail pending requests after shutdown
 static bool sShutdown = false;
@@ -518,19 +522,23 @@ RequestContextService::Shutdown()
   sShutdown = true;
 }
 
-/* static */ nsresult
-RequestContextService::Create(nsISupports *aOuter, const nsIID& aIID, void **aResult)
+/* static */ already_AddRefed<nsIRequestContextService>
+RequestContextService::GetOrCreate()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (aOuter != nullptr) {
-    return NS_ERROR_NO_AGGREGATION;
+
+  RefPtr<RequestContextService> svc;
+  if (gSingleton) {
+    svc = gSingleton;
+  } else {
+    svc = new RequestContextService();
+    nsresult rv = svc->Init();
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    gSingleton = svc;
+    ClearOnShutdown(&gSingleton);
   }
 
-  RefPtr<RequestContextService> svc = new RequestContextService();
-  nsresult rv = svc->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return svc->QueryInterface(aIID, aResult);
+  return svc.forget();
 }
 
 NS_IMETHODIMP

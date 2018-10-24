@@ -6,21 +6,37 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsISocketProvider.h"
-#include "nsSocketProviderService.h"
 #include "nsError.h"
+#include "nsNSSComponent.h"
+#include "nsSOCKSSocketProvider.h"
+#include "nsSocketProviderService.h"
+#include "nsSSLSocketProvider.h"
+#include "nsTLSSocketProvider.h"
+#include "nsUDPSocketProvider.h"
+#include "mozilla/ClearOnShutdown.h"
+
+mozilla::StaticRefPtr<nsSocketProviderService> nsSocketProviderService::gSingleton;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-nsSocketProviderService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+already_AddRefed<nsISocketProviderService>
+nsSocketProviderService::GetOrCreate()
 {
-  nsresult rv;
-  nsCOMPtr<nsISocketProviderService> inst = new nsSocketProviderService();
-  if (!inst)
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  else
-    rv = inst->QueryInterface(aIID, aResult);
-  return rv;
+  RefPtr<nsSocketProviderService> inst;
+  if (gSingleton) {
+    inst = gSingleton;
+  } else {
+    inst = new nsSocketProviderService();
+    gSingleton = inst;
+    if (NS_IsMainThread()) {
+      mozilla::ClearOnShutdown(&gSingleton);
+    } else {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "net::nsSocketProviderService::GetOrCreate",
+        []() -> void { mozilla::ClearOnShutdown(&gSingleton); }));
+    }
+  }
+  return inst.forget();
 }
 
 NS_IMPL_ISUPPORTS(nsSocketProviderService, nsISocketProviderService)
@@ -31,15 +47,26 @@ NS_IMETHODIMP
 nsSocketProviderService::GetSocketProvider(const char         *type,
                                            nsISocketProvider **result)
 {
-  nsresult rv;
-  nsAutoCString contractID(
-          NS_LITERAL_CSTRING(NS_NETWORK_SOCKET_CONTRACTID_PREFIX) +
-          nsDependentCString(type));
-
-  rv = CallGetService(contractID.get(), result);
-  if (NS_FAILED(rv))
-      rv = NS_ERROR_UNKNOWN_SOCKET_TYPE;
-  return rv;
+  nsCOMPtr<nsISocketProvider> inst;
+  if (!nsCRT::strcmp(type, "ssl") &&
+      XRE_IsParentProcess() &&
+      EnsureNSSInitializedChromeOrContent()) {
+    inst = new nsSSLSocketProvider();
+  } else if (!nsCRT::strcmp(type, "starttls") &&
+             XRE_IsParentProcess() &&
+             EnsureNSSInitializedChromeOrContent()) {
+    inst = new nsTLSSocketProvider();
+  } else if (!nsCRT::strcmp(type, "socks")) {
+    inst = new nsSOCKSSocketProvider(NS_SOCKS_VERSION_5);
+  } else if (!nsCRT::strcmp(type, "socks4")) {
+    inst = new nsSOCKSSocketProvider(NS_SOCKS_VERSION_4);
+  } else if (!nsCRT::strcmp(type, "udp")) {
+    inst = new nsUDPSocketProvider();
+  } else {
+    return NS_ERROR_UNKNOWN_SOCKET_TYPE;
+  }
+  inst.forget(result);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

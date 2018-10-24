@@ -18,6 +18,10 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
+EXPORTS += [
+    'nsSocketProviderService.h',
+]
+
 UNIFIED_SOURCES += [
     'nsSocketProviderService.cpp',
     'nsSOCKSIOLayer.cpp',
@@ -28,6 +32,9 @@ UNIFIED_SOURCES += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     XPIDL_SOURCES += [
         'nsINamedPipeService.idl',
+    ]
+    EXPORTS += [
+        'nsNamedPipeService.h',
     ]
     UNIFIED_SOURCES += [
         'nsNamedPipeIOLayer.cpp',

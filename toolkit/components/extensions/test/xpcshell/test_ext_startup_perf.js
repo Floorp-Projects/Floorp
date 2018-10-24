@@ -47,7 +47,7 @@ add_task(async function test_loaded_scripts() {
             "No extra APIs should be loaded at startup for a simple extension");
 
 
-  let loadedModules = Cu.loadedModules()
+  let loadedModules = Cu.loadedModules
                         .filter(url => url.startsWith("resource://gre/modules/Extension"));
 
   deepEqual(loadedModules.sort(), STARTUP_MODULES.sort(),

@@ -1063,30 +1063,20 @@ mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
 }
 
 void
-mozJSComponentLoader::LoadedModules(uint32_t* length,
-                                    char*** aModules)
+mozJSComponentLoader::GetLoadedModules(nsTArray<nsCString>& aLoadedModules)
 {
-    char** modules = new char*[mImports.Count()];
-    *length = mImports.Count();
-    *aModules = modules;
-
+    aLoadedModules.SetCapacity(mImports.Count());
     for (auto iter = mImports.Iter(); !iter.Done(); iter.Next()) {
-        *modules = NS_xstrdup(iter.Data()->location);
-        modules++;
+        aLoadedModules.AppendElement(iter.Data()->location);
     }
 }
 
 void
-mozJSComponentLoader::LoadedComponents(uint32_t* length,
-                                       char*** aComponents)
+mozJSComponentLoader::GetLoadedComponents(nsTArray<nsCString>& aLoadedComponents)
 {
-    char** comp = new char*[mModules.Count()];
-    *length = mModules.Count();
-    *aComponents = comp;
-
+    aLoadedComponents.SetCapacity(mModules.Count());
     for (auto iter = mModules.Iter(); !iter.Done(); iter.Next()) {
-        *comp = NS_xstrdup(iter.Data()->location);
-        comp++;
+        aLoadedComponents.AppendElement(iter.Data()->location);
     }
 }
 

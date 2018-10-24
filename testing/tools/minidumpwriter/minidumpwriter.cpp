@@ -34,7 +34,7 @@ int wmain(int argc, wchar_t** argv)
   HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
                                 0, pid);
   if (!hProcess) {
-    fprintf(stderr, "Couldn't get handle for %d\n", pid);
+    fprintf(stderr, "Couldn't get handle for %lu\n", pid);
     return rv;
   }
 
@@ -49,7 +49,7 @@ int wmain(int argc, wchar_t** argv)
   rv = 0;
   if (!MiniDumpWriteDump(hProcess, pid, file, MiniDumpNormal,
                          nullptr, nullptr, nullptr)) {
-    fprintf(stderr, "Error 0x%X in MiniDumpWriteDump\n", GetLastError());
+    fprintf(stderr, "Error 0x%lX in MiniDumpWriteDump\n", GetLastError());
     rv = 1;
   }
 

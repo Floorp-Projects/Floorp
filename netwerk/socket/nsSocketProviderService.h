@@ -7,18 +7,21 @@
 #define nsSocketProviderService_h__
 
 #include "nsISocketProviderService.h"
+#include "mozilla/StaticPtr.h"
 
 class nsSocketProviderService : public nsISocketProviderService
 {
+  nsSocketProviderService() = default;
   virtual ~nsSocketProviderService() = default;
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISOCKETPROVIDERSERVICE
 
-  nsSocketProviderService() = default;
+  static already_AddRefed<nsISocketProviderService> GetOrCreate();
 
-  static nsresult Create(nsISupports *, REFNSIID aIID, void **aResult);
+private:
+  static mozilla::StaticRefPtr<nsSocketProviderService> gSingleton;
 };
 
 #endif /* nsSocketProviderService_h__ */

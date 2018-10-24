@@ -26,6 +26,7 @@
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
+#include "mozilla/net/RequestContextService.h"
 #include "mozilla/net/TrackingDummyChannelParent.h"
 #ifdef MOZ_WEBRTC
 #include "mozilla/net/StunAddrsRequestParent.h"
@@ -898,7 +899,7 @@ mozilla::ipc::IPCResult
 NeckoParent::RecvRequestContextLoadBegin(const uint64_t& rcid)
 {
   nsCOMPtr<nsIRequestContextService> rcsvc =
-    do_GetService("@mozilla.org/network/request-context-service;1");
+    RequestContextService::GetOrCreate();
   if (!rcsvc) {
     return IPC_OK();
   }
@@ -915,7 +916,7 @@ mozilla::ipc::IPCResult
 NeckoParent::RecvRequestContextAfterDOMContentLoaded(const uint64_t& rcid)
 {
   nsCOMPtr<nsIRequestContextService> rcsvc =
-    do_GetService("@mozilla.org/network/request-context-service;1");
+    RequestContextService::GetOrCreate();
   if (!rcsvc) {
     return IPC_OK();
   }
@@ -932,7 +933,7 @@ mozilla::ipc::IPCResult
 NeckoParent::RecvRemoveRequestContext(const uint64_t& rcid)
 {
   nsCOMPtr<nsIRequestContextService> rcsvc =
-    do_GetService("@mozilla.org/network/request-context-service;1");
+    RequestContextService::GetOrCreate();
   if (!rcsvc) {
     return IPC_OK();
   }

@@ -17,12 +17,12 @@ struct DIR {
   explicit DIR(const WCHAR* path);
   ~DIR();
   HANDLE findHandle;
-  WCHAR name[MAX_PATH];
+  WCHAR name[MAX_PATH + 1];
 };
 
 struct dirent {
   dirent();
-  WCHAR d_name[MAX_PATH];
+  WCHAR d_name[MAX_PATH + 1];
 };
 
 DIR* opendir(const WCHAR* path);

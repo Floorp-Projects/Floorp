@@ -22,7 +22,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     srcs += [
         'loaddlls.cpp',
         'progressui_win.cpp',
-        'win_dirent.cpp',
     ]
     RCINCLUDE = '%supdater.rc' % updater_rel_path
     DEFINES['UNICODE'] = True

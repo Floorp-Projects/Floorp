@@ -64,6 +64,13 @@ PER_PROJECT_PARAMETERS = {
         'include_nightly': False,
     },
 
+    'mozilla-central': {
+        'target_tasks_method': 'default',
+        'optimize_target_tasks': True,
+        'include_nightly': False,
+        'release_type': 'nightly',
+    },
+
     'mozilla-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
         'optimize_target_tasks': True,
@@ -223,7 +230,7 @@ def get_decision_parameters(config, options):
     parameters['version'] = get_version(product_dir)
     parameters['app_version'] = get_app_version(product_dir)
     parameters['next_version'] = None
-    parameters['release_type'] = 'nightly'
+    parameters['release_type'] = ''
     parameters['release_eta'] = ''
     parameters['release_enable_partners'] = False
     parameters['release_partners'] = []

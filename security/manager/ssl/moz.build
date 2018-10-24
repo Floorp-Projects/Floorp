@@ -68,6 +68,8 @@ EXPORTS += [
     'nsRandomGenerator.h',
     'nsSecurityHeaderParser.h',
     'NSSErrorsService.h',
+    'nsSSLSocketProvider.h',
+    'nsTLSSocketProvider.h',
     'RootCertificateTelemetryUtils.h',
     'ScopedNSSTypes.h',
     'SharedCertVerifier.h',

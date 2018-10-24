@@ -1,27 +1,26 @@
-// Each resumption of a generator gets a fresh frame, whose onPop handler
-// fires the next time the generator yields.
-// This is not the behavior the spec requests, but it's what we do for the
-// moment, and it's good to check that at least we don't crash.
+// Each resumption of a generator gets the same Frame; its onPop handler
+// fires each time the generator yields.
+
 var g = newGlobal();
 var dbg = new Debugger(g);
 var log;
 
-var debuggerFrames = [];
-var poppedFrames = [];
+var seenFrame = null;
 dbg.onDebuggerStatement = function handleDebugger(frame) {
     log += 'd';
     assertEq(frame.type, "call");
 
-    assertEq(debuggerFrames.indexOf(frame), -1);
-    assertEq(poppedFrames.indexOf(frame), -1);
-    debuggerFrames.push(frame);
+    if (seenFrame === null) {
+        seenFrame = frame;
+    } else {
+        assertEq(seenFrame, frame);
+    }
 
-    if (frame.eval('i').return % 3 == 0) {
+    let i = frame.eval('i').return;
+    if (i % 3 == 0) {
         frame.onPop = function handlePop(c) {
-            log += ')' + c.return.unsafeDereference().value;
-            assertEq(debuggerFrames.indexOf(this) != -1, true);
-            assertEq(poppedFrames.indexOf(this), -1);
-            poppedFrames.push(this);
+            assertEq(this, seenFrame);
+            log += ')' + i;
         };
     }
 };
@@ -29,4 +28,4 @@ dbg.onDebuggerStatement = function handleDebugger(frame) {
 g.eval("function* g() { for (var i = 0; i < 10; i++) { debugger; yield i; } }");
 log ='';
 assertEq(g.eval("var t = 0; for (j of g()) t += j; t;"), 45);
-assertEq(log, "d)0ddd)3ddd)6ddd)9");
+assertEq(log, "d)0d)0d)0d)3d)3d)3d)6d)6d)6d)9");

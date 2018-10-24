@@ -100,6 +100,9 @@ l10n_description_schema = Schema({
     # dictionary of dependent task objects, keyed by kind.
     Required('dependent-tasks'): {basestring: object},
 
+    # primary dependency task
+    Required('primary-dependency'): object,
+
     # worker-type to utilize
     Required('worker-type'): _by_platform(basestring),
 
@@ -197,7 +200,7 @@ def _remove_locales(locales, to_remove=None):
 @transforms.add
 def setup_name(config, jobs):
     for job in jobs:
-        dep = job['dependent-tasks']['build']
+        dep = job['primary-dependency']
         # Set the name to the same as the dep task, without kind name.
         # Label will get set automatically with this kinds name.
         job['name'] = job.get('name',
@@ -208,7 +211,7 @@ def setup_name(config, jobs):
 @transforms.add
 def copy_in_useful_magic(config, jobs):
     for job in jobs:
-        dep = job['dependent-tasks']['build']
+        dep = job['primary-dependency']
         attributes = copy_attributes_from_dependent_job(dep)
         attributes.update(job.get('attributes', {}))
         # build-platform is needed on `job` for by-build-platform

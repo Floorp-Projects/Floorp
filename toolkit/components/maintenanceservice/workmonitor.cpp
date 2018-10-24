@@ -27,6 +27,7 @@
 #include "updatehelper.h"
 #include "pathhash.h"
 #include "errors.h"
+#include "commonupdatedir.h"
 
 #define PATCH_DIR_PATH L"\\updates\\0"
 
@@ -690,6 +691,15 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
       return FALSE;
     }
 
+    mozilla::UniquePtr<wchar_t[]> updateDir;
+    HRESULT permResult = GetCommonUpdateDirectory(installDir, nullptr, nullptr,
+                                                  SetPermissionsOf::AllFilesAndDirs,
+                                                  updateDir);
+    if (FAILED(permResult)) {
+      LOG_WARN(("Unable to set the permissions on the update directory ('%S'): %d",
+               updateDir.get(), permResult));
+    }
+
     if (!DoesFallbackKeyExist()) {
       WCHAR maintenanceServiceKey[MAX_PATH + 1];
       if (CalculateRegistryPathFromFilePath(installDir, maintenanceServiceKey)) {
@@ -768,6 +778,24 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
     // because the service self updates itself and the service
     // installer will stop the service.
     LOG(("Service command %ls complete.", argv[2]));
+  } else if (!lstrcmpi(argv[2], L"fix-update-directory-perms")) {
+    bool gotInstallDir = true;
+    mozilla::UniquePtr<wchar_t[]> updateDir;
+    if (argc <= 3) {
+      LOG_WARN(("Didn't get an install dir for fix-update-directory-perms"));
+      gotInstallDir = false;
+    }
+    HRESULT permResult = GetCommonUpdateDirectory(gotInstallDir ? argv[3]
+                                                                : nullptr,
+                           nullptr, nullptr,
+                           SetPermissionsOf::AllFilesAndDirs, updateDir);
+    if (FAILED(permResult)) {
+      LOG_WARN(("Unable to set the permissions on the update directory "
+                "('%S'): %d", updateDir.get(), permResult));
+      result = FALSE;
+    } else {
+      result = TRUE;
+    }
   } else {
     LOG_WARN(("Service command not recognized: %ls.", argv[2]));
     // result is already set to FALSE
@@ -775,5 +803,5 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
 
   LOG(("service command %ls complete with result: %ls.",
        argv[1], (result ? L"Success" : L"Failure")));
-  return TRUE;
+  return result;
 }

@@ -3285,41 +3285,68 @@
           ${If} $R2 != ""
             ; Backup the old update directory logs and delete the directory
             ${If} ${FileExists} "$R2\updates\last-update.log"
-              Rename "$R2\updates\last-update.log" "$TEMP\moz-update-old-last-update.log"
+              Rename "$R2\updates\last-update.log" "$TEMP\moz-update-oldest-last-update.log"
             ${EndIf}
 
             ${If} ${FileExists} "$R2\updates\backup-update.log"
-              Rename "$R2\updates\backup-update.log" "$TEMP\moz-update-old-backup-update.log"
+              Rename "$R2\updates\backup-update.log" "$TEMP\moz-update-oldest-backup-update.log"
             ${EndIf}
 
             ${If} ${FileExists} "$R2\updates"
                 RmDir /r "$R2"
             ${EndIf}
           ${EndIf}
+        ${EndIf}
 
-          ; Get the taskbar ID hash for this installation path
-          ReadRegStr $R1 HKLM "SOFTWARE\$R7\TaskBarIDs" $R6
-          ${If} $R1 == ""
-            ReadRegStr $R1 HKCU "SOFTWARE\$R7\TaskBarIDs" $R6
+        ; Get the taskbar ID hash for this installation path
+        ReadRegStr $R1 HKLM "SOFTWARE\$R7\TaskBarIDs" $R6
+        ${If} $R1 == ""
+          ReadRegStr $R1 HKCU "SOFTWARE\$R7\TaskBarIDs" $R6
+        ${EndIf}
+
+        ; If the taskbar ID hash exists then delete the new update directory
+        ; Backup its logs before deleting it.
+        ${If} $R1 != ""
+          StrCpy $R0 "$LOCALAPPDATA\$R8\$R1"
+
+          ${If} ${FileExists} "$R0\updates\last-update.log"
+            Rename "$R0\updates\last-update.log" "$TEMP\moz-update-older-last-update.log"
           ${EndIf}
 
-          ; If the taskbar ID hash exists then delete the new update directory
-          ; Backup its logs before deleting it.
-          ${If} $R1 != ""
-            StrCpy $R0 "$LOCALAPPDATA\$R8\$R1"
+          ${If} ${FileExists} "$R0\updates\backup-update.log"
+            Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-older-backup-update.log"
+          ${EndIf}
 
-            ${If} ${FileExists} "$R0\updates\last-update.log"
-              Rename "$R0\updates\last-update.log" "$TEMP\moz-update-new-last-update.log"
-            ${EndIf}
+          ; Remove the old updates directory, located in the user's Windows profile directory
+          ${If} ${FileExists} "$R0\updates"
+            RmDir /r "$R0"
+          ${EndIf}
 
-            ${If} ${FileExists} "$R0\updates\backup-update.log"
-              Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-new-backup-update.log"
-            ${EndIf}
+          ; Get the new updates directory so we can remove that too
+          ; The new update directory is in the Program Data directory
+          ; (currently C:\ProgramData).
+          ; This system call gets that directory path. The arguments are:
+          ;   A null ptr for hwnd
+          ;   $R0 for the output string
+          ;   CSIDL_COMMON_APPDATA == 0x0023 == 35 for the csidl indicating which dir to get
+          ;   false for fCreate (i.e. Do not create the folder if it doesn't exist)
+          ; We could use %APPDATA% for this instead, but that requires state: the shell
+          ; var context would need to be saved, set, and reset. It is easier just to use
+          ; the system call.
+          System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.R0, i 35, i 0)"
+          StrCpy $R0 "$R0\$R8\$R1"
 
-            ; Remove the old updates directory
-            ${If} ${FileExists} "$R0\updates"
-              RmDir /r "$R0"
-            ${EndIf}
+          ${If} ${FileExists} "$R0\updates\last-update.log"
+            Rename "$R0\updates\last-update.log" "$TEMP\moz-update-newest-last-update.log"
+          ${EndIf}
+
+          ${If} ${FileExists} "$R0\updates\backup-update.log"
+            Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-newest-backup-update.log"
+          ${EndIf}
+
+          ; Remove the new updates directory, which is shared by all users of the installation
+          ${If} ${FileExists} "$R0\updates"
+            RmDir /r "$R0"
           ${EndIf}
         ${EndIf}
       ${EndIf}
@@ -3374,6 +3401,92 @@
     !verbose pop
   !endif
 !macroend
+
+/**
+ * Create the update directory and sets the permissions correctly
+ *
+ * @param   ROOT_DIR_NAME
+ *          The name of the update directory to be created in the common
+ *          application directory. For example, if ROOT_DIR_NAME is "Mozilla",
+ *          the created directory will be "C:\ProgramData\Mozilla".
+ *
+ * $R0 = Used for checking errors
+ * $R1 = The common application directory path
+ * $R9 = An error message to be returned on the stack
+ */
+!macro CreateUpdateDir ROOT_DIR_NAME
+  Push $R9
+  Push $R0
+  Push $R1
+
+  ; The update directory is in the Program Data directory
+  ; (currently C:\ProgramData).
+  ; This system call gets that directory path. The arguments are:
+  ;   A null ptr for hwnd
+  ;   $R1 for the output string
+  ;   CSIDL_COMMON_APPDATA == 0x0023 == 35 for the csidl indicating which dir to get
+  ;   true for fCreate (i.e. Do create the folder if it doesn't exist)
+  ; We could use %APPDATA% for this instead, but that requires state: the shell
+  ; var context would need to be saved, set, and reset. It is easier just to use
+  ; the system call.
+  System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.R1, i 35, i 1)"
+  StrCpy $R1 "$R1\${ROOT_DIR_NAME}"
+
+  ClearErrors
+  ${IfNot} ${FileExists} "$R1"
+    CreateDirectory "$R1"
+    ${If} ${Errors}
+      StrCpy $R9 "Unable to create directory: $R1"
+      GoTo end
+    ${EndIf}
+  ${EndIf}
+
+  ; Grant Full Access to the Builtin User group
+  AccessControl::SetOnFile "$R1" "(BU)" "FullAccess"
+  Pop $R0
+  ${If} $R0 == error
+    Pop $R9  ; Get AccessControl's Error Message
+    SetErrors
+    GoTo end
+  ${EndIf}
+
+  ; Grant Full Access to the Builtin Administrator group
+  AccessControl::SetOnFile "$R1" "(BA)" "FullAccess"
+  Pop $R0
+  ${If} $R0 == error
+    Pop $R9  ; Get AccessControl's Error Message
+    SetErrors
+    GoTo end
+  ${EndIf}
+
+  ; Grant Full Access to the SYSTEM user
+  AccessControl::SetOnFile "$R1" "(SY)" "FullAccess"
+  Pop $R0
+  ${If} $R0 == error
+    Pop $R9  ; Get AccessControl's Error Message
+    SetErrors
+    GoTo end
+  ${EndIf}
+
+  ; Remove inherited permissions
+  AccessControl::DisableFileInheritance "$R1"
+  Pop $R0
+  ${If} $R0 == error
+    Pop $R9  ; Get AccessControl's Error Message
+    SetErrors
+    GoTo end
+  ${EndIf}
+
+end:
+  Pop $R1
+  Pop $R0
+  ${If} ${Errors}
+    Exch $R9
+  ${Else}
+    Pop $R9
+  ${EndIf}
+!macroend
+!define CreateUpdateDir "!insertmacro CreateUpdateDir"
 
 /**
  * Deletes all relative profiles specified in an application's profiles.ini and

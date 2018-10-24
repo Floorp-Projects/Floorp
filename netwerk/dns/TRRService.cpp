@@ -676,7 +676,7 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
     LOG(("TRR verified %s to be fine!\n", newRRSet->mHostName.get()));
   } else {
     LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->mHostName.get()));
-    TRRBlacklist(newRRSet->mHostName, rec->originSuffix, pb, false);
+    TRRBlacklist(newRRSet->mHostName, nsCString(""), pb, false);
   }
   return LOOKUP_OK;
 }
