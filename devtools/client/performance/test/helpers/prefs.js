@@ -10,7 +10,7 @@ const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 exports.MEMORY_SAMPLE_PROB_PREF = "devtools.performance.memory.sample-probability";
 exports.MEMORY_MAX_LOG_LEN_PREF = "devtools.performance.memory.max-log-length";
 exports.PROFILER_BUFFER_SIZE_PREF = "devtools.performance.profiler.buffer-size";
-exports.PROFILER_SAMPLE_RATE_PREF = "devtools.performance.profiler.sample-frequency-khz";
+exports.PROFILER_SAMPLE_RATE_PREF = "devtools.performance.profiler.sample-frequency-hz";
 
 exports.UI_EXPERIMENTAL_PREF = "devtools.performance.ui.experimental";
 exports.UI_INVERT_CALL_TREE_PREF = "devtools.performance.ui.invert-call-tree";

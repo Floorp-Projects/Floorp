@@ -14,6 +14,8 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
+var _Button = require("../shared/Button/index");
+
 var _Svg = require("devtools/client/debugger/new/dist/vendors").vendored["Svg"];
 
 var _Svg2 = _interopRequireDefault(_Svg);
@@ -202,7 +204,9 @@ class SearchBar extends _react.Component {
       const {
         modifiers,
         toggleFileSearchModifier,
-        query
+        query,
+        showClose = true,
+        size = "big"
       } = this.props;
       const {
         doSearch
@@ -248,7 +252,12 @@ class SearchBar extends _react.Component {
         className: "whole-word-btn",
         svgName: "whole-word-match",
         tooltip: L10N.getStr("symbolSearch.searchModifier.wholeWord")
-      }));
+      }), showClose && _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement("span", {
+        className: "pipe-divider"
+      }), _react2.default.createElement(_Button.CloseButton, {
+        handleClick: this.closeSearch,
+        buttonClass: size
+      })));
     };
 
     this.state = {
@@ -361,8 +370,8 @@ class SearchBar extends _react.Component {
       onHistoryScroll: this.onHistoryScroll,
       handleNext: e => this.traverseResults(e, false),
       handlePrev: e => this.traverseResults(e, true),
-      handleClose: this.closeSearch,
-      shouldFocus: this.state.inputFocused
+      shouldFocus: this.state.inputFocused,
+      showClose: false
     }), _react2.default.createElement("div", {
       className: "search-bottom-bar"
     }, this.renderSearchModifiers()));

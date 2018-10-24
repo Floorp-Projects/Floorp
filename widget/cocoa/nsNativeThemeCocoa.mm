@@ -3994,31 +3994,6 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
   }
 }
 
-
-nscolor
-nsNativeThemeCocoa::GetWidgetAutoColor(mozilla::ComputedStyle* aStyle,
-                                       WidgetType aWidgetType)
-{
-  switch (aWidgetType) {
-    case StyleAppearance::Scrollbar:
-    case StyleAppearance::ScrollbarSmall:
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-    case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-      return NS_RGB(0xFA, 0xFA, 0xFA);
-
-    case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-      return NS_RGB(0xC1, 0xC1, 0xC1);
-
-    default:
-      return nsITheme::GetWidgetAutoColor(aStyle, aWidgetType);
-  }
-}
-
 LayoutDeviceIntMargin
 nsNativeThemeCocoa::DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
                                          nsIFrame* aFrame)
