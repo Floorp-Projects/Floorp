@@ -453,6 +453,34 @@ private:
 
 /***************************************************************************
  * stack based helper class for calling EditorBase::EndTransaction() after
+ * EditorBase::BeginTransaction().  This shouldn't be used in editor classes
+ * or helper classes while an edit action is being handled.  Use
+ * AutoTransactionBatch in such cases since it uses non-virtual internal
+ * methods.
+ ***************************************************************************/
+class MOZ_RAII AutoTransactionBatchExternal final
+{
+private:
+  OwningNonNull<EditorBase> mEditorBase;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+public:
+  explicit AutoTransactionBatchExternal(EditorBase& aEditorBase
+                                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mEditorBase(aEditorBase)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    mEditorBase->BeginTransaction();
+  }
+
+  ~AutoTransactionBatchExternal()
+  {
+    mEditorBase->EndTransaction();
+  }
+};
+
+/***************************************************************************
+ * stack based helper class for calling EditorBase::EndTransaction() after
  * EditorBase::BeginTransaction().
  ***************************************************************************/
 class MOZ_RAII AutoTransactionBatch final
