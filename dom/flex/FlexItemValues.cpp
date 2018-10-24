@@ -60,6 +60,8 @@ FlexItemValues::FlexItemValues(FlexLineValues* aParent,
   mCrossMinSize = nsPresContext::AppUnitsToDoubleCSSPixels(
     aItem->mCrossMinSize);
   mCrossMaxSize = ToPossiblyUnconstrainedPixels(aItem->mCrossMaxSize);
+
+  mClampState = FlexItemClampState::Unclamped;
 }
 
 JSObject*
@@ -108,6 +110,12 @@ double
 FlexItemValues::CrossMaxSize() const
 {
   return mCrossMaxSize;
+}
+
+FlexItemClampState
+FlexItemValues::ClampState() const
+{
+  return mClampState;
 }
 
 } // namespace dom

@@ -45,6 +45,7 @@ public:
   double MainMaxSize() const;
   double CrossMinSize() const;
   double CrossMaxSize() const;
+  FlexItemClampState ClampState() const;
 
 protected:
   RefPtr<FlexLineValues> mParent;
@@ -57,6 +58,7 @@ protected:
   double mMainMaxSize;
   double mCrossMinSize;
   double mCrossMaxSize;
+  FlexItemClampState mClampState;
 };
 
 } // namespace dom

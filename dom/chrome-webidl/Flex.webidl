@@ -71,6 +71,14 @@ interface FlexLineValues
   sequence<FlexItemValues> getItems();
 };
 
+/**
+ * Item main sizes have either been unclamped, clamped to the minimum,
+ * or clamped to the maximum.
+ */
+enum FlexItemClampState {
+  "unclamped", "clamped_to_min", "clamped_to_max"
+};
+
 [ChromeOnly]
 interface FlexItemValues
 {
@@ -81,4 +89,5 @@ interface FlexItemValues
   readonly attribute double mainMaxSize;
   readonly attribute double crossMinSize;
   readonly attribute double crossMaxSize;
+  readonly attribute FlexItemClampState clampState;
 };
