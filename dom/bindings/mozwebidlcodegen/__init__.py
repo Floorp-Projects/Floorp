@@ -134,7 +134,6 @@ class WebIDLCodegenManager(LoggingMixin):
         'RegisterWorkerBindings.h',
         'RegisterWorkerDebuggerBindings.h',
         'RegisterWorkletBindings.h',
-        'ResolveSystemBinding.h',
         'UnionConversions.h',
         'UnionTypes.h',
     }
@@ -145,7 +144,6 @@ class WebIDLCodegenManager(LoggingMixin):
         'RegisterWorkerBindings.cpp',
         'RegisterWorkerDebuggerBindings.cpp',
         'RegisterWorkletBindings.cpp',
-        'ResolveSystemBinding.cpp',
         'UnionTypes.cpp',
         'PrototypeList.cpp',
     }

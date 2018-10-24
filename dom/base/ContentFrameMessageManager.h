@@ -9,7 +9,6 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MessageManagerGlobal.h"
-#include "mozilla/dom/ResolveSystemBinding.h"
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
 
