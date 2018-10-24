@@ -336,16 +336,15 @@ public:
    */
   nsresult AddZIndex(int32_t aChange);
 
-  nsresult SetInlineProperty(nsAtom& aProperty,
-                             nsAtom* aAttribute,
-                             const nsAString& aValue)
-  {
-    nsresult rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
-  }
+  /**
+   * SetInlinePropertyAsAction() sets a property which changes inline style of
+   * text.  E.g., bold, italic, super and sub.
+   * This automatically removes exclusive style, however, treats all changes
+   * as a transaction.
+   */
+  nsresult SetInlinePropertyAsAction(nsAtom& aProperty,
+                                     nsAtom* aAttribute,
+                                     const nsAString& aValue);
 
   nsresult GetInlineProperty(nsAtom* aProperty,
                              nsAtom* aAttribute,

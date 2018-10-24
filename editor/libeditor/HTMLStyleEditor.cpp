@@ -54,6 +54,33 @@ HTMLEditor::IsEmptyTextNode(nsINode& aNode)
          isEmptyTextNode;
 }
 
+nsresult
+HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
+                                      nsAtom* aAttribute,
+                                      const nsAString& aValue)
+{
+  AutoTransactionBatch treatAsOneTransaction(*this);
+
+  if (&aProperty == nsGkAtoms::sup) {
+    // Superscript and Subscript styles are mutually exclusive.
+    nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sub, nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else if (&aProperty == nsGkAtoms::sub) {
+    // Superscript and Subscript styles are mutually exclusive.
+    nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sup, nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  nsresult rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HTMLEditor::SetInlineProperty(const nsAString& aProperty,
                               const nsAString& aAttribute,
