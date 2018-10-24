@@ -52,7 +52,7 @@ class ConnectPage extends PureComponent {
       ConnectSection(
         {
           icon: WIFI_ICON_SRC,
-          title: "Via WiFi (Recommended)",
+          title: "Via WiFi",
         },
         ConnectSteps({
           steps: [
