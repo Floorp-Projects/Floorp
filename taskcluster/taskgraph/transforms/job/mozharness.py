@@ -15,6 +15,7 @@ from textwrap import dedent
 
 from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional, Any
+from voluptuous.validators import Match
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
@@ -44,10 +45,16 @@ mozharness_run_schema = Schema({
     Required('config'): [basestring],
 
     # any additional actions to pass to the mozharness command
-    Optional('actions'): [basestring],
+    Optional('actions'): [Match(
+        '^[a-z0-9-]+$',
+        "actions must be `-` seperated alphanumeric strings"
+    )],
 
     # any additional options (without leading --) to be passed to mozharness
-    Optional('options'): [basestring],
+    Optional('options'): [Match(
+        '^[a-z0-9-]+(=[^ ]+)?$',
+        "options must be `-` seperated alphanumeric strings (with optional argument)"
+    )],
 
     # --custom-build-variant-cfg value
     Optional('custom-build-variant-cfg'): basestring,
@@ -290,11 +297,9 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append('--branch ' + config.params['project'])
     mh_command.append(r'--work-dir %cd:Z:=z:%\build')
     for action in run.get('actions', []):
-        assert ' ' not in action
         mh_command.append('--' + action)
 
     for option in run.get('options', []):
-        assert ' ' not in option
         mh_command.append('--' + option)
     if run.get('custom-build-variant-cfg'):
         mh_command.append('--custom-build-variant')
