@@ -68,6 +68,7 @@ def run_try_release(
     files_to_change = {
         'browser/config/version.txt': '{}\n'.format(app_version),
         'browser/config/version_display.txt': '{}\n'.format(version),
+        'config/milestone.txt': '{}\n'.format(app_version),
     }
 
     release_type = version.version_type.name.lower()
