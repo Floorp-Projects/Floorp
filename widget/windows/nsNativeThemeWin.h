@@ -33,34 +33,34 @@ public:
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext,
                                   nsIFrame* aFrame,
-                                  StyleAppearance aWidgetType,
+                                  StyleAppearance aAppearance,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
 
   MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
                                                      nsIFrame* aFrame,
-                                                     StyleAppearance aWidgetType) override;
+                                                     StyleAppearance aAppearance) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext,
                         nsIFrame* aFrame,
-                        StyleAppearance aWidgetType,
+                        StyleAppearance aAppearance,
                         LayoutDeviceIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
-                                   StyleAppearance aWidgetType,
+                                   StyleAppearance aAppearance,
                                    nsRect* aOverflowRect) override;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                  StyleAppearance aWidgetType,
+                                  StyleAppearance aAppearance,
                                   mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
-                                             StyleAppearance aWidgetType) override;
+                                             StyleAppearance aAppearance) override;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame,
-                                StyleAppearance aWidgetType, 
+                                StyleAppearance aAppearance, 
                                 nsAtom* aAttribute,
                                 bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue) override;
@@ -69,82 +69,82 @@ public:
 
   bool ThemeSupportsWidget(nsPresContext* aPresContext, 
                              nsIFrame* aFrame,
-                             StyleAppearance aWidgetType) override;
+                             StyleAppearance aAppearance) override;
 
-  bool WidgetIsContainer(StyleAppearance aWidgetType) override;
+  bool WidgetIsContainer(StyleAppearance aAppearance) override;
 
-  bool ThemeDrawsFocusForWidget(StyleAppearance aWidgetType) override;
+  bool ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
 
   bool ThemeNeedsComboboxDropmarker() override;
 
-  virtual bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetType) override;
+  virtual bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppearance) override;
 
   enum {
     eThemeGeometryTypeWindowButtons = eThemeGeometryTypeUnknown + 1
   };
   virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
-                                                       StyleAppearance aWidgetType) override;
+                                                       StyleAppearance aAppearance) override;
 
   nsNativeThemeWin();
 
 protected:
-  mozilla::Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aWidgetType);
-  HANDLE GetTheme(StyleAppearance aWidgetType);
+  mozilla::Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);
+  HANDLE GetTheme(StyleAppearance aAppearance);
   nsresult GetThemePartAndState(nsIFrame* aFrame,
-                                StyleAppearance aWidgetType,
+                                StyleAppearance aAppearance,
                                 int32_t& aPart, int32_t& aState);
   nsresult ClassicGetThemePartAndState(nsIFrame* aFrame,
-                                       StyleAppearance aWidgetType,
+                                       StyleAppearance aAppearance,
                                        int32_t& aPart, int32_t& aState, bool& aFocused);
   nsresult ClassicDrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
-                                       StyleAppearance aWidgetType,
+                                       StyleAppearance aAppearance,
                                        const nsRect& aRect,
                                        const nsRect& aClipRect);
   MOZ_MUST_USE LayoutDeviceIntMargin ClassicGetWidgetBorder(nsDeviceContext* aContext,
                                                             nsIFrame* aFrame,
-                                                            StyleAppearance aWidgetType);
+                                                            StyleAppearance aAppearance);
   bool ClassicGetWidgetPadding(nsDeviceContext* aContext,
                                nsIFrame* aFrame,
-                               StyleAppearance aWidgetType,
+                               StyleAppearance aAppearance,
                                LayoutDeviceIntMargin* aResult);
   nsresult ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
-                                       StyleAppearance aWidgetType,
+                                       StyleAppearance aAppearance,
                                        mozilla::LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable);
   bool ClassicThemeSupportsWidget(nsIFrame* aFrame,
-                                  StyleAppearance aWidgetType);
+                                  StyleAppearance aAppearance);
   void DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, int32_t back,
                        HBRUSH defaultBack);
   nsresult DrawCustomScrollbarPart(gfxContext* aContext,
                                    nsIFrame* aFrame,
                                    mozilla::ComputedStyle* aStyle,
-                                   StyleAppearance aWidgetType,
+                                   StyleAppearance aAppearance,
                                    const nsRect& aRect,
                                    const nsRect& aClipRect);
-  uint32_t GetWidgetNativeDrawingFlags(StyleAppearance aWidgetType);
+  uint32_t GetWidgetNativeDrawingFlags(StyleAppearance aAppearance);
   int32_t StandardGetState(nsIFrame* aFrame,
-                           StyleAppearance aWidgetType,
+                           StyleAppearance aAppearance,
                            bool wantFocused);
   bool IsMenuActive(nsIFrame* aFrame,
-                    StyleAppearance aWidgetType);
+                    StyleAppearance aAppearance);
   RECT CalculateProgressOverlayRect(nsIFrame* aFrame, RECT* aWidgetRect,
                                     bool aIsVertical, bool aIsIndeterminate,
                                     bool aIsClassic);
   void DrawThemedProgressMeter(nsIFrame* aFrame,
-                               StyleAppearance aWidgetType,
+                               StyleAppearance aAppearance,
                                HANDLE aTheme, HDC aHdc,
                                int aPart, int aState,
                                RECT* aWidgetRect, RECT* aClipRect);
 
   MOZ_MUST_USE LayoutDeviceIntMargin GetCachedWidgetBorder(HANDLE aTheme,
                                                            nsUXThemeClass aThemeClass,
-                                                           StyleAppearance aWidgetType,
+                                                           StyleAppearance aAppearance,
                                                            int32_t aPart,
                                                            int32_t aState);
 
   nsresult GetCachedMinimumWidgetSize(nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
-                                      StyleAppearance aWidgetType,
+                                      StyleAppearance aAppearance,
                                       int32_t aPart, int32_t aState,
                                       THEMESIZE aSizeReq, mozilla::LayoutDeviceIntSize* aResult);
 
@@ -157,7 +157,7 @@ private:
   // eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT is about 800 at the time of writing
   // this, and nsIntMargin is 16 bytes wide, which makes this cache (1/8 + 16) * 800
   // bytes, or about ~12KB. We could probably reduce this cache to 3KB by caching on
-  // the aWidgetType value instead, but there would be some uncacheable values, since
+  // the aAppearance value instead, but there would be some uncacheable values, since
   // we derive some theme parts from other arguments.
   uint8_t mBorderCacheValid[(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
   LayoutDeviceIntMargin mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
