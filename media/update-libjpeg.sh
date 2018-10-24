@@ -19,7 +19,7 @@ tag=${2-HEAD}
 cd $srcdir/libjpeg
 cp win/jsimdcfg.inc simd/
 
-revert_files="1050342.diff externalize-table.diff jconfig.h jconfigint.h jpeg_nbits_table.c moz.build MOZCHANGES mozilla.diff simd/jsimdcfg.inc"
+revert_files="1050342.diff assembly-tables.diff externalize-table.diff jconfig.h jconfigint.h jpeg_nbits_table.c moz.build MOZCHANGES mozilla.diff simd/jsimdcfg.inc"
 if test -d ${topsrcdir}/.hg; then
     hg revert --no-backup $revert_files
 elif test -d ${topsrcdir}/.git; then
@@ -29,3 +29,4 @@ fi
 patch -p0 -i mozilla.diff
 patch -p0 -i 1050342.diff
 patch -p3 -i externalize-table.diff
+patch -p3 -i assembly-tables.diff
